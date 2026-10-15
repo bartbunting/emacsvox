@@ -179,7 +179,8 @@
     (with-selected-window transient--window
       (should-not (string-match-p "Aural Home" (buffer-string))))
     (dolist (row (emacsvox-aural-home--all-entries))
-      (should (assoc (aref (cadr row) 0) emacsvox-settings--actions)))
+      (should (emacsvox-settings--search-matches
+               (aref (cadr row) 0) emacsvox-settings--actions nil)))
     (cl-letf (((symbol-function 'emacsvox-aural)
                (lambda () (interactive) (error "Unexpected Home entry"))))
       (dolist (entry emacsvox-settings--actions)
@@ -190,6 +191,39 @@
                          (nth 3 entry))))
         (execute-kbd-macro (kbd "q"))
         (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-action-aliases-have-one-destination ()
+  "Old names resolve to one displayed action, including mixed-case substrings."
+  (let ((destinations (mapcar #'cdr emacsvox-settings--actions)))
+    (should (= (length destinations) (length (delete-dups destinations)))))
+  (dolist (case '(("Feedback for this item" "Explain this item")
+                  ("recent AURAL" "Recent feedback")
+                  ("MANUAL" "Read the Emacsvox manual")))
+    (should (equal (emacsvox-settings--search-matches
+                    (car case) emacsvox-settings--actions nil)
+                   (cdr case))))
+  (emacsvox-test--with-settings
+    (dolist (case '(("Feedback for this item" emacsvox-settings-feedback "x")
+                    ("Recent aural feedback" emacsvox-settings-feedback "h")
+                    ("MANUAL" emacsvox-aural-menu "i")))
+      ;; Insert the whole query as pasted text: SPC can complete a word in
+      ;; Emacs's default completion frontend before the query is fully typed.
+      (minibuffer-with-setup-hook (lambda () (insert (car case)))
+        (execute-kbd-macro (kbd "a RET")))
+      (should (eq (oref transient--prefix command) (nth 1 case)))
+      (with-selected-window transient--window
+        (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                       (nth 2 case))))
+      (should-not (derived-mode-p 'Info-mode))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
+    ;; Search selects the manual first; the second Enter opens it.
+    (execute-kbd-macro (kbd "a m a n u a l RET RET"))
+    (should (derived-mode-p 'Info-mode))
+    (execute-kbd-macro (kbd "q q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+    (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
     (should-not (file-exists-p custom-file))))
 
 (ert-deftest emacsvox-settings-return-source-restores-captured-position ()

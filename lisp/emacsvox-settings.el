@@ -108,7 +108,7 @@
     ("Review notifications" emacsvox-output-settings emacsvox-output-settings "h")
     ("Return to source item" emacsvox-aural-menu emacsvox-aural-menu "b")
     ("Resume unfinished changes" emacsvox-settings-workflows emacsvox-settings-setups "d")
-    ("Feedback for this item" emacsvox-settings-workflows emacsvox-settings-feedback "x")
+    ("Explain this item" emacsvox-settings-workflows emacsvox-settings-feedback "x")
     ("Choose a voice for this item" emacsvox-settings-workflows emacsvox-settings-feedback "v")
     ("Edit the named voice used here" emacsvox-settings-workflows emacsvox-settings-feedback "t")
     ("Change a sound for this item" emacsvox-settings-workflows emacsvox-settings-feedback "e")
@@ -125,13 +125,14 @@
     ("Spatial settings" emacsvox-output-settings emacsvox-output-settings "d")
     ("Explain feedback as you navigate" emacsvox-settings-workflows emacsvox-settings-presentation "t")
     ("Aural Doctor" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
-    ("Explain this item" emacsvox-settings-workflows emacsvox-settings-feedback "x")
-    ("Recent aural feedback" emacsvox-settings-workflows emacsvox-settings-feedback "h"))
-  "Action labels and focused destinations, including the established search aliases.")
+    ("Read the Emacsvox manual" emacsvox-aural-menu emacsvox-aural-menu "i"))
+  "Canonical action labels and focused destinations.")
 
 (defconst emacsvox-settings--search-aliases
   '(("Capital-letter beep" "caps beep" "capital beep")
-    ("All-caps beep" "allcaps beep" "all caps beep" "caps beep"))
+    ("All-caps beep" "allcaps beep" "all caps beep" "caps beep")
+    ("Explain this item" "Feedback for this item")
+    ("Recent feedback" "Recent aural feedback"))
   "Additional search terms for settings, displayed under their original labels.")
 
 (defun emacsvox-settings--search-matches (string table predicate)

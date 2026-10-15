@@ -25,9 +25,8 @@ personal configuration changes, or publication.
 - Menu organisation follow-up, 2026-10-15: Speech starts with scope, then
   rate, punctuation, capitalization, indentation, and typing. =C-e H n=
   opens navigation preferences directly; =C-e H s n= remains available.
-  All 90 menu, discovery, Transient, and Magit source checks pass in graphical
-  Emacs. The remaining organisation slices are in progress. Final compilation,
-  documentation checks, and listening acceptance are still pending.
+  Implemented in =c58b2e165=. Final automated verification for all five
+  organisation slices is recorded below; listening acceptance remains open.
 
 - Task headings and integration exits, 2026-10-15: pronunciation editing has
   its own section; notification and spatial routing sit under Output routing;
@@ -52,6 +51,23 @@ personal configuration changes, or publication.
   scope-first navigation, private preview, both saves, stop, and cancellation.
   The cancellation test now cancels the actual minibuffer, covering compiled
   editor calls as well as source. Listening acceptance remains open.
+
+- Action discovery, 2026-10-15: =C-e H a= includes the manual. Explain this
+  item and Recent feedback each appear once; their older names remain search
+  aliases. Useful cross-links such as Voice palettes remain in their menus.
+  Search still focuses a control before Enter activates it. The Help chapter
+  documents the direct navigation route and action aliases; generated manuals
+  are current. Listening acceptance remains open.
+
+- Menu-organisation verification, 2026-10-15: all five remaining slices are
+  implemented. All 143 focused checks pass from source and compiled code in
+  fresh graphical Emacs 31.0.90 with Transient 0.13.8, and from source with
+  pinned Transient 0.13.3. No tests were skipped. Loaded paths and versions
+  were checked. Incremental compilation, byte-code preflight, documentation
+  generation, and the documentation release gate pass. Speech submission and
+  playback are observed or stubbed by tests; these results are not listening
+  acceptance. This pass does not repeat the separate Emacs 30.2 matrix.
+  Use a fresh normal Emacsvox profile for the listening checklist below.
 
 - Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
   invoking entry before announcing the parent. Shortcut entry, nested menus,
@@ -1015,15 +1031,23 @@ that snapshot. Do not use its row count as a migration-completeness measure.
 Open as of 2026-10-15. Decide whether searches across the settings menus and
 linked editors should share case-insensitive matching anywhere in a label,
 including inside words, or continue to follow their individual rules and your
-Emacs completion configuration. Only the focused settings search has adopted
-the new matching and alias behavior; no wider conversion is agreed here.
+Emacs completion configuration. Both menu searches use local substring matching
+and aliases; no wider conversion is agreed here.
+
+An additional input decision remains open after the menu-organisation pass:
+Emacs's default completion frontend can treat Space as word completion. Typing
+a multiword alias such as =Recent aural feedback= can therefore complete the
+canonical label before the query is finished. Literal inserted or pasted
+queries match correctly. Decide whether these prompts should make Space insert
+a space, and how that should interact with configured completion frontends.
+The organisation pass preserves existing completion keymaps.
 
 Current source inventory:
 
 | Search | Location and implementation | Current matching |
 |--------+-----------------------------+------------------|
 | Find a setting | =C-e H /=; =emacsvox-settings-search= | Case-insensitive substring matching over labels and a small alias catalogue. Results retain canonical labels without duplicates. Matching styles are local to this prompt. |
-| Find an action | =C-e H a=; =emacsvox-settings-search-actions= | Case-insensitive substring matching. Accepting a result focuses its menu control; a second Enter activates it. |
+| Find an action | =C-e H a=; =emacsvox-settings-search-actions= | Case-insensitive substring matching over canonical labels and aliases, including the manual. One result per destination. Accepting a result focuses its menu control; a second Enter activates it. |
 | Retained Home search | =/= after =M-x emacsvox-aural=; =emacsvox-aural-home-search= | Ordinary completion over action names, including collapsed actions. Matching depends on completion configuration; no local substring or case policy. This is outside the ordinary settings-menu route. |
 | Find a physical voice | =/= in the physical-voice browser; =emacsvox-aural-voice-workbench-find-voice= | Locally requests substring/basic completion and ignores case. Searches voice names, engine IDs, languages and voice IDs, within the current engine and explicit filters. |
 | Choose a physical voice | Physical voice field in the editor; =emacsvox-aural-voice-editor--pick= | Ordinary completion over voice names and engine/voice identifiers. Matching depends on completion configuration. |
@@ -1194,22 +1218,36 @@ The new routes do not require removing or converting the dedicated editors.
 Broader inventory expansion and search policy outside these two menu searches
 remain separate workstreams.
 
+** Menu-organisation listening checks
+
+Implementation and automated verification are complete. Listening acceptance
+remains open for this pass. In a fresh normal Emacsvox profile:
+
+1. Browse =C-e H= and =C-e H s= with section and item arrows. Check the task
+   order, concise announcements, first-item discovery, and Enter's target.
+   Repeat with each navigation style you use.
+2. Open navigation preferences with =C-e H n= and =C-e H s n=. Read Help,
+   then return with =q= and =C-g=; the invoking item should be selected.
+3. Visit =C-e H s p=, =C-e H o=, and =C-e H r=. Find pronunciation editing,
+   output routing, and the combined rules overview by their sections. Open an
+   editor and return; its own saving rules and the source should stay clear.
+4. Use =C-e S= in the supported integrations. Find Finish by section arrows;
+   check that Back and Close are separate from Save and advanced settings.
+   In Notmuch, browse spoken content, status feedback, reading limits, then
+   defaults. Open a field or cue editor and verify its separate Save is clear.
+5. Open a named voice's tuning menu with =m=. Check scope before adjustments,
+   Preview, Save, and Finish. Adjust with Shift-arrows, preview and stop with
+   =P= and =S=, then return without saving. Verify the draft is retained and
+   Help distinguishes =w= Save and apply from =c= collection saving.
+6. At =C-e H a=, search for =manual=, =recent=, and =explain=. Check that each
+   result is clear, selecting it only focuses its action, and another Enter
+   opens it. The manual should give its opening cue and speech; =q= should
+   return to its selected menu entry. Also try the older action names using
+   your completion frontend and report any early completion at spaces.
+
+Changing the established Save and Stop keys remains a separate decision.
+
 ** Next proposed slices
-
-Complete the menu-organisation pass before expanding settings coverage:
-
-- Reorder Speech settings around scope, rate, punctuation, capitalization,
-  indentation, and typing. Consider a direct main-menu navigation-settings
-  entry while retaining =C-e H s n=.
-- Put pronunciation editing, notification routing, and the combined rule
-  overview under sections describing those tasks. Use a consistent Finish
-  section in integration menus.
-- Organise Notmuch around spoken content, status feedback, and reading limits.
-  Keep each editor's saving rules explicit.
-- Put voice-tuning scope before adjustments. Align preview and save wording;
-  changes to established Save and Stop keys remain a separate decision.
-- Add the manual to action discovery and review duplicate search results,
-  preserving useful aliases and cross-links.
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,
 direct action discovery, and Home menu retirement are delivered above. The
