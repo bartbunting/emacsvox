@@ -269,7 +269,7 @@ On a heading, ~TAB~ cycles that subtree's visibility. Listen to the state
 feedback before moving into it. This is different from Tab in a table or at a
 completion prompt. The show-all sequence above provides a known starting view
 if the current folds become confusing. [[info:org#Motion][Motion]] documents the other heading
-commands, while [[*Reading Org headings][Reading Org headings]] explains the speech detail.
+commands, while [[*Browsing Structure][Browsing Structure]] explains the speech detail for Org headings.
 
 For a focused text correction in the example:
 
