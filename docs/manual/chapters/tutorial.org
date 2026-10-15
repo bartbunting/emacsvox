@@ -27,6 +27,10 @@ optional exercise creates a personal palette; you can finish the tutorial
 without doing it. Do not practise in a document, draft, or configuration that
 you need to preserve.
 
+If key notation is new to you, read [[*Read the key instructions][Read the key instructions]] before
+starting. It explains modifiers, separate steps, capital letters and command
+names. The short reminders below use that notation.
+
 Keys are the defaults. ~C-n~ means hold Control and press n. In ~C-e l~,
 press Control-e, release it, then press lowercase l. ~M-~ normally means
 Alt or Option, ~RET~ means Enter, and ~SPC~ means Space. Capital letters

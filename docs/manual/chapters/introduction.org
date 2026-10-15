@@ -14,15 +14,120 @@ Emacsvox requires Emacs 30.2 or newer and is derived from Emacspeak. Emacspeak's
 pioneering audio-desktop design and T. V. Raman's original work remain the
 foundation of this project.
 
-Emacsvox works with Emacs commands, modes, text structure, and application
-state rather than treating the screen as a grid of pixels. It can therefore
-announce what an action means and what changed. Movement speaks the relevant
-text; voices distinguish structure; auditory icons and tones mark events
-without adding words to everything you read.
+Emacsvox works with Emacs commands and the structure of each application.
+It speaks the text you reach and announces relevant changes, rather than
+reading a screenful of characters indiscriminately. Distinctive voices mark
+structure; short sounds can identify an event without adding a spoken label.
+
+** Read the key instructions
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Emacs Key Notation
+:DESCRIPTION: Learn which keys to hold together and which to press in sequence.
+:END:
+
+#+cindex: key notation
+#+cindex: Control, key notation
+#+cindex: Meta, key notation
+#+cindex: uppercase keys
+#+cindex: prefix keys and prefix arguments
+#+cindex: keyboard shortcuts, reading
+
+Emacs manuals use a compact notation for keyboard instructions. Read this
+section before trying the commands below. You do not type the notation as
+text: it tells you which keys to press.
+
+*** Hold modifiers; release them between steps
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+A /modifier/ is a key held while you press another key. ~C-~ means Control,
+usually labelled Ctrl. For ~C-n~, hold Control, press lowercase n, then
+release both keys. The hyphen is part of the notation, not a key to press.
+
+~M-~ means Meta, usually the Alt key. Some macOS configurations use Option
+or Command for Meta. For ~M-x~, hold the key your Emacs uses for Meta,
+press x, and release both. You can also press Escape, release it, then press
+x; do not hold Escape. This alternative is useful when Alt is intercepted.
+
+~S-~ means Shift. For ~S-TAB~, hold Shift while pressing Tab.
+~C-M-f~ means hold Control and Meta together while pressing f. When several
+modifiers are joined by hyphens, hold them for that one keypress.
+
+*** Read spaces as separate steps
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Spaces between keys separate successive keypresses. They do not mean to
+press the space bar. For example, ~C-x C-f~ means press Control-x, release
+it, then press Control-f. Keeping Control held for those two letters also
+works, because both steps require it.
+
+The distinction matters in ~C-e H~:
+
+1. Hold Control, press lowercase e, then release both keys.
+2. Hold Shift, press h to type capital H, then release both keys.
+
+Do not keep Control held for H. The capital H is a letter, not the name of
+another modifier. Lowercase h and uppercase H are different instructions.
+With the Emacsvox defaults, ~C-e h~ repeats Help, while ~C-e H~ opens
+settings. ~C-h~ is different again: hold Control and press h; it begins
+Emacs's Help commands.
+
+A longer route such as ~C-e H v p~ starts the same way. After capital H,
+press lowercase v, then lowercase p, with no modifier held. That route opens
+Voice Palettes when used from an ordinary working buffer. Letters offered
+inside a menu belong to that menu; typing p in a document normally inserts p.
+
+A /prefix key/ starts an unfinished sequence. After pressing one, Emacs
+waits for the next key. You may pause between steps; the notation does not
+ask you to hold the whole sequence down at once.
+
+*** Recognise named keys and command names
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~RET~ means Return or Enter, ~TAB~ means Tab, ~SPC~ means the space bar,
+and ~ESC~ means Escape. Press the named key, not the letters of its name.
+~<down>~ means the Down Arrow key; the angle brackets are not typed.
+"Shift-left" means hold Shift and press Left Arrow. Where this manual says
+"left/right", it offers either arrow, not a slash to type.
+
+Some instructions run a command by name. In
+~M-x describe-mode RET~, press Meta-x, release it, type =describe-mode=
+with its hyphen, then press Enter. The name is ordinary text entered at the
+command prompt, unlike the modifier notation. An instruction written
+~M-x describe-mode~ also means to finish the name with Enter.
+
+*** Cancel an unfinished instruction
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~C-g~ means hold Control and press g. It normally cancels an unfinished
+key sequence or prompt. In Emacsvox's settings menus it goes back one menu;
+~C-q~ closes the menu sequence. These are cancellation and navigation
+commands, not undo: changes already applied remain in effect. An editor may
+ask what to do with unsaved work, so read that prompt before answering.
+
+~C-u~ before another command supplies a /prefix argument/. This is different
+from an unfinished prefix key. Some commands repeat; others change their
+scope or behaviour. Do not add it unless the instructions call for it.
+
+Once speech works, ~C-h k~ followed by a key sequence explains its binding
+in the current buffer without invoking that command. To check the menu
+entry, enter ~C-h k C-e H~: Control-h, lowercase k, Control-e, then capital H.
+Custom bindings and operating-system shortcuts can affect what reaches Emacs.
+For more detail, see [[info:emacs#User Input][Kinds of user input]], [[info:emacs#Keys][Keys]], and
+[[info:emacs#Arguments][Prefix arguments]] in the GNU Emacs Manual.
 
 ** Where To Begin
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Where To Begin
+:ALT_TITLE: Where to begin
+:DESCRIPTION: Get speech working and choose a learning or reference route.
 :END:
 
 Start with [[*Getting Started: Installation and First Speech][Installation]] if Emacsvox is not yet installed. It explains the
@@ -47,6 +152,7 @@ for everyday use once speech works.
 ** The Welcome Screen
 :PROPERTIES:
 :TEXINFO_NODE: no
+:ALT_TITLE: The welcome screen
 :END:
 
 At an idle startup, after speech is ready, Emacsvox offers a short welcome
@@ -64,6 +170,7 @@ already in use alone.
 ** What You Will Hear
 :PROPERTIES:
 :TEXINFO_NODE: no
+:ALT_TITLE: What you will hear
 :END:
 
 Emacsvox combines several forms of feedback. Speech reads text, prompts,
@@ -98,6 +205,7 @@ speech. [[*Speech Backends][Speech Backends]] provides the platform and compatib
 ** About This Manual
 :PROPERTIES:
 :TEXINFO_NODE: no
+:ALT_TITLE: About this manual
 :END:
 
 The maintained chapters teach current setup and everyday tasks. Each explains
