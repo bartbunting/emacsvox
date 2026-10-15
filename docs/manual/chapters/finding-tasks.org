@@ -31,6 +31,8 @@ use [[*Terms used in this manual][Terms used in this manual]].
 
 - [[info:emacsvox#Emacs Key Notation][Understand the keyboard instructions]]: learn modifiers, separate steps,
   uppercase letters and command names before using a shortcut.
+- [[*Answer a prompt and return to your work][Know where to type an answer]]: distinguish minibuffer prompts,
+  completion, document text and command examples.
 - [[info:emacsvox#Recovering From No Speech][Get speech working again]]: start with the no-speech recovery procedure
   before changing presentation rules or voices.
 - [[info:emacsvox#Basic Usage][Stop current speech]]: the first-session commands include stopping speech
@@ -104,9 +106,15 @@ use [[*Terms used in this manual][Terms used in this manual]].
 ** Work in an application
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Finding Application Tasks
-:DESCRIPTION: Find mail privacy, terminal review, and agent-response instructions.
+:DESCRIPTION: Find file, document, web, mail, terminal and agent tasks.
 :END:
 
+#+cindex: open a file
+#+cindex: save a copy
+#+cindex: find a file again
+#+cindex: write a note
+#+cindex: read a web page
+#+cindex: web link, go back
 #+cindex: mail, limit automatic speech
 #+cindex: terminal completion, finding help
 #+cindex: terminal output, review
@@ -114,6 +122,21 @@ use [[*Terms used in this manual][Terms used in this manual]].
 #+cindex: agent response, read in full
 #+cindex: code, copy from an agent response
 
+- [[*Open a document and check its identity][Open the right file]]: check the buffer and full pathname before editing.
+- [[*Save a separate working copy][Keep the original and work on a copy]]: distinguish current buffer text
+  from the last saved file, and check where later saves will go.
+- [[*Find and inspect files with Dired][Find a file and hear its details]]: browse names, inspect size or date,
+  and return without deleting or moving files.
+- [[*Write a note with headings][Write a note I can reopen later]]: create a real Org file rather than
+  leaving the text in a disposable buffer.
+- [[*Review structure and correct text][Review a document and correct a word]]: reveal headings and body text,
+  inspect a small edit, and save the intended version.
+- [[*Open a page and establish your place][Read a web page]]: enter an address and identify the rendered browser
+  buffer before using navigation keys.
+- [[*Read by heading, paragraph or search][Find information within a page]]: use its HTML structure or search the
+  loaded text, without submitting a new web search.
+- [[*Follow a link and return to the article][Follow a link and get back]]: distinguish browser history, separate
+  buffers and saved website bookmarks.
 - [[info:emacsvox#Notmuch Speech And Privacy][Limit the mail details spoken automatically]]: choose fields, bounds, and
   completion feedback. Explicit full-detail reading bypasses automatic bounds.
 - [[info:emacsvox#EAT Terminal Completion][Hear a terminal's completion candidates]]: keep terminal-side completion
@@ -163,6 +186,8 @@ unsaved draft and a failed application are different problems.
   unfinished work while checking stream acknowledgements or a timeout.
 - [[info:emacsvox#Returning From Settings][I cannot get back to what I was reading]]: leave the current editor using
   its own return action, then use the menu's captured-source return.
+- [[*Recover a cluttered or incomplete page][A web page is cluttered or missing content]]: restore its reading view,
+  distinguish a fresh request from history, or use an external browser.
 - [[info:emacsvox#Reporting Speech Problems][I need to report an unresolved problem]]: collect a reproducible example
   and a reviewed diagnostic report without exposing private speech or paths.
 
