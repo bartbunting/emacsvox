@@ -69,6 +69,69 @@
      :around emacsvox--advice-transient-forward-button-around))
   "Current Emacs 31 Transient targets and their direct native advice.")
 
+(ert-deftest emacsvox-transient-requires-supported-loaded-version ()
+  "Reject old or unknown loaded code with an actionable recovery message."
+  (dolist (version '("0.7.2.2" "0.13.2" "unknown" nil))
+    (let* ((transient-version version)
+           (failure (should-error (emacsvox-transient--require-supported))))
+      (should (string-match-p "requires Transient 0.13.3 or newer"
+                              (error-message-string failure)))
+      (should (string-match-p "package-upgrade.*restart Emacs"
+                              (error-message-string failure)))))
+  (dolist (version '("0.13.3" "v0.13.3-10-g87d0ca08-builtin" "0.13.8"))
+    (let ((transient-version version))
+      (emacsvox-transient--require-supported))))
+
+(ert-deftest emacsvox-transient-isolated-session-activates-only-dependencies ()
+  "A session without package initialization can use an installed Transient."
+  (let* ((directory (make-temp-file "emacsvox-transient-packages-" t))
+         (package-user-dir directory)
+         (package-directory-list nil)
+         (package-alist nil)
+         (package-activated-list nil)
+         (package-load-list '(all))
+         (load-path (copy-sequence load-path))
+         (transient-version nil)
+         (builtin (symbol-function 'package-built-in-p))
+         (featurep (symbol-function 'featurep))
+         (require (symbol-function 'require)))
+    (unwind-protect
+        (progn
+          (dolist (name '(transient ev-test-dependency ev-test-unrelated))
+            (let ((path (expand-file-name (format "%s-99.0" name) directory)))
+              (make-directory path)
+              (with-temp-file (expand-file-name (format "%s-pkg.el" name) path)
+                (prin1 `(define-package ,(symbol-name name) "99.0" "Fixture"
+                          ',(when (eq name 'transient) '((ev-test-dependency "1.0"))))
+                       (current-buffer)))
+              (with-temp-file (expand-file-name (format "%s-autoloads.el" name) path)
+                (prin1 `(add-to-list 'load-path ,path) (current-buffer))
+                (when (eq name 'ev-test-unrelated)
+                  (insert "\n(error \"Unrelated package activated\")")))
+              (when (eq name 'transient)
+                (with-temp-file (expand-file-name "transient.el" path)
+                  (insert "(setq transient-version \"0.13.3\")\n(provide 'transient)\n")))))
+          ;; Emulate an unloaded Transient without unloading the test runner's
+          ;; live package.  Package discovery and dependency activation are real.
+          (cl-letf (((symbol-function 'featurep)
+                     (lambda (feature &optional subfeature)
+                       (unless (eq feature 'transient)
+                         (funcall featurep feature subfeature))))
+                    ((symbol-function 'require)
+                     (lambda (feature &optional file noerror)
+                       (if (eq feature 'transient)
+                           (load "transient" noerror t)
+                         (funcall require feature file noerror))))
+                    ((symbol-function 'package-built-in-p)
+                     (lambda (name &optional version)
+                       (unless (eq name 'transient) (funcall builtin name version)))))
+            (emacsvox-transient--require-supported))
+          (should (equal transient-version "0.13.3"))
+          (should (memq 'transient package-activated-list))
+          (should (memq 'ev-test-dependency package-activated-list))
+          (should-not (memq 'ev-test-unrelated package-activated-list)))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-transient-advice-is-directly-registered ()
   "Transient advice is attached directly to current Emacs 31 targets."
   (dolist (entry emacsvox-test--transient-advice)

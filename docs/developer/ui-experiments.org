@@ -6,8 +6,8 @@
 
 The Transient settings workflows have passed listening acceptance. The
 =C-e H h= fallback is retired under
-[[file:../adr/0027-transient-settings-entry.org][ADR 0027]]. Emacs 30.2's bundled Transient exposed existing compatibility
-failures; the package requirement or compatibility work remains outstanding.
+[[file:../adr/0027-transient-settings-entry.org][ADR 0027]]. Transient 0.13.3 or newer is required; Emacs 30.2 needs a
+separately installed package because its bundled version is too old.
 Dedicated editors and =M-x emacsvox-aural= remain available.
 
 The sections below preserve the prototype's research and implementation history.

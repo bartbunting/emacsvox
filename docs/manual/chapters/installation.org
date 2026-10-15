@@ -48,7 +48,9 @@ emacsvox
 
 Replace =VERSION= with the version in the downloaded filename. Apt requires
 a packaged Emacs 30.2 or newer; an installed terminal-only =emacs-nox= also
-satisfies this dependency. The package never builds GNU Emacs. If your
+satisfies this dependency. Settings menus also require Transient 0.13.3 or
+newer. Apt installs =elpa-transient= when a packaged Emacs 31.1 or newer does
+not already supply it. The package never builds GNU Emacs. If your
 distribution cannot provide a supported version, use the source installation
 route below, which offers an explicit Emacs 31 source build.
 
@@ -110,6 +112,33 @@ You can check a specific executable in the same way:
 #+begin_example
 /path/to/emacs-31/bin/emacs --version
 #+end_example
+
+*** Prepare the settings-menu dependency
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Emacsvox requires Transient 0.13.3 or newer. Emacs 31 supplies a supported
+version; Emacs 30.2's bundled 0.7.2.2 needs an upgrade before building Emacsvox.
+Use your selected Emacs and its package manager, with GNU ELPA enabled:
+
+1. Set =package-install-upgrade-built-in= to =t= for this installation, so
+   package dependencies can replace older built-in copies.
+2. Run ~M-x package-refresh-contents RET~, then
+   ~M-x package-upgrade RET transient RET~. Accept the package's dependencies.
+3. Start a fresh Emacs before building or trying the menus. A running session
+   can retain the older loaded version after installation.
+
+An isolated Emacsvox session activates an installed Transient and its
+required packages when its bundled version is too old. It does not load your
+init file, activate unrelated packages, or download dependencies. Install into
+the package directory used by the same Emacs profile; a custom package directory
+must be on that session's load path. Debian installations also discover the
+system ELPA directory without site startup.
+
+If a menu reports an unsupported version, inspect the version and loaded path
+in its error. Upgrade that installation and restart Emacs; restarting only
+speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
 
 *** Obtain the development checkout
 :PROPERTIES:

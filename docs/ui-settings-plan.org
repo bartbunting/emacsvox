@@ -15,8 +15,8 @@ the new interface; many underlying commands and editors already work.
 
 The [[file:developer/ui-experiments.org][UI experiments record]] retains the earlier research and implementation
 history. This document owns the forward plan and settings inventory. The Home
-menu entry is retired after listening acceptance; the compatibility finding
-in the retirement checkpoint remains outstanding.
+menu entry is retired after listening acceptance. The compatibility decision
+requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
@@ -1084,9 +1084,16 @@ Retirement removes the root h suffix and its private opener, checks
 that all former actions remain discoverable, and replaces Home-based manual
 instructions with focused routes. =M-x emacsvox-aural=, shared draft helpers,
 and dedicated editors remain. The =Aural Home= Info node identifier is retained.
-[[file:adr/0027-transient-settings-entry.org][ADR 0027]] records this boundary. An explicit newer Transient requirement or
-old-package compatibility work still needs a decision; this slice changes no
-dependency requirements.
+[[file:adr/0027-transient-settings-entry.org][ADR 0027]] records this boundary. The dependency decision requires Transient
+0.13.3 or newer, with explicit rejection of older loaded versions and selective
+activation of installed dependencies for isolated sessions. The upstream
+0.13.3 package passes all 80 menu/settings checks on Emacs 30.2. Package metadata,
+Debian dependencies, and pinned compatibility inputs now express the requirement.
+The adapter's 49 checks pass in graphical Emacs 31, including rejection and
+isolated dependency activation; the batch run skips six graphical cases.
+The pinned Emacs 30.2 build and byte-code preflight pass. Dependency preparation
+passes nine checks, and Debian packaging passes six checks with Emacs 30.2.
+These automated results do not add listening acceptance.
 The retirement passes all 80 menu/settings checks in fresh compiled
 graphical sessions on Emacs 30.2 with Transient 0.13.8, and Emacs 31.0.90 with
 installed Transient 0.13.8 and bundled Transient 0.13.3. There are no skips in
@@ -1181,6 +1188,17 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-15: Requiring Transient 0.13.3 makes stock Ubuntu 26.04 insufficient
+  for the Debian package: its repositories offer Emacs 30.2 and elpa-transient
+  0.12.0. The disposable Ubuntu installation gate is blocked until a suitable
+  package source or another distribution target is chosen. The source route
+  can use a package-manager upgrade; do not weaken the tested minimum to pass
+  installation. Separate baseline failures also remain: Debian autoload
+  generation under Emacs 31 emits unexpanded Transient forms, and
+  =emacsvox-setup-tracks-maintained-runtime-inventory= finds the voice-menu
+  source missing from the startup inventory. Neither is introduced by the
+  dependency guard. The Emacs 30 compatibility run passes 300 of 302 cases,
+  with that inventory failure and one native-DOM comparison skipped.
 - 2026-10-15: Listening tasks 1 through 9 are accepted; see the current baseline
   and completed milestone checkboxes. Integration discovery remains open after
   Customize did not open from scratch, Magit and shell. Source inspection shows

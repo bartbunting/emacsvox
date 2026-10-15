@@ -73,6 +73,40 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
+(require 'package)
+
+(defconst emacsvox-transient-minimum-version "0.13.3"
+  "Minimum Transient version supported by Emacsvox menus.")
+
+(defun emacsvox-transient--require-supported ()
+  "Load a supported Transient, activating installed dependencies if needed.
+Never download packages or replace an already loaded Transient."
+  (unless (featurep 'transient)
+    (unless (package-built-in-p
+             'transient (version-to-list emacsvox-transient-minimum-version))
+      ;; Isolated -Q sessions skip package activation and Debian site startup.
+      ;; Activate only Transient and its dependencies, without loading init files.
+      (let ((package-directory-list
+             (append package-directory-list
+                     (when (file-directory-p "/usr/share/emacs/site-lisp/elpa")
+                       '("/usr/share/emacs/site-lisp/elpa")))))
+        (package-load-all-descriptors)
+        (package-activate 'transient))))
+  (require 'transient)
+  (let* ((reported (and (boundp 'transient-version) transient-version))
+         ;; Bundled releases can use v0.13.3-10-gHASH-builtin.
+         (version (and (stringp reported)
+                       (string-match "\\`v?\\([0-9]+\\(?:\\.[0-9]+\\)*\\)" reported)
+                       (match-string 1 reported))))
+    (unless (and version
+                 (version<= emacsvox-transient-minimum-version version))
+      (error (concat "Emacsvox requires Transient %s or newer; loaded %s from %s. "
+                     "Upgrade Transient with M-x package-upgrade, then restart Emacs")
+             emacsvox-transient-minimum-version (or reported "unknown")
+             (or (symbol-file 'transient-setup) "unknown location")))))
+
+(emacsvox-transient--require-supported)
+
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-provider-workflows)

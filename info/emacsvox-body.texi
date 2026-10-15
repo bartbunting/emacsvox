@@ -141,7 +141,9 @@ emacsvox
 
 Replace @code{VERSION} with the version in the downloaded filename. Apt requires
 a packaged Emacs 30.2 or newer; an installed terminal-only @code{emacs-nox} also
-satisfies this dependency. The package never builds GNU Emacs. If your
+satisfies this dependency. Settings menus also require Transient 0.13.3 or
+newer. Apt installs @code{elpa-transient} when a packaged Emacs 31.1 or newer does
+not already supply it. The package never builds GNU Emacs. If your
 distribution cannot provide a supported version@comma{} use the source installation
 route below@comma{} which offers an explicit Emacs 31 source build.
 
@@ -200,6 +202,35 @@ You can check a specific executable in the same way:
 @example
 /path/to/emacs-31/bin/emacs --version
 @end example
+
+@subsection Prepare the settings-menu dependency
+
+Emacsvox requires Transient 0.13.3 or newer. Emacs 31 supplies a supported
+version; Emacs 30.2's bundled 0.7.2.2 needs an upgrade before building Emacsvox.
+Use your selected Emacs and its package manager@comma{} with GNU ELPA enabled:
+
+@enumerate
+@item
+Set @code{package-install-upgrade-built-in} to @code{t} for this installation@comma{} so
+package dependencies can replace older built-in copies.
+@item
+Run @kbd{M-x package-refresh-contents @key{RET}}@comma{} then
+@kbd{M-x package-upgrade @key{RET} transient @key{RET}}. Accept the package's dependencies.
+@item
+Start a fresh Emacs before building or trying the menus. A running session
+can retain the older loaded version after installation.
+@end enumerate
+
+An isolated Emacsvox session activates an installed Transient and its
+required packages when its bundled version is too old. It does not load your
+init file@comma{} activate unrelated packages@comma{} or download dependencies. Install into
+the package directory used by the same Emacs profile; a custom package directory
+must be on that session's load path. Debian installations also discover the
+system ELPA directory without site startup.
+
+If a menu reports an unsupported version@comma{} inspect the version and loaded path
+in its error. Upgrade that installation and restart Emacs; restarting only
+speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
 
 @subsection Obtain the development checkout
 
@@ -8254,9 +8285,10 @@ need an isolated interactive session.
 
 
 The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
-@code{make compat-test} for the core compatibility contracts without installing
-third-party packages. CI builds all maintained modules and runs this gate on
-Emacs 30.2 and 31.1. The full @code{make test} suite additionally requires the
+@code{make compat-test} for the core compatibility contracts. Settings menus require
+Transient 0.13.3 or newer; Emacs 30.2 needs a separate package. CI uses the pinned
+Transient@comma{} cond-let@comma{} and compat sources for that build and Emacs 31.1's bundled
+Transient for the newer build. Both compile all maintained modules. The full @code{make test} suite additionally requires the
 optional integration packages@comma{} including @code{lua-mode} on Emacs 30.
 
 The separate core speech CI job runs @code{make core-test}@comma{} @code{make trace-test}@comma{} and
@@ -8269,8 +8301,8 @@ isolated compiled Aural check.  Optional integration suites remain outside
 this job.
 
 The separate integration CI job runs Agent Shell@comma{} Notmuch@comma{} and EAT tests on
-both versions with a private home directory and six reviewed dependency
-snapshots.  @code{make test-deps} verifies the archive hashes in
+both versions with a private home directory and eight reviewed dependency
+snapshots@comma{} including Transient 0.13.3 and cond-let 1.0.0.  @code{make test-deps} verifies the archive hashes in
 @code{test/integration-dependencies.json} and stages sources and autoloads under
 ignored @code{.test-deps/}; it never changes personal packages.  @code{make integration-test}
 verifies that prepared tree before loading it and runs the batch cases.

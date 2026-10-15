@@ -24,6 +24,8 @@ TTS_PROGRAM=/bin/cat emacsvox -- --batch --eval '
 (progn
   (load (expand-file-name "lisp/emacsvox-loaddefs.el" emacsvox-directory))
   (require (quote eww)) (require (quote emacsvox-eww))
+  (require (quote emacsvox-transient))
+  (emacsvox-transient--require-supported)
   (unless (and (equal emacsvox-directory "/usr/share/emacsvox/")
                (file-readable-p (expand-file-name "emacsvox.info" emacsvox-info-directory)))
     (error "Installed runtime paths failed"))

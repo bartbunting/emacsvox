@@ -4,8 +4,8 @@
 
 * Status
 
-Accepted on 2026-10-15. The Home menu entry is retired. The Transient
-compatibility decision described below remains open.
+Accepted on 2026-10-15. The Home menu entry is retired. The dependency
+policy requires Transient 0.13.3 or newer.
 
 * Decision
 
@@ -45,10 +45,24 @@ fails existing menu workflows before this retirement: suspended editor actions
 lose their menu context, and navigation/search assumptions differ. An isolated
 Emacs 30.2 build using Transient 0.13.8 runs the replacement workflows.
 
-Choose between an explicit newer Transient requirement and compatibility work
-for the old bundled package. Retirement does not resolve this existing gap
-or change dependency requirements. No dependency or personal package changes
-are authorised by this record alone.
+Require Transient 0.13.3 or newer instead of adapting the menu workflows to
+0.7.2.2. The upstream 0.13.3 package passes all 80 menu/settings checks on
+Emacs 30.2; Emacs 31's bundled 0.13.3 also passes. This is the supported floor,
+not a claim that every intermediate older release has been tested.
+
+Declare the requirement in Lisp package metadata. Reject an older loaded
+Transient before installing the speech adapter, naming its version and path
+and asking for an upgrade and fresh Emacs. Never unload a live package to
+replace it. In an isolated session with an older bundled Transient, activate
+an already installed package and its dependencies without loading personal
+init files or downloading anything. Include Debian's system ELPA directory
+when site startup was skipped. Respect disabled packages.
+
+The Debian package requires elpa-transient 0.13.3 or newer, or a packaged
+Emacs 31.1 or newer that supplies it. This refines ADR 0013 without changing
+installation ownership. The Emacs 30 compatibility job uses pinned Transient
+sources and dependencies; Emacs 31 continues to test its bundled copy. This
+refines ADR 0012's package-free test setup while retaining its Emacs minimum.
 
 * Verification
 

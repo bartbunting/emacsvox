@@ -250,9 +250,10 @@ need an isolated interactive session.
 :END:
 
 The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
-=make compat-test= for the core compatibility contracts without installing
-third-party packages. CI builds all maintained modules and runs this gate on
-Emacs 30.2 and 31.1. The full =make test= suite additionally requires the
+=make compat-test= for the core compatibility contracts. Settings menus require
+Transient 0.13.3 or newer; Emacs 30.2 needs a separate package. CI uses the pinned
+Transient, cond-let, and compat sources for that build and Emacs 31.1's bundled
+Transient for the newer build. Both compile all maintained modules. The full =make test= suite additionally requires the
 optional integration packages, including =lua-mode= on Emacs 30.
 
 The separate core speech CI job runs =make core-test=, =make trace-test=, and
@@ -265,8 +266,8 @@ isolated compiled Aural check.  Optional integration suites remain outside
 this job.
 
 The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
-both versions with a private home directory and six reviewed dependency
-snapshots.  =make test-deps= verifies the archive hashes in
+both versions with a private home directory and eight reviewed dependency
+snapshots, including Transient 0.13.3 and cond-let 1.0.0.  =make test-deps= verifies the archive hashes in
 =test/integration-dependencies.json= and stages sources and autoloads under
 ignored =.test-deps/=; it never changes personal packages.  =make integration-test=
 verifies that prepared tree before loading it and runs the batch cases.

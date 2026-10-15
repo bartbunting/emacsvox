@@ -312,6 +312,18 @@ jobs:
           emacs_binary=$(command -v emacs)
           compat_home="$RUNNER_TEMP/emacsvox-compat-home"
           mkdir -p "$compat_home"
+          if [ "${{ matrix.emacs }}" = 30.2 ]; then
+            env HOME="$compat_home" make test-deps EMACS="$emacs_binary" \
+              TEST_DEPS_DIR="$compat_home/dependencies"
+            export EMACSLOADPATH="$compat_home/dependencies/transient:$compat_home/dependencies/cond-let:$compat_home/dependencies/compat:"
+            # The Emacsvox build disables source shorthand processing. Compile
+            # Transient normally first, preserving the verified source tree.
+            mkdir -p "$compat_home/compiled"
+            cp "$compat_home/dependencies/transient/transient.el" "$compat_home/compiled/"
+            env HOME="$compat_home" "$emacs_binary" -Q --batch \
+              -f batch-byte-compile "$compat_home/compiled/transient.el"
+            export EMACSLOADPATH="$compat_home/compiled:$EMACSLOADPATH"
+          fi
           env HOME="$compat_home" make -j2 bytecode EMACS="$emacs_binary"
           env HOME="$compat_home" make compat-test EMACS="$emacs_binary"
           env HOME="$compat_home" make bytecode-check EMACS="$emacs_binary"
