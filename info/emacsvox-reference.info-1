@@ -2053,7 +2053,7 @@ for full control.
      a		emacsvox-aural-change-feedback-apply
      c		emacsvox-aural-change-feedback-change
      e		emacsvox-aural-change-feedback-advanced
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      l		emacsvox-aural-change-feedback-lifetime
      m		emacsvox-aural-change-feedback-match
      q		emacsvox-aural-change-feedback-back
@@ -2254,7 +2254,7 @@ deterministic repairs are explicit commands from the spoken report.
      Key             Binding
      -----------------------------------------------------
      ?		emacsvox-aural-doctor-help
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      r		emacsvox-aural-doctor-repair-current
      y		emacsvox-aural-doctor-copy-report
 
@@ -2524,7 +2524,7 @@ predictable for speech access.
      d		emacsvox-aural-editor-delete-rule
      e		emacsvox-aural-editor-edit-rule
      g		emacsvox-aural-editor-refresh
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      m		emacsvox-aural-editor-edit-metadata
      n		emacsvox-aural-editor-next-rule
      p		emacsvox-aural-editor-previous-rule
@@ -2774,7 +2774,7 @@ aural presentation fragments.
      ?		emacsvox-aural-feature-fragment-previews-help
      P		emacsvox-aural-feature-fragment-previews-play
      c		emacsvox-aural-feature-fragment-previews-audition-cues
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      i		emacsvox-aural-feature-fragment-previews-toggle-isolated
      o		emacsvox-aural-list-feature-fragments
 
@@ -2888,7 +2888,7 @@ aural presentation fragments.
      c		emacsvox-aural-copy-feature-fragment
      d		emacsvox-aural-delete-feature-fragment
      e		emacsvox-aural-feature-fragments-edit
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      t		emacsvox-aural-feature-fragments-toggle
      v		emacsvox-aural-show-feature-fragment-validation
      M-<down>	emacsvox-aural-feature-fragments-move-down
@@ -3071,7 +3071,7 @@ planner with private rule layers and captured source context.
      R		emacsvox-aural-feedback-details-change-sound
      V		emacsvox-aural-feedback-details-preview
      g		emacsvox-aural-feedback-details-update-draft-status
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      n		emacsvox-aural-feedback-details-next-heading
      o		emacsvox-aural-feedback-details-switch-view
      p		emacsvox-aural-feedback-details-previous-heading
@@ -3672,7 +3672,7 @@ cascade.
      d		emacsvox-aural-overrides-delete
      e		emacsvox-aural-overrides-edit
      f		emacsvox-aural-overrides-filter
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      t		emacsvox-aural-overrides-toggle
      x		emacsvox-aural-overrides-describe
 
@@ -3876,7 +3876,7 @@ options while capturing sound, voice, and spatial choices.
      a		emacsvox-aural-profiles-activate
      c		emacsvox-aural-profiles-copy
      d		emacsvox-aural-profiles-delete
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      r		emacsvox-aural-profiles-rename
      v		emacsvox-aural-profiles-describe
      w		emacsvox-aural-profiles-update-from-current
@@ -4084,7 +4084,7 @@ aural presentations.
      R		emacsvox-aural-recent-feedback-remap-earcon
      c		emacsvox-aural-recent-feedback-audition-cues
      e		emacsvox-aural-recent-feedback-explain
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      i		emacsvox-aural-toggle-interface-history-recording
      r		emacsvox-aural-recent-feedback-remap-voice
 
@@ -4315,7 +4315,7 @@ accessible browser for the registered aural vocabulary.
      -----------------------------------------------------
      RET		emacsvox-describe-aural-semantic
      ?		emacsvox-aural-semantics-help
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
 
 2.48.1.5 emacsvox-aural-semantics-next
 ......................................
@@ -4454,7 +4454,7 @@ discovered-pack manifests without editing raw Lisp.
      RET		emacsvox-aural-sound-pack-cues-describe
      ?		emacsvox-aural-sound-pack-cues-help
      P		emacsvox-aural-sound-pack-cues-audition
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      o		emacsvox-aural-sound-packs-open-directory
      s		emacsvox-aural-list-sound-packs
      v		emacsvox-aural-sound-pack-cues-show-validation
@@ -4564,7 +4564,7 @@ discovered-pack manifests without editing raw Lisp.
      P		emacsvox-aural-sound-packs-audition
      a		emacsvox-aural-sound-packs-activate
      e		emacsvox-aural-sound-packs-edit-manifest
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      o		emacsvox-aural-sound-packs-open-directory
      v		emacsvox-aural-sound-packs-show-validation
 
@@ -5600,7 +5600,7 @@ defaults.
      T		emacsvox-aural-voice-editor-text
      d		emacsvox-aural-voice-editor-default
      g		revert-buffer
-     h		emacsvox-aural-home
+     h		emacsvox-aural-menu
      i		emacsvox-aural-voice-editor-inherit
      m		emacsvox-aural-voice-menu
      n		emacsvox-aural-voice-editor-next
@@ -5919,7 +5919,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      c		emacsvox-aural-voice-palette-previews-copy
      d		emacsvox-aural-voice-palette-previews-delete
      e		emacsvox-aural-voice-palette-previews-tune
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      o		emacsvox-aural-voice-palette-previews-open-manager
      r		emacsvox-aural-voice-palette-previews-rename
      s		emacsvox-aural-voice-palette-previews-stop
@@ -6187,7 +6187,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      d		emacsvox-aural-voice-palettes-delete
      e		emacsvox-aural-voice-palettes-edit-entry
      f		emacsvox-aural-voice-palettes-follow-baseline
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      i		emacsvox-aural-voice-palettes-import
      r		emacsvox-aural-voice-palettes-rename
      u		emacsvox-aural-voice-palettes-where-used
@@ -6475,7 +6475,7 @@ palettes or routing profiles.
      d		emacsvox-aural-voice-workbench-library-download
      e		emacsvox-aural-voice-workbench-engine-view
      f		emacsvox-aural-voice-workbench-toggle-fallback-engine
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      i		emacsvox-aural-voice-workbench-library-import
      l		emacsvox-aural-voice-workbench-logical-view
      q		emacsvox-aural-voice-workbench-quit

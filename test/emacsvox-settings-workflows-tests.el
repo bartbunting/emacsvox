@@ -11,6 +11,38 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(ert-deftest emacsvox-settings-editors-open-settings-with-source ()
+  "Editor h opens Transient with the captured item, never the old Home buffer."
+  (emacsvox-test--with-settings
+    (dolist (path '("D d" "r h" "r o" "r s" "p p" "v p" "o p"))
+      (execute-kbd-macro (kbd path))
+      (should (emacsvox-aural-ui-interface-buffer-p))
+      (let ((editor (current-buffer)))
+        (should (eq (key-binding (kbd "h")) 'emacsvox-aural-menu))
+        (cl-letf (((symbol-function 'emacsvox-aural)
+                   (lambda () (interactive) (error "Unexpected Home entry"))))
+          (execute-kbd-macro (kbd "h")))
+        (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+        (let ((context (emacsvox-aural-menu--context)))
+          (should (eq (plist-get context :source) source))
+          (should (= (plist-get context :position) 3)))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (current-buffer) editor))
+        (execute-kbd-macro (kbd "q"))
+        (should
+         (eq (oref transient--prefix command)
+             (cdr (assoc (substring path 0 1)
+                         '(("D" . emacsvox-settings-diagnostics)
+                           ("r" . emacsvox-settings-presentation)
+                           ("p" . emacsvox-settings-setups)
+                           ("v" . emacsvox-aural-menu-voices)
+                           ("o" . emacsvox-aural-menu-sounds))))))
+        ;; Re-enter from the original source for the next independent route.
+        (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+        (switch-to-buffer source)
+        (execute-kbd-macro (kbd "<f8>"))))
+    (should-not (file-exists-p custom-file))))
+
 (ert-deftest emacsvox-settings-diagnostics-inspect-and-return ()
   "Reports and Customize return directly, preserving scope and selected entry."
   (emacsvox-test--with-settings
@@ -232,6 +264,12 @@
         (should (eq (emacsvox-aural-voice-editor--get :voice) 'bolden))
         (emacsvox-aural-voice-editor--put :automatic-sample nil)
         (emacsvox-aural-voice-editor--set 'average-pitch 7)
+        (let ((editor (current-buffer)))
+          (execute-kbd-macro (kbd "h"))
+          (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+          (should (eq (plist-get (emacsvox-aural-menu--context) :source) source))
+          (execute-kbd-macro (kbd "q"))
+          (should (eq (current-buffer) editor)))
         (let ((draft (emacsvox-aural-voice-editor--draft)))
           (cl-letf (((symbol-function 'completing-read)
                      (lambda (&rest _) "Continue editing")))

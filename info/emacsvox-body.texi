@@ -1931,7 +1931,7 @@ In details@comma{} @kbd{@key{TAB}} moves to the next action or section;
 @kbd{@key{RET}} activates an action or toggles a section.
 Arrow keys read visible fields and values.
 @kbd{q} returns to the selected engine row and
-@kbd{h} opens Aural Home@comma{} and @kbd{?} opens help.
+@kbd{h} opens Emacsvox settings@comma{} and @kbd{?} opens help.
 Background refresh preserves selection and expanded sections.
 
 @item
@@ -2990,15 +2990,14 @@ no settings.
 
 @enumerate
 @item
-Press @kbd{C-e H h}@comma{} then @kbd{/}@comma{} and choose @emph{Browse voices} from Aural Home's
-searchable actions.
+Press @kbd{C-e H v b} to browse voices and engines.
 @item
 Select an available engine and press @kbd{v} to list its voices. @kbd{@key{RET}} on an
 Omnivox engine opens its status@comma{} downloads@comma{} and settings instead.
 @item
 Move to a voice and press @kbd{P} to hear a sample. @kbd{S} stops it.
 @item
-Press @kbd{h} to return to Home. From Home@comma{} @kbd{C-c C-o} returns to the item
+Press @kbd{h} to open the settings menu@comma{} then @kbd{b} to return to the item
 where you started.
 @end enumerate
 
@@ -3010,8 +3009,9 @@ engine. If no speech is available@comma{} start with
 
 The experimental Emacsvox menu@comma{} opened with @kbd{C-e H}@comma{} groups everyday settings
 by task. Aural Home remains available with @kbd{C-e H h} or
-@kbd{M-x emacsvox-aural}. Editors that already return through @kbd{h} continue to
-use that Home.
+@kbd{M-x emacsvox-aural} for comparison. Editor and manager @kbd{h} keys now open
+the Transient settings menu with the original source item. Closing that menu
+returns to the editor; it does not save or discard its draft.
 
 Use @kbd{C-e S} for direct access to the current buffer's focused Emacsvox
 settings. When no focused integration menu is available@comma{} it opens general
@@ -3177,7 +3177,7 @@ Stop the preview and its remaining samples.
 @item ?
 Display and speak help for the current Aural interface.
 @item h
-Return to Aural Home from a manager or editor.
+Open the settings menu from a manager or editor that provides this key.
 @item q
 Go back or leave; an editor may first offer to retain or discard changes.
 @end table
@@ -3205,7 +3205,7 @@ setting@comma{} sound pack@comma{} and cue remapping rules. The voice editor use
 navigation voice for these announcements; auditions still play the working
 voice.
 
-Returning through Home or Help preserves the selected row and unfinished
+Opening settings or Help preserves the selected row and unfinished
 edits. Buffer rule editors retain separate drafts for each source buffer;
 reopening a modified editor resumes its draft. Reopening the same voice in
 the voice editor likewise preserves its working settings. If a prepared remap's
@@ -3655,7 +3655,7 @@ voice and the facts identifying a heading. The explanation should tell
 you whether it describes recorded output or a simulation.
 
 @item
-Open @kbd{C-e H h c}. Press @kbd{c}@comma{} select @emph{Content voice}@comma{} and choose
+Open @kbd{C-e H f c}. Press @kbd{c}@comma{} select @emph{Content voice}@comma{} and choose
 @code{annotate} with @kbd{@key{RET}}. If @code{annotate} is already the original@comma{} use
 @code{bolden} instead. @kbd{O} plays the original and @kbd{P} previews your choice.
 At this point the change exists only in the draft.
@@ -3668,8 +3668,8 @@ is killed}. This means every matching heading in this buffer@comma{} not just
 the heading you started from.
 
 @item
-Review the summary@comma{} then press @kbd{a}. Return through Home with @kbd{h}@comma{}
-then @kbd{C-c C-o}. Move between the two headings using the same navigation
+Review the summary@comma{} then press @kbd{a}. Open settings with @kbd{h}@comma{}
+then press @kbd{b} to return to the captured item. Move between the two headings using the same navigation
 action. Both matching headings should use your chosen voice; the ordinary
 paragraphs should keep their previous presentation.
 
@@ -4007,7 +4007,7 @@ palette before starting so you can return to it.
 
 @enumerate
 @item
-Open @kbd{C-e H h V} for @emph{Voice palettes}. Press @kbd{N}@comma{} enter @code{reading-demo}@comma{}
+Open @kbd{C-e H v p} for @emph{Voice palettes}. Press @kbd{N}@comma{} enter @code{reading-demo}@comma{}
 give it a purpose such as ``My reading experiments''@comma{} and choose
 @code{acss-default} as its parent. Creation saves the new palette@comma{} but does not
 activate it. Its standard voices are inherited.
@@ -5054,7 +5054,7 @@ changing the entire pack. The next walkthrough demonstrates this.
 
 @enumerate
 @item
-Repeat the action that produces the unwanted cue. Open @kbd{C-e H h H}@comma{} select
+Repeat the action that produces the unwanted cue. Open @kbd{C-e H f h}@comma{} select
 that recorded feedback@comma{} and press @kbd{@key{RET}} to explain it. Find the cue name
 and whether it occurs before or after content.
 @item
@@ -5088,7 +5088,7 @@ available actions depend on what your integration actually produced.
 
 @enumerate
 @item
-Navigate onto a blank line@comma{} then open @kbd{C-e H h H}. Select that feedback
+Navigate onto a blank line@comma{} then open @kbd{C-e H f h}. Select that feedback
 record and press @kbd{C}. Select its part if the record has several.
 @item
 Press @kbd{c} and choose @emph{Change a tone}. Select the tone@comma{} choose @emph{Pitch and
@@ -5505,7 +5505,7 @@ Use unused names and note the profile selected before starting.
 
 @enumerate
 @item
-Open @kbd{C-e H h P}. To keep a restore point for the current selected options
+Open @kbd{C-e H p p}. To keep a restore point for the current selected options
 and resources@comma{} press @kbd{N} and save @code{before-demo} with a short purpose.
 This captures those selections and makes the new profile selected.
 It does not back up rules@comma{} resource definitions@comma{} or engine settings.

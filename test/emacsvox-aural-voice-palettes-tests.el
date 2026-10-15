@@ -77,7 +77,7 @@
              ("P" . emacsvox-aural-voice-palettes-audition)
              ("x" . emacsvox-aural-voice-palettes-explain)
              ("v" . emacsvox-aural-voice-palettes-describe)
-             ("h" . emacsvox-aural)
+             ("h" . emacsvox-aural-menu)
              ("?" . emacsvox-aural-voice-palettes-help)))
         (should
          (eq

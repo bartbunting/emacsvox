@@ -516,7 +516,7 @@ OUTPUT to the generic process sentinel EVENT."
   (when (buffer-live-p output)
     (with-current-buffer output
       (emacsvox-aural-interface-mode)
-      (local-set-key (kbd "h") #'emacsvox-aural)
+      (local-set-key (kbd "h") #'emacsvox-aural-menu)
       (goto-char (point-min)))
     (emacsvox-aural-ui-pop-to-buffer output)))
 
@@ -1304,7 +1304,7 @@ OUTPUT to the generic process sentinel EVENT."
                    ("<backtab>" . emacsvox-omnivox-components--details-previous-action)
                    ("?" . emacsvox-omnivox-components-help)
                    ("q" . emacsvox-omnivox-components--details-back)
-                   ("h" . emacsvox-aural)))
+                   ("h" . emacsvox-aural-menu)))
   (define-key emacsvox-omnivox-engine-details-mode-map (kbd (car binding)) (cdr binding)))
 
 (defun emacsvox-omnivox-components-help ()
@@ -1335,7 +1335,7 @@ OUTPUT to the generic process sentinel EVENT."
       "left/right column    . speak titled cell\n"
       "RET activate action or expand/collapse section\n"
       "TAB next action or section; Shift-TAB previous\n"
-      "g refresh            h aural home\n"
+      "g refresh            h settings menu\n"
       "? help               q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1364,7 +1364,7 @@ OUTPUT to the generic process sentinel EVENT."
        ("i" . emacsvox-omnivox-components-install)
        ("u" . emacsvox-omnivox-components-uninstall)
        ("t" . emacsvox-omnivox-components-test)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-omnivox-components-help)))
   (define-key emacsvox-omnivox-components-mode-map
               (kbd (car binding)) (cdr binding)))

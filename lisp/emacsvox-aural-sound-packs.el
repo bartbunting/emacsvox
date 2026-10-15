@@ -813,7 +813,7 @@ PATH protects completion from invalid inheritance cycles."
       "a activate           P audition representative cue\n"
       "v validate           e edit discovered manifest\n"
       "o open directory     g rescan and refresh\n"
-      "h aural home         ? help\n"
+      "h settings menu         ? help\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -854,7 +854,7 @@ PATH protects completion from invalid inheritance cycles."
        ("v" . emacsvox-aural-sound-packs-show-validation)
        ("e" . emacsvox-aural-sound-packs-edit-manifest)
        ("o" . emacsvox-aural-sound-packs-open-directory)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-sound-packs-help)))
   (define-key
    emacsvox-aural-sound-packs-mode-map
@@ -882,7 +882,7 @@ PATH protects completion from invalid inheritance cycles."
       "RET cue details      P audition; S stop\n"
       "v validate pack      o open pack directory\n"
       "g rescan pack        s sound-pack manager\n"
-      "h aural home         ? help\n"
+      "h settings menu         ? help\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -917,7 +917,7 @@ PATH protects completion from invalid inheritance cycles."
        ("v" . emacsvox-aural-sound-pack-cues-show-validation)
        ("o" . emacsvox-aural-sound-packs-open-directory)
        ("s" . emacsvox-aural-list-sound-packs)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-sound-pack-cues-help)))
   (define-key
    emacsvox-aural-sound-pack-cues-mode-map

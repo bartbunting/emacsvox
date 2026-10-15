@@ -1033,9 +1033,43 @@ Direct discovery checkpoint:
   cases with bundled Transient, without skips. Incremental compilation,
   byte-code preflight, generated manuals/references, and the documentation gate
   pass. Listening acceptance remains pending.
-- The retained Home menu, its own search, and editor h shortcuts remain available
-  for comparison. Removing those entry routes follows listening acceptance;
+- The retained Home menu and its own search remain available for comparison.
+  Removing that entry follows listening acceptance;
   this checkpoint does not claim that Home implementation code was deleted.
+
+Editor entry checkpoint:
+- Existing manager/editor h bindings, including Aural Help and installer results,
+  now open Transient settings with the captured source. Closing that menu returns
+  to the editor without saving, discarding, or replacing its draft.
+- Root =C-e H h= and =M-x emacsvox-aural= retain old Home for listening comparison.
+  Retirement of that comparison entry remains the final step after acceptance.
+- The broader Aural suite exposed a pre-existing 34-rule fixture missing four
+  indentation insertion-timing rules. Its explicit expected list now includes
+  those existing rules; presentation policy itself is unchanged.
+- Source verification: 656 Aural/editor/component checks pass; five graphical
+  cases are skipped in batch. Fresh compiled graphical verification passes all
+  111 settings, voice-editor, and component-layout cases, including those five,
+  with installed Transient. All 55 settings cases also pass with bundled
+  Transient. Incremental compilation, byte-code preflight, generated references
+  and manuals, and the documentation gate pass.
+
+Retirement acceptance still needed:
+1. =C-e H D=: inspect Doctor, spatial capabilities, and available diagnostic
+   output; q returns to the selected item. Opening does not repair or restart.
+2. =C-e H f t=: tune an existing named voice, keep a draft on return, then
+   resume it with =C-e H p d=. Confirm the same voice, sample, and edits.
+3. =C-e H a=: search a partial name such as doctor or packs, select the result,
+   then activate its focused control. q returns directly through the new menus.
+4. In a manager/editor, h opens settings for the captured source; q returns to
+   the editor. =C-e H b= returns to the source position and speaks its line.
+5. =C-e H r=: review combined rules and vocabulary; toggle training on and off.
+   Confirm explanations are useful and the session scope is clear.
+
+The current normal Emacsvox build is ready for these listening tasks. Actual
+listening acceptance and final Emacs 30.2 retirement qualification remain open.
+The new routes do not require removing or converting the dedicated editors.
+Broader inventory expansion and search policy outside these two menu searches
+remain separate workstreams.
 
 ** Next proposed slices
 

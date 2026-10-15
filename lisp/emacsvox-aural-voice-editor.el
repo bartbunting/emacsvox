@@ -1189,7 +1189,7 @@ SOURCE optionally supplies the return buffer for the destination editor."
                     ("m" . emacsvox-aural-voice-menu)
                     ("i" . emacsvox-aural-voice-editor--inherit)
                     ("w" . emacsvox-aural-voice-editor-save) ("C-c C-c" . emacsvox-aural-voice-editor-save)
-                    ("h" . emacsvox-aural-home)
+                    ("h" . emacsvox-aural-menu)
                     ("q" . emacsvox-aural-voice-editor-leave) ("?" . describe-mode)))
       (define-key map (kbd (car pair)) (cdr pair))) map))
 (define-derived-mode emacsvox-aural-voice-editor-mode emacsvox-aural-interface-mode "Voice-Editor"

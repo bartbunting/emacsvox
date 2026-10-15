@@ -226,7 +226,7 @@
           (should
            (eq
             (lookup-key emacsvox-aural-doctor-mode-map (kbd "h"))
-            #'emacsvox-aural))
+            #'emacsvox-aural-menu))
           (should
            (eq
             (key-binding (kbd "q"))

@@ -249,7 +249,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET view details     SPC speak semantic\n"
-      "g refresh            h aural home\n"
+      "g refresh            h settings menu\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -277,7 +277,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 (dolist
     (binding
      '(("RET" . emacsvox-describe-aural-semantic)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-semantics-help)))
   (define-key
    emacsvox-aural-semantics-mode-map

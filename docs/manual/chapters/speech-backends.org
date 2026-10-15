@@ -642,7 +642,7 @@ visibly; stop the sessions using that release before retrying. Press
   ~RET~ activates an action or toggles a section.
   Arrow keys read visible fields and values.
   ~q~ returns to the selected engine row and
-  ~h~ opens Aural Home, and ~?~ opens help.
+  ~h~ opens Emacsvox settings, and ~?~ opens help.
   Background refresh preserves selection and expanded sections.
 
 - To remove an /installed/ engine, expand /Engine installation/, activate /Uninstall engine/, and confirm. This

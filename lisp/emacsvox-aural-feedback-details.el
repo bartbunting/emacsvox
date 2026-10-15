@@ -1068,7 +1068,7 @@ the next visible action.  Press o to compare with the original report."
                    ("g" . emacsvox-aural-feedback-details--update-draft-status)
                    ("o" . emacsvox-aural-feedback-details--switch-view)
                    ("V" . emacsvox-aural-feedback-details-preview)
-                   ("h" . emacsvox-aural)
+                   ("h" . emacsvox-aural-menu)
                    ("q" . emacsvox-aural-ui-help-quit)))
   (define-key emacsvox-aural-feedback-details-mode-map (kbd (car binding)) (cdr binding)))
 

@@ -497,7 +497,7 @@ the value across sessions."
       "R replace, suppress, or restore one exact earcon\n"
       "i include/exclude Aural UI feedback\n"
       "L set retained history limit\n"
-      "g refresh            h aural home\n"
+      "g refresh            h settings menu\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -540,7 +540,7 @@ the value across sessions."
        ("R" . emacsvox-aural-recent-feedback-remap-earcon)
        ("i" . emacsvox-aural-toggle-interface-history-recording)
        ("L" . emacsvox-aural-set-history-limit)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-recent-feedback-help)))
   (define-key
    emacsvox-aural-recent-feedback-mode-map

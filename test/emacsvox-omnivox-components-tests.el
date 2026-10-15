@@ -669,7 +669,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
           (with-current-buffer buffer
             (should emacsvox-aural-ui-interface-buffer)
             (should (eq (key-binding (kbd "q")) #'emacsvox-aural-quit))
-            (should (eq (key-binding (kbd "h")) #'emacsvox-aural))))
+            (should (eq (key-binding (kbd "h")) #'emacsvox-aural-menu))))
       (kill-buffer buffer))))
 
 (ert-deftest emacsvox-omnivox-components-manager-is-spoken-and-actionable ()
@@ -682,7 +682,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
            ("i" . emacsvox-omnivox-components-install)
            ("u" . emacsvox-omnivox-components-uninstall)
            ("t" . emacsvox-omnivox-components-test)
-           ("h" . emacsvox-aural)
+           ("h" . emacsvox-aural-menu)
            ("q" . emacsvox-aural-quit)))
       (should (eq (key-binding (kbd (car binding))) (cdr binding))))))
 

@@ -5887,7 +5887,7 @@ running.
      -----------------------------------------------------
      RET		emacsvox-omnivox-components-activate
      ?		emacsvox-omnivox-components-help
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      i		emacsvox-omnivox-components-install
      t		emacsvox-omnivox-components-test
      u		emacsvox-omnivox-components-uninstall
@@ -5939,7 +5939,7 @@ running.
      TAB		emacsvox-omnivox-components-details-next-action
      RET		emacsvox-omnivox-components-details-activate
      ?		emacsvox-omnivox-components-help
-     h		emacsvox-aural
+     h		emacsvox-aural-menu
      q		emacsvox-omnivox-components-details-back
      <backtab>	emacsvox-omnivox-components-details-previous-action
 

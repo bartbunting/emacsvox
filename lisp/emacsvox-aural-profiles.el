@@ -538,7 +538,7 @@ MUTATION."
       "v view and validate  N save current as new\n"
       "c copy               w write current into profile\n"
       "r rename             d delete\n"
-      "g refresh            h aural home\n"
+      "g refresh            h settings menu\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -589,7 +589,7 @@ MUTATION."
        ("u" . nil)
        ("r" . emacsvox-aural-profiles-rename)
        ("d" . emacsvox-aural-profiles-delete)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-profiles-help)))
   (define-key
    emacsvox-aural-profiles-mode-map

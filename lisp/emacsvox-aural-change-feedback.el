@@ -929,7 +929,7 @@
                           "Applies to expands the conditions. All included conditions must match. RET includes or excludes a condition.\n"
                           "Excluded means ignored, not forbidden: excluding unread matches both read and unread items.\n"
                           "Choose How long, then Save or w. q goes back one level; at the top it hides and preserves the draft. e opens Advanced.\n"
-                          "To retune a named voice for all uses in its palette, use its Edit named voice link in Feedback Details, or Home's T shortcut.\n")
+                          "To retune a named voice for all uses in its palette, use its Edit named voice link in Feedback Details, or C-e H f t.\n")
                 (concat (emacsvox-aural-change-feedback--summary)
                       "\n\nThe example describes the feedback being reviewed. Its facts stay unchanged; What should match chooses which facts limit your rule.\n"
                       "\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
@@ -946,7 +946,7 @@
                       "Preview uses the selected example with current rules and its captured buffer context.\n"
                       "a or C-c C-c applies only after all choices are made; e opens the full Advanced rule editor.\n"
                       "RET opens choices or details. n/p and arrows navigate. Space reads the row.\n"
-                      "C-c C-a lists applicable actions. h opens Home. q collapses one level and returns to its parent; at the top it hides and preserves the draft.\n"))))
+                      "C-c C-a lists applicable actions. h opens settings. q collapses one level and returns to its parent; at the top it hides and preserves the draft.\n"))))
     (when emacsvox-aural-change-feedback--review-buffer
       (setq text (concat text
                          (if emacsvox-aural-change-feedback--simulation
@@ -987,7 +987,7 @@
                    ("w" . emacsvox-aural-change-feedback-apply)
                    ("C-c C-c" . emacsvox-aural-change-feedback-apply)
                    ("e" . emacsvox-aural-change-feedback-advanced)
-                   ("h" . emacsvox-aural)
+                   ("h" . emacsvox-aural-menu)
                    ("?" . emacsvox-aural-change-feedback-help)))
   (define-key emacsvox-aural-change-feedback-mode-map (kbd (car binding)) (cdr binding)))
 

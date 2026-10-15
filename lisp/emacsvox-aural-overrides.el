@@ -782,7 +782,7 @@
       "x explain            P preview complete current result\n"
       "t enable/disable     d remove and restore weaker behavior\n"
       "f filter             a clear filters\n"
-      "g refresh            h aural home\n"
+      "g refresh            h settings menu\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -832,7 +832,7 @@
        ("d" . emacsvox-aural-overrides-delete)
        ("f" . emacsvox-aural-overrides-filter)
        ("a" . emacsvox-aural-overrides-clear-filter)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-overrides-help)))
   (define-key
    emacsvox-aural-overrides-mode-map

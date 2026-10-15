@@ -55,6 +55,7 @@
 (declare-function emacsvox-aural-home-refresh
                   "emacsvox-aural-home" (&optional id))
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
+(autoload 'emacsvox-aural-menu "emacsvox-aural-menu" nil t)
 (declare-function tts-speak "tts-speak" (text))
 (declare-function emacsvox-aural-preview-stop "emacsvox-aural-preview" ())
 (declare-function emacsvox-aural-preview-message "emacsvox-aural-preview"
@@ -188,7 +189,7 @@ A non-nil result means the continuation announced the destination.")
 (defvar emacsvox-aural-ui-help-return-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'emacsvox-aural-ui-help-quit)
-    (define-key map (kbd "h") #'emacsvox-aural)
+    (define-key map (kbd "h") #'emacsvox-aural-menu)
     (define-key map (kbd "S") #'emacsvox-aural-ui-stop-preview)
     (define-key map (kbd "C-c C-a") #'emacsvox-aural-ui-help-actions)
     (define-key map (kbd "i") #'emacsvox-aural-ui-open-manual)

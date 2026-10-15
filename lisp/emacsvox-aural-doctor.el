@@ -662,7 +662,7 @@
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "SPC speak row        r run the offered safe repair\n"
-      "g rerun all checks   h aural home\n"
+      "g rerun all checks   h settings menu\n"
       "y copy report        q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -691,7 +691,7 @@
     (binding
      '(("y" . emacsvox-aural-doctor-copy-report)
        ("r" . emacsvox-aural-doctor-repair-current)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-doctor-help)))
   (define-key
    emacsvox-aural-doctor-mode-map

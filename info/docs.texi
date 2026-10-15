@@ -2013,7 +2013,7 @@ V		emacsvox-aural-change-feedback-preview-whole
 a		emacsvox-aural-change-feedback-apply
 c		emacsvox-aural-change-feedback-change
 e		emacsvox-aural-change-feedback-advanced
-h		emacsvox-aural
+h		emacsvox-aural-menu
 l		emacsvox-aural-change-feedback-lifetime
 m		emacsvox-aural-change-feedback-match
 q		emacsvox-aural-change-feedback--back
@@ -2233,7 +2233,7 @@ step during initialization.
 Key             Binding
 -------------------------------------------------------------------------------
 ?		emacsvox-aural-doctor-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 r		emacsvox-aural-doctor-repair-current
 y		emacsvox-aural-doctor-copy-report
 
@@ -2561,7 +2561,7 @@ c		emacsvox-aural-editor-copy-rule
 d		emacsvox-aural-editor-delete-rule
 e		emacsvox-aural-editor-edit-rule
 g		emacsvox-aural-editor-refresh
-h		emacsvox-aural
+h		emacsvox-aural-menu
 m		emacsvox-aural-editor-edit-metadata
 n		emacsvox-aural-editor-next-rule
 p		emacsvox-aural-editor-previous-rule
@@ -2849,7 +2849,7 @@ RET		emacsvox-aural-feature-fragment-previews-describe
 ?		emacsvox-aural-feature-fragment-previews-help
 P		emacsvox-aural-feature-fragment-previews-play
 c		emacsvox-aural-feature-fragment-previews-audition-cues
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-feature-fragment-previews-toggle-isolated
 o		emacsvox-aural-list-feature-fragments
 
@@ -2989,7 +2989,7 @@ a		emacsvox-aural-feature-fragments-toggle-view
 c		emacsvox-aural-copy-feature-fragment
 d		emacsvox-aural-delete-feature-fragment
 e		emacsvox-aural-feature-fragments-edit
-h		emacsvox-aural
+h		emacsvox-aural-menu
 t		emacsvox-aural-feature-fragments-toggle
 v		emacsvox-aural-show-feature-fragment-validation
 M-<down>	emacsvox-aural-feature-fragments-move-down
@@ -3201,7 +3201,7 @@ P		emacsvox-aural-feedback-details-play
 R		emacsvox-aural-feedback-details--change-sound
 V		emacsvox-aural-feedback-details-preview
 g		emacsvox-aural-feedback-details--update-draft-status
-h		emacsvox-aural
+h		emacsvox-aural-menu
 n		emacsvox-aural-feedback-details-next-heading
 o		emacsvox-aural-feedback-details--switch-view
 p		emacsvox-aural-feedback-details-previous-heading
@@ -3911,7 +3911,7 @@ a		emacsvox-aural-overrides-clear-filter
 d		emacsvox-aural-overrides-delete
 e		emacsvox-aural-overrides-edit
 f		emacsvox-aural-overrides-filter
-h		emacsvox-aural
+h		emacsvox-aural-menu
 t		emacsvox-aural-overrides-toggle
 x		emacsvox-aural-overrides-describe
 
@@ -4140,7 +4140,7 @@ N		emacsvox-aural-profiles-create
 a		emacsvox-aural-profiles-activate
 c		emacsvox-aural-profiles-copy
 d		emacsvox-aural-profiles-delete
-h		emacsvox-aural
+h		emacsvox-aural-menu
 r		emacsvox-aural-profiles-rename
 v		emacsvox-aural-profiles-describe
 w		emacsvox-aural-profiles-update-from-current
@@ -4355,7 +4355,7 @@ P		emacsvox-aural-recent-feedback-replay
 R		emacsvox-aural-recent-feedback-remap-earcon
 c		emacsvox-aural-recent-feedback-audition-cues
 e		emacsvox-aural-recent-feedback-explain
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-toggle-interface-history-recording
 r		emacsvox-aural-recent-feedback-remap-voice
 
@@ -4609,7 +4609,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-describe-aural-semantic
 ?		emacsvox-aural-semantics-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 
 @end format
 @end deffn
@@ -4775,7 +4775,7 @@ Key             Binding
 RET		emacsvox-aural-sound-pack-cues-describe
 ?		emacsvox-aural-sound-pack-cues-help
 P		emacsvox-aural-sound-pack-cues-audition
-h		emacsvox-aural
+h		emacsvox-aural-menu
 o		emacsvox-aural-sound-packs-open-directory
 s		emacsvox-aural-list-sound-packs
 v		emacsvox-aural-sound-pack-cues-show-validation
@@ -4912,7 +4912,7 @@ RET		emacsvox-aural-list-sound-pack-cues
 P		emacsvox-aural-sound-packs-audition
 a		emacsvox-aural-sound-packs-activate
 e		emacsvox-aural-sound-packs-edit-manifest
-h		emacsvox-aural
+h		emacsvox-aural-menu
 o		emacsvox-aural-sound-packs-open-directory
 v		emacsvox-aural-sound-packs-show-validation
 
@@ -6107,7 +6107,7 @@ S		emacsvox-aural-voice-editor-stop
 T		emacsvox-aural-voice-editor-text
 d		emacsvox-aural-voice-editor-default
 g		revert-buffer
-h		emacsvox-aural-home
+h		emacsvox-aural-menu
 i		emacsvox-aural-voice-editor--inherit
 m		emacsvox-aural-voice-menu
 n		emacsvox-aural-voice-editor-next
@@ -6476,7 +6476,7 @@ T		emacsvox-aural-voice-palette-previews-set-text
 c		emacsvox-aural-voice-palette-previews-copy
 d		emacsvox-aural-voice-palette-previews-delete
 e		emacsvox-aural-voice-palette-previews-tune
-h		emacsvox-aural
+h		emacsvox-aural-menu
 o		emacsvox-aural-voice-palette-previews-open-manager
 r		emacsvox-aural-voice-palette-previews-rename
 s		emacsvox-aural-voice-palette-previews-stop
@@ -6810,7 +6810,7 @@ c		emacsvox-aural-voice-palettes-copy
 d		emacsvox-aural-voice-palettes-delete
 e		emacsvox-aural-voice-palettes-edit-entry
 f		emacsvox-aural-voice-palettes-follow-baseline
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-voice-palettes-import
 r		emacsvox-aural-voice-palettes-rename
 u		emacsvox-aural-voice-palettes-where-used
@@ -7152,7 +7152,7 @@ b		emacsvox-aural-voice-workbench--library-slt
 d		emacsvox-aural-voice-workbench--library-download
 e		emacsvox-aural-voice-workbench-engine-view
 f		emacsvox-aural-voice-workbench-toggle-fallback-engine
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-voice-workbench--library-import
 l		emacsvox-aural-voice-workbench-logical-view
 q		emacsvox-aural-voice-workbench-quit
@@ -17339,7 +17339,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-omnivox-components-activate
 ?		emacsvox-omnivox-components-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-omnivox-components-install
 t		emacsvox-omnivox-components-test
 u		emacsvox-omnivox-components-uninstall
@@ -17402,7 +17402,7 @@ Key             Binding
 TAB		emacsvox-omnivox-components--details-next-action
 RET		emacsvox-omnivox-components--details-activate
 ?		emacsvox-omnivox-components-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 q		emacsvox-omnivox-components--details-back
 <backtab>	emacsvox-omnivox-components--details-previous-action
 

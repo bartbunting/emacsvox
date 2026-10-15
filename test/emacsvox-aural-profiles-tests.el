@@ -541,7 +541,7 @@
             (should
              (eq
               (lookup-key emacsvox-aural-profiles-mode-map (kbd "h"))
-              #'emacsvox-aural))
+              #'emacsvox-aural-menu))
             (should
              (eq
               (lookup-key emacsvox-aural-profiles-mode-map (kbd "w"))

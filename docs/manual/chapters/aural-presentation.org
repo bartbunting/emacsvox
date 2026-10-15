@@ -44,12 +44,11 @@ Info returns to the interface. In interface Help, ~i~ opens the same topic.
 This first exercise previews an installed voice. Browsing and previewing save
 no settings.
 
-1. Press ~C-e H h~, then ~/~, and choose /Browse voices/ from Aural Home's
-   searchable actions.
+1. Press ~C-e H v b~ to browse voices and engines.
 2. Select an available engine and press ~v~ to list its voices. ~RET~ on an
    Omnivox engine opens its status, downloads, and settings instead.
 3. Move to a voice and press ~P~ to hear a sample. ~S~ stops it.
-4. Press ~h~ to return to Home. From Home, ~C-c C-o~ returns to the item
+4. Press ~h~ to open the settings menu, then ~b~ to return to the item
    where you started.
 
 If an engine is unavailable, its details explain why; try another available
@@ -63,8 +62,9 @@ engine. If no speech is available, start with
 
 The experimental Emacsvox menu, opened with ~C-e H~, groups everyday settings
 by task. Aural Home remains available with ~C-e H h~ or
-~M-x emacsvox-aural~. Editors that already return through ~h~ continue to
-use that Home.
+~M-x emacsvox-aural~ for comparison. Editor and manager ~h~ keys now open
+the Transient settings menu with the original source item. Closing that menu
+returns to the editor; it does not save or discard its draft.
 
 Use ~C-e S~ for direct access to the current buffer's focused Emacsvox
 settings. When no focused integration menu is available, it opens general
@@ -219,7 +219,7 @@ In Home and other tables, the navigation controls are:
 - P :: Preview in managers and editors; Home retains its profiles shortcut.
 - S :: Stop the preview and its remaining samples.
 - ? :: Display and speak help for the current Aural interface.
-- h :: Return to Aural Home from a manager or editor.
+- h :: Open the settings menu from a manager or editor that provides this key.
 - q :: Go back or leave; an editor may first offer to retain or discard changes.
 
 Home also provides direct keys for frequent routes: ~x~ for Feedback Details,
@@ -245,7 +245,7 @@ setting, sound pack, and cue remapping rules. The voice editor uses the normal
 navigation voice for these announcements; auditions still play the working
 voice.
 
-Returning through Home or Help preserves the selected row and unfinished
+Opening settings or Help preserves the selected row and unfinished
 edits. Buffer rule editors retain separate drafts for each source buffer;
 reopening a modified editor resumes its draft. Reopening the same voice in
 the voice editor likewise preserves its working settings. If a prepared remap's
@@ -651,7 +651,7 @@ palette definitions and saved rules alone.
    voice and the facts identifying a heading. The explanation should tell
    you whether it describes recorded output or a simulation.
 
-3. Open ~C-e H h c~. Press ~c~, select /Content voice/, and choose
+3. Open ~C-e H f c~. Press ~c~, select /Content voice/, and choose
    =annotate= with ~RET~. If =annotate= is already the original, use
    =bolden= instead. ~O~ plays the original and ~P~ previews your choice.
    At this point the change exists only in the draft.
@@ -662,8 +662,8 @@ palette definitions and saved rules alone.
    is killed/. This means every matching heading in this buffer, not just
    the heading you started from.
 
-5. Review the summary, then press ~a~. Return through Home with ~h~,
-   then ~C-c C-o~. Move between the two headings using the same navigation
+5. Review the summary, then press ~a~. Open settings with ~h~,
+   then press ~b~ to return to the captured item. Move between the two headings using the same navigation
    action. Both matching headings should use your chosen voice; the ordinary
    paragraphs should keep their previous presentation.
 
@@ -988,7 +988,7 @@ This example gives you a personal place to adjust standard voices. Use an
 unused palette name; =reading-demo= below is an example. Note your current
 palette before starting so you can return to it.
 
-1. Open ~C-e H h V~ for /Voice palettes/. Press ~N~, enter =reading-demo=,
+1. Open ~C-e H v p~ for /Voice palettes/. Press ~N~, enter =reading-demo=,
    give it a purpose such as ``My reading experiments'', and choose
    =acss-default= as its parent. Creation saves the new palette, but does not
    activate it. Its standard voices are inherited.
@@ -2022,7 +2022,7 @@ changing the entire pack. The next walkthrough demonstrates this.
 :DESCRIPTION: Suppress a cue while retaining speech and restore it afterward.
 :END:
 
-1. Repeat the action that produces the unwanted cue. Open ~C-e H h H~, select
+1. Repeat the action that produces the unwanted cue. Open ~C-e H f h~, select
    that recorded feedback, and press ~RET~ to explain it. Find the cue name
    and whether it occurs before or after content.
 2. Return to the feedback list and press ~C~ for /Change this feedback/.
@@ -2053,7 +2053,7 @@ same rule-management workflow.
 This changes a tone already present in recorded blank-line feedback. The
 available actions depend on what your integration actually produced.
 
-1. Navigate onto a blank line, then open ~C-e H h H~. Select that feedback
+1. Navigate onto a blank line, then open ~C-e H f h~. Select that feedback
    record and press ~C~. Select its part if the record has several.
 2. Press ~c~ and choose /Change a tone/. Select the tone, choose /Pitch and
    duration/, then enter =500= Hertz and =80= milliseconds as a trial.
@@ -2488,7 +2488,7 @@ buffer rather than a global setup.
 This example saves two profiles with different voice or sound selections.
 Use unused names and note the profile selected before starting.
 
-1. Open ~C-e H h P~. To keep a restore point for the current selected options
+1. Open ~C-e H p p~. To keep a restore point for the current selected options
    and resources, press ~N~ and save =before-demo= with a short purpose.
    This captures those selections and makes the new profile selected.
    It does not back up rules, resource definitions, or engine settings.
