@@ -22,6 +22,18 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+History Enter follow-up, 2026-10-15: Enter was reported ineffective on History
+limits and recording. Fresh graphical checks pass with current source and
+compiled code. A new regression uses section/item arrows to reach the action,
+opens it with both Enter events, and checks captured source, parent selection
+on return and absence of implicit saving. All three history checks pass from
+source and compiled code with Transient 0.13.8; byte-code preflight and the
+documentation release gate pass.
+Read-only probes of the two running Emacs sessions found older loaded Enter
+binding functions: one omits Feedback and History, while the other omits
+History. Neither session was reloaded or otherwise repaired. Retry in a newly
+started normal profile; acceptance of this reported interaction remains open.
+
 Listening checkpoint, 2026-10-15: acceptance results cover items 1--6 and
 8--12 of the pre-merge listening checklist. No failures were reported:
 

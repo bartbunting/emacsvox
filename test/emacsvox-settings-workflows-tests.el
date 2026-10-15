@@ -1364,6 +1364,22 @@
       (should-not requests)
       (should-not callbacks))))
 
+(ert-deftest emacsvox-settings-history-enter-and-return ()
+  "Enter opens history policy from its parent and restores the invoking item."
+  (emacsvox-test--with-settings
+    (let ((emacsvox-transient-navigation-style 'continuous))
+      (execute-kbd-macro (kbd "f <right> <down>"))
+      (dolist (key '("RET" "<return>"))
+        (with-selected-window transient--window
+          (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                      'emacsvox-settings-history)))
+        (execute-kbd-macro (kbd key))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-history))
+        (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-feedback)))
+      (should-not (file-exists-p custom-file)))))
+
 (ert-deftest emacsvox-settings-history-controls ()
   "Navigation is inert; adjustments trim oldest records and Save is explicit."
   (emacsvox-test--with-settings
