@@ -319,11 +319,12 @@ File: emacsvox.info,  Node: Installation,  Next: Basic Usage,  Prev: Using This 
 The aim of installation is a clean speaking session that you can test
 before changing your personal Emacs setup.  Choose the route for the
 machine running Emacs.  A Debian package is suitable when your
-distribution provides the required Emacs; the source checkout supports
-GNU/Linux, macOS, and WSL2.  Native Windows uses its own *note Windows
-installation procedure: Trying Native Windows Emacsvox.  If speech will
-play on another workstation, use *note Installing Remote Emacsvox:
-Installing Remote Emacsvox. instead of installing a local speech server.
+distribution provides the required Emacs and Transient.  The source
+checkout supports GNU/Linux, macOS, and WSL2.  Native Windows uses its
+own *note Windows installation procedure: Trying Native Windows
+Emacsvox.  If speech will play on another workstation, use *note
+Installing Remote Emacsvox: Installing Remote Emacsvox. instead of
+installing a local speech server.
 
    The settings-menu instructions in this development manual describe
 ‘ui-experiments’.  Use a checkout of that branch to follow them; an
@@ -366,10 +367,13 @@ Omnivox 1.17.0 includes an amd64 deb for supported Ubuntu systems.
 requires a packaged Emacs 30.2 or newer; an installed terminal-only
 ‘emacs-nox’ also satisfies this dependency.  Settings menus also require
 Transient 0.13.3 or newer.  Apt installs ‘elpa-transient’ when a
-packaged Emacs 31.1 or newer does not already supply it.  The package
-never builds GNU Emacs.  If your distribution cannot provide a supported
-version, use the source installation route below, which offers an
-explicit Emacs 31 source build.
+packaged Emacs 31.1 or newer does not already supply it.  Ubuntu 26.10
+supplies both dependencies.  Ubuntu 26.04's stock Transient is too old;
+use the source installation route below and upgrade Transient through
+Emacs's package manager.  The package never builds GNU Emacs or adds an
+apt repository to resolve missing dependencies.  If your distribution
+also lacks a supported Emacs, the source route offers an explicit Emacs
+31 build.
 
    Use Omnivox 1.17.0 or newer for the Omnivox route documented here.
 If it is unavailable from your apt repositories, include its downloaded
@@ -6130,80 +6134,3 @@ alternate screen, ‘<TAB>’ is navigation rather than shell completion.
    Use ‘C-e q c’ to read the retained candidate/help layout, or open
 frozen review with ‘C-e q r’ and press ‘c’.  This is useful for large or
 multi-column results and does not ask the terminal to complete again.
-
-
-File: emacsvox.info,  Node: EAT Screen Review,  Next: EAT Feedback Preferences,  Prev: EAT Terminal Completion,  Up: EAT Terminal Access
-
-11.4 Explicit Review Commands
-=============================
-
-With the default speech prefix, ‘C-e q’ provides review commands in
-every EAT input mode:
-
-‘C-e q l’
-     Speak the cursor row from the latest retained screen.
-‘C-e q d’
-     Speak the last classified change.
-‘C-e q h’
-     Speak the conservative likely-focus inference and its confidence.
-‘C-e q c’
-     Speak retained completion candidates or help rows.
-‘C-e q s’
-     Speak a bounded copy of the retained visible screen.
-‘C-e q r’
-     Open a read-only frozen copy for line-by-line review.
-‘C-e q t’
-     Speak retained progress, application, or shell-prompt status.
-‘C-e q p’
-     Speak the last identified shell prompt.
-‘C-e q i’
-     Speak the retained, sanitised title or working-directory change.
-‘C-e q v’
-     Cycle terse, normal, and verbose automatic feedback for this
-     terminal.
-‘C-e q m’
-     Toggle content-free background monitoring for this terminal.
-
-   These inspect retained snapshots with concealed content redacted;
-they do not send terminal input.  Speech is bounded.  The retained
-visible screen is not arbitrary scrollback or a promise that it still
-matches a changing live screen.
-
-11.4.1 Frozen Screen Review
----------------------------
-
-‘C-e q r’ opens an immutable copy of the latest visible screen.  It does
-not refresh, move the live cursor, or send input.  It preserves
-normalised styling, cursor and likely-focus anchors, and retained
-completion rows.  Opening and closing play distinct object cues and
-announce the transition.
-
-‘n, p; C-n, C-p; down, up’
-     Move by captured terminal row and speak the destination,
-     interrupting the previous row announcement.
-‘SPC, RET, .’
-     Speak the current captured row.
-‘a’
-     Speak a bounded form of the current screen or completion view.
-‘s, c’
-     Show captured screen rows or retained completion/help rows.
-‘C’
-     Go to the captured terminal cursor.
-‘h’
-     Go to retained likely focus when available.
-‘[, ]’
-     Move among inverse/background-styled, selection-like regions.  They
-     are not labelled as confirmed focus.
-‘t, i’
-     Speak status or metadata copied when review opened.
-‘v, m’
-     Change verbosity or monitoring in the source terminal without
-     sending terminal input.  The copied content stays frozen.
-‘?’
-     Describe frozen review mode.
-‘q’
-     Kill the content-bearing review buffer and restore its window.
-
-   Secure input, terminal reset or restart, killing the source, or
-leaving EAT mode also destroys its frozen review.  These events bound
-the lifetime of copied terminal content.

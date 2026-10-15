@@ -538,8 +538,9 @@ context-free direct icon call in its maintained migrated-module set.
 * Requirements
 
 *Emacsvox requires Emacs 30.2 or later.* The same minimum applies to native
-Windows. Settings menus require Transient 0.13.3 or newer. Ubuntu 26.04 supplies
-Emacs 30.2, but its stock Transient package is too old; use the source installation
+Windows. Settings menus require Transient 0.13.3 or newer. Ubuntu 26.10 supplies
+both dependencies for the Debian package. Ubuntu 26.04 supplies Emacs 30.2,
+but its stock Transient package is too old; use the source installation
 route and upgrade Transient through Emacs's package manager. See
 [[file:docs/manual/chapters/installation.org][Installation]] for activation and restart instructions. Optional integrations
 may need extra packages; Lua mode is built into Emacs 31 and is available

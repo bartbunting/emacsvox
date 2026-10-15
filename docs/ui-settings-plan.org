@@ -934,7 +934,8 @@ Current source inventory:
 | Search | Location and implementation | Current matching |
 |--------+-----------------------------+------------------|
 | Find a setting | =C-e H /=; =emacsvox-settings-search= | Case-insensitive substring matching over labels and a small alias catalogue. Results retain canonical labels without duplicates. Matching styles are local to this prompt. |
-| Find a Home action | =C-e H a= or =/= in old Home; =emacsvox-aural-home-search= | Ordinary completion over action names, including collapsed actions. Matching depends on completion configuration; no local substring or case policy. |
+| Find an action | =C-e H a=; =emacsvox-settings-search-actions= | Case-insensitive substring matching. Accepting a result focuses its menu control; a second Enter activates it. |
+| Retained Home search | =/= after =M-x emacsvox-aural=; =emacsvox-aural-home-search= | Ordinary completion over action names, including collapsed actions. Matching depends on completion configuration; no local substring or case policy. This is outside the ordinary settings-menu route. |
 | Find a physical voice | =/= in the physical-voice browser; =emacsvox-aural-voice-workbench-find-voice= | Locally requests substring/basic completion and ignores case. Searches voice names, engine IDs, languages and voice IDs, within the current engine and explicit filters. |
 | Choose a physical voice | Physical voice field in the editor; =emacsvox-aural-voice-editor--pick= | Ordinary completion over voice names and engine/voice identifiers. Matching depends on completion configuration. |
 | Choose a comparison voice | Compare with B and its Search all engines choice; =emacsvox-aural-voice-workbench-compare= | Ordinary completion. The second prompt broadens the inventory beyond current filters; it does not introduce different matching rules. |
@@ -971,9 +972,10 @@ source behavior; it is not listening acceptance of all these paths.
 
 ** Home retirement delivery, 2026-10-15
 
-Prioritise replacing Home-dependent routes before expanding the wider settings
-inventory. Dedicated voice, palette, rule, sound, and pronunciation editors
-remain supported buffers; retiring the Home menu does not require rewriting them.
+Completed on 2026-10-15 after listening acceptance. The checkpoints below retain
+the evidence and pending acceptance status at each delivery stage; the final
+retirement checkpoint supersedes those earlier pending states. Dedicated voice,
+palette, rule, sound, and pronunciation editors remain supported buffers.
 
 1. Diagnostics: a focused menu, corrected Doctor binding repair, reports,
    logging, and direct return. Implemented at =C-e H D=; listening accepted.
@@ -981,12 +983,11 @@ remain supported buffers; retiring the Home menu does not require rewriting them
    training explanations, and semantic reference, with useful Help and direct return.
 3. Remove Home as an intermediate step for action search, retained drafts,
    source return, and linked editor navigation. Preserve drafts and cancellation.
-4. Verify complete tasks without Home, including the minimum supported Emacs.
-   Keep the old entry available for comparison until listening acceptance;
-   then retire its menu entry and update durable design/documentation decisions.
+4. Verify complete tasks without Home, including the minimum supported Emacs,
+   accept listening, retire its menu entry, and record the dependency decision.
 
-These slices take priority over the broader queue below. Automated checks and
-listening acceptance remain separate; no new acceptance is implied by this plan.
+All four slices are complete. Automated checks and listening acceptance remain
+separate; broader settings discovery continues in the queue below.
 
 Diagnostics checkpoint:
 - Doctor's check and explicit repair now target =emacsvox-aural-menu= at =C-e H=.
@@ -1106,17 +1107,20 @@ remain separate workstreams.
 
 ** Next proposed slices
 
-1. Diagnostics and recovery discovery. Link Aural Doctor, spatial capabilities,
-   and =tts-show-diagnostics= from a focused menu, with logging and advanced
-   diagnostic options. Reuse existing recovery
-   commands, keeping restart or repair an explicit action. Acceptance: inspect
-   a finding and return to the same entry without an implicit state change.
-2. Presentation discovery gaps. Link the combined rule overview and tuning the
-   named voice used at point; expose training and history policy with their
-   actual scopes. Review Voice Lock and silence-at-point separately from face
-   presentation; include earcon enablement and preview-label discovery.
-   Acceptance: explain a heading, find the responsible rule/voice, change or
-   restore it, and verify source return and persistence boundaries.
+Diagnostics, named-voice tuning, the combined rule overview, training controls,
+direct action discovery, and Home menu retirement are delivered above. The
+remaining work is:
+
+1. Complete the voice browsing listening task before choosing further editor
+   changes. Existing workbench/editor tests cover filtered search, sorting, and
+   return focus. Verify filters, row, column, sample text, draft, and source
+   through audition, tuning, compare, save, and return on the normal host.
+   Make a small regression-backed fix for each observed failure.
+2. Audit remaining presentation discovery gaps: history policy, Voice Lock,
+   silence-at-point, earcon enablement, and preview labels. Separate these from
+   the delivered face/rule tuning routes and confirm their actual scopes before
+   adding controls. Acceptance: find the responsible setting, change or restore
+   it, and verify source return and persistence boundaries.
 3. Reading and dictionary discovery. Add an explicitly separate route to Emacs
    pronunciation dictionaries and classify character-scale, repeat cleanup,
    predefined-rate, Unicode, emoji, quiet/nonprinting speech, column filtering,
@@ -1125,25 +1129,22 @@ remain separate workstreams.
    small patch. Include general table preferences and interaction exclusions.
    Acceptance: edit one dictionary entry and demonstrate which store saves it;
    opening the workflow must not write or restart speech.
-4. Complete the voice browsing acceptance task before choosing further UI edits.
-   Existing workbench/editor tests already cover filtered search, sorting, and
-   return focus. Verify filters, row, column, sample text, draft, and source
-   through audition, tuning, compare, save, and return on the normal host.
-   Make a small regression-backed fix for each observed failure.
+4. Decide the shared search policy using the inventory above. Settings and
+   action searches already use case-insensitive substrings; voice pickers and
+   other selection prompts still need a decision. Preserve each prompt's
+   distinction between focusing, selecting, filtering, and activating.
 5. Improve one dedicated editor at a time using listening findings. Audit its
    existing maps, modified state, undo, help, and finish/cancel behavior before
    changing conventions. Prioritize the editor that obstructs the complete task;
    no broad conversion is implied by this queue.
 6. Expand integration and advanced discovery using the repository-wide inventory
-   above, then finish milestone 5 acceptance: cover remaining inventoried routes, compare
-   against Home, verify Emacs 30.2 in a separate checkout, and record settled
-   documentation/design decisions. Home retirement remains a separate decision.
+   above, then finish the remaining milestone 5 tasks. Cover outstanding routes
+   and verify supported Transient versions with Emacs 30.2 in a separate checkout.
+   Preserve the accepted Home retirement and explicit save/apply boundaries.
 
-The next implementation candidate is the Home retirement track above. Listening
-can run alongside those slices and determines later editor priorities.
-The repository-wide audit adds work to this queue; six headings no longer imply
-six small patches or a fixed completion estimate. No additional implementation
-or new listening result is recorded by this audit.
+Listening determines the next editor priority. The broader audit remains a set
+of workstreams rather than six small patches or a fixed completion estimate.
+This updated queue records no additional listening acceptance.
 
 * Acceptance tasks and development cycle
 
@@ -1188,21 +1189,27 @@ verification of subsequently changed code.
 
 ** Findings queue
 
-- 2026-10-15: Requiring Transient 0.13.3 makes stock Ubuntu 26.04 insufficient
-  for the Debian package: its repositories offer Emacs 30.2 and elpa-transient
-  0.12.0. The disposable Ubuntu installation gate is blocked until a suitable
-  package source or another distribution target is chosen. The source route
-  can use a package-manager upgrade; do not weaken the tested minimum to pass
-  installation. Separate baseline failures also remain: Debian autoload
-  generation under Emacs 31 emits unexpanded Transient forms, and
-  =emacsvox-setup-tracks-maintained-runtime-inventory= finds the voice-menu
-  source missing from the startup inventory. Neither is introduced by the
-  dependency guard. The initial Emacs 30 compatibility run passed 300 of 302
-  cases, with that inventory failure and one native-DOM comparison skipped.
-  Startup inventory follow-up: all nine omitted menu modules now participate
-  in stale-bytecode detection. All 26 startup checks pass from source, and all
-  five setup checks pass with the compiled setup loaded in a fresh Emacs.
-  Incremental compilation and byte-code preflight pass; listening is unchanged.
+- 2026-10-15: The Transient dependency follow-up resolves the recorded build
+  and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to
+  stale-bytecode detection; 26 source startup checks and five compiled setup
+  checks pass. Compatibility passes all 302 checks on Emacs 31 and 301 on
+  Emacs 30.2, with only the native-DOM comparison skipped there.
+  Commit =16792f226= registers Transient's macro expansion during Debian
+  autoload generation. All six packaging tests pass on both Emacs versions,
+  including interactive autoloads that do not eagerly load menus.
+  Debian CI now builds with Emacs 31.1 and tests installation on Ubuntu 26.10.
+  The real container run uses Emacs 30.2 and system Transient 0.13.7; install,
+  isolated settings loading, reinstall, purge, and personal-file preservation
+  pass. Ubuntu 26.04's stock Transient 0.12.0 remains unsupported; its source
+  route needs the documented package-manager upgrade. No extra apt repository
+  or relaxed version requirement is introduced.
+  The source archive from =16792f226= also passes isolated installation,
+  byte-code verification, fresh startup, offline help, and remote-helper checks
+  with Emacs 31.0.90. CI selects the stable 31.1 toolchain for this route.
+  Commit =982e17878= completes the pulled manual navigation update with the
+  matching Info menu, external Info links, and generated artifacts. The full
+  rebuild, byte-code preflight, and documentation gate pass. These automated
+  checks add no listening acceptance; voice browsing remains the next task.
 - 2026-10-15: Listening tasks 1 through 9 are accepted; see the current baseline
   and completed milestone checkboxes. Integration discovery remains open after
   Customize did not open from scratch, Magit and shell. Source inspection shows

@@ -219,8 +219,8 @@ and live Help to check its commands.
 The aim of installation is a clean speaking session that you can test before
 changing your personal Emacs setup. Choose the route for the machine running
 Emacs. A Debian package is suitable when your distribution provides the
-required Emacs; the source checkout supports GNU/Linux@comma{} macOS@comma{} and WSL2.
-Native Windows uses its own
+required Emacs and Transient. The source checkout supports GNU/Linux@comma{} macOS@comma{}
+and WSL2. Native Windows uses its own
 @ref{Trying Native Windows Emacsvox, , Windows installation procedure}. If speech will play on another workstation@comma{}
 use @ref{Installing Remote Emacsvox, , Installing Remote Emacsvox} instead of installing a local speech server.
 
@@ -265,9 +265,11 @@ Replace @code{VERSION} with the version in the downloaded filename. Apt requires
 a packaged Emacs 30.2 or newer; an installed terminal-only @code{emacs-nox} also
 satisfies this dependency. Settings menus also require Transient 0.13.3 or
 newer. Apt installs @code{elpa-transient} when a packaged Emacs 31.1 or newer does
-not already supply it. The package never builds GNU Emacs. If your
-distribution cannot provide a supported version@comma{} use the source installation
-route below@comma{} which offers an explicit Emacs 31 source build.
+not already supply it. Ubuntu 26.10 supplies both dependencies. Ubuntu 26.04's
+stock Transient is too old; use the source installation route below and upgrade
+Transient through Emacs's package manager. The package never builds GNU Emacs
+or adds an apt repository to resolve missing dependencies. If your distribution
+also lacks a supported Emacs@comma{} the source route offers an explicit Emacs 31 build.
 
 Use Omnivox 1.17.0 or newer for the Omnivox route documented here. If it is
 unavailable from your apt repositories@comma{} include its downloaded deb in the same
@@ -9048,8 +9050,11 @@ The ownership and release boundaries are recorded in
 @code{make deb-test} checks the actual archive@comma{} reproducibility@comma{} source startup@comma{}
 remote diagnosis@comma{} dependency metadata and refusal of an unprepared release.
 CI additionally installs@comma{} reinstalls and purges the package in a disposable
-Ubuntu 26.04 container using @code{test/debian-install-smoke.sh}. It uploads the
-development deb and checksum as CI artifacts@comma{} without publishing a release.
+Ubuntu 26.10 container using @code{test/debian-install-smoke.sh}. This target supplies
+Transient 0.13.3 or newer through apt; Ubuntu 26.04's package is too old.
+The check loads settings through the isolated launcher and reports the actual
+Transient version and path. CI uploads the development deb and checksum as
+artifacts@comma{} without publishing a release.
 
 After preparing the checked source archive using the release procedure below@comma{}
 @code{make release-deb} produces @code{dist/emacsvox_VERSION-1_all.deb} and its checksum.
@@ -9064,14 +9069,17 @@ After a maintainer publishes a stable GitHub release@comma{} the Release Debian
 package workflow checks out its exact annotated tag and downloads the source
 archive@comma{} checksum and provenance from that release. It checks the source
 identity@comma{} installs from the archive@comma{} builds the release deb@comma{} and tests install@comma{}
-startup@comma{} reinstall and removal in Ubuntu 26.04 before attaching the deb and
+startup@comma{} reinstall and removal in Ubuntu 26.10 before attaching the deb and
 checksum. Build jobs have read-only repository access; only the attachment job
 can write release assets. A rerun accepts identical existing assets and refuses
 to replace different files. CI does not create tags or releases.
 
-This workflow uses Emacs 30.2 for autoload generation; its recorded toolchain
-can differ from a locally prepared package. Let CI attach the release deb
-instead of uploading a differently built local package with the same name.
+This workflow uses Emacs 31.1 for source-archive installation and autoload
+generation@comma{} with its supported bundled Transient. The Ubuntu installation
+check exercises the packaged Emacs 30.2 and external Transient route. The
+recorded build toolchain can differ from a locally prepared package. Let CI
+attach the release deb instead of uploading a differently built local package
+with the same name.
 
 @subsection Emacsvox release staging and publication
 

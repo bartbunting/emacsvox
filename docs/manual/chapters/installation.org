@@ -12,8 +12,8 @@
 The aim of installation is a clean speaking session that you can test before
 changing your personal Emacs setup. Choose the route for the machine running
 Emacs. A Debian package is suitable when your distribution provides the
-required Emacs; the source checkout supports GNU/Linux, macOS, and WSL2.
-Native Windows uses its own
+required Emacs and Transient. The source checkout supports GNU/Linux, macOS,
+and WSL2. Native Windows uses its own
 [[*Installing Native Windows Emacsvox][Windows installation procedure]]. If speech will play on another workstation,
 use [[*Installing On A Remote Linux Host][Installing Remote Emacsvox]] instead of installing a local speech server.
 
@@ -50,9 +50,11 @@ Replace =VERSION= with the version in the downloaded filename. Apt requires
 a packaged Emacs 30.2 or newer; an installed terminal-only =emacs-nox= also
 satisfies this dependency. Settings menus also require Transient 0.13.3 or
 newer. Apt installs =elpa-transient= when a packaged Emacs 31.1 or newer does
-not already supply it. The package never builds GNU Emacs. If your
-distribution cannot provide a supported version, use the source installation
-route below, which offers an explicit Emacs 31 source build.
+not already supply it. Ubuntu 26.10 supplies both dependencies. Ubuntu 26.04's
+stock Transient is too old; use the source installation route below and upgrade
+Transient through Emacs's package manager. The package never builds GNU Emacs
+or adds an apt repository to resolve missing dependencies. If your distribution
+also lacks a supported Emacs, the source route offers an explicit Emacs 31 build.
 
 Use Omnivox 1.17.0 or newer for the Omnivox route documented here. If it is
 unavailable from your apt repositories, include its downloaded deb in the same

@@ -23,7 +23,8 @@ jobs:
           persist-credentials: false
       - uses: purcell/setup-emacs@master
         with:
-          version: '30.2'
+          # Source-archive installation needs a supported bundled Transient.
+          version: '31.1'
       - name: Download and validate the checked release source
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,7 +48,7 @@ jobs:
       - name: Install and remove the release package in disposable Ubuntu
         run: |
           package="dist/emacsvox_$(cat VERSION)-1_all.deb"
-          docker run --rm -v "$PWD:/source:ro" ubuntu:26.04 \
+          docker run --rm -v "$PWD:/source:ro" ubuntu:26.10 \
             sh /source/test/debian-install-smoke.sh "/source/$package"
       - uses: actions/upload-artifact@v4
         with:

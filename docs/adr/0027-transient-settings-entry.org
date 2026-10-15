@@ -64,6 +64,14 @@ installation ownership. The Emacs 30 compatibility job uses pinned Transient
 sources and dependencies; Emacs 31 continues to test its bundled copy. This
 refines ADR 0012's package-free test setup while retaining its Emacs minimum.
 
+Use Ubuntu 26.10 for the Debian installation gates: its stock packages supply
+both required dependencies. Ubuntu 26.04's Transient 0.12.0 is too old; retain
+the source-install route with an Emacs package-manager upgrade there. Do not
+weaken the minimum or add an external apt repository during installation.
+Build Debian CI artifacts and check source-archive installation with Emacs 31.1,
+whose bundled Transient satisfies the requirement without personal packages.
+The container still verifies the Emacs 30.2 runtime with a separate Transient.
+
 * Verification
 
 Listening acceptance covers the replacement workflows, including the corrected

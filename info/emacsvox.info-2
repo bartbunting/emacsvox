@@ -14,6 +14,83 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: EAT Screen Review,  Next: EAT Feedback Preferences,  Prev: EAT Terminal Completion,  Up: EAT Terminal Access
+
+11.4 Explicit Review Commands
+=============================
+
+With the default speech prefix, ‘C-e q’ provides review commands in
+every EAT input mode:
+
+‘C-e q l’
+     Speak the cursor row from the latest retained screen.
+‘C-e q d’
+     Speak the last classified change.
+‘C-e q h’
+     Speak the conservative likely-focus inference and its confidence.
+‘C-e q c’
+     Speak retained completion candidates or help rows.
+‘C-e q s’
+     Speak a bounded copy of the retained visible screen.
+‘C-e q r’
+     Open a read-only frozen copy for line-by-line review.
+‘C-e q t’
+     Speak retained progress, application, or shell-prompt status.
+‘C-e q p’
+     Speak the last identified shell prompt.
+‘C-e q i’
+     Speak the retained, sanitised title or working-directory change.
+‘C-e q v’
+     Cycle terse, normal, and verbose automatic feedback for this
+     terminal.
+‘C-e q m’
+     Toggle content-free background monitoring for this terminal.
+
+   These inspect retained snapshots with concealed content redacted;
+they do not send terminal input.  Speech is bounded.  The retained
+visible screen is not arbitrary scrollback or a promise that it still
+matches a changing live screen.
+
+11.4.1 Frozen Screen Review
+---------------------------
+
+‘C-e q r’ opens an immutable copy of the latest visible screen.  It does
+not refresh, move the live cursor, or send input.  It preserves
+normalised styling, cursor and likely-focus anchors, and retained
+completion rows.  Opening and closing play distinct object cues and
+announce the transition.
+
+‘n, p; C-n, C-p; down, up’
+     Move by captured terminal row and speak the destination,
+     interrupting the previous row announcement.
+‘SPC, RET, .’
+     Speak the current captured row.
+‘a’
+     Speak a bounded form of the current screen or completion view.
+‘s, c’
+     Show captured screen rows or retained completion/help rows.
+‘C’
+     Go to the captured terminal cursor.
+‘h’
+     Go to retained likely focus when available.
+‘[, ]’
+     Move among inverse/background-styled, selection-like regions.  They
+     are not labelled as confirmed focus.
+‘t, i’
+     Speak status or metadata copied when review opened.
+‘v, m’
+     Change verbosity or monitoring in the source terminal without
+     sending terminal input.  The copied content stays frozen.
+‘?’
+     Describe frozen review mode.
+‘q’
+     Kill the content-bearing review buffer and restore its window.
+
+   Secure input, terminal reset or restart, killing the source, or
+leaving EAT mode also destroys its frozen review.  These events bound
+the lifetime of copied terminal content.
+
+
 File: emacsvox.info,  Node: EAT Feedback Preferences,  Next: EAT Shell Integration,  Prev: EAT Screen Review,  Up: EAT Terminal Access
 
 11.5 Verbosity And Background Monitoring
@@ -3146,9 +3223,12 @@ and release boundaries are recorded in ADR 0013
    ‘make deb-test’ checks the actual archive, reproducibility, source
 startup, remote diagnosis, dependency metadata and refusal of an
 unprepared release.  CI additionally installs, reinstalls and purges the
-package in a disposable Ubuntu 26.04 container using
-‘test/debian-install-smoke.sh’.  It uploads the development deb and
-checksum as CI artifacts, without publishing a release.
+package in a disposable Ubuntu 26.10 container using
+‘test/debian-install-smoke.sh’.  This target supplies Transient 0.13.3
+or newer through apt; Ubuntu 26.04's package is too old.  The check
+loads settings through the isolated launcher and reports the actual
+Transient version and path.  CI uploads the development deb and checksum
+as artifacts, without publishing a release.
 
    After preparing the checked source archive using the release
 procedure below, ‘make release-deb’ produces
@@ -3166,15 +3246,17 @@ Debian package workflow checks out its exact annotated tag and downloads
 the source archive, checksum and provenance from that release.  It
 checks the source identity, installs from the archive, builds the
 release deb, and tests install, startup, reinstall and removal in Ubuntu
-26.04 before attaching the deb and checksum.  Build jobs have read-only
+26.10 before attaching the deb and checksum.  Build jobs have read-only
 repository access; only the attachment job can write release assets.  A
 rerun accepts identical existing assets and refuses to replace different
 files.  CI does not create tags or releases.
 
-   This workflow uses Emacs 30.2 for autoload generation; its recorded
-toolchain can differ from a locally prepared package.  Let CI attach the
-release deb instead of uploading a differently built local package with
-the same name.
+   This workflow uses Emacs 31.1 for source-archive installation and
+autoload generation, with its supported bundled Transient.  The Ubuntu
+installation check exercises the packaged Emacs 30.2 and external
+Transient route.  The recorded build toolchain can differ from a locally
+prepared package.  Let CI attach the release deb instead of uploading a
+differently built local package with the same name.
 
 19.3.6 Emacsvox release staging and publication
 -----------------------------------------------
