@@ -7,10 +7,14 @@
 
 #+cindex: Emacs Keyboard Commands
 
-Use [[*Basic Usage][Basic Usage]] for the essential reading keys and
-[[*Find Help While You Work][Using Online Help]] to inspect an unfamiliar command. This chapter explains
-how the default prefixes, settings menus, and local application bindings fit
-together. The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] provides the full default inventory.
+This chapter explains how speech prefixes, settings menus and application
+keys fit together. If the notation is unfamiliar, first read
+[[*Read the key instructions][Read the key instructions]]: a modifier is held for one keypress, while
+spaces separate successive steps. A capital letter is not a modifier name.
+
+Use [[*Basic Usage][Basic Usage]] for essential reading commands and
+[[*Find Help While You Work][Using Online Help]] to inspect a binding in your current buffer.
+The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] provides the full default inventory.
 
 #+attr_texinfo: :indic kbd :compact t
 - C-e ::
@@ -28,12 +32,17 @@ together. The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Key
   Open focused settings for the captured integration when available, otherwise
   general buffer settings. C-e H . always opens general buffer settings.
 
-Inside an Emacsvox settings menu, arrows browse, RET activates, ? followed by
-an item's key explains it, q goes back, and C-q closes the sequence. These are
-menu-local meanings, not universal bindings in every Emacs buffer. A voice
-editor, terminal, table reader, or another Transient application retains its
-own documented keys. In particular, the same letter can mean Save in an editor,
-Export in a palette manager, or ordinary input in a terminal.
+A prefix such as ~C-e~ waits for another key; ~C-e H~ is a complete
+command that opens a settings menu. Release Control-e before typing capital H.
+Once the menu is open, its own displayed letters choose actions. They are not
+additional keys to hold with Control.
+
+Inside an Emacsvox settings menu, arrows browse and ~RET~ activates a choice.
+~?~ followed by an item's key explains it; ~q~ goes back and ~C-q~ closes
+the sequence. A voice editor, terminal, table reader or another Transient
+application retains its own keys. The same letter can mean Save in an editor,
+Export in a palette manager or ordinary input in a terminal. Check which view
+has focus before applying a command from another view's instructions.
 
 Integration-specific and convenience maps depend on major/minor modes, window
 system or terminal, and personal configuration. Live Help resolves those

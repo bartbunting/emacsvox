@@ -1,7 +1,7 @@
 * Applications And Integrations
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Emacs Packages
-:ALT_TITLE: Emacs Packages
+:ALT_TITLE: Applications and integrations
 :DESCRIPTION: Use speech-enabled applications and integrations.
 :END:
 
@@ -109,7 +109,8 @@ also used for character reading.
 
 *** Reading Markdown and Org tables
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Reading Markdown And Org Tables
+:DESCRIPTION: Read cells, rows and columns without editing the source table.
 :END:
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table reading

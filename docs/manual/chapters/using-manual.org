@@ -14,10 +14,10 @@ instructions. [[*Terms used in this manual][Terms used in this manual]] explains
 profile, scope, and draft without requiring you to study the whole settings
 system first.
 
-Key notation follows Emacs conventions: ~C-~ means Control, ~M-~ means Meta
-(usually Alt or Option), and ~RET~ means Return or Enter. In ~C-e H~, press
-Control-e, release it, then type capital H. In a longer sequence, enter each
-following key separately. Uppercase and lowercase keys are different.
+Start with [[*Read the key instructions][Read the key instructions]] if Emacs notation is unfamiliar. It explains
+which keys to hold together, when to release them, and how to enter a command
+by name. The reading routes below assume that notation, not prior experience
+with Emacs.
 
 ** Choose a reading route
 :PROPERTIES:
@@ -42,7 +42,8 @@ prepare its disposable buffer before experimenting. Then read
 and choose an application guide for your work.
 
 For one question, go directly to [[*Find a task][Find a task]], use Info's index, or search
-the manual text. [[info:emacsvox#Speech Backends][Speech Backends]] contains alternative installation and backend
+the manual text. When something is not working, [[*Something is wrong][Something is wrong]] starts
+with symptoms rather than the names of settings. [[info:emacsvox#Speech Backends][Speech Backends]] contains alternative installation and backend
 configuration procedures; it is not required reading between your first
 speaking session and everyday editing. The final Developer Guide is for
 changing and maintaining Emacsvox, not for ordinary use.
@@ -114,6 +115,6 @@ part of the learning route.
 
 In HTML, use the contents, headings, and task links, then your browser's Back
 command to return from a link. The Info keys above are not browser commands.
-The published website and the manual installed with your checkout can describe
-different revisions; use documentation matching the Emacsvox you are running
-and live Help to check its commands.
+The published website may describe a different revision from your installed
+manual. Use the manual matching your Emacsvox version, and check live Help
+when a key differs from the documented default.
