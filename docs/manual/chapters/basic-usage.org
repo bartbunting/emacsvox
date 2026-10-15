@@ -7,53 +7,49 @@
 
 Once Emacsvox is speaking, you can read, edit, and navigate with ordinary
 Emacs commands. Emacsvox announces their results, while explicit speech
-commands let you examine text without moving. Start with the short practice
-session below, then use the rest of this chapter for everyday speech controls.
-[[*Work With The Audio Desktop][Audio Desktop]] explains how these habits carry over to other Emacs applications.
+commands let you examine text without moving. Start with the practice session,
+then use the rest of this chapter for everyday speech controls.
+[[*Work With The Audio Desktop][Audio Desktop]] explains how these habits carry over to other applications.
 
 ** Key Notation And Emacs Words
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Emacs documentation uses ~C-~ for Control and ~M-~ for Meta, usually the
-Alt or Option key. To enter ~C-n~, hold Control and press ~n~. For
-~C-e l~, press ~C-e~, release the keys, then press ~l~. Each
-part of a sequence is a separate keystroke.
+Emacs documentation uses ~C-~ for Control and ~M-~ for Meta, usually Alt or
+Option. To enter ~C-n~, hold Control and press ~n~. For ~C-e l~, press ~C-e~,
+release the keys, then press ~l~. Each part is a separate keystroke.
 
-~M-x~ lets you run a command by name, and ~RET~ means Return or Enter. A
-/buffer/ holds text or an application view; /point/ is the position affected
-by movement and editing. These terms are used throughout the manual.
-
-If you are new to Emacs, ~C-h t~ opens its interactive tutorial. You can
-follow it with Emacsvox and return here to learn the speech commands.
+~M-x~ runs a command by name, and ~RET~ means Return or Enter. A /buffer/
+holds text or an application view; /point/ is the position affected by movement
+and editing. If Emacs is new to you, ~C-h t~ opens its interactive tutorial.
+Follow it with Emacsvox and return here for the speech controls.
 
 ** Your First Few Minutes
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Try these commands in the speaking session started during installation:
+Try these in the speaking session started during installation:
 
 1. Press ~C-n~ to move down one line and ~C-p~ to move back up. Emacsvox
-   speaks the line you reach.
+   speaks the destination line.
+1. Press ~C-e l~ to hear that line without moving.
+1. Press ~C-e s~ to stop speech. Later commands still speak.
+1. Press ~C-h k~, then a key, to learn what it does.
+1. Press ~C-h m~ to discover the current modes and commands.
+1. Press ~C-h C-e~ for the Emacsvox overview.
 
-1. Press ~C-e l~ to hear the current line without moving point.
+When you want to adjust speech, ~C-e H s~ opens Speech settings. Browse with
+arrows and ask for an item's Help with ~?~ followed by its key. ~RET~ activates
+it; ~q~ goes back and ~C-q~ closes the menu sequence. Browsing does not change
+a value, but leaving does not reverse adjustments already applied. Detailed
+scope and saving instructions follow below.
 
-1. Press ~C-e s~ to stop speech immediately. Later commands still speak.
-
-1. Press ~C-h k~, followed by any key, to find out what it does.
-
-1. Press ~C-h m~ to discover the modes and commands available in the
-   current buffer.
-
-1. Press ~C-h C-e~ to open the Emacsvox overview.
-
-These commands let you explore without memorising a long key list. The keys
-in this manual are defaults: use ~C-h k~ if a key behaves differently in
-your session. The generated
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in the /Emacsvox Reference Manual/ lists all default
-bindings; live help reflects your installed packages and customisations.
+The keys in this manual are defaults. Use ~C-h k~ if one behaves differently.
+The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] records default bindings; live Help reflects
+installed packages and personal customisations. These menu quit keys apply
+while an Emacsvox menu is active, not to every application buffer.
 
 ** Emacsvox Overview
 :PROPERTIES:
@@ -62,20 +58,15 @@ bindings; live help reflects your installed packages and customisations.
 :DESCRIPTION: Understand the main kinds of Emacsvox feedback.
 :END:
 
-Emacsvox speaks text as you move through it and announces useful results of
-commands. Applications can also present information in meaningful units:
-messages, search results, tables, source code, and Web pages each have their
-own structure.
+Emacsvox speaks movement and command results. Integrations present information
+in meaningful units such as messages, search results, tables, source code, and
+Web pages. Voices can distinguish headings, links, comments, and other text;
+auditory icons and tones can identify events without adding words. Pronunciation
+dictionaries correct names and terms globally or for a mode or file.
 
-Not all feedback has to be spoken as words. Voice changes can distinguish
-headings, links, comments, and other kinds of text; auditory icons and tones
-can mark events or state changes. Pronunciation dictionaries can correct
-names and technical terms globally or for a particular mode or file. Notice
-these distinctions during normal reading before changing their settings.
-
-You can compare structural voices in [[*Hear Structure With Voice Lock][Hear Structure With Voice Lock]]. For a fuller
-explanation of speech, sounds, and pronunciation choices, see
-[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].
+Notice these distinctions before changing them. Compare structural voices in
+[[*Hear Structure With Voice Lock][Hear Structure With Voice Lock]]. [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] explains speech,
+sounds, rules, and reusable voice settings in detail.
 
 ** Using Emacs Buffers
 :PROPERTIES:
@@ -84,32 +75,29 @@ explanation of speech, sounds, and pronunciation choices, see
 :DESCRIPTION: Understand feedback while editing and completing text.
 :END:
 
-Much of the feedback you need while editing happens automatically. Depending
-on your echo settings, Emacsvox can speak individual characters as you type
-or a word when you finish it. Completion announces candidates, the inserted
-completion, and the currently selected item. Prompts and error messages are
-also spoken.
+Much editing feedback is automatic. Echo settings can speak each character or
+each completed word. Completion announces candidates, inserted completion,
+and the selected item. Prompts and error messages are also spoken.
 
-Other information is available on request. The everyday commands fall into
-three useful groups:
+Other information is requested explicitly:
 
-- Reading commands speak a character, word, line, region, or larger part of a
-  buffer without requiring you to move. Their names usually begin with
-  =emacsvox-speak-= and their default keys use ~C-e~.[fn::The prefix is
-  inherited from Emacspeak, where C-e was mnemonic for the project name.]
+- Reading commands speak a character, word, line, region, or larger unit without
+  first moving. Names usually begin with =emacsvox-speak-= and default keys
+  use ~C-e~.[fn::The prefix comes from Emacspeak, where C-e was mnemonic for
+  the project name.]
+- Speech-system commands adjust rate, punctuation, echo, and related controls.
+  Many use ~C-e d~ and names beginning =tts-=.[fn::The d originally referred
+  to DECtalk; this prefix now contains engine-independent controls.]
+- Help commands explain the active modes, bindings, and integrations.
 
-- Speech-system commands adjust settings such as rate, punctuation, and echo.
-  Their names usually begin with =tts-= and many use ~C-e d~.[fn::The
-  letter d originally referred to DECtalk; the prefix now contains
-  engine-independent controls.]
+The settings menus provide discoverable routes to these controls; the direct
+keys remain useful for frequent actions. ~C-e S~ opens focused settings for
+the current integration, or general buffer settings when no focused menu exists.
+~C-e H .~ always opens general buffer settings.
 
-- Help commands explain the active modes, available keys, and integrations
-  in the buffer where you are working.
-
-Buffers remain available as you move between tasks. For example, ~C-e n~
-and ~C-e p~ cycle among buffers with the same major mode; repeat with
-~n~ or ~p~. [[*Buffers Hold Your Work][Audio Desktop]] explains buffer selection and the other
-navigation controls in context.
+Buffers remain available as you change tasks. ~C-e n~ and ~C-e p~ cycle among
+buffers with the same major mode; repeat with ~n~ or ~p~. See
+[[*Buffers Hold Your Work][Audio Desktop]] for buffer selection and its other navigation controls.
 
 ** Reading And Navigating
 :PROPERTIES:
@@ -118,10 +106,9 @@ navigation controls in context.
 :DESCRIPTION: Reading chunks of information.
 :END:
 
-Ordinary Emacs movement speaks the character, word, line, or larger unit you
-reach. To inspect text without first moving point, use the explicit reading
-commands below. They share the default ~C-e~ prefix, but differ in how
-much text they speak.
+Ordinary movement speaks the character, word, line, or larger unit reached.
+The explicit commands below inspect text without first moving point. They
+share ~C-e~ but differ in how much text they speak.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t
@@ -140,8 +127,7 @@ much text they speak.
   #+kindex: C-e w
 
   =emacsvox-speak-word=
-  speaks the current word.  Repeating it at the same position spells the
-  word.
+  speaks the current word. Repeating it at the same position spells the word.
 - C-e l ::
 
   #+findex: emacsvox-speak-line
@@ -189,7 +175,7 @@ much text they speak.
   #+kindex: C-e b
 
   =emacsvox-speak-buffer=
-  speaks the entire current buffer.
+  speaks the whole current buffer.
 - C-e s ::
 
   #+findex: tts-stop
@@ -209,10 +195,9 @@ much text they speak.
 
 # basic-usage-live-keys-end
 
-Many speaking commands accept a prefix argument to limit speech to the
-text before or after point.  Use ~C-h k~ on a command before relying
-on those variants, because their exact argument behavior is documented
-with the command.
+Many reading commands accept a prefix to limit speech before or after point.
+Use ~C-h k~ before relying on a variant; exact prefix behaviour belongs to
+that command's documentation.
 
 *** Hear Phonetic Names After A Pause
 :PROPERTIES:
@@ -222,20 +207,21 @@ with the command.
 #+findex: emacsvox-delayed-phonetic-mode
 #+vindex: emacsvox-delayed-phonetic-delay
 
-Use ~M-x emacsvox-delayed-phonetic-mode~ to toggle delayed
-phonetic descriptions. When enabled, moving by character speaks the letter
-normally; pausing then speaks its phonetic name, such as "alpha" for "a".
-These are the same English letter names used by ~C-e c~.
+~M-x emacsvox-delayed-phonetic-mode~ toggles delayed phonetics. With it enabled,
+character movement speaks the letter normally, then a pause gives its phonetic
+name, such as "alpha" for "a". These are the English names also used by
+~C-e c~.
 
-The mode starts enabled. Customize =emacsvox-delayed-phonetic-delay= to change
-the default one-second delay to another positive number of seconds. You can
-save the mode's enabled or disabled setting through Customize as well.
+The mode starts enabled with a one-second delay. Customize
+=emacsvox-delayed-phonetic-delay= to another positive number of seconds and
+save the mode preference through Customize. The menu at ~C-e H s t~ also
+exposes delayed phonetics and its global delay, using a minimum 0.1 seconds
+for numeric entry.
 
-Further input, including the first key of a prefix sequence, cancels the pending
-description. New speech, stopping speech, changing the source text or leaving
-its buffer or window also prevents a stale description. Each pause produces at
-most one description. Typing, deletion, punctuation and explicit phonetic
-reading do not trigger delayed descriptions.
+Further input, including the first key of a prefix, cancels the pending name.
+New speech, stopping speech, edited source text, or leaving its buffer/window
+also prevents stale feedback. Each pause produces at most one name. Typing,
+deletion, punctuation, and explicit phonetic reading do not trigger the delay.
 
 ** Adjust Speech While You Work
 :PROPERTIES:
@@ -245,16 +231,19 @@ reading do not trigger delayed descriptions.
 :END:
 
 #+cindex: TTS
-
 #+cindex: speech system
-
 #+cindex: speech settings
 
-Speech settings let you choose how much feedback to hear while you work.
-Typing echo, rate, punctuation, and other controls can be adjusted
-independently. Most commands in this section affect the current buffer; when a
-command also has a global prefix form, its help explains the difference.
-Use ~C-h k~ before applying a prefix argument to an unfamiliar setting.
+Use ~C-e H s~ for rate, punctuation, indentation, capitalisation, and typing
+feedback. It starts with the captured buffer's settings; ~g~ switches scope,
+and ~C-u C-e H~ starts the menu with global defaults. Individual controls
+retain their documented exceptions, such as global volume or phonetic delay.
+
+Changing a global default is not necessarily saving it for restart. A menu's
+Save action records only its documented values, and local or mode settings can
+still override defaults. [[info:emacsvox#Saving And Startup][Choose What Persists]] explains those distinctions.
+The direct keys below are alternatives to menu navigation; use ~C-h k~ to
+check a command's global prefix form before using it.
 
 *** Choose Typing Echo
 :PROPERTIES:
@@ -264,18 +253,14 @@ Use ~C-h k~ before applying a prefix argument to an unfamiliar setting.
 :END:
 
 #+cindex: line echo
-
 #+cindex: character echo
-
 #+cindex: word echo
 
-Character echo speaks each character you type.  Word echo speaks a word when
-you finish it, and optional line echo speaks a completed line.  Toggle each
-kind independently to suit the buffer: character feedback may help in a
-form where accuracy matters, while word echo is often more fluent for prose.
-
-The commands below affect the current buffer.  Press ~C-u~ first to
-change the corresponding default and apply it to the current buffer.
+Character echo reads each typed character, word echo each completed word, and
+optional line echo a completed line. They can be toggled independently. Use
+~C-e H s t~ for explained controls, or the keys below. These direct commands
+affect the current buffer; a preceding ~C-u~ changes the corresponding default
+and applies it to this buffer.
 
 #+attr_texinfo: :indic kbd :compact t
 - C-e d k ::
@@ -313,165 +298,149 @@ change the corresponding default and apply it to the current buffer.
 :DESCRIPTION: Adjust rate and how textual detail is presented.
 :END:
 
-Use these controls to match speech to the current material.  A faster rate may
-suit familiar prose; full punctuation can help when inspecting code or exact
-text.  Start with rate and punctuation, then change capitalization or
-indentation feedback only when the distinction would help your current task.
-
-The commands affect the current buffer unless their interactive help describes
-a global prefix form.  Use ~C-h k~ on a key before changing the global
-default.
+Start with rate and punctuation, then adjust other feedback when the distinction
+helps the task. Familiar prose may suit faster speech; exact code inspection
+may need full punctuation. Direct commands affect the current buffer unless
+their Help specifies a global prefix form.
 
 #+attr_texinfo: :indic kbd :compact t
 - C-e d r ::
 
-  Enter a speech rate for the current buffer with =tts-set-rate=.
+  Enter a rate with =tts-set-rate=. The menu alternative is /Rate/ in ~C-e H s~.
 - C-e d DIGIT ::
 
   Choose one of ten predefined rates with ~0~ through ~9~.
 - C-e d p ::
 
-  Choose =some=, =all=, or =none= punctuation with =tts-set-punctuations=.
+  Choose =some=, =all=, or =none= with =tts-set-punctuations=. A supporting
+  host also offers named profiles, described below.
 - C-e d s ::
 
-  Toggle splitting of mixed-capital identifiers into separate words.
+  Toggle splitting of mixed-capital identifiers into words.
 - C-e d c / C-e d C ::
 
-  Toggle capitalization indication with the lowercase key.  Use the uppercase
-  key to preview and choose whether capitals use speech, a tone, both, a custom
-  rule, or no added indication.
+  Toggle capitalisation indication with the lowercase key. The uppercase
+  key chooses and previews spoken, tone, combined, personal-rule, or no
+  indication. ~C-e H s c~ opens the Capitalization menu.
 - C-e d i / C-e d I ::
 
-  Toggle indentation feedback with the lowercase key. The uppercase key
-  opens the Indentation menu, described after this command list.
+  Toggle indentation feedback with the lowercase key, or open its menu with
+  the uppercase key. ~C-e H s i~ reaches the same menu through settings.
 - C-e d T ::
 
-  Choose and preview whether indentation tones play /Alongside speech/ (the
-  default) or /Before speech/.  This changes the current buffer; use a prefix
-  argument to also change the default for other buffers.  To save your choice
-  across sessions, customize ~emacsvox-indentation-tone-timing~.  Timing does
-  not change your spoken-column or tonal presentation choice, or enable
-  indentation feedback.  Backends without overlay support play tones before
-  speech for either setting.
+  Choose and preview /Alongside speech/ (default) or /Before speech/ for
+  indentation tones. The current buffer changes; a prefix also updates the
+  default. Save =emacsvox-indentation-tone-timing= through Customize for
+  restart. Timing does not choose a spoken/tonal presentation or enable
+  indentation. Backends without overlay support play tones before speech
+  for either setting.
 
 **** Use The Indentation Menu
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-The Indentation menu controls how columns, tones, and speech represent
-indentation. It also provides scope, volume, preview, and saving controls.
+Open ~C-e H s i~ or ~C-e d I~. Select spoken columns with ~s~, pitch tones
+with ~p~, or duration tones with ~d~; uppercase ~P~/~D~ combines speech and
+tones. ~b~ places tones before speech and ~a~ alongside. Timing choices are
+unavailable for presentations without built-in tones.
 
-Toggle indentation feedback with the lowercase key.  The uppercase key opens
-the Indentation menu. Choose spoken columns with ~s~, pitch tones with ~p~,
-or duration tones with ~d~. Capital ~P~ and ~D~ combine speech and tones.
-Choose ~b~ for tones before speech or ~a~ for tones alongside speech.
-Timing choices are unavailable for presentations without built-in tones.
+~g~ switches /Current buffer/ and /Global defaults/. Global defaults leave
+existing local choices intact. A prefix starts the menu in global scope;
+~e~ toggles indentation feedback in the displayed scope.
 
-Press ~g~ to switch between /Current buffer/ and /Global defaults/. Global
-defaults affect buffers without their own choices; existing local settings
-stay in place. A prefix argument opens the menu in Global defaults scope.
-Press ~e~ to toggle indentation feedback in the selected scope.
+Up/down selects a control and left/right changes sections. Shift-left/right
+on /Volume/ changes by five, bounded to 0–100. Other items give guidance rather
+than changing volume. ~RET~ activates an item. These bindings apply inside
+the menu, not in prompts or the source buffer.
 
-Up/down selects a control, and left/right moves between sections. On the
-/Volume/ control, Shift-left/right lowers or raises the value in steps of
-five, bounded from 0 to 100. On other items, shifted arrows give brief
-guidance; ~RET~ activates the selected item. These shifted-arrow bindings
-apply only while navigating the Indentation menu. Input prompts and the
-source buffer retain their normal bindings.
+~v~ or /Volume/ accepts an exact value; ~-~/~+~ remain shortcuts. Volume affects
+all main-stream Omnivox tones even in buffer scope. Adjustments speak the
+percentage and interrupt obsolete main speech, so repeated keys announce the
+latest value rather than queueing old values.
 
-Press ~v~ or activate /Volume/ to enter a number directly. The ~-~ and ~+~
-shortcuts also remain available. Volume always affects all main-stream Omnivox tones,
-even while editing current-buffer settings. Each adjustment speaks just
-the percentage and interrupts previous main-stream speech, so repeated
-presses announce the latest value without queuing older values.
+Changes apply immediately. ~SPC~ previews four-column indentation even when
+feedback is off. ~q~ leaves changes in effect. In global scope, ~S~ saves
+indentation defaults and tone volume; closing without saving keeps defaults
+changed only for this session. ~M-x emacsvox-set-indentation-presentation~
+remains a direct alternative.
 
-Changes take effect immediately. ~SPC~ previews four-column indentation
-with the settings shown, even when feedback is off. ~q~ closes the menu
-and keeps your changes. In Global defaults scope, ~S~ saves indentation
-defaults and tone volume across sessions. Closing without saving leaves
-the defaults changed only for this session.
-
-You can still choose a presentation directly with
-~M-x emacsvox-set-indentation-presentation~.
-
-Character-rate scaling, text chunking, engine-specific controls, and reusable
-presentation profiles are intentionally outside this starter chapter.  Use
-live help for the current speech keymap and see [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when
-you want a complete presentation setup rather than a temporary buffer change.
+The following punctuation sections are reference material for changing individual
+pronunciations. They are not prerequisites for ordinary reading. Reusable
+palettes/profiles, engine-specific tuning, and the wider output model belong to
+[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]]. Specialist character-rate and chunking controls are
+also available through live Help and the generated reference.
 
 **** Edit Punctuation Pronunciations
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-The punctuation level controls how much punctuation is spoken. To change how
-individual characters are pronounced, use the punctuation editor on a
-supporting local Omnivox host. Run ~M-x omnivox-punctuation~ or choose
-/Punctuation/ under /Voices and speech/ in Aural Home. This editor shows saved host settings and an unsaved draft;
-running speech may still use an earlier configuration. It requires the updated
-bundled local launcher and Omnivox's punctuation-editor capability. Older hosts
-report that an update is needed. Remote and native-direct configuration editing
-are not provided by this interface.
+A punctuation level decides how much punctuation is spoken; the pronunciation
+editor changes how particular characters are read. Open it with ~C-e H s p e~
+or ~M-x omnivox-punctuation~. Home's /Punctuation/ remains an alternative.
 
-Each row names its Unicode character explicitly and shows the pronunciation and
-whether it comes from a default or an override. The initial level is /some/.
+This interface needs the bundled local launcher and the host's punctuation-editor
+capability. Older hosts report that an update is required; remote and
+native-direct configuration editing are not provided here. It displays saved
+host settings and an unsaved draft separately. Running speech can still use
+an earlier configuration.
+
+Rows identify Unicode characters, pronunciations, and default/override origin.
+The initial level is /some/.
 
 #+attr_texinfo: :indic kbd :compact t
-- l :: Choose /none/, /some/, or /all/. Each level has independent overrides.
+- l :: Choose none, some, or all, each with independent overrides; supporting hosts also offer named profiles.
 - RET :: Speak a name, preserve the character, or restore its shipped default.
-- a :: Add a character that is absent from the table.
+- a :: Add a character not already listed.
 - d :: Restore the selected character's default in this level.
-- s :: Save edits for all three levels on the speech host. Saving does not
-  restart speech or change another setting in the configuration file.
-- r :: After confirmation, restart this session's main and notification speech
-  workers with the saved settings. Save or discard drafts first.
-- g :: Read the saved file again, asking before discarding edits.
-- q :: Return to the previous view, retaining the draft. Reopen /Punctuation/
-  or choose /Resume unfinished changes/ in Aural Home to continue.
-- ? :: Read help, including the selected host configuration path.
+- s :: Save drafts on the host without restarting speech or altering unrelated configuration.
+- r :: Restart this session's main and notification workers with saved settings after confirmation; save or discard drafts first.
+- g :: Reread the saved file, asking before discarding edits.
+- q :: Return while retaining the draft; reopening the editor resumes it. Home's unfinished-draft chooser also remains available.
+- ? :: Read Help, including the selected host configuration path.
 
-/Preserve character/ leaves punctuation for the engine's pronunciation and
-pauses; it does not promise silence. Org normally selects /some/. To name
-apostrophes in Org prose, set both /APOSTROPHE/, U+0027, and
-/RIGHT SINGLE QUOTATION MARK/, U+2019, to speak “apostrophe” in /some/.
-This also names apostrophes inside contractions. Omnivox 1.15.0 names straight,
-curly and modifier apostrophes at /all/ by default, without a configuration file.
+/Preserve character/ leaves pronunciation and pauses to the engine; it does
+not promise silence. Org normally uses /some/. To name apostrophes, set both
+/APOSTROPHE/ U+0027 and /RIGHT SINGLE QUOTATION MARK/ U+2019 to speak
+“apostrophe” in /some/. That includes contractions. Omnivox 1.15.0 names straight,
+curly, and modifier apostrophes at /all/ without a configuration file.
 
 ***** Save And Activate Changes
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-A save rejects changes if the file or selected target differs from the version
-you reviewed. Your draft is retained so you can review the conflict. Saving
-preserves other settings. With a host supporting named profiles, saving uses
-Omnivox configuration version 4; Omnivox 1.16.0 and earlier cannot read that
-version. The older built-in-only editor service uses version 3, which requires
-Omnivox 1.15.0 or newer. Do not save a file shared with an executable that cannot
-read its format. Named profiles are currently unreleased.
+Saving rejects a file or target changed since review and retains the draft for
+reconciliation. Other configuration is preserved. A named-profile-capable host
+writes Omnivox configuration version 4, unreadable by 1.16.0 and earlier. The
+older built-in-only editor writes version 3, requiring 1.15.0 or newer. Do not
+save a shared file with a format another selected executable cannot read.
+Capability and configuration-format checks matter even when the main installation
+uses a newer supported release.
+
+The editor's ~s~ saves pronunciation data; its ~r~ activates through worker
+restart. By contrast, ~S~ in the parent Punctuation menu saves the selected
+level/profile through Customize, not the host editor's draft.
 
 ***** Work With Named Profiles
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Named profiles are available with the updated Omnivox host. In the punctuation
-editor, ~N~ creates a profile inheriting =none=, =some= or =all=. Use a lowercase
-ID such as =prose= or =proofreading=. Edit characters as usual; ~l~ switches
-between levels and profiles, and ~X~ removes the selected profile from the draft.
-Profiles inherit edits to their base level and can override individual characters.
-~s~ saves all drafts together without changing running speech. Restart explicitly
-with ~r~ to load the same saved definitions in both workers.
+With host support, ~N~ creates a profile inheriting =none=, =some=, or =all=.
+Use a lowercase ID such as =prose= or =proofreading=. ~l~ switches levels and
+profiles; ~X~ removes the selected profile from the draft. Profiles inherit
+base-level edits and override individual characters. ~s~ saves all drafts
+without changing speech; ~r~ loads the same definitions into both workers.
 
-~M-x tts-set-punctuations~ offers profiles whose definitions agree in the current
-speech workers. An explicit selection applies to the buffer. A mode preference
-in ~tts-punctuation-mode-policy-alist~ can use =(text-mode profile "prose" some)=;
-it retains =some= as the fallback for an older server, a missing profile, or
-workers reporting different definitions. The punctuation status describes when
-that fallback is in use. ~tts-reset-punctuation-mode~ restores the mode policy.
-Choosing a built-in level explicitly overrides a profile. Character inspection
-remains independent, and there is no new built-in =most= level.
+=tts-set-punctuations= offers profiles whose definitions agree in current workers.
+Explicit selection applies to the buffer. A preference in
+=tts-punctuation-mode-policy-alist= can use =(text-mode profile "prose" some)=,
+retaining =some= as fallback for older hosts, missing profiles, or inconsistent
+worker definitions. Status identifies fallback use. =tts-reset-punctuation-mode=
+restores mode policy. Explicitly choosing a built-in level overrides a profile.
+Character inspection is independent, and there is no built-in =most= level.
 
 *** Stop Or Restart Speech
 :PROPERTIES:
@@ -480,30 +449,20 @@ remains independent, and there is no new built-in =most= level.
 :DESCRIPTION: Stop, silence, restart, or identify the speech server.
 :END:
 
-Stopping speech ends the current output without disabling future feedback.
-Quiet mode is useful when you temporarily want to keep working without speech.
-Restart the server after correcting a backend problem or changing the selected
-synthesizer.
+Stopping ends current output without disabling future feedback. Quiet mode
+lets you work temporarily without speech. Restart after correcting a backend
+problem or changing the selected synthesiser, not as an assumed cure for every
+missing integration.
 
 #+attr_texinfo: :indic kbd :compact t
-- C-e s ::
+- C-e s :: Stop current main and notification speech with =tts-stop=.
+- C-e d q :: Toggle current-buffer quiet mode; ~C-u~ toggles it globally.
+- C-e C-s :: Stop and restart the selected speech server.
+- C-e d V :: Speak adapter and version information.
 
-  Stop speech now with =tts-stop=.
-- C-e d q ::
-
-  Toggle quiet mode in the current buffer.  Press ~C-u~ first to toggle
-  it globally.
-- C-e C-s ::
-
-  Stop and restart the selected speech server.
-- C-e d V ::
-
-  Speak the selected adapter and its version information.
-
-Use ~C-h m~ or the generated keymap reference for server selection,
-repeated-pattern cleanup, text splitting, language selection, and direct engine
-controls.  Those specialist settings are intentionally outside this starter
-guide.
+Server selection, repeated-pattern cleanup, text splitting, language selection,
+and direct engine controls have specialist Help and reference entries. For
+missing speech, follow [[info:emacsvox#Recovering From No Speech][Recovering From No Speech]].
 
 ** Hear Structure With Voice Lock
 :PROPERTIES:
@@ -512,25 +471,19 @@ guide.
 :DESCRIPTION: Hear document and program structure through voice changes.
 :END:
 
-Voice Lock is enabled automatically in supported buffers.  It maps faces and
-other structural text properties to speech personalities, allowing comments,
-strings, headings, links, and other elements to sound distinct without adding
-words to the document.
+Voice Lock starts automatically in supported buffers. It maps faces and
+structural text properties to personalities, making comments, strings,
+headings, links, and other text sound distinct without extra words.
 
-Try it in source code, Org, Info, or EWW.  Move between two differently styled
-elements, such as a comment and a string or a heading and a link.  Press
-~C-e d v~ to turn Voice Lock off in that buffer, compare the same text,
-then press the key again to restore it.
+Compare two styled elements in code, Org, Info, or EWW. Toggle ~C-e d v~ locally,
+read the same elements, then toggle again to restore. ~C-e d C-v~ changes
+Voice Lock globally. Disabling it removes that layer of voices, not ordinary
+speech, semantic feedback, tones, or icons.
 
-Use ~C-e d C-v~ when you want to change Voice Lock globally.  Turning it
-off removes this layer of voice changes; it does not silence ordinary speech,
-semantic feedback, tones, or auditory icons.
-
-The exact personalities depend on the speech engine and active presentation
-settings.  For an explanation of the separate Voice Lock, face-presentation,
-and semantic-presentation layers, see [[*Voice Lock And Advanced Configuration][Voice Lock]].  Use
-[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when you want to choose voices, sounds, profiles, or
-other reusable presentation behavior.
+The result depends on engine and presentation settings. Voice Lock, explicit
+face rules, and semantic rules are separate; see
+[[*Voice Lock And Advanced Configuration][Voice Lock]] in Aural Presentation. Reusable voice, sound, and profile choices
+belong to that chapter rather than to a Voice Lock toggle.
 
 ** Find Out Where You Are
 :PROPERTIES:
@@ -539,9 +492,8 @@ other reusable presentation behavior.
 :DESCRIPTION: Ask about the current buffer, position, and Emacs state.
 :END:
 
-Use these commands when you want to find out where you are without moving
-point. They repeat the last message, identify the buffer and modes, or
-report your position in the current buffer.
+These commands report context without moving point: the last message, current
+buffer/modes, or position.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t
@@ -562,7 +514,7 @@ report your position in the current buffer.
 
   =emacsvox-speak-mode-line=
 
-  Speak the mode line, including the buffer name and major mode.
+  Speak the mode line, including buffer name and major mode.
 - C-e f ::
 
   #+findex: emacsvox-speak-buffer-filename
@@ -571,8 +523,7 @@ report your position in the current buffer.
 
   =emacsvox-speak-buffer-filename=
 
-  Speak the current file name, or the default directory when the buffer is not
-  visiting a file.
+  Speak the file name, or default directory when no file is visited.
 - C-e C-l ::
 
   #+findex: what-line
@@ -581,7 +532,7 @@ report your position in the current buffer.
 
   =what-line=
 
-  Report the current line number and position in the buffer.
+  Report the line number and position in the buffer.
 - C-e = ::
 
   #+findex: emacsvox-speak-current-column
@@ -599,6 +550,6 @@ report your position in the current buffer.
 
   =emacsvox-speak-current-percentage=
 
-  Announce the percentage into the current buffer.
+  Announce the percentage into the buffer.
 
 # basic-usage-live-keys-end
