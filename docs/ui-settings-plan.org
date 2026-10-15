@@ -1574,7 +1574,11 @@ verification of subsequently changed code.
   synthesis remain later work. Implementation is authorized; the Omnivox plan
   records the versioned contract and cancellation handoff. Standalone tone gain
   is a prerequisite for consistent spelling editing and preview feedback.
-  Runtime implementation and listening acceptance remain outstanding.
+  The first implementation slice adds shared tone types, standalone version 2
+  and timeline version 6 decoders, and compatibility and rejection tests in
+  Omnivox. The active server still rejects the new formats and advertises no
+  richer-tone capability. Next are shared rendering and cancellation, then
+  playback integration. No new sound is available for listening yet.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to
