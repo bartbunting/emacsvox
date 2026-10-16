@@ -1854,6 +1854,24 @@ verification of subsequently changed code.
   phonetic cancellation. Listening acceptance remains open for the capital
   pitch cue and phonetic description after the configured pause.
 
+- Transient review boundaries and shortcuts, 2026-10-16: =C-a= moves review
+  before the current item's first word and character; =C-e= moves after its
+  last word and character. They announce "Start of item" and "End of item".
+  Moving inward then reads the first or last element. Ordinary character and
+  word movement now uses these same boundary positions, fixing the skipped
+  element when reversing direction after a boundary announcement. Repeated
+  outward movement stays at that boundary, and switching review units keeps
+  the position consistent. Menu selection and Enter's target do not move.
+  The former =C-e= review prefix moves to =C-c=: =C-c l= repeats the item,
+  =C-c w= repeats the current word and =C-c c= repeats the current character.
+  Menu-specific bindings still take precedence. Both boundary regressions
+  fail before the fix and pass afterward. All 48 applicable source checks
+  pass. Nine compiled graphical checks pass, including the six batch skips
+  and real settings/Magit menus. Four focused compiled checks cover boundaries,
+  key precedence and phonetic cancellation after resetting review. Incremental
+  byte-code, preflight and the documentation review gate pass. Listening acceptance
+  remains open for the new shortcuts and reversal at both ends.
+
 - Shared diagnostic log lock prompts, 2026-10-16: multiple normal-profile
   sessions append to the same aural submissions log. Emacs's =write-region=
   took an editing lock during these background appends, allowing concurrent

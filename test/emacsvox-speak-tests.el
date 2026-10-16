@@ -530,7 +530,7 @@
 (ert-deftest emacsvox-delayed-phonetics-transient-review-keeps-menu-focus ()
   "A virtual review cursor gets normal phonetics only while still current."
   (require 'emacsvox-transient)
-  (dolist (change '(nil character word selection close redraw stop disabled))
+  (dolist (change '(nil character word repeat start end selection close redraw stop disabled))
     (emacsvox-speak-tests--with-delayed-phonetics
       (let* ((origin (selected-window))
              (origin-point (point))
@@ -558,6 +558,9 @@
                   (pcase change
                     ('character (emacsvox-transient--review-next-character 1))
                     ('word (emacsvox-transient--review-next-word 1))
+                    ('repeat (emacsvox-transient--repeat-item))
+                    ('start (emacsvox-transient--review-beginning))
+                    ('end (emacsvox-transient--review-end))
                     ('selection (with-current-buffer menu
                                   (setq emacsvox-transient--review-state nil)))
                     ('close (setq transient--prefix nil))

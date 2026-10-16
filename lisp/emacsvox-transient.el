@@ -1079,12 +1079,14 @@ When non-nil, preserve compatibility ICON."
             (eq origin-buffer (window-buffer origin-window))
             (memq (selected-window) (list window origin-window))
             (eq state emacsvox-transient--review-state)
-            (= index (plist-get state :character)))))))
+            (equal index (plist-get state :character)))))))
 
 (defun emacsvox-transient--review (movement &optional character)
   "Review the selected item without moving menu focus.
 Nil MOVEMENT repeats the whole item and resets word review.  Zero repeats
-the current word; other integers move that many words.  The first word
+the current word; other integers move that many words.  The symbols `start'
+and `end' move outside the first or last element in both review units.
+The first word
 command starts at the first word.  Keep punctuation and numeric values
 together by separating words at whitespace.  Non-nil CHARACTER reviews
 characters instead, sharing the word review position."
@@ -1110,21 +1112,30 @@ characters instead, sharing the word review position."
             (setq emacsvox-transient--review-state
                   (list :target target :text text :starts (nreverse starts)
                         :words (split-string text "[[:space:]]+" t)
-                        :index -1 :character -1))))
+                        :index nil :character nil))))
         (let* ((words (plist-get emacsvox-transient--review-state :words))
                (starts (plist-get emacsvox-transient--review-state :starts))
                (index (plist-get emacsvox-transient--review-state
                                  (if character :character :index)))
-               (next (if (< index 0) 0 (+ index (or movement 0))))
+               (next (pcase movement
+                       ('start -1)
+                       ('end (if character (length text) (length words)))
+                       (_ (if (null index) 0 (+ index (or movement 0))))))
                (content
                 (cond
                  ((null movement)
-                  (plist-put emacsvox-transient--review-state :index -1)
-                  (plist-put emacsvox-transient--review-state :character -1)
+                  (plist-put emacsvox-transient--review-state :index nil)
+                  (plist-put emacsvox-transient--review-state :character nil)
                   text)
                  ((null words) "No words in this item.")
-                 ((< next 0) "Start of item.")
-                 ((>= next (if character (length text) (length words))) "End of item.")
+                 ((< next 0)
+                  (plist-put emacsvox-transient--review-state :index -1)
+                  (plist-put emacsvox-transient--review-state :character -1)
+                  "Start of item.")
+                 ((>= next (if character (length text) (length words)))
+                  (plist-put emacsvox-transient--review-state :index (length words))
+                  (plist-put emacsvox-transient--review-state :character (length text))
+                  "End of item.")
                  (character
                   (plist-put emacsvox-transient--review-state :character next)
                   (plist-put emacsvox-transient--review-state :index
@@ -1134,6 +1145,7 @@ characters instead, sharing the word review position."
                  (t
                   (plist-put emacsvox-transient--review-state :index next)
                   (unless (and (zerop movement)
+                               (numberp (plist-get emacsvox-transient--review-state :character))
                                (>= (plist-get emacsvox-transient--review-state :character) 0))
                     (plist-put emacsvox-transient--review-state :character (nth next starts)))
                   (nth next words)))))
@@ -1147,6 +1159,16 @@ characters instead, sharing the word review position."
   "Repeat the selected item's name, value and key; restart word review."
   (interactive)
   (emacsvox-transient--review nil))
+
+(defun emacsvox-transient--review-beginning ()
+  "Move review before the selected item's first word and character."
+  (interactive)
+  (emacsvox-transient--review 'start))
+
+(defun emacsvox-transient--review-end ()
+  "Move review after the selected item's last word and character."
+  (interactive)
+  (emacsvox-transient--review 'end))
 
 (defun emacsvox-transient--review-word ()
   "Repeat the current review word without changing the selected item."
@@ -1287,9 +1309,11 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
 (defun emacsvox-transient-setup ()
   "Emacsvox Transient Customizations"
   ;; Navigation bindings remain below each menu's own suffix bindings.
-  (dolist (binding '(("C-e l" . emacsvox-transient--repeat-item)
-                     ("C-e w" . emacsvox-transient--review-word)
-                     ("C-e c" . emacsvox-transient--review-character)
+  (dolist (binding '(("C-c l" . emacsvox-transient--repeat-item)
+                     ("C-c w" . emacsvox-transient--review-word)
+                     ("C-c c" . emacsvox-transient--review-character)
+                     ("C-a" . emacsvox-transient--review-beginning)
+                     ("C-e" . emacsvox-transient--review-end)
                      ("C-f" . emacsvox-transient--review-next-character)
                      ("C-b" . emacsvox-transient--review-previous-character)
                      ("M-f" . emacsvox-transient--review-next-word)
