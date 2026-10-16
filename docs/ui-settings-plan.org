@@ -1782,6 +1782,8 @@ verification of subsequently changed code.
   properties; an uninitialized session now reports an error instead of
   reaching the menu's success announcement. This protects all settings menus
   using the same Customize path.
+  The warning identifies the =-q= option in your startup as a possible cause
+  and explains that you should restart with your usual configuration and save again.
   The missing-init regression fails before the fix and passes afterward.
   Twenty-one focused batch tests pass; three graphical tests skip in batch.
   The updated graphical spelling test passes separately, covering refusal

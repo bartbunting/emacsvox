@@ -79,7 +79,10 @@
     (unwind-protect
         (progn
           (set option 'original)
-          (should-error (customize-save-variable option 'changed) :type 'user-error)
+          (let ((failure (should-error (customize-save-variable option 'changed)
+                                       :type 'user-error)))
+            (should (string-match-p "possibly because of the -q option in your startup"
+                                    (error-message-string failure))))
           (should (eq (symbol-value option) 'original))
           (should-not (get option 'saved-value))
           (should (zerop (file-attribute-size (file-attributes custom-file)))))

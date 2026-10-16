@@ -3028,6 +3028,11 @@ TARGET identifies the command, STATE is its new value, and SETTING names it."
   ;; Custom otherwise returns success for temporary changes in -q sessions.
   ;; Check before suppressing its warning or changing saved-value properties.
   (require 'cus-edit)
+  (unless user-init-file
+    (user-error
+     (concat "Settings were not saved. This session skipped normal initialization, "
+             "possibly because of the -q option in your startup. "
+             "Restart with your usual Emacs configuration, then save again")))
   (custom-file)
   (ems-with-messages-silenced
     (let ((tts-quiet t))
