@@ -10,6 +10,14 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.10.0][NEWS for Emacsvox 2026.10.0]].
 
+** Omnivox 1.18.0
+
+The supported Omnivox baseline is now 1.18.0. This release supplies richer
+tones, including waveforms, pulse width, pitch sweeps, envelopes and individual
+gain. Guided installers pin the matching core and optional engines; Debian
+packages recommend Omnivox 1.18.0 or newer. Updating Emacsvox does not upgrade
+an existing Omnivox installation.
+
 ** Spelling feedback
 
 =C-e H s f= opens global spelling feedback settings. Combine voice changes,

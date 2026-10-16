@@ -84,11 +84,11 @@ upstream package recipes. The generated config.toml replaces crates.io with
 the verified local vendor directory. This helper needs Python 3.11 or newer.
 The package manager and other build dependencies remain separate prerequisites.
 
-Omnivox 1.17.0
+Omnivox 1.18.0
 --------------
 
-The linked omnivox-1.17.0-piper-source.tar.gz is the published corresponding-source
-archive for commit 8a2c3328d34e75b311647db2db6830a90f876ea7. Despite its name,
+The linked omnivox-1.18.0-piper-source.tar.gz is the published corresponding-source
+archive for commit 246e3b72013b4a8a25c18355d567e4cc8ed3fded. Despite its name,
 it includes the complete Omnivox source, locked vendored Cargo dependencies,
 eSpeak NG and Sonic sources, and the native helper sources/build instructions.
 It also includes additional optional Piper/ONNX build inputs; those engines
@@ -98,7 +98,7 @@ Follow that archive's README and SOURCE-MANIFEST.json, and its pinned Rust
 and Windows build-tool instructions. Omnivox supplies its own notices in the
 installed runtime's third-party-licenses directory.
 
-The linked omnivox-1.17.0-tgspeechbox-source.tar.gz supplies the bundled
+The linked omnivox-1.18.0-tgspeechbox-source.tar.gz supplies the bundled
 TGSpeechBox engine source and build inputs at revision
 25b0e1ae65fb87705f0870c724dc8c91f3abbeba, with the same Omnivox commit and
 vendored Cargo dependencies. Its README includes offline build instructions.

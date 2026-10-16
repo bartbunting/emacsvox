@@ -24,7 +24,7 @@ DEPENDS = " | ".join(f"{name} (>= 1:30.2)" for name in
 DEPENDS += ", elpa-transient (>= 0.13.3) | " + " | ".join(
     f"{name} (>= 1:31.1)" for name in
     ("emacs", "emacs-gtk", "emacs-pgtk", "emacs-lucid", "emacs-nox"))
-RECOMMENDS = "omnivox (>= 1.17.0)"
+RECOMMENDS = "omnivox (>= 1.18.0)"
 RUNTIME_FILES = {
     "VERSION", "README.org", "COPYING", "AUTHORS", "THIRD_PARTY_NOTICES",
     "bin/emacsvox", "bin/emacsvox-omnivox-components", "bin/emacsvox-paddleocr",
