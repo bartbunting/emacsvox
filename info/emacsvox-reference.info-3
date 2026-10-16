@@ -9347,21 +9347,21 @@ Function Index
 * emacsvox-tone-editor <1>:              emacsvox-tone-editor.
                                                              (line   16)
 * emacsvox-tone-editor-curve:            emacsvox-tone-editor.
-                                                             (line   25)
-* emacsvox-tone-editor-curve <1>:        emacsvox-tone-editor.
                                                              (line   26)
+* emacsvox-tone-editor-curve <1>:        emacsvox-tone-editor.
+                                                             (line   27)
 * emacsvox-tone-editor-envelope:         emacsvox-tone-editor.
-                                                             (line   32)
-* emacsvox-tone-editor-envelope <1>:     emacsvox-tone-editor.
                                                              (line   33)
+* emacsvox-tone-editor-envelope <1>:     emacsvox-tone-editor.
+                                                             (line   34)
 * emacsvox-tone-editor-presets:          emacsvox-tone-editor.
-                                                             (line   40)
-* emacsvox-tone-editor-presets <1>:      emacsvox-tone-editor.
                                                              (line   41)
+* emacsvox-tone-editor-presets <1>:      emacsvox-tone-editor.
+                                                             (line   42)
 * emacsvox-tone-editor-waveform:         emacsvox-tone-editor.
-                                                             (line   49)
-* emacsvox-tone-editor-waveform <1>:     emacsvox-tone-editor.
                                                              (line   50)
+* emacsvox-tone-editor-waveform <1>:     emacsvox-tone-editor.
+                                                             (line   51)
 * emacsvox-transient-mode:               emacsvox-transient. (line   55)
 * emacsvox-transient-mode <1>:           emacsvox-transient. (line   56)
 * emacsvox-transient-next-section:       emacsvox-transient. (line   66)

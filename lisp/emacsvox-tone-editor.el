@@ -482,8 +482,9 @@ Only ADSR uses this curve; the draft retains it when you choose Classic."
                                     '((linear . emacsvox-tone-editor--linear) (exponential . emacsvox-tone-editor--exponential))))
 
 (transient-define-prefix emacsvox-tone-editor ()
-  "Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
-Enter sets an exact number or opens a choice list.  Preview leaves live settings
+  "Edit a private tone draft.
+Arrows navigate; Shift arrows adjust numbers. Enter sets an exact number or
+opens a choice list.  Preview leaves live settings
 unchanged. Apply changes the session; Save and apply persists tone defaults.
 Back discards unapplied edits. Shared main-tone volume belongs in Output settings."
   :refresh-suffixes t

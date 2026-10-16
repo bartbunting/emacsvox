@@ -22383,8 +22383,9 @@ Shared draft interaction; cue providers own their settings and preview facts.
 @findex emacsvox-tone-editor
 
 @format
-Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
-Enter sets an exact number or opens a choice list.  Preview leaves live settings
+Edit a private tone draft.
+Arrows navigate; Shift arrows adjust numbers. Enter sets an exact number or
+opens a choice list.  Preview leaves live settings
 unchanged. Apply changes the session; Save and apply persists tone defaults.
 Back discards unapplied edits. Shared main-tone volume belongs in Output settings.
 @end format
