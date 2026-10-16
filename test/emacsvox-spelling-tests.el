@@ -141,6 +141,40 @@
           (emacsvox-spelling--preview)
           (should sent))))))
 
+(ert-deftest emacsvox-spelling-tone-preview-interrupts-main-before-delivery ()
+  "Preview replaces existing main speech without stopping notifications."
+  (omnivox-native-runtime-test--with-speech
+    (omnivox-rich-tone-test--enable speaker)
+    (with-temp-buffer
+      (let ((transient--prefix
+             (transient-prefix :command 'emacsvox-spelling
+                               :scope (emacsvox-aural-menu--capture nil)))
+            (emacsvox-flyspell-tone-shape '(:waveform sine))
+            (emacsvox-flyspell-tone-volume 100)
+            (emacsvox-aural-submission-delivery-policy nil)
+            events)
+        (cl-letf (((symbol-function 'tts--interrupt-process)
+                   (lambda (owner &optional notifications _preserved)
+                     (push (list 'stop owner notifications) events)))
+                  ((symbol-function 'process-send-string)
+                   (lambda (owner text) (push (list 'write owner text) events))))
+          (emacsvox-spelling--preview-tone)
+          (setq events (nreverse events))
+          (should (equal (car events) (list 'stop speaker nil)))
+          (should (equal (seq-filter (lambda (event) (eq (car event) 'stop)) events)
+                         (list (list 'stop speaker nil))))
+          (should (seq-some (lambda (event)
+                              (and (eq (car event) 'write)
+                                   (eq (cadr event) speaker)
+                                   (string-match-p "emacsvox_tone" (caddr event))))
+                            (cdr events)))
+          ;; Unsupported previews must fail before disturbing current speech.
+          (setq events nil)
+          (process-put speaker emacsvox-aural--presentation-tone-process-property 1)
+          (let ((emacsvox-flyspell-tone-volume 35))
+            (should-error (emacsvox-spelling--preview-tone) :type 'user-error))
+          (should-not events))))))
+
 (ert-deftest emacsvox-spelling-volume-and-timing-match-reading-editing-and-preview ()
   (omnivox-native-runtime-test--with-speech
    (omnivox-rich-tone-test--enable speaker)

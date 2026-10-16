@@ -176,7 +176,7 @@ Preview does not change Flyspell, edit your text, or save settings."
       (tts-speak (emacsvox-spelling--sample)))))
 
 (defun emacsvox-spelling--preview-tone ()
-  "Play the adjusted tone alone, even when spelling tones are disabled."
+  "Interrupt main speech and play the tone, even when spelling tones are off."
   (interactive)
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
     (let ((emacsvox-flyspell-use-tone t) (emacsvox-flyspell-use-earcon nil)
@@ -184,7 +184,7 @@ Preview does not change Flyspell, edit your text, or save settings."
       (emacsvox-spelling--check-preview)
       (emacsvox-aural-submit-actions
        :facts (emacsvox-flyspell--facts) :module 'flyspell :occasion 'inspection
-       :lane 'main :interruption-policy 'lane))))
+       :lane 'main :delivery-policy 'urgent :interruption-policy 'lane))))
 
 (defconst emacsvox-spelling--tone-fields
   '((:pitch . emacsvox-flyspell-tone-pitch)
