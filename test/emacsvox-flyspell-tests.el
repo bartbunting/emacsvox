@@ -368,4 +368,70 @@
             (should-not icons)))
       (when (process-live-p ispell-process) (delete-process ispell-process)))))
 
+(ert-deftest emacsvox-flyspell-navigation-does-not-repeat-known-error ()
+  "Leaving an unchanged flagged word keeps highlighting without an edit cue."
+  (skip-unless (executable-find "hunspell"))
+  (skip-unless (file-exists-p "/usr/share/hunspell/en_AU.dic"))
+  (let ((ispell-program-name "hunspell") (ispell-dictionary "en_AU")
+        (ispell-process nil) (text-mode-hook nil)
+        (emacsvox-use-icons t) (emacsvox-flyspell-use-tone t)
+        (emacsvox-flyspell-use-earcon nil))
+    (unwind-protect
+        (with-temp-buffer
+          (text-mode)
+          (insert "This is mispeled.\n\n")
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+            (flyspell-mode 1)
+            (flyspell-buffer))
+          (let ((this-command 'next-line) cues checked)
+            (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                       (lambda (&rest args) (push args cues))))
+              ;; Invalidate Flyspell's single-word cache by checking elsewhere.
+              (goto-char (point-min))
+              (flyspell-word)
+              (setq flyspell-changes nil)
+              (goto-char 13)
+              (flyspell-pre-command-hook)
+              (forward-line 1)
+              (emacsvox-flyspell--clear-read-errors)
+              (let ((flyspell-incorrect-hook
+                     (cons (lambda (start end _)
+                             (push (cons start end) checked) nil)
+                           flyspell-incorrect-hook)))
+                (flyspell-post-command-hook))
+              (should checked)
+              (should-not cues)
+              (should (bolp))
+              (should (eolp))
+              (should (seq-some #'flyspell-overlay-p (overlays-at 13)))
+              ;; Reading the flagged word still carries its positioned tone.
+              (let ((text (emacsvox-flyspell--annotate
+                           (emacsvox-aural-source-substring 9 17))))
+                (should (plist-get
+                         (car (get-text-property
+                               0 emacsvox-aural-positioned-facts-property text))
+                         :spelling-tone)))
+              ;; A new edit to that word must still produce detection feedback.
+              (emacsvox-flyspell--clear-read-errors)
+              (goto-char 16)
+              (flyspell-pre-command-hook)
+              (insert "x")
+              (let ((this-command 'self-insert-command)
+                    (flyspell-delay 0))
+                (flyspell-post-command-hook))
+              (should (= 1 (length cues)))
+              (should (eq (plist-get (car cues) :occasion) 'edit))
+              ;; A first detection during navigation remains useful feedback.
+              (setq cues nil)
+              (flyspell-delete-all-overlays)
+              (goto-char (point-min))
+              (flyspell-word)
+              (setq flyspell-changes nil)
+              (goto-char 13)
+              (flyspell-pre-command-hook)
+              (forward-line 1)
+              (flyspell-post-command-hook)
+              (should (= 1 (length cues))))))
+      (when (process-live-p ispell-process) (delete-process ispell-process)))))
+
 (provide 'emacsvox-flyspell-tests)

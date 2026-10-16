@@ -1853,6 +1853,21 @@ verification of subsequently changed code.
   Existing sessions retain their
   loaded logger until restarted; no live locks or buffers were modified.
 
+- Flyspell navigation feedback, 2026-10-16: moving to an empty line could
+  recheck a known error on the preceding line and play another spelling tone
+  after the normal blank-line cue. Automatic checks with no pending edits now
+  keep existing highlights without repeating their detection alerts. Reading
+  tones, first detections and edited-word feedback remain available. A real
+  Hunspell regression reproduces the extra cue before the fix and passes
+  afterward. All 18 Flyspell source tests and 11 spelling/tone source tests
+  pass. Four focused compiled graphical checks pass, including the regression
+  and the three spelling/editor checks skipped in batch. Incremental byte-code,
+  preflight and the documentation review gate pass. A broader graphical run
+  encountered unrelated mail-mode audio setup failures; those tests pass in
+  batch. Listening acceptance remains open in a fresh normal profile.
+  Character entry also needs review: backward navigation currently cues at
+  the following space instead of the final letter of the flagged word.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.

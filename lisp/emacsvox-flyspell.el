@@ -203,6 +203,9 @@ Voice feedback remains independent of the selected tone and earcon."
 (defvar emacsvox-flyspell--reported-errors nil
   "Errors already announced during the current automatic checking pass.")
 
+(defvar emacsvox-flyspell--checking-unchanged-text nil
+  "Non-nil during an automatic check with no pending text edits.")
+
 (defun emacsvox-flyspell--automatic-check (original &rest arguments)
   "Run ORIGINAL with ARGUMENTS without announcing mail setup changes.
 Keep checking and highlighting words when entering a composition buffer.
@@ -211,7 +214,8 @@ Announce each misspelling at most once during an ordinary editing pass."
          (and emacsvox-use-icons
               (or (not (derived-mode-p 'message-mode))
                   (eq flyspell-pre-buffer (current-buffer)))))
-        (emacsvox-flyspell--reported-errors (make-hash-table :test #'equal)))
+        (emacsvox-flyspell--reported-errors (make-hash-table :test #'equal))
+        (emacsvox-flyspell--checking-unchanged-text (null flyspell-changes)))
     (apply original arguments)))
 
 (advice-add 'flyspell-post-command-hook :around
@@ -268,6 +272,15 @@ Announce each misspelling at most once during an ordinary editing pass."
   "Cue a misspelling from START to END with corrections POSSIBLE.
 Leave Flyspell's highlighting intact, including for duplicate words."
   (when (and emacsvox-use-icons (not (eq possible 'doublon))
+             ;; Navigation can recheck the word on the line just left.
+             ;; Keep its highlight, but do not repeat its editing alert.
+             (not (and emacsvox-flyspell--checking-unchanged-text
+                       (cl-some
+                        (lambda (overlay)
+                          (and (flyspell-overlay-p overlay)
+                               (= start (overlay-start overlay))
+                               (= end (overlay-end overlay))))
+                        (overlays-at start))))
              (not (cl-some (lambda (range)
                              (and (< start (cdr range)) (> end (car range))))
                            emacsvox-flyspell--read-errors)))
