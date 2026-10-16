@@ -189,8 +189,7 @@ Preview does not change Flyspell, edit your text, or save settings."
 (defconst emacsvox-spelling--tone-fields
   '((:pitch . emacsvox-flyspell-tone-pitch)
     (:duration . emacsvox-flyspell-tone-duration)
-    (:volume . emacsvox-flyspell-tone-volume)
-    (:timing . emacsvox-flyspell-tone-timing))
+    (:volume . emacsvox-flyspell-tone-volume))
   "Spelling options represented by the common tone editor.")
 
 (defun emacsvox-spelling--tone-data (&optional factory)
@@ -229,7 +228,8 @@ Preview does not change Flyspell, edit your text, or save settings."
   "Edit a private draft of the global spelling tone, including waveform and envelope.
 Preview changes neither live feedback nor saved defaults.  Apply changes the
 session; Save and apply also persists tone defaults.  Back discards unapplied
-edits.  Voice, earcons and the shared tone volume are outside this editor."
+edits.  Timing stays in Spelling feedback.  Voice, earcons and the shared
+tone volume are outside this editor."
   (interactive)
   (emacsvox-tone-editor--open
    (emacsvox-aural-menu--context)

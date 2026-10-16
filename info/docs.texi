@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1669 commands and 242 options.
+This chapter documents a total of 1668 commands and 242 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -22397,16 +22397,6 @@ Enter selects and returns. Cancel keeps the previous draft value.
 @end format
 @end deffn
 
-@subsubsection emacsvox-tone-editor-timing
-@deffn {Command} emacsvox-tone-editor-timing
-@findex emacsvox-tone-editor-timing
-
-@format
-Choose draft timing; arrows browse without applying a choice.
-Enter selects and returns. Cancel keeps the previous draft value.
-@end format
-@end deffn
-
 @subsubsection emacsvox-tone-editor-waveform
 @deffn {Command} emacsvox-tone-editor-waveform
 @findex emacsvox-tone-editor-waveform
@@ -26768,7 +26758,6 @@ The  is then saved to soundscape-device for future use.
 (fn &optional PROMPT)
 @end format
 @end deffn
-
 @subsubsection soundscape-stop
 @deffn {Command} soundscape-stop  (scape)
 @findex soundscape-stop

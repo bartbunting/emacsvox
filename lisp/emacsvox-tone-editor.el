@@ -78,9 +78,8 @@
       (unless (and (numberp value) (<= (nth 3 spec) value (nth 4 spec))
                    (or (memq (car spec) '(:pitch :sustain)) (integerp value)))
         (user-error "Invalid %s: %s" (nth 1 spec) value))))
-  (unless (and (memq (plist-get data :timing) '(insert overlay))
-               (memq (plist-get data :envelope) '(classic adsr)))
-    (user-error "Invalid tone timing or envelope"))
+  (unless (memq (plist-get data :envelope) '(classic adsr))
+    (user-error "Invalid tone envelope"))
   (emacsvox-tone-editor--shape data)
   data)
 
@@ -107,8 +106,7 @@
 
 (defun emacsvox-tone-editor--name (value)
   "Return a concise label for choice VALUE."
-  (pcase value ('insert "Before speech") ('overlay "Alongside speech")
-         ('adsr "ADSR") (_ (capitalize (symbol-name value)))))
+  (pcase value ('adsr "ADSR") (_ (capitalize (symbol-name value)))))
 
 (defun emacsvox-tone-editor--choice-label (key value)
   "Describe choice VALUE for KEY with its selection state."
@@ -146,7 +144,7 @@ shapes or volume instead of playing an inaccurate substitute."
 (defun emacsvox-tone-editor--sample ()
   "Read a sample using the draft tone to compare timing and speech masking.
 The preview enables this tone privately without changing live settings.
-Other feedback follows the source's current settings."
+Timing and other feedback follow the source's current settings."
   (interactive) (emacsvox-tone-editor--preview t))
 
 (defun emacsvox-tone-editor--stop ()
@@ -163,8 +161,8 @@ Other feedback follows the source's current settings."
 
 (defun emacsvox-tone-editor--save ()
   "Save and apply this cue's tone defaults through Customize.
-This saves pitch, duration, individual volume, timing, waveform and envelope.
-It leaves cue enablement, voices, earcons and shared tone volume unchanged."
+This saves pitch, duration, individual volume, waveform and envelope.
+Timing, cue enablement, voices, earcons and shared tone volume stay unchanged."
   (interactive) (emacsvox-tone-editor--apply t))
 
 (defun emacsvox-tone-editor--reset ()
@@ -315,33 +313,6 @@ Enter selects and returns. Cancel keeps the previous draft value."
    'emacsvox-tone-editor-envelope :envelope
    '((classic . emacsvox-tone-editor--classic) (adsr . emacsvox-tone-editor--adsr))))
 
-(defun emacsvox-tone-editor--insert ()
-  "Finish the tone before its word, inserting a pause while reading.
-This changes only the draft. A tone-only preview has no speech to delay.
-Selecting changes only this draft; Apply and Save are separate actions."
-  (interactive) (emacsvox-tone-editor--choose :timing 'insert))
-
-(defun emacsvox-tone-editor--overlay ()
-  "Play the tone alongside its word without adding a tone pause.
-This is the default. Use the sample to judge whether the tone masks speech.
-Selecting changes only this draft; Apply and Save are separate actions."
-  (interactive) (emacsvox-tone-editor--choose :timing 'overlay))
-
-(transient-define-prefix emacsvox-tone-editor-timing ()
-  "Choose draft timing; arrows browse without applying a choice.
-Enter selects and returns. Cancel keeps the previous draft value."
-  ["Timing"
-   ("b" (lambda () (emacsvox-tone-editor--choice-label :timing 'insert))
-    emacsvox-tone-editor--insert :transient transient--do-replace)
-   ("a" (lambda () (emacsvox-tone-editor--choice-label :timing 'overlay))
-    emacsvox-tone-editor--overlay :transient transient--do-replace)
-   ]
-  ["Finish" ("q" "Cancel" transient-quit-one) ("C-q" "Close menus" transient-quit-all)]
-  (interactive)
-  (emacsvox-tone-editor--choice-setup
-   'emacsvox-tone-editor-timing :timing
-   '((insert . emacsvox-tone-editor--insert) (overlay . emacsvox-tone-editor--overlay))))
-
 (transient-define-prefix emacsvox-tone-editor ()
   "Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
 Enter sets an exact number or opens a choice list.  Preview leaves live settings
@@ -352,8 +323,7 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
    ("p" (lambda () (emacsvox-tone-editor--number-label :pitch)) emacsvox-tone-editor--pitch :transient t)
    ("d" (lambda () (emacsvox-tone-editor--number-label :duration)) emacsvox-tone-editor--duration :transient t)
    ("v" (lambda () (emacsvox-tone-editor--number-label :volume)) emacsvox-tone-editor--volume :transient t)
-   ("w" (lambda () (concat "Waveform: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :waveform)))) emacsvox-tone-editor-waveform :transient transient--do-stack)
-   ("m" (lambda () (concat "Timing: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :timing)))) emacsvox-tone-editor-timing :transient transient--do-stack)]
+   ("w" (lambda () (concat "Waveform: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :waveform)))) emacsvox-tone-editor-waveform :transient transient--do-stack)]
   ["Envelope (stage controls apply to ADSR)"
    ("e" (lambda () (concat "Envelope: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :envelope)))) emacsvox-tone-editor-envelope :transient transient--do-stack)
    ("a" (lambda () (emacsvox-tone-editor--number-label :attack)) emacsvox-tone-editor--attack :transient t)
@@ -362,7 +332,8 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
    ("r" (lambda () (emacsvox-tone-editor--number-label :release)) emacsvox-tone-editor--release :transient t)]
   ["Preview"
    ("b" "Play tone alone" emacsvox-tone-editor--tone :transient t)
-   ("SPC" "Read sample" emacsvox-tone-editor--sample :transient t)
+   ("SPC" "Play tone alone" emacsvox-tone-editor--tone :transient t)
+   ("P" "Read sample" emacsvox-tone-editor--sample :transient t)
    ("S" "Stop preview" emacsvox-tone-editor--stop :transient t)]
   ["Apply and save"
    ("R" "Reset draft to factory defaults" emacsvox-tone-editor--reset :transient t)

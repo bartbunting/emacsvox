@@ -1676,13 +1676,29 @@ verification of subsequently changed code.
   Apply, Save and restore after restart. Automated completion is not listening
   acceptance.
 
+- Tone-editor preview correction, 2026-10-16: Space plays the draft tone
+  alone; =b= remains an alias and capital =P= reads the optional spelling
+  sample. Timing stays in Spelling feedback at =C-e H s f m=. The editor
+  neither stores timing in its draft nor changes or saves it through Apply,
+  Save or Reset. The sample uses the current spelling timing. Alongside
+  remains the factory default.
+  Automated verification passes nine focused source tests and three fresh
+  compiled graphical checks, including Space, sample playback dispatch,
+  choices, Help and return focus. The two graphical tests skipped in batch
+  passed in that graphical run. A private Customize save/restart preserves
+  separately saved timing and restores the edited tone. Incremental byte-code
+  and regenerated manual/reference checks pass. Listening remains pending:
+  press Space at =C-e H s f E= and confirm that only the tone plays; compare
+  with capital =P=, then check Stop and navigation interruption.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveform (sine, triangle, square), Classic/ADSR envelope,
-  attack, decay, sustain and release join pitch, duration, volume and timing.
+  attack, decay, sustain and release join pitch, duration and individual volume.
   Fixed duration and proportional stage shortening follow the existing
   Omnivox renderer. Opening and previewing write nothing. Apply changes the
   session; Save and apply persists tone defaults; Back discards unapplied
-  edits. Reset affects only the draft. Shared volume stays outside this editor.
+  edits. Reset affects only the draft. Timing and shared volume stay outside
+  this editor.
   After listening acceptance, add named presets and reuse the editor for
   capitalization, indentation and personal tone rules while preserving each
   destination's scope and saving contract. Capitalization/line-cue retained

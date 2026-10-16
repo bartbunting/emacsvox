@@ -5759,8 +5759,8 @@ punctuation default.
           for a private draft of the complete tone.  The title
           identifies its global spelling scope.  This editor adds
           waveform and envelope controls to pitch, duration, individual
-          volume and timing.  Changes here affect only the draft until
-          you apply it.
+          volume.  Changes here affect only the draft until you apply
+          it.  Timing stays in Spelling feedback at ‘C-e H s f m’.
 
           Use arrows to navigate and Shift-left/right to adjust the
           selected number.  ‘<RET>’ enters an exact number or opens a
@@ -5790,22 +5790,23 @@ punctuation default.
           controls, retaining their values while this draft remains
           open.  The initial waveform is sine with Classic fades.
 
-          Press ‘b’ to hear the draft tone alone, or ‘<SPC>’ to hear it
-          with the spelling sample.  Both privately enable the tone even
-          if live spelling tones are off; the sentence otherwise uses
-          current feedback settings.  ‘S’ stops the preview immediately,
-          without waiting for release.  Navigation also interrupts
-          playback.  Previews neither apply nor save the draft.
+          Press ‘<SPC>’ or ‘b’ to hear the draft tone alone.  Capital
+          ‘P’ reads the spelling sample with the draft tone.  Both
+          privately enable the tone even if live spelling tones are off;
+          the sentence uses the current timing and other feedback
+          settings.  ‘S’ stops the preview immediately, without waiting
+          for release.  Navigation also interrupts playback.  Previews
+          neither apply nor save the draft.
 
           Use ‘A’ to apply the draft for this session.  Capital ‘W’
           saves and applies its tone defaults through Customize.  These
-          actions leave voice, earcon, tone enablement and shared volume
-          unchanged.  ‘R’ resets only the draft to factory defaults for
-          preview and deliberate application.  ‘q’ returns to Spelling
-          feedback and discards unapplied edits; applied and saved
-          changes remain.  Reopening starts from the current tone.  To
-          reverse an applied adjustment, edit it back and apply again,
-          saving too if you changed the saved defaults.
+          actions leave timing, voice, earcon, tone enablement and
+          shared volume unchanged.  ‘R’ resets only the draft to factory
+          defaults for preview and deliberate application.  ‘q’ returns
+          to Spelling feedback and discards unapplied edits; applied and
+          saved changes remain.  Reopening starts from the current tone.
+          To reverse an applied adjustment, edit it back and apply
+          again, saving too if you changed the saved defaults.
 
           Individual volume below 100, harmonic waveforms and ADSR
           require an Omnivox worker with richer-tone support.  Older

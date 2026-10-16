@@ -5410,7 +5410,8 @@ including tone timing and shape@comma{} and the shared tone volume through Custo
 Press capital @kbd{E} in Spelling feedback@comma{} or use @kbd{C-e H s f E}@comma{} for a private
 draft of the complete tone. The title identifies its global spelling scope.
 This editor adds waveform and envelope controls to pitch@comma{} duration@comma{} individual
-volume and timing. Changes here affect only the draft until you apply it.
+volume. Changes here affect only the draft until you apply it. Timing stays
+in Spelling feedback at @kbd{C-e H s f m}.
 
 Use arrows to navigate and Shift-left/right to adjust the selected number.
 @kbd{@key{RET}} enters an exact number or opens a choice list. In a list@comma{} arrows browse@comma{}
@@ -5440,15 +5441,15 @@ Zero skips a timed stage; endpoint smoothing still limits clicks. Classic
 ignores these four controls@comma{} retaining their values while this draft remains
 open. The initial waveform is sine with Classic fades.
 
-Press @kbd{b} to hear the draft tone alone@comma{} or @kbd{@key{SPC}} to hear it with the spelling
-sample. Both privately enable the tone even if live spelling tones are off;
-the sentence otherwise uses current feedback settings. @kbd{S} stops the preview
-immediately@comma{} without waiting for release. Navigation also interrupts playback.
+Press @kbd{@key{SPC}} or @kbd{b} to hear the draft tone alone. Capital @kbd{P} reads the spelling
+sample with the draft tone. Both privately enable the tone even if live
+spelling tones are off; the sentence uses the current timing and other
+feedback settings. @kbd{S} stops the preview immediately@comma{} without waiting for release. Navigation also interrupts playback.
 Previews neither apply nor save the draft.
 
 Use @kbd{A} to apply the draft for this session. Capital @kbd{W} saves and applies
-its tone defaults through Customize. These actions leave voice@comma{} earcon@comma{} tone
-enablement and shared volume unchanged. @kbd{R} resets only the draft to factory
+its tone defaults through Customize. These actions leave timing@comma{} voice@comma{} earcon@comma{}
+tone enablement and shared volume unchanged. @kbd{R} resets only the draft to factory
 defaults for preview and deliberate application. @kbd{q} returns to Spelling
 feedback and discards unapplied edits; applied and saved changes remain.
 Reopening starts from the current tone. To reverse an applied adjustment@comma{}

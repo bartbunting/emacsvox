@@ -9350,14 +9350,10 @@ Function Index
                                                              (line   25)
 * emacsvox-tone-editor-envelope <1>:     emacsvox-tone-editor.
                                                              (line   26)
-* emacsvox-tone-editor-timing:           emacsvox-tone-editor.
-                                                             (line   33)
-* emacsvox-tone-editor-timing <1>:       emacsvox-tone-editor.
-                                                             (line   34)
 * emacsvox-tone-editor-waveform:         emacsvox-tone-editor.
-                                                             (line   41)
+                                                             (line   33)
 * emacsvox-tone-editor-waveform <1>:     emacsvox-tone-editor.
-                                                             (line   42)
+                                                             (line   34)
 * emacsvox-transient-mode:               emacsvox-transient. (line   55)
 * emacsvox-transient-mode <1>:           emacsvox-transient. (line   56)
 * emacsvox-transient-next-section:       emacsvox-transient. (line   66)
