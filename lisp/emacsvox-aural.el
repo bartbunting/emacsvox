@@ -677,6 +677,14 @@ Registry validation rejects missing targets and alias cycles."
      :phases '(before)
      :usage
      "Selects built-in capitalization feedback while allowing stronger rules to override it."))
+  (dolist (entry '((capitalization-tone-pitch number "Capitalization tone pitch in Hz")
+                   (capitalization-tone-duration number "Capitalization tone duration in milliseconds")
+                   (capitalization-tone-volume number "Individual capitalization tone gain from 0 to 1")
+                   (capitalization-tone-shape nil "Capitalization tone waveform, sweep and envelope")))
+    (unless (emacsvox-aural-semantic (car entry))
+      (emacsvox-aural-register-semantic
+       (car entry) :kind 'attribute :summary (nth 2 entry)
+       :value-type (nth 1 entry) :phases '(before))))
   (unless (emacsvox-aural-semantic 'indentation-columns)
     (emacsvox-aural-register-semantic
      'indentation-columns
@@ -718,6 +726,12 @@ Registry validation rejects missing targets and alias cycles."
      :summary "Computed indentation tone duration in milliseconds"
      :value-type 'integer
      :phases '(before)))
+  (dolist (entry '((indentation-tone-volume number "Individual indentation tone gain from 0 to 1")
+                   (indentation-tone-shape nil "Indentation tone waveform, sweep and envelope")))
+    (unless (emacsvox-aural-semantic (car entry))
+      (emacsvox-aural-register-semantic
+       (car entry) :kind 'attribute :value-type (cadr entry)
+       :summary (caddr entry) :phases '(before))))
   (unless (emacsvox-aural-semantic 'edit-operation)
     (emacsvox-aural-register-semantic
      'edit-operation

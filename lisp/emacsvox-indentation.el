@@ -33,13 +33,20 @@
 (require 'emacsvox-speak)
 (require 'emacsvox-transient)
 
+(declare-function emacsvox-tone-editor--data "emacsvox-tone-editor" (pitch duration volume shape))
+(declare-function emacsvox-tone-editor--shape "emacsvox-tone-editor" (data))
+(declare-function emacsvox-tone-editor--open "emacsvox-tone-editor" (context provider))
+(declare-function emacsvox-aural-menu--capture "emacsvox-aural-menu" (global))
+
 (defun emacsvox-indentation--state ()
   "Return the active menu's source buffer and global scope flag."
-  (let ((prefix (or transient--prefix transient-current-prefix)))
-    (unless (and prefix (memq (oref prefix command)
-                              '(emacsvox-indentation emacsvox-indentation-tone)))
-      (user-error "Open the indentation menu first"))
-    (oref prefix scope)))
+  (let* ((prefix (or transient--prefix transient-current-prefix))
+         (command (and prefix (oref prefix command))))
+    (cond ((memq command '(emacsvox-indentation emacsvox-indentation-tone))
+           (oref prefix scope))
+          ((and (eq command 'emacsvox-tone-editor)
+                (plist-get (oref prefix scope) :indentation-state)))
+          (t (user-error "Open the indentation menu first")))))
 
 (defun emacsvox-indentation--source ()
   "Return the menu's live source buffer."
@@ -112,7 +119,9 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
         (base (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-base))
         (rise (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-semitones-per-column))
         (maximum (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum))
-        (duration (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-duration)))
+        (duration (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-duration))
+        (volume (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-volume))
+        (shape (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-shape)))
     (with-current-buffer (emacsvox-indentation--source)
       (let ((emacsvox-audio-indentation t)
             (emacsvox-indentation-presentation
@@ -122,7 +131,9 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
             (emacsvox-indentation-pitch-tone-base base)
             (emacsvox-indentation-pitch-tone-semitones-per-column rise)
             (emacsvox-indentation-pitch-tone-maximum maximum)
-            (emacsvox-indentation-pitch-tone-duration duration))
+            (emacsvox-indentation-pitch-tone-duration duration)
+            (emacsvox-indentation-pitch-tone-volume volume)
+            (emacsvox-indentation-pitch-tone-shape shape))
         (emacsvox-speak--preview-indentation-presentation)))))
 
 (defconst emacsvox-indentation--tone-controls
@@ -211,6 +222,90 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
   (interactive)
   (emacsvox-indentation--preview t))
 
+(defconst emacsvox-indentation--editor-fields
+  '((:pitch . emacsvox-indentation-pitch-tone-base)
+    (:duration . emacsvox-indentation-pitch-tone-duration)
+    (:volume . emacsvox-indentation-pitch-tone-volume))
+  "Rising-pitch options represented by the shared tone editor.")
+
+(defun emacsvox-indentation--tone-data (&optional factory)
+  "Read the selected scope's base tone, or FACTORY tone values."
+  (let ((read (if factory (lambda (symbol) (eval (car (get symbol 'standard-value)) t))
+                #'emacsvox-indentation--value)))
+    (emacsvox-tone-editor--data
+     (funcall read 'emacsvox-indentation-pitch-tone-base)
+     (funcall read 'emacsvox-indentation-pitch-tone-duration)
+     (funcall read 'emacsvox-indentation-pitch-tone-volume)
+     (funcall read 'emacsvox-indentation-pitch-tone-shape))))
+
+(defun emacsvox-indentation--apply-tone (data save)
+  "Apply base tone DATA in the captured scope; SAVE requires global scope."
+  (let* ((state (emacsvox-indentation--state))
+         (shape (emacsvox-tone-editor--shape data))
+         (values (append
+                  (mapcar (lambda (field) (cons (cdr field) (plist-get data (car field))))
+                          emacsvox-indentation--editor-fields)
+                  (list (cons 'emacsvox-indentation-pitch-tone-shape shape)))))
+    (when (and save (not (cdr state)))
+      (user-error "Return to Indentation and select Global defaults before saving"))
+    (when (> (plist-get data :pitch) (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum))
+      (user-error "Base pitch exceeds the maximum; adjust the parent menu's Maximum pitch first"))
+    (with-current-buffer (emacsvox-indentation--source)
+      (dolist (entry values)
+        (cond (save (customize-save-variable (car entry) (cdr entry)))
+              ((cdr state) (set-default (car entry) (cdr entry)))
+              (t (set (make-local-variable (car entry)) (cdr entry))))))))
+
+(defun emacsvox-indentation--preview-draft (data sample)
+  "Preview base tone DATA alone, or SAMPLE at four indentation columns."
+  (when (> (plist-get data :pitch) (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum))
+    (user-error "Base pitch exceeds the maximum; adjust Maximum pitch in the parent menu"))
+  (let ((rise (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-semitones-per-column))
+        (maximum (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum))
+        (timing (emacsvox-indentation--value 'emacsvox-indentation-tone-timing))
+        (emacsvox-aural--exact-tone-preview t)
+        (shape (emacsvox-tone-editor--shape data)))
+    (with-current-buffer (emacsvox-indentation--source)
+      (let ((emacsvox-audio-indentation t)
+            (emacsvox-indentation-presentation 'pitch-tone)
+            (emacsvox-indentation-tone-timing timing)
+            (emacsvox-indentation-pitch-tone-base (plist-get data :pitch))
+            (emacsvox-indentation-pitch-tone-duration (plist-get data :duration))
+            (emacsvox-indentation-pitch-tone-volume (plist-get data :volume))
+            (emacsvox-indentation-pitch-tone-shape shape)
+            (emacsvox-indentation-pitch-tone-semitones-per-column rise)
+            (emacsvox-indentation-pitch-tone-maximum maximum))
+        (emacsvox-aural--tone-volume-deliverable-p (/ (plist-get data :volume) 100.0))
+        (emacsvox-aural--tone-shape-deliverable-p shape)
+        (if sample (emacsvox-speak--preview-indentation-presentation)
+          (emacsvox-aural-submit-actions
+           :facts (emacsvox-speak--indentation-facts 1) :module 'speak :occasion 'inspection
+           :lane 'main :delivery-policy 'urgent :interruption-policy 'lane))))))
+
+(defun emacsvox-indentation--edit-tone ()
+  "Edit a private base-tone draft in the selected indentation scope.
+Space previews the first column's tone; P reads a four-column sample. Actual
+pitch rises by column and duration retains the blank-line minimum. A applies
+only tone fields to this buffer or global defaults; W saves global tone fields
+only. Rise, maximum, timing, enablement and shared volume remain in the parent.
+Duration-coded tones are unchanged. Sweeps end at an absolute frequency."
+  (interactive)
+  ;; The shared editor loads the aural menu, which itself loads Indentation.
+  (require 'emacsvox-tone-editor)
+  (let* ((state (copy-tree (emacsvox-indentation--state)))
+         (global (cdr state))
+         (context (with-current-buffer (emacsvox-indentation--source)
+                    (emacsvox-aural-menu--capture global))))
+    (emacsvox-tone-editor--open
+     (plist-put context :indentation-state state)
+     (list :label (if global "Indentation base tone (global draft)" "Indentation base tone (buffer draft)")
+           :read #'emacsvox-indentation--tone-data
+           :apply #'emacsvox-indentation--apply-tone
+           :apply-label (if global "Apply to global defaults for session" "Apply to source buffer")
+           :apply-message (if global "Global base tone applied; buffer overrides remain" "Base tone applied to source buffer")
+           :save-label (if global "Save global base-tone defaults" "Save requires global scope")
+           :preview #'emacsvox-indentation--preview-draft))))
+
 (defun emacsvox-indentation--stop ()
   "Stop the indentation preview." (interactive) (tts-stop))
 
@@ -285,7 +380,9 @@ Switch to Global defaults before saving; buffer-local choices are not saved."
                    emacsvox-indentation-pitch-tone-base
                    emacsvox-indentation-pitch-tone-semitones-per-column
                    emacsvox-indentation-pitch-tone-maximum
-                   emacsvox-indentation-pitch-tone-duration))
+                   emacsvox-indentation-pitch-tone-duration
+                   emacsvox-indentation-pitch-tone-volume
+                   emacsvox-indentation-pitch-tone-shape))
     (customize-save-variable symbol (default-value symbol)))
   (emacsvox-indentation--say "Saved global indentation defaults and tone volume"))
 
@@ -304,7 +401,8 @@ Linked menus may share STATE so changes of scope survive parent navigation."
    ("b" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--base)) emacsvox-indentation--base :transient t)
    ("r" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--rise)) emacsvox-indentation--rise :transient t)
    ("m" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--maximum)) emacsvox-indentation--maximum :transient t)
-   ("d" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--duration)) emacsvox-indentation--duration :transient t)]
+   ("d" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--duration)) emacsvox-indentation--duration :transient t)
+   ("E" "Base-tone editor: waveform, envelope and presets" emacsvox-indentation--edit-tone :transient transient--do-stack)]
   ["Try and finish"
    ("SPC" "Preview four-column pitch tone" emacsvox-indentation--tone-preview :transient t)
    ("s" "Stop preview" emacsvox-indentation--stop :transient t)

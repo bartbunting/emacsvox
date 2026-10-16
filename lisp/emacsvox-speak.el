@@ -625,6 +625,19 @@ The actual duration is never shorter than the registered blank-line tone."
 (defconst emacsvox-speak--indentation-duration-tone-pitch 250.0
   "Fixed pitch in hertz for duration-coded indentation tones.")
 
+(defcustom emacsvox-indentation-pitch-tone-volume 100
+  "Individual volume percentage for rising-pitch indentation tones.
+This multiplies shared main-tone volume. Duration-coded tones are unchanged."
+  :type '(integer :tag "Percent")
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-indentation-pitch-tone-shape '(:waveform sine)
+  "Waveform, optional pitch sweep and envelope for rising-pitch indentation.
+An optional sweep ends at its absolute configured frequency. The starting
+pitch still rises with indentation; duration-coded tones remain unchanged."
+  :type 'plist
+  :group 'emacsvox-aural)
+
 (defconst emacsvox-speak--indentation-duration-tone-base 50
   "Base duration in milliseconds for duration-coded indentation tones.")
 
@@ -691,7 +704,12 @@ The actual duration is never shorter than the registered blank-line tone."
           (list
            :indentation-tone-pitch (car tone)
            :indentation-tone-duration (cdr tone)
-           :indentation-tone-timing emacsvox-indentation-tone-timing))))
+           :indentation-tone-timing emacsvox-indentation-tone-timing)))
+        (when (memq emacsvox-indentation-presentation '(pitch-tone spoken-pitch-tone))
+          (setq facts
+                (append facts
+                        (list :indentation-tone-volume (/ emacsvox-indentation-pitch-tone-volume 100.0)
+                              :indentation-tone-shape (copy-tree emacsvox-indentation-pitch-tone-shape))))))
       facts)))
 
 (defun emacsvox-speak--annotate-indentation (text facts)

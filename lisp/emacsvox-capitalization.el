@@ -25,12 +25,13 @@
 
 ;;; Commentary:
 ;; Buffer/global reading options and two retained global cue drafts.
-;; Save cue overrides through the existing personal-rule store.
+;; Apply and save beep defaults through Customize; preserve contextual rules.
 
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-preview)
+(require 'emacsvox-tone-editor)
 
 (defvar emacsvox-capitalization--drafts (make-hash-table :test #'eq)
   "Retained global cue drafts, keyed by capitalization kind.")
@@ -113,22 +114,30 @@
   (intern (format "settings-%s-%s" kind presentation)))
 
 (defun emacsvox-capitalization--rules (kind values)
-  "Build the two personal tone overrides for KIND using VALUES, or none."
+  "Build personal tone overrides for KIND from legacy pairs or full VALUES."
   (when values
-    (mapcar
-     (lambda (presentation)
-       (let* ((stem (if (eq kind 'capital) "capital" "all-caps"))
-              (action (intern (format "core-%s-%s-action" stem
-                                      (if (eq presentation 'tone) "tone" "spoken-tone-tone")))))
-         (list :id (emacsvox-capitalization--rule-id kind presentation)
-               :match (list :event 'capitalization-located :capitalization-kind kind
-                            :capitalization-presentation presentation)
-               :render (list :before
-                             (list :anchor 'run :remove (list action)
-                                   :append (list (list :id action :kind 'tone
-                                                       :pitch (car values) :duration (cdr values)
-                                                       :audio-mode 'insert :anchor 'run)))))))
-     '(tone spoken-tone))))
+    (let* ((legacy (numberp (car values)))
+           (pitch (if legacy (car values) (plist-get values :pitch)))
+           (duration (if legacy (cdr values) (plist-get values :duration))))
+      (mapcar
+       (lambda (presentation)
+         (let* ((stem (if (eq kind 'capital) "capital" "all-caps"))
+                (action (intern (format "core-%s-%s-action" stem
+                                        (if (eq presentation 'tone) "tone" "spoken-tone-tone")))))
+           (list :id (emacsvox-capitalization--rule-id kind presentation)
+                 :match (list :event 'capitalization-located :capitalization-kind kind
+                              :capitalization-presentation presentation)
+                 :render
+                 (list :before
+                       (list :anchor 'run :remove (list action)
+                             :append
+                             (list (append (list :id action :kind 'tone
+                                                 :pitch pitch :duration duration
+                                                 :audio-mode 'insert :anchor 'run)
+                                           (unless legacy
+                                             (list :volume (plist-get values :volume)
+                                                   :shape (plist-get values :shape))))))))))
+       '(tone spoken-tone)))))
 
 (defun emacsvox-capitalization--saved (kind)
   "Read only this menu's personal rules for KIND."
@@ -138,27 +147,47 @@
                                 '(tone spoken-tone))))
    emacsvox-aural-user-rules))
 
-(defun emacsvox-capitalization--draft (kind)
-  "Resume KIND's draft, checking for externally changed or edited rules."
+(defun emacsvox-capitalization--option (kind)
+  "Return the Customize option for KIND."
+  (if (eq kind 'capital) 'emacsvox-capitalization-capital-tone
+    'emacsvox-capitalization-all-caps-tone))
+
+(defun emacsvox-capitalization--legacy-values (kind)
+  "Read KIND's old menu-generated rules only when both are unchanged in form.
+Rules with other matches or action structures remain personal rules."
   (let* ((saved (emacsvox-capitalization--saved kind))
-         (old (gethash kind emacsvox-capitalization--drafts))
          (action (car (plist-get (plist-get (plist-get (car saved) :render) :before) :append)))
-         (values (and saved (cons (plist-get action :pitch) (plist-get action :duration)))))
-    (unless (equal saved (emacsvox-capitalization--rules kind values))
-      (user-error "This cue's rules were edited elsewhere; use the personal rule editor"))
-    (when (and old (not (equal saved (plist-get old :saved)))
+         (values (and saved
+                      (if (or (plist-member action :shape) (plist-member action :volume))
+                          (list :pitch (plist-get action :pitch) :duration (plist-get action :duration)
+                                :volume (plist-get action :volume) :shape (plist-get action :shape))
+                        (cons (plist-get action :pitch) (plist-get action :duration))))))
+    (when (and saved (equal saved (emacsvox-capitalization--rules kind values)))
+      (if (numberp (car values))
+          (list :pitch (car values) :duration (cdr values) :volume 1.0 :shape '(:waveform sine))
+        values))))
+
+(defun emacsvox-capitalization--draft (kind)
+  "Resume KIND's draft, checking for changed defaults and legacy rules."
+  (let* ((saved (emacsvox-capitalization--saved kind))
+         (current (default-value (emacsvox-capitalization--option kind)))
+         (old (gethash kind emacsvox-capitalization--drafts))
+         (unchanged (and old (equal saved (plist-get old :saved))
+                         (equal current (plist-get old :initial)))))
+    (when (and old (not unchanged)
                (not (equal (plist-get old :values) (plist-get old :initial))))
-      (user-error "Saved cue changed while this draft was open; discard the draft first"))
-    (if (and old (equal saved (plist-get old :saved))) old
+      (user-error "Cue changed while this draft was open; discard the draft first"))
+    (if unchanged old
       (let ((draft (list :kind kind :saved (copy-tree saved)
-                         :initial (copy-tree values) :values (copy-tree values))))
+                         :initial (copy-tree current)
+                         :values (copy-tree (or (emacsvox-capitalization--legacy-values kind) current)))))
         (puthash kind draft emacsvox-capitalization--drafts)
         draft))))
 
 (defun emacsvox-capitalization--cue-context ()
   "Return the captured cue editor context after validating its source."
   (let* ((prefix (or transient--prefix transient-current-prefix))
-         (context (and prefix (eq (oref prefix command) 'emacsvox-capitalization-cue)
+         (context (and prefix (memq (oref prefix command) '(emacsvox-capitalization-cue emacsvox-tone-editor))
                        (oref prefix scope))))
     (unless context (user-error "Open a capitalization cue first"))
     (emacsvox-aural-menu--source context)
@@ -168,18 +197,22 @@
   "Return draft pitch/duration, falling back to the bundled resource."
   (let* ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft))
          (tone (emacsvox-aural-tone (emacsvox-capitalization--tone-id (plist-get draft :kind)))))
-    (or (plist-get draft :values)
-        (cons (emacsvox-aural-tone-pitch tone) (emacsvox-aural-tone-duration tone)))))
+    (let ((values (plist-get draft :values)))
+      (cond ((null values)
+             (cons (emacsvox-aural-tone-pitch tone) (emacsvox-aural-tone-duration tone)))
+            ((numberp (car values)) values)
+            (t (cons (plist-get values :pitch) (plist-get values :duration)))))))
 
 (defun emacsvox-capitalization--cue-title ()
   "Describe the cue, global scope, and whether its draft differs."
   (let ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft)))
     (format "%s beep (global): %s"
             (if (eq (plist-get draft :kind) 'capital) "Capital-letter" "All-caps")
-            (cond ((not (equal (plist-get draft :values) (plist-get draft :initial)))
-                   "unsaved preview draft")
-                  ((plist-get draft :values) "saved override")
-                  (t "bundled cue")))))
+            (cond ((emacsvox-capitalization--legacy-values (plist-get draft :kind))
+                   "legacy settings; Save to migrate")
+                  ((not (equal (plist-get draft :values) (plist-get draft :initial)))
+                   "preview changes")
+                  (t "current defaults")))))
 
 (defun emacsvox-capitalization--cue-edit (field &optional delta)
   "Edit cue FIELD exactly, or adjust it by DELTA units."
@@ -193,7 +226,9 @@
     (unless (and (numberp value) (if pitch (> value 0) (>= value 0)))
       (user-error "Pitch must be positive; duration must be nonnegative"))
     (if pitch (setcar values value) (setcdr values value))
-    (setf (plist-get draft :values) values)
+    (if (keywordp (car-safe (plist-get draft :values)))
+        (setf (plist-get (plist-get draft :values) (if pitch :pitch :duration)) value)
+      (setf (plist-get draft :values) values))
     (emacsvox-capitalization--say
      (format "%s%s %s" (if (and delta (= current value)) "Minimum. " "")
              value (if pitch "Hz" "milliseconds")))))
@@ -216,63 +251,158 @@
 (defun emacsvox-capitalization--increase ()
   "Increase the selected cue setting." (interactive) (emacsvox-capitalization--cue-adjust 1))
 
+(defun emacsvox-capitalization--tone-data (&optional factory current)
+  "Read the retained tone draft, FACTORY values, or CURRENT defaults."
+  (let* ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft))
+         (kind (plist-get draft :kind))
+         (option (emacsvox-capitalization--option kind))
+         (values (cond (factory (eval (car (get option 'standard-value)) t))
+                       (current (or (emacsvox-capitalization--legacy-values kind)
+                                    (default-value option)))
+                       (t (plist-get draft :values)))))
+    (emacsvox-tone-editor--data
+     (plist-get values :pitch) (plist-get values :duration)
+     (* 100 (plist-get values :volume)) (plist-get values :shape))))
+
+(defun emacsvox-capitalization--tone-values (data)
+  "Convert editor DATA to this cue's Customize value."
+  (list :pitch (plist-get data :pitch) :duration (plist-get data :duration)
+        :volume (/ (plist-get data :volume) 100.0) :shape (emacsvox-tone-editor--shape data)))
+
+(defun emacsvox-capitalization--preview-tone (data sample)
+  "Preview private DATA alone or in a capitalization SAMPLE."
+  (let* ((context (emacsvox-capitalization--cue-context))
+         (kind (plist-get (plist-get context :cue-draft) :kind))
+         (values (emacsvox-capitalization--tone-values data))
+         (emacsvox-aural--exact-tone-preview t))
+    (with-current-buffer (emacsvox-aural-menu--source context)
+      (emacsvox-aural--tone-volume-deliverable-p (plist-get values :volume))
+      (emacsvox-aural--tone-shape-deliverable-p (plist-get values :shape))
+      (if sample
+          (let* ((legacy (and (emacsvox-capitalization--legacy-values kind)
+                              (emacsvox-capitalization--saved kind)))
+                 (emacsvox-aural-user-rules
+                  (cl-remove-if (lambda (rule) (memq rule legacy)) emacsvox-aural-user-rules))
+                 (tts-caps t) (tts-split-caps nil)
+                 (emacsvox-capitalization-presentation 'tone))
+            (cl-progv (list (emacsvox-capitalization--option kind)) (list values)
+              (tts-speak (if (eq kind 'capital) "Capital example" "NASA example"))))
+        (let* ((action (emacsvox-aural--compile-action
+                        (append (list :id 'capitalization-cue-preview :kind 'tone) values)
+                        'capitalization-cue-preview 'before 0 'run))
+               (render (emacsvox-aural--make-render-plan
+                        :before (list action) :content (emacsvox-aural--make-content-style :speak nil))))
+          (emacsvox-aural-preview-play-plan
+           (emacsvox-aural-compile-plan render nil (emacsvox-aural-context-at-point) 'local-cue)))))))
+
 (defun emacsvox-capitalization--cue-preview ()
-  "Preview this draft's beep alone without applying or saving it."
+  "Preview this retained draft without applying or saving it."
   (interactive)
-  (let* ((values (emacsvox-capitalization--cue-values))
-         (action (emacsvox-aural--compile-action
-                  (list :id 'capitalization-cue-preview :kind 'tone
-                        :pitch (car values) :duration (cdr values))
-                  'capitalization-cue-preview 'before 0 'run))
-         (render (emacsvox-aural--make-render-plan
-                  :before (list action) :content (emacsvox-aural--make-content-style :speak nil))))
-    (with-current-buffer (emacsvox-aural-menu--source (emacsvox-capitalization--cue-context))
-      (emacsvox-aural-preview-play-plan
-       (emacsvox-aural-compile-plan render nil (emacsvox-aural-context-at-point) 'local-cue)))))
+  (emacsvox-capitalization--preview-tone (emacsvox-capitalization--tone-data) nil))
+
+(defun emacsvox-capitalization--apply-tone (data save)
+  "Apply DATA as global defaults; SAVE also persists them through Customize."
+  (let ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft)))
+    (setf (plist-get draft :values) (emacsvox-capitalization--tone-values data))
+    (emacsvox-capitalization--commit-cue save)))
+
+(defun emacsvox-capitalization--edit-tone ()
+  "Edit global capitalization defaults in a private tone draft.
+A applies this cue globally; W also saves it through Customize. C compares
+current defaults. Presentation rules can override these defaults. Old
+menu-generated rules migrate on Save; contextual rules remain unchanged."
+  (interactive)
+  (let ((context (emacsvox-capitalization--cue-context)))
+    (emacsvox-tone-editor--open
+     context
+     (list :label (emacsvox-capitalization--cue-title)
+           :read #'emacsvox-capitalization--tone-data
+           :current (lambda () (emacsvox-capitalization--tone-data nil t))
+           :apply #'emacsvox-capitalization--apply-tone
+           :apply-label "Apply global beep defaults"
+           :apply-message "Applied global beep defaults; presentation rules still apply"
+           :save-label "Save global beep defaults in Customize"
+           :save-message "Saved global beep defaults; presentation rules still apply"
+           :preview #'emacsvox-capitalization--preview-tone))))
 
 (defun emacsvox-capitalization--stop ()
   "Stop preview output." (interactive) (emacsvox-aural-preview-stop))
 
 (defun emacsvox-capitalization--cue-reset ()
-  "Preview bundled values; Save removes only this menu's override rules."
+  "Restore factory values in the draft; Apply or Save makes them effective."
   (interactive)
   (let ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft)))
-    (setf (plist-get draft :values) nil))
-  (emacsvox-capitalization--say "Bundled cue in draft. Save to remove this menu's override."))
+    (setf (plist-get draft :values)
+          (emacsvox-capitalization--tone-values (emacsvox-capitalization--tone-data t))))
+  (emacsvox-capitalization--say "Factory cue in draft. Apply or Save to use it."))
 
 (defun emacsvox-capitalization--cue-discard ()
-  "Discard this preview draft and reread the saved cue rules."
+  "Discard preview changes and reread current defaults or legacy settings."
   (interactive)
   (let* ((context (emacsvox-capitalization--cue-context))
          (kind (plist-get (plist-get context :cue-draft) :kind)))
     (remhash kind emacsvox-capitalization--drafts)
     (setf (plist-get context :cue-draft) (emacsvox-capitalization--draft kind))
-    (emacsvox-capitalization--say "Draft discarded")))
+    (emacsvox-capitalization--say "Preview changes discarded; applied defaults unchanged")))
+
+(defun emacsvox-capitalization--commit-cue (save)
+  "Apply this cue's draft; SAVE persists it and migrates old menu rules.
+Write Customize first so a failed rule-store write leaves the old cue intact.
+Retry Save after correcting the write failure to complete the migration."
+  (let* ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft))
+         (kind (plist-get draft :kind))
+         (option (emacsvox-capitalization--option kind))
+         (saved (emacsvox-capitalization--saved kind))
+         (legacy (emacsvox-capitalization--legacy-values kind))
+         (values (copy-tree (plist-get draft :values))))
+    (unless (and (equal saved (plist-get draft :saved))
+                 (equal (default-value option) (plist-get draft :initial)))
+      (user-error "Cue changed; discard this draft and reopen it"))
+    (when legacy
+      (unless save
+        (user-error "Save this cue once to migrate its old personal rules to Customize"))
+      (when (cl-some (lambda (buffer)
+                      (with-current-buffer buffer
+                        (and (eq emacsvox-aural-editor-scope 'personal) emacsvox-aural-editor-dirty)))
+                    (buffer-list))
+        (user-error "Finish the unsaved personal-rule editor before migrating this cue")))
+    ;; The older controls accept fractional durations and any positive pitch.
+    ;; Validate the tone contract without imposing the shared editor's ranges.
+    (emacsvox-aural--compile-action
+     (append (list :id 'capitalization-default :kind 'tone) values)
+     'capitalization-default 'before 0 'run)
+    (let ((previous (copy-tree (default-value option)))
+          (properties (copy-tree (symbol-plist option))))
+      (condition-case err
+          (if save (customize-save-variable option values) (set-default option values))
+        (error
+         (set-default option previous)
+         (setplist option properties)
+         (signal (car err) (cdr err)))))
+    (setf (plist-get draft :initial) (copy-tree values))
+    (when legacy
+      (let ((emacsvox-aural-editor-scope 'personal))
+        (condition-case err
+            (emacsvox-aural-editor--commit-layer
+             (cl-remove-if (lambda (rule) (memq rule saved)) emacsvox-aural-user-rules))
+          (error
+           (error "Customize saved; old cue rules retained. Retry Save: %s"
+                  (error-message-string err)))))
+      (setf (plist-get draft :saved) nil))))
+
+(defun emacsvox-capitalization--cue-apply ()
+  "Apply this draft as global beep defaults for the current Emacs session.
+Presentation rules still apply. Save once first when migrating old menu rules."
+  (interactive)
+  (emacsvox-capitalization--commit-cue nil)
+  (emacsvox-capitalization--say "Applied global beep defaults. Presentation rules still apply."))
 
 (defun emacsvox-capitalization--cue-save ()
-  "Save only this cue's draft as global personal rules, preserving other rules."
+  "Apply and save this beep's defaults through Customize.
+Migrate only unchanged old menu-generated rules; preserve contextual rules."
   (interactive)
-  (let* ((context (emacsvox-capitalization--cue-context))
-         (draft (plist-get context :cue-draft))
-         (kind (plist-get draft :kind))
-         (saved (emacsvox-capitalization--saved kind))
-         (rules (emacsvox-capitalization--rules kind (plist-get draft :values))))
-    (unless (equal saved (plist-get draft :saved))
-      (user-error "Saved cue changed; discard this draft and reopen it"))
-    (when (cl-some (lambda (buffer)
-                     (with-current-buffer buffer
-                       (and (eq emacsvox-aural-editor-scope 'personal) emacsvox-aural-editor-dirty)))
-                   (buffer-list))
-      (user-error "Finish the unsaved personal-rule editor first"))
-    (with-current-buffer (emacsvox-aural-menu--source context)
-      (let ((emacsvox-aural-editor-scope 'personal))
-        (emacsvox-aural-editor--commit-layer
-         (append (cl-remove-if (lambda (rule) (memq rule saved)) emacsvox-aural-user-rules) rules))))
-    (setf (plist-get draft :saved) (copy-tree rules)
-          (plist-get draft :initial) (copy-tree (plist-get draft :values)))
-    (emacsvox-capitalization--say
-     (if rules "Saved global cue override. Other presentation rules still apply."
-       "Removed this menu's cue override. Other presentation rules still apply."))))
+  (emacsvox-capitalization--commit-cue t)
+  (emacsvox-capitalization--say "Saved global beep defaults. Presentation rules still apply."))
 
 (defun emacsvox-capitalization--letter ()
   "Edit the capital-letter beep." (interactive) (emacsvox-capitalization-cue 'capital))
@@ -284,13 +414,15 @@
   :refresh-suffixes t
   [:description emacsvox-capitalization--cue-title
    ("p" (lambda () (format "Pitch: %s Hz" (car (emacsvox-capitalization--cue-values)))) emacsvox-capitalization--pitch :transient t)
-   ("d" (lambda () (format "Duration: %s milliseconds" (cdr (emacsvox-capitalization--cue-values)))) emacsvox-capitalization--duration :transient t)]
+   ("d" (lambda () (format "Duration: %s milliseconds" (cdr (emacsvox-capitalization--cue-values)))) emacsvox-capitalization--duration :transient t)
+   ("E" "Tone editor: waveform, envelope and presets" emacsvox-capitalization--edit-tone :transient transient--do-stack)]
   ["Preview and save (other rules may override)"
    ("SPC" "Preview beep only" emacsvox-capitalization--cue-preview :transient t)
    ("s" "Stop preview" emacsvox-capitalization--stop :transient t)
    ("r" "Restore bundled cue in draft" emacsvox-capitalization--cue-reset :transient t)
    ("D" "Discard preview edits" emacsvox-capitalization--cue-discard :transient t)
-   ("S" "Save this cue globally" emacsvox-capitalization--cue-save :transient t)
+   ("A" "Apply global beep defaults" emacsvox-capitalization--cue-apply :transient t)
+   ("S" "Save this cue in Customize" emacsvox-capitalization--cue-save :transient t)
    ("q" "Back (retain draft)" transient-quit-one)
    ("C-q" "Close menus (retain draft)" transient-quit-all)]
   (interactive (list (intern (completing-read "Capitalization kind: " '(capital all-caps) nil t))))
@@ -313,7 +445,7 @@
 
 ;;;###autoload
 (transient-define-prefix emacsvox-capitalization (&optional global)
-  "Choose capitalization indication, presentation, splitting, and global beep drafts."
+  "Choose capitalization indication, presentation, splitting, and global beep defaults."
   :refresh-suffixes t
   ["Capitalization"
    ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label))) emacsvox-aural-menu--toggle-scope :transient t)
@@ -321,7 +453,7 @@
    ("p" (lambda () (format "Presentation: %s" (emacsvox-capitalization--value 'emacsvox-capitalization-presentation))) emacsvox-capitalization--presentation :transient t)
    ("c" (lambda () (format "Split camel case: %s" (if (emacsvox-capitalization--value 'tts-split-caps) "on" "off"))) emacsvox-capitalization--split :transient t)
    ("SPC" "Preview reading settings" emacsvox-capitalization--preview :transient t)]
-  ["Global beep drafts (save separately)"
+  ["Global beep defaults (save separately)"
    ("l" "Capital-letter beep" emacsvox-capitalization--letter :transient transient--do-stack)
    ("a" "All-caps beep" emacsvox-capitalization--all-caps :transient transient--do-stack)]
   ["Save and finish"

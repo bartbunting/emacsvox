@@ -69,6 +69,25 @@ private draft; Apply or Save and apply changes the destination cue."
   "Read KEY from the private draft."
   (plist-get (plist-get (emacsvox-tone-editor--state) :draft) key))
 
+(defun emacsvox-tone-editor--label (key fallback)
+  "Return the cue provider's label KEY, or FALLBACK."
+  (or (plist-get (plist-get (emacsvox-tone-editor--state) :provider) key) fallback))
+
+(defun emacsvox-tone-editor--data (pitch duration volume shape)
+  "Represent PITCH, DURATION, VOLUME percent and SHAPE as an editor draft."
+  (let ((envelope (plist-get shape :envelope)))
+    (list :pitch pitch :duration duration :volume (round volume)
+          :waveform (or (plist-get shape :waveform) 'sine)
+          :width (* 100 (or (plist-get shape :pulse-width) 0.5))
+          :sweep (and (plist-get shape :end-frequency-hz) t)
+          :end-pitch (or (plist-get shape :end-frequency-hz) pitch)
+          :curve (or (plist-get shape :envelope-curve) 'linear)
+          :envelope (if envelope 'adsr 'classic)
+          :attack (or (plist-get envelope :attack-ms) 5)
+          :decay (or (plist-get envelope :decay-ms) 10)
+          :sustain (* 100 (or (plist-get envelope :sustain-level) 0.6))
+          :release (or (plist-get envelope :release-ms) 10))))
+
 (defun emacsvox-tone-editor--say (text)
   "Speak interruptible editor feedback TEXT."
   (emacsvox-transient--submit-text
@@ -183,11 +202,13 @@ Timing and other feedback follow the source's current settings."
 
 (defun emacsvox-tone-editor--current ()
   "Play the currently applied tone alone for comparison with Space's draft.
-This rereads the cue's live settings, including any earlier Apply. It leaves
-both the draft and saved defaults unchanged and interrupts the previous preview."
+Reread live settings, including earlier Apply. Capitalization also recognises
+old menu rules awaiting migration. This leaves drafts and saved defaults
+unchanged and interrupts the previous preview."
   (interactive)
   (let* ((provider (plist-get (emacsvox-tone-editor--state) :provider))
-         (data (emacsvox-tone-editor--validate (funcall (plist-get provider :read)))))
+         (data (emacsvox-tone-editor--validate
+                (funcall (or (plist-get provider :current) (plist-get provider :read))))))
     (funcall (plist-get provider :preview) data nil)))
 
 (defun emacsvox-tone-editor--load-preset (name data)
@@ -260,17 +281,23 @@ replacement; bundled names cannot be replaced."
   (interactive) (tts-stop))
 
 (defun emacsvox-tone-editor--apply (&optional save)
-  "Apply this draft for the session; SAVE also persists its defaults.
-This changes the global cue's tone, without enabling it or changing its timing,
-voice, earcon or shared volume. Play current tone now uses the applied sound."
+  "Apply this draft using the destination's scope; SAVE also persists it.
+Spelling and capitalization change global defaults; indentation changes the
+captured buffer or global defaults. Save persists global defaults through
+Customize. Enablement, timing and shared volume stay intact."
   (interactive)
   (let* ((state (emacsvox-tone-editor--state))
          (data (emacsvox-tone-editor--validate (copy-tree (plist-get state :draft)))))
     (funcall (plist-get (plist-get state :provider) :apply) data save)
-    (emacsvox-tone-editor--say (if save "Saved and applied tone defaults" "Tone applied for this session"))))
+    (emacsvox-tone-editor--say
+     (if save (emacsvox-tone-editor--label :save-message "Saved and applied tone defaults")
+       (emacsvox-tone-editor--label :apply-message "Tone applied for this session")))))
 
 (defun emacsvox-tone-editor--save ()
-  "Save and apply this cue's tone defaults through Customize.
+  "Save and apply this cue through its destination's persistence mechanism.
+Spelling, capitalization and global indentation use Customize. Buffer-local
+indentation cannot be saved here. Capitalization migrates unchanged old
+menu-generated rules on Save; contextual presentation rules remain intact.
 This saves pitch, duration, individual volume, waveform, Pulse width, sweep
 and envelope controls.
 Timing, cue enablement, voices, earcons and shared tone volume stay unchanged."
@@ -501,7 +528,9 @@ Space or b interrupts main speech and plays the draft tone alone. C plays the
 applied tone; P reads a sample with the draft. S stops, without saving.
 Preview comes before Presets in the section order. L loads a preset into the
 draft; N saves a named preset without changing the cue. A applies the draft
-for this session; W saves and applies tone defaults through Customize.
+in the destination's scope. Capitalization instead copies to its retained
+preview draft. W saves through Customize or the destination's personal rules;
+buffer-local indentation must use global scope before saving.
 q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
 and saved changes remain. Timing, cue enablement, voice and earcon choices
 belong to the parent menu; shared main-tone volume belongs in Output settings."
@@ -525,7 +554,7 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
   ["Preview"
    ("b" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("SPC" "Play tone alone" emacsvox-tone-editor--tone :transient t)
-   ("C" "Play current tone" emacsvox-tone-editor--current :transient t)
+   ("C" (lambda () (emacsvox-tone-editor--label :current-label "Play current tone")) emacsvox-tone-editor--current :transient t)
    ("P" "Read sample" emacsvox-tone-editor--sample :transient t)
    ("S" "Stop preview" emacsvox-tone-editor--stop :transient t)]
   ["Presets"
@@ -533,8 +562,8 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
    ("N" "Save draft as named preset" emacsvox-tone-editor--save-preset :transient t)]
   ["Apply and save"
    ("R" "Reset draft to factory defaults" emacsvox-tone-editor--reset :transient t)
-   ("A" "Apply for session" emacsvox-tone-editor--apply :transient t)
-   ("W" "Save and apply tone defaults" emacsvox-tone-editor--save :transient t)]
+   ("A" (lambda () (emacsvox-tone-editor--label :apply-label "Apply for session")) emacsvox-tone-editor--apply :transient t)
+   ("W" (lambda () (emacsvox-tone-editor--label :save-label "Save and apply tone defaults")) emacsvox-tone-editor--save :transient t)]
   ["Finish"
    ("q" "Back (discard unapplied edits)" emacsvox-tone-editor--back :transient transient--do-quit-one)
    ("C-q" "Close menus" transient-quit-all)]
@@ -544,7 +573,9 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
 
 (defun emacsvox-tone-editor--open (context provider)
   "Open a draft editor for cue PROVIDER using source CONTEXT.
-PROVIDER supplies :label, :read, :apply and :preview callbacks."
+PROVIDER supplies :label, :read, :apply and :preview callbacks. Optional
+:current reads comparison values; label/message overrides describe the
+provider's scope and persistence. :read with non-nil requests factory values."
   (emacsvox-aural-menu--source context)
   (let ((scope (append (list :tone-editor
                             (list :provider provider :draft (funcall (plist-get provider :read))))

@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1670 commands and 243 options.
+   This chapter documents a total of 1670 commands and 247 options.
 
 * Menu:
 
@@ -7423,8 +7423,8 @@ File: emacsvox-reference.info,  Node: emacsvox-capitalization,  Next: emacsvox-c
 2.81 emacsvox-capitalization
 ============================
 
-Buffer/global reading options and two retained global cue drafts.  Save
-cue overrides through the existing personal-rule store.
+Buffer/global reading options and two retained global cue drafts.  Apply
+and save beep defaults through Customize; preserve contextual rules.
 
 2.81.1 Emacsvox-Capitalization Commands
 ---------------------------------------
@@ -7434,7 +7434,7 @@ cue overrides through the existing personal-rule store.
 
  -- Command: emacsvox-capitalization (&optional arg1)
 
-     Choose capitalization indication, presentation, splitting, and global beep drafts.
+     Choose capitalization indication, presentation, splitting, and global beep defaults.
 
 2.81.1.2 emacsvox-capitalization-cue
 ....................................

@@ -1577,6 +1577,28 @@ independently by `tts-split-caps'."
     (const :tag "No capitalization presentation" none))
   :group 'emacsvox-aural)
 
+(defcustom emacsvox-capitalization-capital-tone
+  '(:pitch 440 :duration 20 :volume 1.0 :shape (:waveform sine))
+  "Default tone for an individual capital letter.
+The plist holds pitch in Hz, duration in milliseconds, volume from 0 to 1,
+and a tone shape.  It applies to `tone' and `spoken-tone' presentations when
+`tts-caps' is enabled.  Presentation rules can override these defaults.
+Use the capitalization tone editor to preview waveforms and envelopes."
+  :type '(plist :options ((:pitch number) (:duration number)
+                         (:volume number) (:shape plist)))
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-capitalization-all-caps-tone
+  '(:pitch 1300 :duration 20 :volume 1.0 :shape (:waveform sine))
+  "Default tone for an all-capitals word.
+The plist holds pitch in Hz, duration in milliseconds, volume from 0 to 1,
+and a tone shape.  It applies to `tone' and `spoken-tone' presentations when
+`tts-caps' is enabled.  Presentation rules can override these defaults.
+Use the capitalization tone editor to preview waveforms and envelopes."
+  :type '(plist :options ((:pitch number) (:duration number)
+                         (:volume number) (:shape plist)))
+  :group 'emacsvox-aural)
+
 (defconst emacsvox-capitalization-presentation-values
   '(spoken tone spoken-tone custom none)
   "Supported values of `emacsvox-capitalization-presentation'.")
@@ -2036,10 +2058,17 @@ specifies the current pronunciation mode --- See
       (and
        tts-caps
        (not (eq emacsvox-capitalization-presentation 'none)))
-    (list
-     :events '(capitalization-located)
-     :capitalization-kind kind
-     :capitalization-presentation emacsvox-capitalization-presentation)))
+    (let ((tone (if (eq kind 'capital) emacsvox-capitalization-capital-tone
+                  emacsvox-capitalization-all-caps-tone)))
+      (append
+       (list :events '(capitalization-located)
+             :capitalization-kind kind
+             :capitalization-presentation emacsvox-capitalization-presentation)
+       (when (memq emacsvox-capitalization-presentation '(tone spoken-tone))
+         (list :capitalization-tone-pitch (plist-get tone :pitch)
+               :capitalization-tone-duration (plist-get tone :duration)
+               :capitalization-tone-volume (plist-get tone :volume)
+               :capitalization-tone-shape (copy-tree (plist-get tone :shape))))))))
 
 (defun tts--add-capitalization-annotation (text position facts positioned-p)
   "Add capitalization FACTS to TEXT at POSITION.

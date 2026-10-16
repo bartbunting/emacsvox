@@ -33,6 +33,13 @@ presentation rules, engine configuration and host pronunciation retain their
 existing storage and application contracts. Opening or leaving a menu is not
 a save operation, and previewing a draft does not publish it to live speech.
 
+Clarified on 2026-10-17: basic capitalization tone defaults are Emacs options
+saved through Customize. Conditional presentation rules remain in the separate
+presentation store and override those defaults. Explicit Save migrates only
+rules retaining the old capitalization menu's generated matches and action
+structure. Other rules, profiles and palettes keep their existing contracts.
+Apply changes session defaults; preview remains private.
+
 The manual teaches the focused routes. Preserve the existing =Aural Home=
 Info node identifier so bookmarks and inbound links still resolve; its display
 title becomes Getting started with settings menus. Earlier prototype records

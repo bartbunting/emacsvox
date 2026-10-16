@@ -2034,6 +2034,58 @@ An existing file is copied to FILE~ before replacement."
              :duration (:fact indentation-tone-duration)
              :audio-mode insert
              :anchor transition)))))
+        (:id core-indentation-pitch-tone-overlay-shape
+         :match (:event indentation-located :indentation-presentation pitch-tone
+                 :indentation-tone-timing overlay
+                 :requires (indentation-tone-pitch indentation-tone-duration
+                            indentation-tone-volume indentation-tone-shape))
+         :render
+         (:before (:anchor transition :remove (core-indentation-pitch-tone-action)
+                   :append ((:id core-indentation-pitch-tone-action :kind tone
+                             :pitch (:fact indentation-tone-pitch)
+                             :duration (:fact indentation-tone-duration)
+                             :volume (:fact indentation-tone-volume)
+                             :shape (:fact indentation-tone-shape)
+                             :audio-mode overlay :anchor transition)))))
+        (:id core-indentation-pitch-tone-insert-shape
+         :match (:event indentation-located :indentation-presentation pitch-tone
+                 :indentation-tone-timing insert
+                 :requires (indentation-tone-pitch indentation-tone-duration
+                            indentation-tone-volume indentation-tone-shape))
+         :render
+         (:before (:anchor transition :remove (core-indentation-pitch-tone-action)
+                   :append ((:id core-indentation-pitch-tone-action :kind tone
+                             :pitch (:fact indentation-tone-pitch)
+                             :duration (:fact indentation-tone-duration)
+                             :volume (:fact indentation-tone-volume)
+                             :shape (:fact indentation-tone-shape)
+                             :audio-mode insert :anchor transition)))))
+        (:id core-indentation-spoken-pitch-tone-overlay-shape
+         :match (:event indentation-located :indentation-presentation spoken-pitch-tone
+                 :indentation-tone-timing overlay
+                 :requires (indentation-tone-pitch indentation-tone-duration
+                            indentation-tone-volume indentation-tone-shape))
+         :render
+         (:before (:anchor transition :remove (core-indentation-spoken-pitch-tone-action)
+                   :append ((:id core-indentation-spoken-pitch-tone-action :kind tone
+                             :pitch (:fact indentation-tone-pitch)
+                             :duration (:fact indentation-tone-duration)
+                             :volume (:fact indentation-tone-volume)
+                             :shape (:fact indentation-tone-shape)
+                             :audio-mode overlay :anchor transition)))))
+        (:id core-indentation-spoken-pitch-tone-insert-shape
+         :match (:event indentation-located :indentation-presentation spoken-pitch-tone
+                 :indentation-tone-timing insert
+                 :requires (indentation-tone-pitch indentation-tone-duration
+                            indentation-tone-volume indentation-tone-shape))
+         :render
+         (:before (:anchor transition :remove (core-indentation-spoken-pitch-tone-action)
+                   :append ((:id core-indentation-spoken-pitch-tone-action :kind tone
+                             :pitch (:fact indentation-tone-pitch)
+                             :duration (:fact indentation-tone-duration)
+                             :volume (:fact indentation-tone-volume)
+                             :shape (:fact indentation-tone-shape)
+                             :audio-mode insert :anchor transition)))))
         (:id core-spelling-tone
          :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing insert
                  :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume spelling-tone-shape))
@@ -2115,6 +2167,58 @@ An existing file is copied to FILE~ before replacement."
            (:id core-all-caps-spoken-tone-tone-action
             :kind tone :tone capital-all-caps-tone
             :audio-mode insert :anchor run))))
+        (:id core-capital-tone-defaults
+         :match (:event capitalization-located :capitalization-kind capital
+                 :capitalization-presentation tone
+                 :requires (capitalization-tone-pitch capitalization-tone-duration
+                            capitalization-tone-volume capitalization-tone-shape))
+         :render
+         (:before (:anchor run :remove (core-capital-tone-action)
+                   :append ((:id core-capital-tone-action :kind tone
+                             :pitch (:fact capitalization-tone-pitch)
+                             :duration (:fact capitalization-tone-duration)
+                             :volume (:fact capitalization-tone-volume)
+                             :shape (:fact capitalization-tone-shape)
+                             :audio-mode insert :anchor run)))))
+        (:id core-capital-spoken-tone-defaults
+         :match (:event capitalization-located :capitalization-kind capital
+                 :capitalization-presentation spoken-tone
+                 :requires (capitalization-tone-pitch capitalization-tone-duration
+                            capitalization-tone-volume capitalization-tone-shape))
+         :render
+         (:before (:anchor run :remove (core-capital-spoken-tone-tone-action)
+                   :append ((:id core-capital-spoken-tone-tone-action :kind tone
+                             :pitch (:fact capitalization-tone-pitch)
+                             :duration (:fact capitalization-tone-duration)
+                             :volume (:fact capitalization-tone-volume)
+                             :shape (:fact capitalization-tone-shape)
+                             :audio-mode insert :anchor run)))))
+        (:id core-all-caps-tone-defaults
+         :match (:event capitalization-located :capitalization-kind all-caps
+                 :capitalization-presentation tone
+                 :requires (capitalization-tone-pitch capitalization-tone-duration
+                            capitalization-tone-volume capitalization-tone-shape))
+         :render
+         (:before (:anchor run :remove (core-all-caps-tone-action)
+                   :append ((:id core-all-caps-tone-action :kind tone
+                             :pitch (:fact capitalization-tone-pitch)
+                             :duration (:fact capitalization-tone-duration)
+                             :volume (:fact capitalization-tone-volume)
+                             :shape (:fact capitalization-tone-shape)
+                             :audio-mode insert :anchor run)))))
+        (:id core-all-caps-spoken-tone-defaults
+         :match (:event capitalization-located :capitalization-kind all-caps
+                 :capitalization-presentation spoken-tone
+                 :requires (capitalization-tone-pitch capitalization-tone-duration
+                            capitalization-tone-volume capitalization-tone-shape))
+         :render
+         (:before (:anchor run :remove (core-all-caps-spoken-tone-tone-action)
+                   :append ((:id core-all-caps-spoken-tone-tone-action :kind tone
+                             :pitch (:fact capitalization-tone-pitch)
+                             :duration (:fact capitalization-tone-duration)
+                             :volume (:fact capitalization-tone-volume)
+                             :shape (:fact capitalization-tone-shape)
+                             :audio-mode insert :anchor run)))))
         (:id core-edit-deletion-tone
          :match (:edit-operation deletion)
          :render

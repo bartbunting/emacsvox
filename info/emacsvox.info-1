@@ -5511,10 +5511,11 @@ separate compact resources, independent of sampled files and the active
 pack.
 
    For waveform, pitch sweep and envelope adjustments, use the *note
-complete spelling tone editor: spelling-tone-editor.  It currently edits
-the global spelling cue.  Line cues, capitalisation beeps and
-indentation keep the controls and saving rules described in their own
-sections; they do not yet use that draft editor.
+shared tone editor: spelling-tone-editor.  Spelling, capitalisation
+beeps and rising-pitch indentation each open it from their own menu.
+The waveform and envelope controls are shared; scope and saving belong
+to the destination.  Line cues and general personal-rule editing retain
+their separate controls.
 
 * Menu:
 
@@ -5798,6 +5799,25 @@ punctuation default.
      ‘S’ saves global defaults and tone volume.  ‘q’ retains live
      changes.
 
+     From pitch-tone settings, ‘E’ opens the shared base-tone editor,
+     also reached with ‘C-e H s i t E’.  Its draft includes base pitch,
+     requested duration, individual volume, waveform, sweep and
+     envelope.  ‘<SPC>’ previews the first column's tone; ‘P’ reads a
+     four-column sample.  Both retain the blank-line minimum duration.
+     The starting pitch still rises with indentation; an enabled sweep
+     ends at its absolute End pitch.  Duration-coded tones are
+     unchanged.
+
+     ‘A’ applies the draft to the captured buffer or global defaults, as
+     shown in the title.  ‘W’ saves only the base-tone fields through
+     Customize and requires global scope; return to the parent to change
+     scope.  Global changes preserve local overrides.  Rise per column,
+     maximum pitch, timing, enablement and shared volume remain in the
+     parent menu.  Base pitch cannot exceed Maximum pitch; adjust that
+     parent control first if needed.  ‘q’ discards unapplied editor
+     changes and returns.  See *note the shared controls:
+     spelling-tone-editor. for presets and envelopes.
+
   3. Set capitalisation feedback and its beeps
 
      ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication, ‘p’
@@ -5813,14 +5833,44 @@ punctuation default.
      and ‘s’ stops.  Previewing neither changes reading settings nor
      enables capitalisation indication.
 
-     In a beep editor, ‘S’ saves that cue globally for tone/combined
-     presentation.  ‘r’ restores bundled values in the draft; save to
-     remove this menu's override.  ‘D’ discards/rereads, ‘q’ returns,
-     and ‘C-q’ closes menus while retaining drafts for this session.
-     Unrelated rules and labels survive, and stronger rules may override
-     the cue.  Finish unsaved personal-rule editors before cue saving.
-     If saved rules changed elsewhere, discard the cue draft and reopen
-     it.
+     In a beep menu, ‘A’ applies that cue's global defaults for this
+     Emacs session; ‘S’ also saves them through Customize for future
+     sessions.  These defaults apply to tone/combined presentation, and
+     presentation rules can override them.  ‘r’ restores factory values
+     in the draft; apply or save to use them.  ‘D’ discards preview
+     changes and rereads current defaults.  ‘q’ returns and ‘C-q’ closes
+     menus, retaining the parent draft for this session.  Applied
+     changes remain effective.  If defaults change elsewhere while you
+     are editing, discard the draft and reopen it before applying or
+     saving.
+
+     Press ‘E’ inside either beep menu for the shared tone editor: the
+     full routes are ‘C-e H s c l E’ and ‘C-e H s c a E’.  ‘<SPC>’
+     previews its private draft; ‘C’ compares the current cue and ‘P’
+     reads a capitalisation sample.  The sample privately enables tone
+     indication without changing your reading settings; contextual
+     presentation rules still apply.  ‘A’ applies the global defaults
+     and ‘W’ also saves them through Customize.  ‘q’ discards unapplied
+     changes and returns to the parent.  ‘R’ puts factory values in the
+     private draft.  Waveform and envelope controls follow *note the
+     common editor instructions: spelling-tone-editor.
+
+     The Customize options are ‘emacsvox-capitalization-capital-tone’
+     and ‘emacsvox-capitalization-all-caps-tone’.  Each holds pitch,
+     duration, individual volume and shape.  Conditional rules, profiles
+     and palettes remain in the separate presentation store.
+
+     If you previously saved these beeps as menu-generated personal
+     rules, opening the beep menu imports their values into its draft
+     without writing anything.  Save once with ‘S’, or ‘W’ in the shared
+     editor, to migrate that cue into Customize.  Apply asks you to save
+     first while these legacy rules remain.  Migration removes only
+     rules that retain the generated matches and action structure for
+     that cue.  Rules with different matches or action structures remain
+     intact.  Finish any unsaved personal-rule editor before migrating.
+     If the rule-store write fails, the old rules remain effective and
+     the menu reports that Customize was saved; correct the write
+     problem and retry Save to finish migrating.
 
   4. Choose spelling feedback
 
@@ -5866,32 +5916,36 @@ punctuation default.
      timing and shape, and the shared tone volume through Customize.
      ‘q’ returns and ‘C-q’ closes the menus without saving.
 
-       1. Edit the complete spelling tone
+       1. Use the shared tone editor
 
-          Press capital ‘E’ in Spelling feedback, or use ‘C-e H s f E’,
-          for a private draft of the complete tone.  The title
-          identifies its global spelling scope.  This editor adds
-          waveform, pitch sweep and envelope controls to pitch, duration
-          and individual volume.  Unlike the parent menu's immediate
-          adjustments, changes here affect only the draft until you
-          apply it.  Timing stays in Spelling feedback at ‘C-e H s f m’.
-          Voice, earcon and tone enablement also remain in that menu;
-          shared main-tone volume controls all main tones from Sounds
-          and output.
+          Spelling feedback, each capitalisation beep menu and
+          indentation's pitch-tone settings open this editor with
+          capital ‘E’.  The title identifies the cue and scope.
+          Waveform, pitch sweep and envelope controls accompany pitch,
+          duration and individual volume.  Adjustments affect only a
+          private draft until you apply or save it using the
+          destination's labelled actions.
 
-          The sections follow the editing task: the spelling tone's
-          basic controls, Pitch movement, Envelope, Preview, Presets,
-          Apply and save, then Finish.  Left/right changes sections;
-          up/down selects an item.  Shift-left/right adjusts only a
-          selected number.  ‘<RET>’ enters an exact number, toggles
-          Pitch sweep, or opens the selected choice list.  In a list,
-          up/down browses without changing the draft; ‘<RET>’ chooses
-          and returns, while ‘q’ cancels.  Waveform and Envelope are
-          choices, so shifted arrows do not adjust them.  ‘?’ followed
-          by an item's key explains its effect, units and dependencies.
-          Use ‘C-c l’ or the other *note menu review keys:
-          settings-menu-review. to inspect an announcement without
-          activating it.
+          The exercise below uses global spelling at ‘C-e H s f E’.  Its
+          timing stays in Spelling feedback at ‘C-e H s f m’; voice,
+          earcon and tone enablement also remain there.  Shared
+          main-tone volume controls all main tones from Sounds and
+          output.  Indentation's buffer/global scope follows its saving
+          instructions above; capitalisation and spelling tones use
+          global defaults.
+
+          The sections follow the editing task: the cue's basic
+          controls, Pitch movement, Envelope, Preview, Presets, Apply
+          and save, then Finish.  Left/right changes sections; up/down
+          selects an item.  Shift-left/right adjusts only a selected
+          number.  ‘<RET>’ enters an exact number, toggles Pitch sweep,
+          or opens the selected choice list.  In a list, up/down browses
+          without changing the draft; ‘<RET>’ chooses and returns, while
+          ‘q’ cancels.  Waveform and Envelope are choices, so shifted
+          arrows do not adjust them.  ‘?’ followed by an item's key
+          explains its effect, units and dependencies.  Use ‘C-c l’ or
+          the other *note menu review keys: settings-menu-review. to
+          inspect an announcement without activating it.
 
             1. Try a tone without changing live feedback
 
@@ -6037,13 +6091,13 @@ punctuation default.
 
             5. Apply, save or discard the draft
 
-               Use ‘A’ to apply the draft for this session.  Capital ‘W’
-               saves and applies its tone defaults through Customize.
-               These actions leave timing, voice, earcon, tone
-               enablement and shared volume unchanged.  ‘R’ resets only
-               the draft to factory defaults for preview and deliberate
-               application.  ‘q’ returns to Spelling feedback and
-               discards unapplied edits; applied and saved changes
+               For spelling, use ‘A’ to apply the draft for this
+               session.  Capital ‘W’ saves and applies its tone defaults
+               through Customize.  These actions leave timing, voice,
+               earcon, tone enablement and shared volume unchanged.  ‘R’
+               resets only the draft to factory defaults for preview and
+               deliberate application.  ‘q’ returns to Spelling feedback
+               and discards unapplied edits; applied and saved changes
                remain.  Reopening starts from the current tone.  To
                reverse an applied adjustment, edit it back and apply
                again, saving too if you changed the saved defaults.

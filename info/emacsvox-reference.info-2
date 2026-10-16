@@ -8616,6 +8616,25 @@ of emacsvox from becoming dependent on the speech server modules
      1.0
 
 
+ -- Variable: User Option emacsvox-indentation-pitch-tone-shape
+     Waveform, optional pitch sweep and envelope for rising-pitch indentation.
+     An optional sweep ends at its absolute configured frequency. The starting
+     pitch still rises with indentation; duration-coded tones remain unchanged.
+
+     Default Value:
+
+     (:waveform sine)
+
+
+ -- Variable: User Option emacsvox-indentation-pitch-tone-volume
+     Individual volume percentage for rising-pitch indentation tones.
+     This multiplies shared main-tone volume. Duration-coded tones are unchanged.
+
+     Default Value:
+
+     100
+
+
  -- Variable: User Option emacsvox-indentation-presentation
      How enabled line indentation is presented.
 
@@ -9908,7 +9927,9 @@ facts.
      applied tone; P reads a sample with the draft. S stops, without saving.
      Preview comes before Presets in the section order. L loads a preset into the
      draft; N saves a named preset without changing the cue. A applies the draft
-     for this session; W saves and applies tone defaults through Customize.
+     in the destination’s scope. Capitalization instead copies to its retained
+     preview draft. W saves through Customize or the destination’s personal rules;
+     buffer-local indentation must use global scope before saving.
      q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
      and saved changes remain. Timing, cue enablement, voice and earcon choices
      belong to the parent menu; shared main-tone volume belongs in Output settings.

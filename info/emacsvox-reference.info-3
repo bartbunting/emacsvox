@@ -4232,6 +4232,30 @@ This module defines the generic TTS interface.
 2.316.2 tts-speak Options
 -------------------------
 
+ -- Variable: User Option emacsvox-capitalization-all-caps-tone
+     Default tone for an all-capitals word.
+     The plist holds pitch in Hz, duration in milliseconds, volume from 0 to 1,
+     and a tone shape.  It applies to ‘tone’ and ‘spoken-tone’ presentations when
+     ‘tts-caps’ is enabled.  Presentation rules can override these defaults.
+     Use the capitalization tone editor to preview waveforms and envelopes.
+
+     Default Value:
+
+     (:pitch 1300 :duration 20 :volume 1.0 :shape (:waveform sine))
+
+
+ -- Variable: User Option emacsvox-capitalization-capital-tone
+     Default tone for an individual capital letter.
+     The plist holds pitch in Hz, duration in milliseconds, volume from 0 to 1,
+     and a tone shape.  It applies to ‘tone’ and ‘spoken-tone’ presentations when
+     ‘tts-caps’ is enabled.  Presentation rules can override these defaults.
+     Use the capitalization tone editor to preview waveforms and envelopes.
+
+     Default Value:
+
+     (:pitch 440 :duration 20 :volume 1.0 :shape (:waveform sine))
+
+
  -- Variable: User Option emacsvox-capitalization-presentation
      How enabled capitalization indication is presented.
 
@@ -9465,21 +9489,21 @@ Function Index
 * emacsvox-tone-editor <1>:              emacsvox-tone-editor.
                                                              (line   16)
 * emacsvox-tone-editor-curve:            emacsvox-tone-editor.
-                                                             (line   33)
+                                                             (line   35)
 * emacsvox-tone-editor-curve <1>:        emacsvox-tone-editor.
-                                                             (line   34)
+                                                             (line   36)
 * emacsvox-tone-editor-envelope:         emacsvox-tone-editor.
-                                                             (line   42)
+                                                             (line   44)
 * emacsvox-tone-editor-envelope <1>:     emacsvox-tone-editor.
-                                                             (line   43)
+                                                             (line   45)
 * emacsvox-tone-editor-presets:          emacsvox-tone-editor.
-                                                             (line   53)
+                                                             (line   55)
 * emacsvox-tone-editor-presets <1>:      emacsvox-tone-editor.
-                                                             (line   54)
+                                                             (line   56)
 * emacsvox-tone-editor-waveform:         emacsvox-tone-editor.
-                                                             (line   62)
+                                                             (line   64)
 * emacsvox-tone-editor-waveform <1>:     emacsvox-tone-editor.
-                                                             (line   63)
+                                                             (line   65)
 * emacsvox-transient-mode:               emacsvox-transient. (line   55)
 * emacsvox-transient-mode <1>:           emacsvox-transient. (line   56)
 * emacsvox-transient-next-section:       emacsvox-transient. (line   66)

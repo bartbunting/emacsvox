@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1670 commands and 243 options.
+This chapter documents a total of 1670 commands and 247 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -8244,7 +8244,7 @@ with broken NCX files.
 @section emacsvox-capitalization
 
 Buffer/global reading options and two retained global cue drafts.
-Save cue overrides through the existing personal-rule store.
+Apply and save beep defaults through Customize; preserve contextual rules.
 
 @subsection Emacsvox-Capitalization Commands
 
@@ -8253,7 +8253,7 @@ Save cue overrides through the existing personal-rule store.
 @findex emacsvox-capitalization
 
 @format
-Choose capitalization indication, presentation, splitting, and global beep drafts.
+Choose capitalization indication, presentation, splitting, and global beep defaults.
 @end format
 @end deffn
 
@@ -9835,7 +9835,6 @@ nil
 @end verbatim
 
 @end defvar
-
 @defvar {User Option} emacsvox-emoji-maximum-count
 @verbatim
 Maximum eligible occurrences per speech object or preview sample.
@@ -20756,6 +20755,37 @@ Default Value:
 
 @end defvar
 
+@defvar {User Option} emacsvox-indentation-pitch-tone-shape
+@verbatim
+Waveform, optional pitch sweep and envelope for rising-pitch indentation.
+An optional sweep ends at its absolute configured frequency. The starting
+pitch still rises with indentation; duration-coded tones remain unchanged.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(:waveform sine)
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-indentation-pitch-tone-volume
+@verbatim
+Individual volume percentage for rising-pitch indentation tones.
+This multiplies shared main-tone volume. Duration-coded tones are unchanged.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-indentation-presentation
 @verbatim
 How enabled line indentation is presented.
@@ -22407,7 +22437,9 @@ Space or b interrupts main speech and plays the draft tone alone. C plays the
 applied tone; P reads a sample with the draft. S stops, without saving.
 Preview comes before Presets in the section order. L loads a preset into the
 draft; N saves a named preset without changing the cue. A applies the draft
-for this session; W saves and applies tone defaults through Customize.
+in the destination’s scope. Capitalization instead copies to its retained
+preview draft. W saves through Customize or the destination’s personal rules;
+buffer-local indentation must use global scope before saving.
 q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
 and saved changes remain. Timing, cue enablement, voice and earcon choices
 belong to the parent menu; shared main-tone volume belongs in Output settings.
@@ -27895,6 +27927,42 @@ When called interactively, CHAR defaults to the character after point.
 @end deffn
 
 @subsection tts-speak Options
+
+@defvar {User Option} emacsvox-capitalization-all-caps-tone
+@verbatim
+Default tone for an all-capitals word.
+The plist holds pitch in Hz, duration in milliseconds, volume from 0 to 1,
+and a tone shape.  It applies to ‘tone’ and ‘spoken-tone’ presentations when
+‘tts-caps’ is enabled.  Presentation rules can override these defaults.
+Use the capitalization tone editor to preview waveforms and envelopes.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(:pitch 1300 :duration 20 :volume 1.0 :shape (:waveform sine))
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-capitalization-capital-tone
+@verbatim
+Default tone for an individual capital letter.
+The plist holds pitch in Hz, duration in milliseconds, volume from 0 to 1,
+and a tone shape.  It applies to ‘tone’ and ‘spoken-tone’ presentations when
+‘tts-caps’ is enabled.  Presentation rules can override these defaults.
+Use the capitalization tone editor to preview waveforms and envelopes.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(:pitch 440 :duration 20 :volume 1.0 :shape (:waveform sine))
+
+@end verbatim
+
+@end defvar
 
 @defvar {User Option} emacsvox-capitalization-presentation
 @verbatim

@@ -1658,7 +1658,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * attachments, Notmuch:                  Notmuch Messages And Attachments.
                                                               (line   6)
 * attack, decay, sustain and release:    Reading Scope And Punctuation.
-                                                              (line 265)
+                                                              (line 318)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  15)
@@ -2015,6 +2015,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * settings, survive restart:             Finding Settings Tasks.
                                                               (line   6)
+* shared tone editor:                    Reading Scope And Punctuation.
+                                                              (line 219)
 * shell command status:                  EAT Shell Integration.
                                                               (line   6)
 * shell commands, where to run:          Filenames And Example Commands.
@@ -2038,7 +2040,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech worker, meaning:                Speech And Settings Terms.
                                                               (line   6)
 * spelling tone editor:                  Reading Scope And Punctuation.
-                                                              (line 170)
+                                                              (line 219)
 * starting Notmuch:                      Starting Notmuch.    (line   6)
 * startup palette:                       Saving And Startup.  (line   6)
 * startup selection:                     Speech And Settings Terms.
@@ -2081,9 +2083,9 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * timeout, did anything change:          Finding Problem Tasks.
                                                               (line   6)
 * tone envelope, ADSR:                   Reading Scope And Punctuation.
-                                                              (line 265)
+                                                              (line 318)
 * tone presets:                          Reading Scope And Punctuation.
-                                                              (line 170)
+                                                              (line 219)
 * too much talking:                      Feedback Differs Between Buffers.
                                                               (line   6)
 * too much talking <1>:                  Finding Problem Tasks.

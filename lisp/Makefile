@@ -422,7 +422,7 @@ emacsvox-aural-voice-drafts.elc: emacsvox-aural-voice-runtime.elc
 emacsvox-aural-voice-editing.elc: emacsvox-aural-voice-drafts.elc emacsvox-aural-compiler.elc
 emacsvox-aural-voice-editor.elc: emacsvox-aural-voice-editing.elc emacsvox-aural-voice-workbench.elc
 emacsvox-aural-voice-menu.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-menu.elc
-emacsvox-capitalization.elc: emacsvox-aural-menu.elc emacsvox-aural-editor.elc
+emacsvox-capitalization.elc: emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-tone-editor.elc
 emacsvox-settings-changes.elc: emacsvox-aural-menu.elc emacsvox-aural-home.elc
 emacsvox-settings-integrations.elc: emacsvox-settings.elc
 emacsvox-settings-workflows.elc: emacsvox-aural-menu.elc

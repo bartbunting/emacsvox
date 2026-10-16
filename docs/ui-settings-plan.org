@@ -938,9 +938,9 @@ repeat listening when an editor change warrants it, or as an optional confidence
 check, rather than treating that accepted milestone as unfinished.
 
 Persistence remains owned by existing subsystems. Ordinary defaults use
-Customize; capitalization cues use personal aural rules; voices, palettes,
-and other structured objects use their existing stores; punctuation definitions
-are saved on the Omnivox host. Emacs pronunciation dictionaries use their own
+Customize, including basic capitalization tones. Conditional presentation
+rules, voices, palettes and other structured objects use their existing stores;
+punctuation definitions are saved on the Omnivox host. Emacs pronunciation dictionaries use their own
 file. Unsaved drafts remain session state. The implemented Changed settings view
 separates loaded options and retained drafts and identifies storage boundaries.
 Comparing those stores with disk or live host state remains deferred.
@@ -1987,13 +1987,65 @@ verification of subsequently changed code.
   session; Save and apply persists tone defaults; Back discards unapplied
   edits. Reset affects only the draft. Timing and shared volume stay outside
   this editor.
-  Named presets and current-tone comparison are implemented. After listening
-  acceptance, reuse the editor for capitalization, indentation and personal
-  tone rules while preserving each
-  destination's scope and saving contract. Capitalization/line-cue retained
-  drafts and rule saving are not converted by this slice. Platform listening,
-  envelope clarity at short durations, interruption, speech masking and
-  relative waveform loudness remain separate qualification work.
+  Named presets and current-tone comparison are implemented. Listening
+  acceptance for the shared editor was recorded on 2026-10-17; small future
+  interaction adjustments remain possible. This accepts proceeding with reuse,
+  without claiming every platform or waveform comparison has been qualified.
+  General personal tone rules and line-cue editors remain separate follow-ups.
+
+- Shared tone destinations, 2026-10-17: capital-letter and all-caps beep menus
+  now open the common editor with =E=, as does indentation's pitch-tone menu.
+  The entry routes are =C-e H s c l E=, =C-e H s c a E= and =C-e H s i t E=.
+  The initial capitalization connection retained personal-rule saving. The
+  Customize follow-up below replaces that destination contract.
+  Indentation captures buffer/global scope. Apply changes only base pitch,
+  requested duration, individual volume and shape; Save requires global scope
+  and uses Customize. Rise, maximum, timing, enablement and shared volume remain
+  in the parent. Space previews the first-column tone and =P= a four-column
+  sample. The duration floor remains; sweeps end at an absolute frequency.
+  Duration-coded indentation is unchanged. Existing preview-section navigation
+  stays in place. Opening, browsing and previewing save nothing.
+  Verification: 26 focused batch checks pass; 14 graphical cases skip in batch.
+  Thirteen focused graphical checks pass without skips in fresh Emacs 31.0.90,
+  verifying the changed modules' loaded byte-code paths. They cover the new
+  entry routes, global/buffer scope, retained capitalization drafts, shape
+  persistence, cancellation, parent return and existing spelling interactions.
+  The graphical check caught and verified a fix for copying indentation's
+  global scope pair. A broader batch run passes 402 checks and skips 43; its
+  remaining failure is the previously recorded indentation test-order issue
+  resolving =select-object= in the chimes pack. That test passes in isolation.
+  The broader graphical attempt also encounters an unchanged navigation test
+  expecting item-before-section speech; it is outside the 13 focused cases.
+  Full rebuild, final incremental build, byte-code preflight, header checks,
+  manual preview, reference/manual generation and =make docs-release-check=
+  pass. New-destination listening remains pending. The
+  general shared-editor acceptance above does not imply listening acceptance
+  of these destination-specific paths.
+
+- Capitalization defaults, 2026-10-17: accepted the distinction between ordinary
+  Customize options and conditional rules in the presentation store. Capital
+  letters and all-caps each have a tone option containing pitch, duration,
+  individual volume and shape. Basic defaults sit below presentation rules.
+  Shared-editor =A= now applies global defaults; =W= saves through Customize.
+  The parent beep menu offers =A= and =S= with the same contracts. Preview and
+  opening menus do not write settings. Reset edits a draft; discard leaves
+  applied settings intact.
+  Old menu-generated rules remain effective until explicit Save imports the
+  selected cue into Customize and removes only its unchanged generated rules.
+  Apply requires that initial Save when legacy rules remain. Rules with altered
+  matches or action structures are preserved, even when they retain a formerly
+  generated identifier. Legacy pitch and duration values retain their precision
+  and are not restricted to the shared editor's adjustment ranges.
+  Customize is written before removing old rules. A failed rule-store write
+  keeps those rules effective and allows Save to finish migration on retry.
+  Verification: 55 focused source checks pass; seven graphical cases skip in
+  batch. Twelve graphical checks pass in a fresh Emacs 31.0.90 with the changed
+  modules verified as loaded byte-code. They cover application, persistence,
+  cancellation, parent return and the existing spelling/indentation workflows.
+  The full rebuild, subsequent incremental build, byte-code preflight, header
+  check and reference generation pass. No live session or personal settings
+  file was changed during verification. Listening remains pending for this
+  follow-up.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

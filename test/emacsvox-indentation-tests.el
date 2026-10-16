@@ -8,6 +8,7 @@
 ;;; Code:
 (require 'ert)
 (require 'emacsvox-indentation)
+(require 'emacsvox-tone-editor)
 
 (defmacro emacsvox-test--with-indentation-menu (&rest body)
   "Run BODY with isolated defaults and an indentation source buffer."
@@ -17,7 +18,9 @@
                     emacsvox-indentation-pitch-tone-base
                     emacsvox-indentation-pitch-tone-semitones-per-column
                     emacsvox-indentation-pitch-tone-maximum
-                    emacsvox-indentation-pitch-tone-duration))
+                    emacsvox-indentation-pitch-tone-duration
+                    emacsvox-indentation-pitch-tone-volume
+                    emacsvox-indentation-pitch-tone-shape))
           (defaults (mapcar (lambda (symbol) (cons symbol (default-value symbol))) symbols))
           (properties (mapcar (lambda (symbol) (cons symbol (copy-tree (symbol-plist symbol)))) symbols))
           (native-comp-enable-subr-trampolines nil))
@@ -31,6 +34,8 @@
            (set-default 'emacsvox-indentation-pitch-tone-semitones-per-column 1.0)
            (set-default 'emacsvox-indentation-pitch-tone-maximum 2000.0)
            (set-default 'emacsvox-indentation-pitch-tone-duration 150)
+           (set-default 'emacsvox-indentation-pitch-tone-volume 100)
+           (set-default 'emacsvox-indentation-pitch-tone-shape '(:waveform sine))
            (with-temp-buffer
              (setq-local emacsvox-indentation-presentation 'spoken)
              (setq-local emacsvox-indentation-tone-timing 'overlay)
@@ -152,7 +157,9 @@
                        (emacsvox-indentation-pitch-tone-base . 250.0)
                        (emacsvox-indentation-pitch-tone-semitones-per-column . 1.0)
                        (emacsvox-indentation-pitch-tone-maximum . 2000.0)
-                       (emacsvox-indentation-pitch-tone-duration . 150)))))
+                       (emacsvox-indentation-pitch-tone-duration . 150)
+                       (emacsvox-indentation-pitch-tone-volume . 100)
+                       (emacsvox-indentation-pitch-tone-shape :waveform sine)))))
     (should (eq emacsvox-indentation-presentation 'pitch-tone))))
 
 (ert-deftest emacsvox-indentation-menu-saved-defaults-reload ()
@@ -546,6 +553,102 @@
                 (should (eq (current-buffer) source))
                 (should (= (point) 4)))
             (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
+
+(ert-deftest emacsvox-indentation-shared-editor-scope-preview-and-persistence ()
+  "Draft previews preserve scope; local Save fails and global shape reloads."
+  (emacsvox-test--with-indentation-menu
+    (cl-letf (((symbol-function 'transient-setup)
+               (lambda (command &rest args)
+                 (setq transient--prefix
+                       (transient-prefix :command command :scope (plist-get (nthcdr 2 args) :scope))))))
+      (emacsvox-indentation--edit-tone))
+    (emacsvox-tone-editor--put :waveform 'pulse)
+    (emacsvox-tone-editor--put :width 25)
+    (emacsvox-tone-editor--put :volume 35)
+    (emacsvox-tone-editor--put :duration 20)
+    (let (text)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (value) (setq text value)))
+                ((symbol-function 'emacsvox-aural--tone-volume-deliverable-p) (lambda (&rest _) t))
+                ((symbol-function 'emacsvox-aural--tone-shape-deliverable-p) (lambda (&rest _) t)))
+        (emacsvox-tone-editor--sample))
+      (let ((facts (get-text-property 4 emacsvox-aural-facts-property text)))
+        (should (equal (plist-get facts :indentation-tone-shape)
+                       '(:waveform pulse :pulse-width 0.25)))
+        (should (= (plist-get facts :indentation-tone-volume) 0.35))
+        (should (= (plist-get facts :indentation-tone-duration)
+                   (emacsvox-speak--blank-line-tone-duration)))))
+    (should (= emacsvox-indentation-pitch-tone-volume 100))
+    (should-error (emacsvox-tone-editor--save) :type 'user-error)
+    (should-not (local-variable-p 'emacsvox-indentation-pitch-tone-shape))
+    (emacsvox-tone-editor--apply)
+    (should (local-variable-p 'emacsvox-indentation-pitch-tone-shape))
+    (should (= emacsvox-indentation-pitch-tone-volume 35))
+    (should (= (default-value 'emacsvox-indentation-pitch-tone-volume) 100))
+    (should-not emacsvox-audio-indentation)
+    (should (eq emacsvox-indentation-presentation 'spoken))
+    (should (eq emacsvox-indentation-tone-timing 'overlay))
+    (should (= tts-main-tone-volume 50))
+    ;; A separate global edit must preserve the explicit local values.
+    (setcdr (emacsvox-indentation--state) t)
+    (let* ((custom-file (make-temp-file "indentation-shape-" nil ".el"))
+           (user-init-file custom-file)
+           (data (emacsvox-indentation--tone-data)))
+      (unwind-protect
+          (progn
+            (setq data (plist-put data :waveform 'triangle))
+            (emacsvox-indentation--apply-tone data t)
+            (set-default 'emacsvox-indentation-pitch-tone-shape '(:waveform sine))
+            (load custom-file nil t)
+            (should (equal (default-value 'emacsvox-indentation-pitch-tone-shape) '(:waveform triangle)))
+            (should (equal emacsvox-indentation-pitch-tone-shape '(:waveform pulse :pulse-width 0.25))))
+        (when (get-file-buffer custom-file) (kill-buffer (get-file-buffer custom-file)))
+        (delete-file custom-file)))))
+
+(ert-deftest emacsvox-indentation-shared-tone-reaches-reading-plan ()
+  "Both timing modes carry shape and gain without changing duration coding."
+  (emacsvox-test--with-indentation-menu
+    (let ((emacsvox-audio-indentation t)
+          (emacsvox-indentation-pitch-tone-shape '(:waveform triangle :end-frequency-hz 900))
+          (emacsvox-indentation-pitch-tone-volume 40))
+      (dolist (presentation '(pitch-tone spoken-pitch-tone))
+        (dolist (timing '(insert overlay))
+          (let* ((emacsvox-indentation-presentation presentation)
+                 (emacsvox-indentation-tone-timing timing)
+                 (facts (emacsvox-speak--indentation-facts 4))
+                 (context (emacsvox-aural-context-at-point))
+                 (plan (emacsvox-aural-compile-plan
+                        (emacsvox-aural-resolve-active facts context) facts context))
+                 (actions (emacsvox-aural-concrete-plan-before plan))
+                 (tones (cl-remove-if-not (lambda (a) (eq (emacsvox-aural-concrete-action-kind a) 'tone)) actions)))
+            (should (= (length tones) 1))
+            (should (= (emacsvox-aural-concrete-action-requested-volume (car tones)) 0.4))
+            (should (eq (emacsvox-aural-concrete-action-audio-mode (car tones)) timing))
+            (should (equal (emacsvox-aural-concrete-action-shape (car tones)) emacsvox-indentation-pitch-tone-shape))
+            (should (= (length actions) (if (eq presentation 'pitch-tone) 1 2))))))
+      (let ((emacsvox-indentation-presentation 'duration-tone))
+        (should-not (plist-member (emacsvox-speak--indentation-facts 4) :indentation-tone-shape))))))
+
+(ert-deftest emacsvox-indentation-shared-editor-graphical-navigation ()
+  "The shared editor returns to the selected scope without leaking its keys."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-indentation-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-indentation)
+      (let ((transient--prefix nil) (transient-show-menu t))
+        (unwind-protect
+            (progn
+              (execute-kbd-macro (kbd "<f8> t E w t A q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-indentation-tone))
+              (should (equal (buffer-local-value 'emacsvox-indentation-pitch-tone-shape source)
+                             '(:waveform triangle)))
+              (should-not (cdr (emacsvox-indentation--state)))
+              (execute-kbd-macro (kbd "g E"))
+              (should (eq (emacsvox-tone-editor--get :waveform) 'sine))
+              (execute-kbd-macro (kbd "w r q"))
+              (should (equal (default-value 'emacsvox-indentation-pitch-tone-shape) '(:waveform sine)))
+              (should (cdr (emacsvox-indentation--state))))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
 
 (provide 'emacsvox-indentation-tests)
 ;;; emacsvox-indentation-tests.el ends here
