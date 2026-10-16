@@ -1815,8 +1815,26 @@ verification of subsequently changed code.
   documentation review gate pass.
   Listening remains open: repeat an unclear item, review forward/backward,
   check interruption and boundary feedback, then adjust or activate the same
-  item. Character review and spoken full Help remain follow-ups. Defer the
+  item. Character review follows below; spoken full Help remains open. Defer the
   maintained manual update until the trial's bindings and behaviour settle.
+
+- Transient character review trial, 2026-10-16: =C-f= and =C-b= review the
+  next and previous characters; =C-e c= repeats the current character.
+  These keys share the existing word review position. Moving to a word puts
+  review at its first character; =C-e c= reads it and =C-f= advances from
+  there. The first character command on a newly selected item starts at its
+  first character. Repeating a word leaves the character position intact.
+  Spaces, punctuation, digits and Unicode characters use the existing spoken
+  character names. The shared table's incorrect capital-N name is corrected
+  from "cap m" to "cap n". Boundary feedback, interruption, item selection,
+  adjustments, activation and menu-key precedence are retained.
+  Forty-seven source tests pass; six graphical checks skip in batch and
+  pass in the separate graphical run. All eight graphical checks pass with
+  both source and compiled code, including settings and Magit in all three
+  navigation styles. Three focused review tests also pass in a fresh compiled
+  batch Emacs. Numeric minibuffer entry retains normal =C-f=/=C-b= editing.
+  Incremental byte-code, preflight and the documentation review gate pass. Listening remains
+  open for character clarity, word/character transitions and interruption.
 
 - Shared diagnostic log lock prompts, 2026-10-16: multiple normal-profile
   sessions append to the same aural submissions log. Emacs's =write-region=

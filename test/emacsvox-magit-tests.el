@@ -2819,6 +2819,11 @@
                             (should (equal (reverse speech)
                                            (list (nth 0 words) (nth 1 words)
                                                  (nth 1 words) (nth 0 words)))))
+                          (setq speech nil)
+                          (execute-kbd-macro (kbd "C-e c C-f C-b C-e c"))
+                          (let ((first (string-trim (tts-char-to-speech (aref choice 0))))
+                                (second (string-trim (tts-char-to-speech (aref choice 1)))))
+                            (should (equal (reverse speech) (list first second first first))))
                           (should (= position (window-point transient--window)))
                           (with-selected-window transient--window
                             (should (eq command (oref (button-get (button-at (point)) 'button-data) command)))))
