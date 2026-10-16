@@ -22,6 +22,43 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+Merge-preparation checkpoint, 2026-10-16: listening accepts the Transient
+review endpoint shortcuts and reversal at both ends. Named-voice tuning
+organisation and the revised manual walkthrough are deferred beyond this
+merge; neither is recorded as passed. Their unchecked status remains below
+for later follow-up and does not block this merge. Final branch CI and review
+remain separate gates.
+
+Menu and tone documentation checkpoint, 2026-10-16: the settings chapter now
+owns the complete navigation explanation, with linked reminders in Help,
+keyboard guidance and the tutorial. It distinguishes item selection, section
+movement, activation, numeric adjustment, choice lists and minibuffer prompts.
+Item review covers repeats, words, characters, endpoints, delayed phonetics
+and binding precedence. By-movement guidance uses =C-c l= to discover the
+selected first item before activation. Menu overviews describe the current
+navigation policy and list only the navigation, activation and review bindings
+available in that menu. Opening guidance now distinguishes back from closing.
+
+The spelling tone guide follows a preview-only exercise with waveform, Pulse
+width, sweep, ADSR, curve, preset and saving explanations. It distinguishes
+the active shape from inactive draft fields, individual from shared volume,
+and the tone editor's Stop/Save keys from the parent spelling menu's Save.
+The existing capitalisation, indentation and line-cue editors keep their own
+scope and saving contracts. A named-voice tuning entry route and the preset
+preview instructions were corrected. Save recovery covers skipped normal
+initialisation. No navigation, tone rendering or persistence policy changed.
+
+Verification: 65 source batch checks pass, including menu-specific binding
+precedence; 32 graphical tests skip in batch.
+Thirteen selected graphical checks pass in a fresh Emacs with compiled code,
+covering Help and return, tone choices, selection and
+settings/Magit navigation. The remaining graphical cases were not rerun for
+this documentation change. Incremental compilation, byte-code preflight,
+reference/manual generation and the documentation gate pass. Three generated
+Info cross-references and their history returns pass in a separate fresh Emacs;
+existing Info node names remain unchanged. This is automated verification,
+not new listening acceptance; the two checks deferred above remain deferred.
+
 History Enter follow-up, 2026-10-15: Enter was reported ineffective on History
 limits and recording. Fresh graphical checks pass with current source and
 compiled code. A new regression uses section/item arrows to reach the action,
@@ -61,8 +98,9 @@ Listening checkpoint, 2026-10-15: acceptance results cover items 1--6 and
   presentation; global Voice Lock saving was optional in this task and is
   not separately confirmed.
 - [ ] Item 7, named-voice tuning organisation, preview/stop, save explanations
-  and retained draft: the checklist was included without a result.
-- [ ] Item 13, the revised manual walkthrough: no result was included.
+  and retained draft: deferred beyond this merge on 2026-10-16; no result.
+- [ ] Item 13, the revised manual walkthrough: deferred beyond this merge
+  on 2026-10-16; no result.
 
 This checkpoint supersedes earlier open listening statuses for the accepted
 tasks above. Earlier named-voice workflow acceptance remains valid; acceptance
@@ -1870,7 +1908,7 @@ verification of subsequently changed code.
   and real settings/Magit menus. Four focused compiled checks cover boundaries,
   key precedence and phonetic cancellation after resetting review. Incremental
   byte-code, preflight and the documentation review gate pass. Listening acceptance
-  remains open for the new shortcuts and reversal at both ends.
+  confirmed the new shortcuts and reversal at both ends on 2026-10-16.
 
 - Shared diagnostic log lock prompts, 2026-10-16: multiple normal-profile
   sessions append to the same aural submissions log. Emacs's =write-region=

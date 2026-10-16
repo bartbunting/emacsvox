@@ -1444,6 +1444,12 @@ punctuation policy. It must name the current buffer@comma{} not global defaults.
 Record whether the original policy is automatic@comma{} an explicit level@comma{} or a
 named profile. If scope is global@comma{} use @kbd{g} to choose buffer scope before
 changing anything.
+Practise selecting an item with up/down and changing sections with
+left/right. Press @kbd{C-c l} to repeat the selected item@comma{} then @kbd{M-f} to hear
+its first word. @kbd{C-a C-f} reviews its first character. These review keys
+leave the same item selected and do not change punctuation. In a menu@comma{}
+@kbd{C-e} goes to the end of item review; the ordinary speech prefix returns
+after you close the menu. See @ref{settings-menu-navigation, , menu navigation} for the full controls.
 @item
 Press @kbd{? a} for Help on All@comma{} then @kbd{q} to return to the punctuation menu.
 Press @kbd{a} to apply All@comma{} followed by @kbd{C-q} to close the menus. Back in the
@@ -2759,19 +2765,34 @@ leaves the originating menu open.
 The main menu groups its entries in this order: @emph{Everyday settings}@comma{}
 @emph{This buffer and item}@comma{} @emph{Rules and saved work}@comma{} @emph{Find and get help}@comma{} and
 @emph{Finish}. Use left/right to reach a group@comma{} then up/down to select an item.
-The same arrows navigate sections and items in the submenus.
+Changing sections selects the first available item. Plain arrows navigate;
+Shift-left/right adjusts a selected numeric control where offered.
 Press @kbd{C-e H n} to choose navigation and announcement preferences; the
 same controls remain available through @kbd{C-e H s n}.
 @kbd{@key{RET}}@comma{} @kbd{M-@key{RET}}@comma{} or @kbd{C-j} activates the selected item; its displayed shortcut
-also works directly. Press @kbd{?} followed by an item's key to hear its effect
-and scope@comma{} or @kbd{? ?} for the menu overview. @kbd{q} in that Help returns to the
-menu with the selection retained.
+also works directly.
+
+To hear the selected item again@comma{} press @kbd{C-c l}. This is especially useful
+after a section-only announcement: the first item is selected even though
+only the heading was spoken. @kbd{M-f~/~M-b} reviews its words and @kbd{C-f~/~C-b}
+its characters@comma{} leaving the selection and Enter's target unchanged. These
+menu keys differ from ordinary buffer reading; see
+@ref{settings-menu-review, , Review an item without changing the selection} for endpoints@comma{} repeats and
+menu-specific overrides.
+
+Press @kbd{?} followed by an item's key to hear its effect and scope@comma{} or @kbd{? ?}
+for the menu overview and available review keys. The overview is a read-only
+snapshot with ordinary text navigation. Its displayed actions run after you
+return to the menu. @kbd{q} in Help returns with the selection retained.
 
 Within the menu itself@comma{} @kbd{q} or @kbd{C-g} goes back one level@comma{} while @kbd{C-q} closes
 the sequence. Returning from an Emacsvox submenu selects the entry that opened
 it@comma{} including when you used its shortcut. The return announcement identifies
 that item; @kbd{@key{RET}} opens it again. These navigation commands do not undo changes
 already applied.
+Choice lists and minibuffer prompts have different roles: arrows browse a
+choice list without applying it@comma{} while a prompt uses your normal text editing
+and completion. See @ref{settings-menu-navigation, , Navigate menus and read Help} for the complete interaction.
 A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. See
 @ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
 or a retained draft as the same thing.
@@ -3335,12 +3356,30 @@ you need in a later session.
 @anchor{Navigate menus and read Help}Navigate menus and read Help
 
 
-The settings menus use Transient. Up/down moves through choices@comma{} left/right
-moves between sections@comma{} and @kbd{@key{RET}} activates the selected choice. @kbd{M-@key{RET}}
-and @kbd{C-j} also activate choices. A displayed shortcut invokes its item
-directly. In Emacsvox's menus@comma{} @kbd{q} or @kbd{C-g} goes back one menu and @kbd{C-q}
-closes the sequence. Changes already made remain in effect. Other applications
-using Transient@comma{} including Magit@comma{} retain their own activation and quit keys.
+@anchor{settings-menu-navigation}
+
+The settings menus use Transient: while a menu is open@comma{} its keys act on that
+menu. Up/down selects an item; left/right changes sections and selects the
+destination's first available item. Section movement stops at the first and
+last section. Selecting an item speaks it without activating it or changing
+its value. @kbd{@key{RET}}@comma{} @kbd{M-@key{RET}} or @kbd{C-j} activates that item. A displayed shortcut
+invokes its action directly@comma{} without first moving the selection to it.
+
+An action can open another menu or editor@comma{} toggle a switch@comma{} or ask for a value.
+For a numeric control that offers adjustment@comma{} Shift-left/right decreases or
+increases the selected value; @kbd{@key{RET}} opens its exact-value prompt. The item's
+Help gives its step@comma{} range and scope. Plain arrows continue to navigate.
+Waveform@comma{} envelope and other choice lists use up/down to browse and @kbd{@key{RET}} to
+choose; browsing alone does not apply a choice. When a minibuffer prompt asks
+for text or a number@comma{} use its ordinary editing and completion keys. Finish
+with @kbd{@key{RET}} or cancel with @kbd{C-g} to return to the menu.
+
+In Emacsvox's menus@comma{} @kbd{q} or @kbd{C-g} goes back one menu and @kbd{C-q} closes the
+sequence. A child menu normally returns to the item that opened it. Changes
+already applied remain in effect; an editor's Back action states whether it
+retains or discards an unfinished draft. Other applications using Transient@comma{}
+including Magit@comma{} retain their own activation and quit keys. Use @kbd{C-j} to
+activate a selected Magit item where @kbd{@key{RET}} has another meaning.
 
 Menu feedback interrupts previous main-stream speech@comma{} including when you
 toggle scope or change a setting. Item announcements include the key without
@@ -3350,16 +3389,66 @@ Left/right selects its first selectable item and normally speaks it with the
 section name and position.
 
 For menu Help@comma{} press @kbd{?} followed by a choice's key@comma{} or @kbd{? ?} for help on
-the current menu. @kbd{q} in that Help resumes the menu@comma{} including its parent menus.
+the current menu. The overview is a read-only snapshot: ordinary text reading
+works there@comma{} but its displayed actions run only after you return to the menu.
+@kbd{q} in that Help resumes the menu@comma{} including its parent menus and selection.
 Opening @kbd{C-e H} announces a short reminder of Help and the @kbd{n} navigation
 and speech settings. Moving between items does not repeat that reminder.
 
 @enumerate
 @item
+@anchor{Review an item without changing the selection}Review an item without changing the selection
+
+
+@anchor{settings-menu-review}
+
+@cindex Transient menu review
+@cindex menu items, reading by word or character
+
+If an announcement is unclear@comma{} review the selected item's label@comma{} value@comma{}
+description and key without leaving the menu. The review position is separate
+from menu selection: @kbd{@key{RET}} still activates the same item after you read one
+of its words or characters.
+
+@table @kbd
+@item C-c l
+Repeat the complete item and reset its word and character review.
+@item M-f@comma{} M-b
+Read the next or previous word. Punctuation stays with its word.
+@item C-f@comma{} C-b
+Read the next or previous character@comma{} including spaces.
+@item C-c w@comma{} C-c c
+Repeat the current review word or character.
+@item C-a
+Move before the item's first word and character@comma{} announcing "Start of item".
+@item C-e
+Move after its last word and character@comma{} announcing "End of item".
+@end table
+
+The first word or character command starts at the item's beginning. To read
+backwards from its end@comma{} use @kbd{C-e} followed by @kbd{M-b} or @kbd{C-b}. At either end@comma{}
+moving outwards repeats the boundary announcement; reversing direction reads
+the first or last element again. @kbd{C-a C-f} therefore reads the first character@comma{}
+and @kbd{C-e C-b} reads the last. Word and character review share a position.
+Selecting another item or changing its displayed value starts a fresh review.
+
+Character review follows your normal capitalisation presentation. If delayed
+phonetics are enabled in @ref{Reading Scope And Punctuation,Typing and interaction,,emacsvox,}@comma{} pausing after a character also
+speaks its phonetic description. Further input or speech cancels that pending
+description. Review interrupts obsolete main speech without changing a setting.
+
+These defaults apply to Transient menus@comma{} including Magit@comma{} only where the menu
+has no binding of its own. The menu overview lists the available review keys.
+While reviewing a menu@comma{} @kbd{C-e} means the end of the item: it is not the ordinary
+Emacsvox speech prefix. Use @kbd{C-c l}@comma{} @kbd{C-c w} and @kbd{C-c c} for these menu repeats.
+After closing the menu@comma{} ordinary buffer bindings apply again.
+
+@item
 @anchor{Choose navigation and announcement preferences}Choose navigation and announcement preferences
 
 
-Press @kbd{C-e H s n} for Menu navigation. Choose @kbd{c} for Continuous@comma{} which
+Press @kbd{C-e H n} for Menu navigation@comma{} also available at @kbd{C-e H s n}.
+Choose @kbd{c} for Continuous@comma{} which
 crosses sections and wraps around the whole menu; @kbd{w} to wrap within the
 current section; or @kbd{s} to stop at section edges with a boundary earcon.
 Left/right moves between sections in every style. Changes apply immediately
@@ -3367,9 +3456,10 @@ to all Transient menus@comma{} independently of the current-buffer settings scop
 Wrap within section is the default.
 
 In the Presentation section@comma{} choose @kbd{i} for Item first or @kbd{n} for Section
-first. Section first is the default: it speaks the section name and position
-before the item. Item first reverses that order. Previously saved preferences
-remain in effect.
+first. Section first is the default: on changing sections it speaks the section
+name and position before the item. Item first reverses that order. Movement
+within a section speaks the item without repeating its section. Previously
+saved preferences remain in effect.
 
 Choose @kbd{m} for @emph{By movement: sections or items}. Left/right speaks only the
 destination section and its position. Up/down speaks only the item@comma{} key@comma{} and
@@ -3380,8 +3470,9 @@ not change the navigation style.
 
 Section arrows still select the first item. In Emacsvox menus@comma{} @kbd{@key{RET}} therefore
 activates that item even though its name has not been spoken@comma{} and the next
-Down advances to the second item. Press @kbd{C-u 0 <down>} to hear the selected
-item without moving. Magit's existing activation bindings remain unchanged.
+Down advances to the second item. Press @kbd{C-c l} to hear that first item
+without moving@comma{} then decide whether to activate it. Magit's existing activation
+bindings remain unchanged.
 
 Press @kbd{v} to toggle Detailed descriptions. When enabled@comma{} menu items retain
 their labels and values and add a short command explanation. This applies
@@ -3402,7 +3493,10 @@ capitalisation. Type @code{cap} to find @emph{Capitalization indication and came
 @code{caps beep} and @code{allcaps} find both beep controls and only @emph{All-caps beep}@comma{} respectively.
 Each result appears once under its normal name. Use completion to choose a
 result; ambiguous text does not choose one automatically. These matching rules
-apply to this search without changing completion elsewhere in Emacs.
+apply to this search without changing completion elsewhere in Emacs. Space
+inserts a literal space; @kbd{@key{TAB}} completes. Use your configured completion
+interface to browse results@comma{} displaying completions with @kbd{@key{TAB}} if needed.
+The menu's section and item arrows do not govern this minibuffer prompt.
 
 @kbd{@key{RET}} accepts the choice@comma{} opens its menu@comma{} and selects the matching control
 without changing its value. Press @kbd{@key{RET}} again to activate or edit the control.
@@ -3422,8 +3516,9 @@ Press @kbd{C-e H .} for settings relevant to the captured buffer: speech@comma{}
 indentation@comma{} typing/point feedback@comma{} capitalisation@comma{} and its major mode's
 Customize group when available. This entry starts with buffer scope without
 changing the parent's scope. @kbd{A} opens the advanced Emacsvox Customize group.
-In these linked Customize buffers@comma{} @kbd{q} finishes Customize normally and returns
-to the menu; use Customize's own Apply and Save commands. See
+In these linked Customize buffers@comma{} use Customize's own field navigation@comma{}
+Apply and Save commands. Outside an editable field@comma{} @kbd{q} finishes Customize
+and returns to the menu. See
 @ref{Integration speech settings, , Adjust an integration's speech settings} for application-specific controls.
 
 @subsection Choose a task and navigate its editor
@@ -4397,8 +4492,9 @@ choices are retained. Shared adjustments supply inherited fields;
 
 @subsection Tune through the focused menu
 
-From @kbd{C-e H v p}@comma{} select a palette@comma{} press @kbd{e}@comma{} choose a voice@comma{} then press @kbd{m}
-in its shared editor. This tuning menu edits the same retained draft. Up/down
+From @kbd{C-e H v p}@comma{} enter a palette with @kbd{@key{RET}}@comma{} select a voice and press @kbd{e}
+to open its editor. Press @kbd{m} there for focused tuning. This menu edits the
+same retained draft. Up/down
 selects controls@comma{} left/right changes sections@comma{} and Shift-left/right adjusts
 relative rate@comma{} pitch@comma{} pitch range@comma{} or gain by one unit. @kbd{@key{RET}} enters an exact
 value. @kbd{d} restores the selected adjustment to adapter default@comma{} or asks which
@@ -5093,6 +5189,11 @@ separation@comma{} direction@comma{} speech@comma{} and cues. Unsupported or mon
 audible content at the centre. Named tones are separate compact resources@comma{}
 independent of sampled files and the active pack.
 
+For waveform@comma{} pitch sweep and envelope adjustments@comma{} use the
+@ref{spelling-tone-editor, , complete spelling tone editor}. It currently edits the global spelling cue.
+Line cues@comma{} capitalisation beeps and indentation keep the controls and saving
+rules described in their own sections; they do not yet use that draft editor.
+
 @menu
 * Walkthrough Try A Sound Pack: Sound Pack Walkthrough.  Preview, activate, retain, and restore a sound pack.
 * Walkthrough Silence One Cue: Changing One Sound.  Suppress a cue while retaining speech and restore it afterward.
@@ -5377,7 +5478,10 @@ highlighting. The default is voice plus earcon.
 
 When you read text already marked by Flyspell@comma{} tones and earcons occur at
 the flagged word. Voice feedback uses the existing spelling face mappings.
-Tone and earcon feedback also report errors detected while editing. Opening
+Tone and earcon feedback also report errors detected while editing. Character
+movement cues entry into a flagged word: its first character moving forwards@comma{}
+or its last character moving backwards. Moving within the same word or onto
+an adjacent space does not repeat the entry cue. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
 Use @kbd{m} to choose tone timing. @emph{Alongside speech} is the default: it plays
@@ -5407,17 +5511,71 @@ including tone timing and shape@comma{} and the shared tone volume through Custo
 @anchor{Edit the complete spelling tone}Edit the complete spelling tone
 
 
+@anchor{spelling-tone-editor}
+
+@cindex spelling tone editor
+@cindex tone presets
+
 Press capital @kbd{E} in Spelling feedback@comma{} or use @kbd{C-e H s f E}@comma{} for a private
 draft of the complete tone. The title identifies its global spelling scope.
 This editor adds waveform@comma{} pitch sweep and envelope controls to pitch@comma{} duration
-and individual volume. Changes here affect only the draft until you apply it. Timing stays
-in Spelling feedback at @kbd{C-e H s f m}.
+and individual volume. Unlike the parent menu's immediate adjustments@comma{} changes
+here affect only the draft until you apply it. Timing stays in Spelling feedback
+at @kbd{C-e H s f m}. Voice@comma{} earcon and tone enablement also remain in that menu;
+shared main-tone volume controls all main tones from Sounds and output.
 
-Use arrows to navigate and Shift-left/right to adjust the selected number.
-@kbd{@key{RET}} enters an exact number or opens a choice list. In a list@comma{} arrows browse@comma{}
-@kbd{@key{RET}} selects and returns@comma{} and @kbd{q} cancels. @kbd{?} followed by an item's key
-explains its effect and units. Choose @kbd{w} for waveform: sine is a smooth pure
-tone@comma{} triangle adds a softer harmonic character@comma{} and square sounds brighter.
+The sections follow the editing task: the spelling tone's basic controls@comma{}
+Pitch movement@comma{} Envelope@comma{} Preview@comma{} Presets@comma{} Apply and save@comma{} then Finish.
+Left/right changes sections; up/down selects an item. Shift-left/right adjusts
+only a selected number. @kbd{@key{RET}} enters an exact number@comma{} toggles Pitch sweep@comma{}
+or opens the selected choice list. In a list@comma{} up/down browses without changing
+the draft; @kbd{@key{RET}} chooses and returns@comma{} while @kbd{q} cancels. Waveform and Envelope
+are choices@comma{} so shifted arrows do not adjust them. @kbd{?} followed by an item's
+key explains its effect@comma{} units and dependencies. Use @kbd{C-c l} or the other
+@ref{settings-menu-review, , menu review keys} to inspect an announcement without activating it.
+
+@enumerate
+@item
+@anchor{Try a tone without changing live feedback}Try a tone without changing live feedback
+
+
+@enumerate
+@item
+Open @kbd{C-e H s f E} and press capital @kbd{C} to hear the currently applied
+tone. Press @kbd{@key{SPC}} to hear the draft@comma{} initially the same sound. Both play
+the tone alone@comma{} interrupting previous main speech.
+@item
+Move to @emph{Volume} and lower this draft's individual level with Shift-left
+if wanted. This leaves other tones and the live spelling cue unchanged.
+@item
+Press @kbd{w} to open Waveform. Browse a choice@comma{} read its Help@comma{} then press
+@kbd{@key{RET}} to return with that waveform in the draft. Press @kbd{@key{SPC}} to hear it.
+For Pulse@comma{} adjust @emph{Pulse width} back in the editor@comma{} then preview again.
+@item
+Alternate @kbd{C} for the applied tone and @kbd{@key{SPC}} for the draft. Capital @kbd{P}
+reads a spelling sample with the draft tone@comma{} using the parent's current
+timing@comma{} voice and earcon settings. Use this to judge whether the tone
+obscures the word. Capital @kbd{S} stops; navigation also interrupts playback.
+@item
+Press @kbd{q} to return and discard unapplied edits. Reopening starts from
+the currently applied tone. To keep the experiment instead@comma{} use the
+Apply@comma{} Save or preset actions described below before leaving.
+@end enumerate
+
+These previews privately enable the tone even if live spelling tones are
+off. They do not turn the live cue on@comma{} apply adjustments or save defaults.
+A tone alone cannot demonstrate @emph{Before speech} versus @emph{Alongside speech};
+use capital @kbd{P} for that comparison. Shared tone volume still scales playback@comma{}
+so a shared volume of zero silences these previews too. After Apply@comma{} @kbd{C}
+compares against the newly applied tone@comma{} not the editor's opening value.
+
+@item
+@anchor{Shape the pitch and waveform}Shape the pitch and waveform
+
+
+@kbd{p} sets pitch; Shift-left/right changes it by 25 Hz. Choose @kbd{w} for waveform:
+sine is a smooth pure tone@comma{} triangle adds a softer harmonic character@comma{} and
+square sounds brighter.
 Pulse offers adjustable width; Sawtooth has a bright@comma{} buzzy character. Their
 perceived loudness can differ; compare at a comfortable individual volume.
 
@@ -5434,6 +5592,18 @@ values keep constant pitch. Turning the sweep off retains End pitch in the
 draft. The sweep occupies the existing duration and does not change timing
 relative to speech.
 
+Pitch and End pitch range from 50 to 10000 Hz. Duration ranges from 5 to
+1000 milliseconds and steps by 5; individual Volume ranges from 0 to 100
+percent and steps by 5 percentage points. Zero volume silences this tone.
+Waveform changes can alter perceived loudness even at the same volume.
+
+@item
+@anchor{Shape loudness with an envelope}Shape loudness with an envelope
+
+
+@cindex tone envelope, ADSR
+@cindex attack, decay, sustain and release
+
 Choose @kbd{e} for the envelope@comma{} which describes how loudness changes over the
 life of the tone. @emph{Classic} uses the original short fades. @emph{ADSR} uses four
 controls@comma{} with times in milliseconds and sustain in percent of peak level:
@@ -5449,6 +5619,17 @@ controls@comma{} with times in milliseconds and sustain in percent of peak level
 @kbd{r}@comma{} Release: time to fade from sustain to silence.
 @end itemize
 
+For example@comma{} with Duration 100 milliseconds@comma{} Attack 10@comma{} Decay 20 and Release
+30@comma{} the tone holds its Sustain level for the remaining 40 milliseconds.
+A Sustain value of 40 means 40 percent of peak loudness during that hold@comma{}
+not a 40-millisecond duration. A longer Attack softens the onset; a short
+Attack followed by a longer Decay can make a plucked sound.
+
+Shift-left/right changes each timed stage by 5 milliseconds and Sustain by
+5 percentage points. @kbd{@key{RET}} accepts stage times from 0 to 60000 milliseconds
+and a Sustain level from 0 to 100 percent. The duration of the whole tone
+remains the limit@comma{} even when a stage requests a much longer time.
+
 Total duration includes the whole envelope. If attack@comma{} decay and release
 would exceed it@comma{} they shorten proportionally and leave no sustain hold.
 Zero skips a timed stage; endpoint smoothing still limits clicks. Classic
@@ -5462,25 +5643,31 @@ stage durations and endpoint levels. Arrows browse the choices; @kbd{@key{RET}} 
 and returns@comma{} and @kbd{q} cancels. Classic ignores the curve but retains its choice
 in the draft.
 
-Press @kbd{@key{SPC}} or @kbd{b} to hear the draft tone alone. Capital @kbd{P} reads the spelling
-sample with the draft tone. Both privately enable the tone even if live
-spelling tones are off; the sentence uses the current timing and other
-feedback settings. Capital @kbd{C} plays the currently applied tone alone@comma{} so you
-can alternate @kbd{C} and @kbd{@key{SPC}} to compare it with the draft. After Apply@comma{} @kbd{C}
-uses the applied changes. @kbd{S} stops the preview immediately@comma{} without waiting
-for release. Navigation also interrupts playback. Previews neither apply nor
-save the draft.
+Preview after each small change with @kbd{@key{SPC}} or its equivalent@comma{} @kbd{b}. Capital @kbd{S}
+stops immediately without waiting for the Release stage. Compare a short tone
+with the spelling sample too: a shape that is clear alone can be masked by
+speech or make the word harder to hear.
+
+@item
+@anchor{Reuse a tone through presets}Reuse a tone through presets
+
 
 Capital @kbd{L} opens presets. Arrows browse without changing the draft; @kbd{@key{RET}}
 loads a copy and returns@comma{} while @kbd{q} cancels. Soft tick@comma{} Rounded beep and Short
 pluck are starting points with different pitches and envelopes@comma{} each at
-35 percent individual volume. Use Help for their character and Space to hear
-your selection. Further adjustments leave the preset itself unchanged.
+35 percent individual volume. Use @kbd{?} followed by a preset's displayed key
+for its character. After loading it and returning to the editor@comma{} press @kbd{@key{SPC}}
+to hear the draft. The preset list does not preview while you browse.
+Further adjustments leave the preset itself unchanged.
 
 Capital @kbd{N} saves the draft under a name in your personal preset collection
 through Customize. This does not apply the tone or save the spelling cue
 defaults. Reusing a personal name asks before replacing it; bundled names
 cannot be replaced. Saved presets appear alongside the bundled choices at @kbd{L}.
+
+@item
+@anchor{Apply save or discard the draft}Apply@comma{} save or discard the draft
+
 
 Use @kbd{A} to apply the draft for this session. Capital @kbd{W} saves and applies
 its tone defaults through Customize. These actions leave timing@comma{} voice@comma{} earcon@comma{}
@@ -5490,6 +5677,22 @@ feedback and discards unapplied edits; applied and saved changes remain.
 Reopening starts from the current tone. To reverse an applied adjustment@comma{}
 edit it back and apply again@comma{} saving too if you changed the saved defaults.
 
+Apply and Save store the active tone shape. Unused Pulse width@comma{} End pitch and
+ADSR values remain available while editing this draft@comma{} but reopening reads the
+applied shape; it need not recover those inactive values. A named preset stores
+the complete draft for later reuse.
+
+The keys have different jobs in the two menus: capital @kbd{S} stops playback in
+the tone editor@comma{} but saves settings in the parent Spelling feedback menu.
+Capital @kbd{W} in the editor saves only tone defaults. To keep a choice such as
+voice off and tone on@comma{} return with @kbd{q} and save with @kbd{S} in Spelling feedback.
+That parent Save also includes timing@comma{} earcon selection and shared tone volume.
+Saving a preset with @kbd{N} stores neither those choices nor the live cue defaults.
+
+@item
+@anchor{When a tone cannot be played}When a tone cannot be played
+
+
 Individual volume below 100@comma{} harmonic waveforms and ADSR require an Omnivox
 worker with richer-tone support. Pulse@comma{} Sawtooth@comma{} sweeps and exponential
 curves require extended-tone support. Older workers omit an unsupported tone
@@ -5497,6 +5700,7 @@ while retaining speech and earcons@comma{} and the feedback explanation records 
 A preview reports missing support instead of playing an inaccurate substitute.
 Your settings remain intact. Use an updated worker@comma{} or restore volume 100@comma{}
 sine and Classic and turn off Pitch sweep to hear the tone on an older worker.
+@end enumerate
 @end enumerate
 
 @item
@@ -5966,6 +6170,13 @@ If the saved value exists but is not effective@comma{} check a mode policy or
 buffer override before saving again. For host-side settings@comma{} use the
 owning editor's application or restart procedure@comma{} not a voice-palette Save.
 @end enumerate
+
+Customize saves need a normal initialisation destination. If Emacsvox reports
+"Settings were not saved" because normal initialisation was skipped@comma{} possibly
+with the @code{-q} startup option@comma{} restart with your usual configuration and save
+again. A temporary change in that session is not a successful saved default.
+For spelling@comma{} the tone editor's @kbd{W} saves the tone itself; use @kbd{S} in its
+parent Spelling feedback menu to save voice@comma{} tone and earcon enablement too.
 
 Use @ref{Saving And Startup, , Choose what persists} to select the intended action. Check the result in
 the current session first. A later restart tests startup selection; finish
@@ -10357,7 +10568,13 @@ additional keys to hold with Control.
 
 Inside an Emacsvox settings menu@comma{} arrows browse and @kbd{@key{RET}} activates a choice.
 @kbd{?} followed by an item's key explains it; @kbd{q} goes back and @kbd{C-q} closes
-the sequence. A voice editor@comma{} terminal@comma{} table reader or another Transient
+the sequence. Shift-left/right adjusts a selected numeric control where offered.
+To inspect the selected item@comma{} use @kbd{C-c l} to repeat it@comma{} @kbd{M-f~/~M-b} for words
+or @kbd{C-f~/~C-b} for characters. In this menu context @kbd{C-a~/~C-e} reaches the
+start/end of item review@comma{} so @kbd{C-e} is not the speech prefix. Menu-specific
+bindings take precedence; @ref{settings-menu-review, , menu review} explains the full set and its limits.
+
+A voice editor@comma{} terminal@comma{} table reader or another Transient
 application retains its own keys. The same letter can mean Save in an editor@comma{}
 Export in a palette manager or ordinary input in a terminal. Check which view
 has focus before applying a command from another view's instructions.

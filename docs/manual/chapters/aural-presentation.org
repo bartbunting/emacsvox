@@ -195,12 +195,30 @@ you need in a later session.
 :TEXINFO_NODE: no
 :END:
 
-The settings menus use Transient. Up/down moves through choices, left/right
-moves between sections, and ~RET~ activates the selected choice. ~M-RET~
-and ~C-j~ also activate choices. A displayed shortcut invokes its item
-directly. In Emacsvox's menus, ~q~ or ~C-g~ goes back one menu and ~C-q~
-closes the sequence. Changes already made remain in effect. Other applications
-using Transient, including Magit, retain their own activation and quit keys.
+<<settings-menu-navigation>>
+
+The settings menus use Transient: while a menu is open, its keys act on that
+menu. Up/down selects an item; left/right changes sections and selects the
+destination's first available item. Section movement stops at the first and
+last section. Selecting an item speaks it without activating it or changing
+its value. ~RET~, ~M-RET~ or ~C-j~ activates that item. A displayed shortcut
+invokes its action directly, without first moving the selection to it.
+
+An action can open another menu or editor, toggle a switch, or ask for a value.
+For a numeric control that offers adjustment, Shift-left/right decreases or
+increases the selected value; ~RET~ opens its exact-value prompt. The item's
+Help gives its step, range and scope. Plain arrows continue to navigate.
+Waveform, envelope and other choice lists use up/down to browse and ~RET~ to
+choose; browsing alone does not apply a choice. When a minibuffer prompt asks
+for text or a number, use its ordinary editing and completion keys. Finish
+with ~RET~ or cancel with ~C-g~ to return to the menu.
+
+In Emacsvox's menus, ~q~ or ~C-g~ goes back one menu and ~C-q~ closes the
+sequence. A child menu normally returns to the item that opened it. Changes
+already applied remain in effect; an editor's Back action states whether it
+retains or discards an unfinished draft. Other applications using Transient,
+including Magit, retain their own activation and quit keys. Use ~C-j~ to
+activate a selected Magit item where ~RET~ has another meaning.
 
 Menu feedback interrupts previous main-stream speech, including when you
 toggle scope or change a setting. Item announcements include the key without
@@ -210,16 +228,60 @@ Left/right selects its first selectable item and normally speaks it with the
 section name and position.
 
 For menu Help, press ~?~ followed by a choice's key, or ~? ?~ for help on
-the current menu. ~q~ in that Help resumes the menu, including its parent menus.
+the current menu. The overview is a read-only snapshot: ordinary text reading
+works there, but its displayed actions run only after you return to the menu.
+~q~ in that Help resumes the menu, including its parent menus and selection.
 Opening ~C-e H~ announces a short reminder of Help and the ~n~ navigation
 and speech settings. Moving between items does not repeat that reminder.
+
+***** Review an item without changing the selection
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<settings-menu-review>>
+
+#+cindex: Transient menu review
+#+cindex: menu items, reading by word or character
+
+If an announcement is unclear, review the selected item's label, value,
+description and key without leaving the menu. The review position is separate
+from menu selection: ~RET~ still activates the same item after you read one
+of its words or characters.
+
+#+attr_texinfo: :indic kbd :compact t
+- C-c l :: Repeat the complete item and reset its word and character review.
+- M-f, M-b :: Read the next or previous word. Punctuation stays with its word.
+- C-f, C-b :: Read the next or previous character, including spaces.
+- C-c w, C-c c :: Repeat the current review word or character.
+- C-a :: Move before the item's first word and character, announcing "Start of item".
+- C-e :: Move after its last word and character, announcing "End of item".
+
+The first word or character command starts at the item's beginning. To read
+backwards from its end, use ~C-e~ followed by ~M-b~ or ~C-b~. At either end,
+moving outwards repeats the boundary announcement; reversing direction reads
+the first or last element again. ~C-a C-f~ therefore reads the first character,
+and ~C-e C-b~ reads the last. Word and character review share a position.
+Selecting another item or changing its displayed value starts a fresh review.
+
+Character review follows your normal capitalisation presentation. If delayed
+phonetics are enabled in [[info:emacsvox#Reading Scope And Punctuation][Typing and interaction]], pausing after a character also
+speaks its phonetic description. Further input or speech cancels that pending
+description. Review interrupts obsolete main speech without changing a setting.
+
+These defaults apply to Transient menus, including Magit, only where the menu
+has no binding of its own. The menu overview lists the available review keys.
+While reviewing a menu, ~C-e~ means the end of the item: it is not the ordinary
+Emacsvox speech prefix. Use ~C-c l~, ~C-c w~ and ~C-c c~ for these menu repeats.
+After closing the menu, ordinary buffer bindings apply again.
 
 ***** Choose navigation and announcement preferences
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Press ~C-e H s n~ for Menu navigation. Choose ~c~ for Continuous, which
+Press ~C-e H n~ for Menu navigation, also available at ~C-e H s n~.
+Choose ~c~ for Continuous, which
 crosses sections and wraps around the whole menu; ~w~ to wrap within the
 current section; or ~s~ to stop at section edges with a boundary earcon.
 Left/right moves between sections in every style. Changes apply immediately
@@ -227,9 +289,10 @@ to all Transient menus, independently of the current-buffer settings scope.
 Wrap within section is the default.
 
 In the Presentation section, choose ~i~ for Item first or ~n~ for Section
-first. Section first is the default: it speaks the section name and position
-before the item. Item first reverses that order. Previously saved preferences
-remain in effect.
+first. Section first is the default: on changing sections it speaks the section
+name and position before the item. Item first reverses that order. Movement
+within a section speaks the item without repeating its section. Previously
+saved preferences remain in effect.
 
 Choose ~m~ for /By movement: sections or items/. Left/right speaks only the
 destination section and its position. Up/down speaks only the item, key, and
@@ -240,8 +303,9 @@ not change the navigation style.
 
 Section arrows still select the first item. In Emacsvox menus, ~RET~ therefore
 activates that item even though its name has not been spoken, and the next
-Down advances to the second item. Press ~C-u 0 <down>~ to hear the selected
-item without moving. Magit's existing activation bindings remain unchanged.
+Down advances to the second item. Press ~C-c l~ to hear that first item
+without moving, then decide whether to activate it. Magit's existing activation
+bindings remain unchanged.
 
 Press ~v~ to toggle Detailed descriptions. When enabled, menu items retain
 their labels and values and add a short command explanation. This applies
@@ -263,7 +327,10 @@ capitalisation. Type =cap= to find /Capitalization indication and camel case/,
 =caps beep= and =allcaps= find both beep controls and only /All-caps beep/, respectively.
 Each result appears once under its normal name. Use completion to choose a
 result; ambiguous text does not choose one automatically. These matching rules
-apply to this search without changing completion elsewhere in Emacs.
+apply to this search without changing completion elsewhere in Emacs. Space
+inserts a literal space; ~TAB~ completes. Use your configured completion
+interface to browse results, displaying completions with ~TAB~ if needed.
+The menu's section and item arrows do not govern this minibuffer prompt.
 
 ~RET~ accepts the choice, opens its menu, and selects the matching control
 without changing its value. Press ~RET~ again to activate or edit the control.
@@ -283,8 +350,9 @@ Press ~C-e H .~ for settings relevant to the captured buffer: speech,
 indentation, typing/point feedback, capitalisation, and its major mode's
 Customize group when available. This entry starts with buffer scope without
 changing the parent's scope. ~A~ opens the advanced Emacsvox Customize group.
-In these linked Customize buffers, ~q~ finishes Customize normally and returns
-to the menu; use Customize's own Apply and Save commands. See
+In these linked Customize buffers, use Customize's own field navigation,
+Apply and Save commands. Outside an editable field, ~q~ finishes Customize
+and returns to the menu. See
 [[Integration speech settings][Adjust an integration's speech settings]] for application-specific controls.
 
 *** Choose a task and navigate its editor
@@ -1181,8 +1249,9 @@ choices are retained. Shared adjustments supply inherited fields;
 :TEXINFO_NODE: no
 :END:
 
-From ~C-e H v p~, select a palette, press ~e~, choose a voice, then press ~m~
-in its shared editor. This tuning menu edits the same retained draft. Up/down
+From ~C-e H v p~, enter a palette with ~RET~, select a voice and press ~e~
+to open its editor. Press ~m~ there for focused tuning. This menu edits the
+same retained draft. Up/down
 selects controls, left/right changes sections, and Shift-left/right adjusts
 relative rate, pitch, pitch range, or gain by one unit. ~RET~ enters an exact
 value. ~d~ restores the selected adjustment to adapter default, or asks which
@@ -1873,6 +1942,11 @@ separation, direction, speech, and cues. Unsupported or mono output retains
 audible content at the centre. Named tones are separate compact resources,
 independent of sampled files and the active pack.
 
+For waveform, pitch sweep and envelope adjustments, use the
+[[spelling-tone-editor][complete spelling tone editor]]. It currently edits the global spelling cue.
+Line cues, capitalisation beeps and indentation keep the controls and saving
+rules described in their own sections; they do not yet use that draft editor.
+
 *** Tune line and boundary cues from the menu
 :PROPERTIES:
 :TEXINFO_NODE: no
@@ -2154,7 +2228,10 @@ highlighting. The default is voice plus earcon.
 
 When you read text already marked by Flyspell, tones and earcons occur at
 the flagged word. Voice feedback uses the existing spelling face mappings.
-Tone and earcon feedback also report errors detected while editing. Opening
+Tone and earcon feedback also report errors detected while editing. Character
+movement cues entry into a flagged word: its first character moving forwards,
+or its last character moving backwards. Moving within the same word or onto
+an adjacent space does not repeat the entry cue. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
 Use ~m~ to choose tone timing. /Alongside speech/ is the default: it plays
@@ -2184,17 +2261,65 @@ including tone timing and shape, and the shared tone volume through Customize.
 :TEXINFO_NODE: no
 :END:
 
+<<spelling-tone-editor>>
+
+#+cindex: spelling tone editor
+#+cindex: tone presets
+
 Press capital ~E~ in Spelling feedback, or use ~C-e H s f E~, for a private
 draft of the complete tone. The title identifies its global spelling scope.
 This editor adds waveform, pitch sweep and envelope controls to pitch, duration
-and individual volume. Changes here affect only the draft until you apply it. Timing stays
-in Spelling feedback at ~C-e H s f m~.
+and individual volume. Unlike the parent menu's immediate adjustments, changes
+here affect only the draft until you apply it. Timing stays in Spelling feedback
+at ~C-e H s f m~. Voice, earcon and tone enablement also remain in that menu;
+shared main-tone volume controls all main tones from Sounds and output.
 
-Use arrows to navigate and Shift-left/right to adjust the selected number.
-~RET~ enters an exact number or opens a choice list. In a list, arrows browse,
-~RET~ selects and returns, and ~q~ cancels. ~?~ followed by an item's key
-explains its effect and units. Choose ~w~ for waveform: sine is a smooth pure
-tone, triangle adds a softer harmonic character, and square sounds brighter.
+The sections follow the editing task: the spelling tone's basic controls,
+Pitch movement, Envelope, Preview, Presets, Apply and save, then Finish.
+Left/right changes sections; up/down selects an item. Shift-left/right adjusts
+only a selected number. ~RET~ enters an exact number, toggles Pitch sweep,
+or opens the selected choice list. In a list, up/down browses without changing
+the draft; ~RET~ chooses and returns, while ~q~ cancels. Waveform and Envelope
+are choices, so shifted arrows do not adjust them. ~?~ followed by an item's
+key explains its effect, units and dependencies. Use ~C-c l~ or the other
+[[settings-menu-review][menu review keys]] to inspect an announcement without activating it.
+
+****** Try a tone without changing live feedback
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+1. Open ~C-e H s f E~ and press capital ~C~ to hear the currently applied
+   tone. Press ~SPC~ to hear the draft, initially the same sound. Both play
+   the tone alone, interrupting previous main speech.
+2. Move to /Volume/ and lower this draft's individual level with Shift-left
+   if wanted. This leaves other tones and the live spelling cue unchanged.
+3. Press ~w~ to open Waveform. Browse a choice, read its Help, then press
+   ~RET~ to return with that waveform in the draft. Press ~SPC~ to hear it.
+   For Pulse, adjust /Pulse width/ back in the editor, then preview again.
+4. Alternate ~C~ for the applied tone and ~SPC~ for the draft. Capital ~P~
+   reads a spelling sample with the draft tone, using the parent's current
+   timing, voice and earcon settings. Use this to judge whether the tone
+   obscures the word. Capital ~S~ stops; navigation also interrupts playback.
+5. Press ~q~ to return and discard unapplied edits. Reopening starts from
+   the currently applied tone. To keep the experiment instead, use the
+   Apply, Save or preset actions described below before leaving.
+
+These previews privately enable the tone even if live spelling tones are
+off. They do not turn the live cue on, apply adjustments or save defaults.
+A tone alone cannot demonstrate /Before speech/ versus /Alongside speech/;
+use capital ~P~ for that comparison. Shared tone volume still scales playback,
+so a shared volume of zero silences these previews too. After Apply, ~C~
+compares against the newly applied tone, not the editor's opening value.
+
+****** Shape the pitch and waveform
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~p~ sets pitch; Shift-left/right changes it by 25 Hz. Choose ~w~ for waveform:
+sine is a smooth pure tone, triangle adds a softer harmonic character, and
+square sounds brighter.
 Pulse offers adjustable width; Sawtooth has a bright, buzzy character. Their
 perceived loudness can differ; compare at a comfortable individual volume.
 
@@ -2211,6 +2336,19 @@ values keep constant pitch. Turning the sweep off retains End pitch in the
 draft. The sweep occupies the existing duration and does not change timing
 relative to speech.
 
+Pitch and End pitch range from 50 to 10000 Hz. Duration ranges from 5 to
+1000 milliseconds and steps by 5; individual Volume ranges from 0 to 100
+percent and steps by 5 percentage points. Zero volume silences this tone.
+Waveform changes can alter perceived loudness even at the same volume.
+
+****** Shape loudness with an envelope
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: tone envelope, ADSR
+#+cindex: attack, decay, sustain and release
+
 Choose ~e~ for the envelope, which describes how loudness changes over the
 life of the tone. /Classic/ uses the original short fades. /ADSR/ uses four
 controls, with times in milliseconds and sustain in percent of peak level:
@@ -2219,6 +2357,17 @@ controls, with times in milliseconds and sustain in percent of peak level:
 - ~c~, Decay: time to fall from peak to the sustain level.
 - ~s~, Sustain: the level held for the remaining time, rather than a duration.
 - ~r~, Release: time to fade from sustain to silence.
+
+For example, with Duration 100 milliseconds, Attack 10, Decay 20 and Release
+30, the tone holds its Sustain level for the remaining 40 milliseconds.
+A Sustain value of 40 means 40 percent of peak loudness during that hold,
+not a 40-millisecond duration. A longer Attack softens the onset; a short
+Attack followed by a longer Decay can make a plucked sound.
+
+Shift-left/right changes each timed stage by 5 milliseconds and Sustain by
+5 percentage points. ~RET~ accepts stage times from 0 to 60000 milliseconds
+and a Sustain level from 0 to 100 percent. The duration of the whole tone
+remains the limit, even when a stage requests a much longer time.
 
 Total duration includes the whole envelope. If attack, decay and release
 would exceed it, they shorten proportionally and leave no sustain hold.
@@ -2233,25 +2382,33 @@ stage durations and endpoint levels. Arrows browse the choices; ~RET~ selects
 and returns, and ~q~ cancels. Classic ignores the curve but retains its choice
 in the draft.
 
-Press ~SPC~ or ~b~ to hear the draft tone alone. Capital ~P~ reads the spelling
-sample with the draft tone. Both privately enable the tone even if live
-spelling tones are off; the sentence uses the current timing and other
-feedback settings. Capital ~C~ plays the currently applied tone alone, so you
-can alternate ~C~ and ~SPC~ to compare it with the draft. After Apply, ~C~
-uses the applied changes. ~S~ stops the preview immediately, without waiting
-for release. Navigation also interrupts playback. Previews neither apply nor
-save the draft.
+Preview after each small change with ~SPC~ or its equivalent, ~b~. Capital ~S~
+stops immediately without waiting for the Release stage. Compare a short tone
+with the spelling sample too: a shape that is clear alone can be masked by
+speech or make the word harder to hear.
+
+****** Reuse a tone through presets
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Capital ~L~ opens presets. Arrows browse without changing the draft; ~RET~
 loads a copy and returns, while ~q~ cancels. Soft tick, Rounded beep and Short
 pluck are starting points with different pitches and envelopes, each at
-35 percent individual volume. Use Help for their character and Space to hear
-your selection. Further adjustments leave the preset itself unchanged.
+35 percent individual volume. Use ~?~ followed by a preset's displayed key
+for its character. After loading it and returning to the editor, press ~SPC~
+to hear the draft. The preset list does not preview while you browse.
+Further adjustments leave the preset itself unchanged.
 
 Capital ~N~ saves the draft under a name in your personal preset collection
 through Customize. This does not apply the tone or save the spelling cue
 defaults. Reusing a personal name asks before replacing it; bundled names
 cannot be replaced. Saved presets appear alongside the bundled choices at ~L~.
+
+****** Apply, save or discard the draft
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Use ~A~ to apply the draft for this session. Capital ~W~ saves and applies
 its tone defaults through Customize. These actions leave timing, voice, earcon,
@@ -2260,6 +2417,23 @@ defaults for preview and deliberate application. ~q~ returns to Spelling
 feedback and discards unapplied edits; applied and saved changes remain.
 Reopening starts from the current tone. To reverse an applied adjustment,
 edit it back and apply again, saving too if you changed the saved defaults.
+
+Apply and Save store the active tone shape. Unused Pulse width, End pitch and
+ADSR values remain available while editing this draft, but reopening reads the
+applied shape; it need not recover those inactive values. A named preset stores
+the complete draft for later reuse.
+
+The keys have different jobs in the two menus: capital ~S~ stops playback in
+the tone editor, but saves settings in the parent Spelling feedback menu.
+Capital ~W~ in the editor saves only tone defaults. To keep a choice such as
+voice off and tone on, return with ~q~ and save with ~S~ in Spelling feedback.
+That parent Save also includes timing, earcon selection and shared tone volume.
+Saving a preset with ~N~ stores neither those choices nor the live cue defaults.
+
+****** When a tone cannot be played
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Individual volume below 100, harmonic waveforms and ADSR require an Omnivox
 worker with richer-tone support. Pulse, Sawtooth, sweeps and exponential
@@ -2723,6 +2897,13 @@ for a session is also separate from choosing it at startup.
 4. If the saved value exists but is not effective, check a mode policy or
    buffer override before saving again. For host-side settings, use the
    owning editor's application or restart procedure, not a voice-palette Save.
+
+Customize saves need a normal initialisation destination. If Emacsvox reports
+"Settings were not saved" because normal initialisation was skipped, possibly
+with the =-q= startup option, restart with your usual configuration and save
+again. A temporary change in that session is not a successful saved default.
+For spelling, the tone editor's ~W~ saves the tone itself; use ~S~ in its
+parent Spelling feedback menu to save voice, tone and earcon enablement too.
 
 Use [[*Choose What Persists][Choose what persists]] to select the intended action. Check the result in
 the current session first. A later restart tests startup selection; finish

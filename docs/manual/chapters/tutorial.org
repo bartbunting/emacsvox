@@ -314,6 +314,12 @@ restoring it is a separate action. We will not save a default.
    Record whether the original policy is automatic, an explicit level, or a
    named profile. If scope is global, use ~g~ to choose buffer scope before
    changing anything.
+   Practise selecting an item with up/down and changing sections with
+   left/right. Press ~C-c l~ to repeat the selected item, then ~M-f~ to hear
+   its first word. ~C-a C-f~ reviews its first character. These review keys
+   leave the same item selected and do not change punctuation. In a menu,
+   ~C-e~ goes to the end of item review; the ordinary speech prefix returns
+   after you close the menu. See [[settings-menu-navigation][menu navigation]] for the full controls.
 3. Press ~? a~ for Help on All, then ~q~ to return to the punctuation menu.
    Press ~a~ to apply All, followed by ~C-q~ to close the menus. Back in the
    document, ~C-e l~ lets you compare the same line with punctuation spoken.

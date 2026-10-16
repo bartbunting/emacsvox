@@ -72,19 +72,34 @@ leaves the originating menu open.
 The main menu groups its entries in this order: /Everyday settings/,
 /This buffer and item/, /Rules and saved work/, /Find and get help/, and
 /Finish/. Use left/right to reach a group, then up/down to select an item.
-The same arrows navigate sections and items in the submenus.
+Changing sections selects the first available item. Plain arrows navigate;
+Shift-left/right adjusts a selected numeric control where offered.
 Press ~C-e H n~ to choose navigation and announcement preferences; the
 same controls remain available through ~C-e H s n~.
 ~RET~, ~M-RET~, or ~C-j~ activates the selected item; its displayed shortcut
-also works directly. Press ~?~ followed by an item's key to hear its effect
-and scope, or ~? ?~ for the menu overview. ~q~ in that Help returns to the
-menu with the selection retained.
+also works directly.
+
+To hear the selected item again, press ~C-c l~. This is especially useful
+after a section-only announcement: the first item is selected even though
+only the heading was spoken. ~M-f~/~M-b~ reviews its words and ~C-f~/~C-b~
+its characters, leaving the selection and Enter's target unchanged. These
+menu keys differ from ordinary buffer reading; see
+[[settings-menu-review][Review an item without changing the selection]] for endpoints, repeats and
+menu-specific overrides.
+
+Press ~?~ followed by an item's key to hear its effect and scope, or ~? ?~
+for the menu overview and available review keys. The overview is a read-only
+snapshot with ordinary text navigation. Its displayed actions run after you
+return to the menu. ~q~ in Help returns with the selection retained.
 
 Within the menu itself, ~q~ or ~C-g~ goes back one level, while ~C-q~ closes
 the sequence. Returning from an Emacsvox submenu selects the entry that opened
 it, including when you used its shortcut. The return announcement identifies
 that item; ~RET~ opens it again. These navigation commands do not undo changes
 already applied.
+Choice lists and minibuffer prompts have different roles: arrows browse a
+choice list without applying it, while a prompt uses your normal text editing
+and completion. See [[settings-menu-navigation][Navigate menus and read Help]] for the complete interaction.
 A linked editor keeps its own preview, saving, and discard rules. See
 [[info:emacsvox#Saving And Startup][Choose What Persists]] before treating a saved default, a live adjustment,
 or a retained draft as the same thing.

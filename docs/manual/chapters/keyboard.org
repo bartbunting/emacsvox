@@ -247,7 +247,13 @@ additional keys to hold with Control.
 
 Inside an Emacsvox settings menu, arrows browse and ~RET~ activates a choice.
 ~?~ followed by an item's key explains it; ~q~ goes back and ~C-q~ closes
-the sequence. A voice editor, terminal, table reader or another Transient
+the sequence. Shift-left/right adjusts a selected numeric control where offered.
+To inspect the selected item, use ~C-c l~ to repeat it, ~M-f~/~M-b~ for words
+or ~C-f~/~C-b~ for characters. In this menu context ~C-a~/~C-e~ reaches the
+start/end of item review, so ~C-e~ is not the speech prefix. Menu-specific
+bindings take precedence; [[settings-menu-review][menu review]] explains the full set and its limits.
+
+A voice editor, terminal, table reader or another Transient
 application retains its own keys. The same letter can mean Save in an editor,
 Export in a palette manager or ordinary input in a terminal. Check which view
 has focus before applying a command from another view's instructions.
