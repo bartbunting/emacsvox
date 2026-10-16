@@ -2,9 +2,9 @@
   "Schema": 1,
   "RuntimeSHA256": {
     "Emacs": "02856997d64c42e1e267b12b03ed67ff19a0599983e2f5871637077f7d12a92e",
-    "Omnivox": "b33945f71e861b9417746bea148809b9a8235b5ae7cec0f21504cdc70fe21120"
+    "Omnivox": "8758b428f3bb7cc049865d222352cf553ac8f1e0f123c897f5c2e0cd2d72b905"
   },
-  "OmnivoxSourceCommit": "8a2c3328d34e75b311647db2db6830a90f876ea7",
+  "OmnivoxSourceCommit": "246e3b72013b4a8a25c18355d567e4cc8ed3fded",
   "Review": {
     "GNUWindowsSignatureFingerprint": "ECE77CF417C76C1ACFCE7C2B5B6135511580F007",
     "EmacsDependencyBinaryArchive": "emacs-31-deps.zip",
@@ -14,7 +14,7 @@
     "InnoNoticeURL": "https://raw.githubusercontent.com/jrsoftware/issrc/is-7_1_0/license.txt",
     "InnoNoticeSHA256": "2e5346868c2a18434489824e11d65c3031620f792fefc415d05f19cd441abf5c",
     "RustDependencyResolution": "librsvg and Wasmtime cargo metadata --locked --offline passed after applying the MSYS2 PKGBUILD changes; no DLL rebuild claimed",
-    "OmnivoxTGSpeechBoxSource": "Bundled helper provenance matches the TGSpeechBox corresponding-source archive: Omnivox 8a2c3328d34e75b311647db2db6830a90f876ea7; TGSpeechBox 25b0e1ae65fb87705f0870c724dc8c91f3abbeba. Runtime retains TGSpeechBox and eSpeak notices."
+    "OmnivoxTGSpeechBoxSource": "Bundled helper provenance matches the TGSpeechBox corresponding-source archive: Omnivox 246e3b72013b4a8a25c18355d567e4cc8ed3fded; TGSpeechBox 25b0e1ae65fb87705f0870c724dc8c91f3abbeba. Runtime retains TGSpeechBox and eSpeak notices."
   },
   "EmacsPackages": [
     {
@@ -7376,14 +7376,14 @@
       "SHA256": "3b74e671b98377f49abbbbba5c39156d18f9367117bb22f1051368af03278a4a"
     },
     {
-      "Path": "omnivox-1.17.0-piper-source.tar.gz",
-      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.17.0/omnivox-1.17.0-piper-source.tar.gz",
-      "SHA256": "a38f18dc2e7b258d8c49395c8970afc82d7f5550664eae44c8a9bbaaa2904b0e"
+      "Path": "omnivox-1.18.0-piper-source.tar.gz",
+      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.18.0/omnivox-1.18.0-piper-source.tar.gz",
+      "SHA256": "1f045e77cb68a18d82618d09ae92c6eb7523789019d068ed85f7d3f702adb0cb"
     },
     {
-      "Path": "omnivox-1.17.0-tgspeechbox-source.tar.gz",
-      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.17.0/omnivox-1.17.0-tgspeechbox-source.tar.gz",
-      "SHA256": "adb06ded5b745fe88363356b8c2ceb788eb0cdaab8c252889c7e5651240f7a11"
+      "Path": "omnivox-1.18.0-tgspeechbox-source.tar.gz",
+      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.18.0/omnivox-1.18.0-tgspeechbox-source.tar.gz",
+      "SHA256": "3cbbb4c62ff5ff51656836ad1f9822137435f180ac90b186a09065295bf4f2e1"
     },
     {
       "Path": "wasmtime-tests/component-model-dac78059d47dadf3221a71548463fadb294412e3.tar.gz",
