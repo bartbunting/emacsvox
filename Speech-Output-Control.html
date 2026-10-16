@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -37,104 +38,168 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Miscellaneous.html" accesskey="n" rel="next">Stop Or Restart Speech</a>, Previous: <a href="Controlling-Echo.html" accesskey="p" rel="prev">Choose Typing Echo</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Adjust Speech While You Work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Adjust-Rate-And-Spoken-Detail"><span>3.6.2 Adjust Rate And Spoken Detail<a class="copiable-link" href="#Adjust-Rate-And-Spoken-Detail"> &para;</a></span></h4>
+<h4 class="subsection" id="Adjust-Rate-And-Spoken-Detail"><span>5.8.2 Adjust Rate And Spoken Detail<a class="copiable-link" href="#Adjust-Rate-And-Spoken-Detail"> &para;</a></span></h4>
 
-<p>Use these controls to match speech to the current material.  A faster rate may
-suit familiar prose; full punctuation can help when inspecting code or exact
-text.  Start with rate and punctuation, then change capitalization or
-indentation feedback only when the distinction would help your current task.
-</p>
-<p>The commands affect the current buffer unless their interactive help describes
-a global prefix form.  Use <kbd class="kbd">C-h k</kbd> on a key before changing the global
-default.
+<p>Start with rate and punctuation, then adjust other feedback when the distinction
+helps the task. Familiar prose may suit faster speech; exact code inspection
+may need full punctuation. Direct commands affect the current buffer unless
+their Help specifies a global prefix form.
 </p>
 <dl class="table">
 <dt><kbd class="kbd">C-e d r</kbd></dt>
-<dd><p>Enter a speech rate for the current buffer with <code class="code">tts-set-rate</code>.
+<dd><p>Enter a rate with <code class="code">tts-set-rate</code>. The menu alternative is <em class="emph">Rate</em> in <kbd class="kbd">C-e H s</kbd>.
 </p></dd>
 <dt><kbd class="kbd">C-e d DIGIT</kbd></dt>
 <dd><p>Choose one of ten predefined rates with <kbd class="kbd">0</kbd> through <kbd class="kbd">9</kbd>.
 </p></dd>
 <dt><kbd class="kbd">C-e d p</kbd></dt>
-<dd><p>Choose <code class="code">some</code>, <code class="code">all</code>, or <code class="code">none</code> punctuation with <code class="code">tts-set-punctuations</code>.
+<dd><p>Choose <code class="code">some</code>, <code class="code">all</code>, or <code class="code">none</code> with <code class="code">tts-set-punctuations</code>. A supporting
+host also offers named profiles, described below.
 </p></dd>
 <dt><kbd class="kbd">C-e d s</kbd></dt>
-<dd><p>Toggle splitting of mixed-capital identifiers into separate words.
+<dd><p>Toggle splitting of mixed-capital identifiers into words.
 </p></dd>
 <dt><kbd class="kbd">C-e d c / C-e d C</kbd></dt>
-<dd><p>Toggle capitalization indication with the lowercase key.  Use the uppercase
-key to preview and choose whether capitals use speech, a tone, both, a custom
-rule, or no added indication.
+<dd><p>Toggle capitalisation indication with the lowercase key. The uppercase
+key chooses and previews spoken, tone, combined, personal-rule, or no
+indication. <kbd class="kbd">C-e H s c</kbd> opens the Capitalization menu.
 </p></dd>
 <dt><kbd class="kbd">C-e d i / C-e d I</kbd></dt>
-<dd><p>Toggle indentation feedback with the lowercase key.  Use the uppercase key
-to preview spoken-column and tonal choices.
+<dd><p>Toggle indentation feedback with the lowercase key, or open its menu with
+the uppercase key. <kbd class="kbd">C-e H s i</kbd> reaches the same menu through settings.
+</p></dd>
+<dt><kbd class="kbd">C-e d T</kbd></dt>
+<dd><p>Choose and preview <em class="emph">Alongside speech</em> (default) or <em class="emph">Before speech</em> for
+indentation tones. The current buffer changes; a prefix also updates the
+default. Save <code class="code">emacsvox-indentation-tone-timing</code> through Customize for
+restart. Timing does not choose a spoken/tonal presentation or enable
+indentation. Backends without overlay support play tones before speech
+for either setting.
 </p></dd>
 </dl>
 
-<p>Character-rate scaling, text chunking, engine-specific controls, and reusable
-presentation profiles are intentionally outside this starter chapter.  Use
-live help for the current speech keymap and see <a class="ref" href="Aural-Presentation.html">Aural Presentation</a> when
-you want a complete presentation setup rather than a temporary buffer change.
+<ol class="enumerate">
+<li> <a class="anchor" id="Use-The-Indentation-Menu"></a>Use The Indentation Menu
+
+
+<p>Open <kbd class="kbd">C-e H s i</kbd> or <kbd class="kbd">C-e d I</kbd>. Select spoken columns with <kbd class="kbd">s</kbd>, pitch tones
+with <kbd class="kbd">p</kbd>, or duration tones with <kbd class="kbd">d</kbd>; uppercase <kbd class="kbd">P~/~D</kbd> combines speech and
+tones. <kbd class="kbd">b</kbd> places tones before speech and <kbd class="kbd">a</kbd> alongside. Timing choices are
+unavailable for presentations without built-in tones.
 </p>
-<p><strong class="strong">Review punctuation pronunciations.</strong> With a supporting local Omnivox host,
-run <kbd class="kbd">M-x omnivox-punctuation</kbd>, or choose <em class="emph">Punctuation</em> under <em class="emph">Voices and speech</em>
-in Aural Home. This editor shows saved host settings and an unsaved draft;
-running speech may still use an earlier configuration. It requires the updated
-bundled local launcher and Omnivox&rsquo;s punctuation-editor capability. Older hosts
-report that an update is needed. Remote and native-direct configuration editing
-are not provided by this interface.
+<p><kbd class="kbd">g</kbd> switches <em class="emph">Current buffer</em> and <em class="emph">Global defaults</em>. Global defaults leave
+existing local choices intact. A prefix starts the menu in global scope;
+<kbd class="kbd">e</kbd> toggles indentation feedback in the displayed scope.
 </p>
-<p>Each row names its Unicode character explicitly and shows the pronunciation and
-whether it comes from a default or an override. The initial level is <em class="emph">some</em>.
+<p>Up/down selects a control and left/right changes sections. Shift-left/right
+on <em class="emph">Volume</em> changes by five, bounded to 0–100. Other items give guidance rather
+than changing volume. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates an item. These bindings apply inside
+the menu, not in prompts or the source buffer.
+</p>
+<p><kbd class="kbd">v</kbd> or <em class="emph">Volume</em> accepts an exact value; <kbd class="kbd">-~/~+</kbd> remain shortcuts. Volume affects
+all main-stream Omnivox tones even in buffer scope. Adjustments speak the
+percentage and interrupt obsolete main speech, so repeated keys announce the
+latest value rather than queueing old values.
+</p>
+<p>Changes apply immediately. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews four-column indentation even when
+feedback is off. <kbd class="kbd">q</kbd> leaves changes in effect. In global scope, <kbd class="kbd">S</kbd> saves
+indentation defaults and tone volume; closing without saving keeps defaults
+changed only for this session. <kbd class="kbd">M-x emacsvox-set-indentation-presentation</kbd>
+remains a direct alternative.
+</p>
+<p>The following punctuation sections are reference material for changing individual
+pronunciations. They are not prerequisites for ordinary reading. Reusable
+palettes/profiles, engine-specific tuning, and the wider output model belong to
+<a class="ref" href="Aural-Presentation.html">Aural Presentation</a>. Specialist character-rate and chunking controls are
+also available through live Help and the generated reference.
+</p>
+</li><li> <a class="anchor" id="Edit-Punctuation-Pronunciations"></a>Edit Punctuation Pronunciations
+
+
+<p>A punctuation level decides how much punctuation is spoken; the pronunciation
+editor changes how particular characters are read. Open it with <kbd class="kbd">C-e H s p e</kbd>
+or <kbd class="kbd">M-x omnivox-punctuation</kbd>.
+</p>
+<p>This interface needs the bundled local launcher and the host&rsquo;s punctuation-editor
+capability. Older hosts report that an update is required; remote and
+native-direct configuration editing are not provided here. It displays saved
+host settings and an unsaved draft separately. Running speech can still use
+an earlier configuration.
+</p>
+<p>Rows identify Unicode characters, pronunciations, and default/override origin.
+The initial level is <em class="emph">some</em>.
 </p>
 <dl class="table">
 <dt><kbd class="kbd">l</kbd></dt>
-<dd><p>Choose <em class="emph">none</em>, <em class="emph">some</em>, or <em class="emph">all</em>. Each level has independent overrides.
+<dd><p>Choose none, some, or all, each with independent overrides; supporting hosts also offer named profiles.
 </p></dd>
 <dt><kbd class="kbd">RET</kbd></dt>
 <dd><p>Speak a name, preserve the character, or restore its shipped default.
 </p></dd>
 <dt><kbd class="kbd">a</kbd></dt>
-<dd><p>Add a character that is absent from the table.
+<dd><p>Add a character not already listed.
 </p></dd>
 <dt><kbd class="kbd">d</kbd></dt>
 <dd><p>Restore the selected character&rsquo;s default in this level.
 </p></dd>
 <dt><kbd class="kbd">s</kbd></dt>
-<dd><p>Save edits for all three levels on the speech host. Saving does not
-restart speech or change another setting in the configuration file.
+<dd><p>Save drafts on the host without restarting speech or altering unrelated configuration.
 </p></dd>
 <dt><kbd class="kbd">r</kbd></dt>
-<dd><p>After confirmation, restart this session&rsquo;s main and notification speech
-workers with the saved settings. Save or discard drafts first.
+<dd><p>Restart this session&rsquo;s main and notification workers with saved settings after confirmation; save or discard drafts first.
 </p></dd>
 <dt><kbd class="kbd">g</kbd></dt>
-<dd><p>Read the saved file again, asking before discarding edits.
+<dd><p>Reread the saved file, asking before discarding edits.
 </p></dd>
 <dt><kbd class="kbd">q</kbd></dt>
-<dd><p>Return to the previous view, retaining the draft. Reopen <em class="emph">Punctuation</em>
-or choose <em class="emph">Resume unfinished changes</em> in Aural Home to continue.
+<dd><p>Return while retaining the draft; reopening the editor resumes it. <kbd class="kbd">C-e H p d</kbd> also resumes retained drafts.
 </p></dd>
 <dt><kbd class="kbd">?</kbd></dt>
-<dd><p>Read help, including the selected host configuration path.
+<dd><p>Read Help, including the selected host configuration path.
 </p></dd>
 </dl>
 
-<p><em class="emph">Preserve character</em> leaves punctuation for the engine&rsquo;s pronunciation and
-pauses; it does not promise silence. Org normally selects <em class="emph">some</em>. To name
-apostrophes in Org prose, set both <em class="emph">APOSTROPHE</em>, U+0027, and
-<em class="emph">RIGHT SINGLE QUOTATION MARK</em>, U+2019, to speak “apostrophe” in <em class="emph">some</em>.
-This also names apostrophes inside contractions. Omnivox 1.15.0 names straight,
-curly and modifier apostrophes at <em class="emph">all</em> by default, without a configuration file.
-Custom named levels are future work.
+<p><em class="emph">Preserve character</em> leaves pronunciation and pauses to the engine; it does
+not promise silence. Org normally uses <em class="emph">some</em>. To name apostrophes, set both
+<em class="emph">APOSTROPHE</em> U+0027 and <em class="emph">RIGHT SINGLE QUOTATION MARK</em> U+2019 to speak
+“apostrophe” in <em class="emph">some</em>. That includes contractions. Omnivox 1.15.0 names straight,
+curly, and modifier apostrophes at <em class="emph">all</em> without a configuration file.
 </p>
-<p>A save rejects changes if the file or selected target differs from the version
-you reviewed. Your draft is retained so you can review the conflict. Saving
-upgrades the file to Omnivox configuration version 3, preserving other settings;
-Omnivox 1.14.0 and earlier cannot read this version. Do not save a file used by
-an older executable. This feature is currently unreleased.
+<ol class="enumerate">
+<li> <a class="anchor" id="Save-And-Activate-Changes"></a>Save And Activate Changes
+
+
+<p>Saving rejects a file or target changed since review and retains the draft for
+reconciliation. Other configuration is preserved. A named-profile-capable host
+writes Omnivox configuration version 4, unreadable by 1.16.0 and earlier. The
+older built-in-only editor writes version 3, requiring 1.15.0 or newer. Do not
+save a shared file with a format another selected executable cannot read.
+Capability and configuration-format checks matter even when the main installation
+uses a newer supported release.
 </p>
+<p>The editor&rsquo;s <kbd class="kbd">s</kbd> saves pronunciation data; its <kbd class="kbd">r</kbd> activates through worker
+restart. By contrast, <kbd class="kbd">S</kbd> in the parent Punctuation menu saves the selected
+level/profile through Customize, not the host editor&rsquo;s draft.
+</p>
+</li><li> <a class="anchor" id="Work-With-Named-Profiles"></a>Work With Named Profiles
+
+
+<p>With host support, <kbd class="kbd">N</kbd> creates a profile inheriting <code class="code">none</code>, <code class="code">some</code>, or <code class="code">all</code>.
+Use a lowercase ID such as <code class="code">prose</code> or <code class="code">proofreading</code>. <kbd class="kbd">l</kbd> switches levels and
+profiles; <kbd class="kbd">X</kbd> removes the selected profile from the draft. Profiles inherit
+base-level edits and override individual characters. <kbd class="kbd">s</kbd> saves all drafts
+without changing speech; <kbd class="kbd">r</kbd> loads the same definitions into both workers.
+</p>
+<p><code class="code">tts-set-punctuations</code> offers profiles whose definitions agree in current workers.
+Explicit selection applies to the buffer. A preference in
+<code class="code">tts-punctuation-mode-policy-alist</code> can use <code class="code">(text-mode profile &quot;prose&quot; some)</code>,
+retaining <code class="code">some</code> as fallback for older hosts, missing profiles, or inconsistent
+worker definitions. Status identifies fallback use. <code class="code">tts-reset-punctuation-mode</code>
+restores mode policy. Explicitly choosing a built-in level overrides a profile.
+Character inspection is independent, and there is no built-in <code class="code">most</code> level.
+</p></li></ol>
+</li></ol>
+
 </div>
 <hr>
 <div class="nav-panel">

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Writing An Org Document (Emacsvox User Manual)</title>
+
+<meta name="description" content="Writing An Org Document (Emacsvox User Manual)">
+<meta name="keywords" content="Writing An Org Document (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Document-Authoring.html" rel="up" title="Document Authoring">
+<link href="Reviewing-An-Org-Document.html" rel="next" title="Reviewing An Org Document">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Writing-An-Org-Document">
+<div class="nav-panel">
+<p>
+Next: <a href="Reviewing-An-Org-Document.html" accesskey="n" rel="next">Review structure and correct text</a>, Up: <a href="Document-Authoring.html" accesskey="u" rel="up">Document Authoring</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Write-a-note-with-headings"><span>9.2.1 Write a note with headings<a class="copiable-link" href="#Write-a-note-with-headings"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-notes_002c-writing"></a>
+<a class="index-entry-id" id="index-documents_002c-creating"></a>
+<a class="index-entry-id" id="index-Org_002c-writing-a-document"></a>
+
+<p>Unlike the tutorial&rsquo;s disposable buffer, this task creates a file you can
+return to. Use an unused name and a writable directory. The name
+<code class="code">~/evox-notes.org</code> is an example, not a file the package supplies.
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-x C-f</kbd>, enter <code class="code">~/evox-notes.org</code> and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. If it already
+contains work, choose another name before typing. The <code class="code">.org</code> extension
+normally selects Org mode; check with <kbd class="kbd">C-e m</kbd>. If a personal configuration
+selected another mode, run <kbd class="kbd">M-x org-mode <kbd class="key">RET</kbd></kbd> in this new note.
+</li><li> Type or insert the following text in the document buffer, not in the
+minibuffer or the manual. Start each heading at the beginning of its line.
+One asterisk and a space introduce the main heading; two asterisks and a
+space introduce a heading beneath it.
+
+<div class="example">
+<pre class="example-preformatted">* Project notes
+The draft is ready for review.
+** Questions
+Check the delivery date.
+** Decisions
+Keep a separate review copy.
+</pre></div>
+
+</li><li> Press <kbd class="kbd">M-&lt;</kbd> and read with <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-e l</kbd>. Verify the heading words
+and body text. Org heading feedback can identify structure without reading
+every leading asterisk; exact character inspection remains available.
+</li><li> Press <kbd class="kbd">C-x C-s</kbd> and read the save result. That writes this Org text to
+the selected file. It does not export a formatted document or change speech
+settings. Keep the file open for the following review, or reopen it later
+with <kbd class="kbd">C-x C-f</kbd> and its path.
+</li></ol>
+
+<p>Choose your own heading titles when writing real notes. Org stores the title
+and body as plain text, so the structure remains in the file even when parts
+of it are folded in the current view. Do not delete a folded heading to try
+to reveal its body: folding is a visibility operation, not missing content.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Reviewing-An-Org-Document.html">Review structure and correct text</a>, Up: <a href="Document-Authoring.html">Document Authoring</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

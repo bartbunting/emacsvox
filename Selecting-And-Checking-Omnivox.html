@@ -38,10 +38,9 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Compatibility-Speech-Servers.html" accesskey="n" rel="next">Compatibility Speech Servers</a>, Previous: <a href="Building-Omnivox-For-WSL2.html" accesskey="p" rel="prev">Building Omnivox For WSL2</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Selecting-And-Checking-Omnivox-1"><span>4.7 Selecting And Checking Omnivox<a class="copiable-link" href="#Selecting-And-Checking-Omnivox-1"> &para;</a></span></h3>
+<h3 class="section" id="Selecting-And-Checking-Omnivox-1"><span>14.7 Selecting And Checking Omnivox<a class="copiable-link" href="#Selecting-And-Checking-Omnivox-1"> &para;</a></span></h3>
 
-<p>First test Omnivox without Emacs.  On GNU/Linux or macOS, run the installed
-binary:
+<p>Test the installed server outside Emacs on GNU/Linux/macOS:
 </p>
 <div class="example">
 <pre class="example-preformatted">omnivox --version
@@ -49,46 +48,125 @@ omnivox --check
 omnivox --list-voices
 </pre></div>
 
-<p>Under WSL2, test the Emacsvox launcher.  It selects an explicit
-<code class="code">OMNIVOX_PROGRAM</code> first, then the per-user installation recorded by the guided
-installer, then a content-addressed source-built runtime, and finally an
-<code class="code">omnivox</code> command on <code class="code">PATH</code>:
+<p>In WSL2, the launcher selects <code class="code">OMNIVOX_PROGRAM</code> first, the per-user recorded
+installation next, then a content-addressed source runtime, then <code class="code">omnivox</code> on
+<code class="code">PATH</code>:
 </p>
 <div class="example">
 <pre class="example-preformatted">./servers/omnivox --check
 </pre></div>
 
-<p>The check initializes the selected engine and audio output, then plays a tone
-and speech.  Success ends with a message saying that everything is working if
-both were heard.  Do not continue merely because the command exited zero:
-hearing both signals is the backend acceptance condition.
+<p>The check initialises engine/output and plays tone then speech. Its success
+message is conditional on hearing both. Exit zero alone is not audible
+acceptance.
 </p>
-<p>Next select the server before loading Emacsvox:
+<p>Select before loading Emacsvox:
 </p>
 <div class="example">
 <pre class="example-preformatted">export TTS_PROGRAM=omnivox
 </pre></div>
 
-<p>Make that setting visible in the shell used to launch Emacs.  An
-<code class="code">export</code> affects only that shell and its children; placing it in a
-shell startup file makes the server choice persistent for later sessions.  On
-POSIX systems, Emacsvox&rsquo;s <code class="code">servers/omnivox</code> launcher also finds an installed
-<code class="code">omnivox</code> on <code class="code">PATH</code>.  <code class="code">OMNIVOX_PROGRAM</code> can name an absolute executable as an
-explicit override.  Under WSL2, the guided installer&rsquo;s data-only configuration
-file is persistent across launching shells and takes precedence over a
-source-built staged runtime.
-Native Windows Emacs resolves <code class="code">omnivox.exe</code> directly through <code class="code">exec-path</code>, or
-uses the absolute executable named by <code class="code">TTS_PROGRAM</code>. For the supported x64
-installation procedure, see
-<a class="ref" href="Trying-Native-Windows-Emacsvox.html">Installing Native Windows Emacsvox</a>.
+<p>An export affects that shell and children; a shell-startup entry persists it.
+On POSIX, <code class="code">servers/omnivox</code> finds <code class="code">omnivox</code> on <code class="code">PATH</code>; <code class="code">OMNIVOX_PROGRAM</code>
+can explicitly override it. The WSL per-user selection persists across shells
+and outranks staged source runtimes. Native Windows resolves <code class="code">omnivox.exe</code>
+through <code class="code">exec-path</code> or the absolute <code class="code">TTS_PROGRAM</code>. Follow
+<a class="ref" href="Trying-Native-Windows-Emacsvox.html">Installing Native Windows Emacsvox</a> for the supported native x64 route.
 </p>
-<p>Inside a running Emacsvox session, <kbd class="kbd">M-x omnivox</kbd> selects the same server
-temporarily.  Use <kbd class="kbd">M-x tts-speak-version</kbd> to identify the live adapter
-and <kbd class="kbd">M-x tts-restart</kbd> after changing server configuration.  This backend
-contract stops at a proven speech server; the complete isolated Emacs start,
-expected startup speech, and no-speech recovery belong to the first-use
-procedure.
+<p>In a running session, <kbd class="kbd">M-x omnivox</kbd> temporarily selects that server.
+<kbd class="kbd">M-x tts-speak-version</kbd> identifies the live adapter and <kbd class="kbd">M-x tts-restart</kbd>
+restarts after a deliberate configuration change. The complete isolated start,
+expected speech, and recovery remain in <a class="ref" href="Installation.html">Installation</a>.
 </p>
+<ul class="mini-toc">
+<li><a href="#Remote-Workstation-Speech-_0028Preview_0029" accesskey="1">Remote Workstation Speech (Preview)</a></li>
+</ul>
+<div class="subsection-level-extent" id="Remote-Workstation-Speech-_0028Preview_0029">
+<h4 class="subsection"><span>14.7.1 Remote Workstation Speech (Preview)<a class="copiable-link" href="#Remote-Workstation-Speech-_0028Preview_0029"> &para;</a></span></h4>
+
+<a class="anchor" id="Remote-workstation-speech-setup"></a>
+<p>Emacs can run on an SSH host while Omnivox, installed voices, and playback stay
+on your workstation. This uses Omnivox 1.18.0&rsquo;s <code class="code">--serve</code> and Emacsvox&rsquo;s remote
+transport. Remote access remains a preview feature.
+</p>
+<p>Create a private token on the workstation. The tool refuses to overwrite or
+print an existing token:
+</p>
+<div class="example">
+<pre class="example-preformatted">mkdir -p &quot;$HOME/.config/omnivox&quot;
+python3 /path/to/omnivox/tools/create_remote_token.py \
+    &quot;$HOME/.config/omnivox/remote-token&quot;
+</pre></div>
+
+<p>Leave the installed server running in a terminal, with the matching Emacsvox
+sound-pack directory:
+</p>
+<div class="example">
+<pre class="example-preformatted">omnivox --serve --token-file &quot;$HOME/.config/omnivox/remote-token&quot; \
+    --sound-root /path/to/emacsvox/sounds
+</pre></div>
+
+<p>For a Windows service through the WSL launcher, translate both paths:
+</p>
+<div class="example">
+<pre class="example-preformatted">/path/to/emacsvox/servers/omnivox --serve \
+    --token-file &quot;$(wslpath -w &quot;$HOME/.config/omnivox/remote-token&quot;)&quot; \
+    --sound-root &quot;$(wslpath -w /path/to/emacsvox/sounds)&quot;
+</pre></div>
+
+<p>In another workstation terminal, copy the token through verified SSH and open
+the reverse forward, replacing <code class="code">user@emacs-host</code>:
+</p>
+<div class="example">
+<pre class="example-preformatted">ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
+scp &quot;$HOME/.config/omnivox/remote-token&quot; user@emacs-host:.config/omnivox/remote-token
+ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
+ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
+    -o ServerAliveCountMax=2 \
+    -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
+</pre></div>
+
+<p>When Omnivox runs on Windows, use Windows OpenSSH for the final connection:
+<code class="code">ssh.exe</code> from WSL or <code class="code">ssh</code> from PowerShell. It must reach Windows loopback;
+a WSL client under NAT reaches separate WSL loopback instead. Windows SSH uses
+its Windows keys and host-trust configuration.
+</p>
+<p><a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a> provides the remote-only installation and isolated
+launcher. <code class="code">--remote</code> configures transport before speech starts and needs no
+local Omnivox binary. For personal configuration, set before startup:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq tts-program &quot;omnivox&quot;
+      omnivox-remote-host &quot;127.0.0.1&quot;
+      omnivox-remote-port 6417
+      omnivox-remote-token-file &quot;~/.config/omnivox/remote-token&quot;)
+</pre></div>
+
+<p><kbd class="kbd">M-x omnivox-remote-connect</kbd> connects/retries, <kbd class="kbd">M-x omnivox-remote-status</kbd>
+inspects, and <kbd class="kbd">M-x omnivox-remote-disconnect</kbd> stops and suspends retries.
+Reconnection refreshes voices/routing and discards unfinished speech. Main and
+notification retain separate workers. Only one Emacs session owns a service
+at a time.
+</p>
+<p>If main connects but notification fails, main remains available while the
+missing connection retries. Recovery does not replace working main speech.
+<code class="code">omnivox-remote-auto-reconnect</code> set to nil disables automatic retry; explicit
+disconnect suspends it until another connection. Status retains retry and error
+information.
+</p>
+<p>Keep service and forwarded endpoint on loopback; do not enable SSH
+<code class="code">GatewayPorts</code>. SSH encrypts the transport and the token excludes other remote
+host users. To rotate, stop the service, replace both private token files, and
+restart. Typing <code class="code">quit</code> or interrupting the service terminal stops workers.
+</p>
+<p>Inventory belongs to the workstation; install/manage engines there. Bundled
+icons resolve by pack-relative name. Personal sounds outside that directory
+and sound uploads are unsupported; no <code class="code">--sound-root</code> means no file-based icons.
+For an occupied remote port, change the left side of <code class="code">-R</code> and match
+<code class="code">omnivox-remote-port</code>. Authentication failure indicates differing tokens or
+excessively broad file permissions; a busy service belongs to another connection.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

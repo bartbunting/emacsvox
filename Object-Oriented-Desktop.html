@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Audio-Desktop.html" rel="up" title="Audio Desktop">
 <link href="Context_002dSensitive-Interaction.html" rel="next" title="Context-Sensitive Interaction">
-<link href="Desktop-Objects.html" rel="prev" title="Desktop Objects">
+<link href="Working-With-Windows.html" rel="prev" title="Working With Windows">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,30 +34,25 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Object-Oriented-Desktop">
 <div class="nav-panel">
 <p>
-Next: <a href="Context_002dSensitive-Interaction.html" accesskey="n" rel="next">Hear And Navigate The Current Context</a>, Previous: <a href="Desktop-Objects.html" accesskey="p" rel="prev">Buffers Hold Your Work</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Context_002dSensitive-Interaction.html" accesskey="n" rel="next">Hear And Navigate The Current Context</a>, Previous: <a href="Working-With-Windows.html" accesskey="p" rel="prev">Work with windows without losing your place</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Let-Modes-Give-Each-Buffer-Its-Tools"><span>5.2 Let Modes Give Each Buffer Its Tools<a class="copiable-link" href="#Let-Modes-Give-Each-Buffer-Its-Tools"> &para;</a></span></h3>
+<h3 class="section" id="Let-Modes-Give-Each-Buffer-Its-Tools"><span>7.3 Let Modes Give Each Buffer Its Tools<a class="copiable-link" href="#Let-Modes-Give-Each-Buffer-Its-Tools"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-major-modes"></a>
 
 <a class="index-entry-id" id="index-minor-modes"></a>
 
-<p>Every buffer has one major mode that provides its main editing or application
-behavior.  A source buffer uses a programming-language mode, Dired uses a mode
-for directories, EWW uses one for Web pages, and Org uses one for structured
-notes and documents.  Minor modes add optional behavior alongside the major
-mode.
+<p>Each buffer has one major mode responsible for its principal editing or
+application commands. Programming-language modes work with source code,
+Dired with directories, EWW with Web pages, and Org with structured notes.
+Minor modes add optional behaviour without replacing the major mode.
 </p>
-<p>This context is what makes Emacs efficient: a movement command can move by a
-sentence in prose, a heading in an outline, an item in a list, or another
-meaningful unit supplied by the active mode.  Emacsvox speaks the result of the
-operation and can use the same context to announce state changes.
-</p>
-<p>You do not need to predict which commands every mode provides.  Press
-<kbd class="kbd">C-h m</kbd> in the buffer you are using, then <kbd class="kbd">C-h k</kbd> followed by a key
-when you want a fuller explanation.  <a class="ref" href="Using-Online-Help.html">Using Online Help</a> provides a
-short practical guide to these discovery commands.
+<p>The active mode determines which structures Emacs can navigate. In prose you
+might move by sentence; in Org by heading; in a list by item. Emacsvox speaks
+the result and can announce relevant state changes. To discover the mode&rsquo;s
+commands, press <kbd class="kbd">C-h m</kbd>, then <kbd class="kbd">C-h k</kbd> followed by a key for more detail.
+<a class="ref" href="Using-Online-Help.html">Using Online Help</a> explains these help commands.
 </p>
 </div>
 

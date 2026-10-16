@@ -17,10 +17,12 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Editing-Named-Voices.html" rel="up" title="Editing Named Voices">
 <link href="Voice-Fallbacks.html" rel="next" title="Voice Fallbacks">
+<link href="Changing-A-Palette-Physical-Voice.html" rel="prev" title="Changing A Palette Physical Voice">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -34,87 +36,80 @@ ul.mark-bullet {list-style-type: disc}
 <div class="subsection-level-extent" id="Voice-Adjustments">
 <div class="nav-panel">
 <p>
-Next: <a href="Voice-Fallbacks.html" accesskey="n" rel="next">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Voice-Fallbacks.html" accesskey="n" rel="next">Choose And Tune Fallback Voices</a>, Previous: <a href="Changing-A-Palette-Physical-Voice.html" accesskey="p" rel="prev">Use one physical voice across a palette</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Understand-Voice-Adjustments"><span>6.6.1 Understand Voice Adjustments<a class="copiable-link" href="#Understand-Voice-Adjustments"> &para;</a></span></h4>
+<h4 class="subsection" id="Understand-Voice-Adjustments"><span>8.7.5 Understand Voice Adjustments<a class="copiable-link" href="#Understand-Voice-Adjustments"> &para;</a></span></h4>
 
-<p>Change one field at a time and compare with <kbd class="kbd">B</kbd>. These are portable
-controls, not measurements in Hertz or decibels. Equal numbers can sound
-different on different engines. Most numeric fields use integer levels from
-zero through nine; Relative Rate is the exception.
+<p>Change one field at a time and compare with <kbd class="kbd">B</kbd>. Portable controls are not
+measurements in Hertz or decibels, and equal values may sound different on
+different engines. Most numeric fields use integer levels zero through nine;
+Relative Rate is the exception.
 </p>
 <ul class="itemize mark-bullet">
-<li><em class="emph">Relative Rate</em> ranges from -20 to 20. Negative values request slower
-speech, positive values faster speech, and zero leaves the base rate
-unchanged. The engine interprets those relative steps; they are not words
-per minute. A stronger contextual relative-rate value replaces this value
-rather than adding to it.
-</li><li><em class="emph">Average Pitch</em> requests a lower or higher overall pitch. Start with a
-small difference between two voices intended to mark related content.
-</li><li><em class="emph">Pitch Range</em> requests less or more pitch variation. A low range can make
-a supported voice more monotone; a high range makes intonation more varied.
-</li><li><em class="emph">Stress</em> requests less or more emphasis. Its audible effect depends on how
-the engine implements stress.
-</li><li><em class="emph">Richness</em> changes the voice&rsquo;s tonal character or fullness where supported.
-Compare samples rather than treating it as another volume control.
-</li><li><em class="emph">Gain</em> changes output level. Five is unchanged; lower values reduce it and
-higher values increase it.
-</li><li><em class="emph">Pan</em> places supported audio from left at zero, through center at five,
-to right at nine. Its effect also depends on your output arrangement.
+<li><em class="emph">Relative Rate</em> ranges from -20 to 20. Negative requests slower speech,
+positive faster, and zero leaves base rate unchanged. Engine-relative steps
+are not words per minute. A stronger contextual value replaces rather than
+adds to this one.
+</li><li><em class="emph">Average Pitch</em> requests lower or higher overall pitch. Start with a small
+contrast between voices for related content.
+</li><li><em class="emph">Pitch Range</em> requests less or more pitch variation; supported low settings
+can sound monotone and higher settings more varied.
+</li><li><em class="emph">Stress</em> requests emphasis according to the engine&rsquo;s implementation.
+</li><li><em class="emph">Richness</em> changes tonal character or fullness where supported. Compare
+samples rather than treating it as volume.
+</li><li><em class="emph">Gain</em> changes output level: five is unchanged, lower reduces, higher raises.
+</li><li><em class="emph">Pan</em> requests left at zero, centre at five, and right at nine where supported;
+output arrangement also matters.
 </li><li><em class="emph">Low-pass Amount</em> and <em class="emph">High-pass Amount</em> remove high and low frequencies,
-respectively. Both use zero for neutral and nine for strongest filtering.
-</li><li><em class="emph">Reverb</em> adds a reverberant character, <em class="emph">Echo</em> adds delayed repetitions,
-and <em class="emph">Chorus</em> adds a doubled-voice effect. Zero disables each; higher levels
-increase the effect.
-</li><li><em class="emph">Portable Fallback Family</em>, where offered under additional adjustments,
-is a compatibility family hint. Use <em class="emph">Physical voice</em> for an installed voice
-choice. Family is not part of the complete Omnivox voice preview.
+respectively. Zero is neutral and nine strongest.
+</li><li><em class="emph">Reverb</em> adds reverberation, <em class="emph">Echo</em> delayed repeats, and <em class="emph">Chorus</em> a doubled
+voice. Zero disables each; higher values increase it.
+</li><li><em class="emph">Portable Fallback Family</em>, where offered, is a compatibility hint. Use
+<em class="emph">Physical voice</em> for an installed choice. Family is outside complete Omnivox
+voice preview.
 </li></ul>
 
-<p>In shared settings, <kbd class="kbd">d</kbd> or blank numeric input requests <em class="emph">adapter default</em>;
-<kbd class="kbd">u</kbd> undoes that edit. In an individual physical choice, <kbd class="kbd">i</kbd> instead means
-<em class="emph">use the shared value</em>. Zero remains an explicit value in either view.
-Thus &ldquo;standard default palette&rdquo;, &ldquo;Automatic physical selection&rdquo;, and
-&ldquo;adapter default adjustment&rdquo; answer three different questions: which
-collection supplies the voice, who selects its physical voice, and who supplies
-one adjustment value.
+<p>In shared settings, <kbd class="kbd">d</kbd> or blank input requests <em class="emph">adapter default</em> and <kbd class="kbd">u</kbd> undoes
+it. For a physical choice, <kbd class="kbd">i</kbd> means <em class="emph">use the shared value</em>. Zero is explicit
+in either context. The standard-default palette chooses the collection,
+Automatic delegates physical selection, and adapter default delegates one
+adjustment: they answer different questions.
 </p>
-<p>The voice editor presents <em class="emph">Low-pass Amount</em> and <em class="emph">High-pass Amount</em> from zero through
-nine. Higher amounts mean more filtering: low-pass removes more high
-frequencies, and high-pass removes more low frequencies. Zero is the neutral
-cutoff; blank numeric entry requests the adapter default. The amount scale
-applies to arrows and numeric entry in the common editor. Existing
-saved styles retain their sound; stored low-pass cutoff values keep their
-original meaning.
+<p>Filter amount scales apply to arrows and numeric input in the common editor.
+Zero is the neutral cutoff; blank requests adapter default. Existing saved
+styles retain their sound and stored low-pass cutoff values keep their original
+meaning.
 </p>
-<p>The voice editor names other neutral effect values instead of speaking an ambiguous number:
-gain five is <em class="emph">unchanged</em>, pan five is <em class="emph">centre</em>, and reverb, echo, or chorus zero is
-<em class="emph">disabled</em>.  Chorus adds a bounded doubled-voice modulation without changing
-speech duration or marker positions.  It is applied by Omnivox to buffered
-audio; the voice editor reports when the selected route cannot apply it.  These
-portable levels are translated to the exact values required by the active
-adapter.
+<p>Neutral values are named: gain five <em class="emph">unchanged</em>, pan five <em class="emph">centre</em>, and zero
+reverb, echo, or chorus <em class="emph">disabled</em>. Chorus adds bounded doubled-voice modulation
+without changing speech duration or marker positions. Omnivox applies it to
+buffered audio and reports unsupported routes. Portable levels are translated
+into adapter-specific values.
 </p>
-<p>The built-in <code class="code">acss-default</code> palette also includes a <code class="code">telephone</code> named voice.
-It combines high-pass and low-pass filtering to give any buffered Omnivox
-engine a narrow-band telephone sound while preserving its selected physical
-voice, duration, and markers.  Preview it in <em class="emph">Voice Palettes</em> or <em class="emph">Voice
-Workbench</em> before assigning it to content.  Adapters without post-synthesis
-filtering preserve the portable style but do not apply the filters.
+<p>The standard palette includes <code class="code">telephone</code>, combining high-pass and low-pass
+filtering for a narrow-band sound on buffered Omnivox engines without replacing
+the physical voice or changing duration/markers. Preview it in Voice Palettes
+or Workbench before assignment. Adapters without post-synthesis filtering keep
+the style but cannot apply those filters.
 </p>
-<p>Omnivox average-pitch differences use the customizable
-<code class="code">omnivox-average-pitch-contrast</code>.  Its default value, <code class="code">0.5</code>, keeps palette
-distinctions while making them gentler.  Set it to <code class="code">1.0</code> for the historical
-contrast, or <code class="code">0</code> to make average pitch neutral.  Values through <code class="code">2.0</code> are
-accepted.  Changing it refreshes logical-voice registration, and the same
-setting applies to previews, structured speech, and legacy inline voices.
+<p>For overall Omnivox pitch contrast (<code class="code">omnivox-average-pitch-contrast</code>), open
+<kbd class="kbd">C-e H v o</kbd> and select <em class="emph">Omnivox pitch contrast</em>. Shift-left/right adjusts by <code class="code">0.1</code>; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact
+value from zero to two. The default <code class="code">0.5</code> gives gentler distinctions, <code class="code">1.0</code>
+restores historical contrast, and zero neutralises average pitch. This scales
+all average-pitch levels without changing individual named-voice definitions;
+other backends are unaffected.
+</p>
+<p>Changes refresh logical-voice registration for subsequent previews, structured
+speech and legacy inline voices. Compare familiar content, then restore the
+previous value if needed. The menu&rsquo;s <kbd class="kbd">w</kbd> saves both contrast and comparison
+labels through Customize; it does not save a voice or palette.
 </p>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Voice-Fallbacks.html">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Voice-Fallbacks.html">Choose And Tune Fallback Voices</a>, Previous: <a href="Changing-A-Palette-Physical-Voice.html">Use one physical voice across a palette</a>, Up: <a href="Editing-Named-Voices.html">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

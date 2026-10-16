@@ -22,7 +22,6 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 span:hover a.copiable-link {visibility: visible}
-ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -37,30 +36,85 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Sharing-Voice-Palettes.html" accesskey="n" rel="next">Export, Back Up, And Import Palettes</a>, Previous: <a href="Presentation-Profile-Walkthrough.html" accesskey="p" rel="prev">Walkthrough: Switch Reading And Working Setups</a>, Up: <a href="Presentation-Profiles.html" accesskey="u" rel="up">Save, Switch, And Share Your Setup</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Choose-What-Persists"><span>6.11.2 Choose What Persists<a class="copiable-link" href="#Choose-What-Persists"> &para;</a></span></h4>
+<h4 class="subsection" id="Choose-What-Persists"><span>8.12.2 Choose What Persists<a class="copiable-link" href="#Choose-What-Persists"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-saving-aural-settings"></a>
 <a class="index-entry-id" id="index-startup-palette"></a>
 
-<p>These actions answer different questions:
+<p>Decide what you want to keep before choosing a Save action. <em class="emph">Scope</em> tells
+you where a value applies; <em class="emph">persistence</em> tells you whether it survives a
+restart; <em class="emph">activation</em> tells you whether it is in use now. These are separate
+questions.
 </p>
-<ul class="itemize mark-bullet">
-<li><em class="emph">Preview</em> plays an example without saving or selecting the draft.
-</li><li><em class="emph">Retain draft</em> keeps unfinished edits in this Emacs session only.
-</li><li><em class="emph">Save to collection without selecting</em> saves the voice for later use.
-</li><li><em class="emph">Save and apply</em> saves the voice and selects its palette for this session.
-</li><li><em class="emph">Activate</em> selects an existing palette or sound pack now.
-</li><li><em class="emph">Use at Startup</em> in Voice Palettes changes the palette selected by the saved
-startup profile; it does not apply that profile now.
-</li><li><em class="emph">Presentation Profiles</em> save selected options, palette, sound pack, and
-spatial settings together. Their referenced resources remain shared.
-</li><li><em class="emph">Export</em> and <em class="emph">Full backup</em> create files to share or retain separately.
-</li></ul>
+<p>A current-buffer value applies to the captured buffer. A global default is
+live, but buffer overrides and mode policy can still take precedence. Changing
+it does not automatically save it, and only the command&rsquo;s documented behaviour
+tells you whether existing buffers are updated too. Saved startup settings
+are retained for later sessions.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Try-a-change-or-leave-it-unfinished"></a>Try a change or leave it unfinished
 
-<p>A saved personal rule is used in future sessions. Session and buffer rules
-expire with their session or buffer. Saving a profile does not turn these
-temporary rules or unfinished drafts into permanent settings.
+
+<p>Preview an example to hear a proposal without saving or selecting it. Keep a
+retained draft when you intend to resume it during this Emacs session.
+<a class="ref" href="Recovering-Aural-Changes.html">Recover unfinished changes</a> explains how to return to its editor.
+A draft is not a backup: it is lost when Emacs exits, and discarding it does
+not undo an earlier completed save.
 </p>
+</li><li> <a class="anchor" id="Store-a-voice-without-changing-today_0027s-setup"></a>Store a voice without changing today&rsquo;s setup
+
+
+<p>Use <em class="emph">Save to collection without selecting</em> in the voice editor to store a
+voice for later use without selecting its destination palette. The detailed
+<a class="ref" href="Editing-Named-Voices.html#voice_002dsaving_002dprocedure">voice-saving procedure</a> explains the editor&rsquo;s result and partial-save states.
+This is appropriate for an alternative you want to keep, not yet adopt.
+</p>
+</li><li> <a class="anchor" id="Use-a-saved-voice-or-setup-now"></a>Use a saved voice or setup now
+
+
+<p><em class="emph">Save and apply</em> stores a voice and selects its palette for this session.
+<em class="emph">Activate</em> in the palette or sound-pack manager instead selects an existing
+resource. After applying, check the result and repeat the original task.
+Some host changes need a separate confirmed speech restart, and a successful
+save does not establish that both speech workers acknowledged the application.
+See <a class="ref" href="Unconfirmed-Speech-Changes.html">An unconfirmed Apply result</a> when a result is incomplete.
+</p>
+</li><li> <a class="anchor" id="Start-the-next-session-with-it"></a>Start the next session with it
+
+
+<p>In Voice Palettes, <em class="emph">Use at Startup</em> changes the palette in the saved profile
+without applying that profile now. A Presentation Profile stores coordinated
+options, palette, sound pack and spatial choices, not copies of their resources.
+Applying a profile also saves its selection for future sessions. Use
+<a class="ref" href="Presentation-Profiles.html">Presentation Profiles</a> to switch such a group of choices.
+</p>
+<p>For an individual control, use its own documented Save action. Speech settings
+saves the displayed rate and punctuation; Sounds and output saves five volumes;
+a focused integration menu saves only its documented defaults. Linked editors
+retain their own Save/Apply actions. No one menu action saves all Emacsvox
+settings.
+</p>
+<p>Personal rules persist. Session rules expire when Emacs exits, and buffer
+rules expire with their buffer. Saving a profile cannot make temporary rules
+or drafts permanent. If a choice disappeared after restarting, follow
+<a class="ref" href="Settings-Lost-After-Restart.html">the persistence checks</a> before recreating or overwriting it.
+</p>
+</li><li> <a class="anchor" id="Share-a-palette-or-make-a-backup"></a>Share a palette or make a backup
+
+
+<p>Choose <em class="emph">Export</em> for effective portable entries or <em class="emph">Full backup</em> when palette
+ancestry and local voice choices matter. Neither includes engines, sound-pack
+audio or every Emacsvox setting. Import creates an independent palette; it
+is not an overwrite or automatic activation. Follow
+<a class="ref" href="Sharing-Voice-Palettes.html">Export, back up and import palettes</a> for the exact contents and checks.
+</p></li></ol>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Sharing-Voice-Palettes.html">Export, Back Up, And Import Palettes</a>, Previous: <a href="Presentation-Profile-Walkthrough.html">Walkthrough: Switch Reading And Working Setups</a>, Up: <a href="Presentation-Profiles.html">Save, Switch, And Share Your Setup</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Troubleshooting (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Troubleshooting (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Troubleshooting (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Support-Boundaries.html" rel="prev" title="Notmuch Support Boundaries">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Troubleshooting">
+<div class="nav-panel">
+<p>
+Previous: <a href="Notmuch-Support-Boundaries.html" accesskey="p" rel="prev">Know the support boundaries</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Troubleshoot-the-live-integration"><span>10.8 Troubleshoot the live integration<a class="copiable-link" href="#Troubleshoot-the-live-integration"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-troubleshooting_002c-Notmuch"></a>
+<a class="index-entry-id" id="index-byte_002dcode_002c-Notmuch-integration"></a>
+
+<p>Use <kbd class="kbd">?</kbd> or <kbd class="kbd">C-h m</kbd> in the affected view to check its current keys and
+<kbd class="kbd">M-x notmuch-version</kbd> to identify the package. Consult Notmuch&rsquo;s own manual
+for its behaviour before treating a database or display problem as a speech
+problem.
+</p>
+<p>For bindings, loaded source versus byte-code, presentation rules, sounds, or
+backend issues, open Aural Doctor through <kbd class="kbd">C-e H D d</kbd> or
+<kbd class="kbd">M-x emacsvox-aural-doctor</kbd>. Recent feedback at <kbd class="kbd">C-e H f h</kbd> or
+<kbd class="kbd">M-x emacsvox-aural-list-recent-feedback</kbd> shows the bounded presentation
+submitted for an action. These diagnostics do not query or modify mail.
+</p>
+<p>For source-level work, <a class="ref" href="Integration-Maintenance.html">Integration Maintenance</a> contains the build, test,
+renderer, and asynchronous lifecycle contracts.
+</p>
+</div>
+
+
+
+</body>
+</html>

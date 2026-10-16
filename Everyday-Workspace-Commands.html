@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Everyday Workspace Commands (Emacsvox User Manual)</title>
+
+<meta name="description" content="Everyday Workspace Commands (Emacsvox User Manual)">
+<meta name="keywords" content="Everyday Workspace Commands (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Keyboard-Commands.html" rel="up" title="Emacsvox Keyboard Commands">
+<link href="Everyday-Help-Commands.html" rel="next" title="Everyday Help Commands">
+<link href="Everyday-Editing-Commands.html" rel="prev" title="Everyday Editing Commands">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Everyday-Workspace-Commands">
+<div class="nav-panel">
+<p>
+Next: <a href="Everyday-Help-Commands.html" accesskey="n" rel="next">Help and orientation</a>, Previous: <a href="Everyday-Editing-Commands.html" accesskey="p" rel="prev">Editing reminders</a>, Up: <a href="Emacsvox-Keyboard-Commands.html" accesskey="u" rel="up">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Files_002c-buffers-and-windows"><span>15.3 Files, buffers and windows<a class="copiable-link" href="#Files_002c-buffers-and-windows"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-files-and-windows_002c-quick-reference"></a>
+<a class="index-entry-id" id="index-close-a-view_002c-command"></a>
+
+<p>A buffer contains work; a window displays it. Identify the selected buffer with
+<kbd class="kbd">C-e m</kbd> before editing, saving or closing anything. For definitions, see
+<a data-manual="emacsvox" href="./Working-Context-Terms.html#Working-Context-Terms">Buffers, windows and frames</a>.
+</p>
+<dl class="table">
+<dt>Open a file (<kbd class="kbd">C-x C-f</kbd>)</dt>
+<dd><p>Visit a pathname, creating a new unsaved buffer
+if the file does not exist. <kbd class="kbd">C-x C-r</kbd> visits read-only instead. See
+<a data-manual="emacsvox" href="./Opening-A-Document.html#Opening-A-Document">Checking the document and its destination</a>.
+</p></dd>
+<dt>Save the current file (<kbd class="kbd">C-x C-s</kbd>)</dt>
+<dd><p>Write this buffer to its file; a new
+buffer may need a filename. An error is not a completed save. See
+<a data-manual="emacsvox" href="./Saving-A-Working-Copy.html#Saving-A-Working-Copy">Saving destinations and failure recovery</a>.
+</p></dd>
+<dt>Save under another filename (<kbd class="kbd">C-x C-w</kbd>)</dt>
+<dd><p>Write the current text, including
+unsaved edits, and change where this buffer&rsquo;s later saves go. Cancel an
+unexpected overwrite prompt. See <a data-manual="emacsvox" href="./Saving-A-Working-Copy.html#Saving-A-Working-Copy">Working copies versus copies of saved files</a>.
+</p></dd>
+<dt>Switch to another buffer (<kbd class="kbd">C-x b</kbd>)</dt>
+<dd><p>Select content by buffer name in the
+current window. The buffer you leave stays available. See
+<a data-manual="emacsvox" href="./Desktop-Objects.html#Desktop-Objects">Buffer selection</a>.
+</p></dd>
+<dt>Display a reference (<kbd class="kbd">C-x 4 b</kbd>)</dt>
+<dd><p>Display and select an existing buffer
+in another window, creating or reusing a view. See
+<a data-manual="emacsvox" href="./Reference-And-Draft-Windows.html#Reference-And-Draft-Windows">Keeping a reference beside a draft</a>.
+</p></dd>
+<dt>Select another window (<kbd class="kbd">C-x o</kbd>)</dt>
+<dd><p>Select the next view; lowercase o is not
+zero. With more than two windows, the next one need not be the draft. See
+<a data-manual="emacsvox" href="./Working-With-Windows.html#Working-With-Windows">Identifying the selected view</a>.
+</p></dd>
+<dt>Remove a window (<kbd class="kbd">C-x 0</kbd>)</dt>
+<dd><p>Remove this view, not its buffer. The last
+ordinary window cannot be removed this way. <kbd class="kbd">C-x 1</kbd> instead keeps only the
+selected view. See <a data-manual="emacsvox" href="./Closing-Windows-Safely.html#Closing-Windows-Safely">Closing windows without losing documents</a>.
+</p></dd>
+<dt>Close a buffer (<kbd class="kbd">C-x k</kbd>)</dt>
+<dd><p>Kill the named buffer, checking any unsaved-work
+prompt. This is not the same as removing its window or deleting its file.
+See <a data-manual="emacsvox" href="./Opening-A-Document.html#Opening-A-Document">Leaving document buffers safely</a>.
+</p></dd>
+</dl>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Everyday-Help-Commands.html">Help and orientation</a>, Previous: <a href="Everyday-Editing-Commands.html">Editing reminders</a>, Up: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

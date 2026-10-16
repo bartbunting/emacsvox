@@ -16,7 +16,7 @@
 <link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
 <link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
 <link href="emacsvox_002dtreesit.html" rel="next" title="emacsvox-treesit">
-<link href="emacsvox_002dtodo_002dmode.html" rel="prev" title="emacsvox-todo-mode">
+<link href="emacsvox_002dtone_002deditor.html" rel="prev" title="emacsvox-tone-editor">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -36,10 +36,10 @@ ul.mark-bullet {list-style-type: disc}
 <div class="section-level-extent" id="emacsvox_002dtransient">
 <div class="nav-panel">
 <p>
-Next: <a href="emacsvox_002dtreesit.html" accesskey="n" rel="next">emacsvox-treesit</a>, Previous: <a href="emacsvox_002dtodo_002dmode.html" accesskey="p" rel="prev">emacsvox-todo-mode</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="emacsvox_002dtreesit.html" accesskey="n" rel="next">emacsvox-treesit</a>, Previous: <a href="emacsvox_002dtone_002deditor.html" accesskey="p" rel="prev">emacsvox-tone-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002dtransient-1"><span>2.245 emacsvox-transient<a class="copiable-link" href="#emacsvox_002dtransient-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002dtransient-1"><span>2.258 emacsvox-transient<a class="copiable-link" href="#emacsvox_002dtransient-1"> &para;</a></span></h3>
 
 <p>TRANSIENT ==  Transient commands &mdash; used by magit and friends.
 This module speech-enables transient.
@@ -49,9 +49,10 @@ This module speech-enables transient.
 <li><a href="#Recommended-Customizations" accesskey="2">Recommended Customizations</a></li>
 <li><a href="#Browsing-Contents-Of-transient_002d_002dshow" accesskey="3">Browsing Contents Of transient&ndash;show</a></li>
 <li><a href="#Emacsvox_002dTransient-Commands" accesskey="4">Emacsvox-Transient Commands</a></li>
+<li><a href="#emacsvox_002dtransient-Options" accesskey="5">emacsvox-transient Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="Introduction-1">
-<h4 class="subsection"><span>2.245.1 Introduction<a class="copiable-link" href="#Introduction-1"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.258.1 Introduction<a class="copiable-link" href="#Introduction-1"> &para;</a></span></h4>
 
 <p>Package Transient is similar to package Hydra in the sense that it
 can be used to create a sequence of chained/hierarchical commands
@@ -70,20 +71,20 @@ functionality, learning complex packages like Magit would be difficult
 because  the list of available commands can be very long.
 </p></div>
 <div class="subsection-level-extent" id="Recommended-Customizations">
-<h4 class="subsection"><span>2.245.2 Recommended Customizations<a class="copiable-link" href="#Recommended-Customizations"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.258.2 Recommended Customizations<a class="copiable-link" href="#Recommended-Customizations"> &para;</a></span></h4>
 <p>I use the following customizations via .custom, adjust to taste,
 but use these only after reading the transient info documentations.
 </p><ul class="itemize mark-bullet">
 <li>transient-force-single-column: t
-</li><li>transient-show-menu:  1
+</li><li>transient-show-menu: t
 </li><li>transient-enable-menu-navigation:  t
 </li></ul>
 
-<p>this pops up the transient buffer after a short delay  and lets
-you move through the buttons with the    up/down arrows.
+<p>This displays the menu immediately and lets you move through its
+buttons with the up/down arrows.
 </p></div>
 <div class="subsection-level-extent" id="Browsing-Contents-Of-transient_002d_002dshow">
-<h4 class="subsection"><span>2.245.3 Browsing Contents Of transient&ndash;show<a class="copiable-link" href="#Browsing-Contents-Of-transient_002d_002dshow"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.258.3 Browsing Contents Of transient&ndash;show<a class="copiable-link" href="#Browsing-Contents-Of-transient_002d_002dshow"> &para;</a></span></h4>
 
 <p>When executing a command defined via Transient &mdash; e.g. command
 Magit-dispatch and friends,
@@ -95,7 +96,7 @@ the transient; Pressing <kbd class="kbd">C-q</kbd> quits the transient.
 </p>
 </div>
 <div class="subsection-level-extent" id="Emacsvox_002dTransient-Commands">
-<h4 class="subsection"><span>2.245.4 Emacsvox-Transient Commands<a class="copiable-link" href="#Emacsvox_002dTransient-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.258.4 Emacsvox-Transient Commands<a class="copiable-link" href="#Emacsvox_002dTransient-Commands"> &para;</a></span></h4>
 
 <ul class="mini-toc">
 <li><a href="#emacsvox_002dtransient_002dmode" accesskey="1">emacsvox-transient-mode</a></li>
@@ -103,7 +104,7 @@ the transient; Pressing <kbd class="kbd">C-q</kbd> quits the transient.
 <li><a href="#emacsvox_002dtransient_002dprevious_002dsection" accesskey="3">emacsvox-transient-previous-section</a></li>
 </ul>
 <div class="subsubsection-level-extent" id="emacsvox_002dtransient_002dmode">
-<h4 class="subsubsection"><span>2.245.4.1 emacsvox-transient-mode<a class="copiable-link" href="#emacsvox_002dtransient_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.258.4.1 emacsvox-transient-mode<a class="copiable-link" href="#emacsvox_002dtransient_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dtransient_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-transient-mode</strong><a class="copiable-link" href="#index-emacsvox_002dtransient_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dtransient_002dmode-1"></a>
@@ -120,7 +121,7 @@ final or penultimate step during initialization.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dtransient_002dnext_002dsection">
-<h4 class="subsubsection"><span>2.245.4.2 emacsvox-transient-next-section<a class="copiable-link" href="#emacsvox_002dtransient_002dnext_002dsection"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.258.4.2 emacsvox-transient-next-section<a class="copiable-link" href="#emacsvox_002dtransient_002dnext_002dsection"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dtransient_002dnext_002dsection"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-transient-next-section</strong><a class="copiable-link" href="#index-emacsvox_002dtransient_002dnext_002dsection"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dtransient_002dnext_002dsection-1"></a>
@@ -132,7 +133,7 @@ final or penultimate step during initialization.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dtransient_002dprevious_002dsection">
-<h4 class="subsubsection"><span>2.245.4.3 emacsvox-transient-previous-section<a class="copiable-link" href="#emacsvox_002dtransient_002dprevious_002dsection"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.258.4.3 emacsvox-transient-previous-section<a class="copiable-link" href="#emacsvox_002dtransient_002dprevious_002dsection"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dtransient_002dprevious_002dsection"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-transient-previous-section</strong><a class="copiable-link" href="#index-emacsvox_002dtransient_002dprevious_002dsection"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dtransient_002dprevious_002dsection-1"></a>
@@ -144,11 +145,62 @@ final or penultimate step during initialization.
 
 </div>
 </div>
+<div class="subsection-level-extent" id="emacsvox_002dtransient-Options">
+<h4 class="subsection"><span>2.258.5 emacsvox-transient Options<a class="copiable-link" href="#emacsvox_002dtransient-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-174"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-transient-navigation-style</var><a class="copiable-link" href="#index-User-Option-174"> &para;</a></span></dt>
+<dd><pre class="verbatim">How Up and Down move through Transient menu items.
+Continuous navigation crosses sections and wraps around the whole menu.
+Section wrapping cycles within the current section.  Section stops keep
+point at its first or last item and play a boundary cue.  Left and Right
+move between sections in every style.  This setting applies globally.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+section-wrap
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-175"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-transient-section-announcement-order</var><a class="copiable-link" href="#index-User-Option-175"> &para;</a></span></dt>
+<dd><pre class="verbatim">How Transient navigation announces items and sections.
+Item first speaks the item, then the section name and position.  Section
+first speaks the section name and position before the item.  By movement
+speaks only the section for section navigation and only the item for item
+navigation, even across sections.  Section navigation still selects the
+first item; C-c l repeats it without moving when that review key is available.
+This setting applies globally, including Magit, and does not change navigation.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+section-first
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-176"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-transient-verbose-descriptions</var><a class="copiable-link" href="#index-User-Option-176"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether Transient items include their command documentation summaries.
+When enabled, retain each label and value and add the first line of the
+command’s docstring.  This applies to all Transient menus, including Magit.
+Items without command documentation keep their labels; Transient’s native
+infix controls keep their usual descriptions.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+</div>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="emacsvox_002dtreesit.html">emacsvox-treesit</a>, Previous: <a href="emacsvox_002dtodo_002dmode.html">emacsvox-todo-mode</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="emacsvox_002dtreesit.html">emacsvox-treesit</a>, Previous: <a href="emacsvox_002dtone_002deditor.html">emacsvox-tone-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

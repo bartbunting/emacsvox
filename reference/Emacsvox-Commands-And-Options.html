@@ -68,7 +68,7 @@ is useful in understanding how emacsvox works with a given package;
 thus, when learning to use the Emacs Web Browser (<abbr class="acronym">EWW</abbr>), read
 the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/EWW.html#EWW">(emacs)EWW</a> documentation, then  See <a class="xref" href="emacsvox_002deww.html">emacsvox-eww</a>.
 </p>
-<p>This chapter documents a total of 1623 commands and 224 options.
+<p>This chapter documents a total of 1670 commands and 243 options.
 </p>
 
 <ul class="mini-toc">
@@ -101,6 +101,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002daural_002dhistory.html">emacsvox-aural-history</a></li>
 <li><a href="emacsvox_002daural_002dhome.html">emacsvox-aural-home</a></li>
 <li><a href="emacsvox_002daural_002dinspection.html">emacsvox-aural-inspection</a></li>
+<li><a href="emacsvox_002daural_002dmenu.html">emacsvox-aural-menu</a></li>
 <li><a href="emacsvox_002daural_002doverrides.html">emacsvox-aural-overrides</a></li>
 <li><a href="emacsvox_002daural_002dplanner.html">emacsvox-aural-planner</a></li>
 <li><a href="emacsvox_002daural_002dpreview.html">emacsvox-aural-preview</a></li>
@@ -134,6 +135,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002daural_002dvoice_002dediting.html">emacsvox-aural-voice-editing</a></li>
 <li><a href="emacsvox_002daural_002dvoice_002deditor.html">emacsvox-aural-voice-editor</a></li>
 <li><a href="emacsvox_002daural_002dvoice_002dengine_002dcontrols.html">emacsvox-aural-voice-engine-controls</a></li>
+<li><a href="emacsvox_002daural_002dvoice_002dmenu.html">emacsvox-aural-voice-menu</a></li>
 <li><a href="emacsvox_002daural_002dvoice_002dpalettes.html">emacsvox-aural-voice-palettes</a></li>
 <li><a href="emacsvox_002daural_002dvoice_002druntime.html">emacsvox-aural-voice-runtime</a></li>
 <li><a href="emacsvox_002daural_002dvoice_002dworkbench.html">emacsvox-aural-voice-workbench</a></li>
@@ -150,6 +152,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dcalculator.html">emacsvox-calculator</a></li>
 <li><a href="emacsvox_002dcalendar.html">emacsvox-calendar</a></li>
 <li><a href="emacsvox_002dcalibredb.html">emacsvox-calibredb</a></li>
+<li><a href="emacsvox_002dcapitalization.html">emacsvox-capitalization</a></li>
 <li><a href="emacsvox_002dchess.html">emacsvox-chess</a></li>
 <li><a href="emacsvox_002dcider.html">emacsvox-cider</a></li>
 <li><a href="emacsvox_002dclojure.html">emacsvox-clojure</a></li>
@@ -233,7 +236,9 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dibuffer.html">emacsvox-ibuffer</a></li>
 <li><a href="emacsvox_002dido.html">emacsvox-ido</a></li>
 <li><a href="emacsvox_002diedit.html">emacsvox-iedit</a></li>
+<li><a href="emacsvox_002dindentation.html">emacsvox-indentation</a></li>
 <li><a href="emacsvox_002dinfo.html">emacsvox-info</a></li>
+<li><a href="emacsvox_002dinteraction.html">emacsvox-interaction</a></li>
 <li><a href="emacsvox_002dispell.html">emacsvox-ispell</a></li>
 <li><a href="emacsvox_002divy.html">emacsvox-ivy</a></li>
 <li><a href="emacsvox_002djournalctl.html">emacsvox-journalctl</a></li>
@@ -241,6 +246,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dkeymap.html">emacsvox-keymap</a></li>
 <li><a href="emacsvox_002dkmacro.html">emacsvox-kmacro</a></li>
 <li><a href="emacsvox_002dlibrivox.html">emacsvox-librivox</a></li>
+<li><a href="emacsvox_002dline_002dcues.html">emacsvox-line-cues</a></li>
 <li><a href="emacsvox_002dlispy.html">emacsvox-lispy</a></li>
 <li><a href="emacsvox_002dlua.html">emacsvox-lua</a></li>
 <li><a href="emacsvox_002dm_002dplayer.html">emacsvox-m-player</a></li>
@@ -266,6 +272,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dorg_002dsrs.html">emacsvox-org-srs</a></li>
 <li><a href="emacsvox_002dorgalist.html">emacsvox-orgalist</a></li>
 <li><a href="emacsvox_002doutline.html">emacsvox-outline</a></li>
+<li><a href="emacsvox_002doutput_002dsettings.html">emacsvox-output-settings</a></li>
 <li><a href="emacsvox_002dpackage.html">emacsvox-package</a></li>
 <li><a href="emacsvox_002dperl.html">emacsvox-perl</a></li>
 <li><a href="emacsvox_002dpipewire.html">emacsvox-pipewire</a></li>
@@ -291,6 +298,10 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dsage.html">emacsvox-sage</a></li>
 <li><a href="emacsvox_002dsdcv.html">emacsvox-sdcv</a></li>
 <li><a href="emacsvox_002dses.html">emacsvox-ses</a></li>
+<li><a href="emacsvox_002dsettings.html">emacsvox-settings</a></li>
+<li><a href="emacsvox_002dsettings_002dchanges.html">emacsvox-settings-changes</a></li>
+<li><a href="emacsvox_002dsettings_002dintegrations.html">emacsvox-settings-integrations</a></li>
+<li><a href="emacsvox_002dsettings_002dworkflows.html">emacsvox-settings-workflows</a></li>
 <li><a href="emacsvox_002dsetup.html">emacsvox-setup</a></li>
 <li><a href="emacsvox_002dsgml_002dmode.html">emacsvox-sgml-mode</a></li>
 <li><a href="emacsvox_002dsh_002dscript.html">emacsvox-sh-script</a></li>
@@ -300,6 +311,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dsounds.html">emacsvox-sounds</a></li>
 <li><a href="emacsvox_002dspeak.html">emacsvox-speak</a></li>
 <li><a href="emacsvox_002dspeedbar.html">emacsvox-speedbar</a></li>
+<li><a href="emacsvox_002dspelling.html">emacsvox-spelling</a></li>
 <li><a href="emacsvox_002dsql.html">emacsvox-sql</a></li>
 <li><a href="emacsvox_002dsudoku.html">emacsvox-sudoku</a></li>
 <li><a href="emacsvox_002dsupercite.html">emacsvox-supercite</a></li>
@@ -316,6 +328,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="emacsvox_002dtetris.html">emacsvox-tetris</a></li>
 <li><a href="emacsvox_002dtexinfo.html">emacsvox-texinfo</a></li>
 <li><a href="emacsvox_002dtodo_002dmode.html">emacsvox-todo-mode</a></li>
+<li><a href="emacsvox_002dtone_002deditor.html">emacsvox-tone-editor</a></li>
 <li><a href="emacsvox_002dtransient.html">emacsvox-transient</a></li>
 <li><a href="emacsvox_002dtreesit.html">emacsvox-treesit</a></li>
 <li><a href="emacsvox_002dtypo.html">emacsvox-typo</a></li>
@@ -352,6 +365,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="omaps.html">omaps</a></li>
 <li><a href="omnivox_002dcatalogue.html">omnivox-catalogue</a></li>
 <li><a href="omnivox_002dchoice_002dcodec.html">omnivox-choice-codec</a></li>
+<li><a href="omnivox_002dengine_002dconfiguration.html">omnivox-engine-configuration</a></li>
 <li><a href="omnivox_002dengine_002dsettings.html">omnivox-engine-settings</a></li>
 <li><a href="omnivox_002despeak_002dvariants.html">omnivox-espeak-variants</a></li>
 <li><a href="omnivox_002dlibrary.html">omnivox-library</a></li>
@@ -361,6 +375,7 @@ the See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/h
 <li><a href="omnivox_002dparameters_002dcodec.html">omnivox-parameters-codec</a></li>
 <li><a href="omnivox_002dpreview.html">omnivox-preview</a></li>
 <li><a href="omnivox_002dpunctuation.html">omnivox-punctuation</a></li>
+<li><a href="omnivox_002dpunctuation_002dprofiles.html">omnivox-punctuation-profiles</a></li>
 <li><a href="omnivox_002dremote.html">omnivox-remote</a></li>
 <li><a href="omnivox_002dvoices.html">omnivox-voices</a></li>
 <li><a href="outloud_002dvoices.html">outloud-voices</a></li>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Agent Shell Speech And Privacy (Emacsvox User Manual)</title>
+
+<meta name="description" content="Agent Shell Speech And Privacy (Emacsvox User Manual)">
+<meta name="keywords" content="Agent Shell Speech And Privacy (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Agent-Shell-Permissions.html" rel="next" title="Agent Shell Permissions">
+<link href="Answering-Agent-Questions.html" rel="prev" title="Answering Agent Questions">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Agent-Shell-Speech-And-Privacy">
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Permissions.html" accesskey="n" rel="next">Respond to urgent permissions</a>, Previous: <a href="Answering-Agent-Questions.html" accesskey="p" rel="prev">Answer an agent&rsquo;s question</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Choose-automatic-speech-and-privacy"><span>11.3 Choose automatic speech and privacy<a class="copiable-link" href="#Choose-automatic-speech-and-privacy"> &para;</a></span></h3>
+
+<p>The focused session defaults to <code class="code">response</code>: completed answers and routine
+completion feedback are presented, while thought, plan, and tool chatter is
+suppressed.  An unfocused session defaults to <code class="code">notify</code>: its notification
+names the session but does not disclose response or tool content.
+</p>
+<dl class="table">
+<dt><code class="code">full</code></dt>
+<dd><p>Speak responses plus configured thought, plan, and tool detail.  Full tool
+output can contain commands, file contents, or other sensitive provider data.
+</p></dd>
+<dt><code class="code">response</code></dt>
+<dd><p>Speak completed agent responses while suppressing routine thought, plan, and
+tool content.
+</p></dd>
+<dt><code class="code">notify</code></dt>
+<dd><p>Present routine completion without reading the response body.
+</p></dd>
+<dt><code class="code">quiet</code></dt>
+<dd><p>Suppress routine automatic feedback.  Explicit inspection remains available.
+</p></dd>
+<dt><code class="code">auto</code></dt>
+<dd><p>Use <code class="code">emacsvox-agent-shell-foreground-speech-level</code> or
+<code class="code">emacsvox-agent-shell-background-speech-level</code> according to focus.
+</p></dd>
+</dl>
+
+<p>Press <kbd class="kbd">C-c C-q</kbd> to run
+<code class="code">emacsvox-agent-shell-select-speech-level</code> and choose the current
+session&rsquo;s level, including <code class="code">auto</code>.  Press <kbd class="kbd">C-c C-S-q</kbd> to run
+<code class="code">emacsvox-agent-shell-select-background-speech-level</code> and change the
+shared background default.
+<kbd class="kbd">M-x emacsvox-agent-shell-cycle-speech-level</kbd> cycles toward less routine
+speech; use a prefix argument to restore <code class="code">auto</code>.
+</p>
+<ul class="mini-toc">
+<li><a href="#Adjust-speech-in-the-settings-menu" accesskey="1">Adjust speech in the settings menu</a></li>
+<li><a href="#Understand-automatic-speech-limits" accesskey="2">Understand automatic speech limits</a></li>
+</ul>
+<div class="subsection-level-extent" id="Adjust-speech-in-the-settings-menu">
+<h4 class="subsection"><span>11.3.1 Adjust speech in the settings menu<a class="copiable-link" href="#Adjust-speech-in-the-settings-menu"> &para;</a></span></h4>
+
+<p>Press <kbd class="kbd">C-e S</kbd> in an Agent Shell buffer or its viewport for focused Emacsvox
+settings. The same menu is available through <kbd class="kbd">C-e H j c</kbd> and the integration
+chooser. <kbd class="kbd">s</kbd> opens choices for the temporary session override. <kbd class="kbd">f</kbd> and <kbd class="kbd">b</kbd>
+open foreground and background defaults; <kbd class="kbd">t</kbd> and <kbd class="kbd">o</kbd> open thought and tool-output
+choices. Each list starts on the current value and explains its choices.
+Browse with arrows, press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to apply and return, or <kbd class="kbd">q</kbd> to cancel. Press
+<kbd class="kbd">?</kbd> followed by a choice&rsquo;s key for its effect and scope; <kbd class="kbd">q</kbd> returns from
+Help. <kbd class="kbd">? ?</kbd> opens the menu overview.
+</p>
+<p>The <kbd class="kbd">p</kbd>, <kbd class="kbd">c</kbd> and <kbd class="kbd">l</kbd> controls toggle permission speech, tool-call announcements
+and processing cues. Thought and tool content still depend on the effective
+speech level.
+</p>
+<p>The <kbd class="kbd">a</kbd>, <kbd class="kbd">n</kbd> and <kbd class="kbd">k</kbd> controls set automatic-content, line-navigation and
+block-navigation character limits. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts an exact positive integer or
+<code class="code">none</code>; Shift-left/right adjusts by 100. For line navigation, <code class="code">none</code> restores
+the core long-line policy. For the other limits it allows complete content.
+<kbd class="kbd">w</kbd> saves the displayed global defaults through Customize, excluding the
+session override. <kbd class="kbd">A</kbd> opens advanced settings; <kbd class="kbd">q</kbd> returns. From the direct
+<kbd class="kbd">C-e S</kbd> entry, <kbd class="kbd">q</kbd> closes the menu and leaves you in the captured buffer.
+</p>
+<p>Thought content defaults to an icon under
+<code class="code">emacsvox-agent-shell-speak-thought-process</code>.  Tool feedback is separately
+controlled by <code class="code">emacsvox-agent-shell-speak-tool-calls</code> and
+<code class="code">emacsvox-agent-shell-tool-output-verbosity</code>.  Selecting background
+<code class="code">response</code> or <code class="code">full</code>, thought <code class="code">speak</code>, or full tool output is an
+explicit disclosure choice.
+</p>
+<p>At <code class="code">full</code> speech level, tool verbosity <code class="code">full</code> reads the tool&rsquo;s rendered output,
+including Codex command output and textual diffs.  Changed output can be read
+even when the tool&rsquo;s status has not changed; identical updates are suppressed.
+Tool verbosity <code class="code">status</code> plays status cues as tools start and finish.
+Tool updates, steering outcomes, queue changes, and confirmed setting changes
+use the notification lane, leaving navigation speech independent.
+</p>
+</div>
+<div class="subsection-level-extent" id="Understand-automatic-speech-limits">
+<h4 class="subsection"><span>11.3.2 Understand automatic speech limits<a class="copiable-link" href="#Understand-automatic-speech-limits"> &para;</a></span></h4>
+
+<p>Automatic response, tool, error, permission, and similar text is limited by
+<code class="code">emacsvox-agent-shell-automatic-content-max-characters</code>, which defaults to
+2,000 characters.  A shortened presentation gives exact omitted character and
+line counts and tells you where to inspect the full content.  The complete text
+rendered by Agent Shell stays in its buffer; Emacsvox limits the automatic
+announcement rather than editing that displayed text. Agent Shell separately shortens tool
+output lines longer than 32,768 characters, keeping their beginning and end with
+an omitted-character count. Full tool speech reads that notice; the removed
+middle is not available by reading the buffer.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Permissions.html">Respond to urgent permissions</a>, Previous: <a href="Answering-Agent-Questions.html">Answer an agent&rsquo;s question</a>, Up: <a href="Agent-Shell.html">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

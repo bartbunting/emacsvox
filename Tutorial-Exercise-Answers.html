@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Exercise Answers (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Exercise Answers (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Exercise Answers (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Next-Steps.html" rel="next" title="Tutorial Next Steps">
+<link href="Tutorial-Voice-Experiments.html" rel="prev" title="Tutorial Voice Experiments">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Exercise-Answers">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Next-Steps.html" accesskey="n" rel="next">Finish and choose your next task</a>, Previous: <a href="Tutorial-Voice-Experiments.html" accesskey="p" rel="prev">Lesson 6: preview and keep a voice experiment</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Exercise-answers"><span>4.8 Exercise answers<a class="copiable-link" href="#Exercise-answers"> &para;</a></span></h3>
+
+<p>Use these answers to check your approach, not as a script you must memorise.
+Equivalent commands are useful when their scope and result are the same.
+In Info, <kbd class="kbd">l</kbd> retraces the link from an exercise to its answer.
+</p>
+<ul class="mini-toc">
+<li><a href="#Answers_003a-lesson-1" accesskey="1">Answers: lesson 1</a></li>
+<li><a href="#Answers_003a-lesson-2" accesskey="2">Answers: lesson 2</a></li>
+<li><a href="#Answers_003a-lesson-3" accesskey="3">Answers: lesson 3</a></li>
+<li><a href="#Answers_003a-lesson-4" accesskey="4">Answers: lesson 4</a></li>
+<li><a href="#Answers_003a-lesson-5" accesskey="5">Answers: lesson 5</a></li>
+<li><a href="#Answers_003a-lesson-6" accesskey="6">Answers: lesson 6</a></li>
+</ul>
+<div class="subsection-level-extent" id="Answers_003a-lesson-1">
+<h4 class="subsection"><span>4.8.1 Answers: lesson 1<a class="copiable-link" href="#Answers_003a-lesson-1"> &para;</a></span></h4>
+
+<a class="anchor" id="tutorial_002danswer_002d1"></a>
+<p><strong class="strong">1A.</strong> With the unmodified example, <kbd class="kbd">M-&lt; C-n C-n C-n</kbd> reaches the Check line.
+<kbd class="kbd">C-e l</kbd> reads it without moving, so two repetitions leave the editing position
+unchanged. A different number of inserted lines changes the count; search is
+more dependable when you no longer know the exact layout.
+</p>
+<p><strong class="strong">1B.</strong> Use <kbd class="kbd">C-e b</kbd>, then <kbd class="kbd">C-e s</kbd>. <kbd class="kbd">C-e m</kbd> identifies the buffer and mode;
+<kbd class="kbd">C-e l</kbd> reads the line at point. Stopping speech does not delete text, move
+to another buffer, or disable later speech commands.
+</p>
+</div>
+<div class="subsection-level-extent" id="Answers_003a-lesson-2">
+<h4 class="subsection"><span>4.8.2 Answers: lesson 2<a class="copiable-link" href="#Answers_003a-lesson-2"> &para;</a></span></h4>
+
+<a class="anchor" id="tutorial_002danswer_002d2"></a>
+<p><strong class="strong">2A.</strong> <kbd class="kbd">M-&lt; C-s green <kbd class="key">RET</kbd></kbd> places point after green. <kbd class="kbd">M-<kbd class="key">DEL</kbd></kbd> removes that
+word; typing <code class="code">blue</code> supplies the replacement. Read the whole line to catch
+spacing or punctuation mistakes. Restore it with a search for blue followed
+by the same replacement procedure. Alternatively, use <code class="code">undo-only</code> and inspect
+after each step, as in the lesson. Deletion and insertion may need separate
+undos. Stop at the original line rather than assuming a fixed undo count.
+</p>
+<p><strong class="strong">2B.</strong> Before <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, the letters extend the search query. No document edit
+has occurred. Accept a successful search, then insert the text at point.
+</p>
+</div>
+<div class="subsection-level-extent" id="Answers_003a-lesson-3">
+<h4 class="subsection"><span>4.8.3 Answers: lesson 3<a class="copiable-link" href="#Answers_003a-lesson-3"> &para;</a></span></h4>
+
+<a class="anchor" id="tutorial_002danswer_002d3"></a>
+<p><strong class="strong">3A.</strong> Switch to the notes by name, use <kbd class="kbd">M-&gt;</kbd> to reach their end, add a newline
+and a short sentence, then switch back by name. Neither switch closes the
+other buffer. <kbd class="kbd">C-e m</kbd> and line reading distinguish them.
+</p>
+<p><strong class="strong">3B.</strong> <kbd class="kbd">C-h k C-e s</kbd> describes the effective binding. With the default maps,
+the command is <code class="code">tts-stop</code>. <kbd class="kbd">C-h w tts-stop <kbd class="key">RET</kbd></kbd> reports its keys in the
+current context. Help describes the binding; it does not invoke it as the
+requested action. If you need the keys available in the practice document,
+return there before using <kbd class="kbd">C-h w</kbd>. A Help buffer has its own local bindings.
+</p>
+</div>
+<div class="subsection-level-extent" id="Answers_003a-lesson-4">
+<h4 class="subsection"><span>4.8.4 Answers: lesson 4<a class="copiable-link" href="#Answers_003a-lesson-4"> &para;</a></span></h4>
+
+<a class="anchor" id="tutorial_002danswer_002d4"></a>
+<p><strong class="strong">4A.</strong> From Monday&rsquo;s cell, enter with <kbd class="kbd">C-e C-t C-r</kbd>, press Down for Tuesday,
+then <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> twice to reach Status. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> reads <code class="code">Planned</code>. <kbd class="kbd">q</kbd> restores normal
+Org editing. While table reading is active, these operations do not realign
+the source, add rows, or evaluate formulas.
+</p>
+<p><strong class="strong">4B.</strong> <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> on the heading changes visibility. Return to it and cycle open,
+or use <kbd class="kbd">C-u C-u C-u <kbd class="key">TAB</kbd></kbd> to expose the whole document. The hidden items
+never left the buffer. Text undo would affect edits, not provide the intended
+folding operation.
+</p>
+</div>
+<div class="subsection-level-extent" id="Answers_003a-lesson-5">
+<h4 class="subsection"><span>4.8.5 Answers: lesson 5<a class="copiable-link" href="#Answers_003a-lesson-5"> &para;</a></span></h4>
+
+<a class="anchor" id="tutorial_002danswer_002d5"></a>
+<p><strong class="strong">5A.</strong> Search accepts a result by selecting its menu control. The separate
+activation step is what can open an editor or change a value. Reading Help
+and leaving without activation does not change the punctuation policy.
+</p>
+<p><strong class="strong">5B.</strong> Closing keeps the chosen live adjustment. Restore the recorded policy
+in the buffer&rsquo;s punctuation menu: <kbd class="kbd">r</kbd> for Automatic, or <kbd class="kbd">p</kbd> and the recorded
+explicit choice. Text undo does not restore speech settings. Uppercase <kbd class="kbd">S</kbd>
+would save a default, so it is deliberately absent from this exercise.
+</p>
+</div>
+<div class="subsection-level-extent" id="Answers_003a-lesson-6">
+<h4 class="subsection"><span>4.8.6 Answers: lesson 6<a class="copiable-link" href="#Answers_003a-lesson-6"> &para;</a></span></h4>
+
+<a class="anchor" id="tutorial_002danswer_002d6"></a>
+<p><strong class="strong">6A.</strong> Keep the practice draft on leaving its editor, return to the document,
+and use <kbd class="kbd">C-e H p d</kbd> to resume that specific draft. Inspect it, then leave
+with Discard. Use the editor and menu return commands, or select the practice
+buffer by name once the menus are closed. Do not discard another draft to
+make the chooser empty.
+</p>
+<p><strong class="strong">6B.</strong> Preview auditions working values. Keep draft retains unsaved work in
+this Emacs session. Save to collection writes the destination without selecting
+an inactive palette. Activate chooses the palette for this session. Use at
+Startup changes its selection in a saved Presentation Profile; it is not the
+same as saving the palette. The required exercise uses Preview and Keep draft,
+then discards. The optional exercise additionally creates and saves a palette
+and optionally activates it before restoring the original selection. Neither
+exercise needs Use at Startup.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Next-Steps.html">Finish and choose your next task</a>, Previous: <a href="Tutorial-Voice-Experiments.html">Lesson 6: preview and keep a voice experiment</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

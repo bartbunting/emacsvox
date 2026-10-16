@@ -37,27 +37,21 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Status-Information.html" accesskey="n" rel="next">Find Out Where You Are</a>, Previous: <a href="Speech-System.html" accesskey="p" rel="prev">Adjust Speech While You Work</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Hear-Structure-With-Voice-Lock"><span>3.7 Hear Structure With Voice Lock<a class="copiable-link" href="#Hear-Structure-With-Voice-Lock"> &para;</a></span></h3>
+<h3 class="section" id="Hear-Structure-With-Voice-Lock"><span>5.9 Hear Structure With Voice Lock<a class="copiable-link" href="#Hear-Structure-With-Voice-Lock"> &para;</a></span></h3>
 
-<p>Voice Lock is enabled automatically in supported buffers.  It maps faces and
-other structural text properties to speech personalities, allowing comments,
-strings, headings, links, and other elements to sound distinct without adding
-words to the document.
+<p>Voice Lock starts automatically in supported buffers. It maps faces and
+structural text properties to personalities, making comments, strings,
+headings, links, and other text sound distinct without extra words.
 </p>
-<p>Try it in source code, Org, Info, or EWW.  Move between two differently styled
-elements, such as a comment and a string or a heading and a link.  Press
-<kbd class="kbd">C-e d v</kbd> to turn Voice Lock off in that buffer, compare the same text,
-then press the key again to restore it.
+<p>Compare two styled elements in code, Org, Info, or EWW. Toggle <kbd class="kbd">C-e d v</kbd> locally,
+read the same elements, then toggle again to restore. <kbd class="kbd">C-e d C-v</kbd> changes
+Voice Lock globally. Disabling it removes that layer of voices, not ordinary
+speech, semantic feedback, tones, or icons.
 </p>
-<p>Use <kbd class="kbd">C-e d C-v</kbd> when you want to change Voice Lock globally.  Turning it
-off removes this layer of voice changes; it does not silence ordinary speech,
-semantic feedback, tones, or auditory icons.
-</p>
-<p>The exact personalities depend on the speech engine and active presentation
-settings.  For an explanation of the separate Voice Lock, face-presentation,
-and semantic-presentation layers, see <a class="ref" href="Voice-Lock.html">Voice Lock</a>.  Use
-<a class="ref" href="Aural-Presentation.html">Aural Presentation</a> when you want to choose voices, sounds, profiles, or
-other reusable presentation behavior.
+<p>The result depends on engine and presentation settings. Voice Lock, explicit
+face rules, and semantic rules are separate; see
+<a class="ref" href="Voice-Lock.html">Voice Lock</a> in Aural Presentation. Reusable voice, sound, and profile choices
+belong to that chapter rather than to a Voice Lock toggle.
 </p>
 </div>
 

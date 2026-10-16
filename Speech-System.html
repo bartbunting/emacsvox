@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Basic-Usage.html" rel="up" title="Basic Usage">
 <link href="Voice_002dlock.html" rel="next" title="Voice-lock">
-<link href="Reading.html" rel="prev" title="Reading">
+<link href="Searching-And-Replacing-Text.html" rel="prev" title="Searching And Replacing Text">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,25 +34,25 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Speech-System">
 <div class="nav-panel">
 <p>
-Next: <a href="Voice_002dlock.html" accesskey="n" rel="next">Hear Structure With Voice Lock</a>, Previous: <a href="Reading.html" accesskey="p" rel="prev">Reading And Navigating</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Voice_002dlock.html" accesskey="n" rel="next">Hear Structure With Voice Lock</a>, Previous: <a href="Searching-And-Replacing-Text.html" accesskey="p" rel="prev">Find and replace text carefully</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Adjust-Speech-While-You-Work"><span>3.6 Adjust Speech While You Work<a class="copiable-link" href="#Adjust-Speech-While-You-Work"> &para;</a></span></h3>
+<h3 class="section" id="Adjust-Speech-While-You-Work"><span>5.8 Adjust Speech While You Work<a class="copiable-link" href="#Adjust-Speech-While-You-Work"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-TTS"></a>
-
 <a class="index-entry-id" id="index-speech-system"></a>
-
 <a class="index-entry-id" id="index-speech-settings"></a>
 
-<p>Start with the controls in this section when speech is too fast, too detailed,
-or inappropriate for the current task.  Most settings apply only to the current
-buffer.  Press <kbd class="kbd">C-u</kbd> before a command when its help says that a prefix
-argument changes the default for all buffers.
+<p>Use <kbd class="kbd">C-e H s</kbd> for rate, punctuation, indentation, capitalisation, and typing
+feedback. It starts with the captured buffer&rsquo;s settings; <kbd class="kbd">g</kbd> switches scope,
+and <kbd class="kbd">C-u C-e H</kbd> starts the menu with global defaults. Individual controls
+retain their documented exceptions, such as global volume or phonetic delay.
 </p>
-<p>The generated
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <em class="emph">Emacsvox Reference Manual</em> contains the complete speech keymap, including specialist
-server and text-chunking controls.
+<p>Changing a global default is not necessarily saving it for restart. A menu&rsquo;s
+Save action records only its documented values, and local or mode settings can
+still override defaults. <a data-manual="emacsvox" href="./Saving-And-Startup.html#Saving-And-Startup">Choose What Persists</a> explains those distinctions.
+The direct keys below are alternatives to menu navigation; use <kbd class="kbd">C-h k</kbd> to
+check a command&rsquo;s global prefix form before using it.
 </p>
 
 <ul class="mini-toc">

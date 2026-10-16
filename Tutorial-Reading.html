@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Reading (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Reading (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Reading (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Editing.html" rel="next" title="Tutorial Editing">
+<link href="Tutorial-Practice-Buffer.html" rel="prev" title="Tutorial Practice Buffer">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Reading">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Editing.html" accesskey="n" rel="next">Lesson 2: find, edit, and recover text</a>, Previous: <a href="Tutorial-Practice-Buffer.html" accesskey="p" rel="prev">Prepare a practice buffer</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Lesson-1_003a-read-and-locate-point"><span>4.2 Lesson 1: read and locate point<a class="copiable-link" href="#Lesson-1_003a-read-and-locate-point"> &para;</a></span></h3>
+
+<p>Emacs calls the editing position <em class="emph">point</em>. Movement changes point and Emacsvox
+speaks what you reach. Short inspections, such as reading a line or character,
+leave point in place. Learning that distinction makes it easier to recover
+when speech is interrupted or you are unsure where the next edit will occur.
+</p>
+<ol class="enumerate">
+<li> In the practice buffer, press <kbd class="kbd">M-&lt;</kbd>, then <kbd class="kbd">C-n</kbd>. You reach the line about
+the green notebook and hear its text.
+</li><li> Press <kbd class="kbd">C-e l</kbd> twice. Each invocation reads that line again without moving
+point. Now press <kbd class="kbd">C-n</kbd>: you reach the sentence about being ready, not a line
+farther down because of the repeated reading.
+</li><li> Press <kbd class="kbd">C-p</kbd> to return to the notebook line, then <kbd class="kbd">C-a</kbd> to reach its start.
+<kbd class="kbd">C-e c</kbd> reads the character at point. Use <kbd class="kbd">C-f</kbd> to move one character
+forward and <kbd class="kbd">C-b</kbd> to move back. Point moves only with the movement commands.
+</li><li> Press <kbd class="kbd">C-e b</kbd> to start reading the buffer and <kbd class="kbd">C-e s</kbd> to stop that speech.
+Then press <kbd class="kbd">C-e l</kbd>. It still works: stopping an utterance has not switched
+speech off or closed the document.
+</li></ol>
+
+<p>This small-buffer exercise uses <kbd class="kbd">C-e b</kbd>, which leaves point in place.
+Tracked reading with <kbd class="kbd">C-e i</kbd> is different: on a supporting speech server it
+advances point by chunks. Stopping leaves a chunk boundary, not necessarily
+the exact word last heard. See <a class="ref" href="Reading-From-Point.html">Read from point, stop, and start again</a>
+when you are ready for longer reading; it is not required for this exercise.
+</p>
+<p>The exact voice and pronunciation depend on your current settings. Check the
+text you reached, not whether your system sounds like someone else&rsquo;s.
+<kbd class="kbd">C-e m</kbd> identifies the buffer and mode whenever your context is unclear.
+</p>
+<p>If <kbd class="kbd">M-&lt;</kbd> is intercepted by your desktop or screen reader, run
+<kbd class="kbd">M-x beginning-of-buffer <kbd class="key">RET</kbd></kbd> instead. This is an Emacs command, not a
+requirement to change screen-reader configuration.
+</p>
+<ul class="mini-toc">
+<li><a href="#Try-it" accesskey="1">Try it</a></li>
+</ul>
+<div class="subsection-level-extent" id="Try-it">
+<h4 class="subsection"><span>4.2.1 Try it<a class="copiable-link" href="#Try-it"> &para;</a></span></h4>
+
+<p><strong class="strong">1A.</strong> From the start of the buffer, reach the line beginning <code class="code">Check</code> using
+line movement. Read it twice without changing point.
+</p>
+<p><strong class="strong">1B.</strong> Start a longer reading, stop it, and establish both which buffer you
+are in and what its current line contains. Do not restart Emacs or speech.
+</p>
+<p>See <a class="ref" href="Tutorial-Exercise-Answers.html#tutorial_002danswer_002d1">Answers for lesson 1</a>.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Editing.html">Lesson 2: find, edit, and recover text</a>, Previous: <a href="Tutorial-Practice-Buffer.html">Prepare a practice buffer</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

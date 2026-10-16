@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Opening A Document (Emacsvox User Manual)</title>
+
+<meta name="description" content="Opening A Document (Emacsvox User Manual)">
+<meta name="keywords" content="Opening A Document (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Working-With-Files.html" rel="up" title="Working With Files">
+<link href="Saving-A-Working-Copy.html" rel="next" title="Saving A Working Copy">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Opening-A-Document">
+<div class="nav-panel">
+<p>
+Next: <a href="Saving-A-Working-Copy.html" accesskey="n" rel="next">Save a separate working copy</a>, Up: <a href="Working-With-Files.html" accesskey="u" rel="up">Work with files and directories</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Open-a-document-and-check-its-identity"><span>9.1.1 Open a document and check its identity<a class="copiable-link" href="#Open-a-document-and-check-its-identity"> &para;</a></span></h4>
+
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-x C-f</kbd>. At the file prompt, choose the existing text file you
+want to read. Complete or type its path, then press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Emacs selects
+the file&rsquo;s buffer; use <kbd class="kbd">C-e m</kbd> to hear its name and mode.
+</li><li> Press <kbd class="kbd">M-&lt;</kbd>, then <kbd class="kbd">C-e l</kbd> to read its first line. Check that the content
+is what you expected before editing. A missing filename can instead open
+an empty buffer for a new file. Opening that buffer alone has not created
+a saved document: check the name rather than assuming your text was lost.
+</li><li> If you need to confirm the full destination, use
+<kbd class="kbd">C-h v buffer-file-name <kbd class="key">RET</kbd></kbd>. This Help shows the pathname visited by the
+source buffer; <code class="code">nil</code> means that buffer is not visiting a file. Read Help
+as described in <a class="ref" href="Using-Online-Help.html">Using Online Help</a>, then return to the document by
+its buffer name with <kbd class="kbd">C-x b</kbd>. Do not edit while Help is selected.
+</li></ol>
+
+<p>For reading without accidental text edits, use <kbd class="kbd">C-x C-r</kbd> in place of
+<kbd class="kbd">C-x C-f</kbd>. That opens the file read-only. A read-only buffer is different from
+a document with unsaved changes; do not remove the protection merely to make
+an unfamiliar command work.
+</p>
+<p>When you follow this task from Info or HTML, leave the manual available and
+switch to the document before trying its editing commands. In Emacs, <kbd class="kbd">C-x b</kbd>
+selects an existing buffer by name; <kbd class="kbd">C-x C-f</kbd> selects a file by its path.
+Those are different questions even when the buffer and file have similar names.
+</p>
+<p>To close a document buffer, use <kbd class="kbd">C-x k</kbd> and check the name and any unsaved-work
+prompt. That is not a file deletion. Unlike a Dired or Help buffer, an ordinary
+text buffer does not use <kbd class="kbd">q</kbd> to quit: typing it normally inserts a letter.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Saving-A-Working-Copy.html">Save a separate working copy</a>, Up: <a href="Working-With-Files.html">Work with files and directories</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

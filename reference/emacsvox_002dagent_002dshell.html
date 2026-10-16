@@ -105,8 +105,10 @@ See https://github.com/xenodium/agent-shell for agent-shell itself.
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward">emacsvox-agent-shell-table-exit-forward</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn">emacsvox-agent-shell-table-next-column</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow">emacsvox-agent-shell-table-next-row</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell">emacsvox-agent-shell-table-next-row-cell</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn">emacsvox-agent-shell-table-previous-column</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow">emacsvox-agent-shell-table-previous-row</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell">emacsvox-agent-shell-table-previous-row-cell</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod">emacsvox-agent-shell-table-select-speaking-method</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell">emacsvox-agent-shell-table-speak-cell</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn">emacsvox-agent-shell-table-speak-column</a></li>
@@ -162,7 +164,7 @@ selects the configured foreground or background level.
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002denable-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Enable Emacsvox support for agent-shell.
+<pre class="format-preformatted">Enable Emacsvox support for Agent Shell 0.85.3 or newer.
 </pre></div>
 </dd></dl>
 
@@ -587,8 +589,23 @@ Separate cells with tabs and omit Markdown separator syntax.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell">
+<h4 class="subsubsection"><span>2.10.1.38 emacsvox-agent-shell-table-next-row-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-next-row-cell</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical table rows down and speak the destination cell.
+Retain the current column and use the current table title settings.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.10.1.38 emacsvox-agent-shell-table-previous-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.39 emacsvox-agent-shell-table-previous-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn-1"></a>
@@ -602,7 +619,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow">
-<h4 class="subsubsection"><span>2.10.1.39 emacsvox-agent-shell-table-previous-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.40 emacsvox-agent-shell-table-previous-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow-1"></a>
@@ -615,8 +632,23 @@ Separate cells with tabs and omit Markdown separator syntax.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell">
+<h4 class="subsubsection"><span>2.10.1.41 emacsvox-agent-shell-table-previous-row-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-row-cell</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical table rows up and speak the destination cell.
+Retain the current column and use the current table title settings.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod">
-<h4 class="subsubsection"><span>2.10.1.40 emacsvox-agent-shell-table-select-speaking-method<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.42 emacsvox-agent-shell-table-select-speaking-method<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-select-speaking-method</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod-1"></a>
@@ -631,7 +663,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell">
-<h4 class="subsubsection"><span>2.10.1.41 emacsvox-agent-shell-table-speak-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.43 emacsvox-agent-shell-table-speak-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-cell</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell-1"></a>
@@ -643,7 +675,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn">
-<h4 class="subsubsection"><span>2.10.1.42 emacsvox-agent-shell-table-speak-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.44 emacsvox-agent-shell-table-speak-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-column</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn-1"></a>
@@ -655,7 +687,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext">
-<h4 class="subsubsection"><span>2.10.1.43 emacsvox-agent-shell-table-speak-context<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.45 emacsvox-agent-shell-table-speak-context<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-context</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext-1"></a>
@@ -667,7 +699,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions">
-<h4 class="subsubsection"><span>2.10.1.44 emacsvox-agent-shell-table-speak-dimensions<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.46 emacsvox-agent-shell-table-speak-dimensions<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-dimensions</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions-1"></a>
@@ -679,7 +711,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow">
-<h4 class="subsubsection"><span>2.10.1.45 emacsvox-agent-shell-table-speak-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.47 emacsvox-agent-shell-table-speak-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-row</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow-1"></a>

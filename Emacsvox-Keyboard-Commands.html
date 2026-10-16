@@ -16,15 +16,12 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Copyright.html" rel="next" title="Copyright">
-<link href="Running-Terminal-Based-Applications.html" rel="prev" title="Running Terminal Based Applications">
+<link href="Finding-Tasks.html" rel="next" title="Finding Tasks">
+<link href="Speech-Backends.html" rel="prev" title="Speech Backends">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
-div.example {margin-left: 3.2em}
-kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
-ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -36,73 +33,38 @@ ul.mark-bullet {list-style-type: disc}
 <div class="chapter-level-extent" id="Emacsvox-Keyboard-Commands">
 <div class="nav-panel">
 <p>
-Next: <a href="Copyright.html" accesskey="n" rel="next">Copyright</a>, Previous: <a href="Running-Terminal-Based-Applications.html" accesskey="p" rel="prev">Term Terminal Access</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Finding-Tasks.html" accesskey="n" rel="next">Find a task</a>, Previous: <a href="Speech-Backends.html" accesskey="p" rel="prev">Speech Backends</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Emacsvox-Keyboard-Commands_002e"><span>13 Emacsvox Keyboard Commands.<a class="copiable-link" href="#Emacsvox-Keyboard-Commands_002e"> &para;</a></span></h2>
+<h2 class="chapter" id="Emacsvox-Keyboard-Commands_002e"><span>15 Emacsvox Keyboard Commands.<a class="copiable-link" href="#Emacsvox-Keyboard-Commands_002e"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Emacs-Keyboard-Commands"></a>
+<a class="index-entry-id" id="index-everyday-commands"></a>
+<a class="index-entry-id" id="index-keyboard-shortcuts"></a>
+<a class="index-entry-id" id="index-command-reference"></a>
 
-<p>This chapter explains how to discover the bindings that are current in
-your Emacs session.  For the small starter set, see <a class="ref" href="Basic-Usage.html">Basic Usage</a>.
-For the complete generated default bindings, see
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <em class="emph">Emacsvox Reference Manual</em>.
+<p>Use this chapter to recall an everyday command and check its important
+conditions before acting. <a class="ref" href="Emacs-Key-Notation.html">Read the key instructions</a> explains modifiers,
+capital letters and successive keypresses. <a data-manual="emacsvox" href="./Basic-Usage.html#Basic-Usage">Basic Usage</a> teaches the reading
+and editing workflows; the links beside each reminder lead to their details.
 </p>
-<p>Most Emacsvox commands use one of these two default prefixes:
+<p>These are default keys, used without a prefix argument unless one is shown.
+Application keymaps and personal bindings can change their meaning. A short
+reference cannot replace a terminal&rsquo;s or editor&rsquo;s own instructions. Use
+<a class="ref" href="Using-Online-Help.html">live Help</a> in the affected buffer when a binding differs, and
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">the generated keymap reference</a> for the full default inventory.
 </p>
-<dl class="table">
-<dt><kbd class="kbd">C-e</kbd></dt>
-<dd><p>The main Emacsvox keymap.
-</p></dd>
-<dt><kbd class="kbd">C-e d</kbd></dt>
-<dd><p>The text-to-speech keymap.
-</p></dd>
-</dl>
 
-<p>Emacsvox also defines integration-specific and optional convenience
-maps.  Which of those keys are available depends on the current major
-and minor modes, your window system or terminal, and your configuration;
-therefore this conceptual chapter does not duplicate their inventories.
-</p>
-<p>To choose a different main prefix, set <code class="code">emacsvox-prefix</code> before loading
-Emacsvox.  For example:
-</p>
-<div class="example lisp">
-<pre class="lisp-preformatted">(setq emacsvox-prefix (kbd &quot;C-c e&quot;))
-</pre></div>
-
-<p>With this setting, <kbd class="kbd">C-c e l</kbd> speaks the line and
-<kbd class="kbd">C-c e e</kbd> provides end-of-line recovery.  Evil, EXWM,
-widgets and Term use the prefix followed by <kbd class="kbd">e</kbd> for their
-corresponding recovery command when the prefix contains multiple events.
-Repeating such a prefix is also bound when the sequence is unused or already
-runs that recovery command.  Existing commands and submaps take precedence:
-<kbd class="kbd">C-c e C-c</kbd> retains selective display, so
-<kbd class="kbd">C-c e C-c e</kbd> is not installed as a recovery shortcut.
-Single-event prefixes retain their existing repeated-key behavior, including
-the default <kbd class="kbd">C-e C-e</kbd>.  Mode-local bindings can still shadow
-the chosen prefix; inspect them with Help.
-</p>
-<p>Use Emacs Help to inspect the effective result:
-</p>
-<ul class="itemize mark-bullet">
-<li><kbd class="kbd">C-h m</kbd> describes the modes and their bindings in the current buffer.
-
-</li><li><kbd class="kbd">C-h k</kbd>, followed by a key, describes the command that key invokes.
-
-</li><li>After typing a prefix such as <kbd class="kbd">C-e</kbd>, type <kbd class="kbd">C-h</kbd> to display that
-prefix&rsquo;s current bindings.
-</li></ul>
-
-<p>If live Help and this manual differ, live Help describes your running
-session.  Check customizations first, then compare the generated defaults
-in the <a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <em class="emph">Emacsvox Reference Manual</em>.
-</p>
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Next: <a href="Copyright.html">Copyright</a>, Previous: <a href="Running-Terminal-Based-Applications.html">Term Terminal Access</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+<ul class="mini-toc">
+<li><a href="Everyday-Reading-Commands.html" accesskey="1">Reading reminders</a></li>
+<li><a href="Everyday-Editing-Commands.html" accesskey="2">Editing reminders</a></li>
+<li><a href="Everyday-Workspace-Commands.html" accesskey="3">Files, buffers and windows</a></li>
+<li><a href="Everyday-Help-Commands.html" accesskey="4">Help and orientation</a></li>
+<li><a href="Everyday-Speech-Commands.html" accesskey="5">Speech and settings</a></li>
+<li><a href="Emacsvox-Key-Prefixes.html" accesskey="6">How prefixes and menus fit together</a></li>
+<li><a href="Emacsvox-Key-Prefixes.html#Choose-a-different-speech-prefix" accesskey="7">Choose a different speech prefix</a></li>
+<li><a href="Emacsvox-Key-Prefixes.html#Inspect-the-effective-bindings" accesskey="8">Inspect the effective bindings</a></li>
+</ul>
 </div>
 
 

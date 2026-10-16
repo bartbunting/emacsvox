@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Unconfirmed Speech Changes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Unconfirmed Speech Changes (Emacsvox User Manual)">
+<meta name="keywords" content="Unconfirmed Speech Changes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Recovering-Aural-Changes.html" rel="prev" title="Recovering Aural Changes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Unconfirmed-Speech-Changes">
+<div class="nav-panel">
+<p>
+Previous: <a href="Recovering-Aural-Changes.html" accesskey="p" rel="prev">Recover Unfinished Changes</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="An-Apply-result-is-unconfirmed"><span>8.13.8 An Apply result is unconfirmed<a class="copiable-link" href="#An-Apply-result-is-unconfirmed"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-timeout_002c-applying-speech-settings"></a>
+<a class="index-entry-id" id="index-Apply_002c-unconfirmed-result"></a>
+<a class="index-entry-id" id="index-did-my-change-succeed"></a>
+
+<p>Apply waits for acknowledgements from each speech stream. After an Omnivox
+timeout, Workbench reports <em class="emph">server outcome unconfirmed</em>, stops that
+transaction and sends no later steps. Requests already sent may still take
+effect. A timeout does not undo the saved settings, and it does not tell you
+that Omnivox rejected them.
+</p>
+<ol class="enumerate">
+<li> Read the result for each stream. Partial results retain acknowledged
+streams and identify timeouts; do not describe both as failed when only
+one is unconfirmed.
+</li><li> Check for newer staged edits before retrying. Save them deliberately or
+cancel them; do not mistake an older reply for acceptance of newer work.
+</li><li> In Workbench, <kbd class="kbd">r</kbd> reapplies saved engine settings and requests a new result.
+This is an engine-settings recovery action, not a universal retry key in
+every editor. For a palette review or voice save, use that view&rsquo;s own
+retained proposal and retry action.
+</li><li> Inspect the new result and repeat the original speaking task. If the result
+remains unconfirmed, keep that distinction in your problem report rather
+than claiming a rollback or a successful application.
+</li></ol>
+
+<p>Do not delete the saved resource or discard unrelated drafts merely because
+a worker did not answer. <a class="ref" href="Reporting-Speech-Problems.html">Prepare a useful problem report</a> describes the evidence
+and privacy precautions for further investigation.
+</p>
+</div>
+
+
+
+</body>
+</html>

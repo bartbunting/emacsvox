@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Recovering A Web Page (Emacsvox User Manual)</title>
+
+<meta name="description" content="Recovering A Web Page (Emacsvox User Manual)">
+<meta name="keywords" content="Recovering A Web Page (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Web-Browsing.html" rel="up" title="Web Browsing">
+<link href="Following-Web-Links.html" rel="prev" title="Following Web Links">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Recovering-A-Web-Page">
+<div class="nav-panel">
+<p>
+Previous: <a href="Following-Web-Links.html" accesskey="p" rel="prev">Follow a link and return to the article</a>, Up: <a href="Web-Browsing.html" accesskey="u" rel="up">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Recover-a-cluttered-or-incomplete-page"><span>9.5.4 Recover a cluttered or incomplete page<a class="copiable-link" href="#Recover-a-cluttered-or-incomplete-page"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-EWW_002c-readable-view"></a>
+<a class="index-entry-id" id="index-web-page_002c-missing-content"></a>
+
+<p>In a page buffer, lowercase <kbd class="kbd">s</kbd> runs EWW&rsquo;s readable-view command. It tries to
+isolate the main text; it is not the same action as <kbd class="kbd">s</kbd> inside the focused
+settings menu. To return from the filtered view, run
+<kbd class="kbd">M-x emacsvox-eww-restore <kbd class="key">RET</kbd></kbd>. This restores the retained canonical view
+rather than changing the site. The command is also on <kbd class="kbd"><kbd class="key">DEL</kbd></kbd>, but its name
+avoids differences in how keyboards report Backspace and Delete.
+</p>
+<p>If the retained view is unavailable or you need fresh content, <kbd class="kbd">g</kbd> reloads
+the current address. Reloading makes a new request and can lose form input or
+change the page and reading position. Save needed notes and finish or abandon
+forms deliberately before reloading. Search for a known phrase afterwards
+rather than assuming the old screen position still identifies the passage.
+</p>
+<p>For content that requires JavaScript or another unsupported browser feature,
+use <kbd class="kbd">M-x eww-browse-with-external-browser <kbd class="key">RET</kbd></kbd> to hand the page to the configured
+external browser. The external browser and any screen reader then provide
+its controls; Emacsvox&rsquo;s EWW keys do not operate there. Browser configuration,
+login state and downloaded-content handling can differ. A failed or inaccessible
+website is not in itself a reason to change speech engines or reset voices.
+</p>
+<p>For speech preferences, open <kbd class="kbd">C-e S</kbd> from EWW. In that focused menu, <kbd class="kbd">s</kbd>
+toggles section-navigation autospeak and <kbd class="kbd">i</kbd> changes image suppression for
+subsequent rendering. The latter also changes the shared SHR image default
+while preserving buffer-local overrides; it does not reload the current page.
+Lowercase <kbd class="kbd">w</kbd> saves those two Emacsvox defaults, <kbd class="kbd">A</kbd> opens advanced settings,
+and <kbd class="kbd">q</kbd> returns. These are presentation choices, not EWW&rsquo;s site or account
+preferences. Returning does not undo changes you have already made.
+</p>
+<p>The Emacs/W3 and w3m survey is historical. Do not install either on the strength
+of the Heritage manual; use EWW unless a separately maintained integration says
+otherwise. The GNU Emacs Manual&rsquo;s <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/EWW.html#EWW">EWW</a> entry provides its general introduction.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Following-Web-Links.html">Follow a link and return to the article</a>, Up: <a href="Web-Browsing.html">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

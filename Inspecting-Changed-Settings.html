@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Inspecting Changed Settings (Emacsvox User Manual)</title>
+
+<meta name="description" content="Inspecting Changed Settings (Emacsvox User Manual)">
+<meta name="keywords" content="Inspecting Changed Settings (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Reporting-Speech-Problems.html" rel="next" title="Reporting Speech Problems">
+<link href="Aural-Doctor-Inspection.html" rel="prev" title="Aural Doctor Inspection">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Inspecting-Changed-Settings">
+<div class="nav-panel">
+<p>
+Next: <a href="Reporting-Speech-Problems.html" accesskey="n" rel="next">Prepare a useful problem report</a>, Previous: <a href="Aural-Doctor-Inspection.html" accesskey="p" rel="prev">Inspect the system with Aural Doctor</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Review-changed-settings-before-editing-again"><span>8.13.5 Review changed settings before editing again<a class="copiable-link" href="#Review-changed-settings-before-editing-again"> &para;</a></span></h4>
+
+<p>Press <kbd class="kbd">C-e H d</kbd> to inspect changes without making another one. The snapshot
+separates captured-buffer values, global defaults and saved startup values
+known to Customize. It includes loaded Emacsvox, TTS and Omnivox options that
+are saved, buffer-local or nonstandard. Saved expressions appear as recorded.
+Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to read a complete row with its scope, <kbd class="kbd">g</kbd> to refresh the
+snapshot, and <kbd class="kbd">q</kbd> to return.
+</p>
+<p>Editor and cue drafts appear separately. The snapshot does not reread files,
+query the speech host, establish that saved data is active or include options
+from unloaded integrations. Voice, rule and host-pronunciation stores retain
+their own saving rules. Return to the owning editor or menu to change, save,
+apply or restart anything.
+</p>
+</div>
+
+
+
+</body>
+</html>

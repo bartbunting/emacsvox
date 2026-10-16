@@ -38,73 +38,106 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Installing-Remote-Emacsvox.html" accesskey="n" rel="next">Installing On A Remote Linux Host</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Before-You-Begin"><span>2.2 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
+<h3 class="section" id="Before-You-Begin"><span>3.2 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
 
-<p>Install <code class="code">git</code> so you can obtain the Emacsvox checkout.  Emacsvox requires
-<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 30.2 or newer</a>, but WSL2 users do not need to find a separate Emacs
-package before beginning.  The guided installer below uses an existing
-supported Emacs, suggests a suitable package, or offers an explicit source build.
+<p>Install <code class="code">git</code> to obtain the checkout. Emacsvox requires
+<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 30.2 or newer</a>. WSL2 users can let the guided installer inspect an
+existing Emacs, suggest a suitable package, or offer an explicit source build.
+It does not begin an Emacs source build by default.
 </p>
-<p>On GNU/Linux and macOS, install Emacs 30.2 or newer and <code class="code">make</code>.  Omnivox 1.12.0
-or newer is the supported speech-server baseline.  On macOS, use
-<a class="uref" href="https://brew.sh">Homebrew</a> to install Omnivox as described in
-<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Installing An Omnivox Release Binary</a>; Emacs and Emacsvox
-are installed separately.  Manual release-archive installation requires <code class="code">curl</code>,
-<code class="code">tar</code>, and either <code class="code">sha256sum</code> on GNU/Linux or <code class="code">shasum</code> on macOS.  GNU Texinfo
-is needed only when building or editing the documentation, not for an ordinary
-installation.
+<p>On GNU/Linux and macOS, install Emacs 30.2 or newer and <code class="code">make</code>. Omnivox 1.18.0
+or newer is the supported speech-server baseline. On macOS, use
+<a class="uref" href="https://brew.sh">Homebrew</a> for Omnivox as described in
+<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Installing An Omnivox Release Binary</a>; Emacs and Emacsvox are installed
+separately. Manual release-archive installation requires <code class="code">curl</code>, <code class="code">tar</code>, and
+<code class="code">sha256sum</code> on GNU/Linux or <code class="code">shasum</code> on macOS. GNU Texinfo is needed for
+building or editing the documentation, not for an ordinary installation.
 </p>
-<p>Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which satisfies
-this requirement. The same minimum applies to native Windows.
-On Emacs 30, install <code class="code">lua-mode</code> separately if you use Lua; on Emacs 31 it is
-built in. Corfu on an Emacs 30 text terminal also needs <code class="code">corfu-terminal</code>;
-Emacs 31 supports its terminal popup directly.
+<p>Ubuntu 26.04 provides Emacs 30.2 as a distribution package. The same Emacs
+minimum applies to native Windows. On Emacs 30, install <code class="code">lua-mode</code> separately
+if you use Lua; it is built into Emacs 31. Corfu on an Emacs 30 text terminal
+also needs <code class="code">corfu-terminal</code>; Emacs 31 supports its terminal popup directly.
 </p>
-<p>To check the Emacs found by your shell, run:
+<p>Check the Emacs found by your shell:
 </p>
 <div class="example">
 <pre class="example-preformatted">emacs --version
 </pre></div>
 
-<p>The reported version must be 30.2 or newer.  If
-the command is not found or reports an older version, install a supported Emacs
-or locate its executable.  You can check a specific executable in the same way:
+<p>The reported version must be 30.2 or newer. If the command is missing or
+reports an older version, install a supported Emacs or locate its executable.
+You can check a specific executable in the same way:
 </p>
 <div class="example">
 <pre class="example-preformatted">/path/to/emacs-31/bin/emacs --version
 </pre></div>
 
-<p>The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc, libstdc++,
-libgcc, and ALSA runtime.  If the archive does not match the host, the Omnivox
-source route requires Rust, Python 3, a C and C++ toolchain, CMake, and Clang
-with libclang.  It additionally requires <code class="code">pkg-config</code> and ALSA development
-headers on GNU/Linux or the Xcode command-line tools on macOS.  These are not
-requirements for the recommended WSL2 binary route.  Docker and Windows .NET
-Framework are needed only for the advanced reproducible source-build route in
-<a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+<ul class="mini-toc">
+<li><a href="#Prepare-the-settings_002dmenu-dependency" accesskey="1">Prepare the settings-menu dependency</a></li>
+<li><a href="#Obtain-the-development-checkout" accesskey="2">Obtain the development checkout</a></li>
+<li><a href="#Use-the-guided-WSL2-installer" accesskey="3">Use the guided WSL2 installer</a></li>
+</ul>
+<div class="subsection-level-extent" id="Prepare-the-settings_002dmenu-dependency">
+<h4 class="subsection"><span>3.2.1 Prepare the settings-menu dependency<a class="copiable-link" href="#Prepare-the-settings_002dmenu-dependency"> &para;</a></span></h4>
+
+<p>Emacsvox requires Transient 0.13.3 or newer. Emacs 31 supplies a supported
+version; Emacs 30.2&rsquo;s bundled 0.7.2.2 needs an upgrade before building Emacsvox.
+Use your selected Emacs and its package manager, with GNU ELPA enabled:
 </p>
-<p>Run the clone from a terminal on GNU/Linux, macOS, or WSL.  Under WSL, keep the
-checkout on the Linux filesystem.  The following concrete location works for
-an ordinary per-user installation:
+<ol class="enumerate">
+<li> Run <kbd class="kbd">M-x set-variable <kbd class="key">RET</kbd> package-install-upgrade-built-in <kbd class="key">RET</kbd> t <kbd class="key">RET</kbd></kbd>.
+Answer the variable-name and value prompts separately. This permits package
+dependencies to replace older built-in copies in this Emacs session; it
+does not save a new startup preference. See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Examining.html#Examining">Examining and setting variables</a>
+in the GNU Emacs Manual for this command.
+</li><li> Run <kbd class="kbd">M-x package-refresh-contents <kbd class="key">RET</kbd></kbd>, then
+<kbd class="kbd">M-x package-upgrade <kbd class="key">RET</kbd> transient <kbd class="key">RET</kbd></kbd>. Accept the package&rsquo;s dependencies.
+</li><li> Start a fresh Emacs before building or trying the menus. A running session
+can retain the older loaded version after installation.
+</li></ol>
+
+<p>An isolated Emacsvox session activates an installed Transient and its
+required packages when its bundled version is too old. It does not load your
+init file, activate unrelated packages, or download dependencies. Install into
+the package directory used by the same Emacs profile; a custom package directory
+must be on that session&rsquo;s load path. Debian installations also discover the
+system ELPA directory without site startup.
+</p>
+<p>If a menu reports an unsupported version, inspect the version and loaded path
+in its error. Upgrade that installation and restart Emacs; restarting only
+speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
+</p>
+</div>
+<div class="subsection-level-extent" id="Obtain-the-development-checkout">
+<h4 class="subsection"><span>3.2.2 Obtain the development checkout<a class="copiable-link" href="#Obtain-the-development-checkout"> &para;</a></span></h4>
+
+<p>Run the clone from a terminal on GNU/Linux, macOS, or WSL. The following
+location works for an ordinary per-user installation and selects the branch
+described by this manual:
 </p>
 <div class="example">
 <pre class="example-preformatted">mkdir -p ~/src
 cd ~/src
-git clone https://github.com/bartbunting/emacsvox
+git clone --branch ui-experiments https://github.com/bartbunting/emacsvox
 cd emacsvox
 </pre></div>
 
-<p>The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.  Do not put the ordinary WSL2
-checkout below a Windows-mounted path such as <code class="code">/mnt/c</code>; Windows filesystem
-semantics can interfere with Unix executable permissions and build tools.
-Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
-reproducible WSL2 build route.
+<p>For an existing checkout, inspect <code class="code">git status --short</code> and
+<code class="code">git branch --show-current</code> before changing branches or updating. Do not
+replace or discard local work to make the checkout match an example.
 </p>
-<p>If this machine will send speech to another workstation, use
-<a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a> instead of installing a local
-speech server.  For a local WSL2 desktop, first ask the guided installer to inspect the machine without
-changing it:
+<p>The checkout is the installation directory. It builds in place and does not
+create a second tree to copy elsewhere. Under WSL, keep it on the Linux
+filesystem, not below a Windows-mounted path such as <code class="code">/mnt/c</code>; Windows
+filesystem semantics can interfere with Unix executable permissions and build
+tools. Clone Omnivox beside Emacsvox only for an Omnivox source build or the
+advanced reproducible WSL2 build.
+</p>
+</div>
+<div class="subsection-level-extent" id="Use-the-guided-WSL2-installer">
+<h4 class="subsection"><span>3.2.3 Use the guided WSL2 installer<a class="copiable-link" href="#Use-the-guided-WSL2-installer"> &para;</a></span></h4>
+
+<p>For a local WSL2 desktop, first inspect the machine without changing it:
 </p>
 <div class="example">
 <pre class="example-preformatted">cd ~/src/emacsvox
@@ -113,46 +146,35 @@ changing it:
 
 <p>If Emacs is missing, the report checks the available apt version and suggests
 <code class="code">sudo apt install emacs</code> only when that candidate satisfies 30.2. Older or
-unavailable candidates are identified without being recommended. You can
-refresh apt metadata and check again, or choose the pinned source build with
+unavailable candidates are identified without being recommended. Refresh apt
+metadata and check again, or choose the pinned source build with
 <code class="code">./bin/emacsvox-wsl-install --build-emacs</code>. Add <code class="code">--check</code> to inspect that
-build&rsquo;s prerequisites first. The installer never begins a source build by default.
+build&rsquo;s prerequisites first.
 </p>
 <p>With Emacs selected, the report names it, the matching Omnivox Windows archive,
 and the per-user installation paths. If source-build packages are missing, it
-prints one <code class="code">apt</code> command for you to review and run.  The installer never invokes
-<code class="code">sudo</code> itself.  After resolving any reported prerequisite, run:
+prints one <code class="code">apt</code> command for you to review and run. The installer never invokes
+<code class="code">sudo</code> itself. After resolving reported prerequisites, run:
 </p>
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox-wsl-install
 </pre></div>
 
-<p>If you chose <code class="code">--build-emacs</code>, it prepares the pinned stable Emacs for your user.
-It then downloads and verifies the matching Omnivox 1.12.0 Windows archive, records its
-path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
-and plays the final speech-server check.  The Emacs build can take a while on
-a fresh machine; later runs reuse it and the verified downloads.  Routine
-compiler output is kept below <code class="code">$XDG_CACHE_HOME/emacsvox/logs</code>, normally
-<code class="code">~/.cache/emacsvox/logs</code>.  If a build fails, the installer shows its final log
-lines and the complete log path.  Continue only after hearing both the final
-tone and speech.  You can then skip to the last step in
-<a class="ref" href="Quick-Installation.html">Quick Installation</a> and start Emacsvox.
+<p>If you chose <code class="code">--build-emacs</code>, include that option in the installation command.
+It prepares the pinned stable Emacs for your user. The installer then downloads
+and verifies the matching Omnivox 1.18.0 Windows archive, records its path
+without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
+and plays the final speech-server check. Later runs reuse the Emacs build and
+verified downloads.
 </p>
-<p>After the core installation works, optional speech engines are available from
-<kbd class="kbd">M-x emacsvox-omnivox-manage-components <kbd class="key">RET</kbd></kbd>. The same engine list
-is <em class="emph">Browse voices</em> in Aural Home, opened with
-<kbd class="kbd">C-e H</kbd> and then <kbd class="kbd">I</kbd>. Select an engine and press
-<kbd class="kbd"><kbd class="key">RET</kbd></kbd> for details. It distinguishes engines
-already included in the core, downloadable engines, and bridges that still
-need a user-supplied runtime. Choose <em class="emph">Install engine</em> to confirm,
-checksum-verify, install, and validate that engine without <code class="code">sudo</code>.
-Expand <em class="emph">Engine installation</em> and choose <em class="emph">Uninstall engine</em> for a manager-installed engine to confirm and remove
-it while retaining the verified download cache; choose <em class="emph">Install engine</em> to
-reinstall it later. The manager never removes core engines or separately
-supplied runtimes.
-<a class="ref" href="Optional-Omnivox-Engine-Modules.html">Optional Omnivox Engines</a> explains the choices and
-licensing boundaries.
+<p>Routine compiler output is kept below <code class="code">$XDG_CACHE_HOME/emacsvox/logs</code>,
+normally <code class="code">~/.cache/emacsvox/logs</code>. If a build fails, the installer shows its
+final log lines and the complete log path. Continue only after hearing both
+the final tone and speech. You can then go to the final step in
+<a class="ref" href="Quick-Installation.html">Quick Installation</a> and start Emacsvox. Optional engines can wait until
+first speech is working.
 </p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

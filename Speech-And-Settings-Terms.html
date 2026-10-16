@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Speech And Settings Terms (Emacsvox User Manual)</title>
+
+<meta name="description" content="Speech And Settings Terms (Emacsvox User Manual)">
+<meta name="keywords" content="Speech And Settings Terms (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Terminology.html" rel="up" title="Emacsvox Terminology">
+<link href="Presentation-Resource-Terms.html" rel="prev" title="Presentation Resource Terms">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Speech-And-Settings-Terms">
+<div class="nav-panel">
+<p>
+Previous: <a href="Presentation-Resource-Terms.html" accesskey="p" rel="prev">Voices and presentation resources</a>, Up: <a href="Emacsvox-Terminology.html" accesskey="u" rel="up">Terms used in this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Changes-and-speech-output"><span>17.4 Changes and speech output<a class="copiable-link" href="#Changes-and-speech-output"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-preview_002c-meaning"></a>
+<a class="index-entry-id" id="index-retained-draft_002c-meaning"></a>
+<a class="index-entry-id" id="index-Save_002c-meaning"></a>
+<a class="index-entry-id" id="index-Apply_002c-meaning"></a>
+<a class="index-entry-id" id="index-startup-selection"></a>
+<a class="index-entry-id" id="index-speech-worker_002c-meaning"></a>
+
+<dl class="table">
+<dt>Preview</dt>
+<dd><p>An audition or comparison of a proposed result. Previewing does
+not by itself save the draft or make it the ordinary live configuration.
+</p></dd>
+<dt>Retained draft</dt>
+<dd><p>An unfinished edit kept in the current Emacs session for
+return to its editor. Retaining it is not a promise of recovery after Emacs
+exits, and discarding it does not undo a save already completed.
+</p></dd>
+<dt>Save</dt>
+<dd><p>Record data in the store owned by that editor or setting. Read the
+action&rsquo;s label: <em class="emph">Save and apply</em> and <em class="emph">Save to collection without selecting</em>
+intentionally have different effects.
+</p></dd>
+<dt>Apply</dt>
+<dd><p>Put a chosen configuration into use. The operation may require
+confirmation, validation, or a worker restart. Its exact effect depends on
+the resource; it is not a universal synonym for saving.
+</p></dd>
+<dt>Startup selection</dt>
+<dd><p>The configuration to select when a later session
+starts. Selecting something for this session does not always select it for
+the next one. <a data-manual="emacsvox" href="./Saving-And-Startup.html#Saving-And-Startup">Choose what persists</a> compares these states and their owners.
+</p></dd>
+<dt>Speech server, engine, and worker</dt>
+<dd><p>Emacsvox talks to a speech server;
+the server uses engines to synthesise speech. The manual uses <em class="emph">worker</em> for
+a running speech instance whose configuration and reported voices can
+differ from another instance or from installed files. See
+<a data-manual="emacsvox" href="./Speech-Backends.html#Speech-Backends">Speech Backends</a>.
+</p></dd>
+<dt>Main and notification speech</dt>
+<dd><p>Separate output paths for foreground
+reading and other announcements. An integration decides which path to use
+for an event; their existence is not a guarantee that all background text
+is private. See <a data-manual="emacsvox" href="./Aural-Speech-Output.html#Aural-Speech-Output">Speech output and notifications</a>.
+</p></dd>
+</dl>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Presentation-Resource-Terms.html">Voices and presentation resources</a>, Up: <a href="Emacsvox-Terminology.html">Terms used in this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

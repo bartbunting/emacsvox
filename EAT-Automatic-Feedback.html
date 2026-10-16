@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Automatic Feedback (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Automatic Feedback (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Automatic Feedback (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Terminal-Completion.html" rel="next" title="EAT Terminal Completion">
+<link href="EAT-Input-Modes.html" rel="prev" title="EAT Input Modes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Automatic-Feedback">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Terminal-Completion.html" accesskey="n" rel="next">Terminal-side Completion</a>, Previous: <a href="EAT-Input-Modes.html" accesskey="p" rel="prev">Input Modes And Completion Responsibilities</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Automatic-Terminal-Feedback"><span>12.2 Automatic Terminal Feedback<a class="copiable-link" href="#Automatic-Terminal-Feedback"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-EAT-automatic-speech"></a>
+<a class="index-entry-id" id="index-terminal-output_002c-speech-policy"></a>
+<a class="index-entry-id" id="index-C_002de-C_002dq-_0028EAT_0029"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dtoggle_002dautospeak"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dautospeak"></a>
+
+<p><kbd class="kbd">C-e C-q</kbd> toggles automatic foreground feedback for this terminal; it starts
+enabled. The same control is <kbd class="kbd">s</kbd> in the focused settings menu. It covers
+routine output, status, automatic metadata, application-screen boundaries,
+and process lifecycle feedback. Explicit reading, input and completion
+feedback, and the configured terminal bell remain available. Verbosity
+(<kbd class="kbd">C-e q v</kbd>) and background monitoring (<kbd class="kbd">C-e q m</kbd>) are independent preferences.
+</p>
+<p>Automatic speech requires the selected EAT buffer and Emacs keyboard focus.
+The selected window must follow the live cursor or edit a line-mode draft
+after terminal output. Reviewing scrollback prevents new output from
+interrupting you. Another selected terminal or an active minibuffer also
+suppresses foreground feedback. In terminal-only Emacs, or when keyboard
+focus cannot be reported, selection within Emacs is the available boundary.
+</p>
+<p>Turning autospeak off or losing eligibility discards locally pending automatic
+feedback. Speech already sent to Omnivox may finish. Returning or re-enabling
+speech starts with fresh output; it does not replay missed content. Use explicit
+review instead. This policy also applies to an embedded Eshell terminal,
+without changing ordinary Eshell output.
+</p>
+<ul class="mini-toc">
+<li><a href="#Read-output-and-follow-progress" accesskey="1">Read output and follow progress</a></li>
+<li><a href="#Recognise-and-inspect-prompts" accesskey="2">Recognise and inspect prompts</a></li>
+<li><a href="#Hear-input-and-deletion-results" accesskey="3">Hear input and deletion results</a></li>
+<li><a href="#Bells-and-application_002dscreen-changes" accesskey="4">Bells and application-screen changes</a></li>
+</ul>
+<div class="subsection-level-extent" id="Read-output-and-follow-progress">
+<h4 class="subsection"><span>12.2.1 Read output and follow progress<a class="copiable-link" href="#Read-output-and-follow-progress"> &para;</a></span></h4>
+
+<p>On the main screen, Emacsvox collects a burst before classifying it. Complete
+new output lines are spoken once, with automatic limits of eight lines and
+1,000 characters. Continued input rows and empty terminal placeholders are
+omitted without hiding output or rereading earlier rows. Output remains
+eligible even if it scrolls beyond the screen, including repeated identical
+lines; increasing scrollback is unnecessary for this feedback.
+</p>
+<p>Wrapped output is joined and oversized bursts announce how much was omitted.
+Fresh text without a newline also speaks, keeping password requests and
+confirmation questions accessible. Carriage-return progress and status
+rewrites use rate-limited, replaceable speech. Unchanged repaints and
+resize-only updates remain silent. Bells, pastes, input-mode changes,
+application-screen boundaries, and process exit are content-free semantic
+events rather than arbitrary screen readings.
+</p>
+</div>
+<div class="subsection-level-extent" id="Recognise-and-inspect-prompts">
+<h4 class="subsection"><span>12.2.2 Recognise and inspect prompts<a class="copiable-link" href="#Recognise-and-inspect-prompts"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-emacsvox_002deat_002dprompt_002dfeedback"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dprompt"></a>
+<a class="index-entry-id" id="index-C_002de-q-p-_0028EAT_0029"></a>
+
+<p>When EAT shell integration identifies a ready prompt, Emacsvox gives a cue
+after output instead of reading the prompt text. <code class="code">emacsvox-eat-prompt-feedback</code>
+defaults to <code class="code">earcon</code>; choose <code class="code">text</code> to hear the prompt or <code class="code">silent</code> to suppress
+it. This option can be buffer-local and is independent of verbosity, but
+automatic prompt feedback still obeys foreground autospeak eligibility.
+</p>
+<p>Split and multiline prompts are collected until ready. Redisplay and typing
+do not repeat them. If several prompts arrive in one burst, feedback describes
+the final ready prompt.
+</p>
+<p><kbd class="kbd">C-e q p</kbd> explicitly reads the last identified prompt, even with autospeak off.
+Recognition does not require margin annotations, but it does require shell
+integration. An unintegrated remote prompt or question is ordinary output,
+read as text; the prompt preference does not silence it. The last identified
+prompt may still belong to the local shell. Use <kbd class="kbd">C-e q l</kbd> for the current
+retained cursor row in that situation.
+</p>
+</div>
+<div class="subsection-level-extent" id="Hear-input-and-deletion-results">
+<h4 class="subsection"><span>12.2.3 Hear input and deletion results<a class="copiable-link" href="#Hear-input-and-deletion-results"> &para;</a></span></h4>
+
+<p>On the main screen in semi-character and character modes, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> is silent.
+After rendered left/right movement, Emacsvox names the reached character;
+after up/down it speaks the resulting input or history row without the
+observed shell prompt. <kbd class="kbd">M-b</kbd>, <kbd class="kbd">M-f</kbd>, and modified left/right word movements
+speak the rendered text crossed. A boundary key that produces no movement
+stays silent.
+</p>
+<p>Line-mode history navigation speaks the recalled command once. EAT&rsquo;s
+history-item counter and input-restored message remain visible in the echo
+area without speaking over the command on the notification stream.
+</p>
+<p>An echoed Space is named without rereading the prompt or line. For Backspace,
+Delete, <kbd class="kbd">M-d</kbd>, and <kbd class="kbd">C-k</kbd>, Emacsvox compares bounded public snapshots before
+and after the key. One unambiguous same-row removal is read as the actual
+character or text removed. Otherwise only a deletion tone is given; adjacent
+prompt or screen text is not guessed as deleted content. Padding and trailing
+input blanks do not prevent an otherwise unambiguous word deletion.
+</p>
+<p>A no-echo peer provides no visible deletion to announce. This input feedback
+requires the selected window to follow the live cursor, and is silent during
+protected password entry, in an unselected terminal, and on an alternate
+screen where the application owns the keys.
+</p>
+</div>
+<div class="subsection-level-extent" id="Bells-and-application_002dscreen-changes">
+<h4 class="subsection"><span>12.2.4 Bells and application-screen changes<a class="copiable-link" href="#Bells-and-application_002dscreen-changes"> &para;</a></span></h4>
+
+<p>Bells retain EAT&rsquo;s configured sound without speaking &quot;Terminal bell&quot; by default.
+An aural rule can add a label by matching module <code class="code">eat</code>, role
+<code class="code">command-interaction</code>, event <code class="code">command-terminal-bell</code>, and occasion
+<code class="code">notification</code>, with speech before or after the event. Bell notifications
+remain rate-limited and obey selected-buffer, live-cursor, and secure-input
+restrictions.
+</p>
+<p>On full-screen or alternate-screen applications, Emacsvox does not read every
+refresh. A cursor row reached by correlated arrow-style navigation, or a compact
+high-confidence transfer of selection-like styling, may be announced.
+Ambiguous repaints remain available to explicit review. Inverse video or a
+coloured row alone is not proof of an active item.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Terminal-Completion.html">Terminal-side Completion</a>, Previous: <a href="EAT-Input-Modes.html">Input Modes And Completion Responsibilities</a>, Up: <a href="EAT-Terminal-Access.html">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT In Eshell (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT In Eshell (Emacsvox User Manual)">
+<meta name="keywords" content="EAT In Eshell (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Full_002dscreen-Applications.html" rel="prev" title="EAT Full-screen Applications">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-In-Eshell">
+<div class="nav-panel">
+<p>
+Previous: <a href="EAT-Full_002dscreen-Applications.html" accesskey="p" rel="prev">Full-screen Applications And Limitations</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="EAT-In-Eshell-1"><span>12.10 EAT In Eshell<a class="copiable-link" href="#EAT-In-Eshell-1"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-Eshell_002c-EAT-accessibility"></a>
+<a class="index-entry-id" id="index-eat_002deshell_002dmode"></a>
+<a class="index-entry-id" id="index-eat_002deshell_002dvisual_002dcommand_002dmode"></a>
+
+<p>With global <code class="code">eat-eshell-mode</code> enabled, Emacsvox uses the same screen observer
+for EAT&rsquo;s terminal region inside Eshell. Rendered command output follows one
+speech path instead of also being repeated by generic Eshell feedback.
+</p>
+<p>With <code class="code">eat-eshell-visual-command-mode</code>, a visual command runs in a separate EAT
+buffer. Emacsvox announces its start, delivers eligible final output before
+process-exit feedback, and identifies the exit as an Eshell visual command.
+EAT and Eshell still own window return. In particular,
+<code class="code">eshell-destroy-buffer-when-process-dies</code> determines whether a successful
+visual-command buffer is killed and Eshell restored; Emacsvox does not change it.
+</p>
+</div>
+
+
+
+</body>
+</html>

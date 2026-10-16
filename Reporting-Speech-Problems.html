@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reporting Speech Problems (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reporting Speech Problems (Emacsvox User Manual)">
+<meta name="keywords" content="Reporting Speech Problems (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Recovering-Aural-Changes.html" rel="next" title="Recovering Aural Changes">
+<link href="Inspecting-Changed-Settings.html" rel="prev" title="Inspecting Changed Settings">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reporting-Speech-Problems">
+<div class="nav-panel">
+<p>
+Next: <a href="Recovering-Aural-Changes.html" accesskey="n" rel="next">Recover Unfinished Changes</a>, Previous: <a href="Inspecting-Changed-Settings.html" accesskey="p" rel="prev">Review changed settings before editing again</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Prepare-a-useful-problem-report"><span>8.13.6 Prepare a useful problem report<a class="copiable-link" href="#Prepare-a-useful-problem-report"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-problem-report"></a>
+<a class="index-entry-id" id="index-diagnostic-logging_002c-privacy"></a>
+<a class="index-entry-id" id="index-speech-logs_002c-sensitive-text"></a>
+
+<p>Record the application and buffer type, the exact keys or action, what you
+expected, what you heard and whether the problem repeats. Note the platform,
+Emacs and Emacsvox versions and speech backend. Distinguish a reported
+success or timeout from an audible result; neither is a substitute for the
+other. Prefer a short, non-confidential example that reproduces the problem.
+</p>
+<p>In Aural Doctor, <kbd class="kbd">y</kbd> copies the report. It does not copy spoken text or log
+contents, but it can contain personal paths and configuration. Review that
+copy before sharing it. The log row identifies paths without opening files.
+</p>
+<p>Enable detailed logging only for a reproduction whose spoken content you are
+prepared to handle as sensitive data. In the diagnostics menu, lowercase <kbd class="kbd">l</kbd>
+toggles logging for this session, including complete spoken text. Note its
+previous state and restore that state after the reproduction. Capital <kbd class="kbd">A</kbd>
+opens log-file, size, retention and buffer-visibility options in Customize.
+Apply and Save there are explicit; buffer-naming changes take effect after
+speech restarts.
+</p>
+<p>Review logs separately before sharing excerpts. Remove credentials, message
+content, personal paths and unrelated text; do not assume a diagnostic file
+contains only technical metadata. State which checks you tried and their
+results so another person can continue the investigation without repeating
+unsafe or inconclusive steps.
+</p>
+</div>
+
+
+
+</body>
+</html>

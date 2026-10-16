@@ -38,37 +38,40 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Term-Speech-Feedback.html" accesskey="n" rel="next">Automatic Speech Feedback</a>, Previous: <a href="Starting-Term.html" accesskey="p" rel="prev">Starting Term</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Character-And-Line-Input-Modes"><span>12.2 Character And Line Input Modes<a class="copiable-link" href="#Character-And-Line-Input-Modes"> &para;</a></span></h3>
+<h3 class="section" id="Character-And-Line-Input-Modes"><span>13.2 Character And Line Input Modes<a class="copiable-link" href="#Character-And-Line-Input-Modes"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-character-mode_002c-Term"></a>
-
 <a class="index-entry-id" id="index-line-mode_002c-Term"></a>
-
 <a class="index-entry-id" id="index-term_002dchar_002dmode"></a>
-
 <a class="index-entry-id" id="index-term_002dline_002dmode"></a>
 
-<p>Term starts in character mode.  Choose the mode according to who should receive
-your keys:
+<p>Term starts in character mode. Choose according to who should receive the keys:
 </p>
 <dl class="table">
 <dt>Character mode</dt>
-<dd><p>Most keys are sent immediately to the terminal program.  Use this for
-full-screen or key-driven terminal applications.  Press <kbd class="kbd">C-c C-j</kbd> to enter
-line mode.  Because normal Emacs prefixes may belong to the child program, use
-<kbd class="kbd">C-c C-h m</kbd> for mode help and <kbd class="kbd">C-c M-x</kbd> to run an Emacs command.
+<dd><p>Most keys are sent immediately to the terminal program. This suits
+full-screen or key-driven applications. <kbd class="kbd">C-c C-j</kbd> enters line mode.
+Normal Emacs prefixes may belong to the child, so use <kbd class="kbd">C-c C-h m</kbd> for
+mode help and <kbd class="kbd">C-c M-x</kbd> to run an Emacs command.
 </p></dd>
 <dt>Line mode</dt>
-<dd><p>Normal Emacs editing commands edit the pending input.  <kbd class="kbd"><kbd class="key">RET</kbd></kbd> sends that
-input to the terminal program.  Use <kbd class="kbd">C-h m</kbd> and other ordinary Emacs Help
-keys directly.  Press <kbd class="kbd">C-c C-k</kbd> to return to character mode.
+<dd><p>Ordinary Emacs editing commands edit pending input; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> sends it to
+the program. Emacs Help keys such as <kbd class="kbd">C-h m</kbd> work directly.
+<kbd class="kbd">C-c C-k</kbd> returns to character mode.
 </p></dd>
 </dl>
 
-<p>Emacsvox announces <code class="code">Terminal line mode</code> or <code class="code">Terminal character mode</code>
-after an interactive switch.  In either mode, <kbd class="kbd">C-t</kbd> begins the Emacsvox
-Term review prefix.  To send a literal <kbd class="kbd">C-t</kbd> to the child program in
-character mode, press <kbd class="kbd">C-t C-t</kbd>.
+<p>An interactive switch announces <code class="code">Terminal line mode</code> or
+<code class="code">Terminal character mode</code>. In either mode, <kbd class="kbd">C-t</kbd> introduces Term&rsquo;s Emacsvox
+review commands. Send a literal <kbd class="kbd">C-t</kbd> to the child in character mode with
+<kbd class="kbd">C-t C-t</kbd>.
+</p>
+<p>Use the input-mode escape before trying ordinary Emacs settings or Help keys
+that the child might otherwise receive. In line mode, <kbd class="kbd">C-e H</kbd> opens the
+Emacsvox settings menu. Its general settings do not replace Term&rsquo;s own
+buffer-local automatic-speech control below. Likewise, <kbd class="kbd">q</kbd> closes an Emacsvox
+menu or dedicated review only while that interface owns the keys; it is not
+a general command to leave a running terminal application.
 </p>
 </div>
 

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Hello And Searches (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Hello And Searches (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Hello And Searches (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Search-Results.html" rel="next" title="Notmuch Search Results">
+<link href="Starting-Notmuch.html" rel="prev" title="Starting Notmuch">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Hello-And-Searches">
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Search-Results.html" accesskey="n" rel="next">Navigate and inspect Search results</a>, Previous: <a href="Starting-Notmuch.html" accesskey="p" rel="prev">Start Notmuch</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Use-Hello-and-start-a-search"><span>10.2 Use Hello and start a search<a class="copiable-link" href="#Use-Hello-and-start-a-search"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-saved-searches_002c-Notmuch"></a>
+<a class="index-entry-id" id="index-widgets_002c-Notmuch-Hello"></a>
+
+<p>Moving among Hello widgets speaks each saved search&rsquo;s label and displayed
+message count, or identifies the button or link reached. Use these common
+Hello commands:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">TAB</kbd></dt>
+<dd><p><code class="code">widget-forward</code> reaches the next search, field, button, or link.
+</p></dd>
+<dt><kbd class="kbd">&lt;backtab&gt;</kbd></dt>
+<dd><p><code class="code">widget-backward</code> reaches the preceding widget.
+</p></dd>
+<dt><kbd class="kbd">RET</kbd></dt>
+<dd><p><code class="code">widget-button-press</code> activates the widget; on a saved search it starts
+the query.
+</p></dd>
+<dt><kbd class="kbd">j</kbd></dt>
+<dd><p><code class="code">notmuch-jump-search</code> chooses a configured search.
+</p></dd>
+<dt><kbd class="kbd">g</kbd></dt>
+<dd><p><code class="code">notmuch-refresh-this-buffer</code> refreshes Hello.
+</p></dd>
+<dt><kbd class="kbd">m</kbd></dt>
+<dd><p><code class="code">notmuch-mua-new-mail</code> starts composition, handled by Message mode and
+the separate <code class="code">emacsvox-message</code> integration.
+</p></dd>
+</dl>
+
+<p>Press <kbd class="kbd">?</kbd> in a Notmuch view or <kbd class="kbd">C-h m</kbd> for the bindings supplied by your
+installed Notmuch version. A search can display its first result before all
+rows finish rendering, so an initial message announcement and a later count
+need not arrive together.
+</p>
+<ul class="mini-toc">
+<li><a href="#Understand-asynchronous-search-completion" accesskey="1">Understand asynchronous search completion</a></li>
+</ul>
+<div class="subsection-level-extent" id="Understand-asynchronous-search-completion">
+<h4 class="subsection"><span>10.2.1 Understand asynchronous search completion<a class="copiable-link" href="#Understand-asynchronous-search-completion"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-search-results_002c-asynchronous-rendering"></a>
+<a class="index-entry-id" id="index-notification-stream_002c-Notmuch"></a>
+<a class="index-entry-id" id="index-emacsvox_002dnotmuch_002dsearch_002dcompletion_002dstyle"></a>
+
+<p>The default <code class="code">adaptive</code> policy gives useful early feedback without rereading
+content after you have moved on. For a search you start, other than a refresh,
+a progress cue is given while its buffer remains selected. The first complete
+result can then be spoken while the search continues, using the same summary,
+voices, and status cues as thread navigation. This never moves point or reads
+an empty row.
+</p>
+<p>When the new search remains selected, you have issued no command in it, and
+no input is pending, the first result is spoken once on the main stream.
+Completion reports the final thread count on the notification stream without
+repeating that result. If completion occurs before an early result could be
+announced, it reports the count and result at point, or a zero-thread summary.
+</p>
+<p>If you navigate, invoke another command, or leave before completion, the later
+announcement is only a generic count on the notification stream. It does not
+reread the selected row or disclose the query, sender, recipients, subject,
+tags, or attachment metadata. Killing the owning search buffer silently
+cancels that delivery.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Refresh-an-existing-result"></a>Refresh an existing result
+
+
+<p>An explicit refresh differs from a new search. It queues only the generic
+count on the main stream, without interrupting speech already playing.
+Navigation can interrupt this announcement, including after you leave the
+search buffer before the refresh finishes. Refresh completion never rereads
+the selected row.
+</p>
+</li><li> <a class="anchor" id="Choose-less-automatic-feedback"></a>Choose less automatic feedback
+
+
+<p><code class="code">summary</code> gives a generic count and completion cue; <code class="code">cue</code> gives only the cue;
+<code class="code">silent</code> suppresses successful completion. These policies use the same
+main-stream selection for refreshes. Other search summaries use the
+notification stream. Failures remain audible and generic with every policy;
+refresh failures also use the main stream. The deliberate global refresh-all
+command remains silent.
+</p>
+<p>Use the focused settings described under <a class="ref" href="Notmuch-Speech-And-Privacy.html#Notmuch-fields-and-privacy">Notmuch fields and privacy</a> to choose
+a policy. <a data-manual="emacsvox" href="./Aural-Speech-Output.html#Aural-Speech-Output">Speech Output And Notifications</a> explains the general stream behaviour;
+the refresh rules above are specific to this integration.
+</p></li></ol>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Search-Results.html">Navigate and inspect Search results</a>, Previous: <a href="Starting-Notmuch.html">Start Notmuch</a>, Up: <a href="Notmuch-Mail.html">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

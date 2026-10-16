@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reading Scope And Punctuation (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reading Scope And Punctuation (Emacsvox User Manual)">
+<meta name="keywords" content="Reading Scope And Punctuation (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Speech-Output.html" rel="up" title="Aural Speech Output">
+<link href="Notification-Routing.html" rel="next" title="Notification Routing">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reading-Scope-And-Punctuation">
+<div class="nav-panel">
+<p>
+Next: <a href="Notification-Routing.html" accesskey="n" rel="next">Understand the main and notification streams</a>, Up: <a href="Aural-Speech-Output.html" accesskey="u" rel="up">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Set-the-reading-scope_002c-rate_002c-and-punctuation"><span>8.11.1 Set the reading scope, rate, and punctuation<a class="copiable-link" href="#Set-the-reading-scope_002c-rate_002c-and-punctuation"> &para;</a></span></h4>
+
+<p><kbd class="kbd">C-e H s</kbd> opens Speech settings for the captured buffer. <kbd class="kbd">g</kbd> switches to global
+defaults; <kbd class="kbd">C-u C-e H</kbd> starts there. Indentation shares this scope with its
+parents, including changes made inside its own menu. Opening/closing alone
+saves nothing.
+</p>
+<p>Select <em class="emph">Rate</em> and adjust with Shift-left/right by the configured step, or use
+<kbd class="kbd"><kbd class="key">RET</kbd>~/~r</kbd> for an exact value. Speech must be running; Omnivox uses 0–100.
+Global rate changes also affect the current buffer. A named voice&rsquo;s relative rate
+modifies this base as described in <a data-manual="emacsvox" href="./Voice-Adjustments.html#Voice-Adjustments">Voice Adjustments</a>.
+</p>
+<p>In Speech settings, press <kbd class="kbd">p</kbd> for the punctuation menu. Choose <kbd class="kbd">n</kbd> for
+none, <kbd class="kbd">s</kbd> for some or <kbd class="kbd">a</kbd> for all punctuation. That menu&rsquo;s <kbd class="kbd">p</kbd> offers the
+built-in levels and available named profiles. In buffer scope, <kbd class="kbd">r</kbd> restores
+automatic mode policy. Press <kbd class="kbd">q</kbd> to return to Speech settings.
+</p>
+<p>The punctuation menu&rsquo;s <kbd class="kbd">e</kbd> opens the Omnivox pronunciation editor. In that
+editor, lowercase <kbd class="kbd">s</kbd> saves overrides on the speech host and lowercase <kbd class="kbd">r</kbd>
+restarts speech after confirmation. Its <kbd class="kbd">q</kbd> returns to the same punctuation
+menu item, retaining the draft and selected character for reopening.
+</p>
+<p>Capital <kbd class="kbd">S</kbd> in the punctuation menu has a different purpose: it saves the
+selected level or profile through Customize. It does not save the pronunciation
+editor&rsquo;s host-side draft.
+</p>
+<p><kbd class="kbd">S</kbd> in Speech settings saves displayed rate and punctuation as startup defaults.
+Rate uses the backend&rsquo;s startup option. Saving from buffer scope promotes those
+displayed choices to defaults. Mode punctuation policy and explicit buffer
+settings still override the saved punctuation default.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Use-Emacs-word-and-phrase-dictionaries"></a>Use Emacs word and phrase dictionaries
+
+
+<p>For word or phrase substitutions managed by Emacs, open <kbd class="kbd">C-e H s p d</kbd>.
+This menu is separate from the Omnivox pronunciation editor on <kbd class="kbd">e</kbd>. Its
+dictionaries are stored in an Emacs dictionary file, not Customize or the
+speech host, and changes need no speech restart. Opening the menu writes
+nothing and leaves the source&rsquo;s pronunciation table unchanged.
+</p>
+<p>Press <kbd class="kbd">d</kbd> to define an entry at the captured source item. Choose buffer, file,
+directory or major-mode scope, then enter the term and spoken replacement.
+The existing prompt can load saved dictionaries first. Buffer entries last
+only in that buffer&rsquo;s current pronunciation table. Other scopes update the
+in-memory dictionary collection and need a separate <kbd class="kbd">w</kbd> Save to persist.
+</p>
+<p>Use <kbd class="kbd">e</kbd> to choose an existing dictionary and open its widget editor. <kbd class="kbd"><kbd class="key">TAB</kbd></kbd>
+moves between fields and buttons; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates them. Field edits update
+the in-memory collection. Its Save button writes dictionaries to a chosen
+file. Return with <kbd class="kbd">C-c C-c</kbd> from anywhere, or <kbd class="kbd">q</kbd> outside editable fields;
+inside a field, <kbd class="kbd">q</kbd> inserts text. Returning retains edits without saving or
+rolling them back, and reopening resumes the same editor buffer.
+</p>
+<p>Back in the menu, <kbd class="kbd">r</kbd> rebuilds and enables the captured source&rsquo;s table from
+its dictionaries. This replaces temporary buffer-only entries. <kbd class="kbd">t</kbd> turns
+substitution off or composes the table again when turning it on; turning off
+also loses buffer-only entries. Changes to file, directory and mode entries
+remain in the collection. To reverse an entry change, edit it back and refresh
+the source; save again if you changed the saved dictionary.
+</p>
+<p>Finish and close existing widget editors before loading replacements: their
+retained fields are not reloaded. The menu&rsquo;s <kbd class="kbd">l</kbd> loads a dictionary file into
+the collection; refresh the source afterward to use those entries. <kbd class="kbd">w</kbd> saves file, directory and mode dictionaries,
+excluding buffer-only entries. Both actions prompt for a file; Load offers
+<code class="code">emacsvox-pronounce-dictionaries-file</code>, while Save offers its basename in the
+Emacsvox user directory. Saving elsewhere does not change the configured
+startup file. Use <kbd class="kbd">?</kbd> followed by an item&rsquo;s key
+for its scope and effects before applying it.
+</p>
+</li><li> <a class="anchor" id="Adjust-indentation-feedback"></a>Adjust indentation feedback
+
+
+<p>Open <kbd class="kbd">C-e H s i</kbd> or directly <kbd class="kbd">C-e d I</kbd>. In global-default scope, <kbd class="kbd">S</kbd> saves
+indentation defaults and tone volume through Customize. Select <em class="emph">Volume</em> and
+adjust by five percentage points with Shift-left/right, or enter with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
+Plain left/right changes sections and <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews indentation. Other selected
+items give guidance rather than treating every shifted arrow as volume.
+</p>
+<p><kbd class="kbd">t</kbd> opens pitch-tone settings: base pitch, rise per column, maximum pitch, and
+requested duration. Shift-left/right adjusts; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters exactly. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd>
+previews four columns without changing presentation or enabling feedback.
+<kbd class="kbd">s</kbd> stops. Short durations show the effective blank-line-tone minimum.
+<kbd class="kbd">R</kbd> restores the four bundled values in scope. Global changes preserve local
+overrides; <kbd class="kbd">S</kbd> saves global defaults and tone volume. <kbd class="kbd">q</kbd> retains live changes.
+</p>
+</li><li> <a class="anchor" id="Set-capitalisation-feedback-and-its-beeps"></a>Set capitalisation feedback and its beeps
+
+
+<p><kbd class="kbd">C-e H s c</kbd> opens <em class="emph">Capitalization</em>. <kbd class="kbd">i</kbd> toggles indication, <kbd class="kbd">p</kbd> chooses spoken,
+tone, combined, personal-rule, or no presentation, and <kbd class="kbd">c</kbd> independently toggles
+camel-case splitting. They share buffer/global scope on <kbd class="kbd">g</kbd>. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews
+reading; <kbd class="kbd">S</kbd> saves these three startup defaults. Buffer overrides still apply.
+</p>
+<p>Within Capitalization, <kbd class="kbd">l</kbd> edits the capital-letter beep and <kbd class="kbd">a</kbd> the all-caps
+beep. Each has a separate global draft. Select pitch/duration and adjust by
+25 Hz/5 milliseconds with Shift-left/right, or use <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews only
+the beep and <kbd class="kbd">s</kbd> stops. Previewing neither changes reading settings nor enables
+capitalisation indication.
+</p>
+<p>In a beep editor, <kbd class="kbd">S</kbd> saves that cue globally for tone/combined presentation.
+<kbd class="kbd">r</kbd> restores bundled values in the draft; save to remove this menu&rsquo;s override.
+<kbd class="kbd">D</kbd> discards/rereads, <kbd class="kbd">q</kbd> returns, and <kbd class="kbd">C-q</kbd> closes menus while retaining drafts
+for this session. Unrelated rules and labels survive, and stronger rules may
+override the cue. Finish unsaved personal-rule editors before cue saving. If
+saved rules changed elsewhere, discard the cue draft and reopen it.
+</p>
+</li><li> <a class="anchor" id="Choose-spelling-feedback"></a>Choose spelling feedback
+
+
+<p><kbd class="kbd">C-e H s f</kbd> opens <em class="emph">Spelling feedback</em>. These settings are global. Toggle
+<kbd class="kbd">v</kbd> for voice changes, <kbd class="kbd">t</kbd> for a tone, and <kbd class="kbd">e</kbd> for the help earcon. You can
+combine them or turn all three off without disabling Flyspell checking and
+highlighting. The default is voice plus earcon.
+</p>
+<p>When you read text already marked by Flyspell, tones and earcons occur at
+the flagged word. Voice feedback uses the existing spelling face mappings.
+Tone and earcon feedback also report errors detected while editing. Character
+movement cues entry into a flagged word: its first character moving forwards,
+or its last character moving backwards. Moving within the same word or onto
+an adjacent space does not repeat the entry cue. Opening
+a mail reply checks and highlights inserted text without a burst of cues.
+</p>
+<p>Use <kbd class="kbd">m</kbd> to choose tone timing. <em class="emph">Alongside speech</em> is the default: it plays
+the tone while the word is spoken without adding a tone pause. <em class="emph">Before speech</em>
+finishes each tone before its flagged word, adding a pause. Previously saved
+choices remain in effect. Arrows browse without changing the setting; <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+applies and returns to Timing, while <kbd class="kbd">q</kbd> cancels. Timing leaves voice and
+earcon feedback unchanged. Compare it with <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> or by reading flagged text:
+a tone-only preview or editing cue has no accompanying speech to overlap.
+</p>
+<p>Select <kbd class="kbd">p</kbd> for pitch, <kbd class="kbd">d</kbd> for duration, or <kbd class="kbd">l</kbd> for spelling tone volume.
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact value; Shift-left/right adjusts by 25 Hz, 5 milliseconds,
+or 5 percentage points. Spelling tone volume ranges from 0 to 100 percent:
+zero silences the tone, and the default of 100 preserves its original level.
+<kbd class="kbd">V</kbd> changes the shared volume of all main-stream tones, including indentation
+and spelling. The shared volume still scales the spelling tone after its
+individual adjustment; it is also available in Sounds and output.
+</p>
+<p>These controls change the current session immediately. <kbd class="kbd">b</kbd> previews the tone
+alone, even when tone feedback is off. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads a sample containing one
+flagged word with the selected combination. <kbd class="kbd">S</kbd> saves the spelling settings,
+including tone timing and shape, and the shared tone volume through Customize.
+<kbd class="kbd">q</kbd> returns and <kbd class="kbd">C-q</kbd> closes the menus without saving.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Edit-the-complete-spelling-tone"></a>Edit the complete spelling tone
+
+
+<a class="anchor" id="spelling_002dtone_002deditor"></a>
+<a class="index-entry-id" id="index-spelling-tone-editor"></a>
+<a class="index-entry-id" id="index-tone-presets"></a>
+
+<p>Press capital <kbd class="kbd">E</kbd> in Spelling feedback, or use <kbd class="kbd">C-e H s f E</kbd>, for a private
+draft of the complete tone. The title identifies its global spelling scope.
+This editor adds waveform, pitch sweep and envelope controls to pitch, duration
+and individual volume. Unlike the parent menu&rsquo;s immediate adjustments, changes
+here affect only the draft until you apply it. Timing stays in Spelling feedback
+at <kbd class="kbd">C-e H s f m</kbd>. Voice, earcon and tone enablement also remain in that menu;
+shared main-tone volume controls all main tones from Sounds and output.
+</p>
+<p>The sections follow the editing task: the spelling tone&rsquo;s basic controls,
+Pitch movement, Envelope, Preview, Presets, Apply and save, then Finish.
+Left/right changes sections; up/down selects an item. Shift-left/right adjusts
+only a selected number. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact number, toggles Pitch sweep,
+or opens the selected choice list. In a list, up/down browses without changing
+the draft; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> chooses and returns, while <kbd class="kbd">q</kbd> cancels. Waveform and Envelope
+are choices, so shifted arrows do not adjust them. <kbd class="kbd">?</kbd> followed by an item&rsquo;s
+key explains its effect, units and dependencies. Use <kbd class="kbd">C-c l</kbd> or the other
+<a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dreview">menu review keys</a> to inspect an announcement without activating it.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Try-a-tone-without-changing-live-feedback"></a>Try a tone without changing live feedback
+
+
+<ol class="enumerate">
+<li> Open <kbd class="kbd">C-e H s f E</kbd> and press capital <kbd class="kbd">C</kbd> to hear the currently applied
+tone. Press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to hear the draft, initially the same sound. Both play
+the tone alone, interrupting previous main speech.
+</li><li> Move to <em class="emph">Volume</em> and lower this draft&rsquo;s individual level with Shift-left
+if wanted. This leaves other tones and the live spelling cue unchanged.
+</li><li> Press <kbd class="kbd">w</kbd> to open Waveform. Browse a choice, read its Help, then press
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> to return with that waveform in the draft. Press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to hear it.
+For Pulse, adjust <em class="emph">Pulse width</em> back in the editor, then preview again.
+</li><li> Alternate <kbd class="kbd">C</kbd> for the applied tone and <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> for the draft. Capital <kbd class="kbd">P</kbd>
+reads a spelling sample with the draft tone, using the parent&rsquo;s current
+timing, voice and earcon settings. Use this to judge whether the tone
+obscures the word. Capital <kbd class="kbd">S</kbd> stops; navigation also interrupts playback.
+</li><li> Press <kbd class="kbd">q</kbd> to return and discard unapplied edits. Reopening starts from
+the currently applied tone. To keep the experiment instead, use the
+Apply, Save or preset actions described below before leaving.
+</li></ol>
+
+<p>These previews privately enable the tone even if live spelling tones are
+off. They do not turn the live cue on, apply adjustments or save defaults.
+A tone alone cannot demonstrate <em class="emph">Before speech</em> versus <em class="emph">Alongside speech</em>;
+use capital <kbd class="kbd">P</kbd> for that comparison. Shared tone volume still scales playback,
+so a shared volume of zero silences these previews too. After Apply, <kbd class="kbd">C</kbd>
+compares against the newly applied tone, not the editor&rsquo;s opening value.
+</p>
+</li><li> <a class="anchor" id="Shape-the-pitch-and-waveform"></a>Shape the pitch and waveform
+
+
+<p><kbd class="kbd">p</kbd> sets pitch; Shift-left/right changes it by 25 Hz. Choose <kbd class="kbd">w</kbd> for waveform:
+sine is a smooth pure tone, triangle adds a softer harmonic character, and
+square sounds brighter.
+Pulse offers adjustable width; Sawtooth has a bright, buzzy character. Their
+perceived loudness can differ; compare at a comfortable individual volume.
+</p>
+<p>For Pulse, select <kbd class="kbd">u</kbd> for <em class="emph">Pulse width</em>. This is the percentage of each cycle
+spent high: 50 percent sounds like Square. Shift-left/right changes it by
+five percentage points within 5–95 percent, and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact value.
+Only Pulse uses width. Trying another waveform keeps the width in this draft,
+so you can return to Pulse and continue comparing.
+</p>
+<p>Toggle <kbd class="kbd">t</kbd> for <em class="emph">Pitch sweep</em> to make pitch rise or fall during the tone. The
+ordinary Pitch control sets the start; <kbd class="kbd">f</kbd> sets End pitch. Shift-left/right
+changes the end by 25 Hz and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters it exactly. Equal start and end
+values keep constant pitch. Turning the sweep off retains End pitch in the
+draft. The sweep occupies the existing duration and does not change timing
+relative to speech.
+</p>
+<p>Pitch and End pitch range from 50 to 10000 Hz. Duration ranges from 5 to
+1000 milliseconds and steps by 5; individual Volume ranges from 0 to 100
+percent and steps by 5 percentage points. Zero volume silences this tone.
+Waveform changes can alter perceived loudness even at the same volume.
+</p>
+</li><li> <a class="anchor" id="Shape-loudness-with-an-envelope"></a>Shape loudness with an envelope
+
+
+<a class="index-entry-id" id="index-tone-envelope_002c-ADSR"></a>
+<a class="index-entry-id" id="index-attack_002c-decay_002c-sustain-and-release"></a>
+
+<p>Choose <kbd class="kbd">e</kbd> for the envelope, which describes how loudness changes over the
+life of the tone. <em class="emph">Classic</em> uses the original short fades. <em class="emph">ADSR</em> uses four
+controls, with times in milliseconds and sustain in percent of peak level:
+</p>
+<ul class="itemize mark-bullet">
+<li><kbd class="kbd">a</kbd>, Attack: time to rise from silence to peak level.
+</li><li><kbd class="kbd">c</kbd>, Decay: time to fall from peak to the sustain level.
+</li><li><kbd class="kbd">s</kbd>, Sustain: the level held for the remaining time, rather than a duration.
+</li><li><kbd class="kbd">r</kbd>, Release: time to fade from sustain to silence.
+</li></ul>
+
+<p>For example, with Duration 100 milliseconds, Attack 10, Decay 20 and Release
+30, the tone holds its Sustain level for the remaining 40 milliseconds.
+A Sustain value of 40 means 40 percent of peak loudness during that hold,
+not a 40-millisecond duration. A longer Attack softens the onset; a short
+Attack followed by a longer Decay can make a plucked sound.
+</p>
+<p>Shift-left/right changes each timed stage by 5 milliseconds and Sustain by
+5 percentage points. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts stage times from 0 to 60000 milliseconds
+and a Sustain level from 0 to 100 percent. The duration of the whole tone
+remains the limit, even when a stage requests a much longer time.
+</p>
+<p>Total duration includes the whole envelope. If attack, decay and release
+would exceed it, they shorten proportionally and leave no sustain hold.
+Zero skips a timed stage; endpoint smoothing still limits clicks. Classic
+ignores these four controls, retaining their values while this draft remains
+open. The initial waveform is sine with Classic fades.
+</p>
+<p>With ADSR, <kbd class="kbd">k</kbd> chooses the envelope curve. <em class="emph">Linear</em> uses straight ramps and
+preserves the original ADSR behaviour. <em class="emph">Exponential</em> starts the attack more
+slowly and starts decay and release more quickly, while retaining the same
+stage durations and endpoint levels. Arrows browse the choices; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> selects
+and returns, and <kbd class="kbd">q</kbd> cancels. Classic ignores the curve but retains its choice
+in the draft.
+</p>
+<p>Preview after each small change with <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> or its equivalent, <kbd class="kbd">b</kbd>. Capital <kbd class="kbd">S</kbd>
+stops immediately without waiting for the Release stage. Compare a short tone
+with the spelling sample too: a shape that is clear alone can be masked by
+speech or make the word harder to hear.
+</p>
+</li><li> <a class="anchor" id="Reuse-a-tone-through-presets"></a>Reuse a tone through presets
+
+
+<p>Capital <kbd class="kbd">L</kbd> opens presets. Arrows browse without changing the draft; <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+loads a copy and returns, while <kbd class="kbd">q</kbd> cancels. Soft tick, Rounded beep and Short
+pluck are starting points with different pitches and envelopes, each at
+35 percent individual volume. Use <kbd class="kbd">?</kbd> followed by a preset&rsquo;s displayed key
+for its character. After loading it and returning to the editor, press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd>
+to hear the draft. The preset list does not preview while you browse.
+Further adjustments leave the preset itself unchanged.
+</p>
+<p>Capital <kbd class="kbd">N</kbd> saves the draft under a name in your personal preset collection
+through Customize. This does not apply the tone or save the spelling cue
+defaults. Reusing a personal name asks before replacing it; bundled names
+cannot be replaced. Saved presets appear alongside the bundled choices at <kbd class="kbd">L</kbd>.
+</p>
+</li><li> <a class="anchor" id="Apply-save-or-discard-the-draft"></a>Apply, save or discard the draft
+
+
+<p>Use <kbd class="kbd">A</kbd> to apply the draft for this session. Capital <kbd class="kbd">W</kbd> saves and applies
+its tone defaults through Customize. These actions leave timing, voice, earcon,
+tone enablement and shared volume unchanged. <kbd class="kbd">R</kbd> resets only the draft to factory
+defaults for preview and deliberate application. <kbd class="kbd">q</kbd> returns to Spelling
+feedback and discards unapplied edits; applied and saved changes remain.
+Reopening starts from the current tone. To reverse an applied adjustment,
+edit it back and apply again, saving too if you changed the saved defaults.
+</p>
+<p>Apply and Save store the active tone shape. Unused Pulse width, End pitch and
+ADSR values remain available while editing this draft, but reopening reads the
+applied shape; it need not recover those inactive values. A named preset stores
+the complete draft for later reuse.
+</p>
+<p>The keys have different jobs in the two menus: capital <kbd class="kbd">S</kbd> stops playback in
+the tone editor, but saves settings in the parent Spelling feedback menu.
+Capital <kbd class="kbd">W</kbd> in the editor saves only tone defaults. To keep a choice such as
+voice off and tone on, return with <kbd class="kbd">q</kbd> and save with <kbd class="kbd">S</kbd> in Spelling feedback.
+That parent Save also includes timing, earcon selection and shared tone volume.
+Saving a preset with <kbd class="kbd">N</kbd> stores neither those choices nor the live cue defaults.
+</p>
+</li><li> <a class="anchor" id="When-a-tone-cannot-be-played"></a>When a tone cannot be played
+
+
+<p>Individual volume below 100, harmonic waveforms and ADSR require an Omnivox
+worker with richer-tone support. Pulse, Sawtooth, sweeps and exponential
+curves require extended-tone support. Older workers omit an unsupported tone
+while retaining speech and earcons, and the feedback explanation records the omission.
+A preview reports missing support instead of playing an inaccurate substitute.
+Your settings remain intact. Use an updated worker, or restore volume 100,
+sine and Classic and turn off Pitch sweep to hear the tone on an older worker.
+</p></li></ol>
+</li></ol>
+
+</li><li> <a class="anchor" id="Choose-typing-and-point-feedback"></a>Choose typing and point feedback
+
+
+<p><kbd class="kbd">C-e H s t</kbd> opens <em class="emph">Typing and interaction</em>. Character, word, completed-line
+echo, point indication/presentation, and spoken messages share buffer/global
+scope; global changes also affect the source buffer. Delayed phonetics and
+delay are global. Shift-left/right changes delay by 0.1 seconds; exact entry
+through <kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts at least 0.1 seconds.
+</p>
+<p><kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews the captured line with point settings, <kbd class="kbd">P</kbd> speaks its character&rsquo;s
+phonetic name immediately, and <kbd class="kbd">s</kbd> stops. <kbd class="kbd">S</kbd> saves displayed settings through
+Customize, promoting buffer choices to startup defaults. Closing retains live
+changes without saving.
+</p></li></ol>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Notification-Routing.html">Understand the main and notification streams</a>, Up: <a href="Aural-Speech-Output.html">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

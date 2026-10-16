@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Searching And Replacing Text (Emacsvox User Manual)</title>
+
+<meta name="description" content="Searching And Replacing Text (Emacsvox User Manual)">
+<meta name="keywords" content="Searching And Replacing Text (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Basic-Usage.html" rel="up" title="Basic Usage">
+<link href="Speech-System.html" rel="next" title="Speech System">
+<link href="Editing-Text-With-Speech.html" rel="prev" title="Editing Text With Speech">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Searching-And-Replacing-Text">
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-System.html" accesskey="n" rel="next">Adjust Speech While You Work</a>, Previous: <a href="Editing-Text-With-Speech.html" accesskey="p" rel="prev">Select, copy, and move text</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Find-and-replace-text-carefully"><span>5.7 Find and replace text carefully<a class="copiable-link" href="#Find-and-replace-text-carefully"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-searching_002c-repeated-matches"></a>
+<a class="index-entry-id" id="index-isearch_002c-finishing-before-editing"></a>
+
+<p><kbd class="kbd">C-s</kbd> searches forward and <kbd class="kbd">C-r</kbd> searches backwards in the current buffer.
+Type the query, listen to the match feedback, and repeat the search key to
+reach another occurrence. Reverse direction with the other search key when
+you overshoot. Searching the current text does not send a web or mail query.
+</p>
+<p>When you find the occurrence you want, press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to end the search before
+typing document text. Forward search leaves point after the match; backward
+search leaves it before the match. Check with <kbd class="kbd">C-e l</kbd> before editing. With a
+failing search, <kbd class="kbd">C-g</kbd> first backs out of the failed part; another <kbd class="kbd">C-g</kbd> may be
+needed to abandon the search. Do not begin an edit while its prompt is active.
+</p>
+<p>For details of repetition, search history, case and failure recovery, use
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Incremental-Search.html#Incremental-Search">Incremental search</a> in the GNU Emacs Manual. Its rules describe the editor;
+Emacsvox adds spoken match context and search cues. The next procedure changes
+text, so it begins by establishing a narrower scope.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Reviewing-Text-Replacements.html" accesskey="1">Review replacements one at a time</a></li>
+</ul>
+</div>
+
+
+
+</body>
+</html>

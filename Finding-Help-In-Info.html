@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Finding Help In Info (Emacsvox User Manual)</title>
+
+<meta name="description" content="Finding Help In Info (Emacsvox User Manual)">
+<meta name="keywords" content="Finding Help In Info (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Using-This-Manual.html" rel="up" title="Using This Manual">
+<link href="Manual-Editions-And-Formats.html" rel="next" title="Manual Editions And Formats">
+<link href="Manual-Reading-Routes.html" rel="prev" title="Manual Reading Routes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Finding-Help-In-Info">
+<div class="nav-panel">
+<p>
+Next: <a href="Manual-Editions-And-Formats.html" accesskey="n" rel="next">Recognise the document you are reading</a>, Previous: <a href="Manual-Reading-Routes.html" accesskey="p" rel="prev">Choose a reading route</a>, Up: <a href="Using-This-Manual.html" accesskey="u" rel="up">Using this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Find-an-answer-in-Info-and-return"><span>2.3 Find an answer in Info and return<a class="copiable-link" href="#Find-an-answer-in-Info-and-return"> &para;</a></span></h3>
+
+<p>Info is Emacs&rsquo;s manual reader. A <em class="emph">node</em> is one navigable topic, which can have
+its own menu of subtopics. These instructions apply to the Info buffer, not
+to Emacsvox&rsquo;s settings menus.
+</p>
+<p>Try this lookup without changing your configuration:
+</p>
+<ol class="enumerate">
+<li> From a working buffer, press <kbd class="kbd">C-h i</kbd> to open Info, <kbd class="kbd">d</kbd> for its directory,
+then <kbd class="kbd">m</kbd>. Enter <code class="code">Emacsvox</code> and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to open this manual.
+</li><li> Press <kbd class="kbd">i</kbd>, enter <code class="code">ordinary reading voice</code>, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. The index
+takes you to the voice-task links. Read with your ordinary speech commands.
+</li><li> Use <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> to reach <em class="emph">Change my ordinary reading voice</em> and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
+You are now at the named-voice instructions. Reading them changes nothing;
+leave the editing commands for when you deliberately want to make a change.
+</li><li> Press lowercase <kbd class="kbd">l</kbd> to return to the task links. Another <kbd class="kbd">l</kbd> returns to
+the topic you were reading before the index lookup. This follows your
+visiting history rather than the chapter order.
+</li><li> Press <kbd class="kbd">q</kbd> to leave Info. From an Aural interface&rsquo;s contextual manual link,
+<kbd class="kbd">q</kbd> returns to that interface. If you opened other windows or switched
+buffers during the exercise, <kbd class="kbd">C-x b</kbd> also lets you select your original
+working buffer by name.
+</li></ol>
+
+<p>If the directory has no Emacsvox entry, the manual is not yet discoverable by
+that Emacs session; follow <a data-manual="emacsvox" href="./Installation.html#Installation">Installation</a> rather than guessing a file path.
+In an Aural editor, <kbd class="kbd">C-c C-i</kbd> opens its relevant manual topic, and <kbd class="kbd">i</kbd> in
+that editor&rsquo;s Help opens the same topic.
+</p>
+<p>The following Info commands are useful during later lookups:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">i</kbd></dt>
+<dd><p>Look up a subject in the manual&rsquo;s indexes. Use ordinary words, a
+command name, or a key sequence. <kbd class="kbd">,</kbd> visits further matching entries.
+</p></dd>
+<dt><kbd class="kbd">s</kbd></dt>
+<dd><p>Search the manual text, including other nodes. Enter the words and
+press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>; <kbd class="kbd">s <kbd class="key">RET</kbd></kbd> continues the same search.
+</p></dd>
+<dt><kbd class="kbd">TAB, S-TAB</kbd></dt>
+<dd><p>Move among links. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> follows the selected link.
+</p></dd>
+<dt><kbd class="kbd">m</kbd></dt>
+<dd><p>Choose a subtopic from the current node&rsquo;s menu by name, with completion.
+</p></dd>
+<dt><kbd class="kbd">u</kbd></dt>
+<dd><p>Go to the containing topic. This is different from <kbd class="kbd">l</kbd>, which goes
+back to the topic you last visited.
+</p></dd>
+<dt><kbd class="kbd">g</kbd></dt>
+<dd><p>Go to a node by its identifier. For example, enter <code class="code">Finding Tasks</code>
+to return directly to the task finder.
+</p></dd>
+</dl>
+
+<p>For the full reader tutorial and search behaviour, see the <a data-manual="info" href="https://www.gnu.org/software/emacs/manual/html_node/info/index.html#Top">Info manual</a>.
+If a key behaves differently in your session, <kbd class="kbd">C-h k</kbd> followed by that key
+explains its effective binding without invoking it.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Manual-Editions-And-Formats.html">Recognise the document you are reading</a>, Previous: <a href="Manual-Reading-Routes.html">Choose a reading route</a>, Up: <a href="Using-This-Manual.html">Using this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

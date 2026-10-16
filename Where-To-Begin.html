@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Where To Begin (Emacsvox User Manual)</title>
+
+<meta name="description" content="Where To Begin (Emacsvox User Manual)">
+<meta name="keywords" content="Where To Begin (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Introduction.html" rel="up" title="Introduction">
+<link href="Emacs-Key-Notation.html" rel="prev" title="Emacs Key Notation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Where-To-Begin">
+<div class="nav-panel">
+<p>
+Previous: <a href="Emacs-Key-Notation.html" accesskey="p" rel="prev">Read the key instructions</a>, Up: <a href="Introduction.html" accesskey="u" rel="up">Welcome to Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Where-To-Begin-1"><span>1.2 Where To Begin<a class="copiable-link" href="#Where-To-Begin-1"> &para;</a></span></h3>
+
+<p>Start with <a class="ref" href="Installation.html">Installation</a> if Emacsvox is not yet installed. It explains the
+supported installation routes, takes you to a clean speaking session, and
+provides recovery instructions when speech does not start. Once speech works,
+<a data-manual="emacsvox" href="./Guided-Tutorial.html#Guided-Tutorial">Learn the audio desktop</a> teaches reading, editing, Help, structure, and
+speech adjustments through six connected lessons and a disposable document.
+Return to <a class="ref" href="Basic-Usage.html">Basic Usage</a>, <a class="ref" href="Using-Online-Help.html">Using Online Help</a>, and <a class="ref" href="Audio-Desktop.html">Audio Desktop</a> as everyday references.
+</p>
+<p>If Emacs itself is new to you, <kbd class="kbd">C-h t</kbd> opens its interactive tutorial.
+Emacsvox speaks the tutorial and your navigation while you follow it. At any
+point, <kbd class="kbd">C-h m</kbd> describes the active modes and <kbd class="kbd">C-h k</kbd> followed by a key
+explains its current command.
+</p>
+<p><a class="ref" href="Using-This-Manual.html">Using this manual</a> offers separate reading routes for new and experienced
+Emacs users, with a short exercise in finding a topic and returning to work.
+For one question, <a class="ref" href="Finding-Tasks.html">Find a task</a> links everyday goals to their instructions.
+Use <a class="ref" href="Emacsvox-Terminology.html">Terms used in this manual</a> when a name such as palette or profile is
+unfamiliar. Detailed backend configuration comes later; it is not a prerequisite
+for everyday use once speech works.
+</p>
+</div>
+<div class="section-level-extent" id="The-Welcome-Screen">
+<h3 class="section"><span>1.3 The Welcome Screen<a class="copiable-link" href="#The-Welcome-Screen"> &para;</a></span></h3>
+
+<p>At an idle startup, after speech is ready, Emacsvox offers a short welcome
+screen. Its actions test speech, adjust rate and output volumes, choose voices
+and engines, open the tutorial or manual, and start normal use. Move between
+actions with <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd>, activate one with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, and use <kbd class="kbd">q</kbd> to
+return. Arrow keys read the instructions normally.
+</p>
+<p>Toggle <em class="emph">Show this welcome screen at startup</em> to stop showing it automatically.
+The choice is saved in this Emacs profile and survives application upgrades.
+Open the screen again through Help&rsquo;s <em class="emph">Emacsvox welcome</em> entry, <kbd class="kbd">C-h W</kbd>, or
+<kbd class="kbd">M-x emacsvox-welcome</kbd>. Startup leaves explicitly opened files and sessions
+already in use alone.
+</p>
+</div>
+<div class="section-level-extent" id="What-You-Will-Hear">
+<h3 class="section"><span>1.4 What You Will Hear<a class="copiable-link" href="#What-You-Will-Hear"> &para;</a></span></h3>
+
+<p>Emacsvox combines several forms of feedback. Speech reads text, prompts,
+results, and status. Voice changes make syntax and document structure audible.
+Short auditory icons and tones identify events such as opening a file or
+completing an action. Pauses and spatial cues help separate related information.
+</p>
+<p>Begin with the supplied settings and adjust them as you learn what helps your
+work. From the buffer you are using, <kbd class="kbd">C-e H</kbd> opens the Emacsvox
+settings menu. Press <kbd class="kbd">s</kbd> for speech controls, <kbd class="kbd">v</kbd> for voices and engines, or
+<kbd class="kbd">o</kbd> for sounds and output. <kbd class="kbd">C-e S</kbd> opens focused settings for the current
+integration, falling back to general buffer settings when no focused menu is
+available. To understand a particular item&rsquo;s feedback, leave point on it and
+press <kbd class="kbd">C-e E</kbd>.
+</p>
+<p>In a settings menu, up/down selects an item, left/right changes sections, and
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates the selection. <kbd class="kbd">?</kbd> followed by an item&rsquo;s key explains that
+item; <kbd class="kbd">? ?</kbd> explains the menu. <kbd class="kbd">q</kbd> returns one level and <kbd class="kbd">C-q</kbd> closes the
+menu sequence. Leaving a menu does not reverse adjustments already applied.
+Settings and editors have distinct saving rules, explained alongside each task
+in <a class="ref" href="Aural-Presentation.html">Aural Presentation</a>.
+</p>
+<p>Use <kbd class="kbd">C-e H a</kbd> to find an action, or <kbd class="kbd">C-e H /</kbd> to find a setting. Both select
+the matching menu control before you activate it. Dedicated editors retain
+their own navigation, preview, and saving commands; <kbd class="kbd">?</kbd> explains each view.
+</p>
+<p>Emacsvox sends speech through a speech server. New GNU/Linux, macOS, and WSL2
+installations use Omnivox; established direct servers remain available for
+compatible existing setups. Installation introduces what you need for first
+speech. <a class="ref" href="Speech-Backends.html">Speech Backends</a> provides the platform and compatibility details.
+</p>
+</div>
+<div class="section-level-extent" id="About-This-Manual">
+<h3 class="section"><span>1.5 About This Manual<a class="copiable-link" href="#About-This-Manual"> &para;</a></span></h3>
+
+<p>The maintained chapters teach current setup and everyday tasks. Each explains
+what you do, what feedback to expect, and how to inspect or recover the result.
+The separate generated reference records commands, options, and keymaps from
+the source. The heritage manual preserves Emacspeak essays and application
+guides for their historical and design value; it is not a current setup guide.
+</p>
+<p>Rapidly changing features are also documented in <code class="code">README.org</code>, <code class="code">etc/NEWS</code>,
+and the generated Aural Presentation reference. When a copied binding differs
+from your running Emacs, consult <kbd class="kbd">C-h k</kbd>, <kbd class="kbd">C-h m</kbd>, or <kbd class="kbd">C-h b</kbd> for the
+commands and bindings available in that session.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Emacs-Key-Notation.html">Read the key instructions</a>, Up: <a href="Introduction.html">Welcome to Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

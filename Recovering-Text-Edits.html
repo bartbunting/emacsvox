@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Recovering Text Edits (Emacsvox User Manual)</title>
+
+<meta name="description" content="Recovering Text Edits (Emacsvox User Manual)">
+<meta name="keywords" content="Recovering Text Edits (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Text-With-Speech.html" rel="up" title="Editing Text With Speech">
+<link href="Copying-Through-The-Clipboard.html" rel="next" title="Copying Through The Clipboard">
+<link href="Choosing-Earlier-Copied-Text.html" rel="prev" title="Choosing Earlier Copied Text">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Recovering-Text-Edits">
+<div class="nav-panel">
+<p>
+Next: <a href="Copying-Through-The-Clipboard.html" accesskey="n" rel="next">Exchange text with another application</a>, Previous: <a href="Choosing-Earlier-Copied-Text.html" accesskey="p" rel="prev">Choose text copied earlier</a>, Up: <a href="Editing-Text-With-Speech.html" accesskey="u" rel="up">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Recover-a-text-edit-before-saving"><span>5.6.5 Recover a text edit before saving<a class="copiable-link" href="#Recover-a-text-edit-before-saving"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-undo-with-speech"></a>
+<a class="index-entry-id" id="index-pasted-into-the-wrong-place"></a>
+<a class="index-entry-id" id="index-undo_002donly"></a>
+
+<p>Undo belongs to the selected buffer. Finish prompts and leave special menus,
+check the buffer with <kbd class="kbd">C-e m</kbd>, and press <kbd class="kbd">C-g</kbd> in ordinary text to deactivate
+any selection before undoing across the buffer. An active region can limit
+undo to that region.
+</p>
+<p>Use <kbd class="kbd">M-x undo-only <kbd class="key">RET</kbd></kbd> to undo one recorded change, then inspect with
+<kbd class="kbd">C-e l</kbd> or a freshly selected short region. Deactivate that inspection region
+before the next undo. Repeat only as far as necessary. Insertion and deletion
+can occupy separate undo records; a multi-step move can therefore need more
+than one correction.
+</p>
+<p><kbd class="kbd">C-/</kbd> is the familiar undo key and works for an initial undo. However, an
+intervening reading or movement command breaks its undo sequence, and a later
+ordinary undo can redo what you just undid. <code class="code">undo-only</code> avoids that reversal
+when you pause to inspect through speech. <kbd class="kbd">M-x undo-redo <kbd class="key">RET</kbd></kbd> deliberately
+reapplies undone changes when the buffer&rsquo;s undo history permits it.
+</p>
+<p>For an accidental transfer between buffers, undo the insertion at the
+destination and the cut at the source separately, inspecting each. Copying
+needs no source undo because it left the source unchanged. Neither operation
+writes a file until you save. Correcting a saved edit changes the buffer again;
+save the verified correction explicitly if the file on disk must change too.
+Do not use Revert or close an unsaved buffer as a substitute for inspecting it.
+</p>
+<p>The GNU Emacs Manual&rsquo;s <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Undo.html#Undo">Undo</a> section explains history, selective undo and
+limits. For file destinations and save failures, see
+<a class="ref" href="Saving-A-Working-Copy.html">Save a separate working copy</a>. Text undo does not reverse a settings-menu
+save, a filesystem operation or an action already sent to a terminal.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Copying-Through-The-Clipboard.html">Exchange text with another application</a>, Previous: <a href="Choosing-Earlier-Copied-Text.html">Choose text copied earlier</a>, Up: <a href="Editing-Text-With-Speech.html">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

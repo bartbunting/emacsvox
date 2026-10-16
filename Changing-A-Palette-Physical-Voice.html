@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Changing A Palette Physical Voice (Emacsvox User Manual)</title>
+
+<meta name="description" content="Changing A Palette Physical Voice (Emacsvox User Manual)">
+<meta name="keywords" content="Changing A Palette Physical Voice (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Named-Voices.html" rel="up" title="Editing Named Voices">
+<link href="Voice-Adjustments.html" rel="next" title="Voice Adjustments">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Changing-A-Palette-Physical-Voice">
+<div class="nav-panel">
+<p>
+Next: <a href="Voice-Adjustments.html" accesskey="n" rel="next">Understand Voice Adjustments</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Use-one-physical-voice-across-a-palette"><span>8.7.4 Use one physical voice across a palette<a class="copiable-link" href="#Use-one-physical-voice-across-a-palette"> &para;</a></span></h4>
+
+<p>Select a physical voice in <em class="emph">Browse voices</em> or eSpeak <em class="emph">Voice variants</em> and press
+<kbd class="kbd">V</kbd>. Choose an existing personal palette or create one. Creation copies entries,
+adjustments, and fallbacks from your chosen source. All effective names,
+including <code class="code">default</code> and inherited entries, are reviewed.
+</p>
+<p>The review starts at <code class="code">default</code>. Up/down selects rows, <kbd class="kbd">O</kbd> plays original,
+<kbd class="kbd">P</kbd> proposed, <kbd class="kbd">B</kbd> compares both, and <kbd class="kbd">A</kbd> compares representative voices.
+<kbd class="kbd">S</kbd> stops; <kbd class="kbd">x</kbd> details descendants, retained fallbacks, and playback results.
+An unavailable selected physical voice may cause fallback.
+</p>
+<p>If an entry already contains the exact physical choice, the review moves
+that choice to the front and preserves its tuning. When several choices match,
+only the first moves; the others keep their order. A newly added choice follows
+that entry&rsquo;s shared adjustments, while existing choices keep their individual
+tuning. Saving makes inherited entries complete local entries.
+</p>
+<p>This review changes the entries once. Later edits are independent, and names
+inherited in the future do not automatically acquire the chosen physical voice.
+</p>
+<p><kbd class="kbd">w</kbd> saves the review and applies the palette to both streams; <kbd class="kbd">c</kbd> saves without
+selection or application. Startup is separate. <kbd class="kbd">C-c C-k</kbd> cancels an unsaved
+review without writing; <kbd class="kbd">q</kbd> returns to the browser but retains it. Its actions
+menu offers <em class="emph">Resume palette voice review</em>.
+</p>
+<p>Use <kbd class="kbd">r</kbd> to resolve other unsaved voice editors before continuing, then
+refresh this review with <kbd class="kbd">g</kbd>. Refresh it after saved inputs change as well.
+If only some saving steps succeed, the original proposal remains available
+for retry with the same action.
+</p>
+<p>A failure on one speech stream does not undo a successful palette save.
+Retry and inspect the result for each stream. Selecting another palette ends
+that pending retry; to use the saved palette later, select it deliberately
+through Voice Palettes. <em class="emph">Close saved result</em> closes a completed review without
+undoing its data or changing the selection.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Voice-Adjustments.html">Understand Voice Adjustments</a>, Up: <a href="Editing-Named-Voices.html">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

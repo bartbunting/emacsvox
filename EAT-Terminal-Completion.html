@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Terminal Completion (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Terminal Completion (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Terminal Completion (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Screen-Review.html" rel="next" title="EAT Screen Review">
+<link href="EAT-Automatic-Feedback.html" rel="prev" title="EAT Automatic Feedback">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Terminal-Completion">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Screen-Review.html" accesskey="n" rel="next">Explicit Review Commands</a>, Previous: <a href="EAT-Automatic-Feedback.html" accesskey="p" rel="prev">Automatic Terminal Feedback</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Terminal_002dside-Completion"><span>12.3 Terminal-side Completion<a class="copiable-link" href="#Terminal_002dside-Completion"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-completion-candidates_002c-terminal"></a>
+<a class="index-entry-id" id="index-router-completion"></a>
+<a class="index-entry-id" id="index-TAB-_0028EAT-terminal-completion_0029"></a>
+
+<p>Before a terminal-side <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> on the main screen, Emacsvox captures the public
+screen and waits briefly for output to settle. An inline completion speaks the
+newly displayed field; for example, <code class="code">~/sr&lt;TAB&gt;</code> can speak <code class="code">src slash</code> after the
+shell displays <code class="code">~/src/</code>.
+</p>
+<p>An ambiguous completion printed as columns or help rows is presented as one
+transaction after the input line is redrawn. Small inferred lists speak up to
+eight candidates. Router-style descriptions keep their layout rather than
+being forced into a shell-token model. Large lists are counted and shortened
+for automatic speech. If candidates have already scrolled beyond the bounded
+screen, the count is a lower bound, such as &ldquo;at least N visible&rdquo;, not an
+invented total.
+</p>
+<p>Identical repeated lists, split output, bells, wrapping, and resizing are
+coalesced without repeating the candidate text. This works from rendered
+results for local Readline, SSH, and unstructured router help. No visible
+change means there is nothing reliable to announce. On an alternate screen,
+<kbd class="kbd"><kbd class="key">TAB</kbd></kbd> is navigation rather than shell completion.
+</p>
+<p>Use <kbd class="kbd">C-e q c</kbd> to read the retained candidate/help layout, or open frozen
+review with <kbd class="kbd">C-e q r</kbd> and press <kbd class="kbd">c</kbd>. This is useful for large or multi-column
+results and does not ask the terminal to complete again.
+</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Choosing Earlier Copied Text (Emacsvox User Manual)</title>
+
+<meta name="description" content="Choosing Earlier Copied Text (Emacsvox User Manual)">
+<meta name="keywords" content="Choosing Earlier Copied Text (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Text-With-Speech.html" rel="up" title="Editing Text With Speech">
+<link href="Recovering-Text-Edits.html" rel="next" title="Recovering Text Edits">
+<link href="Moving-Text-Safely.html" rel="prev" title="Moving Text Safely">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Choosing-Earlier-Copied-Text">
+<div class="nav-panel">
+<p>
+Next: <a href="Recovering-Text-Edits.html" accesskey="n" rel="next">Recover a text edit before saving</a>, Previous: <a href="Moving-Text-Safely.html" accesskey="p" rel="prev">Move a paragraph without losing it</a>, Up: <a href="Editing-Text-With-Speech.html" accesskey="u" rel="up">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Choose-text-copied-earlier"><span>5.6.4 Choose text copied earlier<a class="copiable-link" href="#Choose-text-copied-earlier"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-paste-an-earlier-copy"></a>
+<a class="index-entry-id" id="index-kill-ring_002c-earlier-entries"></a>
+<a class="index-entry-id" id="index-M_002dy"></a>
+
+<p>The kill ring keeps more than the latest passage. At the intended destination,
+<kbd class="kbd">M-y</kbd> after a non-yank command opens a chooser for earlier entries. Use
+completion or prompt history to inspect candidates, then <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to insert the
+chosen text. <kbd class="kbd">C-g</kbd> cancels before insertion. These entries may contain private
+text; use a harmless example when practising or sharing your screen or audio.
+</p>
+<p>Immediately after <kbd class="kbd">C-y</kbd>, the same <kbd class="kbd">M-y</kbd> instead replaces that insertion with
+an earlier entry. Further consecutive <kbd class="kbd">M-y</kbd> commands cycle through earlier
+entries, and Emacsvox speaks each inserted candidate. Once you issue a separate
+reading or movement command, do not assume <kbd class="kbd">M-y</kbd> will still replace the last
+paste: outside the yank sequence it opens the chooser for another insertion.
+</p>
+<p>To verify a candidate while cycling, listen to the automatic yank feedback.
+When you decide to keep it, inspect its surroundings normally. If you have
+already broken the sequence and want a different passage, undo the unwanted
+insertion, check the destination, and choose again. Repeated <kbd class="kbd">C-y</kbd> inserts
+more copies; it is not an accept or preview command.
+</p>
+<p>More detail: <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Earlier-Kills.html#Earlier-Kills">Yanking earlier kills</a> in the GNU Emacs Manual. Kill-ring
+history is useful recovery information, not a permanent backup of your work.
+</p>
+</div>
+
+
+
+</body>
+</html>

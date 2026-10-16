@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Help And Buffers (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Help And Buffers (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Help And Buffers (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Structured-Navigation.html" rel="next" title="Tutorial Structured Navigation">
+<link href="Tutorial-Editing.html" rel="prev" title="Tutorial Editing">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Help-And-Buffers">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Structured-Navigation.html" accesskey="n" rel="next">Lesson 4: navigate the document&rsquo;s structure</a>, Previous: <a href="Tutorial-Editing.html" accesskey="p" rel="prev">Lesson 2: find, edit, and recover text</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Lesson-3_003a-get-Help-and-return-to-your-work"><span>4.4 Lesson 3: get Help and return to your work<a class="copiable-link" href="#Lesson-3_003a-get-Help-and-return-to-your-work"> &para;</a></span></h3>
+
+<p>A Help buffer is another piece of work you can visit. It need not replace the
+document you were editing. We will keep a second text buffer available, then
+inspect a command without running it.
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-x b</kbd>, enter an unused name such as <code class="code">evox-tutorial-notes</code>, and
+press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Run <kbd class="kbd">M-x text-mode <kbd class="key">RET</kbd></kbd> and type
+<code class="code">I can return to my document by name.</code>.
+</li><li> Use <kbd class="kbd">C-x b</kbd> and your original practice buffer&rsquo;s name to return. Its text
+and position are still available. <kbd class="kbd">C-e m</kbd> and <kbd class="kbd">C-e l</kbd> confirm where you are.
+</li><li> From the practice document, press <kbd class="kbd">C-h k C-e l</kbd>. Emacs describes the
+current-line reading key instead of executing it as the requested action.
+Spoken key Help selects the <code class="code">*Help*</code> buffer and can remove other windows.
+Your practice document is still open. <kbd class="kbd">C-e h</kbd> reads Help again; it selects
+Help rather than speaking it from the document&rsquo;s window.
+</li><li> Press <kbd class="kbd">C-e m</kbd> to check which buffer is selected. If it is <code class="code">*Help*</code>, read
+there directly; otherwise use <kbd class="kbd">C-x b</kbd> to select <code class="code">*Help*</code> by name. Do not
+switch windows merely because Help appeared. Press <kbd class="kbd">q</kbd> while in Help when
+finished, then select the practice buffer with <kbd class="kbd">C-x b</kbd> if necessary.
+Check its name and line before editing.
+</li><li> Press <kbd class="kbd">C-h m</kbd> from the practice buffer, not from Help. It describes that
+buffer&rsquo;s modes and commands. Mode Help need not select its text for you;
+use the same check-and-select procedure to read it and return.
+</li></ol>
+
+<p>The information comes from your running Emacs, so it is particularly useful
+when a package or personal binding differs from this manual. A buffer and a
+window are different: switching buffers chooses content, while <kbd class="kbd">C-x o</kbd>
+selects another window. A changed layout does not mean a buffer was closed.
+You do not have to recreate a split to finish this exercise: returning by
+buffer name is enough. <a class="ref" href="Using-Online-Help.html">Find help while you work</a> explains how to read and leave
+ordinary Help and the distinct return route used by settings-menu Help.
+</p>
+<ul class="mini-toc">
+<li><a href="#Try-it-2" accesskey="1">Try it</a></li>
+</ul>
+<div class="subsection-level-extent" id="Try-it-2">
+<h4 class="subsection"><span>4.4.1 Try it<a class="copiable-link" href="#Try-it-2"> &para;</a></span></h4>
+
+<p><strong class="strong">3A.</strong> Without closing either text buffer, visit the notes, add a second line,
+and return to the practice document. Confirm that each contains its own text.
+</p>
+<p><strong class="strong">3B.</strong> Discover what <kbd class="kbd">C-e s</kbd> does without stopping speech as the action you
+are investigating. Then find the keys for the command name reported by Help,
+using <kbd class="kbd">C-h w</kbd>.
+</p>
+<p>See <a class="ref" href="Tutorial-Exercise-Answers.html#tutorial_002danswer_002d3">Answers for lesson 3</a>. For manual lookup and navigation history, practise
+<a data-manual="emacsvox" href="./Using-This-Manual.html#Using-This-Manual">Find an answer in Info and return</a> alongside this buffer-based Help exercise.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Structured-Navigation.html">Lesson 4: navigate the document&rsquo;s structure</a>, Previous: <a href="Tutorial-Editing.html">Lesson 2: find, edit, and recover text</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

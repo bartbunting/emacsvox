@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -37,58 +38,81 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Aural-Speech-Output.html" accesskey="n" rel="next">Speech Output And Notifications</a>, Previous: <a href="Installed-Voices-And-Engines.html" accesskey="p" rel="prev">Browse Installed Voices And Choose Engines</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Sounds_002c-Tones_002c-And-Spatial-Cues"><span>6.9 Sounds, Tones, And Spatial Cues<a class="copiable-link" href="#Sounds_002c-Tones_002c-And-Spatial-Cues"> &para;</a></span></h3>
+<h3 class="section" id="Sounds_002c-Tones_002c-And-Spatial-Cues"><span>8.10 Sounds, Tones, And Spatial Cues<a class="copiable-link" href="#Sounds_002c-Tones_002c-And-Spatial-Cues"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-sound-packs"></a>
-
 <a class="index-entry-id" id="index-spatial-presentation"></a>
 
-<p>Presentation rules refer to auditory cues by semantic name.  A sound pack maps
-those names to concrete audio assets and can inherit missing cues from another
-pack.  This separation lets you change the overall sound character without
-rewriting every presentation rule.
+<p>Rules request cues by semantic name. Sound packs map names to audio assets
+and can inherit missing cues. This lets you change the sound of a family of
+cues without rewriting rules. For one event, use its feedback rule instead.
 </p>
-<p>Open <em class="emph">Sound Packs</em> from Aural Home.  In the manager:
+<p>To enable or disable earcons in the captured buffer, use <kbd class="kbd">C-e H r l e</kbd>.
+In that submenu, <kbd class="kbd">E</kbd> changes the global default for buffers without a local
+override; <kbd class="kbd">i</kbd> removes the source buffer&rsquo;s override so it follows that default.
+Speech remains available when earcons are off, but menu cues also disappear
+where the off setting applies. These switches last for the session or buffer
+and have no Customize Save action. Toggle again or restore inheritance to
+reverse an experiment.
+</p>
+<p><kbd class="kbd">C-e H o p</kbd> opens <em class="emph">Sound Packs</em>. Its <kbd class="kbd">q</kbd> returns to <em class="emph">Sounds and output</em> with
+the same settings scope, and another <kbd class="kbd">q</kbd> returns to the main menu. Directly
+opened browsers keep their usual returns.
 </p>
 <dl class="table">
 <dt><kbd class="kbd">P</kbd></dt>
 <dd><p>Audition a representative cue without activating the pack.
 </p></dd>
 <dt><kbd class="kbd">RET</kbd></dt>
-<dd><p>Browse the pack&rsquo;s individual cues and their source or fallback.
+<dd><p>Browse individual cues and their source or fallback.
 </p></dd>
 <dt><kbd class="kbd">P in the cue browser</kbd></dt>
 <dd><p>Audition the selected concrete cue; RET shows details.
 </p></dd>
 <dt><kbd class="kbd">v</kbd></dt>
-<dd><p>Validate the pack and report missing or invalid resources.
+<dd><p>Validate resources and report missing/invalid entries.
 </p></dd>
 <dt><kbd class="kbd">a</kbd></dt>
 <dd><p>Activate the selected pack.
 </p></dd>
 </dl>
 
-<p>Use a sound pack when you want to change a family of cues together.  Use
-<em class="emph">Change a sound for this item</em> or Your feedback rules when one semantic event needs
-a different cue, suppression, or restoration.
+<p>Spatial requests describe placement portably, not a particular device.
+<kbd class="kbd">C-e H D s</kbd> reports capabilities and fallbacks; <kbd class="kbd">C-e H o n</kbd> controls output,
+separation, direction, speech, and cues. Unsupported or mono output retains
+audible content at the centre. Named tones are separate compact resources,
+independent of sampled files and the active pack.
 </p>
-<p>Spatial requests are portable descriptions rather than assumptions about one
-device.  Aural Home separates <em class="emph">Spatial Capabilities</em>, which reports what the
-current route can provide and how it falls back, from <em class="emph">Spatial Settings</em>, which
-controls output, separation, direction, speech, and cues.  Unsupported or mono
-output remains audible at the center rather than silently losing content.
-</p>
-<p>Named tones are another compact presentation resource.  They do not require a
-sampled sound file and may be used independently of the active sound pack.
+<p>For waveform, pitch sweep and envelope adjustments, use the
+<a class="ref" href="Reading-Scope-And-Punctuation.html#spelling_002dtone_002deditor">complete spelling tone editor</a>. It currently edits the global spelling cue.
+Line cues, capitalisation beeps and indentation keep the controls and saving
+rules described in their own sections; they do not yet use that draft editor.
 </p>
 
 <ul class="mini-toc">
-<li><a href="Sound-Pack-Walkthrough.html" accesskey="1">Walkthrough: Try A Sound Pack</a></li>
-<li><a href="Changing-One-Sound.html" accesskey="2">Walkthrough: Silence One Cue</a></li>
-<li><a href="Changing-Tones.html" accesskey="3">Change A Blank-Line Tone</a></li>
-<li><a href="Spatial-Presentation-Controls.html" accesskey="4">Adjust Spatial Presentation</a></li>
-<li><a href="Personal-Sound-Packs.html" accesskey="5">Inspect And Maintain A Personal Sound Pack</a></li>
+<li><a href="#Tune-line-and-boundary-cues-from-the-menu" accesskey="1">Tune line and boundary cues from the menu</a></li>
+<li><a href="Sound-Pack-Walkthrough.html" accesskey="2">Walkthrough: Try A Sound Pack</a></li>
+<li><a href="Changing-One-Sound.html" accesskey="3">Walkthrough: Silence One Cue</a></li>
+<li><a href="Changing-Tones.html" accesskey="4">Change A Blank-Line Tone</a></li>
+<li><a href="Spatial-Presentation-Controls.html" accesskey="5">Adjust Spatial Presentation</a></li>
+<li><a href="Personal-Sound-Packs.html" accesskey="6">Inspect And Maintain A Personal Sound Pack</a></li>
 </ul>
+<div class="subsection-level-extent" id="Tune-line-and-boundary-cues-from-the-menu">
+<h4 class="subsection"><span>8.10.1 Tune line and boundary cues from the menu<a class="copiable-link" href="#Tune-line-and-boundary-cues-from-the-menu"> &para;</a></span></h4>
+
+<p><kbd class="kbd">C-e H o c</kbd> opens <em class="emph">Line and boundary cues</em>. Blank, whitespace-only, separator,
+decorated, and unspeakable-line tones have pitch and integer-duration controls.
+Shift-left/right adjusts by 25 Hz or 5 milliseconds; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters exactly.
+Boundary/warning and large movement instead choose replacement earcons.
+Changing those named earcons affects every use, including warnings elsewhere.
+</p>
+<p>Each cue retains a global preview draft. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> auditions it, <kbd class="kbd">s</kbd> stops,
+<kbd class="kbd">n</kbd> silences in the draft, <kbd class="kbd">r</kbd> restores bundled values, and <kbd class="kbd">D</kbd> discards edits.
+<kbd class="kbd">S</kbd> saves through personal rules while preserving unrelated rules; stronger
+presentation rules may override it. <kbd class="kbd">q</kbd> retains the draft. This changes cue
+output, not classification of separators or decorated lines.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

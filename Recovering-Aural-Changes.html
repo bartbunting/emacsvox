@@ -16,6 +16,8 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Unconfirmed-Speech-Changes.html" rel="next" title="Unconfirmed Speech Changes">
+<link href="Reporting-Speech-Problems.html" rel="prev" title="Reporting Speech Problems">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -32,33 +34,29 @@ span:hover a.copiable-link {visibility: visible}
 <div class="subsection-level-extent" id="Recovering-Aural-Changes">
 <div class="nav-panel">
 <p>
-Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Unconfirmed-Speech-Changes.html" accesskey="n" rel="next">An Apply result is unconfirmed</a>, Previous: <a href="Reporting-Speech-Problems.html" accesskey="p" rel="prev">Prepare a useful problem report</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Recover-Unfinished-Changes"><span>6.12.1 Recover Unfinished Changes<a class="copiable-link" href="#Recover-Unfinished-Changes"> &para;</a></span></h4>
+<h4 class="subsection" id="Recover-Unfinished-Changes"><span>8.13.7 Recover Unfinished Changes<a class="copiable-link" href="#Recover-Unfinished-Changes"> &para;</a></span></h4>
 
-<p>Use <kbd class="kbd">h</kbd> to leave a working editor through Home without losing
-it.  Home&rsquo;s <em class="emph">Resume unfinished changes</em> opens the original draft, including
-its source and working settings.  In the common voice editor, <kbd class="kbd">u</kbd> undoes and
-<kbd class="kbd">q</kbd> offers to keep the draft, discard changes, or continue.  Guided feedback
-<kbd class="kbd">q</kbd> goes back one level, then hides and retains the draft at
-the top level.  To undo an already applied
-rule, open <em class="emph">Your feedback rules</em>, select it in the appropriate scope, and
-use <kbd class="kbd">t</kbd> to disable it or <kbd class="kbd">d</kbd> to remove it.
+<p>Press <kbd class="kbd">C-e H p d</kbd> to resume a retained draft directly in its owning editor.
+When several drafts exist, choose one by name; cancelling keeps the menu open.
+Opening the draft preserves its source and working settings and saves nothing.
+Finishing returns to the same menu item. Each editor retains its own save and
+leave choices: the voice editor offers Keep, Discard, or Continue editing;
+a rule editor can ask before discarding an unsaved draft.
 </p>
-<p>Retained drafts last only until Emacs exits. Discarding a draft abandons
-unsaved edits; it does not undo a completed save. A voice editor reports saved
-settings separately from successful application to the speech server. Keep
-that distinction when deciding whether to retry or to edit the saved voice.
+<p>In the common editor, <kbd class="kbd">u</kbd> undoes and <kbd class="kbd">q</kbd> offers keep, discard, or continue.
+Guided feedback <kbd class="kbd">q</kbd> first goes up through components, then hides/retains the
+draft at the top. To reverse an applied rule, use <kbd class="kbd">C-e H r o</kbd> and disable or
+delete it in the correct scope with <kbd class="kbd">t~/~d</kbd>.
 </p>
-<p>Applying waits for each speech stream to acknowledge its configuration.  If
-an Omnivox apply times out, the Workbench reports <em class="emph">server outcome unconfirmed</em>.
-Emacsvox stops that apply and sends no later steps, but changes already sent
-may still take effect on the server. A timeout does not undo the saved engine
-settings or confirm that the server rejected them. Press <kbd class="kbd">r</kbd> to reapply
-the saved engine settings and obtain a fresh result.  Save or cancel any newer
-staged edits before retrying.  A partial result retains the streams that
-acknowledged success and identifies those that timed out.
+<p>Drafts last only until Emacs exits. Discard abandons unsaved edits, not completed
+saves. The voice editor distinguishes stored settings from successful worker
+application; use that distinction when deciding to retry or make another edit.
+</p>
+<p>If saving finished but application did not, keep the result separate from
+an unfinished editor draft. Use the following procedure before retrying.
 </p>
 </div>
 

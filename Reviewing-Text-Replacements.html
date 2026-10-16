@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reviewing Text Replacements (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reviewing Text Replacements (Emacsvox User Manual)">
+<meta name="keywords" content="Reviewing Text Replacements (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Searching-And-Replacing-Text.html" rel="up" title="Searching And Replacing Text">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reviewing-Text-Replacements">
+<div class="nav-panel">
+<p>
+Up: <a href="Searching-And-Replacing-Text.html" accesskey="u" rel="up">Find and replace text carefully</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Review-replacements-one-at-a-time"><span>5.7.1 Review replacements one at a time<a class="copiable-link" href="#Review-replacements-one-at-a-time"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-replacement_002c-controlling-scope"></a>
+<a class="index-entry-id" id="index-query_002dreplace"></a>
+<a class="index-entry-id" id="index-M_002d_0025"></a>
+
+<p>Use a disposable Text-mode buffer for this example. Insert these three lines:
+</p>
+<div class="example">
+<pre class="example-preformatted">The draft is ready.
+Keep this draft for comparison.
+The draft outside the selection must stay unchanged.
+</pre></div>
+
+<ol class="enumerate">
+<li> From the beginning, set the mark with <kbd class="kbd">C-<kbd class="key">SPC</kbd></kbd> and move down two lines.
+Point is at the third line&rsquo;s beginning. <kbd class="kbd">C-e r</kbd> should read only the first
+two lines. Keep this region active for the next command.
+</li><li> Press <kbd class="kbd">M-%</kbd> to start query replacement. At the first prompt enter <code class="code">draft</code>
+and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>; at the second enter <code class="code">version</code> and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. These are
+answers to successive prompts, not text inserted into the document.
+</li><li> Emacsvox reads the line containing the proposed match. Press <kbd class="kbd">y</kbd> to replace
+the first occurrence. At the second, press <kbd class="kbd">n</kbd> to leave it unchanged.
+</li><li> When the command finishes, read all three lines. Only the first should say
+<code class="code">version</code>. The second was skipped and the third was outside the selection.
+</li></ol>
+
+<p><kbd class="kbd">M-x query-replace <kbd class="key">RET</kbd></kbd> is an alternative when Meta-percent is difficult to
+enter. The active region limits the operation under normal Transient Mark
+mode; without it, ordinary forward query replacement works from point towards
+the accessible buffer end. Do not deactivate or replace the checked mark
+between selection and starting the command. For a full-document operation,
+first abandon unrelated selection and deliberately choose the starting point.
+</p>
+<p>At a replacement question, <kbd class="kbd">q</kbd> or <kbd class="kbd"><kbd class="key">RET</kbd></kbd> stops without changing further
+matches; earlier replacements remain. Comma, <kbd class="kbd">,</kbd>, replaces the current match
+and lets you review it before advancing. <kbd class="kbd">!</kbd> replaces the remaining matches
+without more questions and is not needed for this guided task. Other editing
+keys can leave the replacement loop and then act on the document. Rely on the
+automatic match reading, or stop before issuing ordinary speech/editing keys.
+</p>
+<p>Check the result before saving. Use <a class="ref" href="Recovering-Text-Edits.html">Recover a text edit before saving</a> if the
+scope or replacement was wrong. <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Replace.html#Replace">Replacement commands</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Query-Replace.html#Query-Replace">Query replace</a> in the
+GNU Emacs Manual cover exact matching, case behaviour and the full set of
+answers. Regular-expression replacement is a different, more specialised task.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Up: <a href="Searching-And-Replacing-Text.html">Find and replace text carefully</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

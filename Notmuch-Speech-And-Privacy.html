@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Speech And Privacy (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Speech And Privacy (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Speech And Privacy (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Support-Boundaries.html" rel="next" title="Notmuch Support Boundaries">
+<link href="Notmuch-Tags-And-Archiving.html" rel="prev" title="Notmuch Tags And Archiving">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Speech-And-Privacy">
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Support-Boundaries.html" accesskey="n" rel="next">Know the support boundaries</a>, Previous: <a href="Notmuch-Tags-And-Archiving.html" accesskey="p" rel="prev">Change tags and archive state</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Choose-fields_002c-status_002c-and-privacy"><span>10.6 Choose fields, status, and privacy<a class="copiable-link" href="#Choose-fields_002c-status_002c-and-privacy"> &para;</a></span></h3>
+
+<a class="anchor" id="Notmuch-fields-and-privacy"></a>
+<a class="index-entry-id" id="index-privacy_002c-Notmuch-speech"></a>
+<a class="index-entry-id" id="index-fields_002c-Notmuch-speech"></a>
+<a class="index-entry-id" id="index-status-cues_002c-Notmuch"></a>
+<a class="index-entry-id" id="index-automatic-speech-limits_002c-Notmuch"></a>
+
+<p>From a Notmuch buffer, press <kbd class="kbd">C-e S</kbd> for focused speech settings, or reach it
+through <kbd class="kbd">C-e H j c</kbd>. The same menu is available from Hello, Search, Show, and
+Tree. Availability of settings in Tree does not add Tree-specific navigation
+or message formatting.
+</p>
+<p><kbd class="kbd">c</kbd> opens explained completion choices. Arrows browse without applying,
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies and returns, and <kbd class="kbd">q</kbd> cancels. <kbd class="kbd">?</kbd> followed by a choice&rsquo;s key
+opens spoken Help; <kbd class="kbd">q</kbd> returns to that browsed choice. In the parent menu,
+<kbd class="kbd">f</kbd> and <kbd class="kbd">b</kbd> control per-field character and UTF-8 byte limits, while <kbd class="kbd">t</kbd> and
+<kbd class="kbd">B</kbd> control total limits. Shift-left/right adjusts a selected limit by 100;
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts an exact positive integer or <code class="code">none</code>. Disabling one limit leaves
+the others active. <kbd class="kbd">w</kbd> saves these four limits and completion policy as the
+five displayed global defaults, not every Notmuch option.
+</p>
+<p>For ordered search/message fields, use <kbd class="kbd">s</kbd> and <kbd class="kbd">m</kbd>. <kbd class="kbd">i</kbd> and <kbd class="kbd">I</kbd> open the
+status-tag and fallback-cue maps. These linked Customize editors retain custom
+formatter functions and use their own Apply, Save, and Reset actions. Returning
+with <kbd class="kbd">q</kbd> does not save them. <kbd class="kbd">p</kbd> opens Presentation Options and <kbd class="kbd">A</kbd> advanced
+settings, including separators. The full group is also available through
+<kbd class="kbd">M-x customize-group <kbd class="key">RET</kbd> emacsvox-notmuch <kbd class="key">RET</kbd></kbd>. These speech settings do not
+alter Notmuch&rsquo;s database or its own display configuration.
+</p>
+<ul class="mini-toc">
+<li><a href="#Choose-the-information-in-a-spoken-summary" accesskey="1">Choose the information in a spoken summary</a></li>
+<li><a href="#Understand-limits-and-full-inspection" accesskey="2">Understand limits and full inspection</a></li>
+<li><a href="#Understand-retained-and-notification-content" accesskey="3">Understand retained and notification content</a></li>
+</ul>
+<div class="subsection-level-extent" id="Choose-the-information-in-a-spoken-summary">
+<h4 class="subsection"><span>10.6.1 Choose the information in a spoken summary<a class="copiable-link" href="#Choose-the-information-in-a-spoken-summary"> &para;</a></span></h4>
+
+<dl class="table">
+<dt><code class="code">emacsvox-notmuch-search-result-fields</code></dt>
+<dd><p>Defaults to <code class="code">(authors subject date count tags)</code>. Remove sensitive fields,
+reorder them, or add a formatter function.
+</p></dd>
+<dt><code class="code">emacsvox-notmuch-show-message-fields</code></dt>
+<dd><p>Defaults to <code class="code">(from date to cc tags attachments)</code>. Show omits the subject
+but includes To and Cc; remove <code class="code">to</code>, <code class="code">cc</code>, or other fields when privacy
+requires it.
+</p></dd>
+<dt><code class="code">emacsvox-notmuch-search-field-separator</code></dt>
+<dt><code class="code">emacsvox-notmuch-show-field-separator</code></dt>
+<dd><p>Set the text between configured fields. Both default to comma and space.
+</p></dd>
+<dt><code class="code">emacsvox-notmuch-search-status-icons</code></dt>
+<dt><code class="code">emacsvox-notmuch-show-status-icons</code></dt>
+<dd><p>Map unread, replied, forwarded, flagged, and personal tags to cues or
+silence. Removing an entry makes that status available to ordinary tag
+speech. When <code class="code">mail-message-status-cues</code> is enabled in Presentation
+Options, its rules own the shared semantic status cues; the maps still
+suppress the corresponding spoken status tags.
+</p></dd>
+<dt><code class="code">emacsvox-notmuch-search-completion-style</code></dt>
+<dd><p>Select <code class="code">adaptive</code>, <code class="code">summary</code>, <code class="code">cue</code>, or <code class="code">silent</code> using the completion
+behaviour described earlier.
+</p></dd>
+</dl>
+
+</div>
+<div class="subsection-level-extent" id="Understand-limits-and-full-inspection">
+<h4 class="subsection"><span>10.6.2 Understand limits and full inspection<a class="copiable-link" href="#Understand-limits-and-full-inspection"> &para;</a></span></h4>
+
+<p>Mail-controlled text is bounded before automatic speech and Aural history.
+Defaults are 256 characters and 1,024 UTF-8 bytes per field, then 1,000
+characters and 4,096 bytes for the complete automatic presentation.
+</p>
+<dl class="table">
+<dt><code class="code">emacsvox-notmuch-automatic-field-character-limit</code></dt>
+<dt><code class="code">emacsvox-notmuch-automatic-field-byte-limit</code></dt>
+<dd><p>Bound each automatic field before formatting and submission.
+</p></dd>
+<dt><code class="code">emacsvox-notmuch-automatic-total-character-limit</code></dt>
+<dt><code class="code">emacsvox-notmuch-automatic-total-byte-limit</code></dt>
+<dd><p>Bound the final automatic Notmuch presentation.
+</p></dd>
+<dt><code class="code">emacsvox-notmuch-mime-node-limit</code></dt>
+<dt><code class="code">emacsvox-notmuch-mime-depth-limit</code></dt>
+<dd><p>Default to 4,096 cons nodes and depth 64, limiting inspection of malformed,
+cyclic, broad, or deeply nested MIME metadata. An incomplete scan reports
+a conservative attachment lower bound, not a claim that no attachment exists.
+</p></dd>
+</dl>
+
+<p>A shortened Search or Show announcement explains what was omitted and points
+to <kbd class="kbd">C-c C-p</kbd> for full configured details. A shortened Hello item points to
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Explicit Search and Show inspection deliberately bypasses automatic
+content limits; use it only when speaking the full configured fields is
+appropriate. These limits are not a general privacy guarantee for every
+explicit command or another application&rsquo;s output.
+</p>
+</div>
+<div class="subsection-level-extent" id="Understand-retained-and-notification-content">
+<h4 class="subsection"><span>10.6.3 Understand retained and notification content<a class="copiable-link" href="#Understand-retained-and-notification-content"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-Aural-history_002c-mail-privacy"></a>
+
+<p>Main-stream Notmuch presentations can enter bounded Aural history. By default,
+Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes of speech
+preview per record. Records contain frozen data, source names, and positions,
+but never retain source buffers. Inspect them through <kbd class="kbd">C-e H f h</kbd> or
+<kbd class="kbd">M-x emacsvox-aural-list-recent-feedback</kbd>. Set
+<code class="code">emacsvox-aural-presentation-history-limit</code> to zero to disable this history.
+</p>
+<p>Generic asynchronous completion contains no query or message metadata, but a
+notification-stream completion may be retained by the notification subsystem.
+Choose <code class="code">cue</code> or <code class="code">silent</code> if even a generic thread count is unwanted. Review
+notification-device and logging settings separately from mail field choices.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Support-Boundaries.html">Know the support boundaries</a>, Previous: <a href="Notmuch-Tags-And-Archiving.html">Change tags and archive state</a>, Up: <a href="Notmuch-Mail.html">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

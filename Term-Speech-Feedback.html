@@ -37,30 +37,28 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Reviewing-The-Term-Screen.html" accesskey="n" rel="next">Reviewing The Term Screen</a>, Previous: <a href="Term-Input-Modes.html" accesskey="p" rel="prev">Character And Line Input Modes</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Automatic-Speech-Feedback"><span>12.3 Automatic Speech Feedback<a class="copiable-link" href="#Automatic-Speech-Feedback"> &para;</a></span></h3>
+<h3 class="section" id="Automatic-Speech-Feedback"><span>13.3 Automatic Speech Feedback<a class="copiable-link" href="#Automatic-Speech-Feedback"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-automatic-speech_002c-Term"></a>
-
 <a class="index-entry-id" id="index-emacsvox_002determ_002dautospeak"></a>
-
 <a class="index-entry-id" id="index-emacsvox_002dtoggle_002determ_002dautospeak"></a>
 
-<p>Automatic feedback is controlled by the buffer-local setting
-<code class="code">emacsvox-eterm-autospeak</code>, which is on by default.  Toggle it for the
-current Term buffer with <kbd class="kbd">C-t C-q</kbd>.  The older spelling
+<p><code class="code">emacsvox-eterm-autospeak</code> controls automatic feedback in the current buffer
+and defaults to enabled. <kbd class="kbd">C-t C-q</kbd> toggles it. The older spelling
 <code class="code">eterm-autospeak</code> is not an Emacsvox variable.
 </p>
-<p>The Term buffer must be displayed in a live window for output to be spoken
-automatically.  A hidden Term buffer can continue running without speaking.
-In line mode, Emacsvox reads the newly inserted output range without
-interrupting it for every character.  In character mode, it presents rendered
-cursor movement, characters, words, or the reached line according to how the
-screen changed; new terminal activity can stop earlier speech.
+<p>A Term buffer must be displayed in a live window for automatic output speech.
+A hidden buffer can keep running silently. This displayed-window condition is
+not EAT&rsquo;s selected-buffer and keyboard-focus policy.
 </p>
-<p>This feedback is based on Term&rsquo;s rendered buffer and cursor coordinates.  It
-does not provide EAT&rsquo;s bounded screen transactions, terminal-completion model,
-or alternate-screen policy.  Use explicit review whenever automatic output is
-too brief or an application redraw is ambiguous.
+<p>In line mode, speech reads newly inserted output as a range rather than
+interrupting it for every character. In character mode, rendered cursor and
+screen changes determine whether a character, word, movement, or reached line
+is presented. New terminal activity can stop earlier speech.
+</p>
+<p>This integration does not provide EAT&rsquo;s bounded screen transactions,
+completion model, or alternate-screen policy. When a redraw is ambiguous or
+an announcement too brief, use the explicit review commands.
 </p>
 </div>
 

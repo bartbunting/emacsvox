@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Clipboard Trust (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Clipboard Trust (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Clipboard Trust (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Full_002dscreen-Applications.html" rel="next" title="EAT Full-screen Applications">
+<link href="EAT-Passwords-And-Privacy.html" rel="prev" title="EAT Passwords And Privacy">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Clipboard-Trust">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Full_002dscreen-Applications.html" accesskey="n" rel="next">Full-screen Applications And Limitations</a>, Previous: <a href="EAT-Passwords-And-Privacy.html" accesskey="p" rel="prev">Passwords And Sensitive Content</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Terminal_002dControlled-Clipboard-Trust"><span>12.8 Terminal-Controlled Clipboard Trust<a class="copiable-link" href="#Terminal_002dControlled-Clipboard-Trust"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-clipboard-security_002c-EAT"></a>
+<a class="index-entry-id" id="index-OSC-52_002c-EAT"></a>
+<a class="index-entry-id" id="index-remote-terminal-trust"></a>
+<a class="index-entry-id" id="index-eat_002denable_002dkill_002dfrom_002dterminal"></a>
+<a class="index-entry-id" id="index-eat_002denable_002dyank_002dto_002dterminal"></a>
+
+<p>EAT supports terminal selection-control sequences, commonly called OSC 52.
+Trust therefore extends to any local program, SSH peer, router, or other output
+source that reaches its parser. Displaying an untrusted file through a program
+that does not sanitise control sequences can also exercise this interface.
+</p>
+<p>In the audited EAT 0.9.4 release, <code class="code">eat-enable-kill-from-terminal</code> defaults to
+non-<code class="code">nil</code>. Despite its name, this is the terminal-to-Emacs direction: a terminal
+program can place text in the kill ring. <code class="code">eat-enable-yank-to-terminal</code> defaults
+to <code class="code">nil</code> for security; enabling it lets a terminal program request current
+kill-ring text. Check the installed defaults again after an EAT upgrade.
+</p>
+<p>For output you do not fully trust, disable both directions globally through
+Customize or locally in the EAT buffer:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq-local eat-enable-kill-from-terminal nil
+            eat-enable-yank-to-terminal nil)
+</pre></div>
+
+<p>Evaluate this with <kbd class="kbd">M-:</kbd> in that buffer before processing untrusted output.
+Reserve kill-ring read-back for programs and remote endpoints trusted with
+whatever the kill ring currently contains.
+</p>
+<p>Emacsvox changes neither option. A terminal-originated selection payload is not
+an accessibility command: its contents are neither spoken nor retained as
+terminal screen text. Content-free paste announcements apply to explicit user
+paste commands, not these terminal-originated sequences.
+</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Following Web Links (Emacsvox User Manual)</title>
+
+<meta name="description" content="Following Web Links (Emacsvox User Manual)">
+<meta name="keywords" content="Following Web Links (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Web-Browsing.html" rel="up" title="Web Browsing">
+<link href="Recovering-A-Web-Page.html" rel="next" title="Recovering A Web Page">
+<link href="Navigating-A-Web-Page.html" rel="prev" title="Navigating A Web Page">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Following-Web-Links">
+<div class="nav-panel">
+<p>
+Next: <a href="Recovering-A-Web-Page.html" accesskey="n" rel="next">Recover a cluttered or incomplete page</a>, Previous: <a href="Navigating-A-Web-Page.html" accesskey="p" rel="prev">Read by heading, paragraph or search</a>, Up: <a href="Web-Browsing.html" accesskey="u" rel="up">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Follow-a-link-and-return-to-the-article"><span>9.5.3 Follow a link and return to the article<a class="copiable-link" href="#Follow-a-link-and-return-to-the-article"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-web-links_002c-inspecting"></a>
+<a class="index-entry-id" id="index-web-history_002c-going-back"></a>
+<a class="index-entry-id" id="index-EWW_002c-bookmarks"></a>
+
+<p>Use lowercase <kbd class="kbd">f</kbd> to reach the next link and lowercase <kbd class="kbd">b</kbd> for the previous
+one. Emacsvox presents link navigation; <kbd class="kbd">C-e l</kbd> reads its surrounding line.
+The link&rsquo;s label is not necessarily its destination address.
+</p>
+<p>On a link, <kbd class="kbd">k</kbd> copies its address to Emacs&rsquo;s kill ring, the text store used by
+<kbd class="kbd">C-y</kbd>. To inspect that address as text, press <kbd class="kbd">C-x b</kbd>, enter an unused buffer
+name such as <code class="code">evox-web-address</code>, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. If that name already contains
+work, choose another. Run <kbd class="kbd">M-x text-mode <kbd class="key">RET</kbd></kbd>, press <kbd class="kbd">C-y</kbd> to insert the
+address, then <kbd class="kbd">C-e l</kbd> to read it. Return to the browser by name with <kbd class="kbd">C-x b</kbd>.
+This temporary buffer need not be saved. Do not paste into an important document
+or a web form merely to inspect a URL. Between copying and pasting, avoid
+<kbd class="kbd">C-e a</kbd> and <kbd class="kbd">C-e f</kbd>: repeating a message or reading a filename also adds text
+to the kill ring and can replace the address as the next paste. Check the
+pasted text; <a data-manual="emacsvox" href="./Choosing-Earlier-Copied-Text.html#Choosing-Earlier-Copied-Text">Choose text copied earlier</a> explains retrieving an older entry.
+</p>
+<p>To copy the page&rsquo;s own address regardless of point, use
+<kbd class="kbd">M-x eww-copy-page-url <kbd class="key">RET</kbd></kbd> instead. Emacsvox&rsquo;s <kbd class="kbd">k</kbd> is context-sensitive and
+means the link address when on a link.
+</p>
+<p>Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on the intended link to follow it. After the new page loads,
+press lowercase <kbd class="kbd">l</kbd> to go back in that EWW buffer&rsquo;s history and <kbd class="kbd">r</kbd> to go
+forward again. Emacsvox announces URL navigation through the page header.
+Check your position with line reading; if necessary, search for a distinctive
+phrase from the article. History is limited and a page can change, so do not
+assume the exact passage is always restored.
+</p>
+<p>To follow a link in a separate buffer, use <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd>. Return to the original
+page with <kbd class="kbd">C-x b</kbd>; that is a buffer change rather than a history step in the
+new buffer. Use <kbd class="kbd">q</kbd> in an ordinary EWW page to leave its view. Uppercase <kbd class="kbd">Q</kbd>
+is Emacsvox&rsquo;s buffer-killing command and is not required for this task.
+</p>
+<p>To keep a website for a future session, run <kbd class="kbd">M-x eww-add-bookmark <kbd class="key">RET</kbd></kbd> on the
+wanted page. <kbd class="kbd">M-x eww-list-bookmarks <kbd class="key">RET</kbd></kbd> opens the saved list; select a
+bookmark and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to visit it. These are website bookmarks, not the
+Emacsvox ebook-position marks on <kbd class="kbd">m</kbd>, and they do not promise to preserve an
+exact reading position on a changing page.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Recovering-A-Web-Page.html">Recover a cluttered or incomplete page</a>, Previous: <a href="Navigating-A-Web-Page.html">Read by heading, paragraph or search</a>, Up: <a href="Web-Browsing.html">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

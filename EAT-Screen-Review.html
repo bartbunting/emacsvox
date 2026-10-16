@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Screen Review (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Screen Review (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Screen Review (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Feedback-Preferences.html" rel="next" title="EAT Feedback Preferences">
+<link href="EAT-Terminal-Completion.html" rel="prev" title="EAT Terminal Completion">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Screen-Review">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Feedback-Preferences.html" accesskey="n" rel="next">Verbosity And Background Monitoring</a>, Previous: <a href="EAT-Terminal-Completion.html" accesskey="p" rel="prev">Terminal-side Completion</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Explicit-Review-Commands"><span>12.4 Explicit Review Commands<a class="copiable-link" href="#Explicit-Review-Commands"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-EAT-review-commands"></a>
+<a class="index-entry-id" id="index-terminal-screen-review"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dcurrent_002drow"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dlast_002dchange"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dlikely_002dfocus"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dcompletion_002doutput"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dvisible_002dscreen"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dreview_002dscreen"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dretained_002dstatus"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dretained_002dmetadata"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dcycle_002dverbosity"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring"></a>
+<a class="index-entry-id" id="index-C_002de-q-_0028EAT-review_0029"></a>
+
+<p>With the default speech prefix, <kbd class="kbd">C-e q</kbd> provides review commands in every
+EAT input mode:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-e q l</kbd></dt>
+<dd><p>Speak the cursor row from the latest retained screen.
+</p></dd>
+<dt><kbd class="kbd">C-e q d</kbd></dt>
+<dd><p>Speak the last classified change.
+</p></dd>
+<dt><kbd class="kbd">C-e q h</kbd></dt>
+<dd><p>Speak the conservative likely-focus inference and its confidence.
+</p></dd>
+<dt><kbd class="kbd">C-e q c</kbd></dt>
+<dd><p>Speak retained completion candidates or help rows.
+</p></dd>
+<dt><kbd class="kbd">C-e q s</kbd></dt>
+<dd><p>Speak a bounded copy of the retained visible screen.
+</p></dd>
+<dt><kbd class="kbd">C-e q r</kbd></dt>
+<dd><p>Open a read-only frozen copy for line-by-line review.
+</p></dd>
+<dt><kbd class="kbd">C-e q t</kbd></dt>
+<dd><p>Speak retained progress, application, or shell-prompt status.
+</p></dd>
+<dt><kbd class="kbd">C-e q p</kbd></dt>
+<dd><p>Speak the last identified shell prompt.
+</p></dd>
+<dt><kbd class="kbd">C-e q i</kbd></dt>
+<dd><p>Speak the retained, sanitised title or working-directory change.
+</p></dd>
+<dt><kbd class="kbd">C-e q v</kbd></dt>
+<dd><p>Cycle terse, normal, and verbose automatic feedback for this terminal.
+</p></dd>
+<dt><kbd class="kbd">C-e q m</kbd></dt>
+<dd><p>Toggle content-free background monitoring for this terminal.
+</p></dd>
+</dl>
+
+<p>The reading commands inspect retained snapshots with concealed content
+redacted. The verbosity and monitoring commands instead change the source
+terminal&rsquo;s preferences. Neither operation sends terminal input. Speech is
+bounded: the retained visible screen is not arbitrary scrollback and need
+not match a changing live screen.
+</p>
+<ul class="mini-toc">
+<li><a href="#Frozen-Screen-Review" accesskey="1">Frozen Screen Review</a></li>
+</ul>
+<div class="subsection-level-extent" id="Frozen-Screen-Review">
+<h4 class="subsection"><span>12.4.1 Frozen Screen Review<a class="copiable-link" href="#Frozen-Screen-Review"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-frozen-EAT-review"></a>
+
+<p><kbd class="kbd">C-e q r</kbd> opens an immutable copy of the latest visible screen. It does not
+refresh, move the live cursor, or send input. It preserves normalised styling,
+cursor and likely-focus anchors, and retained completion rows. Opening and
+closing play distinct object cues and announce the transition.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">n, p; C-n, C-p; down, up</kbd></dt>
+<dd><p>Move by captured terminal row and speak the destination, interrupting the
+previous row announcement.
+</p></dd>
+<dt><kbd class="kbd">SPC, RET, .</kbd></dt>
+<dd><p>Speak the current captured row.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Speak a bounded form of the current screen or completion view.
+</p></dd>
+<dt><kbd class="kbd">s, c</kbd></dt>
+<dd><p>Show captured screen rows or retained completion/help rows.
+</p></dd>
+<dt><kbd class="kbd">C</kbd></dt>
+<dd><p>Go to the captured terminal cursor.
+</p></dd>
+<dt><kbd class="kbd">h</kbd></dt>
+<dd><p>Go to retained likely focus when available.
+</p></dd>
+<dt><kbd class="kbd">[, ]</kbd></dt>
+<dd><p>Move among inverse/background-styled, selection-like regions. They are not
+labelled as confirmed focus.
+</p></dd>
+<dt><kbd class="kbd">t, i</kbd></dt>
+<dd><p>Speak status or metadata copied when review opened.
+</p></dd>
+<dt><kbd class="kbd">v, m</kbd></dt>
+<dd><p>Change verbosity or monitoring in the source terminal without sending
+terminal input. The copied content stays frozen.
+</p></dd>
+<dt><kbd class="kbd">?</kbd></dt>
+<dd><p>Describe frozen review mode.
+</p></dd>
+<dt><kbd class="kbd">q</kbd></dt>
+<dd><p>Kill the content-bearing review buffer and restore its window.
+</p></dd>
+</dl>
+
+<p>Secure input, terminal reset or restart, killing the source, or leaving EAT
+mode also destroys its frozen review. These events bound the lifetime of
+copied terminal content.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Feedback-Preferences.html">Verbosity And Background Monitoring</a>, Previous: <a href="EAT-Terminal-Completion.html">Terminal-side Completion</a>, Up: <a href="EAT-Terminal-Access.html">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

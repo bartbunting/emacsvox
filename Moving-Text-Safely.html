@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Moving Text Safely (Emacsvox User Manual)</title>
+
+<meta name="description" content="Moving Text Safely (Emacsvox User Manual)">
+<meta name="keywords" content="Moving Text Safely (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Text-With-Speech.html" rel="up" title="Editing Text With Speech">
+<link href="Choosing-Earlier-Copied-Text.html" rel="next" title="Choosing Earlier Copied Text">
+<link href="Copying-Text-Between-Buffers.html" rel="prev" title="Copying Text Between Buffers">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Moving-Text-Safely">
+<div class="nav-panel">
+<p>
+Next: <a href="Choosing-Earlier-Copied-Text.html" accesskey="n" rel="next">Choose text copied earlier</a>, Previous: <a href="Copying-Text-Between-Buffers.html" accesskey="p" rel="prev">Copy a passage into another buffer</a>, Up: <a href="Editing-Text-With-Speech.html" accesskey="u" rel="up">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Move-a-paragraph-without-losing-it"><span>5.6.3 Move a paragraph without losing it<a class="copiable-link" href="#Move-a-paragraph-without-losing-it"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-moving-paragraphs"></a>
+<a class="index-entry-id" id="index-cutting-text"></a>
+<a class="index-entry-id" id="index-C_002dw"></a>
+
+<p>Cutting with <kbd class="kbd">C-w</kbd> removes the region and stores it for yanking. Practise in
+the unchanged three-paragraph source above; copying in the previous task did
+not alter it. Do not overwrite an existing buffer to recreate the example.
+</p>
+<ol class="enumerate">
+<li> Select the middle sentence from its beginning. This time move down twice
+after setting the mark, stopping at the beginning of <code class="code">Keep the closing
+   paragraph.</code>. The region contains the middle paragraph and both following
+newlines, but none of the closing paragraph. Check with <kbd class="kbd">C-e r</kbd>.
+</li><li> Press <kbd class="kbd">C-w</kbd>. Emacsvox announces the cut. The source now contains the
+opening and closing paragraphs, and point is where the removed passage
+began. Inspect the remaining text without making another cut or copy.
+</li><li> Press <kbd class="kbd">M-&gt;</kbd> for the buffer end. With the example&rsquo;s final newline present,
+press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> once to add a blank line after the closing paragraph. Press
+<kbd class="kbd">C-y</kbd> to insert the cut paragraph there.
+</li><li> Read from the beginning using short passages. The order should be opening,
+closing, then the moved paragraph, separated by blank lines. Check that
+the middle paragraph appears only once.
+</li></ol>
+
+<p>In other text, decide deliberately whether to move a following newline or
+blank line. Cutting only the visible words can leave an empty paragraph at
+the source and join words at the destination. For a transfer between files,
+verify both buffers before saving either: this is not one atomic file move.
+</p>
+<p>Consecutive kills can combine into one kill-ring entry. Avoid using another
+kill command to tidy the destination before yanking the passage; it can alter
+what you insert. <kbd class="kbd">C-k</kbd>, for example, kills to the line end and can remove the
+newline when used there. See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Killing-by-Lines.html#Killing-by-Lines">Killing by lines</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Appending-Kills.html#Appending-Kills">Appending kills</a> in the
+GNU Emacs Manual before using that faster editing pattern.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Choosing-Earlier-Copied-Text.html">Choose text copied earlier</a>, Previous: <a href="Copying-Text-Between-Buffers.html">Copy a passage into another buffer</a>, Up: <a href="Editing-Text-With-Speech.html">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

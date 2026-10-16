@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reference And Draft Windows (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reference And Draft Windows (Emacsvox User Manual)">
+<meta name="keywords" content="Reference And Draft Windows (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Working-With-Windows.html" rel="up" title="Working With Windows">
+<link href="Closing-Windows-Safely.html" rel="next" title="Closing Windows Safely">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reference-And-Draft-Windows">
+<div class="nav-panel">
+<p>
+Next: <a href="Closing-Windows-Safely.html" accesskey="n" rel="next">Close a window without closing the document</a>, Up: <a href="Working-With-Windows.html" accesskey="u" rel="up">Work with windows without losing your place</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Keep-a-reference-and-a-draft-in-separate-windows"><span>7.2.1 Keep a reference and a draft in separate windows<a class="copiable-link" href="#Keep-a-reference-and-a-draft-in-separate-windows"> &para;</a></span></h4>
+
+<p>Begin with an editable draft selected and a reference buffer already open.
+Finish prompts and leave settings editors first. For a safe first attempt,
+use the source and notes buffers from <a class="ref" href="Copying-Text-Between-Buffers.html">Copy a passage into another buffer</a>.
+Keep their names available so that you can recover by buffer name at any time.
+</p>
+<ol class="enumerate">
+<li> In the draft, press <kbd class="kbd">C-x 4 b</kbd>, enter the reference buffer&rsquo;s name, and press
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd>. The digit 4 is a separate keypress. Emacs displays and selects the
+reference in another window, creating or reusing a view according to its
+display configuration. <kbd class="kbd">C-x 4 f</kbd> does the equivalent for a file pathname.
+</li><li> Check the selected buffer with <kbd class="kbd">C-e m</kbd> and read a line or paragraph. Use
+short inspections when you intend to retain point. Tracked reading with
+<kbd class="kbd">C-e i</kbd> moves the reference&rsquo;s reading position as explained in
+<a class="ref" href="Reading-From-Point.html">Read from point, stop, and start again</a>.
+</li><li> Press <kbd class="kbd">C-x o</kbd> to select the next window and identify it before typing.
+With two ordinary windows this usually alternates between reference and
+draft. With more windows, repeat until the intended draft is selected;
+do not assume the next view must be the draft.
+</li><li> To transfer text, return to the reference, select and check a short passage,
+then copy with <kbd class="kbd">M-w</kbd>. Use <kbd class="kbd">C-x o</kbd> to return to the draft, confirm its buffer
+and insertion point, and press <kbd class="kbd">C-y</kbd>. The reference text remains unchanged.
+Follow <a class="ref" href="Copying-Text-Between-Buffers.html">Copy a passage into another buffer</a> for kill-ring and newline checks.
+</li><li> Return to the reference with <kbd class="kbd">C-x o</kbd>. Its position is where you last left
+it, including movement made while selecting or reading. Inspect it rather
+than assuming copying restored an earlier reading position.
+</li></ol>
+
+<p>If window selection becomes confusing, <kbd class="kbd">C-x b</kbd> and a known buffer name is
+always a useful recovery route from ordinary work. It can replace the current
+view rather than restore the old layout; the buffer&rsquo;s text remains available.
+</p>
+<p>Some speech commands intentionally change the layout. <kbd class="kbd">C-e h</kbd> selects and
+reads Help using a windowful-reading helper, which removes other windows.
+Whole-buffer and region reading can use that helper for a large request too.
+A lost split therefore does not necessarily mean the reference was closed.
+Reopen the desired view with <kbd class="kbd">C-x 4 b</kbd>. For a short inspection without that
+helper, use line or paragraph reading as described under
+<a class="ref" href="Reading-Without-Moving-Point.html">Read a short passage without moving point</a>.
+</p>
+<p>For the general display and selection commands, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Pop-Up-Window.html#Pop-Up-Window">Displaying in another window</a>
+and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Other-Window.html#Other-Window">Using other windows</a> in the GNU Emacs Manual. Emacsvox adds speech to the
+selection; it does not make the ordinary display rules identical in every setup.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Closing-Windows-Safely.html">Close a window without closing the document</a>, Up: <a href="Working-With-Windows.html">Work with windows without losing your place</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

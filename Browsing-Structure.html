@@ -21,9 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
-kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
-ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -38,127 +36,47 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Web-Browsing.html" accesskey="n" rel="next">Web Browsing With EWW</a>, Previous: <a href="Structured-Editing.html" accesskey="p" rel="prev">Structured Editing And Templates</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Browsing-Structure-1"><span>8.3 Browsing Structure<a class="copiable-link" href="#Browsing-Structure-1"> &para;</a></span></h3>
+<h3 class="section" id="Browsing-Structure-1"><span>9.4 Browsing Structure<a class="copiable-link" href="#Browsing-Structure-1"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-structured-navigation-1"></a>
 
-<p>Use the structure exposed by the active Emacs mode rather than treating every
-buffer as plain text.  Info provides node and menu navigation, Outline provides
-heading and visibility commands, and EWW exposes HTML headings, links, lists,
-tables, and other document elements.  Begin with <kbd class="kbd">C-h m</kbd> in the buffer;
-see <a class="ref" href="Using-Online-Help.html">Using Online Help</a> for the common discovery commands and
-<a class="ref" href="Web-Browsing.html">Web Browsing</a> for the maintained Web route.
+<p>Use the active mode&rsquo;s structure when it matches the task: Info has nodes and
+menus, Outline has headings and visibility, and EWW exposes HTML headings,
+links, lists, tables, and other document elements. The following sections
+explain Emacsvox&rsquo;s reading of headings, tables, and application lists. These
+reading controls are distinct from commands that edit the underlying content.
 </p>
+
 <ul class="mini-toc">
-<li><a href="#Reading-Markdown-and-Org-tables" accesskey="1">Reading Markdown and Org tables</a></li>
-<li><a href="#Browsing-CSV-data" accesskey="2">Browsing CSV data</a></li>
+<li><a href="#Reading-Org-headings" accesskey="1">Reading Org headings</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html" accesskey="2">Reading Markdown and Org tables</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html#Reading-application-lists" accesskey="3">Reading application lists</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html#Browsing-CSV-data" accesskey="4">Browsing CSV data</a></li>
 </ul>
-<div class="subsection-level-extent" id="Reading-Markdown-and-Org-tables">
-<h4 class="subsection"><span>8.3.1 Reading Markdown and Org tables<a class="copiable-link" href="#Reading-Markdown-and-Org-tables"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Reading-Org-headings">
+<h4 class="subsection"><span>9.4.1 Reading Org headings<a class="copiable-link" href="#Reading-Org-headings"> &para;</a></span></h4>
 
-<p>In a Markdown or Org table, press a Control-Meta arrow to enter table reading
-and move immediately. Left/Right move by cell; Up/Down move by logical row.
-The first movement announces table reading and the destination in one spoken
-result. Outside supported tables, these arrows keep their existing bindings,
-including in code examples.
+<p>Reading a whole Org heading omits its leading stars at punctuation levels
+<code class="code">some</code> and <code class="code">none</code>. Heading voices and the optional heading-level announcement
+still identify the structure. At <code class="code">all</code> punctuation, the stars are counted,
+for example, &ldquo;3 star&rdquo; before a level-three heading. An empty heading is
+spoken as &ldquo;Empty heading&rdquo; when its stars are omitted.
 </p>
-<p>You can still press the speech prefix followed by <kbd class="kbd">C-t C-r</kbd>
-to enter without moving. With the default prefix, this is
-<kbd class="kbd">C-e C-t C-r</kbd>. This entry announces the dimensions and current
-cell. Press <kbd class="kbd">q</kbd> or the same prefix command to restore ordinary
-editing keys.
+<p>Word reading and partial-line reading count the stars actually selected.
+Starting at the second star of a level-three heading therefore says &ldquo;2 star&rdquo;.
+Word movement includes the star count when it reaches the first heading word,
+in either direction, without changing the usual cursor position. Moving through
+the remaining title words does not repeat that count or heading-level
+announcement. Character reading and spelling retain the individual stars.
+Collapsed headings have a collapse cue at every level; the large-movement cue
+belongs to Org structure navigation.
 </p>
-<p>Use the speech prefix followed by <kbd class="kbd">C-t ]</kbd> or
-<kbd class="kbd">C-t [</kbd> to find and enter the next or previous table from
-prose. Inside table reading, <kbd class="kbd">t</kbd> and <kbd class="kbd">T</kbd> do
-the same. Code examples are skipped.
-</p>
-<p>While table reading is active:
-</p>
-<ul class="itemize mark-bullet">
-<li>Up/Down and Control-Meta-Up/Down move by logical row, retain the column,
-and read the complete destination row.
-</li><li>Control-Meta-Left/Right move between cells. Plain Left/Right retain
-character movement. Tab and Shift-Tab move between cells without editing;
-Return or Space reads the current cell.
-</li><li><kbd class="kbd">r</kbd> reads the row; <kbd class="kbd">c</kbd> reads the column.
-<kbd class="kbd">.</kbd> announces coordinates; <kbd class="kbd">=</kbd> gives dimensions.
-</li><li><kbd class="kbd">a</kbd> changes column titles, row titles, or data/title order
-for this buffer. The customization group <code class="code">emacsvox-table-reader</code> sets defaults.
-</li><li><kbd class="kbd">w</kbd> or <kbd class="kbd">k k</kbd> copies the cell;
-<kbd class="kbd">k r</kbd> copies the row with tabs between cells;
-<kbd class="kbd">k c</kbd> copies the column with newlines between cells.
-</li><li>Meta-Up/Down leave directly for preceding/following prose. Up/Down also
-leave when movement crosses a vertical table edge. If there is no content
-beyond that edge, point stays in the table.
-</li></ul>
-
-<p>A horizontal edge or a missing cell in a shorter row leaves point unchanged
-and announces the boundary. Separators are skipped. A separator immediately
-after the first row identifies column titles; otherwise the first row is data.
-Coordinates distinguish the header from one-based data rows. Empty cells are
-spoken as “blank.” Wrapping never shortens a logical cell&rsquo;s speech or copy.
-</p>
-<p>Reading commands preserve document text: they do not align tables, create
-rows, or evaluate Org formulas. Copies use cell values, with ordinary links
-represented by their labels and inline code by its literal text. Use the host
-mode to copy exact markup or formulas. This reader covers simple pipe tables;
-HTML spans, nested tables, and spreadsheet-specific structures have separate
-interfaces.
-</p>
-<p>Leaving the table restores ordinary mode keys. Other editing commands retain
-their normal meaning; an edit ends the reading context. Org&rsquo;s existing table
-editing feedback and Markdown&rsquo;s markup-stripping speech option remain
-independent of this reader. Agent Shell uses the same logical reading
-operations with its existing automatic table entry, commands and preferences;
-see <a class="ref" href="Agent-Shell.html">Agent Shell</a>.
-</p>
-</div>
-<div class="subsection-level-extent" id="Browsing-CSV-data">
-<h4 class="subsection"><span>8.3.2 Browsing CSV data<a class="copiable-link" href="#Browsing-CSV-data"> &para;</a></span></h4>
-
-<p>Use <code class="code">emacsvox-table-find-csv-file</code> to open a CSV file in
-the table browser, or <code class="code">emacsvox-table-view-csv-buffer</code> to
-browse the current buffer&rsquo;s CSV data. Quoted commas, doubled quotation marks,
-and multiline fields remain single logical cells. Blank records outside quoted
-fields are skipped; empty fields remain cells. Empty input or malformed quoting
-produces an error before a table view is created.
-</p>
-<p>Browsing preserves the source text. If the file is already open, its buffer
-and unsaved edits remain available, and the view uses those current contents.
-The browser uses the shared table controls immediately; there is no separate
-reading-mode toggle:
-</p>
-<ul class="itemize mark-bullet">
-<li>Up/Down and <kbd class="kbd">C-M-Up/Down</kbd> move by logical row and read the whole row.
-</li><li><kbd class="kbd">C-M-Left/Right</kbd> and Tab/Shift-Tab move by cell. Plain Left/Right and
-<kbd class="kbd">C-b/C-f</kbd> move by character; <kbd class="kbd">C-p/C-n</kbd> move by logical row.
-</li><li>Return or Space reads the cell; <kbd class="kbd">r</kbd> reads the row and <kbd class="kbd">c</kbd> reads the column.
-</li><li><kbd class="kbd">.</kbd> gives coordinates and <kbd class="kbd">=</kbd> gives dimensions. The first row supplies
-column titles and is announced separately from the data rows.
-</li><li><kbd class="kbd">w</kbd> or <kbd class="kbd">k k</kbd> copies the cell, <kbd class="kbd">k r</kbd> copies the row with tabs between cells,
-and <kbd class="kbd">k c</kbd> copies the column with newlines between cells. <kbd class="kbd">K</kbd> copies the
-whole table to the table clipboard for <code class="code">emacsvox-table-paste-from-clipboard</code>.
-</li><li><kbd class="kbd">a</kbd> changes column titles, row titles, or data order for the view, using
-the shared reader preferences. <kbd class="kbd">q</kbd> closes the view.
-</li></ul>
-
-<p>These replace the old browser cell-arrow, header-reading, automatic-speech,
-and single-key table-copy bindings. The old local aliases <kbd class="kbd">b</kbd>, <kbd class="kbd">n</kbd>, <kbd class="kbd">p</kbd>, <kbd class="kbd">A</kbd>,
-<kbd class="kbd">B</kbd>, <kbd class="kbd">E</kbd>, and <kbd class="kbd">T</kbd> are removed. The speech-prefix table commands remain available.
-</p>
-<p>Search with <kbd class="kbd">s</kbd>, <kbd class="kbd">R</kbd> (row), <kbd class="kbd">C</kbd> (column), or <kbd class="kbd">h</kbd> (headers); <kbd class="kbd">#</kbd> sorts on the
-current column. <kbd class="kbd">M-&lt;</kbd> and <kbd class="kbd">M-&gt;</kbd> jump to the top and bottom. At a table edge,
-movement reports the boundary and leaves point in place.
-</p>
-<p>Filters remain on <kbd class="kbd">f</kbd> (row) and <kbd class="kbd">g</kbd> (column); a prefix argument requests a new
-filter. Filter indexes and the <kbd class="kbd">j</kbd> jump prompt retain zero-based model
-coordinates, including the header row, even though spoken coordinates count
-data rows and columns from one. For example, a row filter <code class="code">(0 &quot;value&quot; 2)</code>
-reads the first column, the word “value”, and the third column. <kbd class="kbd">M-l</kbd> and <kbd class="kbd">M-s</kbd>
-load and save filters. Filters are explicit inspections; shared row movement
-always reads the whole row. Sorting preserves filters and shared speech
-preferences. Use <kbd class="kbd">C-h m</kbd> for the full browser key map.
+<p>Counts preserve the configured character name without adding a plural ending.
+At <code class="code">all</code> punctuation, the speech server names <code class="code">*</code>, so an active Omnivox
+pronunciation of &ldquo;asterisk&rdquo; produces &ldquo;3 asterisk&rdquo;. Saved punctuation-editor
+changes take effect after restarting speech. Explicit word and partial-line
+reads at <code class="code">some</code> or <code class="code">none</code> use <code class="code">tts-character-to-speech-table</code>, the Emacs table
+also used for character reading.
 </p>
 </div>
 </div>

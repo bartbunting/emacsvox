@@ -21,6 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -36,22 +37,27 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Voices-And-Routing.html" accesskey="n" rel="next">Choose And Manage Voice Palettes</a>, Previous: <a href="Explaining-Presentation.html" accesskey="p" rel="prev">Understand Why Something Sounded That Way</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Change-Feedback-And-Manage-Rules"><span>6.4 Change Feedback And Manage Rules<a class="copiable-link" href="#Change-Feedback-And-Manage-Rules"> &para;</a></span></h3>
+<h3 class="section" id="Change-Feedback-And-Manage-Rules"><span>8.5 Change Feedback And Manage Rules<a class="copiable-link" href="#Change-Feedback-And-Manage-Rules"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-presentation-overrides"></a>
 
-<p>Start by choosing the narrowest tool that matches your intention:
+<p>Choose the narrowest tool that expresses the change:
 </p>
 <table class="multitable">
 <tbody><tr><td width="42%">Intention</td><td width="30%">Use</td><td width="28%">Scope</td></tr>
-<tr><td width="42%">Try an optional behavior supplied by Emacsvox or an integration</td><td width="30%">Presentation Options</td><td width="28%">Global configuration</td></tr>
-<tr><td width="42%">Change voice, sound, tone, label, or suppression</td><td width="30%">Feedback Details, then Change field</td><td width="28%">Personal, session, or current buffer</td></tr>
-<tr><td width="42%">Review or remove an existing precise change</td><td width="30%">Your feedback rules</td><td width="28%">Its recorded scope</td></tr>
-<tr><td width="42%">Try rules only in the current work buffer</td><td width="30%">Current Buffer Rules</td><td width="28%">Life of that buffer</td></tr>
-<tr><td width="42%">Switch selected reading or working settings</td><td width="30%">Presentation Profiles</td><td width="28%">Saved global configuration</td></tr>
+<tr><td width="42%">Try optional integration feedback</td><td width="30%">Presentation Options</td><td width="28%">Global configuration</td></tr>
+<tr><td width="42%">Change a voice, sound, tone, label, or suppression</td><td width="30%">Feedback Details, then Change field</td><td width="28%">Personal, session, or current buffer</td></tr>
+<tr><td width="42%">Review or remove a precise change</td><td width="30%">Your feedback rules</td><td width="28%">The rule&rsquo;s recorded scope</td></tr>
+<tr><td width="42%">Experiment only in one work buffer</td><td width="30%">Current Buffer Rules</td><td width="28%">Life of that buffer</td></tr>
+<tr><td width="42%">Switch reading or working settings together</td><td width="30%">Presentation Profiles</td><td width="28%">Selected global configuration</td></tr>
 </tbody>
 </table>
 
+<p><kbd class="kbd">C-e H r</kbd> opens Presentation Options and personal, session, or captured-buffer
+rule editors. Their validation, previews, saving, and discard prompts remain
+in the editor. This menu also toggles global visual-face presentation; its <kbd class="kbd">w</kbd>
+saves only that toggle through Customize. Voice Lock is independent.
+</p>
 
 <ul class="mini-toc">
 <li><a href="Heading-Voice-Walkthrough.html" accesskey="1">Walkthrough: Change Headings In One Buffer</a></li>

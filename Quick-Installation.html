@@ -37,12 +37,12 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Confirming-First-Speech.html" accesskey="n" rel="next">Confirming First Speech</a>, Previous: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="p" rel="prev">Install And Check Omnivox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Build-And-Start-Emacsvox"><span>2.6 Build And Start Emacsvox<a class="copiable-link" href="#Build-And-Start-Emacsvox"> &para;</a></span></h3>
+<h3 class="section" id="Build-And-Start-Emacsvox"><span>3.6 Build And Start Emacsvox<a class="copiable-link" href="#Build-And-Start-Emacsvox"> &para;</a></span></h3>
 
 <p>The guided WSL2 installer has already selected Emacs, compiled Emacsvox, and
-run both checks below.  You may go directly to the final step and start the
-isolated session.  The full sequence remains useful for GNU/Linux, macOS, a
-manual WSL2 installation, or later diagnosis.
+run the two checks below. Go directly to the final step to start the isolated
+session. The full sequence is for GNU/Linux, macOS, manual WSL2 installation,
+or later diagnosis.
 </p>
 <ol class="enumerate">
 <li> Enter the Emacsvox checkout:
@@ -51,28 +51,29 @@ manual WSL2 installation, or later diagnosis.
 <pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
 </pre></div>
 
-</li><li> Select Emacs 30.2 or newer.  If it is not the system <code class="code">emacs</code>, create the
-ignored local settings file:
+</li><li> Select Emacs 30.2 or newer. If it is not the system <code class="code">emacs</code> and no
+<code class="code">local.mk</code> exists, create the ignored local settings file:
 
 <div class="example">
 <pre class="example-preformatted">cp local.mk.example local.mk
 </pre></div>
 
-<p>Then set <code class="code">EMACS</code> in <code class="code">local.mk</code>:
+<p>Edit an existing <code class="code">local.mk</code> rather than replacing it. Set <code class="code">EMACS</code> there:
 </p>
 <div class="example">
 <pre class="example-preformatted">EMACS=/path/to/emacs-31/bin/emacs
 </pre></div>
 
-<p>The earlier <code class="code">emacs --version</code> command checks your shell&rsquo;s default.  Verify
-the executable selected by the Emacsvox build separately:
+<p>The earlier <code class="code">emacs --version</code> checks your shell&rsquo;s default. Verify the
+executable selected by the build separately:
 </p>
 <div class="example">
 <pre class="example-preformatted">make check-emacs
 </pre></div>
 
-<p><code class="code">make check-emacs</code> uses <code class="code">local.mk</code> when present, prints the selected
-executable and version, and confirms whether Emacsvox supports it.
+<p>This checks the Emacs selected by <code class="code">local.mk</code> when present. It can finish
+without printing anything when the version is supported. Resolve any
+executable or version error before compiling.
 </p>
 </li><li> Compile Emacsvox:
 
@@ -80,19 +81,19 @@ executable and version, and confirms whether Emacsvox supports it.
 <pre class="example-preformatted">make bytecode
 </pre></div>
 
-<p>A successful build returns to the shell without an error.  Emacsvox must be
-compiled with the same supported Emacs selected in the previous step.
+<p>A successful build returns to the shell without an error. Compile with
+the same supported Emacs selected in the previous step.
 </p>
-</li><li> Run the non-audible launcher preflight from the Emacsvox checkout:
+</li><li> Run the non-audible launcher preflight:
 
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox --diagnose
 </pre></div>
 
-<p>This checks the checkout, Emacs, and speech server without playing audio or
-opening interactive Emacs.  A successful report names Emacs 30.2 or newer,
-the <code class="code">omnivox</code> speech server, and an isolated <code class="code">-Q</code> startup.  If it reports a
-path or version problem, correct that item and run the command again.
+<p>This checks the checkout, Emacs, and speech server without playing audio
+or opening interactive Emacs. A successful report names Emacs 30.2 or
+newer, the <code class="code">omnivox</code> speech server, and an isolated <code class="code">-Q</code> startup. Correct
+any reported path or version problem, then repeat the command.
 </p>
 </li><li> Check the complete launch path with sound:
 
@@ -100,8 +101,8 @@ path or version problem, correct that item and run the command again.
 <pre class="example-preformatted">./bin/emacsvox --check
 </pre></div>
 
-<p>The launcher prints what it selected, then plays a tone and speech.  Hearing
-both means the complete speech-server launch path is ready.
+<p>The launcher prints its selections, then plays a tone and speech. Confirm
+that both are audible before continuing.
 </p>
 </li><li> Start a clean Emacsvox session:
 
@@ -109,14 +110,14 @@ both means the complete speech-server launch path is ready.
 <pre class="example-preformatted">./bin/emacsvox
 </pre></div>
 
-<p>The launcher uses Omnivox and the selected Emacs, but does not load site
-files or your personal Emacs init file.  This gives you a known starting
-point without changing an existing Emacs setup.
+<p>The launcher uses Omnivox and the selected Emacs without loading site
+files or your personal init file. It does not change an existing Emacs
+setup.
 </p></li></ol>
 
-<p>If a command needs an explicit path, <code class="code">./bin/emacsvox --help</code> describes the
-<code class="code">EMACS</code>, <code class="code">TTS_PROGRAM</code>, and <code class="code">EMACSVOX_DIR</code> overrides.  Arguments after <code class="code">--</code>
-are passed to Emacs.
+<p>For explicit paths, <code class="code">./bin/emacsvox --help</code> describes the <code class="code">EMACS</code>,
+<code class="code">TTS_PROGRAM</code>, and <code class="code">EMACSVOX_DIR</code> overrides. Arguments after <code class="code">--</code> are passed
+to Emacs.
 </p>
 </div>
 <hr>

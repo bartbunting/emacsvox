@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Working Context Terms (Emacsvox User Manual)</title>
+
+<meta name="description" content="Working Context Terms (Emacsvox User Manual)">
+<meta name="keywords" content="Working Context Terms (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Terminology.html" rel="up" title="Emacsvox Terminology">
+<link href="Editing-Terms.html" rel="next" title="Editing Terms">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Working-Context-Terms">
+<div class="nav-panel">
+<p>
+Next: <a href="Editing-Terms.html" accesskey="n" rel="next">Selection, copying and editing</a>, Up: <a href="Emacsvox-Terminology.html" accesskey="u" rel="up">Terms used in this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Your-working-context"><span>17.1 Your working context<a class="copiable-link" href="#Your-working-context"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-buffer_002c-meaning"></a>
+<a class="index-entry-id" id="index-point_002c-meaning"></a>
+<a class="index-entry-id" id="index-window_002c-meaning"></a>
+<a class="index-entry-id" id="index-frame_002c-meaning"></a>
+<a class="index-entry-id" id="index-read_002donly_002c-meaning"></a>
+<a class="index-entry-id" id="index-narrowing_002c-meaning"></a>
+<a class="index-entry-id" id="index-captured-source"></a>
+<a class="index-entry-id" id="index-scope_002c-meaning"></a>
+
+<dl class="table">
+<dt>Buffer</dt>
+<dd><p>An Emacs object containing a document or application view. It is
+not necessarily a file, and switching buffers does not close the one you
+leave. A window displays a buffer. See <a data-manual="emacsvox" href="./Desktop-Objects.html#Desktop-Objects">Buffers hold your work</a>.
+</p></dd>
+<dt>Window</dt>
+<dd><p>A view of a buffer inside an Emacs frame. Removing a window does
+not kill its buffer. Two windows showing the same buffer are views of the
+same text, not independent copies. See <a data-manual="emacsvox" href="./Working-With-Windows.html#Working-With-Windows">Working with windows</a>.
+</p></dd>
+<dt>Frame</dt>
+<dd><p>An outer Emacs application window, or the corresponding display in
+a terminal session. It contains Emacs windows. Selecting another window
+within a frame differs from switching applications in the operating system.
+See <a data-manual="emacsvox" href="./Working-With-Windows.html#Working-With-Windows">Windows and frames</a>.
+</p></dd>
+<dt>Point</dt>
+<dd><p>The current editing position, between characters. Text is normally
+inserted there. Short reading often leaves it unchanged; tracked reading
+advances it. See <a data-manual="emacsvox" href="./Reading-From-Point.html#Reading-From-Point">Reading position and interruption</a>.
+</p></dd>
+<dt>Mode</dt>
+<dd><p>The commands and behaviour associated with a buffer. Its major mode
+supplies its principal tools; minor modes add other behaviour. See
+<a data-manual="emacsvox" href="./Object-Oriented-Desktop.html#Object-Oriented-Desktop">Let modes give each buffer its tools</a>.
+</p></dd>
+<dt>Read-only</dt>
+<dd><p>A buffer state that prevents ordinary text edits. It does not
+mean the buffer has no unsaved changes, and making a buffer writable does
+not grant permission to overwrite a protected file. Special applications
+may still provide their own operations. See <a data-manual="emacsvox" href="./Opening-A-Document.html#Opening-A-Document">Opening a document safely</a>.
+</p></dd>
+<dt>Narrowing</dt>
+<dd><p>Restricting access to part of a buffer without deleting the
+rest. Reading, movement and many editing commands stay within that portion;
+widening removes the restriction. Ordinary file saving still saves the
+entire buffer. See <a data-manual="emacsvox" href="./Reading-Without-Moving-Point.html#Reading-Without-Moving-Point">Reading accessible text</a> and
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Narrowing.html#Narrowing">Narrowing</a> in the GNU Emacs Manual.
+</p></dd>
+<dt>Captured source</dt>
+<dd><p>The buffer and position retained when a settings workflow
+starts. Contextual actions continue to refer to that source rather than
+whichever menu or editor is currently selected. A changed or closed source
+may need to be captured again. See <a data-manual="emacsvox" href="./Aural-Home.html#Aural-Home">Getting started with settings menus</a>.
+</p></dd>
+<dt>Scope</dt>
+<dd><p>Where a setting or rule applies, such as one buffer, a session,
+or global defaults. Scope is not the same as persistence: a global change
+need not be saved, and a saved resource need not be active. See
+<a data-manual="emacsvox" href="./Saving-And-Startup.html#Saving-And-Startup">Choose what persists</a>.
+</p></dd>
+</dl>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Editing-Terms.html">Selection, copying and editing</a>, Up: <a href="Emacsvox-Terminology.html">Terms used in this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

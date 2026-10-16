@@ -38,38 +38,32 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Reading.html" accesskey="n" rel="next">Reading And Navigating</a>, Previous: <a href="Overview.html" accesskey="p" rel="prev">Emacsvox Overview</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Using-Emacs-Buffers"><span>3.4 Using Emacs Buffers<a class="copiable-link" href="#Using-Emacs-Buffers"> &para;</a></span></h3>
+<h3 class="section" id="Using-Emacs-Buffers"><span>5.4 Using Emacs Buffers<a class="copiable-link" href="#Using-Emacs-Buffers"> &para;</a></span></h3>
 
-<p>As you type, character echo can speak individual characters and word echo can
-speak a word when you finish it.  Completion interfaces announce candidates,
-the inserted completion, and the item currently selected.  Prompts and error
-messages are spoken through the same Emacs feedback that appears on screen.
+<p>Much editing feedback is automatic. Echo settings can speak each character or
+each completed word. Completion announces candidates, inserted completion,
+and the selected item. Prompts and error messages are also spoken.
 </p>
-<p>Most everyday feedback happens automatically.  Emacsvox also provides three
-useful groups of explicit commands:
+<p>Other information is requested explicitly:
 </p>
 <ul class="itemize mark-bullet">
-<li>Reading commands speak a character, word, line, region, or larger portion of
-a buffer without requiring you to move first.  Their names usually begin
-with <code class="code">emacsvox-speak-</code>, and their default keys use the main <kbd class="kbd">C-e</kbd>
-prefix.<a class="footnote" id="DOCF1" href="#FOOT1"><sup>1</sup></a>
-
-</li><li>Speech-system commands change settings such as rate, punctuation, and echo.
-Their names usually begin with <code class="code">tts-</code>, and many are grouped under
-<kbd class="kbd">C-e d</kbd>.<a class="footnote" id="DOCF2" href="#FOOT2"><sup>2</sup></a>
-
-</li><li>Help commands describe the active modes, available keys, and Emacsvox
-integrations in the buffer where you are working.
+<li>Reading commands speak a character, word, line, region or larger unit.
+Most inspections preserve point; tracked rest-of-buffer reading advances it.
+Names usually begin with <code class="code">emacsvox-speak-</code> and default keys use
+<kbd class="kbd">C-e</kbd>.<a class="footnote" id="DOCF1" href="#FOOT1"><sup>1</sup></a>
+</li><li>Speech-system commands adjust rate, punctuation, echo, and related controls.
+Many use <kbd class="kbd">C-e d</kbd> and names beginning <code class="code">tts-</code>.<a class="footnote" id="DOCF2" href="#FOOT2"><sup>2</sup></a>
+</li><li>Help commands explain the active modes, bindings, and integrations.
 </li></ul>
 
-<p>To move among buffers with the same major mode, use <kbd class="kbd">C-e n</kbd>
-and <kbd class="kbd">C-e p</kbd>, then repeat with just <kbd class="kbd">n</kbd> or
-<kbd class="kbd">p</kbd>.  See <a class="ref" href="Desktop-Objects.html">Desktop Objects</a> for examples and the
-other buffer-selection controls.
+<p>The settings menus provide discoverable routes to these controls; the direct
+keys remain useful for frequent actions. <kbd class="kbd">C-e S</kbd> opens focused settings for
+the current integration, or general buffer settings when no focused menu exists.
+<kbd class="kbd">C-e H .</kbd> always opens general buffer settings.
 </p>
-<p>The following sections introduce a practical starter set.  Use live Help or
-the generated reference when you need the complete commands for a particular
-application.
+<p>Buffers remain available as you change tasks. <kbd class="kbd">C-e n</kbd> and <kbd class="kbd">C-e p</kbd> cycle among
+buffers with the same major mode; repeat with <kbd class="kbd">n</kbd> or <kbd class="kbd">p</kbd>. See
+<a class="ref" href="Desktop-Objects.html">Audio Desktop</a> for buffer selection and its other navigation controls.
 </p>
 </div>
 <div class="footnotes-segment">
@@ -77,11 +71,11 @@ application.
 <h4 class="footnotes-heading">Footnotes</h4>
 
 <h5 class="footnote-body-heading"><a id="FOOT1" href="#DOCF1">(1)</a></h5>
-<p>The prefix is inherited from Emacspeak, where C-e was mnemonic
-for the project name.</p>
+<p>The prefix comes from Emacspeak, where C-e was mnemonic for
+the project name.</p>
 <h5 class="footnote-body-heading"><a id="FOOT2" href="#DOCF2">(2)</a></h5>
-<p>Historically, d was mnemonic for DECtalk; the prefix now
-contains engine-independent speech controls.</p>
+<p>The d originally referred
+to DECtalk; this prefix now contains engine-independent controls.</p>
 </div>
 
 

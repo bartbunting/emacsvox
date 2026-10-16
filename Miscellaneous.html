@@ -36,33 +36,31 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Speech-Output-Control.html" accesskey="p" rel="prev">Adjust Rate And Spoken Detail</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Adjust Speech While You Work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Stop-Or-Restart-Speech"><span>3.6.3 Stop Or Restart Speech<a class="copiable-link" href="#Stop-Or-Restart-Speech"> &para;</a></span></h4>
+<h4 class="subsection" id="Stop-Or-Restart-Speech"><span>5.8.3 Stop Or Restart Speech<a class="copiable-link" href="#Stop-Or-Restart-Speech"> &para;</a></span></h4>
 
-<p>Stopping speech ends the current output without disabling future feedback.
-Quiet mode is useful when you temporarily want to keep working without speech.
-Restart the server after correcting a backend problem or changing the selected
-synthesizer.
+<p>Stopping ends current output without disabling future feedback. Quiet mode
+lets you work temporarily without speech. Restart after correcting a backend
+problem or changing the selected synthesiser, not as an assumed cure for every
+missing integration.
 </p>
 <dl class="table">
 <dt><kbd class="kbd">C-e s</kbd></dt>
-<dd><p>Stop speech now with <code class="code">tts-stop</code>.
+<dd><p>Stop current main and notification speech with <code class="code">tts-stop</code>.
 </p></dd>
 <dt><kbd class="kbd">C-e d q</kbd></dt>
-<dd><p>Toggle quiet mode in the current buffer.  Press <kbd class="kbd">C-u</kbd> first to toggle
-it globally.
+<dd><p>Toggle current-buffer quiet mode; <kbd class="kbd">C-u</kbd> toggles it globally.
 </p></dd>
 <dt><kbd class="kbd">C-e C-s</kbd></dt>
 <dd><p>Stop and restart the selected speech server.
 </p></dd>
 <dt><kbd class="kbd">C-e d V</kbd></dt>
-<dd><p>Speak the selected adapter and its version information.
+<dd><p>Speak adapter and version information.
 </p></dd>
 </dl>
 
-<p>Use <kbd class="kbd">C-h m</kbd> or the generated keymap reference for server selection,
-repeated-pattern cleanup, text splitting, language selection, and direct engine
-controls.  Those specialist settings are intentionally outside this starter
-guide.
+<p>Server selection, repeated-pattern cleanup, text splitting, language selection,
+and direct engine controls have specialist Help and reference entries. For
+missing speech, follow <a data-manual="emacsvox" href="./Recovering-From-No-Speech.html#Recovering-From-No-Speech">Recovering From No Speech</a>.
 </p>
 </div>
 

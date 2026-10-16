@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Starting An Agent Shell Session (Emacsvox User Manual)</title>
+
+<meta name="description" content="Starting An Agent Shell Session (Emacsvox User Manual)">
+<meta name="keywords" content="Starting An Agent Shell Session (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Answering-Agent-Questions.html" rel="next" title="Answering Agent Questions">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Starting-An-Agent-Shell-Session">
+<div class="nav-panel">
+<p>
+Next: <a href="Answering-Agent-Questions.html" accesskey="n" rel="next">Answer an agent&rsquo;s question</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Start-and-control-a-session"><span>11.1 Start and control a session<a class="copiable-link" href="#Start-and-control-a-session"> &para;</a></span></h3>
+
+<p>Load Emacsvox and start Agent Shell with <kbd class="kbd">M-x agent-shell</kbd>.  Emacsvox loads
+its integration after Agent Shell and activates both new and already existing
+shell buffers.  Run <kbd class="kbd">M-x emacsvox-agent-shell-enable</kbd> only when manually
+re-enabling support after it was disabled or while diagnosing a live reload.
+</p>
+<ul class="mini-toc">
+<li><a href="#Write-and-edit-prompts" accesskey="1">Write and edit prompts</a></li>
+<li><a href="#Follow-a-response-and-steer-a-running-turn" accesskey="2">Follow a response and steer a running turn</a></li>
+<li><a href="#Work-with-queued-prompts" accesskey="3">Work with queued prompts</a></li>
+<li><a href="#Check-session-settings-and-status" accesskey="4">Check session settings and status</a></li>
+</ul>
+<div class="subsection-level-extent" id="Write-and-edit-prompts">
+<h4 class="subsection"><span>11.1.1 Write and edit prompts<a class="copiable-link" href="#Write-and-edit-prompts"> &para;</a></span></h4>
+
+<p>Compose and submit prompts with Agent Shell&rsquo;s normal editing commands.  The
+live prompt retains Emacs undo. Interactive text yanks speak the inserted
+text, including when a prefix argument selects a different kill-ring entry.
+Image attachment keeps Agent Shell&rsquo;s existing feedback. Submitted transcript
+text is history rather than editable prompt input.  Press <kbd class="kbd">C-c C-c</kbd> to ask Agent Shell to interrupt
+an active request; its normal confirmation setting still applies.
+</p>
+<p>With Agent Shell&rsquo;s persistent prompt enabled, you can keep typing while the
+agent works.  Brackets and navigation letters remain ordinary input at
+that prompt.  Reading the live prompt says “Agent busy” while the agent works.
+A pending permission is announced
+as “Waiting for permission”; a pending question says “Waiting for an answer.”
+These cues also precede the first line of a draft;
+later lines keep ordinary reading feedback.  “Ready for input” is reserved for
+an empty prompt when the agent is idle.
+</p>
+<p>Quoting a selected region, sending source context,
+dropping files, and inserting shell-command output can add to that live draft
+while the agent works. These insertions do not submit the draft. If there is
+no live prompt while busy, Agent Shell offers its queue editor instead.
+Use <kbd class="kbd">M-x yank-media</kbd> to attach a clipboard image on a display that supports
+native clipboard access. Image previews survive queueing and steering.
+The animated busy marker does not add repeated speech; reading the prompt
+continues to give its current state.
+</p>
+<p>In the viewport prompt editor, continuing a list announces its bullet or next
+number and indentation.  Indenting and dedenting announce the new indentation;
+leaving an empty list item announces that the list ended.
+</p>
+</div>
+<div class="subsection-level-extent" id="Follow-a-response-and-steer-a-running-turn">
+<h4 class="subsection"><span>11.1.2 Follow a response and steer a running turn<a class="copiable-link" href="#Follow-a-response-and-steer-a-running-turn"> &para;</a></span></h4>
+
+<p>Emacsvox speaks routine content only at complete turn boundaries.  A network
+pause does not make a partial answer sound complete.  A cancelled, refused, or
+failed turn reports its outcome without replacing the last successfully
+completed response.
+</p>
+<p>In the viewport editor, Emacsvox announces whether a prompt was
+submitted, queued, or sent for steering, and whether the editor stays open.
+The normal and override send commands follow Agent Shell&rsquo;s configured busy
+routes, including queueing when the provider does not support steering.
+“Steering sent” confirms dispatch; the agent&rsquo;s acceptance or refusal follows
+separately.
+</p>
+<p>When you use <kbd class="kbd">M-x agent-shell-prompt-steer</kbd>, Emacsvox confirms whether the
+agent accepted the steer, declined it, or started a separate turn.  A separate
+turn is announced as still in progress; it is not reported as complete until
+Agent Shell supplies a completion boundary.  Server-pushed turns, when
+supported by the provider, follow the same completed-response speech policy.
+</p>
+</div>
+<div class="subsection-level-extent" id="Work-with-queued-prompts">
+<h4 class="subsection"><span>11.1.3 Work with queued prompts<a class="copiable-link" href="#Work-with-queued-prompts"> &para;</a></span></h4>
+
+<p>Queued prompts announce when they start and how many remain. Recent Agent Shell
+versions merge queued prompts into one turn by default; Emacsvox announces how
+many prompts started together. Set <code class="code">agent-shell-prompt-queue-merge</code> to nil to
+send them one turn at a time. After cancellation, Agent Shell asks whether to
+continue with the queue. If you decline, or a failed turn leaves prompts waiting,
+the queue announcement gives its count and the command
+<kbd class="kbd">M-x agent-shell-prompt-queue-resume</kbd>. Queue-start feedback
+follows the session&rsquo;s speech level; paused-queue warnings follow
+<code class="code">emacsvox-agent-shell-signal-processing</code>.
+Agent Shell also asks before killing a shell or exiting Emacs when queued
+prompts would be lost. Declining that question keeps the prompts available.
+</p>
+</div>
+<div class="subsection-level-extent" id="Check-session-settings-and-status">
+<h4 class="subsection"><span>11.1.4 Check session settings and status<a class="copiable-link" href="#Check-session-settings-and-status"> &para;</a></span></h4>
+
+<p>Model, mode, thought-level, and other session setting changes announce their
+confirmed values.  Background setting announcements identify the session.
+When grouped choices share a name, confirmation includes the group shown by
+Agent Shell&rsquo;s completion menu.
+</p>
+<p>Use <kbd class="kbd">M-x emacsvox-agent-shell-speak-header</kbd> to hear the full session header.
+When <code class="code">agent-shell-show-cost-indicator</code> is enabled and the provider reports a
+positive cost, this includes the cumulative cost with Agent Shell&rsquo;s currency
+and rounding.  Brief announcements when entering a session stay concise.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Answering-Agent-Questions.html">Answer an agent&rsquo;s question</a>, Up: <a href="Agent-Shell.html">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

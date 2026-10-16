@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Working With Windows (Emacsvox User Manual)</title>
+
+<meta name="description" content="Working With Windows (Emacsvox User Manual)">
+<meta name="keywords" content="Working With Windows (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Audio-Desktop.html" rel="up" title="Audio Desktop">
+<link href="Object-Oriented-Desktop.html" rel="next" title="Object Oriented Desktop">
+<link href="Desktop-Objects.html" rel="prev" title="Desktop Objects">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Working-With-Windows">
+<div class="nav-panel">
+<p>
+Next: <a href="Object-Oriented-Desktop.html" accesskey="n" rel="next">Let Modes Give Each Buffer Its Tools</a>, Previous: <a href="Desktop-Objects.html" accesskey="p" rel="prev">Buffers Hold Your Work</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Work-with-windows-without-losing-your-place"><span>7.2 Work with windows without losing your place<a class="copiable-link" href="#Work-with-windows-without-losing-your-place"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-windows_002c-working-through-speech"></a>
+<a class="index-entry-id" id="index-buffer-versus-window"></a>
+
+<p>A buffer contains your work; a window is a view of a buffer. Emacs calls its
+outer application window a <em class="emph">frame</em>. A frame can contain several Emacs windows,
+but only one is selected for ordinary commands. You can work with those views
+by name and spoken context without needing to picture their arrangement.
+</p>
+<p>Switching buffers with <kbd class="kbd">C-x b</kbd> changes the selected window&rsquo;s contents.
+Selecting another window with <kbd class="kbd">C-x o</kbd> moves to that view instead. The final
+character is lowercase o, for &quot;other&quot;, not the digit zero. Emacsvox announces
+the selected buffer and mode; <kbd class="kbd">C-e m</kbd> repeats that context and <kbd class="kbd">C-e l</kbd> checks
+the current line. <kbd class="kbd">C-e C-w</kbd> describes the window arrangement.
+</p>
+<p>Two windows can show the same buffer at different positions. They are not
+independent document copies: edits in either change the same text, and the
+buffer has one mark. For two independent documents, select different buffers.
+The GNU Emacs Manual&rsquo;s <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Windows.html#Windows">Multiple windows</a> section explains this model in detail.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Reference-And-Draft-Windows.html" accesskey="1">Keep a reference and a draft in separate windows</a></li>
+<li><a href="Closing-Windows-Safely.html" accesskey="2">Close a window without closing the document</a></li>
+</ul>
+</div>
+
+
+
+</body>
+</html>

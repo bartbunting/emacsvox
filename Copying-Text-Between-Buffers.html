@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Copying Text Between Buffers (Emacsvox User Manual)</title>
+
+<meta name="description" content="Copying Text Between Buffers (Emacsvox User Manual)">
+<meta name="keywords" content="Copying Text Between Buffers (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Text-With-Speech.html" rel="up" title="Editing Text With Speech">
+<link href="Moving-Text-Safely.html" rel="next" title="Moving Text Safely">
+<link href="Selecting-Text-With-Speech.html" rel="prev" title="Selecting Text With Speech">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Copying-Text-Between-Buffers">
+<div class="nav-panel">
+<p>
+Next: <a href="Moving-Text-Safely.html" accesskey="n" rel="next">Move a paragraph without losing it</a>, Previous: <a href="Selecting-Text-With-Speech.html" accesskey="p" rel="prev">Select and check the text first</a>, Up: <a href="Editing-Text-With-Speech.html" accesskey="u" rel="up">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Copy-a-passage-into-another-buffer"><span>5.6.2 Copy a passage into another buffer<a class="copiable-link" href="#Copy-a-passage-into-another-buffer"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-copying-text-between-documents"></a>
+<a class="index-entry-id" id="index-M_002dw"></a>
+<a class="index-entry-id" id="index-C_002dy"></a>
+
+<p>Emacs calls its remembered copied or cut text the <em class="emph">kill ring</em>. Copy with
+<kbd class="kbd">M-w</kbd> and insert with <kbd class="kbd">C-y</kbd>, called <em class="emph">yank</em> in Emacs. The names do not imply
+that copying deletes anything.
+</p>
+<ol class="enumerate">
+<li> Select the middle sentence and its newline using the previous procedure.
+Hear it with <kbd class="kbd">C-e r</kbd>, then press <kbd class="kbd">M-w</kbd>. Emacsvox reports the copy; the
+source text stays in place and the mark is normally deactivated.
+</li><li> Press <kbd class="kbd">C-x b</kbd>, choose an unused name such as <code class="code">evox-edit-notes</code>, and run
+<kbd class="kbd">M-x text-mode <kbd class="key">RET</kbd></kbd>. Check the buffer with <kbd class="kbd">C-e m</kbd>. Use an empty buffer
+for this first copy, rather than inserting into an existing document.
+</li><li> Press <kbd class="kbd">C-y</kbd>. Emacsvox speaks the inserted text. Point is after it and
+the mark is at its beginning, normally inactive. Immediately press <kbd class="kbd">C-e r</kbd>
+to hear that range again; do not set a new mark first.
+</li><li> Return to <code class="code">evox-edit-source</code> with <kbd class="kbd">C-x b</kbd> and read the middle paragraph.
+It is still there. The destination contains an independent text copy.
+</li></ol>
+
+<p>For a real document, check the insertion point and deactivate any unrelated
+selection before pasting. A copied newline moves subsequent text to another
+line; a copied blank line can preserve paragraph separation. Inspect the
+surrounding text as well as the pasted passage before saving.
+</p>
+<p>During the transfer, <kbd class="kbd">C-e m</kbd> and <kbd class="kbd">C-e l</kbd> are useful checks. Avoid <kbd class="kbd">C-e f</kbd>
+for filename inspection and <kbd class="kbd">C-e a</kbd> for message repetition at this point:
+those commands also put their result in the kill ring and can change the
+next paste. <kbd class="kbd">M-x emacsvox-speak-current-kill <kbd class="key">RET</kbd></kbd> inspects the current entry
+without inserting it. Another application&rsquo;s clipboard copy can also change
+what <kbd class="kbd">C-y</kbd> inserts.
+</p>
+<p>If the text goes to the wrong place, stop and use
+<a class="ref" href="Recovering-Text-Edits.html">Recover a text edit before saving</a> rather than pasting more copies.
+For the general commands, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Yanking.html#Yanking">Yanking</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Kill-Ring.html#Kill-Ring">The kill ring</a> in the GNU Emacs
+Manual. <a class="ref" href="Reference-And-Draft-Windows.html">Keep a reference and a draft in separate windows</a> offers another way to
+manage the two working contexts.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Moving-Text-Safely.html">Move a paragraph without losing it</a>, Previous: <a href="Selecting-Text-With-Speech.html">Select and check the text first</a>, Up: <a href="Editing-Text-With-Speech.html">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

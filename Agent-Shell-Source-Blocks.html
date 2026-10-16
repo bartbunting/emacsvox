@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Agent Shell Source Blocks (Emacsvox User Manual)</title>
+
+<meta name="description" content="Agent Shell Source Blocks (Emacsvox User Manual)">
+<meta name="keywords" content="Agent Shell Source Blocks (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Agent-Shell-Tables.html" rel="next" title="Agent Shell Tables">
+<link href="Agent-Shell-Transcript-Navigation.html" rel="prev" title="Agent Shell Transcript Navigation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Agent-Shell-Source-Blocks">
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Tables.html" accesskey="n" rel="next">Navigate and copy rendered tables</a>, Previous: <a href="Agent-Shell-Transcript-Navigation.html" accesskey="p" rel="prev">Navigate transcript blocks</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Read-and-copy-source-blocks"><span>11.7 Read and copy source blocks<a class="copiable-link" href="#Read-and-copy-source-blocks"> &para;</a></span></h3>
+
+<p>Use <kbd class="kbd">k</kbd> or <kbd class="kbd">K</kbd>, or typed block navigation, to
+reach a source block, then:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-c C-b</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-speak-source-block</code> to read the complete rendered
+source block with its language and line count.
+</p></dd>
+<dt><kbd class="kbd">C-c C-y</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-copy-source-block</code> to copy the logical source
+through Agent Shell&rsquo;s public copy operation.
+</p></dd>
+</dl>
+
+<p>The source commands are explicit operations and do not use the automatic
+content limit.  Ordinary line navigation retains its separate bounded speech
+policy.
+</p>
+<ul class="mini-toc">
+<li><a href="#Review-proposed-changes" accesskey="1">Review proposed changes</a></li>
+</ul>
+<div class="subsection-level-extent" id="Review-proposed-changes">
+<h4 class="subsection"><span>11.7.1 Review proposed changes<a class="copiable-link" href="#Review-proposed-changes"> &para;</a></span></h4>
+
+<p>Opening an Agent Shell change review announces its file and hunk counts and,
+for a single file, its name.  The normal Diff Mode hunk navigation remains
+available; opening the review does not accept or reject changes.
+</p>
+<p>These events can have their own presentation rules. You can customise speech,
+voices and earcons for steering outcomes, queue changes, list editing, setting
+changes, updated tool output and change-review entry. Use
+<a data-manual="emacsvox" href="./Explaining-Presentation.html#Explaining-Presentation">Feedback Details</a> to inspect a representative event before changing it.
+</p>
+</div>
+</div>
+
+
+
+</body>
+</html>

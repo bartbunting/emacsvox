@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Tags And Archiving (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Tags And Archiving (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Tags And Archiving (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Speech-And-Privacy.html" rel="next" title="Notmuch Speech And Privacy">
+<link href="Notmuch-Messages-And-Attachments.html" rel="prev" title="Notmuch Messages And Attachments">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Tags-And-Archiving">
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Speech-And-Privacy.html" accesskey="n" rel="next">Choose fields, status, and privacy</a>, Previous: <a href="Notmuch-Messages-And-Attachments.html" accesskey="p" rel="prev">Read a thread and its MIME parts</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Change-tags-and-archive-state"><span>10.5 Change tags and archive state<a class="copiable-link" href="#Change-tags-and-archive-state"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-tags_002c-Notmuch"></a>
+<a class="index-entry-id" id="index-archiving_002c-Notmuch"></a>
+
+<p>Emacsvox compares displayed tags before and after an interactive change and
+reports actual additions and removals. Adding an existing tag or removing an
+absent tag reports &ldquo;Tags unchanged&rdquo;. Errors and cancelled commands do not
+produce success feedback.
+</p>
+<p>These Show commands receive result-aware feedback:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">+</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-add-tag</code> on the current message.
+</p></dd>
+<dt><kbd class="kbd">-</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-remove-tag</code>.
+</p></dd>
+<dt><kbd class="kbd">*</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-tag-all</code> across the thread.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-archive-message-then-next-or-next-thread</code>.
+</p></dd>
+<dt><kbd class="kbd">A</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-archive-thread-then-next</code>.
+</p></dd>
+</dl>
+
+<p>Archive feedback distinguishes a real change, unchanged archive tags, and an
+unset <code class="code">notmuch-archive-tags</code>. Movement wrappers combine the result instead of
+duplicating the feedback of nested tag or archive commands.
+</p>
+</div>
+
+
+
+</body>
+</html>

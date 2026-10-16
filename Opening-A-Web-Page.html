@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Opening A Web Page (Emacsvox User Manual)</title>
+
+<meta name="description" content="Opening A Web Page (Emacsvox User Manual)">
+<meta name="keywords" content="Opening A Web Page (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Web-Browsing.html" rel="up" title="Web Browsing">
+<link href="Navigating-A-Web-Page.html" rel="next" title="Navigating A Web Page">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Opening-A-Web-Page">
+<div class="nav-panel">
+<p>
+Next: <a href="Navigating-A-Web-Page.html" accesskey="n" rel="next">Read by heading, paragraph or search</a>, Up: <a href="Web-Browsing.html" accesskey="u" rel="up">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Open-a-page-and-establish-your-place"><span>9.5.1 Open a page and establish your place<a class="copiable-link" href="#Open-a-page-and-establish-your-place"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-web-page_002c-opening"></a>
+<a class="index-entry-id" id="index-EWW_002c-buffer-names"></a>
+
+<ol class="enumerate">
+<li> Run <kbd class="kbd">M-x eww <kbd class="key">RET</kbd></kbd>. At its next prompt, enter a web address, for example
+<code class="code">https://www.gnu.org/software/emacs/</code>, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Text that EWW does
+not recognise as an address is sent to its configured search service;
+do not enter private document text as a practice search.
+</li><li> Wait for loading and rendering to finish before navigating the page.
+An opening cue means the command started, not that the server returned the
+expected article. Read the page title and any error or login message.
+Emacsvox normally names the buffer after the page title, so do not assume
+the buffer is called <code class="code">*eww*</code>. Press <kbd class="kbd">C-e m</kbd> to identify it.
+</li><li> Press <kbd class="kbd">M-&lt;</kbd> and use <kbd class="kbd">C-n</kbd> or <kbd class="kbd">C-e l</kbd> to read. Keep the browser buffer&rsquo;s
+name in mind when switching to notes or Help. <kbd class="kbd">C-x b</kbd> returns to that
+existing buffer; running <code class="code">eww</code> again starts another browsing operation.
+</li></ol>
+
+<p>To request a separate browser buffer instead of reusing the default one,
+start with <kbd class="kbd">C-u M-x eww <kbd class="key">RET</kbd></kbd>. This is an intentional use of the prefix
+argument explained in <a class="ref" href="Emacs-Key-Notation.html">Read the key instructions</a>. It lets you keep the earlier
+page available while opening another. A title can change after navigation;
+check the new buffer name before using it in a later switch.
+</p>
+</div>
+
+
+
+</body>
+</html>

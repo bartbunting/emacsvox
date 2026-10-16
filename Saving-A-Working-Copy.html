@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Saving A Working Copy (Emacsvox User Manual)</title>
+
+<meta name="description" content="Saving A Working Copy (Emacsvox User Manual)">
+<meta name="keywords" content="Saving A Working Copy (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Working-With-Files.html" rel="up" title="Working With Files">
+<link href="Browsing-Files-With-Dired.html" rel="next" title="Browsing Files With Dired">
+<link href="Opening-A-Document.html" rel="prev" title="Opening A Document">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Saving-A-Working-Copy">
+<div class="nav-panel">
+<p>
+Next: <a href="Browsing-Files-With-Dired.html" accesskey="n" rel="next">Find and inspect files with Dired</a>, Previous: <a href="Opening-A-Document.html" accesskey="p" rel="prev">Open a document and check its identity</a>, Up: <a href="Working-With-Files.html" accesskey="u" rel="up">Work with files and directories</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Save-a-separate-working-copy"><span>9.1.2 Save a separate working copy<a class="copiable-link" href="#Save-a-separate-working-copy"> &para;</a></span></h4>
+
+<p>Use this route before editing a document whose original you want to preserve.
+It writes the current buffer text, including unsaved edits, to a new filename
+and makes that new file the buffer&rsquo;s saving destination.
+</p>
+<ol class="enumerate">
+<li> Select the source document and check its identity. Press <kbd class="kbd">C-x C-w</kbd>,
+replace the proposed filename with an unused path such as
+<code class="code">~/evox-notes-copy.txt</code>, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Keep the appropriate extension
+for the document, for example <code class="code">.org</code> for Org notes. Cancel an unexpected
+overwrite prompt and choose another name.
+</li><li> Read the save result and check the new destination with
+<kbd class="kbd">C-h v buffer-file-name <kbd class="key">RET</kbd></kbd> when necessary. A permission or write error
+is not a completed save. Keep the buffer open while correcting the problem;
+do not discard the only copy of unsaved text.
+</li><li> Return to that document, make the intended changes, and press <kbd class="kbd">C-x C-s</kbd>.
+This saves to the new destination. The old saved file remains at its old
+path. You can open it separately with <kbd class="kbd">C-x C-f</kbd> to compare it with the copy.
+</li></ol>
+
+<p><kbd class="kbd">C-x C-w</kbd> does not keep the buffer attached to both files. After it succeeds,
+later <kbd class="kbd">C-x C-s</kbd> saves update the new file. The old file retains its previously
+saved content, not any unsaved changes that were written only to the copy.
+Changing the filename is also not a format converter: naming plain text with
+<code class="code">.docx</code> does not create a Word document.
+</p>
+<p>To duplicate the last saved file while leaving the working buffer&rsquo;s destination
+unchanged, use <kbd class="kbd">M-x copy-file <kbd class="key">RET</kbd></kbd> instead. Answer its source and destination
+prompts with paths. It copies the file on disk, not unsaved buffer edits, and
+does not switch you into the new copy. Open the destination separately to work
+on it. See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Save-Commands.html#Save-Commands">Save commands</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Copying-and-Naming.html#Copying-and-Naming">Copying and naming files</a> in the GNU Emacs
+Manual for other saving and copying operations.
+</p>
+<p>If Emacs reports that another program changed the original, do not force a
+save or revert simply to clear the warning. Keep your buffer, preserve its
+text under an unused filename if needed, and compare the versions before
+deciding which changes to keep. <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Simultaneous-Editing.html#Simultaneous-Editing">Simultaneous editing</a> explains that conflict.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Browsing-Files-With-Dired.html">Find and inspect files with Dired</a>, Previous: <a href="Opening-A-Document.html">Open a document and check its identity</a>, Up: <a href="Working-With-Files.html">Work with files and directories</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

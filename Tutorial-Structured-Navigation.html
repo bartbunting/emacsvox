@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Structured Navigation (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Structured Navigation (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Structured Navigation (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Temporary-Settings.html" rel="next" title="Tutorial Temporary Settings">
+<link href="Tutorial-Help-And-Buffers.html" rel="prev" title="Tutorial Help And Buffers">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Structured-Navigation">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Temporary-Settings.html" accesskey="n" rel="next">Lesson 5: change speech in one buffer</a>, Previous: <a href="Tutorial-Help-And-Buffers.html" accesskey="p" rel="prev">Lesson 3: get Help and return to your work</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Lesson-4_003a-navigate-the-document_0027s-structure"><span>4.5 Lesson 4: navigate the document&rsquo;s structure<a class="copiable-link" href="#Lesson-4_003a-navigate-the-document_0027s-structure"> &para;</a></span></h3>
+
+<p>The practice text is also an Org document. Changing its major mode gives
+Emacs commands that understand headings, lists, links, and tables. The text
+remains yours; a folded section is hidden, not deleted.
+</p>
+<ol class="enumerate">
+<li> Return to the practice buffer and run <kbd class="kbd">M-x org-mode <kbd class="key">RET</kbd></kbd>. Press <kbd class="kbd">M-&lt;</kbd>,
+then <kbd class="kbd">C-u C-u C-u <kbd class="key">TAB</kbd></kbd> to show the whole document, including any folded
+sections. Each <kbd class="kbd">C-u</kbd> is a separate prefix keystroke. <kbd class="kbd">C-e m</kbd> now identifies
+Org rather than Text mode.
+</li><li> From the first heading, press <kbd class="kbd">C-c C-n</kbd> to reach <code class="code">Packing list</code>. This
+moves to a heading, skipping intervening body text. <kbd class="kbd">C-c C-p</kbd> returns to
+the previous visible heading. Go forward to <code class="code">Packing list</code> again.
+</li><li> Press <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> on that heading to fold its body. <kbd class="kbd">C-c C-n</kbd> reaches
+<code class="code">Journey plan</code>. Return with <kbd class="kbd">C-c C-p</kbd> and press <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> to expose the list
+again. Read down into it to confirm that the items are still present.
+</li><li> Show all content again with <kbd class="kbd">C-u C-u C-u <kbd class="key">TAB</kbd></kbd>, then search from the
+beginning for <code class="code">Return to the packing list</code>. Finish with <kbd class="kbd"><kbd class="key">RET</kbd></kbd> and press
+<kbd class="kbd">C-b</kbd> once to leave point inside the link text. <kbd class="kbd">C-c C-o</kbd> follows this
+internal link to the heading; no website or external file is opened.
+</li></ol>
+
+<p>Heading speech and collapse cues depend on your presentation settings.
+What matters is the location and visibility you can inspect. Do not require
+one exact spoken phrase or one physical voice to recognise a heading.
+</p>
+<ul class="mini-toc">
+<li><a href="#Read-the-table-without-editing-it" accesskey="1">Read the table without editing it</a></li>
+<li><a href="#Try-it-3" accesskey="2">Try it</a></li>
+</ul>
+<div class="subsection-level-extent" id="Read-the-table-without-editing-it">
+<h4 class="subsection"><span>4.5.1 Read the table without editing it<a class="copiable-link" href="#Read-the-table-without-editing-it"> &para;</a></span></h4>
+
+<p>Show the whole document again, then search from the beginning for <code class="code">Monday</code>
+and finish with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. You are in the first data row&rsquo;s Day cell.
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-e C-t C-r</kbd> to enter table reading without moving. Emacsvox
+announces the table dimensions and the current cell.
+</li><li> Press <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> to reach the Task cell, <code class="code">Read</code>. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> reads that cell again.
+In this reader these keys do not align the table or insert a row.
+</li><li> Press Down. You remain in the Task column and hear the complete Tuesday
+row. Press <kbd class="kbd">c</kbd> to read the column, or <kbd class="kbd">r</kbd> to repeat the current row.
+<kbd class="kbd">.</kbd> reports coordinates; headers and data rows are distinguished.
+</li><li> Press <kbd class="kbd">q</kbd> to leave table reading, then <kbd class="kbd">C-e l</kbd> to inspect the text line.
+The table reader closes, not the practice buffer. Ordinary Org editing
+keys are restored.
+</li></ol>
+
+<p>Outside table reading, Org&rsquo;s <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> is an editing/navigation command that can
+align a table and create rows. A key&rsquo;s meaning belongs to the active mode or
+reader, not to its letter alone. Do not evaluate the source block at the end
+of the document: it is present so you can also inspect literal code.
+</p>
+</div>
+<div class="subsection-level-extent" id="Try-it-3">
+<h4 class="subsection"><span>4.5.2 Try it<a class="copiable-link" href="#Try-it-3"> &para;</a></span></h4>
+
+<p><strong class="strong">4A.</strong> Enter table reading at <code class="code">Monday</code> again. Reach Tuesday&rsquo;s Status cell and
+read it without typing into the table. Then leave reading mode.
+</p>
+<p><strong class="strong">4B.</strong> Fold <code class="code">Packing list</code>, read another section, and bring the list back.
+Explain why text undo is not needed to recover the hidden items.
+</p>
+<p>See <a class="ref" href="Tutorial-Exercise-Answers.html#tutorial_002danswer_002d4">Answers for lesson 4</a>. <a data-manual="emacsvox" href="./Browsing-Structure.html#Browsing-Structure">Browsing Structure</a> documents the complete shared table reader;
+<a data-manual="org" href="https://www.gnu.org/software/emacs/manual/html_node/org/Motion.html#Motion">Org heading motion</a> and <a data-manual="org" href="https://www.gnu.org/software/emacs/manual/html_node/org/Visibility-Cycling.html#Visibility-Cycling">Org visibility cycling</a> explain the underlying document commands.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Temporary-Settings.html">Lesson 5: change speech in one buffer</a>, Previous: <a href="Tutorial-Help-And-Buffers.html">Lesson 3: get Help and return to your work</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

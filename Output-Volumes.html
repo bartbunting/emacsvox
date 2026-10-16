@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Output Volumes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Output Volumes (Emacsvox User Manual)">
+<meta name="keywords" content="Output Volumes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Speech-Output.html" rel="up" title="Aural Speech Output">
+<link href="Integration-Speech-Settings.html" rel="next" title="Integration Speech Settings">
+<link href="Notification-Routing.html" rel="prev" title="Notification Routing">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Output-Volumes">
+<div class="nav-panel">
+<p>
+Next: <a href="Integration-Speech-Settings.html" accesskey="n" rel="next">Adjust an integration&rsquo;s speech settings</a>, Previous: <a href="Notification-Routing.html" accesskey="p" rel="prev">Understand the main and notification streams</a>, Up: <a href="Aural-Speech-Output.html" accesskey="u" rel="up">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Adjust-output-volumes"><span>8.11.3 Adjust output volumes<a class="copiable-link" href="#Adjust-output-volumes"> &para;</a></span></h4>
+
+<p><kbd class="kbd">C-e H o</kbd> provides five global Omnivox volumes: main tones and earcons, and
+notification speech, tones, and earcons. Each is an integer percentage 0–100;
+100 is normal, zero silences that component. For example, notification speech
+35 and earcons 70 emphasise brief cues over messages.
+</p>
+<p>Shift-left/right adjusts the selected volume by five; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters exactly.
+Changes apply to subsequent audio without restarting; already prepared audio
+keeps its old level. <kbd class="kbd">S</kbd> saves these five volumes, not routing or spatial
+settings.
+Replacement and reconnected Omnivox processes receive current levels.
+</p>
+<p>Independent notification levels need the separate process selected by Automatic,
+Left, Right, or Both channels. Main-output routing/fallback shares main-process
+levels. Earcon volume applies to Omnivox-played sounds, not external players or
+other speech backends. Zero volume does not disable notification recording.
+</p>
+</div>
+
+
+
+</body>
+</html>

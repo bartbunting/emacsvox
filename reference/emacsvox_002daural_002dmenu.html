@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-menu (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-menu (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-menu (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002doverrides.html" rel="next" title="emacsvox-aural-overrides">
+<link href="emacsvox_002daural_002dinspection.html" rel="prev" title="emacsvox-aural-inspection">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dmenu">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002doverrides.html" accesskey="n" rel="next">emacsvox-aural-overrides</a>, Previous: <a href="emacsvox_002daural_002dinspection.html" accesskey="p" rel="prev">emacsvox-aural-inspection</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dmenu-1"><span>2.30 emacsvox-aural-menu<a class="copiable-link" href="#emacsvox_002daural_002dmenu-1"> &para;</a></span></h3>
+
+<p>Experimental entry and speech menus.  Retain the source item across
+submenus and delegate settings and feedback to their existing commands.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dMenu-Commands" accesskey="1">Emacsvox-Aural-Menu Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dMenu-Commands">
+<h4 class="subsection"><span>2.30.1 Emacsvox-Aural-Menu Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dMenu-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dmenu-2" accesskey="1">emacsvox-aural-menu</a></li>
+<li><a href="#emacsvox_002daural_002dmenu_002dline_002dcues" accesskey="2">emacsvox-aural-menu-line-cues</a></li>
+<li><a href="#emacsvox_002daural_002dmenu_002dnavigation" accesskey="3">emacsvox-aural-menu-navigation</a></li>
+<li><a href="#emacsvox_002daural_002dmenu_002dpunctuation" accesskey="4">emacsvox-aural-menu-punctuation</a></li>
+<li><a href="#emacsvox_002daural_002dmenu_002dsounds" accesskey="5">emacsvox-aural-menu-sounds</a></li>
+<li><a href="#emacsvox_002daural_002dmenu_002dspeech" accesskey="6">emacsvox-aural-menu-speech</a></li>
+<li><a href="#emacsvox_002daural_002dmenu_002dvoices" accesskey="7">emacsvox-aural-menu-voices</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu-2">
+<h4 class="subsubsection"><span>2.30.1.1 emacsvox-aural-menu<a class="copiable-link" href="#emacsvox_002daural_002dmenu-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu</strong> <var class="def-var-arguments">(&amp;optional arg1)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-H"></a><span><kbd class="kbd">C-e H</kbd><a class="copiable-link" href="#index-C_002de-H"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002daural_002dmenu-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose Emacsvox speech settings or inspect feedback for this item.
+With prefix GLOBAL, start speech settings with global defaults.
+The source item is captured on entry for contextual editing and return.
+Up and Down select items; Left and Right select the first item of a section.
+Enter activates the selected item; a displayed key invokes its action directly.
+Shift-Left and Shift-Right adjust numeric controls where offered. Choice lists
+use Up and Down to browse and Enter to choose. Text prompts keep normal editing.
+Question mark followed by an item’s key explains its effect and scope.
+q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
+each editor explains its own draft, Apply and Save actions.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu_002dline_002dcues">
+<h4 class="subsubsection"><span>2.30.1.2 emacsvox-aural-menu-line-cues<a class="copiable-link" href="#emacsvox_002daural_002dmenu_002dline_002dcues"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu_002dline_002dcues"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu-line-cues</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu_002dline_002dcues"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dmenu_002dline_002dcues-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose a global line tone or boundary earcon to preview and edit.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu_002dnavigation">
+<h4 class="subsubsection"><span>2.30.1.3 emacsvox-aural-menu-navigation<a class="copiable-link" href="#emacsvox_002daural_002dmenu_002dnavigation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu_002dnavigation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu-navigation</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu_002dnavigation"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dmenu_002dnavigation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose arrow navigation, announcement order, and descriptions for all menus.
+These preferences apply to all Transient menus, including Magit. Browse with
+Up and Down, then Enter to apply a choice. Left and Right change sections
+and select their first item. C-c l repeats that item without activating it.
+Changes take effect immediately; S saves these preferences through Customize.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu_002dpunctuation">
+<h4 class="subsubsection"><span>2.30.1.4 emacsvox-aural-menu-punctuation<a class="copiable-link" href="#emacsvox_002daural_002dmenu_002dpunctuation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu_002dpunctuation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu-punctuation</strong> <var class="def-var-arguments">(&amp;optional arg1)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu_002dpunctuation"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dmenu_002dpunctuation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose punctuation for this buffer or the session’s global default.
+Global changes also apply to the source buffer.  S saves the displayed choice
+as the default across restarts; mode policies still take precedence.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu_002dsounds">
+<h4 class="subsubsection"><span>2.30.1.5 emacsvox-aural-menu-sounds<a class="copiable-link" href="#emacsvox_002daural_002dmenu_002dsounds"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu_002dsounds"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu-sounds</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu_002dsounds"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dmenu_002dsounds-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Adjust global output volumes or browse sound packs.
+Shift left and right adjust the selected volume by five percentage points.
+Enter sets an exact value.  Save explicitly to retain volumes across restarts.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu_002dspeech">
+<h4 class="subsubsection"><span>2.30.1.6 emacsvox-aural-menu-speech<a class="copiable-link" href="#emacsvox_002daural_002dmenu_002dspeech"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu_002dspeech"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu-speech</strong> <var class="def-var-arguments">(&amp;optional arg1)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu_002dspeech"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dmenu_002dspeech-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose speech settings for the source buffer or global defaults.
+With prefix GLOBAL, start with global defaults when opening directly.
+When opened from the Emacsvox menu, share its selected scope.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dmenu_002dvoices">
+<h4 class="subsubsection"><span>2.30.1.7 emacsvox-aural-menu-voices<a class="copiable-link" href="#emacsvox_002daural_002dmenu_002dvoices"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dmenu_002dvoices"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-menu-voices</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dmenu_002dvoices"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dmenu_002dvoices-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse voices and palettes or choose a global engine preference.
+Browser quit commands return here after unwinding their own child views.
+Engine preferences last for this session unless explicitly saved.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002doverrides.html">emacsvox-aural-overrides</a>, Previous: <a href="emacsvox_002daural_002dinspection.html">emacsvox-aural-inspection</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

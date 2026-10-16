@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Copying Through The Clipboard (Emacsvox User Manual)</title>
+
+<meta name="description" content="Copying Through The Clipboard (Emacsvox User Manual)">
+<meta name="keywords" content="Copying Through The Clipboard (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Text-With-Speech.html" rel="up" title="Editing Text With Speech">
+<link href="Recovering-Text-Edits.html" rel="prev" title="Recovering Text Edits">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Copying-Through-The-Clipboard">
+<div class="nav-panel">
+<p>
+Previous: <a href="Recovering-Text-Edits.html" accesskey="p" rel="prev">Recover a text edit before saving</a>, Up: <a href="Editing-Text-With-Speech.html" accesskey="u" rel="up">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Exchange-text-with-another-application"><span>5.6.6 Exchange text with another application<a class="copiable-link" href="#Exchange-text-with-another-application"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-clipboard_002c-exchanging-text"></a>
+<a class="index-entry-id" id="index-WSL_002c-clipboard-boundaries"></a>
+
+<p>The kill ring is part of Emacs. The operating-system clipboard can connect it
+to other applications when the display session and configuration support that
+connection. Under normal graphical clipboard integration, <kbd class="kbd">M-w</kbd> copies to both,
+and <kbd class="kbd">C-y</kbd> can insert text copied more recently outside Emacs. That is why
+checking the pasted result matters even after checking the selection.
+</p>
+<p>Test the boundary with a short, non-confidential sentence in each direction:
+copy from Emacs and paste into a disposable external document, then copy a
+different sentence externally and paste into an empty Emacs buffer. Verify the
+actual text rather than assuming that success in one direction proves both.
+Native Windows Emacs, WSLg, terminal Emacs and remote sessions need not share
+identical clipboard behaviour. This guide does not install a bridge or change
+your clipboard configuration.
+</p>
+<p>If copying between Emacs buffers works but the external test fails, investigate
+that display/clipboard boundary rather than changing speech settings. Do not
+paste test commands into a live terminal. For the general integration and its
+options, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Clipboard.html#Clipboard">Using the clipboard</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Primary-Selection.html#Primary-Selection">Cut and paste with other window applications</a>
+in the GNU Emacs Manual; a primary selection is not the same as the clipboard.
+</p>
+</div>
+
+
+
+</body>
+</html>

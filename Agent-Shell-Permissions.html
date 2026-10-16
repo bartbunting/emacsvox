@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Agent Shell Permissions (Emacsvox User Manual)</title>
+
+<meta name="description" content="Agent Shell Permissions (Emacsvox User Manual)">
+<meta name="keywords" content="Agent Shell Permissions (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Reading-Agent-Responses.html" rel="next" title="Reading Agent Responses">
+<link href="Agent-Shell-Speech-And-Privacy.html" rel="prev" title="Agent Shell Speech And Privacy">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Agent-Shell-Permissions">
+<div class="nav-panel">
+<p>
+Next: <a href="Reading-Agent-Responses.html" accesskey="n" rel="next">Inspect a response on demand</a>, Previous: <a href="Agent-Shell-Speech-And-Privacy.html" accesskey="p" rel="prev">Choose automatic speech and privacy</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Respond-to-urgent-permissions"><span>11.4 Respond to urgent permissions<a class="copiable-link" href="#Respond-to-urgent-permissions"> &para;</a></span></h3>
+
+<p>Permission requests are separate from routine speech levels because they can
+block the agent and require a decision.  With
+<code class="code">emacsvox-agent-shell-speak-permissions</code> enabled, a request interrupts the
+appropriate speech stream, identifies the session and requested operation, and
+announces its choices.  Provider-controlled descriptions and choice labels are
+bounded, but the actual permission controls remain in Agent Shell.
+</p>
+<p>If the provider supplies new operation details after asking permission,
+Emacsvox announces the changed description or input.  Identical updates and
+routine output do not repeat the warning.  The permission controls remain the
+place to inspect and decide the request.
+</p>
+<p>If the request belongs to another session, switch to the named buffer.  Use
+<kbd class="kbd">M-x agent-shell-jump-to-latest-permission-button-row</kbd> to find its latest
+permission row, or use Agent Shell&rsquo;s <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> item navigation.
+Move among the buttons and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, or use a direct choice key displayed
+by Agent Shell.  Choice keys are supplied by Agent Shell and the provider, so
+the visible permission row is authoritative.
+</p>
+<p>Error blocks remain exceptional feedback rather than routine transcript
+chatter.  Lifecycle error announcements follow
+<code class="code">emacsvox-agent-shell-signal-processing</code>; rendered error content remains
+available in the transcript even when routine response speech is quiet.
+</p>
+</div>
+
+
+
+</body>
+</html>

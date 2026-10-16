@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Browsing Files With Dired (Emacsvox User Manual)</title>
+
+<meta name="description" content="Browsing Files With Dired (Emacsvox User Manual)">
+<meta name="keywords" content="Browsing Files With Dired (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Working-With-Files.html" rel="up" title="Working With Files">
+<link href="Saving-A-Working-Copy.html" rel="prev" title="Saving A Working Copy">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Browsing-Files-With-Dired">
+<div class="nav-panel">
+<p>
+Previous: <a href="Saving-A-Working-Copy.html" accesskey="p" rel="prev">Save a separate working copy</a>, Up: <a href="Working-With-Files.html" accesskey="u" rel="up">Work with files and directories</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Find-and-inspect-files-with-Dired"><span>9.1.3 Find and inspect files with Dired<a class="copiable-link" href="#Find-and-inspect-files-with-Dired"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-Dired"></a>
+<a class="index-entry-id" id="index-file-size_002c-hearing"></a>
+<a class="index-entry-id" id="index-file-modification-time"></a>
+<a class="index-entry-id" id="index-dired"></a>
+<a class="index-entry-id" id="index-emacsvox_002ddired_002dspeak_002dfile_002dsize"></a>
+<a class="index-entry-id" id="index-emacsvox_002ddired_002dspeak_002dfile_002dmodification_002dtime"></a>
+
+<p>Dired is Emacs&rsquo;s directory browser. Its ordinary listing is not document text:
+letters such as <kbd class="kbd">n</kbd>, <kbd class="kbd">p</kbd> and <kbd class="kbd">q</kbd> invoke commands rather than being inserted.
+Emacsvox normally speaks filenames as you move, leaving detailed metadata for
+inspection on request. Voices and cues can distinguish directories, links and
+marked entries according to your presentation settings.
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-x d</kbd>, enter an existing directory such as <code class="code">~/</code>, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
+In the Dired buffer, press comma, <kbd class="kbd">,</kbd>, to hear the listing header.
+</li><li> Move with <kbd class="kbd">n</kbd> and <kbd class="kbd">p</kbd> to the next or previous entry. To reach a known name
+in a long listing, use <kbd class="kbd">C-s</kbd>, type part of the filename, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+to finish searching. Check the filename you reached before acting on it.
+</li><li> On an ordinary file, press <kbd class="kbd">z</kbd> to hear its size, lowercase <kbd class="kbd">c</kbd> for its
+modification time, and <kbd class="kbd">/</kbd> for permissions. These inspect the selected
+entry without opening it. Uppercase <kbd class="kbd">C</kbd> is Dired&rsquo;s Copy command, not a
+second way to hear the time. Size inspection on a directory instead uses
+the external <code class="code">du</code> program and may take longer or be unavailable; file-type
+inspection with apostrophe, <kbd class="kbd">'</kbd>, similarly requires the <code class="code">file</code> program.
+</li><li> Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on the file to visit it in Emacs. On a directory, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> opens
+that directory&rsquo;s listing. Opening announces the destination; <kbd class="kbd">C-e m</kbd> lets
+you check the resulting buffer and mode. Use <kbd class="kbd"><kbd class="key">RET</kbd></kbd> here, not <kbd class="kbd">C-j</kbd>:
+Emacsvox assigns <kbd class="kbd">C-j</kbd> and Control-Enter to a separate, file-type-aware
+opener which may preview or play a file instead of visiting its text.
+</li><li> To return from the document, use <kbd class="kbd">C-x b</kbd> and select the directory buffer.
+In Dired, <kbd class="kbd">^</kbd> goes to the parent directory and <kbd class="kbd">g</kbd> refreshes the listing
+from disk. Refreshing Dired does not save or discard an open document&rsquo;s
+edits. Press <kbd class="kbd">q</kbd> in Dired to leave the listing; your files remain on disk.
+</li></ol>
+
+<p>Looking at a file is not the same as marking it for an operation. <kbd class="kbd">m</kbd> marks
+an entry and then moves to the next; its action cue precedes the newly selected
+filename. <kbd class="kbd">u</kbd> unmarks an entry and also advances. If you are inspecting a
+listing with existing marks, leave them alone. Dired operations can apply to
+marked files rather than the row you are hearing.
+</p>
+<p>This guide does not require deletion, renaming, changing permissions or running
+commands on files. In particular, <kbd class="kbd">d</kbd> flags deletion and <kbd class="kbd">x</kbd> executes flagged
+deletions; do not use either as a way to close a listing. Cancellation after a
+file operation and ordinary text undo are not promises of filesystem recovery.
+Use <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html#Dired">Dired</a> in the GNU Emacs Manual before performing those operations, and
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002ddired.html#emacsvox_002ddired">emacsvox-dired</a> for the complete speech-command reference.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Saving-A-Working-Copy.html">Save a separate working copy</a>, Up: <a href="Working-With-Files.html">Work with files and directories</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

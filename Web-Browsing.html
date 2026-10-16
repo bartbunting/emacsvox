@@ -22,7 +22,6 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
-kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -38,27 +37,33 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Messaging.html" accesskey="n" rel="next">Messaging</a>, Previous: <a href="Browsing-Structure.html" accesskey="p" rel="prev">Browsing Structure</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Web-Browsing-With-EWW"><span>8.4 Web Browsing With EWW<a class="copiable-link" href="#Web-Browsing-With-EWW"> &para;</a></span></h3>
+<h3 class="section" id="Web-Browsing-With-EWW"><span>9.5 Web Browsing With EWW<a class="copiable-link" href="#Web-Browsing-With-EWW"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-EWW"></a>
-
 <a class="index-entry-id" id="index-Web-browsing"></a>
-
 <a class="index-entry-id" id="index-eww"></a>
 
-<p>EWW is the built-in browser supported for current Emacsvox.  Run
-<kbd class="kbd">M-x eww <kbd class="key">RET</kbd></kbd>, enter a URL or search words, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
-Emacsvox speaks EWW navigation and rendering feedback and adds commands for
-moving by HTML structure and filtering the displayed DOM.  In an EWW buffer,
-use <kbd class="kbd">C-h m</kbd> for the live workflow and <kbd class="kbd">C-h b</kbd> for its effective keys.
-See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/EWW.html#EWW">EWW</a> in <em class="emph">The GNU Emacs Manual</em> for browser operation and
-<a data-manual="emacsvox-reference" href="reference/emacsvox_002deww.html#emacsvox_002deww">emacsvox-eww</a> in <em class="emph">Emacsvox Reference Manual</em> for the
-speech integration.
+<p>EWW is Emacs&rsquo;s built-in text-oriented web browser. Emacsvox adds speech and
+navigation using the page&rsquo;s HTML structure. These commands act on the rendered
+page, not on the manual you are reading now. Start with a speaking session and
+use a public page for practice; a site requiring JavaScript may need your
+ordinary external browser instead.
 </p>
-<p>The former Emacs/W3 and w3m survey is historical.  Do not install either one
-on the strength of the Heritage manual; use EWW unless a separately maintained
-integration says otherwise.
+<p>The keys below include Emacsvox&rsquo;s EWW bindings, which differ from unmodified
+EWW. In particular, lowercase <kbd class="kbd">b</kbd> moves to the previous link, lowercase <kbd class="kbd">s</kbd>
+requests a readable view, and <kbd class="kbd">?</kbd> is not the settings menu&rsquo;s Help key. Use
+<kbd class="kbd">C-h m</kbd> or <kbd class="kbd">C-h k</kbd> to inspect the running buffer. Help can select its own
+buffer and remove other windows. Return to the page with <kbd class="kbd">C-x b</kbd> and check
+its name with <kbd class="kbd">C-e m</kbd> before using the browser keys below. The upstream
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/EWW.html#EWW">EWW guide</a> and <a data-manual="emacsvox-reference" href="reference/emacsvox_002deww.html#emacsvox_002deww">emacsvox-eww</a> reference cover the rest of the interface.
 </p>
+
+<ul class="mini-toc">
+<li><a href="Opening-A-Web-Page.html" accesskey="1">Open a page and establish your place</a></li>
+<li><a href="Navigating-A-Web-Page.html" accesskey="2">Read by heading, paragraph or search</a></li>
+<li><a href="Following-Web-Links.html" accesskey="3">Follow a link and return to the article</a></li>
+<li><a href="Recovering-A-Web-Page.html" accesskey="4">Recover a cluttered or incomplete page</a></li>
+</ul>
 </div>
 
 

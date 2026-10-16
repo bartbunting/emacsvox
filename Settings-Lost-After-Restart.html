@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Settings Lost After Restart (Emacsvox User Manual)</title>
+
+<meta name="description" content="Settings Lost After Restart (Emacsvox User Manual)">
+<meta name="keywords" content="Settings Lost After Restart (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Feedback-Differs-Between-Buffers.html" rel="next" title="Feedback Differs Between Buffers">
+<link href="Saved-Voice-Change-Not-Audible.html" rel="prev" title="Saved Voice Change Not Audible">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Settings-Lost-After-Restart">
+<div class="nav-panel">
+<p>
+Next: <a href="Feedback-Differs-Between-Buffers.html" accesskey="n" rel="next">Feedback differs between buffers</a>, Previous: <a href="Saved-Voice-Change-Not-Audible.html" accesskey="p" rel="prev">A saved voice change is not audible</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="A-setting-disappeared-after-restarting"><span>8.13.2 A setting disappeared after restarting<a class="copiable-link" href="#A-setting-disappeared-after-restarting"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-settings_002c-lost-after-restart"></a>
+<a class="index-entry-id" id="index-forgot-my-settings"></a>
+
+<p>First establish whether the change was ever meant to survive restarting.
+A retained draft, session rule or buffer rule does not. Activating a palette
+for a session is also separate from choosing it at startup.
+</p>
+<ol class="enumerate">
+<li> Identify the resource you changed: a named voice, rule, profile, speech
+control or host setting. Reopen its own editor or manager and check its
+saved state. Do not assume it is absent merely because it is not active.
+</li><li> For a saved palette, inspect the selected startup profile. Use <em class="emph">Use at
+Startup</em> only when you intend to change that profile&rsquo;s palette. Applying
+a Presentation Profile also retains its selection; a profile does not
+contain speech rate, engine policy, notification output or temporary rules.
+</li><li> For an individual control, check exactly what that menu&rsquo;s Save records.
+The <a class="ref" href="Inspecting-Changed-Settings.html">changed-settings snapshot</a> can compare values known to Customize, but
+it is not a complete inspection of voice, rule or host-side files.
+</li><li> If the saved value exists but is not effective, check a mode policy or
+buffer override before saving again. For host-side settings, use the
+owning editor&rsquo;s application or restart procedure, not a voice-palette Save.
+</li></ol>
+
+<p>Customize saves need a normal initialisation destination. If Emacsvox reports
+&quot;Settings were not saved&quot; because normal initialisation was skipped, possibly
+with the <code class="code">-q</code> startup option, restart with your usual configuration and save
+again. A temporary change in that session is not a successful saved default.
+For spelling, the tone editor&rsquo;s <kbd class="kbd">W</kbd> saves the tone itself; use <kbd class="kbd">S</kbd> in its
+parent Spelling feedback menu to save voice, tone and earcon enablement too.
+</p>
+<p>Use <a class="ref" href="Saving-And-Startup.html">Choose what persists</a> to select the intended action. Check the result in
+the current session first. A later restart tests startup selection; finish
+or deliberately save needed work beforehand because retained drafts will end.
+Do not use a restart as the first way to investigate an unfinished draft.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Feedback-Differs-Between-Buffers.html">Feedback differs between buffers</a>, Previous: <a href="Saved-Voice-Change-Not-Audible.html">A saved voice change is not audible</a>, Up: <a href="Presentation-Troubleshooting.html">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

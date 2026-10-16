@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Integration Speech Settings (Emacsvox User Manual)</title>
+
+<meta name="description" content="Integration Speech Settings (Emacsvox User Manual)">
+<meta name="keywords" content="Integration Speech Settings (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Speech-Output.html" rel="up" title="Aural Speech Output">
+<link href="Output-Volumes.html" rel="prev" title="Output Volumes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Integration-Speech-Settings">
+<div class="nav-panel">
+<p>
+Previous: <a href="Output-Volumes.html" accesskey="p" rel="prev">Adjust output volumes</a>, Up: <a href="Aural-Speech-Output.html" accesskey="u" rel="up">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Adjust-an-integration_0027s-speech-settings"><span>8.11.4 Adjust an integration&rsquo;s speech settings<a class="copiable-link" href="#Adjust-an-integration_0027s-speech-settings"> &para;</a></span></h4>
+
+<a class="anchor" id="Integration-speech-settings"></a>
+<p><kbd class="kbd">C-e S</kbd> opens focused settings directly where available. Alternatively use
+<kbd class="kbd">C-e H j</kbd> or <kbd class="kbd">C-e H . j</kbd>. In that integration menu, <kbd class="kbd">s</kbd> invokes a local Agent
+Shell speech-level chooser or EAT/comint autospeak control, <kbd class="kbd">c</kbd> opens the
+source integration&rsquo;s settings, and <kbd class="kbd">a</kbd> chooses among Shell/comint and installed
+Agent Shell, EAT, Org, Notmuch, and EWW. Cancelling returns to the same entry.
+</p>
+<p>The selected integration determines where a change applies and what its
+Save action retains. For example, a terminal-local setting is not automatically
+saved as the default for future terminals. The summaries below identify those
+boundaries; the application chapters give the complete workflows.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Shell_002fcomint-and-EAT"></a>Shell/comint and EAT
+
+
+<p>Shell/comint&rsquo;s focused menu toggles automatic speech with <kbd class="kbd">s</kbd> and background
+monitoring with <kbd class="kbd">b</kbd>. Background reading needs autospeak enabled. Both values
+belong to the captured buffer for its lifetime; there is no Save action. Arrows
+announce values and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates. <kbd class="kbd">q</kbd> returns to the entry, or closes a
+direct focused menu. Search at <kbd class="kbd">C-e H /</kbd> finds <code class="code">comint</code> and <code class="code">monitoring</code>.
+Choosing Shell/comint from another buffer explains the required context and
+leaves its controls unavailable.
+</p>
+<p>EAT&rsquo;s <kbd class="kbd">s</kbd> toggles foreground speech, <kbd class="kbd">b</kbd> content-free background cues/counts,
+<kbd class="kbd">p</kbd> prompt feedback, and <kbd class="kbd">d</kbd> automatic detail. Background monitoring is
+independent of foreground autospeak and never reads background content.
+Changes are local to the terminal, including from frozen review. <kbd class="kbd">w</kbd> saves all
+four displayed defaults; terminals with overrides keep them. <kbd class="kbd">A</kbd> opens advanced
+Customize and <kbd class="kbd">q</kbd> returns. All controls are searchable. Choice lists start on
+the current value; arrows browse, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies, and <kbd class="kbd">q</kbd> cancels. See
+<a data-manual="emacsvox" href="./EAT-Terminal-Access.html#EAT-Terminal-Access">EAT Terminal Access</a> for prompt integration and safety boundaries.
+</p>
+</li><li> <a class="anchor" id="Agent-Shell-Org-and-EWW"></a>Agent Shell, Org, and EWW
+
+
+<p>Agent Shell&rsquo;s menu covers temporary session speech, global feedback defaults,
+and reading limits. <kbd class="kbd">w</kbd> saves displayed globals, excluding the session override.
+See <a data-manual="emacsvox" href="./Agent-Shell.html#Agent-Shell">Agent Shell</a>.
+</p>
+<p>Org&rsquo;s <kbd class="kbd">c</kbd> chooses cell, header, or combined table-editing feedback and <kbd class="kbd">w</kbd> saves
+that global default. Column headers come from the first row, row headers from
+the first column, and local overrides take precedence. <kbd class="kbd">t</kbd> opens Org table
+options and <kbd class="kbd">A</kbd> advanced Emacsvox Org settings in Customize, returning with
+<kbd class="kbd">q</kbd>. This editing feedback is separate from the shared table reader described
+in <a class="ref" href="Browsing-Structure.html">Browsing Structure</a>.
+</p>
+<p>EWW&rsquo;s <kbd class="kbd">s</kbd> controls section-navigation autospeak and <kbd class="kbd">i</kbd> suppresses images on
+subsequent rendering. It also updates the shared SHR image default while
+preserving local overrides; it does not reload the page. <kbd class="kbd">w</kbd> saves the two
+Emacsvox defaults and <kbd class="kbd">A</kbd> opens advanced settings.
+</p>
+</li><li> <a class="anchor" id="Notmuch-and-shared-choice_002dlist-navigation"></a>Notmuch and shared choice-list navigation
+
+
+<p>Notmuch has the same focused menu in Hello, Search, Show, and Tree. <kbd class="kbd">c</kbd> chooses
+adaptive, count-only, cue-only, or silent successful completion; failures remain
+audible. <kbd class="kbd">f~/~b</kbd> set field character/UTF-8 byte limits and <kbd class="kbd">t~/~B</kbd> total limits.
+Shift-left/right steps by 100, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts a positive integer or <code class="code">none</code> for
+that limit only. <kbd class="kbd">w</kbd> saves those four limits and completion policy: five
+values, not every mail setting.
+</p>
+<p>Org and Notmuch choice lists start on the current global value. Arrows browse
+without applying, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies/returns, and <kbd class="kbd">q</kbd> cancels. <kbd class="kbd">?</kbd> plus a choice key
+explains effect/scope; <kbd class="kbd">q</kbd> returns to that browsed choice.
+</p>
+<p>Notmuch&rsquo;s <kbd class="kbd">s~/~m</kbd> open ordered search/message fields and <kbd class="kbd">i~/~I</kbd> their status
+maps. These Customize editors preserve custom formatters and use their own
+Apply/Save/Reset. <kbd class="kbd">p</kbd> opens Presentation Options: enabled
+<code class="code">mail-message-status-cues</code> owns standard cues, while maps still suppress spoken
+status tags. <kbd class="kbd">A</kbd> exposes advanced options such as separators. <kbd class="kbd">q</kbd> returns;
+opening or returning does not save. <a data-manual="emacsvox" href="./Notmuch-Mail.html#Notmuch-Mail">Notmuch Mail</a> explains privacy and full
+inspection. Integrations without focused entries remain accessible through
+major-mode settings and advanced Customize.
+</p></li></ol>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Output-Volumes.html">Adjust output volumes</a>, Up: <a href="Aural-Speech-Output.html">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

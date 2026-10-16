@@ -36,29 +36,28 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Palette-Inheritance-Walkthrough.html" accesskey="p" rel="prev">Walkthrough: Inheritance, Aliases, And Reset</a>, Up: <a href="Voices-And-Routing.html" accesskey="u" rel="up">Choose And Manage Voice Palettes</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Rename-Voices-And-Palettes"><span>6.5.3 Rename Voices And Palettes<a class="copiable-link" href="#Rename-Voices-And-Palettes"> &para;</a></span></h4>
+<h4 class="subsection" id="Rename-Voices-And-Palettes"><span>8.6.3 Rename Voices And Palettes<a class="copiable-link" href="#Rename-Voices-And-Palettes"> &para;</a></span></h4>
 
-<p>Press <kbd class="kbd">r</kbd> in the voice list to rename a custom voice
-defined directly in that personal palette.  Enter the new name to save it;
-the renamed voice keeps its settings, physical choices and individual tuning.
-Save or discard unfinished voice edits first.  Standard Emacsvox voice names
-cannot be renamed; copy one to create a custom voice.  For an inherited voice,
-copy it or rename it in its owning palette.  Renaming updates personal,
-session and buffer presentation rules, including face mappings, and loaded
-global and buffer face maps.  Personal rules and the voice are saved together;
-a failed save leaves the old name and mappings usable.  Face mappings declared
-in your own Lisp configuration must also be updated there for future sessions.
-References in maintained integration rules, Presentation Options, or other
-voice definitions still block the rename; update those uses first. Renaming also
-stops if another palette directly defines either name, because mappings are shared.
+<p><kbd class="kbd">r</kbd> in the voice list renames a direct custom voice in a personal palette.
+Entering the new name saves it with its settings, physical choices, and tuning
+intact. Finish/discard voice drafts first. Standard names cannot be renamed;
+copy one for a custom entry. An inherited voice must be copied or renamed in
+its owning palette.
 </p>
-<p>To rename a personal palette, select it in <em class="emph">Voice Palettes</em>, press
-<kbd class="kbd">r</kbd>, and enter its new name.  The rename is saved immediately.
-It preserves voice settings and individual fallback tuning, updates child
-palettes and personal Presentation Profiles, and keeps an active palette
-selected under its new name.  Save or discard unfinished voice edits first.
-Built-in palettes cannot be renamed. A reference from maintained integration
-configuration can block a rename; its owner must update that reference first.
+<p>Renaming updates personal, session, and buffer rules, face mappings, and loaded
+global/buffer face maps. Personal rules and the voice are saved together; a
+failure leaves the old name and mappings usable. Update face mappings written
+in your Lisp configuration there too for future sessions. Maintained integration
+rules, Presentation Options, and other voice definitions can block a rename
+until their references are updated. Another palette directly defining either
+name also blocks it because mappings are shared.
+</p>
+<p>In <em class="emph">Voice Palettes</em>, <kbd class="kbd">r</kbd> renames a personal palette and saves immediately.
+It retains settings and fallback tuning, updates children and personal
+Presentation Profiles, and keeps an active palette selected under its new name.
+Finish/discard unfinished voice edits first. Built-ins cannot be renamed, and
+maintained integration references can block the change until their owner
+updates them.
 </p>
 </div>
 

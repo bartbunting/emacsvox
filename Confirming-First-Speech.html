@@ -38,57 +38,86 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Recovering-From-No-Speech.html" accesskey="n" rel="next">Recovering From No Speech</a>, Previous: <a href="Quick-Installation.html" accesskey="p" rel="prev">Build And Start Emacsvox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Confirming-First-Speech-1"><span>2.7 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
+<h3 class="section" id="Confirming-First-Speech-1"><span>3.7 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
 
-<p>You will know the isolated start succeeded when Omnivox acknowledges the
-initial engine inventory, routing policy, and logical voices, and Emacsvox
-speaks:
+<p>The stable first-speech checkpoint is:
 </p>
 <blockquote class="quotation">
 <p>Emacsvox is ready.
 </p>
 </blockquote>
 
-<p>An earlier introduction, overview key, version number, and startup auditory
-icon may also be heard.  Those can change; the sentence above is the stable
-first-speech checkpoint because it normally occurs after initial routing is
-acknowledged and therefore uses the restored engine policy.  If routing does
-not finish within five seconds, Emacsvox speaks the checkpoint through the
-capability-ready fallback so a routing error cannot suppress it indefinitely.
+<p>It normally follows Omnivox&rsquo;s acknowledgement of initial engine inventory,
+routing policy, and logical voices, and therefore uses the restored engine
+policy. If routing does not finish within five seconds, Emacsvox speaks it
+through the capability-ready fallback. Hearing the checkpoint does not by
+itself prove that routing completed or every package integration loaded.
+An earlier introduction, overview key, version number, and startup auditory
+icon may also be heard; those can change.
 </p>
-<p>This checkpoint describes the speech server.  Type
-<kbd class="kbd">M-x emacsvox-startup-status <kbd class="key">RET</kbd></kbd> to check background preparation
-of Emacsvox and its package integrations.  The command speaks a summary and
-opens a report.  Integrations waiting for their packages are normal: their
-speech support loads when you open those packages.  Run the command again to
-refresh the report; <kbd class="kbd">q</kbd> closes it.
+<p>Run <kbd class="kbd">M-x emacsvox-startup-status <kbd class="key">RET</kbd></kbd> to check background preparation of
+Emacsvox and its package integrations. The command speaks a summary and opens
+a report. Integrations waiting for their packages are normal: speech support
+loads when you open those packages. Run the command again to refresh the
+report; <kbd class="kbd">q</kbd> closes it.
 </p>
-<p>You now have a working Emacsvox session.  Try these checks before connecting
-it to your personal configuration:
+<p>Before connecting Emacsvox to your personal configuration, check the live
+adapter and everyday feedback:
 </p>
 <ol class="enumerate">
-<li> Type <kbd class="kbd">M-x tts-speak-version <kbd class="key">RET</kbd></kbd>.  The live speech adapter should speak its
+<li> Begin in an ordinary working buffer. Press <kbd class="kbd">C-e m</kbd> and note its name,
+then run <kbd class="kbd">M-x tts-speak-version <kbd class="key">RET</kbd></kbd>. The live adapter should speak its
 version response.
-
-</li><li> Type <kbd class="kbd">C-h v tts-program <kbd class="key">RET</kbd></kbd>.  The displayed current value should name
-<code class="code">omnivox</code>.
-
-</li><li> Use <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> to move over lines and confirm ordinary spoken
-navigation.  Type <kbd class="kbd">M-x emacsvox-describe-emacsvox <kbd class="key">RET</kbd></kbd> for the Emacsvox
-overview.  See <a class="ref" href="Basic-Usage.html">Basic Usage</a>, for the tested starter commands.
+</li><li> Use <kbd class="kbd">C-h v tts-program <kbd class="key">RET</kbd></kbd>. In this isolated launcher session, the value
+should name <code class="code">omnivox</code>. This opens Help; it is no longer a test in the
+original working buffer.
+</li><li> Leave Help with <kbd class="kbd">q</kbd>, then use <kbd class="kbd">C-x b</kbd> to select the working buffer by name
+if necessary. Confirm it with <kbd class="kbd">C-e m</kbd> before moving over its lines with
+<kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd>. The reached lines should be spoken.
 </li></ol>
 
-<p>If the initial speech is too fast, press <kbd class="kbd">C-e d -</kbd> and then repeat
-<kbd class="kbd">-</kbd> to slow the current buffer, or use <kbd class="kbd">C-e d r</kbd> to enter an exact
-rate such as <code class="code">40</code>.  For individually echoed characters, use
-<kbd class="kbd">C-e d f</kbd> and try a multiplier below one, such as <code class="code">0.7</code>.  Put
-<kbd class="kbd">C-u</kbd> before the exact-rate or character-factor command to change the
-global default rather than only the current buffer.
+<p><kbd class="kbd">M-x emacsvox-describe-emacsvox <kbd class="key">RET</kbd></kbd> opens the overview. Return to your working
+buffer before trying the buffer-local rate adjustments below. See
+<a data-manual="emacsvox" href="./Using-Online-Help.html#Using-Online-Help">Using Online Help</a> for Help&rsquo;s selection and window behaviour.
 </p>
-<p>When these checks pass, continue to <a class="ref" href="Basic-Usage.html">Basic Usage</a> for a short guided
-first session, or use <a class="ref" href="Persistent-Startup.html">Persistent Startup</a> to connect Emacsvox to your
-normal Emacs configuration.
+<p>For a rate change through the settings interface, open <kbd class="kbd">C-e H s</kbd> and select
+<em class="emph">Rate</em>; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd">r</kbd> enters an exact value. The direct commands remain useful
+when first learning the menus: <kbd class="kbd">C-e d -</kbd>, followed by repeated <kbd class="kbd">-</kbd>, slows the
+current buffer, and <kbd class="kbd">C-e d r</kbd> accepts an exact rate such as <code class="code">40</code> for Omnivox.
+For individually echoed characters, <kbd class="kbd">C-e d f</kbd> accepts a multiplier such as
+<code class="code">0.7</code>. A prefix <kbd class="kbd">C-u</kbd> on the exact-rate or character-factor command changes
+the global default rather than only a buffer-local setting.
 </p>
+<p>When these checks pass, continue to <a data-manual="emacsvox" href="./Guided-Tutorial.html#Guided-Tutorial">Learn the audio desktop</a> for connected
+practice, or use <a class="ref" href="Basic-Usage.html">Basic Usage</a> as an everyday reference. Connecting Emacsvox
+to your normal configuration through <a class="ref" href="Persistent-Startup.html">Persistent Startup</a> is a separate choice;
+it is not required to continue learning in the isolated session.
+</p>
+<ul class="mini-toc">
+<li><a href="#Add-optional-engines-after-first-speech" accesskey="1">Add optional engines after first speech</a></li>
+</ul>
+<div class="subsection-level-extent" id="Add-optional-engines-after-first-speech">
+<h4 class="subsection"><span>3.7.1 Add optional engines after first speech<a class="copiable-link" href="#Add-optional-engines-after-first-speech"> &para;</a></span></h4>
+
+<p><kbd class="kbd">C-e H v b</kbd> opens the engine browser. The same list is available with
+<kbd class="kbd">M-x emacsvox-omnivox-manage-components <kbd class="key">RET</kbd></kbd>. Select an engine and press
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> for its details. These distinguish current engine availability from
+files installed for a separately managed release.
+</p>
+<p>For supported WSL release management, choose <em class="emph">Manage installed release</em> and
+check its version and location before choosing <em class="emph">Install engine</em>. The manager
+confirms, checksum-verifies, installs, and validates the selected engine
+without <code class="code">sudo</code>. The installed-release view also offers <em class="emph">Uninstall engine</em>
+for a manager-installed engine. Removal retains its verified download cache;
+<em class="emph">Install engine</em> can reinstall it. Core engines and separately supplied
+runtimes cannot be removed through that operation.
+</p>
+<p>The browser distinguishes included engines, downloadable components, and
+bridges requiring a user-supplied runtime. See
+<a class="ref" href="Optional-Omnivox-Engine-Modules.html">Optional Omnivox Engines</a> for activation, recovery, and licensing boundaries.
+Optional-engine management is not a prerequisite for ordinary WinRT speech.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Editing Terms (Emacsvox User Manual)</title>
+
+<meta name="description" content="Editing Terms (Emacsvox User Manual)">
+<meta name="keywords" content="Editing Terms (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Terminology.html" rel="up" title="Emacsvox Terminology">
+<link href="Presentation-Resource-Terms.html" rel="next" title="Presentation Resource Terms">
+<link href="Working-Context-Terms.html" rel="prev" title="Working Context Terms">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Editing-Terms">
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Resource-Terms.html" accesskey="n" rel="next">Voices and presentation resources</a>, Previous: <a href="Working-Context-Terms.html" accesskey="p" rel="prev">Your working context</a>, Up: <a href="Emacsvox-Terminology.html" accesskey="u" rel="up">Terms used in this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Selection_002c-copying-and-editing"><span>17.2 Selection, copying and editing<a class="copiable-link" href="#Selection_002c-copying-and-editing"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-mark_002c-meaning"></a>
+<a class="index-entry-id" id="index-region_002c-meaning"></a>
+<a class="index-entry-id" id="index-selection_002c-meaning"></a>
+<a class="index-entry-id" id="index-active-region_002c-meaning"></a>
+<a class="index-entry-id" id="index-Transient-Mark-mode_002c-meaning"></a>
+<a class="index-entry-id" id="index-copy_002c-meaning"></a>
+<a class="index-entry-id" id="index-cut_002c-meaning"></a>
+<a class="index-entry-id" id="index-kill_002c-meaning"></a>
+<a class="index-entry-id" id="index-paste_002c-meaning"></a>
+<a class="index-entry-id" id="index-yank_002c-meaning"></a>
+<a class="index-entry-id" id="index-kill-ring_002c-meaning"></a>
+<a class="index-entry-id" id="index-clipboard_002c-meaning"></a>
+<a class="index-entry-id" id="index-undo_002c-meaning"></a>
+
+<dl class="table">
+<dt>Mark</dt>
+<dd><p>A remembered position in a buffer. Point and mark delimit the
+region, whichever comes first. The mark can remain after the selection is
+deactivated; it is not copied text. See <a data-manual="emacsvox" href="./Selecting-Text-With-Speech.html#Selecting-Text-With-Speech">Selecting and checking text</a>.
+</p></dd>
+<dt>Region or selection</dt>
+<dd><p>The text between point and mark, including any
+selected spaces and newlines. The character at its end is excluded. The
+active region is the current selection; some commands can also use an
+inactive mark. Establish a fresh region before cutting. See
+<a data-manual="emacsvox" href="./Selecting-Text-With-Speech.html#Selecting-Text-With-Speech">Selection boundaries and activation</a>.
+</p></dd>
+<dt>Transient Mark mode</dt>
+<dd><p>Emacs&rsquo;s usual active-selection behaviour, used by
+the editing examples. It is unrelated to the Transient package that supplies
+settings menus. See <a data-manual="emacsvox" href="./Selecting-Text-With-Speech.html#Selecting-Text-With-Speech">Using the region through speech</a> and
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Mark.html#Mark">The mark and the region</a> in the GNU Emacs Manual.
+</p></dd>
+<dt>Copy</dt>
+<dd><p>Store a passage in the kill ring while leaving its source text
+unchanged. The destination becomes an independent text copy when you paste
+it. See <a data-manual="emacsvox" href="./Copying-Text-Between-Buffers.html#Copying-Text-Between-Buffers">Copying between buffers</a>.
+</p></dd>
+<dt>Kill or cut</dt>
+<dd><p>Remove text and keep it in the kill ring for later insertion.
+Some deletion commands do not keep that copy. Killing a buffer is a different
+operation: it closes the buffer rather than copying its contents. See
+<a data-manual="emacsvox" href="./Moving-Text-Safely.html#Moving-Text-Safely">Moving text safely</a>.
+</p></dd>
+<dt>Yank or paste</dt>
+<dd><p>Insert text from the kill ring, or through configured
+clipboard integration, at point. It changes the destination buffer, not
+automatically its saved file. See <a data-manual="emacsvox" href="./Copying-Text-Between-Buffers.html#Copying-Text-Between-Buffers">Checking a paste</a>.
+</p></dd>
+<dt>Kill ring</dt>
+<dd><p>Emacs&rsquo;s shared history of copied and cut text. It can contain
+more than the latest passage, including text placed there by inspection
+commands. It is not a permanent backup or the same store as the system
+clipboard. See <a data-manual="emacsvox" href="./Choosing-Earlier-Copied-Text.html#Choosing-Earlier-Copied-Text">Choosing an earlier copy</a>.
+</p></dd>
+<dt>Clipboard</dt>
+<dd><p>The operating system&rsquo;s text-transfer facility. Its connection
+to Emacs depends on the display session and configuration; a new external
+copy can affect the next paste. See <a data-manual="emacsvox" href="./Copying-Through-The-Clipboard.html#Copying-Through-The-Clipboard">Testing clipboard exchange</a>.
+</p></dd>
+<dt>Undo</dt>
+<dd><p>Reverse recorded edits in the selected buffer. It does not reverse
+a settings save or an action already sent to another application. When
+listening between successive corrections, use the recovery guide&rsquo;s
+<code class="code">undo-only</code> procedure. See <a data-manual="emacsvox" href="./Recovering-Text-Edits.html#Recovering-Text-Edits">Undo and spoken inspection</a>.
+</p></dd>
+</dl>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Resource-Terms.html">Voices and presentation resources</a>, Previous: <a href="Working-Context-Terms.html">Your working context</a>, Up: <a href="Emacsvox-Terminology.html">Terms used in this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

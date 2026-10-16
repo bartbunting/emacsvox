@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reading Agent Responses (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reading Agent Responses (Emacsvox User Manual)">
+<meta name="keywords" content="Reading Agent Responses (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Agent-Shell-Transcript-Navigation.html" rel="next" title="Agent Shell Transcript Navigation">
+<link href="Agent-Shell-Permissions.html" rel="prev" title="Agent Shell Permissions">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Reading-Agent-Responses">
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Transcript-Navigation.html" accesskey="n" rel="next">Navigate transcript blocks</a>, Previous: <a href="Agent-Shell-Permissions.html" accesskey="p" rel="prev">Respond to urgent permissions</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Inspect-a-response-on-demand"><span>11.5 Inspect a response on demand<a class="copiable-link" href="#Inspect-a-response-on-demand"> &para;</a></span></h3>
+
+<p>These commands work from the shell and its associated viewports:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-c r</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-speak-last-response</code>.  It reads the latest
+successfully completed response in full without moving point.  This deliberate
+operation does not inherit the automatic 2,000-character limit.  While a new
+turn is busy it explicitly identifies and reads the prior completed response.
+</p></dd>
+<dt><kbd class="kbd">C-c R</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-speak-response-overview</code>.  It reports line,
+heading, source-block, and table counts plus a bounded opening preview.
+</p></dd>
+</dl>
+
+<p>These commands remain usable at <code class="code">notify</code> and <code class="code">quiet</code>.  If no turn has
+completed, they say that no completed response is available rather than
+presenting a streaming partial or failed answer.
+</p>
+</div>
+
+
+
+</body>
+</html>

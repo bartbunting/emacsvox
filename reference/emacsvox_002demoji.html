@@ -36,7 +36,7 @@ strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 Next: <a href="emacsvox_002dempv.html" accesskey="n" rel="next">emacsvox-empv</a>, Previous: <a href="emacsvox_002demms.html" accesskey="p" rel="prev">emacsvox-emms</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002demoji-1"><span>2.116 emacsvox-emoji<a class="copiable-link" href="#emacsvox_002demoji-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002demoji-1"><span>2.119 emacsvox-emoji<a class="copiable-link" href="#emacsvox_002demoji-1"> &para;</a></span></h3>
 
 <p>Optional speech naming uses exact entries from Emacs&rsquo;s bundled emoji data.
 Keep the private upstream table behind this adapter; never use the picker
@@ -46,10 +46,10 @@ helper, which can fall back to naming the first character of a sequence.
 <li><a href="#emacsvox_002demoji-Options" accesskey="1">emacsvox-emoji Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="emacsvox_002demoji-Options">
-<h4 class="subsection"><span>2.116.1 emacsvox-emoji Options<a class="copiable-link" href="#emacsvox_002demoji-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.119.1 emacsvox-emoji Options<a class="copiable-link" href="#emacsvox_002demoji-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-56"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-approved-sequences</var><a class="copiable-link" href="#index-User-Option-56"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-59"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-approved-sequences</var><a class="copiable-link" href="#index-User-Option-59"> &para;</a></span></dt>
 <dd><pre class="verbatim">Complete sequences eligible for automatic speech naming.
 The default t uses Emacs’s emoji table, Unicode arrow, harpoon and box-drawing
 names, and custom names.  A list of strings restricts naming to those complete
@@ -63,7 +63,7 @@ t
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-57"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-custom-names</var><a class="copiable-link" href="#index-User-Option-57"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-60"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-custom-names</var><a class="copiable-link" href="#index-User-Option-60"> &para;</a></span></dt>
 <dd><pre class="verbatim">Spoken names overriding Emacs data for eligible complete sequences.
 Names must contain 1 to 80 characters with no control characters.  Empty
 names are invalid; use an explicit pronunciation to omit a symbol.
@@ -76,7 +76,7 @@ nil
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-58"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-maximum-count</var><a class="copiable-link" href="#index-User-Option-58"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-61"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-maximum-count</var><a class="copiable-link" href="#index-User-Option-61"> &para;</a></span></dt>
 <dd><pre class="verbatim">Maximum eligible occurrences per speech object or preview sample.
 Accepts zero through 64; repetitions count separately.  The default 64 allows
 ordinary decorated messages to retain their preferred speech engine.
@@ -90,7 +90,7 @@ Above this limit, the entire item retains its emoji, arrows and box drawings.
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-59"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-naming-enabled</var><a class="copiable-link" href="#index-User-Option-59"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-62"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-naming-enabled</var><a class="copiable-link" href="#index-User-Option-62"> &para;</a></span></dt>
 <dd><pre class="verbatim">Whether speech names occasional emoji, regardless of engine.
 This option and the other emoji options can be set buffer-locally or in a
 mode hook.  Source buffers keep their original text.

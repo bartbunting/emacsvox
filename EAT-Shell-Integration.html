@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Shell Integration (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Shell Integration (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Shell Integration (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Passwords-And-Privacy.html" rel="next" title="EAT Passwords And Privacy">
+<link href="EAT-Feedback-Preferences.html" rel="prev" title="EAT Feedback Preferences">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Shell-Integration">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Passwords-And-Privacy.html" accesskey="n" rel="next">Passwords And Sensitive Content</a>, Previous: <a href="EAT-Feedback-Preferences.html" accesskey="p" rel="prev">Verbosity And Background Monitoring</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Shell-Integration-And-Command-Status"><span>12.6 Shell Integration And Command Status<a class="copiable-link" href="#Shell-Integration-And-Command-Status"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-EAT-shell-integration"></a>
+<a class="index-entry-id" id="index-shell-command-status"></a>
+
+<p>EAT&rsquo;s Bash or Zsh integration supplies prompt annotation, directory tracking,
+and per-command running/success/failure status. For Bash, EAT documents:
+</p>
+<div class="example">
+<pre class="example-preformatted">[ -n &quot;$EAT_SHELL_INTEGRATION_DIR&quot; ] &amp;&amp; \
+  source &quot;$EAT_SHELL_INTEGRATION_DIR/bash&quot;
+</pre></div>
+
+<p>For Zsh, use its script instead:
+</p>
+<div class="example">
+<pre class="example-preformatted">[ -n &quot;$EAT_SHELL_INTEGRATION_DIR&quot; ] &amp;&amp; \
+  source &quot;$EAT_SHELL_INTEGRATION_DIR/zsh&quot;
+</pre></div>
+
+<a class="index-entry-id" id="index-eat_002denable_002dshell_002dprompt_002dannotation"></a>
+
+<p>With integration and <code class="code">eat-enable-shell-prompt-annotation</code> enabled, Emacsvox
+retains running, successful, and failed command status. A failure is eligible
+for automatic feedback at every verbosity, subject to foreground autospeak.
+Success is automatic only at verbose level after observed command activity;
+the initial successful prompt is not announced as a completed command.
+Running state stays silent. <kbd class="kbd">C-e q t</kbd> requests the retained current state.
+</p>
+<p>Status is not guessed from prompt characters. A remote shell or router usually
+does not provide this per-command integration. Its output and completion can
+still be accessible while individual exit status remains unavailable.
+</p>
+</div>
+
+
+
+</body>
+</html>

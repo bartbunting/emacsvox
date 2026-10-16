@@ -38,41 +38,38 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Speech-Engine-Preferences.html" accesskey="n" rel="next">Set Shared Engine Preferences</a>, Previous: <a href="Physical-Voice-Experiments.html" accesskey="p" rel="prev">Experiment With An Installed Voice</a>, Up: <a href="Installed-Voices-And-Engines.html" accesskey="u" rel="up">Browse Installed Voices And Choose Engines</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Walkthrough_003a-Keep-An-Installed-Voice-Experiment"><span>6.8.2 Walkthrough: Keep An Installed Voice Experiment<a class="copiable-link" href="#Walkthrough_003a-Keep-An-Installed-Voice-Experiment"> &para;</a></span></h4>
+<h4 class="subsection" id="Walkthrough_003a-Keep-An-Installed-Voice-Experiment"><span>8.9.5 Walkthrough: Keep An Installed Voice Experiment<a class="copiable-link" href="#Walkthrough_003a-Keep-An-Installed-Voice-Experiment"> &para;</a></span></h4>
 
-<p>This example keeps the physical voice and its tuning together. First create
-<code class="code">reading-demo</code> as in <a data-manual="emacsvox" href="../Personal-Palette-Walkthrough.html#Personal-Palette-Walkthrough">Make a Personal Reading Palette</a>, or choose an existing
-personal destination. Note the active palette before beginning.
+<p>Create <code class="code">reading-demo</code> as in <a data-manual="emacsvox" href="./Personal-Palette-Walkthrough.html#Personal-Palette-Walkthrough">Make a personal reading palette</a>, or deliberately
+choose an existing personal destination. Note the active palette and whether
+selection follows the standard baseline or is explicit. Saving into an
+existing destination changes that resource; it is not preview-only practice.
 </p>
 <ol class="enumerate">
-<li> In the installed-voice browser, open an experiment with <kbd class="kbd">t</kbd>, adjust a
-field, and use <kbd class="kbd">P</kbd> or <kbd class="kbd">B</kbd> to listen. Press <kbd class="kbd">w</kbd> when ready to keep it.
-</li><li> At <em class="emph">Destination palette</em>, choose your personal palette. At <em class="emph">Use for named
-voice</em>, choose <code class="code">bolden</code>. Select <em class="emph">Physical voice and adjustments — this
-choice</em>, then <em class="emph">Add as preferred</em>. These choices put the experiment first
-while retaining existing alternative physical choices.
-</li><li> The named-voice editor opens with the proposed combination. Nothing has
-been saved yet. Expand <em class="emph">Fallbacks</em>: the new first choice should be marked
-customized, with any previous explicit choices after it. <kbd class="kbd">P</kbd> plays the
-whole proposed voice. Review the reported engine and physical voice after
-the sample; an unavailable preferred choice can cause a fallback.
-</li><li> Press <kbd class="kbd">w</kbd> to save and apply. Wait for the editor&rsquo;s result. If it reports
-a partial save or failed application, keep the draft and follow
-<a data-manual="emacsvox" href="../Recovering-Aural-Changes.html#Recovering-Aural-Changes">Recovering Unfinished Changes</a>. A successful save selects the destination
-palette for this session. Use <kbd class="kbd">U</kbd> in Voice Palettes only if you also want
-that palette at startup.
-</li><li> To reverse this change before saving, use <kbd class="kbd">u</kbd> or discard the draft.
-After saving, reopen the named voice, expand <em class="emph">Fallbacks</em>, open the added
-choice&rsquo;s action menu with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, choose <em class="emph">Remove</em>, preview, and save.
-Removing that row retains the other choices and shared settings. Reactivate
-your original palette if you also want to restore the session selection.
+<li> In the voice browser, open <kbd class="kbd">t</kbd>, adjust a field, and preview with <kbd class="kbd">P~/~B</kbd>.
+Press <kbd class="kbd">w</kbd> to keep it.
+</li><li> Select the personal destination and named voice <code class="code">bolden</code>. Choose <em class="emph">Physical
+voice and adjustments — this choice</em>, then <em class="emph">Add as preferred</em>. This places
+the experiment first while retaining alternatives.
+</li><li> The common editor opens an unsaved proposal. Expand <em class="emph">Fallbacks</em>: the new
+first choice is customised, preceding previous explicit choices. <kbd class="kbd">P</kbd> plays
+the whole proposed voice; inspect its actual reported engine/voice because
+an unavailable preference may fall back.
+</li><li> <kbd class="kbd">w</kbd> saves and applies. Wait for its result and follow
+<a data-manual="emacsvox" href="./Recovering-Aural-Changes.html#Recovering-Aural-Changes">Recovering Unfinished Changes</a> after partial saving or failed application.
+Success selects the destination for this session. Use <kbd class="kbd">U</kbd> in Voice
+Palettes only to choose it for startup too.
+</li><li> Before saving, undo or discard to reverse. After saving, reopen the voice,
+expand fallbacks, choose <em class="emph">Remove</em> in the added row&rsquo;s <kbd class="kbd"><kbd class="key">RET</kbd></kbd> action menu,
+preview, and save. Other choices and shared tuning remain. To restore
+session selection, use <kbd class="kbd">f</kbd> in Voice Palettes if you originally followed
+the standard baseline; otherwise activate the recorded explicit palette.
 </li></ol>
 
-<p>To tune a fallback independently, open its action menu and choose <em class="emph">Customize
-this voice</em>. Set one field, audition that choice, then select <em class="emph">Play whole
-fallback chain</em> to test normal selection. Its custom field replaces the shared
-value only when that choice is used. <kbd class="kbd">i</kbd> returns the field to the shared
-value. Reordering a choice carries its adjustments with it.
+<p>For independent fallback tuning, open its menu and <em class="emph">Customize this voice</em>.
+Change one field, audition that row, then test <em class="emph">Play whole fallback chain</em>.
+The custom field overrides shared tuning only for that choice. <kbd class="kbd">i</kbd> restores
+inheritance; reordering carries adjustments with the row.
 </p>
 </div>
 <hr>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Selecting Text With Speech (Emacsvox User Manual)</title>
+
+<meta name="description" content="Selecting Text With Speech (Emacsvox User Manual)">
+<meta name="keywords" content="Selecting Text With Speech (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Text-With-Speech.html" rel="up" title="Editing Text With Speech">
+<link href="Copying-Text-Between-Buffers.html" rel="next" title="Copying Text Between Buffers">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Selecting-Text-With-Speech">
+<div class="nav-panel">
+<p>
+Next: <a href="Copying-Text-Between-Buffers.html" accesskey="n" rel="next">Copy a passage into another buffer</a>, Up: <a href="Editing-Text-With-Speech.html" accesskey="u" rel="up">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Select-and-check-the-text-first"><span>5.6.1 Select and check the text first<a class="copiable-link" href="#Select-and-check-the-text-first"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-region_002c-selecting-and-hearing"></a>
+<a class="index-entry-id" id="index-mark_002c-checking-a-selection"></a>
+<a class="index-entry-id" id="index-newline_002c-including-in-a-selection"></a>
+<a class="index-entry-id" id="index-C_002dSPC"></a>
+<a class="index-entry-id" id="index-C_002dx-C_002dx"></a>
+
+<p>Point is the moving end of a selection; the mark holds its other end. The
+<em class="emph">region</em> is the text between them, whichever comes first. This procedure uses
+Emacs&rsquo;s normal Transient Mark mode, not the Transient settings-menu package.
+Do not change either mode just because their names are similar.
+</p>
+<ol class="enumerate">
+<li> In the practice buffer, press <kbd class="kbd">M-&lt;</kbd>, then <kbd class="kbd">C-n</kbd> twice and <kbd class="kbd">C-a</kbd>. Check
+with <kbd class="kbd">C-e l</kbd> that you reached <code class="code">Move this paragraph.</code>.
+</li><li> Press <kbd class="kbd">C-<kbd class="key">SPC</kbd></kbd>: hold Control and press the space bar. This sets the mark
+at the line&rsquo;s start. Release the keys, then press <kbd class="kbd">C-n</kbd> once. Point is
+now at the start of the following blank line.
+</li><li> Press <kbd class="kbd">C-e r</kbd> to hear the region. It contains the sentence and its
+terminating newline. Reading this short selection does not move its ends
+or deactivate it, so it remains ready for copying or cutting.
+</li><li> Press <kbd class="kbd">C-b</kbd> once to move point back before that newline. The sentence
+is still selected, but its newline is not. <kbd class="kbd">C-e c</kbd> can identify the
+character at this boundary; the character at the region&rsquo;s end is excluded.
+Press <kbd class="kbd">C-f</kbd> to include the newline again.
+</li></ol>
+
+<p>If the operating system intercepts <kbd class="kbd">C-<kbd class="key">SPC</kbd></kbd>, <kbd class="kbd">M-x set-mark-command <kbd class="key">RET</kbd></kbd> is
+an alternative. Use a small selection and ordinary unshifted movement for this
+exercise. Shift-selection has different deactivation rules.
+</p>
+<p><kbd class="kbd">C-x C-x</kbd> exchanges point and mark without changing the selected text.
+Emacsvox speaks the line at the new point with point indication. You can
+inspect that boundary, move it if necessary, and exchange again to return to
+the other end. Starting a new selection with <kbd class="kbd">C-<kbd class="key">SPC</kbd></kbd> replaces the boundary;
+it is not the command for inspecting the old one.
+</p>
+<p>In the ordinary text buffer, <kbd class="kbd">C-g</kbd> deactivates the selection without deleting
+text. It does not erase the saved mark. Some region commands can still use an
+inactive mark, so always establish a fresh, checked selection before cutting.
+Likewise, typing over selected text depends on Delete Selection mode; use the
+explicit operations below rather than assuming typing will replace it.
+</p>
+<p>More detail: <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Mark.html#Mark">The mark and the region</a>, <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Setting-Mark.html#Setting-Mark">Setting the mark</a>,
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Using-Region.html#Using-Region">Operating on the region</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Shift-Selection.html#Shift-Selection">Shift selection</a> in the GNU Emacs Manual.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Copying-Text-Between-Buffers.html">Copy a passage into another buffer</a>, Up: <a href="Editing-Text-With-Speech.html">Select, copy, and move text</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

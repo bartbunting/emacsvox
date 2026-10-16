@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Finding Problem Tasks (Emacsvox User Manual)</title>
+
+<meta name="description" content="Finding Problem Tasks (Emacsvox User Manual)">
+<meta name="keywords" content="Finding Problem Tasks (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Finding-Tasks.html" rel="up" title="Finding Tasks">
+<link href="Finding-Application-Tasks.html" rel="prev" title="Finding Application Tasks">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Finding-Problem-Tasks">
+<div class="nav-panel">
+<p>
+Previous: <a href="Finding-Application-Tasks.html" accesskey="p" rel="prev">Work in an application</a>, Up: <a href="Finding-Tasks.html" accesskey="u" rel="up">Find a task</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Something-is-wrong"><span>16.6 Something is wrong<a class="copiable-link" href="#Something-is-wrong"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-something-is-wrong"></a>
+<a class="index-entry-id" id="index-saved-but-unchanged-1"></a>
+<a class="index-entry-id" id="index-wrong-voice-1"></a>
+<a class="index-entry-id" id="index-too-much-talking-1"></a>
+<a class="index-entry-id" id="index-disappeared-after-restarting"></a>
+<a class="index-entry-id" id="index-go-back_002c-settings"></a>
+<a class="index-entry-id" id="index-timeout_002c-did-anything-change"></a>
+<a class="index-entry-id" id="index-reporting-a-problem"></a>
+<a class="index-entry-id" id="index-why-did-it-paste-a-filename"></a>
+<a class="index-entry-id" id="index-pasted-a-filename"></a>
+<a class="index-entry-id" id="index-Help-replaced-my-windows"></a>
+
+<p>Start with the closest symptom. These routes preserve existing work and help
+you decide what to inspect before attempting a repair. A failed preview, an
+unsaved draft and a failed application are different problems.
+</p>
+<ul class="itemize mark-bullet">
+<li><a data-manual="emacsvox" href="./Recovering-From-No-Speech.html#Recovering-From-No-Speech">There is no speech at all</a>: restore a working speech route before using
+tools that depend on spoken inspection.
+</li><li><a class="ref" href="Reading-From-Point.html">Reading restarted part of a sentence</a>: distinguish chunk-based tracking
+from exact-word pause/resume and inspect the retained position.
+</li><li><a class="ref" href="Recovering-Text-Edits.html">Text was pasted in the wrong place</a>: undo in the affected buffer and
+check the result before trying the transfer again.
+</li><li><a data-manual="emacsvox" href="./Copying-Text-Between-Buffers.html#Copying-Text-Between-Buffers">A paste inserted a filename or message instead of my passage</a>: inspect
+which command changed the kill ring before choosing the earlier copy.
+</li><li><a data-manual="emacsvox" href="./Using-Online-Help.html#Using-Online-Help">Help replaced my other windows</a>: check the selected buffer and restore
+the desired views; a collapsed layout need not mean lost documents.
+</li><li><a data-manual="emacsvox" href="./Saved-Voice-Change-Not-Audible.html#Saved-Voice-Change-Not-Audible">I saved a voice, but it still sounds the same</a>: check selection,
+matching rules, individual tuning and engine support in that order.
+</li><li><a data-manual="emacsvox" href="./Settings-Lost-After-Restart.html#Settings-Lost-After-Restart">My settings disappeared after restarting</a>: distinguish temporary changes
+from saved resources and their startup selection.
+</li><li><a data-manual="emacsvox" href="./Feedback-Differs-Between-Buffers.html#Feedback-Differs-Between-Buffers">Only one application or document sounds wrong</a>: compare the same kind
+of action and inspect local settings, integration policy and matching rules.
+</li><li><a data-manual="emacsvox" href="./Feedback-Differs-Between-Buffers.html#Feedback-Differs-Between-Buffers">There is too much talking</a>: distinguish automatic content, training
+explanations, extra labels and the notification stream before silencing it.
+</li><li><a data-manual="emacsvox" href="./Unconfirmed-Speech-Changes.html#Unconfirmed-Speech-Changes">I cannot tell whether a change succeeded</a>: keep the saved result and
+unfinished work while checking stream acknowledgements or a timeout.
+</li><li><a data-manual="emacsvox" href="./Returning-From-Settings.html#Returning-From-Settings">I cannot get back to what I was reading</a>: leave the current editor using
+its own return action, then use the menu&rsquo;s captured-source return.
+</li><li><a class="ref" href="Recovering-A-Web-Page.html">A web page is cluttered or missing content</a>: restore its reading view,
+distinguish a fresh request from history, or use an external browser.
+</li><li><a data-manual="emacsvox" href="./Reporting-Speech-Problems.html#Reporting-Speech-Problems">I need to report an unresolved problem</a>: collect a reproducible example
+and a reviewed diagnostic report without exposing private speech or paths.
+</li></ul>
+
+<p>For a missing cue, an unfamiliar profile status or another symptom, use
+<a data-manual="emacsvox" href="./Presentation-Troubleshooting.html#Presentation-Troubleshooting">Troubleshooting and recovery</a>. Avoid resetting unrelated settings to test
+one explanation; change only the cause you have identified and repeat the
+original action to check the result.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Finding-Application-Tasks.html">Work in an application</a>, Up: <a href="Finding-Tasks.html">Find a task</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

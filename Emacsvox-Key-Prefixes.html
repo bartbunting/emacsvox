@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Emacsvox Key Prefixes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Emacsvox Key Prefixes (Emacsvox User Manual)">
+<meta name="keywords" content="Emacsvox Key Prefixes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Keyboard-Commands.html" rel="up" title="Emacsvox Keyboard Commands">
+<link href="Everyday-Speech-Commands.html" rel="prev" title="Everyday Speech Commands">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Emacsvox-Key-Prefixes">
+<div class="nav-panel">
+<p>
+Previous: <a href="Everyday-Speech-Commands.html" accesskey="p" rel="prev">Speech and settings</a>, Up: <a href="Emacsvox-Keyboard-Commands.html" accesskey="u" rel="up">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="How-prefixes-and-menus-fit-together"><span>15.6 How prefixes and menus fit together<a class="copiable-link" href="#How-prefixes-and-menus-fit-together"> &para;</a></span></h3>
+
+<dl class="table">
+<dt><kbd class="kbd">C-e</kbd></dt>
+<dd><p>The main Emacsvox keymap, including reading, status, and navigation commands.
+</p></dd>
+<dt><kbd class="kbd">C-e d</kbd></dt>
+<dd><p>The text-to-speech keymap, including direct rate, punctuation, and echo controls.
+</p></dd>
+<dt><kbd class="kbd">C-e H</kbd></dt>
+<dd><p>Open the general settings menu. Its displayed keys and contextual Help
+provide discoverable routes to speech, voices, sounds, rules, and diagnostics.
+</p></dd>
+<dt><kbd class="kbd">C-e S</kbd></dt>
+<dd><p>Open focused settings for the captured integration when available, otherwise
+general buffer settings. <kbd class="kbd">C-e H .</kbd> always opens general buffer settings.
+</p></dd>
+</dl>
+
+<p>A prefix such as <kbd class="kbd">C-e</kbd> waits for another key; <kbd class="kbd">C-e H</kbd> is a complete
+command that opens a settings menu. Release Control-e before typing capital H.
+Once the menu is open, its own displayed letters choose actions. They are not
+additional keys to hold with Control.
+</p>
+<p>Inside an Emacsvox settings menu, arrows browse and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates a choice.
+<kbd class="kbd">?</kbd> followed by an item&rsquo;s key explains it; <kbd class="kbd">q</kbd> goes back and <kbd class="kbd">C-q</kbd> closes
+the sequence. Shift-left/right adjusts a selected numeric control where offered.
+To inspect the selected item, use <kbd class="kbd">C-c l</kbd> to repeat it, <kbd class="kbd">M-f~/~M-b</kbd> for words
+or <kbd class="kbd">C-f~/~C-b</kbd> for characters. In this menu context <kbd class="kbd">C-a~/~C-e</kbd> reaches the
+start/end of item review, so <kbd class="kbd">C-e</kbd> is not the speech prefix. Menu-specific
+bindings take precedence; <a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dreview">menu review</a> explains the full set and its limits.
+</p>
+<p>A voice editor, terminal, table reader or another Transient
+application retains its own keys. The same letter can mean Save in an editor,
+Export in a palette manager or ordinary input in a terminal. Check which view
+has focus before applying a command from another view&rsquo;s instructions.
+</p>
+<p>Integration-specific and convenience maps depend on major/minor modes, window
+system or terminal, and personal configuration. Live Help resolves those
+contexts. The manual uses the default speech prefix; a customised prefix changes
+its entry sequences without changing a menu&rsquo;s own displayed shortcuts.
+</p>
+</div>
+<div class="section-level-extent" id="Choose-a-different-speech-prefix">
+<h3 class="section"><span>15.7 Choose a different speech prefix<a class="copiable-link" href="#Choose-a-different-speech-prefix"> &para;</a></span></h3>
+
+<p>Set <code class="code">emacsvox-prefix</code> before loading Emacsvox. For example:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq emacsvox-prefix (kbd &quot;C-c e&quot;))
+</pre></div>
+
+<p>Then <kbd class="kbd">C-c e l</kbd> reads the line and <kbd class="kbd">C-c e e</kbd> provides end-of-line recovery.
+Evil, EXWM, widgets, and Term use the prefix followed by <kbd class="kbd">e</kbd> for their
+corresponding recovery command when it contains multiple events. Repeating
+such a prefix is also bound if unused or already assigned to that recovery.
+Existing commands and submaps take precedence: <kbd class="kbd">C-c e C-c</kbd> retains selective
+display, so <kbd class="kbd">C-c e C-c e</kbd> is not installed as recovery.
+</p>
+<p>Single-event prefixes keep their repeated-key behaviour, including default
+<kbd class="kbd">C-e C-e</kbd>. Mode-local bindings can still shadow the prefix; inspect them before
+assuming a key is unavailable or broken.
+</p>
+</div>
+<div class="section-level-extent" id="Inspect-the-effective-bindings">
+<h3 class="section"><span>15.8 Inspect the effective bindings<a class="copiable-link" href="#Inspect-the-effective-bindings"> &para;</a></span></h3>
+
+<p><kbd class="kbd">C-h m</kbd> describes the current modes and their commands. <kbd class="kbd">C-h b</kbd> lists effective
+bindings, and <kbd class="kbd">C-h k</kbd> followed by a key identifies its command. After typing
+a prefix such as <kbd class="kbd">C-e</kbd>, <kbd class="kbd">C-h</kbd> shows that prefix&rsquo;s current bindings.
+</p>
+<p>When live Help differs from this manual, check personal configuration and
+installed package versions, then compare the generated defaults. For speech
+feedback problems rather than binding discovery, see
+<a data-manual="emacsvox" href="./Presentation-Troubleshooting.html#Presentation-Troubleshooting">Troubleshooting And Recovery</a>.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Everyday-Speech-Commands.html">Speech and settings</a>, Up: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

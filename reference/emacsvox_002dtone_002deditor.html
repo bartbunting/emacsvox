@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-tone-editor (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-tone-editor (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-tone-editor (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dtransient.html" rel="next" title="emacsvox-transient">
+<link href="emacsvox_002dtodo_002dmode.html" rel="prev" title="emacsvox-todo-mode">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dtone_002deditor">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtransient.html" accesskey="n" rel="next">emacsvox-transient</a>, Previous: <a href="emacsvox_002dtodo_002dmode.html" accesskey="p" rel="prev">emacsvox-todo-mode</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dtone_002deditor-1"><span>2.257 emacsvox-tone-editor<a class="copiable-link" href="#emacsvox_002dtone_002deditor-1"> &para;</a></span></h3>
+
+<p>Shared draft interaction; cue providers own their settings and preview facts.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dTone_002dEditor-Commands" accesskey="1">Emacsvox-Tone-Editor Commands</a></li>
+<li><a href="#emacsvox_002dtone_002deditor-Options" accesskey="2">emacsvox-tone-editor Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dTone_002dEditor-Commands">
+<h4 class="subsection"><span>2.257.1 Emacsvox-Tone-Editor Commands<a class="copiable-link" href="#Emacsvox_002dTone_002dEditor-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dtone_002deditor-2" accesskey="1">emacsvox-tone-editor</a></li>
+<li><a href="#emacsvox_002dtone_002deditor_002dcurve" accesskey="2">emacsvox-tone-editor-curve</a></li>
+<li><a href="#emacsvox_002dtone_002deditor_002denvelope" accesskey="3">emacsvox-tone-editor-envelope</a></li>
+<li><a href="#emacsvox_002dtone_002deditor_002dpresets" accesskey="4">emacsvox-tone-editor-presets</a></li>
+<li><a href="#emacsvox_002dtone_002deditor_002dwaveform" accesskey="5">emacsvox-tone-editor-waveform</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dtone_002deditor-2">
+<h4 class="subsubsection"><span>2.257.1.1 emacsvox-tone-editor<a class="copiable-link" href="#emacsvox_002dtone_002deditor-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtone_002deditor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-tone-editor</strong><a class="copiable-link" href="#index-emacsvox_002dtone_002deditor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtone_002deditor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit a private tone draft.
+Up and Down select items; Left and Right change sections. Shift-Left and
+Shift-Right adjust numbers. Enter sets an exact number, toggles Pitch sweep,
+or opens a choice list. Browsing a choice list changes nothing until Enter.
+Space or b interrupts main speech and plays the draft tone alone. C plays the
+applied tone; P reads a sample with the draft. S stops, without saving.
+Preview comes before Presets in the section order. L loads a preset into the
+draft; N saves a named preset without changing the cue. A applies the draft
+for this session; W saves and applies tone defaults through Customize.
+q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
+and saved changes remain. Timing, cue enablement, voice and earcon choices
+belong to the parent menu; shared main-tone volume belongs in Output settings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtone_002deditor_002dcurve">
+<h4 class="subsubsection"><span>2.257.1.2 emacsvox-tone-editor-curve<a class="copiable-link" href="#emacsvox_002dtone_002deditor_002dcurve"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtone_002deditor_002dcurve"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-tone-editor-curve</strong><a class="copiable-link" href="#index-emacsvox_002dtone_002deditor_002dcurve"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtone_002deditor_002dcurve-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose the ADSR curve from a list.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Only ADSR uses this curve. Preview with Space back in the editor.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtone_002deditor_002denvelope">
+<h4 class="subsubsection"><span>2.257.1.3 emacsvox-tone-editor-envelope<a class="copiable-link" href="#emacsvox_002dtone_002deditor_002denvelope"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtone_002deditor_002denvelope"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-tone-editor-envelope</strong><a class="copiable-link" href="#index-emacsvox_002dtone_002deditor_002denvelope"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtone_002deditor_002denvelope-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose the draft envelope from a list.
+The envelope controls loudness over the life of the tone. Up and Down browse;
+Enter selects and returns, while q cancels. Classic uses short endpoint fades.
+ADSR uses Attack, Decay, Sustain level and Release in the editor. Selecting
+does not preview or apply the draft; use Space after returning to hear it.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtone_002deditor_002dpresets">
+<h4 class="subsubsection"><span>2.257.1.4 emacsvox-tone-editor-presets<a class="copiable-link" href="#emacsvox_002dtone_002deditor_002dpresets"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtone_002deditor_002dpresets"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-tone-editor-presets</strong><a class="copiable-link" href="#index-emacsvox_002dtone_002deditor_002dpresets"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtone_002deditor_002dpresets-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose a starting point for the private tone draft.
+Arrows browse without changing anything. Enter loads a copy and returns;
+q cancels. Space in the editor plays the resulting draft.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtone_002deditor_002dwaveform">
+<h4 class="subsubsection"><span>2.257.1.5 emacsvox-tone-editor-waveform<a class="copiable-link" href="#emacsvox_002dtone_002deditor_002dwaveform"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtone_002deditor_002dwaveform"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-tone-editor-waveform</strong><a class="copiable-link" href="#index-emacsvox_002dtone_002deditor_002dwaveform"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtone_002deditor_002dwaveform-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose the draft waveform from a list.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Preview with Space after returning to the editor.
+Only Pulse uses the editor’s separate Pulse width control.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dtone_002deditor-Options">
+<h4 class="subsection"><span>2.257.2 emacsvox-tone-editor Options<a class="copiable-link" href="#emacsvox_002dtone_002deditor-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-173"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-tone-presets</var><a class="copiable-link" href="#index-User-Option-173"> &para;</a></span></dt>
+<dd><pre class="verbatim">Named personal tone drafts, saved independently of any cue’s defaults.
+Each entry contains a name and a tone-editor draft. Loading changes only the
+private draft; Apply or Save and apply changes the destination cue.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtransient.html">emacsvox-transient</a>, Previous: <a href="emacsvox_002dtodo_002dmode.html">emacsvox-todo-mode</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

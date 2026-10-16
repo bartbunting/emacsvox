@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Everyday Reading Commands (Emacsvox User Manual)</title>
+
+<meta name="description" content="Everyday Reading Commands (Emacsvox User Manual)">
+<meta name="keywords" content="Everyday Reading Commands (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Keyboard-Commands.html" rel="up" title="Emacsvox Keyboard Commands">
+<link href="Everyday-Editing-Commands.html" rel="next" title="Everyday Editing Commands">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Everyday-Reading-Commands">
+<div class="nav-panel">
+<p>
+Next: <a href="Everyday-Editing-Commands.html" accesskey="n" rel="next">Editing reminders</a>, Up: <a href="Emacsvox-Keyboard-Commands.html" accesskey="u" rel="up">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Reading-reminders"><span>15.1 Reading reminders<a class="copiable-link" href="#Reading-reminders"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-reading-commands_002c-quick-reference"></a>
+<a class="index-entry-id" id="index-read-from-here_002c-command"></a>
+
+<p>These commands apply to the selected buffer&rsquo;s accessible text. In Info that
+means the current node, not the whole manual. Use the application&rsquo;s own reader
+for a table, terminal or other specialised view.
+</p>
+<dl class="table">
+<dt>Read from here (<kbd class="kbd">C-e i</kbd>)</dt>
+<dd><p>Read towards the accessible buffer end with
+tracked position. Requires a supporting speech server; point advances by
+chunks, and another command stops reading before performing its action.
+See <a data-manual="emacsvox" href="./Reading-From-Point.html#Reading-From-Point">Stopping and restarting tracked reading</a>.
+</p></dd>
+<dt>Stop current speech (<kbd class="kbd">C-e s</kbd>)</dt>
+<dd><p>Stop main and notification speech without
+disabling future feedback. During tracked reading this retains a chunk
+boundary, not an exact spoken word. See <a data-manual="emacsvox" href="./Reading-From-Point.html#Reading-From-Point">Where stopping leaves point</a>.
+</p></dd>
+<dt>Repeat the current line (<kbd class="kbd">C-e l</kbd>)</dt>
+<dd><p>Inspect the line without moving point.
+<kbd class="kbd">C-u C-e l</kbd> reads from point to the line&rsquo;s end. See
+<a data-manual="emacsvox" href="./Reading-Without-Moving-Point.html#Reading-Without-Moving-Point">Short reading and prefix variants</a>.
+</p></dd>
+<dt>Read or spell the word (<kbd class="kbd">C-e w</kbd>)</dt>
+<dd><p>Read the word at point; repeat at the
+same position to spell it. See <a data-manual="emacsvox" href="./Reading-Without-Moving-Point.html#Reading-Without-Moving-Point">Inspecting short passages</a>.
+</p></dd>
+<dt>Inspect the character (<kbd class="kbd">C-e c</kbd>)</dt>
+<dd><p>Read the character at point, using its
+phonetic name where available. Point does not move. See
+<a data-manual="emacsvox" href="./Reading.html#Reading">Character and word reading</a>.
+</p></dd>
+<dt>Read the paragraph (<kbd class="kbd">C-e [</kbd>)</dt>
+<dd><p>Read the paragraph around point without
+moving it. The mode determines its boundaries. Sentence reading is also
+available by name. See <a data-manual="emacsvox" href="./Reading-Without-Moving-Point.html#Reading-Without-Moving-Point">Sentence and paragraph inspection</a>.
+</p></dd>
+<dt>Read a checked selection (<kbd class="kbd">C-e r</kbd>)</dt>
+<dd><p>Read between point and mark. A short
+region read preserves its endpoints and activation; it does not establish a
+new selection for you. See <a data-manual="emacsvox" href="./Selecting-Text-With-Speech.html#Selecting-Text-With-Speech">Selecting and checking text</a>.
+</p></dd>
+<dt>Read the buffer (<kbd class="kbd">C-e b</kbd>)</dt>
+<dd><p>Read its accessible contents without tracked
+interruption position. Requests of 40,000 characters or more fall back to
+windowful reading at the current default limit, removing other windows.
+The same limit applies to region reading. See
+<a data-manual="emacsvox" href="./Reading-Without-Moving-Point.html#Reading-Without-Moving-Point">Buffer-reading limits and alternatives</a>.
+</p></dd>
+</dl>
+
+<p>Page reading and the complete reading-key list remain under
+<a data-manual="emacsvox" href="./Reading.html#Reading">Reading and navigating</a>. Page reading changes the mark; it is not a
+substitute for inspecting an existing selection.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Everyday-Editing-Commands.html">Editing reminders</a>, Up: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

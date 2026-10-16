@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
 <link href="Notmuch-Mail.html" rel="next" title="Notmuch Mail">
-<link href="Using-Online-Help.html" rel="prev" title="Using Online Help">
+<link href="Aural-Presentation.html" rel="prev" title="Aural Presentation">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,46 +34,61 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Emacs-Packages">
 <div class="nav-panel">
 <p>
-Next: <a href="Notmuch-Mail.html" accesskey="n" rel="next">Notmuch Mail</a>, Previous: <a href="Using-Online-Help.html" accesskey="p" rel="prev">Find Help While You Work</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Notmuch-Mail.html" accesskey="n" rel="next">Notmuch Mail</a>, Previous: <a href="Aural-Presentation.html" accesskey="p" rel="prev">Aural Presentation: Speech, Voices, And Sound</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Applications-And-Integrations"><span>8 Applications And Integrations<a class="copiable-link" href="#Applications-And-Integrations"> &para;</a></span></h2>
+<h2 class="chapter" id="Applications-And-Integrations"><span>9 Applications And Integrations<a class="copiable-link" href="#Applications-And-Integrations"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-applications"></a>
-
 <a class="index-entry-id" id="index-integrations"></a>
-
 <a class="index-entry-id" id="index-packages_002c-speech-support"></a>
 
-<p>Emacsvox prepares speech support for many Emacs modes as their libraries are
-loaded.  Start the application normally; when its buffer appears, use
-<kbd class="kbd">C-h m</kbd> for the active modes and their commands, <kbd class="kbd">C-h b</kbd> for the
-effective bindings, and <kbd class="kbd">C-h k</kbd> followed by a key to identify one binding.
-The generated
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> in <em class="emph">Emacsvox Reference Manual</em> records the public Emacsvox commands and options.
+<p>Start an application with its normal Emacs command. Emacsvox prepares speech
+support as the relevant libraries load, then presents movement, results, and
+state changes through that application&rsquo;s structure. Emacs or the third-party
+package still owns its editing, files, network operations, and other actions.
 </p>
-<p>This chapter is a curated starting point, not a promise that every module in
-the generated reference has a maintained task guide.  Emacs itself or a
-third-party package provides the application&rsquo;s general operation; Emacsvox
-adds the speech feedback.  Consult both sets of help when diagnosing a problem.
+<p>Use <kbd class="kbd">C-h m</kbd> to learn the active mode, <kbd class="kbd">C-h b</kbd> to inspect its effective keys,
+and <kbd class="kbd">C-h k</kbd> to explain one binding. For Emacsvox&rsquo;s feedback controls, <kbd class="kbd">C-e S</kbd>
+opens the current integration&rsquo;s focused settings when available, otherwise
+general buffer settings. <kbd class="kbd">C-e H j</kbd> also provides integration settings and a
+chooser. These controls adjust speech; they do not replace the application&rsquo;s
+own setup or preferences. <a class="ref" href="Using-Online-Help.html">Using Online Help</a> explains menu Help and search.
 </p>
-<p>Earlier Emacspeak surveys, including their W3, Dismal, and scanner/OCR setup,
-are preserved as historical material in
-<a data-manual="emacsvox-heritage" href="heritage/Emacs-Packages.html#Emacs-Packages">Historical Application Survey</a> in <em class="emph">Emacspeak Heritage</em>.  They are not current setup instructions.
+<p>This chapter is a guide to maintained workflows, not a claim that every module
+has a complete task guide. The generated
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> in the <em class="emph">Emacsvox Reference Manual</em> records
+public commands and options. Consult both that reference and the application&rsquo;s
+manual when diagnosing a problem.
+</p>
+<p>The everyday guides below cover opening and copying files, writing and reviewing
+notes, and reading web pages. They use existing speech settings. Start with
+<a class="ref" href="Answering-Emacs-Prompts.html">Answer a prompt and return to your work</a> if filename entry, completion or
+switching from the manual to a working buffer is unfamiliar.
+</p>
+<p>Earlier surveys of W3, Dismal, and scanner/OCR setup remain in the
+<a data-manual="emacsvox-heritage" href="heritage/Emacs-Packages.html#Emacs-Packages">Historical Application Survey</a> in <em class="emph">Emacspeak Heritage</em>. They describe their
+original period and are not current installation instructions.
 </p>
 
 <ul class="mini-toc">
-<li><a href="Document-Authoring.html" accesskey="1">Document Authoring</a></li>
-<li><a href="Structured-Editing.html" accesskey="2">Structured Editing And Templates</a></li>
-<li><a href="Browsing-Structure.html" accesskey="3">Browsing Structure</a></li>
-<li><a href="Web-Browsing.html" accesskey="4">Web Browsing With EWW</a></li>
-<li><a href="Messaging.html" accesskey="5">Messaging</a></li>
-<li><a href="Editing-Code.html" accesskey="6">Editing Code</a></li>
-<li><a href="Development-Environment.html" accesskey="7">Development Environment</a></li>
-<li><a href="Desktop-Management.html" accesskey="8">Desktop Management</a></li>
-<li><a href="Personal-Information-Management.html" accesskey="9">Personal Information Management</a></li>
+<li><a href="Working-With-Files.html" accesskey="1">Work with files and directories</a></li>
+<li><a href="Document-Authoring.html" accesskey="2">Document Authoring</a></li>
+<li><a href="Structured-Editing.html" accesskey="3">Structured Editing And Templates</a></li>
+<li><a href="Browsing-Structure.html" accesskey="4">Browsing Structure</a></li>
+<li><a href="Web-Browsing.html" accesskey="5">Web Browsing With EWW</a></li>
+<li><a href="Messaging.html" accesskey="6">Messaging</a></li>
+<li><a href="Editing-Code.html" accesskey="7">Editing Code</a></li>
+<li><a href="Development-Environment.html" accesskey="8">Development Environment</a></li>
+<li><a href="Desktop-Management.html" accesskey="9">Desktop Management</a></li>
+<li><a href="Personal-Information-Management.html">Personal Information Management</a></li>
 <li><a href="Desktop-Applications.html">Desktop Applications</a></li>
 </ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Mail.html">Notmuch Mail</a>, Previous: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

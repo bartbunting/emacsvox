@@ -37,50 +37,44 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Voice-Fallbacks.html" accesskey="p" rel="prev">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Inspect-Or-Adjust-A-Voice-In-Context"><span>6.6.3 Inspect Or Adjust A Voice In Context<a class="copiable-link" href="#Inspect-Or-Adjust-A-Voice-In-Context"> &para;</a></span></h4>
+<h4 class="subsection" id="Inspect-Or-Adjust-A-Voice-In-Context"><span>8.7.7 Inspect Or Adjust A Voice In Context<a class="copiable-link" href="#Inspect-Or-Adjust-A-Voice-In-Context"> &para;</a></span></h4>
 
-<p>In the common named-voice editor, choose <em class="emph">Effective sound / Where settings
-came from</em>. It uses the source item captured when you entered Aural Home or
-the voice list. If none is attached, choose an ordinary buffer at its current
-point. The item must have inspectable presentation facts or a valid retained
-presentation. <em class="emph">Choose another source context</em> selects a new item explicitly.
+<p>In the voice editor, choose <em class="emph">Effective sound / Where settings came from</em>.
+It uses the attached source item captured through the entry route or voice list.
+If none is attached, choose an ordinary buffer at its current point. The item
+must provide inspectable facts or valid retained feedback. <em class="emph">Choose another
+source context</em> deliberately selects a replacement.
 </p>
-<p>This is a simulation using captured facts and rules. It shows the selected named
-voice, matching rules, requested values and each dimension&rsquo;s source. A rule
-can override pitch while another supplies richness. A stronger pitch rule can
-hide a base pitch edit; a rule selecting a different named voice can make the open
-base voice irrelevant to this item. Rates follow precedence too: competing
-relative-rate values do not add together.
+<p>This simulates captured facts and rules, showing the selected voice, matching
+rules, requested fields, and their sources. One rule can set pitch and another
+richness. A stronger pitch rule can mask a base edit; a rule choosing a different
+named voice can make the open entry irrelevant. Competing relative rates also
+replace, not add.
 </p>
-<p><kbd class="kbd">P</kbd> plays the edited voice in this context;
-<kbd class="kbd">B</kbd> compares original and edited using the same captured facts,
-rules and text. These voice-only previews omit cues and spatial placement. Family remains a portable fallback outside full
-preview. On a server with per-choice support, the actual fallback&rsquo;s settings
-are applied before the captured context. An explicit rule value still overrides
-that row when it happens to equal the shared value. Requested values are
-separate from confirmed sample starts, accepted audio and
-unsupported adjustments. A changed or deleted source is rejected. After saving
-a rule, use <em class="emph">Refresh facts and rules from this source item</em> to capture its new
-contribution. <kbd class="kbd">q</kbd> returns to the base editor.
+<p><kbd class="kbd">P</kbd> previews the edited voice in context and <kbd class="kbd">B</kbd> compares original/edited with
+the same facts, rules, and text. These voice-only previews omit cues and spatial
+placement. Family remains a portable fallback outside full preview. Per-choice
+support applies the actual fallback&rsquo;s tuning before context, and an explicit
+context value overrides even when numerically equal to shared tuning. Requested
+values remain distinct from confirmed starts, accepted audio, and unsupported
+adjustments. Changed/deleted sources are rejected. After saving a rule, refresh
+facts and rules from the source to capture its contribution. <kbd class="kbd">q</kbd> returns to
+the base editor.
 </p>
-<p><em class="emph">Adjust for this context</em> presents the matching criteria and asks whether the
-rule lasts always (personal), for this Emacs session, or for this buffer. Choose
-one adjustment and its value. It opens the ordinary rule editor with that field
-prepared; changing richness alone produces a richness-only patch and does not
-select a different named voice. Review the rule&rsquo;s match with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>,
-use <kbd class="kbd">V</kbd> to adjust another voice field, and save that scope with
-<kbd class="kbd">w</kbd>. Palette definitions are unchanged. Existing unsaved work
-in that rule editor must be completed before preparing another contextual rule.
+<p><em class="emph">Adjust for this context</em> presents matching criteria and personal, session, or
+buffer lifetime. Choose one adjustment and value to prepare the ordinary rule
+editor. A richness-only change does not select a different voice. Review criteria
+with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, use <kbd class="kbd">V</kbd> for another voice field, and save the chosen scope with
+<kbd class="kbd">w</kbd>. The palette is unchanged. Finish existing rule-editor work before preparing
+another contextual rule.
 </p>
-<p>In the scoped field control, <em class="emph">Inherit</em> removes the field so weaker contributions
-can supply its value. Removing the final voice field removes the voice patch.
-Existing explicit default values are shown separately and preserved when you
-edit another field. Use <em class="emph">Inherit</em> to remove a contextual adjustment; zero is
-a value, not a request to inherit. Some older explicit defaults cannot reset
-an underlying voice setting on every backend. Check the preview and use the
-explanation to identify that limitation. Contextual changes are saved as rules;
-they do not replace the palette entry with the combined result. The
-<a data-manual="emacsvox" href="../Integration-Maintenance.html#Integration-Maintenance">Developer Guide</a> explains the representation and compatibility details.
+<p><em class="emph">Inherit</em> removes a field so weaker contributions can supply it; removing the
+last voice field removes the patch. Existing explicit defaults are shown and
+preserved when another field is edited. Zero is not inheritance. Some older
+default forms cannot reset underlying tuning on every backend; inspect preview
+and explanation. Context changes are saved as rules, not as a palette entry
+containing the combined result. The
+<a data-manual="emacsvox" href="./Integration-Maintenance.html#Integration-Maintenance">Developer Guide</a> describes representation and compatibility.
 </p>
 </div>
 <hr>

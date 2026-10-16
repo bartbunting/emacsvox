@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Audio-Desktop.html" rel="up" title="Audio Desktop">
-<link href="Object-Oriented-Desktop.html" rel="next" title="Object Oriented Desktop">
+<link href="Working-With-Windows.html" rel="next" title="Working With Windows">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -33,20 +33,20 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Desktop-Objects">
 <div class="nav-panel">
 <p>
-Next: <a href="Object-Oriented-Desktop.html" accesskey="n" rel="next">Let Modes Give Each Buffer Its Tools</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Working-With-Windows.html" accesskey="n" rel="next">Work with windows without losing your place</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Buffers-Hold-Your-Work"><span>5.1 Buffers Hold Your Work<a class="copiable-link" href="#Buffers-Hold-Your-Work"> &para;</a></span></h3>
+<h3 class="section" id="Buffers-Hold-Your-Work"><span>7.1 Buffers Hold Your Work<a class="copiable-link" href="#Buffers-Hold-Your-Work"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-buffers"></a>
 
-<p>A buffer is Emacs&rsquo;s working view of one piece of information.  A buffer might
-contain a file you are editing, an Info manual, a directory listing, a Web
-page, a mail search, a shell session, or a temporary Help result.  Some buffers
-are connected to files; many useful application buffers are not.
+<p>A buffer holds the content or application view you are working with. It might
+contain a file, an Info manual, a Dired listing, a Web page, mail search
+results, a shell session, or Help text. Some buffers visit files; others exist
+only within the Emacs session.
 </p>
-<p>The mode line identifies the selected buffer and its major mode.  Press
-<kbd class="kbd">C-e m</kbd> whenever you want to hear it.  Common buffer commands include:
+<p>The mode line identifies the selected buffer and its major mode. Press
+<kbd class="kbd">C-e m</kbd> to hear it. These are the main ways to change buffers:
 </p>
 <dl class="table">
 <dt><kbd class="kbd">C-x b</kbd></dt>
@@ -65,15 +65,15 @@ unsaved file changes.
 </p></dd>
 </dl>
 
-<p>Moving to another buffer changes the selected work object without closing the
-one you left.  This makes it practical to keep a document, its reference
-material, a shell, and related application results available together.
+<p>Switching buffers does not close the one you left. You can work on a document,
+consult Help or a reference, visit a shell, and return to the document without
+reopening it.
 </p>
 <ul class="mini-toc">
 <li><a href="#Cycle-Between-Buffers-of-the-Same-Kind" accesskey="1">Cycle Between Buffers of the Same Kind</a></li>
 </ul>
 <div class="subsection-level-extent" id="Cycle-Between-Buffers-of-the-Same-Kind">
-<h4 class="subsection"><span>5.1.1 Cycle Between Buffers of the Same Kind<a class="copiable-link" href="#Cycle-Between-Buffers-of-the-Same-Kind"> &para;</a></span></h4>
+<h4 class="subsection"><span>7.1.1 Cycle Between Buffers of the Same Kind<a class="copiable-link" href="#Cycle-Between-Buffers-of-the-Same-Kind"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-buffer-cycling"></a>
 <a class="index-entry-id" id="index-C_002de-n"></a>
@@ -81,10 +81,9 @@ material, a shell, and related application results available together.
 <a class="index-entry-id" id="index-C_002de-_002e"></a>
 <a class="index-entry-id" id="index-C_002de-_002c"></a>
 
-<p>When several buffers contain the same kind of work, cycling lets you move
-among them without remembering their names or opening a buffer list.  This is
-useful when comparing Org notes, reviewing several directories in Dired, or
-moving between source files.
+<p>When several buffers use the same major mode, you can cycle among them
+without recalling their names. This is useful for comparing Org notes,
+visiting several Dired directories, or moving between source files.
 </p>
 <p>Press <kbd class="kbd">C-e n</kbd> to select the next buffer with the same major
 mode, or <kbd class="kbd">C-e p</kbd> to select the previous one.  For example, from
@@ -118,7 +117,7 @@ performs its normal action.  To choose a particular buffer by name, use
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Object-Oriented-Desktop.html">Let Modes Give Each Buffer Its Tools</a>, Up: <a href="Audio-Desktop.html">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Working-With-Windows.html">Work with windows without losing your place</a>, Up: <a href="Audio-Desktop.html">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

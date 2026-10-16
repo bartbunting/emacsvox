@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Answering Agent Questions (Emacsvox User Manual)</title>
+
+<meta name="description" content="Answering Agent Questions (Emacsvox User Manual)">
+<meta name="keywords" content="Answering Agent Questions (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Agent-Shell-Speech-And-Privacy.html" rel="next" title="Agent Shell Speech And Privacy">
+<link href="Starting-An-Agent-Shell-Session.html" rel="prev" title="Starting An Agent Shell Session">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Answering-Agent-Questions">
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Speech-And-Privacy.html" accesskey="n" rel="next">Choose automatic speech and privacy</a>, Previous: <a href="Starting-An-Agent-Shell-Session.html" accesskey="p" rel="prev">Start and control a session</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Answer-an-agent_0027s-question"><span>11.2 Answer an agent&rsquo;s question<a class="copiable-link" href="#Answer-an-agent_0027s-question"> &para;</a></span></h3>
+
+<p>Some providers ask you to complete a structured form rather than answer in
+ordinary prompt text. Agent Shell&rsquo;s form support is experimental and off by
+default. To try it, set <code class="code">agent-shell-elicitation--experimental-feature-enabled</code>
+to non-nil after loading Agent Shell and start a new session so the agent learns
+that forms are supported. This upstream experimental setting may change.
+</p>
+<p>When a form arrives, Emacsvox announces that an answer is needed and reads the
+question. Automatic question feedback follows the session&rsquo;s speech level;
+<code class="code">quiet</code> suppresses it. Explicit reading and actions still speak.
+</p>
+<p>Use <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> to move between controls in the shell or viewport.
+Emacsvox reads the field name, whether it is required, and its current value or
+selection state. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to select an option, toggle a checkbox, or edit a
+text or number field. Changes are confirmed after they take effect. When an
+option has a preview, <kbd class="kbd">?</kbd> opens or closes it; opening it reads its contents.
+The preview key applies only to controls that offer a preview.
+</p>
+<p>Choose <em class="emph">Submit</em> to send the answers or <em class="emph">Decline</em> to decline the question.
+Missing required answers are reported without announcing successful submission.
+<kbd class="kbd">C-c C-c</kbd> interrupts the running request, including any pending form. To return
+to the latest question, use <kbd class="kbd">M-x agent-shell-elicitation-jump-to-latest-form</kbd>.
+The next-field and previous-field commands are also available through <kbd class="kbd">M-x</kbd>.
+</p>
+</div>
+
+
+
+</body>
+</html>

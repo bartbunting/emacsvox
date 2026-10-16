@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Closing Windows Safely (Emacsvox User Manual)</title>
+
+<meta name="description" content="Closing Windows Safely (Emacsvox User Manual)">
+<meta name="keywords" content="Closing Windows Safely (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Working-With-Windows.html" rel="up" title="Working With Windows">
+<link href="Reference-And-Draft-Windows.html" rel="prev" title="Reference And Draft Windows">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Closing-Windows-Safely">
+<div class="nav-panel">
+<p>
+Previous: <a href="Reference-And-Draft-Windows.html" accesskey="p" rel="prev">Keep a reference and a draft in separate windows</a>, Up: <a href="Working-With-Windows.html" accesskey="u" rel="up">Work with windows without losing your place</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Close-a-window-without-closing-the-document"><span>7.2.2 Close a window without closing the document<a class="copiable-link" href="#Close-a-window-without-closing-the-document"> &para;</a></span></h4>
+
+<p>Finish active prompts, then select the view you want to remove and check its
+buffer with <kbd class="kbd">C-e m</kbd>. Press <kbd class="kbd">C-x 0</kbd>: Control-x, then the digit zero. This
+removes the selected window, not its buffer or file. Select the buffer again
+with <kbd class="kbd">C-x b</kbd> when you need it.
+</p>
+<p>To keep only the selected view in the frame, use <kbd class="kbd">C-x 1</kbd> instead. The other
+buffers remain available and unsaved text remains unsaved. These layout
+commands are neither file saving nor undo. If Emacs cannot remove the last
+ordinary window or a specially managed view, follow its explanation rather
+than closing Emacs to force the layout change.
+</p>
+<p><kbd class="kbd">C-x k</kbd> has a different purpose: it kills a buffer, with any applicable
+unsaved-work prompt. <kbd class="kbd">C-x 4 0</kbd> kills the buffer as well as its window; it is
+not a longer spelling of <kbd class="kbd">C-x 0</kbd>. Likewise, <kbd class="kbd">q</kbd> belongs to the current mode:
+in a plain document it usually inserts a letter, while Help, Info and Dired
+have their own return commands.
+</p>
+<p>See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Change-Window.html#Change-Window">Deleting and rearranging windows</a> in the GNU Emacs Manual for the full
+set of layout operations. Keep <a class="ref" href="Desktop-Objects.html">Buffers hold your work</a> as the reference for
+buffer selection and closing work itself.
+</p>
+</div>
+
+
+
+</body>
+</html>

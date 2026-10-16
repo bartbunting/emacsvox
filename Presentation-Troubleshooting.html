@@ -23,6 +23,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -37,60 +38,58 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Voice-Lock.html" accesskey="n" rel="next">Voice Lock And Advanced Configuration</a>, Previous: <a href="Presentation-Profiles.html" accesskey="p" rel="prev">Save, Switch, And Share Your Setup</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Troubleshooting-And-Recovery"><span>6.12 Troubleshooting And Recovery<a class="copiable-link" href="#Troubleshooting-And-Recovery"> &para;</a></span></h3>
+<h3 class="section" id="Troubleshooting-And-Recovery"><span>8.13 Troubleshooting And Recovery<a class="copiable-link" href="#Troubleshooting-And-Recovery"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Aural-Doctor"></a>
 
-<p>Use the symptom to choose the shortest diagnostic route:
+<p>Start by describing the symptom and the last action that produced it.
+Avoid deleting personal data, resetting all settings or reinstalling as a
+first diagnostic step. Those changes can remove both useful configuration
+and the evidence needed to explain the problem.
 </p>
-<table class="multitable">
-<tbody><tr><td width="43%">Symptom</td><td width="57%">First action</td></tr>
-<tr><td width="43%">The current object sounds wrong or too verbose</td><td width="57%">Press <kbd class="kbd">C-e E</kbd> and inspect the strongest matching rule.</td></tr>
-<tr><td width="43%">Something heard earlier was wrong</td><td width="57%">Open Recent Aural Feedback and explain its recorded presentation.</td></tr>
-<tr><td width="43%">A broad optional behavior is unwanted</td><td width="57%">Inspect Presentation Options and preview or disable the matching option.</td></tr>
-<tr><td width="43%">One narrow exception is unwanted</td><td width="57%">Open Your feedback rules, preview it, then disable or remove it.</td></tr>
-<tr><td width="43%">A named voice uses the wrong engine or physical voice</td><td width="57%">Inspect its physical choices in the voice editor, then engine health in Voice Workbench.</td></tr>
-<tr><td width="43%">A cue is missing or inappropriate</td><td width="57%">Validate and audition the active Sound Pack, then inspect earcon overrides.</td></tr>
-<tr><td width="43%">A saved setup no longer appears active</td><td width="57%">Check whether the selected Presentation Profile is active or diverged.</td></tr>
-<tr><td width="43%">Voice changes disappear only in some buffers</td><td width="57%">Compare Voice Lock and explicit face-presentation state.</td></tr>
-</tbody>
-</table>
+<p>If speech has stopped altogether, start with
+<a data-manual="emacsvox" href="./Recovering-From-No-Speech.html#Recovering-From-No-Speech">Recovering from no speech</a>. The presentation checks below assume a working
+speech route. <a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend diagnostics</a> covers further server investigation.
+For the keys in a particular Aural interface, use its <kbd class="kbd">?</kbd> Help.
+</p>
+<p>For a problem with otherwise working speech, choose the closest symptom:
+</p>
+<ul class="itemize mark-bullet">
+<li><a class="ref" href="Saved-Voice-Change-Not-Audible.html">I saved a voice change but cannot hear it</a>. Check selection, the named
+voice, overrides and engine support in that order.
+</li><li><a class="ref" href="Settings-Lost-After-Restart.html">A setting disappeared after restarting</a>. Establish what was saved and
+what was only selected for the previous session.
+</li><li><a class="ref" href="Feedback-Differs-Between-Buffers.html">Only one buffer or application sounds different</a>. Inspect its local
+settings and rules before changing global defaults.
+</li><li><a class="ref" href="Unconfirmed-Speech-Changes.html">I cannot tell whether Apply succeeded</a>. Separate a completed save from
+worker acknowledgements before retrying.
+</li><li><a class="ref" href="Recovering-Aural-Changes.html">I left an editor and need my unfinished work</a>. Resume its own draft
+without changing unrelated drafts.
+</li></ul>
 
-<p>Open <em class="emph">Aural Doctor</em> from Aural Home or press <kbd class="kbd">D</kbd> there.  The doctor
-checks live bindings, loaded source or byte-code, the compatibility baseline,
-options, profiles, personal data, sound resources, spatial fallback, and the
-speech backend.  It does not start the speech server or change settings
-automatically.  When one row offers a reviewed safe repair, press <kbd class="kbd">r</kbd>
-on that row to run it.
+<p>For other unexpected feedback, inspect the current item with <kbd class="kbd">C-e E</kbd> or
+an earlier record through <kbd class="kbd">C-e H f h</kbd>. Use a Presentation Option for unwanted
+broad optional behaviour, or inspect a narrow exception in <em class="emph">Your feedback
+rules</em> at <kbd class="kbd">C-e H r o</kbd>. For a missing or inappropriate cue, validate the sound
+pack and inspect overrides. For a saved setup that no longer appears active,
+compare its <em class="emph">Active</em> or <em class="emph">Diverged</em> status. Voice distinctions that disappear
+in some buffers can also come from Voice Lock or explicit face presentation.
 </p>
-<p>Press <kbd class="kbd">?</kbd> in any Aural interface for its complete current keys.  If
-speech itself is absent rather than merely presented incorrectly, follow
-<a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a>; presentation diagnostics assume that a speech route can run.
-</p>
-<p>If an adjustment appears to do nothing, check in this order:
-</p>
-<ol class="enumerate">
-<li> Is the palette containing the edit active? Saving to the collection alone
-does not select it. A retained draft is not a saved voice.
-</li><li> Does the item actually use that named voice? Explain it with <kbd class="kbd">C-e E</kbd>.
-</li><li> Does the physical choice that played have an individual adjustment masking
-the shared one? Inspect <em class="emph">Fallbacks</em> and the last sample&rsquo;s result.
-</li><li> Does a matching contextual rule replace that field? In the voice editor,
-inspect <em class="emph">Effective sound / Where settings came from</em>.
-</li><li> Does the engine support the requested adjustment? Check the reported
-unsupported fields and compare samples on an available supported voice.
-</li></ol>
-
-<p>If speech uses another engine, first check explicit choices in the named
-voice: they outrank the shared preferred-engine setting. Then inspect engine
-availability, disablement, and failure information. A missing custom voice
-name is a configuration error. Ordinary speech preserves the text using an
-unstyled voice and records a diagnostic; it does not invent the missing
-palette entry. Doctor and Explain help locate the unresolved reference.
+<p>A missing custom voice name is a configuration error. Ordinary speech keeps
+the text by using an unstyled voice and records a diagnostic; it does not
+invent the missing palette entry. Explain and Aural Doctor can locate that
+unresolved reference.
 </p>
 
 <ul class="mini-toc">
-<li><a href="Recovering-Aural-Changes.html" accesskey="1">Recover Unfinished Changes</a></li>
+<li><a href="Saved-Voice-Change-Not-Audible.html" accesskey="1">A saved voice change is not audible</a></li>
+<li><a href="Settings-Lost-After-Restart.html" accesskey="2">A setting disappeared after restarting</a></li>
+<li><a href="Feedback-Differs-Between-Buffers.html" accesskey="3">Feedback differs between buffers</a></li>
+<li><a href="Aural-Doctor-Inspection.html" accesskey="4">Inspect the system with Aural Doctor</a></li>
+<li><a href="Inspecting-Changed-Settings.html" accesskey="5">Review changed settings before editing again</a></li>
+<li><a href="Reporting-Speech-Problems.html" accesskey="6">Prepare a useful problem report</a></li>
+<li><a href="Recovering-Aural-Changes.html" accesskey="7">Recover Unfinished Changes</a></li>
+<li><a href="Unconfirmed-Speech-Changes.html" accesskey="8">An Apply result is unconfirmed</a></li>
 </ul>
 </div>
 <hr>

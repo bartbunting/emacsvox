@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Everyday Editing Commands (Emacsvox User Manual)</title>
+
+<meta name="description" content="Everyday Editing Commands (Emacsvox User Manual)">
+<meta name="keywords" content="Everyday Editing Commands (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Keyboard-Commands.html" rel="up" title="Emacsvox Keyboard Commands">
+<link href="Everyday-Workspace-Commands.html" rel="next" title="Everyday Workspace Commands">
+<link href="Everyday-Reading-Commands.html" rel="prev" title="Everyday Reading Commands">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Everyday-Editing-Commands">
+<div class="nav-panel">
+<p>
+Next: <a href="Everyday-Workspace-Commands.html" accesskey="n" rel="next">Files, buffers and windows</a>, Previous: <a href="Everyday-Reading-Commands.html" accesskey="p" rel="prev">Reading reminders</a>, Up: <a href="Emacsvox-Keyboard-Commands.html" accesskey="u" rel="up">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Editing-reminders"><span>15.2 Editing reminders<a class="copiable-link" href="#Editing-reminders"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-editing-commands_002c-quick-reference"></a>
+<a class="index-entry-id" id="index-cut-and-paste_002c-command-reference"></a>
+
+<p>Use these in ordinary text, after leaving any prompt or special reader. Check
+the buffer and the affected text first. <a data-manual="emacsvox" href="./Editing-Terms.html#Editing-Terms">Selection and editing terms</a>
+defines Emacs&rsquo;s names for copying, cutting and pasting.
+</p>
+<dl class="table">
+<dt>Start a selection (<kbd class="kbd">C-<kbd class="key">SPC</kbd></kbd>)</dt>
+<dd><p>Set the mark, then move point to its other
+end. Extend it by moving rather than repeatedly setting the mark. See
+<a data-manual="emacsvox" href="./Selecting-Text-With-Speech.html#Selecting-Text-With-Speech">Selection boundaries and newline checks</a>.
+</p></dd>
+<dt>Inspect the other end (<kbd class="kbd">C-x C-x</kbd>)</dt>
+<dd><p>Exchange point and mark. The selected
+text is unchanged until you move an endpoint. See
+<a data-manual="emacsvox" href="./Selecting-Text-With-Speech.html#Selecting-Text-With-Speech">Adjusting a checked selection</a>.
+</p></dd>
+<dt>Copy (<kbd class="kbd">M-w</kbd>)</dt>
+<dd><p>Copy the checked region to the kill ring without removing
+the source text. See <a data-manual="emacsvox" href="./Copying-Text-Between-Buffers.html#Copying-Text-Between-Buffers">Copying into another buffer</a>.
+</p></dd>
+<dt>Cut (<kbd class="kbd">C-w</kbd>)</dt>
+<dd><p>Remove the checked region and retain it in the kill ring.
+This edits the buffer, not the saved file. See
+<a data-manual="emacsvox" href="./Moving-Text-Safely.html#Moving-Text-Safely">Moving text and verifying both locations</a>.
+</p></dd>
+<dt>Paste (<kbd class="kbd">C-y</kbd>)</dt>
+<dd><p>Insert the current kill-ring entry at point; clipboard
+integration can supply a more recent external copy instead. Point ends
+after the inserted text. See <a data-manual="emacsvox" href="./Copying-Text-Between-Buffers.html#Copying-Text-Between-Buffers">Checking the destination and pasted text</a>.
+</p></dd>
+<dt>Use an earlier copy (<kbd class="kbd">M-y</kbd>)</dt>
+<dd><p>Immediately after a yank, replace that
+insertion with an earlier entry. After a separate command, including a
+reading command, choose an entry for another insertion instead. See
+<a data-manual="emacsvox" href="./Choosing-Earlier-Copied-Text.html#Choosing-Earlier-Copied-Text">Earlier copies and yank sequencing</a>.
+</p></dd>
+<dt>Undo while listening (<kbd class="kbd">M-x undo-only <kbd class="key">RET</kbd></kbd>)</dt>
+<dd><p>Undo a change in the selected
+buffer, inspect it, and repeat only as needed. Deactivate an unrelated
+selection first. Unlike ordinary <kbd class="kbd">C-/</kbd>, this avoids undoing an earlier undo
+after an intervening reading command. See
+<a data-manual="emacsvox" href="./Recovering-Text-Edits.html#Recovering-Text-Edits">Undo, inspection and recovery limits</a>.
+</p></dd>
+<dt>Find text (<kbd class="kbd">C-s</kbd> or <kbd class="kbd">C-r</kbd>)</dt>
+<dd><p>Search forwards or backwards. Finish with
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> before typing an edit; text entered during search changes the query.
+See <a data-manual="emacsvox" href="./Searching-And-Replacing-Text.html#Searching-And-Replacing-Text">Search direction and failure recovery</a>.
+</p></dd>
+<dt>Review replacements (<kbd class="kbd">M-%</kbd>)</dt>
+<dd><p>Query-replace in the checked active region,
+or ordinarily from point onwards when no region is active. The replacement
+questions have their own keys; stopping does not undo accepted changes.
+See <a data-manual="emacsvox" href="./Reviewing-Text-Replacements.html#Reviewing-Text-Replacements">Scoped replacement and match-by-match decisions</a>.
+</p></dd>
+</dl>
+
+<p>Copying is not a permanent backup. Message repetition and filename speech can
+also change the kill ring; <a data-manual="emacsvox" href="./Copying-Text-Between-Buffers.html#Copying-Text-Between-Buffers">the transfer guide</a> explains how to inspect it
+without accidentally replacing the next paste.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Everyday-Workspace-Commands.html">Files, buffers and windows</a>, Previous: <a href="Everyday-Reading-Commands.html">Reading reminders</a>, Up: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

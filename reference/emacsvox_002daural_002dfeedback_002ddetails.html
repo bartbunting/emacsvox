@@ -46,6 +46,7 @@ planner with private rule layers and captured source context.
 </p>
 <ul class="mini-toc">
 <li><a href="#Emacsvox_002dAural_002dFeedback_002dDetails-Commands" accesskey="1">Emacsvox-Aural-Feedback-Details Commands</a></li>
+<li><a href="#emacsvox_002daural_002dfeedback_002ddetails-Options" accesskey="2">emacsvox-aural-feedback-details Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="Emacsvox_002dAural_002dFeedback_002dDetails-Commands">
 <h4 class="subsection"><span>2.26.1 Emacsvox-Aural-Feedback-Details Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dFeedback_002dDetails-Commands"> &para;</a></span></h4>
@@ -66,6 +67,7 @@ planner with private rule layers and captured source context.
 <li><a href="#emacsvox_002daural_002dfeedback_002ddetails_002dprevious_002dline">emacsvox-aural-feedback-details-previous-line</a></li>
 <li><a href="#emacsvox_002daural_002dfeedback_002ddetails_002dspeak_002dline">emacsvox-aural-feedback-details-speak-line</a></li>
 <li><a href="#emacsvox_002daural_002dfeedback_002ddetails_002dtoggle">emacsvox-aural-feedback-details-toggle</a></li>
+<li><a href="#emacsvox_002daural_002dfeedback_002doutline_002dmode">emacsvox-aural-feedback-outline-mode</a></li>
 </ul>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dfeedback_002ddetails_002dchange">
 <h4 class="subsubsection"><span>2.26.1.1 emacsvox-aural-feedback-details-change<a class="copiable-link" href="#emacsvox_002daural_002dfeedback_002ddetails_002dchange"> &para;</a></span></h4>
@@ -118,8 +120,9 @@ P		emacsvox-aural-feedback-details-play
 R		emacsvox-aural-feedback-details&ndash;change-sound
 V		emacsvox-aural-feedback-details-preview
 g		emacsvox-aural-feedback-details&ndash;update-draft-status
-h		emacsvox-aural
+h		emacsvox-aural-menu
 n		emacsvox-aural-feedback-details-next-heading
+o		emacsvox-aural-feedback-details&ndash;switch-view
 p		emacsvox-aural-feedback-details-previous-heading
 q		emacsvox-aural-ui-help-quit
 r		emacsvox-aural-feedback-details&ndash;choose-voice
@@ -287,6 +290,55 @@ r		emacsvox-aural-feedback-details&ndash;choose-voice
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dfeedback_002doutline_002dmode">
+<h4 class="subsubsection"><span>2.26.1.16 emacsvox-aural-feedback-outline-mode<a class="copiable-link" href="#emacsvox_002daural_002dfeedback_002doutline_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dfeedback_002doutline_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-feedback-outline-mode</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dfeedback_002doutline_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dfeedback_002doutline_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Review Feedback Details with standard Outline navigation and folding.
+
+TAB cycles a heading; n and p move between visible headings.  M-n moves to
+the next visible action.  Press o to compare with the original report.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Aural-Feedback-Outline mode’ mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-aural-feedback-outline-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002daural_002dfeedback_002ddetails-Options">
+<h4 class="subsection"><span>2.26.2 emacsvox-aural-feedback-details Options<a class="copiable-link" href="#emacsvox_002daural_002dfeedback_002ddetails-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-29"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-feedback-outline-mode-hook</var><a class="copiable-link" href="#index-User-Option-29"> &para;</a></span></dt>
+<dd><pre class="verbatim">Hook run after entering or leaving ‘emacsvox-aural-feedback-outline-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
 </div>
 </div>
 <hr>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Input Modes (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Input Modes (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Input Modes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Automatic-Feedback.html" rel="next" title="EAT Automatic Feedback">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Input-Modes">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Automatic-Feedback.html" accesskey="n" rel="next">Automatic Terminal Feedback</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Input-Modes-And-Completion-Responsibilities"><span>12.1 Input Modes And Completion Responsibilities<a class="copiable-link" href="#Input-Modes-And-Completion-Responsibilities"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-EAT-input-modes"></a>
+<a class="index-entry-id" id="index-completion_002c-EAT"></a>
+<a class="index-entry-id" id="index-Corfu_002c-EAT"></a>
+<a class="index-entry-id" id="index-eat_002dsemi_002dchar_002dmode"></a>
+<a class="index-entry-id" id="index-eat_002dchar_002dmode"></a>
+<a class="index-entry-id" id="index-eat_002demacs_002dmode"></a>
+<a class="index-entry-id" id="index-eat_002dline_002dmode"></a>
+<a class="index-entry-id" id="index-C_002dc-C_002dj-_0028EAT_0029"></a>
+<a class="index-entry-id" id="index-C_002dc-M_002dd-_0028EAT_0029"></a>
+<a class="index-entry-id" id="index-C_002dc-C_002de-_0028EAT_0029"></a>
+<a class="index-entry-id" id="index-C_002dc-C_002dl-_0028EAT_0029"></a>
+
+<p>EAT has four input modes. Emacsvox announces the mode name when you switch.
+The mode determines whether a key edits text in Emacs or reaches the terminal
+program.
+</p>
+<dl class="table">
+<dt>Semi-character mode</dt>
+<dd><p>The default. Most keys, including <kbd class="kbd"><kbd class="key">TAB</kbd></kbd>, go to the terminal, while
+prefixes such as <kbd class="kbd">C-x</kbd>, <kbd class="kbd">C-c</kbd>, and <kbd class="kbd">M-x</kbd> remain available. Use <kbd class="kbd">C-q</kbd>
+before a normally reserved key to send it through. <kbd class="kbd">C-c C-j</kbd> selects
+this mode.
+</p></dd>
+<dt>Character mode</dt>
+<dd><p>Supported input keys go to the terminal, useful for programs needing
+Emacs-like keys. Emacsvox&rsquo;s review prefix remains available as described
+under <a data-manual="emacsvox" href="./EAT-Screen-Review.html#EAT-Screen-Review">Review retained terminal output</a>. Enter character mode with <kbd class="kbd">C-c M-d</kbd>
+and return to semi-character mode with <kbd class="kbd">C-M-m</kbd> or <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd> before using
+ordinary Emacs command entry.
+</p></dd>
+<dt>Emacs mode</dt>
+<dd><p>Keys stay in Emacs and send no terminal input. Use it for ordinary buffer
+motion and inspection. Enter with <kbd class="kbd">C-c C-e</kbd>.
+</p></dd>
+<dt>Line mode</dt>
+<dd><p>Edit the pending line locally and send it with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> invokes
+Emacs&rsquo;s <code class="code">completion-at-point</code>, whose result may be displayed by a front
+end such as Corfu. Enter from semi-character or Emacs mode with <kbd class="kbd">C-c C-l</kbd>.
+Line mode is not available in EAT&rsquo;s embedded Eshell terminal.
+</p></dd>
+</dl>
+
+<p>Line mode does not create unlimited history. <code class="code">eat-term-scrollback-size</code> still
+limits retained text by <em class="emph">characters</em>, not lines; <code class="code">nil</code> permits unlimited
+retention. The editable draft follows the terminal extent, and changing input
+modes does not change this limit.
+</p>
+<p>In semi-character and character modes, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> belongs to Bash Readline, a
+remote shell, router CLI, or the running terminal program. Corfu is not involved.
+In line mode, completion belongs to Emacs and does not query a remote CLI.
+Semi-character mode is therefore usually appropriate for SSH and network-device
+sessions. If an Emacs completion backend blocks in line mode, <kbd class="kbd">C-g</kbd> cancels
+that Emacs operation; switch to semi-character mode when terminal completion
+was intended.
+</p>
+<p>The shell must have its own completion configuration. For example, completing
+<code class="code">git pul</code> to <code class="code">git pull</code> in Bash requires suitable programmable definitions,
+often supplied by <code class="code">bash-completion</code>. Emacsvox neither installs nor substitutes
+for those definitions.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Automatic-Feedback.html">Automatic Terminal Feedback</a>, Up: <a href="EAT-Terminal-Access.html">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

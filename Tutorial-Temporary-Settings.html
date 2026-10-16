@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Temporary Settings (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Temporary Settings (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Temporary Settings (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Voice-Experiments.html" rel="next" title="Tutorial Voice Experiments">
+<link href="Tutorial-Structured-Navigation.html" rel="prev" title="Tutorial Structured Navigation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Temporary-Settings">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Voice-Experiments.html" accesskey="n" rel="next">Lesson 6: preview and keep a voice experiment</a>, Previous: <a href="Tutorial-Structured-Navigation.html" accesskey="p" rel="prev">Lesson 4: navigate the document&rsquo;s structure</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Lesson-5_003a-change-speech-in-one-buffer"><span>4.6 Lesson 5: change speech in one buffer<a class="copiable-link" href="#Lesson-5_003a-change-speech-in-one-buffer"> &para;</a></span></h3>
+
+<p>Now change how one line is spoken without changing its text. This is a live
+buffer adjustment, not a draft preview. Closing the menu keeps it in effect;
+restoring it is a separate action. We will not save a default.
+</p>
+<ol class="enumerate">
+<li> In the practice buffer, leave table reading if active. Show all content,
+then search from the beginning for <code class="code">Check (A+B), then C.</code> and accept the
+match. Press <kbd class="kbd">C-a</kbd>, then <kbd class="kbd">C-e l</kbd> to hear the starting presentation.
+</li><li> Press <kbd class="kbd">C-e H s p</kbd> without a prefix argument. Read the scope and current
+punctuation policy. It must name the current buffer, not global defaults.
+Record whether the original policy is automatic, an explicit level, or a
+named profile. If scope is global, use <kbd class="kbd">g</kbd> to choose buffer scope before
+changing anything.
+Practise selecting an item with up/down and changing sections with
+left/right. Press <kbd class="kbd">C-c l</kbd> to repeat the selected item, then <kbd class="kbd">M-f</kbd> to hear
+its first word. <kbd class="kbd">C-a C-f</kbd> reviews its first character. These review keys
+leave the same item selected and do not change punctuation. In a menu,
+<kbd class="kbd">C-e</kbd> goes to the end of item review; the ordinary speech prefix returns
+after you close the menu. See <a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dnavigation">menu navigation</a> for the full controls.
+</li><li> Press <kbd class="kbd">? a</kbd> for Help on All, then <kbd class="kbd">q</kbd> to return to the punctuation menu.
+Press <kbd class="kbd">a</kbd> to apply All, followed by <kbd class="kbd">C-q</kbd> to close the menus. Back in the
+document, <kbd class="kbd">C-e l</kbd> lets you compare the same line with punctuation spoken.
+</li><li> Visit the notes buffer and read its line. This operation did not set its
+punctuation policy. Return to the practice buffer, reopen <kbd class="kbd">C-e H s p</kbd>,
+choose <kbd class="kbd">n</kbd> for None, close with <kbd class="kbd">C-q</kbd>, and compare the same line again.
+</li><li> Restore the original policy. For an automatic policy, use <kbd class="kbd">r</kbd> in that
+buffer&rsquo;s punctuation menu. For an explicit level or named profile, use
+<kbd class="kbd">p</kbd> and select the recorded choice instead. Close the menu and verify
+the line and the reported policy. Do not press uppercase <kbd class="kbd">S</kbd>.
+</li></ol>
+
+<p>Punctuation pronunciation varies by engine and configuration, so judge the
+change by the treatment of the line&rsquo;s punctuation rather than an exact sample
+transcript. The characters in the buffer never changed. Restoring Automatic
+returns control to the mode policy; it is not a synonym for choosing Some.
+</p>
+<p>An explicit global change can affect both the default and the source buffer.
+Saving a default adds a persistence step and does not cancel stronger mode
+policies or buffer overrides. Those are different tasks from this temporary
+experiment; see <a data-manual="emacsvox" href="./Saving-And-Startup.html#Saving-And-Startup">Choose What Persists</a>.
+</p>
+<ul class="mini-toc">
+<li><a href="#Try-it-4" accesskey="1">Try it</a></li>
+</ul>
+<div class="subsection-level-extent" id="Try-it-4">
+<h4 class="subsection"><span>4.6.1 Try it<a class="copiable-link" href="#Try-it-4"> &para;</a></span></h4>
+
+<p><strong class="strong">5A.</strong> From the practice buffer, press <kbd class="kbd">C-e H /</kbd>, search for <code class="code">punctuation</code>,
+and choose the punctuation control from completion. The first <kbd class="kbd"><kbd class="key">RET</kbd></kbd> selects
+its menu item without activating it. Read its Help, then leave without making
+a change. Check the policy afterward.
+</p>
+<p><strong class="strong">5B.</strong> After choosing All and then closing the menu, should the original policy
+return? Describe how to restore it and why <kbd class="kbd">C-/</kbd> in the document is not the
+right operation.
+</p>
+<p>See <a class="ref" href="Tutorial-Exercise-Answers.html#tutorial_002danswer_002d5">Answers for lesson 5</a>.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Voice-Experiments.html">Lesson 6: preview and keep a voice experiment</a>, Previous: <a href="Tutorial-Structured-Navigation.html">Lesson 4: navigate the document&rsquo;s structure</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

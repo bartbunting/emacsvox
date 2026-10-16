@@ -39,7 +39,7 @@ ul.mark-bullet {list-style-type: disc}
 Previous: <a href="Personal-Information-Management.html" accesskey="p" rel="prev">Personal Information Management</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Desktop-Applications-1"><span>8.10 Desktop Applications<a class="copiable-link" href="#Desktop-Applications-1"> &para;</a></span></h3>
+<h3 class="section" id="Desktop-Applications-1"><span>9.11 Desktop Applications<a class="copiable-link" href="#Desktop-Applications-1"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Terminal-Applications" accesskey="1">Terminal Applications</a></li>
@@ -47,69 +47,75 @@ Previous: <a href="Personal-Information-Management.html" accesskey="p" rel="prev
 <li><a href="#OCR-And-PDF_002dTo_002dText-With-PaddleOCR" accesskey="3">OCR And PDF-To-Text With PaddleOCR</a></li>
 </ul>
 <div class="subsection-level-extent" id="Terminal-Applications">
-<h4 class="subsection"><span>8.10.1 Terminal Applications<a class="copiable-link" href="#Terminal-Applications"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.11.1 Terminal Applications<a class="copiable-link" href="#Terminal-Applications"> &para;</a></span></h4>
 
-<p>For a new full-terminal workflow, use <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a>.  When a
-built-in terminal with no additional package is preferable, use
-<a class="ref" href="Running-Terminal-Based-Applications.html">Running Terminal Based Applications</a>.  For ordinary line-oriented shell
-commands, <kbd class="kbd">M-x shell</kbd> is usually the simplest route.
+<p>Use <kbd class="kbd">M-x shell</kbd> for ordinary line-oriented shell commands. For a full terminal,
+follow <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a>, or use built-in
+<a class="ref" href="Running-Terminal-Based-Applications.html">Term</a> when no additional package is wanted. Their input, review, and
+asynchronous feedback models differ; choose the appropriate chapter rather
+than transferring terminal keys from one application to another.
+</p>
+<p>In Shell/comint, <kbd class="kbd">C-e S</kbd> opens focused speech settings. <kbd class="kbd">s</kbd> toggles automatic
+output speech and <kbd class="kbd">b</kbd> toggles background monitoring. Background reading needs
+automatic speech enabled. Both settings affect the captured buffer for its
+lifetime; this menu has no Save action. <kbd class="kbd">q</kbd> returns to the originating entry
+or closes a directly opened focused menu.
 </p>
 <a class="index-entry-id" id="index-emacsvox_002dshell_002dcomplete_002dwindows_002dcommands"></a>
 
 <p>In WSL Shell buffers, command-name completion skips Windows drive directories
-by default.  Scanning large directories such as <code class="code">C:\Windows\System32</code> can
-otherwise pause Emacs for many seconds.  Windows programs still run by name,
-and explicit filename completion, including paths under <code class="code">/mnt/c/</code>, remains
-available.  To include Windows command names in completion again, use
-<kbd class="kbd">M-x customize-option <kbd class="key">RET</kbd> emacsvox-shell-complete-windows-commands <kbd class="key">RET</kbd></kbd>
-and enable the option.  This setting leaves native Windows and remote Shell
-buffers unchanged.
+by default. Scanning large directories such as <code class="code">C:\Windows\System32</code> can
+otherwise pause Emacs. Windows programs still run by name, and explicit
+filename completion, including <code class="code">/mnt/c/</code> paths, remains available. To include
+Windows command names again, use
+<kbd class="kbd">M-x customize-option <kbd class="key">RET</kbd> emacsvox-shell-complete-windows-commands <kbd class="key">RET</kbd></kbd>.
+This option does not change native Windows or remote Shell buffers.
 </p>
 </div>
 <div class="subsection-level-extent" id="Forms-Mode">
-<h4 class="subsection"><span>8.10.2 Forms Mode<a class="copiable-link" href="#Forms-Mode"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.11.2 Forms Mode<a class="copiable-link" href="#Forms-Mode"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-Forms-mode"></a>
-
 <a class="index-entry-id" id="index-forms_002dfind_002dfile"></a>
 
-<p>The built-in Forms library presents records from a structured text file one at
-a time.  Emacsvox speaks field values, record movement, searches, and status
-changes while Forms mode is active.  Forms requires a format specification;
-see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Forms-Mode.html#Forms-Mode">Forms Mode</a> in <em class="emph">The GNU Emacs Manual</em> for setup and operation, and
-<a data-manual="emacsvox-reference" href="reference/emacsvox_002dforms.html#emacsvox_002dforms">emacsvox-forms</a> in <em class="emph">Emacsvox Reference Manual</em> for the
-speech integration.
+<p>Forms presents records from a structured text file one at a time. Emacsvox
+speaks fields, record movement, searches, and state changes. Forms requires a
+format specification; see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Forms-Mode.html#Forms-Mode">Forms Mode</a> in <em class="emph">The GNU Emacs Manual</em> for
+setup and <a data-manual="emacsvox-reference" href="reference/emacsvox_002dforms.html#emacsvox_002dforms">emacsvox-forms</a> in the <em class="emph">Emacsvox Reference Manual</em> for speech.
 </p>
 </div>
 <div class="subsection-level-extent" id="OCR-And-PDF_002dTo_002dText-With-PaddleOCR">
-<h4 class="subsection"><span>8.10.3 OCR And PDF-To-Text With PaddleOCR<a class="copiable-link" href="#OCR-And-PDF_002dTo_002dText-With-PaddleOCR"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.11.3 OCR And PDF-To-Text With PaddleOCR<a class="copiable-link" href="#OCR-And-PDF_002dTo_002dText-With-PaddleOCR"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-OCR"></a>
-
 <a class="index-entry-id" id="index-PaddleOCR"></a>
-
 <a class="index-entry-id" id="index-PDF_002c-converting-to-text"></a>
-
 <a class="index-entry-id" id="index-tables_002c-OCR"></a>
-
 <a class="index-entry-id" id="index-emacsvox_002docr"></a>
 
 <p>Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into UTF-8
-Markdown text.  PP-StructureV3 recovers document reading order and represents
-recognized tables as Markdown or embedded HTML, so keep the <code class="code">.md</code> output when
-table structure matters.  Markdown is plain text and can instead be named
-<code class="code">.txt</code> when its lightweight markup is acceptable.
+Markdown text. It recovers reading order and represents recognised tables as
+Markdown or embedded HTML. Keep <code class="code">.md</code> output when structure matters; Markdown
+is plain text and can be named <code class="code">.txt</code> when its lightweight markup is acceptable.
 </p>
-<p>The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.  Paddle&rsquo;s
-Linux wheel requires an AVX-capable x86-64 processor and Python 3.9 through
-3.13.  In particular, do not use Ubuntu 26.04&rsquo;s Python 3.14 for this environment.
-The commands install a separate Python 3.13 so that they do not alter Emacsvox,
-system Python, or another project&rsquo;s packages.  The initial installation uses
-about 1.7 GB.  The first complete PP-StructureV3 run downloads approximately
-another 1.8 GB of models; later runs reuse that cache.
+<p>This route is intended for scanned or image-only PDFs. For a born-digital PDF
+with a trustworthy text layer, extracting that layer is faster and usually
+more exact than OCR. Recognition still depends on scan quality; upright,
+high-contrast pages at 300 DPI are a useful starting point.
 </p>
-<p>Follow the <a class="uref" href="https://docs.astral.sh/uv/getting-started/installation/">official uv installation guide</a> if command <code class="code">uv</code> is not already available,
-then create the isolated environment:
+<ol class="enumerate">
+<li> <a class="anchor" id="Prepare-the-isolated-OCR-environment"></a>Prepare the isolated OCR environment
+
+
+<p>The supported baseline is CPU-only x86-64 WSL2 or GNU/Linux. Paddle&rsquo;s Linux
+wheel requires an AVX-capable x86-64 processor and Python 3.9 through 3.13.
+Do not use Ubuntu 26.04&rsquo;s Python 3.14 for this environment. The commands below
+install Python 3.13 separately without altering Emacsvox, system Python, or
+another project&rsquo;s packages. Installation uses about 1.7 GB; the first complete
+PP-StructureV3 run downloads approximately another 1.8 GB of models, cached
+for later runs.
+</p>
+<p>Follow the <a class="uref" href="https://docs.astral.sh/uv/getting-started/installation/">uv installation guide</a> if <code class="code">uv</code> is unavailable, then create the environment:
 </p>
 <div class="example">
 <pre class="example-preformatted">uv python install 3.13
@@ -117,9 +123,8 @@ uv venv --python 3.13 --seed \
   &quot;$HOME/.local/share/emacsvox/paddleocr-venv&quot;
 </pre></div>
 
-<p>Install the tested CPU runtime and the PaddleOCR <code class="code">all</code> variant.  The <code class="code">all</code>
-extra includes the document-parsing dependencies needed by PP-StructureV3,
-including table and formula support.
+<p>Install the tested CPU runtime and PaddleOCR&rsquo;s <code class="code">all</code> variant, which includes
+the document-parsing, table, and formula dependencies:
 </p>
 <div class="example">
 <pre class="example-preformatted">&quot;$HOME/.local/share/emacsvox/paddleocr-venv/bin/python&quot; -m pip install \
@@ -129,106 +134,97 @@ including table and formula support.
   'paddleocr[all]==3.7.0'
 </pre></div>
 
-<p>From the Emacsvox checkout, verify that the launcher finds both packages:
+<p>From the checkout, verify that the launcher finds both packages:
 </p>
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox-paddleocr --check
 </pre></div>
 
-<p>With the Debian package, use the installed launcher instead:
+<p>For a Debian installation, use the installed launcher, here and in the
+recognition commands below:
 </p>
 <div class="example">
 <pre class="example-preformatted">/usr/share/emacsvox/bin/emacsvox-paddleocr --check
 </pre></div>
 
-<p>Use that installed path in the image-recognition examples below as well.
+<p>The expected report names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
+device. A missing <code class="code">ccache</code> warning is harmless for normal inference.
 </p>
-<p>The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
-device.  A warning that <code class="code">ccache</code> is absent is harmless for normal inference.
-oneDNN, formerly called MKL-DNN, is Paddle&rsquo;s optional optimized CPU execution
-backend; it is not an OCR model.  The launcher deliberately leaves it disabled
-because the stable PaddlePaddle 3.3.0 CPU runtime has an
-<a class="uref" href="https://github.com/PaddlePaddle/Paddle/issues/77340">upstream PIR-to-oneDNN conversion defect</a>.  In the tested pipeline the defect
-aborts initialization when PP-StructureV3 reaches its formula model, but the
-model itself is not at fault.  With oneDNN disabled, Paddle uses its standard
-CPU kernels and every recognition feature remains enabled, including tables
-and formulas.  The trade-off is speed, not recognition capability.
+<p>oneDNN, formerly MKL-DNN, is an optional CPU execution backend, not an OCR
+model. The launcher leaves it disabled because PaddlePaddle 3.3.0 has an
+<a class="uref" href="https://github.com/PaddlePaddle/Paddle/issues/77340">upstream PIR-to-oneDNN conversion defect</a>. In the tested pipeline this aborts
+initialisation at the formula model, although that model is not itself at
+fault. Standard CPU kernels keep every recognition feature enabled, including
+tables and formulas. The trade-off is speed, not capability.
 </p>
-<p>To recognize one image at the shell, redirect the clean Markdown result to a
-file.  Paddle downloads its models on the first real command and writes
-progress messages to standard error without mixing them into the recognized
-text.
+</li><li> <a class="anchor" id="Recognise-and-read-a-document"></a>Recognise and read a document
+
+
+<p>For one image, redirect the clean Markdown result to a file. Model downloads
+and progress go to standard error, not the recognised text:
 </p>
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox-paddleocr &quot;/path/to/page.png&quot; &gt; page.md
 </pre></div>
 
-<p>PDF input uses the same command.  Paddle renders and recognizes every page,
-then joins the pages in reading order:
+<p>PDF input uses the same command. Paddle renders and recognises every page,
+then joins them in reading order:
 </p>
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox-paddleocr &quot;/path/to/scanned-document.pdf&quot; &gt; document.md
 </pre></div>
 
-<p>This route is intended for scanned or image-only PDFs.  For a born-digital PDF
-that already has a trustworthy text layer, extracting that layer is faster and
-usually more exact than OCR.  OCR quality still depends on scan quality;
-300-DPI, upright, high-contrast source pages are a good starting point.  A
-large PDF can take substantial CPU time because table, layout, formula,
+<p>A large PDF can require substantial CPU time: table, layout, formula,
 orientation, and unwarping models are all active by default.
 </p>
-<p>Within Emacsvox, press <kbd class="kbd">C-e C-o</kbd> or run
-<kbd class="kbd">M-x emacsvox-ocr <kbd class="key">RET</kbd></kbd>.  In the OCR buffer:
+<p>Inside Emacsvox, press <kbd class="kbd">C-e C-o</kbd> or run <kbd class="kbd">M-x emacsvox-ocr <kbd class="key">RET</kbd></kbd>. In the OCR
+buffer, <kbd class="kbd">o</kbd> selects an image or PDF. Recognition runs asynchronously and adds
+its result as a new page when complete. Listen for the completion cue, then
+use <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to read the current result, <kbd class="kbd">s</kbd> to save it, or <kbd class="kbd">w</kbd> to save the
+whole OCR buffer. <kbd class="kbd">[</kbd> and <kbd class="kbd">]</kbd> move between results. <kbd class="kbd">d</kbd> opens the per-user
+OCR directory. Progress and errors are retained separately in
+<code class="code">*Emacsvox OCR Errors*</code>.
 </p>
-<ul class="itemize mark-bullet">
-<li>Press <kbd class="kbd">o</kbd>, choose an image or PDF, and wait for the completion cue.  OCR runs
-asynchronously, and the result appears as a new page in the buffer.
-</li><li>Press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to read the current result, <kbd class="kbd">s</kbd> to save it, or <kbd class="kbd">w</kbd> to
-save the complete OCR buffer.  Press <kbd class="kbd">[</kbd> and <kbd class="kbd">]</kbd> to move between results.
-</li><li>Press <kbd class="kbd">d</kbd> to open the per-user OCR directory.  Engine progress and errors are
-kept separately in buffer <code class="code">*Emacsvox OCR Errors*</code>.
-</li></ul>
+</li><li> <a class="anchor" id="Configure-recognition-and-diagnose-the-adapter"></a>Configure recognition and diagnose the adapter
 
-<p>For ordinary use inside Emacs, customize OCR in Emacs rather than setting shell
-environment variables.  Run
-<kbd class="kbd">M-x customize-group <kbd class="key">RET</kbd> emacsvox-ocr <kbd class="key">RET</kbd></kbd>.  The bundled adapter
-has typed options for its normal choices:
+
+<p>Use <kbd class="kbd">M-x customize-group <kbd class="key">RET</kbd> emacsvox-ocr <kbd class="key">RET</kbd></kbd> for ordinary Emacs configuration
+rather than shell environment variables. The bundled adapter provides typed
+options:
 </p>
 <ul class="itemize mark-bullet">
-<li><code class="code">emacsvox-ocr-paddleocr-python</code> selects an exact Python executable when the
-default isolated environment is not appropriate.  Leave it at <code class="code">nil</code> for the
-installation path used above.
-</li><li><code class="code">emacsvox-ocr-paddleocr-language</code> and <code class="code">emacsvox-ocr-paddleocr-device</code> select
-the recognition language and Paddle device.
+<li><code class="code">emacsvox-ocr-paddleocr-python</code> selects an exact Python executable; <code class="code">nil</code>
+uses the isolated installation above.
+</li><li><code class="code">emacsvox-ocr-paddleocr-language</code> and <code class="code">emacsvox-ocr-paddleocr-device</code> choose
+recognition language and device.
 </li><li><code class="code">emacsvox-ocr-paddleocr-use-table-recognition</code> and
 <code class="code">emacsvox-ocr-paddleocr-use-formula-recognition</code> control the structural
-models.  Both are enabled by default.
+models; both default to enabled.
 </li><li><code class="code">emacsvox-ocr-paddleocr-use-document-orientation</code>,
 <code class="code">emacsvox-ocr-paddleocr-use-document-unwarping</code>, and
 <code class="code">emacsvox-ocr-paddleocr-use-text-line-orientation</code> control image correction.
-</li><li><code class="code">emacsvox-ocr-paddleocr-enable-mkldnn</code> enables oneDNN/MKL-DNN acceleration.
-It does not enable or disable any OCR model.  Keep it disabled for the tested
-PaddlePaddle 3.3.0 CPU setup on WSL.
+</li><li><code class="code">emacsvox-ocr-paddleocr-enable-mkldnn</code> enables oneDNN/MKL-DNN acceleration,
+not an OCR model. Keep it disabled for the tested PaddlePaddle 3.3.0 CPU
+setup on WSL.
 </li></ul>
 
-<p>The PaddleOCR options apply only while <code class="code">emacsvox-ocr-engine</code> names the bundled
-adapter.  Selecting a different engine preserves the generic engine interface.
-<code class="code">emacsvox-ocr-engine-options</code> remains an advanced list of literal arguments;
-for the bundled adapter it follows, and can override, the typed options.
+<p>These options apply only when <code class="code">emacsvox-ocr-engine</code> names the bundled adapter.
+A different engine retains the generic interface. <code class="code">emacsvox-ocr-engine-options</code>
+is an advanced list of literal arguments; for the bundled adapter it follows,
+and can override, the typed options.
 </p>
-<p>The environment variables are retained for direct shell or automation use of
-<code class="code">bin/emacsvox-paddleocr</code>, not as the primary Emacs configuration interface.
-<code class="code">EMACSVOX_PADDLEOCR_VENV</code> changes the launcher&rsquo;s environment directory,
-<code class="code">EMACSVOX_PADDLEOCR_PYTHON</code> selects an exact Python executable, and
-<code class="code">EMACSVOX_PADDLEOCR_LANGUAGE</code> or <code class="code">EMACSVOX_PADDLEOCR_DEVICE</code> changes the
-standalone defaults.  See <code class="code">./bin/emacsvox-paddleocr --help</code> for command-line
-switches.
+<p>For standalone shell or automation use, <code class="code">EMACSVOX_PADDLEOCR_VENV</code> changes the
+environment directory, <code class="code">EMACSVOX_PADDLEOCR_PYTHON</code> selects an executable, and
+<code class="code">EMACSVOX_PADDLEOCR_LANGUAGE</code> or <code class="code">EMACSVOX_PADDLEOCR_DEVICE</code> changes defaults.
+See <code class="code">./bin/emacsvox-paddleocr --help</code> for switches. These environment settings
+are not the primary Emacs configuration interface.
 </p>
-<p>The direct SANE scanner-acquisition commands are retained for compatibility
-but are not part of this tested WSL baseline.  It is usually simpler to scan
-with a Windows application and choose the resulting image or PDF with <kbd class="kbd">o</kbd>.
-Scanner configuration is independent of PaddleOCR.
-</p>
+<p>Direct SANE scanner-acquisition commands remain for compatibility but are not
+part of this tested WSL baseline. Scan with a Windows application and select
+the resulting image or PDF with <kbd class="kbd">o</kbd> when that is the available acquisition
+route. Scanner configuration is independent of PaddleOCR.
+</p></li></ol>
+
 </div>
 </div>
 <hr>

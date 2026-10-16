@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reading Markdown And Org Tables (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reading Markdown And Org Tables (Emacsvox User Manual)">
+<meta name="keywords" content="Reading Markdown And Org Tables (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Browsing-Structure.html" rel="up" title="Browsing Structure">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reading-Markdown-And-Org-Tables">
+<div class="nav-panel">
+<p>
+Up: <a href="Browsing-Structure.html" accesskey="u" rel="up">Browsing Structure</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Reading-Markdown-and-Org-tables"><span>9.4.2 Reading Markdown and Org tables<a class="copiable-link" href="#Reading-Markdown-and-Org-tables"> &para;</a></span></h4>
+
+<p>In a Markdown or Org table, press a Control-Meta arrow to enter table reading
+and move immediately. Left/right moves by cell; up/down moves by logical row.
+The first movement announces table reading and the destination together.
+Outside supported tables, these arrows retain their existing bindings,
+including inside code examples.
+</p>
+<p><kbd class="kbd">C-e C-t C-r</kbd> enters without moving when the default speech prefix is used.
+It announces the dimensions and current cell. Press <kbd class="kbd">q</kbd> or the same command
+to restore ordinary editing keys. From prose, <kbd class="kbd">C-e C-t ]</kbd> and <kbd class="kbd">C-e C-t [</kbd>
+find and enter the next or previous table. Inside table reading, <kbd class="kbd">t</kbd> and <kbd class="kbd">T</kbd>
+do the same; code examples are skipped.
+</p>
+<p>While table reading is active:
+</p>
+<ul class="itemize mark-bullet">
+<li>Up/down and Control-Meta-up/down move by logical row, retain the column,
+and read the complete destination row.
+</li><li>Control-Meta-left/right moves between cells. Plain left/right retains
+character movement. <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> move between cells without editing;
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads the current cell.
+</li><li><kbd class="kbd">r</kbd> reads the row and <kbd class="kbd">c</kbd> the column. <kbd class="kbd">.</kbd> announces coordinates and <kbd class="kbd">=</kbd>
+gives dimensions.
+</li><li><kbd class="kbd">a</kbd> changes column titles, row titles, or data/title order for this buffer.
+The <code class="code">emacsvox-table-reader</code> customisation group sets defaults.
+</li><li><kbd class="kbd">w</kbd> or <kbd class="kbd">k k</kbd> copies the cell, <kbd class="kbd">k r</kbd> copies the row with tabs between cells,
+and <kbd class="kbd">k c</kbd> copies the column with newlines between cells.
+</li><li>Meta-up/down leaves directly for preceding/following prose. Up/down also
+leaves across a vertical table edge when content exists beyond it;
+otherwise point stays in the table.
+</li></ul>
+
+<p>A horizontal edge or a missing cell in a shorter row leaves point unchanged
+and announces the boundary. Separators are skipped. A separator immediately
+after the first row identifies column titles; otherwise that row is data.
+Coordinates distinguish the header from one-based data rows. Empty cells are
+spoken as “blank.” Wrapping never shortens a logical cell&rsquo;s speech or copy.
+</p>
+<p>Reading does not align tables, create rows, or evaluate Org formulas. Copies
+use cell values: ordinary links become their labels and inline code becomes
+its literal text. Use the host mode to copy exact markup or formulas. This
+reader covers simple pipe tables; HTML spans, nested tables, and
+spreadsheet-specific structures have separate interfaces.
+</p>
+<p>Leaving restores ordinary mode keys. Other editing commands retain their
+normal meaning, and an edit ends the reading context. Org&rsquo;s table-editing
+feedback and Markdown&rsquo;s markup-stripping speech option remain independent.
+Agent Shell has automatic contextual table entry and its own preferences.
+In Agent Shell, Control-Meta-up/down reads the destination <em class="emph">cell</em>, whereas
+plain up/down reads the destination <em class="emph">row</em>. Do not assume identical spoken
+units merely because the keys are similar; see <a class="ref" href="Agent-Shell.html">Agent Shell</a>.
+</p>
+</div>
+<div class="subsection-level-extent" id="Reading-application-lists">
+<h4 class="subsection"><span>9.4.3 Reading application lists<a class="copiable-link" href="#Reading-application-lists"> &para;</a></span></h4>
+
+<p>In an application built on Tabulated List mode, use a Control-Meta arrow or
+<kbd class="kbd">C-e C-t C-r</kbd> to enter shared reading. Ordinary application navigation stays
+unchanged until you enter. Within reading, up/down reads complete logical rows,
+Control-Meta-left/right reads cells, and plain left/right inspects characters.
+<kbd class="kbd">q</kbd> leaves reading and restores the application&rsquo;s usual navigation.
+</p>
+<p>Application actions take precedence over other shared reader keys. Opening,
+refreshing, sorting, searching, and editing keep their commands, including
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> on a button. When a shared key is occupied, use
+<kbd class="kbd">M-x emacsvox-table-reader-speak-cell</kbd>, <kbd class="kbd">M-x emacsvox-table-reader-speak-row</kbd>,
+<kbd class="kbd">M-x emacsvox-table-reader-speak-column</kbd>, <kbd class="kbd">M-x emacsvox-table-reader-speak-context</kbd>,
+or <kbd class="kbd">M-x emacsvox-table-reader-speak-dimensions</kbd>. The matching
+<code class="code">emacsvox-table-reader-copy-cell</code>, <code class="code">emacsvox-table-reader-copy-row</code> and
+<code class="code">emacsvox-table-reader-copy-column</code> commands copy logical values.
+</p>
+<p>Speech and copies use complete entry text even when a displayed column is
+truncated. Column headings come from the application, not the first item.
+Coordinates count visible data rows; hidden rows are excluded and empty cells
+say “blank.” Movement stops at the first or last row. A refresh ends reading;
+enter again to inspect the refreshed list. Custom table printers, image-only
+cells, and duplicate column names are not supported by this reader.
+</p>
+</div>
+<div class="subsection-level-extent" id="Browsing-CSV-data">
+<h4 class="subsection"><span>9.4.4 Browsing CSV data<a class="copiable-link" href="#Browsing-CSV-data"> &para;</a></span></h4>
+
+<p>Use <code class="code">emacsvox-table-find-csv-file</code> to open a CSV file in the table browser,
+or <code class="code">emacsvox-table-view-csv-buffer</code> for the current buffer&rsquo;s CSV data. Quoted
+commas, doubled quotation marks, and multiline fields remain single logical
+cells. Blank records outside quoted fields are skipped; empty fields remain
+cells. Empty input or malformed quoting produces an error before creating a
+view.
+</p>
+<p>Browsing preserves source text. If the file is already open, the view uses
+that buffer&rsquo;s current contents, including unsaved edits, without replacing the
+source buffer. Shared table controls are active immediately:
+</p>
+<ul class="itemize mark-bullet">
+<li>Up/down and Control-Meta-up/down move by logical row and read the whole row.
+</li><li>Control-Meta-left/right and <kbd class="kbd"><kbd class="key">TAB</kbd>~/~S-<kbd class="key">TAB</kbd></kbd> move by cell. Plain left/right
+and <kbd class="kbd">C-b~/~C-f</kbd> move by character; <kbd class="kbd">C-p~/~C-n</kbd> move by logical row.
+</li><li><kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads the cell; <kbd class="kbd">r</kbd> reads the row and <kbd class="kbd">c</kbd> the column.
+</li><li><kbd class="kbd">.</kbd> gives coordinates and <kbd class="kbd">=</kbd> dimensions. The first row supplies column
+titles and is announced separately from data rows.
+</li><li><kbd class="kbd">w</kbd> or <kbd class="kbd">k k</kbd> copies the cell, <kbd class="kbd">k r</kbd> copies the row with tabs between cells,
+and <kbd class="kbd">k c</kbd> copies the column with newlines between cells. <kbd class="kbd">K</kbd> copies the whole
+table to the clipboard used by <code class="code">emacsvox-table-paste-from-clipboard</code>.
+</li><li><kbd class="kbd">a</kbd> changes column titles, row titles, or data order for this view using
+shared reader preferences. <kbd class="kbd">q</kbd> closes the view.
+</li></ul>
+
+<p>These replace the old browser cell-arrow, header-reading, automatic-speech,
+and single-key table-copy bindings. The old local aliases <kbd class="kbd">b</kbd>, <kbd class="kbd">n</kbd>, <kbd class="kbd">p</kbd>, <kbd class="kbd">A</kbd>,
+<kbd class="kbd">B</kbd>, <kbd class="kbd">E</kbd>, and <kbd class="kbd">T</kbd> are removed; speech-prefix table commands remain available.
+</p>
+<p>Search with <kbd class="kbd">s</kbd>, <kbd class="kbd">R</kbd> for a row, <kbd class="kbd">C</kbd> for a column, or <kbd class="kbd">h</kbd> for headers.
+<kbd class="kbd">#</kbd> sorts on the current column and <kbd class="kbd">M-&lt;~/~M-&gt;</kbd> jumps to the top or bottom.
+At an edge, movement announces the boundary and leaves point in place.
+</p>
+<p>Filters remain on <kbd class="kbd">f</kbd> for a row and <kbd class="kbd">g</kbd> for a column; a prefix argument
+requests a new filter. Filter indexes and the <kbd class="kbd">j</kbd> jump prompt retain
+zero-based model coordinates, including the header, although spoken
+coordinates count data rows and columns from one. For example, the row filter
+<code class="code">(0 &quot;value&quot; 2)</code> reads the first column, “value”, and the third column.
+<kbd class="kbd">M-l</kbd> and <kbd class="kbd">M-s</kbd> load and save filters. Filters are explicit inspections;
+shared row movement always reads the whole row. Sorting preserves filters and
+speech preferences. Use <kbd class="kbd">C-h m</kbd> for the full browser key map.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Up: <a href="Browsing-Structure.html">Browsing Structure</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -21,6 +21,8 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -36,29 +38,29 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Personal-Sound-Packs.html" accesskey="n" rel="next">Inspect And Maintain A Personal Sound Pack</a>, Previous: <a href="Changing-Tones.html" accesskey="p" rel="prev">Change A Blank-Line Tone</a>, Up: <a href="Sounds-And-Space.html" accesskey="u" rel="up">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Adjust-Spatial-Presentation"><span>6.9.4 Adjust Spatial Presentation<a class="copiable-link" href="#Adjust-Spatial-Presentation"> &para;</a></span></h4>
+<h4 class="subsection" id="Adjust-Spatial-Presentation"><span>8.10.5 Adjust Spatial Presentation<a class="copiable-link" href="#Adjust-Spatial-Presentation"> &para;</a></span></h4>
 
-<p>From Home, open <em class="emph">Spatial capabilities</em> under <em class="emph">Troubleshooting</em> to inspect
-what the current backend reports for speech and cues. Then open <em class="emph">Spatial
-settings</em> under <em class="emph">Sounds and output</em>. Speech and cues have separate enable
-controls. Output can follow the backend capability or be declared mono.
-Maximum separation ranges from zero (centered) to one (full separation);
-direction can stay normal, reverse left and right, or center some or all
-requests.
+<p>Open <kbd class="kbd">C-e H D s</kbd> to inspect reported speech/cue capabilities, then return to
+the menu. <kbd class="kbd">C-e H o n</kbd> opens <em class="emph">Notifications and spatial output</em>. Enable
+presentation, speech, and cues independently. Output follows capabilities or
+can be declared mono. Separation ranges from zero (centred) to one (full);
+direction can be normal, reversed, or centred for some/all requests.
 </p>
-<p>To try a gentler layout, note the existing maximum separation, set it to <code class="code">0.3</code>
-with Customize&rsquo;s <em class="emph">Apply</em> action, and repeat feedback that already requests
-spatial placement. Stereo headphones make left/right differences easier to
-compare. If all feedback remains centered, use Explain to check that the
-presentation requests placement and inspect the reported capability.
-A sample with no spatial request cannot demonstrate this setting.
+<p>These spatial controls apply immediately and are global. Shift-left/right
+adjusts selected separation by 0.1; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact value. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> requests
+left then right cue previews; mono or limited capabilities may centre them.
+<kbd class="kbd">x</kbd> stops. <kbd class="kbd">S</kbd> saves spatial and routing defaults without restarting speech,
+separately from output-volume saving.
 </p>
-<p>For a centered comparison, temporarily select <em class="emph">Mono output</em>, apply, and repeat
-the same action. Content should remain audible. Restore the values you noted
-when finished. Use Customize&rsquo;s save action or capture the spatial choices in
-a Presentation Profile to retain an intentional change across restarts.
-These controls govern presentation placement; a voice&rsquo;s explicit Pan effect
-and notification-device routing are separate settings.
+<p>For a gentler layout, note the current settings, select maximum separation,
+and enter <code class="code">0.3</code>. Repeat feedback that requests spatial placement. Stereo
+headphones help compare it. If everything stays centred, Explain the source
+to check its placement request and inspect backend capability. A sample without
+a placement request cannot demonstrate separation.
+</p>
+<p>For comparison, select mono and repeat the action; content remains audible.
+Restore the original values afterward. Save deliberately with <kbd class="kbd">S</kbd> or capture
+spatial choices in a Presentation Profile. A voice&rsquo;s Pan effect and notification-device routing are separate from presentation placement.
 </p>
 </div>
 

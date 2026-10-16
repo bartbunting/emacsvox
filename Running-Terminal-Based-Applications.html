@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Emacsvox-Keyboard-Commands.html" rel="next" title="Emacsvox Keyboard Commands">
+<link href="Speech-Backends.html" rel="next" title="Speech Backends">
 <link href="EAT-Terminal-Access.html" rel="prev" title="EAT Terminal Access">
 <style type="text/css">
 <!--
@@ -34,26 +34,25 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Running-Terminal-Based-Applications">
 <div class="nav-panel">
 <p>
-Next: <a href="Emacsvox-Keyboard-Commands.html" accesskey="n" rel="next">Emacsvox Keyboard Commands.</a>, Previous: <a href="EAT-Terminal-Access.html" accesskey="p" rel="prev">Speech Access To EAT</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Speech-Backends.html" accesskey="n" rel="next">Speech Backends</a>, Previous: <a href="EAT-Terminal-Access.html" accesskey="p" rel="prev">Speech Access To EAT</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Term-Terminal-Access"><span>12 Term Terminal Access<a class="copiable-link" href="#Term-Terminal-Access"> &para;</a></span></h2>
+<h2 class="chapter" id="Term-Terminal-Access"><span>13 Term Terminal Access<a class="copiable-link" href="#Term-Terminal-Access"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Term-mode"></a>
-
 <a class="index-entry-id" id="index-terminal-applications"></a>
-
 <a class="index-entry-id" id="index-Eterm_002c-Emacsvox-module-name"></a>
 
-<p>Emacsvox speech-enables the built-in Emacs Term terminal emulator through the
-module named <code class="code">emacsvox-eterm</code>.  The module name is inherited; users do not
-install a separate Eterm package.
+<p>Term is the terminal emulator built into Emacs. Its Emacsvox integration is
+named <code class="code">emacsvox-eterm</code> for historical reasons; no separate Eterm package is
+required. Use Term when avoiding an extra package matters or a particular
+application works better there.
 </p>
-<p>For a new full-terminal workflow, prefer <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a>.  EAT has
-the richer current guide for bounded screen output, terminal-side completion,
-scrollback, alternate screens, and asynchronous rendering.  Use built-in Term
-when avoiding an additional package matters or an application specifically
-works better there.  For ordinary line-oriented shell commands, <kbd class="kbd">M-x shell</kbd> is usually simpler than either terminal emulator.
+<p>For a new full-terminal workflow, <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a> provides the richer
+current model for bounded output, terminal completion, scrollback, alternate
+screens, and asynchronous rendering. For ordinary line-oriented commands,
+<kbd class="kbd">M-x shell</kbd> is another option. These environments have different input and
+review keys; do not transfer a key sequence merely because both are terminals.
 </p>
 
 <ul class="mini-toc">

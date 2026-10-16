@@ -16,8 +16,8 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Basic-Usage.html" rel="next" title="Basic Usage">
-<link href="Introduction.html" rel="prev" title="Introduction">
+<link href="Guided-Tutorial.html" rel="next" title="Guided Tutorial">
+<link href="Using-This-Manual.html" rel="prev" title="Using This Manual">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -35,20 +35,30 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Installation">
 <div class="nav-panel">
 <p>
-Next: <a href="Basic-Usage.html" accesskey="n" rel="next">Basic Usage</a>, Previous: <a href="Introduction.html" accesskey="p" rel="prev">Welcome to Emacsvox</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Guided-Tutorial.html" accesskey="n" rel="next">Learn the audio desktop</a>, Previous: <a href="Using-This-Manual.html" accesskey="p" rel="prev">Using this manual</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Getting-Started_003a-Installation-and-First-Speech"><span>2 Getting Started: Installation and First Speech<a class="copiable-link" href="#Getting-Started_003a-Installation-and-First-Speech"> &para;</a></span></h2>
+<h2 class="chapter" id="Getting-Started_003a-Installation-and-First-Speech"><span>3 Getting Started: Installation and First Speech<a class="copiable-link" href="#Getting-Started_003a-Installation-and-First-Speech"> &para;</a></span></h2>
 
 
-<p>This chapter takes you from installation to a speaking Emacsvox session.
-Use a Debian package when available, or follow the source checkout route.
-Start an isolated session before changing your personal Emacs setup.
+<p>The aim of installation is a clean speaking session that you can test before
+changing your personal Emacs setup. Choose the route for the machine running
+Emacs. A Debian package is suitable when your distribution provides the
+required Emacs and Transient. The source checkout supports GNU/Linux, macOS,
+and WSL2. Native Windows uses its own
+<a class="ref" href="Trying-Native-Windows-Emacsvox.html">Windows installation procedure</a>. If speech will play on another workstation,
+use <a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a> instead of installing a local speech server.
 </p>
-<p>Commands shown before Emacsvox starts are entered in a terminal.  Keys written
-with <kbd class="kbd">C-</kbd> or <kbd class="kbd">M-</kbd> are entered inside Emacs.  The same chapter is
-available before installation at
-<a class="uref" href="https://bartbunting.github.io/emacsvox/Installation.html">https://bartbunting.github.io/emacsvox/Installation.html</a>.
+<p>The settings-menu instructions in this development manual describe
+<code class="code">ui-experiments</code>. Use a checkout of that branch to follow them; an older
+release package may not contain the same interface. Keep an existing working
+installation available while testing a development checkout.
+</p>
+<p>Commands shown before Emacsvox starts are entered in a terminal. Keys written
+with <kbd class="kbd">C-</kbd> or <kbd class="kbd">M-</kbd> are entered inside Emacs. The published installation chapter
+is also available before installation at
+<a class="uref" href="https://bartbunting.github.io/emacsvox/Installation.html">https://bartbunting.github.io/emacsvox/Installation.html</a>; its published version
+may differ from this development branch.
 </p>
 
 <ul class="mini-toc">
@@ -63,11 +73,11 @@ available before installation at
 <li><a href="Persistent-Startup.html" accesskey="9">Persistent Startup</a></li>
 </ul>
 <div class="section-level-extent" id="Debian-and-Ubuntu-package">
-<h3 class="section"><span>2.1 Debian and Ubuntu package<a class="copiable-link" href="#Debian-and-Ubuntu-package"> &para;</a></span></h3>
+<h3 class="section"><span>3.1 Debian and Ubuntu package<a class="copiable-link" href="#Debian-and-Ubuntu-package"> &para;</a></span></h3>
 
-<p>Debian packaging is new development work; Emacsvox 2026.9.2 predates it.
-Use a package from a release that includes one, or a locally built development
-package. Omnivox 1.12.0 includes an amd64 deb for supported Ubuntu systems.
+<p>Emacsvox 2026.9.2 predates Debian packaging. Use a package from a release that
+includes one, or a locally built development package. Omnivox 1.18.0 includes
+an amd64 deb for supported Ubuntu systems.
 </p>
 <p>With a downloaded Emacsvox deb, install it using apt:
 </p>
@@ -80,35 +90,41 @@ emacsvox
 
 <p>Replace <code class="code">VERSION</code> with the version in the downloaded filename. Apt requires
 a packaged Emacs 30.2 or newer; an installed terminal-only <code class="code">emacs-nox</code> also
-satisfies this dependency. The package never builds GNU Emacs. If your
-distribution cannot provide a supported version, use the source installation
-route below, which offers an explicit Emacs 31 source build.
+satisfies this dependency. Settings menus also require Transient 0.13.3 or
+newer. Apt installs <code class="code">elpa-transient</code> when a packaged Emacs 31.1 or newer does
+not already supply it. Ubuntu 26.10 supplies both dependencies. Ubuntu 26.04&rsquo;s
+stock Transient is too old; use the source installation route below and upgrade
+Transient through Emacs&rsquo;s package manager. The package never builds GNU Emacs
+or adds an apt repository to resolve missing dependencies. If your distribution
+also lacks a supported Emacs, the source route offers an explicit Emacs 31 build.
 </p>
-<p>Omnivox 1.12.0 or newer is recommended. If it is unavailable from your apt
-repositories, include its downloaded deb in the same apt command, or select an
-existing installation. Confirm both tone and speech from <code class="code">emacsvox --check</code>.
-For remote Emacs or WSL with an existing Windows speech server, use
+<p>Use Omnivox 1.18.0 or newer for the Omnivox route documented here. If it is
+unavailable from your apt repositories, include its downloaded deb in the same
+apt command, or select an existing installation. Confirm both tone and speech
+from <code class="code">emacsvox --check</code> before starting the session.
+</p>
+<p>For remote Emacs or WSL with an existing Windows speech server, use
 <code class="code">sudo apt install --no-install-recommends ./emacsvox_VERSION_all.deb</code>.
 Remote sessions start with <code class="code">emacsvox --remote</code> after the workstation service,
 token and tunnel are prepared as described in
-<a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a>. The package does not acquire a
-Windows speech runtime; the guided WSL source installer below handles that.
+<a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a>. The package does not acquire a Windows speech
+runtime; the guided WSL source installer below handles that.
 </p>
 <p>Emacsvox installs under <code class="code">/usr/share/emacsvox</code>, with the command
 <code class="code">/usr/bin/emacsvox</code>. It includes Lisp sources, sounds and offline manuals.
-No personal initialization is changed and ordinary Emacs sessions do not
+No personal initialisation is changed and ordinary Emacs sessions do not
 automatically start speaking. To enable Emacsvox in your own Emacs setup, add
 <code class="code">(load-file &quot;/usr/share/emacsvox/lisp/emacsvox-setup.el&quot;)</code> explicitly.
 Upgrade the system tree using apt; the source build instructions below apply
-to checkouts. Removing the package preserves personal settings and speech tokens.
-Package details are in <code class="code">/usr/share/doc/emacsvox/README.Debian</code>.
+to checkouts. Removing the package preserves personal settings and speech
+tokens. Package details are in <code class="code">/usr/share/doc/emacsvox/README.Debian</code>.
 </p>
 </div>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Basic-Usage.html">Basic Usage</a>, Previous: <a href="Introduction.html">Welcome to Emacsvox</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Guided-Tutorial.html">Learn the audio desktop</a>, Previous: <a href="Using-This-Manual.html">Using this manual</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

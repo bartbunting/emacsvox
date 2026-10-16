@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reading Without Moving Point (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reading Without Moving Point (Emacsvox User Manual)">
+<meta name="keywords" content="Reading Without Moving Point (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Reading.html" rel="up" title="Reading">
+<link href="Reading-From-Point.html" rel="next" title="Reading From Point">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reading-Without-Moving-Point">
+<div class="nav-panel">
+<p>
+Next: <a href="Reading-From-Point.html" accesskey="n" rel="next">Read from point, stop, and start again</a>, Up: <a href="Reading.html" accesskey="u" rel="up">Reading And Navigating</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Read-a-short-passage-without-moving-point"><span>5.5.1 Read a short passage without moving point<a class="copiable-link" href="#Read-a-short-passage-without-moving-point"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-reading-without-moving-point"></a>
+<a class="index-entry-id" id="index-proofreading_002c-spoken-text"></a>
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dsentence"></a>
+
+<p>Use <kbd class="kbd">C-e l</kbd> to check the line containing the next edit, <kbd class="kbd">C-e w</kbd> to hear its
+word, and <kbd class="kbd">C-e c</kbd> to inspect its character. Repeating <kbd class="kbd">C-e w</kbd> at the same
+position spells the word. These are reading commands, not movement commands.
+For a larger unit, <kbd class="kbd">C-e [</kbd> reads the paragraph and
+<kbd class="kbd">M-x emacsvox-speak-sentence <kbd class="key">RET</kbd></kbd> reads the sentence around point.
+</p>
+<p>A positive prefix changes line, sentence or paragraph reading to start at
+point. For example, <kbd class="kbd">C-u C-e l</kbd> reads the rest of the line; <kbd class="kbd">C-u C-e [</kbd> reads
+the rest of the paragraph. <kbd class="kbd">C-u -1 C-e l</kbd> reads from the line&rsquo;s beginning to
+point. Enter the minus sign and digit as part of the prefix argument, not as
+document text. The default form without a prefix reads the whole unit.
+</p>
+<p>Emacs determines sentences, paragraphs and pages from the mode and text.
+A page for <kbd class="kbd">C-e ]</kbd> is an Emacs text page, not necessarily one screenful or a
+printed page. That command also sets a page mark: do not use it while
+preserving a selection for an edit. For more detail, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Sentences.html#Sentences">Sentences</a>,
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Paragraphs.html#Paragraphs">Paragraphs</a> and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Pages.html#Pages">Pages</a> in the GNU Emacs Manual.
+</p>
+<p>For a bounded passage, set and inspect a region as described in
+<a class="ref" href="Selecting-Text-With-Speech.html">Select and check the text first</a>, then use <kbd class="kbd">C-e r</kbd>. A short region read
+preserves its endpoints and active selection. Speech follows pronunciation
+and presentation settings, so silence is not proof that the selected source
+contains no punctuation or whitespace. Inspect the boundaries before editing.
+</p>
+<p>Whole-buffer reading with <kbd class="kbd">C-e b</kbd>, or the untracked rest-of-buffer form
+<kbd class="kbd">C-u C-e b</kbd>, is useful for short text. Neither supplies the interruption
+position tracking described next. With the current default size limit,
+buffer or region requests of 40,000 characters or more fall back to
+windowful reading rather than reading the entire request. That helper removes
+other windows and reads a screenful from point. Use smaller passages to retain
+your window arrangement, or tracked reading when the backend supports it.
+The limit is recorded in <code class="code">ems--large-text-size</code>.
+</p>
+<p>These commands read the buffer&rsquo;s accessible text. In Info, that is the current
+node, not the entire manual; narrowing can also restrict a document. Folding,
+pronunciation and mode-specific presentation affect what you hear. Use the
+application&rsquo;s structural reader for tables, messages or other special views,
+and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Narrowing.html#Narrowing">Narrowing</a> in the GNU Emacs Manual for restricted editing views.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Reading-From-Point.html">Read from point, stop, and start again</a>, Up: <a href="Reading.html">Reading And Navigating</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

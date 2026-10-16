@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Feedback Differs Between Buffers (Emacsvox User Manual)</title>
+
+<meta name="description" content="Feedback Differs Between Buffers (Emacsvox User Manual)">
+<meta name="keywords" content="Feedback Differs Between Buffers (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Aural-Doctor-Inspection.html" rel="next" title="Aural Doctor Inspection">
+<link href="Settings-Lost-After-Restart.html" rel="prev" title="Settings Lost After Restart">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Feedback-Differs-Between-Buffers">
+<div class="nav-panel">
+<p>
+Next: <a href="Aural-Doctor-Inspection.html" accesskey="n" rel="next">Inspect the system with Aural Doctor</a>, Previous: <a href="Settings-Lost-After-Restart.html" accesskey="p" rel="prev">A setting disappeared after restarting</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Feedback-differs-between-buffers"><span>8.13.3 Feedback differs between buffers<a class="copiable-link" href="#Feedback-differs-between-buffers"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-only-one-buffer-sounds-different"></a>
+<a class="index-entry-id" id="index-too-much-talking"></a>
+<a class="index-entry-id" id="index-application-feedback_002c-unexpected"></a>
+
+<p>Different applications deliberately announce different information. Compare
+the same kind of item and the same action before treating that difference as
+a fault. An explicit request for detail can also speak more than automatic
+feedback without ignoring the saved automatic policy.
+</p>
+<p>If the problem is too much speech, first identify what was added. Automatic
+application content belongs to its focused speech settings. Training adds
+explanations across buffers; inspect its current state in <kbd class="kbd">C-e H r</kbd> before
+changing it. Extra labels can come from Presentation Options or rules. Speech
+that arrives independently may be a notification; use
+<a class="ref" href="Notification-Routing.html">notification routing</a> to understand that stream rather than treating it as
+part of the line you are reading.
+</p>
+<ol class="enumerate">
+<li> In the affected buffer, use <kbd class="kbd">C-e S</kbd> to inspect its focused settings, or
+general buffer settings when no focused integration menu is available.
+Read the current values before toggling anything.
+</li><li> Use <kbd class="kbd">C-e H d</kbd> to compare captured-buffer values with global defaults and
+saved values known to Customize. Return from the snapshot before choosing
+a different buffer and opening a fresh comparison.
+</li><li> Explain the affected item with <kbd class="kbd">C-e E</kbd>. Inspect matching buffer or session
+rules, Presentation Options, Voice Lock and explicit face presentation.
+These contributions need not be the same in another buffer.
+</li><li> Change only the setting or rule that explains the difference. Return to
+the original item, repeat the action, and check an unaffected buffer too.
+Restore the earlier value if the change does not address the symptom.
+</li></ol>
+
+<p><a class="ref" href="Integration-Speech-Settings.html">Integration speech settings</a> explains the different saving boundaries.
+Use the application&rsquo;s own chapter for automatic-speech limits and privacy;
+do not assume the same key or background setting has the same effect in EAT,
+Shell/comint, Notmuch and Agent Shell.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Aural-Doctor-Inspection.html">Inspect the system with Aural Doctor</a>, Previous: <a href="Settings-Lost-After-Restart.html">A setting disappeared after restarting</a>, Up: <a href="Presentation-Troubleshooting.html">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

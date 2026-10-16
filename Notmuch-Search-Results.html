@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Search Results (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Search Results (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Search Results (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Messages-And-Attachments.html" rel="next" title="Notmuch Messages And Attachments">
+<link href="Notmuch-Hello-And-Searches.html" rel="prev" title="Notmuch Hello And Searches">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Search-Results">
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Messages-And-Attachments.html" accesskey="n" rel="next">Read a thread and its MIME parts</a>, Previous: <a href="Notmuch-Hello-And-Searches.html" accesskey="p" rel="prev">Use Hello and start a search</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Navigate-and-inspect-Search-results"><span>10.3 Navigate and inspect Search results<a class="copiable-link" href="#Navigate-and-inspect-Search-results"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-Notmuch-Search"></a>
+<a class="index-entry-id" id="index-search-fields_002c-Notmuch"></a>
+
+<p>Thread movement reads configured semantic fields and status cues. At a boundary,
+speech identifies the beginning or end instead of repeating the current row.
+Emacsvox makes the arrow keys equivalent to Notmuch&rsquo;s next and previous thread
+commands.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">n</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-next-thread</code>.
+</p></dd>
+<dt><kbd class="kbd">&lt;down&gt;</kbd></dt>
+<dd><p>Also run <code class="code">notmuch-search-next-thread</code>.
+</p></dd>
+<dt><kbd class="kbd">p</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-previous-thread</code>.
+</p></dd>
+<dt><kbd class="kbd">&lt;up&gt;</kbd></dt>
+<dd><p>Also run <code class="code">notmuch-search-previous-thread</code>.
+</p></dd>
+<dt><kbd class="kbd">RET</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-show-thread</code>. Show lands on a useful visible body
+line or leaf MIME part and presents the opened message.
+</p></dd>
+<dt><kbd class="kbd">SPC</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-scroll-up</code>. This scrolls the viewport rather than
+selecting a semantic thread.
+</p></dd>
+<dt><kbd class="kbd">C-c C-p</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-notmuch-speak-search-details</code> to read all configured fields
+for the result at point without automatic content limits.
+</p></dd>
+<dt><kbd class="kbd">+</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-add-tag</code>.
+</p></dd>
+<dt><kbd class="kbd">-</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-remove-tag</code>.
+</p></dd>
+<dt><kbd class="kbd">*</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-tag-all</code> for the selected results.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Run <code class="code">notmuch-search-archive-thread</code>.
+</p></dd>
+<dt><kbd class="kbd">g</kbd></dt>
+<dd><p>Run <code class="code">notmuch-refresh-this-buffer</code>; completion follows the interruptible
+refresh policy above.
+</p></dd>
+</dl>
+
+<p>Search defaults to authors, subject, relative date, matched and total message
+counts, and ordinary tags. Status tags assigned auditory cues are not repeated
+as words. <a class="ref" href="Notmuch-Speech-And-Privacy.html#Notmuch-fields-and-privacy">Notmuch fields and privacy</a> explains omission and ordering of sensitive fields.
+</p>
+</div>
+
+
+
+</body>
+</html>

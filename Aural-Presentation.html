@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Using-Online-Help.html" rel="next" title="Using Online Help">
+<link href="Emacs-Packages.html" rel="next" title="Emacs Packages">
 <link href="Audio-Desktop.html" rel="prev" title="Audio Desktop">
 <style type="text/css">
 <!--
@@ -34,54 +34,47 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Aural-Presentation">
 <div class="nav-panel">
 <p>
-Next: <a href="Using-Online-Help.html" accesskey="n" rel="next">Find Help While You Work</a>, Previous: <a href="Audio-Desktop.html" accesskey="p" rel="prev">Work With The Audio Desktop</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Emacs-Packages.html" accesskey="n" rel="next">Applications And Integrations</a>, Previous: <a href="Audio-Desktop.html" accesskey="p" rel="prev">Work With The Audio Desktop</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Aural-Presentation_003a-Speech_002c-Voices_002c-And-Sound"><span>6 Aural Presentation: Speech, Voices, And Sound<a class="copiable-link" href="#Aural-Presentation_003a-Speech_002c-Voices_002c-And-Sound"> &para;</a></span></h2>
+<h2 class="chapter" id="Aural-Presentation_003a-Speech_002c-Voices_002c-And-Sound"><span>8 Aural Presentation: Speech, Voices, And Sound<a class="copiable-link" href="#Aural-Presentation_003a-Speech_002c-Voices_002c-And-Sound"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Aural-Presentation"></a>
 
-<p>Aural Presentation is the Emacsvox system that decides <em class="emph">how</em> information and
-events should be heard.  It can combine spoken text, voice changes, auditory
-icons, tones, pauses, and spatial cues in one ordered presentation.  The speech
-server delivers that result; it does not decide what a heading, unread message,
-completed command, warning, or other object means.
+<p>A heading, an unread message, and a warning need not sound alike. Aural
+Presentation lets Emacsvox express those differences through speech, voices,
+short sounds, tones, pauses, and spatial cues. The application identifies
+what happened; presentation rules choose the feedback. The speech server
+then produces it with the voices and output capabilities on your machine.
 </p>
-<p>You do not need to configure Aural Presentation before using Emacsvox.  The
-built-in baseline and application integrations provide useful defaults.  When
-you do want a change, start from the object you heard and use Aural Home rather
-than editing configuration data by hand:
+<p>Return to the item whose feedback you want to understand and leave point on
+it. Press <kbd class="kbd">C-e E</kbd> to explain that item, <kbd class="kbd">C-e H</kbd> for the settings menu, or
+<kbd class="kbd">C-e S</kbd> for the current task&rsquo;s focused settings where available. The workflows
+below use these inspection and editing tools rather than hand-edited
+configuration files. <a class="ref" href="Emacs-Key-Notation.html">Read the key instructions</a> explains how to enter the sequences.
 </p>
-<dl class="table">
-<dt><kbd class="kbd">C-e H</kbd></dt>
-<dd><p>Open Aural Home, the spoken control center for understanding, adjusting, and
-diagnosing presentation.
+<p><a class="ref" href="Choosing-A-Presentation-Change.html">Choose the change you need</a> helps you pick the right tool. To listen
+without making changes, start with <a class="ref" href="Previewing-An-Installed-Voice.html">the voice-preview exercise</a>. The rest of the
+chapter explains feedback rules, voices, engines, sounds, output and saved
+setups. Each procedure includes its own menu route. Action search at
+<kbd class="kbd">C-e H a</kbd> can also select the relevant control before you activate it.
 </p>
-</dd>
-<dt><kbd class="kbd">C-e E</kbd></dt>
-<dd><p>Explain why the object at point received its voices, sounds, and other
-actions.
-</p></dd>
-</dl>
-
-<p>This chapter starts with a short listening task, then explains how to change
-feedback and manage voices, sounds, and saved setups. You can follow it in
-order or open a task directly from its Info menu. In an Aural interface,
-<kbd class="kbd">C-c C-i</kbd> opens the relevant manual topic;
-<kbd class="kbd">q</kbd> in Info returns to the interface. In interface Help,
-<kbd class="kbd">i</kbd> opens the same topic.
+<p>When something is wrong, go directly to <a class="ref" href="Presentation-Troubleshooting.html">Troubleshooting and recovery</a>.
+In an Aural interface, <kbd class="kbd">C-c C-i</kbd> opens its manual topic; <kbd class="kbd">q</kbd> in Info returns
+to that interface. In the interface&rsquo;s Help, <kbd class="kbd">i</kbd> opens the same topic.
 </p>
 
 <ul class="mini-toc">
-<li><a href="Aural-Home.html" accesskey="1">Getting Started With Aural Home</a></li>
-<li><a href="Presentation-Model.html" accesskey="2">How Aural Presentation Works</a></li>
-<li><a href="Explaining-Presentation.html" accesskey="3">Understand Why Something Sounded That Way</a></li>
-<li><a href="Adjusting-Presentation.html" accesskey="4">Change Feedback And Manage Rules</a></li>
-<li><a href="Voices-And-Routing.html" accesskey="5">Choose And Manage Voice Palettes</a></li>
-<li><a href="Editing-Named-Voices.html" accesskey="6">Edit A Named Voice</a></li>
-<li><a href="Emoji-Speech-Names.html" accesskey="7">Name Occasional Emoji In Speech</a></li>
-<li><a href="Installed-Voices-And-Engines.html" accesskey="8">Browse Installed Voices And Choose Engines</a></li>
-<li><a href="Sounds-And-Space.html" accesskey="9">Sounds, Tones, And Spatial Cues</a></li>
+<li><a href="Choosing-A-Presentation-Change.html" accesskey="1">Choose the change you need</a></li>
+<li><a href="Aural-Home.html" accesskey="2">Getting Started With Settings Menus</a></li>
+<li><a href="Presentation-Model.html" accesskey="3">How Aural Presentation Works</a></li>
+<li><a href="Explaining-Presentation.html" accesskey="4">Understand Why Something Sounded That Way</a></li>
+<li><a href="Adjusting-Presentation.html" accesskey="5">Change Feedback And Manage Rules</a></li>
+<li><a href="Voices-And-Routing.html" accesskey="6">Choose And Manage Voice Palettes</a></li>
+<li><a href="Editing-Named-Voices.html" accesskey="7">Edit A Named Voice</a></li>
+<li><a href="Emoji-Speech-Names.html" accesskey="8">Name Occasional Emoji In Speech</a></li>
+<li><a href="Installed-Voices-And-Engines.html" accesskey="9">Browse Installed Voices And Choose Engines</a></li>
+<li><a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a></li>
 <li><a href="Aural-Speech-Output.html">Speech Output And Notifications</a></li>
 <li><a href="Presentation-Profiles.html">Save, Switch, And Share Your Setup</a></li>
 <li><a href="Presentation-Troubleshooting.html">Troubleshooting And Recovery</a></li>
@@ -91,7 +84,7 @@ order or open a task directly from its Info menu. In an Aural interface,
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Using-Online-Help.html">Find Help While You Work</a>, Previous: <a href="Audio-Desktop.html">Work With The Audio Desktop</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Emacs-Packages.html">Applications And Integrations</a>, Previous: <a href="Audio-Desktop.html">Work With The Audio Desktop</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

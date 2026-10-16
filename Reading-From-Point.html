@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reading From Point (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reading From Point (Emacsvox User Manual)">
+<meta name="keywords" content="Reading From Point (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Reading.html" rel="up" title="Reading">
+<link href="Delayed-Phonetic-Reading.html" rel="next" title="Delayed Phonetic Reading">
+<link href="Reading-Without-Moving-Point.html" rel="prev" title="Reading Without Moving Point">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reading-From-Point">
+<div class="nav-panel">
+<p>
+Next: <a href="Delayed-Phonetic-Reading.html" accesskey="n" rel="next">Hear Phonetic Names After A Pause</a>, Previous: <a href="Reading-Without-Moving-Point.html" accesskey="p" rel="prev">Read a short passage without moving point</a>, Up: <a href="Reading.html" accesskey="u" rel="up">Reading And Navigating</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Read-from-point_002c-stop_002c-and-start-again"><span>5.5.2 Read from point, stop, and start again<a class="copiable-link" href="#Read-from-point_002c-stop_002c-and-start-again"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-continuous-reading"></a>
+<a class="index-entry-id" id="index-read-all-from-here"></a>
+<a class="index-entry-id" id="index-stopping-and-restarting-reading"></a>
+<a class="index-entry-id" id="index-emacsvox_002dtracked_002dreading_002dmax_002dchars"></a>
+
+<p><kbd class="kbd">C-e i</kbd> starts reading at point and continues towards the accessible end of
+the buffer. Unlike a line or paragraph inspection, it advances point as
+sentence-oriented chunks complete. This requires a speech server supporting
+tracked playback completion. An unsupported server reports that limitation;
+it does not silently provide equivalent position tracking.
+</p>
+<p>Try it in an ordinary prose buffer, with no selection you need to preserve:
+</p>
+<ol class="enumerate">
+<li> Find the passage you want and finish any search or prompt. Use <kbd class="kbd">C-a</kbd> for
+the beginning of its line and <kbd class="kbd">C-e l</kbd> to check it. For the beginning of
+the accessible buffer, use <kbd class="kbd">M-&lt;</kbd> instead.
+</li><li> Press <kbd class="kbd">C-e i</kbd> and listen without entering another command. The reading
+position advances by chunks, not by each spoken word.
+</li><li> Press <kbd class="kbd">C-e s</kbd> to stop without moving to a different passage. Then use
+<kbd class="kbd">C-e l</kbd> to inspect the retained line before editing or moving.
+</li><li> Press <kbd class="kbd">C-e i</kbd> again to start from the retained position. Part of the
+last chunk can be repeated; this is not an exact-word pause/resume control.
+</li></ol>
+
+<p>Stopping retains the beginning of the current chunk, not necessarily the last
+word you heard. Another user command interrupts tracked reading before
+performing its own action. A movement command therefore also changes the
+retained position, and ordinary typing can insert text there. Use the explicit Stop command when you
+want to listen, stop, and decide what to do next. An existing active region
+would change as point advances, so use <kbd class="kbd">C-e r</kbd>, not <kbd class="kbd">C-e i</kbd>, to check a selection.
+</p>
+<p>Chunks prefer sentence boundaries and are bounded by
+<code class="code">emacsvox-tracked-reading-max-chars</code>, currently 280 source characters. This is
+not a word count or an exact acoustic position. Completion reaches the saved
+end of the accessible text; failure or interruption ends the reading session.
+You can inspect the text and issue a new reading command without restarting
+Emacs. On a backend without tracked support, read paragraphs or short regions,
+or use the untracked buffer form with the size/layout limitations above.
+</p>
+<p>For movement to another starting point, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Moving-Point.html#Moving-Point">Moving point</a> in the
+GNU Emacs Manual. The speech commands themselves belong to Emacsvox; their
+exact interfaces are in <a data-manual="emacsvox-reference" href="reference/emacsvox_002dspeak.html#emacsvox_002dspeak">the core speech reference</a>.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Delayed-Phonetic-Reading.html">Hear Phonetic Names After A Pause</a>, Previous: <a href="Reading-Without-Moving-Point.html">Read a short passage without moving point</a>, Up: <a href="Reading.html">Reading And Navigating</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Support Boundaries (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Support Boundaries (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Support Boundaries (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Troubleshooting.html" rel="next" title="Notmuch Troubleshooting">
+<link href="Notmuch-Speech-And-Privacy.html" rel="prev" title="Notmuch Speech And Privacy">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Support-Boundaries">
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Troubleshooting.html" accesskey="n" rel="next">Troubleshoot the live integration</a>, Previous: <a href="Notmuch-Speech-And-Privacy.html" accesskey="p" rel="prev">Choose fields, status, and privacy</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Know-the-support-boundaries"><span>10.7 Know the support boundaries<a class="copiable-link" href="#Know-the-support-boundaries"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-Notmuch-Tree-support"></a>
+<a class="index-entry-id" id="index-message-composition_002c-Notmuch"></a>
+
+<dl class="table">
+<dt>Hello</dt>
+<dd><p>Widget navigation, view lifecycle, and searches have Notmuch-specific feedback.
+</p></dd>
+<dt>Search</dt>
+<dd><p>Results, asynchronous lifecycle, tags, archiving, opening, and configured
+detail inspection have Notmuch-specific feedback.
+</p></dd>
+<dt>Show</dt>
+<dd><p>Messages, MIME parts, pages, visibility, tags, archiving, and explicit
+inspection have Notmuch-specific feedback.
+</p></dd>
+<dt>Tree</dt>
+<dd><p>Receives <code class="code">emacsvox-aural-module</code> context only. Core speech can operate,
+but this module has no Tree-specific row formatter, navigation, mutation,
+visibility, or asynchronous lifecycle.
+</p></dd>
+<dt>Composition</dt>
+<dd><p>Standard Message mode owns composition. Speech after new-mail, reply,
+forward, or resume transitions belongs to <code class="code">emacsvox-message</code>, not the
+Notmuch integration.
+</p></dd>
+</dl>
+
+<p>There is no independent Notmuch speech-disable or unload command. Its advice,
+hooks, and Search arrow bindings remain installed for the Emacs session after
+loading. Repeated loading is idempotent and does not duplicate them.
+</p>
+</div>
+
+
+
+</body>
+</html>

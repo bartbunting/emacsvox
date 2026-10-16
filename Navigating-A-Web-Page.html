@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Navigating A Web Page (Emacsvox User Manual)</title>
+
+<meta name="description" content="Navigating A Web Page (Emacsvox User Manual)">
+<meta name="keywords" content="Navigating A Web Page (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Web-Browsing.html" rel="up" title="Web Browsing">
+<link href="Following-Web-Links.html" rel="next" title="Following Web Links">
+<link href="Opening-A-Web-Page.html" rel="prev" title="Opening A Web Page">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Navigating-A-Web-Page">
+<div class="nav-panel">
+<p>
+Next: <a href="Following-Web-Links.html" accesskey="n" rel="next">Follow a link and return to the article</a>, Previous: <a href="Opening-A-Web-Page.html" accesskey="p" rel="prev">Open a page and establish your place</a>, Up: <a href="Web-Browsing.html" accesskey="u" rel="up">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Read-by-heading_002c-paragraph-or-search"><span>9.5.2 Read by heading, paragraph or search<a class="copiable-link" href="#Read-by-heading_002c-paragraph-or-search"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-web-headings"></a>
+<a class="index-entry-id" id="index-web-page_002c-finding-text"></a>
+
+<p>In the EWW page buffer, period, <kbd class="kbd">.</kbd>, moves to the next supported heading and
+comma, <kbd class="kbd">,</kbd>, to the previous one. <kbd class="kbd">1</kbd> through <kbd class="kbd">4</kbd> find the next heading at the
+corresponding level; <kbd class="kbd">M-1</kbd> through <kbd class="kbd">M-4</kbd> go backwards. These are HTML heading
+levels, not numbered paragraphs. A page without suitable heading markup
+cannot be navigated as though that structure existed.
+</p>
+<p>Use <kbd class="kbd">]</kbd> and <kbd class="kbd">[</kbd> to move between paragraphs. <kbd class="kbd">M-<kbd class="key">SPC</kbd></kbd> requests the contents of
+the current HTML element. Section-navigation autospeak can read more than a
+heading or a line, depending on your setting; use explicit line or element
+reading when you want to control the amount. Stop current speech with <kbd class="kbd">C-e s</kbd>
+without disabling later feedback.
+</p>
+<p>For known words, press <kbd class="kbd">C-s</kbd>, type the text, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to finish at
+the match. Repeat <kbd class="kbd">C-s</kbd> while searching to find another occurrence. This is
+Control-s, not the unmodified <kbd class="kbd">s</kbd> key used for a readable view. Search covers
+the current rendered buffer; it does not submit a web search or find text
+that was never loaded into the page.
+</p>
+<p>Use the original page when checking whether information is genuinely absent.
+A readable or filtered view can omit menus, tables or other useful material.
+The recovery procedure below explains restoring the page without treating a
+filter as an edit to the website.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Following-Web-Links.html">Follow a link and return to the article</a>, Previous: <a href="Opening-A-Web-Page.html">Open a page and establish your place</a>, Up: <a href="Web-Browsing.html">Web Browsing With EWW</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Finding Settings And Actions (Emacsvox User Manual)</title>
+
+<meta name="description" content="Finding Settings And Actions (Emacsvox User Manual)">
+<meta name="keywords" content="Finding Settings And Actions (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Home.html" rel="up" title="Aural Home">
+<link href="Returning-From-Settings.html" rel="prev" title="Returning From Settings">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Finding-Settings-And-Actions">
+<div class="nav-panel">
+<p>
+Previous: <a href="Returning-From-Settings.html" accesskey="p" rel="prev">Choose an entry point and preserve your place</a>, Up: <a href="Aural-Home.html" accesskey="u" rel="up">Getting Started With Settings Menus</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Find-a-setting-or-an-action"><span>8.2.3 Find a setting or an action<a class="copiable-link" href="#Find-a-setting-or-an-action"> &para;</a></span></h4>
+
+<p>Press <kbd class="kbd">C-e H /</kbd> to find an Emacsvox setting by any part of its name, ignoring
+capitalisation. Type <code class="code">cap</code> to find <em class="emph">Capitalization indication and camel case</em>,
+<em class="emph">Capital-letter beep</em>, <em class="emph">All-caps beep</em>, and <em class="emph">Spatial capabilities</em>. The aliases
+<code class="code">caps beep</code> and <code class="code">allcaps</code> find both beep controls and only <em class="emph">All-caps beep</em>, respectively.
+Each result appears once under its normal name. Use completion to choose a
+result; ambiguous text does not choose one automatically. These matching rules
+apply to this search without changing completion elsewhere in Emacs. Space
+inserts a literal space; <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> completes. Use your configured completion
+interface to browse results, displaying completions with <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> if needed.
+The menu&rsquo;s section and item arrows do not govern this minibuffer prompt.
+</p>
+<p><kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts the choice, opens its menu, and selects the matching control
+without changing its value. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> again to activate or edit the control.
+The captured source and current settings scope follow the search. <kbd class="kbd">q</kbd> returns
+to the menu where you searched, and cancelling completion keeps that menu open.
+</p>
+<p>Press <kbd class="kbd">C-e H a</kbd> to find an action such as <em class="emph">Browse voices</em>, <em class="emph">Your feedback
+rules</em>, or <em class="emph">Aural Doctor</em>. It uses the same case-insensitive partial-name
+matching and two-Enter selection as settings search: choose the destination,
+then activate its control. Child views return to their focused menu; another
+<kbd class="kbd">q</kbd> returns to the menu where you searched.
+</p>
+<p>Press <kbd class="kbd">C-e H b</kbd> to close menus and return to the captured source position,
+speaking its line. A changed or deleted source item must be captured again.
+</p>
+<p>Press <kbd class="kbd">C-e H .</kbd> for settings relevant to the captured buffer: speech,
+indentation, typing/point feedback, capitalisation, and its major mode&rsquo;s
+Customize group when available. This entry starts with buffer scope without
+changing the parent&rsquo;s scope. <kbd class="kbd">A</kbd> opens the advanced Emacsvox Customize group.
+In these linked Customize buffers, use Customize&rsquo;s own field navigation,
+Apply and Save commands. Outside an editable field, <kbd class="kbd">q</kbd> finishes Customize
+and returns to the menu. See
+<a class="ref" href="Integration-Speech-Settings.html#Integration-speech-settings">Adjust an integration&rsquo;s speech settings</a> for application-specific controls.
+</p>
+</div>
+<div class="subsection-level-extent" id="Choose-a-task-and-navigate-its-editor">
+<h4 class="subsection"><span>8.2.4 Choose a task and navigate its editor<a class="copiable-link" href="#Choose-a-task-and-navigate-its-editor"> &para;</a></span></h4>
+
+<p>Choose a focused menu for your task:
+</p>
+<table class="multitable">
+<tbody><tr><td width="20%">Menu</td><td width="80%">Destinations</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H f</kbd></td><td width="80%">Explain, change, or tune current feedback; review recent feedback.</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H v</kbd></td><td width="80%">Voice palettes, installed voices and engines, and Voice Workbench.</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H s</kbd></td><td width="80%">Rate, punctuation, indentation, capitalisation, and interaction.</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H o</kbd></td><td width="80%">Sounds, output volumes, notifications, and spatial controls.</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H r</kbd></td><td width="80%">Presentation Options, scoped rules, training, and semantic vocabulary.</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H p</kbd></td><td width="80%">Profiles, palettes, changed settings, and retained drafts.</td></tr>
+<tr><td width="20%"><kbd class="kbd">C-e H D</kbd></td><td width="80%">Doctor, spatial capabilities, and speech diagnostics.</td></tr>
+</tbody>
+</table>
+
+<p>Editors keep their own controls for detailed changes. In an editor&rsquo;s table,
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> opens a selected destination, details, or expandable group.
+</p>
+<p>Expandable groups announce an open or close cue with their name when you
+reach or toggle them. These cues follow the icon setting and sound pack.
+For spoken state words, enable <em class="emph">aural-panel-state-labels</em> in <em class="emph">Presentation
+Options</em>. This adds &ldquo;collapsed&rdquo; or &ldquo;expanded&rdquo; after the control through
+the normal presentation rules. Key instructions remain available in Help.
+</p>
+<p>In table-based managers and editors, the navigation controls are:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">n, p, down, up</kbd></dt>
+<dd><p>Move by row, retaining and speaking the selected column.
+In the first column, settings lists announce the name and current state.
+</p></dd>
+<dt><kbd class="kbd">left, right</kbd></dt>
+<dd><p>Move among the titled columns.
+</p></dd>
+<dt><kbd class="kbd">.</kbd></dt>
+<dd><p>Speak the current column title and value.
+</p></dd>
+<dt><kbd class="kbd">SPC</kbd></dt>
+<dd><p>Speak the complete current row.
+</p></dd>
+<dt><kbd class="kbd">RET</kbd></dt>
+<dd><p>Open a destination, child list, or details.
+</p></dd>
+<dt><kbd class="kbd">C-c C-a</kbd></dt>
+<dd><p>Choose an applicable action by name.
+</p></dd>
+<dt><kbd class="kbd">N</kbd></dt>
+<dd><p>Create a new item where supported.
+</p></dd>
+<dt><kbd class="kbd">P</kbd></dt>
+<dd><p>Preview in managers and editors.
+</p></dd>
+<dt><kbd class="kbd">S</kbd></dt>
+<dd><p>Stop the preview and its remaining samples.
+</p></dd>
+<dt><kbd class="kbd">?</kbd></dt>
+<dd><p>Display and speak help for the current Aural interface.
+</p></dd>
+<dt><kbd class="kbd">h</kbd></dt>
+<dd><p>Open the settings menu from a manager or editor that provides this key.
+</p></dd>
+<dt><kbd class="kbd">q</kbd></dt>
+<dd><p>Go back or leave; an editor may first offer to retain or discard changes.
+</p></dd>
+</dl>
+
+<p><em class="emph">Feedback for this item</em> combines explanation, playback, and access to voice
+and sound changes. <kbd class="kbd">C-e H f</kbd> groups its editing routes. <kbd class="kbd">C-e H r h</kbd> opens
+<em class="emph">Semantic vocabulary</em>; change editors also link it from matching criteria.
+</p>
+<p>The voice editor contains fields and buttons rather than table columns:
+left/right changes a numeric value, and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> edits a field. See
+<a data-manual="emacsvox" href="./Editing-Named-Voices.html#Editing-Named-Voices">Edit a Named Voice</a>. Keys are local to the view: <kbd class="kbd">w</kbd> saves a voice in its
+editor but exports a palette in the palette manager. Use <kbd class="kbd">C-c C-a</kbd> to choose
+an action by name, or <kbd class="kbd">?</kbd> for that view&rsquo;s keys.
+</p>
+<p>Panel entry, return, selection, and warning cues accompany their spoken
+feedback in one utterance. Returning from a panel announces the destination
+and any unfinished draft warning together. These cues follow the icon
+setting, sound pack, and cue remapping rules. The voice editor uses the normal
+navigation voice for these announcements; auditions still play the working
+voice.
+</p>
+<p>Opening settings or Help preserves the selected row and unfinished
+edits. Buffer rule editors retain separate drafts for each source buffer;
+reopening a modified editor resumes its draft. Reopening the same voice in
+the voice editor likewise preserves its working settings. If a prepared remap&rsquo;s
+source item changes or disappears, Emacsvox asks you to prepare that change
+again before applying it.
+</p>
+<p>Press <kbd class="kbd">C-e H p d</kbd> to resume a retained draft in its original rule editor,
+voice editor, or Workbench engine settings. The draft remains unsaved until
+accepted there.
+Presentation Profiles capture options, palette, sound pack, and spatial
+settings. Physical choices and adjustments belong to named palette voices;
+shared engine settings are saved separately. See
+<a data-manual="emacsvox" href="./Saving-And-Startup.html#Saving-And-Startup">Choose What Persists</a> before treating a setup as a backup.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Returning-From-Settings.html">Choose an entry point and preserve your place</a>, Up: <a href="Aural-Home.html">Getting Started With Settings Menus</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -37,7 +37,7 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="emacsvox_002dfolding.html" accesskey="n" rel="next">emacsvox-folding</a>, Previous: <a href="emacsvox_002dflymake.html" accesskey="p" rel="prev">emacsvox-flymake</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002dflyspell-1"><span>2.139 emacsvox-flyspell<a class="copiable-link" href="#emacsvox_002dflyspell-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002dflyspell-1"><span>2.142 emacsvox-flyspell<a class="copiable-link" href="#emacsvox_002dflyspell-1"> &para;</a></span></h3>
 
 <p>This module speech enables flyspell.
 It loads flyspell-correct if available and uses its native completion
@@ -58,10 +58,10 @@ an explicit IDO, Popup, or Helm interface.
 <li><a href="#emacsvox_002dflyspell-Options" accesskey="1">emacsvox-flyspell Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="emacsvox_002dflyspell-Options">
-<h4 class="subsection"><span>2.139.1 emacsvox-flyspell Options<a class="copiable-link" href="#emacsvox_002dflyspell-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.142.1 emacsvox-flyspell Options<a class="copiable-link" href="#emacsvox_002dflyspell-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-74"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-correct</var><a class="copiable-link" href="#index-User-Option-74"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-77"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-correct</var><a class="copiable-link" href="#index-User-Option-77"> &para;</a></span></dt>
 <dd><pre class="verbatim">Correction interface module to use with Flyspell.
 The default ‘flyspell-correct’ value uses standard completion and therefore
 honors the active completion frontend.  Alternate IDO, Popup, and Helm modules
@@ -74,7 +74,118 @@ nil
 </pre>
 </dd></dl>
 
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-78"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-tone-duration</var><a class="copiable-link" href="#index-User-Option-78"> &para;</a></span></dt>
+<dd><pre class="verbatim">Duration of the spelling tone in milliseconds.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+40
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-79"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-tone-pitch</var><a class="copiable-link" href="#index-User-Option-79"> &para;</a></span></dt>
+<dd><pre class="verbatim">Pitch of the spelling tone in hertz.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+880
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-80"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-tone-shape</var><a class="copiable-link" href="#index-User-Option-80"> &para;</a></span></dt>
+<dd><pre class="verbatim">Waveform and optional ADSR envelope of the spelling tone.
+Waveform is sine, triangle, square, pulse or sawtooth. Pulse requires
+:pulse-width from 0.05 to 0.95. Omit the envelope for Classic fades.
+ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
+Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+Optional :end-frequency-hz makes a linear pitch sweep; :envelope-curve selects
+linear or exponential ADSR. These extensions need extended-tone support.
+Total duration stays fixed: oversized stages are shortened proportionally.
+Non-Classic shapes require richer-tone support.  Older workers omit the tone;
+explicit previews report missing support.  Speech and earcons remain usable.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(:waveform sine)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-81"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-tone-timing</var><a class="copiable-link" href="#index-User-Option-81"> &para;</a></span></dt>
+<dd><pre class="verbatim">When to play spelling tones during reading.
+‘insert’ finishes each tone before its flagged word, adding a pause.
+‘overlay’ plays alongside the word without inserting a pause for the tone.
+This global setting does not change voice or earcon feedback.  Editing
+feedback and tone-only previews have no accompanying speech to overlap.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+overlay
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-82"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-tone-volume</var><a class="copiable-link" href="#index-User-Option-82"> &para;</a></span></dt>
+<dd><pre class="verbatim">Spelling tone volume as a percentage from 0 to 100.
+Zero silences the tone; 100 preserves its original level.  The shared
+‘tts-main-tone-volume’ still scales the result.  Values below 100 require
+a worker with richer-tone support; older workers omit that tone while
+retaining speech and earcons.  Preview reports missing support.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+100
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-83"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-use-earcon</var><a class="copiable-link" href="#index-User-Option-83"> &para;</a></span></dt>
+<dd><pre class="verbatim">Play the help earcon at flagged words and newly checked spelling errors.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-84"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-use-tone</var><a class="copiable-link" href="#index-User-Option-84"> &para;</a></span></dt>
+<dd><pre class="verbatim">Play a tone at flagged words and when editing detects a spelling error.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-85"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-flyspell-use-voice</var><a class="copiable-link" href="#index-User-Option-85"> &para;</a></span></dt>
+<dd><pre class="verbatim">Use the mapped spelling voice when reading flagged words.
+This changes reading feedback, not Flyspell highlighting or checking.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
 </div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dfolding.html">emacsvox-folding</a>, Previous: <a href="emacsvox_002dflymake.html">emacsvox-flymake</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

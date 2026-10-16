@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Voice Experiments (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Voice Experiments (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Voice Experiments (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Exercise-Answers.html" rel="next" title="Tutorial Exercise Answers">
+<link href="Tutorial-Temporary-Settings.html" rel="prev" title="Tutorial Temporary Settings">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Voice-Experiments">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Exercise-Answers.html" accesskey="n" rel="next">Exercise answers</a>, Previous: <a href="Tutorial-Temporary-Settings.html" accesskey="p" rel="prev">Lesson 5: change speech in one buffer</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Lesson-6_003a-preview-and-keep-a-voice-experiment"><span>4.7 Lesson 6: preview and keep a voice experiment<a class="copiable-link" href="#Lesson-6_003a-preview-and-keep-a-voice-experiment"> &para;</a></span></h3>
+
+<p>An installed <em class="emph">physical voice</em> is a voice an engine can produce. A palette&rsquo;s
+<em class="emph">named voice</em>, such as <code class="code">default</code> for ordinary reading, chooses physical voices
+and adjustments for a purpose. Browsing a physical voice does not replace
+that named entry. We will first try a physical voice without selecting it for
+ordinary reading or changing startup.
+</p>
+<ol class="enumerate">
+<li> From the practice buffer, press <kbd class="kbd">C-e H v b</kbd>. Select an available engine
+and press <kbd class="kbd">v</kbd> to browse its voices. Expand a language group with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+if needed, then choose an already usable voice.
+</li><li> Press <kbd class="kbd">P</kbd> to hear its sample and <kbd class="kbd">S</kbd> to stop. An unavailable or inactive
+downloaded voice is not suitable for this first exercise. Read its details
+rather than enabling, installing, or applying packages as a workaround.
+</li><li> Press <kbd class="kbd">t</kbd> on the usable voice to open an experiment. If this resumes
+someone else&rsquo;s or your earlier unfinished draft, leave it with Keep and
+choose another voice; do not overwrite or discard unrelated work.
+</li><li> In your new editor draft, find <em class="emph">Average Pitch</em> and note its value. Use
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> to enter <code class="code">6</code>, or <code class="code">5</code> if it is already six. Press <kbd class="kbd">P</kbd> to preview and
+<kbd class="kbd">B</kbd> to compare the opening and edited versions with the same sample.
+<kbd class="kbd">S</kbd> stops. An automatic sample may also follow an adjustment in the full
+editor; navigation stops it.
+</li><li> Press <kbd class="kbd">u</kbd> to undo that draft adjustment, compare again, then make the
+small adjustment once more. This is editor undo, not text undo. If the
+backend reports the adjustment unsupported, keep that limitation explicit
+and continue with browsing; do not infer that saving will fix support.
+</li><li> Press <kbd class="kbd">q</kbd> in the editor and choose to keep the unfinished draft. Return
+through the browser&rsquo;s parent views with <kbd class="kbd">q</kbd> until you reach its menu, then
+close the menu sequence with <kbd class="kbd">C-q</kbd>. Ordinary reading is unchanged.
+</li><li> From the practice buffer, press <kbd class="kbd">C-e H p d</kbd> and select your retained
+experiment. Verify the value is still there. To finish without saving,
+leave its editor with <kbd class="kbd">q</kbd> and choose to discard this practice draft only.
+Return through the remaining views and menus.
+</li></ol>
+
+<p>A retained draft lasts within the Emacs session. It is not a saved palette and
+does not survive restart. Discarding it leaves ordinary reading untouched,
+but discarding a draft would not undo a save that had already completed.
+The editor&rsquo;s status distinguishes unsaved work, successful saving, and failed
+or pending application. Never treat a preview as proof of persistence.
+</p>
+<ul class="mini-toc">
+<li><a href="#Optional_003a-save-an-inactive-personal-palette" accesskey="1">Optional: save an inactive personal palette</a></li>
+<li><a href="#Try-it-5" accesskey="2">Try it</a></li>
+</ul>
+<div class="subsection-level-extent" id="Optional_003a-save-an-inactive-personal-palette">
+<h4 class="subsection"><span>4.7.1 Optional: save an inactive personal palette<a class="copiable-link" href="#Optional_003a-save-an-inactive-personal-palette"> &para;</a></span></h4>
+
+<p>This exercise writes personal palette data. Skip it to keep the tutorial
+entirely free of saved speech-configuration changes. It deliberately avoids
+startup selection and does not require you to restart a working session.
+</p>
+<ol class="enumerate">
+<li> Open <kbd class="kbd">C-e H v p</kbd> and note the active palette and whether selection follows
+the standard baseline or is explicit. Press <kbd class="kbd">N</kbd> to create a palette with an unused name such as <code class="code">tutorial-reading</code>, a short
+description, and <code class="code">acss-default</code> as parent. Creation saves the new palette
+but does not activate it. Use another name if that one already exists.
+</li><li> Enter your new palette with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, select <code class="code">default</code>, and press <kbd class="kbd">e</kbd> to
+edit it. Change <em class="emph">Average Pitch</em> as above and compare with <kbd class="kbd">B</kbd>. This entry
+controls ordinary reading, not every named voice in the palette.
+</li><li> Choose <em class="emph">Save to collection without selecting</em>. Wait for its result and
+check the destination and saved status. Leave with <kbd class="kbd">q</kbd>. The palette now
+holds your entry, but it is still not selected for ordinary reading.
+</li><li> To try live selection deliberately, return to the palette manager with
+<kbd class="kbd">o</kbd>, select your new palette, and press <kbd class="kbd">a</kbd>. Return to the practice
+document and read the notebook line. Other named voices retain their
+own definitions. Rules or unsupported adjustments can make a contrast
+subtle; <a data-manual="emacsvox" href="./Voices-In-Context.html#Voices-In-Context">Inspect Or Adjust A Voice In Context</a> explains how to investigate.
+</li><li> Reopen the palette manager. If you originally followed the standard
+baseline, use <kbd class="kbd">f</kbd> to follow it again. Otherwise select the original palette
+you recorded and press <kbd class="kbd">a</kbd>. Do not use <kbd class="kbd">U</kbd>, the separate startup action,
+during this tutorial. The inactive tutorial palette remains saved for
+later use.
+</li></ol>
+
+<p>If saving or application fails, keep the reported status and follow
+<a data-manual="emacsvox" href="./Recovering-Aural-Changes.html#Recovering-Aural-Changes">Recovering Unfinished Changes</a>. Do not repeat Create, delete files, or restart
+Emacs to hide the failure. After an accepted save, text undo and draft discard
+are not rollback commands. <a data-manual="emacsvox" href="./Personal-Palette-Walkthrough.html#Personal-Palette-Walkthrough">Make a Personal Reading Palette</a> gives the fuller
+lifecycle, including inheritance and startup selection.
+</p>
+</div>
+<div class="subsection-level-extent" id="Try-it-5">
+<h4 class="subsection"><span>4.7.2 Try it<a class="copiable-link" href="#Try-it-5"> &para;</a></span></h4>
+
+<p><strong class="strong">6A.</strong> Create another small preview-only experiment, keep its draft, and
+resume it without saving. Then discard that practice draft and establish
+that your working document is still there.
+</p>
+<p><strong class="strong">6B.</strong> Explain the difference between Preview, Keep draft, Save to collection,
+Activate, and Use at Startup. Which of them did the required exercise use?
+Which additional operations belong to the optional exercise?
+</p>
+<p>See <a class="ref" href="Tutorial-Exercise-Answers.html#tutorial_002danswer_002d6">Answers for lesson 6</a>.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Exercise-Answers.html">Exercise answers</a>, Previous: <a href="Tutorial-Temporary-Settings.html">Lesson 5: change speech in one buffer</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

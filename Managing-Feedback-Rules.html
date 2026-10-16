@@ -38,38 +38,30 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Presentation-Options.html" accesskey="n" rel="next">Try A Presentation Option</a>, Previous: <a href="Choosing-A-Voice-For-An-Item.html" accesskey="p" rel="prev">Remap One Item At Point</a>, Up: <a href="Adjusting-Presentation.html" accesskey="u" rel="up">Change Feedback And Manage Rules</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Review-And-Remove-Your-Rules"><span>6.4.4 Review And Remove Your Rules<a class="copiable-link" href="#Review-And-Remove-Your-Rules"> &para;</a></span></h4>
+<h4 class="subsection" id="Review-And-Remove-Your-Rules"><span>8.5.4 Review And Remove Your Rules<a class="copiable-link" href="#Review-And-Remove-Your-Rules"> &para;</a></span></h4>
 
-<p>In <em class="emph">Your feedback rules</em>, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd">e</kbd>
-opens the selected rule&rsquo;s settings panel.  In the rule list, the same keys
-open that panel.  Only the selected rule appears while its panel is open;
-the other rules remain in the working draft.  <kbd class="kbd">n</kbd> and
-<kbd class="kbd">p</kbd> move through the
-visible settings; <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads the current setting and value.
-<kbd class="kbd"><kbd class="key">RET</kbd></kbd> expands <em class="emph">What should match</em>, <em class="emph">Content</em>, <em class="emph">Before content</em>,
-or <em class="emph">After content</em>.  Matching criteria toggle between included and excluded.
-Within <em class="emph">Content</em>, <em class="emph">voice</em> and <em class="emph">speak</em> expand their choices in place, showing
-the current choice.  Other fields ask only for the selected value.  Existing
-actions expand into their individual settings; <em class="emph">Change operation</em> offers the
-operation choices for that phase.  <em class="emph">Inherit</em> removes the selected voice or
-speech override; <kbd class="kbd">D</kbd> removes another selected setting.  Each
-edit preserves the rule&rsquo;s other settings and stays in the working draft.
+<p><kbd class="kbd">C-e H r o</kbd> opens <em class="emph">Your feedback rules</em>, combining personal, session, and
+captured-buffer changes. <kbd class="kbd">q</kbd> returns to the selected menu item. <kbd class="kbd">P</kbd> previews
+the complete result, <kbd class="kbd">t</kbd> temporarily enables/disables a rule, and <kbd class="kbd">d</kbd> removes
+it. Removing an override restores the next weaker contribution rather than
+leaving a copied default.
 </p>
-<p><kbd class="kbd">P</kbd> previews the working rule and <kbd class="kbd">S</kbd> stops.
-<kbd class="kbd">w</kbd> or the <em class="emph">Save</em> row saves to the original scope and announces
-whether the rule was saved or applied temporarily.  <kbd class="kbd">q</kbd> closes
-the current section and focuses its parent, retaining unfinished edits.
-For example, from a voice choice it returns to <em class="emph">voice</em>, then <em class="emph">Content</em>.
-At the top level it closes the panel and returns to the full rule list.
-From the rule list,
-<kbd class="kbd">N</kbd> adds a rule and <kbd class="kbd">q</kbd> asks before discarding
-an unfinished draft.
+<p>In the rule list, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd">e</kbd> opens the selected rule&rsquo;s panel. Other rules
+stay in the working draft. <kbd class="kbd">n~/~p</kbd> moves through settings and <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads the
+selected value. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> expands <em class="emph">What should match</em>, <em class="emph">Content</em>, <em class="emph">Before content</em>,
+or <em class="emph">After content</em>. Matching criteria toggle included/excluded states.
 </p>
-<p>Open <em class="emph">Your feedback rules</em> to manage these changes together.  There,
-<kbd class="kbd">P</kbd> previews the complete current result, <kbd class="kbd">t</kbd> temporarily disables
-or enables a rule, and <kbd class="kbd">d</kbd> removes it.  Disabling or deleting an
-override restores the next weaker behavior; it does not leave a copied default
-behind.
+<p>Within <em class="emph">Content</em>, <em class="emph">voice</em> and <em class="emph">speak</em> expand choices in place with the current
+selection shown. Other fields ask for the selected value. Existing actions
+expand into settings; <em class="emph">Change operation</em> chooses an operation for that phase.
+<em class="emph">Inherit</em> removes a voice or speech override and <kbd class="kbd">D</kbd> removes another selected
+setting. Each change preserves other settings and remains in the draft.
+</p>
+<p><kbd class="kbd">P</kbd> in the panel previews the working rule and <kbd class="kbd">S</kbd> stops. <kbd class="kbd">w</kbd> or <em class="emph">Save</em> writes
+to its original scope and announces whether it was saved or temporarily
+applied. <kbd class="kbd">q</kbd> closes a section and focuses its parent, retaining edits: voice
+choice to <em class="emph">voice</em> to <em class="emph">Content</em>, then panel to rule list. In the list, <kbd class="kbd">N</kbd> adds
+a rule and <kbd class="kbd">q</kbd> asks before discarding an unfinished draft.
 </p>
 </div>
 <hr>

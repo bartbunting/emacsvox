@@ -36,30 +36,28 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Recovering-From-No-Speech.html" accesskey="p" rel="prev">Recovering From No Speech</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Persistent-Startup-1"><span>2.9 Persistent Startup<a class="copiable-link" href="#Persistent-Startup-1"> &para;</a></span></h3>
+<h3 class="section" id="Persistent-Startup-1"><span>3.9 Persistent Startup<a class="copiable-link" href="#Persistent-Startup-1"> &para;</a></span></h3>
 
-<p>After <a class="ref" href="Confirming-First-Speech.html">Confirming First Speech</a> succeeds, add these forms to your Emacs
-init file, replacing the example path with the absolute path of the checkout:
+<p>After <a class="ref" href="Confirming-First-Speech.html">Confirming First Speech</a> succeeds, add these forms to your init file,
+replacing the example path with the checkout&rsquo;s absolute path:
 </p>
 <div class="example lisp">
 <pre class="lisp-preformatted">(setenv &quot;TTS_PROGRAM&quot; &quot;omnivox&quot;)
 (load-file &quot;/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
 </pre></div>
 
-<p>Keep the forms in this order: Emacsvox selects and starts the speech server while
-loading setup.  A shell alternative is to export the server name before
-launching Emacs:
+<p>Keep that order: Emacsvox selects and starts the server while loading setup.
+A shell alternative is to export the server name before launching Emacs:
 </p>
 <div class="example">
 <pre class="example-preformatted">export TTS_PROGRAM=omnivox
 </pre></div>
 
-<p>Keep the explicit <code class="code">load-file</code> form for a changing source checkout.  Its
-setup entry point can warn and prefer source when newer Lisp would otherwise
-be hidden by stale local byte-code.  A customized startup should speak the
-same ready message as the isolated launcher.  If it does not, remove or
-comment out the two init forms and return to the isolated launcher before
-trying another change.
+<p>Keep the explicit <code class="code">load-file</code> form for a changing source checkout. Its setup
+entry point can warn and prefer source when newer Lisp would otherwise be
+hidden by stale local byte-code. A customised startup should speak the same
+ready message as the isolated launcher. If it does not, remove or comment out
+the two init forms and return to the isolated launcher before another change.
 </p>
 </div>
 

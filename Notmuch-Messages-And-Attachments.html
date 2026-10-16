@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notmuch Messages And Attachments (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notmuch Messages And Attachments (Emacsvox User Manual)">
+<meta name="keywords" content="Notmuch Messages And Attachments (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Notmuch-Mail.html" rel="up" title="Notmuch Mail">
+<link href="Notmuch-Tags-And-Archiving.html" rel="next" title="Notmuch Tags And Archiving">
+<link href="Notmuch-Search-Results.html" rel="prev" title="Notmuch Search Results">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Notmuch-Messages-And-Attachments">
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Tags-And-Archiving.html" accesskey="n" rel="next">Change tags and archive state</a>, Previous: <a href="Notmuch-Search-Results.html" accesskey="p" rel="prev">Navigate and inspect Search results</a>, Up: <a href="Notmuch-Mail.html" accesskey="u" rel="up">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Read-a-thread-and-its-MIME-parts"><span>10.4 Read a thread and its MIME parts<a class="copiable-link" href="#Read-a-thread-and-its-MIME-parts"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-Notmuch-Show"></a>
+<a class="index-entry-id" id="index-MIME-parts_002c-Notmuch"></a>
+<a class="index-entry-id" id="index-attachments_002c-Notmuch"></a>
+
+<p>Opening a thread selects its newest unread message among the open messages
+matching the search. If there is none, Notmuch&rsquo;s initial selection is retained.
+Emacsvox speaks the selected message&rsquo;s summary and first visible body line,
+skipping hidden alternative bodies. When no body text is visible, point falls
+back to a leaf MIME-part button where possible. That button announces a
+bounded filename, content type, and size.
+</p>
+<p>Line reading speaks a visible sender row even if the preceding message ends
+with folded quoted text; it does not unfold the quote. In a short graphical
+window, Down advances through ordinary body text before speaking the next
+line, even when the current line is only partly visible. Images or text taller
+than the window retain Emacs&rsquo;s partial scrolling.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">n</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-next-open-message</code>.
+</p></dd>
+<dt><kbd class="kbd">p</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-previous-open-message</code>.
+</p></dd>
+<dt><kbd class="kbd">N</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-next-message</code>, including closed messages.
+</p></dd>
+<dt><kbd class="kbd">P</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-previous-message</code>, including closed messages.
+</p></dd>
+<dt><kbd class="kbd">SPC</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-advance-and-archive</code>. Within a message, speech reads the
+newly visible page; at a message transition it reads the new message;
+at the thread end it reports the actual archive outcome and destination.
+</p></dd>
+<dt><kbd class="kbd">DEL</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-rewind</code> and read the resulting page or message.
+</p></dd>
+<dt><kbd class="kbd">RET</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-toggle-message</code> and cue the resulting visibility.
+</p></dd>
+<dt><kbd class="kbd">M-RET</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-open-or-close-all</code> to open every message and report the
+state and total, for example &ldquo;Opened all 5 messages.&rdquo; <kbd class="kbd">C-u M-<kbd class="key">RET</kbd></kbd> closes
+every message and reports the corresponding total.
+</p></dd>
+<dt><kbd class="kbd">C-c C-p</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-notmuch-speak-show-position</code> for the message ordinal, total,
+and full configured details. On a MIME-part button it instead reads the
+complete part description, including its full filename.
+</p></dd>
+<dt><kbd class="kbd">TAB</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-next-button</code> and identify the button or MIME part.
+</p></dd>
+<dt><kbd class="kbd">&lt;backtab&gt;</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-previous-button</code> and identify the button or MIME part.
+</p></dd>
+<dt><kbd class="kbd">w</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-save-attachments</code>. Speech confirms when the command
+returns, but Notmuch exposes no per-attachment result here. The
+confirmation therefore cannot distinguish partial skips.
+</p></dd>
+<dt><kbd class="kbd">. s</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-save-part</code> on the current MIME part.
+</p></dd>
+<dt><kbd class="kbd">. v</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-view-part</code>.
+</p></dd>
+<dt><kbd class="kbd">. o</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-interactively-view-part</code> and choose an external action.
+</p></dd>
+<dt><kbd class="kbd">. m</kbd></dt>
+<dd><p>Run <code class="code">notmuch-show-choose-mime-of-part</code>.
+</p></dd>
+</dl>
+
+<p>Viewing, saving, overwriting, or launching a MIME part is an explicit Notmuch
+operation. Navigation and detail inspection never open an attachment or an
+external viewer by themselves.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Notmuch-Tags-And-Archiving.html">Change tags and archive state</a>, Previous: <a href="Notmuch-Search-Results.html">Navigate and inspect Search results</a>, Up: <a href="Notmuch-Mail.html">Notmuch Mail</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

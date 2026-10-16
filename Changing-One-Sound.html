@@ -38,30 +38,24 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Changing-Tones.html" accesskey="n" rel="next">Change A Blank-Line Tone</a>, Previous: <a href="Sound-Pack-Walkthrough.html" accesskey="p" rel="prev">Walkthrough: Try A Sound Pack</a>, Up: <a href="Sounds-And-Space.html" accesskey="u" rel="up">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Walkthrough_003a-Silence-One-Cue"><span>6.9.2 Walkthrough: Silence One Cue<a class="copiable-link" href="#Walkthrough_003a-Silence-One-Cue"> &para;</a></span></h4>
+<h4 class="subsection" id="Walkthrough_003a-Silence-One-Cue"><span>8.10.3 Walkthrough: Silence One Cue<a class="copiable-link" href="#Walkthrough_003a-Silence-One-Cue"> &para;</a></span></h4>
 
 <ol class="enumerate">
-<li> Repeat the action that produces the unwanted cue. Open <kbd class="kbd">C-e H H</kbd>, select
-that recorded feedback, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to explain it. Find the cue name
-and whether it occurs before or after content.
-</li><li> Return to the feedback list and press <kbd class="kbd">C</kbd> for <em class="emph">Change this feedback</em>.
-If the record has several parts, select the part containing that cue.
-Press <kbd class="kbd">c</kbd>, choose <em class="emph">Suppress one component</em>, and select the exact cue.
-</li><li> Compare <kbd class="kbd">O</kbd> and <kbd class="kbd">P</kbd>. The proposed version should keep the speech and
-other components while omitting that cue. Review <em class="emph">What should match</em> with
-<kbd class="kbd">m</kbd>, then press <kbd class="kbd">l</kbd> and choose <em class="emph">This Emacs session</em> for this experiment.
-</li><li> Press <kbd class="kbd">a</kbd> and repeat the original action. The selected cue should be
-absent for matching feedback. Other cues with different identities or
-matching criteria should still sound.
-</li><li> To restore it, open Home&rsquo;s <em class="emph">Your feedback rules</em>, find the new session rule,
-and disable it with <kbd class="kbd">t</kbd> or remove it with <kbd class="kbd">d</kbd>. The session rule also
-expires when Emacs exits.
+<li> Repeat the action producing the cue, then open <kbd class="kbd">C-e H f h</kbd>. Select the
+record and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to explain it. Identify cue name and before/after phase.
+</li><li> Return to the list and press <kbd class="kbd">C</kbd> for <em class="emph">Change this feedback</em>. Select the
+relevant part if needed, then <kbd class="kbd">c</kbd>, <em class="emph">Suppress one component</em>, and the cue.
+</li><li> Compare <kbd class="kbd">O~/~P</kbd>: speech and other components should remain. Inspect criteria
+with <kbd class="kbd">m</kbd>, then choose <em class="emph">This Emacs session</em> through <kbd class="kbd">l</kbd>.
+</li><li> Apply with <kbd class="kbd">a</kbd> and repeat the source action. Matching feedback should omit
+that cue; other identities or unmatched contexts remain unchanged.
+</li><li> Open <kbd class="kbd">C-e H r o</kbd>, find the session rule, and disable with <kbd class="kbd">t</kbd> or delete
+with <kbd class="kbd">d</kbd>. It also expires when Emacs exits.
 </li></ol>
 
-<p>To add a cue to feedback that has none, use <em class="emph">Add a sound</em> instead. Choose
-<em class="emph">Before content</em> or <em class="emph">After content</em>, select a registered cue, preview, then
-review matching and lifetime. A cue addition and its later removal use the
-same rule-management workflow.
+<p>To add a missing cue, choose <em class="emph">Add a sound</em>, <em class="emph">Before content</em> or <em class="emph">After content</em>,
+then a registered cue. Preview and review criteria/lifetime. Adding and later
+removing use the same rule workflow.
 </p>
 </div>
 

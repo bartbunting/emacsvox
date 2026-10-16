@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Answering Emacs Prompts (Emacsvox User Manual)</title>
+
+<meta name="description" content="Answering Emacs Prompts (Emacsvox User Manual)">
+<meta name="keywords" content="Answering Emacs Prompts (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Using-This-Manual.html" rel="up" title="Using This Manual">
+<link href="Manual-Reading-Routes.html" rel="next" title="Manual Reading Routes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Answering-Emacs-Prompts">
+<div class="nav-panel">
+<p>
+Next: <a href="Manual-Reading-Routes.html" accesskey="n" rel="next">Choose a reading route</a>, Up: <a href="Using-This-Manual.html" accesskey="u" rel="up">Using this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Answer-a-prompt-and-return-to-your-work"><span>2.1 Answer a prompt and return to your work<a class="copiable-link" href="#Answer-a-prompt-and-return-to-your-work"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-minibuffer"></a>
+<a class="index-entry-id" id="index-prompts_002c-answering"></a>
+<a class="index-entry-id" id="index-completion_002c-first-use"></a>
+<a class="index-entry-id" id="index-where-to-type"></a>
+
+<p>A command may ask for a file, a buffer, a search term or another value. Emacs
+reads that answer in the <em class="emph">minibuffer</em>, a temporary input area separate from
+your document. While the prompt is active, ordinary typing answers the prompt;
+it does not add words to the document. Emacsvox speaks prompts and completion
+feedback according to your settings.
+</p>
+<p>For example, <kbd class="kbd">M-x</kbd> asks for a command name. Type <code class="code">describe-mode</code>, including
+its hyphen, then press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to run it. Do not type the prompt label or the
+letters <code class="code">M-x</code>. A command may then ask another question: after choosing <code class="code">eww</code>,
+for example, its next prompt asks for a web address or search words. Answer
+one prompt at a time rather than pasting the whole printed instruction.
+</p>
+<p>Completion helps you enter an existing name. Type a distinctive beginning,
+then press <kbd class="kbd"><kbd class="key">TAB</kbd></kbd>. Emacs may extend the text or offer several candidates.
+With several matches, type more of the name; you can always type the complete
+name and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Completion interfaces differ between configurations,
+so the guides do not assume that Down Arrow accepts the first suggestion.
+Opening a new file permits a name that does not yet exist; selecting an
+installed command normally requires a recognised name.
+</p>
+<p><kbd class="kbd"><kbd class="key">RET</kbd></kbd> submits the current answer, including any text already in the prompt.
+An empty answer may accept a displayed default. Read that default before
+accepting it. For a yes/no question, use the response requested: some prompts
+accept <kbd class="kbd">y</kbd> or <kbd class="kbd">n</kbd>, while others require <code class="code">yes</code> or <code class="code">no</code> followed by <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
+</p>
+<p>Use <kbd class="kbd">C-g</kbd> to abandon an unfinished ordinary prompt. If you have already
+submitted it and the command has acted, cancellation does not undo the result.
+Likewise, quitting a settings menu does not undo an adjustment made there.
+Follow the recovery instructions for the operation you actually performed.
+</p>
+<p>After the prompt finishes, notice which buffer has been selected. An open-file
+command selects a document; Help may appear in another window; a save normally
+leaves you in the document. Press <kbd class="kbd">C-e m</kbd> to identify the current buffer and
+mode before editing. Finish or cancel an active prompt before switching buffers
+with <kbd class="kbd">C-x b</kbd>; otherwise its answer is still unfinished. See
+<a class="ref" href="Using-Online-Help.html">Using Online Help</a> for entering and leaving a Help window.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Filenames-And-Example-Commands.html" accesskey="1">Interpret filenames and examples</a></li>
+</ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Manual-Reading-Routes.html">Choose a reading route</a>, Up: <a href="Using-This-Manual.html">Using this manual</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

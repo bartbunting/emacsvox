@@ -38,7 +38,7 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Speech-Server-Protocols.html" accesskey="n" rel="next">Speech Server Protocols</a>, Up: <a href="Developer-Guide.html" accesskey="u" rel="up">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Documentation-Maintenance-1"><span>16.1 Documentation Maintenance<a class="copiable-link" href="#Documentation-Maintenance-1"> &para;</a></span></h3>
+<h3 class="section" id="Documentation-Maintenance-1"><span>20.1 Documentation Maintenance<a class="copiable-link" href="#Documentation-Maintenance-1"> &para;</a></span></h3>
 
 <p>This chapter is for contributors changing the maintained manuals, generated
 reference, or public browser documentation.  Reports and internal notes do not
@@ -51,7 +51,7 @@ the source being changed.
 <li><a href="#Publish-the-browser-manual" accesskey="3">Publish the browser manual</a></li>
 </ul>
 <div class="subsection-level-extent" id="Choose-the-canonical-source">
-<h4 class="subsection"><span>16.1.1 Choose the canonical source<a class="copiable-link" href="#Choose-the-canonical-source"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.1.1 Choose the canonical source<a class="copiable-link" href="#Choose-the-canonical-source"> &para;</a></span></h4>
 
 <p>The maintained Org master is <code class="code">docs/manual/emacsvox.org</code>.  Current-user chapters
 live under <code class="code">docs/manual/chapters/</code>, while developer and maintainer chapters
@@ -76,7 +76,7 @@ the separately installed <code class="code">emacsvox-heritage.info</code> manual
 </p>
 </div>
 <div class="subsection-level-extent" id="Use-the-fast-authoring-workflow">
-<h4 class="subsection"><span>16.1.2 Use the fast authoring workflow<a class="copiable-link" href="#Use-the-fast-authoring-workflow"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.1.2 Use the fast authoring workflow<a class="copiable-link" href="#Use-the-fast-authoring-workflow"> &para;</a></span></h4>
 
 <p>Keep current operating instructions separate from historical accounts.  State
 which backend or platform a procedure applies to, avoid duplicating detailed
@@ -94,8 +94,11 @@ rebuilding Lisp byte-code:
 <p>Use ordinary Org code markup for keys (<kbd class="kbd">C-x C-f</kbd> or <kbd class="kbd">M-x term <kbd class="key">RET</kbd></kbd>) and
 verbatim markup for other literals (<code class="code">local.mk</code> or <code class="code">make docs-update</code>).
 The Texinfo exporter preserves keyboard and named-key formatting; standard
-Org text and HTML exports retain the key text. Use Org heading links within
-the manual and described <code class="code">info:</code> links to other manuals.
+Org text and HTML exports retain the key text. Within the manual, link to a
+named Info destination or an explicit Org anchor. A structural heading marked
+<code class="code">TEXINFO_NODE: no</code> cannot be used as an Info destination merely because HTML
+can link to it. Use the containing named node when appropriate, and described
+<code class="code">info:</code> links to other manuals. Check the result in both Info and HTML.
 </p>
 <p>Run <code class="code">make docs-org-text</code> for a complete UTF-8 text copy at
 <code class="code">.docs-preview/org-manual/emacsvox.txt</code>. Set <code class="code">DOCS_ORG_TEXT</code> to choose another
@@ -118,7 +121,7 @@ Commit the regenerated Info artifacts with their source changes.
 </p>
 </div>
 <div class="subsection-level-extent" id="Publish-the-browser-manual">
-<h4 class="subsection"><span>16.1.3 Publish the browser manual<a class="copiable-link" href="#Publish-the-browser-manual"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.1.3 Publish the browser manual<a class="copiable-link" href="#Publish-the-browser-manual"> &para;</a></span></h4>
 
 <p>Org on <code class="code">master</code> is the canonical maintained manual source.  GitHub Pages serves
 the generated static files committed on the separate <code class="code">gh-pages</code> branch; never

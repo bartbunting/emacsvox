@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EAT Feedback Preferences (Emacsvox User Manual)</title>
+
+<meta name="description" content="EAT Feedback Preferences (Emacsvox User Manual)">
+<meta name="keywords" content="EAT Feedback Preferences (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="EAT-Terminal-Access.html" rel="up" title="EAT Terminal Access">
+<link href="EAT-Shell-Integration.html" rel="next" title="EAT Shell Integration">
+<link href="EAT-Screen-Review.html" rel="prev" title="EAT Screen Review">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="EAT-Feedback-Preferences">
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Shell-Integration.html" accesskey="n" rel="next">Shell Integration And Command Status</a>, Previous: <a href="EAT-Screen-Review.html" accesskey="p" rel="prev">Explicit Review Commands</a>, Up: <a href="EAT-Terminal-Access.html" accesskey="u" rel="up">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Verbosity-And-Background-Monitoring"><span>12.5 Verbosity And Background Monitoring<a class="copiable-link" href="#Verbosity-And-Background-Monitoring"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-emacsvox_002deat_002dverbosity"></a>
+<a class="index-entry-id" id="index-emacsvox_002deat_002dmonitor_002dbackground_002doutput"></a>
+
+<p><code class="code">emacsvox-eat-verbosity</code> is buffer-local:
+</p>
+<dl class="table">
+<dt><code class="code">terse</code></dt>
+<dd><p>Retain routine output and metadata for explicit review without speaking
+them automatically. Actionable failures and content-free lifecycle feedback
+remain available.
+</p></dd>
+<dt><code class="code">normal</code></dt>
+<dd><p>The default: bounded command output, progress/status, completion, and
+actionable failures.
+</p></dd>
+<dt><code class="code">verbose</code></dt>
+<dd><p>Also give bounded title and directory changes and successful shell-command
+status when EAT shell integration supplies it.
+</p></dd>
+</dl>
+
+<p>Background monitoring starts off. With <kbd class="kbd">C-e q m</kbd> enabled, an unselected
+terminal gives only a rate-limited content-free cue. Returning reports the
+unread burst count, never the terminal&rsquo;s identity or output. Cursor movement,
+style changes, repaint, resize, and process-generation changes do not count.
+Unlike Shell/comint background reading, EAT monitoring neither requires
+foreground autospeak nor reads background content.
+</p>
+<ul class="mini-toc">
+<li><a href="#Adjust-and-save-focused-terminal-settings" accesskey="1">Adjust and save focused terminal settings</a></li>
+</ul>
+<div class="subsection-level-extent" id="Adjust-and-save-focused-terminal-settings">
+<h4 class="subsection"><span>12.5.1 Adjust and save focused terminal settings<a class="copiable-link" href="#Adjust-and-save-focused-terminal-settings"> &para;</a></span></h4>
+
+<p>Use <kbd class="kbd">C-e S</kbd> or <kbd class="kbd">C-e H j c</kbd> from EAT or its frozen review. <kbd class="kbd">C-e H j a</kbd> opens
+the integration chooser, and <kbd class="kbd">C-e H /</kbd> finds individual controls.
+</p>
+<ul class="itemize mark-bullet">
+<li><kbd class="kbd">s</kbd> toggles automatic foreground speech.
+</li><li><kbd class="kbd">b</kbd> toggles background cues and unread counts independently.
+</li><li><kbd class="kbd">p</kbd> chooses ready-prompt cue, text, or silence; recognition still requires
+shell integration and automatic delivery obeys foreground autospeak.
+</li><li><kbd class="kbd">d</kbd> chooses terse, normal, or verbose feedback.
+</li></ul>
+
+<p>Arrows announce values and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates a control. Choice lists start on
+the current value; browsing does not apply a choice, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies and returns,
+and <kbd class="kbd">q</kbd> cancels. Confirmations interrupt older main speech. Changes belong to
+the captured terminal, including embedded Eshell EAT; from frozen review they
+belong to its source terminal.
+</p>
+<p><kbd class="kbd">q</kbd> returns to the originating menu entry. From direct <kbd class="kbd">C-e S</kbd>, it closes
+the menu and announces the restored buffer and mode with a close cue. <kbd class="kbd">w</kbd>
+saves the four displayed values as defaults through Customize. Terminals with
+local overrides keep them; others inherit the new defaults. Adjustment alone
+does not save. <kbd class="kbd">A</kbd> opens advanced EAT settings and <kbd class="kbd">q</kbd> there returns to the
+focused menu.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="EAT-Shell-Integration.html">Shell Integration And Command Status</a>, Previous: <a href="EAT-Screen-Review.html">Explicit Review Commands</a>, Up: <a href="EAT-Terminal-Access.html">Speech Access To EAT</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

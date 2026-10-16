@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Emacs Key Notation (Emacsvox User Manual)</title>
+
+<meta name="description" content="Emacs Key Notation (Emacsvox User Manual)">
+<meta name="keywords" content="Emacs Key Notation (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Introduction.html" rel="up" title="Introduction">
+<link href="Where-To-Begin.html" rel="next" title="Where To Begin">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Emacs-Key-Notation">
+<div class="nav-panel">
+<p>
+Next: <a href="Where-To-Begin.html" accesskey="n" rel="next">Where To Begin</a>, Up: <a href="Introduction.html" accesskey="u" rel="up">Welcome to Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Read-the-key-instructions"><span>1.1 Read the key instructions<a class="copiable-link" href="#Read-the-key-instructions"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-key-notation"></a>
+<a class="index-entry-id" id="index-Control_002c-key-notation"></a>
+<a class="index-entry-id" id="index-Meta_002c-key-notation"></a>
+<a class="index-entry-id" id="index-uppercase-keys"></a>
+<a class="index-entry-id" id="index-prefix-keys-and-prefix-arguments"></a>
+<a class="index-entry-id" id="index-keyboard-shortcuts_002c-reading"></a>
+
+<p>Emacs manuals use a compact notation for keyboard instructions. Read this
+section before trying the commands below. You do not type the notation as
+text: it tells you which keys to press.
+</p>
+<ul class="mini-toc">
+<li><a href="#Hold-modifiers_003b-release-them-between-steps" accesskey="1">Hold modifiers; release them between steps</a></li>
+<li><a href="#Read-spaces-as-separate-steps" accesskey="2">Read spaces as separate steps</a></li>
+<li><a href="#Recognise-named-keys-and-command-names" accesskey="3">Recognise named keys and command names</a></li>
+<li><a href="#Cancel-an-unfinished-instruction" accesskey="4">Cancel an unfinished instruction</a></li>
+</ul>
+<div class="subsection-level-extent" id="Hold-modifiers_003b-release-them-between-steps">
+<h4 class="subsection"><span>1.1.1 Hold modifiers; release them between steps<a class="copiable-link" href="#Hold-modifiers_003b-release-them-between-steps"> &para;</a></span></h4>
+
+<p>A <em class="emph">modifier</em> is a key held while you press another key. <kbd class="kbd">C-</kbd> means Control,
+usually labelled Ctrl. For <kbd class="kbd">C-n</kbd>, hold Control, press lowercase n, then
+release both keys. The hyphen is part of the notation, not a key to press.
+</p>
+<p><kbd class="kbd">M-</kbd> means Meta, usually the Alt key. Some macOS configurations use Option
+or Command for Meta. For <kbd class="kbd">M-x</kbd>, hold the key your Emacs uses for Meta,
+press x, and release both. You can also press Escape, release it, then press
+x; do not hold Escape. This alternative is useful when Alt is intercepted.
+</p>
+<p><kbd class="kbd">S-</kbd> means Shift. For <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd>, hold Shift while pressing Tab.
+<kbd class="kbd">C-M-f</kbd> means hold Control and Meta together while pressing f. When several
+modifiers are joined by hyphens, hold them for that one keypress.
+</p>
+</div>
+<div class="subsection-level-extent" id="Read-spaces-as-separate-steps">
+<h4 class="subsection"><span>1.1.2 Read spaces as separate steps<a class="copiable-link" href="#Read-spaces-as-separate-steps"> &para;</a></span></h4>
+
+<p>Spaces between keys separate successive keypresses. They do not mean to
+press the space bar. For example, <kbd class="kbd">C-x C-f</kbd> means press Control-x, release
+it, then press Control-f. Keeping Control held for those two letters also
+works, because both steps require it.
+</p>
+<p>The distinction matters in <kbd class="kbd">C-e H</kbd>:
+</p>
+<ol class="enumerate">
+<li> Hold Control, press lowercase e, then release both keys.
+</li><li> Hold Shift, press h to type capital H, then release both keys.
+</li></ol>
+
+<p>Do not keep Control held for H. The capital H is a letter, not the name of
+another modifier. Lowercase h and uppercase H are different instructions.
+With the Emacsvox defaults, <kbd class="kbd">C-e h</kbd> repeats Help, while <kbd class="kbd">C-e H</kbd> opens
+settings. <kbd class="kbd">C-h</kbd> is different again: hold Control and press h; it begins
+Emacs&rsquo;s Help commands.
+</p>
+<p>A longer route such as <kbd class="kbd">C-e H v p</kbd> starts the same way. After capital H,
+press lowercase v, then lowercase p, with no modifier held. That route opens
+Voice Palettes when used from an ordinary working buffer. Letters offered
+inside a menu belong to that menu; typing p in a document normally inserts p.
+</p>
+<p>A <em class="emph">prefix key</em> starts an unfinished sequence. After pressing one, Emacs
+waits for the next key. You may pause between steps; the notation does not
+ask you to hold the whole sequence down at once.
+</p>
+</div>
+<div class="subsection-level-extent" id="Recognise-named-keys-and-command-names">
+<h4 class="subsection"><span>1.1.3 Recognise named keys and command names<a class="copiable-link" href="#Recognise-named-keys-and-command-names"> &para;</a></span></h4>
+
+<p><kbd class="kbd"><kbd class="key">RET</kbd></kbd> means Return or Enter, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> means Tab, <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> means the space bar,
+and <kbd class="kbd"><kbd class="key">ESC</kbd></kbd> means Escape. Press the named key, not the letters of its name.
+<kbd class="kbd">&lt;down&gt;</kbd> means the Down Arrow key; the angle brackets are not typed.
+&quot;Shift-left&quot; means hold Shift and press Left Arrow. Where this manual says
+&quot;left/right&quot;, it offers either arrow, not a slash to type.
+</p>
+<p><kbd class="kbd"><kbd class="key">DEL</kbd></kbd> in Emacs instructions normally means Backspace, not the separate
+forward-Delete key. Check live Help when a terminal reports those keys
+differently. Later guides also use <kbd class="kbd">M-&lt;</kbd>, <kbd class="kbd">M-&gt;</kbd> and <kbd class="kbd">M-%</kbd>: hold Meta while
+typing the less-than, greater-than or percent symbol. Add Shift if your
+keyboard needs it to produce that symbol; do not type the surrounding notation.
+</p>
+<p>Some instructions run a command by name. In
+<kbd class="kbd">M-x describe-mode <kbd class="key">RET</kbd></kbd>, press Meta-x, release it, type <code class="code">describe-mode</code>
+with its hyphen, then press Enter. The name is ordinary text entered at the
+command prompt, unlike the modifier notation. An instruction written
+<kbd class="kbd">M-x describe-mode</kbd> also means to finish the name with Enter.
+</p>
+</div>
+<div class="subsection-level-extent" id="Cancel-an-unfinished-instruction">
+<h4 class="subsection"><span>1.1.4 Cancel an unfinished instruction<a class="copiable-link" href="#Cancel-an-unfinished-instruction"> &para;</a></span></h4>
+
+<p><kbd class="kbd">C-g</kbd> means hold Control and press g. It normally cancels an unfinished
+key sequence or prompt. In Emacsvox&rsquo;s settings menus it goes back one menu;
+<kbd class="kbd">C-q</kbd> closes the menu sequence. These are cancellation and navigation
+commands, not undo: changes already applied remain in effect. An editor may
+ask what to do with unsaved work, so read that prompt before answering.
+</p>
+<p><kbd class="kbd">C-u</kbd> before another command supplies a <em class="emph">prefix argument</em>. This is different
+from an unfinished prefix key. Some commands repeat; others change their
+scope or behaviour. Do not add it unless the instructions call for it.
+</p>
+<p>Once speech works, <kbd class="kbd">C-h k</kbd> followed by a key sequence explains its binding
+in the current buffer without invoking that command. To check the menu
+entry, enter <kbd class="kbd">C-h k C-e H</kbd>: Control-h, lowercase k, Control-e, then capital H.
+Custom bindings and operating-system shortcuts can affect what reaches Emacs.
+For more detail, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/User-Input.html#User-Input">Kinds of user input</a>, <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Keys.html#Keys">Keys</a>, and
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Arguments.html#Arguments">Prefix arguments</a> in the GNU Emacs Manual.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Where-To-Begin.html">Where To Begin</a>, Up: <a href="Introduction.html">Welcome to Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

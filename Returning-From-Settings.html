@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Returning From Settings (Emacsvox User Manual)</title>
+
+<meta name="description" content="Returning From Settings (Emacsvox User Manual)">
+<meta name="keywords" content="Returning From Settings (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Home.html" rel="up" title="Aural Home">
+<link href="Finding-Settings-And-Actions.html" rel="next" title="Finding Settings And Actions">
+<link href="Previewing-An-Installed-Voice.html" rel="prev" title="Previewing An Installed Voice">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Returning-From-Settings">
+<div class="nav-panel">
+<p>
+Next: <a href="Finding-Settings-And-Actions.html" accesskey="n" rel="next">Find a setting or an action</a>, Previous: <a href="Previewing-An-Installed-Voice.html" accesskey="p" rel="prev">Listen without changing settings</a>, Up: <a href="Aural-Home.html" accesskey="u" rel="up">Getting Started With Settings Menus</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Choose-an-entry-point-and-preserve-your-place"><span>8.2.2 Choose an entry point and preserve your place<a class="copiable-link" href="#Choose-an-entry-point-and-preserve-your-place"> &para;</a></span></h4>
+
+<p>The Emacsvox menu, <kbd class="kbd">C-e H</kbd>, groups settings by task. <kbd class="kbd">C-e S</kbd>
+opens the current buffer&rsquo;s focused integration settings, or general buffer
+settings when no focused menu exists. <kbd class="kbd">C-e H .</kbd> always opens general buffer
+settings. A directly opened focused menu captures the buffer on entry; <kbd class="kbd">q</kbd>
+closes it and announces the restored buffer and mode with a close earcon.
+</p>
+<p>The menu captures the source item for contextual actions. In Feedback Details,
+<kbd class="kbd">q</kbd> returns to the menu with the same item and settings scope; another <kbd class="kbd">q</kbd>
+closes that menu. Opening Feedback Details directly keeps its usual return
+destination. A changed or deleted source item must be selected again by
+reopening the menu. If the source buffer has closed, the menu cannot resume.
+</p>
+<p>Editor and manager <kbd class="kbd">h</kbd> keys open the Transient settings menu with the original
+source item. Closing that menu returns to the editor without saving or
+discarding its draft.
+</p>
+<p>The menu continues to refer to the item captured when you opened it, even
+if you move point in the source buffer. Use <kbd class="kbd">C-e H b</kbd> to return to that
+position. To work on a different item, close the menu and reopen <kbd class="kbd">C-e H</kbd>
+from the new item in an ordinary buffer.
+</p>
+<p>The former Aural Home table remains available through <kbd class="kbd">M-x emacsvox-aural</kbd>
+for existing configurations. Its <kbd class="kbd">C-e H h</kbd> entry has been retired; the
+workflows below use the settings menus.
+</p>
+<p>Leave an editor using its own <kbd class="kbd">q</kbd>, <kbd class="kbd">h</kbd> or finish action before using menu
+keys. The same letter can mean something else while the editor still has
+focus. Returning does not reverse an applied setting, and keeping an unfinished
+draft does not save it. See <a class="ref" href="Saving-And-Startup.html">Choose what persists</a> before leaving work that
+you need in a later session.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Navigate-menus-and-read-Help"></a>Navigate menus and read Help
+
+
+<a class="anchor" id="settings_002dmenu_002dnavigation"></a>
+<p>The settings menus use Transient: while a menu is open, its keys act on that
+menu. Up/down selects an item; left/right changes sections and selects the
+destination&rsquo;s first available item. Section movement stops at the first and
+last section. Selecting an item speaks it without activating it or changing
+its value. <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd> or <kbd class="kbd">C-j</kbd> activates that item. A displayed shortcut
+invokes its action directly, without first moving the selection to it.
+</p>
+<p>An action can open another menu or editor, toggle a switch, or ask for a value.
+For a numeric control that offers adjustment, Shift-left/right decreases or
+increases the selected value; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> opens its exact-value prompt. The item&rsquo;s
+Help gives its step, range and scope. Plain arrows continue to navigate.
+Waveform, envelope and other choice lists use up/down to browse and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to
+choose; browsing alone does not apply a choice. When a minibuffer prompt asks
+for text or a number, use its ordinary editing and completion keys. Finish
+with <kbd class="kbd"><kbd class="key">RET</kbd></kbd> or cancel with <kbd class="kbd">C-g</kbd> to return to the menu.
+</p>
+<p>In Emacsvox&rsquo;s menus, <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> goes back one menu and <kbd class="kbd">C-q</kbd> closes the
+sequence. A child menu normally returns to the item that opened it. Changes
+already applied remain in effect; an editor&rsquo;s Back action states whether it
+retains or discards an unfinished draft. Other applications using Transient,
+including Magit, retain their own activation and quit keys. Use <kbd class="kbd">C-j</kbd> to
+activate a selected Magit item where <kbd class="kbd"><kbd class="key">RET</kbd></kbd> has another meaning.
+</p>
+<p>Menu feedback interrupts previous main-stream speech, including when you
+toggle scope or change a setting. Item announcements include the key without
+repeating the word &quot;shortcut&quot; or the section name. Under the default
+announcement mode, section names are spoken when you enter a section.
+Left/right selects its first selectable item and normally speaks it with the
+section name and position.
+</p>
+<p>For menu Help, press <kbd class="kbd">?</kbd> followed by a choice&rsquo;s key, or <kbd class="kbd">? ?</kbd> for help on
+the current menu. The overview is a read-only snapshot: ordinary text reading
+works there, but its displayed actions run only after you return to the menu.
+<kbd class="kbd">q</kbd> in that Help resumes the menu, including its parent menus and selection.
+Opening <kbd class="kbd">C-e H</kbd> announces a short reminder of Help and the <kbd class="kbd">n</kbd> navigation
+and speech settings. Moving between items does not repeat that reminder.
+</p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Review-an-item-without-changing-the-selection"></a>Review an item without changing the selection
+
+
+<a class="anchor" id="settings_002dmenu_002dreview"></a>
+<a class="index-entry-id" id="index-Transient-menu-review"></a>
+<a class="index-entry-id" id="index-menu-items_002c-reading-by-word-or-character"></a>
+
+<p>If an announcement is unclear, review the selected item&rsquo;s label, value,
+description and key without leaving the menu. The review position is separate
+from menu selection: <kbd class="kbd"><kbd class="key">RET</kbd></kbd> still activates the same item after you read one
+of its words or characters.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-c l</kbd></dt>
+<dd><p>Repeat the complete item and reset its word and character review.
+</p></dd>
+<dt><kbd class="kbd">M-f, M-b</kbd></dt>
+<dd><p>Read the next or previous word. Punctuation stays with its word.
+</p></dd>
+<dt><kbd class="kbd">C-f, C-b</kbd></dt>
+<dd><p>Read the next or previous character, including spaces.
+</p></dd>
+<dt><kbd class="kbd">C-c w, C-c c</kbd></dt>
+<dd><p>Repeat the current review word or character.
+</p></dd>
+<dt><kbd class="kbd">C-a</kbd></dt>
+<dd><p>Move before the item&rsquo;s first word and character, announcing &quot;Start of item&quot;.
+</p></dd>
+<dt><kbd class="kbd">C-e</kbd></dt>
+<dd><p>Move after its last word and character, announcing &quot;End of item&quot;.
+</p></dd>
+</dl>
+
+<p>The first word or character command starts at the item&rsquo;s beginning. To read
+backwards from its end, use <kbd class="kbd">C-e</kbd> followed by <kbd class="kbd">M-b</kbd> or <kbd class="kbd">C-b</kbd>. At either end,
+moving outwards repeats the boundary announcement; reversing direction reads
+the first or last element again. <kbd class="kbd">C-a C-f</kbd> therefore reads the first character,
+and <kbd class="kbd">C-e C-b</kbd> reads the last. Word and character review share a position.
+Selecting another item or changing its displayed value starts a fresh review.
+</p>
+<p>Character review follows your normal capitalisation presentation. If delayed
+phonetics are enabled in <a data-manual="emacsvox" href="./Reading-Scope-And-Punctuation.html#Reading-Scope-And-Punctuation">Typing and interaction</a>, pausing after a character also
+speaks its phonetic description. Further input or speech cancels that pending
+description. Review interrupts obsolete main speech without changing a setting.
+</p>
+<p>These defaults apply to Transient menus, including Magit, only where the menu
+has no binding of its own. The menu overview lists the available review keys.
+While reviewing a menu, <kbd class="kbd">C-e</kbd> means the end of the item: it is not the ordinary
+Emacsvox speech prefix. Use <kbd class="kbd">C-c l</kbd>, <kbd class="kbd">C-c w</kbd> and <kbd class="kbd">C-c c</kbd> for these menu repeats.
+After closing the menu, ordinary buffer bindings apply again.
+</p>
+</li><li> <a class="anchor" id="Choose-navigation-and-announcement-preferences"></a>Choose navigation and announcement preferences
+
+
+<p>Press <kbd class="kbd">C-e H n</kbd> for Menu navigation, also available at <kbd class="kbd">C-e H s n</kbd>.
+Choose <kbd class="kbd">c</kbd> for Continuous, which
+crosses sections and wraps around the whole menu; <kbd class="kbd">w</kbd> to wrap within the
+current section; or <kbd class="kbd">s</kbd> to stop at section edges with a boundary earcon.
+Left/right moves between sections in every style. Changes apply immediately
+to all Transient menus, independently of the current-buffer settings scope.
+Wrap within section is the default.
+</p>
+<p>In the Presentation section, choose <kbd class="kbd">i</kbd> for Item first or <kbd class="kbd">n</kbd> for Section
+first. Section first is the default: on changing sections it speaks the section
+name and position before the item. Item first reverses that order. Movement
+within a section speaks the item without repeating its section. Previously
+saved preferences remain in effect.
+</p>
+<p>Choose <kbd class="kbd">m</kbd> for <em class="emph">By movement: sections or items</em>. Left/right speaks only the
+destination section and its position. Up/down speaks only the item, key, and
+relevant value, even when Continuous navigation crosses a section boundary.
+Section-change and wrapping earcons remain the same. This option applies to
+all three navigation styles and all Transient menus, including Magit; it does
+not change the navigation style.
+</p>
+<p>Section arrows still select the first item. In Emacsvox menus, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> therefore
+activates that item even though its name has not been spoken, and the next
+Down advances to the second item. Press <kbd class="kbd">C-c l</kbd> to hear that first item
+without moving, then decide whether to activate it. Magit&rsquo;s existing activation
+bindings remain unchanged.
+</p>
+<p>Press <kbd class="kbd">v</kbd> to toggle Detailed descriptions. When enabled, menu items retain
+their labels and values and add a short command explanation. This applies
+globally, including Magit; commands without documentation keep their labels,
+and Transient&rsquo;s native infix controls keep their usual descriptions. Detailed
+descriptions are on by default. Value adjustments still give brief feedback.
+Press <kbd class="kbd">S</kbd> to save the navigation style, presentation order, and descriptions
+preference through Customize.
+</p></li></ol>
+</li></ol>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Finding-Settings-And-Actions.html">Find a setting or an action</a>, Previous: <a href="Previewing-An-Installed-Voice.html">Listen without changing settings</a>, Up: <a href="Aural-Home.html">Getting Started With Settings Menus</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

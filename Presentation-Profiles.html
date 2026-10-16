@@ -37,50 +37,43 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Presentation-Troubleshooting.html" accesskey="n" rel="next">Troubleshooting And Recovery</a>, Previous: <a href="Aural-Speech-Output.html" accesskey="p" rel="prev">Speech Output And Notifications</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Save_002c-Switch_002c-And-Share-Your-Setup"><span>6.11 Save, Switch, And Share Your Setup<a class="copiable-link" href="#Save_002c-Switch_002c-And-Share-Your-Setup"> &para;</a></span></h3>
+<h3 class="section" id="Save_002c-Switch_002c-And-Share-Your-Setup"><span>8.12 Save, Switch, And Share Your Setup<a class="copiable-link" href="#Save_002c-Switch_002c-And-Share-Your-Setup"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-presentation-profiles"></a>
 
-<p>A presentation profile records a coordinated setup: enabled Presentation
-Options and their order, the sound pack, the voice palette, and portable
-spatial settings.  This is useful for switching between focused work and
-leisure reading, between quiet and information-rich feedback, or between audio
-environments.
+<p>A Presentation Profile records enabled options and their order, sound pack,
+voice palette, and portable spatial settings. It switches a coordinated setup
+for focused work, leisure reading, or different audio environments. It is not
+an Emacs startup configuration profile or a backup of every setting.
 </p>
-<p>To save and use a profile:
+<p><kbd class="kbd">C-e H p p</kbd> opens profiles. The parent <kbd class="kbd">C-e H p</kbd> also links palettes and
+unfinished drafts; each editor retains its own Save/Apply actions. Palette
+<kbd class="kbd">w</kbd> exports portable voices, <kbd class="kbd">W</kbd> backs up full local choices, and <kbd class="kbd">i</kbd> imports
+an independent palette without activation. See
+<a data-manual="emacsvox" href="./Sharing-Voice-Palettes.html#Sharing-Voice-Palettes">Export, Back Up, and Import Palettes</a>.
 </p>
 <ol class="enumerate">
-<li> Configure the live options, sound pack, voice palette, and spatial choices
-you want.
-
-</li><li> Open <em class="emph">Presentation Profiles</em> from Aural Home or press <kbd class="kbd">P</kbd> there.
-
-</li><li> Press <kbd class="kbd">N</kbd> to save the current live configuration as a new named
-profile.
-
-</li><li> Later, select that profile and press <kbd class="kbd">a</kbd> to apply
-its saved values.
-
-</li><li> If you deliberately change the live configuration and want the selected
-profile to adopt it, press <kbd class="kbd">w</kbd>.  If you instead want to discard the
-live differences, press <kbd class="kbd">a</kbd> to restore the saved profile; Emacsvox
-asks before replacing the diverged values.
+<li> Configure the live options, sound pack, voice palette, and spatial choices.
+</li><li> Open <kbd class="kbd">C-e H p p</kbd> and inspect the fields to be captured.
+</li><li> <kbd class="kbd">N</kbd> saves the live selection as a new named profile.
+</li><li> Later, <kbd class="kbd">a</kbd> applies the selected profile&rsquo;s saved values.
+</li><li> To update it from deliberately changed live settings, use <kbd class="kbd">w</kbd>. To discard
+live differences instead, apply with <kbd class="kbd">a</kbd> and review confirmation.
 </li></ol>
 
-<p>Only one profile identity is selected.  <em class="emph">Active</em> means the selected profile&rsquo;s
-saved values match the live configuration.  <em class="emph">Diverged</em> means the same profile
-is still selected but the live values differ; it is a status, not an unsaved
-editor warning.
+<p>Only one profile is selected at a time. <em class="emph">Active</em> means its saved values match
+the live configuration. <em class="emph">Diverged</em> means it is still selected, but one or more
+live values now differ from its saved values. That status is not a warning
+about an unsaved editor draft.
 </p>
-<p>Profiles refer to palettes and sound packs by name; they do not make private
-copies of their contents. Editing a palette affects every profile selecting
-it. A profile is therefore a convenient selection of settings, not a backup.
-Profiles do not capture engine policy, speech rate, or notification output.
+<p>Applying a profile also saves its selection for future sessions. This differs
+from activating an individual palette, which selects it only for this session.
 </p>
-<p>Profiles do not copy presentation rules. Edit rules through Presentation
-Options or <em class="emph">Your feedback rules</em>. They also do not capture buffer-local Voice Lock state or
-current-buffer rules, because those belong to an individual buffer rather than
-a global setup.
+<p>Profiles reference palettes and sound packs by name, not private copies.
+Editing a shared palette affects every profile using it. Profiles exclude
+engine policy, speech rate, notification output, rules themselves, buffer-local
+Voice Lock, and current-buffer rules. Those remain in their owning settings
+or rule stores.
 </p>
 
 <ul class="mini-toc">

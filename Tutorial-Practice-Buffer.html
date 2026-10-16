@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Practice Buffer (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Practice Buffer (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Practice Buffer (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Reading.html" rel="next" title="Tutorial Reading">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Practice-Buffer">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Reading.html" accesskey="n" rel="next">Lesson 1: read and locate point</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Prepare-a-practice-buffer"><span>4.1 Prepare a practice buffer<a class="copiable-link" href="#Prepare-a-practice-buffer"> &para;</a></span></h3>
+
+<p>A buffer is Emacs&rsquo;s working copy of text. It need not have a file behind it.
+We will use a new buffer so that editing, undo, and temporary settings cannot
+change the supplied example or an existing document.
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-x b</kbd>, enter <code class="code">evox-tutorial</code>, and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. If that name already
+belongs to work you want to keep, use an unused name such as
+<code class="code">evox-tutorial-2</code> and substitute it throughout these lessons.
+</li><li> Run <kbd class="kbd">M-x text-mode <kbd class="key">RET</kbd></kbd>. This starts with ordinary text rather than Org&rsquo;s
+structural commands. Press <kbd class="kbd">C-e m</kbd> to hear the buffer and mode.
+</li><li> Insert the practice text below. In a source checkout, you can use
+<kbd class="kbd">C-x i</kbd> and select <code class="code">docs/manual/examples/tutorial-practice.org</code> relative
+to that checkout. This inserts a copy; it does not visit or modify that
+file. Otherwise copy or type the displayed text into the empty buffer.
+</li><li> Press <kbd class="kbd">M-&lt;</kbd> to move to the beginning. <kbd class="kbd">C-e l</kbd> reads the current line.
+It should contain the heading <code class="code">* Practice note</code>.
+</li></ol>
+
+<p>The example is included here so you can use an installed Info or HTML manual
+without a source checkout. Preserve its asterisks, brackets, pipes, and line
+breaks. Those characters become useful in the structure lesson. The code at
+the end is for reading, not evaluation; do not run it.
+</p>
+<div class="example">
+<pre class="example-preformatted">* Practice note
+The green notebook is on the desk.
+This sentence is ready.
+Check (A+B), then C.
+
+** Packing list
+- Notebook
+- Headphones
+- Cable
+
+** Journey plan
+| Day     | Task | Status  |
+|---------+------+---------|
+| Monday  | Read | Ready   |
+| Tuesday | Edit | Planned |
+
+** Reference
+[[*Packing list][Return to the packing list]]
+
+** Code to read
+#+begin_src emacs-lisp
+(+ 2 3)
+#+end_src
+</pre></div>
+
+<p>Keep the manual and the practice buffer available. <kbd class="kbd">C-x b</kbd> followed by your
+practice buffer&rsquo;s name returns to your work without closing the manual.
+Finish any active minibuffer prompt first; <kbd class="kbd">C-g</kbd> cancels an ordinary unfinished
+Emacs command. In a settings menu or an editor, use the return procedure
+specified in the lesson instead of assuming that every quit key is identical.
+</p>
+<p>If you need a fresh copy, leave menus and editors first, then use <kbd class="kbd">C-x k</kbd>
+while in the disposable practice buffer. Check the buffer name and discard
+only that practice text if asked. Create a new buffer and insert the example
+again. Do not use this reset procedure on other work.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Reading.html">Lesson 1: read and locate point</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Filenames And Example Commands (Emacsvox User Manual)</title>
+
+<meta name="description" content="Filenames And Example Commands (Emacsvox User Manual)">
+<meta name="keywords" content="Filenames And Example Commands (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Answering-Emacs-Prompts.html" rel="up" title="Answering Emacs Prompts">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Filenames-And-Example-Commands">
+<div class="nav-panel">
+<p>
+Up: <a href="Answering-Emacs-Prompts.html" accesskey="u" rel="up">Answer a prompt and return to your work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Interpret-filenames-and-examples"><span>2.1.1 Interpret filenames and examples<a class="copiable-link" href="#Interpret-filenames-and-examples"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-filenames_002c-entering"></a>
+<a class="index-entry-id" id="index-paths_002c-examples"></a>
+<a class="index-entry-id" id="index-shell-commands_002c-where-to-run"></a>
+<a class="index-entry-id" id="index-WSL_002c-document-paths"></a>
+
+<p>A <em class="emph">path</em> identifies a file&rsquo;s location as well as its name. A file prompt often
+starts with a directory already filled in. Append a filename to use that
+directory, or replace the editable answer with a complete path. In an ordinary
+file minibuffer, <kbd class="kbd">C-a C-k</kbd> removes the current editable answer: Control-a goes
+to its beginning and Control-k removes the text that follows. This edits the
+answer, not a file. Then type the intended path and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
+</p>
+<p>Like other kill commands, <kbd class="kbd">C-k</kbd> also puts the removed text in the kill ring.
+If you intended to paste a previously copied path, clearing the prompt this
+way can change the next paste. Type the intended path here, or use
+<a data-manual="emacsvox" href="./Choosing-Earlier-Copied-Text.html#Choosing-Earlier-Copied-Text">Choose text copied earlier</a> to retrieve the right entry.
+</p>
+<p>The examples use <code class="code">~/</code> for the home directory understood by the running Emacs.
+For example, <code class="code">~/evox-notes.org</code> names <code class="code">evox-notes.org</code> in that home directory.
+In WSL this normally means the Linux home, not Windows Documents. A Windows
+C-drive path is normally reached through <code class="code">/mnt/c/</code> in WSL; native Windows Emacs
+uses its own Windows paths. Use a directory that exists and is writable in the
+environment running Emacs. A speech server running on another host does not
+change where ordinary Emacs document files are stored.
+</p>
+<p>A relative name is resolved against the directory in the prompt, which may
+change with the selected buffer. Do not assume it means the repository root
+or the folder used in an earlier task. When an instruction says &quot;from the
+checkout&quot;, it explicitly means that source directory. Replace placeholders
+such as <code class="code">/path/to/document.txt</code> with real names; do not create those directories
+merely to copy the example literally. In Emacs file prompts, type spaces in
+names normally rather than adding shell quotes around the whole path.
+</p>
+<p>Keyboard sequences invoke Emacs commands. A shell example belongs at a shell
+or terminal prompt in the environment named by the instructions, not after
+<kbd class="kbd">M-x</kbd>. Lisp configuration belongs in the specified Emacs configuration file;
+it is not ordinary document text or a shell command. A displayed command&rsquo;s
+output is something to check, not another command to enter. Read the sentence
+introducing each example to establish which of these contexts it uses.
+</p>
+<p>When practising, choose unused names. If a proposed name already contains work,
+cancel and substitute another name consistently. An overwrite warning is not a
+routine confirmation to accept. Opening, copying, saving and deleting have
+different effects; the following task guides explain the effect before the step.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Up: <a href="Answering-Emacs-Prompts.html">Answer a prompt and return to your work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

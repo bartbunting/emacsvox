@@ -22,7 +22,6 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
-ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -37,24 +36,22 @@ ul.mark-bullet {list-style-type: disc}
 Previous: <a href="Reviewing-The-Term-Screen.html" accesskey="p" rel="prev">Reviewing The Term Screen</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Help-And-Recovery"><span>12.5 Help And Recovery<a class="copiable-link" href="#Help-And-Recovery"> &para;</a></span></h3>
+<h3 class="section" id="Help-And-Recovery"><span>13.5 Help And Recovery<a class="copiable-link" href="#Help-And-Recovery"> &para;</a></span></h3>
 
-<ul class="itemize mark-bullet">
-<li>If terminal output is visible but silent, press <kbd class="kbd">C-t C-q</kbd> once and retry.
-Automatic speech applies only while the Term buffer is displayed.
-
-</li><li>If an Emacs command is being sent to the child program, remember that you are
-probably in character mode.  Use <kbd class="kbd">C-c C-h m</kbd>, <kbd class="kbd">C-c M-x</kbd>, or switch to
-line mode with <kbd class="kbd">C-c C-j</kbd>.
-
-</li><li>If review has drifted away from live output, press <kbd class="kbd">C-t .</kbd>.  If dedicated
-review mode controls the keys, press <kbd class="kbd">q</kbd> first to return to character mode.
-
-</li><li>If a full-screen application redraws in a way that Term cannot present
-reliably, retry it in <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a> and use EAT&rsquo;s explicit review
-commands.
-</li></ul>
-
+<p>For visible but silent output, inspect <code class="code">emacsvox-eterm-autospeak</code> in the
+current buffer and ensure that buffer is displayed. Toggle with <kbd class="kbd">C-t C-q</kbd>
+when necessary, then test new output. An automatic-speech setting does not
+prove that the program has produced a new readable screen change.
+</p>
+<p>If an Emacs command goes to the child, check the input mode. In character
+mode use <kbd class="kbd">C-c C-h m</kbd>, <kbd class="kbd">C-c M-x</kbd>, or switch to line mode with <kbd class="kbd">C-c C-j</kbd>.
+If dedicated review owns the keys, <kbd class="kbd">q</kbd> returns to character mode first.
+</p>
+<p>When review has moved away from current output, <kbd class="kbd">C-t .</kbd> resynchronises the
+pointer. Leave dedicated review with <kbd class="kbd">q</kbd> before using the normal prefix.
+For a full-screen redraw that Term cannot present reliably, try the workflow
+in <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a> and use that emulator&rsquo;s explicit review commands.
+</p>
 </div>
 
 

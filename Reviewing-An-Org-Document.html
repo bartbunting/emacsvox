@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reviewing An Org Document (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reviewing An Org Document (Emacsvox User Manual)">
+<meta name="keywords" content="Reviewing An Org Document (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Document-Authoring.html" rel="up" title="Document Authoring">
+<link href="Writing-An-Org-Document.html" rel="prev" title="Writing An Org Document">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Reviewing-An-Org-Document">
+<div class="nav-panel">
+<p>
+Previous: <a href="Writing-An-Org-Document.html" accesskey="p" rel="prev">Write a note with headings</a>, Up: <a href="Document-Authoring.html" accesskey="u" rel="up">Document Authoring</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Review-structure-and-correct-text"><span>9.2.2 Review structure and correct text<a class="copiable-link" href="#Review-structure-and-correct-text"> &para;</a></span></h4>
+
+<p>Start in the Org document, not in an Info example. Use <kbd class="kbd">C-e m</kbd> to check the
+selected buffer. If the note was reopened with content folded, first press
+<kbd class="kbd">M-&lt;</kbd>, then <kbd class="kbd">C-u C-u C-u <kbd class="key">TAB</kbd></kbd>: Control-u three times, followed by Tab.
+This shows all content without rewriting it. See
+<a data-manual="org" href="https://www.gnu.org/software/emacs/manual/html_node/org/Global-and-local-cycling.html#Global-and-local-cycling">Global and local cycling</a> in the Org manual.
+</p>
+<p>At the first heading, <kbd class="kbd">C-c C-n</kbd> moves to the next visible heading and
+<kbd class="kbd">C-c C-p</kbd> to the previous one. In the example, these let you review Questions
+and Decisions without reading every paragraph. Emacsvox announces the heading
+you reach. Use <kbd class="kbd">C-e l</kbd> to repeat it and <kbd class="kbd">C-n</kbd> to begin reading its body.
+</p>
+<p>On a heading, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> cycles that subtree&rsquo;s visibility. Listen to the state
+feedback before moving into it. This is different from Tab in a table or at a
+completion prompt. The show-all sequence above provides a known starting view
+if the current folds become confusing. <a data-manual="org" href="https://www.gnu.org/software/emacs/manual/html_node/org/Motion.html#Motion">Motion</a> documents the other heading
+commands, while <a class="ref" href="Browsing-Structure.html">Browsing Structure</a> explains the speech detail for Org headings.
+</p>
+<p>For a focused text correction in the example:
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">M-&lt;</kbd>, then <kbd class="kbd">C-s</kbd>, type <code class="code">ready</code> and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to finish the
+search. Search moves point; the subsequent typing will occur there, not
+in a separate search box. Press <kbd class="kbd">C-e l</kbd> to confirm the sentence.
+</li><li> Point is immediately after <code class="code">ready</code>. Press <kbd class="kbd">M-b</kbd> to move to its beginning,
+then <kbd class="kbd">M-d</kbd> to remove that word. Type <code class="code">prepared</code>. The surrounding text
+should now read <code class="code">The draft is prepared for review.</code>.
+</li><li> Read the whole line again before saving. If the edit is wrong, press
+<kbd class="kbd">C-g</kbd> in the document to deactivate any selection, then run
+<kbd class="kbd">M-x undo-only <kbd class="key">RET</kbd></kbd> and inspect the line. Repeat <code class="code">undo-only</code> only as far
+as needed; removing the old word and inserting the new one can be separate
+steps. Unlike ordinary <kbd class="kbd">C-/</kbd>, <code class="code">undo-only</code> does not redo an earlier undo
+merely because you paused to read between corrections. See
+<a data-manual="emacsvox" href="./Recovering-Text-Edits.html#Recovering-Text-Edits">Recover a text edit before saving</a> for the full recovery procedure.
+</li><li> Press <kbd class="kbd">C-x C-s</kbd> only when the text is correct. Switch to another buffer
+and back with <kbd class="kbd">C-x b</kbd> to continue working; leaving the note does not
+require closing its buffer.
+</li></ol>
+
+<p>If a search fails, check the text and the starting position. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> ends the
+search at its current position; <kbd class="kbd">C-g</kbd> can remove a failing suffix before
+aborting the search, so listen for whether it is still active. Finish or cancel
+search before issuing editing commands. Keep the desired note selected when
+saving: a browser page, Help buffer and document do not share Save semantics.
+</p>
+<p>An edit made after a successful save needs another save to replace that file&rsquo;s
+contents. Undo also changes the buffer; it does not by itself restore the file
+on disk. For a separate review version, use <a class="ref" href="Saving-A-Working-Copy.html">Save a separate working copy</a> rather
+than renaming the buffer and assuming that changed its destination.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Writing-An-Org-Document.html">Write a note with headings</a>, Up: <a href="Document-Authoring.html">Document Authoring</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

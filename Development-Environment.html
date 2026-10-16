@@ -21,6 +21,8 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -36,40 +38,77 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Desktop-Management.html" accesskey="n" rel="next">Desktop Management</a>, Previous: <a href="Editing-Code.html" accesskey="p" rel="prev">Editing Code</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Development-Environment-1"><span>8.7 Development Environment<a class="copiable-link" href="#Development-Environment-1"> &para;</a></span></h3>
+<h3 class="section" id="Development-Environment-1"><span>9.8 Development Environment<a class="copiable-link" href="#Development-Environment-1"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-development-tools"></a>
 
-<p>Emacs can combine compilation, diagnostics, project navigation, version
-control, debuggers, and language servers into a development environment.
-Emacsvox supplies speech feedback to many of those components, but their own
-manuals remain authoritative for setup and operation.  Verify each component
-individually with its mode help before combining it into a larger workflow.
+<p>Compilation, diagnostics, project navigation, version control, debuggers, and
+language servers can share the Emacs workspace. Configure each through its own
+manual and verify its operation before combining it with other components.
+Emacsvox supplies speech to many of them; their underlying operations remain
+owned by those tools. <a class="ref" href="Agent-Shell.html">Agent Shell</a> provides the separate guide to AI-agent
+sessions and their permission, feedback, and review controls.
 </p>
 <ul class="mini-toc">
 <li><a href="#Magit" accesskey="1">Magit</a></li>
 </ul>
 <div class="subsection-level-extent" id="Magit">
-<h4 class="subsection"><span>8.7.1 Magit<a class="copiable-link" href="#Magit"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.8.1 Magit<a class="copiable-link" href="#Magit"> &para;</a></span></h4>
 
-<p>Magit navigation speaks the reached section or line.  Empty and whitespace-only
-lines use the normal line tones.  Commit hashes are silent by default; changing
-the voice assigned to the <code class="code">magit-hash</code> face changes this consistently for both
-navigation and explicit reading.  Moving the section highlight preserves that
+<p>Magit navigation speaks the section or line you reach. Empty and
+whitespace-only lines use the normal line tones. Commit hashes are silent by
+default; changing the voice assigned to <code class="code">magit-hash</code> affects navigation and
+explicit reading consistently. Moving the section highlight preserves that
 choice.
 </p>
-<p>Staging and unstaging report their outcome after Git finishes, including
-failures.  Branch checkout, branch and remote renaming, remote removal, and
-stash creation also announce their results.  Repository-list fetching reports
-partial failures when some repositories fail.  Background process completion
-uses the notification lane, while entering status and navigating use the main
-speech lane.
+<p>After successful staging or unstaging in a Magit view, speech reads where point
+lands after the refresh. Failures remain explicit. Staging and unstaging from
+an ordinary file buffer still confirm their outcome. Branch checkout, branch
+and remote renaming, remote removal, and stash creation announce results.
+Repository-list fetching reports partial failures. Background completion uses
+the notification stream; entering status and navigating use the main stream.
 </p>
-<p>Section visibility commands describe the resulting collapsed, expanded, or
-partly expanded state.  Copying a heading without a value says there is nothing
-to copy; it does not repeat an older kill-ring entry as a new copy.
+<p>Visibility commands describe collapsed, expanded, or partly expanded sections.
+Copying a heading without a value reports that there is nothing to copy rather
+than presenting an old kill-ring entry as a new copy.
+</p>
+<a class="index-entry-id" id="index-Magit"></a>
+<a class="index-entry-id" id="index-Transient-menus"></a>
+
+<p>Magit uses Transient menus for Push, Fetch, Commit, Branch, and other actions.
+Opening one speaks a short introduction and navigation guidance. Its automatic
+shortcut list remains visible without being read on the notification stream.
+</p>
+<p>Up/down browses items and left/right moves between sections. The shared
+navigation preferences apply to Magit as well as Emacsvox menus: wrapping
+within a section is the default, and continuous navigation or stopping at
+section edges can be selected. Announcement order can be item first, section
+first, or dependent on the movement. Detailed command descriptions are enabled
+by default; value adjustments still give brief feedback. Configure these
+choices through <kbd class="kbd">C-e H s n</kbd>, as described in
+<a data-manual="emacsvox" href="./Aural-Home.html#Aural-Home">Getting started with settings menus</a>.
+</p>
+<p>An item announcement identifies its key, relevant value, and description;
+capital keys are named explicitly. Section announcements include the heading
+and position according to the selected policy. Do not expect the same
+section-name repetition after changing that policy.
+</p>
+<p>Use <kbd class="kbd">C-j</kbd> or <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd> to activate a selected Magit item, or type its shortcut.
+<kbd class="kbd">?</kbd> followed by the shortcut opens Help. <kbd class="kbd">C-g</kbd> closes the current menu or
+leaves its help mode. Unlike Emacsvox&rsquo;s own settings menus, <kbd class="kbd">q</kbd> is not a
+universal quit key in Transient applications. An unavailable key gives brief
+recovery guidance on the main stream.
+</p>
+<p>Browsing only selects an item. Activating an action can perform a Git
+operation, while activating a switch changes an argument for the next action.
+Listen to the description before activation.
 </p>
 </div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Desktop-Management.html">Desktop Management</a>, Previous: <a href="Editing-Code.html">Editing Code</a>, Up: <a href="Emacs-Packages.html">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

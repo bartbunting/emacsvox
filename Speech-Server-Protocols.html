@@ -39,7 +39,7 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Integration-Maintenance.html" accesskey="n" rel="next">Integration Maintenance</a>, Previous: <a href="Documentation-Maintenance.html" accesskey="p" rel="prev">Documentation Maintenance</a>, Up: <a href="Developer-Guide.html" accesskey="u" rel="up">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Speech-Server-Protocols-1"><span>16.2 Speech Server Protocols<a class="copiable-link" href="#Speech-Server-Protocols-1"> &para;</a></span></h3>
+<h3 class="section" id="Speech-Server-Protocols-1"><span>20.2 Speech Server Protocols<a class="copiable-link" href="#Speech-Server-Protocols-1"> &para;</a></span></h3>
 
 <p>Emacsvox produces spoken output by communicating with one of several speech
 servers.  Two protocol families coexist:
@@ -67,7 +67,7 @@ the historical Emacspeak article at
 <li><a href="#Legacy-Line-Protocol" accesskey="2">Legacy Line Protocol</a></li>
 </ul>
 <div class="subsection-level-extent" id="Omnivox-Structured-Protocol">
-<h4 class="subsection"><span>16.2.1 Omnivox Structured Protocol<a class="copiable-link" href="#Omnivox-Structured-Protocol"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.2.1 Omnivox Structured Protocol<a class="copiable-link" href="#Omnivox-Structured-Protocol"> &para;</a></span></h4>
 
 <p>At process startup the Emacsvox adapter requests capabilities and live engine
 inventory.  Features are used only after negotiation; an older server
@@ -86,6 +86,28 @@ loss of presentation precision.
 <p>Guarantee-bearing operations do not invent success on a legacy server.
 Playback completion, source markers, and domain-scoped replacement remain
 unavailable when the selected server cannot acknowledge them truthfully.
+</p>
+<p>Ordinary control requests belong to their speech process. They have a
+30-second response deadline and an admission limit of 64 outstanding requests
+per process. Background inventory refreshes share one pending request per
+process. Capability negotiation uses <code class="code">omnivox-control-negotiation-timeout</code>.
+Previews, parameter queries, palette application, and synchronous library
+operations retain their own deadlines and cancellation rules.
+</p>
+<p>The client detaches a request and cancels its timer before invoking its
+callback. A response deadline or process exit produces a local error response
+with the original request ID, <code class="code">:origin client</code>, and code <code class="code">timeout</code> or
+<code class="code">process_closed</code>. This does not prove that a submitted server operation was
+cancelled or had no effect. Late replies cannot change the completed outcome.
+Ordinary navigation Stop leaves metadata requests pending; each speech lane
+owns its requests independently.
+</p>
+<p>When adding an ordinary control caller, use <code class="code">omnivox--send-control-request</code>.
+Its callback may run during the send. Use the internal <code class="code">managed</code> timeout only
+when the enclosing operation already enforces a deadline and calls
+<code class="code">omnivox--take-control-request</code> on every cancellation or nonlocal exit. Private
+preview operations keep their existing playback ownership and reserved
+callbacks. No control wire version changes for this client lifecycle handling.
 </p>
 <p>A complete timeline contains its delivery policy, replacement domain,
 generation, dispatch ID, speech spans, and positioned actions.  Small
@@ -135,7 +157,7 @@ annotations; explicit original playback uses this observed snapshot.
 
 </div>
 <div class="subsection-level-extent" id="Legacy-Line-Protocol">
-<h4 class="subsection"><span>16.2.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.2.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h4>
 
 <p>The TTS server reads commands from standard input.
 Script <strong class="strong">speech-server</strong> can be used to cause a TTS
@@ -157,14 +179,11 @@ be classified as follows:
 <pre class="example-preformatted">commandWord {arguments}
 </pre></div>
 
-<p>The braces are optional if the command argument contains no white
-space.  The speech server maintains a <strong class="strong">current state</strong> that
-determines various characteristics of spoken output such as speech
-rate, punctuations mode etc. (see set of commands that manipulate
-speech state for complete list).  The client application
-<strong class="strong">queues</strong> The text and non-speech audio output to be produced
-before asking the server to <strong class="strong">dispatch</strong> the set of queued
-requests, i.e. start producing output.
+<p>The braces are optional when the command argument contains no whitespace.
+The speech server&rsquo;s current state determines speech rate, punctuation mode
+and other output characteristics. The state-setting commands below describe
+those controls. The client queues text and non-speech audio, then asks the
+server to dispatch the queued requests and begin producing output.
 </p>
 <p>Once the server has been asked to produce output, it removes items
 from the front of the queue, sends the requisite commands to the
@@ -359,10 +378,9 @@ value is typically engine specific.
 <pre class="example-preformatted">tts_set_character_scale factor
 </pre></div>
 
-<p>Queues changing the scale factor.  Scale factor applied to speech rate
-when speaking individual characters.Thus, setting speech rate to 500
-and character scale to 1.2 will cause command <strong class="strong">l</strong> to use a
-speech rate of <strong class="strong">500 * 1.2 = 600</strong>.
+<p>Queues a change to the scale factor used for individual-character speech.
+For a speech rate of 500 and a character scale of 1.2, command <code class="code">l</code> uses a
+rate of 600: the base rate multiplied by the character scale.
 </p>
 <div class="example">
 <pre class="example-preformatted">tts_split_caps flag

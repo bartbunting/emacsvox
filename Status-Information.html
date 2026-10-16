@@ -36,12 +36,10 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Voice_002dlock.html" accesskey="p" rel="prev">Hear Structure With Voice Lock</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Find-Out-Where-You-Are"><span>3.8 Find Out Where You Are<a class="copiable-link" href="#Find-Out-Where-You-Are"> &para;</a></span></h3>
+<h3 class="section" id="Find-Out-Where-You-Are"><span>5.10 Find Out Where You Are<a class="copiable-link" href="#Find-Out-Where-You-Are"> &para;</a></span></h3>
 
-<p>Use these commands when you need context without moving point.  They repeat the
-last message, identify the current buffer and modes, or report your position.
-Less common status commands are listed in the
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <em class="emph">Emacsvox Reference Manual</em>.
+<p>These commands report context without moving point: the last message, current
+buffer/modes, or position.
 </p>
 <dl class="table">
 <dt><a id="index-emacsvox_002dspeak_002dmessage_002dagain"></a><span><kbd class="kbd">C-e a</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dmessage_002dagain"> &para;</a></span></dt>
@@ -50,7 +48,8 @@ Less common status commands are listed in the
 
 <p><code class="code">emacsvox-speak-message-again</code>
 </p>
-<p>Repeat the last Emacs message.
+<p>Repeat the last Emacs message and copy it to the kill ring. This can change
+what the next yank inserts.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dmode_002dline"></a><span><kbd class="kbd">C-e m</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dmode_002dline"> &para;</a></span></dt>
 <dd>
@@ -58,7 +57,7 @@ Less common status commands are listed in the
 
 <p><code class="code">emacsvox-speak-mode-line</code>
 </p>
-<p>Speak the mode line, including the buffer name and major mode.
+<p>Speak the mode line, including buffer name and major mode.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dbuffer_002dfilename"></a><span><kbd class="kbd">C-e f</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dbuffer_002dfilename"> &para;</a></span></dt>
 <dd>
@@ -66,8 +65,8 @@ Less common status commands are listed in the
 
 <p><code class="code">emacsvox-speak-buffer-filename</code>
 </p>
-<p>Speak the current file name, or the default directory when the buffer is not
-visiting a file.
+<p>Speak the file name, or default directory when no file is visited, and copy
+that location to the kill ring. Inspect it before copying text for a transfer.
 </p></dd>
 <dt><a id="index-what_002dline"></a><span><kbd class="kbd">C-e C-l</kbd><a class="copiable-link" href="#index-what_002dline"> &para;</a></span></dt>
 <dd>
@@ -75,7 +74,7 @@ visiting a file.
 
 <p><code class="code">what-line</code>
 </p>
-<p>Report the current line number and position in the buffer.
+<p>Report the line number and position in the buffer.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dcurrent_002dcolumn"></a><span><kbd class="kbd">C-e =</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dcurrent_002dcolumn"> &para;</a></span></dt>
 <dd>
@@ -91,7 +90,7 @@ visiting a file.
 
 <p><code class="code">emacsvox-speak-current-percentage</code>
 </p>
-<p>Announce the percentage into the current buffer.
+<p>Announce the percentage into the buffer.
 </p></dd>
 </dl>
 

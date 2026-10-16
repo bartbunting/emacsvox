@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Saved Voice Change Not Audible (Emacsvox User Manual)</title>
+
+<meta name="description" content="Saved Voice Change Not Audible (Emacsvox User Manual)">
+<meta name="keywords" content="Saved Voice Change Not Audible (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<link href="Settings-Lost-After-Restart.html" rel="next" title="Settings Lost After Restart">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Saved-Voice-Change-Not-Audible">
+<div class="nav-panel">
+<p>
+Next: <a href="Settings-Lost-After-Restart.html" accesskey="n" rel="next">A setting disappeared after restarting</a>, Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="A-saved-voice-change-is-not-audible"><span>8.13.1 A saved voice change is not audible<a class="copiable-link" href="#A-saved-voice-change-is-not-audible"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-saved-but-unchanged"></a>
+<a class="index-entry-id" id="index-wrong-voice"></a>
+<a class="index-entry-id" id="index-voice-change_002c-not-audible"></a>
+
+<p>Use one representative item and repeat the same navigation or reading action
+for each comparison. A preview and a different action may use different
+context, so changing several things at once makes the result harder to explain.
+</p>
+<ol class="enumerate">
+<li> Read the editor&rsquo;s save and application status first. A retained draft has
+not been saved; a partial or unconfirmed application needs
+<a class="ref" href="Unconfirmed-Speech-Changes.html">its own recovery</a>, not another speculative voice edit.
+</li><li> Open Voice Palettes with <kbd class="kbd">C-e H v p</kbd> and check which palette is active.
+Saving to the collection does not select its destination. Activate that
+palette only if you intend to use it now; otherwise its unchanged live
+sound is expected. Return through the manager and menu to the source.
+</li><li> Explain the item with <kbd class="kbd">C-e E</kbd>. Check that it resolves to the named entry
+you edited. A rule may choose a different entry, or this kind of text may
+have an explicit voice rather than using <code class="code">default</code>.
+</li><li> Inspect the physical choice and last sample result. An explicit choice
+outranks the shared preferred-engine policy, and that choice&rsquo;s individual
+tuning can mask a shared adjustment. Then check availability, disablement
+and failures rather than repeatedly changing the engine order.
+</li><li> In the voice editor, inspect <em class="emph">Effective sound / Where settings came from</em>.
+A contextual rule may override the edited value. Compare samples and
+reported unsupported fields to distinguish an override from an engine
+that cannot express the adjustment.
+</li></ol>
+
+<p>After correcting the identified cause, return to the original item and repeat
+the same action. Confirm both the explanation and what you hear. If the cause
+remains unclear, keep the working settings and <a class="ref" href="Reporting-Speech-Problems.html">prepare a problem report</a>
+instead of removing unrelated rules or voices.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Settings-Lost-After-Restart.html">A setting disappeared after restarting</a>, Up: <a href="Presentation-Troubleshooting.html">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

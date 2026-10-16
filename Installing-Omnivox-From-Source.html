@@ -38,30 +38,20 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Building-Omnivox-For-WSL2.html" accesskey="n" rel="next">Building Omnivox For WSL2</a>, Previous: <a href="Trying-Native-Windows-Emacsvox.html" accesskey="p" rel="prev">Installing Native Windows Emacsvox</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Installing-Omnivox-From-Source-1"><span>4.5 Installing Omnivox From Source<a class="copiable-link" href="#Installing-Omnivox-From-Source-1"> &para;</a></span></h3>
+<h3 class="section" id="Installing-Omnivox-From-Source-1"><span>14.5 Installing Omnivox From Source<a class="copiable-link" href="#Installing-Omnivox-From-Source-1"> &para;</a></span></h3>
 
-<p>Use this route on GNU/Linux and macOS.  It requires network access for the
-initial clone, Rust toolchain, and locked dependency downloads.
-</p>
-<p>Install these prerequisite classes before building:
+<p>On GNU/Linux/macOS, a source build needs network access for clone, toolchain,
+and locked dependencies. Prepare:
 </p>
 <ul class="itemize mark-bullet">
-<li><a class="uref" href="https://rustup.rs/">rustup</a>; the checked-in
-<code class="code">rust-toolchain.toml</code> selects the supported Rust release.
-
-</li><li>Python 3, a C and C++ toolchain, CMake, and Clang with libclang.  The supported
-build wrapper uses these to build and stage eSpeak NG and its generated data.
-
-</li><li>On GNU/Linux, <code class="code">pkg-config</code> and ALSA development headers.  The ALSA
-package is commonly named <code class="code">libasound2-dev</code> on Debian or Ubuntu and
-<code class="code">alsa-lib-devel</code> on Fedora.
-
-</li><li>On macOS, the Xcode command-line tools.  Install them with
-<code class="code">xcode-select --install</code> if they are absent.
+<li><a class="uref" href="https://rustup.rs/">rustup</a>, with the checked-in <code class="code">rust-toolchain.toml</code> selecting Rust.
+</li><li>Python 3, C/C++, CMake, and Clang/libclang for eSpeak NG and generated data.
+</li><li>GNU/Linux <code class="code">pkg-config</code> and ALSA development headers, commonly
+<code class="code">libasound2-dev</code> on Debian/Ubuntu or <code class="code">alsa-lib-devel</code> on Fedora.
+</li><li>macOS Xcode command-line tools, installed with <code class="code">xcode-select --install</code>.
 </li></ul>
 
-<p>Keep the two repositories beside one another; this also matches the WSL2
-release layout:
+<p>Keep Omnivox beside Emacsvox, also matching the WSL layout:
 </p>
 <div class="example">
 <pre class="example-preformatted">cd /path/containing/emacsvox
@@ -71,15 +61,13 @@ make build
 make install
 </pre></div>
 
-<p><code class="code">make build</code> performs the locked release build and stages the matching
-eSpeak data and third-party notices.  <code class="code">make install</code> installs the
-binary and those adjacent directories, normally below <code class="code">~/.cargo/bin</code>.
-Set <code class="code">OMNIVOX_INSTALL_BIN</code> before <code class="code">make install</code> only when the Cargo
-binary directory is elsewhere.  Do not use a bare <code class="code">cargo build</code> as the
-installation procedure; it does not create the complete staged payload.
+<p><code class="code">make build</code> runs the locked release build and stages matching eSpeak data and
+notices. <code class="code">make install</code> installs binary/data normally under <code class="code">~/.cargo/bin</code>.
+Set <code class="code">OMNIVOX_INSTALL_BIN</code> only for another Cargo binary directory. A bare
+<code class="code">cargo build</code> does not produce the complete installation payload.
 </p>
-<p>Make the install directory visible on <code class="code">PATH</code> before continuing.  No
-proprietary speech runtime is needed for the recommended Linux or macOS path.
+<p>Make the installed directory visible on <code class="code">PATH</code>. No proprietary runtime is
+needed for the recommended Linux/Mac route.
 </p>
 </div>
 

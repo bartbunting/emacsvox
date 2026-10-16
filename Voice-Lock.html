@@ -36,63 +36,61 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Presentation-Troubleshooting.html" accesskey="p" rel="prev">Troubleshooting And Recovery</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Voice-Lock-And-Advanced-Configuration"><span>6.13 Voice Lock And Advanced Configuration<a class="copiable-link" href="#Voice-Lock-And-Advanced-Configuration"> &para;</a></span></h3>
+<h3 class="section" id="Voice-Lock-And-Advanced-Configuration"><span>8.14 Voice Lock And Advanced Configuration<a class="copiable-link" href="#Voice-Lock-And-Advanced-Configuration"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Voice-Lock"></a>
 
-<p>Voice Lock is one compatibility input to Aural Presentation, not the whole
-presentation system.  It maps established Emacs faces and <code class="code">personality</code> text
-properties to voices.  Emacs calls its visual style labels <em class="emph">faces</em>; Emacsvox
-can use those labels without requiring you to see them.
-</p>
-<p>The three related policies are independent:
+<p>Voice Lock is one compatibility input to Aural Presentation, not the entire
+system. It maps Emacs faces and <code class="code">personality</code> text properties to voices.
+Faces are visual style labels that Emacsvox can use without requiring sight.
 </p>
 <table class="multitable">
 <tbody><tr><td width="28%">Policy</td><td width="42%">What it controls</td><td width="30%">How to inspect or change it</td></tr>
-<tr><td width="28%">Semantic presentation</td><td width="42%">Rules based on roles, events, states, and attributes supplied by integrations.</td><td width="30%">Use <kbd class="kbd">C-e E</kbd>, Presentation options, and Your feedback rules.</td></tr>
-<tr><td width="28%">Explicit face presentation</td><td width="42%">Aural rules that deliberately match a named Emacs face.</td><td width="30%">Run <code class="code">emacsvox-aural-toggle-face-presentation</code> or inspect it in Aural Doctor.</td></tr>
-<tr><td width="28%">Voice Lock</td><td width="42%">The historical face or personality-to-voice mapping in each buffer.</td><td width="30%">Use <kbd class="kbd">C-e d v</kbd> locally or <kbd class="kbd">C-e d C-v</kbd> globally.</td></tr>
+<tr><td width="28%">Semantic presentation</td><td width="42%">Integration roles, events, states, and attributes</td><td width="30%">Explain, Presentation Options, and feedback rules</td></tr>
+<tr><td width="28%">Explicit face presentation</td><td width="42%">Rules deliberately matching an Emacs face</td><td width="30%">emacsvox-aural-toggle-face-presentation or Aural Doctor</td></tr>
+<tr><td width="28%">Voice Lock</td><td width="42%">Historical buffer face/personality mapping</td><td width="30%">C-e H r l v locally; C-e H r l V globally</td></tr>
 </tbody>
 </table>
 
-<p>To find out whether a distinction comes from Voice Lock:
+<p>To identify Voice Lock&rsquo;s contribution:
 </p>
 <ol class="enumerate">
-<li> Move across two elements that the mode treats differently, such as a comment
-and string in source code or a heading and link in Org.
-
-</li><li> Press <kbd class="kbd">C-e d v</kbd> to toggle Voice Lock only in that buffer, then
-compare the same elements.
-
-</li><li> Press <kbd class="kbd">C-e E</kbd> on the element.  The explanation reports the
-Voice Lock and explicit face-presentation state alongside the rules that
-contributed to the result.
+<li> Move across differently styled elements, such as a comment/string or Org
+heading/link.
+</li><li> Toggle <kbd class="kbd">C-e d v</kbd> in that buffer and compare the same elements.
+</li><li> Explain with <kbd class="kbd">C-e E</kbd> to inspect Voice Lock/face state and contributing rules.
 </li></ol>
 
-<p>Turning Voice Lock off removes only its compatibility voice contribution.  It
-does not disable semantic presentation, explicit face rules, auditory cues,
-tones, or ordinary spoken status.  The global Voice Lock command updates
-existing and new buffers; an individual mode can still opt out when it starts.
-Buffer-local Voice Lock state is not saved in a presentation profile.
+<p>Turning it off removes only that compatibility contribution. Semantic
+presentation, explicit face rules, cues, tones, and spoken status remain.
+The global command updates existing and new buffers; a mode can still opt out
+on startup. The same controls are available at <kbd class="kbd">C-e H r l v</kbd> for the captured
+buffer and capital <kbd class="kbd">V</kbd> for global policy. That submenu&rsquo;s <kbd class="kbd">w</kbd> saves only global
+Voice Lock through Customize. Buffer-local Voice Lock is not captured in
+Presentation Profiles.
 </p>
-<p>For new customization, prefer explanation, Aural Home, voice palettes, and
-Voice Workbench.  Older configurations can still customize a named legacy
-voice&rsquo;s <code class="code">-settings</code> option, such as <code class="code">voice-monotone-settings</code>.  Customize the
-settings option rather than a generated <code class="code">acss-...</code> voice symbol.  Historical
-background is preserved in
+<p>To silence or restore the personality or mapped face at the captured item,
+choose <kbd class="kbd">s</kbd> in that submenu. This uses the existing local suppression command;
+it can affect other text using that mapping in the same buffer. It does not
+retune the named voice, and a globally inaudible mapping cannot be restored
+there. The change lasts for the buffer and is not saved. Close and reopen the
+menu from the intended item if its captured source has changed.
+</p>
+<p>For new changes, prefer explanation, settings menus, palettes, and Workbench.
+Legacy named voices can still use <code class="code">-settings</code> options such as <code class="code">voice-monotone-settings</code>. Customise
+the option, not a generated <code class="code">acss-...</code> symbol. Historical background is in
 <a data-manual="emacsvox-heritage" href="heritage/Audio-Formatting-And-Aural-CSS.html#Audio-Formatting-And-Aural-CSS">Audio Formatting And Aural CSS</a> in <em class="emph">Emacspeak Heritage</em>.
 </p>
 <p>Named formatting voices such as <code class="code">bolden</code> and <code class="code">annotate</code> follow the active
-palette. An inherited standard entry may use a personality&rsquo;s <code class="code">-settings</code>
-option as its implementation. This is the definition in the explicit standard
-root, not a second hidden palette fallback. Explicit styles keep their own
-settings, and explicit presentation rules can change the resulting voice.
+palette. An inherited standard entry may be implemented by a personality&rsquo;s
+settings option within the explicit root, not a hidden second fallback.
+Explicit styles retain their own settings and rules can change the resulting
+voice.
 </p>
-<p>The <a data-manual="emacsvox" href="../Integration-Maintenance.html#Integration-Maintenance">Developer Guide</a> covers voice-style metadata, rule authoring contracts,
-and integration behavior; <a data-manual="emacsvox" href="../Speech-Server-Protocols.html#Speech-Server-Protocols">Speech Server Protocols</a> covers delivery.
-The generated <a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> in <em class="emph">Emacsvox Reference Manual</em>
-records exact commands, options, and keymaps. These references complement the
-tasks here; they are not prerequisites for using Aural Home.
+<p>The <a data-manual="emacsvox" href="./Integration-Maintenance.html#Integration-Maintenance">Developer Guide</a> covers voice metadata, rule authoring, and integrations;
+<a data-manual="emacsvox" href="./Speech-Server-Protocols.html#Speech-Server-Protocols">Speech Server Protocols</a> covers delivery. The generated
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> records exact commands, options, and keymaps.
+These complement the tasks here rather than being prerequisites for them.
 </p>
 </div>
 <hr>

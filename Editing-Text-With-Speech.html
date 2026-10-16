@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Editing Text With Speech (Emacsvox User Manual)</title>
+
+<meta name="description" content="Editing Text With Speech (Emacsvox User Manual)">
+<meta name="keywords" content="Editing Text With Speech (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Basic-Usage.html" rel="up" title="Basic Usage">
+<link href="Searching-And-Replacing-Text.html" rel="next" title="Searching And Replacing Text">
+<link href="Reading.html" rel="prev" title="Reading">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Editing-Text-With-Speech">
+<div class="nav-panel">
+<p>
+Next: <a href="Searching-And-Replacing-Text.html" accesskey="n" rel="next">Find and replace text carefully</a>, Previous: <a href="Reading.html" accesskey="p" rel="prev">Reading And Navigating</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Select_002c-copy_002c-and-move-text"><span>5.6 Select, copy, and move text<a class="copiable-link" href="#Select_002c-copy_002c-and-move-text"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-editing-through-speech"></a>
+<a class="index-entry-id" id="index-cut-and-paste"></a>
+
+<p>Reading a passage is not the same as selecting it for an operation. These
+procedures make the affected text and destination explicit before changing
+anything. They apply to ordinary editable text, not terminal input, a settings
+editor or a table reader. Keep using the application&rsquo;s own instructions in
+those contexts.
+</p>
+<p>For practice, use <kbd class="kbd">C-x b</kbd> to create an unused buffer named <code class="code">evox-edit-source</code>,
+run <kbd class="kbd">M-x text-mode <kbd class="key">RET</kbd></kbd>, and insert the following text, including the blank
+lines and a final newline after the last sentence. Use another unused name
+if that buffer already contains work. No file or speech-setting save is needed.
+</p>
+<div class="example">
+<pre class="example-preformatted">Keep the opening paragraph.
+
+Move this paragraph.
+
+Keep the closing paragraph.
+</pre></div>
+
+<p>Keep the manual open separately and return to this buffer before trying a
+step. <a class="ref" href="Answering-Emacs-Prompts.html">Answer a prompt and return to your work</a> explains command entry; the
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Killing.html#Killing">Killing and moving text</a> chapter in the GNU Emacs Manual supplies the wider
+editing reference.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Selecting-Text-With-Speech.html" accesskey="1">Select and check the text first</a></li>
+<li><a href="Copying-Text-Between-Buffers.html" accesskey="2">Copy a passage into another buffer</a></li>
+<li><a href="Moving-Text-Safely.html" accesskey="3">Move a paragraph without losing it</a></li>
+<li><a href="Choosing-Earlier-Copied-Text.html" accesskey="4">Choose text copied earlier</a></li>
+<li><a href="Recovering-Text-Edits.html" accesskey="5">Recover a text edit before saving</a></li>
+<li><a href="Copying-Through-The-Clipboard.html" accesskey="6">Exchange text with another application</a></li>
+</ul>
+</div>
+
+
+
+</body>
+</html>

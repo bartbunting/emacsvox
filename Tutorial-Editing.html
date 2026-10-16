@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tutorial Editing (Emacsvox User Manual)</title>
+
+<meta name="description" content="Tutorial Editing (Emacsvox User Manual)">
+<meta name="keywords" content="Tutorial Editing (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Guided-Tutorial.html" rel="up" title="Guided Tutorial">
+<link href="Tutorial-Help-And-Buffers.html" rel="next" title="Tutorial Help And Buffers">
+<link href="Tutorial-Reading.html" rel="prev" title="Tutorial Reading">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Tutorial-Editing">
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Help-And-Buffers.html" accesskey="n" rel="next">Lesson 3: get Help and return to your work</a>, Previous: <a href="Tutorial-Reading.html" accesskey="p" rel="prev">Lesson 1: read and locate point</a>, Up: <a href="Guided-Tutorial.html" accesskey="u" rel="up">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Lesson-2_003a-find_002c-edit_002c-and-recover-text"><span>4.3 Lesson 2: find, edit, and recover text<a class="copiable-link" href="#Lesson-2_003a-find_002c-edit_002c-and-recover-text"> &para;</a></span></h3>
+
+<p>Searching locates text; it does not change the text. Editing happens at point,
+which is after the match when a forward search succeeds. We will make one
+small insertion, inspect it, and undo it before attempting a replacement.
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">M-&lt;</kbd>, then <kbd class="kbd">C-s</kbd> and type <code class="code">ready</code>. When the search finds the word,
+press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to finish. Point is after <code class="code">ready</code> and before its full stop.
+</li><li> Type a space followed by <code class="code">now</code>. <kbd class="kbd">C-e l</kbd> should read the sentence with
+<code class="code">ready now</code>. The other sentences are unchanged.
+</li><li> In the practice document, press <kbd class="kbd">C-g</kbd> to deactivate any selection, then
+run <kbd class="kbd">M-x undo-only <kbd class="key">RET</kbd></kbd>. Read the line with <kbd class="kbd">C-e l</kbd>. If another undo is
+needed, run <code class="code">undo-only</code> again and inspect again. Undo works in editing
+groups, not necessarily one character at a time. Stop when the sentence
+is back to <code class="code">This sentence is ready.</code>; do not undo the original example.
+Use <code class="code">undo-only</code> for this listen-between-steps pattern: after an intervening
+reading command, ordinary <kbd class="kbd">C-/</kbd> can redo an earlier undo instead.
+</li><li> Search for <code class="code">notebook</code> from the beginning and finish with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Notice that
+searching and reading did not modify the document. You can return to any
+known phrase without counting lines.
+</li></ol>
+
+<p>If a search does not find its text, check your spelling. <kbd class="kbd">C-g</kbd> during a
+failing search first backs out of the failure; another <kbd class="kbd">C-g</kbd> may be needed to
+leave the search. Wait until the search prompt is gone before typing ordinary
+text. A successful search is accepted with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, not by typing the edit into
+its search prompt.
+</p>
+<ul class="mini-toc">
+<li><a href="#Try-it-1" accesskey="1">Try it</a></li>
+</ul>
+<div class="subsection-level-extent" id="Try-it-1">
+<h4 class="subsection"><span>4.3.1 Try it<a class="copiable-link" href="#Try-it-1"> &para;</a></span></h4>
+
+<p><strong class="strong">2A.</strong> Replace <code class="code">green</code> with <code class="code">blue</code>. Use a successful search for the whole word,
+then <kbd class="kbd">M-<kbd class="key">DEL</kbd></kbd> to remove the word immediately before point, and type its
+replacement. Here <kbd class="kbd"><kbd class="key">DEL</kbd></kbd> means Backspace; <kbd class="kbd">M-x backward-kill-word <kbd class="key">RET</kbd></kbd> is an
+alternative to <kbd class="kbd">M-<kbd class="key">DEL</kbd></kbd>. Inspect the complete line and restore <code class="code">green</code> before
+continuing.
+</p>
+<p><strong class="strong">2B.</strong> What would happen if you typed <code class="code">now</code> before accepting the search?
+Explain the difference between changing the query and changing the document.
+</p>
+<p>See <a class="ref" href="Tutorial-Exercise-Answers.html#tutorial_002danswer_002d2">Answers for lesson 2</a>. Text undo is not a general undo command for settings
+menus; we will practise their recovery separately. For more on inspecting
+between undo steps, see <a data-manual="emacsvox" href="./Recovering-Text-Edits.html#Recovering-Text-Edits">Recover a text edit before saving</a> and
+<a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Undo.html#Undo">Undo</a> in the GNU Emacs Manual.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Tutorial-Help-And-Buffers.html">Lesson 3: get Help and return to your work</a>, Previous: <a href="Tutorial-Reading.html">Lesson 1: read and locate point</a>, Up: <a href="Guided-Tutorial.html">Learn the audio desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Agent Shell Tables (Emacsvox User Manual)</title>
+
+<meta name="description" content="Agent Shell Tables (Emacsvox User Manual)">
+<meta name="keywords" content="Agent Shell Tables (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Agent-Shell-Recovery.html" rel="next" title="Agent Shell Recovery">
+<link href="Agent-Shell-Source-Blocks.html" rel="prev" title="Agent Shell Source Blocks">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Agent-Shell-Tables">
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Recovery.html" accesskey="n" rel="next">Recover from interruption or failure</a>, Previous: <a href="Agent-Shell-Source-Blocks.html" accesskey="p" rel="prev">Read and copy source blocks</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Navigate-and-copy-rendered-tables"><span>11.8 Navigate and copy rendered tables<a class="copiable-link" href="#Navigate-and-copy-rendered-tables"> &para;</a></span></h3>
+
+<p>Agent Shell gives rendered Markdown tables their own navigation commands.
+Moving into a table activates a contextual table map.  It
+announces the table dimensions and current cell.  Leaving the table restores
+the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
+table reading with matching logical operations; see
+<a class="ref" href="Browsing-Structure.html">Browsing Structure</a>. Agent Shell retains its own table speech
+preferences and automatic contextual activation.
+Plain Left and Right, or <kbd class="kbd">C-b</kbd> and <kbd class="kbd">C-f</kbd>, move by character within the current
+cell. <kbd class="kbd">M-b</kbd> and <kbd class="kbd">M-f</kbd>, or Control-Left and Control-Right, move by word. These
+commands follow wrapped text within the same cell, skipping borders, padding,
+and neighbouring columns. At the beginning or end of the cell, they stop and
+announce the boundary. Use Control-Meta-Left and Control-Meta-Right to move
+between columns. Control-Meta-Up and Control-Meta-Down move between logical
+rows in the current column and read only the destination cell. Plain Up and
+Down make the same move and read the entire destination row. Wrapped cells
+are read in full, using your table title settings.
+</p>
+<p><kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> retain ordinary line movement. They can move through wrapped
+cell text, but do not stay within the logical cell or skip other columns.
+Use character and word movement to follow the cell&rsquo;s text in order.
+</p>
+<p>Outside editable input, press <kbd class="kbd">t</kbd> for the next table or
+<kbd class="kbd">T</kbd> for the previous table. These keys skip the current table
+and announce the destination table and cell. Like the bracket navigation keys,
+they insert themselves in a live prompt or viewport editor, including while
+the agent is working.
+</p>
+<ul class="mini-toc">
+<li><a href="#Understand-table-key-conflicts" accesskey="1">Understand table key conflicts</a></li>
+<li><a href="#Table-command-reference" accesskey="2">Table command reference</a></li>
+</ul>
+<div class="subsection-level-extent" id="Understand-table-key-conflicts">
+<h4 class="subsection"><span>11.8.1 Understand table key conflicts<a class="copiable-link" href="#Understand-table-key-conflicts"> &para;</a></span></h4>
+
+<p>In viewport view mode, <kbd class="kbd">t</kbd> takes the place of Agent Shell&rsquo;s thought-level
+shortcut; use <kbd class="kbd">M-x agent-shell-viewport-set-session-thought-level</kbd> for that
+action. Inside a table, <kbd class="kbd">r</kbd>, <kbd class="kbd">c</kbd>, and <kbd class="kbd">a</kbd> read rows, read columns, and select
+the table speaking method. To invoke the displaced viewport actions there,
+use <kbd class="kbd">M-x agent-shell-viewport-reply</kbd>, <kbd class="kbd">M-x agent-shell-viewport-reply-continue</kbd>,
+or <kbd class="kbd">M-x agent-shell-viewport-reply-again</kbd>. In the shell transcript, table <kbd class="kbd">r</kbd>
+replaces quoting; use <kbd class="kbd">M-x agent-shell-quote-region</kbd> with a selected region.
+Leaving the table restores these ordinary bindings.
+</p>
+<p>Outside tables, <kbd class="kbd">C-M-&lt;up&gt;</kbd> and <kbd class="kbd">C-M-&lt;down&gt;</kbd> do nothing in Agent Shell,
+including its viewport and prompt editor. Repeating a row key after leaving
+a table therefore keeps point at the exit. These two keys also do nothing
+in ordinary <kbd class="kbd">shell-mode</kbd> buffers. For structural movement there, use
+<kbd class="kbd">M-x backward-up-list</kbd> or <kbd class="kbd">M-x down-list</kbd>. Source-code buffers keep their
+usual bindings.
+</p>
+<p>Continuous speech and response-block reading omit rendered table borders and
+keep the cell text. Decorative borders therefore do not force a switch to a
+different speech engine. Literal box-drawing characters in prose or code remain
+available to symbol naming and exact character inspection.
+</p>
+</div>
+<div class="subsection-level-extent" id="Table-command-reference">
+<h4 class="subsection"><span>11.8.2 Table command reference<a class="copiable-link" href="#Table-command-reference"> &para;</a></span></h4>
+
+<dl class="table">
+<dt><kbd class="kbd">t</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-next-table</code> outside editable input.
+</p></dd>
+<dt><kbd class="kbd">T</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-previous-table</code> outside editable input.
+</p></dd>
+<dt><kbd class="kbd">C-M-&lt;right&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-column</code>.
+</p></dd>
+<dt><kbd class="kbd">C-M-&lt;left&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-column</code>.
+</p></dd>
+<dt><kbd class="kbd">&lt;down&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-row</code> and read the destination row.
+</p></dd>
+<dt><kbd class="kbd">&lt;up&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-row</code> and read the destination row.
+</p></dd>
+<dt><kbd class="kbd">C-M-&lt;down&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-row-cell</code> and read the destination cell.
+</p></dd>
+<dt><kbd class="kbd">C-M-&lt;up&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-row-cell</code> and read the destination cell.
+</p></dd>
+<dt><kbd class="kbd">M-&lt;down&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-exit-forward</code>.
+</p></dd>
+<dt><kbd class="kbd">M-&lt;up&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-exit-backward</code>.
+</p></dd>
+<dt><kbd class="kbd">SPC</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-cell</code>.
+</p></dd>
+<dt><kbd class="kbd">r</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-row</code>.
+</p></dd>
+<dt><kbd class="kbd">c</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-column</code>.
+</p></dd>
+<dt><kbd class="kbd">.</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-context</code> for row, column, and table
+position.
+</p></dd>
+<dt><kbd class="kbd">=</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-dimensions</code>.
+</p></dd>
+<dt><kbd class="kbd">w</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-copy-cell</code>.
+</p></dd>
+<dt><kbd class="kbd">k k</kbd></dt>
+<dd><p>Also run <code class="code">emacsvox-agent-shell-table-copy-cell</code>.
+</p></dd>
+<dt><kbd class="kbd">k r</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-copy-row</code>; copied cells are tab-separated.
+</p></dd>
+<dt><kbd class="kbd">k c</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-copy-column</code>; copied cells are separated by
+newlines.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-select-speaking-method</code> to toggle column
+titles, row titles, or whether data is spoken before titles.
+</p></dd>
+</dl>
+
+<p>Copy commands use logical cell values, excluding renderer padding and Markdown
+borders.  Wrapped cell contents remain complete.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Recovery.html">Recover from interruption or failure</a>, Previous: <a href="Agent-Shell-Source-Blocks.html">Read and copy source blocks</a>, Up: <a href="Agent-Shell.html">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

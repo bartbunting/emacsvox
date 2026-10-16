@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Agent Shell Transcript Navigation (Emacsvox User Manual)</title>
+
+<meta name="description" content="Agent Shell Transcript Navigation (Emacsvox User Manual)">
+<meta name="keywords" content="Agent Shell Transcript Navigation (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Agent-Shell.html" rel="up" title="Agent Shell">
+<link href="Agent-Shell-Source-Blocks.html" rel="next" title="Agent Shell Source Blocks">
+<link href="Reading-Agent-Responses.html" rel="prev" title="Reading Agent Responses">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Agent-Shell-Transcript-Navigation">
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Source-Blocks.html" accesskey="n" rel="next">Read and copy source blocks</a>, Previous: <a href="Reading-Agent-Responses.html" accesskey="p" rel="prev">Inspect a response on demand</a>, Up: <a href="Agent-Shell.html" accesskey="u" rel="up">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Navigate-transcript-blocks"><span>11.6 Navigate transcript blocks<a class="copiable-link" href="#Navigate-transcript-blocks"> &para;</a></span></h3>
+
+<p>Agent Shell responses contain semantic prompt, response, thought, activity,
+tool, plan, permission, error, source-block, and table locations.  Emacsvox
+navigation reports the block type, visibility, and a bounded body preview.
+</p>
+<p>Up and Down play the ellipses cue when you enter a collapsed heading, such as
+Capabilities, Models, or Notices. Wrapped continuation rows do not repeat the
+cue; leaving and returning to the heading plays it again. The optional block
+visibility cue replaces this default cue. Reading the current line with
+<kbd class="kbd">C-e l</kbd> continues to indicate hidden content.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">h / H</kbd></dt>
+<dd><p>Use <kbd class="kbd">h</kbd> (<code class="code">emacsvox-agent-shell-next-heading</code>) or
+<kbd class="kbd">H</kbd> (<code class="code">emacsvox-agent-shell-previous-heading</code>).
+Move to the next or previous visible Markdown heading and speak its text.
+</p></dd>
+<dt><kbd class="kbd">k / K</kbd></dt>
+<dd><p>Use <kbd class="kbd">k</kbd> (<code class="code">emacsvox-agent-shell-next-source-block</code>) or
+<kbd class="kbd">K</kbd> (<code class="code">emacsvox-agent-shell-previous-source-block</code>).
+Move to the next or previous source block and announce its language and
+line count. Inside a table, lowercase <kbd class="kbd">k</kbd> remains the table
+copy prefix; use <kbd class="kbd">M-x emacsvox-agent-shell-next-source-block</kbd> to jump forward
+to code from there.
+</p></dd>
+<dt><kbd class="kbd">u / U</kbd></dt>
+<dd><p>Use <kbd class="kbd">u</kbd> (<code class="code">emacsvox-agent-shell-next-user-prompt</code>) or
+<kbd class="kbd">U</kbd> (<code class="code">emacsvox-agent-shell-previous-user-prompt</code>).
+Move to the next or previous submitted user prompt, skipping the live editor.
+</p></dd>
+<dt><kbd class="kbd">j / J</kbd></dt>
+<dd><p>Use <kbd class="kbd">j</kbd> (<code class="code">emacsvox-agent-shell-next-response</code>) or
+<kbd class="kbd">J</kbd> (<code class="code">emacsvox-agent-shell-previous-response</code>).
+Move to the next or previous agent response and speak its bounded body
+preview. These keys skip intervening thoughts, tools, and other block types.
+From code or a table inside an answer, they skip that enclosing answer.
+</p></dd>
+<dt><kbd class="kbd">l / L</kbd></dt>
+<dd><p>Use <kbd class="kbd">l</kbd> (<code class="code">emacsvox-agent-shell-next-link</code>) or
+<kbd class="kbd">L</kbd> (<code class="code">emacsvox-agent-shell-previous-link</code>).
+Move to the next or previous visible rendered link and speak its label and
+Return action together. The cursor hint remains visible without a second
+voice repeating it.
+Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to follow the link.
+</p></dd>
+<dt><kbd class="kbd">e / E</kbd></dt>
+<dd><p>Use <kbd class="kbd">e</kbd> (<code class="code">emacsvox-agent-shell-next-error</code>) or
+<kbd class="kbd">E</kbd> (<code class="code">emacsvox-agent-shell-previous-error</code>).
+Move to the next or previous error or failed tool call. Failed tools are
+identified by Agent Shell&rsquo;s error styling in their status label, rather than
+by words in their output.
+</p></dd>
+<dt><kbd class="kbd">]</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-next-block-at-point</code> to find the next block of
+the current semantic type.
+</p></dd>
+<dt><kbd class="kbd">[</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-previous-block-at-point</code> to find the preceding
+block of the current semantic type.
+</p></dd>
+<dt><kbd class="kbd">C-c ]</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-next-block-of-type</code>, choose a type, and move to
+its next occurrence.
+</p></dd>
+<dt><kbd class="kbd">C-c [</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-previous-block-of-type</code>, choose a type, and move
+to its preceding occurrence.
+</p></dd>
+</dl>
+
+<p>After a successful typed jump, <kbd class="kbd">]</kbd> and <kbd class="kbd">[</kbd> repeat in that direction.
+At an editable live prompt or viewport editor, bare brackets and navigation
+letters insert themselves instead of taking over prompt editing.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Source-Blocks.html">Read and copy source blocks</a>, Previous: <a href="Reading-Agent-Responses.html">Inspect a response on demand</a>, Up: <a href="Agent-Shell.html">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

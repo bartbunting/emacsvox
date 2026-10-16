@@ -16,8 +16,8 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Audio-Desktop.html" rel="next" title="Audio Desktop">
-<link href="Basic-Usage.html" rel="prev" title="Basic Usage">
+<link href="Emacsvox-Keyboard-Commands.html" rel="next" title="Emacsvox Keyboard Commands">
+<link href="Running-Terminal-Based-Applications.html" rel="prev" title="Running Terminal Based Applications">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -33,33 +33,25 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Speech-Backends">
 <div class="nav-panel">
 <p>
-Next: <a href="Audio-Desktop.html" accesskey="n" rel="next">Work With The Audio Desktop</a>, Previous: <a href="Basic-Usage.html" accesskey="p" rel="prev">Basic Usage</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Emacsvox-Keyboard-Commands.html" accesskey="n" rel="next">Emacsvox Keyboard Commands.</a>, Previous: <a href="Running-Terminal-Based-Applications.html" accesskey="p" rel="prev">Term Terminal Access</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Speech-Backends-1"><span>4 Speech Backends<a class="copiable-link" href="#Speech-Backends-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Speech-Backends-1"><span>14 Speech Backends<a class="copiable-link" href="#Speech-Backends-1"> &para;</a></span></h2>
 
-<p>Emacsvox needs a speech-server process.  For a new installation, use
-<strong class="strong">Omnivox</strong>.  Omnivox is the server that Emacsvox talks to; the engine
-that produces speech underneath it is platform-specific.  The normal engine
-is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
+<p>Emacsvox sends speech through a speech server. For a new installation,
+use <em class="emph">Omnivox</em>. The server communicates with the engine that produces speech:
+normally eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
 SpeechSynthesizer on Windows.
 </p>
-<p>Omnivox 1.12.0 is the minimum supported release. It supplies managed voice
-libraries, on-demand eSpeak variants and engine-specific voice controls, as well
-as individual fallback tuning and complete voice previews. A newer compatible
-release may be used. The manual archive examples and guided installers pin the
-1.12.0 core and matching optional engines exactly; the macOS Homebrew tap follows
-its maintained stable formula, initially 1.12.0. Upgrade an existing Omnivox
-installation separately; updating Emacsvox does not replace the selected speech
-server. Voice-library management currently uses the bundled WSL-to-Windows
-launcher; remote and direct native launches retain their existing limits.
-</p>
-<p>For a first installation, follow the linear procedure in
-<a class="ref" href="Installation.html">Installation</a>.  Return here when you need platform-specific build
-details, compatibility servers, or deeper diagnostics.  Omnivox build
-internals, engine behavior, and versioned protocols are documented and
-maintained in
+<p>Follow <a class="ref" href="Installation.html">Installation</a> if you have not yet obtained speech. This chapter is for
+choosing a supported platform route, installing or configuring a different
+backend, and diagnosing problems. Omnivox&rsquo;s native build procedures, engine
+behaviour, and versioned protocols belong to
 <a class="uref" href="https://github.com/bartbunting/omnivox">the Omnivox repository</a>.
+</p>
+<p>The menu routes here describe <code class="code">ui-experiments</code>. Release packages can provide
+an earlier interface; use the matching manual and keep a working installation
+available while testing the development branch.
 </p>
 
 <ul class="mini-toc">

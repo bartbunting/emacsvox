@@ -38,14 +38,15 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Guided-Feedback-Changes.html" accesskey="n" rel="next">Guided Change This Feedback</a>, Up: <a href="Adjusting-Presentation.html" accesskey="u" rel="up">Change Feedback And Manage Rules</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Walkthrough_003a-Change-Headings-In-One-Buffer"><span>6.4.1 Walkthrough: Change Headings In One Buffer<a class="copiable-link" href="#Walkthrough_003a-Change-Headings-In-One-Buffer"> &para;</a></span></h4>
+<h4 class="subsection" id="Walkthrough_003a-Change-Headings-In-One-Buffer"><span>8.5.1 Walkthrough: Change Headings In One Buffer<a class="copiable-link" href="#Walkthrough_003a-Change-Headings-In-One-Buffer"> &para;</a></span></h4>
 
-<p>This example changes headings in a temporary Org buffer. It leaves your
-palette definitions and saved rules alone.
+<p>This experiment changes headings in a temporary Org buffer without altering
+palette definitions or saved personal rules. Use an unused buffer name; if
+<code class="code">*aural-practice*</code> already contains work, choose another name throughout the
+exercise. Do not erase existing text to recreate the example.
 </p>
 <ol class="enumerate">
-<li> Use <kbd class="kbd">C-x b</kbd> to create a new buffer named <code class="code">*aural-practice*</code>. Run
-<kbd class="kbd">M-x org-mode</kbd> and insert this short document:
+<li> Use <kbd class="kbd">C-x b</kbd> to create that new buffer. Run <kbd class="kbd">M-x org-mode <kbd class="key">RET</kbd></kbd> and insert:
 
 <div class="example">
 <pre class="example-preformatted">* Reading notes
@@ -54,40 +55,40 @@ An ordinary paragraph.
 Another ordinary paragraph.
 </pre></div>
 
-</li><li> Move onto the first heading and press <kbd class="kbd">C-e E</kbd>. Find its current named
-voice and the facts identifying a heading. The explanation should tell
-you whether it describes recorded output or a simulation.
+</li><li> Move onto the first heading and press <kbd class="kbd">C-e E</kbd>. Identify its named voice
+and heading facts, noting whether the report describes recorded output or
+a simulation. Press <kbd class="kbd">q</kbd> to return to the source before opening a new menu.
 
-</li><li> Open <kbd class="kbd">C-e H c</kbd>. Press <kbd class="kbd">c</kbd>, select <em class="emph">Content voice</em>, and choose
-<code class="code">annotate</code> with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. If <code class="code">annotate</code> is already the original, use
-<code class="code">bolden</code> instead. <kbd class="kbd">O</kbd> plays the original and <kbd class="kbd">P</kbd> previews your choice.
-At this point the change exists only in the draft.
+</li><li> Press <kbd class="kbd">C-e H f c</kbd> for the guided change. Press <kbd class="kbd">c</kbd>, select <em class="emph">Content voice</em>,
+and choose <code class="code">annotate</code> with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, or <code class="code">bolden</code> if <code class="code">annotate</code> is already used.
+<kbd class="kbd">O</kbd> plays the original and <kbd class="kbd">P</kbd> previews the proposed voice. Only the draft
+has changed.
 
-</li><li> Press <kbd class="kbd">m</kbd> to inspect <em class="emph">What should match</em>. Keep the Org module and
-heading role, plus heading level if shown. Leave other criteria as shown
-for this first example. Press <kbd class="kbd">l</kbd> and choose <em class="emph">Current buffer, until it
-is killed</em>. This means every matching heading in this buffer, not just
-the heading you started from.
+</li><li> Press <kbd class="kbd">m</kbd> for <em class="emph">What should match</em>. Keep the Org module, heading role, and
+heading level if shown. Leave other criteria as shown for this experiment.
+Press <kbd class="kbd">l</kbd> and select <em class="emph">Current buffer, until it is killed</em>. This matches
+every qualifying heading in the buffer, not only the original heading.
 
-</li><li> Review the summary, then press <kbd class="kbd">a</kbd>. Return through Home with <kbd class="kbd">h</kbd>,
-then <kbd class="kbd">C-c C-o</kbd>. Move between the two headings using the same navigation
-action. Both matching headings should use your chosen voice; the ordinary
-paragraphs should keep their previous presentation.
+</li><li> Review the summary and press <kbd class="kbd">a</kbd> to apply it. Open settings with <kbd class="kbd">h</kbd>,
+then press <kbd class="kbd">b</kbd> in that menu to return to the captured item. Move between
+the two headings using the same navigation action. Both matching headings
+should use the chosen voice; ordinary paragraphs should keep their
+previous presentation.
 
-</li><li> Press <kbd class="kbd">C-e E</kbd> on a heading again. Check that the new buffer rule supplies
-the selected voice. If the sound is too similar to distinguish, the
-explanation still tells you whether the rule matched; compare voices in
-the palette or consult <a data-manual="emacsvox" href="../Presentation-Troubleshooting.html#Presentation-Troubleshooting">Troubleshooting</a>.
+</li><li> Press <kbd class="kbd">C-e E</kbd> on a heading again. Check that the buffer rule supplies the
+selected voice. If the sound is too similar to distinguish, the report
+still shows whether it matched. Compare voices or consult
+<a data-manual="emacsvox" href="./Presentation-Troubleshooting.html#Presentation-Troubleshooting">Troubleshooting</a>. Return to the source with <kbd class="kbd">q</kbd>.
 
-</li><li> To undo, open Home&rsquo;s <em class="emph">Your feedback rules</em> with <kbd class="kbd">O</kbd>. Find the new rule
-in the buffer scope and inspect its target. Press <kbd class="kbd">t</kbd> to disable it or
-<kbd class="kbd">d</kbd> to remove it, then revisit the heading. Killing this practice buffer
-also ends its buffer rules. Nothing from this example survives a restart.
+</li><li> Open <kbd class="kbd">C-e H r o</kbd> for <em class="emph">Your feedback rules</em>. Find the rule in buffer scope
+and inspect its target. <kbd class="kbd">t</kbd> disables it and <kbd class="kbd">d</kbd> removes it. Revisit the
+heading to check the result. Killing the practice buffer also ends its
+buffer rules; none survives an Emacs restart.
 </li></ol>
 
-<p>For a permanent change, repeat the task on a representative item and choose
-<em class="emph">Saved personal rule</em> at step 4. Review the matching criteria carefully:
-a permanent rule can affect future matching buffers too.
+<p>For a lasting change, repeat on a representative item and choose <em class="emph">Saved
+personal rule</em> at step 4. Review the criteria carefully: that rule can affect
+future matching buffers.
 </p>
 </div>
 <hr>

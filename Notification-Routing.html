@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Notification Routing (Emacsvox User Manual)</title>
+
+<meta name="description" content="Notification Routing (Emacsvox User Manual)">
+<meta name="keywords" content="Notification Routing (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Speech-Output.html" rel="up" title="Aural Speech Output">
+<link href="Output-Volumes.html" rel="next" title="Output Volumes">
+<link href="Reading-Scope-And-Punctuation.html" rel="prev" title="Reading Scope And Punctuation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Notification-Routing">
+<div class="nav-panel">
+<p>
+Next: <a href="Output-Volumes.html" accesskey="n" rel="next">Adjust output volumes</a>, Previous: <a href="Reading-Scope-And-Punctuation.html" accesskey="p" rel="prev">Set the reading scope, rate, and punctuation</a>, Up: <a href="Aural-Speech-Output.html" accesskey="u" rel="up">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Understand-the-main-and-notification-streams"><span>8.11.2 Understand the main and notification streams<a class="copiable-link" href="#Understand-the-main-and-notification-streams"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-speech-streams"></a>
+<a class="index-entry-id" id="index-notification-stream"></a>
+<a class="index-entry-id" id="index-tts_002dnotification_002ddevice"></a>
+
+<p>The <em class="emph">main stream</em> presents current interaction such as movement, buffer entry,
+and message opening. Navigation interrupts obsolete main speech. The
+<em class="emph">notification stream</em> presents asynchronous events without stopping main speech;
+normal navigation does not stop a separate notification stream. Both can be
+heard concurrently, with each notification&rsquo;s cue and speech delivered together.
+Integrations may deliberately route particular asynchronous actions differently:
+Notmuch&rsquo;s explicit refresh, for example, uses interruptible main speech.
+</p>
+<p>Open <kbd class="kbd">C-e H o n</kbd> for routing. <kbd class="kbd">r</kbd> chooses automatic, left, right, both, main
+output, or another device for the next restart. Selecting does not restart.
+<kbd class="kbd">N</kbd> previews active output, which may still use the old route; <kbd class="kbd">R</kbd> restarts
+after confirmation. <kbd class="kbd">h</kbd> inspects a notification-history snapshot, returning
+with <kbd class="kbd">q</kbd>. <kbd class="kbd">S</kbd> saves routing and spatial defaults without a restart.
+</p>
+<p>With Omnivox, Automatic normally uses an independent notification process;
+left/right/both choose its route. <em class="emph">Use main output (notifications remain
+audible)</em> uses the main process instead, where navigation can interrupt it.
+It is not a mute option. Other backends use their configured device or fall
+back to main speech. In Lisp, <code class="code">default</code> or an empty string means main output;
+use descriptive labels for ordinary configuration.
+</p>
+<p>After changing the route, <kbd class="kbd">C-e d C-n</kbd> also initialises the arrangement.
+Use notification history to read an announcement you missed. Ordinary
+obsolete-main-speech cancellation is local to main; explicit <code class="code">tts-stop</code> stops
+both streams.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Output-Volumes.html">Adjust output volumes</a>, Previous: <a href="Reading-Scope-And-Punctuation.html">Set the reading scope, rate, and punctuation</a>, Up: <a href="Aural-Speech-Output.html">Speech Output And Notifications</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>
