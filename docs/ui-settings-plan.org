@@ -1691,8 +1691,10 @@ verification of subsequently changed code.
   press Space at =C-e H s f E= and confirm that only the tone plays; compare
   with capital =P=, then check Stop and navigation interruption.
 
-- Tone presets and comparison, 2026-10-16: =L= opens a browsable preset
-  list; Enter loads only the draft and Cancel preserves it. Each choice has
+- Tone presets and comparison, 2026-10-16: the editor's Preview section
+  precedes Presets, so listening controls follow the adjustments before
+  preset management. =L= opens a browsable preset list; Enter loads only
+  the draft and Cancel preserves it. Each choice has
   Help. =N= saves a named copy through Customize without applying the cue;
   replacing a personal preset asks first. =C= plays the current applied tone
   for comparison with Space's draft. Ten focused source checks and three

@@ -505,15 +505,15 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
    ("c" (lambda () (emacsvox-tone-editor--number-label :decay)) emacsvox-tone-editor--decay :transient t)
    ("s" (lambda () (emacsvox-tone-editor--number-label :sustain)) emacsvox-tone-editor--sustain :transient t)
    ("r" (lambda () (emacsvox-tone-editor--number-label :release)) emacsvox-tone-editor--release :transient t)]
-  ["Presets"
-   ("L" "Load preset into draft" emacsvox-tone-editor-presets :transient transient--do-stack)
-   ("N" "Save draft as named preset" emacsvox-tone-editor--save-preset :transient t)]
   ["Preview"
    ("b" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("SPC" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("C" "Play current tone" emacsvox-tone-editor--current :transient t)
    ("P" "Read sample" emacsvox-tone-editor--sample :transient t)
    ("S" "Stop preview" emacsvox-tone-editor--stop :transient t)]
+  ["Presets"
+   ("L" "Load preset into draft" emacsvox-tone-editor-presets :transient transient--do-stack)
+   ("N" "Save draft as named preset" emacsvox-tone-editor--save-preset :transient t)]
   ["Apply and save"
    ("R" "Reset draft to factory defaults" emacsvox-tone-editor--reset :transient t)
    ("A" "Apply for session" emacsvox-tone-editor--apply :transient t)
