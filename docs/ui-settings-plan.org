@@ -1838,6 +1838,22 @@ verification of subsequently changed code.
   Incremental byte-code, preflight and the documentation review gate pass. Listening remains
   open for character clarity, word/character transitions and interruption.
 
+- Transient character speech follow-up, 2026-10-16: review now uses normal
+  character speech instead of converting capitals into literal "cap" text.
+  Native letter delivery preserves the configured capitalization presentation.
+  The existing delayed phonetic mode and delay also apply to the separate
+  review cursor. Its pending description is checked against the menu, review
+  position and rendered text, and cancels on further input, speech, Stop or
+  disabling the mode. Menu selection and Enter's target stay unchanged.
+  Source checks pass: 65 tests, with six graphical checks deferred to the
+  graphical run. All nine compiled graphical checks pass, including settings
+  and Magit menus; 21 focused compiled batch checks also pass. Incremental
+  byte-code, preflight and the documentation review gate pass. Coverage includes
+  the native uppercase-letter protocol,
+  configured capitalization modes, ordinary character feedback and stale
+  phonetic cancellation. Listening acceptance remains open for the capital
+  pitch cue and phonetic description after the configured pause.
+
 - Shared diagnostic log lock prompts, 2026-10-16: multiple normal-profile
   sessions append to the same aural submissions log. Emacs's =write-region=
   took an editing lock during these background appends, allowing concurrent

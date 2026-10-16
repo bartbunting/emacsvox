@@ -1059,6 +1059,28 @@ When non-nil, preserve compatibility ICON."
 (defvar-local emacsvox-transient--review-state nil
   "Selected item's announcement and review position, independent of menu focus.")
 
+(defun emacsvox-transient--speak-review-character (char origin-window)
+  "Speak review CHAR normally without moving menu focus from ORIGIN-WINDOW."
+  (let ((emacsvox-aural-submission-occasion 'navigation)
+        (emacsvox-aural-submission-module 'transient)
+        (prefix transient--prefix)
+        (window (selected-window))
+        (origin-buffer (window-buffer origin-window))
+        (state emacsvox-transient--review-state)
+        (index (plist-get emacsvox-transient--review-state :character)))
+    (tts-stop)
+    (emacsvox-speak-this-char char)
+    (emacsvox--delayed-phonetic-schedule
+     char
+     (lambda ()
+       (and (eq prefix transient--prefix)
+            (eq window transient--window)
+            (window-live-p origin-window)
+            (eq origin-buffer (window-buffer origin-window))
+            (memq (selected-window) (list window origin-window))
+            (eq state emacsvox-transient--review-state)
+            (= index (plist-get state :character)))))))
+
 (defun emacsvox-transient--review (movement &optional character)
   "Review the selected item without moving menu focus.
 Nil MOVEMENT repeats the whole item and resets word review.  Zero repeats
@@ -1066,57 +1088,60 @@ the current word; other integers move that many words.  The first word
 command starts at the first word.  Keep punctuation and numeric values
 together by separating words at whitespace.  Non-nil CHARACTER reviews
 characters instead, sharing the word review position."
-  (with-selected-window (emacsvox-transient--navigation-window)
-    (unless (and transient--prefix (button-at (point)))
-      (user-error "Select a menu item with Up or Down first"))
-    (let* ((button (button-at (point)))
-           (object (button-get button 'button-data))
-           (rendered (emacsvox-aural-source-substring
-                      (button-start button) (button-end button)))
-           (text (or (emacsvox-transient--choice-text object nil rendered) rendered))
-           (target (list transient--prefix (button-start button) object)))
-      (unless (and (eq transient--prefix
-                       (car (plist-get emacsvox-transient--review-state :target)))
-                   (equal target (plist-get emacsvox-transient--review-state :target))
-                   (equal text (plist-get emacsvox-transient--review-state :text)))
-        (let ((start 0) starts)
-          (save-match-data
-            (while (string-match "[^[:space:]]+" text start)
-              (push (match-beginning 0) starts)
-              (setq start (match-end 0))))
-          (setq emacsvox-transient--review-state
-                (list :target target :text text :starts (nreverse starts)
-                      :words (split-string text "[[:space:]]+" t)
-                      :index -1 :character -1))))
-      (let* ((words (plist-get emacsvox-transient--review-state :words))
-             (starts (plist-get emacsvox-transient--review-state :starts))
-             (index (plist-get emacsvox-transient--review-state
-                               (if character :character :index)))
-             (next (if (< index 0) 0 (+ index (or movement 0))))
-             (content
-              (cond
-               ((null movement)
-                (plist-put emacsvox-transient--review-state :index -1)
-                (plist-put emacsvox-transient--review-state :character -1)
-                text)
-               ((null words) "No words in this item.")
-               ((< next 0) "Start of item.")
-               ((>= next (if character (length text) (length words))) "End of item.")
-               (character
-                (plist-put emacsvox-transient--review-state :character next)
-                (plist-put emacsvox-transient--review-state :index
-                           (or (cl-position-if (lambda (start) (<= start next))
-                                               starts :from-end t) 0))
-                (string-trim (tts-char-to-speech (aref text next))))
-               (t
-                (plist-put emacsvox-transient--review-state :index next)
-                (unless (and (zerop movement)
-                             (>= (plist-get emacsvox-transient--review-state :character) 0))
-                  (plist-put emacsvox-transient--review-state :character (nth next starts)))
-                (nth next words)))))
-        (emacsvox-transient--submit-text
-         content (emacsvox-transient--item-facts 'command 'review-item)
-         'navigation)))))
+  (let ((origin-window (selected-window)))
+    (with-selected-window (emacsvox-transient--navigation-window)
+      (unless (and transient--prefix (button-at (point)))
+        (user-error "Select a menu item with Up or Down first"))
+      (let* ((button (button-at (point)))
+             (object (button-get button 'button-data))
+             (rendered (emacsvox-aural-source-substring
+                        (button-start button) (button-end button)))
+             (text (or (emacsvox-transient--choice-text object nil rendered) rendered))
+             (target (list transient--prefix (button-start button) object)))
+        (unless (and (eq transient--prefix
+                         (car (plist-get emacsvox-transient--review-state :target)))
+                     (equal target (plist-get emacsvox-transient--review-state :target))
+                     (equal text (plist-get emacsvox-transient--review-state :text)))
+          (let ((start 0) starts)
+            (save-match-data
+              (while (string-match "[^[:space:]]+" text start)
+                (push (match-beginning 0) starts)
+                (setq start (match-end 0))))
+            (setq emacsvox-transient--review-state
+                  (list :target target :text text :starts (nreverse starts)
+                        :words (split-string text "[[:space:]]+" t)
+                        :index -1 :character -1))))
+        (let* ((words (plist-get emacsvox-transient--review-state :words))
+               (starts (plist-get emacsvox-transient--review-state :starts))
+               (index (plist-get emacsvox-transient--review-state
+                                 (if character :character :index)))
+               (next (if (< index 0) 0 (+ index (or movement 0))))
+               (content
+                (cond
+                 ((null movement)
+                  (plist-put emacsvox-transient--review-state :index -1)
+                  (plist-put emacsvox-transient--review-state :character -1)
+                  text)
+                 ((null words) "No words in this item.")
+                 ((< next 0) "Start of item.")
+                 ((>= next (if character (length text) (length words))) "End of item.")
+                 (character
+                  (plist-put emacsvox-transient--review-state :character next)
+                  (plist-put emacsvox-transient--review-state :index
+                             (or (cl-position-if (lambda (start) (<= start next))
+                                                 starts :from-end t) 0))
+                  (aref text next))
+                 (t
+                  (plist-put emacsvox-transient--review-state :index next)
+                  (unless (and (zerop movement)
+                               (>= (plist-get emacsvox-transient--review-state :character) 0))
+                    (plist-put emacsvox-transient--review-state :character (nth next starts)))
+                  (nth next words)))))
+          (if (characterp content)
+              (emacsvox-transient--speak-review-character content origin-window)
+            (emacsvox-transient--submit-text
+             content (emacsvox-transient--item-facts 'command 'review-item)
+             'navigation)))))))
 
 (defun emacsvox-transient--repeat-item ()
   "Repeat the selected item's name, value and key; restart word review."

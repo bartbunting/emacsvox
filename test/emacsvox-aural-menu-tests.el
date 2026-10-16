@@ -179,6 +179,8 @@
                  (emacsvox-transient-section-announcement-order 'by-movement)
                  spoken)
              (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                       ((symbol-function 'tts-letter) (lambda (text) (push text spoken)))
+                       ((symbol-function 'tts-speak) (lambda (text) (push text spoken)))
                        ((symbol-function 'emacsvox-aural-submit)
                         (lambda (text &rest _) (push text spoken))))
                (unwind-protect
@@ -196,7 +198,19 @@
                                             (format "%s." value) "Rate:")))
                        (setq spoken nil)
                        (execute-kbd-macro (kbd "C-e c C-f C-f C-b C-e c C-e w"))
-                       (should (equal (reverse spoken) '("cap r" "a" "t" "a" "a" "Rate:")))
+                       (should (equal (reverse spoken) '("R" "a" "t" "a" "a" "Rate:")))
+                       ;; The real command loop leaves the virtual request valid
+                       ;; after returning from the popup to the source window.
+                       (execute-kbd-macro (kbd "C-e l C-e c"))
+                       (should (equal (car spoken) "R"))
+                       (let ((request emacsvox--delayed-phonetic-request))
+                         (should request)
+                         ;; Macro termination adds an input event after the key.
+                         ;; Expire as if idle before that synthetic terminator.
+                         (should (= num-input-keys (1+ (nth 5 request))))
+                         (let ((num-input-keys (nth 5 request)))
+                           (emacsvox--delayed-phonetic-announce request)))
+                       (should (equal (car spoken) "Romeo"))
                        (should (= (window-point transient--window) position))
                        (should (= tts-speech-rate value))
                        (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech)))

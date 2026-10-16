@@ -2776,6 +2776,7 @@
                 (transient-show-menu 0) speech cues)
             (cl-letf (((symbol-function 'tts-speak) #'ignore)
                       ((symbol-function 'tts-stop) #'ignore)
+                      ((symbol-function 'tts-letter) (lambda (text) (push text speech)))
                       ((symbol-function 'emacsvox-icon) #'ignore)
                       ((symbol-function 'emacsvox-aural-submit-actions) #'ignore)
                       ((symbol-function 'emacsvox-aural-submit)
@@ -2821,8 +2822,8 @@
                                                  (nth 1 words) (nth 0 words)))))
                           (setq speech nil)
                           (execute-kbd-macro (kbd "C-e c C-f C-b C-e c"))
-                          (let ((first (string-trim (tts-char-to-speech (aref choice 0))))
-                                (second (string-trim (tts-char-to-speech (aref choice 1)))))
+                          (let ((first (char-to-string (aref choice 0)))
+                                (second (char-to-string (aref choice 1))))
                             (should (equal (reverse speech) (list first second first first))))
                           (should (= position (window-point transient--window)))
                           (with-selected-window transient--window
