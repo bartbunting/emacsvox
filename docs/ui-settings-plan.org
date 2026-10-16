@@ -42,6 +42,13 @@ The full integration gate needs the current pinned dependency tree; the local
 cache has an older lock. Final branch CI remains required before merging.
 These corrections add no listening acceptance.
 
+The next CI run passed source speech and compatibility checks on both Emacs
+versions, then exposed the compiled gate's retired Home binding expectation.
+It now verifies =C-e H= for settings and =C-e S= for current-buffer settings.
+The isolated compiled Aural gate passes locally. The Emacs 31.1 integration
+gate also passed with the current pinned dependencies. The final branch run
+must include these corrected compiled checks before merging.
+
 Menu and tone documentation checkpoint, 2026-10-16: the settings chapter now
 owns the complete navigation explanation, with linked reminders in Help,
 keyboard guidance and the tutorial. It distinguishes item selection, section
