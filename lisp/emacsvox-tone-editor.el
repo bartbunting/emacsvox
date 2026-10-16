@@ -28,6 +28,25 @@
 ;;; Code:
 (require 'emacsvox-aural-menu)
 
+(defcustom emacsvox-tone-presets nil
+  "Named personal tone drafts, saved independently of any cue's defaults.
+Each entry contains a name and a tone-editor draft. Loading changes only the
+private draft; Apply or Save and apply changes the destination cue."
+  :type '(alist :key-type string :value-type plist)
+  :group 'emacsvox-aural)
+
+(defconst emacsvox-tone-editor--presets
+  '(("Soft tick" "A brief sine tone with short fades, at 35 percent volume."
+     :pitch 880 :duration 25 :volume 35 :waveform sine :envelope adsr
+     :attack 2 :decay 5 :sustain 40 :release 10)
+    ("Rounded beep" "A lower sine tone with a gradual onset and release, at 35 percent volume."
+     :pitch 660 :duration 80 :volume 35 :waveform sine :envelope adsr
+     :attack 15 :decay 10 :sustain 60 :release 30)
+    ("Short pluck" "A triangle tone with a quick onset and falling level, at 35 percent volume."
+     :pitch 1100 :duration 100 :volume 35 :waveform triangle :envelope adsr
+     :attack 2 :decay 70 :sustain 15 :release 20))
+  "Bundled starting points: name, explanation, then a complete draft.")
+
 (defconst emacsvox-tone-editor--numbers
   '((:pitch "Pitch" "Hz" 50 10000 25)
     (:duration "Duration" "milliseconds" 5 1000 5)
@@ -146,6 +165,80 @@ shapes or volume instead of playing an inaccurate substitute."
 The preview enables this tone privately without changing live settings.
 Timing and other feedback follow the source's current settings."
   (interactive) (emacsvox-tone-editor--preview t))
+
+(defun emacsvox-tone-editor--current ()
+  "Play the currently applied tone alone for comparison with Space's draft.
+This rereads the cue's live settings, including any earlier Apply. It leaves
+both the draft and saved defaults unchanged and interrupts the previous preview."
+  (interactive)
+  (let* ((provider (plist-get (emacsvox-tone-editor--state) :provider))
+         (data (emacsvox-tone-editor--validate (funcall (plist-get provider :read)))))
+    (funcall (plist-get provider :preview) data nil)))
+
+(defun emacsvox-tone-editor--load-preset (name data)
+  "Copy preset DATA named NAME into the draft and return to its control."
+  (let ((draft (emacsvox-tone-editor--validate (copy-tree data)))
+        (state (emacsvox-tone-editor--state)))
+    (setf (plist-get state :draft) draft))
+  (transient--stack-pop)
+  (transient--show)
+  (emacsvox-tone-editor--say (concat name "; draft only")))
+
+(defun emacsvox-tone-editor--preset-children (_children)
+  "Build browsable preset choices with individual explanations."
+  (let* ((entries (append emacsvox-tone-editor--presets
+                          (mapcar (lambda (entry)
+                                    (append (list (car entry) "Your saved tone; loading changes only the draft.")
+                                            (cdr entry)))
+                                  emacsvox-tone-presets)))
+         (width (length (number-to-string (length entries))))
+         (index 0))
+    (transient-parse-suffixes
+     'emacsvox-tone-editor-presets
+     (mapcar
+      (lambda (entry)
+        (let ((name (car entry)) (data (copy-tree (cddr entry)))
+              (help (concat (cadr entry) "\nEnter copies this preset into the draft; Apply and Save remain separate.")))
+          (list (format (concat "%0" (number-to-string width) "d") (cl-incf index))
+                name (lambda () (:documentation help) (interactive)
+                       (emacsvox-tone-editor--load-preset name data))
+                :transient 'transient--do-replace)))
+      entries))))
+
+(transient-define-prefix emacsvox-tone-editor-presets ()
+  "Choose a starting point for the private tone draft.
+Arrows browse without changing anything. Enter loads a copy and returns;
+q cancels. Space in the editor plays the resulting draft."
+  ["Tone presets" :class transient-column
+   :setup-children emacsvox-tone-editor--preset-children]
+  ["Finish" ("q" "Cancel" transient-quit-one) ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-tone-editor-presets nil nil :scope (emacsvox-aural-menu--context))
+  (transient--show)
+  (with-selected-window transient--window
+    (transient--goto-button
+     (seq-find (lambda (suffix) (equal (oref suffix description) "Soft tick")) transient--suffixes)))
+  (emacsvox-transient--speak-button))
+
+(defun emacsvox-tone-editor--save-preset ()
+  "Save this draft under a name through Customize, without applying it.
+The preset collection is shared by tone editors. Saving a preset leaves the
+cue's live and saved defaults unchanged. Reusing a personal name asks before
+replacement; bundled names cannot be replaced."
+  (interactive)
+  (let* ((data (emacsvox-tone-editor--validate
+                (copy-tree (plist-get (emacsvox-tone-editor--state) :draft))))
+         (name (string-trim (read-string "Save tone preset as: ")))
+         (presets (copy-tree emacsvox-tone-presets)))
+    (when (string-empty-p name) (user-error "Give the preset a name"))
+    (when (assoc-string name emacsvox-tone-editor--presets t)
+      (user-error "Choose a name other than a bundled preset"))
+    (let ((existing (assoc-string name presets t)))
+      (when (and existing (not (y-or-n-p (format "Replace tone preset %s? " (car existing)))))
+        (user-error "Preset unchanged"))
+      (if existing (setcdr existing data) (setq presets (append presets (list (cons name data))))))
+    (customize-save-variable 'emacsvox-tone-presets presets)
+    (emacsvox-tone-editor--say (concat "Saved preset " name "; cue unchanged"))))
 
 (defun emacsvox-tone-editor--stop ()
   "Stop current main speech and tone preview immediately."
@@ -330,9 +423,13 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
    ("c" (lambda () (emacsvox-tone-editor--number-label :decay)) emacsvox-tone-editor--decay :transient t)
    ("s" (lambda () (emacsvox-tone-editor--number-label :sustain)) emacsvox-tone-editor--sustain :transient t)
    ("r" (lambda () (emacsvox-tone-editor--number-label :release)) emacsvox-tone-editor--release :transient t)]
+  ["Presets"
+   ("L" "Load preset into draft" emacsvox-tone-editor-presets :transient transient--do-stack)
+   ("N" "Save draft as named preset" emacsvox-tone-editor--save-preset :transient t)]
   ["Preview"
    ("b" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("SPC" "Play tone alone" emacsvox-tone-editor--tone :transient t)
+   ("C" "Play current tone" emacsvox-tone-editor--current :transient t)
    ("P" "Read sample" emacsvox-tone-editor--sample :transient t)
    ("S" "Stop preview" emacsvox-tone-editor--stop :transient t)]
   ["Apply and save"

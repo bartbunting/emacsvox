@@ -5758,9 +5758,10 @@ punctuation default.
           Press capital ‘E’ in Spelling feedback, or use ‘C-e H s f E’,
           for a private draft of the complete tone.  The title
           identifies its global spelling scope.  This editor adds
-          waveform and envelope controls to pitch, duration, individual
-          volume.  Changes here affect only the draft until you apply
-          it.  Timing stays in Spelling feedback at ‘C-e H s f m’.
+          waveform and envelope controls to pitch, duration and
+          individual volume.  Changes here affect only the draft until
+          you apply it.  Timing stays in Spelling feedback at ‘C-e H s f
+          m’.
 
           Use arrows to navigate and Shift-left/right to adjust the
           selected number.  ‘<RET>’ enters an exact number or opens a
@@ -5794,9 +5795,27 @@ punctuation default.
           ‘P’ reads the spelling sample with the draft tone.  Both
           privately enable the tone even if live spelling tones are off;
           the sentence uses the current timing and other feedback
-          settings.  ‘S’ stops the preview immediately, without waiting
-          for release.  Navigation also interrupts playback.  Previews
-          neither apply nor save the draft.
+          settings.  Capital ‘C’ plays the currently applied tone alone,
+          so you can alternate ‘C’ and ‘<SPC>’ to compare it with the
+          draft.  After Apply, ‘C’ uses the applied changes.  ‘S’ stops
+          the preview immediately, without waiting for release.
+          Navigation also interrupts playback.  Previews neither apply
+          nor save the draft.
+
+          Capital ‘L’ opens presets.  Arrows browse without changing the
+          draft; ‘<RET>’ loads a copy and returns, while ‘q’ cancels.
+          Soft tick, Rounded beep and Short pluck are starting points
+          with different pitches and envelopes, each at 35 percent
+          individual volume.  Use Help for their character and Space to
+          hear your selection.  Further adjustments leave the preset
+          itself unchanged.
+
+          Capital ‘N’ saves the draft under a name in your personal
+          preset collection through Customize.  This does not apply the
+          tone or save the spelling cue defaults.  Reusing a personal
+          name asks before replacing it; bundled names cannot be
+          replaced.  Saved presets appear alongside the bundled choices
+          at ‘L’.
 
           Use ‘A’ to apply the draft for this session.  Capital ‘W’
           saves and applies its tone defaults through Customize.  These

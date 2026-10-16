@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1668 commands and 242 options.
+This chapter documents a total of 1669 commands and 243 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -22397,6 +22397,17 @@ Enter selects and returns. Cancel keeps the previous draft value.
 @end format
 @end deffn
 
+@subsubsection emacsvox-tone-editor-presets
+@deffn {Command} emacsvox-tone-editor-presets
+@findex emacsvox-tone-editor-presets
+
+@format
+Choose a starting point for the private tone draft.
+Arrows browse without changing anything. Enter loads a copy and returns;
+q cancels. Space in the editor plays the resulting draft.
+@end format
+@end deffn
+
 @subsubsection emacsvox-tone-editor-waveform
 @deffn {Command} emacsvox-tone-editor-waveform
 @findex emacsvox-tone-editor-waveform
@@ -22406,6 +22417,24 @@ Choose draft waveform; arrows browse without applying a choice.
 Enter selects and returns. Cancel keeps the previous draft value.
 @end format
 @end deffn
+
+@subsection emacsvox-tone-editor Options
+
+@defvar {User Option} emacsvox-tone-presets
+@verbatim
+Named personal tone drafts, saved independently of any cue’s defaults.
+Each entry contains a name and a tone-editor draft. Loading changes only the
+private draft; Apply or Save and apply changes the destination cue.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-transient
 @section emacsvox-transient
@@ -26758,6 +26787,7 @@ The  is then saved to soundscape-device for future use.
 (fn &optional PROMPT)
 @end format
 @end deffn
+
 @subsubsection soundscape-stop
 @deffn {Command} soundscape-stop  (scape)
 @findex soundscape-stop

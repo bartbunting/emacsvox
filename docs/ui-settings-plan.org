@@ -1691,6 +1691,25 @@ verification of subsequently changed code.
   press Space at =C-e H s f E= and confirm that only the tone plays; compare
   with capital =P=, then check Stop and navigation interruption.
 
+- Tone presets and comparison, 2026-10-16: =L= opens a browsable preset
+  list; Enter loads only the draft and Cancel preserves it. Each choice has
+  Help. =N= saves a named copy through Customize without applying the cue;
+  replacing a personal preset asks first. =C= plays the current applied tone
+  for comparison with Space's draft. Ten focused source checks and three
+  fresh compiled graphical checks pass, including first-item focus, browsing,
+  Help, cancellation, loading and existing Apply/discard behaviour. Byte-code
+  and regenerated manual/reference gates pass. Preset character and audible
+  comparison still need listening acceptance.
+
+- Tone extensions accepted for implementation, 2026-10-16: add named presets
+  and draft/current comparison first, then bounded pitch sweeps, linear or
+  exponential envelope curves, Pulse with 5–95 percent width and Sawtooth.
+  Timing relative to speech remains outside the tone editor. Pulse width uses
+  Shift arrows in five-point steps and exact Enter input; only Pulse uses it.
+  Keep old wire formats strict, negotiate extensions per worker, preserve
+  Classic audio and interruption, and qualify the paired development runtime.
+  Automated verification and listening acceptance remain separate.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveform (sine, triangle, square), Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.
