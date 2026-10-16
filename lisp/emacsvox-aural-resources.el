@@ -82,7 +82,7 @@
      (:constructor emacsvox-aural--make-resource-pack))
   "A concrete sound resource provider."
   id summary kind directory parent profiles default-spatialization assets
-  origin)
+  origin assignments)
 
 (cl-defstruct
     (emacsvox-aural-resource-overlay
@@ -231,7 +231,7 @@ Palettes without native settings are created in version 3.")
   "emacsvox-sound-pack.el"
   "Optional data-only manifest filename for a discovered sound pack.")
 
-(defconst emacsvox-aural-resource-pack-manifest-schema-version 1
+(defconst emacsvox-aural-resource-pack-manifest-schema-version 2
   "Current schema version for sound-pack manifests.")
 
 (defvar emacsvox-aural-disabled-resource-overlays nil)
@@ -553,15 +553,63 @@ requests immediate protocol dispatch after the tone."
         (puthash (intern (file-name-base file)) file assets)))
     assets))
 
+(defun emacsvox-aural--recording-digest (file)
+  "Return the SHA256 identity of the exact bytes in FILE."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert-file-contents-literally file)
+    (secure-hash 'sha256 (current-buffer))))
+
+(defun emacsvox-aural--validate-pack-assignments (assignments directory)
+  "Validate ASSIGNMENTS and their immutable audio below DIRECTORY.
+An inherit entry masks a legacy filename without deleting its original file."
+  (unless (proper-list-p assignments)
+    (emacsvox-aural--resource-error "Sound assignments must be a proper list"))
+  (let (seen)
+    (dolist (entry assignments)
+      (unless (and (consp entry) (symbolp (car entry)) (car entry)
+                   (not (memq (car entry) seen)))
+        (emacsvox-aural--resource-error "Invalid or duplicate sound assignment: %S" entry))
+      (push (car entry) seen)
+      (unless (eq (cdr entry) 'inherit)
+        (let* ((data (cdr entry)) (id (plist-get data :recording))
+               (relative (plist-get data :file)) (name (plist-get data :name)))
+          (unless (and (emacsvox-aural--plist-p data) (= (length data) 6)
+                       (cl-loop for (key _) on data by #'cddr
+                                always (memq key '(:recording :file :name))))
+            (emacsvox-aural--resource-error "Malformed sound assignment: %S" entry))
+          (unless (and (stringp id) (string-match-p "\\`[a-f0-9]\\{64\\}\\'" id)
+                       (stringp relative)
+                       (string-match-p
+                        (concat "\\`recordings/assigned/" id "\\.\\(ogg\\|wav\\|mp3\\|flac\\)\\'") relative)
+                       (stringp name) (not (string-empty-p (string-trim name))))
+            (emacsvox-aural--resource-error "Invalid recording reference: %S" entry))
+          (let ((file (expand-file-name relative directory)))
+            (unless (and (file-regular-p file) (file-readable-p file)
+                         (file-in-directory-p (file-truename file) (file-truename directory))
+                         (equal id (emacsvox-aural--recording-digest file)))
+              (emacsvox-aural--resource-error "Missing or changed assigned recording: %s" file)))))))
+  assignments)
+
+(defun emacsvox-aural--assigned-pack-assets (directory assignments)
+  "Return filename assets overlaid by validated ASSIGNMENTS in DIRECTORY."
+  (emacsvox-aural--validate-pack-assignments assignments directory)
+  (let ((assets (emacsvox-aural--scan-resource-directory directory)))
+    (dolist (entry assignments)
+      (if (eq (cdr entry) 'inherit) (remhash (car entry) assets)
+        (puthash (car entry) (expand-file-name (plist-get (cdr entry) :file) directory) assets)))
+    assets))
+
 (cl-defun emacsvox-aural-register-resource-pack
     (id &key summary (kind 'sound) directory parent profiles
-        (default-spatialization 'neutral) (origin 'explicit))
+        (default-spatialization 'neutral) (origin 'explicit) assignments)
   "Register resource pack ID with SUMMARY rooted at DIRECTORY.
 
 KIND is `sound' or `prompt'.  PARENT supplies inherited assets, PROFILES name
 coverage contracts, and DEFAULT-SPATIALIZATION describes the concrete assets.
 ORIGIN is `explicit' for declared providers and `discovered' for synchronized
-sound directories."
+sound directories. ASSIGNMENTS map cues to immutable pack-owned recordings
+or inherit, which reveals the parent without deleting legacy files."
   (emacsvox-aural--validate-id id "Resource pack identifier")
   (emacsvox-aural--validate-summary summary (format "Resource pack %S" id))
   (unless (memq kind '(sound prompt))
@@ -594,8 +642,8 @@ sound directories."
           :parent parent
           :profiles (delete-dups (copy-sequence profiles))
           :default-spatialization default-spatialization
-          :assets (emacsvox-aural--scan-resource-directory directory)
-          :origin origin)))
+          :assets (emacsvox-aural--assigned-pack-assets directory assignments)
+          :origin origin :assignments (copy-tree assignments))))
     (puthash id record emacsvox-aural-resource-pack-registry)
     (maphash
      (lambda (_ overlay)
@@ -1099,14 +1147,12 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
            (memq
             key
             '(:schema-version :summary :parent :profiles
-              :default-spatialization))
+              :default-spatialization :assignments))
            do
            (emacsvox-aural--resource-error
             "Unknown sound-pack manifest field %S in %s" key file))
           (unless
-              (eq
-               (plist-get data :schema-version)
-               emacsvox-aural-resource-pack-manifest-schema-version)
+              (memq (plist-get data :schema-version) '(1 2))
             (emacsvox-aural--resource-error
              "Unsupported sound-pack manifest schema in %s: %S"
              file (plist-get data :schema-version)))
@@ -1131,6 +1177,10 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
               (emacsvox-aural--resource-error
                "Invalid sound-pack spatialization in %s: %S"
                file (plist-get data :default-spatialization))))
+          (when (plist-member data :assignments)
+            (unless (eq (plist-get data :schema-version) 2)
+              (emacsvox-aural--resource-error "Assignments require sound-pack schema 2"))
+            (emacsvox-aural--validate-pack-assignments (plist-get data :assignments) directory))
           data)))))
 
 (defun emacsvox-aural--resource-pack-default-summary (id)
@@ -1178,7 +1228,7 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
          :profiles profiles
          :default-spatialization
          (or (plist-get manifest :default-spatialization) 'neutral)
-         :origin 'discovered)))))
+         :origin 'discovered :assignments (plist-get manifest :assignments))))))
 
 (defun emacsvox-aural--pack-immediately-below-root-p (pack root)
   "Return non-nil when discovered PACK is immediately below ROOT."
@@ -1340,10 +1390,13 @@ discovered directories with the same identifier."
   (let ((pack (emacsvox-aural-resource-pack id)))
     (unless pack
       (emacsvox-aural--resource-error "Unknown resource pack: %S" id))
-    (setf
-     (emacsvox-aural-resource-pack-assets pack)
-     (emacsvox-aural--scan-resource-directory
-      (emacsvox-aural-resource-pack-directory pack)))
+    (let* ((directory (emacsvox-aural-resource-pack-directory pack))
+           (assignments (if (eq (emacsvox-aural-resource-pack-origin pack) 'discovered)
+                            (plist-get (emacsvox-aural--read-resource-pack-manifest directory) :assignments)
+                          (emacsvox-aural-resource-pack-assignments pack)))
+           (assets (emacsvox-aural--assigned-pack-assets directory assignments)))
+      (setf (emacsvox-aural-resource-pack-assets pack) assets
+            (emacsvox-aural-resource-pack-assignments pack) (copy-tree assignments)))
     (maphash
      (lambda (_ overlay)
        (emacsvox-aural--refresh-resource-overlay-pack overlay id))
@@ -1422,15 +1475,21 @@ PATH protects this helper from invalid inheritance cycles."
     (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
       (emacsvox-aural--apply-pack-assets-with-overlays
        parent assets (cons id path)))
-    (emacsvox-aural--copy-resource-assets
-     (emacsvox-aural-resource-pack-assets pack) assets)
-    (when (eq (emacsvox-aural-resource-pack-kind pack) 'sound)
-      (dolist (overlay (emacsvox-aural--enabled-resource-overlays))
-        (when-let* ((module-assets
-                     (gethash
-                      id
-                      (emacsvox-aural-resource-overlay-pack-assets overlay))))
-          (emacsvox-aural--copy-resource-assets module-assets assets)))))
+    (let ((local (copy-hash-table (emacsvox-aural-resource-pack-assets pack))))
+      (when (eq (emacsvox-aural-resource-pack-kind pack) 'sound)
+        (dolist (overlay (emacsvox-aural--enabled-resource-overlays))
+          (when-let* ((module-assets
+                      (gethash id (emacsvox-aural-resource-overlay-pack-assets overlay))))
+            (emacsvox-aural--copy-resource-assets module-assets local))))
+      ;; Explicit assignments override flat files and module overrides.  Inherit
+      ;; masks both local sources while preserving the weaker parent/default.
+      (dolist (entry (emacsvox-aural-resource-pack-assignments pack))
+        (if (eq (cdr entry) 'inherit)
+            (remhash (car entry) local)
+          (puthash (car entry)
+                   (expand-file-name (plist-get (cdr entry) :file)
+                                     (emacsvox-aural-resource-pack-directory pack)) local)))
+      (emacsvox-aural--copy-resource-assets local assets)))
   assets)
 
 (defun emacsvox-aural--build-effective-assets
@@ -1439,7 +1498,8 @@ PATH protects this helper from invalid inheritance cycles."
 
 When INCLUDE-PROMPTS is non-nil, prompt resources form the weakest layer.
 Enabled module defaults come next.  Each selected-pack inheritance layer then
-adds its flat assets followed by OWNER-named module-subdirectory overrides."
+adds its flat assets, OWNER-named module overrides, then explicit assignments.
+An explicit inherit assignment skips both local file sources for that cue."
   (let* ((pack (emacsvox-aural-resource-pack pack-id))
          (_
           (unless pack

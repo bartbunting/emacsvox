@@ -53,6 +53,7 @@
 (autoload 'omnivox-punctuation "omnivox-punctuation" nil t)
 (autoload 'emacsvox-line-cues-edit "emacsvox-line-cues" nil t)
 (autoload 'emacsvox-interaction "emacsvox-interaction" nil t)
+(autoload 'emacsvox-sound-library "emacsvox-sound-library" nil t)
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
 (autoload 'emacsvox-aural-list-voice-palettes "emacsvox-aural-voice-palettes" nil t)
 (autoload 'emacsvox-aural-voice-workbench "emacsvox-aural-voice-workbench" nil t)
@@ -749,6 +750,14 @@ settings, and returning retains the captured source and settings scope."
   (emacsvox-aural-menu--open-browser
    #'emacsvox-aural-list-sound-packs 'emacsvox-aural-menu--sound-packs))
 
+(defun emacsvox-aural-menu--sound-library ()
+  "Browse available recordings without assigning them to events.
+Preview, import and search candidates; choose a personal pack and cue to assign.
+q returns to this menu item. Saving an assignment does not activate its pack."
+  (interactive)
+  (emacsvox-aural-menu--open-browser
+   #'emacsvox-sound-library 'emacsvox-aural-menu--sound-library))
+
 (defun emacsvox-aural-menu--browse-voices ()
   "Browse engines and their voices; q returns through the browser parents."
   (interactive)
@@ -850,7 +859,8 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
    ("n" "Notifications and spatial output" emacsvox-output-settings :transient transient--do-stack)]
   ["Cues and sound packs"
    ("c" "Line and boundary cues" emacsvox-aural-menu-line-cues :transient transient--do-stack)
-   ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)]
+   ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)
+   ("l" "Browse recording library" emacsvox-aural-menu--sound-library :transient transient--do-suspend)]
   ["Save and finish"
    ("S" "Save output volumes" emacsvox-aural-menu--save-output :transient t)
    ("q" "Back (keep changes)" transient-quit-one)

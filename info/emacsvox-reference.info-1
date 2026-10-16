@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1670 commands and 247 options.
+   This chapter documents a total of 1687 commands and 248 options.
 
 * Menu:
 
@@ -660,6 +660,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-slime:: Speech-enable SLIME.
 * emacsvox-smartparens:: SMARTPARENS.
 * emacsvox-solitaire:: Solitaire.
+* emacsvox-sound-library:: Recordings and explicit cue assignments.
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
 * emacsvox-speedbar:: speedbar -.
@@ -4429,28 +4430,36 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional PACK)
 
-2.49.1.3 emacsvox-aural-sound-pack-cues-audition
+2.49.1.3 emacsvox-aural-sound-pack-cues-assign
+..............................................
+
+ -- Command: emacsvox-aural-sound-pack-cues-assign
+
+     Compare library recordings for this cue; W explicitly saves an assignment.
+     Only writable discovered packs can be changed. The active pack stays selected.
+
+2.49.1.4 emacsvox-aural-sound-pack-cues-audition
 ................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-audition
 
      Audition the concrete cue at point.
 
-2.49.1.4 emacsvox-aural-sound-pack-cues-describe
+2.49.1.5 emacsvox-aural-sound-pack-cues-describe
 ................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-describe
 
      Show details of the selected cue without playing it.
 
-2.49.1.5 emacsvox-aural-sound-pack-cues-help
+2.49.1.6 emacsvox-aural-sound-pack-cues-help
 ............................................
 
  -- Command: emacsvox-aural-sound-pack-cues-help
 
      Display and speak sound-pack cue-browser help.
 
-2.49.1.6 emacsvox-aural-sound-pack-cues-mode
+2.49.1.7 emacsvox-aural-sound-pack-cues-mode
 ............................................
 
  -- Command: emacsvox-aural-sound-pack-cues-mode
@@ -4467,40 +4476,41 @@ discovered-pack manifests without editing raw Lisp.
      RET		emacsvox-aural-sound-pack-cues-describe
      ?		emacsvox-aural-sound-pack-cues-help
      P		emacsvox-aural-sound-pack-cues-audition
+     a		emacsvox-aural-sound-pack-cues-assign
      h		emacsvox-aural-menu
      o		emacsvox-aural-sound-packs-open-directory
      s		emacsvox-aural-list-sound-packs
      v		emacsvox-aural-sound-pack-cues-show-validation
 
-2.49.1.7 emacsvox-aural-sound-pack-cues-next
+2.49.1.8 emacsvox-aural-sound-pack-cues-next
 ............................................
 
  -- Command: emacsvox-aural-sound-pack-cues-next
 
      Move to and speak the next cue.
 
-2.49.1.8 emacsvox-aural-sound-pack-cues-next-column
+2.49.1.9 emacsvox-aural-sound-pack-cues-next-column
 ...................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-next-column
 
      Move right and speak the next cue column.
 
-2.49.1.9 emacsvox-aural-sound-pack-cues-previous
-................................................
+2.49.1.10 emacsvox-aural-sound-pack-cues-previous
+.................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-previous
 
      Move to and speak the previous cue.
 
-2.49.1.10 emacsvox-aural-sound-pack-cues-previous-column
+2.49.1.11 emacsvox-aural-sound-pack-cues-previous-column
 ........................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-previous-column
 
      Move left and speak the previous cue column.
 
-2.49.1.11 emacsvox-aural-sound-pack-cues-refresh
+2.49.1.12 emacsvox-aural-sound-pack-cues-refresh
 ................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-refresh (&optional cue)
@@ -4509,56 +4519,56 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional CUE)
 
-2.49.1.12 emacsvox-aural-sound-pack-cues-show-validation
+2.49.1.13 emacsvox-aural-sound-pack-cues-show-validation
 ........................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-show-validation
 
      Display and speak validation for the cue browser’s sound pack.
 
-2.49.1.13 emacsvox-aural-sound-pack-cues-speak-current
+2.49.1.14 emacsvox-aural-sound-pack-cues-speak-current
 ......................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-speak-current
 
      Speak the cue, provenance, and intent at point.
 
-2.49.1.14 emacsvox-aural-sound-pack-cues-speak-current-cell
+2.49.1.15 emacsvox-aural-sound-pack-cues-speak-current-cell
 ...........................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-speak-current-cell
 
      Speak the current cue-browser column title and value.
 
-2.49.1.15 emacsvox-aural-sound-packs-activate
+2.49.1.16 emacsvox-aural-sound-packs-activate
 .............................................
 
  -- Command: emacsvox-aural-sound-packs-activate
 
      Activate the sound pack at point.
 
-2.49.1.16 emacsvox-aural-sound-packs-audition
+2.49.1.17 emacsvox-aural-sound-packs-audition
 .............................................
 
  -- Command: emacsvox-aural-sound-packs-audition
 
      Audition a representative cue from the sound pack at point.
 
-2.49.1.17 emacsvox-aural-sound-packs-edit-manifest
+2.49.1.18 emacsvox-aural-sound-packs-edit-manifest
 ..................................................
 
  -- Command: emacsvox-aural-sound-packs-edit-manifest
 
      Guidedly edit safe manifest metadata for the discovered pack at point.
 
-2.49.1.18 emacsvox-aural-sound-packs-help
+2.49.1.19 emacsvox-aural-sound-packs-help
 .........................................
 
  -- Command: emacsvox-aural-sound-packs-help
 
      Display and speak sound-pack manager help.
 
-2.49.1.19 emacsvox-aural-sound-packs-mode
+2.49.1.20 emacsvox-aural-sound-packs-mode
 .........................................
 
  -- Command: emacsvox-aural-sound-packs-mode
@@ -4581,42 +4591,42 @@ discovered-pack manifests without editing raw Lisp.
      o		emacsvox-aural-sound-packs-open-directory
      v		emacsvox-aural-sound-packs-show-validation
 
-2.49.1.20 emacsvox-aural-sound-packs-next
+2.49.1.21 emacsvox-aural-sound-packs-next
 .........................................
 
  -- Command: emacsvox-aural-sound-packs-next
 
      Move to and speak the next sound pack.
 
-2.49.1.21 emacsvox-aural-sound-packs-next-column
+2.49.1.22 emacsvox-aural-sound-packs-next-column
 ................................................
 
  -- Command: emacsvox-aural-sound-packs-next-column
 
      Move right and speak the next sound-pack column.
 
-2.49.1.22 emacsvox-aural-sound-packs-open-directory
+2.49.1.23 emacsvox-aural-sound-packs-open-directory
 ...................................................
 
  -- Command: emacsvox-aural-sound-packs-open-directory
 
      Open the current sound pack’s directory in Dired.
 
-2.49.1.23 emacsvox-aural-sound-packs-previous
+2.49.1.24 emacsvox-aural-sound-packs-previous
 .............................................
 
  -- Command: emacsvox-aural-sound-packs-previous
 
      Move to and speak the previous sound pack.
 
-2.49.1.24 emacsvox-aural-sound-packs-previous-column
+2.49.1.25 emacsvox-aural-sound-packs-previous-column
 ....................................................
 
  -- Command: emacsvox-aural-sound-packs-previous-column
 
      Move left and speak the previous sound-pack column.
 
-2.49.1.25 emacsvox-aural-sound-packs-refresh
+2.49.1.26 emacsvox-aural-sound-packs-refresh
 ............................................
 
  -- Command: emacsvox-aural-sound-packs-refresh (&optional pack)
@@ -4625,7 +4635,7 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional PACK)
 
-2.49.1.26 emacsvox-aural-sound-packs-show-validation
+2.49.1.27 emacsvox-aural-sound-packs-show-validation
 ....................................................
 
  -- Command: emacsvox-aural-sound-packs-show-validation (&optional
@@ -4635,14 +4645,14 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional PACK-ID)
 
-2.49.1.27 emacsvox-aural-sound-packs-speak-current
+2.49.1.28 emacsvox-aural-sound-packs-speak-current
 ..................................................
 
  -- Command: emacsvox-aural-sound-packs-speak-current
 
      Speak a natural summary of the sound pack at point.
 
-2.49.1.28 emacsvox-aural-sound-packs-speak-current-cell
+2.49.1.29 emacsvox-aural-sound-packs-speak-current-cell
 .......................................................
 
  -- Command: emacsvox-aural-sound-packs-speak-current-cell
@@ -7441,7 +7451,9 @@ and save beep defaults through Customize; preserve contextual rules.
 
  -- Command: emacsvox-capitalization-cue (arg1)
 
-     Tune one global capitalization beep in a retained preview draft.
+     Preview and adjust one global capitalization beep.
+     Edits remain available in this session until applied or discarded. A applies
+     session defaults; S saves them through Customize for future sessions.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-chess,  Next: emacsvox-cider,  Prev: emacsvox-capitalization,  Up: Emacsvox Commands And Options

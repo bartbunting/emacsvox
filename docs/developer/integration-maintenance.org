@@ -1468,6 +1468,19 @@ Unknown cue names fail the resource audit; introducing a new semantic cue
 requires an integration to register its intent and use it. Every standalone
 sound pack must resolve =button=, directly or through its declared parent.
 
+The recording library writes version 2 manifests when saving assignments.
+These retain the same metadata and add =:assignments=: an alist mapping cue
+symbols to =inherit= or =(:recording SHA256 :file RELATIVE-PATH :name LABEL)=.
+Audio is copied below =recordings/assigned/= inside the pack; paths and byte
+hashes are checked before publication. Copy the complete pack directory when
+relocating it. Version 1 manifests and flat cue filenames remain supported.
+
+Explicit assignments override flat and module-specific files at their own
+inheritance level. =inherit= skips both local sources without deleting them.
+The browser shows recorded labels, while cue registration still owns semantic
+intent. Candidate files belong in the separate library, not at the pack root;
+see [[info:emacsvox#Personal Sound Packs][Personal Sound Packs]] for the assignment workflow.
+
 The optional =:profiles= field lists registered cue-coverage requirements.
 These are resource validation contracts, distinct from Presentation Profiles
 that select a user's setup. Keep the coverage appropriate to the intended

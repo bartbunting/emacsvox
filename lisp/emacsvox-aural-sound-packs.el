@@ -269,12 +269,18 @@ SELECTED-PACK distinguishes direct from inherited resources."
       (format
        "Resource pack inheritance cycle: %S"
        (nreverse (cons pack-id path))))))
-  (let ((pack (emacsvox-aural-resource-pack pack-id))
-        (selected-pack (or selected-pack pack-id)))
+  (let* ((pack (emacsvox-aural-resource-pack pack-id))
+         (assignment (assq cue (and pack (emacsvox-aural-resource-pack-assignments pack))))
+         (selected-pack (or selected-pack pack-id)))
     (unless pack
       (user-error "Unknown sound pack: %S" pack-id))
     (or
-     (when-let* ((module
+     (when (and assignment (not (eq (cdr assignment) 'inherit)))
+       (list :provider pack-id
+             :resource (gethash cue (emacsvox-aural-resource-pack-assets pack))
+             :availability (if (eq pack-id selected-pack) "assigned" "inherited assignment")))
+     (unless assignment
+      (when-let* ((module
                   (emacsvox-aural--resource-pack-module-asset cue pack-id)))
        (list
         :provider pack-id
@@ -282,15 +288,16 @@ SELECTED-PACK distinguishes direct from inherited resources."
         :availability
         (if (eq pack-id selected-pack)
             "module override"
-          "inherited module override")))
-     (when-let* ((file
+          "inherited module override"))))
+     (unless assignment
+      (when-let* ((file
                   (gethash
                    cue (emacsvox-aural-resource-pack-assets pack))))
        (list
         :provider pack-id
         :resource file
         :availability
-        (if (eq pack-id selected-pack) "native" "inherited")))
+        (if (eq pack-id selected-pack) "native" "inherited"))))
      (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
        (emacsvox-aural-sound-packs--exact-asset
         cue parent (cons pack-id path) selected-pack)))))
@@ -393,6 +400,15 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
      (delete-dups ids)
      #'emacsvox-aural-sound-packs--symbol-less-p)))
 
+(defun emacsvox-aural-sound-packs--recording-name (detail)
+  "Return the assigned recording's friendly name from resolved DETAIL."
+  (when-let* ((pack (emacsvox-aural-resource-pack
+                    (emacsvox-aural-sound-cue-detail-provider detail)))
+              (assignment (cdr (assq (emacsvox-aural-sound-cue-detail-resolved-cue detail)
+                                      (emacsvox-aural-resource-pack-assignments pack))))
+              ((listp assignment)))
+    (plist-get assignment :name)))
+
 (defun emacsvox-aural-sound-pack-cues--row (cue)
   "Return a cue-browser row for CUE in the current pack."
   (let* ((detail
@@ -410,7 +426,8 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
       (symbol-name cue)
       (emacsvox-aural-sound-cue-detail-availability detail)
       (if provider (symbol-name provider) "")
-      (if resource (abbreviate-file-name resource) "")
+      (or (emacsvox-aural-sound-packs--recording-name detail)
+          (if resource (abbreviate-file-name resource) ""))
       (if spatial (symbol-name spatial) "")
       (emacsvox-aural-sound-cue-detail-intent detail)))))
 
@@ -459,6 +476,8 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
                (format
                 "Provided by %s."
                 (emacsvox-aural-humanize provider)))
+             (when-let* ((name (emacsvox-aural-sound-packs--recording-name detail)))
+               (format "Recording %s." name))
              (when-let* ((spatial
                           (emacsvox-aural-sound-cue-detail-spatialization
                            detail)))
@@ -714,6 +733,8 @@ PATH protects completion from invalid inheritance cycles."
                      (equal
                       (emacsvox-aural-resource-pack-profiles updated)
                       (plist-get data :profiles))
+                     (equal (emacsvox-aural-resource-pack-assignments updated)
+                            (plist-get data :assignments))
                      (eq
                       (emacsvox-aural-resource-pack-default-spatialization
                        updated)
@@ -788,7 +809,8 @@ PATH protects completion from invalid inheritance cycles."
              (unless (string-empty-p parent-answer)
                (intern parent-answer))
              :profiles profiles
-             :default-spatialization spatial)))
+             :default-spatialization spatial
+             :assignments (copy-tree (emacsvox-aural-resource-pack-assignments pack)))))
       (emacsvox-aural-sound-packs--write-manifest pack data)
       (emacsvox-aural-sound-packs-refresh id)
       (emacsvox-aural-ui-refresh-home-if-live)
@@ -867,6 +889,19 @@ PATH protects completion from invalid inheritance cycles."
   (let ((description (emacsvox-aural-sound-pack-cues-speak-current)))
     (emacsvox-aural-ui-with-help-window (princ description))))
 
+(autoload 'emacsvox-sound-library "emacsvox-sound-library" nil t)
+
+(defun emacsvox-aural-sound-pack-cues-assign ()
+  "Compare library recordings for this cue; W explicitly saves an assignment.
+Only writable discovered packs can be changed. The active pack stays selected."
+  (interactive)
+  (emacsvox-sound-library emacsvox-aural-sound-pack-cues-pack
+                         (or (tabulated-list-get-id) (user-error "Move to a cue first")))
+  (emacsvox-aural-ui-speak "Choose a recording. P previews; C compares the current cue; W saves")
+  (emacsvox-sound-library-speak-current))
+
+(declare-function emacsvox-sound-library-speak-current "emacsvox-sound-library")
+
 (defun emacsvox-aural-sound-pack-cues-help ()
   "Display and speak sound-pack cue-browser help."
   (interactive)
@@ -880,6 +915,7 @@ PATH protects completion from invalid inheritance cycles."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET cue details      P audition; S stop\n"
+      "a assign from library; compare with C, select with RET, save with W\n"
       "v validate pack      o open pack directory\n"
       "g rescan pack        s sound-pack manager\n"
       "h settings menu         ? help\n"
@@ -901,7 +937,7 @@ PATH protects completion from invalid inheritance cycles."
    [("Cue" 24 t)
     ("Availability" 24 t)
     ("Provider" 18 t)
-    ("File" 40 t)
+    ("Recording / file" 40 t)
     ("Spatial" 18 t)
     ("Intent" 0 t)])
   (setq tabulated-list-padding 2)
@@ -913,6 +949,7 @@ PATH protects completion from invalid inheritance cycles."
 (dolist
     (binding
      '(("RET" . emacsvox-aural-sound-pack-cues-describe)
+       ("a" . emacsvox-aural-sound-pack-cues-assign)
        ("P" . emacsvox-aural-sound-pack-cues-audition)
        ("v" . emacsvox-aural-sound-pack-cues-show-validation)
        ("o" . emacsvox-aural-sound-packs-open-directory)

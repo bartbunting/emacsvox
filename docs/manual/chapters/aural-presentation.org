@@ -1916,7 +1916,9 @@ For unconfirmed application, see
 
 Rules request cues by semantic name. Sound packs map names to audio assets
 and can inherit missing cues. This lets you change the sound of a family of
-cues without rewriting rules. For one event, use its feedback rule instead.
+cues without rewriting rules. A recording library holds available sounds;
+assigning one to a cue changes its sound in that pack. To change when the cue
+plays, use its feedback rule.
 
 To enable or disable earcons in the captured buffer, use ~C-e H r l e~.
 In that submenu, ~E~ changes the global default for buffers without a local
@@ -1935,7 +1937,8 @@ opened browsers keep their usual returns.
 - RET :: Browse individual cues and their source or fallback.
 - P in the cue browser :: Audition the selected concrete cue; RET shows details.
 - v :: Validate resources and report missing/invalid entries.
-- a :: Activate the selected pack.
+- a in the pack manager :: Activate the selected pack.
+- a in the cue browser :: Compare library recordings for an explicit assignment.
 
 Spatial requests describe placement portably, not a particular device.
 ~C-e H D s~ reports capabilities and fallbacks; ~C-e H o n~ controls output,
@@ -1945,9 +1948,9 @@ independent of sampled files and the active pack.
 
 For waveform, pitch sweep and envelope adjustments, use the
 [[spelling-tone-editor][shared tone editor]]. Spelling, capitalisation beeps and rising-pitch
-indentation each open it from their own menu. The waveform and envelope
-controls are shared; scope and saving belong to the destination. Line cues
-and general personal-rule editing retain their separate controls.
+indentation each open it from their own menu, as do the five line-condition
+cues. The waveform and envelope controls are shared; scope and saving belong
+to the destination. General personal-rule editing retains its own controls.
 
 *** Tune line and boundary cues from the menu
 :PROPERTIES:
@@ -1957,14 +1960,23 @@ and general personal-rule editing retain their separate controls.
 ~C-e H o c~ opens /Line and boundary cues/. Blank, whitespace-only, separator,
 decorated, and unspeakable-line tones have pitch and integer-duration controls.
 Shift-left/right adjusts by 25 Hz or 5 milliseconds; ~RET~ enters exactly.
+Their ~E~ opens the shared tone editor for volume, waveform, sweep and envelope.
 Boundary/warning and large movement instead choose replacement earcons.
 Changing those named earcons affects every use, including warnings elsewhere.
 
-Each cue retains a global preview draft. ~SPC~ auditions it, ~s~ stops,
-~n~ silences in the draft, ~r~ restores bundled values, and ~D~ discards edits.
-~S~ saves through personal rules while preserving unrelated rules; stronger
-presentation rules may override it. ~q~ retains the draft. This changes cue
-output, not classification of separators or decorated lines.
+Each cue retains a global draft. ~SPC~ auditions it, ~s~ stops, ~n~ silences
+in the draft, ~r~ restores bundled values, and ~D~ discards unapplied edits.
+~A~ applies a temporary session rule. ~S~ saves the conditional personal rule
+and removes its temporary session override. Unrelated rules remain intact and
+other presentation rules may override the result. To undo an applied change,
+choose the desired values or bundled restoration, then Apply or Save again.
+
+Inside the shared editor, ~A~ applies for the session and ~W~ saves the personal
+rule. Preview leaves the parent's draft and live rules unchanged; ~q~ discards
+unapplied editor adjustments and returns to the same /Edit tone/ control.
+The parent menu's ~q~ retains its draft, including an applied change. Line cues
+use the presentation-rule store because they match line conditions. These
+controls change cue output, not classification of separators or decorated lines.
 
 *** Walkthrough: Try A Sound Pack
 :PROPERTIES:
@@ -1987,7 +1999,8 @@ output, not classification of separators or decorated lines.
 5. Restore the original pack by activating it. If the experiment was saved
    in a profile, restore/update that profile too. Preview alone needs no undo.
 
-For one unwanted cue, change its rule rather than switching every cue in a pack.
+For a different recording on one cue, assign from the library below. To
+suppress the cue or change when it plays, use its feedback rule.
 
 *** Walkthrough: Silence One Cue
 :PROPERTIES:
@@ -2102,10 +2115,80 @@ Coverage profiles declare cue sets for validation, not working Presentation
 Profiles. Native assets belong to the pack; effective ones include inherited
 and fallback cues. Validation and details explain those sources.
 
-This manager does not record/edit audio or create a sound pack through a New
-Palette-style wizard. New packs need audio files and resource metadata; see
-[[info:emacsvox#Authoring Sound Packs][Authoring Sound Packs]] in the Developer Guide. For a change to when a cue
-plays, use the feedback-rule workflow.
+Use the cue browser's ~a~ to replace a cue from the recording library. Its
+/Availability/ distinguishes explicit assignments from native files and
+inherited sounds. Assigned recordings show their names in =Recording / file=;
+row speech includes the name and provider. The manager does not record or edit
+audio, or create a pack through a wizard. For a new personal pack directory,
+see [[info:emacsvox#Authoring Sound Packs][Authoring Sound Packs]] in the Developer Guide.
+
+*** Browse recordings and assign them to cues
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Open ~C-e H o l~ for the recording library, or run ~M-x emacsvox-sound-library~.
+The default directory is =~/.emacsvox/sounds/library/=; change it through
+~M-x customize-option RET emacsvox-sound-library-directory RET~. Put Ogg, WAV,
+MP3 or FLAC files there, optionally in collection subdirectories, then press
+~g~ to rescan. ~i~ imports a copy into a named collection and leaves its source
+intact. Adding files does not create cues or assign them to events.
+
+Arrows browse names, collections, durations and known assignments. ~SPC~ or ~P~ previews
+the current row and ~S~ stops. ~/~ filters names and collections; an empty
+search restores all rows. ~u~ filters recordings without saved assignments;
+it also keeps pending choices visible so you can review them. Duration is shown
+when the optional =ffprobe= program is available. Playback still depends on
+your audio backend. Identical file bytes appear once, even under several names.
+
+To assign several sounds in a writable personal pack:
+
+1. Select a recording in the library and press ~a~ to choose the destination
+   pack and cue. This queues the recording without saving. Alternatively,
+   open ~C-e H o p~, select the pack, then ~RET~ for its cues. Find the cue
+   and press ~a~ to open the library, then ~RET~ to queue a recording.
+2. The row shows and speaks /Pending/ with the pack and cue. ~SPC~ previews the
+   row; ~C~ plays the saved sound for the current cue. Browse and press ~RET~
+   to replace that cue's pending choice. Live playback stays unchanged.
+3. To assign another cue, select another recording and press ~a~ again. Choose
+   the cue; the pack stays the same. You stay in the same buffer, and earlier
+   choices remain pending. Repeat for as many cues as needed. The header shows
+   the current cue and the number of pending changes.
+4. Press ~W~ to save all pending changes together. Their status becomes /Saved/.
+   Speech confirms the number of assignments, the pack and whether it is active.
+   An active pack uses the saved sounds; an inactive pack stays inactive.
+5. Press ~q~ to return to the opening menu or cue row. This discards any changes
+   still pending and announces how many were discarded. Saved assignments stay
+   in place. Reopen the library to choose a different pack.
+
+A recording can serve several cues. Its row lists each pending and saved
+assignment separately. Replacing one pending choice leaves the other cues'
+choices intact. Until Save, an old recording still shows its saved assignment
+because that is the sound currently used.
+
+To restore inheritance, open that cue's assignment and press ~R~. This queues
+Reset to parent alongside any other pending changes. ~W~ saves them together,
+skipping that cue's local assignment and revealing its parent or fallback while
+retaining original audio files. Select and save another recording to replace
+it again. If the pack or a candidate changes while pending, Save refuses the
+stale edit and leaves the whole batch unsaved. Cancel, refresh and reopen it.
+
+Saved assignments copy audio into the pack. Renaming or removing the library
+source cannot break that copy. To move a pack, copy its whole directory and
+retain its parent packs; the library is not required for playback. Older
+filename-based packs continue to work. A saved assignment takes precedence
+over their local file for that cue.
+
+~o~ opens the library directory for file management. ~d~ deletes the selected
+library file after confirmation, refusing recordings assigned in known packs
+or pending in the current buffer.
+Assignment reporting covers configured packs, not copies elsewhere. Original
+imports outside the library and audio copied into packs remain intact.
+
+This browser does not upload audio to a remote speech host. Personal library
+paths outside the configured workstation sound root cannot be previewed through
+the remote resource route. Use local playback for those recordings; remote
+resource installation remains a separate task.
 
 ** Speech Output And Notifications
 :PROPERTIES:
@@ -2201,16 +2284,19 @@ for its scope and effects before applying it.
 :END:
 
 Open ~C-e H s i~ or directly ~C-e d I~. In global-default scope, ~S~ saves
-indentation defaults and tone volume through Customize. Select /Volume/ and
-adjust by five percentage points with Shift-left/right, or enter with ~RET~.
-Plain left/right changes sections and ~SPC~ previews indentation. Other selected
-items give guidance rather than treating every shifted arrow as volume.
+indentation defaults and tone volumes through Customize. In /Tone levels/,
+~l~ changes /Pitch-tone volume/ in the selected buffer/global scope; ~v~ changes
+/Shared tone volume/ globally. Adjust either by five percentage points with
+Shift-left/right, or enter with ~RET~. The shared level scales all main-stream
+tones. The individual level affects rising-pitch indentation only;
+duration-coded tones still use the shared level. Plain left/right changes
+sections and ~SPC~ previews indentation.
 
-~t~ opens pitch-tone settings: base pitch, rise per column, maximum pitch, and
-requested duration. Shift-left/right adjusts; ~RET~ enters exactly. ~SPC~
-previews four columns without changing presentation or enabling feedback.
+~t~ opens pitch-tone settings: base pitch, rise per column, maximum pitch,
+requested duration and individual volume. Shift-left/right adjusts; ~RET~
+enters exactly. ~SPC~ previews four columns without changing presentation or enabling feedback.
 ~s~ stops. Short durations show the effective blank-line-tone minimum.
-~R~ restores the four bundled values in scope. Global changes preserve local
+~R~ restores these five bundled values in scope. Global changes preserve local
 overrides; ~S~ saves global defaults and tone volume. ~q~ retains live changes.
 
 From pitch-tone settings, ~E~ opens the shared base-tone editor, also reached
@@ -2236,7 +2322,10 @@ changes and returns. See [[spelling-tone-editor][the shared controls]] for prese
 ~C-e H s c~ opens /Capitalization/. ~i~ toggles indication and ~c~ independently
 toggles camel-case splitting. These and the presentation choice share
 buffer/global scope on ~g~. ~SPC~ previews reading; ~S~ saves these three
-startup defaults. Buffer overrides still apply.
+startup defaults. Buffer overrides still apply. The reading sample contains
+several camel-case identifiers. Capital cues and a voice's own pronunciation
+can make splitting on and off sound similar; compare with indication off to
+hear splitting without capital cues.
 
 Press ~p~ to browse Spoken, Tone, Spoken and tone, Personal rules or None.
 The current choice is focused and marked selected. Up/down browses without
@@ -2247,28 +2336,34 @@ Press ~RET~ again to try another choice, or ~SPC~ to preview reading. ~q~ or
 enables indication nor saves startup defaults.
 
 Within Capitalization, ~l~ edits the capital-letter beep and ~a~ the all-caps
-beep. Each has a separate global draft. Select pitch/duration and adjust by
-25 Hz/5 milliseconds with Shift-left/right, or use ~RET~. ~SPC~ previews only
-the beep and ~s~ stops. Previewing neither changes reading settings nor enables
-capitalisation indication.
+beep. Each has separate global defaults saved through Customize. You can
+preview edits before applying or saving them; these unsaved edits are what
+the editor calls a /draft/.
+
+Select pitch, duration or /Beep volume/ (~v~) and adjust by 25 Hz,
+5 milliseconds or 5 percentage points with Shift-left/right, or use ~RET~.
+The individual volume affects only that beep and is scaled by shared tone
+volume. ~SPC~ previews the beep alone. ~P~ reads two sentences with several
+examples of the selected kind, so you can judge repeated beeps against speech.
+~s~ stops. Samples privately enable tone indication without changing your
+reading settings; contextual presentation rules still apply.
 
 In a beep menu, ~A~ applies that cue's global defaults for this Emacs session;
 ~S~ also saves them through Customize for future sessions. These defaults
 apply to tone/combined presentation, and presentation rules can override them.
-~r~ restores factory values in the draft; apply or save to use them. ~D~
+~r~ prepares factory values for preview; apply or save to use them. ~D~
 discards preview changes and rereads current defaults. ~q~ returns and ~C-q~
-closes menus, retaining the parent draft for this session. Applied changes
+closes menus, retaining unsaved preview edits for this session. Applied changes
 remain effective. If defaults change elsewhere while you are editing, discard
-the draft and reopen it before applying or saving.
+the preview edits and reopen before applying or saving.
 
 Press ~E~ inside either beep menu for the shared tone editor: the full routes
-are ~C-e H s c l E~ and ~C-e H s c a E~. ~SPC~ previews its private draft;
-~C~ compares the current cue and ~P~ reads a capitalisation sample. The sample
-privately enables tone indication without changing your reading settings;
-contextual presentation rules still apply. ~A~ applies the global defaults
-and ~W~ also saves them through Customize. ~q~ discards unapplied changes and
-returns to the parent. ~R~ puts factory values in the private draft. Waveform
-and envelope controls follow [[spelling-tone-editor][the common editor instructions]].
+are ~C-e H s c l E~ and ~C-e H s c a E~. ~SPC~ previews the edited tone alone;
+~C~ compares the current cue and ~P~ reads the same repeated-beep sample.
+~A~ applies the global defaults and ~W~ also saves them through Customize.
+~q~ discards unapplied changes and returns to the parent. ~R~ prepares factory
+values for preview. Waveform and envelope controls follow
+[[spelling-tone-editor][the common editor instructions]].
 
 The Customize options are =emacsvox-capitalization-capital-tone= and
 =emacsvox-capitalization-all-caps-tone=. Each holds pitch, duration, individual
@@ -2321,7 +2416,11 @@ individual adjustment; it is also available in Sounds and output.
 
 These controls change the current session immediately. ~b~ previews the tone
 alone, even when tone feedback is off. ~SPC~ reads a sample containing one
-flagged word with the selected combination. ~S~ saves the spelling settings,
+flagged word with the selected combination. Capitalisation follows the captured
+source buffer's active reading settings and presentation rules. A local Spoken
+choice can therefore say “cap” even when global defaults use Tone. Open
+Capitalization for that buffer to inspect or change its reading settings.
+~S~ saves the spelling settings,
 including tone timing and shape, and the shared tone volume through Customize.
 ~q~ returns and ~C-q~ closes the menus without saving.
 
@@ -2336,8 +2435,8 @@ including tone timing and shape, and the shared tone volume through Customize.
 #+cindex: shared tone editor
 #+cindex: tone presets
 
-Spelling feedback, each capitalisation beep menu and indentation's pitch-tone
-settings open this editor with capital ~E~. The title identifies the cue and
+Spelling feedback, each capitalisation beep menu, indentation's pitch-tone
+settings and the five line-condition menus open this editor with capital ~E~. The title identifies the cue and
 scope. Waveform, pitch sweep and envelope controls accompany pitch, duration
 and individual volume. Adjustments affect only a private draft until you
 apply or save it using the destination's labelled actions.
@@ -2346,7 +2445,9 @@ The exercise below uses global spelling at ~C-e H s f E~. Its timing stays
 in Spelling feedback at ~C-e H s f m~; voice, earcon and tone enablement also
 remain there. Shared main-tone volume controls all main tones from Sounds
 and output. Indentation's buffer/global scope follows its saving instructions
-above; capitalisation and spelling tones use global defaults.
+above; capitalisation and spelling tones use global defaults. Line tones use
+conditional session or personal rules as described in
+[[info:emacsvox#Sounds And Space][Sounds, Tones, and Spatial Cues]].
 
 The sections follow the editing task: the cue's basic controls,
 Pitch movement, Envelope, Preview, Presets, Apply and save, then Finish.

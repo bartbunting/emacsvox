@@ -289,7 +289,7 @@
                 (should (equal (car toggles) '(off)))
                 (execute-kbd-macro (kbd "<down>"))
                 (should (equal (car selections)
-                               "Spoken column (selected). s. Presentation. 2 of 5 sections."))
+                               "Presentation. 2 of 5 sections. Spoken column (selected). s."))
                 (should (equal (car cues) '(section)))
                 (execute-kbd-macro (kbd "<down>"))
                 (should (equal (car selections) "Pitch tone. p."))
@@ -305,7 +305,7 @@
             (when transient--prefix (execute-kbd-macro (kbd "C-g")))))))))
 
 (ert-deftest emacsvox-indentation-menu-graphical-shift-arrows-adjust-volume ()
-  "Shift arrows adjust only Volume; plain arrows navigate and prompts keep their keys."
+  "Shift arrows adjust each volume independently; prompts keep their editing keys."
   (skip-unless (display-graphic-p))
   (save-window-excursion
     (emacsvox-test--with-indentation-menu
@@ -341,6 +341,13 @@
                 (execute-kbd-macro (kbd "<right> <right> <right>"))
                 (with-selected-window transient--window
                   (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                              'emacsvox-indentation--tone-volume)))
+                (execute-kbd-macro (kbd "S-<left>"))
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-volume source) 95))
+                (should (= (default-value 'tts-main-tone-volume) 50))
+                (execute-kbd-macro (kbd "<down>"))
+                (with-selected-window transient--window
+                  (should (eq (oref (button-get (button-at (point)) 'button-data) command)
                               'emacsvox-indentation--volume))
                   (should (string-match-p "Shift arrows.*5 percentage points"
                                           (emacsvox-transient--line-content))))
@@ -354,7 +361,7 @@
                   (should (eq (plist-get (cdr entry) :delivery-policy) 'replaceable))
                   (should (eq (plist-get (cdr entry) :interruption-policy) 'lane)))
                 (with-selected-window transient--window
-                  (should (string-match-p "Volume: 45 percent" (button-label (button-at (point))))))
+                  (should (string-match-p "Shared tone volume: 45 percent" (button-label (button-at (point))))))
                 (set-default 'tts-main-tone-volume 0)
                 (execute-kbd-macro (kbd "S-<left>"))
                 (should (= (default-value 'tts-main-tone-volume) 0))
@@ -649,6 +656,21 @@
               (should (equal (default-value 'emacsvox-indentation-pitch-tone-shape) '(:waveform sine)))
               (should (cdr (emacsvox-indentation--state))))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
+
+(ert-deftest emacsvox-indentation-parent-volume-keeps-scope-and-shared-level ()
+  "Individual volume preserves shared volume and other buffers' overrides."
+  (emacsvox-test--with-indentation-menu
+    (emacsvox-indentation--tone-edit 'emacsvox-indentation--tone-volume -1)
+    (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-volume source) 95))
+    (should (= (default-value 'emacsvox-indentation-pitch-tone-volume) 100))
+    (emacsvox-indentation--scope)
+    (emacsvox-indentation--tone-edit 'emacsvox-indentation--tone-volume -1)
+    (emacsvox-indentation--tone-edit 'emacsvox-indentation--tone-volume -1)
+    (should (= (default-value 'emacsvox-indentation-pitch-tone-volume) 90))
+    (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-volume source) 95))
+    (should (= (default-value 'tts-main-tone-volume) 50))
+    (dotimes (_ 5) (emacsvox-indentation--tone-edit 'emacsvox-indentation--tone-volume 1))
+    (should (= (default-value 'emacsvox-indentation-pitch-tone-volume) 100))))
 
 (provide 'emacsvox-indentation-tests)
 ;;; emacsvox-indentation-tests.el ends here

@@ -155,6 +155,7 @@
     "emacsvox-aural-provider-notmuch.el"
     "emacsvox-sounds.el"
     "emacsvox-aural-sound-packs.el"
+    "emacsvox-sound-library.el"
     "emacsvox.el"
     "emacsvox-setup.el")
   "Sources whose byte-code must not shadow a newer aural startup.")

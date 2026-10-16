@@ -20,6 +20,155 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Commit checkpoint: recording library and tone controls, 2026-10-17
+
+This commit includes the recording library, pending cue assignments, shared
+line-tone editing, alphabetical assignment prompts, Space preview, repeated
+capitalisation samples and individual tone-level controls. The implementation
+notes below retain their earlier checkpoints; their uncommitted status is
+superseded here. Listening acceptance remains separate, including the reported
+camel-case and spelling-sample observations.
+
+The latest fresh graphical run passes all 63 focused tests with the affected
+modules loaded from repository byte-code. Earlier line-cue and assignment
+checks remain applicable. Compilation, byte-code preflight, generated manuals
+and the documentation release check pass. No live Emacs session was changed.
+
+** Line tones and recording assignments, 2026-10-17
+
+Implementation and automated verification complete. Changes are uncommitted;
+listening acceptance remains open.
+
+- All five line-condition cues now use the shared waveform, volume, sweep
+  and envelope editor. Apply writes a session rule; Save writes the owned
+  conditional personal rule and removes its temporary session override.
+  Older pitch/duration pairs and unrelated rules are preserved.
+- The recording library is at =C-e H o l=, separate from semantic cue names.
+  Import and preview do not assign anything. In a personal pack's cue browser,
+  =a= captures the cue, =P= previews a candidate, =C= compares the current cue,
+  =RET= selects, =W= saves, and =q= cancels and returns to the same cue row.
+- Explicit assignments persist in a version 2 pack manifest. Packs contain
+  immutable copies identified by audio-byte hashes. Library renames and pack
+  relocation preserve assignments; version 1 filename packs remain supported.
+  Reset masks local assets and reveals the parent without deleting originals.
+- Personal migration completed: 20 task-completion files moved into the
+  library collection, with byte checksums and import metadata preserved. Their
+  configuration-only cue registrations were removed; task-done stays inherited.
+  A complete pack/configuration backup is recorded in the local migration log.
+  The configuration was tangled and its Windows configuration snapshot synced.
+  No running Emacs was reloaded; native Windows playback remains untested.
+- Finding: module overrides must sit below explicit assignments. Reset must
+  skip both local filename and module overrides in playback and provenance.
+- Verification: 55 focused batch checks pass from source and compiled code.
+  Six graphical cases skip in batch and pass in the fresh graphical run;
+  that compiled run passes all 25 selected checks without skips. Loaded paths
+  identify repository byte-code for the editor, library, resource registry and
+  menus. Coverage includes preview/cancel, rule persistence, import/search,
+  publication failure, stale edits, module precedence, relocation, a separate
+  process reopening a saved assignment, and actual return focus.
+- Full rebuild, final incremental compilation, byte-code preflight, headers,
+  generated references and manual, and the documentation release gate pass.
+  A separate fresh Emacs finds all 20 local candidates unassigned, validates
+  Bart and resolves task-done through Accent to its existing 3d provider.
+  Optional ffprobe is absent here, so library durations display as unknown.
+  Listening, normal-profile restart acceptance and native Windows playback
+  remain separate; no existing Emacs session was modified.
+
+** Assignment prompt ordering, 2026-10-17
+
+The assignment pack and cue prompts supplied alphabetical candidates but no
+completion sorting metadata. The configured Vertico frontend reordered them
+by history and length. A fresh graphical regression reproduces the resulting
+non-alphabetical cue list with the previous prompt implementation.
+
+The prompts now specify alphabetical display and cycling through standard
+completion metadata. General completion preferences and recording assignments
+are unchanged. The recording rows themselves were alphabetical in the inspected
+personal collection. Nine library batch tests pass, with two graphical skips;
+the graphical sorting regression passes from source with installed Vertico.
+Incremental compilation and byte-code preflight pass. A fresh graphical Emacs
+31.0.90 loads repository byte-code and the configured Vertico package and passes
+all 11 library tests without skips. The documentation release gate passes.
+This correction is uncommitted; listening acceptance remains open.
+
+** Multiple pending recording assignments, 2026-10-17
+
+The library previously retained one proposed cue assignment and displayed only
+saved uses. Selecting a candidate therefore still announced Unassigned. A
+regression against the previous byte-code reproduces that observable failure.
+
+Implementation now keeps pending choices for several cues in one pack in the
+same buffer. The first =a= chooses the pack and cue; subsequent =a= commands
+choose another cue in that pack. Rows and speech distinguish Pending from
+Saved, and the header counts pending changes. The Unassigned filter keeps
+pending rows visible. Replacing a cue's pending recording retains other cues.
+=W= publishes all pending assignments in one manifest write. Failure retains
+the entire batch and leaves saved assignments effective. =q= discards pending
+changes even when the opening menu supplies its own return continuation.
+
+Source verification passes all 15 library tests in a fresh graphical Emacs,
+including alphabetical prompts, same-buffer keyboard assignment, return focus,
+three distinct recordings saved together, replacement, reset, cancellation,
+changed files and publication failure. Batch testing passes 12 tests and skips
+three graphical cases. After incremental compilation and byte-code preflight,
+a fresh graphical Emacs loads repository byte-code and passes all 15 library
+tests without skips. The manual walkthrough and generated references now
+describe multiple pending assignments. Org preview and documentation generation
+pass. Changes are uncommitted; listening and normal-profile restart acceptance
+remain open. No running Emacs session was modified.
+
+** Recording library Space preview, 2026-10-17
+
+Space now previews the recording at point in the library, overriding the
+inherited row-reading binding. =P= remains an alternative and =S= stops
+playback. Header hints, Help and the manual use Space for preview. The existing
+private-preview check now invokes Space through the effective buffer keymap
+and verifies that preview leaves no pending assignment. All 15 library tests
+pass in a fresh graphical Emacs loading repository byte-code. Incremental
+compilation, byte-code preflight, Org preview and documentation generation pass.
+Changes are uncommitted and listening acceptance remains open.
+
+** Tone menu listening follow-up, 2026-10-17
+
+Implementation:
+- The shared editor shows one Play tone alone entry, on Space; =b= remains
+  a keyboard alias. The recording library already binds Space to preview.
+- Capital-letter and all-caps samples now contain two sentences and at least
+  five instances of the edited cue. =P= offers the sample from the simple beep
+  menus as well as the shared editor.
+- The simple beep menus expose individual volume and describe retained edits
+  as preview edits. Apply changes session defaults; Save writes Customize.
+  The shared editor's private draft and named presets remain distinct actions.
+- Indentation exposes its existing pitch-tone volume alongside shared tone
+  volume, and inside pitch-tone settings. Scope and saving remain unchanged.
+  Inventory gap: duration-coded indentation still has no individual volume;
+  the existing option and tone editor cover rising-pitch indentation only.
+- The reading preview includes multiple camel-case identifiers. Help explains
+  that capital cues and voice pronunciation can mask the difference. Spelling
+  sample Help identifies the captured source buffer's reading settings.
+
+Findings and checks:
+- Real speech preparation tests confirm that each camel-case choice sends the
+  corresponding split flag, and that spelling samples use capital tones,
+  spoken labels or silence according to the source's active presentation.
+  The reported audible sameness and unexpected spoken “cap” remain listening
+  findings, not reproduced failures in those paths. The affected session has
+  not yet been identified; no live state has been changed.
+- An existing indentation navigation test expected the old item-before-section
+  wording. This failure also reproduces with the pre-change indentation code.
+  Its assertion now follows the accepted section-before-item feedback; no
+  production speech-order change was made. Volume navigation tests now check
+  both individual and shared controls.
+- All 63 focused tests pass in fresh graphical Emacs runs, first from source
+  and then with the affected modules confirmed as repository byte-code. Checks
+  cover both volume controls and scope, Customize saving, repeated sample
+  beeps, one visible play action with both keys, and library Space preview.
+  Incremental compilation, byte-code preflight, reference generation, Org
+  preview and manual generation pass. The compiled run prefers newer test
+  sources because a pre-existing ignored test byte-code file references a
+  retired speech module; that artifact was preserved. Changes remain
+  uncommitted; listening acceptance is separate.
+
 ** Current baseline
 
 Merge-preparation checkpoint, 2026-10-16: listening accepts the Transient
@@ -1610,6 +1759,68 @@ behaviour settles. Preserve earlier evidence without treating it as current
 verification of subsequently changed code.
 
 ** Findings queue
+
+- 2026-10-16: Proposed sound library and cue assignments. Registering each
+  candidate recording as a semantic cue makes available audio look like
+  application behaviour. Separate recordings, semantic cues and pack-owned
+  assignments. A library entry such as =Desk bell= is an audio asset;
+  =task-done= remains the task-completion cue; Bart chooses which recording
+  supplies that cue. Importing a file creates no event or assignment.
+
+  Provide a personal library directory, provisionally
+  =~/.emacsvox/sounds/library/=, with Import, Open directory and Rescan actions.
+  Preserve source files and metadata. Use stable recording identities so
+  changing a display name does not break assignments. Preview and navigation
+  write nothing. The library shows name, collection, duration and known pack
+  assignments, with an Unassigned filter and a direct Assign to cue action.
+
+  The pack view lists semantic cues with a useful explanation, effective
+  recording and assignment source: local, inherited, fallback or missing.
+  Choose recording opens the library with the target pack and cue retained.
+  Show current and proposed sounds for comparison, then explicitly Save and
+  apply the assignment. Announce the affected pack and cue. Reset removes the
+  local assignment and restores inheritance. Saving an inactive pack does
+  not select it. Library deletion must show affected assignments and require
+  reassignment or reset before removing a referenced recording.
+
+  Pack assignments refer to recordings through validated data, rather than
+  deriving event meaning from each library filename. Preserve existing
+  filename-based packs and their inheritance. Define portable export and
+  workstation resource resolution before introducing durable references;
+  retain ADR 0010's remote sound-root boundary. Known assignment usage is
+  distinct from whether a contextual rule currently plays the cue. Replacing
+  =task-done= in Bart affects its shared uses; a Notmuch-only change belongs
+  in the contextual presentation-rule workflow.
+
+  First implementation should cover library import/browsing, pack assignment,
+  explicit persistence/application, reset and migration of the 20 candidates
+  out of the semantic cue inventory while retaining their recordings and
+  provenance. Verify that import alone changes no event, cancellation preserves
+  assignments, restart restores saved choices, inheritance resets correctly,
+  and previews match assigned playback. Include graphical and listening checks
+  for focus, target scope, comparison and spoken save feedback. Proposal only:
+  storage details, implementation, migration, listening acceptance and commits
+  remain separate checkpoints. The 2026-10-17 implementation and verification
+  checkpoint near the start of this plan supersedes this proposal status.
+
+- 2026-10-16: The sound cue browser can preview recordings and show their
+  details but has no action to assign a recording to another cue. Adding
+  task-completion candidates exposed this missing step: previewing a candidate
+  does not replace =task-done=. The current manual route is to copy the chosen
+  recording to =task-done.ogg= in the personal pack and rescan it with =g=.
+  The library proposal above replaces the initial idea of assigning one cue
+  to another. Superseded by the 2026-10-17 implementation checkpoint; listening
+  acceptance remains separate.
+
+- 2026-10-16: The personal Bart pack now contains 20 realistic task-completion
+  candidates under =task-done-*= cue names. Personal configuration registers
+  their descriptions for the cue browser; the standard =task-done= assignment
+  remains inherited. Source metadata is retained with the personal pack.
+  All 20 stereo files decode and match their source bytes; durations range
+  from 0.050 to 0.463 seconds. A fresh Emacs verifies registration, resolution
+  and valid pack coverage. Byte-code preflight passes; repository Lisp is unchanged.
+  Listening comparison and selection of a default are pending. These are
+  local assets, separate from bundled sounds and repository commits.
 
 - 2026-10-16: Menu discovery defaults now put the section heading and position
   before the item. Detailed descriptions and wrapping within sections remain

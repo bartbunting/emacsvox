@@ -283,8 +283,9 @@ replacement; bundled names cannot be replaced."
 (defun emacsvox-tone-editor--apply (&optional save)
   "Apply this draft using the destination's scope; SAVE also persists it.
 Spelling and capitalization change global defaults; indentation changes the
-captured buffer or global defaults. Save persists global defaults through
-Customize. Enablement, timing and shared volume stay intact."
+captured buffer or global defaults. Line cues apply session presentation rules.
+Save uses Customize for ordinary defaults and personal rules for line cues.
+Enablement, timing and shared volume stay intact."
   (interactive)
   (let* ((state (emacsvox-tone-editor--state))
          (data (emacsvox-tone-editor--validate (copy-tree (plist-get state :draft)))))
@@ -295,8 +296,8 @@ Customize. Enablement, timing and shared volume stay intact."
 
 (defun emacsvox-tone-editor--save ()
   "Save and apply this cue through its destination's persistence mechanism.
-Spelling, capitalization and global indentation use Customize. Buffer-local
-indentation cannot be saved here. Capitalization migrates unchanged old
+Line cues save conditional personal rules. Spelling, capitalization and global
+indentation use Customize. Buffer-local indentation cannot be saved here. Capitalization migrates unchanged old
 menu-generated rules on Save; contextual presentation rules remain intact.
 This saves pitch, duration, individual volume, waveform, Pulse width, sweep
 and envelope controls.
@@ -333,6 +334,7 @@ Use Preview to hear it, then Apply or Save and apply if you want to keep it."
 (defun emacsvox-tone-editor--bindings (map)
   "Add draft adjustment bindings to tone editor MAP."
   (when (and transient--prefix (eq (oref transient--prefix command) 'emacsvox-tone-editor))
+    (keymap-set map "b" #'emacsvox-tone-editor--tone)
     (keymap-set map "S-<left>" #'emacsvox-tone-editor--decrease)
     (keymap-set map "S-<right>" #'emacsvox-tone-editor--increase))
   map)
@@ -528,8 +530,7 @@ Space or b interrupts main speech and plays the draft tone alone. C plays the
 applied tone; P reads a sample with the draft. S stops, without saving.
 Preview comes before Presets in the section order. L loads a preset into the
 draft; N saves a named preset without changing the cue. A applies the draft
-in the destination's scope. Capitalization instead copies to its retained
-preview draft. W saves through Customize or the destination's personal rules;
+in the destination's scope. Line cues use session presentation rules. W saves through Customize or the destination's personal rules;
 buffer-local indentation must use global scope before saving.
 q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
 and saved changes remain. Timing, cue enablement, voice and earcon choices
@@ -552,7 +553,6 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
    ("s" (lambda () (emacsvox-tone-editor--number-label :sustain)) emacsvox-tone-editor--sustain :transient t)
    ("r" (lambda () (emacsvox-tone-editor--number-label :release)) emacsvox-tone-editor--release :transient t)]
   ["Preview"
-   ("b" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("SPC" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("C" (lambda () (emacsvox-tone-editor--label :current-label "Play current tone")) emacsvox-tone-editor--current :transient t)
    ("P" "Read sample" emacsvox-tone-editor--sample :transient t)

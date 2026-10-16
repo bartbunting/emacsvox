@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 319 loaded; 0 intentionally omitted.
+@c Modules: 320 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -49,23 +49,23 @@
 @c Loaded: emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc
 @c Loaded: emacsvox-settings-changes.elc emacsvox-settings-integrations.elc emacsvox-settings-workflows.elc emacsvox-settings.elc emacsvox-setup.elc
 @c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
-@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-spelling.elc emacsvox-sql.elc
-@c Loaded: emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc
-@c Loaded: emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc
-@c Loaded: emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc
-@c Loaded: emacsvox-tone-editor.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc
-@c Loaded: emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc
-@c Loaded: emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc
-@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
-@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
-@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
-@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
-@c Loaded: omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc
-@c Loaded: omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc
-@c Loaded: omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc
-@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
-@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
-@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-sound-library.elc emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-spelling.elc
+@c Loaded: emacsvox-sql.elc emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc
+@c Loaded: emacsvox-table-reader.elc emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc
+@c Loaded: emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc
+@c Loaded: emacsvox-todo-mode.elc emacsvox-tone-editor.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc
+@c Loaded: emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc
+@c Loaded: emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc
+@c Loaded: emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc
+@c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
+@c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
+@c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
+@c Loaded: mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc
+@c Loaded: omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc
+@c Loaded: omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc
+@c Loaded: omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
+@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
+@c Loaded: tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1670 commands and 247 options.
+This chapter documents a total of 1687 commands and 248 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -312,6 +312,7 @@ This chapter documents a total of 1670 commands and 247 options.
 * emacsvox-slime:: Speech-enable SLIME.
 * emacsvox-smartparens:: SMARTPARENS.
 * emacsvox-solitaire:: Solitaire.
+* emacsvox-sound-library:: Recordings and explicit cue assignments.
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
 * emacsvox-speedbar:: speedbar -.
@@ -4744,6 +4745,16 @@ Open the spoken sound-pack manager, selecting PACK when supplied.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-sound-pack-cues-assign
+@deffn {Command} emacsvox-aural-sound-pack-cues-assign
+@findex emacsvox-aural-sound-pack-cues-assign
+
+@format
+Compare library recordings for this cue; W explicitly saves an assignment.
+Only writable discovered packs can be changed. The active pack stays selected.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-sound-pack-cues-audition
 @deffn {Command} emacsvox-aural-sound-pack-cues-audition
 @findex emacsvox-aural-sound-pack-cues-audition
@@ -4788,6 +4799,7 @@ Key             Binding
 RET		emacsvox-aural-sound-pack-cues-describe
 ?		emacsvox-aural-sound-pack-cues-help
 P		emacsvox-aural-sound-pack-cues-audition
+a		emacsvox-aural-sound-pack-cues-assign
 h		emacsvox-aural-menu
 o		emacsvox-aural-sound-packs-open-directory
 s		emacsvox-aural-list-sound-packs
@@ -8262,7 +8274,9 @@ Choose capitalization indication, presentation, splitting, and global beep defau
 @findex emacsvox-capitalization-cue
 
 @format
-Tune one global capitalization beep in a retained preview draft.
+Preview and adjust one global capitalization beep.
+Edits remain available in this session until applied or discarded. A applies
+session defaults; S saves them through Customize for future sessions.
 @end format
 @end deffn
 
@@ -9835,6 +9849,7 @@ nil
 @end verbatim
 
 @end defvar
+
 @defvar {User Option} emacsvox-emoji-maximum-count
 @verbatim
 Maximum eligible occurrences per speech object or preview sample.
@@ -14322,8 +14337,9 @@ Choose indentation feedback, timing, and shared tone volume with Transient.
 Choose indentation feedback for the current buffer or global defaults.
 With prefix GLOBAL, start with global defaults.  Changes apply immediately;
 closing the menu keeps them.  Global changes preserve buffer-local choices.
-Save defaults explicitly to retain them across sessions.  Tone volume always
-affects all main-stream Omnivox tones, independently of the selected scope.
+Save defaults explicitly to retain them across sessions. Pitch-tone volume
+uses the selected scope. Shared tone volume always affects all main-stream
+Omnivox tones, independently of that scope.
 Up/down selects a control; left/right changes sections.  Shift-left/right
 adjusts Volume by five percentage points.  Space previews the indentation settings.
 @end format
@@ -18882,6 +18898,214 @@ Speak number of stones remaining.
 @end format
 @end deffn
 
+@node emacsvox-sound-library
+@section emacsvox-sound-library
+
+Audio files in the library are candidates, not semantic cues. Explicit
+assignment copies immutable audio into a pack before publishing its manifest.
+Browsing and preview do not assign, activate a pack, or persist settings.
+
+@subsection Emacsvox-Sound-Library Commands
+
+@subsubsection emacsvox-sound-library
+@deffn {Command} emacsvox-sound-library  (&optional pack cue)
+@findex emacsvox-sound-library
+
+@format
+Browse available recordings, optionally proposing an assignment for PACK/CUE.
+
+(fn &optional PACK CUE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-assign
+@deffn {Command} emacsvox-sound-library-assign
+@findex emacsvox-sound-library-assign
+
+@format
+Queue the recording for a cue, keeping other pending choices in this buffer.
+Choose a pack on the first assignment; further assignments use that pack.
+W saves all pending cues together. q discards them; reopen to change packs.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-current
+@deffn {Command} emacsvox-sound-library-current
+@findex emacsvox-sound-library-current
+
+@format
+Preview the currently assigned cue in the captured target pack.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-delete
+@deffn {Command} emacsvox-sound-library-delete
+@findex emacsvox-sound-library-delete
+
+@format
+Delete this library file after confirmation, refusing known assignments.
+Imported originals elsewhere and immutable pack copies remain untouched.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-help
+@deffn {Command} emacsvox-sound-library-help
+@findex emacsvox-sound-library-help
+
+@format
+Explain available recordings, assignments, preview and explicit saving.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-import
+@deffn {Command} emacsvox-sound-library-import  (file collection)
+@findex emacsvox-sound-library-import
+
+@format
+Copy audio FILE to COLLECTION without assigning a cue or removing its source.
+
+(fn FILE COLLECTION)
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-mode
+@deffn {Command} emacsvox-sound-library-mode
+@findex emacsvox-sound-library-mode
+
+@format
+Browse available recordings and explicitly assign sounds to pack cues.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-sound-library-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-sound-library-select
+SPC		emacsvox-sound-library-preview
+/		emacsvox-sound-library-search
+?		emacsvox-sound-library-help
+C		emacsvox-sound-library-current
+P		emacsvox-sound-library-preview
+R		emacsvox-sound-library-reset
+W		emacsvox-sound-library-save
+a		emacsvox-sound-library-assign
+d		emacsvox-sound-library-delete
+i		emacsvox-sound-library-import
+o		emacsvox-sound-library-open-directory
+u		emacsvox-sound-library-unassigned
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-open-directory
+@deffn {Command} emacsvox-sound-library-open-directory
+@findex emacsvox-sound-library-open-directory
+
+@format
+Open the candidate library directory for adding or organising recordings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-preview
+@deffn {Command} emacsvox-sound-library-preview
+@findex emacsvox-sound-library-preview
+
+@format
+Preview the selected recording without changing any cue or pack.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-refresh
+@deffn {Command} emacsvox-sound-library-refresh
+@findex emacsvox-sound-library-refresh
+
+@format
+Rescan candidates and assignments without applying or saving anything.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-reset
+@deffn {Command} emacsvox-sound-library-reset
+@findex emacsvox-sound-library-reset
+
+@format
+Prepare removal of the local cue assignment, revealing its parent or fallback.
+Original audio stays intact. W saves all pending changes; q discards them.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-save
+@deffn {Command} emacsvox-sound-library-save
+@findex emacsvox-sound-library-save
+
+@format
+Save and apply all pending assignments to their captured pack.
+An inactive pack stays inactive. Assigned audio is copied into the pack;
+removing or renaming the library source cannot break that saved sound.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-search
+@deffn {Command} emacsvox-sound-library-search  (text)
+@findex emacsvox-sound-library-search
+
+@format
+Filter recording names and collections by case-insensitive substring TEXT.
+
+(fn TEXT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-select
+@deffn {Command} emacsvox-sound-library-select
+@findex emacsvox-sound-library-select
+
+@format
+Queue this recording for the current cue; W saves all pending assignments.
+Browsing and selecting do not change playback. SPC previews the candidate;
+C compares the saved cue. a chooses another cue; q discards all proposals.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-speak-current
+@deffn {Command} emacsvox-sound-library-speak-current
+@findex emacsvox-sound-library-speak-current
+
+@format
+Speak the recording’s name, collection, duration and known assignments.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-unassigned
+@deffn {Command} emacsvox-sound-library-unassigned
+@findex emacsvox-sound-library-unassigned
+
+@format
+Toggle recordings without saved assignments, keeping pending rows visible.
+@end format
+@end deffn
+
+@subsection emacsvox-sound-library Options
+
+@defvar {User Option} emacsvox-sound-library-directory
+@verbatim
+Directory of candidate recordings, separate from sound-pack cue assignments.
+Put Ogg, WAV, MP3 or FLAC files here or in collection subdirectories, then
+Rescan the library. Playback support depends on the audio backend. Import
+copies files here without changing any cue. Assigned packs own their audio.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"~/.emacsvox/sounds/library/"
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-sounds
 @section emacsvox-sounds
 
@@ -22437,8 +22661,7 @@ Space or b interrupts main speech and plays the draft tone alone. C plays the
 applied tone; P reads a sample with the draft. S stops, without saving.
 Preview comes before Presets in the section order. L loads a preset into the
 draft; N saves a named preset without changing the cue. A applies the draft
-in the destination’s scope. Capitalization instead copies to its retained
-preview draft. W saves through Customize or the destination’s personal rules;
+in the destination’s scope. Line cues use session presentation rules. W saves through Customize or the destination’s personal rules;
 buffer-local indentation must use global scope before saving.
 q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
 and saved changes remain. Timing, cue enablement, voice and earcon choices

@@ -421,6 +421,7 @@
               (with-current-buffer transient--buffer
                 (should (string-match-p "Spelling tone (global draft)" (buffer-string)))
                 (should-not (string-match-p "Timing:" (buffer-string)))
+                (should (= 1 (how-many "Play tone alone" (point-min) (point-max))))
                 (should (string-match-p "Duration:.*Shift arrows.*5 ms" (buffer-string)))
                 (dolist (label '("Waveform:" "Envelope:" "Curve:"))
                   (goto-char (point-min))
@@ -434,8 +435,10 @@
                            (lambda (_data sample) (push (if sample 'sample 'tone) previews))))
                   (execute-kbd-macro (kbd "SPC"))
                   (should (equal previews '(tone)))
+                  (execute-kbd-macro (kbd "b"))
+                  (should (equal previews '(tone tone)))
                   (execute-kbd-macro (kbd "P"))
-                  (should (equal previews '(sample tone)))))
+                  (should (equal previews '(sample tone tone)))))
               (with-selected-window transient--window
                 (transient--goto-button (transient-suffix-object 'emacsvox-tone-editor--pitch)))
               (execute-kbd-macro (kbd "S-<right>"))
@@ -574,6 +577,91 @@
       (dolist (entry properties) (setplist (car entry) (cdr entry)))
       (when (get-file-buffer custom-file) (kill-buffer (get-file-buffer custom-file)))
       (delete-file custom-file))))
+
+(defun emacsvox-test--capture-menu-preview (command)
+  "Call COMMAND through real speech preparation and capture its wire output."
+  (let* ((process (make-pipe-process :name "menu-preview-test" :noquery t))
+         (tts-speaker-process process) (tts-notify-process nil)
+         (tts-program "omnivox") (tts-quiet nil) (tts-stop-immediately nil)
+         (tts-handle-unicode nil) (voice-lock-mode t)
+         (tts-punctuation-mode 'none) (emacsvox-pronounce-table nil)
+         (tts-get-voice-command (lambda (_voice) ""))
+         writes)
+    (unwind-protect
+        (progn
+          (process-put process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process emacsvox-aural--presentation-tone-process-property 1)
+          (process-put process tts--capitalization-presentation-property t)
+          (cl-letf (((symbol-function 'process-send-string)
+                     (lambda (_process text) (push text writes)))
+                    ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (funcall command)
+            (emacsvox-aural-flush-pending-deliveries process))
+          (let ((wire (apply #'concat (nreverse writes))))
+            (should (string-match "emacsvox_timeline {\\([^}]+\\)}" wire))
+            (list :wire wire :timeline
+                  (json-parse-string
+                   (decode-coding-string (base64-decode-string (match-string 1 wire)) 'utf-8)
+                   :object-type 'plist :array-type 'list))))
+      (delete-process process))))
+
+(ert-deftest emacsvox-capitalization-preview-transmits-camel-case-choice ()
+  "The displayed camel-case choice reaches the speech worker for every preview."
+  (require 'emacsvox-capitalization)
+  (emacsvox-test--with-transport-scheme
+    (with-temp-buffer
+      (setq-local tts-caps t emacsvox-capitalization-presentation 'tone)
+      (let* ((context (emacsvox-aural-menu--capture nil))
+             (transient--prefix (transient-prefix :command 'emacsvox-capitalization :scope context)))
+        (dolist (split '(nil t))
+          (setq-local tts-split-caps split)
+          (let* ((result (emacsvox-test--capture-menu-preview #'emacsvox-capitalization--preview))
+                 (wire (plist-get result :wire))
+                 (text (mapconcat (lambda (span) (plist-get span :text))
+                                  (plist-get (plist-get result :timeline) :spans) "")))
+            (should (string-match-p (format "tts_sync_state none %d 0 " (if split 1 0)) wire))
+            (should (string-match-p "readWriteBuffer" text))
+            (should (string-match-p "saveCurrentFile" text))))))))
+
+(ert-deftest emacsvox-spelling-preview-keeps-active-capitalization ()
+  "Spelling samples obey the source's capitalization indication and presentation."
+  (emacsvox-test--with-transport-scheme
+    (with-temp-buffer
+      (setq-local tts-caps t tts-split-caps nil)
+      (let* ((context (emacsvox-aural-menu--capture nil))
+             (transient--prefix (transient-prefix :command 'emacsvox-spelling :scope context))
+             (emacsvox-flyspell-use-tone nil) (emacsvox-flyspell-use-earcon nil))
+        (dolist (presentation '(tone spoken none))
+          (setq-local emacsvox-capitalization-presentation presentation)
+          (let* ((result (emacsvox-test--capture-menu-preview #'emacsvox-spelling--preview))
+                 (timeline (plist-get result :timeline))
+                 (text (mapconcat (lambda (span) (plist-get span :text)) (plist-get timeline :spans) ""))
+                 (tones (seq-filter (lambda (a) (equal (plist-get a :type) "tone"))
+                                    (plist-get timeline :actions))))
+            (should (= (length tones) (if (eq presentation 'tone) 1 0)))
+            (should (eq (and (string-match-p "cap" (downcase text)) t)
+                        (eq presentation 'spoken)))))))))
+
+(ert-deftest emacsvox-capitalization-samples-contain-several-owned-beeps ()
+  "Both samples produce several beeps of the edited kind without applying it."
+  (require 'emacsvox-capitalization)
+  (emacsvox-test--with-transport-scheme
+    (with-temp-buffer
+      (let ((emacsvox-capitalization--drafts (make-hash-table :test #'eq)))
+        (dolist (kind '(capital all-caps))
+          (let* ((context (plist-put (emacsvox-aural-menu--capture nil) :cue-draft
+                                     (emacsvox-capitalization--draft kind)))
+                 (transient--prefix (transient-prefix :command 'emacsvox-capitalization-cue :scope context))
+                 (before (copy-tree (default-value (emacsvox-capitalization--option kind))))
+                 (result (emacsvox-test--capture-menu-preview
+                          (lambda () (emacsvox-capitalization--preview-tone
+                                      (emacsvox-tone-editor--data 875 30 100 '(:waveform sine)) t))))
+                 (tones (seq-filter (lambda (a) (equal (plist-get a :type) "tone"))
+                                    (plist-get (plist-get result :timeline) :actions))))
+            (should (>= (length tones) 5))
+            (dolist (tone tones) (should (= (plist-get tone :frequency_hz) 875)))
+            (should (equal before (default-value (emacsvox-capitalization--option kind))))))))))
 
 (provide 'emacsvox-spelling-tests)
 ;;; emacsvox-spelling-tests.el ends here

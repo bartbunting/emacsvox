@@ -63,7 +63,7 @@
       (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (setq seen (list text tts-caps tts-split-caps emacsvox-capitalization-presentation)))))
         (execute-kbd-macro (kbd "SPC")))
-      (should (equal seen '("Capital camelCase NASA" nil t tone))))
+      (should (equal seen '("Alice checks readWriteBuffer before Bob calls saveCurrentFile. NASA sends XML over HTTP." nil t tone))))
     ;; A global toggle starts from the displayed global value, not the override.
     (execute-kbd-macro (kbd "i"))
     (should (default-value 'tts-caps))
@@ -543,6 +543,31 @@
               (should (eq (plist-get (emacsvox-line-cues--current) :value) 'help))
               (should-not (file-exists-p emacsvox-aural-schemes-file)))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
+
+(ert-deftest emacsvox-capitalization-parent-volume-is-private-and-saves-one-cue ()
+  "The simple volume control changes only its preview until Customize Save."
+  (emacsvox-test--with-capitalization
+    (emacsvox-test--with-capitalization-cue 'capital
+      (let ((shared tts-main-tone-volume)
+            (other (copy-tree emacsvox-capitalization-all-caps-tone)))
+        (emacsvox-capitalization--volume -1)
+        (should (= (plist-get (emacsvox-capitalization--tone-data) :volume) 95))
+        (should (= (plist-get emacsvox-capitalization-capital-tone :volume) 1.0))
+        (emacsvox-capitalization--cue-save)
+        (should (= (plist-get emacsvox-capitalization-capital-tone :volume) 0.95))
+        (should (equal other emacsvox-capitalization-all-caps-tone))
+        (should (= shared tts-main-tone-volume))
+        (should (file-exists-p custom-file))))))
+
+(ert-deftest emacsvox-capitalization-parent-volume-graphical-focus-and-save ()
+  "Exact entry returns to Beep volume for further adjustments and saving."
+  (emacsvox-test--with-capitalization-gui
+    (execute-kbd-macro (kbd "l v 8 0 RET S-<right>"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--volume))
+    (should (= (plist-get (emacsvox-capitalization--tone-data) :volume) 85))
+    (should (= (plist-get emacsvox-capitalization-capital-tone :volume) 1.0))
+    (execute-kbd-macro (kbd "S"))
+    (should (= (plist-get emacsvox-capitalization-capital-tone :volume) 0.85))))
 
 (provide 'emacsvox-capitalization-tests)
 ;;; emacsvox-capitalization-tests.el ends here

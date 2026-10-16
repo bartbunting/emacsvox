@@ -30,6 +30,7 @@
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-tone-editor)
 
 (defconst emacsvox-line-cues--entries
   '((empty "Blank line" line-empty core-empty-line-tone-action)
@@ -44,11 +45,13 @@
   "Retained drafts keyed by cue kind.")
 
 (defun emacsvox-line-cues--context ()
-  "Return this editor's captured context, checking its source."
+  "Return this cue's captured context, including inside the shared editor."
   (let* ((prefix (or transient--prefix transient-current-prefix))
-         (context (and prefix (eq (oref prefix command) 'emacsvox-line-cues-edit)
-                       (oref prefix scope))))
-    (unless context (user-error "Open a line or boundary cue first"))
+         (context (if (and prefix (eq (oref prefix command) 'emacsvox-line-cues-edit))
+                      (oref prefix scope) (emacsvox-aural-menu--context))))
+    (unless (assq (plist-get (plist-get context :cue-draft) :kind)
+                  emacsvox-line-cues--entries)
+      (user-error "Open a line or boundary cue first"))
     (emacsvox-aural-menu--source context)
     context))
 (defun emacsvox-line-cues--current ()
@@ -65,55 +68,87 @@
   (emacsvox-transient--submit-text
    text (emacsvox-transient--menu-facts 'line-cue 'command-menu-value-changed)
    'state-change 'select-object))
-(defun emacsvox-line-cues--id (kind)
-  "Return the owned personal-rule identifier for KIND."
-  (intern (format "settings-line-cue-%s" kind)))
-(defun emacsvox-line-cues--rules (kind value)
-  "Build KIND's rule for VALUE: bundled, silent, a tone pair, or an earcon."
+(defun emacsvox-line-cues--id (kind &optional session)
+  "Return the owned rule identifier for KIND, optionally for SESSION."
+  (intern (format "settings-line-cue-%s%s" kind (if session "-session" ""))))
+(defun emacsvox-line-cues--rules (kind value &optional session)
+  "Build KIND's rule for VALUE, with a distinct identifier for SESSION."
   (unless (eq value 'bundled)
     (let* ((entry (assq kind emacsvox-line-cues--entries))
            (action (nth 3 entry)))
       (if (not action)
           (list (emacsvox-aural-make-legacy-cue-rule
-                 (emacsvox-line-cues--id kind) (nth 2 entry)
+                 (emacsvox-line-cues--id kind session) (nth 2 entry)
                  (unless (eq value 'silent) value)))
-        (list (list :id (emacsvox-line-cues--id kind)
+        (list (list :id (emacsvox-line-cues--id kind session)
                     :match (list :line-condition kind)
                     :render
                     (list :before
                           (append (list :remove (list action))
                                   (unless (eq value 'silent)
                                     (list :append
-                                          (list (list :id action :kind 'tone
-                                                      :pitch (car value) :duration (cdr value)))))))))))))
+                                          (list (append (list :id action :kind 'tone)
+                                                        (if (numberp (car value))
+                                                            (list :pitch (car value) :duration (cdr value))
+                                                          value)))))))))))))
 (defun emacsvox-line-cues--saved (kind)
   "Read only the personal rule owned for KIND."
   (cl-remove-if-not (lambda (r) (eq (plist-get r :id) (emacsvox-line-cues--id kind)))
                     emacsvox-aural-user-rules))
-(defun emacsvox-line-cues--draft (kind)
-  "Resume KIND's draft without overwriting conflicting edits."
-  (let* ((saved (emacsvox-line-cues--saved kind))
-         (action (car (plist-get (plist-get (plist-get (car saved) :render) :before) :append)))
-         (value (cond ((not saved) 'bundled) ((not action) 'silent)
+(defun emacsvox-line-cues--session (kind)
+  "Return this menu's session rule for KIND."
+  (cl-remove-if-not (lambda (r) (eq (plist-get r :id) (emacsvox-line-cues--id kind t)))
+                    emacsvox-aural-session-rules))
+
+(defun emacsvox-line-cues--rule-value (kind rules &optional session)
+  "Read KIND's owned RULES, refusing rules edited outside this menu."
+  (let* ((action (car (plist-get (plist-get (plist-get (car rules) :render) :before) :append)))
+         (value (cond ((not rules) 'bundled) ((not action) 'silent)
                       ((nth 3 (assq kind emacsvox-line-cues--entries))
-                       (cons (plist-get action :pitch) (plist-get action :duration)))
-                      (t (plist-get action :cue))))
-         (old (gethash kind emacsvox-line-cues--drafts)))
-    (unless (equal saved (emacsvox-line-cues--rules kind value))
-      (user-error "This cue rule was edited elsewhere; use the personal-rule editor"))
-    (when (and old (not (equal saved (plist-get old :saved)))
+                       (if (or (plist-member action :volume) (plist-member action :shape))
+                           (cl-loop for (key val) on action by #'cddr
+                                    when (memq key '(:pitch :duration :volume :shape))
+                                    append (list key (copy-tree val)))
+                         (cons (plist-get action :pitch) (plist-get action :duration))))
+                      (t (plist-get action :cue)))))
+    (unless (equal rules (emacsvox-line-cues--rules kind value session))
+      (user-error "This cue rule was edited elsewhere; use the rule editor"))
+    value))
+
+(defun emacsvox-line-cues--draft (kind)
+  "Resume KIND's draft without overwriting conflicting edits or session rules."
+  (let* ((saved (emacsvox-line-cues--saved kind))
+         (session (emacsvox-line-cues--session kind))
+         (_ (emacsvox-line-cues--rule-value kind saved))
+         (value (emacsvox-line-cues--rule-value kind (or session saved) session))
+         (old (gethash kind emacsvox-line-cues--drafts))
+         (unchanged (and old (equal saved (plist-get old :saved))
+                        (equal session (plist-get old :session)))))
+    (when (and old (not unchanged)
                (not (equal (plist-get old :value) (plist-get old :initial))))
-      (user-error "Saved cue changed; discard the draft first"))
-    (if (and old (equal saved (plist-get old :saved))) old
-      (let ((draft (list :kind kind :saved (copy-tree saved)
+      (user-error "Cue changed; discard the draft first"))
+    (if unchanged old
+      (let ((draft (list :kind kind :saved (copy-tree saved) :session (copy-tree session)
                          :initial (copy-tree value) :value (copy-tree value))))
         (puthash kind draft emacsvox-line-cues--drafts) draft))))
+
+(defun emacsvox-line-cues--tone-values (&optional value)
+  "Return full tone values for VALUE or the current draft, retaining old pairs."
+  (let ((value (or value (plist-get (emacsvox-line-cues--current) :value))))
+    (cond ((and (consp value) (numberp (car value)))
+           (list :pitch (car value) :duration (cdr value) :volume 1.0 :shape '(:waveform sine)))
+          ((consp value) (append (copy-tree value)
+                                (unless (plist-member value :volume) '(:volume 1.0))
+                                (unless (plist-member value :shape) '(:shape (:waveform sine)))))
+          (t (let ((tone (emacsvox-aural-tone (nth 2 (emacsvox-line-cues--entry)))))
+               (list :pitch (emacsvox-aural-tone-pitch tone)
+                     :duration (emacsvox-aural-tone-duration tone)
+                     :volume 1.0 :shape '(:waveform sine)))))))
+
 (defun emacsvox-line-cues--values ()
-  "Return this tone's draft values or its resource defaults."
-  (let ((value (plist-get (emacsvox-line-cues--current) :value)))
-    (if (consp value) value
-      (let ((tone (emacsvox-aural-tone (nth 2 (emacsvox-line-cues--entry)))))
-        (cons (emacsvox-aural-tone-pitch tone) (emacsvox-aural-tone-duration tone))))))
+  "Return the current tone's pitch and duration pair for the simple controls."
+  (let ((values (emacsvox-line-cues--tone-values)))
+    (cons (plist-get values :pitch) (plist-get values :duration))))
 (defun emacsvox-line-cues--title ()
   "Describe cue scope and draft state."
   (let ((draft (emacsvox-line-cues--current)))
@@ -140,7 +175,12 @@
       (user-error "Enter a finite positive pitch or nonnegative integer duration"))
     (if pitch (setcar values value) (setcdr values value))
     (let ((draft (emacsvox-line-cues--current)))
-      (setf (plist-get draft :value) values))
+      (setf (plist-get draft :value)
+            (if (and (consp (plist-get draft :value))
+                     (keywordp (car (plist-get draft :value))))
+                (plist-put (copy-tree (plist-get draft :value))
+                           (if pitch :pitch :duration) value)
+              values)))
     (emacsvox-line-cues--say (format "%s%s %s" (if (and delta (= old value)) "Minimum. " "")
                                     value (if pitch "Hz" "milliseconds")))))
 (defun emacsvox-line-cues--pitch ()
@@ -159,13 +199,13 @@
   (interactive)
   (let ((draft (emacsvox-line-cues--current)))
     (setf (plist-get draft :value) 'silent))
-  (emacsvox-line-cues--say "Silent in draft. Save to apply."))
+  (emacsvox-line-cues--say "Silent in draft. Apply or Save to use it."))
 (defun emacsvox-line-cues--reset ()
   "Restore the bundled cue in this draft."
   (interactive)
   (let ((draft (emacsvox-line-cues--current)))
     (setf (plist-get draft :value) 'bundled))
-  (emacsvox-line-cues--say "Bundled cue in draft. Save to remove this override."))
+  (emacsvox-line-cues--say "Bundled cue in draft. Apply or Save to restore it."))
 (defun emacsvox-line-cues--discard ()
   "Discard edits and reread the saved rule."
   (interactive)
@@ -174,26 +214,103 @@
     (remhash kind emacsvox-line-cues--drafts)
     (setf (plist-get context :cue-draft) (emacsvox-line-cues--draft kind)))
   (emacsvox-line-cues--say "Draft discarded"))
-(defun emacsvox-line-cues--save ()
-  "Persist only this draft's owned rule through the personal-rule store."
-  (interactive)
+(defun emacsvox-line-cues--commit (save)
+  "Apply the draft as a session rule; SAVE persists it as a personal rule."
   (let* ((draft (emacsvox-line-cues--current)) (kind (plist-get draft :kind))
          (saved (emacsvox-line-cues--saved kind))
-         (rules (emacsvox-line-cues--rules kind (plist-get draft :value))))
-    (unless (equal saved (plist-get draft :saved))
-      (user-error "Saved cue changed; discard this draft first"))
+         (session (emacsvox-line-cues--session kind))
+         (value (plist-get draft :value))
+         (rules (emacsvox-line-cues--rules kind value)))
+    (unless (and (equal saved (plist-get draft :saved))
+                 (equal session (plist-get draft :session)))
+      (user-error "Cue changed; discard this draft first"))
     (when (cl-some (lambda (buffer)
                     (with-current-buffer buffer
-                      (and (eq emacsvox-aural-editor-scope 'personal) emacsvox-aural-editor-dirty)))
+                      (and (memq emacsvox-aural-editor-scope '(personal session))
+                           emacsvox-aural-editor-dirty)))
                   (buffer-list))
-      (user-error "Finish the unsaved personal-rule editor first"))
+      (user-error "Finish the unsaved personal or session rule editor first"))
     (with-current-buffer (emacsvox-aural-menu--source (emacsvox-line-cues--context))
-      (let ((emacsvox-aural-editor-scope 'personal))
+      (when save
+        (let ((emacsvox-aural-editor-scope 'personal))
+          (emacsvox-aural-editor--commit-layer
+           (append (cl-remove-if (lambda (r) (memq r saved)) emacsvox-aural-user-rules) rules)))
+        ;; Persistence has succeeded even if a subsequent session update fails.
+        (setf (plist-get draft :saved) (copy-tree rules)))
+      (let* ((emacsvox-aural-editor-scope 'session)
+             (replacement
+              (unless save
+                (or (emacsvox-line-cues--rules kind value t)
+                    (emacsvox-line-cues--rules
+                     kind (if (nth 3 (assq kind emacsvox-line-cues--entries))
+                              (emacsvox-line-cues--tone-values 'bundled)
+                            (nth 2 (assq kind emacsvox-line-cues--entries))) t)))))
         (emacsvox-aural-editor--commit-layer
-         (append (cl-remove-if (lambda (rule) (memq rule saved)) emacsvox-aural-user-rules) rules))))
-    (setf (plist-get draft :saved) (copy-tree rules)
-          (plist-get draft :initial) (copy-tree (plist-get draft :value)))
-    (emacsvox-line-cues--say "Saved global cue. Other presentation rules still apply.")))
+         (append (cl-remove-if (lambda (r) (memq r session)) emacsvox-aural-session-rules)
+                 replacement))
+        (setf (plist-get draft :session) (copy-tree replacement))))
+    (setf (plist-get draft :initial) (copy-tree value))))
+
+(defun emacsvox-line-cues--apply ()
+  "Apply this cue globally for this session without writing personal rules.
+Other contextual rules still apply. Save persists this cue for future sessions."
+  (interactive)
+  (emacsvox-line-cues--commit nil)
+  (emacsvox-line-cues--say "Cue applied for this session"))
+
+(defun emacsvox-line-cues--save ()
+  "Save this cue's conditional rule and remove its temporary session override.
+Other rules remain intact. Restoring bundled removes this menu's personal rule."
+  (interactive)
+  (emacsvox-line-cues--commit t)
+  (emacsvox-line-cues--say "Saved global cue. Other presentation rules still apply."))
+
+(defun emacsvox-line-cues--tone-data (&optional factory current)
+  "Return shared-editor values for the draft, FACTORY or CURRENT comparison."
+  (let* ((kind (plist-get (emacsvox-line-cues--current) :kind))
+         (value (cond (factory 'bundled)
+                      (current (emacsvox-line-cues--rule-value
+                                kind (or (emacsvox-line-cues--session kind)
+                                         (emacsvox-line-cues--saved kind))
+                                (emacsvox-line-cues--session kind)))))
+         (values (emacsvox-line-cues--tone-values value)))
+    (emacsvox-tone-editor--data (plist-get values :pitch) (plist-get values :duration)
+                               (* 100 (plist-get values :volume)) (plist-get values :shape))))
+
+(defun emacsvox-line-cues--editor-values (data)
+  "Convert shared-editor DATA to durable tone values."
+  (list :pitch (plist-get data :pitch) :duration (plist-get data :duration)
+        :volume (/ (plist-get data :volume) 100.0) :shape (emacsvox-tone-editor--shape data)))
+
+(defun emacsvox-line-cues--apply-tone (data save)
+  "Apply private tone DATA, persisting the conditional rule when SAVE is non-nil."
+  (let ((draft (emacsvox-line-cues--current)))
+    (setf (plist-get draft :value) (emacsvox-line-cues--editor-values data)))
+  (emacsvox-line-cues--commit save))
+
+(defun emacsvox-line-cues--preview-tone (data _sample)
+  "Preview private DATA without changing the parent draft or any rules."
+  (let* ((context (copy-sequence (emacsvox-line-cues--context)))
+         (draft (copy-tree (emacsvox-line-cues--current)))
+         (transient--prefix (clone transient--prefix)))
+    (setf (plist-get draft :value) (emacsvox-line-cues--editor-values data))
+    (oset transient--prefix scope (plist-put context :cue-draft draft))
+    (emacsvox-line-cues--preview)))
+
+(defun emacsvox-line-cues--edit-tone ()
+  "Edit this line condition's tone in a private shared-editor draft.
+A applies a global session rule; W saves a personal rule. C compares the
+current tone values. Silence, bundled restoration and earcons stay in
+the parent."
+  (interactive)
+  (emacsvox-tone-editor--open
+   (emacsvox-line-cues--context)
+   (list :label (emacsvox-line-cues--title) :read #'emacsvox-line-cues--tone-data
+         :current (lambda () (emacsvox-line-cues--tone-data nil t))
+         :apply #'emacsvox-line-cues--apply-tone :preview #'emacsvox-line-cues--preview-tone
+         :apply-label "Apply line tone for session" :save-label "Save line tone as personal rule"
+         :save-message "Saved line tone; other presentation rules still apply")))
+
 (defun emacsvox-line-cues--preview ()
   "Preview just this draft's cue without applying or saving it."
   (interactive)
@@ -201,8 +318,7 @@
          (value (plist-get (emacsvox-line-cues--current) :value)))
     (if (eq value 'silent) (progn (emacsvox-aural-preview-stop) (emacsvox-line-cues--say "Silent cue"))
       (let* ((data (if (nth 3 entry)
-                       (let ((pair (emacsvox-line-cues--values)))
-                         (list :kind 'tone :pitch (car pair) :duration (cdr pair)))
+                       (append (list :kind 'tone) (emacsvox-line-cues--tone-values))
                      (list :kind 'cue :cue (if (eq value 'bundled) (nth 2 entry) value))))
              (action (emacsvox-aural--compile-action
                       (append '(:id line-cue-preview) data) 'line-cue-preview 'before 0 'object))
@@ -245,12 +361,14 @@
    ("p" (lambda () (format "Pitch: %s Hz" (car (emacsvox-line-cues--values)))) emacsvox-line-cues--pitch :if emacsvox-line-cues--tone-p :transient t)
    ("d" (lambda () (format "Duration: %s milliseconds" (cdr (emacsvox-line-cues--values)))) emacsvox-line-cues--duration :if emacsvox-line-cues--tone-p :transient t)
    ("e" "Choose replacement earcon" emacsvox-line-cues--choose :if-not emacsvox-line-cues--tone-p :transient t)
+   ("E" "Edit tone shape and envelope" emacsvox-line-cues--edit-tone :if emacsvox-line-cues--tone-p :transient transient--do-stack)
    ("n" "Silence cue in draft" emacsvox-line-cues--silent :transient t)]
   ["Preview and save"
    ("SPC" "Preview cue only" emacsvox-line-cues--preview :transient t)
    ("s" "Stop preview" emacsvox-line-cues--stop :transient t)
    ("r" "Restore bundled cue in draft" emacsvox-line-cues--reset :transient t)
    ("D" "Discard draft edits" emacsvox-line-cues--discard :transient t)
+   ("A" "Apply this cue for session" emacsvox-line-cues--apply :transient t)
    ("S" "Save this cue globally" emacsvox-line-cues--save :transient t)
    ("q" "Back (retain draft)" transient-quit-one)
    ("C-q" "Close menus (retain draft)" transient-quit-all)]

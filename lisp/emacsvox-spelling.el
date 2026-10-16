@@ -171,6 +171,8 @@ Read the spelling sample to compare timing; a tone alone cannot demonstrate it."
 
 (defun emacsvox-spelling--preview ()
   "Read a sample with the selected feedback at its flagged word.
+Capitalization follows the captured source buffer's active reading settings;
+buffer-local choices and presentation rules can override global defaults.
 Preview does not change Flyspell, edit your text, or save settings."
   (interactive)
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))

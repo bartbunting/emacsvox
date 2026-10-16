@@ -1,0 +1,68 @@
+#+title: ADR 0028: Recording Library and Cue Assignments
+#+date: 2026-10-17
+#+startup: content
+
+* Status
+
+Accepted on 2026-10-17. Implementation and listening checkpoints are tracked
+separately in [[file:../ui-settings-plan.org][the settings plan]].
+
+* Decision
+
+Separate available recordings from semantic cues. A file in the personal
+recording library does not register an event or change playback. Collection
+subdirectories organise candidates. Browsing, import, selection and preview
+leave assignments unchanged; explicit Save assigns a recording to a cue in a
+captured writable personal pack. Saving does not select that pack as active.
+
+Keep =emacsvox-sound-library-directory= as a Customize option, defaulting to
+=~/.emacsvox/sounds/library/=. Recording identity is the SHA-256 digest of its
+exact audio-file bytes. This identity survives renaming and moving a file;
+re-encoding creates a different recording. Duplicate bytes appear once in the
+library, and direct assignments in known packs are reported together. The
+browser is not an inventory of unrelated packs outside configured discovery.
+
+Add version 2 of the data-only sound-pack manifest. Retain version 1 readers
+and filename-based packs. Version 2 adds =:assignments=, an alist whose cue
+keys map to either =inherit= or a plist containing =:recording= (the digest),
+=:file= (a relative path) and =:name= (the displayed recording name).
+
+Save copies audio into =recordings/assigned/DIGEST.EXT= inside the pack, verifies
+its bytes, then atomically publishes the manifest using the existing backup and
+rollback path. Reject stale manifest captures, changed source recordings,
+invalid paths and mismatched copies. Failed publication leaves the previous
+assignment effective. An unused immutable copy may remain after failure or
+replacement; it can be reused and is not automatically deleted. Pack relocation
+needs the whole directory and its parent packs; it does not need the library.
+
+At each inheritance level, explicit assignments take precedence over flat cue
+files and module overrides. =inherit= skips both local sources, revealing the
+parent or weaker module default/fallback. Original files remain available for
+recovery. Explicit assignment changes what the cue sounds like; presentation
+rules still determine when it occurs. Assigned audio uses its owning pack's
+spatialisation metadata.
+
+Library preview and pack assignment do not upload resources. ADR 0010's
+workstation-resource boundary remains in force. An external personal path is
+not made remotely playable by recording it in a manifest. Local playback still
+requires backend support for the chosen audio format.
+
+* Related tone editing
+
+The five line-condition cues use the shared tone editor while retaining their
+conditional-rule ownership under ADR 0027. Apply uses distinct session rule
+identifiers; Save persists the personal rule and removes that session override.
+Older pitch/duration pairs remain readable. Waveform, volume, sweep and envelope
+are carried in full tone values. Preview changes neither rules nor parent drafts.
+
+* Consequences and verification
+
+Candidates no longer appear to be events. Explicit assignments can be compared,
+reset and carried with a pack. The additional audio copies trade some disk space
+for independence from library organisation. Hash checks validate file identity;
+they do not establish valid audio decoding or listening acceptance.
+
+Automated checks cover preview and cancellation, session/personal rule round
+trips, import and filtering, stale saves, failed manifest publication, module
+precedence, inherited reset, relocation and graphical return focus. Follow the
+repository's fresh compiled Emacs and documentation gates before review.

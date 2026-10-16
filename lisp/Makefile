@@ -154,7 +154,8 @@ emacsvox-aural-provider-org-srs.elc \
 emacsvox-aural-provider-markdown.elc \
 emacsvox-aural-provider-notmuch.elc \
 emacsvox-sounds.elc \
-emacsvox-aural-sound-packs.elc
+emacsvox-aural-sound-packs.elc \
+emacsvox-sound-library.elc
 
 SPEAK_OBJECTS =   \
 emacsvox-pronounce.elc \
@@ -428,7 +429,7 @@ emacsvox-settings-integrations.elc: emacsvox-settings.elc
 emacsvox-settings-workflows.elc: emacsvox-aural-menu.elc
 emacsvox-settings.elc: emacsvox-aural-menu.elc
 emacsvox-output-settings.elc: emacsvox-aural-menu.elc emacsvox-aural-spatial.elc emacsvox-aural-preview.elc
-emacsvox-line-cues.elc: emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc
+emacsvox-line-cues.elc: emacsvox-tone-editor.elc emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc
 emacsvox-interaction.elc: emacsvox-aural-menu.elc
 emacsvox-tone-editor.elc: emacsvox-aural-menu.elc
 emacsvox-spelling.elc: emacsvox-aural-menu.elc emacsvox-flyspell.elc emacsvox-tone-editor.elc
@@ -540,6 +541,7 @@ emacsvox-aural-provider-markdown.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-notmuch.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-org-srs.elc: emacsvox-aural-provider-org-srs.elc
 emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
+emacsvox-sound-library.elc: emacsvox-aural-sound-packs.elc
 emacsvox-aural-sound-packs.elc: \
 emacsvox-aural-ui.elc emacsvox-aural-inspection.elc \
 emacsvox-aural-description.elc \

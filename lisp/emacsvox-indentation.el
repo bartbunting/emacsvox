@@ -140,7 +140,8 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
   '((emacsvox-indentation--base emacsvox-indentation-pitch-tone-base "Base pitch" "Hz" 25 1)
     (emacsvox-indentation--rise emacsvox-indentation-pitch-tone-semitones-per-column "Rise per column" "semitones" 0.25 0)
     (emacsvox-indentation--maximum emacsvox-indentation-pitch-tone-maximum "Maximum pitch" "Hz" 100 1)
-    (emacsvox-indentation--duration emacsvox-indentation-pitch-tone-duration "Requested duration" "milliseconds" 10 0))
+    (emacsvox-indentation--duration emacsvox-indentation-pitch-tone-duration "Requested duration" "milliseconds" 10 0)
+    (emacsvox-indentation--tone-volume emacsvox-indentation-pitch-tone-volume "Pitch-tone volume" "percent" 5 0))
   "Pitch-tone controls: command, option, label, units, step, and lower bound.")
 
 (defun emacsvox-indentation--tone-label (command)
@@ -158,8 +159,10 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
          (symbol (nth 1 control))
          (current (emacsvox-indentation--value symbol))
          (minimum (nth 5 control))
-         (maximum (when (eq command 'emacsvox-indentation--base)
-                    (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum)))
+         (maximum (pcase command
+                    ('emacsvox-indentation--base
+                     (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum))
+                    ('emacsvox-indentation--tone-volume 100)))
          (minimum (if (eq command 'emacsvox-indentation--maximum)
                       (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-base)
                     minimum))
@@ -192,6 +195,14 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
              (when (and (eq command 'emacsvox-indentation--duration)
                         (< value (emacsvox-speak--blank-line-tone-duration)))
                (format "; effective %s milliseconds" (emacsvox-speak--blank-line-tone-duration)))))))
+
+(defun emacsvox-indentation--tone-volume ()
+  "Set rising-pitch indentation volume; Shift arrows step by five percent.
+Apply immediately in the selected buffer/global scope. This affects pitch-tone
+and spoken-pitch-tone; duration-coded tones are unchanged. Shared main-tone
+volume still scales this level. S saves global defaults through Customize."
+  (interactive)
+  (emacsvox-indentation--tone-edit 'emacsvox-indentation--tone-volume))
 
 (defun emacsvox-indentation--base ()
   "Set the first column pitch; Shift arrows change it by 25 Hz." (interactive)
@@ -402,6 +413,7 @@ Linked menus may share STATE so changes of scope survive parent navigation."
    ("r" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--rise)) emacsvox-indentation--rise :transient t)
    ("m" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--maximum)) emacsvox-indentation--maximum :transient t)
    ("d" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--duration)) emacsvox-indentation--duration :transient t)
+   ("v" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--tone-volume)) emacsvox-indentation--tone-volume :transient t)
    ("E" "Base-tone editor: waveform, envelope and presets" emacsvox-indentation--edit-tone :transient transient--do-stack)]
   ["Try and finish"
    ("SPC" "Preview four-column pitch tone" emacsvox-indentation--tone-preview :transient t)
@@ -421,8 +433,9 @@ Linked menus may share STATE so changes of scope survive parent navigation."
   "Choose indentation feedback for the current buffer or global defaults.
 With prefix GLOBAL, start with global defaults.  Changes apply immediately;
 closing the menu keeps them.  Global changes preserve buffer-local choices.
-Save defaults explicitly to retain them across sessions.  Tone volume always
-affects all main-stream Omnivox tones, independently of the selected scope.
+Save defaults explicitly to retain them across sessions. Pitch-tone volume
+uses the selected scope. Shared tone volume always affects all main-stream
+Omnivox tones, independently of that scope.
 Up/down selects a control; left/right changes sections.  Shift-left/right
 adjusts Volume by five percentage points.  Space previews the indentation settings."
   :refresh-suffixes t
@@ -469,8 +482,9 @@ adjusts Volume by five percentage points.  Space previews the indentation settin
       (interactive) (emacsvox-indentation--set 'emacsvox-indentation-tone-timing 'overlay "Tone alongside speech"))
     :inapt-if-not emacsvox-indentation--tonal-p :transient t)
    ("t" "Pitch-tone settings" emacsvox-indentation-tone :transient transient--do-stack)]
-  ["All main-stream tones (global)"
-   ("v" (lambda () (format "Volume: %d percent" (default-value 'tts-main-tone-volume)))
+  ["Tone levels"
+   ("l" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--tone-volume)) emacsvox-indentation--tone-volume :transient t)
+   ("v" (lambda () (format "Shared tone volume: %d percent" (default-value 'tts-main-tone-volume)))
     emacsvox-indentation--volume :transient t)
    ("-" "Volume down 5 percent" (lambda () "Lower all main-stream tones by five percentage points; speech volume stays unchanged."
       (interactive) (emacsvox-indentation--volume -5)) :transient t)

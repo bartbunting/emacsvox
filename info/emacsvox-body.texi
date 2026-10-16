@@ -5157,7 +5157,9 @@ For unconfirmed application@comma{} see
 
 Rules request cues by semantic name. Sound packs map names to audio assets
 and can inherit missing cues. This lets you change the sound of a family of
-cues without rewriting rules. For one event@comma{} use its feedback rule instead.
+cues without rewriting rules. A recording library holds available sounds;
+assigning one to a cue changes its sound in that pack. To change when the cue
+plays@comma{} use its feedback rule.
 
 To enable or disable earcons in the captured buffer@comma{} use @kbd{C-e H r l e}.
 In that submenu@comma{} @kbd{E} changes the global default for buffers without a local
@@ -5180,8 +5182,10 @@ Browse individual cues and their source or fallback.
 Audition the selected concrete cue; RET shows details.
 @item v
 Validate resources and report missing/invalid entries.
-@item a
+@item a in the pack manager
 Activate the selected pack.
+@item a in the cue browser
+Compare library recordings for an explicit assignment.
 @end table
 
 Spatial requests describe placement portably@comma{} not a particular device.
@@ -5192,9 +5196,9 @@ independent of sampled files and the active pack.
 
 For waveform@comma{} pitch sweep and envelope adjustments@comma{} use the
 @ref{spelling-tone-editor, , shared tone editor}. Spelling@comma{} capitalisation beeps and rising-pitch
-indentation each open it from their own menu. The waveform and envelope
-controls are shared; scope and saving belong to the destination. Line cues
-and general personal-rule editing retain their separate controls.
+indentation each open it from their own menu@comma{} as do the five line-condition
+cues. The waveform and envelope controls are shared; scope and saving belong
+to the destination. General personal-rule editing retains its own controls.
 
 @menu
 * Walkthrough Try A Sound Pack: Sound Pack Walkthrough.  Preview, activate, retain, and restore a sound pack.
@@ -5209,14 +5213,23 @@ and general personal-rule editing retain their separate controls.
 @kbd{C-e H o c} opens @emph{Line and boundary cues}. Blank@comma{} whitespace-only@comma{} separator@comma{}
 decorated@comma{} and unspeakable-line tones have pitch and integer-duration controls.
 Shift-left/right adjusts by 25 Hz or 5 milliseconds; @kbd{@key{RET}} enters exactly.
+Their @kbd{E} opens the shared tone editor for volume@comma{} waveform@comma{} sweep and envelope.
 Boundary/warning and large movement instead choose replacement earcons.
 Changing those named earcons affects every use@comma{} including warnings elsewhere.
 
-Each cue retains a global preview draft. @kbd{@key{SPC}} auditions it@comma{} @kbd{s} stops@comma{}
-@kbd{n} silences in the draft@comma{} @kbd{r} restores bundled values@comma{} and @kbd{D} discards edits.
-@kbd{S} saves through personal rules while preserving unrelated rules; stronger
-presentation rules may override it. @kbd{q} retains the draft. This changes cue
-output@comma{} not classification of separators or decorated lines.
+Each cue retains a global draft. @kbd{@key{SPC}} auditions it@comma{} @kbd{s} stops@comma{} @kbd{n} silences
+in the draft@comma{} @kbd{r} restores bundled values@comma{} and @kbd{D} discards unapplied edits.
+@kbd{A} applies a temporary session rule. @kbd{S} saves the conditional personal rule
+and removes its temporary session override. Unrelated rules remain intact and
+other presentation rules may override the result. To undo an applied change@comma{}
+choose the desired values or bundled restoration@comma{} then Apply or Save again.
+
+Inside the shared editor@comma{} @kbd{A} applies for the session and @kbd{W} saves the personal
+rule. Preview leaves the parent's draft and live rules unchanged; @kbd{q} discards
+unapplied editor adjustments and returns to the same @emph{Edit tone} control.
+The parent menu's @kbd{q} retains its draft@comma{} including an applied change. Line cues
+use the presentation-rule store because they match line conditions. These
+controls change cue output@comma{} not classification of separators or decorated lines.
 
 @node Sound Pack Walkthrough
 @subsection Walkthrough: Try A Sound Pack
@@ -5242,7 +5255,8 @@ Restore the original pack by activating it. If the experiment was saved
 in a profile@comma{} restore/update that profile too. Preview alone needs no undo.
 @end enumerate
 
-For one unwanted cue@comma{} change its rule rather than switching every cue in a pack.
+For a different recording on one cue@comma{} assign from the library below. To
+suppress the cue or change when it plays@comma{} use its feedback rule.
 
 @node Changing One Sound
 @subsection Walkthrough: Silence One Cue
@@ -5355,10 +5369,84 @@ Coverage profiles declare cue sets for validation@comma{} not working Presentati
 Profiles. Native assets belong to the pack; effective ones include inherited
 and fallback cues. Validation and details explain those sources.
 
-This manager does not record/edit audio or create a sound pack through a New
-Palette-style wizard. New packs need audio files and resource metadata; see
-@ref{Authoring Sound Packs,Authoring Sound Packs,,emacsvox,} in the Developer Guide. For a change to when a cue
-plays@comma{} use the feedback-rule workflow.
+Use the cue browser's @kbd{a} to replace a cue from the recording library. Its
+@emph{Availability} distinguishes explicit assignments from native files and
+inherited sounds. Assigned recordings show their names in @code{Recording / file};
+row speech includes the name and provider. The manager does not record or edit
+audio@comma{} or create a pack through a wizard. For a new personal pack directory@comma{}
+see @ref{Authoring Sound Packs,Authoring Sound Packs,,emacsvox,} in the Developer Guide.
+
+@subsection Browse recordings and assign them to cues
+
+Open @kbd{C-e H o l} for the recording library@comma{} or run @kbd{M-x emacsvox-sound-library}.
+The default directory is @code{~/.emacsvox/sounds/library/}; change it through
+@kbd{M-x customize-option @key{RET} emacsvox-sound-library-directory @key{RET}}. Put Ogg@comma{} WAV@comma{}
+MP3 or FLAC files there@comma{} optionally in collection subdirectories@comma{} then press
+@kbd{g} to rescan. @kbd{i} imports a copy into a named collection and leaves its source
+intact. Adding files does not create cues or assign them to events.
+
+Arrows browse names@comma{} collections@comma{} durations and known assignments. @kbd{@key{SPC}} or @kbd{P} previews
+the current row and @kbd{S} stops. @kbd{/} filters names and collections; an empty
+search restores all rows. @kbd{u} filters recordings without saved assignments;
+it also keeps pending choices visible so you can review them. Duration is shown
+when the optional @code{ffprobe} program is available. Playback still depends on
+your audio backend. Identical file bytes appear once@comma{} even under several names.
+
+To assign several sounds in a writable personal pack:
+
+@enumerate
+@item
+Select a recording in the library and press @kbd{a} to choose the destination
+pack and cue. This queues the recording without saving. Alternatively@comma{}
+open @kbd{C-e H o p}@comma{} select the pack@comma{} then @kbd{@key{RET}} for its cues. Find the cue
+and press @kbd{a} to open the library@comma{} then @kbd{@key{RET}} to queue a recording.
+@item
+The row shows and speaks @emph{Pending} with the pack and cue. @kbd{@key{SPC}} previews the
+row; @kbd{C} plays the saved sound for the current cue. Browse and press @kbd{@key{RET}}
+to replace that cue's pending choice. Live playback stays unchanged.
+@item
+To assign another cue@comma{} select another recording and press @kbd{a} again. Choose
+the cue; the pack stays the same. You stay in the same buffer@comma{} and earlier
+choices remain pending. Repeat for as many cues as needed. The header shows
+the current cue and the number of pending changes.
+@item
+Press @kbd{W} to save all pending changes together. Their status becomes @emph{Saved}.
+Speech confirms the number of assignments@comma{} the pack and whether it is active.
+An active pack uses the saved sounds; an inactive pack stays inactive.
+@item
+Press @kbd{q} to return to the opening menu or cue row. This discards any changes
+still pending and announces how many were discarded. Saved assignments stay
+in place. Reopen the library to choose a different pack.
+@end enumerate
+
+A recording can serve several cues. Its row lists each pending and saved
+assignment separately. Replacing one pending choice leaves the other cues'
+choices intact. Until Save@comma{} an old recording still shows its saved assignment
+because that is the sound currently used.
+
+To restore inheritance@comma{} open that cue's assignment and press @kbd{R}. This queues
+Reset to parent alongside any other pending changes. @kbd{W} saves them together@comma{}
+skipping that cue's local assignment and revealing its parent or fallback while
+retaining original audio files. Select and save another recording to replace
+it again. If the pack or a candidate changes while pending@comma{} Save refuses the
+stale edit and leaves the whole batch unsaved. Cancel@comma{} refresh and reopen it.
+
+Saved assignments copy audio into the pack. Renaming or removing the library
+source cannot break that copy. To move a pack@comma{} copy its whole directory and
+retain its parent packs; the library is not required for playback. Older
+filename-based packs continue to work. A saved assignment takes precedence
+over their local file for that cue.
+
+@kbd{o} opens the library directory for file management. @kbd{d} deletes the selected
+library file after confirmation@comma{} refusing recordings assigned in known packs
+or pending in the current buffer.
+Assignment reporting covers configured packs@comma{} not copies elsewhere. Original
+imports outside the library and audio copied into packs remain intact.
+
+This browser does not upload audio to a remote speech host. Personal library
+paths outside the configured workstation sound root cannot be previewed through
+the remote resource route. Use local playback for those recordings; remote
+resource installation remains a separate task.
 
 @node Aural Speech Output
 @section Speech Output And Notifications
@@ -5453,16 +5541,19 @@ for its scope and effects before applying it.
 
 
 Open @kbd{C-e H s i} or directly @kbd{C-e d I}. In global-default scope@comma{} @kbd{S} saves
-indentation defaults and tone volume through Customize. Select @emph{Volume} and
-adjust by five percentage points with Shift-left/right@comma{} or enter with @kbd{@key{RET}}.
-Plain left/right changes sections and @kbd{@key{SPC}} previews indentation. Other selected
-items give guidance rather than treating every shifted arrow as volume.
+indentation defaults and tone volumes through Customize. In @emph{Tone levels}@comma{}
+@kbd{l} changes @emph{Pitch-tone volume} in the selected buffer/global scope; @kbd{v} changes
+@emph{Shared tone volume} globally. Adjust either by five percentage points with
+Shift-left/right@comma{} or enter with @kbd{@key{RET}}. The shared level scales all main-stream
+tones. The individual level affects rising-pitch indentation only;
+duration-coded tones still use the shared level. Plain left/right changes
+sections and @kbd{@key{SPC}} previews indentation.
 
-@kbd{t} opens pitch-tone settings: base pitch@comma{} rise per column@comma{} maximum pitch@comma{} and
-requested duration. Shift-left/right adjusts; @kbd{@key{RET}} enters exactly. @kbd{@key{SPC}}
-previews four columns without changing presentation or enabling feedback.
+@kbd{t} opens pitch-tone settings: base pitch@comma{} rise per column@comma{} maximum pitch@comma{}
+requested duration and individual volume. Shift-left/right adjusts; @kbd{@key{RET}}
+enters exactly. @kbd{@key{SPC}} previews four columns without changing presentation or enabling feedback.
 @kbd{s} stops. Short durations show the effective blank-line-tone minimum.
-@kbd{R} restores the four bundled values in scope. Global changes preserve local
+@kbd{R} restores these five bundled values in scope. Global changes preserve local
 overrides; @kbd{S} saves global defaults and tone volume. @kbd{q} retains live changes.
 
 From pitch-tone settings@comma{} @kbd{E} opens the shared base-tone editor@comma{} also reached
@@ -5487,7 +5578,10 @@ changes and returns. See @ref{spelling-tone-editor, , the shared controls} for p
 @kbd{C-e H s c} opens @emph{Capitalization}. @kbd{i} toggles indication and @kbd{c} independently
 toggles camel-case splitting. These and the presentation choice share
 buffer/global scope on @kbd{g}. @kbd{@key{SPC}} previews reading; @kbd{S} saves these three
-startup defaults. Buffer overrides still apply.
+startup defaults. Buffer overrides still apply. The reading sample contains
+several camel-case identifiers. Capital cues and a voice's own pronunciation
+can make splitting on and off sound similar; compare with indication off to
+hear splitting without capital cues.
 
 Press @kbd{p} to browse Spoken@comma{} Tone@comma{} Spoken and tone@comma{} Personal rules or None.
 The current choice is focused and marked selected. Up/down browses without
@@ -5498,28 +5592,34 @@ Press @kbd{@key{RET}} again to try another choice@comma{} or @kbd{@key{SPC}} to 
 enables indication nor saves startup defaults.
 
 Within Capitalization@comma{} @kbd{l} edits the capital-letter beep and @kbd{a} the all-caps
-beep. Each has a separate global draft. Select pitch/duration and adjust by
-25 Hz/5 milliseconds with Shift-left/right@comma{} or use @kbd{@key{RET}}. @kbd{@key{SPC}} previews only
-the beep and @kbd{s} stops. Previewing neither changes reading settings nor enables
-capitalisation indication.
+beep. Each has separate global defaults saved through Customize. You can
+preview edits before applying or saving them; these unsaved edits are what
+the editor calls a @emph{draft}.
+
+Select pitch@comma{} duration or @emph{Beep volume} (@kbd{v}) and adjust by 25 Hz@comma{}
+5 milliseconds or 5 percentage points with Shift-left/right@comma{} or use @kbd{@key{RET}}.
+The individual volume affects only that beep and is scaled by shared tone
+volume. @kbd{@key{SPC}} previews the beep alone. @kbd{P} reads two sentences with several
+examples of the selected kind@comma{} so you can judge repeated beeps against speech.
+@kbd{s} stops. Samples privately enable tone indication without changing your
+reading settings; contextual presentation rules still apply.
 
 In a beep menu@comma{} @kbd{A} applies that cue's global defaults for this Emacs session;
 @kbd{S} also saves them through Customize for future sessions. These defaults
 apply to tone/combined presentation@comma{} and presentation rules can override them.
-@kbd{r} restores factory values in the draft; apply or save to use them. @kbd{D}
+@kbd{r} prepares factory values for preview; apply or save to use them. @kbd{D}
 discards preview changes and rereads current defaults. @kbd{q} returns and @kbd{C-q}
-closes menus@comma{} retaining the parent draft for this session. Applied changes
+closes menus@comma{} retaining unsaved preview edits for this session. Applied changes
 remain effective. If defaults change elsewhere while you are editing@comma{} discard
-the draft and reopen it before applying or saving.
+the preview edits and reopen before applying or saving.
 
 Press @kbd{E} inside either beep menu for the shared tone editor: the full routes
-are @kbd{C-e H s c l E} and @kbd{C-e H s c a E}. @kbd{@key{SPC}} previews its private draft;
-@kbd{C} compares the current cue and @kbd{P} reads a capitalisation sample. The sample
-privately enables tone indication without changing your reading settings;
-contextual presentation rules still apply. @kbd{A} applies the global defaults
-and @kbd{W} also saves them through Customize. @kbd{q} discards unapplied changes and
-returns to the parent. @kbd{R} puts factory values in the private draft. Waveform
-and envelope controls follow @ref{spelling-tone-editor, , the common editor instructions}.
+are @kbd{C-e H s c l E} and @kbd{C-e H s c a E}. @kbd{@key{SPC}} previews the edited tone alone;
+@kbd{C} compares the current cue and @kbd{P} reads the same repeated-beep sample.
+@kbd{A} applies the global defaults and @kbd{W} also saves them through Customize.
+@kbd{q} discards unapplied changes and returns to the parent. @kbd{R} prepares factory
+values for preview. Waveform and envelope controls follow
+@ref{spelling-tone-editor, , the common editor instructions}.
 
 The Customize options are @code{emacsvox-capitalization-capital-tone} and
 @code{emacsvox-capitalization-all-caps-tone}. Each holds pitch@comma{} duration@comma{} individual
@@ -5571,7 +5671,11 @@ individual adjustment; it is also available in Sounds and output.
 
 These controls change the current session immediately. @kbd{b} previews the tone
 alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a sample containing one
-flagged word with the selected combination. @kbd{S} saves the spelling settings@comma{}
+flagged word with the selected combination. Capitalisation follows the captured
+source buffer's active reading settings and presentation rules. A local Spoken
+choice can therefore say “cap” even when global defaults use Tone. Open
+Capitalization for that buffer to inspect or change its reading settings.
+@kbd{S} saves the spelling settings@comma{}
 including tone timing and shape@comma{} and the shared tone volume through Customize.
 @kbd{q} returns and @kbd{C-q} closes the menus without saving.
 
@@ -5586,8 +5690,8 @@ including tone timing and shape@comma{} and the shared tone volume through Custo
 @cindex shared tone editor
 @cindex tone presets
 
-Spelling feedback@comma{} each capitalisation beep menu and indentation's pitch-tone
-settings open this editor with capital @kbd{E}. The title identifies the cue and
+Spelling feedback@comma{} each capitalisation beep menu@comma{} indentation's pitch-tone
+settings and the five line-condition menus open this editor with capital @kbd{E}. The title identifies the cue and
 scope. Waveform@comma{} pitch sweep and envelope controls accompany pitch@comma{} duration
 and individual volume. Adjustments affect only a private draft until you
 apply or save it using the destination's labelled actions.
@@ -5596,7 +5700,9 @@ The exercise below uses global spelling at @kbd{C-e H s f E}. Its timing stays
 in Spelling feedback at @kbd{C-e H s f m}; voice@comma{} earcon and tone enablement also
 remain there. Shared main-tone volume controls all main tones from Sounds
 and output. Indentation's buffer/global scope follows its saving instructions
-above; capitalisation and spelling tones use global defaults.
+above; capitalisation and spelling tones use global defaults. Line tones use
+conditional session or personal rules as described in
+@ref{Sounds And Space,Sounds@comma{} Tones@comma{} and Spatial Cues,,emacsvox,}.
 
 The sections follow the editing task: the cue's basic controls@comma{}
 Pitch movement@comma{} Envelope@comma{} Preview@comma{} Presets@comma{} Apply and save@comma{} then Finish.
@@ -13265,6 +13371,19 @@ The file contains data@comma{} not executable initialization: do not wrap the fo
 Unknown cue names fail the resource audit; introducing a new semantic cue
 requires an integration to register its intent and use it. Every standalone
 sound pack must resolve @code{button}@comma{} directly or through its declared parent.
+
+The recording library writes version 2 manifests when saving assignments.
+These retain the same metadata and add @code{:assignments}: an alist mapping cue
+symbols to @code{inherit} or @code{(:recording SHA256 :file RELATIVE-PATH :name LABEL)}.
+Audio is copied below @code{recordings/assigned/} inside the pack; paths and byte
+hashes are checked before publication. Copy the complete pack directory when
+relocating it. Version 1 manifests and flat cue filenames remain supported.
+
+Explicit assignments override flat and module-specific files at their own
+inheritance level. @code{inherit} skips both local sources without deleting them.
+The browser shows recorded labels@comma{} while cue registration still owns semantic
+intent. Candidate files belong in the separate library@comma{} not at the pack root;
+see @ref{Personal Sound Packs,Personal Sound Packs,,emacsvox,} for the assignment workflow.
 
 The optional @code{:profiles} field lists registered cue-coverage requirements.
 These are resource validation contracts@comma{} distinct from Presentation Profiles

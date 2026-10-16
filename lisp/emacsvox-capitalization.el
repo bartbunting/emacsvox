@@ -69,7 +69,9 @@
     (emacsvox-capitalization--say (if value "Indication on" "Indication off"))))
 
 (defun emacsvox-capitalization--split ()
-  "Toggle camel-case splitting independently of indication."
+  "Toggle camel-case splitting independently of indication.
+Capital cues and a voice's own pronunciation can make both choices sound
+similar. Compare with Indication off to hear splitting without capital cues."
   (interactive)
   (let ((value (not (emacsvox-capitalization--value 'tts-split-caps))))
     (emacsvox-capitalization--set 'tts-split-caps value)
@@ -154,7 +156,7 @@ Indication and camel-case splitting are separate; Save remains in the parent."
     (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
       (let ((tts-caps caps) (tts-split-caps split)
             (emacsvox-capitalization-presentation presentation))
-        (tts-speak "Capital camelCase NASA")))))
+        (tts-speak "Alice checks readWriteBuffer before Bob calls saveCurrentFile. NASA sends XML over HTTP.")))))
 
 (defun emacsvox-capitalization--save ()
   "Save the three displayed reading options as startup defaults."
@@ -296,6 +298,22 @@ Rules with other matches or action structures remain personal rules."
   "Set draft pitch; Shift arrows change it by 25 Hz." (interactive) (emacsvox-capitalization--cue-edit 'pitch))
 (defun emacsvox-capitalization--duration ()
   "Set draft duration; Shift arrows change it by 5 ms." (interactive) (emacsvox-capitalization--cue-edit 'duration))
+(defun emacsvox-capitalization--volume (&optional direction)
+  "Set this beep's preview volume; DIRECTION steps by five percentage points.
+Only this capital-letter or all-caps beep changes. Shared main-tone volume
+still scales it. Apply changes the session; Save persists through Customize."
+  (interactive)
+  (let* ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft))
+         (data (emacsvox-capitalization--tone-data))
+         (current (plist-get data :volume))
+         (value (if direction (max 0 (min 100 (+ current (* 5 direction))))
+                  (emacsvox-aural-menu--read-number "Beep volume (0 to 100): " current))))
+    (unless (and (numberp value) (<= 0 value 100))
+      (user-error "Beep volume must be between 0 and 100"))
+    (setf (plist-get data :volume) value
+          (plist-get draft :values) (emacsvox-capitalization--tone-values data))
+    (emacsvox-capitalization--say (format "%s percent; preview only until Apply or Save" value))))
+
 (defun emacsvox-capitalization--cue-adjust (direction)
   "Adjust the focused cue control in DIRECTION."
   (let ((command (with-selected-window (emacsvox-transient--navigation-window)
@@ -304,7 +322,8 @@ Rules with other matches or action structures remain personal rules."
     (pcase command
       ('emacsvox-capitalization--pitch (emacsvox-capitalization--cue-edit 'pitch (* 25 direction)))
       ('emacsvox-capitalization--duration (emacsvox-capitalization--cue-edit 'duration (* 5 direction)))
-      (_ (user-error "Choose Pitch or Duration first")))))
+      ('emacsvox-capitalization--volume (emacsvox-capitalization--volume direction))
+      (_ (user-error "Choose Pitch, Duration or Beep volume first")))))
 (defun emacsvox-capitalization--decrease ()
   "Decrease the selected cue setting." (interactive) (emacsvox-capitalization--cue-adjust -1))
 (defun emacsvox-capitalization--increase ()
@@ -345,7 +364,9 @@ Rules with other matches or action structures remain personal rules."
                  (tts-caps t) (tts-split-caps nil)
                  (emacsvox-capitalization-presentation 'tone))
             (cl-progv (list (emacsvox-capitalization--option kind)) (list values)
-              (tts-speak (if (eq kind 'capital) "Capital example" "NASA example"))))
+              (tts-speak (if (eq kind 'capital)
+                             "Alice visits Bob on Monday. Carol meets David on Friday."
+                           "NASA sends XML to HTTP. CPU and RAM checks report OK."))))
         (let* ((action (emacsvox-aural--compile-action
                         (append (list :id 'capitalization-cue-preview :kind 'tone) values)
                         'capitalization-cue-preview 'before 0 'run))
@@ -353,6 +374,12 @@ Rules with other matches or action structures remain personal rules."
                         :before (list action) :content (emacsvox-aural--make-content-style :speak nil))))
           (emacsvox-aural-preview-play-plan
            (emacsvox-aural-compile-plan render nil (emacsvox-aural-context-at-point) 'local-cue)))))))
+
+(defun emacsvox-capitalization--cue-sample ()
+  "Read several examples using this beep's preview settings.
+Temporarily enable tone indication; contextual rules still apply."
+  (interactive)
+  (emacsvox-capitalization--preview-tone (emacsvox-capitalization--tone-data) t))
 
 (defun emacsvox-capitalization--cue-preview ()
   "Preview this retained draft without applying or saving it."
@@ -393,7 +420,7 @@ menu-generated rules migrate on Save; contextual rules remain unchanged."
   (let ((draft (plist-get (emacsvox-capitalization--cue-context) :cue-draft)))
     (setf (plist-get draft :values)
           (emacsvox-capitalization--tone-values (emacsvox-capitalization--tone-data t))))
-  (emacsvox-capitalization--say "Factory cue in draft. Apply or Save to use it."))
+  (emacsvox-capitalization--say "Factory values ready to preview. Apply or Save to use them."))
 
 (defun emacsvox-capitalization--cue-discard ()
   "Discard preview changes and reread current defaults or legacy settings."
@@ -469,21 +496,25 @@ Migrate only unchanged old menu-generated rules; preserve contextual rules."
   "Edit the all-caps beep." (interactive) (emacsvox-capitalization-cue 'all-caps))
 
 (transient-define-prefix emacsvox-capitalization-cue (kind)
-  "Tune one global capitalization beep in a retained preview draft."
+  "Preview and adjust one global capitalization beep.
+Edits remain available in this session until applied or discarded. A applies
+session defaults; S saves them through Customize for future sessions."
   :refresh-suffixes t
   [:description emacsvox-capitalization--cue-title
    ("p" (lambda () (format "Pitch: %s Hz" (car (emacsvox-capitalization--cue-values)))) emacsvox-capitalization--pitch :transient t)
    ("d" (lambda () (format "Duration: %s milliseconds" (cdr (emacsvox-capitalization--cue-values)))) emacsvox-capitalization--duration :transient t)
+   ("v" (lambda () (format "Beep volume: %s percent" (plist-get (emacsvox-capitalization--tone-data) :volume))) emacsvox-capitalization--volume :transient t)
    ("E" "Tone editor: waveform, envelope and presets" emacsvox-capitalization--edit-tone :transient transient--do-stack)]
   ["Preview and save (other rules may override)"
    ("SPC" "Preview beep only" emacsvox-capitalization--cue-preview :transient t)
+   ("P" "Read sentence with several beeps" emacsvox-capitalization--cue-sample :transient t)
    ("s" "Stop preview" emacsvox-capitalization--stop :transient t)
-   ("r" "Restore bundled cue in draft" emacsvox-capitalization--cue-reset :transient t)
+   ("r" "Restore factory values for preview" emacsvox-capitalization--cue-reset :transient t)
    ("D" "Discard preview edits" emacsvox-capitalization--cue-discard :transient t)
    ("A" "Apply global beep defaults" emacsvox-capitalization--cue-apply :transient t)
    ("S" "Save this cue in Customize" emacsvox-capitalization--cue-save :transient t)
-   ("q" "Back (retain draft)" transient-quit-one)
-   ("C-q" "Close menus (retain draft)" transient-quit-all)]
+   ("q" "Back (keep preview edits)" transient-quit-one)
+   ("C-q" "Close menus (keep preview edits)" transient-quit-all)]
   (interactive (list (intern (completing-read "Capitalization kind: " '(capital all-caps) nil t))))
   (unless (memq kind '(capital all-caps)) (user-error "Unknown capitalization kind"))
   (let* ((prefix (or transient--prefix transient-current-prefix))
