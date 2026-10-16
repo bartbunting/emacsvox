@@ -227,6 +227,17 @@ jobs:
           emacs_binary=$(command -v emacs)
           core_home="$RUNNER_TEMP/emacsvox-core-home"
           mkdir -p "$core_home"
+          if [ "${{ matrix.emacs }}" = 30.2 ]; then
+            env HOME="$core_home" make test-deps EMACS="$emacs_binary" \
+              TEST_DEPS_DIR="$core_home/dependencies"
+            export EMACSLOADPATH="$core_home/dependencies/transient:$core_home/dependencies/cond-let:$core_home/dependencies/compat:"
+            # Emacsvox's config check disables source shorthand processing.
+            mkdir -p "$core_home/compiled"
+            cp "$core_home/dependencies/transient/transient.el" "$core_home/compiled/"
+            env HOME="$core_home" "$emacs_binary" -Q --batch \
+              -f batch-byte-compile "$core_home/compiled/transient.el"
+            export EMACSLOADPATH="$core_home/compiled:$EMACSLOADPATH"
+          fi
           env HOME="$core_home" make core-test EMACS="$emacs_binary"
           env HOME="$core_home" make trace-test EMACS="$emacs_binary"
           env HOME="$core_home" make compiled-aural-test EMACS="$emacs_binary"
