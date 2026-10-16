@@ -210,13 +210,36 @@ Voice feedback remains independent of the selected tone and earcon."
   "Run ORIGINAL with ARGUMENTS without announcing mail setup changes.
 Keep checking and highlighting words when entering a composition buffer.
 Announce each misspelling at most once during an ordinary editing pass."
-  (let ((emacsvox-use-icons
-         (and emacsvox-use-icons
-              (or (not (derived-mode-p 'message-mode))
-                  (eq flyspell-pre-buffer (current-buffer)))))
-        (emacsvox-flyspell--reported-errors (make-hash-table :test #'equal))
-        (emacsvox-flyspell--checking-unchanged-text (null flyspell-changes)))
-    (apply original arguments)))
+  (let* ((emacsvox-use-icons
+          (and emacsvox-use-icons
+               (or (not (derived-mode-p 'message-mode))
+                   (eq flyspell-pre-buffer (current-buffer)))))
+         (emacsvox-flyspell--reported-errors (make-hash-table :test #'equal))
+         (emacsvox-flyspell--checking-unchanged-text (null flyspell-changes))
+         (character-navigation
+          (and emacsvox-flyspell--checking-unchanged-text
+               (memq this-command '(forward-char backward-char left-char right-char))
+               (eq flyspell-pre-buffer (current-buffer))
+               (integer-or-marker-p flyspell-pre-point)))
+         (result
+          (let ((emacsvox-use-icons (and emacsvox-use-icons
+                                        (not character-navigation))))
+            (apply original arguments))))
+    ;; Flyspell may check the preceding word while point is on a space.
+    ;; Character feedback instead belongs to entry into the destination word.
+    (when (and character-navigation emacsvox-use-icons)
+      (when-let* ((overlay
+                   (cl-find-if
+                    (lambda (candidate)
+                      (and (flyspell-overlay-p candidate)
+                           (eq (overlay-get candidate 'face) 'flyspell-incorrect)
+                           (not (and (<= (overlay-start candidate) flyspell-pre-point)
+                                     (< flyspell-pre-point (overlay-end candidate))))))
+                    (overlays-at (point)))))
+        (let ((emacsvox-flyspell--checking-unchanged-text nil))
+          (emacsvox-flyspell--incorrect
+           (overlay-start overlay) (overlay-end overlay) nil))))
+    result))
 
 (advice-add 'flyspell-post-command-hook :around
             #'emacsvox-flyspell--automatic-check)

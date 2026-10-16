@@ -1865,8 +1865,16 @@ verification of subsequently changed code.
   preflight and the documentation review gate pass. A broader graphical run
   encountered unrelated mail-mode audio setup failures; those tests pass in
   batch. Listening acceptance remains open in a fresh normal profile.
-  Character entry also needs review: backward navigation currently cues at
-  the following space instead of the final letter of the flagged word.
+  Character entry was corrected in a separate follow-up slice. With no pending
+  edits, character movement cues the flagged word under point when entering
+  from outside its range: the first letter going forward or the last letter
+  going backward. Adjacent spaces and movement inside that word stay quiet.
+  Both spelling tones and earcons follow this rule; their saved switches and
+  voice feedback remain unchanged. All 19 Flyspell source tests pass, including
+  a real Hunspell regression covering both directions and both cue choices.
+  Five focused graphical checks pass with compiled code. Incremental byte-code,
+  preflight and the documentation review gate pass.
+  Listening still needs to confirm blank-line and character-entry feedback.
 
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
