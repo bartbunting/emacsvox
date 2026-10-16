@@ -10,6 +10,41 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.10.0][NEWS for Emacsvox 2026.10.0]].
 
+** Spelling feedback
+
+=C-e H s f= opens global spelling feedback settings. Combine voice changes,
+tones and earcons independently; adjust tone pitch and duration, preview a
+tone or a sample sentence, and save through Customize. The volume control
+affects all main-stream tones.
+
+Reading words marked by Flyspell places selected cues at those words instead
+of after the line. Opening a mail reply retains spelling highlights without
+playing a burst of cues. Repeated automatic checks announce each error once
+per checking pass, while ordinary editing retains spelling feedback.
+
+** Experimental Emacsvox menu
+
+On the =ui-experiments= branch, =C-e H= opens a Transient. Press =s= for
+Speech settings, then =i= for the existing Indentation menu. The menus share
+the current-buffer or global-defaults selection; =C-u C-e H= starts with
+global defaults. =C-e d I= still opens Indentation directly.
+
+=x= opens Feedback for the captured source item; =q= there returns to the
+menu with its original item and settings scope. Help also returns to its
+menu with =q=. =h= opens the existing
+Aural Home with all its actions; it also remains available through
+=M-x emacsvox-aural=. Existing Home shortcuts follow =C-e H h= in this
+prototype. =q= returns one menu, and =C-q= closes the menu sequence.
+Transient feedback interrupts previous main-stream speech, including scope
+toggles and value changes. Item announcements speak the key without the
+word "shortcut" and do not repeat the section name.
+
+=C-e H s n= opens Menu navigation. Choose Continuous, Wrap within section,
+or Stop at section edges. Left/right moves between sections in every style.
+The choice applies globally and immediately; =S= saves it through Customize.
+Enter activates the focused item in the Emacsvox settings menus; =M-RET=
+and =C-j= also work.
+
 ** Clear permission choice speech in Agent Shell
 
 Tab and Shift-Tab speak each permission choice once. The cursor hint remains
@@ -27,7 +62,8 @@ backends, with before-speech timing available as an option.
 and main-stream tone volume. Use =g= to switch between current-buffer settings
 and global defaults, or open with =C-u C-e d I= to start with global defaults.
 =SPC= previews the settings, and =S= saves global defaults across sessions.
-Tone volume is global in either scope. Existing direct selector commands
+Tone volume is global in either scope. Volume adjustments speak just the
+percentage and interrupt previous main-stream speech. Existing direct selector commands
 remain available, and spoken-only indentation feedback is unchanged.
 
 ** Announce the destination after closing an Agent Shell buffer

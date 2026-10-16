@@ -56,8 +56,11 @@ make docs-org-preview
 Use ordinary Org code markup for keys (~C-x C-f~ or ~M-x term RET~) and
 verbatim markup for other literals (=local.mk= or =make docs-update=).
 The Texinfo exporter preserves keyboard and named-key formatting; standard
-Org text and HTML exports retain the key text. Use Org heading links within
-the manual and described =info:= links to other manuals.
+Org text and HTML exports retain the key text. Within the manual, link to a
+named Info destination or an explicit Org anchor. A structural heading marked
+=TEXINFO_NODE: no= cannot be used as an Info destination merely because HTML
+can link to it. Use the containing named node when appropriate, and described
+=info:= links to other manuals. Check the result in both Info and HTML.
 
 Run =make docs-org-text= for a complete UTF-8 text copy at
 =.docs-preview/org-manual/emacsvox.txt=. Set =DOCS_ORG_TEXT= to choose another

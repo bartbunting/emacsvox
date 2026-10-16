@@ -178,7 +178,7 @@ endpoints.  The other dimensions use the ordinary linear mapping."
      (:constructor emacsvox-aural--make-action))
   "A validated backend-independent action."
   id kind text text-template template-fields cue pitch duration voice volume space
-  anchor source tone audio-mode
+  anchor source tone audio-mode shape
   ;; A one-element snapshot distinguishes resolved empty facts from an action
   ;; compiled directly without rule matching.  Never mutate registered actions.
   matched-facts)
@@ -909,6 +909,56 @@ instead be `(:fact ATTRIBUTE)', which is resolved after rule matching."
      "Action %S %s must be a number or (:fact ATTRIBUTE): %S"
      action-id property value))))
 
+(defun emacsvox-aural--validate-tone-shape (shape)
+  "Validate literal tone SHAPE and return an independent copy.
+A shape has a waveform and an optional ADSR envelope.  Envelope times
+include attack, decay and release within the fixed total tone duration."
+  (emacsvox-aural--require-plist shape "Tone shape")
+  (let ((keys (cl-loop for (key _) on shape by #'cddr collect key)))
+    (unless (and (memq (plist-get shape :waveform) '(sine triangle square pulse sawtooth))
+                 (= (length keys) (length (delete-dups (copy-sequence keys))))
+                 (cl-every (lambda (key) (memq key '(:waveform :envelope :pulse-width :end-frequency-hz :envelope-curve))) keys))
+      (emacsvox-aural--rule-error "Invalid tone shape fields: %S" shape)))
+  (if (eq (plist-get shape :waveform) 'pulse)
+      (let ((width (plist-get shape :pulse-width)))
+        (unless (and (numberp width) (<= 0.05 width 0.95))
+          (emacsvox-aural--rule-error "Pulse width must be from 0.05 through 0.95")))
+    (when (plist-member shape :pulse-width)
+      (emacsvox-aural--rule-error "Pulse width applies only to Pulse")))
+  (when (plist-member shape :end-frequency-hz)
+    (let ((end (plist-get shape :end-frequency-hz)))
+      (unless (and (numberp end) (< 0 end) (<= end 20000))
+        (emacsvox-aural--rule-error "Sweep end must be positive and at most 20000 Hz"))))
+  (when (plist-member shape :envelope-curve)
+    (unless (and (plist-get shape :envelope)
+                 (memq (plist-get shape :envelope-curve) '(linear exponential)))
+      (emacsvox-aural--rule-error "Envelope curve requires ADSR and Linear or Exponential")))
+  (when (plist-member shape :envelope)
+    (let ((envelope (plist-get shape :envelope)))
+      (emacsvox-aural--require-plist envelope "Tone envelope")
+      (unless (equal (sort (cl-loop for (key _) on envelope by #'cddr collect key)
+                           (lambda (a b) (string< (symbol-name a) (symbol-name b))))
+                     '(:attack-ms :decay-ms :release-ms :sustain-level))
+        (emacsvox-aural--rule-error "Tone envelope requires attack, decay, sustain and release"))
+      (dolist (key '(:attack-ms :decay-ms :release-ms))
+        (let ((value (plist-get envelope key)))
+          (unless (and (integerp value) (<= 0 value 60000))
+            (emacsvox-aural--rule-error "%s must be integer milliseconds from 0 to 60000" key))))
+      (let ((value (plist-get envelope :sustain-level)))
+        (unless (and (numberp value) (<= 0 value 1))
+          (emacsvox-aural--rule-error "Sustain level must be from 0 to 1")))))
+  (copy-tree shape))
+
+(defun emacsvox-aural--extended-tone-shape-p (shape)
+  "Return non-nil when SHAPE requires extended tone negotiation."
+  (or (memq (plist-get shape :waveform) '(pulse sawtooth))
+      (plist-member shape :pulse-width) (plist-member shape :end-frequency-hz)
+      (plist-member shape :envelope-curve)))
+
+(defun emacsvox-aural--classic-tone-shape-p (shape)
+  "Return non-nil for absent SHAPE or the original sine with Classic fades."
+  (or (null shape) (equal shape '(:waveform sine))))
+
 (defun emacsvox-aural--compile-action
     (data rule-id phase index default-anchor)
   "Compile action DATA contributed by RULE-ID in PHASE at INDEX.
@@ -925,6 +975,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
          (text-template (plist-get data :text-template))
          (cue (or (plist-get data :cue) (plist-get data :name)))
          (tone (plist-get data :tone))
+         (shape (plist-get data :shape))
          (pitch (plist-get data :pitch))
          (duration (plist-get data :duration))
          (audio-mode
@@ -937,7 +988,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
          (anchor (or (plist-get data :anchor) default-anchor))
          (allowed
           '(:id :kind :text :text-template :cue :name :tone :pitch :duration
-            :audio-mode :voice :volume :space :anchor))
+            :audio-mode :voice :volume :space :anchor :shape))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -959,7 +1010,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
               ('cue '(:id :kind :cue :name :volume :space :anchor))
               ('pause '(:id :kind :duration :anchor))
               ('tone
-               '(:id :kind :tone :pitch :duration :audio-mode :anchor))
+               '(:id :kind :tone :pitch :duration :volume :audio-mode :anchor :shape))
               (_ allowed)))
            (incompatible
             (cl-loop
@@ -1027,9 +1078,21 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
            (emacsvox-aural--rule-error
             "Tone action %S requires :tone or both :pitch and :duration"
             id))))))
-    (when (and volume (not (numberp volume)))
-      (emacsvox-aural--rule-error
-       "Action volume must be numeric for %S" id))
+    (when (plist-member data :shape)
+      (if (and (proper-list-p shape) (= (length shape) 2)
+               (eq (car shape) :fact) (symbolp (cadr shape)) (cadr shape))
+          (push (cadr shape) template-fields)
+        (setq shape (emacsvox-aural--validate-tone-shape shape))))
+    (if (eq kind 'tone)
+        (when (plist-member data :volume)
+          (let ((field (emacsvox-aural--numeric-action-expression-field
+                        volume :volume id nil)))
+            (when field (push field template-fields))
+            (unless (or field (and (numberp volume) (<= 0 volume 1)))
+              (emacsvox-aural--rule-error "Tone volume must be from 0 to 1 for %S" id))))
+      (when (and volume (not (numberp volume)))
+        (emacsvox-aural--rule-error
+         "Action volume must be numeric for %S" id)))
     (when (plist-member data :voice)
       (emacsvox-aural-validate-voice-value
        voice (format "Voice for action %S" id)))
@@ -1054,6 +1117,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
      :template-fields template-fields
      :cue cue
      :tone tone
+     :shape (copy-tree shape)
      :pitch pitch
      :duration duration
      :audio-mode (and (eq kind 'tone) audio-mode)

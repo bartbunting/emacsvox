@@ -1022,7 +1022,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
       "RET example details  P full preview; S stop\n"
       "c cue-only audition  i composed/isolated\n"
       "SPC speak example    g refresh\n"
-      "o option manager     h aural home\n"
+      "o option manager     h settings menu\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1058,7 +1058,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
        ("c" . emacsvox-aural-feature-fragment-previews-audition-cues)
        ("i" . emacsvox-aural-feature-fragment-previews-toggle-isolated)
        ("o" . emacsvox-aural-list-feature-fragments)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-feature-fragment-previews-help)))
   (define-key
    emacsvox-aural-feature-fragment-previews-mode-map
@@ -1384,7 +1384,7 @@ announce the selected example after displaying the buffer."
       "N create personal    c copy as personal\n"
       "e edit personal      d delete personal\n"
       "v validate           g refresh\n"
-      "h aural home\n"
+      "h settings menu\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1449,7 +1449,7 @@ announce the selected example after displaying the buffer."
        ("e" . emacsvox-aural-feature-fragments-edit)
        ("d" . emacsvox-aural-delete-feature-fragment)
        ("v" . emacsvox-aural-show-feature-fragment-validation)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-feature-fragments-help)))
   (define-key
    emacsvox-aural-feature-fragments-mode-map

@@ -647,14 +647,19 @@ Return non-nil when LINE is a control event, including a malformed one."
 
 (defun omnivox--choice-registration-version (snapshot)
   "Return the timeline version belonging to acknowledged SNAPSHOT."
-  (if (equal (plist-get (plist-get snapshot :content) :type) "register_logical_voices_v3") 5 4))
+  (or (plist-get snapshot :timeline-version)
+      (if (equal (plist-get (plist-get snapshot :content) :type) "register_logical_voices_v3") 5 4)))
 
 (defun omnivox--choice-current-registration (process)
   "Return PROCESS's acknowledged snapshot or fail before preparing speech."
   (let ((snapshot (process-get process omnivox--choice-registration-property)))
     (unless (and (process-live-p process)
-                 (if (= (omnivox--choice-registration-version snapshot) 5)
-                     (omnivox--native-tuning-supported-p process)
+                 (if (memq (omnivox--choice-registration-version snapshot) '(5 6 7))
+                     (and (omnivox--native-tuning-supported-p process)
+                          (pcase (omnivox--choice-registration-version snapshot)
+                            (7 (omnivox--extended-tones-supported-p process))
+                            (6 (omnivox--rich-tones-supported-p process))
+                            (_ t)))
                    (omnivox--choice-tuning-supported-p process))
                  snapshot
                  (equal (plist-get snapshot :process-generation)
@@ -704,7 +709,7 @@ Return non-nil when LINE is a control event, including a malformed one."
          (print-circle t) (print-length nil) (print-level nil)
          (span-bytes (+ (string-bytes (prin1-to-string (plist-get context :spans)))
                         (* (1+ omnivox--choice-observation-limit)
-                           (if (= version 5) omnivox--choice-receipt-limit omnivox--choice-observation-bytes))))
+                           (if (memq version '(5 6 7)) omnivox--choice-receipt-limit omnivox--choice-observation-bytes))))
          (snapshot-bytes
           (or (when-let* ((references (process-get process 'omnivox--choice-snapshot-references))
                           (entry (gethash snapshot references)))
@@ -912,8 +917,9 @@ Return non-nil when LINE is a control event, including a malformed one."
   "Correlate versioned choice EVENT before mutating any playback state."
   (when-let* ((owner (tts--dispatch-owner-for process (plist-get event :dispatch_id)))
               ((tts--dispatch-observing-p owner))
-              ((eql (plist-get (tts--dispatch-owner-context owner) :protocol-version)
-                    (1+ (plist-get event :protocol_version)))))
+              ((eql (plist-get event :protocol_version)
+                    (pcase (plist-get (tts--dispatch-owner-context owner) :protocol-version)
+                      (4 3) ((or 5 6 7) 4)))))
     (let ((receipt (when (equal (plist-get event :type) "voice_choice_applied")
                      (omnivox--choice-receipt-context owner event))))
       (tts--dispatch-playback-marker-event
@@ -1662,6 +1668,25 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
                  '("engine_parameter_catalogue_v1" "engine_voice_parameters_v1"
                    "presentation_timeline_v5" "playback_marker_events_v4"))))
 
+(defun omnivox--rich-tones-supported-p (process)
+  "Return non-nil when PROCESS supports richer tones and their speech contract."
+  (and (omnivox--native-tuning-supported-p process)
+       (cl-every (lambda (feature) (omnivox--process-supports-p process feature))
+                 '("rich_tones_v1" "presentation_tone_v2"
+                   "presentation_timeline_v6"))))
+
+(defun omnivox--extended-tones-supported-p (process)
+  "Return non-nil when PROCESS supports the complete extended tone bundle."
+  (and (omnivox--rich-tones-supported-p process)
+       (cl-every (lambda (feature) (omnivox--process-supports-p process feature))
+                 '("rich_tones_v2" "presentation_tone_v3" "presentation_timeline_v7"))))
+
+(defun omnivox--native-timeline-version (process)
+  "Choose PROCESS's complete negotiated native timeline format."
+  (cond ((omnivox--extended-tones-supported-p process) 7)
+        ((omnivox--rich-tones-supported-p process) 6)
+        (t 5)))
+
 (defun omnivox--choice-definition-projection (definition &optional native)
   "Return wire wrapper, provenance and unapplied flag for DEFINITION.
 NATIVE selects the native-aware wire form.  Read raw ownership only once."
@@ -1787,11 +1812,16 @@ JSON map hash tables are copied independently and cannot be compared by `equal'.
                              (equal response (plist-get old :response))))
               (process-put process omnivox--choice-registration-property
                            (list :registry-generation generation
+                                 :timeline-version
+                                 (if (equal (plist-get content :type) "register_logical_voices_v3")
+                                     (omnivox--native-timeline-version process)
+                                   4)
                                  :process-generation (plist-get content :choice-process-generation)
                                  :content (tts--dispatch-copy-data content)
                                  :response (tts--dispatch-copy-data response))))
             (if (equal (plist-get content :type) "register_logical_voices_v3")
-                (emacsvox-aural-enable-structured-timeline process 5)
+                (emacsvox-aural-enable-structured-timeline
+                 process (omnivox--native-timeline-version process))
               (when (omnivox--choice-tuning-supported-p process)
                 (emacsvox-aural-enable-structured-timeline process 4)))
             (process-put process 'omnivox-library-accepted-registration
@@ -1805,7 +1835,7 @@ JSON map hash tables are copied independently and cannot be compared by `equal'.
         (process-put process omnivox--choice-registration-property nil)
         (process-put process 'omnivox-library-accepted-registration
                      (tts--dispatch-copy-data content))
-        (when (memq (process-get process emacsvox-aural--structured-timeline-process-property) '(4 5))
+        (when (memq (process-get process emacsvox-aural--structured-timeline-process-property) '(4 5 6 7))
           (emacsvox-aural-enable-structured-timeline process 3))
         (omnivox--handle-registration-response process response))
       (omnivox--choice-warn-unapplied process content)
@@ -2415,6 +2445,8 @@ taken effect on the server.  Reapply to confirm the desired configuration."
     (when (member "emacsvox_tx" (plist-get response :features))
       (emacsvox-aural-enable-framed-delivery process))
     (cond
+     ((omnivox--rich-tones-supported-p process)
+      (emacsvox-aural-enable-structured-timeline process (omnivox--native-timeline-version process)))
      ((member "presentation_timeline_v3" (plist-get response :features))
       (emacsvox-aural-enable-structured-timeline process 3))
      ((or
@@ -2433,8 +2465,11 @@ taken effect on the server.  Reapply to confirm the desired configuration."
          "Omnivox timeline V3 is required; rebuild and restart the server"))))
     (when (member "relative_rate_v1" (plist-get response :features))
       (emacsvox-aural-enable-relative-rate process))
-    (when (member "presentation_tone_v1" (plist-get response :features))
-      (emacsvox-aural-enable-presentation-tone process 1))
+    (cond
+     ((omnivox--rich-tones-supported-p process)
+      (emacsvox-aural-enable-presentation-tone process (if (omnivox--extended-tones-supported-p process) 3 2)))
+     ((member "presentation_tone_v1" (plist-get response :features))
+      (emacsvox-aural-enable-presentation-tone process 1)))
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
     (omnivox--finish-capability-negotiation process 'ready)

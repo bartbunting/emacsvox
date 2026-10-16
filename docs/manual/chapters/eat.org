@@ -1,325 +1,297 @@
 * Speech Access To EAT
 :PROPERTIES:
 :TEXINFO_NODE_NAME: EAT Terminal Access
-:ALT_TITLE: EAT Terminal Access
+:ALT_TITLE: Speech access to EAT
 :DESCRIPTION: Use EAT with terminal-aware speech.
 :END:
 
 #+cindex: EAT terminal emulator
-
 #+cindex: terminal accessibility
-
 #+cindex: speech access, terminal
-
 #+findex: eat
 
-EAT (Emulate A Terminal) is a third-party terminal emulator; it is not part of
-stock Emacs.  It is commonly installed from NonGNU ELPA.  Start it with
-~M-x eat~; use a prefix argument to create or select another EAT terminal.
-See the EAT manual for terminal setup and EAT's complete command reference
-(see [[info:eat#Top][Eat User Manual]]).
+EAT (Emulate A Terminal) is a third-party terminal emulator, commonly installed
+from NonGNU ELPA. Run ~M-x eat~ to start it; a prefix argument creates or
+selects another terminal. Follow the [[info:eat#Top][Eat User Manual]] for installation,
+terminal setup, and EAT's complete command reference.
 
-Emacsvox observes EAT's bounded rendered screen.  It does not parse a shell's
-private state and it does not generate shell or router completion candidates.
-This distinction is important: EAT handles terminal emulation, the program on
-the other end handles terminal-side input and completion, and Emacsvox
-presents the visible result.
+Three parts cooperate here. EAT emulates the terminal; the shell, router, or
+other program handles terminal input and completion; Emacsvox presents the
+rendered result. Emacsvox observes a bounded screen, not the program's private
+state. It does not generate shell or router completion candidates.
+
+First choose an input mode appropriate to the program. Then use automatic
+feedback for current work and explicit review for content you need to examine
+again. ~C-e S~ opens focused EAT speech settings; those menu keys apply only
+while the menu is open, not to ordinary terminal input.
 
 ** Input Modes And Completion Responsibilities
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Input Modes
+:ALT_TITLE: Choose an input mode
+:DESCRIPTION: Decide which keys reach Emacs and which reach the terminal program.
 :END:
 
 #+cindex: EAT input modes
-
 #+cindex: completion, EAT
-
 #+cindex: Corfu, EAT
-
 #+findex: eat-semi-char-mode
-
 #+findex: eat-char-mode
-
 #+findex: eat-emacs-mode
-
 #+findex: eat-line-mode
-
 #+kindex: C-c C-j (EAT)
-
 #+kindex: C-c M-d (EAT)
-
 #+kindex: C-c C-e (EAT)
-
 #+kindex: C-c C-l (EAT)
 
-EAT provides four input modes.  Emacsvox announces a human-readable mode name
-whenever you switch modes.
+EAT has four input modes. Emacsvox announces the mode name when you switch.
+The mode determines whether a key edits text in Emacs or reaches the terminal
+program.
 
 #+attr_texinfo: :indic asis :compact t
 - Semi-character mode ::
 
-  This is EAT's default.  Most keys, including ~TAB~, go to the terminal,
-  while Emacs prefixes such as ~C-x~, ~C-c~, and ~M-x~ remain
-  available.  Use ~C-q~ before a normally reserved key to send it to the
-  terminal.  Switch here with ~C-c C-j~.
+  The default. Most keys, including ~TAB~, go to the terminal, while
+  prefixes such as ~C-x~, ~C-c~, and ~M-x~ remain available. Use ~C-q~
+  before a normally reserved key to send it through. ~C-c C-j~ selects
+  this mode.
 - Character mode ::
 
-  All supported keys go to the terminal, which is useful for applications that
-  need Emacs-like keys.  Switch here with ~C-c M-d~; return to semi-character
-  mode with ~C-M-m~ or ~M-RET~.
+  Supported input keys go to the terminal, useful for programs needing
+  Emacs-like keys. Emacsvox's review prefix remains available as described
+  under [[info:emacsvox#EAT Screen Review][Review retained terminal output]]. Enter character mode with ~C-c M-d~
+  and return to semi-character mode with ~C-M-m~ or ~M-RET~ before using
+  ordinary Emacs command entry.
 - Emacs mode ::
 
-  Keys remain in Emacs and no input is sent to the terminal.  Use this for normal
-  Emacs buffer motion and inspection.  Switch here with ~C-c C-e~.
+  Keys stay in Emacs and send no terminal input. Use it for ordinary buffer
+  motion and inspection. Enter with ~C-c C-e~.
 - Line mode ::
 
-  The pending input line is edited locally and sent on ~RET~.  ~TAB~ runs
-  Emacs's =completion-at-point=, so a configured Emacs completion front end
-  such as Corfu can display its result.  Switch here from semi-character or Emacs
-  mode with ~C-c C-l~.  Line mode is not available in EAT's embedded Eshell
-  terminal.
+  Edit the pending line locally and send it with ~RET~. ~TAB~ invokes
+  Emacs's =completion-at-point=, whose result may be displayed by a front
+  end such as Corfu. Enter from semi-character or Emacs mode with ~C-c C-l~.
+  Line mode is not available in EAT's embedded Eshell terminal.
 
-Switching to line mode does not create unlimited history.  EAT still applies
-=eat-term-scrollback-size= to retained terminal text; it is a character limit,
-not a line count, and =nil= permits unlimited retention.  The editable draft
-follows the terminal extent.  Changing input modes does not change this limit.
+Line mode does not create unlimited history. =eat-term-scrollback-size= still
+limits retained text by /characters/, not lines; =nil= permits unlimited
+retention. The editable draft follows the terminal extent, and changing input
+modes does not change this limit.
 
-In semi-character and character mode, ~TAB~ belongs to Bash Readline, a
-remote shell, a router CLI, or whichever terminal application is running.
-Corfu is not involved.  In line mode, ~TAB~ belongs to Emacs completion and
-does not ask a remote CLI for candidates.  Therefore semi-character mode is
-usually the right choice for SSH sessions and network-device CLIs.  If an
-Emacs completion backend blocks in line mode, ~C-g~ cancels that Emacs
-operation; switch to semi-character mode if terminal-side completion was
-intended.
+In semi-character and character modes, ~TAB~ belongs to Bash Readline, a
+remote shell, router CLI, or the running terminal program. Corfu is not involved.
+In line mode, completion belongs to Emacs and does not query a remote CLI.
+Semi-character mode is therefore usually appropriate for SSH and network-device
+sessions. If an Emacs completion backend blocks in line mode, ~C-g~ cancels
+that Emacs operation; switch to semi-character mode when terminal completion
+was intended.
 
-Shell completion must itself be configured.  For example, Bash can complete
-=git pul= to =git pull= only when the shell has suitable programmable
-completion definitions, often supplied by a system =bash-completion=
-package.  Emacsvox observes the result but neither installs nor substitutes for
-those definitions.
+The shell must have its own completion configuration. For example, completing
+=git pul= to =git pull= in Bash requires suitable programmable definitions,
+often supplied by =bash-completion=. Emacsvox neither installs nor substitutes
+for those definitions.
 
 ** Automatic Terminal Feedback
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Automatic Feedback
+:ALT_TITLE: Understand automatic terminal feedback
+:DESCRIPTION: Follow output, prompts, editing results, and application-screen changes.
 :END:
 
 #+cindex: EAT automatic speech
-
 #+cindex: terminal output, speech policy
-
 #+kindex: C-e C-q (EAT)
-
 #+findex: emacsvox-eat-toggle-autospeak
-
 #+vindex: emacsvox-eat-autospeak
 
-Use ~C-e C-q~ to toggle automatic foreground feedback for this terminal.
-It starts enabled.  This controls routine output, status, automatic metadata,
-application-screen boundaries, and process lifecycle feedback.  Explicit reading,
-input and completion feedback, and the configured terminal bell remain available.
-The verbosity control ~C-e q v~ and background monitoring ~C-e q m~ remain
-independent; changing autospeak does not change either preference.
+~C-e C-q~ toggles automatic foreground feedback for this terminal; it starts
+enabled. The same control is ~s~ in the focused settings menu. It covers
+routine output, status, automatic metadata, application-screen boundaries,
+and process lifecycle feedback. Explicit reading, input and completion
+feedback, and the configured terminal bell remain available. Verbosity
+(~C-e q v~) and background monitoring (~C-e q m~) are independent preferences.
 
 Automatic speech requires the selected EAT buffer and Emacs keyboard focus.
-The selected window must follow the live cursor or be editing a line-mode draft
-after the terminal output.  Moving into scrollback prevents new output from
-interrupting review.  Another terminal or an active minibuffer also suppresses
-foreground feedback.  In terminal-only Emacs, or when the display cannot report
-keyboard focus, selection within Emacs is the available focus boundary.
+The selected window must follow the live cursor or edit a line-mode draft
+after terminal output. Reviewing scrollback prevents new output from
+interrupting you. Another selected terminal or an active minibuffer also
+suppresses foreground feedback. In terminal-only Emacs, or when keyboard
+focus cannot be reported, selection within Emacs is the available boundary.
 
-Switching autospeak off or losing eligibility discards locally pending automatic
-feedback.  Speech already sent to Omnivox may finish.  Returning to the terminal
-or switching autospeak on starts with fresh output; it does not replay missed
-output.  Use explicit reading to inspect it.  This control also applies while
-EAT owns an embedded Eshell terminal, without changing ordinary Eshell output.
+Turning autospeak off or losing eligibility discards locally pending automatic
+feedback. Speech already sent to Omnivox may finish. Returning or re-enabling
+speech starts with fresh output; it does not replay missed content. Use explicit
+review instead. This policy also applies to an embedded Eshell terminal,
+without changing ordinary Eshell output.
 
-On the main screen, Emacsvox coalesces a burst before classifying it.  Complete
-new output lines are spoken once, with an automatic limit of eight lines and
-1,000 characters.  Continued input rows and empty terminal placeholders are
-omitted without hiding the output or replaying earlier screen rows.  The
-output remains available to speech when it scrolls beyond the screen, including
-repeated identical lines.  Increasing scrollback is unnecessary for this
-feedback.  Wrapped output is joined and oversized bursts announce how much
-output was omitted.  Fresh text without a newline also speaks, so password
-requests and confirmation questions remain accessible.
-Carriage-return progress and status rewrites
-use rate-limited replaceable speech.  Unchanged repaint and resize-only updates
-remain silent.  Terminal bells, paste actions, input-mode changes,
+*** Read output and follow progress
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+On the main screen, Emacsvox collects a burst before classifying it. Complete
+new output lines are spoken once, with automatic limits of eight lines and
+1,000 characters. Continued input rows and empty terminal placeholders are
+omitted without hiding output or rereading earlier rows. Output remains
+eligible even if it scrolls beyond the screen, including repeated identical
+lines; increasing scrollback is unnecessary for this feedback.
+
+Wrapped output is joined and oversized bursts announce how much was omitted.
+Fresh text without a newline also speaks, keeping password requests and
+confirmation questions accessible. Carriage-return progress and status
+rewrites use rate-limited, replaceable speech. Unchanged repaints and
+resize-only updates remain silent. Bells, pastes, input-mode changes,
 application-screen boundaries, and process exit are content-free semantic
-events rather than arbitrary screen speech.
+events rather than arbitrary screen readings.
+
+*** Recognise and inspect prompts
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 #+vindex: emacsvox-eat-prompt-feedback
-
 #+findex: emacsvox-eat-speak-prompt
-
 #+kindex: C-e q p (EAT)
 
 When EAT shell integration identifies a ready prompt, Emacsvox gives a cue
-after the output instead of reading the prompt text.  Set
-=emacsvox-eat-prompt-feedback= to =text= to hear it, or =silent= to suppress
-prompt feedback; the default is =earcon=.  This preference can be buffer-local
-and is independent of verbosity.  Automatic prompt feedback obeys the same
-foreground autospeak policy.  Split and multiline prompts are collected until
-ready, and redisplay or typing does not repeat them.  If several prompts arrive
-within one coalesced burst, feedback describes the final ready prompt.
+after output instead of reading the prompt text. =emacsvox-eat-prompt-feedback=
+defaults to =earcon=; choose =text= to hear the prompt or =silent= to suppress
+it. This option can be buffer-local and is independent of verbosity, but
+automatic prompt feedback still obeys foreground autospeak eligibility.
 
-Use ~C-e q p~ to read the most recently identified prompt explicitly, even
-with autospeak off.  Prompt recognition does not require EAT's margin
-annotations.  It does require shell integration: over SSH, an unintegrated
-remote prompt or question is ordinary output and is read as text.  The prompt
-preference does not silence such questions.  In that situation the last
-identified prompt may still belong to the local shell; ~C-e q l~ reads the
-current retained cursor row.
+Split and multiline prompts are collected until ready. Redisplay and typing
+do not repeat them. If several prompts arrive in one burst, feedback describes
+the final ready prompt.
 
-Terminal bells retain EAT's configured bell sound without speaking
-"Terminal bell" by default.  An aural rule can add that spoken label by
-matching module =eat=, role =command-interaction=, event
-=command-terminal-bell=, and occasion =notification=, with a speech action
-before or after the event.  Bell notifications remain rate-limited and obey
-the selected-buffer, live-cursor, and secure-input restrictions.
+~C-e q p~ explicitly reads the last identified prompt, even with autospeak off.
+Recognition does not require margin annotations, but it does require shell
+integration. An unintegrated remote prompt or question is ordinary output,
+read as text; the prompt preference does not silence it. The last identified
+prompt may still belong to the local shell. Use ~C-e q l~ for the current
+retained cursor row in that situation.
 
-In semi-character and character mode on the main screen, ~RET~ is silent.
-After a rendered Left or Right movement, Emacsvox names the character reached;
-after Up or Down, it speaks the resulting input or history row without the
-observed shell prompt.  ~M-b~, ~M-f~, and modified Left or Right word
-movement speak the exact rendered text crossed.  A boundary key that produces
-no movement stays silent.
+*** Hear input and deletion results
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-In line mode, history navigation speaks the recalled command once.  EAT's
+On the main screen in semi-character and character modes, ~RET~ is silent.
+After rendered left/right movement, Emacsvox names the reached character;
+after up/down it speaks the resulting input or history row without the
+observed shell prompt. ~M-b~, ~M-f~, and modified left/right word movements
+speak the rendered text crossed. A boundary key that produces no movement
+stays silent.
+
+Line-mode history navigation speaks the recalled command once. EAT's
 history-item counter and input-restored message remain visible in the echo
-area, but are not spoken over the command on the notification stream.
+area without speaking over the command on the notification stream.
 
-An echoed Space is named without reading the prompt or the rest of the line.
-For ~BACKSPACE~, ~DELETE~, ~M-d~, and ~C-k~, Emacsvox compares
-bounded public screen snapshots before and after the key.  When one same-row
-removal is unambiguous, it speaks the character or text actually removed.
-Otherwise it gives only a deletion tone; it never guesses from adjacent prompt
-or screen text.  Terminal padding and trailing input blanks do not prevent an
-otherwise unambiguous word deletion from being announced.  This also handles a
-no-echo peer safely: without a visible deletion there is no content to
-announce.  Feedback requires the selected window to follow the live cursor,
-and is silent during protected password input, in an unselected terminal, and
-on an alternate screen where the application controls the keys.
+An echoed Space is named without rereading the prompt or line. For Backspace,
+Delete, ~M-d~, and ~C-k~, Emacsvox compares bounded public snapshots before
+and after the key. One unambiguous same-row removal is read as the actual
+character or text removed. Otherwise only a deletion tone is given; adjacent
+prompt or screen text is not guessed as deleted content. Padding and trailing
+input blanks do not prevent an otherwise unambiguous word deletion.
 
-On a full-screen or alternate-screen application, Emacsvox does not read every
-refresh.  A cursor row reached by correlated arrow-style navigation, or one
-compact high-confidence transfer of selection-like styling, can be announced.
-Ambiguous repaint remains silent and available through explicit review.  In
-particular, inverse video or a colored row alone is not treated as proof of the
-active item.
+A no-echo peer provides no visible deletion to announce. This input feedback
+requires the selected window to follow the live cursor, and is silent during
+protected password entry, in an unselected terminal, and on an alternate
+screen where the application owns the keys.
+
+*** Bells and application-screen changes
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Bells retain EAT's configured sound without speaking "Terminal bell" by default.
+An aural rule can add a label by matching module =eat=, role
+=command-interaction=, event =command-terminal-bell=, and occasion
+=notification=, with speech before or after the event. Bell notifications
+remain rate-limited and obey selected-buffer, live-cursor, and secure-input
+restrictions.
+
+On full-screen or alternate-screen applications, Emacsvox does not read every
+refresh. A cursor row reached by correlated arrow-style navigation, or a compact
+high-confidence transfer of selection-like styling, may be announced.
+Ambiguous repaints remain available to explicit review. Inverse video or a
+coloured row alone is not proof of an active item.
 
 ** Terminal-side Completion
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Terminal Completion
+:ALT_TITLE: Hear terminal-side completion
+:DESCRIPTION: Hear completed input and inspect retained candidate or help rows.
 :END:
 
 #+cindex: completion candidates, terminal
-
 #+cindex: router completion
-
 #+kindex: TAB (EAT terminal completion)
 
-On the main terminal screen, Emacsvox takes a public screen snapshot before a
-terminal-side ~TAB~ and waits briefly for EAT output to settle.
+Before a terminal-side ~TAB~ on the main screen, Emacsvox captures the public
+screen and waits briefly for output to settle. An inline completion speaks the
+newly displayed field; for example, =~/sr<TAB>= can speak =src slash= after the
+shell displays =~/src/=.
 
-- A unique inline completion speaks the newly displayed field.  For example,
-   =~/sr<TAB>= can speak =src slash= after the shell displays
-   =~/src/=.
+An ambiguous completion printed as columns or help rows is presented as one
+transaction after the input line is redrawn. Small inferred lists speak up to
+eight candidates. Router-style descriptions keep their layout rather than
+being forced into a shell-token model. Large lists are counted and shortened
+for automatic speech. If candidates have already scrolled beyond the bounded
+screen, the count is a lower bound, such as ``at least N visible'', not an
+invented total.
 
-- An ambiguous completion that prints columns or help rows is presented as one
-   candidate transaction after the input line is redrawn.  Small inferred lists
-   speak up to eight candidates.  Descriptive router-style rows retain their
-   layout instead of being forced into a shell-token model.
+Identical repeated lists, split output, bells, wrapping, and resizing are
+coalesced without repeating the candidate text. This works from rendered
+results for local Readline, SSH, and unstructured router help. No visible
+change means there is nothing reliable to announce. On an alternate screen,
+~TAB~ is navigation rather than shell completion.
 
-- Large lists are counted and truncated for automatic speech.  If candidates
-   have already scrolled beyond the bounded visible screen, Emacsvox reports an
-   honest lower bound such as ``at least N visible'' rather than inventing a total.
-
-- Repeated identical lists, split output chunks, terminal bells, wrapping, and
-   screen resize are coalesced without replaying the same candidate text.
-
-The completion result is derived from the rendered screen, so the same design
-works with local Readline, SSH, and unstructured router help.  If the peer makes
-no visible change, there is nothing reliable to announce.  On an alternate
-screen, ~TAB~ is treated as navigation rather than shell completion.
-
-Use ~C-e q c~ to speak the latest retained candidate or help layout, or
-open frozen review with ~C-e q r~ and press ~c~.  These commands are
-especially useful after a large or multi-column result.
+Use ~C-e q c~ to read the retained candidate/help layout, or open frozen
+review with ~C-e q r~ and press ~c~. This is useful for large or multi-column
+results and does not ask the terminal to complete again.
 
 ** Explicit Review Commands
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Screen Review
+:ALT_TITLE: Review retained terminal output
+:DESCRIPTION: Read retained state or inspect an immutable screen without sending input.
 :END:
 
 #+cindex: EAT review commands
-
 #+cindex: terminal screen review
-
 #+findex: emacsvox-eat-speak-current-row
-
 #+findex: emacsvox-eat-speak-last-change
-
 #+findex: emacsvox-eat-speak-likely-focus
-
 #+findex: emacsvox-eat-speak-completion-output
-
 #+findex: emacsvox-eat-speak-visible-screen
-
 #+findex: emacsvox-eat-review-screen
-
 #+findex: emacsvox-eat-speak-retained-status
-
 #+findex: emacsvox-eat-speak-retained-metadata
-
 #+findex: emacsvox-eat-cycle-verbosity
-
 #+findex: emacsvox-eat-toggle-background-monitoring
-
 #+kindex: C-e q (EAT review)
 
-The default Emacsvox prefix is ~C-e~.  In every EAT input mode,
-~C-e q~ opens the terminal review prefix:
+With the default speech prefix, ~C-e q~ provides review commands in every
+EAT input mode:
 
 #+attr_texinfo: :indic kbd :compact t
-- C-e q l ::
+- C-e q l :: Speak the cursor row from the latest retained screen.
+- C-e q d :: Speak the last classified change.
+- C-e q h :: Speak the conservative likely-focus inference and its confidence.
+- C-e q c :: Speak retained completion candidates or help rows.
+- C-e q s :: Speak a bounded copy of the retained visible screen.
+- C-e q r :: Open a read-only frozen copy for line-by-line review.
+- C-e q t :: Speak retained progress, application, or shell-prompt status.
+- C-e q p :: Speak the last identified shell prompt.
+- C-e q i :: Speak the retained, sanitised title or working-directory change.
+- C-e q v :: Cycle terse, normal, and verbose automatic feedback for this terminal.
+- C-e q m :: Toggle content-free background monitoring for this terminal.
 
-  Speak the cursor row from the latest retained screen.
-- C-e q d ::
-
-  Speak the last classified screen change.
-- C-e q h ::
-
-  Speak the latest conservative likely-focus inference and its confidence.
-- C-e q c ::
-
-  Speak the retained completion candidates or help rows.
-- C-e q s ::
-
-  Speak a bounded copy of the retained visible screen.
-- C-e q r ::
-
-  Open a read-only frozen copy for line-by-line review.
-- C-e q t ::
-
-  Speak the retained progress, application, or shell-prompt status.
-- C-e q p ::
-
-  Speak the most recently identified shell prompt.
-- C-e q i ::
-
-  Speak the retained sanitized title or working-directory change.
-- C-e q v ::
-
-  Cycle terse, normal, and verbose automatic feedback for this terminal.
-- C-e q m ::
-
-  Toggle content-free background-output monitoring for this terminal.
-
-These commands inspect concealed-redacted retained snapshots; they do not send
-terminal input.  Content is bounded when spoken.  The visible screen is
-retained, not arbitrary scrollback.
+The reading commands inspect retained snapshots with concealed content
+redacted. The verbosity and monitoring commands instead change the source
+terminal's preferences. Neither operation sends terminal input. Speech is
+bounded: the retained visible screen is not arbitrary scrollback and need
+not match a changing live screen.
 
 *** Frozen Screen Review
 :PROPERTIES:
@@ -328,61 +300,45 @@ retained, not arbitrary scrollback.
 
 #+cindex: frozen EAT review
 
-~C-e q r~ opens an immutable copy of the latest visible screen.  It does
-not refresh and navigation cannot move the live terminal cursor or send input.
-The copy preserves normalized terminal styling, cursor and likely-focus
-anchors, and the exact retained completion rows.  Opening and closing review
-play distinct object cues and announce the transition.
+~C-e q r~ opens an immutable copy of the latest visible screen. It does not
+refresh, move the live cursor, or send input. It preserves normalised styling,
+cursor and likely-focus anchors, and retained completion rows. Opening and
+closing play distinct object cues and announce the transition.
 
 #+attr_texinfo: :indic kbd :compact t
 - n, p; C-n, C-p; down, up ::
 
   Move by captured terminal row and speak the destination, interrupting the
-  previous row announcement when navigation continues.
-- SPC, RET, . ::
-
-  Speak the current captured row.
-- a ::
-
-  Speak a bounded form of the current screen or completion view.
-- s, c ::
-
-  Show captured screen rows or retained completion/help rows.
-- C ::
-
-  Go to the captured terminal cursor.
-- h ::
-
-  Go to the retained likely focus, when one exists.
+  previous row announcement.
+- SPC, RET, . :: Speak the current captured row.
+- a :: Speak a bounded form of the current screen or completion view.
+- s, c :: Show captured screen rows or retained completion/help rows.
+- C :: Go to the captured terminal cursor.
+- h :: Go to retained likely focus when available.
 - [, ] ::
 
-  Move among selection-like inverse/background styled regions.  These regions
-  are deliberately not labelled as focus.
-- t, i ::
-
-  Speak status or metadata copied when review was opened.
+  Move among inverse/background-styled, selection-like regions. They are not
+  labelled as confirmed focus.
+- t, i :: Speak status or metadata copied when review opened.
 - v, m ::
 
-  Change verbosity or background monitoring in the source terminal without
-  sending terminal input.  The copied content itself remains frozen.
-- ? ::
+  Change verbosity or monitoring in the source terminal without sending
+  terminal input. The copied content stays frozen.
+- ? :: Describe frozen review mode.
+- q :: Kill the content-bearing review buffer and restore its window.
 
-  Describe frozen review mode.
-- q ::
-
-  Kill the content-bearing review buffer and restore its window.
-
-Starting secure input, resetting or restarting the terminal, killing the
-source, or leaving EAT mode also destroys its frozen review.  This bounds the
-lifetime of copied terminal content.
+Secure input, terminal reset or restart, killing the source, or leaving EAT
+mode also destroys its frozen review. These events bound the lifetime of
+copied terminal content.
 
 ** Verbosity And Background Monitoring
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Feedback Preferences
+:ALT_TITLE: Adjust and save terminal feedback
+:DESCRIPTION: Choose verbosity, background monitoring, and focused speech defaults.
 :END:
 
 #+vindex: emacsvox-eat-verbosity
-
 #+vindex: emacsvox-eat-monitor-background-output
 
 =emacsvox-eat-verbosity= is buffer-local:
@@ -390,43 +346,71 @@ lifetime of copied terminal content.
 #+attr_texinfo: :indic code :compact t
 - terse ::
 
-  Retain routine output and metadata for explicit review without speaking them
-  automatically.  Actionable failures and content-free lifecycle feedback remain
-  available.
+  Retain routine output and metadata for explicit review without speaking
+  them automatically. Actionable failures and content-free lifecycle feedback
+  remain available.
 - normal ::
 
-  The default.  Speak bounded command output, progress/status, completion, and
+  The default: bounded command output, progress/status, completion, and
   actionable failures.
 - verbose ::
 
-  Also speak bounded terminal title and working-directory changes and successful
-  shell-command status when EAT shell integration provides it.
+  Also give bounded title and directory changes and successful shell-command
+  status when EAT shell integration supplies it.
 
-Background monitoring is off by default.  When enabled with ~C-e q m~, an
-unselected terminal plays only a rate-limited content-free cue.  On returning,
-Emacsvox reports only the unread burst count, never the terminal's identity or
-output.  Cursor movement, style changes, repaint, resize, and process generation
-changes do not count as background output.
+Background monitoring starts off. With ~C-e q m~ enabled, an unselected
+terminal gives only a rate-limited content-free cue. Returning reports the
+unread burst count, never the terminal's identity or output. Cursor movement,
+style changes, repaint, resize, and process-generation changes do not count.
+Unlike Shell/comint background reading, EAT monitoring neither requires
+foreground autospeak nor reads background content.
 
-** Shell Integration And Command Status
+*** Adjust and save focused terminal settings
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-#+cindex: EAT shell integration
+Use ~C-e S~ or ~C-e H j c~ from EAT or its frozen review. ~C-e H j a~ opens
+the integration chooser, and ~C-e H /~ finds individual controls.
 
+- ~s~ toggles automatic foreground speech.
+- ~b~ toggles background cues and unread counts independently.
+- ~p~ chooses ready-prompt cue, text, or silence; recognition still requires
+  shell integration and automatic delivery obeys foreground autospeak.
+- ~d~ chooses terse, normal, or verbose feedback.
+
+Arrows announce values and ~RET~ activates a control. Choice lists start on
+the current value; browsing does not apply a choice, ~RET~ applies and returns,
+and ~q~ cancels. Confirmations interrupt older main speech. Changes belong to
+the captured terminal, including embedded Eshell EAT; from frozen review they
+belong to its source terminal.
+
+~q~ returns to the originating menu entry. From direct ~C-e S~, it closes
+the menu and announces the restored buffer and mode with a close cue. ~w~
+saves the four displayed values as defaults through Customize. Terminals with
+local overrides keep them; others inherit the new defaults. Adjustment alone
+does not save. ~A~ opens advanced EAT settings and ~q~ there returns to the
+focused menu.
+
+** Shell Integration And Command Status
+:PROPERTIES:
+:TEXINFO_NODE_NAME: EAT Shell Integration
+:ALT_TITLE: Follow shell prompts and command status
+:DESCRIPTION: Understand the Bash or Zsh integration and its remote-shell limits.
+:END:
+
+#+cindex: EAT shell integration
 #+cindex: shell command status
 
-EAT's Bash or Zsh shell integration is required for prompt annotation,
-directory tracking, and per-command running/success/failure status.  For Bash,
-EAT documents this initialization:
+EAT's Bash or Zsh integration supplies prompt annotation, directory tracking,
+and per-command running/success/failure status. For Bash, EAT documents:
 
 #+begin_example
 [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
   source "$EAT_SHELL_INTEGRATION_DIR/bash"
 #+end_example
 
-For Zsh, source the =zsh= script instead:
+For Zsh, use its script instead:
 
 #+begin_example
 [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
@@ -435,144 +419,141 @@ For Zsh, source the =zsh= script instead:
 
 #+vindex: eat-enable-shell-prompt-annotation
 
-With shell integration and =eat-enable-shell-prompt-annotation= enabled,
-Emacsvox retains running, successful, and failed command status.  A failure is
-announced automatically at every verbosity.  Success is automatic only in
-verbose mode and only after observed command activity; the initial successful
-prompt does not chatter.  Running state remains silent.  Use ~C-e q t~ for
-the retained current state.
+With integration and =eat-enable-shell-prompt-annotation= enabled, Emacsvox
+retains running, successful, and failed command status. A failure is eligible
+for automatic feedback at every verbosity, subject to foreground autospeak.
+Success is automatic only at verbose level after observed command activity;
+the initial successful prompt is not announced as a completed command.
+Running state stays silent. ~C-e q t~ requests the retained current state.
 
-This status is not guessed from prompt characters.  A remote shell or router
-normally does not provide EAT's per-command integration, so remote commands can
-still have accessible screen output and completion while their individual exit
-status remains unavailable.
+Status is not guessed from prompt characters. A remote shell or router usually
+does not provide this per-command integration. Its output and completion can
+still be accessible while individual exit status remains unavailable.
 
 ** Passwords And Sensitive Content
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Passwords And Privacy
+:ALT_TITLE: Enter passwords and protect sensitive content
+:DESCRIPTION: Use protected password input and understand retained terminal data.
 :END:
 
 #+cindex: password input, EAT
-
 #+cindex: terminal privacy
-
 #+findex: eat-send-password
 
-Use ~M-x eat-send-password~ for a terminal password.  EAT reads it with
-Emacs's protected password reader instead of recording the keystrokes in
-command lossage.  During this command Emacsvox suppresses terminal observation
-and bell speech, clears content-bearing retained state before and after, and
-announces only whether secure input was sent or cancelled.
+Use ~M-x eat-send-password RET~ for a terminal password. In character mode,
+first press ~M-RET~ to return to semi-character mode so command entry reaches
+Emacs rather than the terminal program. Enter the secret only in the protected
+password prompt. EAT uses Emacs's password reader rather than recording those
+keystrokes in command lossage.
+Emacsvox suppresses observation and bell speech during the command, clears
+content-bearing retained state before and after it, and announces only whether
+secure input was sent or cancelled.
 
-Emacsvox intentionally does not guess that arbitrary no-echo terminal input is
-a password: EAT exposes no public echo-state signal, and a quiet repaint is not
-proof.  Typing a secret through ordinary terminal input can leave keystrokes in
-Emacs lossage and does not establish the same privacy boundary.  Backspace or
-Delete in such input can produce a content-free deletion tone, but Emacsvox
-does not name text unless EAT exposes one unambiguous visible removal.
+Ordinary no-echo input does not establish that boundary. EAT exposes no public
+echo-state signal, and a quiet repaint is not evidence of password entry.
+Typing a secret through normal terminal input can leave keystrokes in Emacs
+lossage. Backspace or Delete may give a content-free deletion tone, but speech
+names content only when one unambiguous visible removal is exposed.
 
-Selected foreground output can contain sensitive information and may be
-spoken.  A frozen review is a real in-memory copy until it is killed, although
-visually concealed cells are redacted at snapshot time.  Verbose title and
-directory speech can disclose host or path metadata.  Background monitoring,
-by contrast, never speaks content or terminal identity.
+Selected foreground output can contain sensitive information and be spoken.
+Frozen review is a real in-memory copy until killed, although visually concealed
+cells are redacted when captured. Verbose title and directory announcements can
+disclose host/path metadata. Background monitoring, by contrast, never reads
+content or terminal identity.
 
 ** Terminal-Controlled Clipboard Trust
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Clipboard Trust
+:ALT_TITLE: Control terminal access to the clipboard
+:DESCRIPTION: Review OSC 52 trust and the two terminal selection-control options.
 :END:
 
 #+cindex: clipboard security, EAT
-
 #+cindex: OSC 52, EAT
-
 #+cindex: remote terminal trust
-
 #+vindex: eat-enable-kill-from-terminal
-
 #+vindex: eat-enable-yank-to-terminal
 
-EAT supports terminal selection control sequences, commonly called OSC 52.
-Consequently, trust applies not only to a local shell but also to an SSH peer,
-router CLI, or any program whose output reaches EAT's terminal parser.  Even
-displaying an untrusted file can pass terminal control sequences through a
-program that does not sanitize them.
+EAT supports terminal selection-control sequences, commonly called OSC 52.
+Trust therefore extends to any local program, SSH peer, router, or other output
+source that reaches its parser. Displaying an untrusted file through a program
+that does not sanitise control sequences can also exercise this interface.
 
-In the audited EAT 0.9.4 release, =eat-enable-kill-from-terminal= defaults
-to non-=nil=.  Despite the potentially confusing name, this is the
-terminal-to-Emacs direction: it permits a terminal program to place text in
-Emacs's kill ring.  =eat-enable-yank-to-terminal= defaults to =nil=
-for security.  Enabling it permits a terminal program to request the current
-Emacs kill-ring text.  Verify these defaults after upgrading EAT.
+In the audited EAT 0.9.4 release, =eat-enable-kill-from-terminal= defaults to
+non-=nil=. Despite its name, this is the terminal-to-Emacs direction: a terminal
+program can place text in the kill ring. =eat-enable-yank-to-terminal= defaults
+to =nil= for security; enabling it lets a terminal program request current
+kill-ring text. Check the installed defaults again after an EAT upgrade.
 
-For terminals connected to an endpoint whose output is not fully trusted,
-disable both directions.  They can be customized globally, or disabled only
-in the current EAT buffer with:
+For output you do not fully trust, disable both directions globally through
+Customize or locally in the EAT buffer:
 
 #+begin_src emacs-lisp
 (setq-local eat-enable-kill-from-terminal nil
             eat-enable-yank-to-terminal nil)
 #+end_src
 
-Run that expression with ~M-:~ in the EAT buffer before processing
-untrusted output.  Enabling kill-ring read-back should be reserved for terminal
-programs and remote endpoints that are trusted with whatever Emacs currently
-holds in its kill ring.
+Evaluate this with ~M-:~ in that buffer before processing untrusted output.
+Reserve kill-ring read-back for programs and remote endpoints trusted with
+whatever the kill ring currently contains.
 
-Emacsvox deliberately changes neither EAT option.  A terminal-originated
-selection payload is not an accessibility command: Emacsvox does not speak its
-contents or retain it as terminal screen text.  The content-free paste
-announcements described elsewhere apply to explicit user paste commands, not
-to terminal-originated selection control sequences.
+Emacsvox changes neither option. A terminal-originated selection payload is not
+an accessibility command: its contents are neither spoken nor retained as
+terminal screen text. Content-free paste announcements apply to explicit user
+paste commands, not these terminal-originated sequences.
 
 ** Full-screen Applications And Limitations
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Full-screen Applications
+:ALT_TITLE: Inspect full-screen applications and diagnose silence
+:DESCRIPTION: Use retained review and distinguish terminal rendering from speech.
 :END:
 
 #+cindex: curses applications, EAT
-
 #+cindex: alternate screen, EAT
 
-Programs such as pagers, editors, menus, and refreshing dashboards frequently
-rewrite existing cells instead of printing lines.  Emacsvox uses conservative
-cursor, style-change, input-direction, and timing evidence.  Arrow-key movement
-and clear paired highlight movement work best.  Printable navigation keys such
-as ~h~, ~j~, ~k~, and ~l~ are not assumed to be navigation,
-because they may instead be application text.
+Pagers, editors, menus, and refreshing dashboards often rewrite cells instead
+of printing lines. Emacsvox uses conservative cursor, style-change, input-
+direction, and timing evidence. Arrow movement and clear paired highlight
+movement work best. Printable keys such as ~h~, ~j~, ~k~, and ~l~ are not
+assumed to mean navigation: the application may treat them as text.
 
-Use ~C-e q l~, ~C-e q d~, and ~C-e q h~ after a silent update.  For
-systematic review use ~C-e q r~, then navigate rows and selection-like
-styled regions.  Rapid dashboards are intentionally not read on every refresh.
-Hyperlink targets, sixel/image semantics, an application's true accessibility
-focus, and exact update causes are not exposed by EAT's current public API, so
-Emacsvox cannot infer them reliably from pixels and faces alone.
+After a silent update, use ~C-e q l~, ~C-e q d~, or ~C-e q h~. For systematic
+inspection, open ~C-e q r~ and review rows or selection-like regions. Rapid
+dashboards are deliberately not read on every refresh. EAT's current public
+API does not expose hyperlink targets, sixel/image semantics, true application
+accessibility focus, or exact update causes; pixels and faces are insufficient
+to infer them reliably.
 
-Remote programs also need terminal information compatible with EAT.  Broken
-cursor addressing or screen layout caused by missing remote terminfo cannot be
-repaired by speech classification; consult EAT's manual when the visual
-terminal itself renders incorrectly.
+When ordinary output is unexpectedly silent, check the input mode, selected
+buffer and live-cursor position, foreground autospeak, and verbosity before
+changing recognition settings. Retained review may explain what was observed,
+but it is not a replacement for live output or an unbounded transcript.
+
+Remote programs also need compatible terminal information. Missing remote
+terminfo can break cursor addressing and screen layout; speech classification
+cannot repair that. Consult EAT's manual when the terminal itself renders
+incorrectly.
 
 ** EAT In Eshell
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT In Eshell
+:ALT_TITLE: Use EAT in Eshell
+:DESCRIPTION: Understand embedded terminals and visual-command window return.
 :END:
 
 #+cindex: Eshell, EAT accessibility
-
 #+findex: eat-eshell-mode
-
 #+findex: eat-eshell-visual-command-mode
 
-When EAT's global =eat-eshell-mode= is enabled, Emacsvox uses the same
-screen observer for the terminal region embedded in Eshell.  Rendered command
-output is handled by one speech path, so it is not repeated by generic Eshell
-output feedback.
+With global =eat-eshell-mode= enabled, Emacsvox uses the same screen observer
+for EAT's terminal region inside Eshell. Rendered command output follows one
+speech path instead of also being repeated by generic Eshell feedback.
 
-With =eat-eshell-visual-command-mode=, an Eshell visual command runs in a
-separate EAT buffer.  Emacsvox announces its start, delivers eligible final
-output before the process-exit event, and labels its exit as an Eshell visual
-command.  EAT and Eshell still determine the window-return policy.  In
-particular, =eshell-destroy-buffer-when-process-dies= determines whether a
-successful visual-command buffer is killed and Eshell is restored; Emacsvox
-does not change that option.
+With =eat-eshell-visual-command-mode=, a visual command runs in a separate EAT
+buffer. Emacsvox announces its start, delivers eligible final output before
+process-exit feedback, and identifies the exit as an Eshell visual command.
+EAT and Eshell still own window return. In particular,
+=eshell-destroy-buffer-when-process-dies= determines whether a successful
+visual-command buffer is killed and Eshell restored; Emacsvox does not change it.

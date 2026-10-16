@@ -188,7 +188,8 @@ each publication step.  It must not mutate configuration."
                              (funcall user-rules-transform
                                       (copy-tree (plist-get aural :user-rules))))))
     (when (eq (plist-get palette :schema-version) 4)
-      (setq aural (plist-put aural :schema-version 10)))
+      (setq aural (plist-put aural :schema-version
+                                (max 10 (plist-get aural :schema-version)))))
     (setq routing (emacsvox-aural-routing--with-choice-sets routing sets))
     (let ((proposal
            (emacsvox-aural-voice-drafts--make-save

@@ -255,8 +255,11 @@
          emacsvox-aural-voice-palettes-follow-scheme))
     (when (fboundp command)
       (error "Retired scheme command remains available: %S" command)))
-  (unless (eq (lookup-key emacsvox-keymap (kbd "H")) 'emacsvox-aural)
-    (error "Compiled keymap does not bind C-e H to the aural home"))
+  (unless (eq (lookup-key emacsvox-keymap (kbd "H")) 'emacsvox-aural-menu)
+    (error "Compiled keymap does not bind C-e H to settings"))
+  (unless (eq (lookup-key emacsvox-keymap (kbd "S"))
+              'emacsvox-settings-for-buffer)
+    (error "Compiled keymap does not bind C-e S to current-buffer settings"))
   (unless
       (eq
        (lookup-key emacsvox-keymap (kbd "E"))

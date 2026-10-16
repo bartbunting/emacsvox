@@ -273,7 +273,10 @@ Logging never prevents presentation; a write failure is retained in
                   :emacs-pid (emacs-pid)
                   :event event)
                  (emacsvox-aural--diagnostic-fields fields)))
-               (coding-system-for-write 'utf-8-unix))
+               (coding-system-for-write 'utf-8-unix)
+               ;; Concurrent diagnostic appends must not ask about another
+               ;; Emacs's editing lock.  Leave normal buffer locking intact.
+               (create-lockfiles nil))
           (when directory (make-directory directory t))
           (emacsvox-aural--secure-diagnostic-log-file file)
           (with-temp-buffer

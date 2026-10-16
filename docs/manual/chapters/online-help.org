@@ -7,103 +7,192 @@
 
 #+cindex: Online Help
 
-You do not need to memorize every Emacs or Emacsvox command.  Emacs can explain
-the key you are about to use, the modes active in the current buffer, and the
-commands and variables available in your running session.  This live help is
-usually more reliable than a copied key list because it includes installed
-packages and personal customizations.
+Emacs can explain the key you are about to use, the modes active in a buffer,
+and the commands and settings available in your session. This live help
+reflects installed packages and personal customisations. Use it to understand
+an unfamiliar command or resolve a difference between a manual and your
+running Emacs.
 
-Most help commands begin with the ~C-h~ prefix.  If you forget what can
-follow it, press ~C-h C-h~ for =help-for-help=.
+Most Emacs help commands begin with ~C-h~. Press ~C-h C-h~ for
+=help-for-help= when you need to discover what can follow that prefix.
+Settings menus also have their own contextual Help, described below.
 
 ** Ask About A Key, Command, Or Setting
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Use the question you have to choose a help command:
+Begin in the buffer whose commands or settings you want to inspect. Help
+can select a different buffer, so return to your working buffer before asking
+about another local binding or value. Choose according to what you know:
 
-- ~C-h k~ followed by a key runs =describe-key= and explains the
-  command currently bound to that key.
-
-- ~C-h f~ runs =describe-function=.  Enter a command or function name
-  to read its complete documentation.
-
-- ~C-h v~ runs =describe-variable=.  Enter an option name to hear its
+- ~C-h k~ followed by a key runs =describe-key= and explains the command
+  currently bound to that key.
+- ~C-h f~ runs =describe-function=. Enter a command or function name to
+  read its documentation.
+- ~C-h v~ runs =describe-variable=. Enter an option name to inspect its
   current value and documentation.
-
 - ~C-h w~ runs =where-is= and reports the keys that invoke a command.
 
-For example, press ~C-h k C-e l~ to ask what the current-line speaking
-key does.  If you know the command name but not its key, use ~C-h w~ and
-enter that name.
+For example, ~C-h k C-e l~ explains the current-line speaking key without
+running that command. If you know its command name but not its key, use
+~C-h w~ and enter the name instead.
 
 ** Discover What The Current Buffer Can Do
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Two commands answer most questions about a buffer:
+Start with ~C-h m~ after opening Dired, EWW, mail, a terminal, or another
+application. This runs =describe-mode= and explains the major mode, active
+minor modes, and their local commands. Use ~C-h b~ (=describe-bindings=)
+when you need the effective key bindings after package maps and personal
+customisations have been applied.
 
-- ~C-h m~ runs =describe-mode=.  It explains the major mode, active
-  minor modes, and their local commands.
+For Emacsvox settings that apply to the current task, press ~C-e S~. It opens
+the integration's focused menu when one is available, otherwise general buffer
+settings. ~C-e H .~ always opens general buffer settings. The menu captures
+the buffer on entry, so its controls continue to refer to that task while you
+navigate its menus and editors.
 
-- ~C-h b~ runs =describe-bindings=.  It lists the effective key
-  bindings after local package maps and personal customizations are applied.
+*** Find a setting and read its menu Help
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-After opening Dired, EWW, mail, a terminal, or another application, start with
-~C-h m~.  Use ~C-h b~ when you need the exact keys available in
-that particular buffer.
+Press ~C-e H /~ to find a setting by part of its name. The search is
+case-insensitive and includes supported aliases. For example, =cap= finds
+capitalisation controls. Space inserts a literal space, so you can type a
+multiword query such as =all caps beep=; ~TAB~ completes it. Completion lets
+you choose a result; accepting it
+opens the appropriate menu and selects the control without changing its
+value. Press ~RET~ again to activate or edit it. Cancelling completion
+leaves the originating menu open.
+
+The main menu groups its entries in this order: /Everyday settings/,
+/This buffer and item/, /Rules and saved work/, /Find and get help/, and
+/Finish/. Use left/right to reach a group, then up/down to select an item.
+Changing sections selects the first available item. Plain arrows navigate;
+Shift-left/right adjusts a selected numeric control where offered.
+Press ~C-e H n~ to choose navigation and announcement preferences; the
+same controls remain available through ~C-e H s n~.
+~RET~, ~M-RET~, or ~C-j~ activates the selected item; its displayed shortcut
+also works directly.
+
+To hear the selected item again, press ~C-c l~. This is especially useful
+after a section-only announcement: the first item is selected even though
+only the heading was spoken. ~M-f~/~M-b~ reviews its words and ~C-f~/~C-b~
+its characters, leaving the selection and Enter's target unchanged. These
+menu keys differ from ordinary buffer reading; see
+[[settings-menu-review][Review an item without changing the selection]] for endpoints, repeats and
+menu-specific overrides.
+
+Press ~?~ followed by an item's key to hear its effect and scope, or ~? ?~
+for the menu overview and available review keys. The overview is a read-only
+snapshot with ordinary text navigation. Its displayed actions run after you
+return to the menu. ~q~ in Help returns with the selection retained.
+
+Within the menu itself, ~q~ or ~C-g~ goes back one level, while ~C-q~ closes
+the sequence. Returning from an Emacsvox submenu selects the entry that opened
+it, including when you used its shortcut. The return announcement identifies
+that item; ~RET~ opens it again. These navigation commands do not undo changes
+already applied.
+Choice lists and minibuffer prompts have different roles: arrows browse a
+choice list without applying it, while a prompt uses your normal text editing
+and completion. See [[settings-menu-navigation][Navigate menus and read Help]] for the complete interaction.
+A linked editor keeps its own preview, saving, and discard rules. See
+[[info:emacsvox#Saving And Startup][Choose What Persists]] before treating a saved default, a live adjustment,
+or a retained draft as the same thing.
+
+Use ~C-e H a~ to find an action such as browsing voices, inspecting
+diagnostics, or reading the manual. It uses the same partial-name matching and
+two-Enter selection as settings search, including literal spaces and ~TAB~
+completion. Alternative names lead to one displayed
+result for each action: for example, =Feedback for this item= finds
+/Explain this item/, and =Recent aural feedback= finds /Recent feedback/.
+Editors opened from these menus retain their own Help,
+preview, save, and return commands.
 
 ** Read And Leave A Help Window
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Help usually appears in a separate =*Help*= window, and Emacsvox speaks the
-most relevant initial result automatically.  Press ~C-e h~
-=emacsvox-speak-help= to hear the displayed help again.
+Ordinary Emacs Help writes its explanation in =*Help*=. Some commands, such
+as ~C-h m~, can display that buffer without selecting it. Spoken descriptions
+such as key, function and variable Help use =emacsvox-speak-help=, also bound
+to ~C-e h~. This helper selects Help, removes other windows in the frame,
+and reads a windowful starting at Help's current point. It does not kill the
+buffers those windows displayed, and it does not necessarily read all of Help.
 
-To explore the help text directly, press ~C-x o~ to move to its window
-and use ordinary reading and navigation commands.  Press ~q~ in the Help
-buffer when you are finished.  If another window is selected unexpectedly,
-~C-e C-w~ describes the current window arrangement.
+After requesting Help, press ~C-e m~ to check the selected buffer. If it is
+=*Help*=, read there directly. Otherwise, use ~C-x b~ and choose =*Help*=
+by name, or select its existing window deliberately. Do not automatically
+press ~C-x o~: Help may already be selected, or there may now be only one
+window. ~C-e C-w~ describes the arrangement when needed.
+
+Once in Help, use line or paragraph reading for a local check. ~C-e h~ repeats
+a windowful from the current Help position; ~M-<~ first returns to its beginning.
+For longer reading and its effect on point, see
+[[info:emacsvox#Reading][Reading and navigating]]. Press ~q~ while in Help to leave its view.
+Then check the selected buffer and use ~C-x b~ to return to your document
+before editing or requesting buffer-specific Help again. To restore a reference
+window, follow [[info:emacsvox#Reference And Draft Windows][Keep a reference and a draft in separate windows]].
+
+Help reached through an Emacsvox settings menu has the menu-return behaviour
+explained above. Use its ~q~ to return to the originating menu item, not the
+ordinary document-return procedure. Dedicated editors likewise keep their own
+Help and return commands.
 
 ** Learn Interactively And Read Manuals
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-- ~C-h t~ opens the interactive Emacs tutorial.  Emacsvox speaks the
-  tutorial and your navigation as you work through it.
+~C-h t~ opens the interactive Emacs tutorial. Emacsvox speaks its text and
+your navigation as you work through it. For a separate key-learning exercise,
+~C-h C-l~ runs =emacsvox-learn-emacs=: it speaks the function of each key
+you press. Leave that loop with ~C-g~.
 
-- ~C-h i~ opens Info, the manual reader used by Emacs and Emacsvox.
-  Press ~d~ for the Info directory, then ~m~ and enter =Emacsvox=
-  to open this manual.
+Press ~C-e H i~ to read the offline Emacsvox manual from the settings menu.
+It opens at the top in Info, plays the opening cue, and reads the first screen
+or the whole node according to your Info speech setting. Info's navigation and
+index lookup remain available.
+Press ~q~ to return to the menu with /Read the manual/ selected and the same
+source buffer and settings scope. ~C-e C-i~ opens the manual directly.
 
-- ~C-h C-l~ runs =emacsvox-learn-emacs=, a learning loop that speaks
-  the function of each key you press.  Leave the loop with ~C-g~.
+~C-h i~ opens Info's general manual reader. Press ~d~ for the Info directory,
+then ~m~ and enter =Emacsvox= to choose this manual.
+[[*Using this manual][Using this manual]] provides an exercise in index lookup, following a link,
+and returning to your work. [[*Find a task][Find a task]] starts from an everyday goal, and
+[[*Terms used in this manual][Terms used in this manual]] explains the names used in the procedures. The
+[[info:info#Top][Info manual]] covers the reader's complete navigation and search commands.
 
-See the Emacs manual's help and Info chapters when you want to search manuals,
-follow cross-references, or keep a help buffer for later.
+In an Aural interface, ~C-c C-i~ opens the relevant manual topic and ~q~ in
+Info returns to that interface. In the interface's own Help, ~i~ opens the
+same topic.
 
 ** Emacsvox-Specific Help
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-- ~C-h C-e~ =emacsvox-describe-emacsvox= opens a concise Emacsvox
-  overview.
+Use ~C-h C-e~ (=emacsvox-describe-emacsvox=) for the Emacsvox overview.
+~C-e N~ (=emacsvox-view-emacsvox-news=) opens project news, and ~C-e T~
+(=emacsvox-view-emacsvox-tips=) opens productivity tips.
 
-- ~C-e N~ =emacsvox-view-emacsvox-news= opens versioned project news,
-  while ~C-e T~ =emacsvox-view-emacsvox-tips= opens productivity tips.
+For unexpected feedback, leave point on the item and press ~C-e E~ to
+explain its voices, sounds, and other presentation actions. ~C-e H x~ opens
+Feedback Details through the settings menu. Its report distinguishes retained
+output from a simulation; see [[info:emacsvox#Explaining Presentation][Understand Why Something Sounded That Way]].
 
-- ~C-e H~ =emacsvox-aural= opens Aural Home for presentation options.
+~C-e H D~ opens diagnostics. Use ~d~ there for Aural Doctor, ~s~ for spatial
+capabilities, or ~m~ and ~n~ for retained main and notification diagnostics.
+These inspection routes do not imply that speech has been repaired. Run a
+repair or restart only when you deliberately choose that action. If there is
+no speech at all, begin with
+[[info:emacsvox#Recovering From No Speech][Recovering From No Speech]] rather than presentation settings.
 
-- ~C-e E~ =emacsvox-aural-explain-presentation= explains why the
-  object at point received its voices, sounds, and other auditory actions.
-
-The generated
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/ records all default Emacsvox bindings.  Prefer ~C-h k~,
-~C-h m~, and ~C-h b~ when a running package or customization
-changes those defaults.
+The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in the /Emacsvox Reference Manual/ records
+default bindings. Return to ~C-h k~, ~C-h m~, and ~C-h b~ when a package or
+personal configuration changes those defaults.

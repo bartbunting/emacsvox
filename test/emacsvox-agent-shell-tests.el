@@ -10331,12 +10331,31 @@ Return speech events plus the target character.  DIRECTION is `forward' or
              ((type . "content") (content . ((type . "text") (text . "Tests passed"))))])
           "Tests passed")))
 
+(ert-deftest emacsvox-agent-shell-context-settings-binding ()
+  "Context settings remain reachable through shell, viewport and contextual maps."
+  (require 'emacsvox-keymap)
+  (dolist (busy '(nil t))
+    (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode agent-shell-viewport-edit-mode))
+      (save-window-excursion
+        (emacsvox-agent-shell-test--with-current-session
+         (switch-to-buffer (current-buffer))
+         (let ((major-mode mode))
+           (use-local-map (symbol-value (intern (format "%s-map" mode))))
+           (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy)))
+             (emacsvox-agent-shell--table-navigation-setup)
+             (should (eq (key-binding (kbd "C-e S")) 'emacsvox-settings-for-buffer))
+             (dolist (map '(emacsvox-agent-shell--table-navigation-map
+                            agent-shell-ui-fragment-map agent-shell-elicitation-map
+                            agent-shell-elicitation-preview-map))
+               (let ((overriding-local-map (symbol-value map)))
+                 (should (eq (key-binding (kbd "C-e S")) 'emacsvox-settings-for-buffer)))))))))))
+
 (ert-deftest emacsvox-agent-shell-persistent-prompt-keeps-navigation-keys-editable ()
   "Busy live prompts insert navigation letters; transcript keys navigate."
   (skip-unless (fboundp 'agent-shell--point-in-live-input-p))
   (dolist (busy '(nil t))
     (dolist (key '("[" "]" "t" "T" "h" "H" "k" "K"
-                   "u" "U" "l" "L" "e" "E" "j" "J" "n" "p"))
+                   "u" "U" "l" "L" "e" "E" "j" "J" "n" "p" "S"))
       (save-window-excursion
         (emacsvox-agent-shell-test--with-current-session
           (switch-to-buffer (current-buffer))
@@ -10423,7 +10442,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (emacsvox-agent-shell-test--with-current-session
         (let ((shell (current-buffer))
               (agent-shell-file-completion-enabled nil)
-              (text "[]tThHkKuUlLeEjJnp"))
+              (text "[]tThHkKuUlLeEjJnpS"))
           (with-temp-buffer
             (cl-letf (((symbol-function 'agent-shell-viewport--update-header) #'ignore)
                       ((symbol-function 'agent-shell--shell-buffer)

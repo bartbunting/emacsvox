@@ -1640,7 +1640,7 @@ not schedule descriptions.  This mode is enabled by default."
     (emacsvox--delayed-phonetic-cancel)
     (pcase-let
         ((`(,buffer ,window ,position ,tick ,events ,keys ,submission
-                    ,process ,char ,context)
+                    ,process ,char ,context ,review-valid-p)
           request))
       (when (and emacsvox-delayed-phonetic-mode
                  (not (input-pending-p))
@@ -1649,25 +1649,29 @@ not schedule descriptions.  This mode is enabled by default."
                  (= events num-nonmacro-input-events)
                  (= keys num-input-keys)
                  (= submission emacsvox-aural--submission-sequence)
-                 (eq window (selected-window))
+                 (or review-valid-p (eq window (selected-window)))
                  (buffer-live-p buffer)
                  (eq buffer (window-buffer window)))
         (with-current-buffer buffer
           (when (and (not tts-quiet)
                      (eq process tts-speaker-process)
-                     (= position (point))
                      (= tick (buffer-chars-modified-tick))
-                     (not (stringp (get-char-property position 'display))))
+                     (if review-valid-p
+                         (funcall review-valid-p)
+                       (and (= position (point))
+                            (not (stringp (get-char-property position 'display))))))
             (let ((emacsvox-aural-submission-context context)
                   (emacsvox-aural-submission-occasion 'navigation))
               (tts-speak (emacsvox-get-phonetic-string char)))))))))
 
-(defun emacsvox--delayed-phonetic-schedule (char)
-  "Remember navigated CHAR for one optional delayed phonetic announcement."
+(defun emacsvox--delayed-phonetic-schedule (char &optional review-valid-p)
+  "Remember navigated CHAR for one optional delayed phonetic announcement.
+REVIEW-VALID-P, when non-nil, validates a separate review cursor instead of
+point and the selected window.  It runs in the captured source buffer."
   (when (and emacsvox-delayed-phonetic-mode
              (not tts-quiet)
              (eq emacsvox-aural-submission-occasion 'navigation)
-             (eq char (char-after))
+             (or review-valid-p (eq char (char-after)))
              (<= ?a (downcase char) ?z)
              (numberp emacsvox-delayed-phonetic-delay)
              (> emacsvox-delayed-phonetic-delay 0)
@@ -1678,7 +1682,8 @@ not schedule descriptions.  This mode is enabled by default."
           (list (current-buffer) (selected-window) (point)
                 (buffer-chars-modified-tick) num-nonmacro-input-events num-input-keys
                 emacsvox-aural--submission-sequence tts-speaker-process char
-                (emacsvox-aural-capture-context nil 'navigation)))
+                (emacsvox-aural-capture-context nil 'navigation)
+                review-valid-p))
     (setq emacsvox--delayed-phonetic-timer
           (run-with-idle-timer
            emacsvox-delayed-phonetic-delay nil

@@ -9,23 +9,33 @@
 @c Generated from docs/manual/emacsvox.org; do not edit.
 #+end_export
 
-This chapter takes you from installation to a speaking Emacsvox session.
-Use a Debian package when available, or follow the source checkout route.
-Start an isolated session before changing your personal Emacs setup.
+The aim of installation is a clean speaking session that you can test before
+changing your personal Emacs setup. Choose the route for the machine running
+Emacs. A Debian package is suitable when your distribution provides the
+required Emacs and Transient. The source checkout supports GNU/Linux, macOS,
+and WSL2. Native Windows uses its own
+[[*Installing Native Windows Emacsvox][Windows installation procedure]]. If speech will play on another workstation,
+use [[*Installing On A Remote Linux Host][Installing Remote Emacsvox]] instead of installing a local speech server.
 
-Commands shown before Emacsvox starts are entered in a terminal.  Keys written
-with ~C-~ or ~M-~ are entered inside Emacs.  The same chapter is
-available before installation at
-[[https://bartbunting.github.io/emacsvox/Installation.html]].
+The settings-menu instructions in this development manual describe
+=ui-experiments=. Use a checkout of that branch to follow them; an older
+release package may not contain the same interface. Keep an existing working
+installation available while testing a development checkout.
+
+Commands shown before Emacsvox starts are entered in a terminal. Keys written
+with ~C-~ or ~M-~ are entered inside Emacs. The published installation chapter
+is also available before installation at
+[[https://bartbunting.github.io/emacsvox/Installation.html]]; its published version
+may differ from this development branch.
 
 ** Debian and Ubuntu package
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Debian packaging is new development work; Emacsvox 2026.9.2 predates it.
-Use a package from a release that includes one, or a locally built development
-package. Omnivox 1.17.0 includes an amd64 deb for supported Ubuntu systems.
+Emacsvox 2026.9.2 predates Debian packaging. Use a package from a release that
+includes one, or a locally built development package. Omnivox 1.17.0 includes
+an amd64 deb for supported Ubuntu systems.
 
 With a downloaded Emacsvox deb, install it using apt:
 
@@ -38,28 +48,34 @@ emacsvox
 
 Replace =VERSION= with the version in the downloaded filename. Apt requires
 a packaged Emacs 30.2 or newer; an installed terminal-only =emacs-nox= also
-satisfies this dependency. The package never builds GNU Emacs. If your
-distribution cannot provide a supported version, use the source installation
-route below, which offers an explicit Emacs 31 source build.
+satisfies this dependency. Settings menus also require Transient 0.13.3 or
+newer. Apt installs =elpa-transient= when a packaged Emacs 31.1 or newer does
+not already supply it. Ubuntu 26.10 supplies both dependencies. Ubuntu 26.04's
+stock Transient is too old; use the source installation route below and upgrade
+Transient through Emacs's package manager. The package never builds GNU Emacs
+or adds an apt repository to resolve missing dependencies. If your distribution
+also lacks a supported Emacs, the source route offers an explicit Emacs 31 build.
 
-Omnivox 1.17.0 or newer is recommended. If it is unavailable from your apt
-repositories, include its downloaded deb in the same apt command, or select an
-existing installation. Confirm both tone and speech from =emacsvox --check=.
+Use Omnivox 1.17.0 or newer for the Omnivox route documented here. If it is
+unavailable from your apt repositories, include its downloaded deb in the same
+apt command, or select an existing installation. Confirm both tone and speech
+from =emacsvox --check= before starting the session.
+
 For remote Emacs or WSL with an existing Windows speech server, use
 =sudo apt install --no-install-recommends ./emacsvox_VERSION_all.deb=.
 Remote sessions start with =emacsvox --remote= after the workstation service,
 token and tunnel are prepared as described in
-[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]]. The package does not acquire a
-Windows speech runtime; the guided WSL source installer below handles that.
+[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]]. The package does not acquire a Windows speech
+runtime; the guided WSL source installer below handles that.
 
 Emacsvox installs under =/usr/share/emacsvox=, with the command
 =/usr/bin/emacsvox=. It includes Lisp sources, sounds and offline manuals.
-No personal initialization is changed and ordinary Emacs sessions do not
+No personal initialisation is changed and ordinary Emacs sessions do not
 automatically start speaking. To enable Emacsvox in your own Emacs setup, add
 =(load-file "/usr/share/emacsvox/lisp/emacsvox-setup.el")= explicitly.
 Upgrade the system tree using apt; the source build instructions below apply
-to checkouts. Removing the package preserves personal settings and speech tokens.
-Package details are in =/usr/share/doc/emacsvox/README.Debian=.
+to checkouts. Removing the package preserves personal settings and speech
+tokens. Package details are in =/usr/share/doc/emacsvox/README.Debian=.
 
 ** Before You Begin
 :PROPERTIES:
@@ -67,71 +83,101 @@ Package details are in =/usr/share/doc/emacsvox/README.Debian=.
 :DESCRIPTION: Prepare the required tools and Emacsvox checkout.
 :END:
 
-Install =git= so you can obtain the Emacsvox checkout.  Emacsvox requires
-[[https://www.gnu.org/software/emacs/download.html][Emacs 30.2 or newer]], but WSL2 users do not need to find a separate Emacs
-package before beginning.  The guided installer below uses an existing
-supported Emacs, suggests a suitable package, or offers an explicit source build.
+Install =git= to obtain the checkout. Emacsvox requires
+[[https://www.gnu.org/software/emacs/download.html][Emacs 30.2 or newer]]. WSL2 users can let the guided installer inspect an
+existing Emacs, suggest a suitable package, or offer an explicit source build.
+It does not begin an Emacs source build by default.
 
-On GNU/Linux and macOS, install Emacs 30.2 or newer and =make=.  Omnivox 1.17.0
-or newer is the supported speech-server baseline.  On macOS, use
-[[https://brew.sh][Homebrew]] to install Omnivox as described in
-[[*Install Omnivox From A Release Binary][Installing An Omnivox Release Binary]]; Emacs and Emacsvox
-are installed separately.  Manual release-archive installation requires =curl=,
-=tar=, and either =sha256sum= on GNU/Linux or =shasum= on macOS.  GNU Texinfo
-is needed only when building or editing the documentation, not for an ordinary
-installation.
+On GNU/Linux and macOS, install Emacs 30.2 or newer and =make=. Omnivox 1.17.0
+or newer is the supported speech-server baseline. On macOS, use
+[[https://brew.sh][Homebrew]] for Omnivox as described in
+[[*Install Omnivox From A Release Binary][Installing An Omnivox Release Binary]]; Emacs and Emacsvox are installed
+separately. Manual release-archive installation requires =curl=, =tar=, and
+=sha256sum= on GNU/Linux or =shasum= on macOS. GNU Texinfo is needed for
+building or editing the documentation, not for an ordinary installation.
 
-Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which satisfies
-this requirement. The same minimum applies to native Windows.
-On Emacs 30, install =lua-mode= separately if you use Lua; on Emacs 31 it is
-built in. Corfu on an Emacs 30 text terminal also needs =corfu-terminal=;
-Emacs 31 supports its terminal popup directly.
+Ubuntu 26.04 provides Emacs 30.2 as a distribution package. The same Emacs
+minimum applies to native Windows. On Emacs 30, install =lua-mode= separately
+if you use Lua; it is built into Emacs 31. Corfu on an Emacs 30 text terminal
+also needs =corfu-terminal=; Emacs 31 supports its terminal popup directly.
 
-To check the Emacs found by your shell, run:
+Check the Emacs found by your shell:
 
 #+begin_example
 emacs --version
 #+end_example
 
-The reported version must be 30.2 or newer.  If
-the command is not found or reports an older version, install a supported Emacs
-or locate its executable.  You can check a specific executable in the same way:
+The reported version must be 30.2 or newer. If the command is missing or
+reports an older version, install a supported Emacs or locate its executable.
+You can check a specific executable in the same way:
 
 #+begin_example
 /path/to/emacs-31/bin/emacs --version
 #+end_example
 
-The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc, libstdc++,
-libgcc, and ALSA runtime.  If the archive does not match the host, the Omnivox
-source route requires Rust, Python 3, a C and C++ toolchain, CMake, and Clang
-with libclang.  It additionally requires =pkg-config= and ALSA development
-headers on GNU/Linux or the Xcode command-line tools on macOS.  These are not
-requirements for the recommended WSL2 binary route.  Docker and Windows .NET
-Framework are needed only for the advanced reproducible source-build route in
-[[*Building Omnivox For WSL2][Building Omnivox For WSL2]].
+*** Prepare the settings-menu dependency
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-Run the clone from a terminal on GNU/Linux, macOS, or WSL.  Under WSL, keep the
-checkout on the Linux filesystem.  The following concrete location works for
-an ordinary per-user installation:
+Emacsvox requires Transient 0.13.3 or newer. Emacs 31 supplies a supported
+version; Emacs 30.2's bundled 0.7.2.2 needs an upgrade before building Emacsvox.
+Use your selected Emacs and its package manager, with GNU ELPA enabled:
+
+1. Run ~M-x set-variable RET package-install-upgrade-built-in RET t RET~.
+   Answer the variable-name and value prompts separately. This permits package
+   dependencies to replace older built-in copies in this Emacs session; it
+   does not save a new startup preference. See [[info:emacs#Examining][Examining and setting variables]]
+   in the GNU Emacs Manual for this command.
+2. Run ~M-x package-refresh-contents RET~, then
+   ~M-x package-upgrade RET transient RET~. Accept the package's dependencies.
+3. Start a fresh Emacs before building or trying the menus. A running session
+   can retain the older loaded version after installation.
+
+An isolated Emacsvox session activates an installed Transient and its
+required packages when its bundled version is too old. It does not load your
+init file, activate unrelated packages, or download dependencies. Install into
+the package directory used by the same Emacs profile; a custom package directory
+must be on that session's load path. Debian installations also discover the
+system ELPA directory without site startup.
+
+If a menu reports an unsupported version, inspect the version and loaded path
+in its error. Upgrade that installation and restart Emacs; restarting only
+speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
+
+*** Obtain the development checkout
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Run the clone from a terminal on GNU/Linux, macOS, or WSL. The following
+location works for an ordinary per-user installation and selects the branch
+described by this manual:
 
 #+begin_example
 mkdir -p ~/src
 cd ~/src
-git clone https://github.com/bartbunting/emacsvox
+git clone --branch ui-experiments https://github.com/bartbunting/emacsvox
 cd emacsvox
 #+end_example
 
-The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.  Do not put the ordinary WSL2
-checkout below a Windows-mounted path such as =/mnt/c=; Windows filesystem
-semantics can interfere with Unix executable permissions and build tools.
-Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
-reproducible WSL2 build route.
+For an existing checkout, inspect =git status --short= and
+=git branch --show-current= before changing branches or updating. Do not
+replace or discard local work to make the checkout match an example.
 
-If this machine will send speech to another workstation, use
-[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]] instead of installing a local
-speech server.  For a local WSL2 desktop, first ask the guided installer to inspect the machine without
-changing it:
+The checkout is the installation directory. It builds in place and does not
+create a second tree to copy elsewhere. Under WSL, keep it on the Linux
+filesystem, not below a Windows-mounted path such as =/mnt/c=; Windows
+filesystem semantics can interfere with Unix executable permissions and build
+tools. Clone Omnivox beside Emacsvox only for an Omnivox source build or the
+advanced reproducible WSL2 build.
+
+*** Use the guided WSL2 installer
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+For a local WSL2 desktop, first inspect the machine without changing it:
 
 #+begin_example
 cd ~/src/emacsvox
@@ -140,45 +186,33 @@ cd ~/src/emacsvox
 
 If Emacs is missing, the report checks the available apt version and suggests
 =sudo apt install emacs= only when that candidate satisfies 30.2. Older or
-unavailable candidates are identified without being recommended. You can
-refresh apt metadata and check again, or choose the pinned source build with
+unavailable candidates are identified without being recommended. Refresh apt
+metadata and check again, or choose the pinned source build with
 =./bin/emacsvox-wsl-install --build-emacs=. Add =--check= to inspect that
-build's prerequisites first. The installer never begins a source build by default.
+build's prerequisites first.
 
 With Emacs selected, the report names it, the matching Omnivox Windows archive,
 and the per-user installation paths. If source-build packages are missing, it
-prints one =apt= command for you to review and run.  The installer never invokes
-=sudo= itself.  After resolving any reported prerequisite, run:
+prints one =apt= command for you to review and run. The installer never invokes
+=sudo= itself. After resolving reported prerequisites, run:
 
 #+begin_example
 ./bin/emacsvox-wsl-install
 #+end_example
 
-If you chose =--build-emacs=, it prepares the pinned stable Emacs for your user.
-It then downloads and verifies the matching Omnivox 1.17.0 Windows archive, records its
-path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
-and plays the final speech-server check.  The Emacs build can take a while on
-a fresh machine; later runs reuse it and the verified downloads.  Routine
-compiler output is kept below =$XDG_CACHE_HOME/emacsvox/logs=, normally
-=~/.cache/emacsvox/logs=.  If a build fails, the installer shows its final log
-lines and the complete log path.  Continue only after hearing both the final
-tone and speech.  You can then skip to the last step in
-[[*Build And Start Emacsvox][Quick Installation]] and start Emacsvox.
+If you chose =--build-emacs=, include that option in the installation command.
+It prepares the pinned stable Emacs for your user. The installer then downloads
+and verifies the matching Omnivox 1.17.0 Windows archive, records its path
+without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
+and plays the final speech-server check. Later runs reuse the Emacs build and
+verified downloads.
 
-After the core installation works, optional speech engines are available from
-~M-x emacsvox-omnivox-manage-components RET~. The same engine list
-is /Browse voices/ in Aural Home, opened with
-~C-e H~ and then ~I~. Select an engine and press
-~RET~ for details. It distinguishes engines
-already included in the core, downloadable engines, and bridges that still
-need a user-supplied runtime. Choose /Install engine/ to confirm,
-checksum-verify, install, and validate that engine without =sudo=.
-Expand /Engine installation/ and choose /Uninstall engine/ for a manager-installed engine to confirm and remove
-it while retaining the verified download cache; choose /Install engine/ to
-reinstall it later. The manager never removes core engines or separately
-supplied runtimes.
-[[*Optional Omnivox Engines][Optional Omnivox Engines]] explains the choices and
-licensing boundaries.
+Routine compiler output is kept below =$XDG_CACHE_HOME/emacsvox/logs=,
+normally =~/.cache/emacsvox/logs=. If a build fails, the installer shows its
+final log lines and the complete log path. Continue only after hearing both
+the final tone and speech. You can then go to the final step in
+[[*Build And Start Emacsvox][Quick Installation]] and start Emacsvox. Optional engines can wait until
+first speech is working.
 
 ** Installing On A Remote Linux Host
 :PROPERTIES:
@@ -187,10 +221,9 @@ licensing boundaries.
 :END:
 
 Use this route when Emacs runs on a Linux host and speech plays on your
-workstation through an SSH reverse forward.  It also works for remote-only
-Emacs under WSL, without Windows interoperability.  This is currently a
-preview feature. The workstation needs Omnivox 1.17.0 or newer, which includes
-the =--serve= option.
+workstation through an SSH reverse forward. It also works for remote-only
+Emacs under WSL, without Windows interoperability. Remote access is a preview
+feature. The workstation needs Omnivox 1.17.0 or newer, including =--serve=.
 
 After cloning Emacsvox on the Emacs host, run:
 
@@ -207,21 +240,20 @@ when that version is suitable. To choose the source build instead, run
 =./bin/emacsvox-install --role remote-emacs --build-emacs=. Add =--check= to
 inspect build prerequisites first. The checksum-verified GNU Emacs 31.1 source
 is built as a terminal-only installation under
-=~/.local/opt/emacs-31.1-terminal=.  Other Linux distributions currently need
-an existing Emacs 30.2 or newer.  A supported GUI Emacs can also be reused.
+=~/.local/opt/emacs-31.1-terminal=. Other Linux distributions currently need
+an existing Emacs 30.2 or newer. A supported GUI Emacs can also be reused.
 Explicit =EMACS= and =local.mk= selections are preserved; if they conflict or
 select an unsupported version, resolve the reported setting first.
 
 No local Omnivox, sound device, GUI build packages, or Windows speech tools
-are required.  Missing Debian/Ubuntu build packages are reported as one
-=apt= command for you to review and run.  The installer never invokes =sudo=
-or changes a shell startup file.  Build logs are kept below
+are required. Missing Debian/Ubuntu build packages are reported as one
+=apt= command for you to review and run. The installer never invokes =sudo=
+or changes a shell startup file. Build logs are kept below
 =~/.cache/emacsvox/logs=, or the corresponding =XDG_CACHE_HOME= location.
 
-Installation can finish before the workstation is connected.  Follow the
-/Remote workstation speech/ instructions in
-[[*Supported Platform Routes][Supported Platform Routes]] to prepare its service, private
-token, and SSH reverse forward.  Then run on the Emacs host:
+Installation can finish before the workstation is connected. Follow
+[[Remote workstation speech setup][Remote Workstation Speech]] to prepare its service, private token, and SSH
+reverse forward. Then run on the Emacs host:
 
 #+begin_example
 ./bin/emacsvox --remote --diagnose
@@ -229,13 +261,13 @@ token, and SSH reverse forward.  Then run on the Emacs host:
 ./bin/emacsvox --remote
 #+end_example
 
-Diagnosis reports local configuration without connecting or reading the
-token's contents.  The check connects both speech lanes, waits for workstation
-inventory and voice registration, and speaks a short foreground announcement
-followed by a notification announcement.  Confirm that both are audible.
-The last command starts an isolated terminal Emacsvox session.
+Diagnosis reports local configuration without connecting or reading the token's
+contents. The check connects both speech lanes, waits for workstation inventory
+and voice registration, and speaks a foreground announcement followed by a
+notification announcement. Confirm that both are audible. The last command
+starts an isolated terminal Emacsvox session.
 
-The default forwarded endpoint is =127.0.0.1:6417=.  The token file defaults
+The default forwarded endpoint is =127.0.0.1:6417=. The token file defaults
 to =~/.config/omnivox/remote-token=, respecting =XDG_CONFIG_HOME= when set.
 To select another forwarded port or private token path, supply environment
 values to the same command:
@@ -246,19 +278,19 @@ EMACSVOX_REMOTE_TOKEN_FILE="$HOME/.config/omnivox/other-token" \
   ./bin/emacsvox --remote --check
 #+end_example
 
-=EMACSVOX_REMOTE_HOST= accepts only =127.0.0.1= or =::1=.  The token path
-must be absolute; its contents stay in the private file.  Use the same
-settings when starting the session.  Remote mode selects the Omnivox
-transport and skips local speech executable and playback probes; leave
-=TTS_PROGRAM= unset or set it to =omnivox=.
+=EMACSVOX_REMOTE_HOST= accepts only =127.0.0.1= or =::1=. The token path
+must be absolute; its contents stay in the private file. Use the same settings
+when starting the session. Remote mode selects the Omnivox transport and skips
+local speech executable and playback probes; leave =TTS_PROGRAM= unset or set
+it to =omnivox=.
 
 For updates, keep your speaking session open, pull the checkout with
-=git pull --ff-only=, and rerun the remote installer.  It rebuilds byte-code
-with the selected Emacs.  Perform the connected check while the workstation
+=git pull --ff-only=, and rerun the remote installer. It rebuilds byte-code
+with the selected Emacs. Perform the connected check while the workstation
 service is free, and test the updated session before closing the known-good
-one.  A single service admits only one Emacs session at a time: use a
-separate test service or explicitly disconnect the old remote session before
-connecting its replacement.
+one. A single service admits only one Emacs session at a time: use a separate
+test service or explicitly disconnect the old remote session before connecting
+its replacement.
 
 ** Updating An Existing WSL2 Installation
 :PROPERTIES:
@@ -266,54 +298,54 @@ connecting its replacement.
 :DESCRIPTION: Update the source checkout and rerun the guided installer.
 :END:
 
-The guided installer recompiles the source already present in the Emacsvox
-checkout, but it does not fetch newer source itself.  Keep the current speaking
-Emacsvox session open while updating.  Run the commands from
-~M-x shell RET~ in that session, or from another accessible WSL terminal:
+The guided installer recompiles the source in the checkout; it does not fetch
+newer source. Keep the current speaking Emacsvox session open while updating.
+Run these commands from ~M-x shell RET~ in that session or another accessible
+WSL terminal:
 
 #+begin_example
 cd ~/src/emacsvox
+git status --short
+git branch --show-current
 git pull --ff-only
 ./bin/emacsvox-wsl-install --check
 ./bin/emacsvox-wsl-install
 #+end_example
 
-Replace =~/src/emacsvox= if you chose another Linux-filesystem location.  The
-fast-forward-only pull does not create a merge commit.  If Git reports local
-changes, a divergent branch, or another error, stop and review that checkout;
-do not reset or discard files merely to complete an update.
+Replace =~/src/emacsvox= if you chose another Linux-filesystem location.
+Check that this is the intended branch before pulling. The fast-forward-only
+pull does not create a merge commit. If Git reports local changes, divergence,
+or another error, stop and review the checkout; do not reset or discard files
+to complete an update.
 
 Rerunning the installer reuses supported Emacs and verified cached downloads,
 installs a newly pinned Omnivox release when necessary, rebuilds Emacsvox
 byte-code from scratch so files from the previous source revision cannot
-survive, and repeats the launch checks.  These operations change files on disk
-but do not stop the Emacsvox process already providing speech.  If the update
-fails, leave that session running while using it to inspect the reported error
-and the named log file.
+survive, and repeats the launch checks. These operations change files on disk
+but do not stop the Emacsvox process already providing speech. If the update
+fails, leave that session running while inspecting the error and named log.
 
-After the installer succeeds and you hear its final check, leave the old
-Emacsvox session open and start a second, isolated process from the updated
-checkout:
+After the installer succeeds and you hear its final check, start a second,
+isolated process from the updated checkout without closing the old one:
 
 #+begin_example
 cd ~/src/emacsvox
 ./bin/emacsvox
 #+end_example
 
-Running both sessions temporarily is deliberate: the old session remains the
-known-good source of speech while you test the replacement.  The new process
-cannot retain Lisp loaded from the previous version.  Confirm that it speaks
-the ready message and ordinary buffer contents.  In the new session, use
-~M-x emacsvox-speak-version RET~ to hear the Emacsvox version and
-~M-x tts-speak-version RET~ to hear the live speech-server version.  Only
-after these checks pass should you save work in the old session and exit it.
-You can then continue in the isolated session or start Emacsvox through your
-normal customized entry point.  If the new session does not speak, close it but
-leave the old session running while you inspect the diagnostic and installer
-logs.
+The old session remains the known-good source of speech while you test its
+replacement. The new process cannot retain Lisp loaded from the previous
+version. Confirm its ready message and ordinary buffer reading. In the new
+session, ~M-x emacsvox-speak-version RET~ reports the Emacsvox version and
+~M-x tts-speak-version RET~ reports the live speech-server version. Only after
+these checks pass should you save work in the old session and exit it.
 
-For an Emacsvox-only manual update, keep the current session running and replace
-the two guided-installer commands after =git pull --ff-only= with:
+Continue in the isolated session or start Emacsvox through your normal
+customised entry point. If the new session does not speak, close it but leave
+the old session running while inspecting the diagnostic and installer logs.
+
+To update Emacsvox without rerunning the guided installer, replace the two
+installer commands after =git pull --ff-only= with:
 
 #+begin_example
 make check-emacs
@@ -322,13 +354,13 @@ make bytecode-rebuild
 ./bin/emacsvox --check
 #+end_example
 
-All four commands must succeed, and the final check must produce both its tone
-and speech, before performing the second-session test above.  This manual route
+All four commands must succeed, and the final check must produce both tone
+and speech, before the second-session test above. This manual procedure
 rebuilds Emacsvox but does not download or select a newly pinned Omnivox
-release.  When Omnivox also needs to be updated independently, follow the
-/Manual Release Installation/ subsection in
-[[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]], then repeat
-the diagnostic and audible check above.
+release. When Omnivox also needs an independent update, follow /Manual Release
+Installation/ in
+[[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]], then repeat the diagnostic
+and audible check.
 
 ** Install And Check Omnivox
 :PROPERTIES:
@@ -336,44 +368,54 @@ the diagnostic and audible check above.
 :DESCRIPTION: Install the recommended server and hear its check.
 :END:
 
-If you used the guided WSL2 installer above, Omnivox is already installed and
-checked.  Continue to [[*Build And Start Emacsvox][Quick Installation]].
+If the guided WSL2 installer succeeded, Omnivox is already installed and
+checked. Continue to [[*Build And Start Emacsvox][Quick Installation]].
 
 On macOS, follow the Homebrew instructions in
-[[*Install Omnivox From A Release Binary][Installing An Omnivox Release Binary]].  They install the
-matching Mac binary and record its stable executable path for Emacsvox,
-including Emacs sessions that do not inherit the shell's =PATH=.  Homebrew
-installs Omnivox only; continue below to build and start Emacsvox with your
-selected Emacs 30.2 or newer.
+[[*Install Omnivox From A Release Binary][Installing An Omnivox Release Binary]]. They install the matching Mac binary
+and record its stable executable path for Emacsvox, including sessions that do
+not inherit the shell's =PATH=. Homebrew installs Omnivox only; continue below
+to build and start Emacsvox with your selected Emacs 30.2 or newer.
 
 On a matching GNU/Linux x86-64 host, or for a manual Mac installation, use the
-archive instructions in that same section.  They verify the published 1.17.0
-archive, keep its runtime data beside the executable, and add its versioned
-installation directory to =PATH=.  Then run:
+archive instructions in that section. They verify the published 1.17.0 archive,
+keep its runtime data beside the executable, and add its versioned installation
+directory to =PATH=. Then run:
 
 #+begin_example
 omnivox --check
 #+end_example
 
-Use [[*Installing Omnivox From Source][Installing Omnivox From Source]] instead on Linux ARM64, an
-incompatible Linux distribution, or a host whose security policy does not
-permit the unsigned macOS archive.  No proprietary speech runtime is needed
-for either GNU/Linux or macOS route.
+Use [[*Installing Omnivox From Source][Installing Omnivox From Source]] on Linux ARM64, an incompatible distribution,
+or a host whose security policy does not permit the unsigned macOS archive.
+No proprietary speech runtime is needed for the GNU/Linux or macOS routes.
+For a manual WSL2 installation, or details of what its guided installer checks,
+see [[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]].
 
-For a manual WSL2 installation, or to understand exactly what the guided
-installer verifies, see
-[[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]].
+The check plays a tone followed by speech. Hearing both is the acceptance
+condition; a successful exit code alone does not prove audible output. If
+either is missing, follow
+[[*Backend Diagnostics And Responsibilities][Backend Diagnostics And Responsibilities]] before continuing.
 
-The check plays a tone followed by speech.  When you hear both, the speech
-server is ready.  If either is missing, use
-[[*Backend Diagnostics And Responsibilities][Backend Diagnostics And Responsibilities]]
-before continuing.  [[*Speech Backends][Speech Backends]] contains the complete platform
-matrix, build details, and compatibility alternatives.  Native Windows Emacs
-on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
-a prebuilt Emacs, can download a verified Emacs with =-DownloadEmacs=, or
-offers an explicit source build, and installs Omnivox
-without WSL. Follow
-[[*Installing Native Windows Emacsvox][Installing Native Windows Emacsvox]].
+*** When the binary does not match the host
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc, libstdc++,
+libgcc, and ALSA runtime. The Omnivox source route requires Rust, Python 3,
+a C and C++ toolchain, CMake, and Clang with libclang. It also requires
+=pkg-config= and ALSA development headers on GNU/Linux, or Xcode command-line
+tools on macOS. These are not requirements for the recommended WSL2 binary
+route. Docker and Windows .NET Framework are needed only for the advanced
+reproducible source-build route in
+[[*Building Omnivox For WSL2][Building Omnivox For WSL2]].
+
+[[*Speech Backends][Speech Backends]] owns the complete platform matrix, alternative builds, and
+compatibility servers. Native Windows x64 is supported with Emacs 30.2 or newer;
+its PowerShell installer reuses a prebuilt Emacs, can download a verified Emacs
+with =-DownloadEmacs=, or offers an explicit source build. It installs Omnivox
+without WSL; follow [[*Installing Native Windows Emacsvox][Installing Native Windows Emacsvox]].
 
 ** Build And Start Emacsvox
 :PROPERTIES:
@@ -383,9 +425,9 @@ without WSL. Follow
 :END:
 
 The guided WSL2 installer has already selected Emacs, compiled Emacsvox, and
-run both checks below.  You may go directly to the final step and start the
-isolated session.  The full sequence remains useful for GNU/Linux, macOS, a
-manual WSL2 installation, or later diagnosis.
+run the two checks below. Go directly to the final step to start the isolated
+session. The full sequence is for GNU/Linux, macOS, manual WSL2 installation,
+or later diagnosis.
 
 1. Enter the Emacsvox checkout:
 
@@ -393,28 +435,29 @@ manual WSL2 installation, or later diagnosis.
    cd /path/where/you/keep/source/emacsvox
    #+end_example
 
-1. Select Emacs 30.2 or newer.  If it is not the system =emacs=, create the
-   ignored local settings file:
+1. Select Emacs 30.2 or newer. If it is not the system =emacs= and no
+   =local.mk= exists, create the ignored local settings file:
 
    #+begin_example
    cp local.mk.example local.mk
    #+end_example
 
-   Then set =EMACS= in =local.mk=:
+   Edit an existing =local.mk= rather than replacing it. Set =EMACS= there:
 
    #+begin_example
    EMACS=/path/to/emacs-31/bin/emacs
    #+end_example
 
-   The earlier =emacs --version= command checks your shell's default.  Verify
-   the executable selected by the Emacsvox build separately:
+   The earlier =emacs --version= checks your shell's default. Verify the
+   executable selected by the build separately:
 
    #+begin_example
    make check-emacs
    #+end_example
 
-   =make check-emacs= uses =local.mk= when present, prints the selected
-   executable and version, and confirms whether Emacsvox supports it.
+   This checks the Emacs selected by =local.mk= when present. It can finish
+   without printing anything when the version is supported. Resolve any
+   executable or version error before compiling.
 
 1. Compile Emacsvox:
 
@@ -422,19 +465,19 @@ manual WSL2 installation, or later diagnosis.
    make bytecode
    #+end_example
 
-   A successful build returns to the shell without an error.  Emacsvox must be
-   compiled with the same supported Emacs selected in the previous step.
+   A successful build returns to the shell without an error. Compile with
+   the same supported Emacs selected in the previous step.
 
-1. Run the non-audible launcher preflight from the Emacsvox checkout:
+1. Run the non-audible launcher preflight:
 
    #+begin_example
    ./bin/emacsvox --diagnose
    #+end_example
 
-   This checks the checkout, Emacs, and speech server without playing audio or
-   opening interactive Emacs.  A successful report names Emacs 30.2 or newer,
-   the =omnivox= speech server, and an isolated =-Q= startup.  If it reports a
-   path or version problem, correct that item and run the command again.
+   This checks the checkout, Emacs, and speech server without playing audio
+   or opening interactive Emacs. A successful report names Emacs 30.2 or
+   newer, the =omnivox= speech server, and an isolated =-Q= startup. Correct
+   any reported path or version problem, then repeat the command.
 
 1. Check the complete launch path with sound:
 
@@ -442,8 +485,8 @@ manual WSL2 installation, or later diagnosis.
    ./bin/emacsvox --check
    #+end_example
 
-   The launcher prints what it selected, then plays a tone and speech.  Hearing
-   both means the complete speech-server launch path is ready.
+   The launcher prints its selections, then plays a tone and speech. Confirm
+   that both are audible before continuing.
 
 1. Start a clean Emacsvox session:
 
@@ -451,13 +494,13 @@ manual WSL2 installation, or later diagnosis.
    ./bin/emacsvox
    #+end_example
 
-   The launcher uses Omnivox and the selected Emacs, but does not load site
-   files or your personal Emacs init file.  This gives you a known starting
-   point without changing an existing Emacs setup.
+   The launcher uses Omnivox and the selected Emacs without loading site
+   files or your personal init file. It does not change an existing Emacs
+   setup.
 
-If a command needs an explicit path, =./bin/emacsvox --help= describes the
-=EMACS=, =TTS_PROGRAM=, and =EMACSVOX_DIR= overrides.  Arguments after =--=
-are passed to Emacs.
+For explicit paths, =./bin/emacsvox --help= describes the =EMACS=,
+=TTS_PROGRAM=, and =EMACSVOX_DIR= overrides. Arguments after =--= are passed
+to Emacs.
 
 ** Confirming First Speech
 :PROPERTIES:
@@ -465,51 +508,78 @@ are passed to Emacs.
 :DESCRIPTION: Verify the live adapter and basic feedback.
 :END:
 
-You will know the isolated start succeeded when Omnivox acknowledges the
-initial engine inventory, routing policy, and logical voices, and Emacsvox
-speaks:
+The stable first-speech checkpoint is:
 
 #+begin_quote
 Emacsvox is ready.
 #+end_quote
 
+It normally follows Omnivox's acknowledgement of initial engine inventory,
+routing policy, and logical voices, and therefore uses the restored engine
+policy. If routing does not finish within five seconds, Emacsvox speaks it
+through the capability-ready fallback. Hearing the checkpoint does not by
+itself prove that routing completed or every package integration loaded.
 An earlier introduction, overview key, version number, and startup auditory
-icon may also be heard.  Those can change; the sentence above is the stable
-first-speech checkpoint because it normally occurs after initial routing is
-acknowledged and therefore uses the restored engine policy.  If routing does
-not finish within five seconds, Emacsvox speaks the checkpoint through the
-capability-ready fallback so a routing error cannot suppress it indefinitely.
+icon may also be heard; those can change.
 
-This checkpoint describes the speech server.  Type
-~M-x emacsvox-startup-status RET~ to check background preparation
-of Emacsvox and its package integrations.  The command speaks a summary and
-opens a report.  Integrations waiting for their packages are normal: their
-speech support loads when you open those packages.  Run the command again to
-refresh the report; ~q~ closes it.
+Run ~M-x emacsvox-startup-status RET~ to check background preparation of
+Emacsvox and its package integrations. The command speaks a summary and opens
+a report. Integrations waiting for their packages are normal: speech support
+loads when you open those packages. Run the command again to refresh the
+report; ~q~ closes it.
 
-You now have a working Emacsvox session.  Try these checks before connecting
-it to your personal configuration:
+Before connecting Emacsvox to your personal configuration, check the live
+adapter and everyday feedback:
 
-1. Type ~M-x tts-speak-version RET~.  The live speech adapter should speak its
+1. Begin in an ordinary working buffer. Press ~C-e m~ and note its name,
+   then run ~M-x tts-speak-version RET~. The live adapter should speak its
    version response.
+1. Use ~C-h v tts-program RET~. In this isolated launcher session, the value
+   should name =omnivox=. This opens Help; it is no longer a test in the
+   original working buffer.
+1. Leave Help with ~q~, then use ~C-x b~ to select the working buffer by name
+   if necessary. Confirm it with ~C-e m~ before moving over its lines with
+   ~C-n~ and ~C-p~. The reached lines should be spoken.
 
-1. Type ~C-h v tts-program RET~.  The displayed current value should name
-   =omnivox=.
+~M-x emacsvox-describe-emacsvox RET~ opens the overview. Return to your working
+buffer before trying the buffer-local rate adjustments below. See
+[[info:emacsvox#Using Online Help][Using Online Help]] for Help's selection and window behaviour.
 
-1. Use ~C-n~ and ~C-p~ to move over lines and confirm ordinary spoken
-   navigation.  Type ~M-x emacsvox-describe-emacsvox RET~ for the Emacsvox
-   overview.  See [[*Basic Usage][Basic Usage]], for the tested starter commands.
+For a rate change through the settings interface, open ~C-e H s~ and select
+/Rate/; ~RET~ or ~r~ enters an exact value. The direct commands remain useful
+when first learning the menus: ~C-e d -~, followed by repeated ~-~, slows the
+current buffer, and ~C-e d r~ accepts an exact rate such as =40= for Omnivox.
+For individually echoed characters, ~C-e d f~ accepts a multiplier such as
+=0.7=. A prefix ~C-u~ on the exact-rate or character-factor command changes
+the global default rather than only a buffer-local setting.
 
-If the initial speech is too fast, press ~C-e d -~ and then repeat
-~-~ to slow the current buffer, or use ~C-e d r~ to enter an exact
-rate such as =40=.  For individually echoed characters, use
-~C-e d f~ and try a multiplier below one, such as =0.7=.  Put
-~C-u~ before the exact-rate or character-factor command to change the
-global default rather than only the current buffer.
+When these checks pass, continue to [[info:emacsvox#Guided Tutorial][Learn the audio desktop]] for connected
+practice, or use [[*Basic Usage][Basic Usage]] as an everyday reference. Connecting Emacsvox
+to your normal configuration through [[*Persistent Startup][Persistent Startup]] is a separate choice;
+it is not required to continue learning in the isolated session.
 
-When these checks pass, continue to [[*Basic Usage][Basic Usage]] for a short guided
-first session, or use [[*Persistent Startup][Persistent Startup]] to connect Emacsvox to your
-normal Emacs configuration.
+*** Add optional engines after first speech
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~C-e H v b~ opens the engine browser. The same list is available with
+~M-x emacsvox-omnivox-manage-components RET~. Select an engine and press
+~RET~ for its details. These distinguish current engine availability from
+files installed for a separately managed release.
+
+For supported WSL release management, choose /Manage installed release/ and
+check its version and location before choosing /Install engine/. The manager
+confirms, checksum-verifies, installs, and validates the selected engine
+without =sudo=. The installed-release view also offers /Uninstall engine/
+for a manager-installed engine. Removal retains its verified download cache;
+/Install engine/ can reinstall it. Core engines and separately supplied
+runtimes cannot be removed through that operation.
+
+The browser distinguishes included engines, downloadable components, and
+bridges requiring a user-supplied runtime. See
+[[*Optional Omnivox Engines][Optional Omnivox Engines]] for activation, recovery, and licensing boundaries.
+Optional-engine management is not a prerequisite for ordinary WinRT speech.
 
 ** Recovering From No Speech
 :PROPERTIES:
@@ -517,67 +587,64 @@ normal Emacs configuration.
 :DESCRIPTION: Diagnose the boundary at which speech failed.
 :END:
 
-If speech did not start, keep the isolated launcher as your known starting
-point and find the first command below that did not work:
+Keep the isolated launcher as your known starting point. Find the first stage
+that failed rather than adding configuration at several layers at once.
 
 #+attr_texinfo: :indic asis :compact t
 - =./bin/emacsvox --diagnose= fails ::
 
-  No audio or interactive Emacs has started.  Under WSL2, begin with
-  =./bin/emacsvox-wsl-install --check= and resolve the first item it reports.
-  Otherwise, follow the launcher selection:
-  set =EMACS=, correct =EMACS== in =local.mk=, or install Emacs 30.2 or newer
-  when the Emacs check fails.  When the speech server is not
-  executable, finish installing Omnivox, put it on =PATH=, or set
-  =OMNIVOX_PROGRAM= to its absolute executable.  The guided WSL2 installer
-  records the verified executable in a per-user configuration file; rerunning
-  it repairs a missing installation or selection without requiring a shell
-  startup edit.
+  No audio or interactive Emacs has started. Under WSL2, begin with
+  =./bin/emacsvox-wsl-install --check= and resolve its first reported item.
+  Otherwise, correct the selected =EMACS=, the =EMACS= value in =local.mk=,
+  or the installed Emacs version. When the speech server is not executable,
+  finish installing Omnivox, put it on =PATH=, or set =OMNIVOX_PROGRAM= to
+  its absolute executable. The guided WSL2 installer records that selection
+  in a per-user file; rerunning it repairs a missing installation or selection
+  without requiring a shell startup edit.
 - The diagnostic passes, but =--check= errors or is inaudible ::
 
-  The speech server needs attention before Emacs configuration is relevant.
-  Follow
-  [[*Backend Diagnostics And Responsibilities][Backend Diagnostics And Responsibilities]] until the check produces both its tone
-  and speech.
+  Diagnose the speech server before Emacs configuration. Follow
+  [[*Backend Diagnostics And Responsibilities][Backend Diagnostics And Responsibilities]] until both tone and speech
+  are audible.
 - The audible check passes, but ``Emacsvox is ready'' is absent ::
 
   Run =./bin/emacsvox --diagnose= again from the same checkout and shell.
-  Remove an unintended =TTS_PROGRAM= override if the report does not select
-  =omnivox=.  Then request an Emacs startup backtrace with:
+  Remove an unintended =TTS_PROGRAM= override if it does not select
+  =omnivox=. Request a startup backtrace with:
 
   #+begin_example
   ./bin/emacsvox -- --debug-init
   #+end_example
 
-  An error saying =Could not find speech server executable= means the
-  speech server visible during that start cannot be executed.  Correct the
-  reported speech-server path rather than adding more init-file configuration.
-  For an Omnivox process error, inspect the private log directory described
-  below.
+  =Could not find speech server executable= means the server visible during
+  that start cannot be executed. Correct its reported path rather than
+  adding more init-file configuration. For an Omnivox process error, inspect
+  the private log directory described below.
 - The ready message is heard, but one mode lacks spoken feedback ::
 
-  Type ~M-x emacsvox-startup-status RET~.  The report names failed
-  startup work or package integrations and retains the original error.  Use
-  ~M-x emacsvox-speak-buffer RET~ to hear the full report.  Correct
-  the named package, configuration, or Emacsvox problem, then verify in a fresh
-  session.  For source edits, follow the byte-code build procedure before
-  testing.  Repeating startup or restarting the speech server does not retry
-  failed integrations: an interrupted load can leave some hooks or advice
-  installed.  Keep the original error when requesting help.
+  Run ~M-x emacsvox-startup-status RET~. It names failed startup work or
+  package integrations and retains the original error. Select the report and
+  inspect its lines or paragraphs. ~M-x emacsvox-speak-buffer RET~ can read a
+  short report; large requests have the limits described in
+  [[info:emacsvox#Reading Without Moving Point][Short reading and buffer limits]]. Correct the named package,
+  configuration, or Emacsvox problem, then verify in a fresh session.
+  For source edits, follow the byte-code build procedure before testing.
+  Repeating startup or restarting the speech server does not retry failed
+  integrations: an interrupted load can leave some hooks or advice installed.
+  Keep the original error when requesting help.
 - The ready message is heard, but speech later stops ::
 
-  If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox
-  session log and type ~M-x tts-restart RET~ after correcting the
-  speech-server problem.  Logs are below =$XDG_STATE_HOME/emacsvox/omnivox=, defaulting to
-  =~/.local/state/emacsvox/omnivox=.  Spoken text is omitted unless explicit
+  If Emacs reports that a speech server exited, inspect the Omnivox session
+  log and run ~M-x tts-restart RET~ after correcting the server problem.
+  Logs are below =$XDG_STATE_HOME/emacsvox/omnivox=, defaulting to
+  =~/.local/state/emacsvox/omnivox=. Spoken text is omitted unless explicit
   text logging is enabled.
-- The isolated launcher works, but a customized Emacs start does not ::
+- The isolated launcher works, but a customised Emacs start does not ::
 
   Remove or comment out the Emacsvox environment and =load-file= forms from
-  the personal init file.  This is the rollback: it leaves the checkout and the
-  known-good =./bin/emacsvox= path intact.  Re-add the forms in the order
-  shown in [[*Persistent Startup][Persistent Startup]]; speech-server selection must happen before
-  setup is loaded.
+  your init file. This rollback leaves the checkout and known-good
+  =./bin/emacsvox= path intact. Re-add the forms in the order shown in
+  [[*Persistent Startup][Persistent Startup]]; server selection must precede loading setup.
 
 ** Persistent Startup
 :PROPERTIES:
@@ -585,25 +652,23 @@ point and find the first command below that did not work:
 :DESCRIPTION: Add Emacsvox to personal configuration safely.
 :END:
 
-After [[*Confirming First Speech][Confirming First Speech]] succeeds, add these forms to your Emacs
-init file, replacing the example path with the absolute path of the checkout:
+After [[*Confirming First Speech][Confirming First Speech]] succeeds, add these forms to your init file,
+replacing the example path with the checkout's absolute path:
 
 #+begin_src emacs-lisp
 (setenv "TTS_PROGRAM" "omnivox")
 (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
 #+end_src
 
-Keep the forms in this order: Emacsvox selects and starts the speech server while
-loading setup.  A shell alternative is to export the server name before
-launching Emacs:
+Keep that order: Emacsvox selects and starts the server while loading setup.
+A shell alternative is to export the server name before launching Emacs:
 
 #+begin_example
 export TTS_PROGRAM=omnivox
 #+end_example
 
-Keep the explicit =load-file= form for a changing source checkout.  Its
-setup entry point can warn and prefer source when newer Lisp would otherwise
-be hidden by stale local byte-code.  A customized startup should speak the
-same ready message as the isolated launcher.  If it does not, remove or
-comment out the two init forms and return to the isolated launcher before
-trying another change.
+Keep the explicit =load-file= form for a changing source checkout. Its setup
+entry point can warn and prefer source when newer Lisp would otherwise be
+hidden by stale local byte-code. A customised startup should speak the same
+ready message as the isolated launcher. If it does not, remove or comment out
+the two init forms and return to the isolated launcher before another change.

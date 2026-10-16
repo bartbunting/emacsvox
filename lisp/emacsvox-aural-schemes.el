@@ -135,7 +135,7 @@ configuration; callers can then report it as diverged.")
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 10
+(defconst emacsvox-aural-user-data-schema-version 13
   "Current schema version for the personal presentation data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -1363,8 +1363,45 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
      previous 'voice-palette '(voice-palette)))
   palette)
 
+(defun emacsvox-aural--rules-have-tone-volume-p (rules)
+  "Return non-nil when compiled RULES specify per-tone volume."
+  (cl-some (lambda (rule)
+             (cl-some (lambda (action)
+                        (and (eq (emacsvox-aural-action-kind action) 'tone)
+                             (emacsvox-aural-action-volume action)))
+                      (emacsvox-aural-rule-actions rule))) rules))
+
+(defun emacsvox-aural--personal-tone-volume-p (fragments rules)
+  "Check personal FRAGMENTS and RULES for versioned tone volume fields."
+  (emacsvox-aural--rules-have-tone-volume-p
+   (append (emacsvox-aural--compile-rule-list rules 'user "user data" t)
+           (mapcan (lambda (fragment)
+                     (copy-sequence (emacsvox-aural-scheme-rules
+                                     (emacsvox-aural--compile-feature-fragment fragment))))
+                   fragments))))
+
+(defun emacsvox-aural--personal-tone-shape-p (fragments rules)
+  "Check personal FRAGMENTS and RULES for versioned tone shape fields."
+  (cl-some (lambda (rule)
+             (cl-some #'emacsvox-aural-action-shape (emacsvox-aural-rule-actions rule)))
+           (append (emacsvox-aural--compile-rule-list rules 'user "user data" t)
+                   (mapcan (lambda (fragment)
+                             (copy-sequence (emacsvox-aural-scheme-rules
+                                             (emacsvox-aural--compile-feature-fragment fragment))))
+                           fragments))))
+
+(defun emacsvox-aural--personal-extended-tone-p (fragments rules)
+  "Check personal FRAGMENTS and RULES for extended literal tone shapes."
+  (cl-some (lambda (rule)
+             (cl-some (lambda (action) (emacsvox-aural--extended-tone-shape-p
+                                       (emacsvox-aural-action-shape action)))
+                      (emacsvox-aural-rule-actions rule)))
+           (append (emacsvox-aural--compile-rule-list rules 'user "user data" t)
+                   (mapcan (lambda (fragment) (copy-sequence (emacsvox-aural-scheme-rules
+                                                             (emacsvox-aural--compile-feature-fragment fragment)))) fragments))))
+
 (defun emacsvox-aural--validate-user-data (data)
-  "Validate user DATA without promoting supported envelope versions 9 or 10."
+  "Validate user DATA without promoting supported envelope versions 9 through 13."
   (emacsvox-aural--require-plist data "Aural user data")
   (let ((version (plist-get data :schema-version))
         (fragments (plist-get data :feature-fragments))
@@ -1384,10 +1421,10 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
              :enabled-feature-fragments :feature-fragment-order :voice-palettes
              :profiles :active-profile :user-rules))
           collect key)))
-    (unless (memq version '(9 10))
+    (unless (memq version '(9 10 11 12 13))
       (emacsvox-aural--scheme-error
        "Unsupported user data version: %S" version))
-    (when (eq version 10)
+    (when (memq version '(10 11 12 13))
       (let ((keys (cl-loop for (key _) on data by #'cddr collect key)))
         (unless (= (length keys) (length (delete-dups keys)))
           (emacsvox-aural--scheme-error "Duplicate native user data keys"))))
@@ -1407,6 +1444,13 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
        "Personal voice palettes must be a list"))
     (unless (listp rules)
       (emacsvox-aural--scheme-error "User rules must be a list"))
+    (when (and (< version 13) (emacsvox-aural--personal-extended-tone-p fragments rules))
+      (emacsvox-aural--scheme-error "Extended tone rules require user data schema 13"))
+    (when (and (< version 12) (emacsvox-aural--personal-tone-shape-p fragments rules))
+      (emacsvox-aural--scheme-error "Tone shape rules require user data schema 12"))
+    (when (and (< version 11)
+               (emacsvox-aural--personal-tone-volume-p fragments rules))
+      (emacsvox-aural--scheme-error "Tone volume rules require user data schema 11"))
     (let ((scheme-registry (emacsvox-aural--built-in-scheme-registry))
           (fragment-registry
            (emacsvox-aural--built-in-feature-fragment-registry))
@@ -1473,11 +1517,11 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
 
 (defun emacsvox-aural-migrate-user-data (data)
   "Apply registered migrations to user DATA, preserving supported envelopes.
-Versions 9 and 10 remain unchanged; earlier versions migrate to version 9.
-Only saving a native palette requires version 10."
+Versions 9 through 13 remain unchanged; earlier versions migrate to version 9.
+Native palettes require 10, tone volume 11, tone shape 12 and extended shapes 13."
   (let ((current (copy-tree data))
         (seen nil))
-    (while (not (memq (plist-get current :schema-version) '(9 10)))
+    (while (not (memq (plist-get current :schema-version) '(9 10 11 12 13)))
       (let ((version (plist-get current :schema-version)))
         (when (memq version seen)
           (emacsvox-aural--scheme-error
@@ -1701,8 +1745,12 @@ The file is read as data and is never evaluated."
          (symbol-name (plist-get left :id))
          (symbol-name (plist-get right :id))))))
     (list
-     :schema-version (if (cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4))
-                                  palettes) 10 9)
+     :schema-version
+     (cond ((emacsvox-aural--personal-extended-tone-p fragments emacsvox-aural-user-rules) 13)
+           ((emacsvox-aural--personal-tone-shape-p fragments emacsvox-aural-user-rules) 12)
+           ((emacsvox-aural--personal-tone-volume-p fragments emacsvox-aural-user-rules) 11)
+           ((cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4)) palettes) 10)
+           (t 9))
      :feature-fragments fragments
      :enabled-feature-fragments
      (copy-sequence emacsvox-aural-enabled-feature-fragments)
@@ -1986,6 +2034,31 @@ An existing file is copied to FILE~ before replacement."
              :duration (:fact indentation-tone-duration)
              :audio-mode insert
              :anchor transition)))))
+        (:id core-spelling-tone
+         :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing insert
+                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume spelling-tone-shape))
+         :render
+         (:before ((:id core-spelling-tone-action :kind tone
+                    :pitch (:fact spelling-tone-pitch)
+                    :duration (:fact spelling-tone-duration)
+                    :volume (:fact spelling-tone-volume)
+                    :shape (:fact spelling-tone-shape)
+                    :audio-mode insert :anchor run))))
+        (:id core-spelling-tone-overlay
+         :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing overlay
+                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume spelling-tone-shape))
+         :render
+         (:before ((:id core-spelling-tone-action :kind tone
+                    :pitch (:fact spelling-tone-pitch)
+                    :duration (:fact spelling-tone-duration)
+                    :volume (:fact spelling-tone-volume)
+                    :shape (:fact spelling-tone-shape)
+                    :audio-mode overlay :anchor run))))
+        (:id core-spelling-earcon
+         :match (:event spelling-error-located :spelling-earcon t)
+         :render
+         (:before ((:id core-spelling-earcon-action :kind cue
+                    :cue help :anchor run))))
         (:id core-capital-spoken
          :match
          (:event capitalization-located :capitalization-kind capital

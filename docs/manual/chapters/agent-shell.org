@@ -8,27 +8,33 @@
 
 #+cindex: artificial intelligence agents
 
-Agent Shell is a separately installed Emacs package for interactive AI-agent
-sessions.  Emacsvox adds speech and semantic presentation without replacing
-Agent Shell's provider setup, session management, prompt editor, or permission
-controls.  See [[https://github.com/xenodium/agent-shell][Agent Shell]] for
-provider installation and configuration.  Emacsvox requires Agent Shell 0.85.3
-or newer.
+Agent Shell is an Emacs package for interactive AI-agent sessions. Emacsvox
+adds speech and structured navigation to its prompts, responses, permissions,
+and other activity. Agent Shell remains responsible for providers, sessions,
+prompt editing, and permission decisions. Install and configure Agent Shell
+using [[https://github.com/xenodium/agent-shell][its own documentation]]; Emacsvox requires version 0.85.3 or newer.
 
-The generated
-[[info:emacsvox-reference#emacsvox-agent-shell][emacsvox-agent-shell]] in /Emacsvox Reference Manual/
-section is the exhaustive Emacsvox command and option reference.  This chapter
-follows the tasks a user performs in a session.
+This chapter follows a session from writing a prompt through receiving and
+reviewing an answer, then explains speech choices and recovery. The generated
+[[info:emacsvox-reference#emacsvox-agent-shell][emacsvox-agent-shell]] section in the /Emacsvox Reference Manual/ lists the
+complete Emacsvox command and option interfaces.
 
 ** Start and control a session
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Starting An Agent Shell Session
+:ALT_TITLE: Start and control a session
+:DESCRIPTION: Write prompts, follow responses, steer work, and manage queued input.
 :END:
 
 Load Emacsvox and start Agent Shell with ~M-x agent-shell~.  Emacsvox loads
 its integration after Agent Shell and activates both new and already existing
 shell buffers.  Run ~M-x emacsvox-agent-shell-enable~ only when manually
 re-enabling support after it was disabled or while diagnosing a live reload.
+
+*** Write and edit prompts
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Compose and submit prompts with Agent Shell's normal editing commands.  The
 live prompt retains Emacs undo. Interactive text yanks speak the inserted
@@ -55,6 +61,20 @@ native clipboard access. Image previews survive queueing and steering.
 The animated busy marker does not add repeated speech; reading the prompt
 continues to give its current state.
 
+In the viewport prompt editor, continuing a list announces its bullet or next
+number and indentation.  Indenting and dedenting announce the new indentation;
+leaving an empty list item announces that the list ended.
+
+*** Follow a response and steer a running turn
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Emacsvox speaks routine content only at complete turn boundaries.  A network
+pause does not make a partial answer sound complete.  A cancelled, refused, or
+failed turn reports its outcome without replacing the last successfully
+completed response.
+
 In the viewport editor, Emacsvox announces whether a prompt was
 submitted, queued, or sent for steering, and whether the editor stays open.
 The normal and override send commands follow Agent Shell's configured busy
@@ -62,16 +82,16 @@ routes, including queueing when the provider does not support steering.
 “Steering sent” confirms dispatch; the agent's acceptance or refusal follows
 separately.
 
-Emacsvox speaks routine content only at complete turn boundaries.  A network
-pause does not make a partial answer sound complete.  A cancelled, refused, or
-failed turn reports its outcome without replacing the last successfully
-completed response.
-
 When you use ~M-x agent-shell-prompt-steer~, Emacsvox confirms whether the
 agent accepted the steer, declined it, or started a separate turn.  A separate
 turn is announced as still in progress; it is not reported as complete until
 Agent Shell supplies a completion boundary.  Server-pushed turns, when
 supported by the provider, follow the same completed-response speech policy.
+
+*** Work with queued prompts
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Queued prompts announce when they start and how many remain. Recent Agent Shell
 versions merge queued prompts into one turn by default; Emacsvox announces how
@@ -85,13 +105,15 @@ follows the session's speech level; paused-queue warnings follow
 Agent Shell also asks before killing a shell or exiting Emacs when queued
 prompts would be lost. Declining that question keeps the prompts available.
 
+*** Check session settings and status
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 Model, mode, thought-level, and other session setting changes announce their
 confirmed values.  Background setting announcements identify the session.
 When grouped choices share a name, confirmation includes the group shown by
 Agent Shell's completion menu.
-In the viewport prompt editor, continuing a list announces its bullet or next
-number and indentation.  Indenting and dedenting announce the new indentation;
-leaving an empty list item announces that the list ended.
 
 Use ~M-x emacsvox-agent-shell-speak-header~ to hear the full session header.
 When =agent-shell-show-cost-indicator= is enabled and the provider reports a
@@ -100,11 +122,14 @@ and rounding.  Brief announcements when entering a session stay concise.
 
 ** Answer an agent's question
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Answering Agent Questions
+:ALT_TITLE: Answer an agent's question
+:DESCRIPTION: Review and complete an optional structured question form.
 :END:
 
-Agent Shell has experimental support for structured question forms. It is off
-by default. To try it, set =agent-shell-elicitation--experimental-feature-enabled=
+Some providers ask you to complete a structured form rather than answer in
+ordinary prompt text. Agent Shell's form support is experimental and off by
+default. To try it, set =agent-shell-elicitation--experimental-feature-enabled=
 to non-nil after loading Agent Shell and start a new session so the agent learns
 that forms are supported. This upstream experimental setting may change.
 
@@ -125,10 +150,11 @@ Missing required answers are reported without announcing successful submission.
 to the latest question, use ~M-x agent-shell-elicitation-jump-to-latest-form~.
 The next-field and previous-field commands are also available through ~M-x~.
 
-
 ** Choose automatic speech and privacy
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Speech And Privacy
+:ALT_TITLE: Choose automatic speech and privacy
+:DESCRIPTION: Choose session feedback, background disclosure, and automatic limits.
 :END:
 
 The focused session defaults to =response=: completed answers and routine
@@ -164,6 +190,32 @@ shared background default.
 ~M-x emacsvox-agent-shell-cycle-speech-level~ cycles toward less routine
 speech; use a prefix argument to restore =auto=.
 
+*** Adjust speech in the settings menu
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press ~C-e S~ in an Agent Shell buffer or its viewport for focused Emacsvox
+settings. The same menu is available through ~C-e H j c~ and the integration
+chooser. ~s~ opens choices for the temporary session override. ~f~ and ~b~
+open foreground and background defaults; ~t~ and ~o~ open thought and tool-output
+choices. Each list starts on the current value and explains its choices.
+Browse with arrows, press ~RET~ to apply and return, or ~q~ to cancel. Press
+~?~ followed by a choice's key for its effect and scope; ~q~ returns from
+Help. ~? ?~ opens the menu overview.
+
+The ~p~, ~c~ and ~l~ controls toggle permission speech, tool-call announcements
+and processing cues. Thought and tool content still depend on the effective
+speech level.
+
+The ~a~, ~n~ and ~k~ controls set automatic-content, line-navigation and
+block-navigation character limits. ~RET~ accepts an exact positive integer or
+=none=; Shift-left/right adjusts by 100. For line navigation, =none= restores
+the core long-line policy. For the other limits it allows complete content.
+~w~ saves the displayed global defaults through Customize, excluding the
+session override. ~A~ opens advanced settings; ~q~ returns. From the direct
+~C-e S~ entry, ~q~ closes the menu and leaves you in the captured buffer.
+
 Thought content defaults to an icon under
 =emacsvox-agent-shell-speak-thought-process=.  Tool feedback is separately
 controlled by =emacsvox-agent-shell-speak-tool-calls= and
@@ -178,19 +230,26 @@ Tool verbosity =status= plays status cues as tools start and finish.
 Tool updates, steering outcomes, queue changes, and confirmed setting changes
 use the notification lane, leaving navigation speech independent.
 
+*** Understand automatic speech limits
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 Automatic response, tool, error, permission, and similar text is limited by
 =emacsvox-agent-shell-automatic-content-max-characters=, which defaults to
 2,000 characters.  A shortened presentation gives exact omitted character and
 line counts and tells you where to inspect the full content.  The complete text
-rendered by Agent Shell stays in its buffer; this speech limit is applied before
-Aural compiles the automatic speech copy. Agent Shell separately shortens tool
+rendered by Agent Shell stays in its buffer; Emacsvox limits the automatic
+announcement rather than editing that displayed text. Agent Shell separately shortens tool
 output lines longer than 32,768 characters, keeping their beginning and end with
 an omitted-character count. Full tool speech reads that notice; the removed
 middle is not available by reading the buffer.
 
 ** Respond to urgent permissions
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Permissions
+:ALT_TITLE: Respond to urgent permissions
+:DESCRIPTION: Find and decide a permission request without confusing routine speech.
 :END:
 
 Permission requests are separate from routine speech levels because they can
@@ -219,7 +278,9 @@ available in the transcript even when routine response speech is quiet.
 
 ** Inspect a response on demand
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Reading Agent Responses
+:ALT_TITLE: Inspect a response on demand
+:DESCRIPTION: Read a completed response in full or request a structural overview.
 :END:
 
 These commands work from the shell and its associated viewports:
@@ -242,7 +303,9 @@ presenting a streaming partial or failed answer.
 
 ** Navigate transcript blocks
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Transcript Navigation
+:ALT_TITLE: Navigate transcript blocks
+:DESCRIPTION: Move among responses, prompts, headings, links, tools, and errors.
 :END:
 
 Agent Shell responses contain semantic prompt, response, thought, activity,
@@ -319,7 +382,9 @@ letters insert themselves instead of taking over prompt editing.
 
 ** Read and copy source blocks
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Source Blocks
+:ALT_TITLE: Read and copy source blocks
+:DESCRIPTION: Read logical code, copy it, and open a change review.
 :END:
 
 Use ~k~ or ~K~, or typed block navigation, to
@@ -339,20 +404,29 @@ The source commands are explicit operations and do not use the automatic
 content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
 
-Opening an Agent Shell change review announces its file and hunk counts and,
-for a single file, its name.  The normal Diff Mode hunk navigation remains
-available; opening the review does not accept or reject changes.
-
-These interactions expose semantic events and attributes to Aural.  You can
-customize speech, voices, and earcons for steering outcomes, queue changes,
-list editing, setting changes, updated tool output, and change-review entry.
-
-** Navigate and copy rendered tables
+*** Review proposed changes
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Moving into a rendered Markdown table activates a contextual table map.  It
+Opening an Agent Shell change review announces its file and hunk counts and,
+for a single file, its name.  The normal Diff Mode hunk navigation remains
+available; opening the review does not accept or reject changes.
+
+These events can have their own presentation rules. You can customise speech,
+voices and earcons for steering outcomes, queue changes, list editing, setting
+changes, updated tool output and change-review entry. Use
+[[info:emacsvox#Explaining Presentation][Feedback Details]] to inspect a representative event before changing it.
+
+** Navigate and copy rendered tables
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Agent Shell Tables
+:ALT_TITLE: Navigate and copy rendered tables
+:DESCRIPTION: Read table cells, rows, and columns, and understand local key conflicts.
+:END:
+
+Agent Shell gives rendered Markdown tables their own navigation commands.
+Moving into a table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
 table reading with matching logical operations; see
@@ -378,6 +452,11 @@ and announce the destination table and cell. Like the bracket navigation keys,
 they insert themselves in a live prompt or viewport editor, including while
 the agent is working.
 
+*** Understand table key conflicts
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 In viewport view mode, ~t~ takes the place of Agent Shell's thought-level
 shortcut; use ~M-x agent-shell-viewport-set-session-thought-level~ for that
 action. Inside a table, ~r~, ~c~, and ~a~ read rows, read columns, and select
@@ -398,6 +477,11 @@ Continuous speech and response-block reading omit rendered table borders and
 keep the cell text. Decorative borders therefore do not force a switch to a
 different speech engine. Literal box-drawing characters in prose or code remain
 available to symbol naming and exact character inspection.
+
+*** Table command reference
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 #+attr_texinfo: :indic kbd :compact t
 - t ::
@@ -469,7 +553,9 @@ borders.  Wrapped cell contents remain complete.
 
 ** Recover from interruption or failure
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Recovery
+:ALT_TITLE: Recover from interruption or failure
+:DESCRIPTION: Interrupt work, inspect the previous response, and recover the session.
 :END:
 
 If a request is taking the wrong path, press ~C-c C-c~ and confirm the

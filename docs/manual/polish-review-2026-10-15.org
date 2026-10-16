@@ -1,0 +1,104 @@
+#+title: Manual clarity and recovery review, 15 October 2026
+#+language: en
+
+* Scope
+
+This source-only editorial pass is based on =ui-experiments= at
+=c242e75529ee9602728ad3a0f447fb2d56cbf799=. It changes no Lisp, dependency,
+packaging or publication behaviour and preserves the concurrent tutorial and
+Transient work already present at that revision. Before committing, the pass
+was rebased onto =82a5207c18db7c4c3bac77ba0dba9daea16d62d0=. Its menu-help,
+menu grouping, implementation, tests and generated-document changes do not
+overlap these edited files and are preserved. The updated menu and Online Help
+were checked for the continuing routes and lowercase Help key.
+
+The Introduction now explains Emacs key notation before any operational key
+instructions. It covers modifiers, released sequential steps, uppercase letters,
+named keys, command names, cancellation and prefix arguments. Using This Manual,
+the tutorial, keyboard reference, task finder and Aural Presentation link to
+that explanation instead of relying on a novice to infer the notation.
+The tutorial's practice text, lessons, exercises and answers are unchanged.
+
+Aural Presentation has a connected prose edit and a decision guide for choosing
+between a named-voice edit, a contextual rule, a palette-wide physical choice,
+engine preference and delivery settings. The existing persistence explanation
+is organised by intention: preview, retain, store for later, use now, retain at
+startup, share or back up. These are not new operations or a universal Save.
+
+Troubleshooting starts with symptoms and inspection. Dedicated topics cover
+saved-but-inaudible voices, settings lost after restart, buffer differences,
+unconfirmed application and privacy-aware problem reports. Existing diagnostic,
+scope, timeout, stream acknowledgement and draft-protection qualifications are
+retained. Repeated saving, global resets and deleting unrelated work are not
+substitutes for identifying a cause.
+
+The task finder retains its earlier goals, adds a problem route and uses precise
+destinations for previews, drafts, notification routing, volumes and shared table
+reading. Displayed headings are clarified without renaming existing source
+headings or Info identifiers. Applications and Integrations changes only its
+printed title and the shared Markdown/Org table reader's navigation properties.
+The historical Aural Home identifier and compatibility note remain; no learning
+route reintroduces its retired menu entry.
+
+* Navigation changes
+
+Twenty destinations are added: two introductory topics, sixteen presentation
+and recovery topics, one shared-table topic and one problem-finder topic.
+The accepted inventory grows from 146 to 166 entries. Every earlier identifier
+and its relative order remains. New child nodes intentionally refine Info's
+Next, Previous and Up relationships; exports and inbound links need checking.
+Existing source-heading links and explicit anchors are retained.
+
+* Checks completed
+
+All eight edited existing files were reconstructed or obtained locally and
+matched their Git blob hashes before modification. Static checks verified the
+166-entry inventory, old-node ordering, original source-heading targets and
+explicit anchors, old index entries, and all original code/example blocks.
+Operational key and literal sets are retained; the short notation examples
+removed from Using This Manual now live in the Introduction.
+
+New local links resolve against the revised sources or accepted node inventory.
+All 40 Info destinations in the task finder resolve to that inventory. The key
+notation topic precedes the Introduction's first keyboard instruction. Source
+checks also cover property-drawer balance, trailing whitespace, no added retired
+Home route and unchanged tutorial lessons.
+
+The prose changes were compared with the complete original Aural Presentation
+chapter for retained scopes, saving behaviour, numerical limits, backend
+qualifications, privacy and recovery. Those checks are editorial review, not
+proof of runtime equivalence. Menu entry and return, shared-voice versus remap
+semantics, draft selection and diagnostic routes were checked against
+=lisp/emacsvox-aural-menu.el= and =lisp/emacsvox-settings-workflows.el= at the
+same revision. Key notation follows the GNU Emacs User Input, Keys and Arguments
+chapters; their Info references are included in the guide.
+
+* Remaining acceptance
+
+No Emacs executable was available in the editing environment. Org lint, export,
+Info navigation in Emacs, live key tests and listening acceptance were not run.
+Generated Texinfo and Info are unchanged for this pass. The earlier merge's
+successful gates do not validate these newer source edits.
+
+Using the configured toolchain and required byte-code preflight, run:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+Read the opening without assumed Emacs knowledge: distinguish Control-e then
+capital H from Control-h, and interpret a named command, modified arrow and
+prefix argument. Follow each new problem and task link in Info and HTML, then
+return to the originating topic. Confirm displayed headings and the new parent
+relationships without losing old bookmarks.
+
+Try saved-but-inactive and retained-draft cases without modifying unrelated
+settings. Verify that the explanations distinguish palette, profile and host
+application results. Test problem reporting with non-confidential text and
+inspect the resulting diagnostic copy before sharing. Check the ordinary
+listening experience; a recorded value or acknowledgement does not establish
+what the reader actually heard.
+
+Website publication and a release require separate authorisation.

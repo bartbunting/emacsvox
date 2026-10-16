@@ -160,10 +160,11 @@
                   (error (princ (error-message-string failure)) (kill-emacs 1)))))))
         (unless (eq status 0) (ert-fail (buffer-string)))))))
 
-(ert-deftest emacsvox-setup-loads-newer-omnivox-and-advice-source ()
+(ert-deftest emacsvox-setup-loads-newer-runtime-source ()
   "Each formerly omitted dependency enables fallback in a fresh session."
   (let ((emacs (expand-file-name invocation-name invocation-directory)))
-    (dolist (module '(omnivox-voices omnivox-remote emacsvox-advice))
+    (dolist (module '(omnivox-voices omnivox-remote emacsvox-advice
+                     emacsvox-spelling emacsvox-tone-editor))
       (let* ((root (make-temp-file "emacsvox-startup-fallback-" t))
              (source (expand-file-name (format "%s.el" module) root)))
         (unwind-protect

@@ -250,9 +250,10 @@ need an isolated interactive session.
 :END:
 
 The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
-=make compat-test= for the core compatibility contracts without installing
-third-party packages. CI builds all maintained modules and runs this gate on
-Emacs 30.2 and 31.1. The full =make test= suite additionally requires the
+=make compat-test= for the core compatibility contracts. Settings menus require
+Transient 0.13.3 or newer; Emacs 30.2 needs a separate package. CI uses the pinned
+Transient, cond-let, and compat sources for that build and Emacs 31.1's bundled
+Transient for the newer build. Both compile all maintained modules. The full =make test= suite additionally requires the
 optional integration packages, including =lua-mode= on Emacs 30.
 
 The separate core speech CI job runs =make core-test=, =make trace-test=, and
@@ -265,8 +266,8 @@ isolated compiled Aural check.  Optional integration suites remain outside
 this job.
 
 The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
-both versions with a private home directory and six reviewed dependency
-snapshots.  =make test-deps= verifies the archive hashes in
+both versions with a private home directory and eight reviewed dependency
+snapshots, including Transient 0.13.3 and cond-let 1.0.0.  =make test-deps= verifies the archive hashes in
 =test/integration-dependencies.json= and stages sources and autoloads under
 ignored =.test-deps/=; it never changes personal packages.  =make integration-test=
 verifies that prepared tree before loading it and runs the batch cases.
@@ -556,8 +557,11 @@ The ownership and release boundaries are recorded in
 =make deb-test= checks the actual archive, reproducibility, source startup,
 remote diagnosis, dependency metadata and refusal of an unprepared release.
 CI additionally installs, reinstalls and purges the package in a disposable
-Ubuntu 26.04 container using =test/debian-install-smoke.sh=. It uploads the
-development deb and checksum as CI artifacts, without publishing a release.
+Ubuntu 26.10 container using =test/debian-install-smoke.sh=. This target supplies
+Transient 0.13.3 or newer through apt; Ubuntu 26.04's package is too old.
+The check loads settings through the isolated launcher and reports the actual
+Transient version and path. CI uploads the development deb and checksum as
+artifacts, without publishing a release.
 
 After preparing the checked source archive using the release procedure below,
 =make release-deb= produces =dist/emacsvox_VERSION-1_all.deb= and its checksum.
@@ -572,14 +576,17 @@ After a maintainer publishes a stable GitHub release, the Release Debian
 package workflow checks out its exact annotated tag and downloads the source
 archive, checksum and provenance from that release. It checks the source
 identity, installs from the archive, builds the release deb, and tests install,
-startup, reinstall and removal in Ubuntu 26.04 before attaching the deb and
+startup, reinstall and removal in Ubuntu 26.10 before attaching the deb and
 checksum. Build jobs have read-only repository access; only the attachment job
 can write release assets. A rerun accepts identical existing assets and refuses
 to replace different files. CI does not create tags or releases.
 
-This workflow uses Emacs 30.2 for autoload generation; its recorded toolchain
-can differ from a locally prepared package. Let CI attach the release deb
-instead of uploading a differently built local package with the same name.
+This workflow uses Emacs 31.1 for source-archive installation and autoload
+generation, with its supported bundled Transient. The Ubuntu installation
+check exercises the packaged Emacs 30.2 and external Transient route. The
+recorded build toolchain can differ from a locally prepared package. Let CI
+attach the release deb instead of uploading a differently built local package
+with the same name.
 
 ** Emacsvox release staging and publication
 :PROPERTIES:
@@ -1469,7 +1476,7 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=. Use the
 last for recordings that already encode their intended spatial placement,
 so runtime balance does not position them a second time.
 
-Open Aural Home's /Sound packs/ and press ~g~ to rescan.
+Open /Sound packs/ with ~C-e H o p~ and press ~g~ to rescan.
 Inspect the new pack with ~RET~: the replacement should be
 native, while unchanged cues identify their parent or fallback provider.
 Audition individual cues with ~P~ and validate with

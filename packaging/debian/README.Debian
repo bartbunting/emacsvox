@@ -5,7 +5,11 @@ Install a downloaded package with apt, which resolves its Emacs dependency:
 
   sudo apt install ./emacsvox_VERSION_all.deb
 
-Emacs 30.2 or newer is required. Omnivox 1.10.0 or newer is recommended.
+Emacs 30.2 or newer is required. Settings menus need elpa-transient 0.13.3
+or newer, or Emacs 31.1 or newer with a supported bundled Transient.
+Ubuntu 26.10 supplies these dependencies. Ubuntu 26.04's stock Transient is
+too old; use the source-install route with an Emacs package-manager upgrade.
+Omnivox 1.17.0 or newer is recommended.
 If Omnivox is not in your configured apt repositories, install its downloaded
 deb in the same apt command, or supply an existing Omnivox installation.
 The package does not add repositories, download engines or build GNU Emacs.

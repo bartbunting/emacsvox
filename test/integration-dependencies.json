@@ -52,6 +52,22 @@
       "sha256": "8c53b6344c35b446216708db1df94c49773b5428445e296667bbbc723cb80cc7",
       "archive_root": "notmuch-094744b3f6f5c6831b6555d1fe75709abf1d1279",
       "subdirectory": "emacs"
+    },
+    {
+      "name": "cond-let",
+      "commit": "28d3b039a9c1f27ecfea36a7df4c37a3b90e4687",
+      "url": "https://codeload.github.com/tarsius/cond-let/tar.gz/28d3b039a9c1f27ecfea36a7df4c37a3b90e4687",
+      "sha256": "b0f7bcfe3ed995db703b49fc4b7134ddb01cbacb6f45c0d8332ac3d69c26998a",
+      "archive_root": "cond-let-28d3b039a9c1f27ecfea36a7df4c37a3b90e4687",
+      "subdirectory": "."
+    },
+    {
+      "name": "transient",
+      "commit": "9e78954343613786cdb0659183b766099f051149",
+      "url": "https://codeload.github.com/magit/transient/tar.gz/9e78954343613786cdb0659183b766099f051149",
+      "sha256": "a164ead14bffd4e926d6f4ac9f2672c13d2d45c2e8e3b9f41c174d89008e9c99",
+      "archive_root": "transient-9e78954343613786cdb0659183b766099f051149",
+      "subdirectory": "lisp"
     }
   ]
 }

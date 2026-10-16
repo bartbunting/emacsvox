@@ -1,0 +1,2257 @@
+#+title: Emacsvox Settings and Voice Interface Plan
+#+date: 2026-10-14
+#+startup: overview
+
+* Purpose and status
+
+Living delivery plan for the =ui-experiments= branch, agreed on 2026-10-14.
+Extend the Transient proof of concept into a discoverable settings interface
+covering everyday feedback, voices, sounds, rules, integrations, and recovery.
+Record new settings and interaction findings here as they are discovered.
+
+This is an internal plan. Proposed menu layouts and controls are not claims
+that those interfaces already exist. Inventory status describes coverage in
+the new interface; many underlying commands and editors already work.
+
+The [[file:developer/ui-experiments.org][UI experiments record]] retains the earlier research and implementation
+history. This document owns the forward plan and settings inventory. The Home
+menu entry is retired after listening acceptance. The compatibility decision
+requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
+Planning an item does not authorize unrelated refactors, dependency changes,
+personal configuration changes, or publication.
+
+** Current baseline
+
+Merge-preparation checkpoint, 2026-10-16: listening accepts the Transient
+review endpoint shortcuts and reversal at both ends. Named-voice tuning
+organisation and the revised manual walkthrough are deferred beyond this
+merge; neither is recorded as passed. Their unchecked status remains below
+for later follow-up and does not block this merge. Final branch CI and review
+remain separate gates.
+
+Merge CI follow-up, 2026-10-16: the complete branch checks found two missing
+startup stale-byte-code guard entries, for spelling feedback and the tone
+editor. Both are now guarded; a fresh-process regression confirms newer
+source wins over stale compiled copies. The Notmuch documentation assertion
+now checks the history-limit option and Tree's support boundary instead of
+superseded prose. Local core checks pass 1,011 tests with 17 graphical skips;
+all 302 compatibility checks and the focused Notmuch guide check pass.
+Five startup checks also pass in a fresh Emacs using the compiled guard;
+incremental compilation, byte-code preflight and documentation review pass.
+The full integration gate needs the current pinned dependency tree; the local
+cache has an older lock. Final branch CI remains required before merging.
+These corrections add no listening acceptance.
+
+The next CI runs passed compatibility checks on both Emacs versions and source
+speech checks on Emacs 31.1, then exposed the compiled gate's retired Home
+binding expectation.
+It now verifies =C-e H= for settings and =C-e S= for current-buffer settings.
+The isolated compiled Aural gate passes locally. The Emacs 31.1 integration
+gate also passed with the current pinned dependencies. The final branch run
+must include these corrected compiled checks before merging.
+
+Both integration gates now pass. The Emacs 30.2 core job also needs the pinned
+supported Transient for its new menu-review phonetics regression; its bundled
+0.7.2.2 is rejected as required by ADR 0027. Core CI now prepares the same
+locked dependencies used by compatibility CI. Dependency versions and runtime
+requirements are unchanged. Transient is compiled separately before Emacsvox's
+config check, which disables source shorthand processing. The complete core,
+trace and isolated compiled gates pass in a separate Emacs 30.2 checkout:
+1,011 core results pass, with 17 graphical skips. YAML and both matrix shell
+scripts pass syntax checks. Final CI must verify this corrected setup.
+
+Menu and tone documentation checkpoint, 2026-10-16: the settings chapter now
+owns the complete navigation explanation, with linked reminders in Help,
+keyboard guidance and the tutorial. It distinguishes item selection, section
+movement, activation, numeric adjustment, choice lists and minibuffer prompts.
+Item review covers repeats, words, characters, endpoints, delayed phonetics
+and binding precedence. By-movement guidance uses =C-c l= to discover the
+selected first item before activation. Menu overviews describe the current
+navigation policy and list only the navigation, activation and review bindings
+available in that menu. Opening guidance now distinguishes back from closing.
+
+The spelling tone guide follows a preview-only exercise with waveform, Pulse
+width, sweep, ADSR, curve, preset and saving explanations. It distinguishes
+the active shape from inactive draft fields, individual from shared volume,
+and the tone editor's Stop/Save keys from the parent spelling menu's Save.
+The existing capitalisation, indentation and line-cue editors keep their own
+scope and saving contracts. A named-voice tuning entry route and the preset
+preview instructions were corrected. Save recovery covers skipped normal
+initialisation. No navigation, tone rendering or persistence policy changed.
+
+Verification: 65 source batch checks pass, including menu-specific binding
+precedence; 32 graphical tests skip in batch.
+Thirteen selected graphical checks pass in a fresh Emacs with compiled code,
+covering Help and return, tone choices, selection and
+settings/Magit navigation. The remaining graphical cases were not rerun for
+this documentation change. Incremental compilation, byte-code preflight,
+reference/manual generation and the documentation gate pass. Three generated
+Info cross-references and their history returns pass in a separate fresh Emacs;
+existing Info node names remain unchanged. This is automated verification,
+not new listening acceptance; the two checks deferred above remain deferred.
+
+History Enter follow-up, 2026-10-15: Enter was reported ineffective on History
+limits and recording. Fresh graphical checks pass with current source and
+compiled code. A new regression uses section/item arrows to reach the action,
+opens it with both Enter events, and checks captured source, parent selection
+on return and absence of implicit saving. All three history checks pass from
+source and compiled code with Transient 0.13.8; byte-code preflight and the
+documentation release gate pass.
+Read-only probes of the two running Emacs sessions found older loaded Enter
+binding functions: one omits Feedback and History, while the other omits
+History. Neither session was reloaded or otherwise repaired. Listening accepted
+on 2026-10-15 after starting a fresh normal profile: Enter opens History limits
+and recording. This closes the reported interaction issue.
+
+Listening checkpoint, 2026-10-15: acceptance results cover items 1--6 and
+8--12 of the pre-merge listening checklist. No failures were reported:
+
+- [X] Main and Speech grouping, first-item discovery, Enter's target, and
+  the clarification that other settings save in their own menus.
+- [X] Both navigation-preference routes, return with =q= and =C-g=, all three
+  navigation styles, and movement-based section/item announcements and cues.
+- [X] Literal spaces, case-insensitive and partial matching, cancellation,
+  and select-then-activate behaviour in settings and action searches.
+- [X] Manual opening feedback, Info navigation, return and reopening,
+  including entry through action search.
+- [X] Pronunciation, output-routing and rule grouping, with editor return.
+- [X] Integration menu scope, choice lists, Help and exit feedback in the
+  tested integrations, including the specific Notmuch ordering and editor-save
+  checks. This does not establish coverage of every installed integration.
+- [X] History adjustment, interface recording, saving explanations and return.
+- [X] Local/global Voice Lock, earcons, inheritance, mapped-item silence and
+  restoration, and the scope of Save.
+- [X] Comparison-label choices, cancellation, pitch-contrast adjustment and
+  audible results on the normal host.
+- [X] Emacs dictionaries: scope, field typing, retained edits, menu return,
+  separate file saving, loading, refresh and pronunciation.
+- [X] Saved-default restart checks as reported for history and voice
+  presentation; global Voice Lock saving was optional in this task and is
+  not separately confirmed.
+- [ ] Item 7, named-voice tuning organisation, preview/stop, save explanations
+  and retained draft: deferred beyond this merge on 2026-10-16; no result.
+- [ ] Item 13, the revised manual walkthrough: deferred beyond this merge
+  on 2026-10-16; no result.
+
+This checkpoint supersedes earlier open listening statuses for the accepted
+tasks above. Earlier named-voice workflow acceptance remains valid; acceptance
+of its latest menu organisation remains pending. Emacs 30.2 verification of
+the latest changes, branch CI and final merge review remain separate work.
+No new automated verification is implied by these listening results.
+
+Documentation follow-up, 2026-10-15: the tutorial's link to =Read And Leave A
+Help Window= targeted a heading without an Info node and blocked export.
+It now targets the containing =Using Online Help= node. Org preview, manual
+regeneration and =make docs-release-check= pass, including byte-code preflight
+and the unchanged Info node inventory. A fresh batch Emacs followed the
+tutorial link, found the Help subsection and returned through Info history.
+Regenerated manuals also include the recent committed documentation edits.
+This resolves the documentation blocker; it adds no listening acceptance.
+
+- Literal search spaces, 2026-10-15: Space now inserts text in both menu
+  searches; Tab completes and Enter keeps its selection/activation distinction.
+  A graphical regression reproduced =all caps = changing to =All-caps = before
+  the fix. All 59 settings/workflow checks pass from source and compiled code
+  in fresh graphical Emacs, covering literal input, typed aliases, completion,
+  cancellation, source return, and unrelated-prompt isolation. Two additional
+  checks pass with installed Vertico in both runs. Incremental compilation and
+  byte-code preflight pass. The manual is regenerated and the documentation
+  release gate passes. Listening acceptance remains open: try
+  =C-e H /= with =all caps beep= and =C-e H a= with =Recent aural feedback=,
+  checking Space, Tab, Enter, and cancellation in a fresh normal profile.
+
+- Menu organisation follow-up, 2026-10-15: Speech starts with scope, then
+  rate, punctuation, capitalization, indentation, and typing. =C-e H n=
+  opens navigation preferences directly; =C-e H s n= remains available.
+  Implemented in =c58b2e165=. Final automated verification for all five
+  organisation slices is recorded below; listening acceptance remains open.
+
+- Task headings and integration exits, 2026-10-15: pronunciation editing has
+  its own section; notification and spatial routing sit under Output routing;
+  the combined feedback-rule overview precedes the rule editors. Integration
+  menus end with Finish, separate from saving and advanced settings. Keys,
+  command Help, scopes, and save ownership are retained. Graphical section
+  checks cover spoken headings and selected actions in all navigation styles.
+  Listening acceptance remains open.
+
+- Notmuch organisation, 2026-10-15: spoken content precedes status feedback,
+  reading limits, defaults and advanced settings, then Finish. Field and status
+  editors retain their own saving actions; =w= still saves only completion and
+  reading defaults. Section navigation is covered in all three styles alongside
+  editor return, order preservation, and explicit-save checks. Listening
+  acceptance remains open.
+
+- Voice-tuning organisation, 2026-10-15: scope comes before adjustments, then
+  Preview, Save, and Finish. Adapter defaults, inheritance, and Undo stay with
+  adjustments. Preview wording is consistent within the menu; =S= still stops
+  preview and =w= still saves and applies. Collection saving and draft retention
+  keep their existing meanings. Source and compiled graphical checks cover
+  scope-first navigation, private preview, both saves, stop, and cancellation.
+  The cancellation test now cancels the actual minibuffer, covering compiled
+  editor calls as well as source. Listening acceptance remains open.
+
+- Action discovery, 2026-10-15: =C-e H a= includes the manual. Explain this
+  item and Recent feedback each appear once; their older names remain search
+  aliases. Useful cross-links such as Voice palettes remain in their menus.
+  Search still focuses a control before Enter activates it. The Help chapter
+  documents the direct navigation route and action aliases; generated manuals
+  are current. Listening acceptance remains open.
+
+- Menu-organisation verification, 2026-10-15: all five remaining slices are
+  implemented. All 143 focused checks pass from source and compiled code in
+  fresh graphical Emacs 31.0.90 with Transient 0.13.8, and from source with
+  pinned Transient 0.13.3. No tests were skipped. Loaded paths and versions
+  were checked. Incremental compilation, byte-code preflight, documentation
+  generation, and the documentation release gate pass. Speech submission and
+  playback are observed or stubbed by tests; these results are not listening
+  acceptance. This pass does not repeat the separate Emacs 30.2 matrix.
+  Use a fresh normal Emacsvox profile for the listening checklist below.
+
+- Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
+  invoking entry before announcing the parent. Shortcut entry, nested menus,
+  and delayed display retain the correct target for Enter. Closing the menu
+  sequence releases its return state; unrelated Transient menus keep their
+  existing behaviour. The heading-return failure was reproduced before the fix.
+  All 89 menu, discovery, Transient, and Magit checks pass in fresh graphical
+  Emacs with source and compiled code using Transient 0.13.8, and from source
+  with pinned Transient 0.13.3. Loaded paths and versions were verified.
+  Incremental compilation and byte-code preflight pass.
+  Listening accepted on 2026-10-15 for the restored item and its announcement.
+
+- Menu organisation, 2026-10-15: the first slice groups =C-e H= into Everyday
+  settings, This buffer and item, Rules and saved work, Find and get help, and
+  Finish. Existing shortcuts and actions are retained. The item explanation
+  reads "Explain this item"; buffer discovery uses "Find an action" rather
+  than the retired Home label. Section-arrow destinations deliberately change.
+  All 40 focused menu, discovery, and movement-announcement checks passed
+  from source and compiled code in fresh graphical Emacs. Incremental
+  compilation and byte-code preflight passed.
+  Listening acceptance of the new grouping remains open.
+
+- Implemented on 2026-10-15: =C-e H i= opens the offline manual at its top
+  node in a separate Info buffer. Normal Info navigation and index lookup
+  remain available; =q= restores the menu's manual selection, captured source,
+  and settings scope. The help chapter documents this route alongside
+  =C-e C-i=. All 25 focused menu tests passed from source and in a fresh
+  graphical Emacs loading compiled code, including repeated Enter activation,
+  Info navigation, and exact menu return. Incremental compilation and byte-code
+  preflight passed. Listening accepted opening, navigation, and menu return;
+  opening feedback was absent. The direct call bypassed Info's interactive
+  speech advice. Entry now uses the same interactive dispatch as =C-e C-i=,
+  preserving the opening cue and configured first-screen or whole-node speech.
+  The fix passed 26 menu tests from source and compiled code in fresh graphical
+  Emacs, plus all seven Info advice tests. Regression coverage checks one cue
+  and one speech request on entry and reopening under both reading policies.
+  Listening acceptance of the entry-feedback fix remains open.
+
+Listening checkpoint, 2026-10-15: the nine tasks covering rate/punctuation
+persistence, typing/interaction, indentation and line/boundary cues,
+movement-based announcements, the full voice workflow, notification/spatial
+output, host pronunciation editing, feedback/rules, and setups/drafts/changed
+settings are accepted. The integration chooser also worked on the follow-up
+test via =C-e H j a= and Org tables. That resolves the reported inability to open
+Customize through the chooser; it does not establish listening acceptance for
+every installed integration. Replacing these Customize entry points with focused
+Transient menus is now planned below. This checkpoint supersedes earlier open
+listening statuses for the nine tasks and the reported chooser issue;
+source-audit gaps, cross-search consistency, and minimum-version verification
+remain separate work.
+
+- Accepted and committed: linked entry menus, indentation, Outline feedback,
+  concise speech, section navigation, and shifted-arrow volume adjustment.
+- Accepted and committed: Sounds and output, its five global volume controls,
+  and return from the sound-pack browser to the suspended menu.
+  Commits: =0269cd163= and =50a39ebd1=.
+- Committed: rate adjustment, punctuation choices
+  and named profiles, automatic-policy reset, and explicit default saving.
+  Twenty-five focused checks passed with compiled code in fresh graphical
+  Emacs using both bundled and installed Transient. A separate Emacs startup
+  restored the saved Omnivox rate and named punctuation profile. Listening
+  acceptance remains open. Documentation and its review gate passed.
+  Commits: =abd1cc504= (controls) and =b0005102f= (default saving).
+- Accepted and committed on 2026-10-14: Voices and engines under =C-e H v=.
+  Links to
+  engine/voice browsing, palettes, and the existing workbench retain their
+  menu return. Session preference, explicit saved preference, and restoring
+  saved or initial engine order use the existing engine commands. Returning
+  from the workbench retains drafts and announces unsaved engine policy.
+  Fifty-one focused checks passed from source and compiled code in fresh
+  graphical Emacs; compiled checks covered bundled and installed Transient.
+  Incremental compilation and byte-code preflight passed.
+  Commit: =f14750661=. The manual and generated references cover this workflow.
+- Implemented and committed: =m= in a named voice's shared editor opens
+  focused tuning.
+  Relative rate, pitch, pitch range, and gain use shifted-arrow adjustments
+  and exact entry. Private play/compare, sample text, undo, adapter default,
+  save/apply, and save-to-collection reuse the retained editor draft. This menu
+  previews explicitly without changing the full editor's automatic-sample
+  preference. Returning to the editor keeps the draft and stops its sample.
+  Fifty-seven tuner/editor checks passed from source and compiled code in
+  fresh graphical Emacs, including both bundled and installed Transient.
+  Incremental compilation, byte-code preflight, and header checks passed.
+  Commit: =10d636b17=. The manual and generated references cover this workflow;
+  the documentation review gate passed on 2026-10-14. A complete tuner
+  listening-and-restart task remains open.
+- Accepted and committed on 2026-10-14: =C-e H s c= opens Capitalization. Indication,
+  presentation, and camel-case splitting share the buffer/global scope. Separate
+  capital-letter and all-caps beep menus retain global preview drafts with
+  shifted-arrow pitch/duration adjustment, exact entry, preview/stop, discard,
+  and explicit save. Cue saves use personal rules; restoring a bundled cue
+  removes only this menu's override. Reading defaults save separately through
+  Customize. Thirty-seven focused checks passed from source and compiled code
+  in fresh graphical Emacs; compiled checks covered bundled and installed
+  Transient. Saved reading defaults also survived a separate Emacs startup.
+  Incremental compilation, byte-code preflight, and header checks passed.
+  Listening accepted; the manual and generated references cover these controls.
+  The documentation review gate passed. Controls commit: =a0dd8e350=.
+- Testing route: a new normal Emacsvox session loading current byte-code.
+- Implemented and committed: =C-e H s t= opens Typing and interaction.
+  Controls commit: =c51ea23f4=. Listening acceptance remains open.
+  Character, word, and completed-line echo, point indication/presentation,
+  and spoken messages share buffer/global scope. Delayed phonetics and its
+  delay are global. Changes apply immediately; Save persists displayed values
+  through Customize. Source-line and immediate phonetic-name previews retain
+  the captured source location. Fifty-three focused checks passed from source
+  and compiled code in fresh graphical Emacs, with both bundled and installed
+  Transient checked after compilation. A separate Emacs startup restored the
+  saved interaction values. Incremental compilation, byte-code preflight, and
+  header checks passed. Listening acceptance remains open; the manual covers
+  these controls. Capitalization and interaction tests are registered in the unit runner;
+  their graphical cases require a graphical session.
+
+* Interaction contract
+
+Use focused Transient menus for actions and repeated adjustments. Use
+searchable, sortable lists for inventories such as voices, palettes, rules,
+and sound packs. Use expandable Outline details for explanations, inheritance,
+effective settings, and diagnostic evidence.
+
+- Up/down selects items. Plain left/right changes menu sections.
+- Shift-left/right adjusts a selected numeric control. Enter activates a
+  choice or edits an exact value. Announce bounds and unavailable controls.
+- Announce menu and section names on entry or section changes. Repeated
+  adjustments speak the new value promptly and replace obsolete feedback.
+- Show effective values, available choices, scope, and where a value comes
+  from: a buffer override, mode policy, global default, palette, or engine.
+- Offer only scopes the underlying setting supports. Explain when a global
+  operation also changes the originating buffer.
+- Make saving, applying, selecting a palette, and restarting speech distinct
+  actions. Menu entry and preview must not silently persist changes.
+- Provide representative previews and a reliable stop action. Audit existing
+  keys before assigning preview, stop, or save keys in another interface.
+- Return to the originating menu or list with its selection, filters, source
+  context, and draft intact. Preserve existing editor decisions about keeping
+  or discarding unsaved work. Whole-stack exit remains available.
+- Validate the captured source item before contextual edits. Handle changed
+  text, closed buffers, unavailable voices, and missing capabilities clearly.
+- Explain what Reset restores: an inherited value, a mode policy, a standard
+  value, or an engine default.
+
+* Delivery milestones
+
+** 1. Finish the current foundation
+
+- [X] Listen to rate and punctuation controls, save defaults, and verify them
+  in a new normal Emacsvox session.
+- [X] Commit the accepted controls and persistence in reviewable slices.
+- [X] Batch their user documentation and generated references at that checkpoint.
+- [X] Reconcile the Home action map with this inventory, including commands
+  exposed only by shortcuts, Help, or search. Source audit completed on
+  2026-10-15; the coverage audit below records all 26 named actions and aliases.
+  Broader settings coverage and interaction acceptance remain in milestone 5.
+
+Done when accepted behaviour, restart persistence, documentation, and commits
+agree. Existing passing checks remain reusable for unchanged code.
+
+** 2. Complete the first voice workflow
+
+- [X] Accept the prototype linking voice/engine browsing, preferred engine,
+  palettes, and workbench. Accepted on 2026-10-14.
+- [X] Accept selection, filters, sorting, and sample-text retention across the
+  complete audition/edit/return task. Retention is already implemented with
+  focused workbench/editor regression coverage; this is an end-to-end review,
+  not a claim that those mechanisms still need to be written.
+- [X] Listen to the focused named-voice tuner prototype, including bounds,
+  exact entry, adapter default, and manual preview.
+- [X] Support edited preview and original-versus-edited comparison with the
+  same sample text, followed by explicit save/apply or draft retention.
+  Implemented, checked automatically, and listening accepted on 2026-10-15.
+
+Done when a voice can be found, auditioned, adjusted, compared, saved, and
+revisited without losing the source context or an unfinished experiment.
+
+** 3. Cover everyday settings and cues
+
+- [X] Accept Capitalization and its separate capital-letter and all-caps cue
+  editors. Accepted on 2026-10-14; save/reload and bundled reset also have
+  automated coverage.
+- [X] Add typing echo, phonetic feedback, point indication, and spoken messages.
+  Listening accepted on 2026-10-15; further spoken-detail inventory remains open.
+- [X] Complete indentation pitch tuning and the inventoried line/boundary cues.
+  Listening accepted on 2026-10-15. Duration-coded indentation
+  constants and integration-specific boundary semantics remain separate work.
+- [X] Extend Sounds and output with notification routing/history and spatial
+  settings. Keep restart requirements explicit.
+- [X] Link the punctuation pronunciation editor as well as level selection.
+- [X] Add action/settings search and access to settings relevant to this buffer.
+  Implemented; integration discovery now covers the initial package inventory.
+  Integration listening and further integration coverage remain open.
+
+Done when common reading, coding, and notification adjustments are discoverable
+without knowing their variable names, and their previews and persistence work.
+
+** 4. Connect richer editing and management
+
+- [X] Connect contextual feedback changes, recent feedback, remapping, and
+  effective explanations at =C-e H f=.
+- [X] Expose presentation features and personal/session/buffer rule editors
+  with explicit scope at =C-e H r=.
+- [X] Connect profiles, retained drafts, inheritance/reset, and palette
+  import/export at =C-e H p=.
+- [X] Add initial integration discovery at =C-e H j= and =C-e H . j=:
+  Agent Shell, EAT/comint, Org, Notmuch, and EWW. Most advanced options retain
+  Customize routes; further packages remain an inventory task.
+- [X] Extend the voice editor's =m= menu to fallback choices and link qualified
+  native controls through the existing editor.
+- [X] Add a changed-settings view at =C-e H d=, separating current values,
+  saved defaults, and retained drafts. Coverage is limited to loaded options
+  and in-memory drafts; disk/host reconciliation is deferred.
+
+Implemented and committed in six slices, =3f246446f= through =51bf15972=.
+Automated evidence is in the six-slice checkpoint below. These are menu and
+workflow connections; dedicated editors retain their existing editing models.
+Listening accepted on 2026-10-15 for explanation, editing, preview, explicit
+persistence, voice tuning, setups/drafts and return. The reported integration
+chooser issue is resolved by listening; other integration paths and the planned
+Transient conversion still need their own acceptance.
+
+** 5. Evaluate the complete settings interface
+
+- [ ] Review every inventoried action for a menu, search, or advanced-settings
+  route. Keep uncovered or deliberately deferred items explicit.
+- [ ] Review grouping, shortcuts, Help, current-value announcements, and all
+  return paths, including cancelled prompts and retained drafts.
+- [ ] Run end-to-end listening tasks and compare with the existing Home.
+- [ ] Run applicable integration checks, a real Magit navigation check for
+  shared Transient changes, and verification on the minimum supported Emacs.
+  The last combined graphical run covered installed Magit on Emacs 31.0.90;
+  listening and Emacs 30.2 compatibility acceptance remain open.
+- [ ] Batch final documentation and record durable design decisions in ADRs.
+
+Done when the replacement is usable across the agreed tasks and remaining
+limitations are named. Retiring existing interfaces is a separate decision.
+
+* Settings inventory
+
+This is the initial inventory, not an exhaustive list of Emacsvox options.
+Audit commands, keymaps, cue resources, presentation rules, and existing
+editors as well as =defcustom= declarations. A setting may be implemented
+through an existing rule rather than a dedicated option.
+
+** Speech and reading
+
+- Rate, adjustment step, current-buffer/global scope, and backend startup rate.
+- Punctuation level, named profile, automatic mode policy, and saved fallback.
+- Full punctuation pronunciation editor, including its apply/restart boundary.
+- Capitalization indication, presentation, and camel-case splitting.
+- Indentation enablement, spoken/tone presentation, timing, and tone parameters.
+- Character pronunciation, character-rate scale, Unicode handling, repeated
+  character handling, and delayed phonetic feedback where supported.
+- Emacs pronunciation dictionaries: define/edit entries, enable/disable their
+  use, refresh, load, and explicitly save their own dictionary file. These are
+  separate from host punctuation pronunciations and Customize defaults.
+
+Rate, level/profile selection, policy reset, and saving are current prototypes.
+The initial indentation path is accepted. Pitch-tone tuning is implemented for
+listening at =C-e H s i t=: base pitch, rise per column, maximum pitch, and
+requested duration. The effective duration retains the blank-line tone minimum.
+Duration-coded indentation uses fixed constants rather than Customize options;
+making those adjustable remains a separate design decision.
+
+*** Capitalization: accepted on 2026-10-14
+
+- [X] Expose indication on/off through the existing =tts-caps= behaviour.
+- [X] Expose spoken, tone, spoken-and-tone, custom-rule, and none presentations.
+- [X] Add a named Capital-letter beep entry with preview and pitch/duration
+  tuning through the existing cue/rule model.
+- [X] Add a separate All-caps beep entry with its own preview and tuning.
+- [X] Keep camel-case splitting independent of capitalization indication.
+- [X] Preview representative text such as "Capital camelCase NASA".
+- [X] Label scope, separate saving, preview drafts, and restoring the bundled cue.
+  The manual covers the reading settings and separate cue drafts.
+
+Confirmed resources: =capital-letter-tone= and =capital-all-caps-tone= in
+[[file:../lisp/emacsvox-aural-resources.el][aural resources]], with distinct capitalization rules in
+[[file:../lisp/emacsvox-aural-schemes.el][aural schemes]]. Cue tuning uses two personal override rules per kind, one
+for tone presentation and one for spoken-and-tone. It preserves spoken labels
+and unrelated rules. Other presentation rules may override these changes.
+Drafts persist for this session; adjusting or closing the menu writes nothing.
+Conflicting saved changes or a dirty personal-rule editor block cue saving.
+Do not confuse a cue adjustment with shared main-tone volume.
+
+** Typing and interaction
+
+- Typing echo choices and their current scope.
+- Point indication and character/phonetic feedback.
+- Spoken messages, navigation detail, and relevant interaction feedback toggles.
+- Menu navigation style, section-announcement order, and detailed descriptions.
+
+The menu presentation controls already exist. The new interaction prototype
+covers the echo, point, message, and delayed-phonetic settings above; existing
+direct commands remain available. Delayed phonetics applies to character
+navigation, not typing. Its menu adjusts by 0.1 seconds and accepts exact
+values of at least 0.1 seconds; it cancels pending announcements through the
+existing mode and Customize setter. It does not change the engine's rate.
+
+Inventory other spoken-detail controls as integrations are visited.
+
+** Sounds, output, and notifications
+
+- Main tone and earcon volumes; separate notification speech, tone, and earcon
+  volumes. These controls and explicit saving are accepted.
+- Sound-pack browsing, activation, validation, and personal-pack maintenance.
+- Individual cues, including capitalization, blank lines, line decoration,
+  separators, unspeakable lines, boundaries, and point indication.
+- Notification output selection, separate/main output behaviour, and history.
+- Spatial speech/cues, output mode, separation, and remapping where supported.
+
+Record which controls affect Omnivox audio versus external sound players, and
+which require a restart. Link cue editing to a concrete preview and explanation.
+
+** Voices and engines
+
+- Installed physical voices: engine, language, availability, filters, sorting,
+  audition, and engine details.
+- Named palette voices: effective definition, owner/inheritance, physical
+  choices, shared tuning, and contextual use.
+- Preferred engine and its existing session/save semantics.
+- Common and per-fallback tuning, qualified engine-native controls, and preview.
+- Palette selection, copying, inheritance, reset, rename, import, and export.
+- Engine settings, downloads, enablement, availability, and explicit recovery.
+
+** Presentation and rules
+
+- Feedback for the captured item and recent feedback history.
+- Guided feedback changes, named-voice assignment, voice editing, and earcon
+  remapping with clear scope and effect.
+- Voice Lock/face presentation, optional features, and training explanations.
+- Saved, session, and current-buffer rules; precedence, disable/remove, and reset.
+- Feedback-history retention and inclusion of interface presentations.
+
+The Outline report and surrounding editing links are implemented. Review the
+complete task of explaining why a rule or contextual adjustment wins, changing
+it, and returning to the source. The coverage audit below records the remaining
+focused-menu gaps for training, history policy, and the combined rule overview.
+
+** Integrations
+
+Inventory settings relevant to Agent Shell, terminal/comint buffers, Org,
+browsers, mail, and other integrations as they are encountered. Record the
+actual command or option before proposing a new control. Offer a contextual
+entry and an all-integrations route. Check effective keymaps before new keys.
+
+*** Planned: Transient menus for integration settings
+
+Direction recorded on 2026-10-15: each listed integration should open a focused
+Transient rather than using Customize as its primary settings screen. Include
+ordinary shell/comint alongside the existing integrations. Keep current-buffer
+access and the all-integrations chooser.
+Shell/comint, EAT, Agent Shell, Org, EWW and Notmuch now have focused menus.
+Structured and advanced editors retain their existing Customize routes.
+
+Deliver and listen to one integration at a time. Proposed control groupings:
+Implementation may continue in separate commits before listening acceptance.
+
+- [X] Shell/comint: local automatic speech and background output monitoring
+  implemented; listening accepted on 2026-10-15, commit =7592c191d=.
+- [X] EAT: foreground speech, background monitoring, prompt feedback and detail
+  implemented; menu listening accepted on 2026-10-15.
+- [X] Agent Shell: session speech level, foreground/background defaults,
+  thoughts/tool/permission feedback and reading limits implemented; listening
+  acceptance pending.
+- [X] Org: table feedback and links to its existing structured settings
+  implemented; listening acceptance pending.
+- [X] EWW: section-navigation speech and image handling implemented; listening
+  acceptance pending.
+- [X] Notmuch: completion feedback, reading limits, spoken-field and status-cue
+  editor links implemented; listening acceptance pending.
+
+Contextual shortcut checkpoint, 2026-10-15:
+
+- =C-e S= opens the captured buffer's focused integration menu, falling back to
+  general buffer settings until that integration has a focused menu. =q= closes
+  the direct entry. =C-e H= and =C-e H .= retain their existing meanings.
+- Graphical source checks cover the actual binding, buffer ownership, fallback,
+  closing without a parent menu, and no implicit save. Listening remains pending.
+- Verification: 32 graphical settings tests passed from source and compiled
+  code. The required full rebuild, bytecode preflight and public-reference/manual
+  generation passed. Agent Shell's six binding and prompt-editing regressions
+  passed with both installed and pinned dependencies; no new overlap appeared.
+
+Use toggles, choices, shifted-arrow numeric adjustments and exact entry where
+appropriate. Preserve each existing command's lifecycle and buffer/session/global
+scope. Saving ordinary defaults can still use Customize's persistence functions
+without opening its screen; do not add Save for session-only state. Opening or
+returning must not apply or save changes implicitly.
+
+Link lists such as field layouts and rules to suitable dedicated editors from
+the Transient. Inspect those workflows before choosing their editing interface;
+this direction does not require forcing structured data into a long menu.
+Keep advanced Customize available for options outside the focused controls.
+For buffers without integration-specific controls, explain that and offer the
+integration chooser rather than implying a working current-buffer entry.
+
+Acceptance for each slice: find a control by arrows and search, hear its current
+value and scope, change it, return to the captured buffer, and verify saving or
+session-only behavior as appropriate. Check entry from the source buffer and
+from the all-integrations chooser, including cancellation and return focus.
+
+Shell/comint implementation checkpoint, 2026-10-15:
+
+- =C-e H j c= and the all-integrations chooser open the same focused menu.
+  =s= toggles automatic output speech; =b= toggles background monitoring.
+  Both call the existing local commands with no prefix and never save defaults.
+  Monitoring retains its existing protocol synchronization and needs automatic
+  speech enabled to read background output.
+- =C-e H /= finds both controls by their Shell/comint labels and selects without
+  activating. Menu labels show current values and explain the temporary buffer
+  scope. Outside Comint, the chooser explains which buffer is needed and keeps
+  the controls unavailable. Unsupported current-buffer settings point to =a=.
+- =q= restores the originating entry; cancelling the integration chooser also
+  restores its entry. Existing Customize routes remain available for the other
+  integrations.
+- Automated verification: 25 graphical settings/workflow tests passed from
+  source, then 25 with compiled code and installed Transient/Vertico, and 25
+  with compiled code and bundled Transient; no skips. Coverage includes spoken
+  values, arrows and Enter, both entry routes, search without activation,
+  cancellation, return focus, source ownership, unchanged defaults, protocol
+  synchronization, unavailable controls and existing Customize return.
+  Loaded paths were checked in fresh Emacs processes. Incremental bytecode,
+  bytecode preflight and manual regeneration passed.
+- Listening accepted on 2026-10-15 following the fresh-profile handoff for
+  =7592c191d=.
+
+EAT implementation checkpoint, 2026-10-15:
+
+- =C-e H j c= and the all-integrations chooser open the same EAT Transient.
+  =s= toggles automatic foreground speech; =b= toggles background cues and unread
+  counts. Background monitoring stays independent of foreground speech and
+  never reads background terminal content. Existing lifecycle commands discard
+  pending automatic feedback and clear monitoring state as before.
+- =p= cycles ready cue, read prompt and silent; this requires EAT shell
+  integration and obeys foreground autospeak. =d= cycles terse, normal and
+  verbose automatic feedback through the existing command. All four changes
+  target the captured terminal, including from its frozen review or an active
+  Eshell-embedded EAT terminal. Unavailable or stale sources cannot be changed.
+- =w= explicitly saves these four terminal values through Customize. Other
+  terminals with local overrides retain them; terminals without overrides inherit
+  the new defaults. Opening, adjusting and returning never save implicitly.
+  =A= retains advanced Customize access and returns to its menu entry with =q=.
+- =C-e H /= finds all four controls and selects without activating. =q= returns
+  to the originating current-buffer, chooser or search entry.
+- Automated source verification: 31 graphical settings/workflow tests and 15
+  focused EAT lifecycle/prompt/monitoring tests passed, with no skips. New tests
+  cover spoken values, arrows and Enter, independent local changes, explicit
+  save/reload, other-terminal overrides, frozen review, stale sources, embedded
+  Eshell, search and Customize return.
+- Compiled verification: 31 graphical tests passed with installed Transient and
+  Vertico, and 31 with bundled Transient, with no skips. Both used installed EAT
+  0.9.4 from =~/.emacs.d/elpa/eat-0.9.4/=; loaded menu and integration bytecode
+  paths were checked in fresh Emacs processes. Incremental compilation, bytecode
+  preflight and manual regeneration passed.
+- The listening checkpoint below supersedes the original menu acceptance tasks.
+  Persistence has automated save/reload coverage; a real save/restart remains a
+  separate acceptance check unless explicitly confirmed.
+
+EAT listening iteration, 2026-10-15:
+
+- Prompt feedback and automatic output detail now open three-choice Transients.
+  The current value is selected on entry. Arrows browse without applying; Enter
+  applies once and returns to the original control. =q= cancels. Values remain
+  terminal-local until the existing explicit Save action is used.
+- EAT menu toggle confirmations now replace and interrupt older main speech.
+  Existing terminal lifecycle commands still clear pending feedback and monitor
+  state. Choice confirmations use concise Transient speech. The normal terminal
+  commands outside the settings menu retain their existing delivery policies.
+- Evidence: test session =20261014T223223Z-2874343= submitted verbosity changes
+  as ordered state-change feedback. Submissions 150/151 mapped to main-process
+  dispatches 165/166; Omnivox process 2874660 queued them behind existing audio.
+  The first completed while the second had waited about 1.6 seconds to start.
+  This supports the reported interruption problem; menu listening is now accepted.
+- The same test session recorded =Cannot open doc string file= for
+  =emacsvox-settings-integrations.elc=. Replacing compiled files during an open
+  session is a plausible cause, not a confirmed diagnosis. Keep this finding
+  open if it recurs in a fresh Emacs started after compilation has finished.
+- Verification: 40 graphical settings tests passed from source, then 40 from
+  compiled code with installed Transient and 40 with bundled Transient; no skips.
+  Tests cover opening on the current choice, browsing without applying, Enter,
+  cancellation, parent focus, review-buffer ownership and actual normalized
+  interruption policies. Incremental compilation and bytecode preflight passed;
+  fresh graphical sessions read the changed commands' compiled docstrings.
+- Direct =C-e S= exit feedback: the integration-specific Back action previously
+  closed silently when no parent menu existed. It now announces the restored
+  buffer and mode with the standard =close-object= earcon, using interruptible
+  speech. Nested Back still restores its parent without an exit announcement.
+  A graphical regression reproduces the old silence and checks =q=, =C-g= and
+  =C-q= for fallback, Comint, EAT and Org menus, plus nested choice/menu return.
+  All 41 graphical settings tests passed from source and compiled code with
+  installed and bundled Transient; incremental build and preflight passed.
+- Listening accepted on 2026-10-15 for the EAT menu and direct-menu exit
+  feedback. Choice navigation, interruption and return speech/cue behaviour
+  are accepted. The intermittent docstring finding remains recorded above.
+  The maintained manual now describes the accepted choices and return feedback.
+
+Agent Shell implementation checkpoint, 2026-10-15:
+
+- Direct =C-e S=, current-integration and chooser routes share a focused menu.
+  Session speech uses its existing chooser and cancellation lifecycle, including
+  from viewports; only global controls are saved by =w=. Background defaults
+  preserve cancellation of queued speech for automatic background sessions.
+- Global thought, tool, permission, lifecycle and reading-limit controls retain
+  the existing options. Exact entry accepts positive integers or =none=;
+  Shift-arrows adjust the selected limit by 100 and retain focus. Search selects
+  each control without changing it. Advanced Customize remains linked.
+- Source verification: 35 graphical settings tests passed. Binding overlap and
+  prompt/table/viewport checks cover installed Agent Shell =20261013.250=
+  (commit =956a0be6=) and pinned =0.86.1= (commit =137b574f=), with Shell Maker
+  commit =dcc05a8c=. The new prefix shortcut does not displace a navigation key.
+- Compiled verification: 35 graphical tests passed; all ten binding and speech
+  lifecycle checks passed against both installed and pinned packages. Incremental
+  bytecode, preflight and manual regeneration passed. No listening acceptance is
+  inferred from these checks.
+- Listening remains pending: compare session and global changes, background
+  cancellation, feedback choices, numeric adjustment/exact entry, save/restart
+  and return from shell and viewport.
+
+Agent Shell choice-list iteration, 2026-10-15:
+
+- Foreground/background speech, thought feedback and tool-output detail open
+  explained choice lists. The current value is selected on entry. Arrows browse
+  without applying; Enter applies once and returns; =q= cancels. Global controls
+  retain their explicit Save action and background cancellation lifecycle.
+- Session speech uses the same menu interaction, including Auto. Each level
+  explains what it reads or suppresses. It still changes only the captured shell
+  session, including from its viewport, through the existing cancellation path.
+  Session confirmations interrupt older main speech and are excluded from Save.
+- Choice Help explains the selected value, scope, saving and relevant speech
+  policies. Toggles and numeric controls have useful effect descriptions rather
+  than repeating their names. This is also recorded as a standing writing rule
+  in =AGENTS.md=: every settings item and choice needs an explanation, with
+  concise arrow feedback and fuller Help where needed.
+- Verification: all 43 graphical settings tests passed from source and compiled
+  code with installed and bundled Transient; no skips. Coverage includes each
+  choice, spoken explanations and Help, return/cancel, session/viewport ownership,
+  queued-speech cancellation, interruptible confirmations and explicit saving.
+  The incremental build and bytecode preflight passed. Fresh sessions verified
+  the compiled menu paths and readable command documentation.
+- Listening accepted on 2026-10-15 in a fresh test Emacs: the five choice lists,
+  explanations, arrow browsing, apply/cancel, Help and return, and closing
+  feedback passed. This acceptance is separate from the automated checks above;
+  it does not establish save/restart acceptance for every global setting.
+- The maintained Agent Shell guide now describes the choice lists and spoken
+  Help. Manual generation, bytecode preflight and the documentation release gate
+  passed for the accepted slice.
+
+Org implementation checkpoint, 2026-10-15:
+
+- Direct, current-integration, chooser and search routes open a focused table
+  feedback menu. =c= cycles all six existing cell/header combinations; =w= saves
+  only that global default. Local overrides retain their existing precedence.
+- =t= opens Org's structured table settings; =A= opens Emacsvox Org Customize.
+  Both return to their originating entry. These editors retain their own Apply
+  and Save controls; opening or returning does not save.
+- All 36 graphical settings tests passed from source and compiled code.
+  Incremental compilation, bytecode preflight and manual regeneration passed.
+  Tests cover actual cell/header spoken text for every choice,
+  the direct shortcut, both Customize returns, explicit save/reload and existing
+  integration workflows. Listening remains pending for navigation, spoken table
+  feedback, save/restart and editor return.
+
+EWW implementation checkpoint, 2026-10-15:
+
+- Direct, chooser, current-integration and search routes open its focused menu.
+  =s= toggles section-navigation autospeak; =i= toggles image suppression and
+  synchronizes the shared SHR default for subsequent rendering. Local overrides
+  are preserved; the current page is not reloaded.
+- =w= saves only the two displayed Emacsvox defaults. =A= retains advanced
+  Customize with exact return. All 37 graphical settings tests passed from source
+  and compiled code; they cover rendering inhibition, unchanged local overrides,
+  no implicit page reload, explicit save/reload, search and return. Incremental
+  compilation, bytecode preflight and manual regeneration passed.
+  Listening and save/restart acceptance remain open.
+
+Notmuch implementation checkpoint, 2026-10-15:
+
+- The focused menu is available from welcome, search, message and tree views,
+  the integration chooser and settings search. Completion feedback cycles through
+  all four existing styles. Four reading limits support shifted arrows, exact
+  positive integers and =none=. =w= saves only these five global defaults.
+- Ordered field lists and status-tag/fallback-cue maps link to targeted Customize
+  editors with exact return. Their ordering and custom functions are preserved;
+  they retain their own save actions. Presentation Options is linked because its
+  enabled mail-status rules own the standard cues ahead of the fallback maps.
+  Advanced Customize retains separators and internal MIME traversal limits.
+- Verification: 39 graphical settings tests passed from source and compiled
+  code with installed Transient, then 39 with bundled Transient, with no skips.
+  Fresh processes verified the loaded menu bytecode paths. All 129 Notmuch
+  integration tests and two focused EWW speech/image tests passed. Coverage
+  includes spoken values, exact/numeric adjustments, explicit save/reload, all
+  four mail view identities, structured value preservation and editor returns.
+  Incremental compilation, bytecode preflight and manual regeneration passed.
+- Listening remains pending for completion feedback, limit adjustments, actual
+  field reading, cue ownership, editor return and persistence after restart.
+
+Org and Notmuch choice-list iteration, 2026-10-15:
+
+- Org table feedback and Notmuch search completion now open explained choice
+  lists from =c=. The current global value is selected on entry. Arrows browse
+  without changing it; Enter applies once and returns; =q= cancels. Org exposes
+  all six cell/header combinations; Notmuch retains its four completion styles.
+  Defaults, buffer-local overrides and explicit =w= saving are unchanged.
+- Choice Help describes scope and dependencies: Org uses the first row and
+  first column for headers, and local overrides still take precedence. Notmuch
+  explains adaptive focus/interaction behavior, notification versus refresh
+  speech, and audible failures even when successful completion is silent.
+  The surrounding controls also have useful effect descriptions.
+- A graphical regression exposed Help returning to the current value instead
+  of the browsed choice. The shared integration choice menu now retains that
+  choice through Help, so Enter still targets the browsed item. The restoration
+  is limited to this menu and consumed once on redisplay; Agent Shell shares it.
+- All 44 graphical settings tests passed from source and compiled code, including
+  installed and bundled Transient, with no skips. They cover all Org spoken
+  cell/header outputs, Notmuch choices, navigation without applying, Help speech
+  and focus restoration, local overrides and explicit save/reload. Six focused
+  Notmuch completion tests passed for adaptive focus/interaction, counts, cues,
+  silence, refresh interruption and audible failures. Incremental compilation
+  and bytecode preflight passed; fresh processes verified compiled menu paths.
+- Listening accepted on 2026-10-15 for the explained choices and Help-return
+  interaction. This acceptance is separate from the automated checks above;
+  it does not establish save/restart acceptance for every global setting.
+- The maintained manual now describes both choice lists, scope, spoken Help
+  and restored selection. Manual generation, bytecode preflight and the
+  documentation release gate passed for the accepted slice.
+
+** Saved setups and drafts
+
+- Presentation profiles and what each profile captures or leaves independent.
+- Saved defaults, active palette, and engine configuration ownership.
+- Retained voice, rule, routing, and punctuation drafts.
+- Import/export, backup, inherited defaults, and standard-value restoration.
+
+Show the effect of switching a setup. Keep each existing storage service and
+its save/apply behaviour; do not imply one Save command covers all data types.
+
+** Diagnostics and recovery
+
+- Actual speech backend, loaded paths/versions, output state, and capabilities.
+- Aural Doctor, spatial capability explanations, and unavailable features.
+- Relevant logs and existing stop, restart, and recovery commands.
+- Links from a diagnostic finding to the affected setting or recovery action.
+
+Opening a settings or diagnostic menu must not implicitly download components,
+restart speech, or change the active configuration.
+
+* Longer-term voice experience
+
+** Listing and discovery
+
+Keep clearly labelled views for physical voices and named palette voices.
+Preserve filters, sort order, selected row, preview text, and originating buffer
+across editing and return. Show useful availability and inheritance information
+without repeating an entire engine or palette description on each movement.
+
+** Common tuning
+
+Begin with a small set of supported controls such as rate, pitch, pitch range,
+and volume. Use the agreed arrows and exact-value editing. Preview the draft
+and compare original/edited versions with the same sample and rate context.
+An optional automatic-preview experiment must replace obsolete previews and
+remain easy to stop; manual preview remains the initial acceptance path.
+
+** Drafts, ownership, and saving
+
+Retain drafts when returning to a browser. Explain whether an edit changes a
+named voice wherever it is used or changes one contextual presentation rule.
+Offer the existing save/apply, save-to-collection, experiment destination,
+reset, and discard behaviours. Use private previews rather than temporarily
+publishing the draft as a live voice.
+
+** Fallback and native controls
+
+Expose shared tuning first, then individual fallback adjustments and advanced
+engine controls. Obtain controls, types, bounds, and qualified defaults from
+the engine catalogue. Distinguish Follow shared/common settings, Set value,
+and Engine voice default. Reordering choices must retain their adjustments.
+
+Explain the physical voice that actually spoke, any fallback or degraded
+capability, and the contextual settings that affected the result. Preserve the
+accepted shared, choice, then context precedence. Relevant contracts are
+[[file:adr/0016-complete-voice-preview.org][complete private preview]], [[file:adr/0017-per-fallback-voice-tuning.org][per-fallback tuning]],
+[[file:adr/0018-unified-voice-palette-model.org][palette ownership and inheritance]], [[file:adr/0022-engine-described-voice-parameters.org][engine-described parameters]],
+and [[file:adr/0026-palette-default-reading-voice.org][the palette default reading voice]]. Read all applicable ADRs before
+implementation; these links are not a substitute for the repository rule.
+
+* Longer-term editor improvements
+
+Menu coverage and editor improvements are separate checkpoints. The Home menu
+entry is retired and its named actions have focused destinations. Keep dedicated
+buffers for voice, palette, sound, punctuation, and rule inventories, with
+Transient menus for actions and repeated adjustments.
+
+Retain the existing major-mode foundations:
+
+- =emacsvox-aural-voice-editor-mode= and the rule editor's
+  =emacsvox-aural-scheme-editor-mode= derive from
+  =emacsvox-aural-interface-mode=, which derives from =special-mode=.
+- Voice, palette, sound-pack, and pronunciation lists use dedicated modes
+  based on =emacsvox-aural-tabulated-mode= and =tabulated-list-mode=.
+
+No replacement major mode is selected. Improve the existing modes' editing
+conventions, state reporting, and speech. Start the editor workstream with the
+named-voice editor and its browser, unless a concrete problem in another editor
+has higher priority. Inspect existing bindings and draft behaviour before
+choosing changes; exact save, finish, and cancel bindings remain undecided.
+
+After connecting each editor, evaluate its ordinary Emacs editing behaviour:
+
+- Use searchable, sortable lists and preserve selection, filters, and return
+  context. Use foldable Outline sections for structured details.
+- Make the existing major mode's movement and Help predictable, report modified
+  state accurately, and provide undo appropriate to its draft model.
+- Audit existing bindings before adopting familiar save, finish, and cancel
+  conventions. Saving, applying, previewing, and restarting must remain
+  distinct when they have different effects.
+- Retain unfinished drafts on ordinary return. Make destructive discard
+  explicit and keep the existing save-failure recovery behaviour.
+- Keep rare settings reachable through Customize or their specialist editor;
+  record each deliberate exception to a focused menu.
+
+These are proposed follow-on slices, not a completed conversion or an
+authorization to rewrite all editors at once.
+
+For each editor, implement and commit small fixes with focused regression
+coverage. Listening acceptance covers editing, undo, preview interruption,
+save or draft retention, leaving and returning, and recovery after a failed
+save. Preserve selection, filters, sample text, draft identity, and source
+context throughout. The complete voice workflow was accepted on 2026-10-15;
+repeat listening when an editor change warrants it, or as an optional confidence
+check, rather than treating that accepted milestone as unfinished.
+
+Persistence remains owned by existing subsystems. Ordinary defaults use
+Customize; capitalization cues use personal aural rules; voices, palettes,
+and other structured objects use their existing stores; punctuation definitions
+are saved on the Omnivox host. Emacs pronunciation dictionaries use their own
+file. Unsaved drafts remain session state. The implemented Changed settings view
+separates loaded options and retained drafts and identifies storage boundaries.
+Comparing those stores with disk or live host state remains deferred.
+
+The punctuation connection opens the existing character/pronunciation table
+from level/profile selection and preserves drafts on return. Saving and the
+explicit speech-worker restart remain separate. The table remains the editor
+for individual characters.
+
+* Coverage audit, 2026-10-15
+
+This is a source audit of the current interface, not new listening acceptance.
+Checked [[file:../lisp/emacsvox-aural-home.el][Home entries, activation, shortcuts and Help]],
+[[file:../lisp/emacsvox-settings.el][settings/action search]], the [[file:../lisp/emacsvox-aural-menu.el][root and reading/output menus]],
+[[file:../lisp/emacsvox-settings-workflows.el][workflow links]], and [[file:../lisp/emacsvox-settings-integrations.el][integration discovery]].
+Every one of Home's 26 named actions is available through =C-e H a= action
+search, including previously collapsed and shortcut-only actions. Search now
+focuses controls in the new menus without displaying Home. Child-view return
+and retained draft coverage are recorded in the retirement checkpoints.
+The =C-e H /= focused-setting search has a separate catalogue.
+
+** Home action routes
+
+Keys below follow =C-e H=. A Home/search route is retained coverage; a focused
+menu gap means the action has no direct control in the new focused menus.
+
+| Home action ID | Current route | Coverage or remaining review |
+|----------------+---------------+------------------------------|
+| change-feedback | =f c= | Guided draft |
+| browse-voices | =v b= | Voice/engine browser |
+| speech-engine | =v e=; =v S= saves | Existing engine preference commands |
+| speech-rate | =s r= | Scoped rate control |
+| punctuation | =s p e= | Host pronunciation editor; level/profile controls alongside |
+| output-volumes | =o=; =o n= for routing | Focused controls; advanced output options remain in Customize |
+| notification-log | =o n h= | History snapshot; Home retains the original notification viewer |
+| return-source | =b=; action search | Explicit jump to the captured item; distinct from simply closing menus |
+| drafts | =p d= | Direct retained-editor chooser; Home is not displayed |
+| explain | =x= or =f x= | Effective feedback details |
+| remap | =f v= | Named-voice mapping draft |
+| tune-voice | =f t=; action search | Shared named-voice draft; direct return preserves unfinished work |
+| remap-earcon | =f e= | Scoped cue-remapping draft |
+| overrides | =r o=; action search | Combined overview alongside individual rule-layer editors |
+| recent-feedback | =f h= | Frozen feedback review and editing |
+| profiles | =p p= | Profile manager |
+| voices | =v p= or =p v= | Palette manager and its native editing/exchange commands |
+| voice-workbench | =v w= | Existing workbench |
+| features | =r f= | Presentation Options manager |
+| buffer-rules | =r b= | Captured-buffer rule editor |
+| semantics | =r h=; action search | Read-only vocabulary reference with direct return |
+| sounds | =o p= | Sound-pack browser and editor |
+| spatial | =D s=; action search | Capability report returns directly to Diagnostics |
+| spatial-settings | =o n=; Home offers Customize | Focused spatial controls plus advanced settings |
+| training | =r t= | Session toggle with current value and explicit scope |
+| diagnostics | =D d=; action search: Aural Doctor | Direct Doctor return; binding check and repair target Transient |
+
+Home's =engine-modules= shortcut dispatches to Browse voices; =I= remains an
+alias for that browser. The legacy =notifications= activation branch opens
+output Customize, while =notification-log= opens history. Neither alias adds
+a missing named action. Home's refresh, group expansion, help, and source-return
+commands remain local interface operations.
+
+** Settings beyond the Home catalogue
+
+- History policy is already reachable inside =f h=: =L= invokes
+  =emacsvox-aural-set-history-limit= and =i= invokes
+  =emacsvox-aural-toggle-interface-history-recording=. They change session state;
+  Customize owns saved defaults. Lowering the limit immediately discards excess
+  history. The focused route =f H= now states that effect and saves explicitly.
+- =r v= controls visual-face presentation. =r l= now exposes source-local and
+  global Voice Lock separately, preserving their lifecycle. It also links local
+  silence and source/default earcon enablement; only global Voice Lock has a
+  Customize Save in that submenu.
+- Emacs pronunciation dictionaries now appear in both search catalogues and
+  at =s p d=. Define/edit/load/refresh/save/toggle retain their existing store
+  ownership. The widget editor has exact menu return while keeping letters
+  editable and retaining in-memory changes. Template definitions, collection
+  clearing and pronunciation emphasis remain in the original dispatcher.
+- [[file:../lisp/tts-speak.el][tts-set-character-scale]] supports local/global character-rate changes;
+  =tts-add-cleanup-pattern= edits =tts-cleanup-repeats=. Both remain direct
+  commands without a new focused search route. Their variables are not ordinary
+  Customize defaults; establish persistence before adding any Save control.
+- =tts-speech-rate-base= and =tts-speech-rate-step= configure predefined rates;
+  they are not the shifted-arrow menu's adjustment step. Unicode replacements,
+  name transformations, and untouched charsets already have Customize options.
+  Record explicit advanced routes before considering new controls.
+- Duration-coded indentation still uses fixed constants. Configurable duration
+  coding remains a separate design decision; pitch-tone duration is implemented.
+- Integration discovery covers the initial Agent Shell, EAT/comint, Org,
+  Notmuch, and EWW inventory. Package presence gates Customize entries; further
+  package coverage and dedicated integration controls remain separate work.
+- Changed settings covers loaded Emacsvox/TTS/Omnivox Custom options and known
+  retained drafts, with additional runtime rate/session rows. Dictionary stores,
+  unloaded options, arbitrary non-Custom toggles, and disk/host comparisons are
+  outside that snapshot. Broader coverage needs an explicit ownership inventory.
+
+** Repository-wide settings audit, 2026-10-15
+
+Expanded the inventory beyond Home by scanning all 321 tracked Lisp files for
+Custom declarations and setting/toggle commands, then tracing the core speech
+keymaps and candidate gaps against the menus, search catalogues, and linked
+editors. The scan found 221 distinct literal =defcustom= names. This is a
+source-inventory count, not a count of missing controls or all runtime options:
+generated voice settings, minor modes, and ordinary variables also carry state.
+Optional integrations were inspected in source, not loaded into a live profile.
+
+=C-e H /= searches a curated setting catalogue, and =C-e H a= searches Home
+actions. Neither searches every Emacsvox command or option. =C-e H . A= opens
+the Emacsvox Customize group; it is an advanced route, not an inventory loader
+for every optional module. =C-e H . m= opens the source major mode's group,
+which need not contain that mode's Emacsvox speech settings. Group membership
+must be checked before claiming an option is covered by either route.
+
+*** Core-control audit and current coverage
+
+This inventory includes delivered routes and proposed additions. Existing commands remain
+available through =M-x= and, where present, the speech keymap. A command's
+global default is not necessarily a saved startup value.
+
+| Area | Existing command or option | Coverage and proposed treatment |
+|------+----------------------------+---------------------------------|
+| Earcon enablement | =emacsvox-toggle-icons=; =emacsvox-use-icons= | Delivered at =r l=: source, inherit and global-default controls. Separate from volume/pack selection; no Customize save. |
+| Quiet speech | =tts-toggle-quiet=; =tts-quiet= | Add a scoped reading control with an accessible way to restore speech. Buffer-local/global-default session state; stopping current speech is a separate action. |
+| Nonprinting text | =tts-toggle-speak-nonprinting-chars=; =tts-toggle-strip-octals= | Missing reading controls. Existing local/global switches are ordinary variables; retain their interaction and do not invent a Customize save. |
+| Speech chunking | =tts-toggle-splitting-on-white-space=; =tts-set-chunk-separator-syntax= | Advanced reading commands acting on buffer-local separator syntax. Keep distinct from tracked-reading chunk limits. |
+| Column filtering | =emacsvox-speak-line-set-column-filter=; =emacsvox-toggle-speak-line-invert-filter= | Missing reading workflow. Uses its own filter store; see persistence caveat below. |
+| Automatic punctuation policy | =tts-punctuation-mode-policy-alist= | Level/profile and return-to-policy controls exist; editing the mode-to-policy list needs an advanced Customize link. |
+| Message filtering and tooltips | =emacsvox-speak-messages-filter=; =emacsvox-speak-tooltips= | The message on/off control does not cover exclusions or tooltip speech. Add interaction discovery; use the filter's Custom setter. |
+| Emoji speech | =emacsvox-emoji-naming-enabled=; =emacsvox-emoji-custom-names= | Add reading discovery for the emoji group, including approved sequences and maximum count. Customize owns these defaults. |
+| Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Link general table preferences. Agent Shell and Org have separate controls; their integration links do not replace this group. |
+| Voice contrast and preview labels | =omnivox-average-pitch-contrast=; =emacsvox-aural-preview-label-verbosity= | Delivered at =v o=: browsable labels and numeric global contrast, with explicit Customize Save. Distinct from tuning one voice; the contrast setter updates logical voices. |
+| Startup feedback | =emacsvox-speak-ready-message=; =emacsvox-welcome-show-at-startup= | Add advanced interaction discovery; keep the routing timeout separate from announcement enablement. |
+| Mail and background output | =emacsvox-toggle-mail-alert=; =emacsvox-toggle-comint-output-monitor= | Missing context-sensitive controls. Mail spool/interval are Custom options; the two switches are local/global-default session state. |
+| Diagnostic logging | =emacsvox-aural-toggle-diagnostic-logging=; =tts-hide-diagnostic-buffers= | Extend the diagnostics slice with logging and advanced retention options. Diagnostic-buffer naming changes apply after speech restart. |
+| Speech server and language | =tts-select-server=; =tts-set-language=; =tts-set-next-language=; =tts-set-previous-language= | Capability-sensitive discovery only. Server selection restarts speech; legacy language commands refuse Omnivox, whose voice workbench already owns language routing. |
+
+Evidence: [[file:../lisp/emacsvox-keymap.el][speech keymaps]], [[file:../lisp/tts-speak.el][TTS commands and ownership]],
+[[file:../lisp/emacsvox-speak.el][reading, filters and mail]], [[file:../lisp/emacsvox-sounds.el][earcon switch]],
+[[file:../lisp/emacsvox-advice.el][messages and tooltips]], [[file:../lisp/emacsvox-emoji.el][emoji options]],
+[[file:../lisp/emacsvox-table-reader.el][general table reading]], and [[file:../lisp/emacsvox-comint.el][background output]].
+
+The earlier character-scale, repeat-cleanup, Unicode, predefined-rate,
+dictionary, Voice Lock, training, and history findings remain part of this
+inventory. Additional reading options suited to advanced discovery include
+=emacsvox-tracked-reading-max-chars=, =emacsvox-speak-time-format=,
+=emacsvox-speak-time-brief-format=, and =emacsvox-buffer-select-help=.
+The dictionary workflow also has smiley/XML namespace options and date
+pronunciation helpers in [[file:../lisp/emacsvox-wizards.el][the wizards module]].
+
+Important interaction and ownership findings:
+
+- Column filtering loads =emacsvox-speak-filter-persistent-store= and installs
+  an exit hook to persist its filter table. The existing command remembers
+  filters by file or mode. A menu cannot promise that closing without Save
+  discards these edits; explain the existing persistence before linking it.
+- Outside supported terminal buffers,
+  =emacsvox-toggle-inaudible-or-comint-autospeak= invokes
+  =voice-setup-toggle-silence-personality=. This now has captured-source
+  discovery at =r l s=, separate from quiet mode and terminal foreground speech.
+- The existing server chooser changes =tts-program= and initializes speech.
+  It is not the Omnivox engine-preference control already in =C-e H v=.
+  A discovery menu must not run it merely by opening or moving to its row.
+- Quiet and earcon controls affect feedback used to navigate these menus.
+  Listening must check restoration and source-buffer scope before accepting
+  these entries. Source inspection alone does not establish usable feedback.
+
+*** Integration coverage beyond the initial catalogue
+
+Updated on 2026-10-15: the six catalogue entries are Shell/comint, Agent Shell,
+EAT, Org, Notmuch and EWW, all with focused Transients. Comint and EAT expose
+background monitoring directly. Vterm and eterm are not yet recognized by the
+contextual integration selector.
+
+| Integration or workflow | Concrete settings or commands | Proposed treatment |
+|-------------------------+-------------------------------+--------------------|
+| EWW | =emacsvox-eww-inhibit-images= | Resolved on 2026-10-15: exposed directly in the EWW Transient and settings search despite its different Customize group. |
+| Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
+| Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
+| Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
+| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume=; =emacsvox-flyspell-tone-timing=; =emacsvox-flyspell-tone-shape= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, before/alongside timing, tone and reading previews, explicit Save. The draft tone editor at =E= adds waveform and ADSR. Alongside timing passed listening and is the default; saved choices remain authoritative. Tone-editor listening is pending. |
+| Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
+| Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
+| OCR | =emacsvox-ocr-customize=; =emacsvox-ocr-engine= | Link the existing configuration workflow, including scanning and PaddleOCR options; do not make a root entry for every engine parameter. |
+| Media, books and feeds | =emacsvox-m-player-customize=; =emacsvox-empv-custom-filters=; =emacsvox-epub-library-directory=; =emacsvox-feeds= | Specialist discovery candidates, alongside Bookshare, LibriVox, webspace and web-extraction settings. Keep playback/search commands in their own interfaces. |
+
+*** Advanced configuration and deliberate scope boundaries
+
+Prefer explicit advanced links for the following families. Their absence from
+a short everyday menu does not require converting each option into a suffix.
+
+- Sound resource directories and overlay enablement, including
+  =emacsvox-aural-disabled-resource-overlays=; external-player configuration
+  through =emacsvox-play-program=. The existing sound-pack editor remains the
+  route for pack contents and activation.
+- [[file:../lisp/omnivox-engine-settings.el][Engine runtime/model paths]],
+  [[file:../lisp/omnivox-remote.el][remote host, connection and token-file options]],
+  [[file:../lisp/emacsvox-windows-speech.el][Windows launcher/audio defaults]], and component installation policy.
+  These are separate from runtime notification routing and spatial rendering.
+  Keep engine ordering, fallback choices, palettes, and native parameters in
+  their already linked workbench/editors; avoid duplicate owners.
+- Voice fallback policy, transport/negotiation timeouts, unsupported-volume
+  policy, diagnostic retention, and store locations. These need discoverable
+  Customize or specialist routes, not ordinary adjustment arrows.
+- Keymap profile options in [[file:../lisp/emacsvox-keymap.el][the keymap module]], hooks, shell/project helpers,
+  network/service configuration, and startup loading such as
+  =emacsvox-pip-enable=. Selecting an advanced group must not implicitly
+  change bindings, initialize another service, or install components.
+- System mixer, soundscape, and SoX options belong to their respective audio
+  workflows; system volume is distinct from Emacsvox's five output volumes.
+  Application paths, credentials, caches, media libraries, and web/API options
+  remain specialist configuration rather than speech-tuning controls.
+
+Ordinary reading/navigation, search, playback, OCR execution, application
+launching, and buffer editing commands are not settings-migration omissions
+merely because they have no =C-e H= entry. A universal command launcher is
+outside this plan. This audit does not claim to exercise every application
+keymap or every runtime-generated option.
+
+Changed settings is also narrower than this inventory: its option scan uses
+the =emacsvox-=, =tts-=, and =omnivox-= prefixes. Other backend startup-rate
+options, generated voice-font settings, mixer/soundscape settings, ordinary
+variables, unloaded modules, and separate stores are not a complete part of
+that snapshot. Do not use its row count as a migration-completeness measure.
+
+** Outstanding decision: consistent search matching
+
+Open as of 2026-10-15. Decide whether searches across the settings menus and
+linked editors should share case-insensitive matching anywhere in a label,
+including inside words, or continue to follow their individual rules and your
+Emacs completion configuration. Both menu searches use local substring matching
+and aliases; no wider conversion is agreed here.
+
+Input decision accepted on 2026-10-15: Space inserts a literal space in
+=C-e H /= and =C-e H a=; Tab remains available for completion. This prevents
+multiword queries and aliases from expanding before typing is finished.
+The implementation copies the active minibuffer map for each search, retaining
+its other bindings and leaving shared maps and unrelated prompts untouched.
+Substring matching, aliases, and the two-Enter selection flow are retained.
+The broader matching-policy decision remains open.
+
+Current source inventory:
+
+| Search | Location and implementation | Current matching |
+|--------+-----------------------------+------------------|
+| Find a setting | =C-e H /=; =emacsvox-settings-search= | Case-insensitive substring matching over labels and a small alias catalogue. Results retain canonical labels without duplicates. Matching styles are local to this prompt. |
+| Find an action | =C-e H a=; =emacsvox-settings-search-actions= | Case-insensitive substring matching over canonical labels and aliases, including the manual. One result per destination. Accepting a result focuses its menu control; a second Enter activates it. |
+| Retained Home search | =/= after =M-x emacsvox-aural=; =emacsvox-aural-home-search= | Ordinary completion over action names, including collapsed actions. Matching depends on completion configuration; no local substring or case policy. This is outside the ordinary settings-menu route. |
+| Find a physical voice | =/= in the physical-voice browser; =emacsvox-aural-voice-workbench-find-voice= | Locally requests substring/basic completion and ignores case. Searches voice names, engine IDs, languages and voice IDs, within the current engine and explicit filters. |
+| Choose a physical voice | Physical voice field in the editor; =emacsvox-aural-voice-editor--pick= | Ordinary completion over voice names and engine/voice identifiers. Matching depends on completion configuration. |
+| Choose a comparison voice | Compare with B and its Search all engines choice; =emacsvox-aural-voice-workbench-compare= | Ordinary completion. The second prompt broadens the inventory beyond current filters; it does not introduce different matching rules. |
+| Find engine controls | =/= or Search controls in native engine controls; =emacsvox-aural-voice-engine-controls-search= | Literal, case-insensitive substring filtering of labels, identifiers and help across collapsed groups. Empty input clears the filter. |
+| Find available voices | =/= in the download catalogue; =omnivox-catalogue-search= | Literal, case-insensitive substring filtering of voice names, language codes and language names within the selected engine. Empty input clears the search and restores the retained browsing scope. |
+
+Other selection prompts also let you type to find a choice. These currently
+use ordinary completion rather than a shared Emacsvox matching policy:
+
+- Integration selection at =C-e H j a=, implemented by
+  =emacsvox-settings-integrations--all=.
+- Palette/profile and sound-pack choices in
+  [[file:../lisp/emacsvox-aural-voice-palettes.el][palette management]], [[file:../lisp/emacsvox-aural-profiles.el][profiles]], and
+  [[file:../lisp/emacsvox-aural-sound-packs.el][sound-pack management]].
+- Named voices, cues, tones, criteria and other rule choices in the
+  [[file:../lisp/emacsvox-aural-editor.el][rule editor]] and [[file:../lisp/emacsvox-aural-change-feedback.el][guided feedback editor]].
+- Retained-draft choices in [[file:../lisp/emacsvox-aural-home.el][Home]] and draft/review choices in
+  [[file:../lisp/emacsvox-aural-voice-bulk.el][bulk voice editing]].
+
+Keep attribute filters distinct from free-text searches. The voice workbench's
+=F= selects engine, language, gender, quality, health or availability values;
+its =Q= selects a predefined view. The overrides view filters by scope, module
+and semantic role. Their choice prompts use completion, but the resulting
+filters select attributes rather than arbitrary substrings of row text.
+
+Before implementation, decide which searches and selection prompts share the
+policy, which retain configured completion styles, and where aliases are useful.
+Also settle ambiguity and selection behavior: finding/focusing a setting,
+choosing a voice, running a Home action, and filtering a list have different
+effects. Consistent matching must not silently make those effects identical.
+Then add focused regression coverage and listening tasks for candidate speech,
+partial-word matching, cancellation, scope and return. This inventory records
+source behavior; it is not listening acceptance of all these paths.
+
+** Home retirement delivery, 2026-10-15
+
+Completed on 2026-10-15 after listening acceptance. The checkpoints below retain
+the evidence and pending acceptance status at each delivery stage; the final
+retirement checkpoint supersedes those earlier pending states. Dedicated voice,
+palette, rule, sound, and pronunciation editors remain supported buffers.
+
+1. Diagnostics: a focused menu, corrected Doctor binding repair, reports,
+   logging, and direct return. Implemented at =C-e H D=; listening accepted.
+2. Presentation gaps: tune the named voice at point, combined rule overview,
+   training explanations, and semantic reference, with useful Help and direct return.
+3. Remove Home as an intermediate step for action search, retained drafts,
+   source return, and linked editor navigation. Preserve drafts and cancellation.
+4. Verify complete tasks without Home, including the minimum supported Emacs,
+   accept listening, retire its menu entry, and record the dependency decision.
+
+All four slices are complete. Automated checks and listening acceptance remain
+separate; broader settings discovery continues in the queue below.
+
+Diagnostics checkpoint:
+- Doctor's check and explicit repair now target =emacsvox-aural-menu= at =C-e H=.
+- =D d= opens Doctor, =D s= spatial capabilities, and =D m= / =D n= retained
+  local main/notification diagnostics. Reports return to the exact menu item.
+- =D l= toggles session logging, explicitly labelled as complete spoken text;
+  =D A= opens file, size, retention, and buffer-visibility options in Customize.
+  Opening and navigating do not log, save, repair, or restart speech.
+- A reused Help buffer initially retained its Aural return binding and broke
+  later Transient choice Help. The scoped report return now removes that binding.
+- All 13 Doctor tests and 48 graphical settings tests pass from source.
+  The same 48 checks pass against compiled code in fresh graphical Emacs with
+  installed and bundled Transient. Incremental compilation, byte-code preflight,
+  generated references/manuals, and the documentation gate pass. Listening
+  acceptance remains pending.
+
+Presentation checkpoint:
+- =f t= opens the named voice used at the captured item, explaining shared scope.
+  Its editor now honours the existing one-shot menu return after Keep or Discard;
+  Continue editing retains both the draft and the pending return.
+- =r o= opens combined feedback rules, =r h= the semantic reference, and =r t=
+  session-wide training explanations. Each has effect and scope Help, searchable
+  discovery, and direct return where applicable. No implicit saving was added.
+- Source: all 51 graphical settings checks and 51 batch voice-editor checks
+  pass; two layout cases require graphics. Fresh compiled graphical verification
+  passes all 104 settings/editor checks with installed Transient, including those
+  layout cases, and all 51 settings checks with bundled Transient. Incremental
+  compilation, byte-code preflight, and the documentation gate pass. Listening
+  remains pending; broader settings discovery remains in the queue.
+
+Direct discovery checkpoint:
+- =C-e H a= now focuses a destination in the new menus without opening Home.
+  All 26 named Home actions and both search aliases have routes. Like settings
+  search, matching is case-insensitive and accepts substrings; the first Enter
+  selects a destination and the second activates its control. This is an
+  intentional change from Home action search's immediate activation.
+- =C-e H p d= resumes the existing draft chooser directly. It reuses the current
+  draft registry/chooser helpers without displaying Home. Voice drafts preserve
+  their identity and return to the draft entry after Keep or Discard.
+- =C-e H b= explicitly closes menus and returns to the captured source position.
+- Cancelling a multi-draft chooser exposed a suspended-menu gap. The shared
+  opener now restores its menu on cancellation or a failed open.
+- All 54 source graphical settings checks pass. Fresh compiled checks pass all
+  107 settings/voice-editor cases with installed Transient and all 54 settings
+  cases with bundled Transient, without skips. Incremental compilation,
+  byte-code preflight, generated manuals/references, and the documentation gate
+  pass. Listening acceptance remains pending.
+- The retained Home menu and its own search remain available for comparison.
+  Removing that entry follows listening acceptance;
+  this checkpoint does not claim that Home implementation code was deleted.
+
+Editor entry checkpoint:
+- Existing manager/editor h bindings, including Aural Help and installer results,
+  now open Transient settings with the captured source. Closing that menu returns
+  to the editor without saving, discarding, or replacing its draft.
+- Root =C-e H h= and =M-x emacsvox-aural= retain old Home for listening comparison.
+  Retirement of that comparison entry remains the final step after acceptance.
+- The broader Aural suite exposed a pre-existing 34-rule fixture missing four
+  indentation insertion-timing rules. Its explicit expected list now includes
+  those existing rules; presentation policy itself is unchanged.
+- Source verification: 656 Aural/editor/component checks pass; five graphical
+  cases are skipped in batch. Fresh compiled graphical verification passes all
+  111 settings, voice-editor, and component-layout cases, including those five,
+  with installed Transient. All 55 settings cases also pass with bundled
+  Transient. Incremental compilation, byte-code preflight, generated references
+  and manuals, and the documentation gate pass.
+
+Retirement listening checklist:
+1. =C-e H D=: inspect Doctor, spatial capabilities, and available diagnostic
+   output; q returns to the selected item. Opening does not repair or restart.
+2. =C-e H f t=: tune an existing named voice, keep a draft on return, then
+   resume it with =C-e H p d=. Confirm the same voice, sample, and edits.
+3. =C-e H a=: search a partial name such as doctor or packs, select the result,
+   then activate its focused control. q returns directly through the new menus.
+4. In a manager/editor, h opens settings for the captured source; q returns to
+   the editor. =C-e H b= returns to the source position and speaks its line.
+5. =C-e H r=: review combined rules and vocabulary; toggle training on and off.
+   Confirm explanations are useful and the session scope is clear.
+
+Listening accepted on 2026-10-15, including the corrected plain Enter activation
+in the diagnostics menu. That prefix was missing from the settings Enter-binding
+list; Meta-Enter and letter shortcuts worked. Commit =e24e0b172= adds the missing
+prefix and regression coverage for both Enter events, arrow selection, and
+report return.
+All five diagnostics checks pass with source and with current byte-code in
+fresh graphical Emacs sessions using installed and bundled Transient.
+Final Emacs 30.2 retirement qualification found an existing Transient dependency
+gap. The bundled 0.7.2.2 loses context during suspended editor actions and fails
+navigation/search checks. A private build using Transient 0.13.8 passes those
+workflows; the remaining baseline failure was a stale Close-button fixture that
+selected the newly added source-return action. The fixture now navigates to
+Close explicitly. No runtime behaviour was changed to accommodate that test.
+
+Retirement removes the root h suffix and its private opener, checks
+that all former actions remain discoverable, and replaces Home-based manual
+instructions with focused routes. =M-x emacsvox-aural=, shared draft helpers,
+and dedicated editors remain. The =Aural Home= Info node identifier is retained.
+[[file:adr/0027-transient-settings-entry.org][ADR 0027]] records this boundary. The dependency decision requires Transient
+0.13.3 or newer, with explicit rejection of older loaded versions and selective
+activation of installed dependencies for isolated sessions. The upstream
+0.13.3 package passes all 80 menu/settings checks on Emacs 30.2. Package metadata,
+Debian dependencies, and pinned compatibility inputs now express the requirement.
+The adapter's 49 checks pass in graphical Emacs 31, including rejection and
+isolated dependency activation; the batch run skips six graphical cases.
+The pinned Emacs 30.2 build and byte-code preflight pass. Dependency preparation
+passes nine checks, and Debian packaging passes six checks with Emacs 30.2.
+These automated results do not add listening acceptance.
+The retirement passes all 80 menu/settings checks in fresh compiled
+graphical sessions on Emacs 30.2 with Transient 0.13.8, and Emacs 31.0.90 with
+installed Transient 0.13.8 and bundled Transient 0.13.3. There are no skips in
+these runs. Separate byte-code builds and preflights pass; generated references,
+manuals, and the documentation release check pass. The failed bundled Emacs 30
+baseline remains a compatibility finding, not a passing configuration.
+The new routes do not require removing or converting the dedicated editors.
+Broader inventory expansion and search policy outside these two menu searches
+remain separate workstreams.
+
+** Menu-organisation listening checks
+
+Implementation and automated verification are complete. Listening acceptance
+is recorded in the latest baseline checkpoint: tasks 1--4 and 6 below passed;
+task 5, named-voice tuning, still needs a result. In a fresh normal Emacsvox profile:
+
+1. Browse =C-e H= and =C-e H s= with section and item arrows. Check the task
+   order, concise announcements, first-item discovery, and Enter's target.
+   Repeat with each navigation style you use.
+2. Open navigation preferences with =C-e H n= and =C-e H s n=. Read Help,
+   then return with =q= and =C-g=; the invoking item should be selected.
+3. Visit =C-e H s p=, =C-e H o=, and =C-e H r=. Find pronunciation editing,
+   output routing, and the combined rules overview by their sections. Open an
+   editor and return; its own saving rules and the source should stay clear.
+4. Use =C-e S= in the supported integrations. Find Finish by section arrows;
+   check that Back and Close are separate from Save and advanced settings.
+   In Notmuch, browse spoken content, status feedback, reading limits, then
+   defaults. Open a field or cue editor and verify its separate Save is clear.
+5. Open a named voice's tuning menu with =m=. Check scope before adjustments,
+   Preview, Save, and Finish. Adjust with Shift-arrows, preview and stop with
+   =P= and =S=, then return without saving. Verify the draft is retained and
+   Help distinguishes =w= Save and apply from =c= collection saving.
+6. At =C-e H a=, search for =manual=, =recent=, and =explain=. Check that each
+   result is clear, selecting it only focuses its action, and another Enter
+   opens it. The manual should give its opening cue and speech; =q= should
+   return to its selected menu entry. Also try the older action names using
+   your completion frontend. Space should now insert literally; Tab should
+   complete, and Enter should select before a second Enter activates.
+
+Changing the established Save and Stop keys remains a separate decision.
+
+** Presentation and dictionary slices, 2026-10-15
+
+All four slices are implemented: history policy, presentation switches, voice
+presentation options, and Emacs pronunciation dictionaries. History is committed
+as =45cb34b26=, switches as =8ff91f294=, and voice presentation as =37ee83430=.
+The dictionary commit includes the batched user guide and final verification.
+Listening remains deferred; use a fresh normal Emacsvox profile.
+
+- History policy is available at =C-e H f H= and through settings/action search.
+  Enter sets an exact nonnegative limit; Shift-arrows adjust by one. Lowering
+  removes old records immediately, and zero clears and disables history.
+  Interface recording uses the existing lifecycle. Explicit Save writes only
+  the two defaults through Customize; retained feedback stays in memory.
+  All 61 focused settings checks passed in fresh graphical Emacs with compiled
+  code; the two new history checks also passed from source. Compilation,
+  byte-code preflight, generated reference and documentation gate passed.
+  User-guide updates are included with the fourth slice; listening remains open.
+
+- Presentation switches are at =C-e H r l= and in search. Voice Lock exposes
+  source-local and global lifecycle commands, with a separate Save for the
+  global minor-mode default. Captured-item silence reuses the local mapping
+  command and combines its result and cue into interruptible feedback.
+  Earcons have source-local, inherited, and global-default controls; these are
+  session state and are not presented as Customize options. All three new
+  graphical checks passed from source and all 64 settings checks passed with
+  compiled code. Build, preflight, generated reference and documentation gate
+  passed. The fourth slice includes user-guide updates; listening remains open.
+
+- Voice presentation is at =C-e H v o= and in both searches. Comparison labels
+  use an explicit three-choice list; arrows are inert and Enter returns to the
+  invoking control. Omnivox average-pitch contrast uses its Custom setter and
+  live registration, accepts 0 through 2, and adjusts by tenths with Shift-arrows.
+  Explicit Save persists both global options; no palette or named voice changes.
+  Both new graphical checks passed from source; all 66 settings checks passed
+  with compiled code. Compilation, byte-code preflight, generated reference and
+  documentation gate passed. Listening remains deferred.
+
+- Emacs word and phrase dictionaries are linked at =C-e H s p d= and in both
+  searches. Define retains explicit buffer/file/directory/mode scope. Edit
+  opens or resumes the existing widget buffer; fields keep literal letters,
+  =C-c C-c= returns anywhere, and =q= returns outside fields. Opening preserves
+  source pronunciation enablement. Save writes the existing dictionary format,
+  not Customize or Omnivox host data. Load and source Refresh remain separate.
+  Refresh and toggling off replace/remove temporary buffer-only entries; Help
+  states this existing behaviour. Close retained widget editors before loading
+  replacements; their fields are not reloaded. All 69 settings checks passed
+  from source. History adjustment feedback was also shortened to the new limit.
+
+Final automated checkpoint: 154 graphical menu/settings/Transient/Magit/voice
+checks passed in fresh Emacs 31.0.90 with current compiled files and installed
+Transient 0.13.8. All 69 settings checks also passed with compiled files and
+pinned Transient 0.13.3; actual loaded paths and versions were verified. Neither
+run skipped tests. Ten focused regressions cover the four slices, including
+widget field typing, retained edits, exact return, scope, validation and saving.
+
+A concurrent documentation merge required a full byte-code rebuild. Its broken
+Org-heading cross-reference was repaired separately in =11c156f30=. The rebuild,
+final incremental build, byte-code preflight, Org preview, generated reference,
+manual update and non-mutating documentation gate all passed. Generated manuals
+include both the merged documentation and this guide update. The separate
+Emacs 30.2 matrix and normal-host listening remain outstanding.
+
+** Listening for the four presentation and dictionary slices
+
+Accepted on 2026-10-15 for the four tasks below and the separate saved-default
+restart task, with optional global Voice Lock persistence not separately
+confirmed. See the latest baseline checkpoint for the reported scope.
+
+Speech Save wording clarification: the label and Help now state that other
+settings are saved in their own menus. The action still saves only rate and
+punctuation; submenu saving and persistence are unchanged. Five focused speech
+checks passed from source and compiled code in fresh graphical Emacs. Build,
+byte-code preflight and the documentation gate passed. Listening accepted the
+wording clarification on 2026-10-15.
+
+Use a fresh normal Emacsvox profile after the final build:
+
+1. At =C-e H f H=, read Help, adjust the history limit, toggle interface
+   recording, and save only if wanted. Check concise, interruptible feedback
+   and return to the selected History item. Reducing the limit loses entries.
+2. At =C-e H r l=, compare source/global Voice Lock and earcon settings, restore
+   inheritance, and silence/restore a mapped item. Check speech remains usable
+   with earcons off and scope is clear. Global Voice Lock is the only Save here.
+3. At =C-e H v o=, browse label choices and cancel, then choose each and compare
+   physical voices. Adjust pitch contrast and restore the previous value.
+   Check sound, interruption and save/restart behaviour on the normal host.
+4. At =C-e H s p d=, define a temporary entry, then a mode entry. Edit fields,
+   type q, return with =C-c C-c=, reopen and save to a test dictionary file.
+   Load and refresh the source, verify pronunciation, then restore the entry.
+   Check that Emacs dictionaries and Omnivox pronunciation saving stay distinct.
+
+Automated checks exercise text, requests, scopes, files and graphical interaction.
+They do not establish listening acceptance or the acoustic effect of pitch changes.
+
+** Next proposed slices
+
+History controls, scoped presentation switches, voice presentation options and
+Emacs dictionary discovery are implemented above. Remaining work is:
+
+1. Reading discovery: classify character-scale, repeat cleanup, predefined-rate,
+   Unicode, emoji, quiet/nonprinting speech, column filtering, chunking and
+   punctuation-policy settings as focused or advanced controls. Include general
+   table preferences and interaction exclusions. Dictionary template definitions,
+   collection clearing and pronunciation emphasis remain in the existing
+   dispatcher; they are not new focused controls in this slice.
+2. Decide shared search policy using the inventory above. Settings and action
+   searches use case-insensitive substrings and literal spaces; voice pickers
+   and other prompts still need a decision. Preserve each prompt's distinction
+   between focusing, selecting, filtering and activating.
+3. Improve the named-voice editor and browser using their existing major modes,
+   then apply useful conventions to another editor. The dictionary widget editor
+   now has a return link but retains its immediate in-memory editing model;
+   a dedicated draft/Apply model remains future work.
+4. Expand integration and advanced discovery, then finish remaining milestone 5
+   tasks. Verify supported Transient versions with Emacs 30.2 in a separate
+   checkout. Preserve Home retirement and explicit save/apply boundaries.
+
+Listening findings can change editor priorities. These remain workstreams,
+not a fixed completion estimate. This checkpoint adds no listening acceptance.
+
+* Acceptance tasks and development cycle
+
+Use complete tasks as milestones:
+
+- Find an installed voice, audition it, tune a named draft, compare, save,
+  and return to the source item.
+- Distinguish a single capital from an all-caps word, tune each cue, and
+  verify the chosen presentation after saving and restarting.
+- Make coding punctuation more detailed while retaining the prose policy.
+- Reduce notification sounds and verify which output changed.
+- Change feedback for one heading, explain the winning rule, then restore it.
+- Leave an unfinished draft, return later, and resume without losing edits.
+- Find a setting by name or from the current buffer without knowing its key.
+
+Implement one usable path at a time. Run affected tests and real graphical
+checks where focus, layout, or keymaps matter. Build incrementally and verify
+actual loaded paths before listening in a fresh normal Emacsvox session.
+Commit accepted behaviour in small slices. Batch user documentation, generated
+references, and broader checks at accepted milestones or before review.
+Expand checks when shared behaviour changes or a failure warrants investigation.
+
+* Maintaining this plan
+
+When a new setting, cue, missing action, or awkward interaction is found:
+
+1. Add it to the appropriate inventory section, or the findings queue below
+   if its destination is still unclear. Name the concrete behaviour.
+2. Record its existing command, option, cue, or editor when known; otherwise
+   mark that investigation as open. Avoid inventing an underlying setting.
+3. Record applicable scope, persistence, preview, and capability constraints.
+4. Assign a milestone and a small acceptance task. Distinguish proposed,
+   implemented, automatically checked, listening-accepted, and committed work.
+5. Update this document when findings or milestones change. Keep test evidence
+   concise and date completed checkpoints; do not turn it into a command log.
+
+Plan-only discoveries can be recorded without regenerating the public manual.
+The repository's documentation review gate still applies at review checkpoints.
+Keep durable decisions in ADRs and accepted usage in the user manual when the
+behaviour settles. Preserve earlier evidence without treating it as current
+verification of subsequently changed code.
+
+** Findings queue
+
+- 2026-10-16: Menu discovery defaults now put the section heading and position
+  before the item. Detailed descriptions and wrapping within sections remain
+  enabled by default. Saved choices remain authoritative. Home entry adds a
+  short hint for question-mark help and =n= navigation/speech settings; ordinary
+  redisplay and item movement do not repeat it. This supersedes the earlier
+  item-first default. All 51 source graphical checks pass; 52 compiled graphical
+  checks pass, including a real Magit dispatch check of heading-first speech.
+  Incremental compilation and byte-code preflight pass. The shared personal
+  profile and three running sessions use section-first, detailed descriptions,
+  and section wrapping for listening. Restart for the Home hint. The manual
+  and generated reference describe the new default and entry hint; the
+  documentation release gate passes. Listening acceptance remains open,
+  including the separation issue below.
+
+- 2026-10-16: Listening after selecting section-first finds that menu titles,
+  headings, section counts, and items run together. The section heading retains
+  its face mapping to =voice-lighten=, and the count has explicit =voice-annotate=.
+  The opening purpose has no dedicated personality; ordinary item labels use
+  their description's styling or the normal voice. These parts are concatenated
+  with punctuation and spaces, without explicit pauses. The inspected live
+  profile has face presentation enabled and distinct heading/count mappings;
+  audible separation and final synthesis still need verification. Consider
+  short boundary pauses and a distinct menu-title style without slowing each
+  item movement. No speech behaviour changed during this inspection.
+
+- 2026-10-16: Opening a Notmuch reply produced six spelling cues. The speech
+  log showed six separate sound requests; a synthetic reply with real Hunspell
+  reproduced repeated checks of inserted sender names and the subject.
+  Flyspell now keeps checking and highlighting when entering a composition
+  buffer, but suppresses that automatic pass's spelling cues. Ordinary editing
+  retains feedback, with one cue per word and position in each checking pass.
+  All 16 Flyspell checks pass from source and compiled code in fresh Emacs,
+  including reply construction, subsequent mail/text edits, and duplicate
+  checks. Incremental compilation and byte-code preflight pass.
+  The initial documentation review gate found a stale generated manual from
+  separate keyboard-reference and task-lookup changes. Regeneration during
+  spelling-feedback commit preparation resolved that prerequisite.
+  Listening accepted on 2026-10-16 for opening a reply without the cue burst.
+  Ordinary editing cues have automated coverage; listening acceptance for
+  typing and leaving a misspelled word remains open.
+
+- 2026-10-16: Reading a reply attribution can play a spelling cue near the end
+  of the line instead of at the flagged word. In test Emacs PID 719265,
+  dispatch 79 read the attribution; a separate sound request in the same
+  stop epoch waited about 1.04 seconds behind its synthesis. Both sender names
+  had Flyspell overlays and received their mapped voices during speech.
+  A fresh batch reproduction with the same attribution and real Hunspell
+  confirms that moving onto the line checks the first name and emits =help=
+  from Flyspell's post-command check. This cue has no word anchor in the
+  submitted speech.
+  The implemented prototype captures Flyspell overlays into speech strings
+  without editing the source. It places selected tone and earcon actions at
+  flagged words through the existing timeline, retains editing feedback, and
+  suppresses later checker cues for ranges captured in that command. Independent
+  voice, tone and earcon toggles include all-off. Voice defaults retain existing
+  face mappings; voice plus earcon is the initial combination. Settings apply
+  globally for the session, with explicit Save through Customize.
+  =C-e H s f= opens the menu; pitch and duration accept exact values or shifted
+  arrow adjustments. Previews cover the tone alone and a marked word in a line.
+  All 20 non-graphical Flyspell/spelling tests pass in fresh compiled Emacs,
+  including the real checker and all eight presentation combinations on the
+  final timeline. The menu passes source and compiled graphical checks, and
+  all 275 aural regression tests pass. Incremental compilation, byte-code
+  preflight and attribution checks pass. Commit preparation on 2026-10-16 adds
+  the menu guide and NEWS entry and regenerates the manual and public reference.
+  The non-mutating documentation release gate now passes, including the earlier
+  keyboard-reference and task-lookup source updates in the generated manual.
+  Listening remains open: restart the normal profile, read the attribution,
+  adjust and preview the spelling tone, try feedback combinations, and type
+  and leave a misspelled word. No live profile was reloaded.
+
+- 2026-10-16: Tone-volume inspection distinguishes backend capability from the
+  current Emacsvox controls. Omnivox timeline tones have per-action volume,
+  multiplied by the worker's master tone volume. Emacsvox currently sends
+  =1.0= per tone and exposes only the master control. The spelling prototype
+  labels that shared scope; independent spelling volume remains a proposed
+  Emacsvox follow-up, including consistent standalone preview/editing delivery.
+  Omnivox generates sine waves with fixed fades of up to 10 milliseconds.
+  Selectable waveforms and adjustable fades would need a separate backend
+  extension. Prioritize existing per-tone gain before additional synthesis
+  controls. No Omnivox source or protocol changes are included here.
+
+- 2026-10-16: The [[file:../../omnivox/docs/plans/richer-tones.md][Omnivox richer-tone plan]] records proposed delivery slices:
+  individual cue gain, a negotiated tone contract, waveform/envelope generation,
+  Emacsvox presets and editing, then platform and listening qualification.
+  Classic cues and defaults remain unchanged. Fixed total duration with
+  proportionally shortened envelope stages is selected for implementation.
+  Start with spelling, then capitalization and indentation. Client work must
+  cover standalone preview, timeline delivery, retained replay, explicit rule
+  saving and old-server behavior consistently. Patterns and more complex
+  synthesis remain later work. Implementation is authorized; the Omnivox plan
+  records the versioned contract and cancellation handoff. Standalone tone gain
+  is a prerequisite for consistent spelling editing and preview feedback.
+  The first implementation slice adds shared tone types, standalone version 2
+  and timeline version 6 decoders, and compatibility and rejection tests in
+  Omnivox. Shared waveform/envelope rendering and cancellation during generation
+  are implemented. Both new formats now reach playback through the same
+  renderer, advertised together as =rich_tones_v1=. Automated tests cover
+  matching standalone and timeline sound, gain, routing, multipart framing and
+  replacement. The Linux workspace passes 1,187 tests, with two existing
+  qualification/stress tests ignored; formatting, Clippy and documentation
+  checks pass. Full Windows development staging passes for build
+  =a4b085773844514f=, from Omnivox commit =a04e91e=. A fresh native Windows
+  process through the normal launcher confirms capability negotiation and
+  standalone, direct-timeline and multipart-timeline execution using null
+  audio output. This is automated verification, not listening acceptance.
+  Emacsvox now negotiates richer-tone support independently for each worker,
+  including replacement processes. Standalone and timeline tones carry the
+  same frozen gain; original replay retains it. An older worker omits a tone
+  with unsupported gain, preserves speech and records the reason. Exact
+  previews report missing support. Personal rules use schema 11 only when
+  they contain tone volume; older data stays at its existing schema. The
+  first two client slices are committed as =47df2aa1a= and =82d13b353=.
+  Individual spelling volume is now available at =C-e H s f l= and through
+  settings search. It defaults to 100 percent, adjusts in steps of five with
+  Shift arrows, accepts an exact integer with Enter, and saves with =S=.
+  =V= retains its shared main-tone scope. Reading, editing feedback and both
+  previews use the same gain. The graphical check also found and fixed the
+  spelling menu's missing Enter activation binding.
+  Automated verification: 692 shared regressions and six spelling tests pass;
+  79 focused integration checks pass. Four graphical checks pass in a fresh
+  Emacs with current byte-code, covering spelling adjustments and Enter,
+  every search destination, and feedback-detail return paths. A separate fresh
+  Emacs restores the saved volume through Customize. The compiled client and
+  staged Windows runtime complete standalone and timeline gain checks on
+  both workers, after reconnect, and through retained replay, using null audio.
+  The existing runtime is reused; no Omnivox rebuild is needed for these
+  client-only changes. Lisp compilation and the documentation gate pass.
+  A combined 805-test run has 770 passes, 34 graphical skips and one
+  order-dependent failure: =emacsvox-indentation-menu-feedback-replaces-main-speech=
+  cannot resolve =select-object= in =chimes=. That test passes alone. A broader
+  optional-integration run also exposes the same cue-fixture issue in the
+  earcon replacement preview, which passes alone, and an outdated default-rule
+  count in =emacsvox-aural-tools-disabled-rules-stay-valid-but-inactive= (38
+  expected, 40 actual; the existing two spelling rules are absent from its
+  expected list). These test-maintenance findings remain open. None of the
+  automated checks establishes listening acceptance.
+  Listening remains open in a fresh normal profile: compare =b= and =SPC=
+  at 100, 50 and 0 percent; check a flagged word during reading and editing;
+  confirm other main tones retain their level; check interruption, Help,
+  return focus and saved volume after restart. Restore the original settings.
+  No live session has been changed. Next is the reusable tone editor described
+  below, followed by capitalization and indentation controls and platform
+  qualification.
+
+- 2026-10-16: Spelling volume adjustments passed listening. Reading several
+  flagged words sounds stop-start with inserted tones; the test session uses
+  85 ms tones, voice and earcon feedback off, and runtime =a4b085773844514f=.
+  A global Timing choice at =C-e H s f m= now offers Before speech and Alongside
+  speech, with explanations, browse-without-apply, Enter to select, and Cancel.
+  Before speech remains the default. Save includes timing through Customize;
+  settings search includes the control. The new overlay rule keeps the same
+  spelling action identity for existing action-specific overrides.
+  Automated verification passes seven focused source checks, 692 shared
+  regressions, and two fresh graphical checks covering timing, Help, cancellation,
+  return focus and spelling search routes. A fresh compiled Emacs restores the
+  saved timing. Muted native Windows checks complete both timing modes in
+  standalone and timeline delivery on both workers, after reconnect and in
+  replay. The selected runtime is reused without rebuilding Omnivox.
+  The default-rule inventory test now includes all three spelling rules,
+  resolving its outdated-count failure recorded above. The separate test-order
+  cue-resolution finding remains open. Listening for timing is pending:
+  select Alongside speech, read the same sentence, compare Before speech,
+  check Help, cancellation and return focus, then save and restart if desired.
+
+- Tone-editor implementation checkpoint, 2026-10-16: Alongside speech passed
+  listening and is now the factory spelling timing default. Saved Before
+  speech choices remain authoritative. The reusable draft editor starts at
+  =C-e H s f E=. Waveform and envelope data are validated and frozen for
+  reading, editing, preview and replay. Personal rules containing shape use
+  schema 12; existing schemas and unshaped tones retain their contracts.
+  Shared tone support is committed as =43c750173=.
+  Draft adjustments and previews leave live settings alone; Apply changes
+  the session, Save and apply persists tone defaults through Customize, and
+  Back discards unapplied edits. Reset changes only the draft. All controls
+  and choices have Help. Automated checks pass: 698 shared source tests,
+  nine focused editor/spelling tests, three fresh graphical checks, a private
+  Customize save/restart, full byte-code rebuild plus incremental final build,
+  header validation and regenerated manual/reference review. Graphical checks
+  cover choice browsing, first-Enter activation, numeric adjustment, Help,
+  cancellation, discard, Apply, reset, search and return focus. Muted native
+  Windows checks pass Classic, triangle and square/ADSR in both timing modes,
+  standalone and timeline delivery on both workers after reconnect, using
+  runtime =a4b085773844514f= without rebuilding Omnivox. Historical speech
+  replay also passes there; source tests cover frozen tone-shape replay. No live session or
+  personal defaults were changed.
+  An expanded 814-test run passed 778 and skipped 35 graphical tests; the one
+  failure remains the previously recorded indentation-menu test-order cue
+  resolution issue. The affected three graphical checks passed separately.
+  Editor listening remains pending: compare waveforms and ADSR stages at a
+  comfortable individual volume; try a longer duration to hear the stages;
+  check tone/sample preview, Stop and navigation interruption, Back/discard,
+  Apply, Save and restore after restart. Automated completion is not listening
+  acceptance.
+
+- Tone-editor preview correction, 2026-10-16: Space plays the draft tone
+  alone; =b= remains an alias and capital =P= reads the optional spelling
+  sample. Timing stays in Spelling feedback at =C-e H s f m=. The editor
+  neither stores timing in its draft nor changes or saves it through Apply,
+  Save or Reset. The sample uses the current spelling timing. Alongside
+  remains the factory default.
+  Automated verification passes nine focused source tests and three fresh
+  compiled graphical checks, including Space, sample playback dispatch,
+  choices, Help and return focus. The two graphical tests skipped in batch
+  passed in that graphical run. A private Customize save/restart preserves
+  separately saved timing and restores the edited tone. Incremental byte-code
+  and regenerated manual/reference checks pass. Listening remains pending:
+  press Space at =C-e H s f E= and confirm that only the tone plays; compare
+  with capital =P=, then check Stop and navigation interruption.
+
+- Tone presets and comparison, 2026-10-16: the editor's Preview section
+  precedes Presets, so listening controls follow the adjustments before
+  preset management. =L= opens a browsable preset list; Enter loads only
+  the draft and Cancel preserves it. Each choice has
+  Help. =N= saves a named copy through Customize without applying the cue;
+  replacing a personal preset asks first. =C= plays the current applied tone
+  for comparison with Space's draft. Ten focused source checks and three
+  fresh compiled graphical checks pass, including first-item focus, browsing,
+  Help, cancellation, loading and existing Apply/discard behaviour. Byte-code
+  and regenerated manual/reference gates pass. Preset character and audible
+  comparison still need listening acceptance.
+
+- Tone extensions accepted for implementation, 2026-10-16: add named presets
+  and draft/current comparison first, then bounded pitch sweeps, linear or
+  exponential envelope curves, Pulse with 5–95 percent width and Sawtooth.
+  Timing relative to speech remains outside the tone editor. Pulse width uses
+  Shift arrows in five-point steps and exact Enter input; only Pulse uses it.
+  Keep old wire formats strict, negotiate extensions per worker, preserve
+  Classic audio and interruption, and qualify the paired development runtime.
+  Automated verification and listening acceptance remain separate.
+
+- Tone extensions implemented, 2026-10-16: Pulse width, Sawtooth, linear pitch
+  sweeps and linear/exponential ADSR curves are available in the spelling
+  editor at =C-e H s f E=. Width uses =u=, sweep =t=, end pitch =f= and curve
+  =k=. Help explains their dependencies; Space remains tone-only. Personal
+  presets retain the complete draft. Extended personal tone rules use schema
+  13; older rules and protocol formats remain supported.
+  Automated verification passes 61 focused source tests, with two graphical
+  tests skipped in batch and covered by three passing fresh compiled graphical
+  checks. Earlier shared coverage passed 702 tests. A private Customize
+  save/restart restores the extended shape and preset without changing timing.
+  Native Windows runtime =c7a933a8824837b6= passes muted standalone version 3
+  and timeline version 7 delivery in both timing modes, both workers and after
+  reconnect, plus historical speech replay. Native verification exposed a
+  missing version-7 marker guard; the correction has source regression coverage.
+  Full byte-code rebuild and regenerated manual/reference checks pass.
+  The normal launcher now selects this runtime; existing Emacs processes keep
+  their current workers. Listening remains pending: compare Pulse widths,
+  Sawtooth, rising/falling sweeps and ADSR curves; check Stop, interruption,
+  draft/current comparison, Apply and saved defaults in a fresh session.
+
+- Tone preview and settings hints, 2026-10-16: tone-only spelling previews
+  now use urgent delivery after capability validation. Space in the tone
+  editor, current-tone comparison and the parent tone preview interrupt main
+  speech before the tone is sent; notification speech stays independent.
+  A regression reproduced ordered delivery with no stop, then passed with
+  the main-lane stop preceding the tone. Unsupported previews leave speech
+  alone. Audible interruption still needs listening acceptance.
+  The settings-menu arrow audit removes blanket adjustment hints from menu
+  openings and mixed sections. Waveform, envelope, curve and integration
+  choice summaries no longer include arrow instructions. Numeric controls
+  announce their actual Shift-arrow step, including Duration and ADSR stages,
+  spelling, capitalization, line cues, indentation, speech/output, spatial
+  separation, phonetic delay, voice tuning, history and integration limits.
+  Automated verification passes 55 focused batch tests; eight graphical tests
+  skip in batch. Eight separate fresh compiled graphical checks pass,
+  including the two skipped spelling/editor checks and the changed output and
+  indentation descriptions. The other six general navigation checks were not
+  repeated graphically. Incremental byte-code and the documentation review gate pass.
+  Private Customize save/restart checks restore all nine values saved by
+  Spelling feedback's =S= and the extended tone saved by the editor's =W=.
+  The tested normal profile loads its Customize file, which currently contains
+  no spelling values. The reported restart loss is not reproduced; confirm
+  which Save action was used. In the editor =S= stops, =W= saves and applies,
+  and Back discards an unapplied draft. No personal defaults were changed.
+
+- Spelling switch persistence check, 2026-10-16: a fresh compiled graphical
+  regression opens Spelling feedback, toggles Voice, Tone and Earcon, enters
+  the tone editor, returns, and presses the parent's actual =S= binding.
+  Both tone-only =(nil t nil)= and the factory combination =(t nil t)=
+  survive separate Emacs starts with Customize loaded before or after the
+  menu libraries. Menu labels reflect the restored values. Eleven focused
+  batch tests pass; three graphical checks skip in batch. The new graphical
+  check passes separately; the other two retain their earlier passing runs.
+  The documentation review gate passes. The open test session has tone-only
+  values but no saved spelling properties, and its writable Customize file
+  contains no spelling entries. Its =S= binding resolves to the expected
+  save command. The reported loss remains unreproduced; check the feedback
+  and file after an actual =S= press in that session. Personal defaults remain
+  unchanged by the tests.
+
+- Spelling save failure resolved, 2026-10-16: the normal local launcher uses
+  =-q= and loads the profile explicitly, leaving =user-init-file= nil.
+  Customize therefore treated saves as temporary even with =custom-file=
+  configured. Core speech advice silenced that warning, and menu commands
+  announced success. The earlier isolated tests supplied an init identity,
+  so they did not reproduce this startup condition.
+  The local =~/.emacsvox.d/init.el= now records its init identity after loading
+  the configuration and existing Customize file. Core save advice checks
+  Customize's save eligibility before silencing messages or changing saved
+  properties; an uninitialized session now reports an error instead of
+  reaching the menu's success announcement. This protects all settings menus
+  using the same Customize path.
+  The warning identifies the =-q= option in your startup as a possible cause
+  and explains that you should restart with your usual configuration and save again.
+  The missing-init regression fails before the fix and passes afterward.
+  Twenty-one focused batch tests pass; three graphical tests skip in batch.
+  The updated graphical spelling test passes separately, covering refusal
+  without a false success announcement and actual =S= save/restart afterward.
+  Two fresh batch Emacs runs using a private copy of the real profile restore
+  Voice off, Tone on and Earcon off. Speech transport is muted in this check;
+  listening acceptance remains open. Incremental byte-code, preflight and
+  the documentation review gate pass. No personal defaults were saved, and
+  running sessions were not modified. Restart to load the corrected profile,
+  then repeat the setting, Save and restart check.
+
+- Transient item review trial, 2026-10-16: =C-e l= repeats the selected item's
+  description, value and key; =M-f= and =M-b= review its words, and =C-e w=
+  repeats the current word. The first word command starts at the first word.
+  Review keeps menu focus and Enter's target unchanged. Selecting another
+  item, changing its text or reopening the menu resets review; repeating the
+  whole item also starts word review over. Word boundaries use whitespace
+  so punctuation and numeric values stay together. Boundary feedback says
+  "Start of item" or "End of item" without wrapping. All review speech uses
+  the existing interruptible main-lane path.
+  Bindings apply through the shared Transient navigation map, with each
+  menu's suffixes retaining precedence. Installed Transient and Magit sources
+  show no conflicting suffixes for these keys. Regression coverage checks
+  precedence explicitly. Forty-six source tests pass; six graphical tests
+  skip in batch and pass in a fresh compiled graphical run. That run also
+  passes settings-menu review, adjustment, Enter and return checks, plus
+  review in Magit dispatch, across all three navigation styles: eight
+  graphical tests in total. Incremental byte-code, preflight and the
+  documentation review gate pass.
+  Listening remains open: repeat an unclear item, review forward/backward,
+  check interruption and boundary feedback, then adjust or activate the same
+  item. Character review follows below; spoken full Help remains open. Defer the
+  maintained manual update until the trial's bindings and behaviour settle.
+
+- Transient character review trial, 2026-10-16: =C-f= and =C-b= review the
+  next and previous characters; =C-e c= repeats the current character.
+  These keys share the existing word review position. Moving to a word puts
+  review at its first character; =C-e c= reads it and =C-f= advances from
+  there. The first character command on a newly selected item starts at its
+  first character. Repeating a word leaves the character position intact.
+  Spaces, punctuation, digits and Unicode characters use the existing spoken
+  character names. The shared table's incorrect capital-N name is corrected
+  from "cap m" to "cap n". Boundary feedback, interruption, item selection,
+  adjustments, activation and menu-key precedence are retained.
+  Forty-seven source tests pass; six graphical checks skip in batch and
+  pass in the separate graphical run. All eight graphical checks pass with
+  both source and compiled code, including settings and Magit in all three
+  navigation styles. Three focused review tests also pass in a fresh compiled
+  batch Emacs. Numeric minibuffer entry retains normal =C-f=/=C-b= editing.
+  Incremental byte-code, preflight and the documentation review gate pass. Listening remains
+  open for character clarity, word/character transitions and interruption.
+
+- Transient character speech follow-up, 2026-10-16: review now uses normal
+  character speech instead of converting capitals into literal "cap" text.
+  Native letter delivery preserves the configured capitalization presentation.
+  The existing delayed phonetic mode and delay also apply to the separate
+  review cursor. Its pending description is checked against the menu, review
+  position and rendered text, and cancels on further input, speech, Stop or
+  disabling the mode. Menu selection and Enter's target stay unchanged.
+  Source checks pass: 65 tests, with six graphical checks deferred to the
+  graphical run. All nine compiled graphical checks pass, including settings
+  and Magit menus; 21 focused compiled batch checks also pass. Incremental
+  byte-code, preflight and the documentation review gate pass. Coverage includes
+  the native uppercase-letter protocol,
+  configured capitalization modes, ordinary character feedback and stale
+  phonetic cancellation. Listening acceptance remains open for the capital
+  pitch cue and phonetic description after the configured pause.
+
+- Transient review boundaries and shortcuts, 2026-10-16: =C-a= moves review
+  before the current item's first word and character; =C-e= moves after its
+  last word and character. They announce "Start of item" and "End of item".
+  Moving inward then reads the first or last element. Ordinary character and
+  word movement now uses these same boundary positions, fixing the skipped
+  element when reversing direction after a boundary announcement. Repeated
+  outward movement stays at that boundary, and switching review units keeps
+  the position consistent. Menu selection and Enter's target do not move.
+  The former =C-e= review prefix moves to =C-c=: =C-c l= repeats the item,
+  =C-c w= repeats the current word and =C-c c= repeats the current character.
+  Menu-specific bindings still take precedence. Both boundary regressions
+  fail before the fix and pass afterward. All 48 applicable source checks
+  pass. Nine compiled graphical checks pass, including the six batch skips
+  and real settings/Magit menus. Four focused compiled checks cover boundaries,
+  key precedence and phonetic cancellation after resetting review. Incremental
+  byte-code, preflight and the documentation review gate pass. Listening acceptance
+  confirmed the new shortcuts and reversal at both ends on 2026-10-16.
+
+- Shared diagnostic log lock prompts, 2026-10-16: multiple normal-profile
+  sessions append to the same aural submissions log. Emacs's =write-region=
+  took an editing lock during these background appends, allowing concurrent
+  logging to stop speech behind a lock-conflict question. The logger now
+  binds =create-lockfiles= to nil only during its file operations. Normal
+  editing protection and another session's existing lock remain intact.
+  A regression holds the log lock in a separate Emacs process and checks
+  initial creation, ordinary append and rotation. It reproduces the old
+  failure and passes with the fix, including owner-only permissions and
+  normal lock conflict detection outside logging. All five focused diagnostic
+  tests pass from source and in a fresh Emacs using compiled code.
+  Incremental byte-code, preflight and the documentation review gate pass.
+  Existing sessions retain their
+  loaded logger until restarted; no live locks or buffers were modified.
+
+- Flyspell navigation feedback, 2026-10-16: moving to an empty line could
+  recheck a known error on the preceding line and play another spelling tone
+  after the normal blank-line cue. Automatic checks with no pending edits now
+  keep existing highlights without repeating their detection alerts. Reading
+  tones, first detections and edited-word feedback remain available. A real
+  Hunspell regression reproduces the extra cue before the fix and passes
+  afterward. All 18 Flyspell source tests and 11 spelling/tone source tests
+  pass. Four focused compiled graphical checks pass, including the regression
+  and the three spelling/editor checks skipped in batch. Incremental byte-code,
+  preflight and the documentation review gate pass. A broader graphical run
+  encountered unrelated mail-mode audio setup failures; those tests pass in
+  batch. Listening acceptance remains open in a fresh normal profile.
+  Character entry was corrected in a separate follow-up slice. With no pending
+  edits, character movement cues the flagged word under point when entering
+  from outside its range: the first letter going forward or the last letter
+  going backward. Adjacent spaces and movement inside that word stay quiet.
+  Both spelling tones and earcons follow this rule; their saved switches and
+  voice feedback remain unchanged. All 19 Flyspell source tests pass, including
+  a real Hunspell regression covering both directions and both cue choices.
+  Five focused graphical checks pass with compiled code. Incremental byte-code,
+  preflight and the documentation review gate pass.
+  Listening still needs to confirm blank-line and character-entry feedback.
+
+- Tone-editor follow-up: the common draft editor is implemented for global
+  spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
+  attack, decay, sustain and release join pitch, duration and individual volume.
+  Fixed duration and proportional stage shortening follow the existing
+  Omnivox renderer. Opening and previewing write nothing. Apply changes the
+  session; Save and apply persists tone defaults; Back discards unapplied
+  edits. Reset affects only the draft. Timing and shared volume stay outside
+  this editor.
+  Named presets and current-tone comparison are implemented. After listening
+  acceptance, reuse the editor for capitalization, indentation and personal
+  tone rules while preserving each
+  destination's scope and saving contract. Capitalization/line-cue retained
+  drafts and rule saving are not converted by this slice. Platform listening,
+  envelope clarity at short durations, interruption, speech masking and
+  relative waveform loudness remain separate qualification work.
+
+- 2026-10-15: The Transient dependency follow-up resolves the recorded build
+  and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to
+  stale-bytecode detection; 26 source startup checks and five compiled setup
+  checks pass. Compatibility passes all 302 checks on Emacs 31 and 301 on
+  Emacs 30.2, with only the native-DOM comparison skipped there.
+  Commit =16792f226= registers Transient's macro expansion during Debian
+  autoload generation. All six packaging tests pass on both Emacs versions,
+  including interactive autoloads that do not eagerly load menus.
+  Debian CI now builds with Emacs 31.1 and tests installation on Ubuntu 26.10.
+  The real container run uses Emacs 30.2 and system Transient 0.13.7; install,
+  isolated settings loading, reinstall, purge, and personal-file preservation
+  pass. Ubuntu 26.04's stock Transient 0.12.0 remains unsupported; its source
+  route needs the documented package-manager upgrade. No extra apt repository
+  or relaxed version requirement is introduced.
+  The source archive from =16792f226= also passes isolated installation,
+  byte-code verification, fresh startup, offline help, and remote-helper checks
+  with Emacs 31.0.90. CI selects the stable 31.1 toolchain for this route.
+  Commit =982e17878= completes the pulled manual navigation update with the
+  matching Info menu, external Info links, and generated artifacts. The full
+  rebuild, byte-code preflight, and documentation gate pass. These automated
+  checks add no listening acceptance and preserve the earlier voice-workflow
+  acceptance. Repeating that task is optional unless relevant behaviour changes.
+- 2026-10-15: Listening tasks 1 through 9 are accepted; see the current baseline
+  and completed milestone checkboxes. Integration discovery remains open after
+  Customize did not open from scratch, Magit and shell. Source inspection shows
+  =j c= is unavailable for scratch, Magit and ordinary shell/comint: none has
+  an entry in the current Customize catalogue. Comint has only the =j s= local
+  autospeak control. =j a= is the separate chooser for supported integrations
+  from any source buffer. The follow-up test of =C-e H j a= and Org tables
+  succeeded, resolving the reported chooser issue. The unsupported-buffer route needs to
+  make the alternative clear; no new integration group is implied by this report.
+  Three focused checks passed in fresh graphical Emacs with current compiled
+  code, installed Transient and Vertico, and Emacsvox completion advice. They
+  cover the all-integrations chooser, Org Customize return, and local comint
+  control; speech delivery was stubbed. The confirmed chooser route has listening
+  acceptance; other integration paths remain to be tried. Focused Transient
+  menus for integrations are now planned in the integration inventory above.
+- 2026-10-15: Settings search now matches anywhere in labels and a small alias
+  catalogue, ignoring case independently of the surrounding completion styles.
+  =cap= finds the indication/camel-case entry and both beep controls;
+  =caps beep= finds both beeps; =allcaps=, =allcaps beep=, and =all caps= find
+  All-caps beep. Results retain their normal names without duplicate alias
+  rows. Ambiguous queries retain the prompt until a destination is chosen.
+  Matching rules are local to this search; the existing completion frontend
+  and other prompts retain their configuration. Selection still focuses a
+  control without activating it or writing settings.
+  Nine focused checks passed from source and compiled code in fresh graphical
+  Emacs with installed Transient, with no skips. They cover substring/alias
+  matching, mixed case, ambiguity, literal punctuation, completion isolation,
+  real keyboard selection, source/scope, cancellation, and return. Incremental
+  compilation and byte-code preflight passed. The manual includes examples.
+  Listening accepted on 2026-10-15 in the test Emacs: =pitch= announces its
+  single Indentation pitch and duration result; =cap= supports Up/Down
+  navigation among the three matches and Enter selection. With one match,
+  arrows have no other result to select. This acceptance covers these search
+  interactions; consistency across other searches remains an open decision.
+- 2026-10-15: Listening feedback finds partial-name settings search unclear.
+  =C-e H /= uses ordinary completion over fixed labels, then opens and focuses
+  a control without activating it. Search now ignores capitalization for both
+  completion and accepting a typed name, without changing completion elsewhere.
+  A regression reproduced lowercase =cap= failing before the fix. Seven focused
+  checks passed for that case-only change from source and byte-code in fresh graphical Emacs using
+  installed Transient, including partial completion, mixed-case acceptance,
+  focus, cancellation, return, and no activation or saving on selection.
+  Incremental compilation and byte-code preflight passed; the manual explains
+  the two Enter actions. Later substring-search listening acceptance is recorded
+  above.
+- 2026-10-15: Aural Doctor still checks =C-e H= against =emacsvox-aural=,
+  and its binding repair restores that old Home command. Its =h= key also opens
+  old Home. An isolated graphical probe with source and compiled settings code
+  confirmed that action search opens =*Aural Doctor*=, then =q= returns to Home
+  and a second =q= restores Transient. The entry link works; the current route
+  retains Home as an intermediate return step. Correct the stale check/repair
+  and add direct menu return in the diagnostics slice, with regression coverage.
+  Merely opening Doctor does not change bindings. Doctor is unchanged here.
+- 2026-10-14: Arkadiusz's navigation feedback motivates an additional
+  =by-movement= announcement option: section arrows speak only the destination
+  section, while item arrows speak only the item, including continuous section
+  crossings. Select it with =C-e H s n m= and save through Customize with =S=.
+  The existing item-first default, other modes, navigation, selection, semantic
+  facts, and cues are unchanged. Speech remains interruptible. Implemented and
+  automatically checked; listening acceptance remains open.
+  Source checks passed 110 tests. Fresh graphical Emacs checks of compiled code
+  passed 110 with installed Transient (including real Magit navigation) and 109
+  with bundled Transient, with no skips. These cover all three navigation styles,
+  section crossing/wrapping cues, switch values, Enter activation, and Customize
+  saving. Incremental compilation and byte-code preflight passed. The manual
+  now explains selection, saving, and the first-item discovery caveat.
+  The isolated commit slice passed 106 graphical checks, a fresh byte-code
+  rebuild, and the documentation review gate; generated references are current.
+- Interaction caveat: section arrows still select the first item. Section-only
+  speech therefore leaves Emacsvox menus' Enter targeting an unspoken item, and
+  the next Down advances to the second item. =C-u 0 <down>= reads the selection
+  without moving in all three styles, including a one-item section with stopping
+  navigation. Magit's existing activation bindings are preserved. The first-item
+  discovery and activation experience still needs listening feedback. Changing
+  landing or first-Down behaviour is a separate decision, outside this
+  announcement-only change.
+- 2026-10-14: Indentation pitch tuning is ready for listening at =C-e H s i t=.
+  Shift-left/right adjusts the selected numeric control; Enter or its letter
+  enters an exact value and retains focus. Space previews four-column pitch
+  feedback without changing the chosen presentation or enablement; =s= stops.
+  =R= restores the four bundled values in the displayed scope without saving.
+  Scope is shared with the parent menus. Global changes preserve local overrides;
+  =S= saves global indentation defaults and tone volume through Customize.
+  The preview uses displayed parameters, including global values when the
+  source has local overrides. Short requested durations show the effective
+  blank-line tone minimum.
+  Forty-seven focused checks passed from source and compiled code in fresh
+  graphical Emacs; compiled checks covered installed and bundled Transient,
+  with no skips. Coverage includes bounds, preview facts, interruptible feedback,
+  exact-entry focus, shifted arrows, parent return, and saved startup values.
+  Incremental compilation and byte-code preflight passed. Listening acceptance
+  remains open, especially useful step sizes and the preview's duration floor.
+  The manual and generated references cover these controls; their review gate
+  passed. A broader compiled graphical check passed 114 tests, including
+  interaction and Magit. Line and boundary cue controls remain separate.
+
+- 2026-10-14: The full voice editor defaults to automatic samples. The focused
+  tuner starts with explicit previews while preserving that editor preference.
+- 2026-10-14: Keep physical experiments and per-fallback/native controls in
+  the full editor for now. The first focused tuner owns shared named-voice
+  adjustments only and rejects a changed editing scope.
+
+- 2026-10-14: Returning from the voice workbench to a suspended menu must
+  still announce staged engine-policy changes. Implemented in the milestone 2
+  prototype; verify the warning during listening.
+
+- 2026-10-14: Caps beep and all-caps beep need distinct discoverable entries.
+  Confirmed existing cue resources; assigned to milestone 3 above.
+- 2026-10-14: Punctuation-level selection does not cover the existing
+  pronunciation editor. Retain both routes; assigned to milestone 3.
+- 2026-10-14: Inventory must include non-Customize toggles and rule-owned cues.
+  Complete the audit during milestone 1 and extend it as integrations are visited.
+- Open: determine which remaining settings need a dedicated preview, which
+  have useful scope choices, and which remain best served by Customize.
+- Open: audit preview, stop, and save keys across existing voice and sound
+  editors before applying common menu conventions to those interfaces.
+
+** Five-slice delivery checkpoint, 2026-10-14
+
+- Interaction controls committed as =c51ea23f4=; indentation tuning and the
+  documentation checkpoint committed as =25ff6d126=. Listening remains open.
+- Line and boundary cues are implemented at =C-e H o c=. Five line-tone kinds
+  have retained pitch/duration drafts; warning and large-movement earcons have
+  replacement drafts. Preview, silence, bundled reset, discard, and explicit
+  personal-rule saving preserve unrelated rules. Boundary earcon changes affect
+  all uses of the named cue; labels state this scope. Fifty focused source
+  checks passed, including graphical return, actual resolved output, save/reload,
+  silence/reset, and conflicting-save protection. Listening remains open.
+
+- Line and boundary controls committed as =b3236460c=. Fifty focused compiled
+  checks passed; compilation, documentation review, and headers passed.
+- Notification and spatial settings are implemented at =C-e H o n=. Routing
+  changes apply on explicit speech restart; Save is separate. The active-output
+  preview does not claim to audition a pending route. History is a snapshot with
+  menu return. Spatial enablement, speech/cue switches, mono/automatic output,
+  mapping, and bounded separation use existing global Customize options.
+  Left/right cue previews compile through existing spatial policy. Listening on
+  actual output hardware, notification routing after restart, and stereo
+  capabilities remain acceptance tasks.
+  Fifty-three focused source and compiled graphical checks passed. Compilation,
+  byte-code preflight, documentation review, and header checks passed. Automated
+  restart tests use a stub; they do not establish actual hardware routing.
+
+- Notification and spatial controls committed as =0597fe553=.
+- Pronunciation editing is linked at =C-e H s p e=. Return and Help preserve the
+  draft and editor row; returning focuses the same menu entry. Direct reopening
+  updates the parent rather than retaining a stale menu callback. Saving host
+  pronunciations, restarting speech, and saving a level/profile remain separate.
+  Sixty-one source checks passed, including two graphical editor/menu checks;
+  the optional native-service round trip was skipped because its test program
+  was not configured. Listening and a real host save/restart remain open.
+
+- Pronunciation linking committed as =dfa0a4400=. Sixty-one compiled graphical
+  and editor checks passed; compilation, preflight, and documentation gate passed.
+- Settings discovery is implemented: =C-e H /= finds and focuses a control,
+  =C-e H a= searches the maintained Home action catalogue, and =C-e H .= opens
+  current-buffer settings. Search does not activate the selected setting. Scope,
+  source position, cancellation, parent return, and the source mode's actual
+  Customize group have graphical coverage. Linked Customize buffers retain
+  their own Apply/Save commands; =q= finishes normally and returns to the menu.
+  The existing root Close section stays in its original position. Specialized
+  integration menus and a comprehensive changed-settings view remain later work.
+  The combined source run passed 139 tests. Fresh graphical Emacs loaded the
+  repository's compiled modules and passed 139 tests with installed Transient
+  (including Magit) and 138 with bundled Transient, with no skips in those
+  selected runs. The optional punctuation native-service round trip remains
+  excluded after its earlier environment skip. Incremental compilation,
+  byte-code preflight, generated documentation review, and header checks passed.
+  All five slices are implemented; listening acceptance, real notification
+  routing after restart, and real host pronunciation save/restart remain open.
+
+** Six workflow slices, 2026-10-15
+
+- Contextual feedback is linked at =C-e H f=: effective explanations, guided
+  voice/cue/tone changes, voice mapping, scoped cue remapping, and recent frozen
+  feedback. Existing preview/apply/save and draft semantics remain in their
+  editors. Graphical regression verifies draft preview without persistence,
+  exact menu return, and stale-source refusal. Fifty-seven source checks passed.
+  Listening acceptance remains open.
+
+- Presentation and rule editing is linked at =C-e H r=. Scope is explicit before
+  opening an editor; its existing preview, validation, save, and discard behavior
+  remains authoritative. Global visual-face presentation has a separate explicit
+  Customize save. Contextual feedback committed as =3f246446f=; its 57 source and
+  compiled graphical checks, build, documentation, and header gates passed.
+
+- Saved setups is linked at =C-e H p=: profile inspection and activation,
+  palette inheritance/reset and exchange, and the existing retained-draft
+  chooser in Home. Portable export and full local backup remain distinct;
+  importing does not activate a palette. Tests cover manager ownership, exact
+  return, and opening without persistence. Presentation/rules passed 59 source
+  and compiled graphical checks plus build and documentation gates.
+
+- Integration discovery is at =C-e H j= and =C-e H . j=. Agent Shell, EAT,
+  Org, Notmuch, and EWW link to their actual Customize groups when installed.
+  Source-local Agent Shell/EAT/comint controls reuse their lifecycle commands;
+  no integration navigation bindings change. Further integrations remain an
+  incremental inventory, not a claim that every package has a focused menu.
+  Saved setups passed 61 source and compiled graphical checks and the build
+  and documentation gates. Listening on all new routes remains open.
+
+- Focused voice tuning now supports stable per-fallback choices as well as shared
+  values. Inherit, explicit adapter default, and zero remain distinct. Preview
+  uses the selected choice; native controls open the existing qualified async
+  editor. No storage or protocol changes are introduced. Integration discovery
+  passed 64 source and compiled graphical checks and the build/documentation
+  gates. Actual voice sound and native-engine availability still need listening
+  and runtime acceptance on the normal speech host.
+
+- Changed settings is available at =C-e H d= and from current-buffer/saved-setup
+  settings. It distinguishes local values, current global defaults, Customize's
+  known saved values, and retained editor/cue drafts. It is a read-only snapshot
+  of loaded options, not a disk/host reconciliation or a combined Save action.
+  Voice tuning passed 114 source and compiled graphical/protocol checks, including
+  native qualification. Its discovery-timer fixture is isolated from unrelated
+  GUI timers so combined tests can exercise real graphical navigation reliably.
+
+- Final automated verification passed: 279 graphical regression checks with
+  source preferred, 279 in a fresh Emacs using current byte-code and installed
+  Transient (including Magit), and 278 with bundled Transient. Those selected
+  runs had no skips. Loaded paths were checked for the new settings modules,
+  voice editor, and Transient. The optional native punctuation service round
+  trip remains excluded because its test program is unconfigured. Incremental
+  compilation and byte-code preflight passed; generated manuals are updated.
+
+- All six workflow slices are implemented. Existing editors retain their editing
+  models and storage ownership. Remaining migration work includes further editor
+  interaction improvements, diagnostics/recovery links, and integration inventory
+  beyond Agent Shell, EAT/comint, Org, Notmuch, and EWW. The changed-settings view
+  covers loaded options and retained drafts; disk/host reconciliation remains
+  outside its scope.
+
+- Listening acceptance remains open. Start a fresh normal Emacsvox profile and
+  try =C-e H f=, =r=, =p=, =j=, and =d=, plus =m= in a named-voice editor.
+  Check return focus, concise speech, draft resumption, fallback selection,
+  shared/default/zero distinctions, and Play/Compare. Native engine controls
+  still need the normal host's live catalogue and listening checks. Automated
+  preview requests and mocked runtime replies do not establish acoustic results.

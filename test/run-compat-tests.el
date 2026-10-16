@@ -4,7 +4,8 @@
 
 ;;; Commentary:
 ;; Run core startup, reading, input, voice, Org and installer contracts without
-;; third-party packages.  The complete integration suite remains make test.
+;; optional integrations.  Emacs 30 needs the pinned Transient dependency.
+;; The complete integration suite remains make test.
 ;; CI supplies a private HOME and builds all byte-code before this source gate.
 
 ;;; Code:

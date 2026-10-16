@@ -1,0 +1,110 @@
+#+title: Reading and recovery consistency review, 15 October 2026
+#+language: en
+
+* Scope
+
+This bounded pass starts at =ui-experiments= commit
+=31d07c1a167e00fcf50ca5a631311589b78817b5=. It reconciles the tutorial,
+Online Help and the document/web guides with the reading, editing and window
+reference. It changes no application behaviour, dependencies or publication
+workflow. No chapters or Info destinations are added or renamed.
+
+* Corrections and ownership
+
+The tutorial's first reading lesson now distinguishes short stationary
+inspection from tracked =C-e i= reading. The exercise still uses its small
+practice buffer and does not require tracked-playback support. Its reference
+link explains chunk boundaries and interruption rather than promising an
+exact-word pause/resume position.
+
+The tutorial and the Org-document correction task use =undo-only= when the
+reader listens between undo steps. They establish the document context,
+deactivate an unrelated region, inspect each result and stop at the intended
+text. The exercise answers agree. Ordinary undo is not forbidden: the guide
+explains why a non-undo command can change the meaning of its next invocation.
+Basic Usage remains the full explanation, with the GNU Emacs Undo reference.
+
+Online Help now owns the detailed explanation of ordinary Help selection.
+=emacsvox-speak-help= selects Help, uses windowful reading and removes other
+windows; it does not kill their buffers. The tutorial checks the selected
+buffer instead of assuming that an additional window switch is needed. It
+returns to the practice document before asking about that document's modes or
+local bindings. Menu/editor Help retains its separate return instructions.
+
+The web guide explicitly returns from Help to the page before using browser
+keys. Its address-copy task warns that message repetition and filename speech
+can change the next paste by adding to the kill ring. It links to the existing
+earlier-copy guide instead of reproducing that procedure.
+
+The existing references for selection, yank sequencing and window recovery
+were checked as the primary explanations; they need no new parallel guide.
+The source examples, exercise numbering, answers' anchors, retained-draft
+protections and optional palette exercise remain intact. This is not a new
+round of settings-menu redesign or a tutorial expansion.
+
+* Regression coverage added
+
+=test/emacsvox-manual-workflow-tests.el= adds five command-level ERT cases,
+registered in =test/run-tests.el= for =make unit-test=:
+
+- Reading a small active region preserves point, mark, activation and the
+  selected final newline for a subsequent copy and paste.
+- =undo-only= undoes successive edits with a real line inspection between them.
+- Immediate =yank-pop= replaces the last paste, whereas a separate inspection
+  makes the next invocation prompt for another insertion.
+- Spoken Help selects its own buffer and collapses the split while preserving
+  the reference, draft and unsaved text; buffer selection returns to the draft.
+- Filename inspection changes the next paste while retaining the earlier copy.
+
+The fixture isolates output and the external clipboard. It uses real editing,
+inspection and window functions; the kill-ring chooser response is supplied
+by the test. Its small command helper models command identity and mark
+deactivation, not the complete keyboard-event loop. These tests do not prove
+acoustic output, graphical focus or every personal keymap configuration.
+
+* Checks performed here
+
+The four edited baseline files matched their repository Git blob hashes before
+modification. Static checks compare existing headings, named nodes, indexes,
+example/code blocks and tutorial include/answer anchors. New links target
+existing reading, recovery, window and earlier-copy topics. The node inventory
+is untouched. The test-runner change is one require form; existing test
+registration order is preserved.
+
+The changed passages were reviewed in their complete chapters. Their state
+claims were checked against =lisp/emacsvox-speak.el= and
+=lisp/emacsvox-advice.el=, including Help selection, windowful reading,
+tracked playback, region handling and kill-ring side effects. Upstream GNU
+Emacs documentation supplies the undo and yank sequencing rules; it remains
+linked from the owning explanations.
+
+* Outstanding validation
+
+There is no Emacs executable in this editing environment. The five new ERT
+cases have been written and source-reviewed but NOT executed. Delimiter and
+source checks are not an Emacs reader, byte-compiler, Org exporter or runtime
+test. No acoustic or graphical acceptance has been performed.
+
+Use the configured supported Emacs, run =make check-emacs= and =make unit-test=,
+then regenerate and validate the manual. Follow =AGENTS.md= for the required
+byte-code rebuild/preflight before a gate that consumes compiled code:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+Generated Texinfo and Info are unchanged for this pass. An earlier build does
+not validate these source edits. Follow each added cross-reference in the
+assembled Info and HTML and return to its source. Work through the corrected
+undo and Help steps with speech, with two document windows and with an
+existing selection. Verify that completing Help leaves the intended buffer
+selected before the next edit. Use non-confidential text for clipboard tests.
+
+A change to Help's window policy would require revisiting these assertions
+and the manual together; the tests describe current behaviour, not a design
+requirement to retain window collapse forever. Existing tracked-reading tests
+remain the place for completion and interruption coverage.
+
+No website or tagged release is published by this work.

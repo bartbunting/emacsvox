@@ -99,7 +99,7 @@
                ("v" . emacsvox-aural-sound-packs-show-validation)
                ("e" . emacsvox-aural-sound-packs-edit-manifest)
                ("o" . emacsvox-aural-sound-packs-open-directory)
-               ("h" . emacsvox-aural)
+               ("h" . emacsvox-aural-menu)
                ("?" . emacsvox-aural-sound-packs-help)))
           (should
            (eq
@@ -168,7 +168,7 @@
                ("v" . emacsvox-aural-sound-pack-cues-show-validation)
                ("o" . emacsvox-aural-sound-packs-open-directory)
                ("s" . emacsvox-aural-list-sound-packs)
-               ("h" . emacsvox-aural)
+               ("h" . emacsvox-aural-menu)
                ("?" . emacsvox-aural-sound-pack-cues-help)))
           (should
            (eq

@@ -45,6 +45,13 @@
     core-indentation-pitch-tone
     core-indentation-spoken-duration-tone
     core-indentation-spoken-pitch-tone
+    core-indentation-duration-tone-insert
+    core-indentation-pitch-tone-insert
+    core-indentation-spoken-duration-tone-insert
+    core-indentation-spoken-pitch-tone-insert
+    core-spelling-tone
+    core-spelling-tone-overlay
+    core-spelling-earcon
     core-capital-spoken
     core-all-caps-spoken
     core-capital-tone
@@ -2846,8 +2853,8 @@
           (kill-buffer "*Emacsvox Aural*"))
         (kill-buffer source)))))
 
-(ert-deftest emacsvox-aural-interfaces-provide-home-navigation ()
-  "Every aural child manager and editor uses h for the aural home."
+(ert-deftest emacsvox-aural-interfaces-provide-settings-navigation ()
+  "Aural child managers and editors use h for the source-aware settings menu."
   (dolist
       (map
        (list
@@ -2862,7 +2869,7 @@
         emacsvox-aural-voice-editor-mode-map
         emacsvox-aural-scheme-editor-mode-map))
     (should
-     (memq (lookup-key map (kbd "h")) '(emacsvox-aural emacsvox-aural-home)))))
+     (eq (lookup-key map (kbd "h")) 'emacsvox-aural-menu))))
 
 (ert-deftest emacsvox-aural-interfaces-provide-dismissal ()
   "Aural managers use shared exit feedback and editors retain confirmation."
@@ -3029,7 +3036,7 @@
                    ("d" . emacsvox-aural-delete-feature-fragment)
                    ("v"
                     . emacsvox-aural-show-feature-fragment-validation)
-                   ("h" . emacsvox-aural)
+                   ("h" . emacsvox-aural-menu)
                    ("?" . emacsvox-aural-feature-fragments-help)))
               (should
                (eq

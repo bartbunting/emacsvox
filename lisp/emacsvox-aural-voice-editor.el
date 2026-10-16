@@ -50,6 +50,8 @@
 (declare-function omnivox-parameters--cached "omnivox-parameters" (process engine voice))
 (autoload 'emacsvox-aural-voice-context-open "emacsvox-aural-voice-context"
   "Inspect this voice draft in a captured source context." t)
+(autoload 'emacsvox-aural-voice-menu "emacsvox-aural-voice-menu"
+  "Open focused shared tuning for this named voice." t)
 (autoload 'emacsvox-aural-voice-engine-controls-open "emacsvox-aural-voice-engine-controls"
   "Edit engine controls for one physical choice." t)
 (declare-function emacsvox-aural-voice-engine-controls--render "emacsvox-aural-voice-engine-controls" ())
@@ -469,6 +471,9 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
       (emacsvox-aural-voice-editor--button 'engine-controls "Engine-specific settings"
                                             #'emacsvox-aural-voice-engine-controls-open))
     (insert (if tuning "\nIndividual fallback adjustments\n" "\nShared adjustments\n"))
+    (when (and voice (or (not tuning) row))
+      (emacsvox-aural-voice-editor--button
+       'tuning-menu "Focused tuning menu (m)" #'emacsvox-aural-voice-menu))
     (when tuning
       (emacsvox-aural-voice-editor--button
        'tuning-scope
@@ -1154,11 +1159,14 @@ SOURCE optionally supplies the return buffer for the destination editor."
     (emacsvox-aural-voice-editor-stop)
     (let ((origin (emacsvox-aural-voice-editor--get :origin))
           (row (emacsvox-aural-voice-editor--get :origin-row))
-          (column (emacsvox-aural-voice-editor--get :origin-column)))
+          (column (emacsvox-aural-voice-editor--get :origin-column))
+          (return emacsvox-aural-ui--return-function))
+      (setq emacsvox-aural-ui--return-function nil)
       ;; Selecting the origin alone leaves this editor in the window history,
       ;; so quitting the workbench can immediately reveal it again.
       (quit-window (emacsvox-aural-voice-editor--get :discarded))
-      (if (and (markerp origin) (marker-buffer origin))
+      (if (and (not (and return (funcall return)))
+               (markerp origin) (marker-buffer origin))
           (progn (pop-to-buffer (marker-buffer origin))
                  (if (and row (derived-mode-p 'tabulated-list-mode))
                      (progn (emacsvox-aural-ui-goto-row row) (move-to-column (or column 0)))
@@ -1178,9 +1186,10 @@ SOURCE optionally supplies the return buffer for the destination editor."
                     ("B" . emacsvox-aural-voice-editor-compare) ("S" . emacsvox-aural-voice-editor-stop)
                     ("T" . emacsvox-aural-voice-editor-text) ("u" . emacsvox-aural-voice-editor-undo)
                     ("d" . emacsvox-aural-voice-editor-default)
+                    ("m" . emacsvox-aural-voice-menu)
                     ("i" . emacsvox-aural-voice-editor--inherit)
                     ("w" . emacsvox-aural-voice-editor-save) ("C-c C-c" . emacsvox-aural-voice-editor-save)
-                    ("h" . emacsvox-aural-home)
+                    ("h" . emacsvox-aural-menu)
                     ("q" . emacsvox-aural-voice-editor-leave) ("?" . describe-mode)))
       (define-key map (kbd (car pair)) (cdr pair))) map))
 (define-derived-mode emacsvox-aural-voice-editor-mode emacsvox-aural-interface-mode "Voice-Editor"

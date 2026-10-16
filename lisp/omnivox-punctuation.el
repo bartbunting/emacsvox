@@ -328,9 +328,11 @@
 (defun omnivox-punctuation-quit ()
   "Return to the originating view; retain this buffer and its draft."
   (interactive)
-  (let ((parent omnivox-punctuation--parent))
-    (quit-window)
-    (when (buffer-live-p parent) (pop-to-buffer parent))))
+  (if emacsvox-aural-ui--return-function
+      (emacsvox-aural-quit)
+    (let ((parent omnivox-punctuation--parent))
+      (quit-window)
+      (when (buffer-live-p parent) (pop-to-buffer parent)))))
 
 (defun omnivox-punctuation-help ()
   "Explain punctuation editing and its save/restart boundary."
@@ -380,7 +382,11 @@ restart speech.  Reopening retains any unfinished draft in this buffer."
   (let ((parent (current-buffer))
         (existing (get-buffer "*Omnivox Punctuation*")))
     (if (and existing (buffer-local-value 'omnivox-punctuation--review existing))
-        (emacsvox-aural-ui-pop-to-buffer existing)
+        (progn
+          (with-current-buffer existing
+            (setq omnivox-punctuation--parent parent
+                  emacsvox-aural-ui--return-function nil))
+          (emacsvox-aural-ui-pop-to-buffer existing))
       (let ((review (omnivox-punctuation--request '(:command "punctuation-review")))
             (buffer (get-buffer-create "*Omnivox Punctuation*")))
         (with-current-buffer buffer

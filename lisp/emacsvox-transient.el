@@ -52,12 +52,12 @@
 ;; but use these only after reading the transient info documentations.
 ;; @itemize
 ;; @item transient-force-single-column: t
-;; @item  transient-show-menu:  1
+;; @item transient-show-menu: t
 ;; @item transient-enable-menu-navigation:  t
 ;; @end itemize
 ;; 
-;; this pops up the transient buffer after a short delay  and lets
-;; you move through the buttons with the    up/down arrows. 
+;; This displays the menu immediately and lets you move through its
+;; buttons with the up/down arrows.
 ;; @subsection Browsing Contents Of transient--show
 ;; 
 ;; When executing a command defined via Transient --- e.g. command
@@ -73,11 +73,90 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
+(require 'package)
+
+(defconst emacsvox-transient-minimum-version "0.13.3"
+  "Minimum Transient version supported by Emacsvox menus.")
+
+(defun emacsvox-transient--require-supported ()
+  "Load a supported Transient, activating installed dependencies if needed.
+Never download packages or replace an already loaded Transient."
+  (unless (featurep 'transient)
+    (unless (package-built-in-p
+             'transient (version-to-list emacsvox-transient-minimum-version))
+      ;; Isolated -Q sessions skip package activation and Debian site startup.
+      ;; Activate only Transient and its dependencies, without loading init files.
+      (let ((package-directory-list
+             (append package-directory-list
+                     (when (file-directory-p "/usr/share/emacs/site-lisp/elpa")
+                       '("/usr/share/emacs/site-lisp/elpa")))))
+        (package-load-all-descriptors)
+        (package-activate 'transient))))
+  (require 'transient)
+  (let* ((reported (and (boundp 'transient-version) transient-version))
+         ;; Bundled releases can use v0.13.3-10-gHASH-builtin.
+         (version (and (stringp reported)
+                       (string-match "\\`v?\\([0-9]+\\(?:\\.[0-9]+\\)*\\)" reported)
+                       (match-string 1 reported))))
+    (unless (and version
+                 (version<= emacsvox-transient-minimum-version version))
+      (error (concat "Emacsvox requires Transient %s or newer; loaded %s from %s. "
+                     "Upgrade Transient with M-x package-upgrade, then restart Emacs")
+             emacsvox-transient-minimum-version (or reported "unknown")
+             (or (symbol-file 'transient-setup) "unknown location")))))
+
+(emacsvox-transient--require-supported)
+
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-provider-workflows)
 (require 'derived)
 (require 'transient)
+
+(defcustom emacsvox-transient-navigation-style 'section-wrap
+  "How Up and Down move through Transient menu items.
+Continuous navigation crosses sections and wraps around the whole menu.
+Section wrapping cycles within the current section.  Section stops keep
+point at its first or last item and play a boundary cue.  Left and Right
+move between sections in every style.  This setting applies globally."
+  :type '(choice (const :tag "Continuous" continuous)
+                 (const :tag "Wrap within section" section-wrap)
+                 (const :tag "Stop at section edges" section-stop))
+  :group 'emacsvox)
+
+(defcustom emacsvox-transient-section-announcement-order 'section-first
+  "How Transient navigation announces items and sections.
+Item first speaks the item, then the section name and position.  Section
+first speaks the section name and position before the item.  By movement
+speaks only the section for section navigation and only the item for item
+navigation, even across sections.  Section navigation still selects the
+first item; C-c l repeats it without moving when that review key is available.
+This setting applies globally, including Magit, and does not change navigation."
+  :type '(choice (const :tag "Item first" item-first)
+                 (const :tag "Section first" section-first)
+                 (const :tag "By movement: sections or items" by-movement))
+  :group 'emacsvox)
+
+(defcustom emacsvox-transient-verbose-descriptions t
+  "Whether Transient items include their command documentation summaries.
+When enabled, retain each label and value and add the first line of the
+command's docstring.  This applies to all Transient menus, including Magit.
+Items without command documentation keep their labels; Transient's native
+infix controls keep their usual descriptions."
+  :type 'boolean
+  :group 'emacsvox)
+
+(defun emacsvox--advice-transient-format-description-around (original object)
+  "Format OBJECT with ORIGINAL, optionally adding command summaries."
+  (let ((transient--docsp (or emacsvox-transient-verbose-descriptions
+                             transient--docsp))
+        (transient-show-docstring-format
+         (if emacsvox-transient-verbose-descriptions "%c. %s"
+           transient-show-docstring-format)))
+    (funcall original object)))
+
+(advice-add 'transient-format-description :around
+            #'emacsvox--advice-transient-format-description-around)
 
 ;;; Map Faces:
 
@@ -139,7 +218,6 @@
 (defun emacsvox--advice-transient-toggle-common-after (&rest _)
   "Present the new common-command visibility setting."
   (when (ems-interactive-p 'transient-toggle-common)
-    (tts-stop 'all)
     (emacsvox-transient--submit-actions
      (emacsvox-transient--menu-facts
       'toggle-common 'command-menu-value-changed)
@@ -151,7 +229,13 @@
 
 (defun emacsvox-transient--quit-feedback (target)
   "Provide quit feedback when TARGET is the interactive command."
-  (when (ems-interactive-p target)
+  (when (or (ems-interactive-p target)
+            ;; Transient can invoke its suffix through an interactive wrapper.
+            (and (eq this-command target)
+                 (or transient--prefix transient--exitp)
+                 (not (symbolp ems--interactive-fn-name))
+                 (functionp ems--interactive-fn-name)))
+    (setq ems--interactive-fn-name nil)
     (cond
      ((eq major-mode 'emacsvox-transient-mode)
       (bury-buffer)
@@ -166,8 +250,7 @@
        (emacsvox-transient--menu-facts 'abort-key-sequence)
        'navigation
        'close-object))
-     ((null transient--prefix)
-      (tts-stop 'all)
+     ((and (null transient--prefix) (null transient--stack))
       (emacsvox-transient--submit-text
        (emacsvox-transient--buffer-summary)
        (emacsvox-transient--menu-facts
@@ -199,7 +282,6 @@
 (defun emacsvox-transient--value-feedback (target icon)
   "Present a value change for interactive TARGET with compatibility ICON."
   (when (ems-interactive-p target)
-    (tts-stop 'all)
     (emacsvox-transient--submit-actions
      (emacsvox-transient--menu-facts
       target 'command-menu-value-changed)
@@ -307,8 +389,9 @@
         " ")))
    (kbd key) " "))
 
-(defun emacsvox-transient--choice-text (object &optional group rendered)
-  "Describe suffix OBJECT with GROUP context and RENDERED fallback text."
+(defun emacsvox-transient--choice-text (object &optional _group rendered)
+  "Describe suffix OBJECT with RENDERED fallback text.
+Section context is announced when navigation enters a section."
   (when (and (eieio-object-p object) (object-of-class-p object 'transient-suffix))
     (let* ((description (ignore-errors
                           (transient-with-shadowed-buffer
@@ -324,14 +407,12 @@
                           "" rendered t t))))))
       (when label
         (concat
-         (if (and group (not infix) (not (string-prefix-p group label t)))
-             (concat group " " label)
-           label)
+         label
          (when (and description infix)
            (concat ", " (emacsvox-transient--infix-state object)))
-         ". "
+         (if (string-suffix-p "." label) " " ". ")
          (when (oref object inapt) "Unavailable. ")
-         "Shortcut " (emacsvox-transient--key-text (oref object key)) ".")))))
+         (emacsvox-transient--key-text (oref object key)) ".")))))
 
 (defun emacsvox--advice-transient-infix-set-after (object _value)
   "Present an interactively changed Transient infix OBJECT."
@@ -505,6 +586,63 @@
 (defvar emacsvox-transient--announced-stack nil
   "Command identity of the stack paired with the announced prefix.")
 
+(defvar emacsvox-transient--return-targets
+  (make-hash-table :test #'eq :weakness 'key)
+  "Invoking items owned by live stack entries or awaiting prefix displays.
+Each value contains the parent command, suffix key, and suffix command.
+Weak keys let abandoned menus release their return state.")
+
+(defvar emacsvox-transient--restoring-target nil
+  "Invoking item awaiting display while a parent menu is being restored.")
+
+(defun emacsvox--advice-transient--do-stack-around (original)
+  "Retain an Emacsvox submenu's invoking item while ORIGINAL stacks its parent."
+  (let* ((prefix transient--prefix)
+         (command (and prefix (oref prefix command)))
+         (suffix (and command
+                      (string-prefix-p "emacsvox-" (symbol-name command))
+                      (cl-find this-command transient--suffixes
+                               :key (lambda (item) (oref item command)))))
+         (target (and suffix (list command (oref suffix key) this-command))))
+    (prog1 (funcall original)
+      (when (and target transient--stack)
+        (puthash (car transient--stack) target emacsvox-transient--return-targets)))))
+
+(advice-add 'transient--do-stack :around
+            #'emacsvox--advice-transient--do-stack-around)
+
+(defun emacsvox--advice-transient--stack-pop-around (original)
+  "Make the saved invoking item available while ORIGINAL restores its parent."
+  (let* ((entry (car transient--stack))
+         (emacsvox-transient--restoring-target
+          (gethash entry emacsvox-transient--return-targets)))
+    (remhash entry emacsvox-transient--return-targets)
+    (prog1 (funcall original)
+      ;; A delayed menu may not have displayed during `transient-setup'.
+      (when (and emacsvox-transient--restoring-target transient--prefix
+                 (eq (oref transient--prefix command)
+                     (car emacsvox-transient--restoring-target)))
+        (puthash transient--prefix emacsvox-transient--restoring-target
+                 emacsvox-transient--return-targets)))))
+
+(advice-add 'transient--stack-pop :around
+            #'emacsvox--advice-transient--stack-pop-around)
+
+(defun emacsvox-transient--restore-return-target ()
+  "Restore the invoking item once, before announcing the displayed parent."
+  (when-let* ((target (or emacsvox-transient--restoring-target
+                          (gethash transient--prefix emacsvox-transient--return-targets)))
+              (_ (eq (oref transient--prefix command) (car target))))
+    (setq emacsvox-transient--restoring-target nil)
+    (remhash transient--prefix emacsvox-transient--return-targets)
+    (when-let* ((suffix (cl-find-if
+                        (lambda (item)
+                          (and (equal (oref item key) (nth 1 target))
+                               (eq (oref item command) (nth 2 target))))
+                        transient--suffixes)))
+      (with-selected-window transient--window
+        (transient--goto-button suffix)))))
+
 (defun emacsvox-transient--stack-commands ()
   "Return the command identities in the current Transient stack."
   (mapcar #'car transient--stack))
@@ -527,24 +665,28 @@
    (when states (list :states states))))
 
 (defun emacsvox-transient--submit-actions (facts occasion &rest icons)
-  "Submit FACTS and compatibility ICONS as one action-only transaction."
+  "Submit FACTS and compatibility ICONS, replacing previous main feedback."
   (emacsvox-aural-submit-actions
    :facts facts
    :module 'transient
    :occasion occasion
+   :lane 'main :delivery-policy 'replaceable
+   :replacement-key 'speaker :interruption-policy 'lane
    :compatibility-actions
    (mapcar #'emacsvox-aural-compatibility-icon icons)))
 
 (defun emacsvox-transient--submit-text
     (content facts occasion &optional icon icon-phase)
   "Submit CONTENT under FACTS and OCCASION with an optional compatibility ICON.
-ICON-PHASE defaults to `before'."
+ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
   (if (and (stringp content) (> (length content) 0))
       (emacsvox-aural-submit
        content
        :facts facts
        :module 'transient
        :occasion occasion
+       :lane 'main :delivery-policy 'replaceable
+       :replacement-key 'speaker :interruption-policy 'lane
        :compatibility-actions
        (when icon
          (list
@@ -607,12 +749,32 @@ ICON-PHASE defaults to `before'."
          (car (split-string purpose "\n"))
        "Command menu.")
      " Up and down: options. Left and right: sections."
-     " Control J: activate. Control G: close. "
+     (when (eq command 'emacsvox-aural-menu)
+       " Question mark for help; n for navigation and speech options.")
+     (when (and (eq command 'emacsvox-aural-menu)
+                (eq (lookup-key transient--transient-map (kbd "C-c l"))
+                    #'emacsvox-transient--repeat-item))
+       " Control C l: repeat item.")
+     (when (eq command 'emacsvox-indentation)
+       " Space: preview.")
+     (when (eq command 'emacsvox-indentation-tone)
+       " Space: preview pitch tone.")
+     (when (eq command 'emacsvox-aural-voice-menu)
+       " Capital P: preview. Capital S: stop.")
+     (when (eq command 'emacsvox-capitalization-cue)
+       " Space: preview beep.")
+     (when (eq command 'emacsvox-interaction)
+       " Space: preview source line.")
+     (if (eq (lookup-key transient--transient-map (kbd "RET"))
+             #'transient-push-button)
+         " Enter: activate. Control G: back or close. "
+       " Control J: activate. Control G: back or close. ")
      (emacsvox-transient--line-content))))
 
 (defun emacsvox--advice-transient--show-after (&rest _)
   "Cache the menu and announce a new or explicitly requested display."
   (when (window-live-p transient--window)
+    (emacsvox-transient--restore-return-target)
     (with-current-buffer (window-buffer transient--window)
       (setq-local emacsvox-aural-module 'transient)
       (setq
@@ -634,9 +796,124 @@ ICON-PHASE defaults to `before'."
 (advice-add 'transient--show :after
             #'emacsvox--advice-transient--show-after)
 
+(defun emacsvox--advice-transient-help-after (&optional interactivep)
+  "Announce help selection when INTERACTIVEP enters that state."
+  ;; The next key calls this function again noninteractively to display help.
+  (when (and interactivep transient--helpp)
+    (emacsvox-transient--submit-text
+     "Help: press an item's key, or question mark for the menu overview."
+     (emacsvox-transient--menu-facts 'help-selection)
+     'state-change)))
+
+(advice-add 'transient-help :after #'emacsvox--advice-transient-help-after)
+
+(defun emacsvox-transient--navigation-help ()
+  "Describe navigation and activation bindings in the active menu."
+  (let (lines)
+    (dolist (entry
+             '(("<up>" transient-backward-button "Select the previous item.")
+               ("<down>" transient-forward-button "Select the next item.")
+               ("<left>" emacsvox-transient-previous-section
+                "Select the first item of the previous section.")
+               ("<right>" emacsvox-transient-next-section
+                "Select the first item of the next section.")
+               ("RET" transient-push-button "Activate the selected item.")
+               ("M-RET" transient-push-button "Activate the selected item.")
+               ("C-j" transient-push-button "Activate the selected item.")))
+      (when (eq (lookup-key transient--transient-map (kbd (car entry))) (cadr entry))
+        (push (format "%s: %s\n" (car entry) (nth 2 entry)) lines)))
+    (when lines
+      (concat "Navigate the menu\n"
+              "After returning with q, selecting an item reads it without activating it.\n"
+              (apply #'concat (nreverse lines))
+              (pcase emacsvox-transient-navigation-style
+                ('continuous "Item navigation crosses sections and wraps around the whole menu.\n")
+                ('section-wrap "Item navigation wraps within the current section.\n")
+                (_ "Item navigation stops at section edges with a boundary cue.\n"))
+              (pcase emacsvox-transient-section-announcement-order
+                ('by-movement
+                 "Section movement speaks only its heading; review the selected first item before activation.\n")
+                ('item-first "When changing sections, the item is spoken before its section.\n")
+                (_ "When changing sections, the section is spoken before its item.\n"))
+              "A displayed action key invokes that action directly. Read its Help for\n"
+              "scope, adjustment steps and saving. Prompts use normal text editing.\n\n"))))
+
+(defun emacsvox-transient--review-help ()
+  "Describe the item review keys available in the active menu.
+Check effective bindings so a menu's own commands are never described as review."
+  (let (lines)
+    (dolist (entry
+             '(("C-c l" emacsvox-transient--repeat-item
+                "Repeat the selected item and restart word and character review.")
+               ("M-f" emacsvox-transient--review-next-word "Read the next word.")
+               ("M-b" emacsvox-transient--review-previous-word "Read the previous word.")
+               ("C-f" emacsvox-transient--review-next-character "Read the next character.")
+               ("C-b" emacsvox-transient--review-previous-character "Read the previous character.")
+               ("C-c w" emacsvox-transient--review-word "Repeat the review word.")
+               ("C-c c" emacsvox-transient--review-character "Repeat the review character.")
+               ("C-a" emacsvox-transient--review-beginning
+                "Move before the first word and character; moving forward reads the first.")
+               ("C-e" emacsvox-transient--review-end
+                "Move after the last word and character; moving backward reads the last.")))
+      (when (eq (lookup-key transient--transient-map (kbd (car entry))) (cadr entry))
+        (push (format "%s: %s\n" (car entry) (nth 2 entry)) lines)))
+    (when lines
+      (concat
+       "Review the selected item\n"
+       "These keys apply after returning to the menu with q. Review reads the\n"
+       "item's label, value, description and key without changing the selection\n"
+       "or activation target. The first word or character command starts at the\n"
+       "beginning. Character speech follows your capitalisation and delayed\n"
+       "phonetic settings. Further input interrupts obsolete review speech.\n\n"
+       (apply #'concat (nreverse lines))
+       "\nOnly available review bindings are listed; menu-specific commands take precedence.\n\n"))))
+
+(defun emacsvox--advice-transient-show-help-around (original object)
+  "Show the active menu overview, retaining ORIGINAL help for other OBJECTs."
+  (if (and (eieio-object-p object)
+           (object-of-class-p object 'transient-prefix)
+           (eq object transient--prefix))
+      (progn
+        ;; Render now even when help was requested before the display delay.
+        (transient--show)
+        (let ((contents emacsvox-transient-cache)
+              (purpose (documentation (oref object command) t))
+              (navigation-help (emacsvox-transient--navigation-help))
+              (review-help (emacsvox-transient--review-help))
+              (buffer (get-buffer-create "*Transient-Emacsvox*")))
+          (with-current-buffer buffer
+            (let ((inhibit-read-only t))
+              (erase-buffer)
+              (insert "q to return to the menu.\n\n")
+              (when purpose (insert purpose "\n\n"))
+              (when navigation-help (insert navigation-help))
+              (when review-help (insert review-help))
+              (insert contents)
+              ;; This is a readable snapshot; actions run in the resumed menu.
+              (remove-text-properties
+               (point-min) (point-max)
+               '(button nil category nil keymap nil action nil))
+              (goto-char (point-min)))
+            (emacsvox-transient-mode)
+            ;; `transient--display-help' enables the minor mode that remaps
+            ;; `quit-window' to resume the captured menu and its parent stack.
+            (local-set-key "q" #'quit-window)
+            (local-set-key (kbd "C-g") #'quit-window))
+          (pop-to-buffer buffer)
+          (emacsvox-transient--submit-text
+           (emacsvox-transient--buffer-summary)
+           (emacsvox-transient--menu-facts 'help 'command-menu-suspended)
+           'state-change 'open-object)))
+    (funcall original object)))
+
+(advice-add 'transient-show-help :around
+            #'emacsvox--advice-transient-show-help-around)
+
 (defun emacsvox--advice-transient-suspend-around (orig-fun)
   "Suspend once and display the cached menu in a browsable buffer."
-  (if (ems-interactive-p 'transient-suspend)
+  ;; Transient also suspends while displaying Help, which owns its return path.
+  (if (and (not (bound-and-true-p transient-resume-mode))
+           (ems-interactive-p 'transient-suspend))
       (let
           ((buff (get-buffer-create "*Transient-Emacsvox*"))
            (inhibit-read-only t))
@@ -667,7 +944,6 @@ ICON-PHASE defaults to `before'."
         (apply orig-fun arguments)
       (when (ems-interactive-p 'transient-resume)
         (when resumable
-          (tts-stop 'all)
           (emacsvox-transient--present-visible-menu
            'resume 'command-menu-resumed 'state-change 'open-object))))))
 
@@ -718,26 +994,43 @@ When non-nil, preserve compatibility ICON."
   "Describe SECTION and its position within SECTIONS."
   (concat
    (string-trim (emacsvox-aural-source-substring (car section) (cdr section)))
-   (format ". Section %d of %d."
-           (1+ (cl-position section sections :test #'equal)) (length sections))))
+   ". "
+   (propertize
+    (format "%d of %d section%s."
+            (1+ (cl-position section sections :test #'equal)) (length sections)
+            (if (= (length sections) 1) "" "s"))
+    'personality 'voice-annotate)))
 
 (defun emacsvox-transient--move-section (backward)
-  "Move to and present the next section, or previous when BACKWARD."
+  "Select the first item in the next section, or previous when BACKWARD."
   (with-selected-window (emacsvox-transient--navigation-window)
     (let* ((action (if backward 'previous-section 'next-section))
+           (previous (point))
            (sections (emacsvox-transient--sections))
-           (position (line-beginning-position))
+           (position (or (car (emacsvox-transient--section-at (point) sections))
+                         (line-beginning-position)))
            (section (cl-find-if
                      (lambda (range) (if backward (< (car range) position)
                                        (> (car range) position)))
                      (if backward (reverse sections) sections))))
       (if section
-          (progn
+          (let ((end (or (car (cadr (member section sections))) (point-max)))
+                button)
             (goto-char (car section))
-            (emacsvox-transient--submit-text
-             (emacsvox-transient--section-text section sections)
-             (emacsvox-transient--item-facts 'section action 'focus-entered '(selected))
-             'navigation))
+            (setq button (next-button (point) t))
+            (while (and button (< (button-start button) end)
+                        (button-get button 'skip))
+              (setq button (next-button (button-end button) t)))
+            (if (and button (< (button-start button) end))
+                (progn
+                  (goto-char (button-start button))
+                  (emacsvox-transient--speak-button
+                   previous nil
+                   (eq emacsvox-transient-section-announcement-order 'by-movement)))
+              (emacsvox-transient--submit-text
+               (emacsvox-transient--section-text section sections)
+               (emacsvox-transient--item-facts 'section action 'focus-entered)
+               'navigation 'section)))
         (emacsvox-transient--submit-text
          (cond ((null sections) "No sections in this menu.")
                (backward "First section.")
@@ -760,55 +1053,278 @@ When non-nil, preserve compatibility ICON."
 ;;; Hooks:
 
 (defun emacsvox-transient-post-hook ()
-  "Forget the menu announcement when a Transient level exits."
-  (setq
-   emacsvox-transient--announced-prefix nil
-   emacsvox-transient--announced-stack nil))
+  "Forget the announcement after exit unless a new menu is already active."
+  ;; A child can be displayed before the parent's exit hook runs.
+  (unless transient--prefix
+    (setq
+     emacsvox-transient--announced-prefix nil
+     emacsvox-transient--announced-stack nil)))
 
 (add-hook 'transient-exit-hook 'emacsvox-transient-post-hook)
 
 ;;; Advice transient navigation:
 
-(defun emacsvox-transient--speak-button (&optional previous direction)
-  "Present the current button, noting section changes and wraps from PREVIOUS.
-DIRECTION is positive for forward movement, negative for backward movement."
+(defun emacsvox-transient--move-within-section (n)
+  "Move N items within the current section; return non-nil at a hard stop."
   (with-selected-window transient--window
+    (let* ((sections (emacsvox-transient--sections))
+           (section (or (emacsvox-transient--section-at (point) sections)
+                        (car sections)))
+           (start (or (car section) (point-min)))
+           (end (or (car (cadr (member section sections))) (point-max)))
+           (position start)
+           buttons button)
+      (while (and (< position end)
+                  (setq button (next-button position t))
+                  (< (button-start button) end))
+        (unless (button-get button 'skip)
+          (push (button-start button) buttons))
+        (setq position (button-end button)))
+      (setq buttons (nreverse buttons))
+      (if (null buttons)
+          t
+        (let* ((current (cl-position
+                         (when-let* ((at-point (button-at (point))))
+                           (button-start at-point))
+                         buttons))
+               ;; A section heading enters at its first item with Down and
+               ;; its last item with Up, without crossing to another section.
+               (target (if current (+ current n)
+                         (if (< n 0) (+ (length buttons) n) (max 0 (1- n)))))
+               (index (if (eq emacsvox-transient-navigation-style 'section-wrap)
+                          (mod target (length buttons))
+                        (max 0 (min target (1- (length buttons)))))))
+          (goto-char (nth index buttons))
+          (and (eq emacsvox-transient-navigation-style 'section-stop)
+               current (= current index) (/= target index)))))))
+
+(defun emacsvox-transient--navigate-button (original n direction interactive)
+  "Call ORIGINAL with N or move DIRECTION items for INTERACTIVE navigation."
+  (if (and interactive (window-live-p transient--window)
+           (memq emacsvox-transient-navigation-style '(section-wrap section-stop)))
+      (let ((previous (window-point transient--window)))
+        (if (emacsvox-transient--move-within-section direction)
+            (emacsvox-transient--submit-actions
+             (emacsvox-transient--item-facts
+              'section 'section-boundary 'operation-failed)
+             'navigation 'warn-user)
+          (emacsvox-transient--speak-button previous direction)))
+    (let ((previous (and (window-live-p transient--window)
+                         (window-point transient--window))))
+      (prog1 (funcall original n)
+        (when interactive
+          (emacsvox-transient--speak-button previous direction))))))
+
+(defun emacsvox-transient--choice-selected-p (object text)
+  "Return non-nil if OBJECT has an active value or TEXT marks it selected."
+  (or (and (eieio-object-p object)
+           (object-of-class-p object 'transient-infix)
+           (oref object value))
+      (and (stringp text) (> (length text) 0)
+           (memq 'selected
+                 (plist-get (get-text-property 0 emacsvox-aural-facts-property text)
+                            :states)))))
+
+(defvar-local emacsvox-transient--review-state nil
+  "Selected item's announcement and review position, independent of menu focus.")
+
+(defun emacsvox-transient--speak-review-character (char origin-window)
+  "Speak review CHAR normally without moving menu focus from ORIGIN-WINDOW."
+  (let ((emacsvox-aural-submission-occasion 'navigation)
+        (emacsvox-aural-submission-module 'transient)
+        (prefix transient--prefix)
+        (window (selected-window))
+        (origin-buffer (window-buffer origin-window))
+        (state emacsvox-transient--review-state)
+        (index (plist-get emacsvox-transient--review-state :character)))
+    (tts-stop)
+    (emacsvox-speak-this-char char)
+    (emacsvox--delayed-phonetic-schedule
+     char
+     (lambda ()
+       (and (eq prefix transient--prefix)
+            (eq window transient--window)
+            (window-live-p origin-window)
+            (eq origin-buffer (window-buffer origin-window))
+            (memq (selected-window) (list window origin-window))
+            (eq state emacsvox-transient--review-state)
+            (equal index (plist-get state :character)))))))
+
+(defun emacsvox-transient--review (movement &optional character)
+  "Review the selected item without moving menu focus.
+Nil MOVEMENT repeats the whole item and resets word review.  Zero repeats
+the current word; other integers move that many words.  The symbols `start'
+and `end' move outside the first or last element in both review units.
+The first word
+command starts at the first word.  Keep punctuation and numeric values
+together by separating words at whitespace.  Non-nil CHARACTER reviews
+characters instead, sharing the word review position."
+  (let ((origin-window (selected-window)))
+    (with-selected-window (emacsvox-transient--navigation-window)
+      (unless (and transient--prefix (button-at (point)))
+        (user-error "Select a menu item with Up or Down first"))
+      (let* ((button (button-at (point)))
+             (object (button-get button 'button-data))
+             (rendered (emacsvox-aural-source-substring
+                        (button-start button) (button-end button)))
+             (text (or (emacsvox-transient--choice-text object nil rendered) rendered))
+             (target (list transient--prefix (button-start button) object)))
+        (unless (and (eq transient--prefix
+                         (car (plist-get emacsvox-transient--review-state :target)))
+                     (equal target (plist-get emacsvox-transient--review-state :target))
+                     (equal text (plist-get emacsvox-transient--review-state :text)))
+          (let ((start 0) starts)
+            (save-match-data
+              (while (string-match "[^[:space:]]+" text start)
+                (push (match-beginning 0) starts)
+                (setq start (match-end 0))))
+            (setq emacsvox-transient--review-state
+                  (list :target target :text text :starts (nreverse starts)
+                        :words (split-string text "[[:space:]]+" t)
+                        :index nil :character nil))))
+        (let* ((words (plist-get emacsvox-transient--review-state :words))
+               (starts (plist-get emacsvox-transient--review-state :starts))
+               (index (plist-get emacsvox-transient--review-state
+                                 (if character :character :index)))
+               (next (pcase movement
+                       ('start -1)
+                       ('end (if character (length text) (length words)))
+                       (_ (if (null index) 0 (+ index (or movement 0))))))
+               (content
+                (cond
+                 ((null movement)
+                  (plist-put emacsvox-transient--review-state :index nil)
+                  (plist-put emacsvox-transient--review-state :character nil)
+                  text)
+                 ((null words) "No words in this item.")
+                 ((< next 0)
+                  (plist-put emacsvox-transient--review-state :index -1)
+                  (plist-put emacsvox-transient--review-state :character -1)
+                  "Start of item.")
+                 ((>= next (if character (length text) (length words)))
+                  (plist-put emacsvox-transient--review-state :index (length words))
+                  (plist-put emacsvox-transient--review-state :character (length text))
+                  "End of item.")
+                 (character
+                  (plist-put emacsvox-transient--review-state :character next)
+                  (plist-put emacsvox-transient--review-state :index
+                             (or (cl-position-if (lambda (start) (<= start next))
+                                                 starts :from-end t) 0))
+                  (aref text next))
+                 (t
+                  (plist-put emacsvox-transient--review-state :index next)
+                  (unless (and (zerop movement)
+                               (numberp (plist-get emacsvox-transient--review-state :character))
+                               (>= (plist-get emacsvox-transient--review-state :character) 0))
+                    (plist-put emacsvox-transient--review-state :character (nth next starts)))
+                  (nth next words)))))
+          (if (characterp content)
+              (emacsvox-transient--speak-review-character content origin-window)
+            (emacsvox-transient--submit-text
+             content (emacsvox-transient--item-facts 'command 'review-item)
+             'navigation)))))))
+
+(defun emacsvox-transient--repeat-item ()
+  "Repeat the selected item's name, value and key; restart word review."
+  (interactive)
+  (emacsvox-transient--review nil))
+
+(defun emacsvox-transient--review-beginning ()
+  "Move review before the selected item's first word and character."
+  (interactive)
+  (emacsvox-transient--review 'start))
+
+(defun emacsvox-transient--review-end ()
+  "Move review after the selected item's last word and character."
+  (interactive)
+  (emacsvox-transient--review 'end))
+
+(defun emacsvox-transient--review-word ()
+  "Repeat the current review word without changing the selected item."
+  (interactive)
+  (emacsvox-transient--review 0))
+
+(defun emacsvox-transient--review-next-word (n)
+  "Review N words forward without changing the selected menu item."
+  (interactive "p")
+  (emacsvox-transient--review n))
+
+(defun emacsvox-transient--review-previous-word (n)
+  "Review N words backward without changing the selected menu item."
+  (interactive "p")
+  (emacsvox-transient--review (- n)))
+
+(defun emacsvox-transient--review-character ()
+  "Repeat the current review character without changing menu focus."
+  (interactive)
+  (emacsvox-transient--review 0 t))
+
+(defun emacsvox-transient--review-next-character (n)
+  "Review N characters forward without changing the selected menu item."
+  (interactive "p")
+  (emacsvox-transient--review n t))
+
+(defun emacsvox-transient--review-previous-character (n)
+  "Review N characters backward without changing the selected menu item."
+  (interactive "p")
+  (emacsvox-transient--review (- n) t))
+
+(defun emacsvox-transient--speak-button (&optional previous direction section-only)
+  "Present the current button, noting section changes and wraps from PREVIOUS.
+DIRECTION is positive for forward movement, negative for backward movement.
+SECTION-ONLY speaks its section while retaining the button's facts and cues."
+  (with-selected-window (emacsvox-transient--navigation-window)
+    (setq emacsvox-transient--review-state nil)
     (when-let* ((button (button-at (point)))
                 (start (button-start button))
                 (end (button-end button)))
       (let* ((sections (emacsvox-transient--sections))
              (section (emacsvox-transient--section-at start sections))
              (old-section (and previous (emacsvox-transient--section-at previous sections)))
+             (object (button-get button 'button-data))
+             (choice (or (emacsvox-transient--choice-text
+                          object nil (emacsvox-aural-source-substring start end))
+                         (emacsvox-aural-source-substring start end)))
+             (selected (emacsvox-transient--choice-selected-p object choice))
+             (toggle (get-text-property 0 'emacsvox-transient-toggle-state choice))
              (wrap (and previous direction
-                        (cond ((and (> direction 0) (<= start previous)) "Beginning of menu. ")
-                              ((and (< direction 0) (>= start previous)) "End of menu. ")))))
+                        (or (and (> direction 0) (<= start previous))
+                            (and (< direction 0) (>= start previous)))))
+             (section-change
+              (and section
+                   (or (not (equal section old-section))
+                       (and wrap (eq emacsvox-transient-navigation-style 'continuous))))))
         (emacsvox-transient--submit-text
-         (concat wrap
-                 (when (and section (or wrap (not (equal section old-section))))
-                   (concat (emacsvox-transient--section-text section sections) " "))
-                 (or (emacsvox-transient--choice-text
-                      (button-get button 'button-data)
-                      (when section
-                        (string-trim (emacsvox-aural-source-substring
-                                      (car section) (cdr section))))
-                      (emacsvox-aural-source-substring start end))
-                     (emacsvox-aural-source-substring start end)))
-         (emacsvox-transient--item-facts 'command 'focus-button 'focus-entered '(selected))
-         'navigation 'button)))))
+         (cond
+          ((and section-only section)
+           (emacsvox-transient--section-text section sections))
+          ((and section-change
+                (not (eq emacsvox-transient-section-announcement-order 'by-movement)))
+           (let ((heading (emacsvox-transient--section-text section sections)))
+             (if (eq emacsvox-transient-section-announcement-order 'section-first)
+                 (concat heading " " choice)
+               (concat choice " " heading))))
+          (t choice))
+         (emacsvox-transient--item-facts
+          (if (and (eieio-object-p object)
+                   (object-of-class-p object 'transient-infix)) 'value 'command)
+          'focus-button 'focus-entered (when selected '(selected)))
+         'navigation
+         (cond (wrap 'repeat-start)
+               (section-change 'section)
+               ((memq toggle '(on off)) toggle)
+               (selected 'select-object)))))))
 
 (defun emacsvox--advice-transient-backward-button-around
     (orig-fun n)
   "Speak the button reached after moving backward by N."
   ;; Transient's temporary interactive wrapper can replace our command marker
   ;; with a function object.  Check the interactive call before moving instead.
-  (let ((previous (and (window-live-p transient--window) (window-point transient--window)))
-        (interactive
+  (let ((interactive
          (or (ems-interactive-p 'transient-backward-button)
              (and (eq this-command 'transient-backward-button)
                   (called-interactively-p 'any)))))
-    (prog1 (funcall orig-fun n)
-      (when interactive
-        (emacsvox-transient--speak-button previous (- n))))))
+    (emacsvox-transient--navigate-button orig-fun n (- n) interactive)))
 
 (advice-add 'transient-backward-button :around
             #'emacsvox--advice-transient-backward-button-around)
@@ -816,22 +1332,63 @@ DIRECTION is positive for forward movement, negative for backward movement."
 (defun emacsvox--advice-transient-forward-button-around
     (orig-fun n)
   "Speak the button reached after moving forward by N."
-  (let ((previous (and (window-live-p transient--window) (window-point transient--window)))
-        (interactive
+  (let ((interactive
          (or (ems-interactive-p 'transient-forward-button)
              (and (eq this-command 'transient-forward-button)
                   (called-interactively-p 'any)))))
-    (prog1 (funcall orig-fun n)
-      (when interactive
-        (emacsvox-transient--speak-button previous n)))))
+    (emacsvox-transient--navigate-button orig-fun n n interactive)))
 
 (advice-add 'transient-forward-button :around
             #'emacsvox--advice-transient-forward-button-around)
 
 ;;; Enable And Customize Transient Navigation:
 
+(defun emacsvox-transient--settings-enter-binding (map)
+  "Add Enter activation to MAP for the Emacsvox settings menus."
+  (when (and transient-enable-menu-navigation transient--prefix
+             (memq (oref transient--prefix command)
+                   '(emacsvox-aural-menu emacsvox-aural-menu-speech
+                     emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
+                     emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
+                     emacsvox-aural-voice-menu emacsvox-indentation
+                     emacsvox-capitalization emacsvox-capitalization-cue emacsvox-spelling
+                     emacsvox-spelling-timing
+                         emacsvox-tone-editor emacsvox-tone-editor-waveform
+                         emacsvox-tone-editor-envelope emacsvox-tone-editor-presets emacsvox-tone-editor-curve
+                     emacsvox-interaction emacsvox-indentation-tone
+                     emacsvox-aural-menu-line-cues emacsvox-line-cues-edit
+                     emacsvox-output-settings emacsvox-settings-buffer emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
+                     emacsvox-settings-dictionaries emacsvox-settings-diagnostics emacsvox-settings-history emacsvox-settings-switches
+                     emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
+                     emacsvox-settings-integrations--comint
+                     emacsvox-settings-integrations--eat
+                         emacsvox-settings-integrations--eat-choice
+                         emacsvox-settings-integrations--agent
+                         emacsvox-settings-integrations--choice
+                         emacsvox-settings-integrations--org
+                         emacsvox-settings-integrations--eww
+                         emacsvox-settings-integrations--notmuch)))
+    (keymap-set map "RET" #'transient-push-button)
+    (keymap-set map "<return>" #'transient-push-button))
+  map)
+
+(advice-add 'transient--make-transient-map :filter-return
+            #'emacsvox-transient--settings-enter-binding)
+
 (defun emacsvox-transient-setup ()
   "Emacsvox Transient Customizations"
+  ;; Navigation bindings remain below each menu's own suffix bindings.
+  (dolist (binding '(("C-c l" . emacsvox-transient--repeat-item)
+                     ("C-c w" . emacsvox-transient--review-word)
+                     ("C-c c" . emacsvox-transient--review-character)
+                     ("C-a" . emacsvox-transient--review-beginning)
+                     ("C-e" . emacsvox-transient--review-end)
+                     ("C-f" . emacsvox-transient--review-next-character)
+                     ("C-b" . emacsvox-transient--review-previous-character)
+                     ("M-f" . emacsvox-transient--review-next-word)
+                     ("M-b" . emacsvox-transient--review-previous-word)))
+    (keymap-set transient-popup-navigation-map (car binding) (cdr binding))
+    (define-key transient-predicate-map (vector (cdr binding)) 'transient--do-move))
   (keymap-set  transient-popup-navigation-map "C-j" #'transient-push-button)
   (define-key transient-predicate-map
               [emacsvox-transient-previous-section] 'transient--do-move)
@@ -846,7 +1403,7 @@ DIRECTION is positive for forward movement, negative for backward movement."
   (setq transient-enable-menu-navigation t
         transient-force-single-column t
         transient-semantic-coloring t
-        transient-show-menu 1))
+        transient-show-menu t))
 (emacsvox-transient-setup)
 
 (provide 'emacsvox-transient)

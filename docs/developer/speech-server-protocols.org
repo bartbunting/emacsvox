@@ -135,14 +135,11 @@ All commands are of the form
 commandWord {arguments}
 #+end_example
 
-The braces are optional if the command argument contains no white
-space.  The speech server maintains a *current state* that
-determines various characteristics of spoken output such as speech
-rate, punctuations mode etc. (see set of commands that manipulate
-speech state for complete list).  The client application
-*queues* The text and non-speech audio output to be produced
-before asking the server to *dispatch* the set of queued
-requests, i.e. start producing output.
+The braces are optional when the command argument contains no whitespace.
+The speech server's current state determines speech rate, punctuation mode
+and other output characteristics. The state-setting commands below describe
+those controls. The client queues text and non-speech audio, then asks the
+server to dispatch the queued requests and begin producing output.
 
 Once the server has been asked to produce output, it removes items
 from the front of the queue, sends the requisite commands to the
@@ -340,10 +337,9 @@ value is typically engine specific.
 tts_set_character_scale factor
 #+end_example
 
-Queues changing the scale factor.  Scale factor applied to speech rate
-when speaking individual characters.Thus, setting speech rate to 500
-and character scale to 1.2 will cause command *l* to use a
-speech rate of *500 * 1.2 = 600*.
+Queues a change to the scale factor used for individual-character speech.
+For a speech rate of 500 and a character scale of 1.2, command =l= uses a
+rate of 600: the base rate multiplied by the character scale.
 
 #+begin_example
 tts_split_caps flag

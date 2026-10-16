@@ -45,6 +45,7 @@
 (ert-deftest emacsvox-customize-save-variable-runs-quietly-once ()
   "Saving a variable preserves arguments, result, and dynamic state."
   (let ((emacsvox-speak-messages t)
+        (user-init-file "/tmp/emacsvox-test-init.el")
         (inhibit-message nil)
         (tts-quiet nil)
         (calls 0)
@@ -68,6 +69,24 @@
     (should emacsvox-speak-messages)
     (should-not inhibit-message)
     (should-not tts-quiet)))
+
+(ert-deftest emacsvox-customize-save-rejects-uninitialized-session ()
+  "A -q session must not silently report a temporary change as saved."
+  (require 'cus-edit)
+  (let ((custom-file (make-temp-file "emacsvox-unsaved-custom-" nil ".el"))
+        (user-init-file nil)
+        (option (make-symbol "emacsvox-test-unsaved-option")))
+    (unwind-protect
+        (progn
+          (set option 'original)
+          (let ((failure (should-error (customize-save-variable option 'changed)
+                                       :type 'user-error)))
+            (should (string-match-p "possibly because of the -q option in your startup"
+                                    (error-message-string failure))))
+          (should (eq (symbol-value option) 'original))
+          (should-not (get option 'saved-value))
+          (should (zerop (file-attribute-size (file-attributes custom-file)))))
+      (delete-file custom-file))))
 
 (provide 'emacsvox-customize-tests)
 ;;; emacsvox-customize-tests.el ends here

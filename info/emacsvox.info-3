@@ -1,0 +1,2164 @@
+This is emacsvox.info, produced by makeinfo version 7.2 from
+emacsvox.texi.
+
+INFO-DIR-SECTION Accessibility
+START-INFO-DIR-ENTRY
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
+END-INFO-DIR-ENTRY
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
+END-INFO-DIR-ENTRY
+
+This manual documents *Emacsvox, The Complete Audio Desktop*.
+
+
+File: emacsvox.info,  Node: Integration Maintenance,  Prev: Speech Server Protocols,  Up: Developer Guide
+
+20.3 Integration Maintenance
+============================
+
+This chapter collects source-level contracts that are deliberately
+omitted from the user task guides.  Optional package APIs and renderers
+evolve, so recheck the upstream interfaces and keep compatibility
+behavior bounded when changing an integration.
+
+* Menu:
+
+* Authoring Sound Packs::        Prepare a personal resource directory and validate its cue metadata.
+
+20.3.1 Logical table readers
+----------------------------
+
+‘emacsvox-table-reader.el’ supplies common cell/row/column formatting,
+copying, and movement decisions.  Agent Shell retains its rendered
+source-property adapter, contextual map, public commands, and
+preferences.  Markdown and Org register source adapters and use an
+explicit reader minor mode.  The table browser uses a buffer-local
+adapter for shared inspection, copying and speech preferences.  Its own
+movement commands keep the standalone view at vertical boundaries.
+Tabulated lists register an explicit reader adapter while retaining
+their ordinary application navigation outside that context.
+
+   An adapter supplies a fresh cell snapshot and a native Aural
+submission function.  Snapshots contain complete logical rows, flat
+source positions in row order, table bounds, optional header
+information, and zero-based internal coordinates.  Movement rejects
+missing cells and handles boundaries before changing point.  Source
+adapters rebuild snapshots for each command; source edits end explicit
+reading.  No native table editing command is used for navigation.
+Presentation remains under each integration's Aural module and role,
+with one main-lane submission per reader action.
+
+   The tabulated-list adapter reads printed entry properties in display
+order, without calling entry producers.  It uses full string/button
+labels and column metadata, skips invisible rows, and maps an empty
+final cell to its newline.  Refreshes retire the reader before positions
+can become stale.  An optional adapter map preserves application and
+button actions; only shared navigation and ‘q’ deliberately override
+them during reading.  Other occupied keys retain their application
+action, with shared commands accessible through ‘M-x’.  Standalone list
+bounds include the buffer, so vertical edges stay put.
+
+   The read-only table browser caches logical string rows when
+rendering.  Text properties map every character, including embedded line
+breaks and delimiters, to a model cell.  Pre/post-command hooks
+synchronize the model after ordinary character movement; snapshot
+extraction also synchronizes it.  Browser movement uses the model and
+its rendered position index.  New reader actions submit under module
+‘table-ui’, with role ‘field’ for cells and explicit main-lane delivery.
+The local browser map is independent of the legacy speech-prefix map.
+CSV parsing preserves quoted fields and visited source buffers before
+constructing the view.  Sorting constructs a new view and carries over
+both filters and the shared speech preferences.
+
+   The shared prefix adds only previously unused keys: ‘C-r’ toggles
+source-table reading, and ‘[’ / ‘]’ discover tables.  Printable reader
+keys are contextual.  Control-Meta arrows also enter reading and move
+within supported source tables.  A conditional minor-mode map uses
+menu-item filters: returning nil outside these tables preserves the
+effective binding in lower maps, including personal bindings.  The
+filter preserves point and match data, excludes code examples, and
+defers to the active reader map after entry.  First-arrow entry and
+movement produce one submission.  Structural movement remains available
+outside tables; inside tables, its usual ‘C-M-f/b/u/d’ keys remain
+available.  Org's native ‘<TAB>’, ‘<RET>’ and Meta-arrow editing
+bindings remain available outside reading.  Agent Shell's existing
+scoped overrides and prompt behaviour remain as documented in its
+integration contract.
+
+   Regression coverage lives in ‘test/emacsvox-table-reader-tests.el’
+and the Agent Shell table cases.  The graphical Agent Shell integration
+gate includes real wrapped-table movement and copying.  The
+source-reader graphical case
+‘emacsvox-table-reader-graphical-wrapped-source’ must also run in a
+fresh graphical Emacs with Markdown Mode installed; its batch skip is
+not a pass.  Check source text and modified state, effective keys,
+complete wrapped values, source edits, code exclusion, title
+preferences, and native Aural submissions.  Browser coverage lives in
+‘test/emacsvox-table-ui-tests.el’; use
+‘EMACSVOX_TABLE_UI_TEST_LOAD=compiled’ in a fresh Emacs after building
+to verify the compiled implementation.  Its
+‘emacsvox-table-ui-graphical-multiline-navigation’ case requires a
+graphical display and checks actual wrapping and logical cell movement.
+Listening acceptance is separate from submission and graphical checks.
+Tabulated-list coverage lives in
+‘test/emacsvox-tabulated-list-tests.el’, including full values, blanks,
+buttons, native action keys, sorting, filtering, refresh and hidden
+rows.  Its graphical navigation case must run on a real graphical Emacs;
+a batch skip does not establish display acceptance.
+
+20.3.2 Ordinary line movement in short windows
+----------------------------------------------
+
+Core ‘next-line’ advice dynamically disables ‘auto-window-vscroll’ for
+an interactive one-line forward move when the displayed row fits in the
+selected window.  Native partial scrolling can otherwise scroll without
+moving point, causing the existing after advice to read the same line
+again.  This reproduced while reading Notmuch HTML with a header line
+and mixed font heights.
+
+   Preserve the interactive marker for the after advice, programmatic
+movement, prefix arguments and scrolling within genuinely tall rows.  Do
+not change the buffer's scrolling preference or suppress repeated text
+as a substitute for correct movement.  The graphical integration gate
+exercises real rendering, cursor movement and speech, plus a tall-image
+case, in ‘test/emacsvox-vertical-navigation-tests.el’.
+
+20.3.3 EAT rendered output and prompt observation
+-------------------------------------------------
+
+EAT output is collected around ‘eat-term-process-output’ before
+redisplay can trim it, including a bounded unfinished row.  Never retain
+raw process bytes or unredacted concealed text.  Read fresh public
+terminal bounds, preserve soft-wrap continuity, and reject uncertain
+clear/reset/alternate-screen replacements.  Check selected-window
+following after EAT synchronizes windows, not between chunks inside its
+renderer.  Editable line-mode text lies after ‘eat-term-end’; it can
+share the final physical row with the terminal cursor.
+
+   Prompt observation wraps the public ‘ui-command-function’ terminal
+parameter and preserves its original callback.  EAT has already parsed
+the protocol: ‘e;B’ and ‘e;C’ bracket a prompt, and ‘e;J’ identifies a
+new shell prompt cycle.  The adapter reads bounded rendered ranges,
+excludes those ranges from ordinary output, and deduplicates
+same-position prompt repaint.  It does not infer a prompt from
+punctuation or require annotation overlays.  Keep this protocol seam
+covered against the pinned EAT source and its real Bash integration when
+upgrading.  Unmarked unfinished text remains ordinary output; otherwise
+remote questions can disappear indefinitely while waiting for a newline.
+
+   Foreground loss discards Emacs-local automatic work only.  It must
+not call a process-wide speech stop.  Already dispatched speech may
+finish; scoped Omnivox cancellation remains a separate backlog
+direction.  The graphical gate covers real X11 focus loss, minibuffers,
+selection, line drafts and scrolling.  Integration runners force the
+silent ‘log-null’ backend before loading Emacsvox so a failed test
+cannot start the maintainer's configured speech engine.  Submission
+checks are separate from the maintainer's final audible SSH acceptance.
+
+   When aural diagnostics are enabled, ‘eat-output-decision’ records
+explain collection rejection, pending-work cancellation, retained
+output, and selection for presentation.  Each contains fixed
+decision/reason symbols plus terminal, generation and update
+identifiers, without terminal text.  Selection for presentation is not
+proof of transport, playback or audible output; correlate the ordinary
+aural submission and Omnivox records for those later stages.
+
+20.3.4 Source checkout and byte-code lifecycle
+----------------------------------------------
+
+Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
+Emacs 30.2 or newer is not the system ‘emacs’, set its absolute path
+there:
+
+     EMACS=/path/to/emacs-31/bin/emacs
+
+   Run ‘make check-emacs’ before diagnosing compilation.  After an
+ordinary Lisp edit, use the incremental build:
+
+     make bytecode
+
+   After switching branches, pulling changes, or changing a macro or
+public interface, use:
+
+     make bytecode-rebuild
+
+   That target removes ignored generated ‘.elc’ files and recompiles
+them with the selected Emacs; it does not clean or discard source
+changes.  ‘make bytecode-check’ is the non-mutating preflight for
+startup or deployment.  It reports missing, stale, orphaned, or
+wrong-Emacs byte-code.
+
+   Each ‘make config’ fully regenerates ‘lisp/emacsvox-loaddefs.el’ from
+the current sources, including edited autoloads, new modules, and
+deleted modules.  The build targets ‘make bytecode’, ‘make
+bytecode-rebuild’, ‘make emacsvox’, and ‘make all’ run configuration
+before compiling; ‘make compat-test’ runs it before testing.  The
+portable command ‘emacs -Q --batch -l etc/configure-emacsvox.el’ uses
+the same full regeneration.  Saving a source file or starting Emacs does
+not regenerate autoloads.  Neither ‘make bytecode-check’ nor ‘make
+docs-release-check’ does so.  Regenerating the index alone does not
+force all modules to be recompiled.
+
+   Tests deliberately prefer source and therefore do not prove that the
+byte-code used by a live profile is current.  Verify rebuilt byte-code
+in a fresh Emacs rather than relying on a file reload when compiled
+dependants may already be resident.
+
+   During development, load the changing setup source explicitly:
+
+     (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+
+   The setup entry point warns and prefers source when newer Lisp would
+otherwise be hidden by stale local byte-code.  In a stable checkout with
+current ‘.elc’ files, ‘(load-library "emacsvox-setup")’ may be used.  Do
+not use ‘load-library’ as the first load after editing the source tree:
+Emacs can select an old ‘emacsvox-setup.elc’ before the newer source
+checker runs.
+
+  1. Background startup ownership and failure recovery
+
+     ‘emacsvox’ starts two named background tasks: ‘core-advice’ loads
+     core command feedback and ‘package-preparation’ registers optional
+     package adapters.  The private task registry retains each thread,
+     state, start/end times, and original error for the Emacs session.
+     Repeated startup reuses these records, including completed and
+     failed tasks, instead of starting duplicate background work.  Other
+     startup effects, including speech-server initialization, still run
+     when ‘emacsvox’ is called again; this is not a general-purpose
+     retry command.
+
+     Registration completion is separate from adapter loading.  An
+     already-loaded package triggers its adapter immediately; another
+     package gets a deferred load callback.  Each package/adapter pair
+     is registered once.  Both load paths record failures without
+     aborting later registrations.  Failed or completed adapters are not
+     automatically retried on another package load.  User quit is
+     recorded and still propagates.  Source fallback from the setup
+     guard is preserved in both background tasks and deferred callbacks.
+
+     ‘M-x emacsvox-startup-status’ speaks a summary and selects a Help
+     report with task durations and original adapter errors.  Calling
+     ‘emacsvox-startup-status’ from Lisp returns the summary without
+     speech or a window.  Failures also issue a warning and attempt a
+     notification in interactive Emacs; retained records remain
+     available if either feedback path fails.  Successful completion
+     adds no new unconditional announcement.  The protocol and routing
+     checkpoints defined in the startup ADRs retain their separate
+     meanings; task completion does not declare the speech server ready,
+     or establish that every adapter has loaded.
+
+     Correct the reported cause and verify in a fresh session,
+     rebuilding changed Lisp first.  A failed adapter can leave partial
+     advice or hooks: error isolation does not roll those effects back.
+     Do not clear private ownership tables as a retry mechanism, since
+     deferred callbacks can still refer to their records.  Retain error
+     details, selected Emacs version, and phase durations when
+     debugging.  Background scheduling is preserved; these records do
+     not guarantee that core advice finishes before the first input
+     command, and batch timings do not measure interactive startup
+     latency.
+
+     The focused tests exercise real deferred loads, failure isolation,
+     task reuse, source fallback, and spoken status with speech
+     intercepted.  Check source with the selected Emacs using
+     ‘test/emacsvox-startup-tests.el’.  For fresh compiled parity, first
+     run ‘make bytecode-check’, then set
+     ‘EMACSVOX_STARTUP_TEST_LOAD=compiled’ when loading the same test
+     file in a new batch Emacs.  This selects ‘emacsvox.elc’ explicitly;
+     it does not make every test dependency compiled.  Audible diagnosis
+     and real startup latency still need an isolated interactive
+     session.
+
+  2. Supported Emacs versions
+
+     The Lisp runtime and all platform routes support Emacs 30.2 and
+     newer.  Run ‘make compat-test’ for the core compatibility
+     contracts.  Settings menus require Transient 0.13.3 or newer; Emacs
+     30.2 needs a separate package.  CI uses the pinned Transient,
+     cond-let, and compat sources for that build and Emacs 31.1's
+     bundled Transient for the newer build.  Both compile all maintained
+     modules.  The full ‘make test’ suite additionally requires the
+     optional integration packages, including ‘lua-mode’ on Emacs 30.
+
+     The separate core speech CI job runs ‘make core-test’, ‘make
+     trace-test’, and ‘make compiled-aural-test’ on both versions with a
+     private home directory.  It covers speech, voice configuration,
+     transport, Voice Workbench, startup, and golden speech traces
+     without optional Emacs packages.  It requires GNU Make, Git, a
+     POSIX shell, and Tcl (‘tclsh’); missing prerequisites fail before
+     the core tests run.  The fresh CI checkout exercises source,
+     followed by an isolated compiled Aural check.  Optional integration
+     suites remain outside this job.
+
+     The separate integration CI job runs Agent Shell, Notmuch, and EAT
+     tests on both versions with a private home directory and eight
+     reviewed dependency snapshots, including Transient 0.13.3 and
+     cond-let 1.0.0.  ‘make test-deps’ verifies the archive hashes in
+     ‘test/integration-dependencies.json’ and stages sources and
+     autoloads under ignored ‘.test-deps/’; it never changes personal
+     packages.  ‘make integration-test’ verifies that prepared tree
+     before loading it and runs the batch cases.  ‘make
+     graphical-integration-test’ uses the same verified tree for the two
+     Agent Shell display-row cases in a real graphical Emacs on a
+     private Xvfb display.  Both gates fail on missing dependencies or
+     skipped selected tests.  The graphical runner requires ‘xvfb-run’,
+     ‘Xvfb’, ‘xauth’ and ‘timeout’, captures its log, disables speech
+     output and stops its isolated session after 60 seconds.  CI runs
+     both gates on each supported Emacs version.  Pin updates require
+     upstream review, new archive hashes, and fresh preparation for both
+     Emacs versions.  These source tests capture speech events and
+     exercise disposable EAT subprocesses; they do not replace listening
+     tests or compiled integration checks.  See ‘test/README.org’ for
+     preparation checks, directory overrides, recovery, and coverage
+     boundaries.
+
+     Keep each Emacs version's build in a separate checkout; never reuse
+     ‘.elc’ files across versions.  All platforms, including native
+     Windows x64, use this minimum.  The documentation toolchain retains
+     its independent pin.
+
+  3. Native Windows builds
+
+     Use a separate checkout on a Windows drive.  The native installer
+     regenerates autoloads and all modules from the ‘lisp/Makefile’
+     inventory with the selected Windows Emacs.  Its launcher verifies
+     that byte-code in a fresh process.  Do not share generated
+     byte-code with a WSL checkout using another Emacs.
+
+     Run the native installer checks from that Windows checkout:
+
+          .\test\emacsvox-windows-install-tests.ps1 -Emacs "C:\path\to\emacs.exe"
+          .\bin\emacsvox-install.ps1 -Role Desktop -Check
+          .\bin\emacsvox-install.ps1 -Role Desktop
+          .\bin\emacsvox.ps1 -Check
+
+     The PowerShell tests use temporary fixtures and an existing native
+     Emacs.  They check doctor behavior, explicit selections,
+     prebuilt/offline preflight, incomplete installations, platform
+     rejection, checksums, archive paths, argument handling, and atomic
+     configuration replacement.
+     ‘test/emacsvox-native-bytecode-tests.el’ compares the native
+     inventory with GNU Make and checks dependency order and byte-code
+     preflight failures.  Keep the WSL x64/ARM64 and remote installer
+     tests passing.
+
+     Actual acquisition acceptance must start with the pinned archives
+     in an empty installation root, not a reused developer runtime.  For
+     ‘-DownloadEmacs’, verify the complete upstream Windows ZIP and its
+     bundled runtime features.  For source builds, start with a private
+     toolchain.  Keep MSYS2 package versions,
+     compiler/configure/build/install logs, and ‘emacsvox-build.json’
+     with the installed Emacs.  The installation logs also include
+     ‘native-install-provenance.json’ with Lisp source hashes and
+     selected pins.  MSYS2 packages are signed rolling inputs; these
+     records do not claim a frozen or bit-identical compiler
+     environment.  Verify fresh graphical startup, acknowledged routing,
+     and tracked completion on both speech lanes with a PATH that
+     contains neither WSL nor MSYS2 tools.  Human listening remains a
+     separate acceptance step.  Native Windows x64 is supported; remote
+     workstation speech remains preview, as recorded in ADR 0014
+     (../adr/0014-native-windows-support.org).
+
+       1. Offline Windows development bundle
+
+          ‘make windows-bundle-dev’ downloads checksum-pinned Emacs and
+          Omnivox archives and creates a development ZIP below ‘dist/’.
+          Packaging needs Python 3.11 or newer and Git on the build
+          machine.  To use a prepared cache without network:
+
+               python3 utils/emacsvox-windows-bundle.py --offline \
+                 --cache-directory /path/to/archives --output-directory dist/windows-installer
+               make windows-bundle-test
+
+          Extract the ZIP on a local Windows drive and run
+          ‘Install.cmd’, or run ‘Install.ps1 -InstallRoot "C:\path with
+          spaces\Emacsvox"’ from PowerShell.  The destination needs
+          neither Git nor build tools.  ‘-Check’ verifies the bundle
+          without writing installation state; ‘-NoAudioCheck’ prepares
+          an unattended installation.  Run the printed launch command
+          with ‘-Check’ to perform the graphical speech check afterward.
+
+          From a Windows checkout, repeat acquisition and installation
+          acceptance with:
+
+               .\test\emacsvox-windows-bundle-tests.ps1 -BundleArchive "C:\path\to\bundle.zip" -AudioCheck
+
+          This tests a fresh install, a repeated install, damaged
+          inputs, long paths, profile preservation and protection of
+          edited sources.  It limits PATH to Windows tools.  Add
+          ‘-KeepInstallation’ to retain the successful test directory;
+          failed test directories are retained with their logs
+          automatically.
+
+          Each bundle records its source commit and hashes the exact
+          payload, including uncommitted changes.  It copies only source
+          files, compiles in a versioned Windows application directory,
+          and refuses modified installed sources.  Repeated installation
+          reuses the verified runtimes and preserves the profile.  The
+          ZIP is a local development artifact.  To add the Windows setup
+          wizard, stage its contents for Inno Setup:
+
+               make windows-setup-stage WINDOWS_BUNDLE=/path/to/development-bundle.zip \
+                 WINDOWS_SETUP_STAGE=/path/to/new/setup-stage
+               make windows-setup-test
+
+          Put the complete staging directory on a Windows drive.  From a
+          native Windows checkout, build the executable with:
+
+               .\utils\emacsvox-windows-setup-build.ps1 -StagingDirectory "C:\path\to\setup-stage" -InstallCompiler
+
+          ‘-InstallCompiler’ acquires the checksum-pinned Inno Setup
+          compiler and verifies its publisher signature before
+          installing it per-user on the build machine.
+          ‘etc/windows-setup.conf’ owns these build-tool pins.  An
+          existing pinned compiler may be selected with ‘-Compiler’.
+          The output directory contains the setup executable, checksum
+          and compiler/payload provenance.  No compiler is needed on the
+          destination machine.
+
+          Run setup-helper checks and real lifecycle acceptance on
+          Windows:
+
+               .\test\emacsvox-windows-setup-helper-tests.ps1
+               .\test\emacsvox-windows-setup-cleanup-tests.ps1
+               .\test\emacsvox-windows-setup-tests.ps1 -Setup "C:\path\to\first-setup.exe" -Upgrade "C:\path\to\next-setup.exe" -AudioCheck
+               .\test\emacsvox-windows-setup-wizard-tests.ps1 -Setup "C:\path\to\setup.exe"
+
+          The lifecycle test refuses to replace an existing development
+          Setup registration or matching shortcuts.  It tests an
+          isolated installation, shortcut launch, running-process
+          refusal, repair, an optional second-build upgrade, and
+          uninstall while retaining profile and voice fixtures.  It
+          keeps logs for diagnosis.  Use a separate test account when a
+          development Setup installation is already registered.  Test
+          interactive wizard navigation with screen readers separately;
+          silent acceptance does not establish that UI.  The wizard test
+          inspects native accessibility controls, reaches the review
+          page and cancels without installing.  It does not replace
+          listening with a screen reader or keyboard-only navigation.
+
+          For rollback acceptance, stage an intentionally failing
+          fixture with ‘python3 test/prepare_windows_setup_failure.py
+          --bundle /path/to/bundle.zip --staging-directory
+          /path/to/failure-stage’ and compile it using the same build
+          command.  Pass its executable as ‘-FailedUpgrade’ to the
+          lifecycle test.  This fixture fails during configuration,
+          before activation; the test checks that the previous selection
+          and launcher still work.  Keep the failure fixture separate
+          from user-facing artifacts.
+
+          The main GitHub Actions CI workflow builds the installer on
+          Windows x64 for pushes and pull requests to ‘master’, and can
+          also be started manually.  Its Linux packaging fixtures run
+          first.  The Windows job checks native ownership and cleanup
+          helpers, verifies the cached Emacs and Omnivox downloads, and
+          uses the pinned Inno compiler.  It tests installation,
+          shortcut launch, running-process refusal, repair, rollback of
+          a deliberately failed upgrade, and uninstall with profile and
+          voice fixtures preserved.  Destination checks run with only
+          Windows tools on PATH.  The core speech CI job also exercises
+          startup and welcome-screen preferences on each supported Emacs
+          version without needing an audio device.
+
+          The ‘emacsvox-windows-installer-evidence’ artifact retains
+          build manifests, checksums, compiler provenance and lifecycle
+          logs for 14 days, including failed runs.  To export lifecycle
+          logs locally, add ‘-LogDirectory’ with a new directory to
+          ‘emacsvox-windows-setup-tests.ps1’.  Its ‘result.json’ records
+          whether acceptance passed and which optional checks were
+          requested.
+
+          CI does not run audio or interactive screen-reader acceptance.
+          It does not yet exercise a successful second-build upgrade;
+          use ‘-Upgrade’ locally for that check.
+
+          Successful runs offer two separate downloads in the job
+          summary: ‘emacsvox-windows-installer’ contains the tested
+          setup executable, its checksums, provenance, launch
+          instructions and ‘SOURCE-DOWNLOADS.md’, linking directly to
+          matching third-party sources on their upstream hosts.
+          ‘emacsvox-windows-sources’ contains our exact Emacsvox code,
+          build scripts, runtime assets and the same source index.
+          Unshipped historical soundscapes and talk recordings are
+          omitted.  It does not mirror the large upstream archives.
+          Sources are optional and are not installed on users' machines.
+          CI uploads them first and retains them for 90 days, compared
+          with 14 days for the installer.  Keep paired sources available
+          if redistributing an installer, and remove binaries before
+          their sources when deleting artifacts.  Keep the upstream
+          locations accessible; repair broken source links or withdraw
+          the affected installer.
+
+          ‘etc/windows-sources.json’ binds the reviewed Emacs/Omnivox
+          runtime archives to source archives and licence notices.  It
+          records exact DLL package matches, additional MSYS2 sources
+          absent from the GNU dependency ZIP, and locked Rust
+          dependencies.  ‘etc/windows-sources.txt’ explains the archive
+          contents and build recipes.  The application includes
+          ‘etc/WINDOWS-THIRD-PARTY-NOTICES.txt’; Emacs and Omnivox also
+          retain their own notices.  Runtime updates require a source
+          and notice review; link the exact versions with their
+          checksums.
+
+          The packaging gate requires a clean committed checkout
+          matching the staged installer, intact payloads and compiler
+          provenance.  It verifies the pinned upstream archives in a
+          private build cache and publishes their links beside the
+          installer.  It checks both downloads before making either
+          available.  Only the main tested executable is uploaded.  The
+          failed-upgrade fixture and offline bundle remain build inputs.
+          Run ‘make windows-sources-test’ for the isolated
+          source/publication boundary checks.
+
+          The setup executable remains a development artifact.  Stable
+          release integration and remaining acceptance work are recorded
+          in ADR 0024 (../adr/0024-native-windows-installer.org).
+          Public preview promotion is described below and in ADR 0025
+          (../adr/0025-windows-preview-publication.org).
+
+  4. Public Windows installer previews
+
+     Use a Windows preview when testers need public downloads without
+     Actions sign-in or artifact expiry.  Keep ‘VERSION’ and the
+     ‘Unreleased’ NEWS heading unchanged.  Do not use the stable release
+     targets or a stable version tag for this operation.  The tag
+     identifies the installer source commit; the clean publication
+     tooling checkout may be newer and records its own commit.
+
+     Start with a successful complete ‘CI’ run from ‘master’ in the
+     repository selected by ‘RELEASE_REMOTE’ (default ‘origin’).  The
+     installer, matching sources and evidence artifacts must still be
+     available for preparation.  For example:
+
+          make windows-preview-test
+          make windows-preview-prepare WINDOWS_PREVIEW_RUN=RUN_ID \
+            WINDOWS_PREVIEW_TAG=windows-preview-2026-09-20 \
+            WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+          make windows-preview-check WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+
+     Preparation downloads and verifies the exact CI assets.  It checks
+     all archived Emacsvox source files against Git, the installer and
+     setup provenance, source pairing, upstream source index, and native
+     lifecycle result.  It writes the publishable files under ‘assets/’
+     and a local ‘preview.json’ receipt.  It creates no tag or GitHub
+     release and refuses to overwrite an existing output directory.
+     Review ‘assets/README-preview.md’, the executable, sources and
+     checksums.  These instructions include permanent source links; the
+     old CI-only README is not published.  Upstream sources remain
+     upstream links, not mirrored archives.
+
+     Only after explicit maintainer approval naming the preview, run:
+
+          make windows-preview-tag WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+          make windows-preview-publish WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+
+     Both commands repeat validation.  The first creates only a local
+     annotated, unsigned tag at the tested source commit.  The second
+     pushes that exact tag, creates a private GitHub draft, attaches
+     sources and installer, verifies all remote SHA256 values, then
+     publishes as a prerelease with Latest disabled.  It always selects
+     the repository explicitly from ‘RELEASE_REMOTE’'s push URL.  It
+     does not edit the installer or source ZIP.  If uploading fails,
+     rerun the publish target against the same prepared directory; it
+     resumes only a matching draft with intact assets.  A mismatched
+     draft, conflicting tag or published release is an error, never an
+     invitation to force-push or overwrite it.
+
+     Changing the publication tooling commit or prepared files requires
+     preparing a new directory.  Keep the original evidence for review.
+     The preview is for native Windows x64, remains unsigned, and does
+     not establish stable installer readiness.  Its notes identify the
+     remaining interactive and lifecycle checks.
+
+  5. Remote preview validation
+
+     Keep remote installer fixtures separate from connected acceptance.
+     In the Omnivox checkout, run ‘make dev’ followed by ‘make
+     remote-test’; set ‘OMNIVOX_REMOTE_TEST_SLOW=1’ to cover heartbeat
+     expiry.  Set ‘OMNIVOX_REMOTE_TEST_EMACS’ to the selected Emacs and
+     ‘OMNIVOX_REMOTE_TEST_EMACSVOX’ to the matching Emacsvox checkout
+     for client acceptance.  The Omnivox ‘docs/REMOTE.md’ guide records
+     Windows relay tests, real-device options, and retained evidence.
+     Null-output tests do not establish audible playback or acceptance
+     through a separate SSH host.  Remote access remains preview
+     independently of native Windows desktop support.
+
+20.3.5 Debian package builds
+----------------------------
+
+‘make deb’ builds a local development package in ‘dist/’ using Python 3,
+‘dpkg-deb’, Git and the selected Emacs.  It stages runtime sources and
+generates autoloads in a private directory, preserving checkout
+byte-code and personal configuration.  The deb has architecture ‘all’,
+an Emacs 30.2 dependency (including terminal and graphical
+alternatives), and an Omnivox recommendation.  It loads source and does
+not install emacsen-common hooks or compile on install.  The ownership
+and release boundaries are recorded in ADR 0013
+(../adr/0013-debian-package.org).
+
+   ‘make deb-test’ checks the actual archive, reproducibility, source
+startup, remote diagnosis, dependency metadata and refusal of an
+unprepared release.  CI additionally installs, reinstalls and purges the
+package in a disposable Ubuntu 26.10 container using
+‘test/debian-install-smoke.sh’.  This target supplies Transient 0.13.3
+or newer through apt; Ubuntu 26.04's package is too old.  The check
+loads settings through the isolated launcher and reports the actual
+Transient version and path.  CI uploads the development deb and checksum
+as artifacts, without publishing a release.
+
+   After preparing the checked source archive using the release
+procedure below, ‘make release-deb’ produces
+‘dist/emacsvox_VERSION-1_all.deb’ and its checksum.  The script itself
+verifies the existing clean-source artifact gate before and after
+packaging.  Local versions instead contain ‘+git’ with the source commit
+and source hash, and revision ‘-0local1’.  The included
+‘BUILD-INFO.json’ records the exact source identity and autoload Emacs
+version.  Neither package target creates a tag, uploads release assets,
+adds an apt repository or changes the manual release publication
+approval boundary.
+
+   After a maintainer publishes a stable GitHub release, the Release
+Debian package workflow checks out its exact annotated tag and downloads
+the source archive, checksum and provenance from that release.  It
+checks the source identity, installs from the archive, builds the
+release deb, and tests install, startup, reinstall and removal in Ubuntu
+26.10 before attaching the deb and checksum.  Build jobs have read-only
+repository access; only the attachment job can write release assets.  A
+rerun accepts identical existing assets and refuses to replace different
+files.  CI does not create tags or releases.
+
+   This workflow uses Emacs 31.1 for source-archive installation and
+autoload generation, with its supported bundled Transient.  The Ubuntu
+installation check exercises the packaged Emacs 30.2 and external
+Transient route.  The recorded build toolchain can differ from a locally
+prepared package.  Let CI attach the release deb instead of uploading a
+differently built local package with the same name.
+
+20.3.6 Emacsvox release staging and publication
+-----------------------------------------------
+
+The repository-level ‘VERSION’ file is the canonical stable release
+identifier.  Calendar-versioning policy, including delayed patches and
+backports, is recorded in ADR 0002
+(../adr/0002-calendar-versioning.org).  When advancing a release, update
+‘VERSION’, the literal package header in ‘lisp/emacsvox.el’, and the
+current heading in ‘etc/NEWS’ together, then run:
+
+     make version-check
+
+   Between releases, ‘etc/NEWS’ uses the ‘Emacsvox Unreleased’ heading,
+so changes can be recorded before deciding whether the next publication
+is a patch or a new feature-release series.  After publishing, preserve
+those notes verbatim as ‘etc/NEWS-VERSION’ and start a new unreleased
+file.  Ordinary ‘version-check’ accepts that state; ‘release-check’,
+‘release-tag’, and ‘release-publish’ require the current NEWS heading to
+match ‘VERSION’ exactly.
+
+   Prepare an artifact only from a separate clean, committed worktree.
+Build fresh byte-code and run the guarded artifact target:
+
+     make bytecode-rebuild
+     make release-artifact
+
+   ‘release-artifact’ runs the complete test and documentation gates
+before creating ‘dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2’, its SHA-256
+checksum, and a provenance record naming the checked source commit.  For
+a patch-zero feature release, the series must match the current month.
+A corrective or backport release retains its original non-future series
+as required by ADR 0002.  The source archive includes the maintained
+‘utils/’ tools needed by the installers, launchers and build.  Before
+recording checked provenance, the artifact target extracts the actual
+archive into a temporary directory and runs the remote-only installer
+with the selected Emacs in a private home.  It checks fresh compiled
+startup, the offline manual and the remote helper's credential
+validation without opening a workstation connection or playing speech.
+‘make source-archive-check’ repeats this check on an existing archive;
+‘make source-archive-test’ checks export contents and rejection of
+missing helpers, local configuration and byte-code.  CI runs both checks
+before a release as well.  On native Windows, run
+‘test/emacsvox-source-archive-tests.ps1 -Archive PATH -Emacs PATH’ to
+check the actual archive's installer doctor, complete native compilation
+and fresh byte-code validation in a temporary Windows directory.
+
+   Inspect the archive, checksum, and provenance before proceeding.
+
+   Stop after artifact inspection unless fresh explicit permission names
+the release to be tagged and published.  Preparing an artifact,
+committing or pushing a branch, publishing documentation, or receiving a
+general instruction to continue is not permission to create or push a
+release tag.  Once that separate authorization has been given, the
+guarded commands are:
+
+     make release-tag
+     make release-publish
+
+   ‘release-tag’ validates the artifact against the still-clean ‘HEAD’
+and creates a local annotated, unsigned tag; it does not push the tag.
+The unsigned-tag policy and its trust boundary are recorded in ADR 0006
+(../adr/0006-annotated-unsigned-release-tags.org).  ‘release-publish’
+repeats the artifact and source-commit validation, pushes only that
+exact tag, and creates the GitHub release in the repository identified
+by ‘RELEASE_REMOTE’.  This explicit selection prevents the GitHub CLI
+from choosing an ‘upstream’ remote when releasing from a fork.  No
+release target pushes ‘master’ or the documentation branch.  Use ‘make
+release-check’ alone when a non-mutating preflight is wanted without
+creating an artifact.
+
+20.3.7 Future Aural contract decisions
+--------------------------------------
+
+The completed Aural implementation diary is preserved under
+‘archive/emacsvox/migrations/’ rather than serving as current
+instructions.  Three questions from that diary remain deliberately
+undecided and require an explicit architecture decision before
+implementation:
+
+   • whether a critical alert may be completely suppressed or must
+     retain an alternative presentation;
+   • which deterministic ordering policy would apply before minor-mode
+     selectors can participate in the presentation cascade; and
+   • whether a new presentation occasion belongs to the core semantic
+     contract or to a module-owned extension.
+
+   Do not infer answers from the archived proposals.  Current behavior
+is defined by the Aural implementation, its generated reference, and
+accepted ADRs.
+
+20.3.8 Voice-style metadata ownership
+-------------------------------------
+
+The private ‘emacsvox-aural--voice-style-fields’ table in
+‘lisp/emacsvox-aural-rules.el’ owns accepted field names, groups, value
+types, and integer bounds.  The existing public dimension lists and
+private accepted key list are derived from it; validation traverses the
+descriptors directly.  Composition and provenance continue to consume
+the accepted-key inventory.
+
+   Keep the two established orders explicit.  Validation checks preset,
+family, the four numeric ACSS fields, post-synthesis fields, relative
+rate, and legacy rate.  The accepted-key inventory places relative and
+legacy rate before the post-synthesis fields.  ACSS dimension order also
+determines positional legacy personality settings, and rich dimension
+order determines adjustment rows.
+
+   Every accepted field allows ‘nil’.  Validation preserves the original
+plist, including duplicate fields, for which the first value is used.
+Field absence, explicit ‘nil’, and zero remain distinct during
+composition and persistence.  Legacy ‘:rate’ is accepted for loading
+saved data but is not applied as a new rate; nonzero legacy values
+produce the existing retuning degradation.  The table supplies no
+implicit defaults and does not declare engine support.
+
+   An explicit ‘nil’ over a preset is a compatibility behavior to
+characterize, not an authoring decision settled by the metadata table.
+For example, the current compiler clears the reported average-pitch
+value for ‘(:preset base :average-pitch nil)’ while retaining the base
+voice command and emitting no pitch-reset command.  The tests preserve
+this distinction.  A future inheritance, omission, or reset policy needs
+a separate decision.
+
+   Compiler conversion, backend wire names, capability discovery,
+normalization, and delivery stay in their existing owners.  When adding
+a field, update those consumers explicitly and test final serialized
+output or an explicit degradation.  The common voice editor uses the
+shared field metadata for bounds and neutral values.  It covers portable
+ACSS and optional rate and post-synthesis adjustments in the same
+retained draft.
+
+   Input grammar remains UI policy.  In the common voice editor, blank
+numeric entry requests the adapter default; zero is explicit.
+Individual choice fields distinguish shared inheritance, custom values
+and explicit adapter defaults.  Rule-editor input has its own scoped
+inheritance semantics; do not substitute one editor's blank-input
+behavior for the other's.
+
+   The common editor displays low-pass and high-pass as amounts from
+zero through nine, increasing with stronger filtering.  Low-pass
+converts between amount and stored cutoff with ‘9 - value’; high-pass
+retains its numeric direction.  Zero is labelled neutral.  Stored
+cutoffs and adapter-default nil retain their meaning.  Invalid boundary
+steps must fail before history, dirty state, refresh or audition
+changes.
+
+   Delivery preparation has the limited helper boundaries described
+below; asynchronous operation ownership remains a separate refactoring
+proposal.
+
+   The rule tests state field inventories, bounds, error precedence, and
+composition expectations independently of the metadata.  Scheme tests
+cover saved rich palettes and explicit-nil rules; transport tests check
+distinct ACSS mappings, zero and omitted wire fields, effects, and
+preset behavior.  ‘make compiled-aural-test’ also runs these style
+contracts with the isolated compiled subsystem loaded, checking that the
+implementations stay in that build.  The ‘voice-style-ui’ tests exercise
+common-editor entry, inherited reset and draft retention in source and
+compiled runs.  Editor tests also cover numeric bounds, explicit
+defaults, undo and comparison.  They capture auditions and do not start
+audio.  Run ‘make graphical-voice-test’ for the voice editor's link,
+return navigation, and save-button checks in a fresh graphical Emacs
+with current byte-code.  It requires Xvfb, xvfb-run and xauth, and uses
+a separate virtual display so test windows cannot take desktop focus.
+The launcher prints the graphical ERT log and exits unsuccessfully for
+failures, skips, startup errors or a 45-second timeout.  A missing
+virtual-display tool fails before starting Emacs.  The graphical
+redisplay test is reported as skipped in ordinary batch runs.  The
+connected saved-style regression edits a custom ‘bolden’, reads its
+saved data back, and compares common-editor and Workbench previews with
+the final normal-speech wire for ‘voice-bolden’.  Workbench uses the
+compiler's palette resolution and the shared effect normalizer: gain and
+pan level five must remain exactly neutral at 0.5.  Preserve both this
+path and the independently specified Workbench scale cases when changing
+preview or palette lookup.  Preserve final-write, timeout, reentrancy,
+and trace regressions when working on later delivery slices; metadata
+validation alone cannot establish process lifecycle or audible behavior.
+
+20.3.9 Timeline preparation boundaries
+--------------------------------------
+
+Two private helpers in ‘lisp/emacsvox-aural-transport.el’ make
+preparation inputs explicit.
+‘emacsvox-aural--timeline-effect-transition’ takes previous effects,
+normalized next effects, and a span ID, returning a directive and the
+next state.  Replacement copies the saved state separately from the
+directive; retention preserves the previous state.  The builder still
+owns the state accumulator, span numbering, and when normalization runs.
+Suppressed or empty content does not advance effects, while spoken
+boundary actions do.
+
+   ‘emacsvox-aural--encode-timeline-delivery-fields’ takes a policy and
+replacement key.  The existing
+‘emacsvox-aural--timeline-delivery-fields’ wrapper reads the dynamic
+submission variables at the end of timeline construction.  Preserve that
+capture point: resource resolution earlier in construction can re-enter
+Lisp and change the submission state.  The serializer preserves ordered
+defaults, key conversion, circular printing, diagnostics, and byte
+bounds.
+
+   The complete builder is not pure.  Cue resolution through
+‘omnivox-remote-resource’ may perform I/O; relative-rate support comes
+from the live speech process.  Those operations, action placement,
+dispatch registration, framing, fallback, and process writes retain
+their existing owners and sequence.  Separating a complete delivery
+candidate from those effects requires further design and failure-path
+characterization.
+
+   The ‘delivery-preparation’ tests in
+‘test/emacsvox-aural-transport-tests.el’ check complete serialized
+timelines and final writes, semantic bindings, state ownership, policy
+inputs, and capture timing.  The compiled Aural gate also runs these
+contracts and existing stop and send-failure regressions with the
+compiled implementation resident.  Keep the full failure, reentrancy,
+and golden-trace suites as regression checks; captured writes establish
+protocol behavior, not audible playback.
+
+20.3.10 Aural interface source ownership
+----------------------------------------
+
+Ordinary-buffer entry captures a source buffer, a marker, and a guarded
+source line.  Child interfaces and Help inherit that context through the
+inspection and shared UI helpers.  Use
+‘emacsvox-aural-inspection-call-in-source’ for contextual commands so
+that moving the source cursor does not retarget an open interface.
+Re-entry from an ordinary buffer deliberately captures a new target.  A
+dead or replaced source is reported rather than resolved through an
+unrelated recent-buffer fallback.
+
+   Current-item lookup may reuse a frozen history record only when the
+captured source identity, position, and modification tick still match.
+Source identity is a buffer-local, data-only token that distinguishes
+buffers sharing a name; history continues to retain no buffer objects or
+markers.  Explicit historical selection remains valid after the source
+changes and is explained from its frozen plan.  Prepared current-item
+rules carry a source guard checked before their saved or live rule layer
+changes.
+
+   Find rule editors by scope and target identity, not by a formatted
+buffer name.  Buffer scopes belong to buffer objects, fragment scopes to
+fragment identifiers, and personal/session scopes each share one working
+editor.  Reopening a dirty editor preserves its draft and source
+association.
+
+20.3.11 Remote speech recovery
+------------------------------
+
+Ordinary ‘tts-initialize’ startup schedules the existing remote retry
+when main speech starts but a configured notification connection fails.
+The scheduler respects ‘omnivox-remote-auto-reconnect’, explicit
+suspension, and its single pending timer.  The retry restores only
+missing lanes; it keeps a working main process and negotiates fresh
+configuration for the new notifier.  ‘omnivox-remote-disconnect’ cancels
+the timer and suspends even a retry callback that has already been
+dispatched.  Local speech and disabled notification streams do not start
+remote recovery.  Exercise these boundaries in
+‘test/omnivox-remote-tests.el’ with controlled connection failures and
+timers.
+
+20.3.12 Omnivox voice configuration applies
+-------------------------------------------
+
+‘omnivox-apply-voice-configuration’ captures one generation and its
+definitions for the original speech processes.  Applies may overlap.
+Each owns its request identifiers and retires only those callbacks when
+a process result becomes terminal.  Acknowledging routing precedes
+logical registration; one aggregate reports applied, partial, or failed
+after all participating processes finish.
+
+   The timeout closes pending results as failed with phase ‘timeout’,
+cancels the timer, and releases the apply's pending callbacks.  A late
+acknowledgement cannot start another phase, update acknowledged
+configuration, or publish a second terminal result.  A reply from a
+stopped or replaced process also cannot advance its old apply.  Request
+ownership must remain correct when replies are dispatched while a send
+is still returning.
+
+   This closes client work; it cannot undo a change already sent to the
+server.  The Workbench therefore describes a timeout as an unconfirmed
+server outcome and offers reapplication of the committed profile.  No
+late-reply history is retained for expired applies.  Keep request-table,
+late-reply, overlapping-apply, and replacement regressions in
+‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
+‘test/emacsvox-aural-voice-workbench-tests.el’.
+
+20.3.13 Notmuch contracts
+-------------------------
+
+The live module is registered as an optional package integration.  Its
+stable extension points are the Hello, Search, Show, and Tree mode
+hooks; Search and Show mode maps; public interactive commands; and
+public Search/Show accessors.  Advice is installed only when a target
+exists and is target-aware, so a nested or programmatic upstream call
+does not claim the outer user's feedback.
+
+   The Show landing and visibility paths also read renderer metadata
+such as ‘:headers-overlay’, ‘:message-visible’, message extents,
+‘:notmuch-part’, part-hidden state, and Notmuch part-button types.
+Missing optional metadata should reduce presentation detail rather than
+authorize an operation.  Review these adapters whenever the Notmuch
+renderer changes.
+
+   Each user-owned asynchronous Search process carries its own
+completion state as a process property.  The upstream sentinel renders
+first; Emacsvox then clears that property before delivering exactly one
+terminal result.  The owning buffer and process status are
+authoritative.  A killed owner remains silent, concurrent buffers cannot
+overwrite one another, and the global refresh-all path intentionally
+acquires no ownership.
+
+   Run ‘make notmuch-test’ for the explicit source suite.  After current
+byte-code exists, run ‘make compiled-notmuch-test’; it verifies the
+exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
+focused selector, including real displayed-window reading for both
+advance paths.
+
+20.3.14 Agent Shell contracts
+-----------------------------
+
+Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
+deliberately disabling them or while testing live integration changes.
+
+   The minimum supported Agent Shell is 0.85.3.  The integration pins
+target Agent Shell 0.86.1 at ‘137b574’ and Shell Maker 0.97.5 at
+‘dcc05a8’.  ACP retains its reviewed snapshot.  A personal package
+upgrade does not refresh ‘test/integration-dependencies.json’ or its
+prepared tree.  When the preparer rejects a changed lock, choose a fresh
+‘TEST_DEPS_DIR’ and pass the same directory to preparation and both
+integration gates; preserve the old directory until it is no longer
+needed.
+
+   For every pin refresh, compare all Emacsvox navigation,
+speech-control, table, and repeat keys against shell and viewport maps,
+inherited Shell Maker maps, list editing, inline actions, permission and
+question controls, and transients.  Verify effective keys in real prompt
+and transcript contexts.  The 0.86.1 refresh keeps the existing scoped
+overrides: viewport ‘t’ discovers tables; table ‘r’ reads rows instead
+of quoting or replying; viewport table ‘c’ reads columns and ‘a’ selects
+table speech instead of continuing or repeating a reply.  The table ‘k’
+copy prefix takes precedence over Emacsvox's source-block jump.  These
+preserve consistent reading keys; the displaced commands remain
+available through ‘M-x’ as documented in the Agent Shell user chapter.
+Prompt letters remain literal input, and repeat navigation must release
+unrelated keys.
+
+  1. Internal ownership and renderer tests
+
+     The main ‘lisp/emacsvox-agent-shell.el’ module requires the
+     internal ‘lisp/emacsvox-agent-shell-render.el’ module.  The
+     renderer module depends only on Emacs libraries, with no reverse
+     dependency on the main integration.  Its private helper names and
+     argument contracts remain available through the main module.
+
+     Owner                  Responsibilities
+     --------------------------------------------------------------------------
+     Renderer module        Interpret prompt faces and chat label strings,
+                            current and legacy status glyphs, semantic
+                            fragment provenance, decorative controls, answer
+                            body ranges, and legacy clipboard properties.
+                            Most helpers inspect supplied strings; fragment
+                            classification can also read the current buffer
+                            without changing it.
+     Main integration       Capture buffer and overlay context; apply user
+                            customization, speech limits, and delivery; own
+                            response accumulation, event subscriptions,
+                            timers, callback generations, navigation,
+                            permission handling, activation, and cleanup.
+
+     Renderer metadata supplies presentation and navigation facts; it
+     does not authorize permission responses or establish lifecycle
+     completion.  Status label customization stays with the main
+     integration.  Keep compatibility interpretation together in the
+     renderer module, and keep registration and speech side effects in
+     the main owner.
+
+     This is the first bounded separation of responsibilities.  Event
+     state, navigation and table commands, and permission handling still
+     share the main module.  Assess their private dependencies and
+     lifecycle contracts before considering another extraction; a
+     heading or a line count alone is not a reason to create a module.
+
+     The independent ‘test/emacsvox-agent-shell-render-tests.el’ suite
+     runs in the core and integration gates without needing optional
+     packages of its own.  It checks property-preserving copies,
+     compatibility renderings, group provenance, answer selection, and a
+     fresh module load without integration registrations.  With the
+     Emacs selected by ‘local.mk’, it can also run directly:
+
+          /path/to/emacs -Q --batch -L lisp \
+            -l test/emacsvox-agent-shell-render-tests.el -f ert-run-tests-batch-and-exit
+
+     Keep the existing Agent Shell integration tests alongside these
+     smaller contracts.  They exercise real pinned upstream renderers,
+     speech delivery, enable/disable, and buffer-death cleanup.  After
+     preparing the pinned dependencies with ‘make test-deps’, run source
+     and compiled parity checks:
+
+          make integration-test
+          make graphical-integration-test
+          make bytecode
+          make bytecode-check
+          EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
+          EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make graphical-integration-test
+
+     The environment setting selects the exact renderer and main
+     integration ‘.elc’ files in a fresh Emacs; other dependencies
+     retain the runner's source preference.  Without it, both modules
+     load explicitly from ‘.el’ sources.  The tests capture speech
+     events and do not establish audible playback.
+
+  2. Upstream contract layers
+
+     The integration uses three deliberately different contract layers:
+
+     Layer         Agent Shell owner           Emacsvox rule
+     ---------------------------------------------------------------------------
+     Public        ‘agent-shell-subscribe-to’, Primary authority for
+     structured    ‘agent-shell-unsubscribe’,  processing, completion,
+     API           ‘agent-shell-status’, and   errors, permission urgency,
+                   ‘agent-shell-shell-buffer’; and tool status.  The public
+                   lifecycle, permission,      turn boundary triggers
+                   and tool events             inspection of renderer-owned
+                                               response sections.  Event and
+                                               response data is treated as
+                                               untrusted content and bounded
+                                               before automatic Aural
+                                               submission.
+     Experimental  ‘agent-shell-ui-state’,     Feature-detected navigation
+     renderer      ‘agent-shell-ui-section’,   and presentation input.
+     metadata      rendered Markdown           Renderer group provenance
+                   table/source properties,    outranks provider-controlled
+                   and renderer-owned faces    IDs; prose and IDs cannot
+                                               manufacture structured
+                                               permission or lifecycle
+                                               authority.
+     Private       The aggregate               Kept in narrow adapter
+     compatibility ‘agent-shell--state’,       functions for the supported
+     fallback      viewport position           minimum or incomplete
+                   helpers, configuration      renderers.  A missing optional
+                   access on 0.85.3, and       detail may reduce header or
+                   face, prompt, or ID         navigation richness but must
+                   inference                   not create a permission action
+                                               or completed response.
+
+     The lifecycle subscription currently consumes ‘init-started’,
+     ‘init-finished’, ‘session-selected’, ‘session-restored’,
+     ‘input-submitted’, ‘turn-complete’, ‘error’, ‘elicitation-request’,
+     and ‘elicitation-response’.  Dedicated subscriptions consume
+     ‘permission-request’, ‘permission-response’, and
+     ‘tool-call-update’.  Add new semantic behavior at the public event
+     layer when Agent Shell exposes it; keep renderer and private
+     fallbacks isolated and covered by compatibility tests.
+
+     Question feedback resolves control identity from renderer
+     properties and values from the owning shell's ‘:elicitations’
+     state.  Navigation and actions work in both shell and viewport
+     buffers.  Public question events govern automatic request and
+     response announcements; action advice confirms edits and previews.
+     No new key overrides are installed.  The upstream feature stays
+     opt-in.
+
+     Configuration access uses ‘agent-shell-config-options’ and
+     ‘agent-shell-initialized-p’ when available.  The 0.85.3 fallback
+     reads normalized private options and checks the initialization
+     pipeline flags.  Startup defaults must not be announced as user
+     changes.  Verify the minimum at ‘f44c96b’ as well as the pinned
+     version, including source and compiled speech and graphical form
+     controls.  Use separate prepared dependency directories for each
+     version.
+
+     The lifecycle subscription also observes ‘config-option-update’.
+     Configuration snapshots suppress initial inventory and duplicate
+     callback/event confirmation.  Recent Agent Shell versions emit this
+     event on successful setting requests too; the callback fallback
+     remains for older versions and shares the same snapshot cache.
+     Confirmations reuse upstream completion labels when available so
+     grouped choices with identical names remain distinguishable.  Late
+     tool details are compared only for permissions established by a
+     public ‘permission-request’ event, and their snapshots are removed
+     on resolution.
+
+     Current Agent Shell omits rendered Codex ‘rawOutput’ and textual
+     diffs from ‘tool-call-update’.  A narrow
+     ‘agent-shell--on-notification’ adapter joins that public event to
+     the body rendered during the same call, matching both the owning
+     buffer and qualified fragment ID.  Full tool speech is submitted
+     after rendering returns.  Output digests and lifecycle statuses are
+     tracked separately so late output is spoken without repeating
+     identical updates.  Renderer IDs without a matching public event do
+     not authorize tool feedback.
+
+     Until upstream exposes public steering and push lifecycle events,
+     small adapters wrap the structured steering request's callbacks and
+     the accepted ‘session/push’ lifecycle.  Push speech finishes before
+     the original completion callback can drain the next queued prompt.
+     Callback generations invalidate pending speech feedback on session
+     change or integration cleanup; original transport callbacks still
+     run.  No transcript text is interpreted as a steering outcome or
+     push completion.
+
+     The queue adapter captures the pending count before draining and
+     lets ‘input-submitted’ confirm how many prompts actually left the
+     queue.  This covers both one-at-a-time and merged submission
+     without duplicating upstream policy.  Prompt list editing and diff
+     entry have native command feedback.  New asynchronous tool, queue,
+     steering, setting, and permission-detail submissions explicitly
+     select the notification lane; list editing and diff entry remain
+     foreground interactions.  All new events and their outcome, count,
+     or setting attributes are registered by the workflow semantic
+     provider so Aural rules can customize their presentation.
+
+20.3.15 Magit contracts
+-----------------------
+
+Staging and selected synchronous operations collect Git outcomes at
+‘magit-process-finish’, before Magit can raise an error.  One
+interactive command owns the aggregate result across nested calls.  A
+process that Magit starts and waits for contributes only to the
+collector attached when it was started; unrelated process callbacks
+cannot change that result.  Uncollected asynchronous completions
+explicitly select the notification lane.  Neither a command's return
+value nor the absence of an Emacs error proves Git succeeded.
+
+   Successful staging and unstaging in a Magit view present the
+refreshed line with destination section facts and a ‘focus-entered’
+event.  The destination does not inherit the original selection's staged
+or unstaged state.  Failures, commands that run no Git operation, and
+commands outside Magit views retain outcome messages.  Regression
+coverage enables real refreshes for file and hunk staging and unstaging,
+including removal of the last file in a section.
+
+   Magit's positional highlight overlays must not become source
+personalities.  The integration suppresses legacy overlay voice
+mirroring for those highlights and excludes their faces from source
+capture.  It preserves text faces, deliberate personalities, and
+customized hash voices.  Navigation still emits section facts; empty
+lines supply the core line-condition facts without a competing selection
+icon.
+
+   Regression tests use isolated repositories for real Git failures and
+real section trees for highlighting and visibility.  Run the Magit tests
+from source, then again in a fresh Emacs with
+‘EMACSVOX_MAGIT_TEST_LOAD=compiled’ after bringing byte-code current.  A
+live buffer created with the former highlight mirroring needs a Magit
+refresh to rebuild its source properties.
+
+20.3.16 WSL2 Omnivox development staging
+----------------------------------------
+
+The ordinary WSL2 user route is implemented by
+‘bin/emacsvox-wsl-install’ and pinned by ‘etc/wsl-install.conf’.  Treat
+either file as release tooling.  When advancing GNU Emacs or Omnivox,
+update the version, archive name, URL, and SHA-256 together; exercise
+x64 and ARM64 selection in the isolated installer tests; and perform one
+real installation of the newly pinned archive before updating the user
+manual.  The installer must remain per-user, must not invoke ‘sudo’ or
+edit shell startup files, and must preserve an explicit ‘EMACS’ or
+‘local.mk’ selection rather than silently replacing it.
+
+   The installed Omnivox executable is recorded as an absolute WSL path
+in the data-only ‘$XDG_CONFIG_HOME/emacsvox/omnivox-program’ file.
+Launcher selection is explicit ‘OMNIVOX_PROGRAM’, that per-user file,
+developer staging, then ‘PATH’.  Keep the selection tests synchronized
+with this order.  A configured but invalid path is a visible
+configuration error; silently falling through would hide a stale or
+damaged user installation.
+
+   This section describes the reproducible source-build path, not the
+ordinary pre-built WSL2 installation.  The complete source-build
+prerequisite checklist is in *note Building Omnivox For WSL2: Building
+Omnivox For WSL2.  Dependency ownership is deliberately split across
+three boundaries:
+
+Boundary      Supplied by            Dependencies
+---------------------------------------------------------------------------
+Windows and   Maintainer             WSL interoperation,
+WSL host                             ‘powershell.exe’, ‘wslpath’,
+                                     Windows .NET Framework 4.7.2 or
+                                     newer, Docker with Linux/AMD64
+                                     support, Git, Make, download and
+                                     checksum tools, standard GNU shell
+                                     utilities, network access, and
+                                     writable Windows ‘LocalAppData’.
+Pinned        Emacsvox target        The immutable Rust/Debian
+release                              container, MinGW cross tools and
+toolchain                            runtime DLLs, CMake, Clang and
+                                     libclang, eSpeak build
+                                     dependencies, Roslyn, .NET 4.0
+                                     reference assemblies, and official
+                                     Windows Piper companion.  The exact
+                                     versions, source commit, and
+                                     downloaded-package hashes live in
+                                     ‘servers/omnivox-release/toolchain.lock’.
+Build         Git checkouts          The current Emacsvox checkout and
+source                               the Omnivox checkout selected by
+                                     ‘OMNIVOX_DIR’, including Omnivox's
+                                     locked Rust dependencies and
+                                     checksum-locked Flite and RuTTS
+                                     source inputs.
+
+   ‘make verify-windows-omnivox-toolchain’ prepares the cached Roslyn
+inputs, builds the Docker image, and validates this boundary before
+compilation.  The full target then builds Omnivox's two 32-bit helper
+sources deterministically, builds native Windows Omnivox plus its
+RHVoice, Flite, and RuTTS helpers in the container, and stages their
+licenses, provenance, and checksums.  The clean target also builds Piper
+support and verifies that the pinned companion and main executable
+identify the same Omnivox source commit.  A host Rust installation,
+MinGW installation, Visual Studio, .NET SDK, or system eSpeak
+installation is not an input to this release path.  RHVoice's native
+library, languages, and voices remain external user-supplied runtime
+inputs.  Flite's CMU US SLT voice is compiled into its checksum-locked
+helper.  RuTTS's built-in male and female Russian voices are compiled
+from the checksum-locked 6.3.3 source; RuLex is not included.
+
+   After staging, the static verifier rechecks manifests, provenance,
+the Windows-local copy, and all configured external inputs.  The
+separate live verifier executes that exact Windows-local runtime,
+prewarms the bounded eSpeak voice cache tied to the verified
+content-addressed data, discovers the compiled Flite and RuTTS voices,
+and requires real WAV synthesis from both helpers.  Use ‘make
+verify-windows-omnivox-live’ to repeat only the executable smoke gate.
+
+   ‘OMNIVOX_PIPER_MODEL’ is an optional staging input, not a release
+payload.  When supplied, the target validates the adjacent
+configuration, copies both files into a content-addressed Windows-local
+model cache, records their hashes, and writes the Windows path used by
+the launcher.  The recursive runtime manifest deliberately excludes
+model files.  A different model therefore creates a distinct local build
+identity without changing the pinned companion.  The public-domain
+engineering voice used in Omnivox CI is approved only for that bounded
+test purpose and is not a model-distribution default.
+
+   Maintainers testing tracked Emacsvox or Omnivox changes may use ‘make
+windows-omnivox-dev’.  That target records both worktree-diff hashes and
+labels the result as a development build.  It builds the RHVoice, Flite,
+and RuTTS companions but omits Piper, because the currently pinned Piper
+companion must not be mixed with later Omnivox source.  It also rejects
+‘OMNIVOX_PIPER_MODEL’.  Advance the checked Piper companion and source
+commit together before these integrations enter the clean release path.
+See ‘servers/omnivox-release/README.org’ for the pinned toolchain,
+licensing, provenance, and restaging contract.
+
+   To test Piper before that release-pin advance, commit and push a
+clean Omnivox revision and run its ‘Piper Native Validation’ workflow.
+Download the ‘omnivox-piper-windows-x64’ artifact, which contains the
+companion archive and ‘piper-sha256sums.txt’, then stage it with a
+reviewed model:
+
+     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.17.0-piper-windows-x64.zip \
+       OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
+       OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
+       make windows-omnivox-piper-dev
+
+   This is a development-only bridge, not a release-pin bypass.  It
+verifies the outer archive hash, rejects unsafe archive members and
+symbolic links, checks the companion's internal manifest, and requires
+its source provenance to name the exact clean Omnivox ‘HEAD’ and the
+Windows MSVC target.  The staged runtime records the artifact hash and
+companion tree hash and labels the companion
+‘github-actions-native-development-build’ with version ‘development-ci’.
+The version-looking archive filename comes from Omnivox's current
+package metadata and does not assert that post-tag code was released.
+The final live gate loads the separately cached model and requires Piper
+to enumerate that voice and synthesize a non-empty WAV.
+
+   The ordinary ‘windows-omnivox-dev’ target remains appropriate for
+uncommitted Omnivox work because it rebuilds all included companions
+locally and omits Piper.  The CI-artifact target deliberately rejects a
+dirty Omnivox checkout: commit and push the change, let the native
+workflow build that exact commit, then use its new artifact.  Emacsvox
+itself may contain tracked changes; their diff hash remains part of the
+local runtime identity.
+
+   After one complete development runtime has been staged, use ‘make
+windows-omnivox-main-dev’ for changes confined to the main Rust server
+or its main-only audio output.  This guarded path uses the same pinned
+toolchain to rebuild only ‘omnivox.exe’, derives a new content-addressed
+runtime from the current hash-verified development payload, records the
+original complete build and reused manifest in provenance, hard-links
+the unchanged payload, and runs a focused live check of the new Windows
+main executable.  It refuses reuse when helper, helper-protocol,
+dependency, toolchain, or companion inputs changed; in that case rerun
+‘make windows-omnivox-dev’.  Run ‘make verify-windows-omnivox-runtime
+verify-windows-omnivox-live’ when a complete development audit is
+useful.  The clean ‘make windows-omnivox’ release path always rebuilds
+and verifies every payload and never uses incremental reuse.
+
+   The development target accepts ‘OMNIVOX_RHVOICE_LIBRARY’ and
+‘OMNIVOX_RHVOICE_DATA’ together, plus an optional
+‘OMNIVOX_RHVOICE_CONFIG’ directory.  It resolves WSL or Windows absolute
+paths, requires the C API DLL and the language/voice data layout,
+records content digests in provenance and machine-local Windows path
+pointers beside the selected runtime, and leaves all RHVoice files
+external.  Those pointers let the launcher restore the variables for
+every fresh Emacsvox process.  The runtime verifier rejects missing or
+changed external inputs.  Omitting all three variables leaves RHVoice
+unconfigured without affecting Flite, RuTTS, or the other engines.
+RuTTS requires no external installation; the staged helper always
+provides its built-in male and female Russian voices without RuLex.
+
+   Do not bypass the Omnivox release target manually or clean either
+repository to make its release guard pass.  Use ‘make windows-omnivox’
+only for the reproducible clean-release path documented in the
+user-facing WSL2 route.
+
+20.3.17 Windows staging implementation and fixtures
+---------------------------------------------------
+
+Make owns option and clean-source guards, toolchain verification,
+companion preparation, Docker compilation, and final runtime
+verification.  Its ‘windows-omnivox’ target passes prepared build
+outputs to the internal ‘servers/omnivox-release/stage-runtime.sh’
+script.  Use the guarded Make targets rather than invoking this script
+directly.
+
+   TGSpeechBox is included by default.  Its helper compiles inside the
+pinned container with the pinned MinGW POSIX C++ compiler.  The internal
+‘build-tgspeechbox.py’ records the executable, data and compiler hashes.
+On the host it validates those outputs and uses the exact Windows helper
+to generate voice inventories before runtime staging.  A changed
+executable, data payload or source lock fails this handoff.  Clean
+builds require TGSpeechBox; development builds can explicitly omit it.
+
+   The script owns host-side payload staging: input checks, content
+hashes, optional voice-data caches, diagnostics, provenance, path files,
+and selection of the completed runtime.  Make passes the Emacsvox root
+as ‘EMACSVOX_STAGE_ROOT’, the resolved ‘OMNIVOX_*’ source/build/runtime
+paths and feature switches, and the two pinned Roslyn/reference-assembly
+archive hashes.  The assignments at the call site and the script's
+initial parameter checks define the complete internal input list.
+Optional user inputs retain their ‘OMNIVOX_PIPER_MODEL’,
+‘OMNIVOX_RHVOICE_*’, and ‘OMNIVOX_ECI_DLL’ environment variables.
+Main-only development staging remains separately owned by
+‘stage-main-dev.sh’ with its existing reuse restrictions.
+
+   Run ‘make windows-staging-test’ on a GNU/Linux host with Python 3,
+Git, Make, and the standard GNU file/checksum tools.  The tests use
+private repositories, prepared payloads, runtime directories, and a
+simulated LocalAppData.  Docker, Windows commands, and compiler/verifier
+boundaries are replaced by fixtures; Git guards, copying, hashing,
+provenance, and link activation execute normally.  The suite is also
+included in ‘make test’ and its own CI job.  It exercises
+clean/development variants, optional companions and external voice
+inputs, paths containing spaces, corrupt caches, missing inputs,
+rejected main-only reuse, interruption, and activation failure.
+
+   Preserve the current activation sequence during maintenance.  The
+script selects the staged runtime before Make's final runtime and live
+checks; a failure in those final checks does not restore the previous
+selection.  Interruption before activation can leave temporary files in
+a new version directory while preserving the current link.  The fixture
+tests characterize these existing behaviors and successful retry.
+Changing cleanup or rollback requires a separate fix and acceptance
+decision.  Fixture success does not establish native compiler
+reproducibility, real Windows path conversion, engine startup, or
+audible playback; run the existing native gates for that acceptance in
+an appropriate staging environment.
+
+20.3.18 Aural experiments and guided changes
+--------------------------------------------
+
+Physical experiments use the common voice editor with an exact
+engine/voice selector, an immutable opening snapshot, a mutable working
+style and undo history.  Navigation uses the ordinary voice.
+Experiments write no settings; Keep prepares a named-voice draft,
+including any reviewed row placement and adjustment scope.  The
+destination still requires an explicit save.
+
+   The unified palette contract is recorded in ADR 0018.  Every nonroot
+palette uses complete schema 3 entries and an explicit parent chain to
+‘acss-default’.  Palette definitions and immutable local-choice
+snapshots are saved through the common coordinator.  Frozen proposals
+retain separate persistence and apply completion, and retry does not
+repeat a successful write.  Save failures, acknowledged application and
+actual playback evidence remain separate.  Workstation routing profiles
+contain global engine policy, not per-name routes.
+
+   Labelled comparisons use one controlled preview sequence, with
+identical sample text and separately configurable labels.  Each sequence
+belongs to its speech lane.  Stopping that lane cancels remaining
+entries and invalidates late callbacks; stopping foreground speech must
+not cancel notifications.  Requested parameters and advertised
+capabilities are distinct from playback reports.  Do not fabricate exact
+effective numeric values when the adapter reports only support,
+acceptance, or degradation.
+
+   Guided feedback changes use existing declarative rules and registered
+facts.  The draft selects a component, matching criteria, and lifetime
+separately; preview dynamically overlays the intended layer without
+mutating live rules.  Explicit buffer-rule snapshots in captured context
+must also be overlaid.  Generated IDs remain stable for the matched
+component; new rules follow existing explicit order within the layer.
+Apply checks a Current-item source guard and refuses to overwrite
+another unfinished editor for the same scope.  Historical selection
+chooses a frozen part when a transaction contains several runs.
+Original replay uses that part; proposed preview deliberately resolves
+it with current rules and the captured buffer context.
+
+   Shared Help and offline task nodes preserve the original source and
+exact return position.  New interfaces should use the shared parent
+modes and add a task-node mapping to ‘emacsvox-aural-ui-manual-nodes’.
+Row action predicates should hide operations that cannot apply to that
+row; this includes editing built-in options and reordering items outside
+the active-order view.
+
+20.3.19 Repeatable voice performance measurements
+-------------------------------------------------
+
+Use ‘utils/voice_benchmark.py’ to retain comparable measurements of
+ordinary speech, native voice settings and the voice editor.  It starts
+private speech workers and fresh Emacs processes; it does not connect to
+a running Emacs or save editor drafts.  The default null audio output
+avoids speaking the workload.  Reports remain below the ignored
+‘.benchmarks/’ directory.
+
+   The runner requires Python 3, the selected Emacs toolchain, and an
+Omnivox checkout containing ‘tools/benchmark_server.py’ and
+‘tools/process_metrics.py’.  It reuses that checkout's lifecycle
+workloads.  On Linux, ‘xvfb-run’ provides a private graphical display
+when installed.  The plan can explicitly select ‘native’ for a visible
+graphical Emacs or ‘batch’ for a nongraphical run.  Batch measurements
+do not establish graphical responsiveness.  Build current byte-code
+before running; the runner refuses stale byte-code.
+
+   Create a local plan once, using the same runtime overrides as the
+development speech launcher.  List the runtime libraries, dictionaries
+and voice data that affect the selected engines.  For example:
+
+     python3 utils/voice_benchmark.py init .benchmarks/voices.json \
+       --program /path/to/omnivox \
+       --emacs /path/to/emacs-31/bin/emacs \
+       --omnivox-root /path/to/omnivox-checkout \
+       --runtime-input voices=/path/to/voice-data
+
+   Initialization captures supported runtime overrides from the
+environment, including ‘OMNIVOX_DECTALK_DLL’, ‘OMNIVOX_ECI_DLL’ and
+‘ESPEAK_NG_DATA’.  Inspect the resulting JSON plan.  Its initial routes
+are Eloquence ‘v1’, DECtalk ‘paul’ and eSpeak's British English voice
+(‘espeak:gmw/en’, with a backslash on Windows); remove unavailable
+engines or change exact voice IDs.  Native routes also specify one
+parameter and test value.  A missing voice, fallback voice, unsupported
+parameter or failed native readback fails the workload.  It must not
+become a fast but invalid result.
+
+   If a separately retained failure prevents one case from producing
+timings, a route may declare ‘exclude_cases’ as an object mapping case
+names to reasons.  Exclusions appear at the top of the report and must
+match on both sides of a comparison.  An excluded case supplies no
+evidence about its performance or correctness; do not treat a completed
+timing run as clearing that failure.
+
+   The plan pins the executable path.  When staging a new development
+build, update ‘targets[].program’ before measuring it.  Retain the
+earlier executable and complete helper payload if an old-build
+comparison is wanted.  ‘--baseline-program’ at initialization adds a
+second target for ordinary speech, with native controls and editor tests
+disabled for that older worker.  An editor comparison against older Lisp
+needs a target with its own ‘emacsvox_root’ and current byte-code for
+that checkout.  Keep runtime inputs, rate, display mode, machine and
+benchmark driver identical between runs.
+
+   Run a short setup check, then collect the repeatable baseline:
+
+     make voice-benchmark BENCHMARK_PRESET=quick
+     make voice-benchmark BENCHMARK_OUTPUT=.benchmarks/before
+
+   The full preset runs three shuffled blocks, discards warm-up samples,
+and collects 90 observations per warm speech case and 60 per repeated
+editor operation.  Cold speech and first editor openings have fewer
+observations and are reported separately.  Allow several minutes for a
+full run; engine startup and timeout costs vary.  Keep unrelated
+workload low.  Output directories must be new; existing evidence is
+never overwritten.  An interrupted or failed run retains its partial
+report and logs but cannot be compared as successful.
+
+   The speech cases cover a character, word, line, dense text, multipart
+delivery, rapid replacement, and simultaneous main and notification
+workers.  For engines with native controls, the runner distinguishes
+ordinary timeline delivery, layered delivery with no native overrides,
+and an explicit native override.  The editor workload measures opening,
+navigation, control readiness, common preview completion and automatic
+previews after native adjustments.  It keeps synchronous command time
+separate from waiting for asynchronous replies.
+
+   Compare a subsequent full run against the baseline:
+
+     make voice-benchmark BENCHMARK_OUTPUT=.benchmarks/after
+     python3 utils/voice_benchmark.py compare \
+       .benchmarks/before .benchmarks/after --output .benchmarks/comparison.md
+
+   Use ‘--flavour legacy --mode warm’ to examine ordinary speech, or
+‘--flavour editor --mode ui’ for the editor.  A plan containing both
+builds can be compared against itself with ‘--before-target baseline
+--after-target current’.  Every report contains medians, 95th
+percentiles, maxima and raw observations.  The default comparison flags
+a series only when its 95th percentile rises by more than both 5
+milliseconds and 15 percent, with at least 20 observations on each side.
+Short setup checks and low-count cold openings are explicitly
+inconclusive.  Repeat flagged runs before attributing a change to code.
+With ‘--fail-on-regression’, exit status is 1 for a flagged slowdown, 3
+for insufficient evidence, and 2 for an invalid run or comparison.
+
+   The index records executable and helper hashes, runtime input hashes,
+driver hashes, source commit and dirty-tree identity, toolchain and host
+information.  Comparison validates the retained raw-report hashes and
+recomputes summaries.  Changed runtime data or incompatible test
+settings are rejected.  Retain the whole run directory, not just
+‘report.md’.  The source identity may differ between runs: that is the
+change under investigation.
+
+   Add ‘BENCHMARK_RESOURCES=1’ for a separate process-tree CPU and
+memory phase.  Sampling runs after the latency jobs so process
+enumeration does not distort those timings.  Resource reports identify
+their observation provider and its limitations; unavailable memory
+evidence is not zero memory use.  Editor reports also retain Emacs CPU,
+resident memory and garbage-collection counters.  Check retained
+processes and memory across repeated work before calling an increase a
+leak.
+
+   These measurements observe software source consumption and
+completion, not sound reaching the listener.  Editor previews currently
+expose completion but no onset event.  Null audio bypasses the physical
+device, so device latency or audible clipping needs a separate listening
+or loopback measurement.  Results from null and real audio are not
+comparable.  Run ‘make voice-benchmark-test’ to check evidence integrity
+and comparison logic.
+
+
+File: emacsvox.info,  Node: Authoring Sound Packs,  Up: Integration Maintenance
+
+20.3.20 Authoring Sound Packs
+-----------------------------
+
+Ordinary selection, preview, and cue remapping are covered in *note
+Sounds, Tones, and Spatial Cues: (emacsvox)Sounds And Space.  Preparing
+a new pack requires audio files and resource metadata.  A pack supplies
+recordings for registered cue names; the presentation rules decide when
+those cues occur.
+
+   The standard personal discovery root is ‘~/.emacsvox/sounds/packs/’,
+controlled by ‘emacsvox-aural-personal-sound-packs-directory’.  Each
+immediate child is a candidate pack, and its directory basename becomes
+its identifier.  Choose an unused identifier.  A directory containing
+‘button.ogg’ is discovered without a manifest.  A partial pack can
+instead supply the data-only manifest ‘emacsvox-sound-pack.el’ and
+inherit missing cues from another pack.
+
+   For example, create ‘my-cues/’ below the personal root and put this
+single Lisp data form in ‘my-cues/emacsvox-sound-pack.el’:
+
+     (:schema-version 1
+      :summary "My personal cues, inheriting the remaining chimes"
+      :parent chimes
+      :default-spatialization neutral)
+
+   The file contains data, not executable initialization: do not wrap
+the form in ‘setq’, quote it, or add a second form.  Put a replacement
+recording such as ‘button.ogg’ in the same directory.  Its basename
+names the registered cue.  Unknown cue names fail the resource audit;
+introducing a new semantic cue requires an integration to register its
+intent and use it.  Every standalone sound pack must resolve ‘button’,
+directly or through its declared parent.
+
+   The optional ‘:profiles’ field lists registered cue-coverage
+requirements.  These are resource validation contracts, distinct from
+Presentation Profiles that select a user's setup.  Keep the coverage
+appropriate to the intended uses rather than treating a successful
+single audition as complete coverage.  Default spatialization is
+‘neutral’, ‘stereo’, or ‘pre-spatialized’.  Use the last for recordings
+that already encode their intended spatial placement, so runtime balance
+does not position them a second time.
+
+   Open _Sound packs_ with ‘C-e H o p’ and press ‘g’ to rescan.  Inspect
+the new pack with ‘<RET>’: the replacement should be native, while
+unchanged cues identify their parent or fallback provider.  Audition
+individual cues with ‘P’ and validate with ‘v’ before activating the
+pack.  Missing or malformed assets are errors to resolve, not cues to
+copy from an unrelated installed pack.  No activation follows from
+writing the directory or previewing it.
+
+   The manager's ‘e’ edits metadata for discovered packs only.  It
+replaces the manifest atomically, retains the previous file with a ‘~’
+suffix, and restores the old metadata if validation of the refreshed
+pack fails.  It does not edit recordings.  After changing files
+externally, refresh the pack; ‘emacsvox-aural-refresh-resource-pack’
+refreshes an already registered pack, and
+‘emacsvox-aural-refresh-discovered-resource-packs’ rescans discovery
+roots.  Engine installation, remote sound-directory placement, and user
+startup selection remain separate tasks.
+
+
+File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
+
+21 Concept Index
+****************
+
+ [index ]
+* Menu:
+
+* acss-default:                          Voices And Routing.  (line   6)
+* active region, meaning:                Editing Terms.       (line   6)
+* agent response, read in full:          Finding Application Tasks.
+                                                              (line   6)
+* Agent Shell:                           Agent Shell.         (line   6)
+* alternate screen, EAT:                 EAT Full-screen Applications.
+                                                              (line   6)
+* application feedback, unexpected:      Feedback Differs Between Buffers.
+                                                              (line   6)
+* applications:                          Emacs Packages.      (line   6)
+* Apply, meaning:                        Speech And Settings Terms.
+                                                              (line   6)
+* Apply, unconfirmed result:             Unconfirmed Speech Changes.
+                                                              (line   6)
+* archiving, Notmuch:                    Notmuch Tags And Archiving.
+                                                              (line   6)
+* artificial intelligence agents:        Agent Shell.         (line   6)
+* asynchronous search, Notmuch:          Notmuch Mail.        (line   6)
+* attachments, Notmuch:                  Notmuch Messages And Attachments.
+                                                              (line   6)
+* attack, decay, sustain and release:    Reading Scope And Punctuation.
+                                                              (line 265)
+* Audio Desktop:                         Audio Desktop.       (line   6)
+* audio formatting:                      Context-Sensitive Interaction.
+                                                              (line  15)
+* auditory icon, meaning:                Presentation Resource Terms.
+                                                              (line   6)
+* Aural Doctor:                          Presentation Troubleshooting.
+                                                              (line   6)
+* Aural history, mail privacy:           Notmuch Speech And Privacy.
+                                                              (line  87)
+* Aural Home:                            Aural Home.          (line   6)
+* Aural Presentation:                    Aural Presentation.  (line   6)
+* automatic speech limits, Notmuch:      Notmuch Speech And Privacy.
+                                                              (line   6)
+* automatic speech, Term:                Term Speech Feedback.
+                                                              (line   6)
+* buffer cycling:                        Desktop Objects.     (line  33)
+* buffer versus file:                    Working With Files.  (line   6)
+* buffer versus window:                  Working With Windows.
+                                                              (line   6)
+* buffer, meaning:                       Working Context Terms.
+                                                              (line   6)
+* buffers:                               Desktop Objects.     (line   6)
+* buffers <1>:                           Desktop Management.  (line   6)
+* byte-code, Notmuch integration:        Notmuch Troubleshooting.
+                                                              (line   6)
+* cancel versus undo:                    Everyday Speech Commands.
+                                                              (line   6)
+* captured source:                       Working Context Terms.
+                                                              (line   6)
+* character echo:                        Controlling Echo.    (line   6)
+* character mode, Term:                  Term Input Modes.    (line   6)
+* clipboard security, EAT:               EAT Clipboard Trust. (line   6)
+* clipboard, exchanging text:            Copying Through The Clipboard.
+                                                              (line   6)
+* clipboard, meaning:                    Editing Terms.       (line   6)
+* close a view, command:                 Everyday Workspace Commands.
+                                                              (line   6)
+* close a window without losing my document: Finding Reading Tasks.
+                                                              (line   6)
+* close this view:                       Finding Reading Tasks.
+                                                              (line   6)
+* code, copy from an agent response:     Finding Application Tasks.
+                                                              (line   6)
+* command reference:                     Emacsvox Keyboard Commands.
+                                                              (line   6)
+* completion candidates, terminal:       EAT Terminal Completion.
+                                                              (line   6)
+* completion, EAT:                       EAT Input Modes.     (line   6)
+* completion, first use:                 Answering Emacs Prompts.
+                                                              (line   6)
+* Context-Sensitive Interaction:         Context-Sensitive Interaction.
+                                                              (line   6)
+* continuous reading:                    Reading From Point.  (line   6)
+* Control, key notation:                 Emacs Key Notation.  (line   6)
+* copy and paste:                        Finding Editing Tasks.
+                                                              (line   6)
+* copy, meaning:                         Editing Terms.       (line   6)
+* copying text between documents:        Copying Text Between Buffers.
+                                                              (line   6)
+* Corfu, EAT:                            EAT Input Modes.     (line   6)
+* current line, read without moving:     Finding Reading Tasks.
+                                                              (line   6)
+* curses applications, EAT:              EAT Full-screen Applications.
+                                                              (line   6)
+* cut and paste:                         Editing Text With Speech.
+                                                              (line   6)
+* cut and paste, command reference:      Everyday Editing Commands.
+                                                              (line   6)
+* cut, meaning:                          Editing Terms.       (line   6)
+* cutting text:                          Moving Text Safely.  (line   6)
+* desktop navigation:                    Context-Sensitive Interaction.
+                                                              (line  43)
+* development tools:                     Development Environment.
+                                                              (line   6)
+* diagnostic logging, privacy:           Reporting Speech Problems.
+                                                              (line   6)
+* did my change succeed:                 Unconfirmed Speech Changes.
+                                                              (line   6)
+* directories, browsing:                 Working With Files.  (line   6)
+* Dired:                                 Browsing Files With Dired.
+                                                              (line   6)
+* disappeared after restarting:          Finding Problem Tasks.
+                                                              (line   6)
+* document authoring:                    Document Authoring.  (line   6)
+* documents, creating:                   Writing An Org Document.
+                                                              (line   6)
+* documents, switching:                  Finding Reading Tasks.
+                                                              (line   6)
+* draft, resume:                         Finding Settings Tasks.
+                                                              (line   6)
+* EAT automatic speech:                  EAT Automatic Feedback.
+                                                              (line   6)
+* EAT input modes:                       EAT Input Modes.     (line   6)
+* EAT review commands:                   EAT Screen Review.   (line   6)
+* EAT shell integration:                 EAT Shell Integration.
+                                                              (line   6)
+* EAT terminal emulator:                 EAT Terminal Access. (line   6)
+* editing commands, quick reference:     Everyday Editing Commands.
+                                                              (line   6)
+* editing through speech:                Editing Text With Speech.
+                                                              (line   6)
+* Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
+                                                              (line   6)
+* Eshell, EAT accessibility:             EAT In Eshell.       (line   6)
+* Eterm, Emacsvox module name:           Running Terminal Based Applications.
+                                                              (line   6)
+* everyday commands:                     Emacsvox Keyboard Commands.
+                                                              (line   6)
+* EWW:                                   Web Browsing.        (line   6)
+* EWW, bookmarks:                        Following Web Links. (line   6)
+* EWW, buffer names:                     Opening A Web Page.  (line   6)
+* EWW, readable view:                    Recovering A Web Page.
+                                                              (line   6)
+* explaining presentation:               Explaining Presentation.
+                                                              (line   6)
+* fields, Notmuch speech:                Notmuch Speech And Privacy.
+                                                              (line   6)
+* file modification time:                Browsing Files With Dired.
+                                                              (line   6)
+* file size, hearing:                    Browsing Files With Dired.
+                                                              (line   6)
+* filenames, entering:                   Filenames And Example Commands.
+                                                              (line   6)
+* files and windows, quick reference:    Everyday Workspace Commands.
+                                                              (line   6)
+* files, everyday work:                  Working With Files.  (line   6)
+* find a file again:                     Finding Application Tasks.
+                                                              (line   6)
+* finding:                               Context-Sensitive Interaction.
+                                                              (line  58)
+* forgot my settings:                    Settings Lost After Restart.
+                                                              (line   6)
+* Forms mode:                            Desktop Applications.
+                                                              (line  35)
+* frame, meaning:                        Working Context Terms.
+                                                              (line   6)
+* frozen EAT review:                     EAT Screen Review.   (line  42)
+* glossary:                              Emacsvox Terminology.
+                                                              (line   6)
+* go back, settings:                     Finding Problem Tasks.
+                                                              (line   6)
+* headings, changing their voice:        Finding Voice Tasks. (line   6)
+* Help commands, quick reference:        Everyday Help Commands.
+                                                              (line   6)
+* Help replaced my windows:              Finding Problem Tasks.
+                                                              (line   6)
+* how to:                                Finding Tasks.       (line   6)
+* Info, finding a task:                  Using This Manual.   (line   6)
+* integrations:                          Emacs Packages.      (line   6)
+* Introduction:                          Introduction.        (line   6)
+* isearch, finishing before editing:     Searching And Replacing Text.
+                                                              (line   6)
+* key notation:                          Emacs Key Notation.  (line   6)
+* keyboard instructions, understanding:  Finding Reading Tasks.
+                                                              (line   6)
+* keyboard shortcuts:                    Emacsvox Keyboard Commands.
+                                                              (line   6)
+* keyboard shortcuts, reading:           Emacs Key Notation.  (line   6)
+* keys, discovering:                     Finding Reading Tasks.
+                                                              (line   6)
+* kill ring, earlier entries:            Choosing Earlier Copied Text.
+                                                              (line   6)
+* kill ring, meaning:                    Editing Terms.       (line   6)
+* kill, meaning:                         Editing Terms.       (line   6)
+* learning Emacsvox:                     Guided Tutorial.     (line   6)
+* line echo:                             Controlling Echo.    (line   6)
+* line mode, Term:                       Term Input Modes.    (line   6)
+* lost speech:                           Finding Reading Tasks.
+                                                              (line   6)
+* Magit:                                 Development Environment.
+                                                              (line  36)
+* mail search, Notmuch:                  Notmuch Mail.        (line   6)
+* mail, limit automatic speech:          Finding Application Tasks.
+                                                              (line   6)
+* major modes:                           Object Oriented Desktop.
+                                                              (line   6)
+* manual, using:                         Using This Manual.   (line   6)
+* mark, checking a selection:            Selecting Text With Speech.
+                                                              (line   6)
+* mark, meaning:                         Editing Terms.       (line   6)
+* menu items, reading by word or character: Returning From Settings.
+                                                              (line  89)
+* message composition, Notmuch:          Notmuch Support Boundaries.
+                                                              (line   6)
+* messaging:                             Messaging.           (line   6)
+* Meta, key notation:                    Emacs Key Notation.  (line   6)
+* MIME parts, Notmuch:                   Notmuch Messages And Attachments.
+                                                              (line   6)
+* minibuffer:                            Answering Emacs Prompts.
+                                                              (line   6)
+* minor modes:                           Object Oriented Desktop.
+                                                              (line   6)
+* move a paragraph:                      Finding Editing Tasks.
+                                                              (line   6)
+* moving paragraphs:                     Moving Text Safely.  (line   6)
+* named voice, meaning:                  Presentation Resource Terms.
+                                                              (line   6)
+* narrowing, meaning:                    Working Context Terms.
+                                                              (line   6)
+* newline, including in a selection:     Selecting Text With Speech.
+                                                              (line   6)
+* normal reading voice, choosing an operation: Choosing A Presentation Change.
+                                                              (line   6)
+* notes, writing:                        Writing An Org Document.
+                                                              (line   6)
+* notification stream:                   Notification Routing.
+                                                              (line   6)
+* notification stream, Notmuch:          Notmuch Hello And Searches.
+                                                              (line  33)
+* notifications, changing output:        Finding Settings Tasks.
+                                                              (line   6)
+* Notmuch Hello:                         Starting Notmuch.    (line   6)
+* Notmuch mail:                          Notmuch Mail.        (line   6)
+* Notmuch Search:                        Notmuch Search Results.
+                                                              (line   6)
+* Notmuch Show:                          Notmuch Messages And Attachments.
+                                                              (line   6)
+* Notmuch Tree support:                  Notmuch Support Boundaries.
+                                                              (line   6)
+* OCR:                                   Desktop Applications.
+                                                              (line  45)
+* Online Help:                           Using Online Help.   (line   6)
+* only one buffer sounds different:      Feedback Differs Between Buffers.
+                                                              (line   6)
+* open a file:                           Finding Application Tasks.
+                                                              (line   6)
+* ordinary reading voice:                Finding Voice Tasks. (line   6)
+* Org, writing a document:               Writing An Org Document.
+                                                              (line   6)
+* OSC 52, EAT:                           EAT Clipboard Trust. (line   6)
+* Outline mode:                          Structured Editing.  (line   6)
+* packages, speech support:              Emacs Packages.      (line   6)
+* PaddleOCR:                             Desktop Applications.
+                                                              (line  45)
+* palette inheritance:                   Voices And Routing.  (line   6)
+* palette, meaning:                      Presentation Resource Terms.
+                                                              (line   6)
+* password input, EAT:                   EAT Passwords And Privacy.
+                                                              (line   6)
+* passwords, terminal:                   Finding Application Tasks.
+                                                              (line   6)
+* paste an earlier copy:                 Choosing Earlier Copied Text.
+                                                              (line   6)
+* paste an older copy:                   Finding Editing Tasks.
+                                                              (line   6)
+* paste something I copied earlier:      Finding Editing Tasks.
+                                                              (line   6)
+* paste, meaning:                        Editing Terms.       (line   6)
+* pasted a filename:                     Finding Problem Tasks.
+                                                              (line   6)
+* pasted into the wrong place:           Recovering Text Edits.
+                                                              (line   6)
+* paths, examples:                       Filenames And Example Commands.
+                                                              (line   6)
+* PDF, converting to text:               Desktop Applications.
+                                                              (line  45)
+* personal information management:       Personal Information Management.
+                                                              (line   6)
+* physical voice, meaning:               Presentation Resource Terms.
+                                                              (line   6)
+* physical voices:                       Installed Voices And Engines.
+                                                              (line   6)
+* point, meaning:                        Working Context Terms.
+                                                              (line   6)
+* practice document:                     Guided Tutorial.     (line   6)
+* prefix keys and prefix arguments:      Emacs Key Notation.  (line   6)
+* presentation modalities:               Presentation Modalities.
+                                                              (line   6)
+* presentation model:                    Presentation Model.  (line   6)
+* presentation overrides:                Adjusting Presentation.
+                                                              (line   6)
+* presentation profiles:                 Presentation Profiles.
+                                                              (line   6)
+* preview, meaning:                      Speech And Settings Terms.
+                                                              (line   6)
+* privacy, Notmuch speech:               Notmuch Speech And Privacy.
+                                                              (line   6)
+* problem report:                        Reporting Speech Problems.
+                                                              (line   6)
+* profile, meaning:                      Presentation Resource Terms.
+                                                              (line   6)
+* programming:                           Editing Code.        (line   6)
+* prompts, answering:                    Answering Emacs Prompts.
+                                                              (line   6)
+* proofreading, spoken text:             Reading Without Moving Point.
+                                                              (line   6)
+* read a web page:                       Finding Application Tasks.
+                                                              (line   6)
+* read all from here:                    Reading From Point.  (line   6)
+* read continuously:                     Finding Reading Tasks.
+                                                              (line   6)
+* read from here:                        Finding Reading Tasks.
+                                                              (line   6)
+* read from here, command:               Everyday Reading Commands.
+                                                              (line   6)
+* read-only, meaning:                    Working Context Terms.
+                                                              (line   6)
+* reading commands, quick reference:     Everyday Reading Commands.
+                                                              (line   6)
+* reading routes:                        Using This Manual.   (line   6)
+* reading without moving point:          Reading Without Moving Point.
+                                                              (line   6)
+* reference and draft windows:           Finding Reading Tasks.
+                                                              (line   6)
+* region, meaning:                       Editing Terms.       (line   6)
+* region, selecting and hearing:         Selecting Text With Speech.
+                                                              (line   6)
+* remote terminal trust:                 EAT Clipboard Trust. (line   6)
+* replacement, controlling scope:        Reviewing Text Replacements.
+                                                              (line   6)
+* reporting a problem:                   Finding Problem Tasks.
+                                                              (line   6)
+* resume reading:                        Finding Reading Tasks.
+                                                              (line   6)
+* retained draft, meaning:               Speech And Settings Terms.
+                                                              (line   6)
+* review mode, Term:                     Reviewing The Term Screen.
+                                                              (line   6)
+* review pointer, Term:                  Reviewing The Term Screen.
+                                                              (line   6)
+* router completion:                     EAT Terminal Completion.
+                                                              (line   6)
+* rule or palette:                       Choosing A Presentation Change.
+                                                              (line   6)
+* rule, meaning:                         Presentation Resource Terms.
+                                                              (line   6)
+* save a copy:                           Finding Application Tasks.
+                                                              (line   6)
+* Save and Apply, difference:            Finding Settings Tasks.
+                                                              (line   6)
+* Save, meaning:                         Speech And Settings Terms.
+                                                              (line   6)
+* saved but unchanged:                   Saved Voice Change Not Audible.
+                                                              (line   6)
+* saved but unchanged <1>:               Finding Problem Tasks.
+                                                              (line   6)
+* saved searches, Notmuch:               Notmuch Hello And Searches.
+                                                              (line   6)
+* saving aural settings:                 Saving And Startup.  (line   6)
+* scope, meaning:                        Working Context Terms.
+                                                              (line   6)
+* search fields, Notmuch:                Notmuch Search Results.
+                                                              (line   6)
+* search results, asynchronous rendering: Notmuch Hello And Searches.
+                                                              (line  33)
+* searching:                             Context-Sensitive Interaction.
+                                                              (line  58)
+* searching, repeated matches:           Searching And Replacing Text.
+                                                              (line   6)
+* select text:                           Finding Editing Tasks.
+                                                              (line   6)
+* selection, meaning:                    Editing Terms.       (line   6)
+* settings, lost after restart:          Settings Lost After Restart.
+                                                              (line   6)
+* settings, survive restart:             Finding Settings Tasks.
+                                                              (line   6)
+* shell command status:                  EAT Shell Integration.
+                                                              (line   6)
+* shell commands, where to run:          Filenames And Example Commands.
+                                                              (line   6)
+* something is wrong:                    Finding Problem Tasks.
+                                                              (line   6)
+* sound packs:                           Sounds And Space.    (line   6)
+* spatial presentation:                  Sounds And Space.    (line   6)
+* speech access, terminal:               EAT Terminal Access. (line   6)
+* speech engine preference:              Installed Voices And Engines.
+                                                              (line   6)
+* speech engine, choosing:               Finding Voice Tasks. (line   6)
+* speech logs, sensitive text:           Reporting Speech Problems.
+                                                              (line   6)
+* speech settings:                       Speech System.       (line   6)
+* speech settings, command reference:    Everyday Speech Commands.
+                                                              (line   6)
+* speech streams:                        Notification Routing.
+                                                              (line   6)
+* speech system:                         Speech System.       (line   6)
+* speech worker, meaning:                Speech And Settings Terms.
+                                                              (line   6)
+* spelling tone editor:                  Reading Scope And Punctuation.
+                                                              (line 170)
+* starting Notmuch:                      Starting Notmuch.    (line   6)
+* startup palette:                       Saving And Startup.  (line   6)
+* startup selection:                     Speech And Settings Terms.
+                                                              (line   6)
+* status cues, Notmuch:                  Notmuch Speech And Privacy.
+                                                              (line   6)
+* stopping and restarting reading:       Reading From Point.  (line   6)
+* structured navigation:                 Context-Sensitive Interaction.
+                                                              (line  29)
+* structured navigation <1>:             Browsing Structure.  (line   6)
+* tables, finding reading instructions:  Finding Reading Tasks.
+                                                              (line   6)
+* tables, OCR:                           Desktop Applications.
+                                                              (line  45)
+* tabs:                                  Desktop Management.  (line   6)
+* tags, Notmuch:                         Notmuch Tags And Archiving.
+                                                              (line   6)
+* talking, stop:                         Finding Reading Tasks.
+                                                              (line   6)
+* task finder:                           Finding Tasks.       (line   6)
+* Tempo:                                 Structured Editing.  (line   6)
+* Term mode:                             Running Terminal Based Applications.
+                                                              (line   6)
+* terminal accessibility:                EAT Terminal Access. (line   6)
+* terminal applications:                 Running Terminal Based Applications.
+                                                              (line   6)
+* terminal completion, finding help:     Finding Application Tasks.
+                                                              (line   6)
+* terminal output, review:               Finding Application Tasks.
+                                                              (line   6)
+* terminal output, speech policy:        EAT Automatic Feedback.
+                                                              (line   6)
+* terminal privacy:                      EAT Passwords And Privacy.
+                                                              (line   6)
+* terminal screen review:                EAT Screen Review.   (line   6)
+* terminology:                           Emacsvox Terminology.
+                                                              (line   6)
+* timeout, applying speech settings:     Unconfirmed Speech Changes.
+                                                              (line   6)
+* timeout, did anything change:          Finding Problem Tasks.
+                                                              (line   6)
+* tone envelope, ADSR:                   Reading Scope And Punctuation.
+                                                              (line 265)
+* tone presets:                          Reading Scope And Punctuation.
+                                                              (line 170)
+* too much talking:                      Feedback Differs Between Buffers.
+                                                              (line   6)
+* too much talking <1>:                  Finding Problem Tasks.
+                                                              (line   6)
+* Transient Mark mode, meaning:          Editing Terms.       (line   6)
+* Transient menu review:                 Returning From Settings.
+                                                              (line  89)
+* Transient menus:                       Development Environment.
+                                                              (line  36)
+* troubleshooting, Notmuch:              Notmuch Troubleshooting.
+                                                              (line   6)
+* TTS:                                   Speech System.       (line   6)
+* tutorial:                              Guided Tutorial.     (line   6)
+* undo while listening:                  Finding Editing Tasks.
+                                                              (line   6)
+* undo with speech:                      Recovering Text Edits.
+                                                              (line   6)
+* undo, inspect between steps:           Finding Editing Tasks.
+                                                              (line   6)
+* undo, meaning:                         Editing Terms.       (line   6)
+* undoing a temporary rule:              Finding Settings Tasks.
+                                                              (line   6)
+* unexpected feedback:                   Finding Settings Tasks.
+                                                              (line   6)
+* unwanted sound:                        Finding Voice Tasks. (line   6)
+* uppercase keys:                        Emacs Key Notation.  (line   6)
+* voice adjustments:                     Editing Named Voices.
+                                                              (line   6)
+* voice aliases:                         Voices And Routing.  (line   6)
+* voice change, not audible:             Saved Voice Change Not Audible.
+                                                              (line   6)
+* voice editor:                          Editing Named Voices.
+                                                              (line   6)
+* Voice Lock:                            Voice Lock.          (line   6)
+* voice palettes:                        Voices And Routing.  (line   6)
+* Voice Workbench:                       Installed Voices And Engines.
+                                                              (line   6)
+* voices, downloading:                   Finding Voice Tasks. (line   6)
+* voices, preview without saving:        Finding Voice Tasks. (line   6)
+* Web browsing:                          Web Browsing.        (line   6)
+* web headings:                          Navigating A Web Page.
+                                                              (line   6)
+* web history, going back:               Following Web Links. (line   6)
+* web link, go back:                     Finding Application Tasks.
+                                                              (line   6)
+* web links, inspecting:                 Following Web Links. (line   6)
+* web page, finding text:                Navigating A Web Page.
+                                                              (line   6)
+* web page, missing content:             Recovering A Web Page.
+                                                              (line   6)
+* web page, opening:                     Opening A Web Page.  (line   6)
+* where am I, command:                   Everyday Help Commands.
+                                                              (line   6)
+* where to type:                         Answering Emacs Prompts.
+                                                              (line   6)
+* which voice setting to change:         Choosing A Presentation Change.
+                                                              (line   6)
+* why did it paste a filename:           Finding Problem Tasks.
+                                                              (line   6)
+* widgets, Notmuch Hello:                Notmuch Hello And Searches.
+                                                              (line   6)
+* window, meaning:                       Working Context Terms.
+                                                              (line   6)
+* windows:                               Desktop Management.  (line   6)
+* windows, working through speech:       Working With Windows.
+                                                              (line   6)
+* word echo:                             Controlling Echo.    (line   6)
+* write a note:                          Finding Application Tasks.
+                                                              (line   6)
+* wrong voice:                           Saved Voice Change Not Audible.
+                                                              (line   6)
+* wrong voice <1>:                       Finding Problem Tasks.
+                                                              (line   6)
+* WSL, clipboard boundaries:             Copying Through The Clipboard.
+                                                              (line   6)
+* WSL, document paths:                   Filenames And Example Commands.
+                                                              (line   6)
+* yank, meaning:                         Editing Terms.       (line   6)

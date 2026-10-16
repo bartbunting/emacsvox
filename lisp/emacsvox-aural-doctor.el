@@ -489,7 +489,7 @@
   (append
    (list
     (emacsvox-aural-doctor--binding-finding
-     'home-binding "C-e H" 'emacsvox-aural "Aural home binding")
+     'home-binding "C-e H" 'emacsvox-aural-menu "Emacsvox settings binding")
     (emacsvox-aural-doctor--binding-finding
      'explain-binding "C-e E" 'emacsvox-aural-explain-presentation
      "Point explanation binding"))
@@ -539,9 +539,9 @@
      (t "All checks passed"))))
 
 (defun emacsvox-aural-doctor-restore-bindings ()
-  "Restore the documented aural home and point-explanation bindings."
+  "Restore the documented settings and point-explanation bindings."
   (interactive)
-  (define-key emacsvox-keymap (kbd "H") #'emacsvox-aural)
+  (define-key emacsvox-keymap (kbd "H") #'emacsvox-aural-menu)
   (define-key
    emacsvox-keymap (kbd "E") #'emacsvox-aural-explain-presentation)
   (global-set-key emacsvox-prefix emacsvox-keymap)
@@ -662,7 +662,7 @@
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "SPC speak row        r run the offered safe repair\n"
-      "g rerun all checks   h aural home\n"
+      "g rerun all checks   h settings menu\n"
       "y copy report        q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -691,7 +691,7 @@
     (binding
      '(("y" . emacsvox-aural-doctor-copy-report)
        ("r" . emacsvox-aural-doctor-repair-current)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-doctor-help)))
   (define-key
    emacsvox-aural-doctor-mode-map

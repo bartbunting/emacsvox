@@ -2746,7 +2746,7 @@ when they remain unsaved."
       "C-c C-k cancels staged policy edits; r retries a saved apply.\n"
       "U restores the previous saved policy; E exports and I imports it.\n\n"
       "C-c C-a offers available actions; C-c C-i opens the offline manual.\n"
-      "h opens Home; q leaves the Workbench, retaining staged policy edits.\n")))
+      "h opens settings; q leaves the Workbench, retaining staged policy edits.\n")))
   (when (fboundp 'emacsvox-speak-help) (emacsvox-speak-help)))
 
 (defun emacsvox-aural-voice-workbench--dismiss-warning ()
@@ -2909,7 +2909,7 @@ when they remain unsaved."
        ("r" . emacsvox-aural-voice-workbench-retry-apply)
        ("U" . emacsvox-aural-voice-workbench-undo-applied)
        ("q" . emacsvox-aural-voice-workbench-quit)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-voice-workbench-help)))
   (define-key emacsvox-aural-voice-workbench-mode-map
               (kbd (car binding)) (cdr binding)))
@@ -2939,6 +2939,7 @@ when they remain unsaved."
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
         (emacsvox-aural-voice-workbench-mode))
+      (setq-local emacsvox-aural-ui--return-function nil)
       (emacsvox-aural-inspection-attach-source source)
       (when view (setq emacsvox-aural-voice-workbench-view view))
       (emacsvox-aural-voice-workbench-refresh))

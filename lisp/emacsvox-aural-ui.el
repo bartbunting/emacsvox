@@ -55,6 +55,7 @@
 (declare-function emacsvox-aural-home-refresh
                   "emacsvox-aural-home" (&optional id))
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
+(autoload 'emacsvox-aural-menu "emacsvox-aural-menu" nil t)
 (declare-function tts-speak "tts-speak" (text))
 (declare-function emacsvox-aural-preview-stop "emacsvox-aural-preview" ())
 (declare-function emacsvox-aural-preview-message "emacsvox-aural-preview"
@@ -100,6 +101,10 @@ When nil, movement speaks the current titled cell.")
 
 (defvar-local emacsvox-aural-ui-dismiss-warning-function nil
   "Optional function returning a warning to speak after this interface hides.")
+
+(defvar-local emacsvox-aural-ui--return-function nil
+  "One-shot continuation after dismissing this interface.
+A non-nil result means the continuation announced the destination.")
 
 (defvar-local emacsvox-aural-ui-action-filter nil
   "Optional predicate deciding whether a command applies to the current row.")
@@ -184,7 +189,7 @@ When nil, movement speaks the current titled cell.")
 (defvar emacsvox-aural-ui-help-return-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'emacsvox-aural-ui-help-quit)
-    (define-key map (kbd "h") #'emacsvox-aural)
+    (define-key map (kbd "h") #'emacsvox-aural-menu)
     (define-key map (kbd "S") #'emacsvox-aural-ui-stop-preview)
     (define-key map (kbd "C-c C-a") #'emacsvox-aural-ui-help-actions)
     (define-key map (kbd "i") #'emacsvox-aural-ui-open-manual)
@@ -205,12 +210,18 @@ When nil, movement speaks the current titled cell.")
   (emacsvox-aural-ui-help-quit)
   (emacsvox-aural-ui-actions))
 
+(defvar-local emacsvox-aural-ui--help-return-function nil
+  "Optional continuation after returning to the originating buffer.
+A non-nil result means the continuation announced the destination.")
+
 (defun emacsvox-aural-ui-help-quit ()
   "Quit Help and restore its originating aural interface and position."
   (interactive)
   (let ((origin-buffer emacsvox-aural-ui-help-origin-buffer)
         (origin-window emacsvox-aural-ui-help-origin-window)
-        (origin-position emacsvox-aural-ui-help-origin-position))
+        (origin-position emacsvox-aural-ui-help-origin-position)
+        (return-function emacsvox-aural-ui--help-return-function))
+    (setq emacsvox-aural-ui--help-return-function nil)
     (quit-window)
     (cond
      ((and (window-live-p origin-window)
@@ -229,9 +240,10 @@ When nil, movement speaks the current titled cell.")
         (goto-char origin-position))))
     (when (markerp origin-position)
       (set-marker origin-position nil))
-    (emacsvox-aural-ui--speak-feedback
-     (emacsvox-aural-ui--destination-description) 'close-object
-     'aural-interface-closed)))
+    (unless (and return-function (funcall return-function))
+      (emacsvox-aural-ui--speak-feedback
+       (emacsvox-aural-ui--destination-description) 'close-object
+       'aural-interface-closed))))
 
 (defun emacsvox-aural-ui-display-help (producer)
   "Display Help from PRODUCER and remember the exact aural origin.
@@ -789,18 +801,23 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
               (funcall emacsvox-aural-ui-dismiss-warning-function)))
         (facts
          '(:role aural-interface :events (aural-interface-closed)))
+        (return-function emacsvox-aural-ui--return-function)
         (context
          (emacsvox-aural-capture-context 'aural-tools 'state-change)))
+    (setq emacsvox-aural-ui--return-function nil)
     (prog1
         (quit-window kill)
-      (let ((emacsvox-aural-submission-facts facts)
-            (emacsvox-aural-submission-context context)
-            (emacsvox-aural-submission-module 'aural-tools)
-            (emacsvox-aural-submission-occasion 'state-change))
-        (emacsvox-aural-ui--speak-feedback
-         (concat (emacsvox-aural-ui--destination-description)
-                 (when warning (concat " " warning)))
-         'close-object 'aural-interface-closed)))))
+      (let ((returned (and return-function (funcall return-function))))
+        (when (or warning (not returned))
+          (let ((emacsvox-aural-submission-facts facts)
+                (emacsvox-aural-submission-context context)
+                (emacsvox-aural-submission-module 'aural-tools)
+                (emacsvox-aural-submission-occasion 'state-change))
+            (emacsvox-aural-ui--speak-feedback
+             (if returned warning
+               (concat (emacsvox-aural-ui--destination-description)
+                       (when warning (concat " " warning))))
+             'close-object 'aural-interface-closed)))))))
 
 (defvar emacsvox-aural-interface-mode-map
   (let ((map (make-sparse-keymap)))

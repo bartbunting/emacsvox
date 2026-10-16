@@ -1,0 +1,134 @@
+#+title: Everyday workflows and novice assumptions review, 15 October 2026
+#+language: en
+
+* Scope
+
+This documentation pass starts from =ui-experiments= at
+=1afdfc6c3e2362c1c73d8198889573bf026ff5cf=. It adds practical file, document
+and web tasks without changing Lisp, dependencies, packaging or publication.
+The existing Introduction's key-notation explanation remains the first place
+to learn the notation; the tutorial and its exercises are unchanged.
+
+Before committing, the pass was rebased onto
+=74e9b00f3cf232a550419d24218eae7e74e4655a=. Its seven intervening commits
+change menu implementation, tests, Online Help, the settings plan and generated
+manuals, but not these edited files. They remain intact. The current EWW focused
+menu still has the documented controls; its updated return path is preserved.
+
+* Editorial responsibilities and content
+
+=using-manual.org= now owns the beginner explanation of answering minibuffer
+prompts, completion, sequential questions, filename entry, example paths and
+input contexts. It distinguishes typing an answer from editing a document,
+Emacs commands from shell commands, and cancelling an unfinished command from
+undoing an operation already performed. It links to the existing key primer
+rather than duplicating it.
+
+=applications.org= adds files and directories before Document Authoring, expands
+the existing authoring section into a real Org-document workflow, and replaces
+the short EWW overview with a connected web-reading guide. These tasks are
+independent of the tutorial and use existing speech settings.
+
+File guidance separates the working buffer from the saved file. It explains
+read-only visits, checking a destination, writing a separate working copy with
+write-file, copying the last saved file with copy-file, and preserving work
+after a save error or external modification. Dired guidance distinguishes
+inspection from marking, ordinary RET from the smart opener, lowercase c from
+Copy, and leaving a listing from deletion. External du/file dependencies are
+stated beside the affected inspections.
+
+The Org task creates a deliberately named file, reviews headings and folding,
+then searches for and corrects one word. It distinguishes visibility from
+content, undo from saving, and buffer names from file destinations. The literal
+sample contains no executable code or file-local configuration.
+
+The EWW task uses Emacsvox's actual bindings rather than copying stock EWW keys.
+It distinguishes links from browser history, a link address from the page URL,
+readable views from site content, and web bookmarks from ebook-position marks.
+It covers changing buffer titles, separate buffers, contextual k, search
+privacy, network errors, form-input loss on reload, and external-browser
+handoff. A browser or network failure is not treated as a speech-engine failure.
+
+The remaining application sections retain their instructions. The existing CSV
+copy list gains explicit verbs in two descriptions for spoken clarity; no key
+or behaviour changes there. All material from Messaging to the chapter's end
+is byte-for-byte unchanged. The expanded summaries keep the original upstream
+and generated-reference destinations.
+
+=finding-tasks.org= adds direct routes for prompts, files, notes and web pages.
+It retains the prior goals and recovery links. Procedures have one maintained
+home; the task finder does not copy their steps.
+
+* Navigation
+
+The accepted Info inventory grows from 166 to 181 identifiers. Ten destinations
+cover files, document authoring and EWW. Five belong to Using This Manual: two
+new prompt/path explanations and three existing reading/lookup/format sections
+promoted to nodes. Those latter nodes keep the subsequent reading guidance
+from becoming part of the filename explanation in Info.
+
+Every earlier identifier and its relative order remains. New child nodes
+intentionally change local Next, Previous and Up navigation. The master include
+order is unchanged and no retired Home entry is introduced.
+
+* Source verification
+
+All four existing baseline files were checked against their Git blob hashes
+before transformation. The applications baseline was reconciled against Git's
+diff before final review. The locally reviewed applications result matches
+its stored Git blob. The completed commit's other blobs must likewise match
+the checked local files before the branch is advanced.
+
+Static checks pass for the 181-entry inventory, unique new names, old-node
+ordering, retained source headings and indexes, original command/example
+blocks, property-drawer balance, trailing whitespace and new internal links.
+The note's search word and expected correction are checked in the example.
+These are source checks, not an interactive execution of the lessons.
+
+Dired navigation, destination feedback, marking, metadata keys and smart-open
+behaviour were inspected in =lisp/emacsvox-dired.el=. EWW navigation, link-map
+overrides, title-based buffer naming, history feedback, ebook marks and view
+restoration were inspected in =lisp/emacsvox-eww.el=. The focused EWW controls
+were checked in =lisp/emacsvox-settings-integrations.el= at the rebased head.
+General file saving, EWW history/new-buffer operation and Org visibility/motion
+were checked against the GNU Emacs, EWW and Org manuals referenced by the text.
+No claim of audible playback follows merely from a command, cue or saved value.
+
+* Remaining acceptance
+
+No Emacs executable is available in this editing environment, and a network
+checkout attempt failed. Org lint/export, the configured documentation gates,
+effective key tests and listening acceptance were not run. The previous merge's
+successful generation does not validate these newer source changes. Tracked
+Texinfo and Info remain unchanged for this pass.
+
+Use the configured toolchain and the byte-code build/preflight required by
+=AGENTS.md=, then run:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+Check the new nodes and task links in Info and HTML, including returning from
+lookup and transitions between the prompt guide and reading routes. Read the
+opening without assuming minibuffer or shell knowledge. Try a filename with
+spaces, a missing filename, an existing unused destination, an overwrite
+cancellation and a save error without discarding the working buffer.
+
+For file acceptance, verify that write-file includes unsaved changes and
+retargets later saves, whereas copy-file copies disk content without retargeting.
+In Dired, inspect only disposable files, preserve existing marks and compare RET
+with the smart opener. Verify metadata speech and unavailable external helpers.
+For document acceptance, create a new Org note, reveal/fold it, make the small
+correction and undo only the intended edit before deciding what to save.
+
+For EWW, use a non-confidential public page with headings and links. Check link
+and page URL copying, title-based buffer selection, history versus separate
+buffers, readable-view restoration and an unavailable or JavaScript-dependent
+page. Treat any exact return-position or acoustic differences as findings, not
+as evidence to silently change the documented outcome. Verify focused settings
+return and saving without assuming that q reverses live changes.
+
+Website publication and a tagged release remain separate authorised actions.

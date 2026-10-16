@@ -1513,7 +1513,7 @@ LABEL identifies the speech or cue being edited."
       "m metadata          P preview; S stop\n"
       "x explain           v validate\n"
       "w or C-c C-c write changes\n"
-      "h aural home\n"
+      "h settings menu\n"
       "q collapses one level and returns to its parent, retaining changes; at the top it closes the panel; from the rule list it quits\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1594,7 +1594,7 @@ LABEL identifies the speech or cue being edited."
     (define-key map (kbd "w") #'emacsvox-aural-editor-save)
     (define-key map (kbd "C-c C-c") #'emacsvox-aural-editor-save)
     (define-key map (kbd "g") #'emacsvox-aural-editor-refresh)
-    (define-key map (kbd "h") #'emacsvox-aural)
+    (define-key map (kbd "h") #'emacsvox-aural-menu)
     (define-key map (kbd "?") #'emacsvox-aural-editor-help)
     (define-key map (kbd "q") #'emacsvox-aural-editor-quit)
     map)

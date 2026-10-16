@@ -43,7 +43,9 @@
 
 (defmacro omnivox-parameters-test--with-lanes (&rest body)
   (declare (indent 0) (debug t))
-  `(let ((speaker (make-pipe-process :name "parameters-main" :noquery t))
+  `(let (;; Fake discovery timers must not receive unrelated GUI timers.
+         (timer-list nil) (timer-idle-list nil)
+         (speaker (make-pipe-process :name "parameters-main" :noquery t))
          (notification (make-pipe-process :name "parameters-notify" :noquery t))
          (omnivox-parameters-test--timers nil) (omnivox-parameters-test--writes nil)
          (omnivox-parameters--last-error nil) (omnivox--control-request-sequence 0)

@@ -2056,7 +2056,9 @@ compatibility source."
          :summary "HTML reading earcons"
          :owner 'html
          :directory html-directory)))
-    (dolist (discovery-root discovery-roots)
+    ;; Load bundled parents before personal children.  Configured precedence
+    ;; still gives personal packs priority over bundled copies.
+    (dolist (discovery-root (reverse discovery-roots))
       (emacsvox-aural-discover-resource-packs discovery-root))
     (emacsvox-aural-validate-resource-registry)))
 

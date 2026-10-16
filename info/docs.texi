@@ -1,69 +1,71 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 307 loaded; 0 intentionally omitted.
+@c Modules: 319 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
 @c Loaded: emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc emacsvox-aural-description.elc emacsvox-aural-doctor.elc
 @c Loaded: emacsvox-aural-editor.elc emacsvox-aural-explanation.elc emacsvox-aural-feature-fragments.elc emacsvox-aural-feedback-details.elc emacsvox-aural-history.elc
-@c Loaded: emacsvox-aural-home.elc emacsvox-aural-inspection.elc emacsvox-aural-overrides.elc emacsvox-aural-planner.elc emacsvox-aural-preview.elc
-@c Loaded: emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc emacsvox-aural-provider-markdown.elc emacsvox-aural-provider-notmuch.elc emacsvox-aural-provider-org-srs.elc
-@c Loaded: emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc emacsvox-aural-recent-feedback.elc emacsvox-aural-replay.elc
-@c Loaded: emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc emacsvox-aural-schemes.elc emacsvox-aural-semantics.elc
-@c Loaded: emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc emacsvox-aural-submission.elc emacsvox-aural-tools.elc
-@c Loaded: emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc emacsvox-aural-voice-bulk.elc emacsvox-aural-voice-context.elc
-@c Loaded: emacsvox-aural-voice-data.elc emacsvox-aural-voice-drafts.elc emacsvox-aural-voice-editing.elc emacsvox-aural-voice-editor.elc emacsvox-aural-voice-engine-controls.elc
-@c Loaded: emacsvox-aural-voice-palettes.elc emacsvox-aural-voice-runtime.elc emacsvox-aural-voice-workbench.elc emacsvox-aural.elc emacsvox-avy.elc
-@c Loaded: emacsvox-bbdb.elc emacsvox-bibtex.elc emacsvox-bookmark.elc emacsvox-bookshare.elc emacsvox-browse-kill-ring.elc
-@c Loaded: emacsvox-bs.elc emacsvox-buff-menu.elc emacsvox-c.elc emacsvox-calc.elc emacsvox-calculator.elc
-@c Loaded: emacsvox-calendar.elc emacsvox-calibredb.elc emacsvox-chess.elc emacsvox-cider.elc emacsvox-clojure.elc
-@c Loaded: emacsvox-cmuscheme.elc emacsvox-combobulate.elc emacsvox-comint.elc emacsvox-company.elc emacsvox-compile.elc
-@c Loaded: emacsvox-consult.elc emacsvox-corfu.elc emacsvox-cperl.elc emacsvox-custom.elc emacsvox-dbus.elc
-@c Loaded: emacsvox-deadgrep.elc emacsvox-debugger.elc emacsvox-denote.elc emacsvox-desktop.elc emacsvox-devdocs.elc
-@c Loaded: emacsvox-dictionary.elc emacsvox-diff-mode.elc emacsvox-dired.elc emacsvox-dumb-jump.elc emacsvox-eat-core.elc
-@c Loaded: emacsvox-eat-input.elc emacsvox-eat-review.elc emacsvox-eat.elc emacsvox-ebuku.elc emacsvox-ediff.elc
-@c Loaded: emacsvox-eglot.elc emacsvox-ein.elc emacsvox-elfeed.elc emacsvox-elisp-refs.elc emacsvox-ellama.elc
-@c Loaded: emacsvox-elpher.elc emacsvox-elpy.elc emacsvox-embark.elc emacsvox-emms.elc emacsvox-emoji.elc
-@c Loaded: emacsvox-empv.elc emacsvox-enriched.elc emacsvox-entertain.elc emacsvox-enwc.elc emacsvox-epa.elc
-@c Loaded: emacsvox-epub.elc emacsvox-erc.elc emacsvox-eshell.elc emacsvox-ess.elc emacsvox-etable.elc
-@c Loaded: emacsvox-eterm.elc emacsvox-eudc.elc emacsvox-evil.elc emacsvox-eww.elc emacsvox-extras.elc
-@c Loaded: emacsvox-exwm.elc emacsvox-feeds.elc emacsvox-ffap.elc emacsvox-ffip.elc emacsvox-filtertext.elc
-@c Loaded: emacsvox-flycheck.elc emacsvox-flymake.elc emacsvox-flyspell.elc emacsvox-folding.elc emacsvox-forge.elc
-@c Loaded: emacsvox-forms.elc emacsvox-geiser.elc emacsvox-gnuplot.elc emacsvox-gnus.elc emacsvox-go-mode.elc
-@c Loaded: emacsvox-gomoku.elc emacsvox-google.elc emacsvox-gptel.elc emacsvox-gridtext.elc emacsvox-gud.elc
-@c Loaded: emacsvox-haskell.elc emacsvox-helm.elc emacsvox-helpful.elc emacsvox-hide-lines.elc emacsvox-hide.elc
-@c Loaded: emacsvox-hideshow.elc emacsvox-hydra.elc emacsvox-ibuffer.elc emacsvox-ido.elc emacsvox-iedit.elc
-@c Loaded: emacsvox-indentation.elc emacsvox-info.elc emacsvox-ispell.elc emacsvox-ivy.elc emacsvox-journalctl.elc
-@c Loaded: emacsvox-js2.elc emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-lispy.elc
+@c Loaded: emacsvox-aural-home.elc emacsvox-aural-inspection.elc emacsvox-aural-menu.elc emacsvox-aural-overrides.elc emacsvox-aural-planner.elc
+@c Loaded: emacsvox-aural-preview.elc emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc emacsvox-aural-provider-markdown.elc emacsvox-aural-provider-notmuch.elc
+@c Loaded: emacsvox-aural-provider-org-srs.elc emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc emacsvox-aural-recent-feedback.elc
+@c Loaded: emacsvox-aural-replay.elc emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc emacsvox-aural-schemes.elc
+@c Loaded: emacsvox-aural-semantics.elc emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc emacsvox-aural-submission.elc
+@c Loaded: emacsvox-aural-tools.elc emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc emacsvox-aural-voice-bulk.elc
+@c Loaded: emacsvox-aural-voice-context.elc emacsvox-aural-voice-data.elc emacsvox-aural-voice-drafts.elc emacsvox-aural-voice-editing.elc emacsvox-aural-voice-editor.elc
+@c Loaded: emacsvox-aural-voice-engine-controls.elc emacsvox-aural-voice-menu.elc emacsvox-aural-voice-palettes.elc emacsvox-aural-voice-runtime.elc emacsvox-aural-voice-workbench.elc
+@c Loaded: emacsvox-aural.elc emacsvox-avy.elc emacsvox-bbdb.elc emacsvox-bibtex.elc emacsvox-bookmark.elc
+@c Loaded: emacsvox-bookshare.elc emacsvox-browse-kill-ring.elc emacsvox-bs.elc emacsvox-buff-menu.elc emacsvox-c.elc
+@c Loaded: emacsvox-calc.elc emacsvox-calculator.elc emacsvox-calendar.elc emacsvox-calibredb.elc emacsvox-capitalization.elc
+@c Loaded: emacsvox-chess.elc emacsvox-cider.elc emacsvox-clojure.elc emacsvox-cmuscheme.elc emacsvox-combobulate.elc
+@c Loaded: emacsvox-comint.elc emacsvox-company.elc emacsvox-compile.elc emacsvox-consult.elc emacsvox-corfu.elc
+@c Loaded: emacsvox-cperl.elc emacsvox-custom.elc emacsvox-dbus.elc emacsvox-deadgrep.elc emacsvox-debugger.elc
+@c Loaded: emacsvox-denote.elc emacsvox-desktop.elc emacsvox-devdocs.elc emacsvox-dictionary.elc emacsvox-diff-mode.elc
+@c Loaded: emacsvox-dired.elc emacsvox-dumb-jump.elc emacsvox-eat-core.elc emacsvox-eat-input.elc emacsvox-eat-review.elc
+@c Loaded: emacsvox-eat.elc emacsvox-ebuku.elc emacsvox-ediff.elc emacsvox-eglot.elc emacsvox-ein.elc
+@c Loaded: emacsvox-elfeed.elc emacsvox-elisp-refs.elc emacsvox-ellama.elc emacsvox-elpher.elc emacsvox-elpy.elc
+@c Loaded: emacsvox-embark.elc emacsvox-emms.elc emacsvox-emoji.elc emacsvox-empv.elc emacsvox-enriched.elc
+@c Loaded: emacsvox-entertain.elc emacsvox-enwc.elc emacsvox-epa.elc emacsvox-epub.elc emacsvox-erc.elc
+@c Loaded: emacsvox-eshell.elc emacsvox-ess.elc emacsvox-etable.elc emacsvox-eterm.elc emacsvox-eudc.elc
+@c Loaded: emacsvox-evil.elc emacsvox-eww.elc emacsvox-extras.elc emacsvox-exwm.elc emacsvox-feeds.elc
+@c Loaded: emacsvox-ffap.elc emacsvox-ffip.elc emacsvox-filtertext.elc emacsvox-flycheck.elc emacsvox-flymake.elc
+@c Loaded: emacsvox-flyspell.elc emacsvox-folding.elc emacsvox-forge.elc emacsvox-forms.elc emacsvox-geiser.elc
+@c Loaded: emacsvox-gnuplot.elc emacsvox-gnus.elc emacsvox-go-mode.elc emacsvox-gomoku.elc emacsvox-google.elc
+@c Loaded: emacsvox-gptel.elc emacsvox-gridtext.elc emacsvox-gud.elc emacsvox-haskell.elc emacsvox-helm.elc
+@c Loaded: emacsvox-helpful.elc emacsvox-hide-lines.elc emacsvox-hide.elc emacsvox-hideshow.elc emacsvox-hydra.elc
+@c Loaded: emacsvox-ibuffer.elc emacsvox-ido.elc emacsvox-iedit.elc emacsvox-indentation.elc emacsvox-info.elc
+@c Loaded: emacsvox-interaction.elc emacsvox-ispell.elc emacsvox-ivy.elc emacsvox-journalctl.elc emacsvox-js2.elc
+@c Loaded: emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-line-cues.elc emacsvox-lispy.elc
 @c Loaded: emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc emacsvox-man.elc
 @c Loaded: emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc emacsvox-mines.elc
 @c Loaded: emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc emacsvox-nm.elc
 @c Loaded: emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc emacsvox-omnivox-components.elc
-@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc
-@c Loaded: emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc
-@c Loaded: emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc
-@c Loaded: emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc
-@c Loaded: emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc
-@c Loaded: emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc
+@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-output-settings.elc
+@c Loaded: emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc
+@c Loaded: emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc
+@c Loaded: emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc
+@c Loaded: emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc
+@c Loaded: emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc
+@c Loaded: emacsvox-settings-changes.elc emacsvox-settings-integrations.elc emacsvox-settings-workflows.elc emacsvox-settings.elc emacsvox-setup.elc
 @c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
-@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc
-@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-ui.elc
-@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc
-@c Loaded: emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc
-@c Loaded: emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc
-@c Loaded: emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc
-@c Loaded: emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc
-@c Loaded: emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc
-@c Loaded: emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc
-@c Loaded: espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc gweb.elc
-@c Loaded: ladspa.elc light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc
-@c Loaded: omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc
-@c Loaded: omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc
-@c Loaded: omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
-@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
-@c Loaded: swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc
-@c Loaded: voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-spelling.elc emacsvox-sql.elc
+@c Loaded: emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc
+@c Loaded: emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc
+@c Loaded: emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc
+@c Loaded: emacsvox-tone-editor.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc
+@c Loaded: emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc
+@c Loaded: emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc
+@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
+@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
+@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
+@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
+@c Loaded: omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc
+@c Loaded: omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc
+@c Loaded: omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc
+@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
+@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -71,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1631 commands and 229 options.
+This chapter documents a total of 1670 commands and 243 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -103,6 +105,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-aural-history:: Frozen aural observability.
 * emacsvox-aural-home:: Spoken aural control center.
 * emacsvox-aural-inspection:: Context for aural inspection.
+* emacsvox-aural-menu:: Transient menus for aural settings.
 * emacsvox-aural-overrides:: Spoken presentation override manager.
 * emacsvox-aural-planner:: Source aural planner.
 * emacsvox-aural-preview:: Shared aural preview runtime.
@@ -136,6 +139,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-aural-voice-editing:: Complete voice editing proposals.
 * emacsvox-aural-voice-editor:: Common spoken voice editor.
 * emacsvox-aural-voice-engine-controls:: Engine-described voice controls.
+* emacsvox-aural-voice-menu:: Focused named voice tuning.
 * emacsvox-aural-voice-palettes:: Spoken voice-palette manager.
 * emacsvox-aural-voice-runtime:: Owned voice routing.
 * emacsvox-aural-voice-workbench:: Spoken voice routing UI.
@@ -152,6 +156,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-calculator:: Extend calculator.
 * emacsvox-calendar:: Speech enable Calendar.
 * emacsvox-calibredb:: CALIBREDB.
+* emacsvox-capitalization:: Capitalization settings and cue drafts.
 * emacsvox-chess:: Speech-enable CHESS.
 * emacsvox-cider:: Speech-enable CIDER.
 * emacsvox-clojure:: Speech-enable CLOJURE.
@@ -237,6 +242,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-iedit:: Speech-enable IEDIT.
 * emacsvox-indentation:: Indentation feedback menu.
 * emacsvox-info:: Speech enable Info --.
+* emacsvox-interaction:: Typing and interaction settings.
 * emacsvox-ispell:: Speech enable Ispell.
 * emacsvox-ivy:: Speech-enable IVY.
 * emacsvox-journalctl:: JOURNALCTL.
@@ -244,6 +250,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-keymap:: Setup   keybindings.
 * emacsvox-kmacro:: Speech-enable KMacros.
 * emacsvox-librivox:: LIBRIVOX API client.
+* emacsvox-line-cues:: Line and boundary cue drafts.
 * emacsvox-lispy:: Speech-enable LISPY.
 * emacsvox-lua:: Speech-enable LUA.
 * emacsvox-m-player:: Media Player.
@@ -269,6 +276,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
 * emacsvox-outline:: Speech enable Outline.
+* emacsvox-output-settings:: Notification and spatial settings.
 * emacsvox-package:: Speech-enable PACKAGE.
 * emacsvox-perl:: Speech enable Perl Mode.
 * emacsvox-pipewire:: Speech-enable PIPEWIRE.
@@ -294,6 +302,10 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-sage:: Speech-enable SAGE.
 * emacsvox-sdcv:: Speech-enable SDCV.
 * emacsvox-ses:: Speech-enable ses.
+* emacsvox-settings:: Settings discovery.
+* emacsvox-settings-changes:: Changed settings and draft status.
+* emacsvox-settings-integrations:: Integration settings discovery.
+* emacsvox-settings-workflows:: Linked editing workflows.
 * emacsvox-setup:: Setup Emacsvox --.
 * emacsvox-sgml-mode:: Speech enable SGML.
 * emacsvox-sh-script:: Speech enable script.
@@ -303,6 +315,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
 * emacsvox-speedbar:: speedbar -.
+* emacsvox-spelling:: Spelling feedback settings.
 * emacsvox-sql:: Speech enable sql-mode.
 * emacsvox-sudoku:: Play SuDoku.
 * emacsvox-supercite:: Speech enable SC.
@@ -319,6 +332,7 @@ This chapter documents a total of 1631 commands and 229 options.
 * emacsvox-tetris:: Tetris.
 * emacsvox-texinfo:: Speech enable texinfo.
 * emacsvox-todo-mode:: speech-enable todo.
+* emacsvox-tone-editor:: Draft tone adjustments.
 * emacsvox-transient:: TRANSIENT.
 * emacsvox-treesit:: Speech-enable TREESIT.
 * emacsvox-typo:: Speech-enable TYPO.
@@ -2001,7 +2015,7 @@ V		emacsvox-aural-change-feedback-preview-whole
 a		emacsvox-aural-change-feedback-apply
 c		emacsvox-aural-change-feedback-change
 e		emacsvox-aural-change-feedback-advanced
-h		emacsvox-aural
+h		emacsvox-aural-menu
 l		emacsvox-aural-change-feedback-lifetime
 m		emacsvox-aural-change-feedback-match
 q		emacsvox-aural-change-feedback--back
@@ -2221,7 +2235,7 @@ step during initialization.
 Key             Binding
 -------------------------------------------------------------------------------
 ?		emacsvox-aural-doctor-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 r		emacsvox-aural-doctor-repair-current
 y		emacsvox-aural-doctor-copy-report
 
@@ -2307,7 +2321,7 @@ Run the deterministic repair offered by the finding at point.
 @findex emacsvox-aural-doctor-restore-bindings
 
 @format
-Restore the documented aural home and point-explanation bindings.
+Restore the documented settings and point-explanation bindings.
 @end format
 @end deffn
 
@@ -2549,7 +2563,7 @@ c		emacsvox-aural-editor-copy-rule
 d		emacsvox-aural-editor-delete-rule
 e		emacsvox-aural-editor-edit-rule
 g		emacsvox-aural-editor-refresh
-h		emacsvox-aural
+h		emacsvox-aural-menu
 m		emacsvox-aural-editor-edit-metadata
 n		emacsvox-aural-editor-next-rule
 p		emacsvox-aural-editor-previous-rule
@@ -2837,7 +2851,7 @@ RET		emacsvox-aural-feature-fragment-previews-describe
 ?		emacsvox-aural-feature-fragment-previews-help
 P		emacsvox-aural-feature-fragment-previews-play
 c		emacsvox-aural-feature-fragment-previews-audition-cues
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-feature-fragment-previews-toggle-isolated
 o		emacsvox-aural-list-feature-fragments
 
@@ -2977,7 +2991,7 @@ a		emacsvox-aural-feature-fragments-toggle-view
 c		emacsvox-aural-copy-feature-fragment
 d		emacsvox-aural-delete-feature-fragment
 e		emacsvox-aural-feature-fragments-edit
-h		emacsvox-aural
+h		emacsvox-aural-menu
 t		emacsvox-aural-feature-fragments-toggle
 v		emacsvox-aural-show-feature-fragment-validation
 M-<down>	emacsvox-aural-feature-fragments-move-down
@@ -3189,8 +3203,9 @@ P		emacsvox-aural-feedback-details-play
 R		emacsvox-aural-feedback-details--change-sound
 V		emacsvox-aural-feedback-details-preview
 g		emacsvox-aural-feedback-details--update-draft-status
-h		emacsvox-aural
+h		emacsvox-aural-menu
 n		emacsvox-aural-feedback-details-next-heading
+o		emacsvox-aural-feedback-details--switch-view
 p		emacsvox-aural-feedback-details-previous-heading
 q		emacsvox-aural-ui-help-quit
 r		emacsvox-aural-feedback-details--choose-voice
@@ -3321,6 +3336,53 @@ Expand or collapse the selected field, including its voice spans.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-feedback-outline-mode
+@deffn {Command} emacsvox-aural-feedback-outline-mode  (&optional arg)
+@findex emacsvox-aural-feedback-outline-mode
+
+@format
+Review Feedback Details with standard Outline navigation and folding.
+
+TAB cycles a heading; n and p move between visible headings.  M-n moves to
+the next visible action.  Press o to compare with the original report.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Aural-Feedback-Outline mode’ mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-aural-feedback-outline-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsection emacsvox-aural-feedback-details Options
+
+@defvar {User Option} emacsvox-aural-feedback-outline-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-aural-feedback-outline-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-aural-history
 @section emacsvox-aural-history
 
@@ -3375,11 +3437,6 @@ diagnosis, and contextual remapping.
 
 @subsubsection emacsvox-aural
 @deffn {Command} emacsvox-aural  (&optional source-buffer)
-@table @kbd
-@item C-e H
-@kindex C-e H
-@end table
-
 @findex emacsvox-aural
 
 @format
@@ -3674,6 +3731,103 @@ Return to the captured source item.
 @end format
 @end deffn
 
+@node emacsvox-aural-menu
+@section emacsvox-aural-menu
+
+Experimental entry and speech menus.  Retain the source item across
+submenus and delegate settings and feedback to their existing commands.
+
+@subsection Emacsvox-Aural-Menu Commands
+
+@subsubsection emacsvox-aural-menu
+@deffn {Command} emacsvox-aural-menu  (&optional arg1)
+@table @kbd
+@item C-e H
+@kindex C-e H
+@end table
+
+@findex emacsvox-aural-menu
+
+@format
+Choose Emacsvox speech settings or inspect feedback for this item.
+With prefix GLOBAL, start speech settings with global defaults.
+The source item is captured on entry for contextual editing and return.
+Up and Down select items; Left and Right select the first item of a section.
+Enter activates the selected item; a displayed key invokes its action directly.
+Shift-Left and Shift-Right adjust numeric controls where offered. Choice lists
+use Up and Down to browse and Enter to choose. Text prompts keep normal editing.
+Question mark followed by an item’s key explains its effect and scope.
+q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
+each editor explains its own draft, Apply and Save actions.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-line-cues
+@deffn {Command} emacsvox-aural-menu-line-cues
+@findex emacsvox-aural-menu-line-cues
+
+@format
+Choose a global line tone or boundary earcon to preview and edit.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-navigation
+@deffn {Command} emacsvox-aural-menu-navigation
+@findex emacsvox-aural-menu-navigation
+
+@format
+Choose arrow navigation, announcement order, and descriptions for all menus.
+These preferences apply to all Transient menus, including Magit. Browse with
+Up and Down, then Enter to apply a choice. Left and Right change sections
+and select their first item. C-c l repeats that item without activating it.
+Changes take effect immediately; S saves these preferences through Customize.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-punctuation
+@deffn {Command} emacsvox-aural-menu-punctuation  (&optional arg1)
+@findex emacsvox-aural-menu-punctuation
+
+@format
+Choose punctuation for this buffer or the session’s global default.
+Global changes also apply to the source buffer.  S saves the displayed choice
+as the default across restarts; mode policies still take precedence.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-sounds
+@deffn {Command} emacsvox-aural-menu-sounds
+@findex emacsvox-aural-menu-sounds
+
+@format
+Adjust global output volumes or browse sound packs.
+Shift left and right adjust the selected volume by five percentage points.
+Enter sets an exact value.  Save explicitly to retain volumes across restarts.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-speech
+@deffn {Command} emacsvox-aural-menu-speech  (&optional arg1)
+@findex emacsvox-aural-menu-speech
+
+@format
+Choose speech settings for the source buffer or global defaults.
+With prefix GLOBAL, start with global defaults when opening directly.
+When opened from the Emacsvox menu, share its selected scope.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-voices
+@deffn {Command} emacsvox-aural-menu-voices
+@findex emacsvox-aural-menu-voices
+
+@format
+Browse voices and palettes or choose a global engine preference.
+Browser quit commands return here after unwinding their own child views.
+Engine preferences last for this session unless explicitly saved.
+@end format
+@end deffn
+
 @node emacsvox-aural-overrides
 @section emacsvox-aural-overrides
 
@@ -3770,7 +3924,7 @@ a		emacsvox-aural-overrides-clear-filter
 d		emacsvox-aural-overrides-delete
 e		emacsvox-aural-overrides-edit
 f		emacsvox-aural-overrides-filter
-h		emacsvox-aural
+h		emacsvox-aural-menu
 t		emacsvox-aural-overrides-toggle
 x		emacsvox-aural-overrides-describe
 
@@ -3999,7 +4153,7 @@ N		emacsvox-aural-profiles-create
 a		emacsvox-aural-profiles-activate
 c		emacsvox-aural-profiles-copy
 d		emacsvox-aural-profiles-delete
-h		emacsvox-aural
+h		emacsvox-aural-menu
 r		emacsvox-aural-profiles-rename
 v		emacsvox-aural-profiles-describe
 w		emacsvox-aural-profiles-update-from-current
@@ -4214,7 +4368,7 @@ P		emacsvox-aural-recent-feedback-replay
 R		emacsvox-aural-recent-feedback-remap-earcon
 c		emacsvox-aural-recent-feedback-audition-cues
 e		emacsvox-aural-recent-feedback-explain
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-toggle-interface-history-recording
 r		emacsvox-aural-recent-feedback-remap-voice
 
@@ -4468,7 +4622,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-describe-aural-semantic
 ?		emacsvox-aural-semantics-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 
 @end format
 @end deffn
@@ -4634,7 +4788,7 @@ Key             Binding
 RET		emacsvox-aural-sound-pack-cues-describe
 ?		emacsvox-aural-sound-pack-cues-help
 P		emacsvox-aural-sound-pack-cues-audition
-h		emacsvox-aural
+h		emacsvox-aural-menu
 o		emacsvox-aural-sound-packs-open-directory
 s		emacsvox-aural-list-sound-packs
 v		emacsvox-aural-sound-pack-cues-show-validation
@@ -4771,7 +4925,7 @@ RET		emacsvox-aural-list-sound-pack-cues
 P		emacsvox-aural-sound-packs-audition
 a		emacsvox-aural-sound-packs-activate
 e		emacsvox-aural-sound-packs-edit-manifest
-h		emacsvox-aural
+h		emacsvox-aural-menu
 o		emacsvox-aural-sound-packs-open-directory
 v		emacsvox-aural-sound-packs-show-validation
 
@@ -5966,8 +6120,9 @@ S		emacsvox-aural-voice-editor-stop
 T		emacsvox-aural-voice-editor-text
 d		emacsvox-aural-voice-editor-default
 g		revert-buffer
-h		emacsvox-aural-home
+h		emacsvox-aural-menu
 i		emacsvox-aural-voice-editor--inherit
+m		emacsvox-aural-voice-menu
 n		emacsvox-aural-voice-editor-next
 p		emacsvox-aural-voice-editor-previous
 q		emacsvox-aural-voice-editor-leave
@@ -6226,6 +6381,23 @@ nil
 
 @end defvar
 
+@node emacsvox-aural-voice-menu
+@section emacsvox-aural-voice-menu
+
+A focused view of the common editor's authoritative named-voice draft.
+Preview and saving use the editor's existing ownership and recovery paths.
+
+@subsection Emacsvox-Aural-Voice-Menu Commands
+
+@subsubsection emacsvox-aural-voice-menu
+@deffn {Command} emacsvox-aural-voice-menu
+@findex emacsvox-aural-voice-menu
+
+@format
+Tune shared or individual fallback values; preview and save explicitly.
+@end format
+@end deffn
+
 @node emacsvox-aural-voice-palettes
 @section emacsvox-aural-voice-palettes
 
@@ -6317,7 +6489,7 @@ T		emacsvox-aural-voice-palette-previews-set-text
 c		emacsvox-aural-voice-palette-previews-copy
 d		emacsvox-aural-voice-palette-previews-delete
 e		emacsvox-aural-voice-palette-previews-tune
-h		emacsvox-aural
+h		emacsvox-aural-menu
 o		emacsvox-aural-voice-palette-previews-open-manager
 r		emacsvox-aural-voice-palette-previews-rename
 s		emacsvox-aural-voice-palette-previews-stop
@@ -6651,7 +6823,7 @@ c		emacsvox-aural-voice-palettes-copy
 d		emacsvox-aural-voice-palettes-delete
 e		emacsvox-aural-voice-palettes-edit-entry
 f		emacsvox-aural-voice-palettes-follow-baseline
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-voice-palettes-import
 r		emacsvox-aural-voice-palettes-rename
 u		emacsvox-aural-voice-palettes-where-used
@@ -6993,7 +7165,7 @@ b		emacsvox-aural-voice-workbench--library-slt
 d		emacsvox-aural-voice-workbench--library-download
 e		emacsvox-aural-voice-workbench-engine-view
 f		emacsvox-aural-voice-workbench-toggle-fallback-engine
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-aural-voice-workbench--library-import
 l		emacsvox-aural-voice-workbench-logical-view
 q		emacsvox-aural-voice-workbench-quit
@@ -8065,6 +8237,32 @@ Optional prefix arg uses alternative renderer that handles epubs
 with broken NCX files.
 
 (fn &optional BROKEN-NCX)
+@end format
+@end deffn
+
+@node emacsvox-capitalization
+@section emacsvox-capitalization
+
+Buffer/global reading options and two retained global cue drafts.
+Save cue overrides through the existing personal-rule store.
+
+@subsection Emacsvox-Capitalization Commands
+
+@subsubsection emacsvox-capitalization
+@deffn {Command} emacsvox-capitalization  (&optional arg1)
+@findex emacsvox-capitalization
+
+@format
+Choose capitalization indication, presentation, splitting, and global beep drafts.
+@end format
+@end deffn
+
+@subsubsection emacsvox-capitalization-cue
+@deffn {Command} emacsvox-capitalization-cue  (arg1)
+@findex emacsvox-capitalization-cue
+
+@format
+Tune one global capitalization beep in a retained preview draft.
 @end format
 @end deffn
 
@@ -13205,6 +13403,136 @@ nil
 
 @end defvar
 
+@defvar {User Option} emacsvox-flyspell-tone-duration
+@verbatim
+Duration of the spelling tone in milliseconds.
+@end verbatim
+
+Default Value:
+@verbatim
+
+40
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-tone-pitch
+@verbatim
+Pitch of the spelling tone in hertz.
+@end verbatim
+
+Default Value:
+@verbatim
+
+880
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-tone-shape
+@verbatim
+Waveform and optional ADSR envelope of the spelling tone.
+Waveform is sine, triangle, square, pulse or sawtooth. Pulse requires
+:pulse-width from 0.05 to 0.95. Omit the envelope for Classic fades.
+ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
+Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+Optional :end-frequency-hz makes a linear pitch sweep; :envelope-curve selects
+linear or exponential ADSR. These extensions need extended-tone support.
+Total duration stays fixed: oversized stages are shortened proportionally.
+Non-Classic shapes require richer-tone support.  Older workers omit the tone;
+explicit previews report missing support.  Speech and earcons remain usable.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(:waveform sine)
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-tone-timing
+@verbatim
+When to play spelling tones during reading.
+‘insert’ finishes each tone before its flagged word, adding a pause.
+‘overlay’ plays alongside the word without inserting a pause for the tone.
+This global setting does not change voice or earcon feedback.  Editing
+feedback and tone-only previews have no accompanying speech to overlap.
+@end verbatim
+
+Default Value:
+@verbatim
+
+overlay
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-tone-volume
+@verbatim
+Spelling tone volume as a percentage from 0 to 100.
+Zero silences the tone; 100 preserves its original level.  The shared
+‘tts-main-tone-volume’ still scales the result.  Values below 100 require
+a worker with richer-tone support; older workers omit that tone while
+retaining speech and earcons.  Preview reports missing support.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-use-earcon
+@verbatim
+Play the help earcon at flagged words and newly checked spelling errors.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-use-tone
+@verbatim
+Play a tone at flagged words and when editing detects a spelling error.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-use-voice
+@verbatim
+Use the mapped spelling voice when reading flagged words.
+This changes reading feedback, not Flyspell highlighting or checking.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-folding
 @section emacsvox-folding
 
@@ -13997,6 +14325,17 @@ With prefix GLOBAL, start with global defaults.  Changes apply immediately;
 closing the menu keeps them.  Global changes preserve buffer-local choices.
 Save defaults explicitly to retain them across sessions.  Tone volume always
 affects all main-stream Omnivox tones, independently of the selected scope.
+Up/down selects a control; left/right changes sections.  Shift-left/right
+adjusts Volume by five percentage points.  Space previews the indentation settings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-indentation-tone
+@deffn {Command} emacsvox-indentation-tone
+@findex emacsvox-indentation-tone
+
+@format
+Tune rising-pitch indentation tones in the selected scope.
 @end format
 @end deffn
 
@@ -14075,6 +14414,23 @@ screenfull
 @end verbatim
 
 @end defvar
+
+@node emacsvox-interaction
+@section emacsvox-interaction
+
+Scoped typing echo, point and message feedback, and global phonetic controls.
+Changes apply immediately; saving startup defaults is explicit.
+
+@subsection Emacsvox-Interaction Commands
+
+@subsubsection emacsvox-interaction
+@deffn {Command} emacsvox-interaction  (&optional arg1)
+@findex emacsvox-interaction
+
+@format
+Adjust typing, point, message, and phonetic feedback.
+@end format
+@end deffn
 
 @node emacsvox-ispell
 @section emacsvox-ispell
@@ -14502,6 +14858,22 @@ Default Value:
 @end verbatim
 
 @end defvar
+
+@node emacsvox-line-cues
+@section emacsvox-line-cues
+
+Retain preview drafts and save only owned overrides in personal rules.
+
+@subsection Emacsvox-Line-Cues Commands
+
+@subsubsection emacsvox-line-cues-edit
+@deffn {Command} emacsvox-line-cues-edit  (arg1)
+@findex emacsvox-line-cues-edit
+
+@format
+Edit a retained global line or boundary cue draft of KIND.
+@end format
+@end deffn
 
 @node emacsvox-lispy
 @section emacsvox-lispy
@@ -17110,7 +17482,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-omnivox-components-activate
 ?		emacsvox-omnivox-components-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 i		emacsvox-omnivox-components-install
 t		emacsvox-omnivox-components-test
 u		emacsvox-omnivox-components-uninstall
@@ -17173,7 +17545,7 @@ Key             Binding
 TAB		emacsvox-omnivox-components--details-next-action
 RET		emacsvox-omnivox-components--details-activate
 ?		emacsvox-omnivox-components-help
-h		emacsvox-aural
+h		emacsvox-aural-menu
 q		emacsvox-omnivox-components--details-back
 <backtab>	emacsvox-omnivox-components--details-previous-action
 
@@ -17574,6 +17946,22 @@ except that the outline section is  spoken
 
 @format
 Speak current outline section starting from point
+@end format
+@end deffn
+
+@node emacsvox-output-settings
+@section emacsvox-output-settings
+
+Global output policy; persistence and speech restart are explicit actions.
+
+@subsection Emacsvox-Output-Settings Commands
+
+@subsubsection emacsvox-output-settings
+@deffn {Command} emacsvox-output-settings
+@findex emacsvox-output-settings
+
+@format
+Set global notification routing and spatial presentation policy.
 @end format
 @end deffn
 
@@ -18169,6 +18557,232 @@ Summarize current cell.
 (fn &rest IGNORE)
 @end format
 @end deffn
+
+@node emacsvox-settings
+@section emacsvox-settings
+
+Search settings and action destinations with captured source context.
+
+@subsection Emacsvox-Settings Commands
+
+@subsubsection emacsvox-settings-buffer
+@deffn {Command} emacsvox-settings-buffer
+@findex emacsvox-settings-buffer
+
+@format
+Find settings relevant to the captured source buffer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-search
+@deffn {Command} emacsvox-settings-search
+@findex emacsvox-settings-search
+
+@format
+Find a focused setting and select its control without activating it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-search-actions
+@deffn {Command} emacsvox-settings-search-actions
+@findex emacsvox-settings-search-actions
+
+@format
+Find an action and select its focused-menu control without activating it.
+Match partial names without case sensitivity.  RET accepts a search result;
+another RET activates its control.  q returns to the menu where you searched.
+@end format
+@end deffn
+
+@node emacsvox-settings-changes
+@section emacsvox-settings-changes
+
+A read-only snapshot of loaded Custom options and their separate draft stores.
+
+@subsection Emacsvox-Settings-Changes Commands
+
+@subsubsection emacsvox-settings-changes
+@deffn {Command} emacsvox-settings-changes
+@findex emacsvox-settings-changes
+
+@format
+Review current values, saved defaults and drafts without changing them.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-changes-mode
+@deffn {Command} emacsvox-settings-changes-mode
+@findex emacsvox-settings-changes-mode
+
+@format
+Read changed loaded options and retained drafts; g refreshes, q returns.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-settings-changes-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-settings-changes--speak
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-changes-refresh
+@deffn {Command} emacsvox-settings-changes-refresh
+@findex emacsvox-settings-changes-refresh
+
+@format
+Refresh the snapshot while keeping the selected setting and column.
+@end format
+@end deffn
+
+@node emacsvox-settings-integrations
+@section emacsvox-settings-integrations
+
+Discover actual integration options and invoke existing source controls.
+
+@subsection Emacsvox-Settings-Integrations Commands
+
+@subsubsection emacsvox-settings-for-buffer
+@deffn {Command} emacsvox-settings-for-buffer
+@table @kbd
+@item C-e S
+@kindex C-e S
+@end table
+
+@findex emacsvox-settings-for-buffer
+
+@format
+Open Emacsvox settings for the current buffer.
+Use its focused integration menu when available, otherwise general buffer
+settings.  Changes retain the scope shown by each control.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-integrations
+@deffn {Command} emacsvox-settings-integrations
+@findex emacsvox-settings-integrations
+
+@format
+Find integration settings and existing local speech controls.
+@end format
+@end deffn
+
+@node emacsvox-settings-workflows
+@section emacsvox-settings-workflows
+
+Link focused menus to existing editors, retaining their persistence semantics.
+
+@subsection Emacsvox-Settings-Workflows Commands
+
+@subsubsection emacsvox-settings-diagnostics
+@deffn {Command} emacsvox-settings-diagnostics
+@findex emacsvox-settings-diagnostics
+
+@format
+Inspect speech and presentation; only explicit actions change settings.
+Doctor offers individual repairs.  Logging includes complete spoken text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-dictionaries
+@deffn {Command} emacsvox-settings-dictionaries
+@findex emacsvox-settings-dictionaries
+
+@format
+Manage Emacs pronunciation dictionaries for words and phrases.
+These dictionaries have their own Save file, separate from Customize and
+Omnivox punctuation.  Opening the menu changes nothing.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-feedback
+@deffn {Command} emacsvox-settings-feedback
+@findex emacsvox-settings-feedback
+
+@format
+Explain and edit current or recent feedback, preserving source context.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-history
+@deffn {Command} emacsvox-settings-history
+@findex emacsvox-settings-history
+
+@format
+Manage retained feedback globally; lowering the limit deletes old records.
+Changes apply immediately.  Save defaults separately through Customize.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-presentation
+@deffn {Command} emacsvox-settings-presentation
+@findex emacsvox-settings-presentation
+
+@format
+Manage presentation features and explicitly scoped rule drafts.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-preview-labels
+@deffn {Command} emacsvox-settings-preview-labels
+@findex emacsvox-settings-preview-labels
+
+@format
+Choose physical voice comparison labels; navigation changes nothing.
+Enter applies the selected policy and returns.  Cancel retains the old policy.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-setups
+@deffn {Command} emacsvox-settings-setups
+@findex emacsvox-settings-setups
+
+@format
+Manage saved setups and retained drafts in their owning editors.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-switches
+@deffn {Command} emacsvox-settings-switches
+@findex emacsvox-settings-switches
+
+@format
+Control Voice Lock, local silence, and earcons with explicit scopes.
+Only global Voice Lock has a Customize save here.  Other switches last for the
+session or buffer; Help explains which presentation each switch affects.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-voice-presentation
+@deffn {Command} emacsvox-settings-voice-presentation
+@findex emacsvox-settings-voice-presentation
+
+@format
+Set comparison labels and overall Omnivox pitch contrast globally.
+Changes apply now; Save defaults explicitly to keep them across restarts.
+@end format
+@end deffn
+
+@subsection emacsvox-settings-workflows Options
+
+@defvar {User Option} emacsvox-settings-workflows--dictionary-return-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-settings-workflows--dictionary-return-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-setup
 @section emacsvox-setup
@@ -20325,6 +20939,44 @@ Switch to the speedbar
 @end format
 @end deffn
 
+@node emacsvox-spelling
+@section emacsvox-spelling
+
+Independent spelling voice, tone and earcon controls with tone adjustment.
+Changes apply to the current session; saving startup defaults is explicit.
+
+@subsection Emacsvox-Spelling Commands
+
+@subsubsection emacsvox-spelling
+@deffn {Command} emacsvox-spelling
+@findex emacsvox-spelling
+
+@format
+Choose global spelling feedback and adjust its tone.
+Voice, tone and earcon combine independently. All off silences spelling
+feedback without disabling Flyspell. Voice changes apply while reading;
+tone and earcon also report errors detected while editing. Settings apply
+immediately; S saves across restarts. Spelling tone volume affects only
+this tone; Shared tone volume scales all main-stream tones.
+E opens a private tone draft with waveform, sweep and envelope controls.
+In this parent menu, Space reads the selected feedback sample and b plays
+the tone alone. In the tone editor, Space plays only the draft tone, P reads
+its sample, S stops, and W saves only tone defaults. Return here and use S
+to save voice, tone and earcon enablement as well.
+@end format
+@end deffn
+
+@subsubsection emacsvox-spelling-timing
+@deffn {Command} emacsvox-spelling-timing
+@findex emacsvox-spelling-timing
+
+@format
+Choose global spelling tone timing; browsing does not change the setting.
+Enter applies and returns. Cancel keeps the original choice.
+Read the spelling sample to compare timing; a tone alone cannot demonstrate it.
+@end format
+@end deffn
+
 @node emacsvox-sql
 @section emacsvox-sql
 
@@ -21735,6 +22387,98 @@ todo-mode (part of Emacs 21) provides todo-lists that can be
 integrated with the Emacs calendar.
 This module speech-enables todo-mode
 
+@node emacsvox-tone-editor
+@section emacsvox-tone-editor
+
+Shared draft interaction; cue providers own their settings and preview facts.
+
+@subsection Emacsvox-Tone-Editor Commands
+
+@subsubsection emacsvox-tone-editor
+@deffn {Command} emacsvox-tone-editor
+@findex emacsvox-tone-editor
+
+@format
+Edit a private tone draft.
+Up and Down select items; Left and Right change sections. Shift-Left and
+Shift-Right adjust numbers. Enter sets an exact number, toggles Pitch sweep,
+or opens a choice list. Browsing a choice list changes nothing until Enter.
+Space or b interrupts main speech and plays the draft tone alone. C plays the
+applied tone; P reads a sample with the draft. S stops, without saving.
+Preview comes before Presets in the section order. L loads a preset into the
+draft; N saves a named preset without changing the cue. A applies the draft
+for this session; W saves and applies tone defaults through Customize.
+q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
+and saved changes remain. Timing, cue enablement, voice and earcon choices
+belong to the parent menu; shared main-tone volume belongs in Output settings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-curve
+@deffn {Command} emacsvox-tone-editor-curve
+@findex emacsvox-tone-editor-curve
+
+@format
+Choose the ADSR curve from a list.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Only ADSR uses this curve. Preview with Space back in the editor.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-envelope
+@deffn {Command} emacsvox-tone-editor-envelope
+@findex emacsvox-tone-editor-envelope
+
+@format
+Choose the draft envelope from a list.
+The envelope controls loudness over the life of the tone. Up and Down browse;
+Enter selects and returns, while q cancels. Classic uses short endpoint fades.
+ADSR uses Attack, Decay, Sustain level and Release in the editor. Selecting
+does not preview or apply the draft; use Space after returning to hear it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-presets
+@deffn {Command} emacsvox-tone-editor-presets
+@findex emacsvox-tone-editor-presets
+
+@format
+Choose a starting point for the private tone draft.
+Arrows browse without changing anything. Enter loads a copy and returns;
+q cancels. Space in the editor plays the resulting draft.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-waveform
+@deffn {Command} emacsvox-tone-editor-waveform
+@findex emacsvox-tone-editor-waveform
+
+@format
+Choose the draft waveform from a list.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Preview with Space after returning to the editor.
+Only Pulse uses the editor’s separate Pulse width control.
+@end format
+@end deffn
+
+@subsection emacsvox-tone-editor Options
+
+@defvar {User Option} emacsvox-tone-presets
+@verbatim
+Named personal tone drafts, saved independently of any cue’s defaults.
+Each entry contains a name and a tone-editor draft. Loading changes only the
+private draft; Apply or Save and apply changes the destination cue.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-transient
 @section emacsvox-transient
 
@@ -21763,12 +22507,12 @@ I use the following customizations via .custom, adjust to taste,
 but use these only after reading the transient info documentations.
 @itemize
 @item transient-force-single-column: t
-@item  transient-show-menu:  1
+@item transient-show-menu: t
 @item transient-enable-menu-navigation:  t
 @end itemize
 
-this pops up the transient buffer after a short delay  and lets
-you move through the buttons with the    up/down arrows.
+This displays the menu immediately and lets you move through its
+buttons with the up/down arrows.
 @subsection Browsing Contents Of transient--show
 
 When executing a command defined via Transient --- e.g. command
@@ -21812,6 +22556,64 @@ Next transient section.
 Previous transient section.
 @end format
 @end deffn
+
+@subsection emacsvox-transient Options
+
+@defvar {User Option} emacsvox-transient-navigation-style
+@verbatim
+How Up and Down move through Transient menu items.
+Continuous navigation crosses sections and wraps around the whole menu.
+Section wrapping cycles within the current section.  Section stops keep
+point at its first or last item and play a boundary cue.  Left and Right
+move between sections in every style.  This setting applies globally.
+@end verbatim
+
+Default Value:
+@verbatim
+
+section-wrap
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-transient-section-announcement-order
+@verbatim
+How Transient navigation announces items and sections.
+Item first speaks the item, then the section name and position.  Section
+first speaks the section name and position before the item.  By movement
+speaks only the section for section navigation and only the item for item
+navigation, even across sections.  Section navigation still selects the
+first item; C-c l repeats it without moving when that review key is available.
+This setting applies globally, including Magit, and does not change navigation.
+@end verbatim
+
+Default Value:
+@verbatim
+
+section-first
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-transient-verbose-descriptions
+@verbatim
+Whether Transient items include their command documentation summaries.
+When enabled, retain each label and value and add the first line of the
+command’s docstring.  This applies to all Transient menus, including Magit.
+Items without command documentation keep their labels; Transient’s native
+infix controls keep their usual descriptions.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-treesit
 @section emacsvox-treesit

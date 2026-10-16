@@ -25,9 +25,23 @@
 - Use `rg` and bounded reads. Parallelize independent inspections; serialize
   edits, compilation, generated-file updates, and checks that consume their
   results. Do not silently fix unrelated findings.
+- For UI and settings work, maintain the living plan in
+  [docs/ui-settings-plan.org](docs/ui-settings-plan.org). Add newly discovered
+  settings, cues, missing actions, and interaction issues to its inventory or
+  findings queue. Keep proposed work, implementation, listening acceptance,
+  and commits distinct; update it at meaningful findings and checkpoints.
 
 ## Writing style
 
+- Keep spoken menu feedback concise. Announce menu and section titles on
+  entry or when crossing sections, rather than repeating them before each
+  item. Speak the key itself without a "shortcut" label. Repeated adjustments
+  should announce the new value promptly and interrupt obsolete main speech.
+- Give every settings-menu item and choice a useful explanation of its effect.
+  State scope and important dependencies or exceptions. Keep arrow feedback
+  concise, and provide fuller Help where needed; repeating the label or saying
+  "Change this setting" is not an explanation. Prefer browsable lists for
+  multi-option choices, showing the current value without applying on navigation.
 - Apply these rules to documentation, including ADRs and reports, code comments,
   commit messages, and PR descriptions. Use concise, plain language that reads
   naturally through speech. State the behaviour, decision, and reason directly.
@@ -87,6 +101,33 @@
 
 ## Lisp builds and verification
 
+- Establish how the current change will be tried: a fresh normal Emacsvox
+  profile, a fresh test Emacs explicitly loading source, or a supported narrow
+  reload in an existing session. Use the conversation and configuration first;
+  ask only when the route is unclear or changes. Keep the agreed route across
+  follow-ups instead of asking before every iteration.
+- During interaction experiments, distinguish a prototype handed back for
+  listening from a change ready to commit or review. Run checks directly
+  relevant to each small change and prepare it for the agreed testing route.
+  Defer documentation edits, generated manuals, and broader verification until
+  the behaviour settles or before committing or presenting the change for
+  review. State what remains unchecked; do not describe a prototype handoff
+  as fully verified. Shared changes or failures can require broader checks
+  during iteration.
+- A fresh normal profile still loads byte-code: complete the incremental build
+  and preflight below before handing it back for a restart. A fresh source-test
+  session can skip compilation when it explicitly loads the affected source;
+  verify the actual loaded paths. Reloading an existing session must follow the
+  live-session rules below. Do not infer source loading merely from a restart.
+- During rapid iteration, test source changes with the affected tests first.
+  For ordinary function edits, run the incremental `make bytecode` when the
+  edit settles; do not run a full rebuild for each small change. Reserve
+  `make bytecode-rebuild` for the cases listed below. Reuse checks that still
+  cover the unchanged code and environment.
+- Batch documentation generation after the text settles. Code-only fixes
+  that do not change public documentation do not need documentation
+  regeneration. Keep the final non-mutating documentation review gate and
+  the fresh-Emacs verification required below.
 - Use the Emacs selected by the ignored `local.mk` and run `make check-emacs`
   before diagnosing compiler failures. Emacsvox requires Emacs 30.2 or newer;
   never compile it with an older system `emacs`. Keep compatibility builds
@@ -204,12 +245,12 @@
 
 ## Documentation
 
-- For maintained manual prose, follow `docs/manual/EDITORIAL_STYLE.org`.
-  Before a substantive edit, read the complete affected chapter, its place in
-  the manual, and related sections. Integrate new material into the narrative
-  rather than appending disconnected notes; revise surrounding text and remove
-  duplication where appropriate. Reread the entire revised chapter for flow,
-  accuracy, technical completeness, auditory behaviour, and Info navigation.
+- Follow `docs/manual/EDITORIAL_STYLE.org` for maintained manual prose.
+  Read the complete affected chapter and related chapters before substantive
+  changes. Integrate new information into the narrative, revise surrounding
+  passages, and consolidate repeated explanations rather than appending notes.
+  After editing, review the chapter for technical accuracy, audible behaviour,
+  continuity, and stable Info navigation and links.
 - Reports and internal notes do not require an Emacsvox build. The maintained
   manual source is `docs/manual/emacsvox.org`, its included user chapters under
   `docs/manual/chapters/`, and its final developer guide under
@@ -235,6 +276,14 @@
 
 ## Omnivox builds and installers
 
+- During iteration, run affected source tests first and defer Windows staging
+  until the slice settles or native testing is needed. Lisp-only changes do
+  not require an Omnivox rebuild when the selected runtime already supports
+  them. Reuse passing checks for unchanged code and environment; run broader
+  checks when shared behaviour changes and complete applicable gates before
+  review. Batch documentation generation at meaningful checkpoints. Identify
+  the actual runtime used for testing and distinguish automated execution
+  checks from listening acceptance.
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.
@@ -244,6 +293,16 @@
   reused payload identity, and rejects helper, protocol, dependency,
   toolchain, or companion changes. Use the full development target whenever
   that guard rejects reuse; release builds always use the clean full target.
+- Future optimization, not yet implemented: add a separate cached full
+  development build for changes that cannot use main-only staging. Currently
+  `windows-omnivox-dev` delegates to the clean release recipe, deleting its
+  build cache and rebuilding helpers. The development route should retain
+  compilation results, rebuild affected components, and invalidate reuse
+  when protocol, dependency, toolchain or companion inputs change. Preserve
+  source/diff provenance, payload verification and native smoke checks; test
+  cache invalidation before adopting it. Keep release builds clean and
+  reproducible. Until this route exists, follow the targets above without
+  bypassing their guards.
 - The ordinary WSL2 binary-install route is `bin/emacsvox-wsl-install`; its
   pinned inputs and hashes live in `etc/wsl-install.conf`. Treat both as release
   tooling, keep the installer per-user, and run its isolated x64/ARM64 tests

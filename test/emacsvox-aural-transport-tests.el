@@ -1587,7 +1587,9 @@ write.  State synchronization lines in a combined write are ignored."
              ((symbol-function 'tts--protocol-queue-text)
               (lambda (text) (push (list 'text text) events)))
              ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-              (lambda (pitch duration mode)
+              (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+                (should (= (or gain 1) 1))
                 (push (list 'tone pitch duration mode) events))))
           (tts-audio-format (point-min) (point-max))))
       (should
@@ -3338,6 +3340,60 @@ write.  State synchronization lines in a combined write are ignored."
           (should (= (file-modes file) #o600)))
       (when (file-exists-p file) (delete-file file)))))
 
+(ert-deftest emacsvox-aural-diagnostics-do-not-contend-for-editor-locks ()
+  "Another Emacs's editing lock must not prompt or block diagnostic appends."
+  (load "userlock" nil t)
+  (dolist (scenario '(create append rotate))
+    (let* ((directory (make-temp-file "emacsvox-aural-log-lock-" t))
+           (file (expand-file-name "submissions.log" directory))
+           (ready (expand-file-name "ready" directory))
+           (emacsvox-aural-diagnostic-log-file file)
+           (emacsvox-aural-diagnostic-log-max-bytes (and (eq scenario 'rotate) 1))
+           (emacsvox-aural-last-diagnostic-log-error nil)
+           (create-lockfiles t)
+           holder prompted)
+      (unwind-protect
+          (progn
+            (unless (eq scenario 'create)
+              (write-region "existing record\n" nil file nil 'silent))
+            (setq holder
+                  (make-process
+                   :name "emacsvox-test-log-lock-holder" :noquery t
+                   :command
+                   (list (expand-file-name invocation-name invocation-directory)
+                         "-Q" "--batch" "--eval"
+                         (prin1-to-string
+                          `(progn
+                             (lock-file ,file)
+                             (write-region "ready" nil ,ready nil 'silent)
+                             (sleep-for 30))))))
+            (let ((deadline (+ (float-time) 5)))
+              (while (and (not (file-exists-p ready))
+                          (process-live-p holder) (< (float-time) deadline))
+                (accept-process-output holder 0.02)))
+            (should (file-exists-p ready))
+            (let ((owner (file-locked-p file)))
+              (should (stringp owner))
+              (cl-letf (((symbol-function 'ask-user-about-lock)
+                         (lambda (&rest _)
+                           (setq prompted t)
+                           (signal 'file-locked (list file owner)))))
+                (should (emacsvox-aural-diagnostic-log-event 'shared-log-test :scenario scenario))
+                (should-not prompted)
+                (should-not emacsvox-aural-last-diagnostic-log-error)
+                (should (equal (file-locked-p file) owner))
+                (should create-lockfiles)
+                (should (= (file-modes file) #o600))
+                (with-temp-buffer
+                  (insert-file-contents file)
+                  (should (search-forward ":event shared-log-test" nil t)))
+                ;; The same file still has normal protection outside logging.
+                (should-error (write-region "normal edit" nil file t 'silent)
+                              :type 'file-locked)
+                (should prompted))))
+        (when (and holder (process-live-p holder)) (delete-process holder))
+        (delete-directory directory t)))))
+
 (ert-deftest emacsvox-aural-diagnostics-interactive-toggle-remembers-file ()
   "The interactive toggle should enable, disable, and reuse its log file."
   (let* ((directory (make-temp-file "emacsvox-aural-toggle-" t))
@@ -3486,7 +3542,9 @@ write.  State synchronization lines in a combined write are ignored."
           (((symbol-function 'emacsvox-aural--ensure-speaker)
             (lambda () (push 'ensure events)))
            ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-            (lambda (pitch duration mode)
+            (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+              (should (= (or gain 1) 1))
               (push (list 'tone pitch duration mode) events)))
            ((symbol-function 'tts--protocol-silence)
             (lambda (duration &optional _force)
@@ -3578,7 +3636,9 @@ write.  State synchronization lines in a combined write are ignored."
            ((symbol-function 'emacsvox-queue-resource)
             (lambda (_resource) (push 'cue events)))
            ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-            (lambda (pitch duration mode)
+            (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+              (should (= (or gain 1) 1))
               (push (list 'tone pitch duration mode) events)))
            ((symbol-function 'tts--protocol-silence)
             (lambda (duration &optional _force)
@@ -4482,7 +4542,9 @@ write.  State synchronization lines in a combined write are ignored."
                   (ert-fail
                    (format "A line condition queued content: %S" text))))
                ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-                (lambda (pitch duration mode)
+                (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+                  (should (= (or gain 1) 1))
                   (push (list 'tone pitch duration mode) events)))
                ((symbol-function 'tts--protocol-dispatch)
                 (lambda () (push 'dispatch events))))
@@ -4541,7 +4603,9 @@ write.  State synchronization lines in a combined write are ignored."
                 (ert-fail
                  (format "Edit queued content: %S" text))))
              ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-              (lambda (pitch duration mode)
+              (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+                (should (= (or gain 1) 1))
                 (push (list 'tone pitch duration mode) events)))
              ((symbol-function 'tts--protocol-dispatch)
               (lambda () (push 'dispatch events))))
@@ -4873,7 +4937,9 @@ is the default inherited by a newly created TTS scratch buffer."
       (should (emacsvox-aural-concrete-action-force action))
       (cl-letf
           (((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-            (lambda (pitch duration mode)
+            (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+              (should (= (or gain 1) 1))
               (push (list pitch duration mode) events))))
         (emacsvox-aural-queue-concrete-action action context))
       (should (equal events '((130.8 150 overlay))))
@@ -4919,7 +4985,9 @@ is the default inherited by a newly created TTS scratch buffer."
       (should-not (emacsvox-aural-concrete-action-force action))
       (cl-letf
           (((symbol-function 'emacsvox-aural--protocol-presentation-tone)
-            (lambda (pitch duration mode)
+            (lambda (pitch duration mode &optional gain shape)
+                (should-not shape)
+              (should (= (or gain 1) 1))
               (push (list pitch duration mode) events))))
         (emacsvox-aural-queue-concrete-action action context))
       (should (equal events '((500.0 175 insert)))))))

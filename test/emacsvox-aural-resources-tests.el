@@ -266,12 +266,12 @@
        :type 'emacsvox-aural-resource-error))))
 
 (ert-deftest emacsvox-aural-resources-bundled-packs-satisfy-profile ()
-  "Chimes and 3d satisfy the shared legacy-complete requirements."
+  "Every bundled sound pack satisfies the legacy-complete requirements."
   (emacsvox-test--with-empty-resource-packs
     (emacsvox-aural-register-bundled-resources
      emacsvox-test--sounds-directory)
     (should (emacsvox-aural-validate-resource-registry))
-    (dolist (id '(chimes 3d))
+    (dolist (id '(chimes 3d accent))
       (let ((report (emacsvox-aural-validate-resource-pack id)))
         (should (emacsvox-aural-resource-report-valid report))
         (should-not
@@ -288,6 +288,60 @@
        (emacsvox-aural-resource-pack-default-spatialization
         (emacsvox-aural-resource-pack 'chimes))
        'neutral))))
+
+(ert-deftest emacsvox-aural-resources-accent-inherits-spatial-cues ()
+  "Accent supplies replacements and retains 3d recordings and their metadata."
+  (emacsvox-test--with-empty-resource-packs
+    (emacsvox-aural-register-bundled-resources emacsvox-test--sounds-directory)
+    (should (member "accent" (emacsvox-aural-resource-pack-candidates 'sound)))
+    (dolist (entry '((button "accent" neutral)
+                     (section "accent" neutral)
+                     (repeat-start "accent" neutral)
+                     (select-object "3d" pre-spatialized)
+                     (shutdown "3d" pre-spatialized)))
+      (let ((resource (emacsvox-aural-resolve-cue (car entry) 'accent)))
+        (should (file-readable-p resource))
+        (should (string-match-p (concat "/packs/" (nth 1 entry) "/") resource))
+        (should (eq (emacsvox-aural-resource-spatialization resource 'accent)
+                    (nth 2 entry)))))))
+
+(ert-deftest emacsvox-aural-resources-personal-pack-inherits-bundled-accent ()
+  "A personal pack can inherit Accent during initial resource discovery."
+  (emacsvox-test--with-resource-directory
+    (emacsvox-test--with-empty-resource-packs
+      (let* ((personal (expand-file-name "bart" root))
+             (emacsvox-aural-personal-sound-packs-directory root)
+             (emacsvox-aural-resource-pack-discovery-roots nil)
+             (emacsvox-aural--resource-pack-discovery-registry
+              emacsvox-aural-resource-pack-registry))
+        (make-directory personal)
+        (with-temp-file (expand-file-name "emacsvox-sound-pack.el" personal)
+          (insert "(:schema-version 1 :parent accent :profiles (legacy-complete))"))
+        (emacsvox-aural-register-bundled-resources emacsvox-test--sounds-directory)
+        (emacsvox-aural-refresh-discovered-resource-packs)
+        (dolist (cue '(button repeat-start shutdown))
+          (should (equal (emacsvox-aural-resolve-cue cue 'bart)
+                         (emacsvox-aural-resolve-cue cue 'accent))))))))
+
+(ert-deftest emacsvox-aural-resources-personal-accent-overrides-bundled-copy ()
+  "A personal Accent pack wins; removing it restores the bundled pack."
+  (emacsvox-test--with-resource-directory
+    (emacsvox-test--with-empty-resource-packs
+      (let* ((personal (expand-file-name "accent" root))
+             (emacsvox-aural-personal-sound-packs-directory root)
+             (emacsvox-aural-resource-pack-discovery-roots nil)
+             (emacsvox-aural--resource-pack-discovery-registry
+              emacsvox-aural-resource-pack-registry))
+        (make-directory personal)
+        (let ((button (emacsvox-test--resource-file personal "button")))
+          (emacsvox-aural-register-bundled-resources emacsvox-test--sounds-directory)
+          (emacsvox-aural-refresh-discovered-resource-packs)
+          (should (equal (emacsvox-aural-resolve-cue 'button 'accent) button)))
+        (delete-directory personal t)
+        (emacsvox-aural-refresh-discovered-resource-packs)
+        (should (equal (emacsvox-aural-resolve-cue 'button 'accent)
+                       (expand-file-name "packs/accent/button.ogg"
+                                         emacsvox-test--sounds-directory)))))))
 
 (ert-deftest emacsvox-aural-resources-discover-and-remove-local-packs ()
   "Pack candidates dynamically track qualifying immediate directories."

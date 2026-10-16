@@ -527,6 +527,57 @@
   "Invoke captured TIMER, even if cancellation has already made it stale."
   (apply (timer--function timer) (timer--args timer)))
 
+(ert-deftest emacsvox-delayed-phonetics-transient-review-keeps-menu-focus ()
+  "A virtual review cursor gets normal phonetics only while still current."
+  (require 'emacsvox-transient)
+  (dolist (change '(nil character word repeat start end selection close redraw stop disabled))
+    (emacsvox-speak-tests--with-delayed-phonetics
+      (let* ((origin (selected-window))
+             (origin-point (point))
+             (menu (generate-new-buffer " *phonetic menu*"))
+             (transient--window (split-window-right))
+             (transient--prefix (make-instance 'transient-prefix :command #'ignore))
+             (emacsvox-transient-verbose-descriptions nil))
+        (unwind-protect
+            (progn
+              (with-current-buffer menu
+                (insert-text-button
+                 "x New item" 'button-data
+                 (make-instance 'transient-suffix
+                                :key "x" :description "New item" :command #'ignore))
+                (goto-char (point-min)))
+              (set-window-buffer transient--window menu)
+              (emacsvox-transient--review-next-character 1)
+              (should (equal spoken '((letter "N"))))
+              (should (eq origin (selected-window)))
+              (should (= origin-point (point)))
+              (should (= 1 (window-point transient--window)))
+              (should (= (caar scheduled) emacsvox-delayed-phonetic-delay))
+              (let ((timer (nth 2 (car scheduled))))
+                (cl-letf (((symbol-function 'emacsvox-aural-submit) #'ignore))
+                  (pcase change
+                    ('character (emacsvox-transient--review-next-character 1))
+                    ('word (emacsvox-transient--review-next-word 1))
+                    ('repeat (emacsvox-transient--repeat-item))
+                    ('start (emacsvox-transient--review-beginning))
+                    ('end (emacsvox-transient--review-end))
+                    ('selection (with-current-buffer menu
+                                  (setq emacsvox-transient--review-state nil)))
+                    ('close (setq transient--prefix nil))
+                    ('redraw (with-current-buffer menu (insert "changed")))
+                    ('stop (tts-stop))
+                    ('disabled (emacsvox-delayed-phonetic-mode -1))))
+                (emacsvox-speak-tests--expire-phonetics timer)
+                (ert-info ((format "Review change: %S" change))
+                  (if change
+                      (should-not (assq 'phonetic spoken))
+                    (should (equal (car spoken) '(phonetic "November")))
+                    ;; Expiring the same request again must not repeat it.
+                    (emacsvox-speak-tests--expire-phonetics timer)
+                    (should (= (length spoken) 2))))))
+          (when (window-live-p transient--window) (delete-window transient--window))
+          (kill-buffer menu))))))
+
 (ert-deftest emacsvox-delayed-phonetics-navigation-is-once-and-configurable ()
   "Navigation speaks normally, then the existing phonetic name once."
   (emacsvox-speak-tests--with-delayed-phonetics

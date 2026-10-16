@@ -40,6 +40,7 @@ class DebianPackageTests(unittest.TestCase):
         control = (self.extracted / "DEBIAN/control").read_text()
         self.assertIn("Architecture: all\n", control)
         self.assertIn("emacs-nox (>= 1:30.2)", control)
+        self.assertIn("elpa-transient (>= 0.13.3) | emacs (>= 1:31.1)", control)
         self.assertIn("Recommends: omnivox (>= 1.17.0)\n", control)
         self.assertNotIn("omnivox", control.split("Depends: ")[1].splitlines()[0])
         self.assertTrue((self.runtime / "lisp/emacsvox-loaddefs.el").is_file())
@@ -83,6 +84,12 @@ class DebianPackageTests(unittest.TestCase):
     def test_source_startup_and_offline_resources(self):
         expression = '''(progn
           (load (expand-file-name "lisp/emacsvox-loaddefs.el" emacsvox-directory))
+          (dolist (command '(emacsvox-aural-menu emacsvox-aural-menu-speech
+                             emacsvox-settings-buffer emacsvox-settings-diagnostics))
+            (unless (and (commandp command) (autoloadp (symbol-function command)))
+              (error "Packaged menu is not an interactive autoload: %s" command)))
+          (when (or (featurep 'transient) (featurep 'emacsvox-aural-menu))
+            (error "Loading packaged autoloads eagerly loaded menus"))
           (require 'eww) (require 'emacsvox-eww)
           (require 'emacsvox-ocr)
           (unless (file-executable-p emacsvox-ocr-engine)

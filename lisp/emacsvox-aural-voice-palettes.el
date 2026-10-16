@@ -262,7 +262,8 @@ writing. Publish the registry only after the atomic write succeeds."
             (when new-data (push new-data palettes)))))
       (setq saved (plist-put (copy-tree saved) :voice-palettes palettes))
       (when (cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4)) palettes)
-        (setq saved (plist-put saved :schema-version 10)))
+        (setq saved (plist-put saved :schema-version
+                                (max 10 (plist-get saved :schema-version)))))
       (emacsvox-aural--validate-user-data saved)
       (unless (equal fingerprint (emacsvox-aural-voice-drafts--file-id file))
         (user-error "Saved presentation settings changed while preparing; retry"))
@@ -1662,7 +1663,7 @@ A built-in voice opens a personal draft; save it to create a personal child."
       "Editing a built-in voice opens a draft; saving creates a personal child\n"
       "x explain voice; u known uses and descendants\n"
       "O open source        g refresh; o palette manager\n"
-      "h aural home         q quit\n")))
+      "h settings menu         q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -1711,7 +1712,7 @@ A built-in voice opens a personal draft; save it to create a personal child."
        ("o" . emacsvox-aural-voice-palette-previews-open-manager)
        ("O" . emacsvox-aural-voice-palette-previews-open-source)
        ("u" . emacsvox-aural-voice-palettes-where-used)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-voice-palette-previews-help)))
   (define-key
    emacsvox-aural-voice-palette-previews-mode-map
@@ -2071,7 +2072,7 @@ When SPEAK is non-nil, include the selected row's full description."
       "x explain voice; u known uses and descendants\n"
       "In the voice list, N creates and c copies a voice\n"
       "v view and validate  g refresh\n"
-      "h aural home         q quit\n")))
+      "h settings menu         q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -2122,7 +2123,7 @@ When SPEAK is non-nil, include the selected row's full description."
        ("P" . emacsvox-aural-voice-palettes-audition)
        ("x" . emacsvox-aural-voice-palettes-explain)
        ("v" . emacsvox-aural-voice-palettes-describe)
-       ("h" . emacsvox-aural)
+       ("h" . emacsvox-aural-menu)
        ("?" . emacsvox-aural-voice-palettes-help)))
   (define-key
    emacsvox-aural-voice-palettes-mode-map
@@ -2139,6 +2140,7 @@ When SPEAK is non-nil, include the selected row's full description."
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-voice-palettes-mode)
         (emacsvox-aural-voice-palettes-mode))
+      (setq-local emacsvox-aural-ui--return-function nil)
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-voice-palettes-refresh
        (or palette (tabulated-list-get-id) (emacsvox-aural-voice-palettes--active-id))))

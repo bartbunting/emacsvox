@@ -1,0 +1,82 @@
+#+title: ADR 0027: Transient Settings Entry and Home Menu Retirement
+#+date: 2026-10-15
+#+startup: content
+
+* Status
+
+Accepted on 2026-10-15. The Home menu entry is retired. The dependency
+policy requires Transient 0.13.3 or newer.
+
+* Decision
+
+Use linked Transient menus as the ordinary Emacsvox settings entry at =C-e H=.
+=C-e S= opens focused settings for the current buffer, falling back to general
+buffer settings. Every named action formerly offered by Aural Home has a
+focused-menu destination, including diagnostics, source return and retained
+drafts. Remove the =C-e H h= fallback to the Home table.
+
+Keep =M-x emacsvox-aural= and its alias for existing configurations. Retain
+the Home module's shared draft registry and helpers. Removing that module or
+its public commands is separate work; it is not needed to retire the menu entry.
+Keep dedicated voice, palette, rule, sound and pronunciation editors as buffers.
+Their existing =h= bindings open settings with the captured source; closing
+that menu returns to the editor with its draft intact.
+
+Settings and action searches use case-insensitive substring matching. Accepting
+a result selects its menu control without activating it; a second Enter
+activates it. Preserve captured source markers, stale-source rejection, parent
+return, explicit save/apply boundaries, and interruptible main speech.
+Announcement choices and defaults are unchanged.
+
+Customize remains responsible for Emacs options. Voice palettes, profiles,
+presentation rules, engine configuration and host pronunciation retain their
+existing storage and application contracts. Opening or leaving a menu is not
+a save operation, and previewing a draft does not publish it to live speech.
+
+The manual teaches the focused routes. Preserve the existing =Aural Home=
+Info node identifier so bookmarks and inbound links still resolve; its display
+title becomes Getting started with settings menus. Earlier prototype records
+remain historical evidence rather than current navigation instructions.
+
+* Compatibility finding
+
+The Emacs minimum remains 30.2 under ADR 0012. Its bundled Transient 0.7.2.2
+fails existing menu workflows before this retirement: suspended editor actions
+lose their menu context, and navigation/search assumptions differ. An isolated
+Emacs 30.2 build using Transient 0.13.8 runs the replacement workflows.
+
+Require Transient 0.13.3 or newer instead of adapting the menu workflows to
+0.7.2.2. The upstream 0.13.3 package passes all 80 menu/settings checks on
+Emacs 30.2; Emacs 31's bundled 0.13.3 also passes. This is the supported floor,
+not a claim that every intermediate older release has been tested.
+
+Declare the requirement in Lisp package metadata. Reject an older loaded
+Transient before installing the speech adapter, naming its version and path
+and asking for an upgrade and fresh Emacs. Never unload a live package to
+replace it. In an isolated session with an older bundled Transient, activate
+an already installed package and its dependencies without loading personal
+init files or downloading anything. Include Debian's system ELPA directory
+when site startup was skipped. Respect disabled packages.
+
+The Debian package requires elpa-transient 0.13.3 or newer, or a packaged
+Emacs 31.1 or newer that supplies it. This refines ADR 0013 without changing
+installation ownership. The Emacs 30 compatibility job uses pinned Transient
+sources and dependencies; Emacs 31 continues to test its bundled copy. This
+refines ADR 0012's package-free test setup while retaining its Emacs minimum.
+
+Use Ubuntu 26.10 for the Debian installation gates: its stock packages supply
+both required dependencies. Ubuntu 26.04's Transient 0.12.0 is too old; retain
+the source-install route with an Emacs package-manager upgrade there. Do not
+weaken the minimum or add an external apt repository during installation.
+Build Debian CI artifacts and check source-archive installation with Emacs 31.1,
+whose bundled Transient satisfies the requirement without personal packages.
+The container still verifies the Emacs 30.2 runtime with a separate Transient.
+
+* Verification
+
+Listening acceptance covers the replacement workflows, including the corrected
+diagnostics Enter action. Automated checks cover all former action destinations,
+captured context, editor return, retained drafts, and menu Help without a Home
+entry. Compile and test in separate Emacs 30.2 and normal-toolchain checkouts;
+record exact loaded Transient versions. Automated speech capture does not
+establish acoustic results. The living settings plan records the final checks.

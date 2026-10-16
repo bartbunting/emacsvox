@@ -64,6 +64,35 @@
            (should (equal (plist-get (plist-get (car (plist-get voice :choices)) :selector) :voice-id)
                           "espeak:gmw/en+max"))))))))
 
+(ert-deftest emacsvox-character-voice-transient-review-keeps-capitalization-policy ()
+  "Menu review sends a native capital letter with the selected cue policy."
+  (require 'emacsvox-transient)
+  (emacsvox-character-test--with-runtime
+   (process-put speaker tts--capitalization-presentation-property t)
+   (save-window-excursion
+     (with-temp-buffer
+       (set-window-buffer (selected-window) (current-buffer))
+       (insert-text-button
+        "x Name" 'button-data
+        (make-instance 'transient-suffix :key "x" :description "Name" :command #'ignore))
+       (goto-char (point-min))
+       (let ((transient--window (selected-window))
+             (transient--prefix (make-instance 'transient-prefix :command #'ignore))
+             (emacsvox-transient-verbose-descriptions nil)
+             (tts-caps t))
+         (dolist (emacsvox-capitalization-presentation '(custom tone spoken none))
+           (pcase-let ((`(,command ,envelope ,writes)
+                        (emacsvox-character-test--capture
+                         #'emacsvox-transient--review-character)))
+             (should (equal command "emacsvox_letter"))
+             (should (equal (plist-get (plist-get (car (plist-get envelope :spans)) :span) :text)
+                            "N"))
+             (should (string-match-p
+                      (format "tts_set_capitalization_presentation %s"
+                              emacsvox-capitalization-presentation)
+                      (apply #'concat writes)))
+             (should (= (point) (point-min))))))))))
+
 (ert-deftest emacsvox-character-voice-phonetics-and-punctuation-use-default ()
   (emacsvox-character-test--with-runtime
    (dolist (case '(("q" "quebec") ("'" "apostrophe") ("?" "question")))

@@ -74,11 +74,23 @@ repeat generic pointers to the generated keymap in every subsection.
 
 Use these chapter responsibilities when selecting a home for material:
 
-- =introduction.org=: the promise and conceptual identity of the audio desktop,
-  where to begin, and orientation to the manual.
+- =introduction.org=: the identity of the audio desktop, first-use key
+  notation, and where to begin.
+- =using-manual.org=: prompts and input contexts, example paths, reading
+  routes, and finding and returning from a topic in the published manual.
 - =installation.org=: the shortest supported route to first speech, first
   verification, immediate recovery, and persistent startup.
-- =basic-usage.org=: essential reading, editing, speech control, and help.
+- =tutorial.org=: connected practice with one disposable document, exercises,
+  answers, and explicit restoration of temporary choices. Link to the owning
+  reference for detail rather than creating a competing explanation.
+- =basic-usage.org=: reading, selection-based editing, recovery, and everyday
+  speech controls. Keep their state and side-effect explanations authoritative.
+- =keyboard.org=: short command reminders, their consequential conditions,
+  and links to the full procedures; retain the speech-prefix explanation.
+- =finding-tasks.org=: routes from the reader's goal or symptom to the
+  authoritative procedure, not a second copy of that procedure.
+- =terminology.org=: concise distinctions and links, introducing Emacs names
+  through familiar intentions without reproducing the task instructions.
 - =audio-desktop.org=: the Emacs objects and navigation concepts that connect
   tasks across applications.
 - =speech-backends.org=: supported server/platform combinations, installation

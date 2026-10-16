@@ -66,7 +66,10 @@
     (define-key emacsvox-keymap (kbd "E") #'ignore)
     (global-set-key emacsvox-prefix emacsvox-keymap)
     (emacsvox-aural-doctor-restore-bindings)
-    (should (eq (key-binding (kbd "C-e H")) 'emacsvox-aural))
+    (should (eq (key-binding (kbd "C-e H")) 'emacsvox-aural-menu))
+    (should
+     (eq (emacsvox-aural-doctor-finding-severity
+          (car (emacsvox-aural-doctor-run))) 'ok))
     (should
      (eq
       (key-binding (kbd "C-e E"))
@@ -223,7 +226,7 @@
           (should
            (eq
             (lookup-key emacsvox-aural-doctor-mode-map (kbd "h"))
-            #'emacsvox-aural))
+            #'emacsvox-aural-menu))
           (should
            (eq
             (key-binding (kbd "q"))
