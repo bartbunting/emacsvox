@@ -499,8 +499,9 @@
 (ert-deftest emacsvox-spelling-switches-graphical-save-survives-restart ()
   "Save switches with S after tone editing and restore them in a fresh Emacs."
   (skip-unless (display-graphic-p))
+  (require 'emacsvox-advice)
   (let* ((custom-file (make-temp-file "emacsvox-spelling-switches-" nil ".el"))
-         (user-init-file custom-file)
+         (user-init-file nil)
          (symbols (append emacsvox-spelling--options '(tts-main-tone-volume)))
          (defaults (mapcar (lambda (symbol) (cons symbol (default-value symbol))) symbols))
          (properties (mapcar (lambda (symbol) (cons symbol (copy-tree (symbol-plist symbol)))) symbols))
@@ -509,6 +510,15 @@
     (unwind-protect
         (save-window-excursion
           (emacsvox-test--with-aural-menu
+            ;; A manually loaded -q profile has no init identity until setup
+            ;; completes.  Save must fail without announcing success.
+            (let (spoken)
+              (cl-letf (((symbol-function 'emacsvox-spelling--say)
+                         (lambda (text) (push text spoken))))
+                (should-error (emacsvox-spelling--save) :type 'user-error))
+              (should-not spoken))
+            (should (zerop (file-attribute-size (file-attributes custom-file))))
+            (setq user-init-file custom-file)
             (switch-to-buffer source)
             (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
             (cl-mapc #'set-default switches '(t nil t))

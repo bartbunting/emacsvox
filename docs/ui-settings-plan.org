@@ -1770,6 +1770,29 @@ verification of subsequently changed code.
   and file after an actual =S= press in that session. Personal defaults remain
   unchanged by the tests.
 
+- Spelling save failure resolved, 2026-10-16: the normal local launcher uses
+  =-q= and loads the profile explicitly, leaving =user-init-file= nil.
+  Customize therefore treated saves as temporary even with =custom-file=
+  configured. Core speech advice silenced that warning, and menu commands
+  announced success. The earlier isolated tests supplied an init identity,
+  so they did not reproduce this startup condition.
+  The local =~/.emacsvox.d/init.el= now records its init identity after loading
+  the configuration and existing Customize file. Core save advice checks
+  Customize's save eligibility before silencing messages or changing saved
+  properties; an uninitialized session now reports an error instead of
+  reaching the menu's success announcement. This protects all settings menus
+  using the same Customize path.
+  The missing-init regression fails before the fix and passes afterward.
+  Twenty-one focused batch tests pass; three graphical tests skip in batch.
+  The updated graphical spelling test passes separately, covering refusal
+  without a false success announcement and actual =S= save/restart afterward.
+  Two fresh batch Emacs runs using a private copy of the real profile restore
+  Voice off, Tone on and Earcon off. Speech transport is muted in this check;
+  listening acceptance remains open. Incremental byte-code, preflight and
+  the documentation review gate pass. No personal defaults were saved, and
+  running sessions were not modified. Restart to load the corrected profile,
+  then repeat the setting, Save and restart check.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.

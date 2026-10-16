@@ -46,6 +46,8 @@
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
 
+(declare-function custom-file "cus-edit" (&optional no-error))
+
 (defvar read-passwd--password-hidden)
 (defvar read-passwd--hide-password)
 (defvar emacsvox-speak--word-navigation-p)
@@ -3023,6 +3025,10 @@ TARGET identifies the command, STATE is its new value, and SETTING names it."
 (defun emacsvox--advice-customize-save-variable-around
     (original &rest arguments)
   "Call ORIGINAL with ARGUMENTS while silencing Custom chatter."
+  ;; Custom otherwise returns success for temporary changes in -q sessions.
+  ;; Check before suppressing its warning or changing saved-value properties.
+  (require 'cus-edit)
+  (custom-file)
   (ems-with-messages-silenced
     (let ((tts-quiet t))
       (apply original arguments))))
