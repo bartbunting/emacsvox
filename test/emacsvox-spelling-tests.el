@@ -412,7 +412,15 @@
               (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
               (with-current-buffer transient--buffer
                 (should (string-match-p "Spelling tone (global draft)" (buffer-string)))
-                (should-not (string-match-p "Timing:" (buffer-string))))
+                (should-not (string-match-p "Timing:" (buffer-string)))
+                (should (string-match-p "Duration:.*Shift arrows.*5 ms" (buffer-string)))
+                (dolist (label '("Waveform:" "Envelope:" "Curve:"))
+                  (goto-char (point-min))
+                  (search-forward label)
+                  (should-not (string-match-p
+                               "[Aa]rrows"
+                               (buffer-substring-no-properties
+                                (line-beginning-position) (line-end-position))))))
               (let (previews)
                 (cl-letf (((symbol-function 'emacsvox-spelling--preview-draft)
                            (lambda (_data sample) (push (if sample 'sample 'tone) previews))))
@@ -441,7 +449,7 @@
               (should (eq (emacsvox-tone-editor--get :envelope) 'adsr))
               (execute-kbd-macro (kbd "? a"))
               (with-current-buffer "*Help*"
-                (should (string-match-p "rise from silence" (buffer-string))))
+                (should (string-match-p "silence to peak level" (buffer-string))))
               (execute-kbd-macro (kbd "q"))
               (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
               (execute-kbd-macro (kbd "q"))

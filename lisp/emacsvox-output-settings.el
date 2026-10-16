@@ -83,7 +83,7 @@
                                         '(normal reverse collapse-left collapse-right center) nil t))))
     (emacsvox-output-settings--set 'emacsvox-aural-spatial-remapping choice (symbol-name choice))))
 (defun emacsvox-output-settings--separation (&optional delta)
-  "Set maximum separation exactly, or adjust by DELTA."
+  "Set maximum separation; Shift arrows change it by 0.1."
   (interactive)
   (when (and (not delta) (window-live-p transient--window))
     (with-selected-window transient--window

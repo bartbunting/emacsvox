@@ -22396,7 +22396,7 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
 @findex emacsvox-tone-editor-curve
 
 @format
-Choose the ADSR curve. Arrows browse; Enter selects; q cancels.
+Choose the ADSR curve from a list.
 @end format
 @end deffn
 
@@ -22405,7 +22405,7 @@ Choose the ADSR curve. Arrows browse; Enter selects; q cancels.
 @findex emacsvox-tone-editor-envelope
 
 @format
-Choose draft envelope; arrows browse without applying a choice.
+Choose the draft envelope from a list.
 Enter selects and returns. Cancel keeps the previous draft value.
 @end format
 @end deffn
@@ -22426,7 +22426,7 @@ q cancels. Space in the editor plays the resulting draft.
 @findex emacsvox-tone-editor-waveform
 
 @format
-Choose draft waveform; arrows browse without applying a choice.
+Choose the draft waveform from a list.
 Enter selects and returns. Cancel keeps the previous draft value.
 @end format
 @end deffn

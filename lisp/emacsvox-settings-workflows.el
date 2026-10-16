@@ -108,10 +108,10 @@ remain explicit in the editor; q retains unfinished work and returns here."
     (emacsvox-settings-workflows--say text)))
 
 (defun emacsvox-settings-workflows--history-limit (&optional delta)
-  "Set the global history limit, or adjust it by DELTA.
+  "Set the global history limit; Shift arrows change it by one.
 Lowering the limit immediately removes the oldest excess records.  Zero clears
 and disables history; increasing it cannot restore removed records.  Enter
-accepts an exact nonnegative integer; Shift-arrows adjust by one.  Save is
+accepts an exact nonnegative integer. Save is
 separate and saves the limit, never the retained spoken text."
   (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
@@ -438,7 +438,7 @@ Enter applies the selected policy and returns.  Cancel retains the old policy."
   (format "Omnivox pitch contrast: %g" omnivox-average-pitch-contrast))
 
 (defun emacsvox-settings-workflows--pitch-contrast (&optional delta)
-  "Set global Omnivox pitch contrast, or adjust by DELTA tenths.
+  "Set global pitch contrast; Shift arrows change it by 0.1.
 Zero neutralises average pitch, 0.5 is the gentle default, 1 restores the
 historical curve, and values through 2 increase contrast.  This scales every
 ACSS average-pitch level rather than retuning one named voice.  It affects

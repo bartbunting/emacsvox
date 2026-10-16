@@ -199,9 +199,9 @@
              value (if pitch "Hz" "milliseconds")))))
 
 (defun emacsvox-capitalization--pitch ()
-  "Set draft pitch in Hz." (interactive) (emacsvox-capitalization--cue-edit 'pitch))
+  "Set draft pitch; Shift arrows change it by 25 Hz." (interactive) (emacsvox-capitalization--cue-edit 'pitch))
 (defun emacsvox-capitalization--duration ()
-  "Set draft duration in milliseconds." (interactive) (emacsvox-capitalization--cue-edit 'duration))
+  "Set draft duration; Shift arrows change it by 5 ms." (interactive) (emacsvox-capitalization--cue-edit 'duration))
 (defun emacsvox-capitalization--cue-adjust (direction)
   "Adjust the focused cue control in DIRECTION."
   (let ((command (with-selected-window (emacsvox-transient--navigation-window)

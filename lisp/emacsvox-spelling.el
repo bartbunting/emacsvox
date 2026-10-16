@@ -85,16 +85,19 @@ When INTEGER-ONLY is non-nil, reject fractional input."
     (emacsvox-spelling--say (format "%s %s" value units))))
 
 (defun emacsvox-spelling--pitch (&optional direction)
-  "Set spelling pitch, or adjust by DIRECTION times 25 Hz. Range: 50–10000 Hz."
+  "Set spelling pitch; Shift arrows change it by 25 Hz.
+Range: 50–10000 Hz. From Lisp, DIRECTION counts 25 Hz steps."
   (interactive)
   (emacsvox-spelling--number 'emacsvox-flyspell-tone-pitch "Pitch" "Hz" 50 10000 25 direction))
 (defun emacsvox-spelling--duration (&optional direction)
-  "Set spelling duration, or adjust by DIRECTION times 5 ms. Range: 5–1000 ms."
+  "Set spelling duration; Shift arrows change it by 5 ms.
+Range: 5–1000 ms. From Lisp, DIRECTION counts 5 ms steps."
   (interactive)
   (emacsvox-spelling--number 'emacsvox-flyspell-tone-duration "Duration" "milliseconds" 5 1000 5 direction))
 
 (defun emacsvox-spelling--volume (&optional direction)
-  "Set spelling tone volume, or adjust by DIRECTION times 5 percentage points.
+  "Set spelling tone volume; Shift arrows change it by 5 percentage points.
+From Lisp, DIRECTION counts five-percentage-point steps.
 Range: 0–100 percent. Zero silences this tone; 100 preserves its original
 level. The shared main-tone volume still scales it. Older workers omit
 tones below 100; Preview explains missing support without changing settings."
@@ -291,7 +294,7 @@ this tone; Shared tone volume scales all main-stream tones."
    ("v" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-voice "Voice")) emacsvox-spelling--voice :transient t)
    ("t" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-tone "Tone")) emacsvox-spelling--tone :transient t)
    ("e" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-earcon "Earcon")) emacsvox-spelling--earcon :transient t)]
-  ["Tone adjustment (Shift arrows adjust selected control)"
+  ["Tone adjustment"
    ("E" "Edit complete tone" emacsvox-spelling--edit-tone :transient transient--do-stack)
    ("m" (lambda () (concat "Timing: " (emacsvox-spelling--timing-name)))
     emacsvox-spelling-timing :transient transient--do-stack)

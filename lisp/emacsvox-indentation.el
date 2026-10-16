@@ -183,16 +183,16 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
                (format "; effective %s milliseconds" (emacsvox-speak--blank-line-tone-duration)))))))
 
 (defun emacsvox-indentation--base ()
-  "Set the first column's pitch." (interactive)
+  "Set the first column pitch; Shift arrows change it by 25 Hz." (interactive)
   (emacsvox-indentation--tone-edit 'emacsvox-indentation--base))
 (defun emacsvox-indentation--rise ()
-  "Set pitch rise per additional column." (interactive)
+  "Set pitch rise per column; Shift arrows change it by 0.25 semitones." (interactive)
   (emacsvox-indentation--tone-edit 'emacsvox-indentation--rise))
 (defun emacsvox-indentation--maximum ()
-  "Set the pitch ceiling." (interactive)
+  "Set the pitch ceiling; Shift arrows change it by 100 Hz." (interactive)
   (emacsvox-indentation--tone-edit 'emacsvox-indentation--maximum))
 (defun emacsvox-indentation--duration ()
-  "Set requested pitch-tone duration." (interactive)
+  "Set requested tone duration; Shift arrows change it by 10 ms." (interactive)
   (emacsvox-indentation--tone-edit 'emacsvox-indentation--duration))
 
 (defun emacsvox-indentation--tone-reset ()
@@ -215,7 +215,8 @@ With PITCH-TONE, preview rising pitch even if another presentation is selected."
   "Stop the indentation preview." (interactive) (tts-stop))
 
 (defun emacsvox-indentation--volume (&optional delta)
-  "Enter a volume from 0 to 100 for all main-stream tones.
+  "Set shared main-tone volume; Shift arrows change it by 5 percentage points.
+Enter a volume from 0 to 100 for all main-stream tones.
 When called from Lisp, adjust by DELTA percentage points if non-nil."
   (interactive)
   (emacsvox-indentation--source)

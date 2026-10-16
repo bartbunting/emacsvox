@@ -298,7 +298,8 @@ Section arrows still select the first item."
     value))
 
 (defun emacsvox-aural-menu--rate (&optional direction)
-  "Set speech rate, or adjust it by DIRECTION times the configured step.
+  "Set speech rate; Shift arrows use the configured rate step.
+Set speech rate, or adjust it by DIRECTION times the configured step.
 Global scope changes the default and current buffer for this session."
   (interactive)
   (let* ((context (emacsvox-aural-menu--context))
@@ -595,27 +596,32 @@ When opened from the Emacsvox menu, share its selected scope."
           (transient--goto-button focus))))))
 
 (defun emacsvox-aural-menu--main-tones ()
-  "Set the volume of main-stream tones, including indentation tones."
+  "Set main-tone volume; Shift arrows change it by 5 percentage points.
+Includes indentation tones."
   (interactive)
   (emacsvox-aural-menu--output-volume 'tts-main-tone-volume))
 
 (defun emacsvox-aural-menu--main-earcons ()
-  "Set the volume of main-stream earcons played by Omnivox."
+  "Set main-earcon volume; Shift arrows change it by 5 percentage points.
+Applies to main-stream earcons played by Omnivox."
   (interactive)
   (emacsvox-aural-menu--output-volume 'tts-main-earcon-volume))
 
 (defun emacsvox-aural-menu--notification-speech ()
-  "Set speech volume on the separate Omnivox notification output."
+  "Set notification speech volume; Shift arrows change it by 5 points.
+Applies to speech on the separate Omnivox notification output."
   (interactive)
   (emacsvox-aural-menu--output-volume 'tts-notification-speech-volume))
 
 (defun emacsvox-aural-menu--notification-tones ()
-  "Set tone volume on the separate Omnivox notification output."
+  "Set notification tone volume; Shift arrows change it by 5 points.
+Applies to tones on the separate Omnivox notification output."
   (interactive)
   (emacsvox-aural-menu--output-volume 'tts-notification-tone-volume))
 
 (defun emacsvox-aural-menu--notification-earcons ()
-  "Set earcon volume on the separate Omnivox notification output."
+  "Set notification earcon volume; Shift arrows change it by 5 points.
+Applies to earcons on the separate Omnivox notification output."
   (interactive)
   (emacsvox-aural-menu--output-volume 'tts-notification-earcon-volume))
 

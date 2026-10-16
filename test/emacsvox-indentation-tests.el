@@ -322,7 +322,7 @@
           (unwind-protect
               (progn
                 (execute-kbd-macro (kbd "<f8>"))
-                (should (cl-some (lambda (entry)
+                (should-not (cl-some (lambda (entry)
                                    (string-match-p "Shift left and right: adjust volume"
                                                    (car entry))) submissions))
                 (execute-kbd-macro (kbd "<down>"))
@@ -334,7 +334,9 @@
                 (execute-kbd-macro (kbd "<right> <right> <right>"))
                 (with-selected-window transient--window
                   (should (eq (oref (button-get (button-at (point)) 'button-data) command)
-                              'emacsvox-indentation--volume)))
+                              'emacsvox-indentation--volume))
+                  (should (string-match-p "Shift arrows.*5 percentage points"
+                                          (emacsvox-transient--line-content))))
                 (setq submissions nil)
                 (execute-kbd-macro (kbd "S-<left> S-<left> S-<right>"))
                 (should (= (default-value 'tts-main-tone-volume) 45))

@@ -103,7 +103,7 @@
    (if emacsvox-delayed-phonetic-mode "Delayed phonetics on" "Delayed phonetics off")))
 
 (defun emacsvox-interaction--delay (&optional delta)
-  "Set phonetic delay exactly, or adjust by DELTA seconds without saving."
+  "Set phonetic delay; Shift arrows change it by 0.1 seconds."
   (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
   ;; Direct shortcut entry should leave the edited control ready for arrows.

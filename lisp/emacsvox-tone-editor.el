@@ -340,8 +340,8 @@ start and end values keep constant pitch. Preview and Apply remain separate."
 (put 'emacsvox-tone-editor--end-pitch 'emacsvox-tone-field :end-pitch)
 
 (defun emacsvox-tone-editor--duration ()
-  "Set total draft duration in milliseconds, including all envelope stages.
-Shift arrows change it by 5 ms. Range: 5–1000 ms. Oversized attack, decay and
+  "Set total tone duration; Shift arrows change it by 5 ms.
+Total duration includes all envelope stages. Range: 5–1000 ms. Oversized attack, decay and
 release stages are shortened proportionally; they never extend this duration."
   (interactive) (emacsvox-tone-editor--number :duration))
 (put 'emacsvox-tone-editor--duration 'emacsvox-tone-field :duration)
@@ -354,31 +354,32 @@ are unchanged. Values below 100 require richer-tone support."
 (put 'emacsvox-tone-editor--volume 'emacsvox-tone-field :volume)
 
 (defun emacsvox-tone-editor--attack ()
-  "Set milliseconds for the ADSR rise from silence to peak level.
-Zero starts immediately. Shift arrows change it by 5 ms, within 0–60000 ms.
+  "Set ADSR attack time; Shift arrows change it by 5 ms.
+Attack rises from silence to peak level. Zero starts immediately.
+Range: 0–60000 ms.
 Classic ignores this value. Oversized stages shorten to fit total duration."
   (interactive) (emacsvox-tone-editor--number :attack))
 (put 'emacsvox-tone-editor--attack 'emacsvox-tone-field :attack)
 
 (defun emacsvox-tone-editor--decay ()
-  "Set milliseconds for the ADSR fall from peak to the sustain level.
-Zero goes straight to sustain. Shift arrows change it by 5 ms.
+  "Set ADSR decay time; Shift arrows change it by 5 ms.
+Decay falls from peak to the sustain level. Zero goes straight to sustain.
 Range: 0–60000 ms.
 Classic ignores this value. Oversized stages shorten to fit total duration."
   (interactive) (emacsvox-tone-editor--number :decay))
 (put 'emacsvox-tone-editor--decay 'emacsvox-tone-field :decay)
 
 (defun emacsvox-tone-editor--sustain ()
-  "Set the ADSR held level from 0 to 100 percent of peak, not a duration.
-The hold uses time left after attack, decay and release. Shift arrows change
-it by 5 percentage points. Classic ignores this value."
+  "Set ADSR sustain level; Shift arrows change it by 5 percentage points.
+Sustain is 0–100 percent of peak, not a duration. The hold uses time left
+after attack, decay and release. Classic ignores this value."
   (interactive) (emacsvox-tone-editor--number :sustain))
 (put 'emacsvox-tone-editor--sustain 'emacsvox-tone-field :sustain)
 
 (defun emacsvox-tone-editor--release ()
-  "Set milliseconds for the ADSR final fade to silence.
-Zero removes that fade; endpoint smoothing still limits clicks. Shift arrows
-change it by 5 ms, within 0–60000 ms. Classic ignores this value. Oversized
+  "Set ADSR release time; Shift arrows change it by 5 ms.
+Release fades to silence. Zero removes that fade; endpoint smoothing still
+limits clicks. Range: 0–60000 ms. Classic ignores this value. Oversized
 stages shorten to fit total duration. Stop never waits for this fade."
   (interactive) (emacsvox-tone-editor--number :release))
 (put 'emacsvox-tone-editor--release 'emacsvox-tone-field :release)
@@ -413,7 +414,7 @@ Selecting changes only the draft; Apply and Save remain separate."
   (interactive) (emacsvox-tone-editor--choose :waveform 'sawtooth))
 
 (transient-define-prefix emacsvox-tone-editor-waveform ()
-  "Choose draft waveform; arrows browse without applying a choice.
+  "Choose the draft waveform from a list.
 Enter selects and returns. Cancel keeps the previous draft value."
   ["Waveform"
    ("s" (lambda () (emacsvox-tone-editor--choice-label :waveform 'sine))
@@ -448,7 +449,7 @@ Selecting changes only this draft; Apply and Save are separate actions."
   (interactive) (emacsvox-tone-editor--choose :envelope 'adsr))
 
 (transient-define-prefix emacsvox-tone-editor-envelope ()
-  "Choose draft envelope; arrows browse without applying a choice.
+  "Choose the draft envelope from a list.
 Enter selects and returns. Cancel keeps the previous draft value."
   ["Envelope"
    ("c" (lambda () (emacsvox-tone-editor--choice-label :envelope 'classic))
@@ -472,7 +473,7 @@ Stage durations, endpoint levels and total tone duration stay the same.
 Only ADSR uses this curve; the draft retains it when you choose Classic."
   (interactive) (emacsvox-tone-editor--choose :curve 'exponential))
 (transient-define-prefix emacsvox-tone-editor-curve ()
-  "Choose the ADSR curve. Arrows browse; Enter selects; q cancels."
+  "Choose the ADSR curve from a list."
   ["ADSR curve"
    ("l" (lambda () (emacsvox-tone-editor--choice-label :curve 'linear)) emacsvox-tone-editor--linear :transient transient--do-replace)
    ("e" (lambda () (emacsvox-tone-editor--choice-label :curve 'exponential)) emacsvox-tone-editor--exponential :transient transient--do-replace)]

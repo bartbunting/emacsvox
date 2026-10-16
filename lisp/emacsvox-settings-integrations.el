@@ -319,7 +319,7 @@ A nil group denotes a focused menu with buffer-only controls.")
   "Apply this choice." (interactive)
   (emacsvox-settings-integrations--eat-choice-apply 2))
 (transient-define-prefix emacsvox-settings-integrations--eat-choice ()
-  "Choose with arrows and Enter; q cancels."
+  "Choose an option; Enter applies it and q cancels."
   [:description (lambda () (nth 2 (emacsvox-settings-integrations--eat-choice-spec)))
    ("1" (lambda () (emacsvox-settings-integrations--eat-choice-label 0))
     emacsvox-settings-integrations--eat-choice-first :transient transient--do-replace)
@@ -712,7 +712,7 @@ Numeric controls accept positive integers or none.")
   "Apply this choice." (interactive)
   (emacsvox-settings-integrations--choice-apply 5))
 (transient-define-prefix emacsvox-settings-integrations--choice ()
-  "Choose with arrows and Enter; q cancels."
+  "Choose an option; Enter applies it and q cancels."
   [:description emacsvox-settings-integrations--choice-heading
    ("1" (lambda () (emacsvox-settings-integrations--choice-label 0))
     emacsvox-settings-integrations--choice-first
@@ -800,19 +800,22 @@ Numeric controls accept positive integers or none.")
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-processing))
 
 (defun emacsvox-settings-integrations--agent-automatic-limit ()
-  "Limit automatic speech length; explicit response inspection stays complete.
+  "Set the automatic speech limit; Shift arrows change it by 100 characters.
+Limit automatic speech length; explicit response inspection stays complete.
 Enter a positive character count or none for complete automatic content.
 Provider-controlled permission fields and tool labels remain concise." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-automatic-limit))
 
 (defun emacsvox-settings-integrations--agent-line-limit ()
-  "Limit long-line navigation speech and announce the omitted count.
+  "Set the line speech limit; Shift arrows change it by 100 characters.
+Limit long-line navigation speech and announce the omitted count.
 Enter a positive character count or none to use the core long-line policy.
 Explicit response and block-reading commands remain complete." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-line-limit))
 
 (defun emacsvox-settings-integrations--agent-block-limit ()
-  "Limit the body read after block navigation; block labels stay concise.
+  "Set the block speech limit; Shift arrows change it by 100 characters.
+Limit the body read after block navigation; block labels stay concise.
 Enter a positive character count or none for the complete body." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-block-limit))
 
@@ -838,7 +841,7 @@ Enter a positive character count or none for the complete body." (interactive)
    ("l" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-processing))
     emacsvox-settings-integrations--agent-processing :transient t)
   ]
-  ["Global reading limits: Enter exact value; Shift-arrows adjust"
+  ["Global reading limits"
    ("a" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-automatic-limit))
     emacsvox-settings-integrations--agent-automatic-limit :transient t)
    ("n" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-line-limit))
@@ -940,22 +943,26 @@ Change the global default; buffer-local settings still take precedence."
   (interactive)
   (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--notmuch-completion))
 (defun emacsvox-settings-integrations--notmuch-field-characters ()
-  "Limit characters read from each automatic mail field.
+  "Set the per-field character limit; Shift arrows change it by 100.
+Limit characters read from each automatic mail field.
 Enter a positive count or none; total presentation limits still apply."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-field-characters))
 (defun emacsvox-settings-integrations--notmuch-field-bytes ()
-  "Limit UTF-8 bytes prepared and read from each automatic mail field.
+  "Set the per-field UTF-8 byte limit; Shift arrows change it by 100.
+Limit UTF-8 bytes prepared and read from each automatic mail field.
 Enter a positive count or none; total presentation limits still apply."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-field-bytes))
 (defun emacsvox-settings-integrations--notmuch-total-characters ()
-  "Limit characters in automatic mail feedback, including truncation notices.
+  "Set the total character limit; Shift arrows change it by 100.
+Limit characters in automatic mail feedback, including truncation notices.
 Enter a positive count or none; the byte limit still applies."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-total-characters))
 (defun emacsvox-settings-integrations--notmuch-total-bytes ()
-  "Limit UTF-8 bytes in automatic mail feedback, including truncation notices.
+  "Set the total UTF-8 byte limit; Shift arrows change it by 100.
+Limit UTF-8 bytes in automatic mail feedback, including truncation notices.
 Enter a positive count or none; the character limit still applies."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-total-bytes))

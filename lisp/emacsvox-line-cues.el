@@ -144,9 +144,9 @@
     (emacsvox-line-cues--say (format "%s%s %s" (if (and delta (= old value)) "Minimum. " "")
                                     value (if pitch "Hz" "milliseconds")))))
 (defun emacsvox-line-cues--pitch ()
-  "Set draft pitch." (interactive) (emacsvox-line-cues--edit 'pitch))
+  "Set draft pitch; Shift arrows change it by 25 Hz." (interactive) (emacsvox-line-cues--edit 'pitch))
 (defun emacsvox-line-cues--duration ()
-  "Set draft duration." (interactive) (emacsvox-line-cues--edit 'duration))
+  "Set draft duration; Shift arrows change it by 5 ms." (interactive) (emacsvox-line-cues--edit 'duration))
 (defun emacsvox-line-cues--choose ()
   "Choose a replacement earcon for this global draft."
   (interactive)

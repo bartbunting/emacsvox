@@ -1730,6 +1730,31 @@ verification of subsequently changed code.
   Sawtooth, rising/falling sweeps and ADSR curves; check Stop, interruption,
   draft/current comparison, Apply and saved defaults in a fresh session.
 
+- Tone preview and settings hints, 2026-10-16: tone-only spelling previews
+  now use urgent delivery after capability validation. Space in the tone
+  editor, current-tone comparison and the parent tone preview interrupt main
+  speech before the tone is sent; notification speech stays independent.
+  A regression reproduced ordered delivery with no stop, then passed with
+  the main-lane stop preceding the tone. Unsupported previews leave speech
+  alone. Audible interruption still needs listening acceptance.
+  The settings-menu arrow audit removes blanket adjustment hints from menu
+  openings and mixed sections. Waveform, envelope, curve and integration
+  choice summaries no longer include arrow instructions. Numeric controls
+  announce their actual Shift-arrow step, including Duration and ADSR stages,
+  spelling, capitalization, line cues, indentation, speech/output, spatial
+  separation, phonetic delay, voice tuning, history and integration limits.
+  Automated verification passes 55 focused batch tests; eight graphical tests
+  skip in batch. Eight separate fresh compiled graphical checks pass,
+  including the two skipped spelling/editor checks and the changed output and
+  indentation descriptions. The other six general navigation checks were not
+  repeated graphically. Incremental byte-code and the documentation review gate pass.
+  Private Customize save/restart checks restore all nine values saved by
+  Spelling feedback's =S= and the extended tone saved by the editor's =W=.
+  The tested normal profile loads its Customize file, which currently contains
+  no spelling values. The reported restart loss is not reproduced; confirm
+  which Save action was used. In the editor =S= stops, =W= saves and applies,
+  and Back discards an unapplied draft. No personal defaults were changed.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.

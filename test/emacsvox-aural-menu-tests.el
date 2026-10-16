@@ -729,9 +729,12 @@
                    (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
                    (should (eq (plist-get (emacsvox-aural-menu--context) :source) source))
                    (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
-                   (should (string-match-p "Shift left and right: adjust volume"
+                   (should-not (string-match-p "Shift left and right: adjust volume"
                                            (emacsvox-transient--opening-text)))
                    (execute-kbd-macro (kbd "<down>"))
+                   (with-selected-window transient--window
+                     (should (string-match-p "Shift arrows.*5 percentage points"
+                                             (emacsvox-transient--line-content))))
                    (setq spoken nil)
                    (execute-kbd-macro (kbd "S-<left> S-<left> S-<right>"))
                    (should (= tts-main-tone-volume 45))
