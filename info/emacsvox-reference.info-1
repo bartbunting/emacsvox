@@ -3536,6 +3536,13 @@ submenus and delegate settings and feedback to their existing commands.
      Choose Emacsvox speech settings or inspect feedback for this item.
      With prefix GLOBAL, start speech settings with global defaults.
      The source item is captured on entry for contextual editing and return.
+     Up and Down select items; Left and Right select the first item of a section.
+     Enter activates the selected item; a displayed key invokes its action directly.
+     Shift-Left and Shift-Right adjust numeric controls where offered. Choice lists
+     use Up and Down to browse and Enter to choose. Text prompts keep normal editing.
+     Question mark followed by an item’s key explains its effect and scope.
+     q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
+     each editor explains its own draft, Apply and Save actions.
 
 2.30.1.2 emacsvox-aural-menu-line-cues
 ......................................
@@ -3550,6 +3557,10 @@ submenus and delegate settings and feedback to their existing commands.
  -- Command: emacsvox-aural-menu-navigation
 
      Choose arrow navigation, announcement order, and descriptions for all menus.
+     These preferences apply to all Transient menus, including Magit. Browse with
+     Up and Down, then Enter to apply a choice. Left and Right change sections
+     and select their first item. C-c l repeats that item without activating it.
+     Changes take effect immediately; S saves these preferences through Customize.
 
 2.30.1.4 emacsvox-aural-menu-punctuation
 ........................................
@@ -9143,50 +9154,3 @@ select few for interactive use.
      Default Value:
 
      ("extrastereo" "stereowiden=4.25:.1:735:.8" "haas")
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-enriched,  Next: emacsvox-entertain,  Prev: emacsvox-empv,  Up: Emacsvox Commands And Options
-
-2.121 emacsvox-enriched
-=======================
-
-emacsvox extensions to voiceify rich text.
-
-2.121.1 Emacsvox-Enriched Commands
-----------------------------------
-
-2.121.1.1 emacsvox-enriched-voiceify-faces
-..........................................
-
- -- Command: emacsvox-enriched-voiceify-faces (start end)
-
-     Map base fonts to voices.
-     Useful in voiceifying rich text.
-
-     (fn START END)
-
-
-File: emacsvox-reference.info,  Node: emacsvox-entertain,  Next: emacsvox-enwc,  Prev: emacsvox-enriched,  Up: Emacsvox Commands And Options
-
-2.122 emacsvox-entertain
-========================
-
-Auditory interface to misc games
-
-2.122.1 Emacsvox-Entertain Commands
------------------------------------
-
-2.122.1.1 emacsvox-hangman-speak-guess
-......................................
-
- -- Command: emacsvox-hangman-speak-guess
-
-     Speak current guessed string.
-
-2.122.1.2 emacsvox-hangman-speak-statistics
-...........................................
-
- -- Command: emacsvox-hangman-speak-statistics
-
-     Speak statistics.

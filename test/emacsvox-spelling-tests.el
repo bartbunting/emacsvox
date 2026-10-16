@@ -410,6 +410,14 @@
             (progn
               (execute-kbd-macro (kbd "<f8> s f E"))
               (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
+              (execute-kbd-macro (kbd "? ?"))
+              (should (derived-mode-p 'emacsvox-transient-mode))
+              (should (string-match-p "plays the draft tone alone" (buffer-string)))
+              (should (string-match-p "S stops, without saving" (buffer-string)))
+              (should (string-match-p "C-c l: Repeat the selected item" (buffer-string)))
+              (should (string-match-p "discards unapplied edits" (buffer-string)))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
               (with-current-buffer transient--buffer
                 (should (string-match-p "Spelling tone (global draft)" (buffer-string)))
                 (should-not (string-match-p "Timing:" (buffer-string)))
@@ -437,6 +445,12 @@
                 (execute-kbd-macro (kbd "RET")))
               (should (= (emacsvox-tone-editor--get :pitch) 925))
               (execute-kbd-macro (kbd "w <down>"))
+              (should (eq (emacsvox-tone-editor--get :waveform) 'sine))
+              (execute-kbd-macro (kbd "? ?"))
+              (should (string-match-p "browse without changing the draft" (buffer-string)))
+              (should (string-match-p "Preview with Space after returning" (buffer-string)))
+              (should-not (string-match-p "Shift.*adjust" (buffer-string)))
+              (execute-kbd-macro (kbd "q"))
               (should (eq (emacsvox-tone-editor--get :waveform) 'sine))
               (execute-kbd-macro (kbd "q"))
               (with-selected-window transient--window

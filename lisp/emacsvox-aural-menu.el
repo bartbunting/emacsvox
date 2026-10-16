@@ -246,7 +246,11 @@
    'state-change (if emacsvox-transient-verbose-descriptions 'on 'off)))
 
 (transient-define-prefix emacsvox-aural-menu-navigation ()
-  "Choose arrow navigation, announcement order, and descriptions for all menus."
+  "Choose arrow navigation, announcement order, and descriptions for all menus.
+These preferences apply to all Transient menus, including Magit. Browse with
+Up and Down, then Enter to apply a choice. Left and Right change sections
+and select their first item. C-c l repeats that item without activating it.
+Changes take effect immediately; S saves these preferences through Customize."
   :refresh-suffixes t
   ["Navigation style (global)"
    ("c" (lambda () (emacsvox-aural-menu--navigation-choice 'continuous "Continuous"))
@@ -267,7 +271,10 @@
       (interactive) (emacsvox-aural-menu--set-section-order 'section-first "Section first")) :transient t)
    ("m" (lambda () (emacsvox-aural-menu--section-order-choice 'by-movement "By movement: sections or items"))
     (lambda () "Speak sections with section arrows and items with item arrows.
-Section arrows still select the first item."
+Section arrows still select the first item; Down would advance to the second.
+Use C-c l to hear the selected item without moving, then Enter to activate it
+in Emacsvox menus. Continuous item movement keeps the section-change cue
+without speaking the section name. This applies to all navigation styles."
       (interactive) (emacsvox-aural-menu--set-section-order 'by-movement "By movement: sections or items")) :transient t)
    ("v" (lambda ()
           (propertize
@@ -871,7 +878,14 @@ The captured location must still exist.  This changes no settings or drafts."
 (transient-define-prefix emacsvox-aural-menu (&optional global)
   "Choose Emacsvox speech settings or inspect feedback for this item.
 With prefix GLOBAL, start speech settings with global defaults.
-The source item is captured on entry for contextual editing and return."
+The source item is captured on entry for contextual editing and return.
+Up and Down select items; Left and Right select the first item of a section.
+Enter activates the selected item; a displayed key invokes its action directly.
+Shift-Left and Shift-Right adjust numeric controls where offered. Choice lists
+use Up and Down to browse and Enter to choose. Text prompts keep normal editing.
+Question mark followed by an item's key explains its effect and scope.
+q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
+each editor explains its own draft, Apply and Save actions."
   :refresh-suffixes t
   ["Everyday settings"
    ("s" (lambda () (concat "Speech settings: " (emacsvox-aural-menu--scope-label)))

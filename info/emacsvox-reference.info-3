@@ -12,6 +12,124 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-tone-editor,  Up: Emacsvox Commands And Options
+
+2.258 emacsvox-transient
+========================
+
+TRANSIENT == Transient commands -- used by magit and friends.  This
+module speech-enables transient.
+
+2.258.1 Introduction
+--------------------
+
+Package Transient is similar to package Hydra in the sense that it can
+be used to create a sequence of chained/hierarchical commands that are
+invoked via a sequence of keys.  It is used by Magit for dispatching to
+the various Git commands.  Speech-enabling package Transient results in
+the various interactive commands producing auditory feedback.  Transient
+shows an ephemeral window with the currently available commands,
+Emacsvox speech-enables transient-show to cache that content so it can
+be browsed if desired.
+
+   Finally, this module defines a new minor mode called
+transient-emacsvox that enables interactive browsing of the contents
+displayed temporarily.  Note that without this functionality, learning
+complex packages like Magit would be difficult because the list of
+available commands can be very long.
+
+2.258.2 Recommended Customizations
+----------------------------------
+
+I use the following customizations via .custom, adjust to taste, but use
+these only after reading the transient info documentations.
+   • transient-force-single-column: t
+   • transient-show-menu: t
+   • transient-enable-menu-navigation: t
+
+   This displays the menu immediately and lets you move through its
+buttons with the up/down arrows.
+
+2.258.3 Browsing Contents Of transient-show
+-------------------------------------------
+
+When executing a command defined via Transient -- e.g.  command
+Magit-dispatch and friends, ‘?’ twice to suspend the transient -- this
+calls 2‘transient-suspend’.  Emacsvox now displays a
+*transient-emacsvox* buffer that displays the contents of the most
+recently displayed transient choices.  Pressing ‘r’ resumes the
+transient; Pressing ‘C-q’ quits the transient.
+
+2.258.4 Emacsvox-Transient Commands
+-----------------------------------
+
+2.258.4.1 emacsvox-transient-mode
+.................................
+
+ -- Command: emacsvox-transient-mode
+
+     emacsvox integration with Transient.
+
+     In addition to any hooks its parent mode ‘special-mode’ might have
+     run, this mode runs the hook ‘emacsvox-transient-mode-hook’, as the
+     final or penultimate step during initialization.
+
+2.258.4.2 emacsvox-transient-next-section
+.........................................
+
+ -- Command: emacsvox-transient-next-section
+
+     Next transient section.
+
+2.258.4.3 emacsvox-transient-previous-section
+.............................................
+
+ -- Command: emacsvox-transient-previous-section
+
+     Previous transient section.
+
+2.258.5 emacsvox-transient Options
+----------------------------------
+
+ -- Variable: User Option emacsvox-transient-navigation-style
+     How Up and Down move through Transient menu items.
+     Continuous navigation crosses sections and wraps around the whole menu.
+     Section wrapping cycles within the current section.  Section stops keep
+     point at its first or last item and play a boundary cue.  Left and Right
+     move between sections in every style.  This setting applies globally.
+
+     Default Value:
+
+     section-wrap
+
+
+ -- Variable: User Option emacsvox-transient-section-announcement-order
+     How Transient navigation announces items and sections.
+     Item first speaks the item, then the section name and position.  Section
+     first speaks the section name and position before the item.  By movement
+     speaks only the section for section navigation and only the item for item
+     navigation, even across sections.  Section navigation still selects the
+     first item; C-c l repeats it without moving when that review key is available.
+     This setting applies globally, including Magit, and does not change navigation.
+
+     Default Value:
+
+     section-first
+
+
+ -- Variable: User Option emacsvox-transient-verbose-descriptions
+     Whether Transient items include their command documentation summaries.
+     When enabled, retain each label and value and add the first line of the
+     command’s docstring.  This applies to all Transient menus, including Magit.
+     Items without command documentation keep their labels; Transient’s native
+     infix controls keep their usual descriptions.
+
+     Default Value:
+
+     t
+
+
+
 File: emacsvox-reference.info,  Node: emacsvox-treesit,  Next: emacsvox-typo,  Prev: emacsvox-transient,  Up: Emacsvox Commands And Options
 
 2.259 emacsvox-treesit
@@ -6241,29 +6359,29 @@ Function Index
 * emacsvox-aural-menu <1>:               emacsvox-aural-menu.
                                                              (line   18)
 * emacsvox-aural-menu-line-cues:         emacsvox-aural-menu.
-                                                             (line   25)
-* emacsvox-aural-menu-line-cues <1>:     emacsvox-aural-menu.
-                                                             (line   26)
-* emacsvox-aural-menu-navigation:        emacsvox-aural-menu.
                                                              (line   32)
-* emacsvox-aural-menu-navigation <1>:    emacsvox-aural-menu.
+* emacsvox-aural-menu-line-cues <1>:     emacsvox-aural-menu.
                                                              (line   33)
-* emacsvox-aural-menu-punctuation:       emacsvox-aural-menu.
+* emacsvox-aural-menu-navigation:        emacsvox-aural-menu.
                                                              (line   39)
-* emacsvox-aural-menu-punctuation <1>:   emacsvox-aural-menu.
+* emacsvox-aural-menu-navigation <1>:    emacsvox-aural-menu.
                                                              (line   40)
+* emacsvox-aural-menu-punctuation:       emacsvox-aural-menu.
+                                                             (line   50)
+* emacsvox-aural-menu-punctuation <1>:   emacsvox-aural-menu.
+                                                             (line   51)
 * emacsvox-aural-menu-sounds:            emacsvox-aural-menu.
-                                                             (line   48)
+                                                             (line   59)
 * emacsvox-aural-menu-sounds <1>:        emacsvox-aural-menu.
-                                                             (line   49)
+                                                             (line   60)
 * emacsvox-aural-menu-speech:            emacsvox-aural-menu.
-                                                             (line   57)
+                                                             (line   68)
 * emacsvox-aural-menu-speech <1>:        emacsvox-aural-menu.
-                                                             (line   58)
+                                                             (line   69)
 * emacsvox-aural-menu-voices:            emacsvox-aural-menu.
-                                                             (line   66)
+                                                             (line   77)
 * emacsvox-aural-menu-voices <1>:        emacsvox-aural-menu.
-                                                             (line   67)
+                                                             (line   78)
 * emacsvox-aural-overrides-clear-filter: emacsvox-aural-overrides.
                                                              (line   26)
 * emacsvox-aural-overrides-clear-filter <1>: emacsvox-aural-overrides.
@@ -9031,8 +9149,8 @@ Function Index
 * emacsvox-speedbar-goto-speedbar <1>:   emacsvox-speedbar.  (line   27)
 * emacsvox-spelling:                     emacsvox-spelling.  (line   16)
 * emacsvox-spelling <1>:                 emacsvox-spelling.  (line   17)
-* emacsvox-spelling-timing:              emacsvox-spelling.  (line   28)
-* emacsvox-spelling-timing <1>:          emacsvox-spelling.  (line   29)
+* emacsvox-spelling-timing:              emacsvox-spelling.  (line   33)
+* emacsvox-spelling-timing <1>:          emacsvox-spelling.  (line   34)
 * emacsvox-startup-status:               emacsvox.           (line   20)
 * emacsvox-startup-status <1>:           emacsvox.           (line   21)
 * emacsvox-submit-bug:                   emacsvox-speak.     (line 1006)
@@ -9347,21 +9465,21 @@ Function Index
 * emacsvox-tone-editor <1>:              emacsvox-tone-editor.
                                                              (line   16)
 * emacsvox-tone-editor-curve:            emacsvox-tone-editor.
-                                                             (line   26)
-* emacsvox-tone-editor-curve <1>:        emacsvox-tone-editor.
-                                                             (line   27)
-* emacsvox-tone-editor-envelope:         emacsvox-tone-editor.
                                                              (line   33)
-* emacsvox-tone-editor-envelope <1>:     emacsvox-tone-editor.
+* emacsvox-tone-editor-curve <1>:        emacsvox-tone-editor.
                                                              (line   34)
-* emacsvox-tone-editor-presets:          emacsvox-tone-editor.
-                                                             (line   41)
-* emacsvox-tone-editor-presets <1>:      emacsvox-tone-editor.
+* emacsvox-tone-editor-envelope:         emacsvox-tone-editor.
                                                              (line   42)
+* emacsvox-tone-editor-envelope <1>:     emacsvox-tone-editor.
+                                                             (line   43)
+* emacsvox-tone-editor-presets:          emacsvox-tone-editor.
+                                                             (line   53)
+* emacsvox-tone-editor-presets <1>:      emacsvox-tone-editor.
+                                                             (line   54)
 * emacsvox-tone-editor-waveform:         emacsvox-tone-editor.
-                                                             (line   50)
+                                                             (line   62)
 * emacsvox-tone-editor-waveform <1>:     emacsvox-tone-editor.
-                                                             (line   51)
+                                                             (line   63)
 * emacsvox-transient-mode:               emacsvox-transient. (line   55)
 * emacsvox-transient-mode <1>:           emacsvox-transient. (line   56)
 * emacsvox-transient-next-section:       emacsvox-transient. (line   66)

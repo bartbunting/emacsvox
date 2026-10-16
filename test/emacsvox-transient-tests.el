@@ -1469,7 +1469,7 @@
          (transient--prefix (transient-prefix :command #'ignore))
          (transient--suffixes
           (cons object (mapcar (lambda (key) (transient-suffix :key key :command #'ignore))
-                               '("C-f" "C-a" "C-e" "C-c w"))))
+                               '("C-f" "C-a" "C-e" "C-c w" "RET"))))
          (transient--editp nil)
          (map (transient--make-transient-map)))
     (should (eq (lookup-key map (kbd "M-f")) #'ignore))
@@ -1482,7 +1482,16 @@
                 #'emacsvox-transient--review-end))
     (should (eq (lookup-key map (kbd "C-b")) #'emacsvox-transient--review-previous-character))
     (should (eq (lookup-key map (kbd "M-b")) #'emacsvox-transient--review-previous-word))
-    (should (eq (lookup-key map (kbd "C-c l")) #'emacsvox-transient--repeat-item))))
+    (should (eq (lookup-key map (kbd "C-c l")) #'emacsvox-transient--repeat-item))
+    (let* ((transient--transient-map map)
+           (help (emacsvox-transient--review-help)))
+      (dolist (key '("M-f" "C-f" "C-a" "C-e" "C-c w"))
+        (should-not (string-match-p (concat "^" (regexp-quote key) ":") help)))
+      (dolist (key '("M-b" "C-b" "C-c l" "C-c c"))
+        (should (string-match-p (concat "^" (regexp-quote key) ":") help)))
+      (let ((navigation (emacsvox-transient--navigation-help)))
+        (should-not (string-match-p "^RET:" navigation))
+        (should (string-match-p "^C-j: Activate" navigation))))))
 
 (ert-deftest emacsvox-transient-review-characters-share-word-position ()
   "Character review names punctuation and shares position with word review."

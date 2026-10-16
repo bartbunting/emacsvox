@@ -3752,6 +3752,13 @@ submenus and delegate settings and feedback to their existing commands.
 Choose Emacsvox speech settings or inspect feedback for this item.
 With prefix GLOBAL, start speech settings with global defaults.
 The source item is captured on entry for contextual editing and return.
+Up and Down select items; Left and Right select the first item of a section.
+Enter activates the selected item; a displayed key invokes its action directly.
+Shift-Left and Shift-Right adjust numeric controls where offered. Choice lists
+use Up and Down to browse and Enter to choose. Text prompts keep normal editing.
+Question mark followed by an item’s key explains its effect and scope.
+q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
+each editor explains its own draft, Apply and Save actions.
 @end format
 @end deffn
 
@@ -3770,6 +3777,10 @@ Choose a global line tone or boundary earcon to preview and edit.
 
 @format
 Choose arrow navigation, announcement order, and descriptions for all menus.
+These preferences apply to all Transient menus, including Magit. Browse with
+Up and Down, then Enter to apply a choice. Left and Right change sections
+and select their first item. C-c l repeats that item without activating it.
+Changes take effect immediately; S saves these preferences through Customize.
 @end format
 @end deffn
 
@@ -20947,6 +20958,11 @@ feedback without disabling Flyspell. Voice changes apply while reading;
 tone and earcon also report errors detected while editing. Settings apply
 immediately; S saves across restarts. Spelling tone volume affects only
 this tone; Shared tone volume scales all main-stream tones.
+E opens a private tone draft with waveform, sweep and envelope controls.
+In this parent menu, Space reads the selected feedback sample and b plays
+the tone alone. In the tone editor, Space plays only the draft tone, P reads
+its sample, S stops, and W saves only tone defaults. Return here and use S
+to save voice, tone and earcon enablement as well.
 @end format
 @end deffn
 
@@ -22384,10 +22400,17 @@ Shared draft interaction; cue providers own their settings and preview facts.
 
 @format
 Edit a private tone draft.
-Arrows navigate; Shift arrows adjust numbers. Enter sets an exact number or
-opens a choice list.  Preview leaves live settings
-unchanged. Apply changes the session; Save and apply persists tone defaults.
-Back discards unapplied edits. Shared main-tone volume belongs in Output settings.
+Up and Down select items; Left and Right change sections. Shift-Left and
+Shift-Right adjust numbers. Enter sets an exact number, toggles Pitch sweep,
+or opens a choice list. Browsing a choice list changes nothing until Enter.
+Space or b interrupts main speech and plays the draft tone alone. C plays the
+applied tone; P reads a sample with the draft. S stops, without saving.
+Preview comes before Presets in the section order. L loads a preset into the
+draft; N saves a named preset without changing the cue. A applies the draft
+for this session; W saves and applies tone defaults through Customize.
+q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
+and saved changes remain. Timing, cue enablement, voice and earcon choices
+belong to the parent menu; shared main-tone volume belongs in Output settings.
 @end format
 @end deffn
 
@@ -22397,6 +22420,8 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
 
 @format
 Choose the ADSR curve from a list.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Only ADSR uses this curve. Preview with Space back in the editor.
 @end format
 @end deffn
 
@@ -22406,7 +22431,10 @@ Choose the ADSR curve from a list.
 
 @format
 Choose the draft envelope from a list.
-Enter selects and returns. Cancel keeps the previous draft value.
+The envelope controls loudness over the life of the tone. Up and Down browse;
+Enter selects and returns, while q cancels. Classic uses short endpoint fades.
+ADSR uses Attack, Decay, Sustain level and Release in the editor. Selecting
+does not preview or apply the draft; use Space after returning to hear it.
 @end format
 @end deffn
 
@@ -22427,7 +22455,9 @@ q cancels. Space in the editor plays the resulting draft.
 
 @format
 Choose the draft waveform from a list.
-Enter selects and returns. Cancel keeps the previous draft value.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Preview with Space after returning to the editor.
+Only Pulse uses the editor’s separate Pulse width control.
 @end format
 @end deffn
 
@@ -22554,7 +22584,7 @@ Item first speaks the item, then the section name and position.  Section
 first speaks the section name and position before the item.  By movement
 speaks only the section for section navigation and only the item for item
 navigation, even across sections.  Section navigation still selects the
-first item; a zero-count item movement reads it without moving.
+first item; C-c l repeats it without moving when that review key is available.
 This setting applies globally, including Magit, and does not change navigation.
 @end verbatim
 

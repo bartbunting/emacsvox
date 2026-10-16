@@ -12,6 +12,52 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-enriched,  Next: emacsvox-entertain,  Prev: emacsvox-empv,  Up: Emacsvox Commands And Options
+
+2.121 emacsvox-enriched
+=======================
+
+emacsvox extensions to voiceify rich text.
+
+2.121.1 Emacsvox-Enriched Commands
+----------------------------------
+
+2.121.1.1 emacsvox-enriched-voiceify-faces
+..........................................
+
+ -- Command: emacsvox-enriched-voiceify-faces (start end)
+
+     Map base fonts to voices.
+     Useful in voiceifying rich text.
+
+     (fn START END)
+
+
+File: emacsvox-reference.info,  Node: emacsvox-entertain,  Next: emacsvox-enwc,  Prev: emacsvox-enriched,  Up: Emacsvox Commands And Options
+
+2.122 emacsvox-entertain
+========================
+
+Auditory interface to misc games
+
+2.122.1 Emacsvox-Entertain Commands
+-----------------------------------
+
+2.122.1.1 emacsvox-hangman-speak-guess
+......................................
+
+ -- Command: emacsvox-hangman-speak-guess
+
+     Speak current guessed string.
+
+2.122.1.2 emacsvox-hangman-speak-statistics
+...........................................
+
+ -- Command: emacsvox-hangman-speak-statistics
+
+     Speak statistics.
+
+
 File: emacsvox-reference.info,  Node: emacsvox-enwc,  Next: emacsvox-epa,  Prev: emacsvox-entertain,  Up: Emacsvox Commands And Options
 
 2.123 emacsvox-enwc
@@ -8721,6 +8767,11 @@ defaults is explicit.
      tone and earcon also report errors detected while editing. Settings apply
      immediately; S saves across restarts. Spelling tone volume affects only
      this tone; Shared tone volume scales all main-stream tones.
+     E opens a private tone draft with waveform, sweep and envelope controls.
+     In this parent menu, Space reads the selected feedback sample and b plays
+     the tone alone. In the tone editor, Space plays only the draft tone, P reads
+     its sample, S stops, and W saves only tone defaults. Return here and use S
+     to save voice, tone and earcon enablement as well.
 
 2.240.1.2 emacsvox-spelling-timing
 ..................................
@@ -9850,10 +9901,17 @@ facts.
  -- Command: emacsvox-tone-editor
 
      Edit a private tone draft.
-     Arrows navigate; Shift arrows adjust numbers. Enter sets an exact number or
-     opens a choice list.  Preview leaves live settings
-     unchanged. Apply changes the session; Save and apply persists tone defaults.
-     Back discards unapplied edits. Shared main-tone volume belongs in Output settings.
+     Up and Down select items; Left and Right change sections. Shift-Left and
+     Shift-Right adjust numbers. Enter sets an exact number, toggles Pitch sweep,
+     or opens a choice list. Browsing a choice list changes nothing until Enter.
+     Space or b interrupts main speech and plays the draft tone alone. C plays the
+     applied tone; P reads a sample with the draft. S stops, without saving.
+     Preview comes before Presets in the section order. L loads a preset into the
+     draft; N saves a named preset without changing the cue. A applies the draft
+     for this session; W saves and applies tone defaults through Customize.
+     q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
+     and saved changes remain. Timing, cue enablement, voice and earcon choices
+     belong to the parent menu; shared main-tone volume belongs in Output settings.
 
 2.257.1.2 emacsvox-tone-editor-curve
 ....................................
@@ -9861,6 +9919,8 @@ facts.
  -- Command: emacsvox-tone-editor-curve
 
      Choose the ADSR curve from a list.
+     Up and Down browse without changing the draft. Enter selects and returns;
+     q cancels. Only ADSR uses this curve. Preview with Space back in the editor.
 
 2.257.1.3 emacsvox-tone-editor-envelope
 .......................................
@@ -9868,7 +9928,10 @@ facts.
  -- Command: emacsvox-tone-editor-envelope
 
      Choose the draft envelope from a list.
-     Enter selects and returns. Cancel keeps the previous draft value.
+     The envelope controls loudness over the life of the tone. Up and Down browse;
+     Enter selects and returns, while q cancels. Classic uses short endpoint fades.
+     ADSR uses Attack, Decay, Sustain level and Release in the editor. Selecting
+     does not preview or apply the draft; use Space after returning to hear it.
 
 2.257.1.4 emacsvox-tone-editor-presets
 ......................................
@@ -9885,7 +9948,9 @@ facts.
  -- Command: emacsvox-tone-editor-waveform
 
      Choose the draft waveform from a list.
-     Enter selects and returns. Cancel keeps the previous draft value.
+     Up and Down browse without changing the draft. Enter selects and returns;
+     q cancels. Preview with Space after returning to the editor.
+     Only Pulse uses the editor’s separate Pulse width control.
 
 2.257.2 emacsvox-tone-editor Options
 ------------------------------------
@@ -9898,121 +9963,3 @@ facts.
      Default Value:
 
      nil
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-tone-editor,  Up: Emacsvox Commands And Options
-
-2.258 emacsvox-transient
-========================
-
-TRANSIENT == Transient commands -- used by magit and friends.  This
-module speech-enables transient.
-
-2.258.1 Introduction
---------------------
-
-Package Transient is similar to package Hydra in the sense that it can
-be used to create a sequence of chained/hierarchical commands that are
-invoked via a sequence of keys.  It is used by Magit for dispatching to
-the various Git commands.  Speech-enabling package Transient results in
-the various interactive commands producing auditory feedback.  Transient
-shows an ephemeral window with the currently available commands,
-Emacsvox speech-enables transient-show to cache that content so it can
-be browsed if desired.
-
-   Finally, this module defines a new minor mode called
-transient-emacsvox that enables interactive browsing of the contents
-displayed temporarily.  Note that without this functionality, learning
-complex packages like Magit would be difficult because the list of
-available commands can be very long.
-
-2.258.2 Recommended Customizations
-----------------------------------
-
-I use the following customizations via .custom, adjust to taste, but use
-these only after reading the transient info documentations.
-   • transient-force-single-column: t
-   • transient-show-menu: t
-   • transient-enable-menu-navigation: t
-
-   This displays the menu immediately and lets you move through its
-buttons with the up/down arrows.
-
-2.258.3 Browsing Contents Of transient-show
--------------------------------------------
-
-When executing a command defined via Transient -- e.g.  command
-Magit-dispatch and friends, ‘?’ twice to suspend the transient -- this
-calls 2‘transient-suspend’.  Emacsvox now displays a
-*transient-emacsvox* buffer that displays the contents of the most
-recently displayed transient choices.  Pressing ‘r’ resumes the
-transient; Pressing ‘C-q’ quits the transient.
-
-2.258.4 Emacsvox-Transient Commands
------------------------------------
-
-2.258.4.1 emacsvox-transient-mode
-.................................
-
- -- Command: emacsvox-transient-mode
-
-     emacsvox integration with Transient.
-
-     In addition to any hooks its parent mode ‘special-mode’ might have
-     run, this mode runs the hook ‘emacsvox-transient-mode-hook’, as the
-     final or penultimate step during initialization.
-
-2.258.4.2 emacsvox-transient-next-section
-.........................................
-
- -- Command: emacsvox-transient-next-section
-
-     Next transient section.
-
-2.258.4.3 emacsvox-transient-previous-section
-.............................................
-
- -- Command: emacsvox-transient-previous-section
-
-     Previous transient section.
-
-2.258.5 emacsvox-transient Options
-----------------------------------
-
- -- Variable: User Option emacsvox-transient-navigation-style
-     How Up and Down move through Transient menu items.
-     Continuous navigation crosses sections and wraps around the whole menu.
-     Section wrapping cycles within the current section.  Section stops keep
-     point at its first or last item and play a boundary cue.  Left and Right
-     move between sections in every style.  This setting applies globally.
-
-     Default Value:
-
-     section-wrap
-
-
- -- Variable: User Option emacsvox-transient-section-announcement-order
-     How Transient navigation announces items and sections.
-     Item first speaks the item, then the section name and position.  Section
-     first speaks the section name and position before the item.  By movement
-     speaks only the section for section navigation and only the item for item
-     navigation, even across sections.  Section navigation still selects the
-     first item; a zero-count item movement reads it without moving.
-     This setting applies globally, including Magit, and does not change navigation.
-
-     Default Value:
-
-     section-first
-
-
- -- Variable: User Option emacsvox-transient-verbose-descriptions
-     Whether Transient items include their command documentation summaries.
-     When enabled, retain each label and value and add the first line of the
-     command’s docstring.  This applies to all Transient menus, including Magit.
-     Items without command documentation keep their labels; Transient’s native
-     infix controls keep their usual descriptions.
-
-     Default Value:
-
-     t

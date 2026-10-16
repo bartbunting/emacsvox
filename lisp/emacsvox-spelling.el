@@ -247,7 +247,9 @@ tone volume are outside this editor."
 
 (defun emacsvox-spelling--save ()
   "Save spelling controls, individual tone volume and shared main-tone volume.
-These global defaults apply across restarts."
+This includes voice, tone and earcon enablement, tone timing, pitch, duration
+and shape. These global defaults apply across restarts. The tone editor's W
+saves only tone defaults; its S stops playback instead of saving."
   (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
   (dolist (symbol (append emacsvox-spelling--options '(tts-main-tone-volume)))
@@ -288,7 +290,12 @@ Voice, tone and earcon combine independently. All off silences spelling
 feedback without disabling Flyspell. Voice changes apply while reading;
 tone and earcon also report errors detected while editing. Settings apply
 immediately; S saves across restarts. Spelling tone volume affects only
-this tone; Shared tone volume scales all main-stream tones."
+this tone; Shared tone volume scales all main-stream tones.
+E opens a private tone draft with waveform, sweep and envelope controls.
+In this parent menu, Space reads the selected feedback sample and b plays
+the tone alone. In the tone editor, Space plays only the draft tone, P reads
+its sample, S stops, and W saves only tone defaults. Return here and use S
+to save voice, tone and earcon enablement as well."
   :refresh-suffixes t
   ["Spelling feedback (global; combine any)"
    ("v" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-voice "Voice")) emacsvox-spelling--voice :transient t)

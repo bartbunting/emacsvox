@@ -170,6 +170,7 @@ private draft; Apply or Save and apply changes the destination cue."
 
 (defun emacsvox-tone-editor--tone ()
   "Play the draft tone alone, including when the live cue is disabled.
+Space and b interrupt previous main speech; S stops this preview immediately.
 Preview does not apply or save adjustments.  Older workers report unsupported
 shapes or volume instead of playing an inaccurate substitute."
   (interactive) (emacsvox-tone-editor--preview nil))
@@ -259,7 +260,9 @@ replacement; bundled names cannot be replaced."
   (interactive) (tts-stop))
 
 (defun emacsvox-tone-editor--apply (&optional save)
-  "Apply this draft for the session; SAVE also persists its defaults."
+  "Apply this draft for the session; SAVE also persists its defaults.
+This changes the global cue's tone, without enabling it or changing its timing,
+voice, earcon or shared volume. Play current tone now uses the applied sound."
   (interactive)
   (let* ((state (emacsvox-tone-editor--state))
          (data (emacsvox-tone-editor--validate (copy-tree (plist-get state :draft)))))
@@ -415,7 +418,9 @@ Selecting changes only the draft; Apply and Save remain separate."
 
 (transient-define-prefix emacsvox-tone-editor-waveform ()
   "Choose the draft waveform from a list.
-Enter selects and returns. Cancel keeps the previous draft value."
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Preview with Space after returning to the editor.
+Only Pulse uses the editor's separate Pulse width control."
   ["Waveform"
    ("s" (lambda () (emacsvox-tone-editor--choice-label :waveform 'sine))
     emacsvox-tone-editor--sine :transient transient--do-replace)
@@ -450,7 +455,10 @@ Selecting changes only this draft; Apply and Save are separate actions."
 
 (transient-define-prefix emacsvox-tone-editor-envelope ()
   "Choose the draft envelope from a list.
-Enter selects and returns. Cancel keeps the previous draft value."
+The envelope controls loudness over the life of the tone. Up and Down browse;
+Enter selects and returns, while q cancels. Classic uses short endpoint fades.
+ADSR uses Attack, Decay, Sustain level and Release in the editor. Selecting
+does not preview or apply the draft; use Space after returning to hear it."
   ["Envelope"
    ("c" (lambda () (emacsvox-tone-editor--choice-label :envelope 'classic))
     emacsvox-tone-editor--classic :transient transient--do-replace)
@@ -473,7 +481,9 @@ Stage durations, endpoint levels and total tone duration stay the same.
 Only ADSR uses this curve; the draft retains it when you choose Classic."
   (interactive) (emacsvox-tone-editor--choose :curve 'exponential))
 (transient-define-prefix emacsvox-tone-editor-curve ()
-  "Choose the ADSR curve from a list."
+  "Choose the ADSR curve from a list.
+Up and Down browse without changing the draft. Enter selects and returns;
+q cancels. Only ADSR uses this curve. Preview with Space back in the editor."
   ["ADSR curve"
    ("l" (lambda () (emacsvox-tone-editor--choice-label :curve 'linear)) emacsvox-tone-editor--linear :transient transient--do-replace)
    ("e" (lambda () (emacsvox-tone-editor--choice-label :curve 'exponential)) emacsvox-tone-editor--exponential :transient transient--do-replace)]
@@ -484,10 +494,17 @@ Only ADSR uses this curve; the draft retains it when you choose Classic."
 
 (transient-define-prefix emacsvox-tone-editor ()
   "Edit a private tone draft.
-Arrows navigate; Shift arrows adjust numbers. Enter sets an exact number or
-opens a choice list.  Preview leaves live settings
-unchanged. Apply changes the session; Save and apply persists tone defaults.
-Back discards unapplied edits. Shared main-tone volume belongs in Output settings."
+Up and Down select items; Left and Right change sections. Shift-Left and
+Shift-Right adjust numbers. Enter sets an exact number, toggles Pitch sweep,
+or opens a choice list. Browsing a choice list changes nothing until Enter.
+Space or b interrupts main speech and plays the draft tone alone. C plays the
+applied tone; P reads a sample with the draft. S stops, without saving.
+Preview comes before Presets in the section order. L loads a preset into the
+draft; N saves a named preset without changing the cue. A applies the draft
+for this session; W saves and applies tone defaults through Customize.
+q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
+and saved changes remain. Timing, cue enablement, voice and earcon choices
+belong to the parent menu; shared main-tone volume belongs in Output settings."
   :refresh-suffixes t
   [:description (lambda () (plist-get (plist-get (emacsvox-tone-editor--state) :provider) :label))
    ("p" (lambda () (emacsvox-tone-editor--number-label :pitch)) emacsvox-tone-editor--pitch :transient t)

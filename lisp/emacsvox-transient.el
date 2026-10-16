@@ -130,7 +130,7 @@ Item first speaks the item, then the section name and position.  Section
 first speaks the section name and position before the item.  By movement
 speaks only the section for section navigation and only the item for item
 navigation, even across sections.  Section navigation still selects the
-first item; a zero-count item movement reads it without moving.
+first item; C-c l repeats it without moving when that review key is available.
 This setting applies globally, including Magit, and does not change navigation."
   :type '(choice (const :tag "Item first" item-first)
                  (const :tag "Section first" section-first)
@@ -751,6 +751,10 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
      " Up and down: options. Left and right: sections."
      (when (eq command 'emacsvox-aural-menu)
        " Question mark for help; n for navigation and speech options.")
+     (when (and (eq command 'emacsvox-aural-menu)
+                (eq (lookup-key transient--transient-map (kbd "C-c l"))
+                    #'emacsvox-transient--repeat-item))
+       " Control C l: repeat item.")
      (when (eq command 'emacsvox-indentation)
        " Space: preview.")
      (when (eq command 'emacsvox-indentation-tone)
@@ -763,8 +767,8 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
        " Space: preview source line.")
      (if (eq (lookup-key transient--transient-map (kbd "RET"))
              #'transient-push-button)
-         " Enter: activate. Control G: close. "
-       " Control J: activate. Control G: close. ")
+         " Enter: activate. Control G: back or close. "
+       " Control J: activate. Control G: back or close. ")
      (emacsvox-transient--line-content))))
 
 (defun emacsvox--advice-transient--show-after (&rest _)
@@ -803,6 +807,67 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
 
 (advice-add 'transient-help :after #'emacsvox--advice-transient-help-after)
 
+(defun emacsvox-transient--navigation-help ()
+  "Describe navigation and activation bindings in the active menu."
+  (let (lines)
+    (dolist (entry
+             '(("<up>" transient-backward-button "Select the previous item.")
+               ("<down>" transient-forward-button "Select the next item.")
+               ("<left>" emacsvox-transient-previous-section
+                "Select the first item of the previous section.")
+               ("<right>" emacsvox-transient-next-section
+                "Select the first item of the next section.")
+               ("RET" transient-push-button "Activate the selected item.")
+               ("M-RET" transient-push-button "Activate the selected item.")
+               ("C-j" transient-push-button "Activate the selected item.")))
+      (when (eq (lookup-key transient--transient-map (kbd (car entry))) (cadr entry))
+        (push (format "%s: %s\n" (car entry) (nth 2 entry)) lines)))
+    (when lines
+      (concat "Navigate the menu\n"
+              "After returning with q, selecting an item reads it without activating it.\n"
+              (apply #'concat (nreverse lines))
+              (pcase emacsvox-transient-navigation-style
+                ('continuous "Item navigation crosses sections and wraps around the whole menu.\n")
+                ('section-wrap "Item navigation wraps within the current section.\n")
+                (_ "Item navigation stops at section edges with a boundary cue.\n"))
+              (pcase emacsvox-transient-section-announcement-order
+                ('by-movement
+                 "Section movement speaks only its heading; review the selected first item before activation.\n")
+                ('item-first "When changing sections, the item is spoken before its section.\n")
+                (_ "When changing sections, the section is spoken before its item.\n"))
+              "A displayed action key invokes that action directly. Read its Help for\n"
+              "scope, adjustment steps and saving. Prompts use normal text editing.\n\n"))))
+
+(defun emacsvox-transient--review-help ()
+  "Describe the item review keys available in the active menu.
+Check effective bindings so a menu's own commands are never described as review."
+  (let (lines)
+    (dolist (entry
+             '(("C-c l" emacsvox-transient--repeat-item
+                "Repeat the selected item and restart word and character review.")
+               ("M-f" emacsvox-transient--review-next-word "Read the next word.")
+               ("M-b" emacsvox-transient--review-previous-word "Read the previous word.")
+               ("C-f" emacsvox-transient--review-next-character "Read the next character.")
+               ("C-b" emacsvox-transient--review-previous-character "Read the previous character.")
+               ("C-c w" emacsvox-transient--review-word "Repeat the review word.")
+               ("C-c c" emacsvox-transient--review-character "Repeat the review character.")
+               ("C-a" emacsvox-transient--review-beginning
+                "Move before the first word and character; moving forward reads the first.")
+               ("C-e" emacsvox-transient--review-end
+                "Move after the last word and character; moving backward reads the last.")))
+      (when (eq (lookup-key transient--transient-map (kbd (car entry))) (cadr entry))
+        (push (format "%s: %s\n" (car entry) (nth 2 entry)) lines)))
+    (when lines
+      (concat
+       "Review the selected item\n"
+       "These keys apply after returning to the menu with q. Review reads the\n"
+       "item's label, value, description and key without changing the selection\n"
+       "or activation target. The first word or character command starts at the\n"
+       "beginning. Character speech follows your capitalisation and delayed\n"
+       "phonetic settings. Further input interrupts obsolete review speech.\n\n"
+       (apply #'concat (nreverse lines))
+       "\nOnly available review bindings are listed; menu-specific commands take precedence.\n\n"))))
+
 (defun emacsvox--advice-transient-show-help-around (original object)
   "Show the active menu overview, retaining ORIGINAL help for other OBJECTs."
   (if (and (eieio-object-p object)
@@ -813,12 +878,16 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
         (transient--show)
         (let ((contents emacsvox-transient-cache)
               (purpose (documentation (oref object command) t))
+              (navigation-help (emacsvox-transient--navigation-help))
+              (review-help (emacsvox-transient--review-help))
               (buffer (get-buffer-create "*Transient-Emacsvox*")))
           (with-current-buffer buffer
             (let ((inhibit-read-only t))
               (erase-buffer)
               (insert "q to return to the menu.\n\n")
               (when purpose (insert purpose "\n\n"))
+              (when navigation-help (insert navigation-help))
+              (when review-help (insert review-help))
               (insert contents)
               ;; This is a readable snapshot; actions run in the resumed menu.
               (remove-text-properties
