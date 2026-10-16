@@ -58,6 +58,8 @@
     "emacsvox-aural-voice-menu.el"
     "emacsvox-capitalization.el"
     "emacsvox-interaction.el"
+    "emacsvox-spelling.el"
+    "emacsvox-tone-editor.el"
     "emacsvox-line-cues.el"
     "emacsvox-output-settings.el"
     "emacsvox-settings.el"

@@ -29,6 +29,19 @@ merge; neither is recorded as passed. Their unchecked status remains below
 for later follow-up and does not block this merge. Final branch CI and review
 remain separate gates.
 
+Merge CI follow-up, 2026-10-16: the complete branch checks found two missing
+startup stale-byte-code guard entries, for spelling feedback and the tone
+editor. Both are now guarded; a fresh-process regression confirms newer
+source wins over stale compiled copies. The Notmuch documentation assertion
+now checks the history-limit option and Tree's support boundary instead of
+superseded prose. Local core checks pass 1,011 tests with 17 graphical skips;
+all 302 compatibility checks and the focused Notmuch guide check pass.
+Five startup checks also pass in a fresh Emacs using the compiled guard;
+incremental compilation, byte-code preflight and documentation review pass.
+The full integration gate needs the current pinned dependency tree; the local
+cache has an older lock. Final branch CI remains required before merging.
+These corrections add no listening acceptance.
+
 Menu and tone documentation checkpoint, 2026-10-16: the settings chapter now
 owns the complete navigation explanation, with linked reminders in Help,
 keyboard guidance and the tutorial. It distinguishes item selection, section
