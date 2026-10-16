@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1669 commands and 243 options.
+This chapter documents a total of 1670 commands and 243 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -13423,9 +13423,12 @@ Default Value:
 @defvar {User Option} emacsvox-flyspell-tone-shape
 @verbatim
 Waveform and optional ADSR envelope of the spelling tone.
-Waveform is sine, triangle or square.  Omit the envelope for Classic fades.
+Waveform is sine, triangle, square, pulse or sawtooth. Pulse requires
+:pulse-width from 0.05 to 0.95. Omit the envelope for Classic fades.
 ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
 Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+Optional :end-frequency-hz makes a linear pitch sweep; :envelope-curve selects
+linear or exponential ADSR. These extensions need extended-tone support.
 Total duration stays fixed: oversized stages are shortened proportionally.
 Non-Classic shapes require richer-tone support.  Older workers omit the tone;
 explicit previews report missing support.  Speech and earcons remain usable.
@@ -22384,6 +22387,15 @@ Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
 Enter sets an exact number or opens a choice list.  Preview leaves live settings
 unchanged. Apply changes the session; Save and apply persists tone defaults.
 Back discards unapplied edits. Shared main-tone volume belongs in Output settings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-curve
+@deffn {Command} emacsvox-tone-editor-curve
+@findex emacsvox-tone-editor-curve
+
+@format
+Choose the ADSR curve. Arrows browse; Enter selects; q cancels.
 @end format
 @end deffn
 

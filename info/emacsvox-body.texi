@@ -5409,8 +5409,8 @@ including tone timing and shape@comma{} and the shared tone volume through Custo
 
 Press capital @kbd{E} in Spelling feedback@comma{} or use @kbd{C-e H s f E}@comma{} for a private
 draft of the complete tone. The title identifies its global spelling scope.
-This editor adds waveform and envelope controls to pitch@comma{} duration and individual
-volume. Changes here affect only the draft until you apply it. Timing stays
+This editor adds waveform@comma{} pitch sweep and envelope controls to pitch@comma{} duration
+and individual volume. Changes here affect only the draft until you apply it. Timing stays
 in Spelling feedback at @kbd{C-e H s f m}.
 
 Use arrows to navigate and Shift-left/right to adjust the selected number.
@@ -5418,7 +5418,21 @@ Use arrows to navigate and Shift-left/right to adjust the selected number.
 @kbd{@key{RET}} selects and returns@comma{} and @kbd{q} cancels. @kbd{?} followed by an item's key
 explains its effect and units. Choose @kbd{w} for waveform: sine is a smooth pure
 tone@comma{} triangle adds a softer harmonic character@comma{} and square sounds brighter.
-Their perceived loudness can differ; compare at a comfortable individual volume.
+Pulse offers adjustable width; Sawtooth has a bright@comma{} buzzy character. Their
+perceived loudness can differ; compare at a comfortable individual volume.
+
+For Pulse@comma{} select @kbd{u} for @emph{Pulse width}. This is the percentage of each cycle
+spent high: 50 percent sounds like Square. Shift-left/right changes it by
+five percentage points within 5–95 percent@comma{} and @kbd{@key{RET}} enters an exact value.
+Only Pulse uses width. Trying another waveform keeps the width in this draft@comma{}
+so you can return to Pulse and continue comparing.
+
+Toggle @kbd{t} for @emph{Pitch sweep} to make pitch rise or fall during the tone. The
+ordinary Pitch control sets the start; @kbd{f} sets End pitch. Shift-left/right
+changes the end by 25 Hz and @kbd{@key{RET}} enters it exactly. Equal start and end
+values keep constant pitch. Turning the sweep off retains End pitch in the
+draft. The sweep occupies the existing duration and does not change timing
+relative to speech.
 
 Choose @kbd{e} for the envelope@comma{} which describes how loudness changes over the
 life of the tone. @emph{Classic} uses the original short fades. @emph{ADSR} uses four
@@ -5440,6 +5454,13 @@ would exceed it@comma{} they shorten proportionally and leave no sustain hold.
 Zero skips a timed stage; endpoint smoothing still limits clicks. Classic
 ignores these four controls@comma{} retaining their values while this draft remains
 open. The initial waveform is sine with Classic fades.
+
+With ADSR@comma{} @kbd{k} chooses the envelope curve. @emph{Linear} uses straight ramps and
+preserves the original ADSR behaviour. @emph{Exponential} starts the attack more
+slowly and starts decay and release more quickly@comma{} while retaining the same
+stage durations and endpoint levels. Arrows browse the choices; @kbd{@key{RET}} selects
+and returns@comma{} and @kbd{q} cancels. Classic ignores the curve but retains its choice
+in the draft.
 
 Press @kbd{@key{SPC}} or @kbd{b} to hear the draft tone alone. Capital @kbd{P} reads the spelling
 sample with the draft tone. Both privately enable the tone even if live
@@ -5470,11 +5491,12 @@ Reopening starts from the current tone. To reverse an applied adjustment@comma{}
 edit it back and apply again@comma{} saving too if you changed the saved defaults.
 
 Individual volume below 100@comma{} harmonic waveforms and ADSR require an Omnivox
-worker with richer-tone support. Older workers omit an unsupported tone while
-retaining speech and earcons@comma{} and the feedback explanation records the omission.
+worker with richer-tone support. Pulse@comma{} Sawtooth@comma{} sweeps and exponential
+curves require extended-tone support. Older workers omit an unsupported tone
+while retaining speech and earcons@comma{} and the feedback explanation records the omission.
 A preview reports missing support instead of playing an inaccurate substitute.
 Your settings remain intact. Use an updated worker@comma{} or restore volume 100@comma{}
-sine and Classic to hear the tone on an older worker.
+sine and Classic and turn off Pitch sweep to hear the tone on an older worker.
 @end enumerate
 
 @item

@@ -5758,10 +5758,10 @@ punctuation default.
           Press capital ‘E’ in Spelling feedback, or use ‘C-e H s f E’,
           for a private draft of the complete tone.  The title
           identifies its global spelling scope.  This editor adds
-          waveform and envelope controls to pitch, duration and
-          individual volume.  Changes here affect only the draft until
-          you apply it.  Timing stays in Spelling feedback at ‘C-e H s f
-          m’.
+          waveform, pitch sweep and envelope controls to pitch, duration
+          and individual volume.  Changes here affect only the draft
+          until you apply it.  Timing stays in Spelling feedback at ‘C-e
+          H s f m’.
 
           Use arrows to navigate and Shift-left/right to adjust the
           selected number.  ‘<RET>’ enters an exact number or opens a
@@ -5769,9 +5769,25 @@ punctuation default.
           returns, and ‘q’ cancels.  ‘?’ followed by an item's key
           explains its effect and units.  Choose ‘w’ for waveform: sine
           is a smooth pure tone, triangle adds a softer harmonic
-          character, and square sounds brighter.  Their perceived
-          loudness can differ; compare at a comfortable individual
-          volume.
+          character, and square sounds brighter.  Pulse offers
+          adjustable width; Sawtooth has a bright, buzzy character.
+          Their perceived loudness can differ; compare at a comfortable
+          individual volume.
+
+          For Pulse, select ‘u’ for _Pulse width_.  This is the
+          percentage of each cycle spent high: 50 percent sounds like
+          Square.  Shift-left/right changes it by five percentage points
+          within 5–95 percent, and ‘<RET>’ enters an exact value.  Only
+          Pulse uses width.  Trying another waveform keeps the width in
+          this draft, so you can return to Pulse and continue comparing.
+
+          Toggle ‘t’ for _Pitch sweep_ to make pitch rise or fall during
+          the tone.  The ordinary Pitch control sets the start; ‘f’ sets
+          End pitch.  Shift-left/right changes the end by 25 Hz and
+          ‘<RET>’ enters it exactly.  Equal start and end values keep
+          constant pitch.  Turning the sweep off retains End pitch in
+          the draft.  The sweep occupies the existing duration and does
+          not change timing relative to speech.
 
           Choose ‘e’ for the envelope, which describes how loudness
           changes over the life of the tone.  _Classic_ uses the
@@ -5790,6 +5806,14 @@ punctuation default.
           smoothing still limits clicks.  Classic ignores these four
           controls, retaining their values while this draft remains
           open.  The initial waveform is sine with Classic fades.
+
+          With ADSR, ‘k’ chooses the envelope curve.  _Linear_ uses
+          straight ramps and preserves the original ADSR behaviour.
+          _Exponential_ starts the attack more slowly and starts decay
+          and release more quickly, while retaining the same stage
+          durations and endpoint levels.  Arrows browse the choices;
+          ‘<RET>’ selects and returns, and ‘q’ cancels.  Classic ignores
+          the curve but retains its choice in the draft.
 
           Press ‘<SPC>’ or ‘b’ to hear the draft tone alone.  Capital
           ‘P’ reads the spelling sample with the draft tone.  Both
@@ -5828,13 +5852,15 @@ punctuation default.
           again, saving too if you changed the saved defaults.
 
           Individual volume below 100, harmonic waveforms and ADSR
-          require an Omnivox worker with richer-tone support.  Older
-          workers omit an unsupported tone while retaining speech and
-          earcons, and the feedback explanation records the omission.  A
-          preview reports missing support instead of playing an
-          inaccurate substitute.  Your settings remain intact.  Use an
-          updated worker, or restore volume 100, sine and Classic to
-          hear the tone on an older worker.
+          require an Omnivox worker with richer-tone support.  Pulse,
+          Sawtooth, sweeps and exponential curves require extended-tone
+          support.  Older workers omit an unsupported tone while
+          retaining speech and earcons, and the feedback explanation
+          records the omission.  A preview reports missing support
+          instead of playing an inaccurate substitute.  Your settings
+          remain intact.  Use an updated worker, or restore volume 100,
+          sine and Classic and turn off Pitch sweep to hear the tone on
+          an older worker.
 
   5. Choose typing and point feedback
 

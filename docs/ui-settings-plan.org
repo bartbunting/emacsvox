@@ -1710,16 +1710,37 @@ verification of subsequently changed code.
   Classic audio and interruption, and qualify the paired development runtime.
   Automated verification and listening acceptance remain separate.
 
+- Tone extensions implemented, 2026-10-16: Pulse width, Sawtooth, linear pitch
+  sweeps and linear/exponential ADSR curves are available in the spelling
+  editor at =C-e H s f E=. Width uses =u=, sweep =t=, end pitch =f= and curve
+  =k=. Help explains their dependencies; Space remains tone-only. Personal
+  presets retain the complete draft. Extended personal tone rules use schema
+  13; older rules and protocol formats remain supported.
+  Automated verification passes 61 focused source tests, with two graphical
+  tests skipped in batch and covered by three passing fresh compiled graphical
+  checks. Earlier shared coverage passed 702 tests. A private Customize
+  save/restart restores the extended shape and preset without changing timing.
+  Native Windows runtime =c7a933a8824837b6= passes muted standalone version 3
+  and timeline version 7 delivery in both timing modes, both workers and after
+  reconnect, plus historical speech replay. Native verification exposed a
+  missing version-7 marker guard; the correction has source regression coverage.
+  Full byte-code rebuild and regenerated manual/reference checks pass.
+  The normal launcher now selects this runtime; existing Emacs processes keep
+  their current workers. Listening remains pending: compare Pulse widths,
+  Sawtooth, rising/falling sweeps and ADSR curves; check Stop, interruption,
+  draft/current comparison, Apply and saved defaults in a fresh session.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
-  spelling feedback. Waveform (sine, triangle, square), Classic/ADSR envelope,
+  spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.
   Fixed duration and proportional stage shortening follow the existing
   Omnivox renderer. Opening and previewing write nothing. Apply changes the
   session; Save and apply persists tone defaults; Back discards unapplied
   edits. Reset affects only the draft. Timing and shared volume stay outside
   this editor.
-  After listening acceptance, add named presets and reuse the editor for
-  capitalization, indentation and personal tone rules while preserving each
+  Named presets and current-tone comparison are implemented. After listening
+  acceptance, reuse the editor for capitalization, indentation and personal
+  tone rules while preserving each
   destination's scope and saving contract. Capitalization/line-cue retained
   drafts and rule saving are not converted by this slice. Platform listening,
   envelope clarity at short durations, interruption, speech masking and

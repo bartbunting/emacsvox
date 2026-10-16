@@ -135,7 +135,7 @@ configuration; callers can then report it as diverged.")
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 12
+(defconst emacsvox-aural-user-data-schema-version 13
   "Current schema version for the personal presentation data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -1390,8 +1390,18 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
                                              (emacsvox-aural--compile-feature-fragment fragment))))
                            fragments))))
 
+(defun emacsvox-aural--personal-extended-tone-p (fragments rules)
+  "Check personal FRAGMENTS and RULES for extended literal tone shapes."
+  (cl-some (lambda (rule)
+             (cl-some (lambda (action) (emacsvox-aural--extended-tone-shape-p
+                                       (emacsvox-aural-action-shape action)))
+                      (emacsvox-aural-rule-actions rule)))
+           (append (emacsvox-aural--compile-rule-list rules 'user "user data" t)
+                   (mapcan (lambda (fragment) (copy-sequence (emacsvox-aural-scheme-rules
+                                                             (emacsvox-aural--compile-feature-fragment fragment)))) fragments))))
+
 (defun emacsvox-aural--validate-user-data (data)
-  "Validate user DATA without promoting supported envelope versions 9 through 12."
+  "Validate user DATA without promoting supported envelope versions 9 through 13."
   (emacsvox-aural--require-plist data "Aural user data")
   (let ((version (plist-get data :schema-version))
         (fragments (plist-get data :feature-fragments))
@@ -1411,10 +1421,10 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
              :enabled-feature-fragments :feature-fragment-order :voice-palettes
              :profiles :active-profile :user-rules))
           collect key)))
-    (unless (memq version '(9 10 11 12))
+    (unless (memq version '(9 10 11 12 13))
       (emacsvox-aural--scheme-error
        "Unsupported user data version: %S" version))
-    (when (memq version '(10 11 12))
+    (when (memq version '(10 11 12 13))
       (let ((keys (cl-loop for (key _) on data by #'cddr collect key)))
         (unless (= (length keys) (length (delete-dups keys)))
           (emacsvox-aural--scheme-error "Duplicate native user data keys"))))
@@ -1434,6 +1444,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
        "Personal voice palettes must be a list"))
     (unless (listp rules)
       (emacsvox-aural--scheme-error "User rules must be a list"))
+    (when (and (< version 13) (emacsvox-aural--personal-extended-tone-p fragments rules))
+      (emacsvox-aural--scheme-error "Extended tone rules require user data schema 13"))
     (when (and (< version 12) (emacsvox-aural--personal-tone-shape-p fragments rules))
       (emacsvox-aural--scheme-error "Tone shape rules require user data schema 12"))
     (when (and (< version 11)
@@ -1505,11 +1517,11 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
 
 (defun emacsvox-aural-migrate-user-data (data)
   "Apply registered migrations to user DATA, preserving supported envelopes.
-Versions 9 through 11 remain unchanged; earlier versions migrate to version 9.
-Native palettes require version 10; tone volume requires 11 and tone shape 12."
+Versions 9 through 13 remain unchanged; earlier versions migrate to version 9.
+Native palettes require 10, tone volume 11, tone shape 12 and extended shapes 13."
   (let ((current (copy-tree data))
         (seen nil))
-    (while (not (memq (plist-get current :schema-version) '(9 10 11 12)))
+    (while (not (memq (plist-get current :schema-version) '(9 10 11 12 13)))
       (let ((version (plist-get current :schema-version)))
         (when (memq version seen)
           (emacsvox-aural--scheme-error
@@ -1734,7 +1746,8 @@ The file is read as data and is never evaluated."
          (symbol-name (plist-get right :id))))))
     (list
      :schema-version
-     (cond ((emacsvox-aural--personal-tone-shape-p fragments emacsvox-aural-user-rules) 12)
+     (cond ((emacsvox-aural--personal-extended-tone-p fragments emacsvox-aural-user-rules) 13)
+           ((emacsvox-aural--personal-tone-shape-p fragments emacsvox-aural-user-rules) 12)
            ((emacsvox-aural--personal-tone-volume-p fragments emacsvox-aural-user-rules) 11)
            ((cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4)) palettes) 10)
            (t 9))

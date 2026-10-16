@@ -10,6 +10,7 @@
 ;; EMACSVOX_CHOICE_TEST_SOURCE=1 only when deliberately exercising source.
 ;; Set EMACSVOX_RICH_TONE_TEST=1 to require richer-tone negotiation and check
 ;; standalone and timeline gain on both workers, including reconnection.
+;; EMACSVOX_EXTENDED_TONE_TEST=1 additionally requires extended tone shapes.
 
 ;;; Code:
 (unless noninteractive (error "Run acceptance in a fresh batch Emacs"))
@@ -50,6 +51,8 @@
       (unless (omnivox--choice-tuning-supported-p process) (error "Server lacks the complete choice bundle"))
       (when (getenv "EMACSVOX_RICH_TONE_TEST")
         (unless (omnivox--rich-tones-supported-p process) (error "Server lacks the richer-tone bundle"))
+        (when (getenv "EMACSVOX_EXTENDED_TONE_TEST")
+          (unless (omnivox--extended-tones-supported-p process) (error "Server lacks the extended-tone bundle")))
         ;; Inventory is requested synchronously below, before owned registration.
         (cl-letf (((symbol-function 'omnivox--request-inventory) #'ignore))
           (omnivox--handle-capabilities-response process capabilities))))
@@ -60,9 +63,10 @@
 
 (defun omnivox-choice-acceptance--tone (timeline &optional mode shape)
   "Verify a quiet tone in MODE with SHAPE, adding speech when TIMELINE is non-nil."
-  (unless (= (omnivox--choice-registration-version
-              (omnivox--choice-current-registration tts-speaker-process)) 6)
-    (error "Richer-tone registration did not select timeline 6"))
+  (unless (memq (omnivox--choice-registration-version
+                 (omnivox--choice-current-registration tts-speaker-process))
+                (if (getenv "EMACSVOX_EXTENDED_TONE_TEST") '(7) '(6 7)))
+    (error "Richer-tone registration did not select the required timeline version"))
   (let* ((action (emacsvox-aural--make-concrete-action
                   :kind 'tone :pitch 880 :duration 40 :audio-mode (or mode 'insert) :shape shape
                   :requested-volume 0.35 :volume-capability 'supported))
@@ -82,7 +86,8 @@
     (omnivox-choice-acceptance--wait (lambda () result))
     (unless (eq result 'completed) (error "Tone dispatch ended %S" result))
     (princ (format "worker=%s tone=%s mode=%s shape=%S gain=0.35 completed\n"
-                   (process-name tts-speaker-process) (if timeline "timeline6" "standalone2")
+                   (process-name tts-speaker-process) (if timeline (format "timeline%d" (omnivox--choice-registration-version (omnivox--choice-current-registration tts-speaker-process)))
+                     (format "standalone%d" (process-get tts-speaker-process emacsvox-aural--presentation-tone-process-property)))
                    (or mode 'insert) shape))))
 (let* ((tts-program "omnivox")
        (tts-speaker-process (omnivox-choice-acceptance--process "choice-live-main" 2001))
@@ -142,9 +147,16 @@
               (unless (= 0 (process-get lane 'tts--dispatch-metadata-bytes)) (error "Retained metadata leaked"))
               (when (getenv "EMACSVOX_RICH_TONE_TEST")
                 (dolist (mode '(insert overlay))
-                  (dolist (shape '(nil (:waveform triangle)
-                                   (:waveform square :envelope
-                                    (:attack-ms 5 :decay-ms 10 :sustain-level 0.4 :release-ms 15))))
+                  (dolist (shape (append '(nil (:waveform triangle)
+                                          (:waveform square :envelope
+                                           (:attack-ms 5 :decay-ms 10 :sustain-level 0.4 :release-ms 15)))
+                                       (when (getenv "EMACSVOX_EXTENDED_TONE_TEST")
+                                         '((:waveform pulse :pulse-width 0.05)
+                                           (:waveform pulse :pulse-width 0.5)
+                                           (:waveform pulse :pulse-width 0.95 :end-frequency-hz 1320
+                                            :envelope-curve exponential :envelope
+                                            (:attack-ms 5 :decay-ms 10 :sustain-level 0.4 :release-ms 15))
+                                           (:waveform sawtooth :end-frequency-hz 220)))))
                     (omnivox-choice-acceptance--tone nil mode shape)
                     (omnivox-choice-acceptance--tone t mode shape))))))
           (let* ((record (car emacsvox-aural-presentation-history))

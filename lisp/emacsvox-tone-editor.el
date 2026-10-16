@@ -51,6 +51,8 @@ private draft; Apply or Save and apply changes the destination cue."
   '((:pitch "Pitch" "Hz" 50 10000 25)
     (:duration "Duration" "milliseconds" 5 1000 5)
     (:volume "Volume" "percent" 0 100 5)
+    (:width "Pulse width" "percent" 5 95 5)
+    (:end-pitch "End pitch" "Hz" 50 10000 25)
     (:attack "Attack" "milliseconds" 0 60000 5)
     (:decay "Decay" "milliseconds" 0 60000 5)
     (:sustain "Sustain" "percent" 0 100 5)
@@ -83,6 +85,11 @@ private draft; Apply or Save and apply changes the destination cue."
   "Return the validated waveform and envelope represented by draft DATA."
   (emacsvox-aural--validate-tone-shape
    (append (list :waveform (plist-get data :waveform))
+           (when (eq (plist-get data :waveform) 'pulse)
+             (list :pulse-width (/ (or (plist-get data :width) 50) 100.0)))
+           (when (plist-get data :sweep) (list :end-frequency-hz (plist-get data :end-pitch)))
+           (when (and (eq (plist-get data :envelope) 'adsr) (eq (plist-get data :curve) 'exponential))
+             (list :envelope-curve 'exponential))
            (when (eq (plist-get data :envelope) 'adsr)
              (list :envelope
                    (list :attack-ms (plist-get data :attack)
@@ -92,10 +99,15 @@ private draft; Apply or Save and apply changes the destination cue."
 
 (defun emacsvox-tone-editor--validate (data)
   "Validate the complete draft DATA before previewing or applying it."
+  ;; Presets saved before extended tones retain their original sound.
+  (dolist (entry `((:width . 50) (:end-pitch . ,(plist-get data :pitch)) (:curve . linear)))
+    (unless (plist-member data (car entry)) (setq data (plist-put data (car entry) (cdr entry)))))
+  (unless (and (memq (plist-get data :sweep) '(nil t)) (memq (plist-get data :curve) '(linear exponential)))
+    (user-error "Invalid sweep or envelope curve"))
   (dolist (spec emacsvox-tone-editor--numbers)
     (let ((value (plist-get data (car spec))))
       (unless (and (numberp value) (<= (nth 3 spec) value (nth 4 spec))
-                   (or (memq (car spec) '(:pitch :sustain)) (integerp value)))
+                   (or (memq (car spec) '(:pitch :end-pitch :width :sustain)) (integerp value)))
         (user-error "Invalid %s: %s" (nth 1 spec) value))))
   (unless (memq (plist-get data :envelope) '(classic adsr))
     (user-error "Invalid tone envelope"))
@@ -114,9 +126,11 @@ private draft; Apply or Save and apply changes the destination cue."
     (emacsvox-tone-editor--validate candidate)
     (emacsvox-tone-editor--put key value)
     (emacsvox-tone-editor--say (format "%s %s%s" value (nth 2 spec)
-                                     (if (and (memq key '(:attack :decay :sustain :release))
-                                              (eq (emacsvox-tone-editor--get :envelope) 'classic))
-                                         "; used with ADSR" "")))))
+                                     (cond ((and (memq key '(:attack :decay :sustain :release))
+                                                 (eq (emacsvox-tone-editor--get :envelope) 'classic)) "; used with ADSR")
+                                           ((and (eq key :width) (not (eq (emacsvox-tone-editor--get :waveform) 'pulse))) "; used with Pulse")
+                                           ((and (eq key :end-pitch) (not (emacsvox-tone-editor--get :sweep))) "; sweep is off")
+                                           (t ""))))))
 
 (defun emacsvox-tone-editor--number-label (key)
   "Describe numeric draft KEY and its units."
@@ -254,7 +268,8 @@ replacement; bundled names cannot be replaced."
 
 (defun emacsvox-tone-editor--save ()
   "Save and apply this cue's tone defaults through Customize.
-This saves pitch, duration, individual volume, waveform and envelope.
+This saves pitch, duration, individual volume, waveform, Pulse width, sweep
+and envelope controls.
 Timing, cue enablement, voices, earcons and shared tone volume stay unchanged."
   (interactive) (emacsvox-tone-editor--apply t))
 
@@ -299,6 +314,30 @@ Use Preview to hear it, then Apply or Save and apply if you want to keep it."
   "Set draft pitch in hertz; Shift arrows change it by 25 Hz. Range: 50–10000 Hz."
   (interactive) (emacsvox-tone-editor--number :pitch))
 (put 'emacsvox-tone-editor--pitch 'emacsvox-tone-field :pitch)
+
+(defun emacsvox-tone-editor--width ()
+  "Set Pulse width from 5 to 95 percent; Shift arrows change it by 5 points.
+Width is the high part of each cycle. 50 percent sounds like Square; other
+widths change the harmonic character. Only Pulse uses this value. The draft
+retains it while you try other waveforms. Preview and Apply remain separate."
+  (interactive) (emacsvox-tone-editor--number :width))
+(put 'emacsvox-tone-editor--width 'emacsvox-tone-field :width)
+
+(defun emacsvox-tone-editor--sweep ()
+  "Toggle a linear pitch sweep within the tone's existing duration.
+When enabled, pitch moves from Pitch to End pitch. A higher end rises and a
+lower end falls. Turning it off keeps End pitch in the draft for later use.
+This changes only the draft; timing relative to speech is unchanged."
+  (interactive)
+  (emacsvox-tone-editor--put :sweep (not (emacsvox-tone-editor--get :sweep)))
+  (emacsvox-tone-editor--say (if (emacsvox-tone-editor--get :sweep) "Pitch sweep on" "Pitch sweep off")))
+
+(defun emacsvox-tone-editor--end-pitch ()
+  "Set the sweep's final pitch from 50 to 10000 Hz; Shift arrows change 25 Hz.
+Used only when Pitch sweep is on. Pitch remains the starting frequency. Equal
+start and end values keep constant pitch. Preview and Apply remain separate."
+  (interactive) (emacsvox-tone-editor--number :end-pitch))
+(put 'emacsvox-tone-editor--end-pitch 'emacsvox-tone-field :end-pitch)
 
 (defun emacsvox-tone-editor--duration ()
   "Set total draft duration in milliseconds, including all envelope stages.
@@ -361,6 +400,18 @@ The renderer limits high harmonics. Compare at a comfortable individual volume.
 Selecting changes only this draft; Apply and Save are separate actions."
   (interactive) (emacsvox-tone-editor--choose :waveform 'square))
 
+(defun emacsvox-tone-editor--pulse ()
+  "Use a pulse waveform with adjustable high-time percentage.
+At 50 percent width it sounds like Square. Narrower or wider pulses change
+its character. Adjust Pulse width in the editor; only the draft changes."
+  (interactive) (emacsvox-tone-editor--choose :waveform 'pulse))
+
+(defun emacsvox-tone-editor--sawtooth ()
+  "Use a bright, buzzy waveform with both odd and even harmonics.
+Compare at a comfortable individual volume, especially alongside speech.
+Selecting changes only the draft; Apply and Save remain separate."
+  (interactive) (emacsvox-tone-editor--choose :waveform 'sawtooth))
+
 (transient-define-prefix emacsvox-tone-editor-waveform ()
   "Choose draft waveform; arrows browse without applying a choice.
 Enter selects and returns. Cancel keeps the previous draft value."
@@ -371,12 +422,17 @@ Enter selects and returns. Cancel keeps the previous draft value."
     emacsvox-tone-editor--triangle :transient transient--do-replace)
    ("r" (lambda () (emacsvox-tone-editor--choice-label :waveform 'square))
     emacsvox-tone-editor--square :transient transient--do-replace)
+   ("p" (lambda () (emacsvox-tone-editor--choice-label :waveform 'pulse))
+    emacsvox-tone-editor--pulse :transient transient--do-replace)
+   ("w" (lambda () (emacsvox-tone-editor--choice-label :waveform 'sawtooth))
+    emacsvox-tone-editor--sawtooth :transient transient--do-replace)
    ]
   ["Finish" ("q" "Cancel" transient-quit-one) ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (emacsvox-tone-editor--choice-setup
    'emacsvox-tone-editor-waveform :waveform
-   '((sine . emacsvox-tone-editor--sine) (triangle . emacsvox-tone-editor--triangle) (square . emacsvox-tone-editor--square))))
+   '((sine . emacsvox-tone-editor--sine) (triangle . emacsvox-tone-editor--triangle) (square . emacsvox-tone-editor--square) (pulse . emacsvox-tone-editor--pulse)
+     (sawtooth . emacsvox-tone-editor--sawtooth))))
 
 (defun emacsvox-tone-editor--classic ()
   "Use the original short fades at each end of the tone.
@@ -406,6 +462,25 @@ Enter selects and returns. Cancel keeps the previous draft value."
    'emacsvox-tone-editor-envelope :envelope
    '((classic . emacsvox-tone-editor--classic) (adsr . emacsvox-tone-editor--adsr))))
 
+(defun emacsvox-tone-editor--linear ()
+  "Use straight volume ramps for each ADSR stage, preserving the original ADSR.
+Only ADSR uses the curve. Selecting changes only the draft and returns."
+  (interactive) (emacsvox-tone-editor--choose :curve 'linear))
+(defun emacsvox-tone-editor--exponential ()
+  "Use curved ADSR ramps: a slower initial rise and faster initial decay or release.
+Stage durations, endpoint levels and total tone duration stay the same.
+Only ADSR uses this curve; the draft retains it when you choose Classic."
+  (interactive) (emacsvox-tone-editor--choose :curve 'exponential))
+(transient-define-prefix emacsvox-tone-editor-curve ()
+  "Choose the ADSR curve. Arrows browse; Enter selects; q cancels."
+  ["ADSR curve"
+   ("l" (lambda () (emacsvox-tone-editor--choice-label :curve 'linear)) emacsvox-tone-editor--linear :transient transient--do-replace)
+   ("e" (lambda () (emacsvox-tone-editor--choice-label :curve 'exponential)) emacsvox-tone-editor--exponential :transient transient--do-replace)]
+  ["Finish" ("q" "Cancel" transient-quit-one) ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (emacsvox-tone-editor--choice-setup 'emacsvox-tone-editor-curve :curve
+                                    '((linear . emacsvox-tone-editor--linear) (exponential . emacsvox-tone-editor--exponential))))
+
 (transient-define-prefix emacsvox-tone-editor ()
   "Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
 Enter sets an exact number or opens a choice list.  Preview leaves live settings
@@ -416,9 +491,14 @@ Back discards unapplied edits. Shared main-tone volume belongs in Output setting
    ("p" (lambda () (emacsvox-tone-editor--number-label :pitch)) emacsvox-tone-editor--pitch :transient t)
    ("d" (lambda () (emacsvox-tone-editor--number-label :duration)) emacsvox-tone-editor--duration :transient t)
    ("v" (lambda () (emacsvox-tone-editor--number-label :volume)) emacsvox-tone-editor--volume :transient t)
-   ("w" (lambda () (concat "Waveform: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :waveform)))) emacsvox-tone-editor-waveform :transient transient--do-stack)]
+   ("w" (lambda () (concat "Waveform: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :waveform)))) emacsvox-tone-editor-waveform :transient transient--do-stack)
+   ("u" (lambda () (concat (emacsvox-tone-editor--number-label :width) (unless (eq (emacsvox-tone-editor--get :waveform) 'pulse) "; used with Pulse"))) emacsvox-tone-editor--width :transient t)]
+  ["Pitch movement"
+   ("t" (lambda () (concat "Pitch sweep: " (if (emacsvox-tone-editor--get :sweep) "on" "off"))) emacsvox-tone-editor--sweep :transient t)
+   ("f" (lambda () (emacsvox-tone-editor--number-label :end-pitch)) emacsvox-tone-editor--end-pitch :transient t)]
   ["Envelope (stage controls apply to ADSR)"
    ("e" (lambda () (concat "Envelope: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :envelope)))) emacsvox-tone-editor-envelope :transient transient--do-stack)
+   ("k" (lambda () (concat "Curve: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :curve)))) emacsvox-tone-editor-curve :transient transient--do-stack)
    ("a" (lambda () (emacsvox-tone-editor--number-label :attack)) emacsvox-tone-editor--attack :transient t)
    ("c" (lambda () (emacsvox-tone-editor--number-label :decay)) emacsvox-tone-editor--decay :transient t)
    ("s" (lambda () (emacsvox-tone-editor--number-label :sustain)) emacsvox-tone-editor--sustain :transient t)

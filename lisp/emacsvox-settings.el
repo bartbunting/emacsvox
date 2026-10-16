@@ -97,7 +97,7 @@
     ("Spelling tone pitch" emacsvox-spelling emacsvox-spelling "p")
     ("Spelling tone duration" emacsvox-spelling emacsvox-spelling "d")
     ("Spelling tone volume" emacsvox-spelling emacsvox-spelling "l")
-    ("Spelling tone editor waveform envelope attack decay sustain release" emacsvox-spelling emacsvox-spelling "E")
+    ("Spelling tone editor waveform pulse width sawtooth pitch sweep envelope curve attack decay sustain release presets" emacsvox-spelling emacsvox-spelling "E")
     ("Spelling tone timing before or alongside speech" emacsvox-spelling emacsvox-spelling "m")
     ("Character echo" emacsvox-interaction emacsvox-interaction "c")
     ("Word echo" emacsvox-interaction emacsvox-interaction "w")

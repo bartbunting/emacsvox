@@ -365,5 +365,130 @@
         (should-error (emacsvox-aural--tone-shape-deliverable-p '(:waveform triangle) 5)
                       :type 'user-error)))))
 
+(defconst omnivox-extended-tone-test--shape
+  '(:waveform pulse :pulse-width 0.25 :end-frequency-hz 1320 :envelope-curve exponential
+    :envelope (:attack-ms 5 :decay-ms 10 :sustain-level 0.4 :release-ms 15)))
+
+(defun omnivox-extended-tone-test--enable (process)
+  (omnivox-rich-tone-test--enable process)
+  (emacsvox-aural-enable-presentation-tone process 3)
+  (process-put process omnivox--control-capabilities-property
+               (list :features (append '("rich_tones_v2" "presentation_tone_v3" "presentation_timeline_v7")
+                                       (plist-get (process-get process omnivox--control-capabilities-property) :features)))))
+
+(ert-deftest omnivox-extended-tone-negotiation-and-private-workers ()
+  (omnivox-native-runtime-test--with-speech
+    (dolist (missing '("rich_tones_v2" "presentation_tone_v3" "presentation_timeline_v7"))
+      (omnivox-extended-tone-test--enable speaker)
+      (process-put speaker omnivox--control-capabilities-property
+                   (list :features (remove missing (plist-get (process-get speaker omnivox--control-capabilities-property) :features))))
+      (should-not (omnivox--extended-tones-supported-p speaker)))
+    (omnivox-extended-tone-test--enable speaker)
+    (process-put speaker omnivox--choice-registration-property nil)
+    (omnivox-native-runtime-test--register)
+    (should (= (omnivox--choice-registration-version (omnivox--choice-current-registration speaker)) 7))
+    (tts-speak (propertize "ordinary" 'personality 'bolden))
+    (tts-notify (propertize "notification" 'personality 'bolden) t)
+    (dolist (write writes)
+      (should (= (plist-get (omnivox-choice-consumer-test--timeline write) :protocol_version)
+                 (if (eq (car write) speaker) 7 5))))
+    (let ((id (omnivox-choice-playback-test--submit)))
+      (omnivox-choice-playback-test--event speaker (omnivox-native-runtime-test--start id))
+      (omnivox-choice-playback-test--event speaker (omnivox-native-runtime-test--receipt id speaker))
+      (should (eq (plist-get (omnivox-last-realized-voice 'bolden) :choice-status) 'verified)))
+    (omnivox-rich-tone-test--enable speaker)
+      (process-put speaker omnivox--control-capabilities-property
+                   (list :features (cl-set-difference
+                                    (plist-get (process-get speaker omnivox--control-capabilities-property) :features)
+                                    '("rich_tones_v2" "presentation_tone_v3" "presentation_timeline_v7") :test #'equal)))
+    (should-error (omnivox--choice-current-registration speaker))))
+
+(ert-deftest omnivox-extended-tone-both-paths-framing-and-old-worker ()
+  (omnivox-native-runtime-test--with-speech
+    (omnivox-extended-tone-test--enable speaker)
+    (process-put speaker omnivox--choice-registration-property nil)
+    (omnivox-native-runtime-test--register)
+    (let* ((shape (copy-tree omnivox-extended-tone-test--shape))
+           (action (omnivox-rich-tone-test--shaped-action shape))
+           (run (omnivox-choice-timeline-test--run 'bolden nil)) commands)
+      (setf (plist-get shape :pulse-width) 0.75)
+      (setf (emacsvox-aural-concrete-plan-before (car run)) (list action))
+      (let* ((document (car (emacsvox-aural--build-structured-timeline
+                            2 91 (list run) (omnivox--choice-current-registration speaker))))
+             (tone (seq-find (lambda (a) (equal (plist-get a :type) "tone")) (plist-get document :actions)))
+             (emacsvox-aural--timeline-frame-max-bytes 128)
+             (emacsvox-aural--timeline-encoded-fragment-max-bytes 172))
+        (should (= (plist-get document :protocol_version) 7))
+        (should (equal (plist-get tone :shape)
+                       '(:waveform "pulse" :pulse_width 0.25 :end_frequency_hz 1320 :envelope_curve "exponential"
+                         :envelope (:attack_ms 5 :decay_ms 10 :sustain_level 0.4 :release_ms 15))))
+        (should (cl-every (lambda (part) (string-prefix-p "emacsvox_timeline_part 7 " part))
+                          (emacsvox-aural--frame-structured-timeline document))))
+      (cl-letf (((symbol-function 'emacsvox-aural--delivery-send-typed)
+                 (lambda (_ command _kind) (push command commands))))
+        (emacsvox-aural-queue-concrete-action action))
+      (should (equal (car commands) "emacsvox_tone 3 overlay 880 40 1.0 pulse adsr 5 10 0.4 15 0.25 1320 exponential\n"))
+      (should (emacsvox-aural--legacy-frame-command-p (string-trim (car commands))))
+      (dolist (bad '("emacsvox_tone 3 overlay 880 40 1 pulse classic 0.99 - -"
+                     "emacsvox_tone 3 overlay 880 40 1 sine classic 0.5 - -"
+                     "emacsvox_tone 3 overlay 880 40 1 sine classic - 0 -"
+                     "emacsvox_tone 3 overlay 880 40 1 pulse classic 0.5 - exponential"))
+        (should-not (emacsvox-aural--legacy-frame-command-p bad)))
+      (omnivox-rich-tone-test--enable speaker)
+      (process-put speaker omnivox--control-capabilities-property
+                   (list :features (cl-set-difference
+                                    (plist-get (process-get speaker omnivox--control-capabilities-property) :features)
+                                    '("rich_tones_v2" "presentation_tone_v3" "presentation_timeline_v7") :test #'equal)))
+      (should-not (emacsvox-aural--tone-shape-deliverable-p omnivox-extended-tone-test--shape 6))
+      (should (emacsvox-aural-concrete-action-shape-degradation
+               (omnivox-rich-tone-test--shaped-action omnivox-extended-tone-test--shape)))
+      (let ((emacsvox-aural--exact-tone-preview t))
+        (should-error (emacsvox-aural-queue-concrete-action action) :type 'user-error)))))
+
+(ert-deftest omnivox-extended-tone-storage-and-validation ()
+  (emacsvox-test--with-transport-scheme
+    (setq emacsvox-aural-user-rules
+          `((:id shaped :match (:role heading)
+             :render (:before ((:id tone :kind tone :pitch 880 :duration 40
+                               :shape ,omnivox-extended-tone-test--shape))))))
+    (let ((data (emacsvox-aural-user-data)) (file (make-temp-file "extended-tone-")))
+      (unwind-protect
+          (progn
+            (should (= (plist-get data :schema-version) 13))
+            (emacsvox-aural--write-user-data data file)
+            (should (equal (emacsvox-aural-read-user-data file) data))
+            (should-error (emacsvox-aural--validate-user-data (plist-put (copy-tree data) :schema-version 12))))
+        (delete-file file))))
+  (dolist (shape '((:waveform pulse) (:waveform pulse :pulse-width 0.99)
+                  (:waveform pulse :pulse-width 0.0e+NaN) (:waveform sawtooth :pulse-width 0.5)
+                  (:waveform sine :end-frequency-hz 0) (:waveform sine :end-frequency-hz 0.0e+NaN)
+                  (:waveform sine :envelope-curve exponential)))
+    (should-error (emacsvox-aural--validate-tone-shape shape))))
+
+(ert-deftest omnivox-extended-tone-replay-retains-shape-and-preflights-capability ()
+  (let* ((record (emacsvox-replay-test--record))
+         (plan (emacsvox-aural-presentation-record-plan record))
+         (action (emacsvox-aural--make-concrete-action
+                  :kind 'tone :pitch 880 :duration 40 :audio-mode 'overlay
+                  :shape (copy-tree omnivox-extended-tone-test--shape))))
+    (setf (emacsvox-aural-concrete-plan-before plan) (list action))
+    (emacsvox-test--with-complete-preview
+      (omnivox-preview-test--bundle speaker)
+      (omnivox-rich-tone-test--enable speaker)
+      (process-put speaker omnivox--control-capabilities-property
+                   (list :features (cl-set-difference
+                                    (plist-get (process-get speaker omnivox--control-capabilities-property) :features)
+                                    '("rich_tones_v2" "presentation_tone_v3" "presentation_timeline_v7") :test #'equal)))
+      (should-error (emacsvox-aural-replay--play record) :type 'user-error)
+      (should-not writes)
+      (should (= stops 0))
+      (omnivox-extended-tone-test--enable speaker)
+      (process-put speaker tts--tracked-playback-completion-property t)
+      (let ((operation (emacsvox-aural-replay--play record)))
+        (should (seq-some (lambda (write) (string-match-p "pulse adsr 5 10 0.4 15 0.25 1320 exponential" write)) writes))
+        (tts-stop)
+        (should (emacsvox-aural-replay--operation-finished operation)))
+      (omnivox-preview-test--clean speaker))))
+
 (provide 'omnivox-rich-tone-tests)
 ;;; omnivox-rich-tone-tests.el ends here

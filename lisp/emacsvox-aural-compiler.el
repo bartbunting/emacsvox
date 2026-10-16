@@ -825,6 +825,7 @@ according to `emacsvox-aural-unsupported-volume-policy'."
        :reason 'unsupported-volume)))))
 
 (declare-function emacsvox-aural--tone-volume-supported-p "emacsvox-aural-transport" ())
+(declare-function omnivox--extended-tones-supported-p "omnivox-voices" (process))
 
 (defun emacsvox-aural--compile-tone-volume (action facts)
   "Freeze ACTION's per-tone gain from FACTS and record missing support."
@@ -969,8 +970,10 @@ according to `emacsvox-aural-unsupported-volume-policy'."
         :kind 'tone
         :shape shape
         :shape-degradation
-        (unless (or (emacsvox-aural--classic-tone-shape-p shape)
-                    (emacsvox-aural--tone-volume-supported-p))
+        (unless (and (or (emacsvox-aural--classic-tone-shape-p shape)
+                         (emacsvox-aural--tone-volume-supported-p))
+                     (or (not (emacsvox-aural--extended-tone-shape-p shape))
+                         (omnivox--extended-tones-supported-p tts-speaker-process)))
           (list :action (emacsvox-aural-action-id action) :property 'shape
                 :requested (copy-tree shape) :policy 'omit :reason 'unsupported-tone-shape
                 :message "Tone omitted: this worker lacks richer-tone support"))

@@ -110,9 +110,12 @@ retaining speech and earcons.  Preview reports missing support."
 
 (defcustom emacsvox-flyspell-tone-shape '(:waveform sine)
   "Waveform and optional ADSR envelope of the spelling tone.
-Waveform is sine, triangle or square.  Omit the envelope for Classic fades.
+Waveform is sine, triangle, square, pulse or sawtooth. Pulse requires
+:pulse-width from 0.05 to 0.95. Omit the envelope for Classic fades.
 ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
 Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+Optional :end-frequency-hz makes a linear pitch sweep; :envelope-curve selects
+linear or exponential ADSR. These extensions need extended-tone support.
 Total duration stays fixed: oversized stages are shortened proportionally.
 Non-Classic shapes require richer-tone support.  Older workers omit the tone;
 explicit previews report missing support.  Speech and earcons remain usable."
