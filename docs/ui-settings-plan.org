@@ -1818,6 +1818,21 @@ verification of subsequently changed code.
   item. Character review and spoken full Help remain follow-ups. Defer the
   maintained manual update until the trial's bindings and behaviour settle.
 
+- Shared diagnostic log lock prompts, 2026-10-16: multiple normal-profile
+  sessions append to the same aural submissions log. Emacs's =write-region=
+  took an editing lock during these background appends, allowing concurrent
+  logging to stop speech behind a lock-conflict question. The logger now
+  binds =create-lockfiles= to nil only during its file operations. Normal
+  editing protection and another session's existing lock remain intact.
+  A regression holds the log lock in a separate Emacs process and checks
+  initial creation, ordinary append and rotation. It reproduces the old
+  failure and passes with the fix, including owner-only permissions and
+  normal lock conflict detection outside logging. All five focused diagnostic
+  tests pass from source and in a fresh Emacs using compiled code.
+  Incremental byte-code, preflight and the documentation review gate pass.
+  Existing sessions retain their
+  loaded logger until restarted; no live locks or buffers were modified.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.
