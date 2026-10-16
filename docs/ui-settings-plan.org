@@ -1795,6 +1795,29 @@ verification of subsequently changed code.
   running sessions were not modified. Restart to load the corrected profile,
   then repeat the setting, Save and restart check.
 
+- Transient item review trial, 2026-10-16: =C-e l= repeats the selected item's
+  description, value and key; =M-f= and =M-b= review its words, and =C-e w=
+  repeats the current word. The first word command starts at the first word.
+  Review keeps menu focus and Enter's target unchanged. Selecting another
+  item, changing its text or reopening the menu resets review; repeating the
+  whole item also starts word review over. Word boundaries use whitespace
+  so punctuation and numeric values stay together. Boundary feedback says
+  "Start of item" or "End of item" without wrapping. All review speech uses
+  the existing interruptible main-lane path.
+  Bindings apply through the shared Transient navigation map, with each
+  menu's suffixes retaining precedence. Installed Transient and Magit sources
+  show no conflicting suffixes for these keys. Regression coverage checks
+  precedence explicitly. Forty-six source tests pass; six graphical tests
+  skip in batch and pass in a fresh compiled graphical run. That run also
+  passes settings-menu review, adjustment, Enter and return checks, plus
+  review in Magit dispatch, across all three navigation styles: eight
+  graphical tests in total. Incremental byte-code, preflight and the
+  documentation review gate pass.
+  Listening remains open: repeat an unclear item, review forward/backward,
+  check interruption and boundary feedback, then adjust or activate the same
+  item. Character review and spoken full Help remain follow-ups. Defer the
+  maintained manual update until the trial's bindings and behaviour settle.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.

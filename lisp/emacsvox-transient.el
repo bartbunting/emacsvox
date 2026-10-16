@@ -1056,11 +1056,75 @@ When non-nil, preserve compatibility ICON."
                  (plist-get (get-text-property 0 emacsvox-aural-facts-property text)
                             :states)))))
 
+(defvar-local emacsvox-transient--review-state nil
+  "Selected item's announcement and independent word review position.")
+
+(defun emacsvox-transient--review (movement)
+  "Review the selected item without moving menu focus.
+Nil MOVEMENT repeats the whole item and resets word review.  Zero repeats
+the current word; other integers move that many words.  The first word
+command starts at the first word.  Keep punctuation and numeric values
+together by separating words at whitespace."
+  (with-selected-window (emacsvox-transient--navigation-window)
+    (unless (and transient--prefix (button-at (point)))
+      (user-error "Select a menu item with Up or Down first"))
+    (let* ((button (button-at (point)))
+           (object (button-get button 'button-data))
+           (rendered (emacsvox-aural-source-substring
+                      (button-start button) (button-end button)))
+           (text (or (emacsvox-transient--choice-text object nil rendered) rendered))
+           (target (list transient--prefix (button-start button) object)))
+      (unless (and (eq transient--prefix
+                       (car (plist-get emacsvox-transient--review-state :target)))
+                   (equal target (plist-get emacsvox-transient--review-state :target))
+                   (equal text (plist-get emacsvox-transient--review-state :text)))
+        (setq emacsvox-transient--review-state
+              (list :target target :text text
+                    :words (split-string text "[[:space:]]+" t) :index -1)))
+      (let* ((words (plist-get emacsvox-transient--review-state :words))
+             (index (plist-get emacsvox-transient--review-state :index))
+             (next (if (< index 0) 0 (+ index (or movement 0))))
+             (content
+              (cond
+               ((null movement)
+                (plist-put emacsvox-transient--review-state :index -1)
+                text)
+               ((null words) "No words in this item.")
+               ((< next 0) "Start of item.")
+               ((>= next (length words)) "End of item.")
+               (t
+                (plist-put emacsvox-transient--review-state :index next)
+                (nth next words)))))
+        (emacsvox-transient--submit-text
+         content (emacsvox-transient--item-facts 'command 'review-item)
+         'navigation)))))
+
+(defun emacsvox-transient--repeat-item ()
+  "Repeat the selected item's name, value and key; restart word review."
+  (interactive)
+  (emacsvox-transient--review nil))
+
+(defun emacsvox-transient--review-word ()
+  "Repeat the current review word without changing the selected item."
+  (interactive)
+  (emacsvox-transient--review 0))
+
+(defun emacsvox-transient--review-next-word (n)
+  "Review N words forward without changing the selected menu item."
+  (interactive "p")
+  (emacsvox-transient--review n))
+
+(defun emacsvox-transient--review-previous-word (n)
+  "Review N words backward without changing the selected menu item."
+  (interactive "p")
+  (emacsvox-transient--review (- n)))
+
 (defun emacsvox-transient--speak-button (&optional previous direction section-only)
   "Present the current button, noting section changes and wraps from PREVIOUS.
 DIRECTION is positive for forward movement, negative for backward movement.
 SECTION-ONLY speaks its section while retaining the button's facts and cues."
   (with-selected-window (emacsvox-transient--navigation-window)
+    (setq emacsvox-transient--review-state nil)
     (when-let* ((button (button-at (point)))
                 (start (button-start button))
                 (end (button-end button)))
@@ -1163,6 +1227,13 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
 
 (defun emacsvox-transient-setup ()
   "Emacsvox Transient Customizations"
+  ;; Navigation bindings remain below each menu's own suffix bindings.
+  (dolist (binding '(("C-e l" . emacsvox-transient--repeat-item)
+                     ("C-e w" . emacsvox-transient--review-word)
+                     ("M-f" . emacsvox-transient--review-next-word)
+                     ("M-b" . emacsvox-transient--review-previous-word)))
+    (keymap-set transient-popup-navigation-map (car binding) (cdr binding))
+    (define-key transient-predicate-map (vector (cdr binding)) 'transient--do-move))
   (keymap-set  transient-popup-navigation-map "C-j" #'transient-push-button)
   (define-key transient-predicate-map
               [emacsvox-transient-previous-section] 'transient--do-move)
