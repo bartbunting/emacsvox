@@ -496,5 +496,60 @@
               (should (equal emacsvox-flyspell-tone-shape '(:waveform square))))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
 
+(ert-deftest emacsvox-spelling-switches-graphical-save-survives-restart ()
+  "Save switches with S after tone editing and restore them in a fresh Emacs."
+  (skip-unless (display-graphic-p))
+  (let* ((custom-file (make-temp-file "emacsvox-spelling-switches-" nil ".el"))
+         (user-init-file custom-file)
+         (symbols (append emacsvox-spelling--options '(tts-main-tone-volume)))
+         (defaults (mapcar (lambda (symbol) (cons symbol (default-value symbol))) symbols))
+         (properties (mapcar (lambda (symbol) (cons symbol (copy-tree (symbol-plist symbol)))) symbols))
+         (switches '(emacsvox-flyspell-use-voice emacsvox-flyspell-use-tone
+                     emacsvox-flyspell-use-earcon)))
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-test--with-aural-menu
+            (switch-to-buffer source)
+            (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+            (cl-mapc #'set-default switches '(t nil t))
+            (let ((transient--prefix nil) (transient-show-menu t))
+              (unwind-protect
+                  (progn
+                    (execute-kbd-macro (kbd "<f8> s f"))
+                    (dolist (expected '((nil t nil) (t nil t)))
+                      (execute-kbd-macro (kbd "v t e E q S"))
+                      (should (eq (oref transient--prefix command) 'emacsvox-spelling))
+                      (should (equal (mapcar #'default-value switches) expected))
+                      (should (> (file-attribute-size (file-attributes custom-file)) 0))
+                      ;; Support Customize loaded before or after the menu.
+                      (dolist (custom-first '(t nil))
+                        (with-temp-buffer
+                          (let* ((load-custom `(load ,custom-file nil t))
+                                 (load-menu '(require 'emacsvox-spelling))
+                                 (check
+                                  `(progn
+                                     ,(if custom-first load-custom load-menu)
+                                     ,(if custom-first load-menu load-custom)
+                                     (unless (equal (mapcar #'default-value ',switches) ',expected)
+                                       (error "Spelling switches reverted after restart"))
+                                     (cl-mapc
+                                      (lambda (symbol value label)
+                                        (unless (equal (emacsvox-spelling--label symbol label)
+                                                       (concat label (if value ": on" ": off")))
+                                          (error "Spelling menu displays stale switch state")))
+                                      ',switches ',expected '("Voice" "Tone" "Earcon"))))
+                                 (status
+                                  (call-process
+                                   (expand-file-name invocation-name invocation-directory)
+                                   nil (current-buffer) nil "-Q" "--batch"
+                                   "-L" emacsvox-lisp-directory "-l" "emacsvox-preamble.el"
+                                   "--eval" (prin1-to-string check))))
+                            (ert-info ((buffer-string)) (should (equal status 0))))))))
+                (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))
+      (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+      (dolist (entry properties) (setplist (car entry) (cdr entry)))
+      (when (get-file-buffer custom-file) (kill-buffer (get-file-buffer custom-file)))
+      (delete-file custom-file))))
+
 (provide 'emacsvox-spelling-tests)
 ;;; emacsvox-spelling-tests.el ends here

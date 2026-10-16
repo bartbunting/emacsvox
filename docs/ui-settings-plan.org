@@ -1755,6 +1755,21 @@ verification of subsequently changed code.
   which Save action was used. In the editor =S= stops, =W= saves and applies,
   and Back discards an unapplied draft. No personal defaults were changed.
 
+- Spelling switch persistence check, 2026-10-16: a fresh compiled graphical
+  regression opens Spelling feedback, toggles Voice, Tone and Earcon, enters
+  the tone editor, returns, and presses the parent's actual =S= binding.
+  Both tone-only =(nil t nil)= and the factory combination =(t nil t)=
+  survive separate Emacs starts with Customize loaded before or after the
+  menu libraries. Menu labels reflect the restored values. Eleven focused
+  batch tests pass; three graphical checks skip in batch. The new graphical
+  check passes separately; the other two retain their earlier passing runs.
+  The documentation review gate passes. The open test session has tone-only
+  values but no saved spelling properties, and its writable Customize file
+  contains no spelling entries. Its =S= binding resolves to the expected
+  save command. The reported loss remains unreproduced; check the feedback
+  and file after an actual =S= press in that session. Personal defaults remain
+  unchanged by the tests.
+
 - Tone-editor follow-up: the common draft editor is implemented for global
   spelling feedback. Waveforms, Pulse width, pitch sweep, Classic/ADSR envelope,
   attack, decay, sustain and release join pitch, duration and individual volume.
