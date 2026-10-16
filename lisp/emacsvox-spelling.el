@@ -150,7 +150,7 @@ Read the spelling sample to compare timing; a tone alone cannot demonstrate it."
   (transient--show)
   (with-selected-window transient--window
     (transient--goto-button
-     (transient-suffix-object
+     (emacsvox-transient--menu-suffix
       (if (eq emacsvox-flyspell-tone-timing 'overlay)
           'emacsvox-spelling--alongside 'emacsvox-spelling--before))))
   (emacsvox-transient--speak-button))

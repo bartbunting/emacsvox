@@ -273,9 +273,11 @@
 (ert-deftest emacsvox-settings-menu-search-cancel-keeps-menu ()
   "Cancelling completion returns to the original menu without a mutation."
   (emacsvox-test--with-settings
-    (dolist (key '("/ C-g" "a C-g"))
-      (condition-case nil (execute-kbd-macro (kbd key)) (quit nil))
-      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
+    (dolist (entry '(("/ C-g" . emacsvox-settings-search)
+                     ("a C-g" . emacsvox-settings-search-actions)))
+      (condition-case nil (execute-kbd-macro (kbd (car entry))) (quit nil))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+      (should (eq (emacsvox-test--menu-focused-command) (cdr entry))))
     (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
     (should (= (with-current-buffer source (point)) 3))
     (should-not (file-exists-p custom-file))))

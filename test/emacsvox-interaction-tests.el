@@ -88,7 +88,7 @@
 (ert-deftest emacsvox-interaction-menu-graphical-preview-and-source ()
   "Point previews use the displayed scope and captured item without moving point."
   (emacsvox-test--with-interaction
-    (execute-kbd-macro (kbd "i p T o n e TAB RET"))
+    (execute-kbd-macro (kbd "i p t"))
     (should (eq (buffer-local-value 'emacsvox-show-point-presentation source) 'tone))
     (let (seen)
       (cl-letf (((symbol-function 'emacsvox-aural-submit)
@@ -152,7 +152,7 @@
 (ert-deftest emacsvox-interaction-menu-graphical-defaults-survive-startup ()
   "Explicit Save persists scoped choices and global mode settings before loading Lisp."
   (emacsvox-test--with-interaction
-    (execute-kbd-macro (kbd "c w l i m p T o n e TAB RET f d 0 . 5 RET"))
+    (execute-kbd-macro (kbd "c w l i m p t f d 0 . 5 RET"))
     (should-not (file-exists-p custom-file))
     (execute-kbd-macro (kbd "S"))
     (with-temp-buffer

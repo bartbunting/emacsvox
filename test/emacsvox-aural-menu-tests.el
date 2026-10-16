@@ -429,6 +429,9 @@
               (should (eq (current-buffer) source))
               (should (= (point) 3))
               (should (eq (emacsvox-aural-menu--context) menu-context))
+              (with-selected-window transient--window
+                (should (eq (oref (get-text-property (point) 'button-data) command)
+                            'emacsvox-aural-menu--feedback)))
               (should (cdr (plist-get menu-context :settings)))
               (should (equal announcements '((command-menu-opened))))
               (should (buffer-live-p details))

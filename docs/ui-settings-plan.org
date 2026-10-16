@@ -1106,6 +1106,67 @@ Important interaction and ownership findings:
   Listening must check restoration and source-buffer scope before accepting
   these entries. Source inspection alone does not establish usable feedback.
 
+*** Menu focus audit, 2026-10-17
+
+Status: implemented and rebuilt; listening acceptance pending. The audit covers
+all twelve Lisp modules defining Emacsvox settings Transients and the shared
+Transient adapter. It does not claim coverage of every application's menus
+or every dialog reachable inside an external editor.
+
+Real graphical reproduction found no selected item after accepting the old
+capitalization prompt, point presentation, spatial output or indentation
+volume. Their minibuffers can destroy the popup, losing its saved point.
+Capitalization, point presentation, notification route, spatial output and
+direction mapping now use browsable lists with the current choice selected.
+Arrows do not apply; Enter applies and returns to the invoking control.
+Cancel returns to the same item without changing the value. Point presentation
+and capitalization retain the captured buffer/global scope; output choices are
+global. Notification routing still requires an explicit speech restart.
+
+A second reproduction found that reopening the chooser immediately with Enter
+lost its initial selection. Transient's =transient-suffix-object= can prefer a
+pending or invoking suffix over its optional command argument. Focus lookups
+now search the active menu's suffixes directly. This also repairs the same
+pattern in existing choice lists and browser-return paths.
+
+| Menu path or interaction | Audit result and disposition |
+|--------------------------+------------------------------|
+| Capitalization presentation | Replaced the completion prompt with a browsable list. Repeated Enter, local/global scope, cancellation and unchanged enablement/save state are covered graphically. |
+| Point presentation, notification route, spatial output and direction mapping | Replaced completion prompts with browsable lists. Current selection, repeated Enter, scope and cancellation are covered graphically. A custom direction function has a selected entry that retains it. |
+| Other device | Accepting a name returns to Route; cancelling stays on Other device. Known routes and the empty-string main-output alias select their matching entries. |
+| Indentation volume and shared numeric entry | Restore the actual invoking control, including shortcuts, cancelled input and rejected values. Existing indentation pitch-control guards remain. |
+| Earcon replacement and tone preset naming | Restore focus after completion or free text. Preset overwrite confirmation uses the same guard; declining leaves the saved preset intact. |
+| Speech restart confirmation | Restore focus when declining or cancelling. Tests do not restart a live speech process. |
+| Tone waveform/envelope/curve, spelling timing and preview-label choices | Replace parent-sensitive suffix lookup with lookup in the active list. A graphical regression covers reopening waveform selection with Enter. |
+| Settings and action search | Cancellation restores the invoking search item. Successful search still focuses its chosen destination. |
+| Feedback details and browser return | Feedback details returns to its invoking item before announcing the menu. Browser return resolves its target in the restored menu. Help, manual and dictionary cancellation paths are covered graphically. |
+| Voice tuning and integration settings | Existing focus/return guards retained. Voice tuning is covered graphically; integration-specific limits and return handlers were inspected in source, without retesting every installed integration. |
+| Direct M-x cue-kind prompts | These run before a menu exists and do not need to restore a menu item. |
+
+The shared reader wrapper restores focus only while the same prefix remains
+active. It adds no global minibuffer advice and does not override intentional
+editor or search destinations. Existing source-buffer ownership, preview,
+scope and persistence contracts remain unchanged.
+
+Earcon replacement remains future work: it needs a searchable recording/cue
+browser with preview; a long flat submenu is not sufficient. Numeric values,
+device names and preset names remain text prompts with focus restoration.
+
+Verification: 65 focused batch checks pass; 100 graphical cases skip in batch.
+Thirty-three targeted graphical checks passed against the changed source.
+After the full rebuild, 40 graphical checks pass in a fresh Emacs 31.0.90,
+with the changed modules verified as loaded from this checkout's byte-code.
+These cover the reproduced failures, all five choice lists, device prompt
+cancellation, custom-function retention, scope, persistence, explicit restart,
+existing tone menus, voice tuning, search, help and editor return.
+
+The full byte-code rebuild and preflight, header check, manual preview,
+reference/manual generation, documentation release check and whitespace check
+pass. The manual explains the lists and the existing custom spatial mapping
+option, including its balance range, an example and how to restore Normal.
+The generated Info node was also checked in a fresh Emacs. Automated checks
+do not establish listening acceptance; the live profile has not been reloaded.
+
 *** Integration coverage beyond the initial catalogue
 
 Updated on 2026-10-15: the six catalogue entries are Shell/comint, Agent Shell,

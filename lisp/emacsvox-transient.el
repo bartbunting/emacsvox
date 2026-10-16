@@ -647,6 +647,30 @@ Weak keys let abandoned menus release their return state.")
   "Return the command identities in the current Transient stack."
   (mapcar #'car transient--stack))
 
+(defun emacsvox-transient--menu-suffix (command)
+  "Find COMMAND in the currently displayed menu's suffixes.
+Unlike `transient-suffix-object', this does not prefer an invoking or pending
+suffix from the parent menu when Enter opens a child menu."
+  (cl-find command transient--suffixes :key (lambda (item) (oref item command))))
+
+(defun emacsvox-transient--read (reader &rest arguments)
+  "Call minibuffer READER with ARGUMENTS, retaining the invoking menu item.
+Restore focus after acceptance, cancellation or an error, only while the same
+prefix remains active. Outside a displayed menu, call READER normally."
+  (let* ((prefix transient--prefix)
+         (focus (when (and prefix (window-live-p transient--window))
+                  (or (emacsvox-transient--menu-suffix this-command)
+                      (with-selected-window transient--window
+                        (get-text-property (point) 'button-data))))))
+    (unwind-protect
+        (apply reader arguments)
+      ;; A real minibuffer can destroy the popup and its saved point.
+      (when (and focus prefix (eq transient--prefix prefix))
+        (transient--show)
+        (when (window-live-p transient--window)
+          (with-selected-window transient--window
+            (transient--goto-button focus)))))))
+
 (defun emacsvox-transient--menu-facts (action &optional event)
   "Return semantic command-menu facts for ACTION and optional EVENT."
   (append
@@ -1351,7 +1375,11 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
                      emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
                      emacsvox-aural-voice-menu emacsvox-indentation
-                     emacsvox-capitalization emacsvox-capitalization-cue emacsvox-spelling
+                     emacsvox-capitalization emacsvox-capitalization--presentation
+                         emacsvox-interaction--presentation
+                         emacsvox-output-settings--route emacsvox-output-settings--output
+                         emacsvox-output-settings--remapping
+                     emacsvox-capitalization-cue emacsvox-spelling
                      emacsvox-spelling-timing
                          emacsvox-tone-editor emacsvox-tone-editor-waveform
                          emacsvox-tone-editor-envelope emacsvox-tone-editor-presets emacsvox-tone-editor-curve

@@ -178,7 +178,7 @@ private draft; Apply or Save and apply changes the destination cue."
   (transient--show)
   (with-selected-window transient--window
     (transient--goto-button
-     (transient-suffix-object (cdr (assq (emacsvox-tone-editor--get key) choices)))))
+     (emacsvox-transient--menu-suffix (cdr (assq (emacsvox-tone-editor--get key) choices)))))
   (emacsvox-transient--speak-button))
 
 (defun emacsvox-tone-editor--preview (sample)
@@ -264,13 +264,13 @@ replacement; bundled names cannot be replaced."
   (interactive)
   (let* ((data (emacsvox-tone-editor--validate
                 (copy-tree (plist-get (emacsvox-tone-editor--state) :draft))))
-         (name (string-trim (read-string "Save tone preset as: ")))
+         (name (string-trim (emacsvox-transient--read #'read-string "Save tone preset as: ")))
          (presets (copy-tree emacsvox-tone-presets)))
     (when (string-empty-p name) (user-error "Give the preset a name"))
     (when (assoc-string name emacsvox-tone-editor--presets t)
       (user-error "Choose a name other than a bundled preset"))
     (let ((existing (assoc-string name presets t)))
-      (when (and existing (not (y-or-n-p (format "Replace tone preset %s? " (car existing)))))
+      (when (and existing (not (emacsvox-transient--read #'y-or-n-p (format "Replace tone preset %s? " (car existing)))))
         (user-error "Preset unchanged"))
       (if existing (setcdr existing data) (setq presets (append presets (list (cons name data))))))
     (customize-save-variable 'emacsvox-tone-presets presets)

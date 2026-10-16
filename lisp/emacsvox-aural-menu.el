@@ -68,6 +68,10 @@
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
+                         emacsvox-capitalization--presentation
+                         emacsvox-interaction--presentation
+                         emacsvox-output-settings--route emacsvox-output-settings--output
+                         emacsvox-output-settings--remapping
                          emacsvox-interaction emacsvox-spelling emacsvox-spelling-timing
                          emacsvox-tone-editor emacsvox-tone-editor-waveform
                          emacsvox-tone-editor-envelope emacsvox-tone-editor-presets emacsvox-tone-editor-curve
@@ -141,8 +145,10 @@
   (when (buffer-live-p (plist-get context :source))
     ;; Restore our own context rather than another command's resume stack.
     (pop-to-buffer (plist-get context :source))
-    (transient-setup 'emacsvox-aural-menu nil nil :scope context)
-    (transient--show)
+    (let ((emacsvox-transient--restoring-target
+           '(emacsvox-aural-menu "x" emacsvox-aural-menu--feedback)))
+      (transient-setup 'emacsvox-aural-menu nil nil :scope context)
+      (transient--show))
     t))
 
 (defun emacsvox-aural-menu--scope-label ()
@@ -587,20 +593,20 @@ When opened from the Emacsvox menu, share its selected scope."
         'value symbol 'command-menu-value-changed '(selected))
        'state-change 'select-object))))
 
+(defun emacsvox-aural-menu--choice-setup (prefix command)
+  "Open choice PREFIX in the parent context and focus its current COMMAND."
+  (let ((context (emacsvox-aural-menu--context)))
+    (emacsvox-aural-menu--source context)
+    (transient-setup prefix nil nil :scope context))
+  (transient--show)
+  (when-let* ((suffix (emacsvox-transient--menu-suffix command)))
+    (with-selected-window transient--window
+      (transient--goto-button suffix)))
+  (emacsvox-transient--speak-button))
+
 (defun emacsvox-aural-menu--read-number (prompt value)
   "Read a number with PROMPT and default VALUE, retaining menu focus."
-  (let ((prefix transient--prefix)
-        (focus (when (window-live-p transient--window)
-                 (with-selected-window transient--window
-                   (when-let* ((button (button-at (point))))
-                     (button-get button 'button-data))))))
-    (unwind-protect
-        (read-number prompt value)
-      ;; Transient can destroy its popup while the minibuffer is active.
-      (when (and focus prefix (eq transient--prefix prefix))
-        (transient--show)
-        (with-selected-window transient--window
-          (transient--goto-button focus))))))
+  (emacsvox-transient--read #'read-number prompt value))
 
 (defun emacsvox-aural-menu--main-tones ()
   "Set main-tone volume; Shift arrows change it by 5 percentage points.
@@ -707,7 +713,7 @@ Cancelled prompts and failed opens restore the suspended menu too."
               (transient--stack-pop)
               (transient--show)
               (with-selected-window transient--window
-                (transient--goto-button (transient-suffix-object command)))
+                (transient--goto-button (emacsvox-transient--menu-suffix command)))
               t))))
     (condition-case failure
         (with-current-buffer source

@@ -215,7 +215,7 @@
                 ;; Preserve the frontend's other bindings and shared maps.
                 (use-local-map (copy-keymap (current-local-map)))
                 (local-set-key (kbd "SPC") #'self-insert-command))
-            (completing-read prompt entries nil t))
+            (emacsvox-transient--read #'completing-read prompt entries nil t))
           entries t)
          (user-error "Choose a destination")))))
 

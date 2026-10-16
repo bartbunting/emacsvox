@@ -52,7 +52,7 @@
 (ert-deftest emacsvox-capitalization-menu-graphical-scope-preview-and-defaults ()
   "Options retain scope; preview reads displayed values and Save survives startup."
   (emacsvox-test--with-capitalization-gui
-    (execute-kbd-macro (kbd "i c p S p o k e n TAB RET"))
+    (execute-kbd-macro (kbd "i c p s"))
     (should tts-caps)
     (should-not tts-split-caps)
     (should (eq emacsvox-capitalization-presentation 'spoken))
@@ -294,6 +294,255 @@
     (should-not (file-exists-p emacsvox-aural-schemes-file))
     (execute-kbd-macro (kbd "r S"))
     (should (eq (plist-get (plist-get emacsvox-capitalization-capital-tone :shape) :waveform) 'sine))))
+
+(defun emacsvox-test--menu-focused-command ()
+  "Return the command at the real menu window's point."
+  (when (window-live-p transient--window)
+    (with-selected-window transient--window
+      (when-let* ((object (get-text-property (point) 'button-data)))
+        (and (slot-exists-p object 'command) (oref object command))))))
+
+(ert-deftest emacsvox-capitalization-presentation-graphical-browse-return-and-cancel ()
+  "Browsing is private; selecting or cancelling restores the Presentation item."
+  (emacsvox-test--with-capitalization-gui
+    (execute-kbd-macro (kbd "p"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--tone))
+    (with-selected-window transient--window
+      (should (string-match-p "selected" (button-label (button-at (point))))))
+    (execute-kbd-macro (kbd "<up>"))
+    (should (eq emacsvox-capitalization-presentation 'tone))
+    (execute-kbd-macro (kbd "RET"))
+    (should (eq emacsvox-capitalization-presentation 'spoken))
+    (should (eq (default-value 'emacsvox-capitalization-presentation) 'tone))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--presentation))
+    ;; Enter immediately reopens the same chooser, focused on the new value.
+    (execute-kbd-macro (kbd "RET"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--spoken))
+    (execute-kbd-macro (kbd "<down> q"))
+    (should (eq emacsvox-capitalization-presentation 'spoken))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--presentation))
+    (execute-kbd-macro (kbd "g p"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--tone))
+    (execute-kbd-macro (kbd "b"))
+    (should (eq (default-value 'emacsvox-capitalization-presentation) 'spoken-tone))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--presentation))
+    (should-not tts-caps)
+    (should tts-split-caps)
+    (should-not (file-exists-p custom-file))
+    (should (= (with-current-buffer source (point)) 3))))
+
+(ert-deftest emacsvox-menu-choices-graphical-point-scope-and-return ()
+  "Point choices browse privately, preserve scope and support repeated Enter."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-interaction)
+  (save-window-excursion
+    (emacsvox-test--with-capitalization
+      (switch-to-buffer source)
+      (let ((transient--prefix nil) (transient-show-menu t)
+            (old (default-value 'emacsvox-show-point-presentation)))
+        (unwind-protect
+            (progn
+              (set-default 'emacsvox-show-point-presentation 'voice)
+              (setq-local emacsvox-show-point-presentation 'tone emacsvox-show-point nil)
+              (local-set-key (kbd "<f8>") #'emacsvox-interaction)
+              (execute-kbd-macro (kbd "<f8> p"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-interaction--tone))
+              (with-selected-window transient--window
+                (should (string-match-p "selected" (button-label (button-at (point))))))
+              (execute-kbd-macro (kbd "<down>"))
+              (should (eq emacsvox-show-point-presentation 'tone))
+              (execute-kbd-macro (kbd "RET"))
+              (should (eq emacsvox-show-point-presentation 'earcon))
+              (should (eq (default-value 'emacsvox-show-point-presentation) 'voice))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-interaction--presentation))
+              (execute-kbd-macro (kbd "RET"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-interaction--earcon))
+              (execute-kbd-macro (kbd "<down> q"))
+              (should (eq emacsvox-show-point-presentation 'earcon))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-interaction--presentation))
+              (execute-kbd-macro (kbd "g p"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-interaction--voice))
+              (execute-kbd-macro (kbd "s"))
+              (should (eq emacsvox-show-point-presentation 'spoken))
+              (should (eq (default-value 'emacsvox-show-point-presentation) 'spoken))
+              (should-not emacsvox-show-point)
+              (should-not (file-exists-p custom-file))
+              (should (= (with-current-buffer source (point)) 3)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+          (set-default 'emacsvox-show-point-presentation old))))))
+
+(ert-deftest emacsvox-menu-choices-graphical-output-browse-and-return ()
+  "Output lists preserve values while browsing and restore their parent items."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-output-settings)
+  (save-window-excursion
+    (emacsvox-test--with-capitalization
+      (switch-to-buffer source)
+      (let* ((transient--prefix nil) (transient-show-menu t)
+             (symbols emacsvox-output-settings--options)
+             (defaults (mapcar (lambda (s) (cons s (default-value s))) symbols))
+             (properties (mapcar (lambda (s) (cons s (copy-tree (symbol-plist s)))) symbols)))
+        (unwind-protect
+            (progn
+              (local-set-key (kbd "<f8>") #'emacsvox-output-settings)
+              (dolist (entry '(("r" tts-notification-device nil "left"
+                               emacsvox-output-settings--route
+                               emacsvox-output-settings--route-automatic emacsvox-output-settings--route-left)
+                              ("o" emacsvox-aural-spatial-output auto mono
+                               emacsvox-output-settings--output
+                               emacsvox-output-settings--output-auto emacsvox-output-settings--output-mono)
+                              ("m" emacsvox-aural-spatial-remapping normal reverse
+                               emacsvox-output-settings--remapping
+                               emacsvox-output-settings--remapping-normal emacsvox-output-settings--remapping-reverse)))
+                (set-default (nth 1 entry) (nth 2 entry))
+                (execute-kbd-macro (kbd (concat "<f8> " (car entry))))
+                (should (eq (emacsvox-test--menu-focused-command) (nth 5 entry)))
+                (with-selected-window transient--window
+                  (should (string-match-p "selected" (button-label (button-at (point))))))
+                (execute-kbd-macro (kbd "<down>"))
+                (should (equal (default-value (nth 1 entry)) (nth 2 entry)))
+                (execute-kbd-macro (kbd "RET"))
+                (should (equal (default-value (nth 1 entry)) (nth 3 entry)))
+                (should (eq (emacsvox-test--menu-focused-command) (nth 4 entry)))
+                (execute-kbd-macro (kbd "RET"))
+                (should (eq (emacsvox-test--menu-focused-command) (nth 6 entry)))
+                (execute-kbd-macro (kbd "<up> q"))
+                (should (equal (default-value (nth 1 entry)) (nth 3 entry)))
+                (should (eq (emacsvox-test--menu-focused-command) (nth 4 entry)))
+                (condition-case nil (execute-kbd-macro (kbd "RET C-g")) (quit nil))
+                (should (equal (default-value (nth 1 entry)) (nth 3 entry)))
+                (should (eq (emacsvox-test--menu-focused-command) (nth 4 entry)))
+                (execute-kbd-macro (kbd "C-q")))
+              (should-not (file-exists-p custom-file))
+              (dolist (symbol '(emacsvox-aural-spatial-enabled emacsvox-aural-spatial-speech-enabled
+                                emacsvox-aural-spatial-cue-enabled emacsvox-aural-spatial-maximum-separation))
+                (should (equal (default-value symbol) (cdr (assq symbol defaults)))))
+              (should (= (with-current-buffer source (point)) 3)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+          (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+          (dolist (entry properties) (setplist (car entry) (cdr entry))))))))
+
+(ert-deftest emacsvox-menu-choices-graphical-device-and-custom-mapping ()
+  "Named devices retain prompt focus; custom mappings survive browsing."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-output-settings)
+  (save-window-excursion
+    (emacsvox-test--with-capitalization
+      (switch-to-buffer source)
+      (let* ((transient--prefix nil) (transient-show-menu t)
+             (symbols '(tts-notification-device emacsvox-aural-spatial-remapping))
+             (defaults (mapcar (lambda (s) (cons s (default-value s))) symbols))
+             (properties (mapcar (lambda (s) (cons s (copy-tree (symbol-plist s)))) symbols))
+             (mapping (lambda (balance) (/ balance 2))))
+        (unwind-protect
+            (progn
+              (set-default 'tts-notification-device "old-device")
+              (set-default 'emacsvox-aural-spatial-remapping mapping)
+              (local-set-key (kbd "<f8>") #'emacsvox-output-settings)
+              (execute-kbd-macro (kbd "<f8> r"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--route-other))
+              (condition-case nil (execute-kbd-macro (kbd "RET C-g")) (quit nil))
+              (should (eq (oref transient--prefix command) 'emacsvox-output-settings--route))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--route-other))
+              (should (equal tts-notification-device "old-device"))
+              (execute-kbd-macro (kbd "RET C-a C-k n e w RET"))
+              (should (equal tts-notification-device "new"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--route))
+              (execute-kbd-macro (kbd "RET"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--route-other))
+              (execute-kbd-macro (kbd "q m"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--remapping-custom))
+              (with-selected-window transient--window
+                (should (string-match-p "current: custom function" (buffer-string))))
+              (execute-kbd-macro (kbd "RET"))
+              (should (eq emacsvox-aural-spatial-remapping mapping))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--remapping))
+              (execute-kbd-macro (kbd "RET <up> q"))
+              (should (eq emacsvox-aural-spatial-remapping mapping))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--remapping))
+              (execute-kbd-macro (kbd "RET l"))
+              (should (eq emacsvox-aural-spatial-remapping 'collapse-left))
+              ;; The empty-string alias must appear as Main output, not an unknown device.
+              (set-default 'tts-notification-device "")
+              (execute-kbd-macro (kbd "r"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-output-settings--route-main))
+              (should-not (file-exists-p custom-file)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+          (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+          (dolist (entry properties) (setplist (car entry) (cdr entry))))))))
+
+(ert-deftest emacsvox-menu-prompts-graphical-retain-focus-on-accept-and-cancel ()
+  "Numeric and confirmation prompts return to their invoking control."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-interaction)
+  (require 'emacsvox-output-settings)
+  (save-window-excursion
+    (emacsvox-test--with-capitalization
+      (switch-to-buffer source)
+      (let* ((transient--prefix nil) (transient-show-menu t)
+             (symbols '(tts-notification-device emacsvox-aural-spatial-output
+                        emacsvox-aural-spatial-remapping))
+             (defaults (mapcar (lambda (s) (cons s (default-value s))) symbols)))
+        (unwind-protect
+            (dolist (entry '((emacsvox-output-settings emacsvox-output-settings--restart "RET n o RET")
+                            (emacsvox-indentation emacsvox-indentation--volume "RET 6 0 RET")))
+              (local-set-key (kbd "<f8>") (car entry))
+              (execute-kbd-macro (kbd "<f8>"))
+              (with-selected-window transient--window
+                (transient--goto-button (emacsvox-transient--menu-suffix (cadr entry))))
+              (execute-kbd-macro (kbd (nth 2 entry)))
+              (should (eq (emacsvox-test--menu-focused-command) (cadr entry)))
+              (condition-case nil (execute-kbd-macro (kbd "RET C-g")) (quit nil))
+              (should (eq (emacsvox-test--menu-focused-command) (cadr entry)))
+              (execute-kbd-macro (kbd "C-q")))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+          (dolist (entry defaults) (set-default (car entry) (cdr entry))))))))
+
+(ert-deftest emacsvox-menu-prompts-graphical-shortcut-error-and-preset-focus ()
+  "A direct shortcut, rejected numeric value and cancelled preset retain focus."
+  (emacsvox-test--with-capitalization-gui
+    (execute-kbd-macro (kbd "l p 5 0 0 RET"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--pitch))
+    (should-error (execute-kbd-macro (kbd "p - 1 RET")) :type 'user-error)
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-capitalization--pitch))
+    (execute-kbd-macro (kbd "E"))
+    (condition-case nil (execute-kbd-macro (kbd "N C-g")) (quit nil))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-tone-editor--save-preset))
+    (let ((emacsvox-tone-presets nil))
+      (cl-letf (((symbol-function 'customize-save-variable)
+                 (lambda (symbol value &rest _)
+                   (should (eq symbol 'emacsvox-tone-presets))
+                   (setq emacsvox-tone-presets value))))
+        (execute-kbd-macro (kbd "N F o c u s RET"))
+        (should (assoc "Focus" emacsvox-tone-presets))
+        (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-tone-editor--save-preset))
+        (should-error (execute-kbd-macro (kbd "N F o c u s RET n")) :type 'user-error)
+        (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-tone-editor--save-preset))))
+    (execute-kbd-macro (kbd "w t RET"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-tone-editor--triangle))
+    (execute-kbd-macro (kbd "q"))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-menu-prompts-graphical-earcon-focus ()
+  "Choosing and cancelling a replacement earcon retain its draft control."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-line-cues)
+  (save-window-excursion
+    (emacsvox-test--with-capitalization
+      (switch-to-buffer source)
+      (let ((transient--prefix nil) (transient-show-menu t)
+            (emacsvox-line-cues--drafts (make-hash-table :test #'eq)))
+        (local-set-key (kbd "<f8>") (lambda () (interactive) (emacsvox-line-cues-edit 'warn-user)))
+        (unwind-protect
+            (cl-letf (((symbol-function 'emacsvox-aural-tools--earcon-remap-candidates)
+                       (lambda () '("help"))))
+              (execute-kbd-macro (kbd "<f8> e h e l p RET"))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-line-cues--choose))
+              (condition-case nil (execute-kbd-macro (kbd "RET C-g")) (quit nil))
+              (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-line-cues--choose))
+              (should (eq (plist-get (emacsvox-line-cues--current) :value) 'help))
+              (should-not (file-exists-p emacsvox-aural-schemes-file)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
 
 (provide 'emacsvox-capitalization-tests)
 ;;; emacsvox-capitalization-tests.el ends here

@@ -3597,7 +3597,8 @@ later session.
      to choose; browsing alone does not apply a choice.  When a
      minibuffer prompt asks for text or a number, use its ordinary
      editing and completion keys.  Finish with ‘<RET>’ or cancel with
-     ‘C-g’ to return to the menu.
+     ‘C-g’ to return to the invoking control.  A search result instead
+     selects the destination control.
 
      In Emacsvox's menus, ‘q’ or ‘C-g’ goes back one menu and ‘C-q’
      closes the sequence.  A child menu normally returns to the item
@@ -5637,6 +5638,13 @@ follows capabilities or can be declared mono.  Separation ranges from
 zero (centred) to one (full); direction can be normal, reversed, or
 centred for some/all requests.
 
+   ‘o’ opens the Output list and ‘m’ opens Direction mapping.  Each
+focuses and marks the current choice.  Arrows browse without applying;
+‘<RET>’ applies and returns to the same parent control, ready to reopen.
+‘q’ or ‘C-g’ cancels.  If direction mapping uses a custom function, its
+selected entry lets you keep it; choosing a built-in mapping replaces
+it.  Use Customize to edit the function.
+
    These spatial controls apply immediately and are global.
 Shift-left/right adjusts selected separation by 0.1; ‘<RET>’ enters an
 exact value.  ‘<SPC>’ requests left then right cue previews; mono or
@@ -5656,6 +5664,18 @@ audible.  Restore the original values afterward.  Save deliberately with
 ‘S’ or capture spatial choices in a Presentation Profile.  A voice's Pan
 effect and notification-device routing are separate from presentation
 placement.
+
+   For a mapping beyond the built-in choices, use ‘M-x customize-option
+<RET> emacsvox-aural-spatial-remapping <RET>’ and select _Custom
+remapping function_.  The Lisp function receives a balance from ‘-1.0’
+(fully left) through ‘0.0’ (centre) to ‘1.0’ (fully right), and returns
+a balance in the same range.  For example, ‘(lambda (balance) (* 0.5
+balance))’ brings each requested position halfway towards the centre.
+Maximum separation then limits the result; spatial enablement and output
+capability still apply.  Use Customize's Apply or Save actions
+deliberately.  To return to built-in behaviour, choose _Normal_ in
+Direction mapping and save if you also want to replace a saved custom
+function.
 
 
 File: emacsvox.info,  Node: Personal Sound Packs,  Prev: Spatial Presentation Controls,  Up: Sounds And Space
@@ -5820,11 +5840,20 @@ punctuation default.
 
   3. Set capitalisation feedback and its beeps
 
-     ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication, ‘p’
-     chooses spoken, tone, combined, personal-rule, or no presentation,
-     and ‘c’ independently toggles camel-case splitting.  They share
-     buffer/global scope on ‘g’.  ‘<SPC>’ previews reading; ‘S’ saves
-     these three startup defaults.  Buffer overrides still apply.
+     ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication and ‘c’
+     independently toggles camel-case splitting.  These and the
+     presentation choice share buffer/global scope on ‘g’.  ‘<SPC>’
+     previews reading; ‘S’ saves these three startup defaults.  Buffer
+     overrides still apply.
+
+     Press ‘p’ to browse Spoken, Tone, Spoken and tone, Personal rules
+     or None.  The current choice is focused and marked selected.
+     Up/down browses without applying; ‘?’ followed by a choice's key
+     explains its effect.  ‘<RET>’ applies in the parent menu's scope,
+     announces the choice and returns to _Presentation_.  Press ‘<RET>’
+     again to try another choice, or ‘<SPC>’ to preview reading.  ‘q’ or
+     ‘C-g’ cancels and returns to the same control.  Choosing a
+     presentation neither enables indication nor saves startup defaults.
 
      Within Capitalization, ‘l’ edits the capital-letter beep and ‘a’
      the all-caps beep.  Each has a separate global draft.  Select
@@ -6139,6 +6168,15 @@ punctuation default.
      source buffer.  Delayed phonetics and delay are global.
      Shift-left/right changes delay by 0.1 seconds; exact entry through
      ‘<RET>’ accepts at least 0.1 seconds.
+
+     ‘p’ opens Point presentation with the current choice focused and
+     marked.  Choose animated voice, tone, earcon, voice with tone or
+     earcon, spoken point, personal rules, or none.  Arrows browse
+     without applying; ‘<RET>’ applies in the displayed scope and
+     returns to Point presentation.  Press ‘<RET>’ again to try another
+     choice, or cancel the list with ‘q’ or ‘C-g’.  Choosing a
+     presentation leaves point indication's on/off setting unchanged;
+     each choice's Help explains its effect.
 
      ‘<SPC>’ previews the captured line with point settings, ‘P’ speaks
      its character's phonetic name immediately, and ‘s’ stops.  ‘S’

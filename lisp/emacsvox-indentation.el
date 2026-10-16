@@ -317,7 +317,7 @@ When called from Lisp, adjust by DELTA percentage points if non-nil."
   (emacsvox-indentation--source)
   (let ((value (if delta
                    (max 0 (min 100 (+ (default-value 'tts-main-tone-volume) delta)))
-                 (read-number "Global tone volume (0 to 100): "
+                 (emacsvox-transient--read #'read-number "Global tone volume (0 to 100): "
                               (default-value 'tts-main-tone-volume)))))
     (tts--validate-output-volume value)
     (customize-set-variable 'tts-main-tone-volume value)

@@ -126,7 +126,7 @@
   (when (and (not delta) (window-live-p transient--window))
     (with-selected-window transient--window
       (transient--goto-button
-       (transient-suffix-object (if (eq field 'pitch) 'emacsvox-line-cues--pitch
+       (emacsvox-transient--menu-suffix (if (eq field 'pitch) 'emacsvox-line-cues--pitch
                                  'emacsvox-line-cues--duration)))))
   (let* ((values (copy-tree (emacsvox-line-cues--values)))
          (pitch (eq field 'pitch))
@@ -152,7 +152,7 @@
   (interactive)
   (let ((draft (emacsvox-line-cues--current)))
     (setf (plist-get draft :value)
-          (intern (completing-read "Earcon: " (emacsvox-aural-tools--earcon-remap-candidates) nil t))))
+          (intern (emacsvox-transient--read #'completing-read "Earcon: " (emacsvox-aural-tools--earcon-remap-candidates) nil t))))
   (emacsvox-line-cues--say "Earcon in draft. Space previews; capital S saves."))
 (defun emacsvox-line-cues--silent ()
   "Suppress only this cue when the draft is saved."

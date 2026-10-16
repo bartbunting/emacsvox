@@ -425,7 +425,7 @@ Enter applies the selected policy and returns.  Cancel retains the old policy."
   (transient--show)
   (with-selected-window transient--window
     (transient--goto-button
-     (transient-suffix-object
+     (emacsvox-transient--menu-suffix
       (pcase emacsvox-aural-preview-label-verbosity
         ('names 'emacsvox-settings-workflows--preview-names)
         ('brief 'emacsvox-settings-workflows--preview-brief)

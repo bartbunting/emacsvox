@@ -32,7 +32,7 @@
 (ert-deftest emacsvox-output-settings-menu-route-save-restart ()
   "Routing changes and Save never restart; explicit restart honours cancellation."
   (emacsvox-test--with-output-settings
-    (execute-kbd-macro (kbd "r M a i n SPC o u t p u t RET e s c o m o n o RET m r e v e r s e RET d 0 . 5 RET S-<right>"))
+    (execute-kbd-macro (kbd "r m e s c o m m r d 0 . 5 RET S-<right>"))
     (should (equal tts-notification-device "default"))
     (should (= emacsvox-aural-spatial-maximum-separation 0.6))
     (should-not (file-exists-p custom-file))
@@ -57,7 +57,7 @@
 (ert-deftest emacsvox-output-settings-menu-spatial-preview-and-bounds ()
   "Spatial preview compiles the displayed mapping and rejects invalid separation."
   (emacsvox-test--with-output-settings
-    (execute-kbd-macro (kbd "d 0 . 5 RET m r e v e r s e RET"))
+    (execute-kbd-macro (kbd "d 0 . 5 RET m r"))
     (dolist (invalid '(-1 2 1.0e+INF 0.0e+NaN))
       (cl-letf (((symbol-function 'read-number) (lambda (&rest _) invalid)))
         (should-error (emacsvox-output-settings--separation) :type 'user-error)))

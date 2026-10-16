@@ -3372,7 +3372,8 @@ Help gives its step@comma{} range and scope. Plain arrows continue to navigate.
 Waveform@comma{} envelope and other choice lists use up/down to browse and @kbd{@key{RET}} to
 choose; browsing alone does not apply a choice. When a minibuffer prompt asks
 for text or a number@comma{} use its ordinary editing and completion keys. Finish
-with @kbd{@key{RET}} or cancel with @kbd{C-g} to return to the menu.
+with @kbd{@key{RET}} or cancel with @kbd{C-g} to return to the invoking control. A search
+result instead selects the destination control.
 
 In Emacsvox's menus@comma{} @kbd{q} or @kbd{C-g} goes back one menu and @kbd{C-q} closes the
 sequence. A child menu normally returns to the item that opened it. Changes
@@ -5308,6 +5309,12 @@ presentation@comma{} speech@comma{} and cues independently. Output follows capab
 can be declared mono. Separation ranges from zero (centred) to one (full);
 direction can be normal@comma{} reversed@comma{} or centred for some/all requests.
 
+@kbd{o} opens the Output list and @kbd{m} opens Direction mapping. Each focuses and
+marks the current choice. Arrows browse without applying; @kbd{@key{RET}} applies and
+returns to the same parent control@comma{} ready to reopen. @kbd{q} or @kbd{C-g} cancels.
+If direction mapping uses a custom function@comma{} its selected entry lets you keep
+it; choosing a built-in mapping replaces it. Use Customize to edit the function.
+
 These spatial controls apply immediately and are global. Shift-left/right
 adjusts selected separation by 0.1; @kbd{@key{RET}} enters an exact value. @kbd{@key{SPC}} requests
 left then right cue previews; mono or limited capabilities may centre them.
@@ -5322,7 +5329,19 @@ a placement request cannot demonstrate separation.
 
 For comparison@comma{} select mono and repeat the action; content remains audible.
 Restore the original values afterward. Save deliberately with @kbd{S} or capture
-spatial choices in a Presentation Profile. A voice's Pan effect and notification-device routing are separate from presentation placement.
+spatial choices in a Presentation Profile. A voice's Pan effect and
+notification-device routing are separate from presentation placement.
+
+For a mapping beyond the built-in choices@comma{} use @kbd{M-x customize-option @key{RET}
+emacsvox-aural-spatial-remapping @key{RET}} and select @emph{Custom remapping function}.
+The Lisp function receives a balance from @code{-1.0} (fully left) through @code{0.0}
+(centre) to @code{1.0} (fully right)@comma{} and returns a balance in the same range.
+For example@comma{} @code{(lambda (balance) (* 0.5 balance))} brings each requested
+position halfway towards the centre. Maximum separation then limits the
+result; spatial enablement and output capability still apply. Use Customize's
+Apply or Save actions deliberately. To return to built-in behaviour@comma{} choose
+@emph{Normal} in Direction mapping and save if you also want to replace a saved
+custom function.
 
 @node Personal Sound Packs
 @subsection Inspect And Maintain A Personal Sound Pack
@@ -5465,10 +5484,18 @@ changes and returns. See @ref{spelling-tone-editor, , the shared controls} for p
 @anchor{Set capitalisation feedback and its beeps}Set capitalisation feedback and its beeps
 
 
-@kbd{C-e H s c} opens @emph{Capitalization}. @kbd{i} toggles indication@comma{} @kbd{p} chooses spoken@comma{}
-tone@comma{} combined@comma{} personal-rule@comma{} or no presentation@comma{} and @kbd{c} independently toggles
-camel-case splitting. They share buffer/global scope on @kbd{g}. @kbd{@key{SPC}} previews
-reading; @kbd{S} saves these three startup defaults. Buffer overrides still apply.
+@kbd{C-e H s c} opens @emph{Capitalization}. @kbd{i} toggles indication and @kbd{c} independently
+toggles camel-case splitting. These and the presentation choice share
+buffer/global scope on @kbd{g}. @kbd{@key{SPC}} previews reading; @kbd{S} saves these three
+startup defaults. Buffer overrides still apply.
+
+Press @kbd{p} to browse Spoken@comma{} Tone@comma{} Spoken and tone@comma{} Personal rules or None.
+The current choice is focused and marked selected. Up/down browses without
+applying; @kbd{?} followed by a choice's key explains its effect. @kbd{@key{RET}} applies
+in the parent menu's scope@comma{} announces the choice and returns to @emph{Presentation}.
+Press @kbd{@key{RET}} again to try another choice@comma{} or @kbd{@key{SPC}} to preview reading. @kbd{q} or
+@kbd{C-g} cancels and returns to the same control. Choosing a presentation neither
+enables indication nor saves startup defaults.
 
 Within Capitalization@comma{} @kbd{l} edits the capital-letter beep and @kbd{a} the all-caps
 beep. Each has a separate global draft. Select pitch/duration and adjust by
@@ -5760,6 +5787,14 @@ scope; global changes also affect the source buffer. Delayed phonetics and
 delay are global. Shift-left/right changes delay by 0.1 seconds; exact entry
 through @kbd{@key{RET}} accepts at least 0.1 seconds.
 
+@kbd{p} opens Point presentation with the current choice focused and marked.
+Choose animated voice@comma{} tone@comma{} earcon@comma{} voice with tone or earcon@comma{} spoken point@comma{}
+personal rules@comma{} or none. Arrows browse without applying; @kbd{@key{RET}} applies in the
+displayed scope and returns to Point presentation. Press @kbd{@key{RET}} again to try
+another choice@comma{} or cancel the list with @kbd{q} or @kbd{C-g}. Choosing a presentation
+leaves point indication's on/off setting unchanged; each choice's Help explains
+its effect.
+
 @kbd{@key{SPC}} previews the captured line with point settings@comma{} @kbd{P} speaks its character's
 phonetic name immediately@comma{} and @kbd{s} stops. @kbd{S} saves displayed settings through
 Customize@comma{} promoting buffer choices to startup defaults. Closing retains live
@@ -5781,8 +5816,13 @@ heard concurrently@comma{} with each notification's cue and speech delivered tog
 Integrations may deliberately route particular asynchronous actions differently:
 Notmuch's explicit refresh@comma{} for example@comma{} uses interruptible main speech.
 
-Open @kbd{C-e H o n} for routing. @kbd{r} chooses automatic@comma{} left@comma{} right@comma{} both@comma{} main
-output@comma{} or another device for the next restart. Selecting does not restart.
+Open @kbd{C-e H o n} for routing. @kbd{r} opens a list of automatic@comma{} left@comma{} right@comma{}
+both channels@comma{} main output@comma{} and other device. The configured choice is focused
+and marked. Arrows browse without applying; @kbd{@key{RET}} selects the route for the
+next restart and returns to the Route control. @kbd{q} or @kbd{C-g} cancels the list.
+Other device asks for an existing device name; cancelling that prompt stays on
+Other device and retains the previous route. Selecting does not restart speech.
+
 @kbd{N} previews active output@comma{} which may still use the old route; @kbd{R} restarts
 after confirmation. @kbd{h} inspects a notification-history snapshot@comma{} returning
 with @kbd{q}. @kbd{S} saves routing and spatial defaults without a restart.

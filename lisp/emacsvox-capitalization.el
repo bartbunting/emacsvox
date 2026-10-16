@@ -75,16 +75,75 @@
     (emacsvox-capitalization--set 'tts-split-caps value)
     (emacsvox-capitalization--say (if value "Split camel case on" "Split camel case off"))))
 
-(defun emacsvox-capitalization--presentation ()
-  "Choose spoken, tone, combined, personal-rule, or no presentation."
+(defun emacsvox-capitalization--presentation-label (value label)
+  "Describe presentation VALUE with LABEL and its current selection state."
+  (concat label (when (eq value (emacsvox-capitalization--value
+                                'emacsvox-capitalization-presentation))
+                  ", selected")))
+
+(defun emacsvox-capitalization--choose-presentation (value label)
+  "Apply presentation VALUE in the captured scope and announce LABEL."
+  (emacsvox-capitalization--set 'emacsvox-capitalization-presentation value)
+  (transient--stack-pop)
+  (transient--show)
+  (emacsvox-capitalization--say label))
+
+(defun emacsvox-capitalization--spoken ()
+  "Say cap or all caps when capitalization indication is enabled.
+Apply in the parent menu's buffer/global scope. This does not enable indication
+or save startup defaults. Presentation rules can override the spoken label."
+  (interactive) (emacsvox-capitalization--choose-presentation 'spoken "Spoken"))
+(defun emacsvox-capitalization--tone ()
+  "Play the capital-letter or all-caps beep when indication is enabled.
+Use the capital-letter or all-caps beep defaults, subject to presentation rules.
+Apply in the parent scope without enabling indication or saving defaults."
+  (interactive) (emacsvox-capitalization--choose-presentation 'tone "Tone"))
+(defun emacsvox-capitalization--spoken-tone ()
+  "Combine spoken labels and beeps when indication is enabled.
+Apply in the parent scope without enabling indication or saving defaults.
+Presentation rules can override these cues."
+  (interactive) (emacsvox-capitalization--choose-presentation 'spoken-tone "Spoken and tone"))
+(defun emacsvox-capitalization--custom ()
+  "Use presentation rules for capitalization feedback without a built-in cue.
+Publish capitalization facts when indication is enabled. Apply in the parent
+scope without enabling indication or saving defaults."
+  (interactive) (emacsvox-capitalization--choose-presentation 'custom "Personal rules"))
+(defun emacsvox-capitalization--none ()
+  "Suppress capitalization feedback; leave indication and splitting unchanged.
+Apply in the parent menu's scope without saving startup defaults."
+  (interactive) (emacsvox-capitalization--choose-presentation 'none "None"))
+
+(transient-define-prefix emacsvox-capitalization--presentation ()
+  "Choose capitalization presentation from a list.
+Up and Down browse without applying. Enter selects in the parent menu's scope
+and returns to Presentation; q cancels. The current choice is marked selected.
+Indication and camel-case splitting are separate; Save remains in the parent."
+  ["Presentation"
+   ("s" (lambda () (emacsvox-capitalization--presentation-label 'spoken "Spoken"))
+    emacsvox-capitalization--spoken :transient transient--do-replace)
+   ("t" (lambda () (emacsvox-capitalization--presentation-label 'tone "Tone"))
+    emacsvox-capitalization--tone :transient transient--do-replace)
+   ("b" (lambda () (emacsvox-capitalization--presentation-label 'spoken-tone "Spoken and tone"))
+    emacsvox-capitalization--spoken-tone :transient transient--do-replace)
+   ("c" (lambda () (emacsvox-capitalization--presentation-label 'custom "Personal rules"))
+    emacsvox-capitalization--custom :transient transient--do-replace)
+   ("n" (lambda () (emacsvox-capitalization--presentation-label 'none "None"))
+    emacsvox-capitalization--none :transient transient--do-replace)]
+  ["Finish" ("q" "Cancel" transient-quit-one) ("C-q" "Close menus" transient-quit-all)]
   (interactive)
-  (let* ((choices '(("Spoken" . spoken) ("Tone" . tone)
-                    ("Spoken and tone" . spoken-tone) ("Personal rules" . custom)
-                    ("None" . none)))
-         (selected (cdr (assoc (completing-read "Capitalization presentation: " choices nil t)
-                               choices))))
-    (emacsvox-capitalization--set 'emacsvox-capitalization-presentation selected)
-    (emacsvox-capitalization--say (car (rassq selected choices)))))
+  (transient-setup 'emacsvox-capitalization--presentation nil nil
+                   :scope (emacsvox-aural-menu--context))
+  (transient--show)
+  (with-selected-window transient--window
+    (transient--goto-button
+     (emacsvox-transient--menu-suffix
+      (cdr (assq (emacsvox-capitalization--value 'emacsvox-capitalization-presentation)
+                 '((spoken . emacsvox-capitalization--spoken)
+                   (tone . emacsvox-capitalization--tone)
+                   (spoken-tone . emacsvox-capitalization--spoken-tone)
+                   (custom . emacsvox-capitalization--custom)
+                   (none . emacsvox-capitalization--none)))))))
+  (emacsvox-transient--speak-button))
 
 (defun emacsvox-capitalization--preview ()
   "Read representative text using the displayed settings and current rules."
@@ -450,7 +509,7 @@ Migrate only unchanged old menu-generated rules; preserve contextual rules."
   ["Capitalization"
    ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label))) emacsvox-aural-menu--toggle-scope :transient t)
    ("i" (lambda () (format "Indication: %s" (if (emacsvox-capitalization--value 'tts-caps) "on" "off"))) emacsvox-capitalization--indication :transient t)
-   ("p" (lambda () (format "Presentation: %s" (emacsvox-capitalization--value 'emacsvox-capitalization-presentation))) emacsvox-capitalization--presentation :transient t)
+   ("p" (lambda () (format "Presentation: %s" (emacsvox-capitalization--value 'emacsvox-capitalization-presentation))) emacsvox-capitalization--presentation :transient transient--do-stack)
    ("c" (lambda () (format "Split camel case: %s" (if (emacsvox-capitalization--value 'tts-split-caps) "on" "off"))) emacsvox-capitalization--split :transient t)
    ("SPC" "Preview reading settings" emacsvox-capitalization--preview :transient t)]
   ["Global beep defaults (save separately)"
