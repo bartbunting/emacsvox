@@ -337,6 +337,23 @@ directory entry with INSTALL-INFO."
       (emacsvox-docs-check--check-info-manual
        source-directory output-directory makeinfo install-info manual))))
 
+(defun emacsvox-docs-check--relative-htmlxref
+    (htmlxref output-root output-directory)
+  "Return HTMLXREF contents with site paths relative to OUTPUT-DIRECTORY.
+Local mappings in HTMLXREF start at OUTPUT-ROOT; external URLs stay unchanged."
+  (with-temp-buffer
+    (insert-file-contents htmlxref)
+    (goto-char (point-min))
+    (while (re-search-forward
+            "^[^# \t\n]+[ \t]+\\(?:mono\\|node\\)[ \t]+\\([^ \t\n]+\\)" nil t)
+      (let ((url (match-string 1)))
+        (unless (string-match-p "\\`\\(?:[[:alpha:]][[:alnum:]+.-]*:\\|/\\)" url)
+          (replace-match
+           (file-relative-name
+            (expand-file-name url output-root) output-directory)
+           t t nil 1))))
+    (buffer-string)))
+
 (defun emacsvox-docs-check--compile-html-manual
     (source-directory output-root makeinfo htmlxref manual)
   "Compile one HTML MANUAL below OUTPUT-ROOT from SOURCE-DIRECTORY."
@@ -359,17 +376,26 @@ directory entry with INSTALL-INFO."
       (error "%s HTML output already exists: %s" name output))
     (make-directory
      (if relative-file (file-name-directory output) output-root) t)
-    (apply
-     #'emacsvox-docs-check--run-process
-     (format "%s HTML compilation" name) makeinfo source-directory nil
-     (append
-      '("--error-limit=0" "--html")
-      (when relative-file '("--no-split"))
-      (list
-       "-c" "HTMLXREF_MODE=file"
-       "-c" (concat "HTMLXREF_FILE=" htmlxref)
-       "--css-ref=https://www.w3.org/StyleSheets/Core/Modernist"
-       (concat "--output=" output) source)))
+    (let ((relative-htmlxref (make-temp-file "emacsvox-htmlxref-")))
+      (unwind-protect
+          (progn
+            (with-temp-file relative-htmlxref
+              (insert
+               (emacsvox-docs-check--relative-htmlxref
+                htmlxref output-root
+                (if relative-file (file-name-directory output) output))))
+            (apply
+             #'emacsvox-docs-check--run-process
+             (format "%s HTML compilation" name) makeinfo source-directory nil
+             (append
+              '("--error-limit=0" "--html")
+              (when relative-file '("--no-split"))
+              (list
+               "-c" "HTMLXREF_MODE=file"
+               "-c" (concat "HTMLXREF_FILE=" relative-htmlxref)
+               "--css-ref=https://www.w3.org/StyleSheets/Core/Modernist"
+               (concat "--output=" output) source))))
+        (delete-file relative-htmlxref)))
     (let ((files
            (if relative-file
                (list output)

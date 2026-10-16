@@ -329,6 +329,48 @@
           (should-not
            (file-exists-p (expand-file-name "heritage/index.html" output))))))))
 
+(ert-deftest emacsvox-docs-check-html-links-resolve-from-each-manual ()
+  "Root, nested and standalone manuals should link to their published targets."
+  (let ((makeinfo (executable-find "makeinfo")))
+    (skip-unless makeinfo)
+    (emacsvox-docs-check-tests--with-directory (directory)
+      (let* ((output (expand-file-name "html" directory))
+             (htmlxref (expand-file-name
+                        "info/htmlxref.cnf" emacsvox-docs-check--root))
+             (targets '(("emacsvox" . "index.html")
+                        ("emacsvox-reference" . "reference/index.html")
+                        ("emacsvox-heritage" . "heritage/index.html")
+                        ("introducing-emacspeak" . "heritage/introducing-emacspeak.html"))))
+        (dolist (manual emacsvox-docs-check--manuals)
+          (with-temp-file (expand-file-name (plist-get manual :source) directory)
+            (insert "\\input texinfo\n@setfilename " (plist-get manual :name)
+                    ".info\n@node Top\n@top Link fixture\n")
+            (dolist (target targets)
+              (insert "@ref{Top,,," (car target) "}.\n"))
+            (insert "@ref{Top,,,emacs}.\n@bye\n"))
+          (emacsvox-docs-check--compile-html-manual
+           directory output makeinfo htmlxref manual))
+        (dolist (page targets)
+          (let ((file (expand-file-name (cdr page) output)))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (dolist (target targets)
+                (goto-char (point-min))
+                (should
+                 (re-search-forward
+                  (format "data-manual=\"%s\" href=\"\\([^\"]+\\)\""
+                          (regexp-quote (car target))) nil t))
+                (should
+                 (equal
+                  (expand-file-name
+                   (car (split-string (match-string 1) "#"))
+                   (file-name-directory file))
+                  (expand-file-name (cdr target) output))))
+              (goto-char (point-min))
+              (should (re-search-forward
+                       "https://www\\.gnu\\.org/software/emacs/manual/html_\\(?:node/emacs/\\|mono/emacs\\.html\\)"
+                       nil t)))))))))
+
 (ert-deftest emacsvox-docs-check-rejects-personal-generated-paths ()
   "Generated reference output should not expose a builder's home."
   (emacsvox-docs-check-tests--with-directory (directory)

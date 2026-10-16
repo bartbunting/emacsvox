@@ -1,4 +1,6 @@
 # Complete cross-manual mappings used by reproducible Emacsvox HTML builds.
+# Local paths are relative to the published site root.  The publisher adjusts
+# them for each manual's output directory.
 
 emacs	mono	https://www.gnu.org/software/emacs/manual/html_mono/emacs.html
 emacs	node	https://www.gnu.org/software/emacs/manual/html_node/emacs/
@@ -10,10 +12,10 @@ eat	mono	https://elpa.nongnu.org/nongnu/doc/eat.html
 dir	mono	index.html
 emacspeak	mono	https://tvraman.github.io/emacspeak/manual/index.html
 emacspeak	node	https://tvraman.github.io/emacspeak/manual/
-emacsvox	mono	../index.html
-emacsvox	node	../
+emacsvox	mono	index.html
+emacsvox	node	./
 emacsvox-reference	mono	reference/index.html
 emacsvox-reference	node	reference/
 emacsvox-heritage	mono	heritage/index.html
 emacsvox-heritage	node	heritage/
-introducing-emacspeak	mono	introducing-emacspeak.html
+introducing-emacspeak	mono	heritage/introducing-emacspeak.html
