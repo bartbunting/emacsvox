@@ -1716,6 +1716,35 @@ Normal-profile listening remains to be checked after a restart. No live session
 was reloaded. CSV/spreadsheet readers, blank-cell skipping, cycling and key
 remapping remain outside the accepted scope.
 
+**** Tables listening findings, 2026-10-18
+
+A fresh normal profile exposed two gaps in the initial tests: Enter was
+unbound in both Tables menus, and Space preview failed semantic validation.
+The menus were absent from the settings Enter-binding list. Preview and Help
+incorrectly attached a value-change event to inspection speech; that event
+only permits state-change speech.
+
+The correction enables Enter in both menus and limits the value-change event
+to actual state-change feedback. Regression tests reproduce both failures and
+cover graphical Enter selection, return focus, and Preview/Help through real
+aural submission validation. Earlier tests used shortcut keys and suppressed
+submission, which missed these failures. Listening acceptance remains open
+until the corrected build is tried in a fresh normal profile. The correction
+passes 128 menu checks and 82 focused graphical checks in a fresh Emacs using
+current byte-code, plus the byte-code preflight and documentation release gate.
+No running profile was reloaded.
+
+Choice descriptions also needed correction: every value previously repeated
+the generic selection instruction. Each value now supplies its own short
+effect description through Transient's existing verbose-description setting.
+Inheritance explains buffer-to-mode and mode-to-common fallback, with an Org
+example and the common-default restriction in Help. Browsing remains passive;
+Help returns to the same value. Graphical regression coverage checks all
+visible choices, spoken inheritance feedback, and Help focus. The final build
+passes all 83 focused graphical checks and the documentation release gate.
+The fixes and descriptions are recorded together; listening acceptance after
+a restart remains open.
+
 **** Verification and acceptance for every implemented slice
 
 Use focused regression tests, the selected Emacs toolchain, incremental

@@ -116,5 +116,75 @@
         (execute-kbd-macro (kbd "q")))
       (should-not (file-exists-p custom-file)))))
 
+(ert-deftest emacsvox-table-settings-graphical-enter-selects-and-restores-focus ()
+  "Enter opens a choice list and stages its selected row, retaining focus."
+  (emacsvox-table-settings-test--isolated
+    (emacsvox-test--with-settings
+      (execute-kbd-macro (kbd "s T"))
+      (dolist (key '("RET" "<return>"))
+        (should (eq (key-binding (kbd key)) #'transient-push-button)))
+      (execute-kbd-macro (kbd "<down> RET"))
+      (should (eq (oref transient--prefix command) 'emacsvox-table-settings--choices))
+      (dolist (key '("RET" "<return>"))
+        (should (eq (key-binding (kbd key)) #'transient-push-button)))
+      (execute-kbd-macro (kbd "<down> <return>"))
+      (should (eq (oref transient--prefix command) 'emacsvox-table-settings))
+      (should (equal (alist-get 'titles (plist-get (emacsvox-table-settings--draft) :values)) '(row)))
+      (should (memq 'titles (plist-get (emacsvox-table-settings--draft) :changed)))
+      (with-selected-window transient--window
+        (should (equal (oref (button-get (button-at (point)) 'button-data) key) "t")))
+      (should (equal (buffer-local-value 'emacsvox-table-reader-titles source) '(column)))
+      (should-not (file-exists-p custom-file)))))
+
+(ert-deftest emacsvox-table-settings-preview-and-help-pass-aural-validation ()
+  "Preview and Help submit valid inspection speech through the real pipeline."
+  (let ((submit (symbol-function 'emacsvox-aural-submit)))
+    (emacsvox-test--with-aural-menu
+      (let (submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (&rest args) (push (apply submit args) submissions))))
+          (save-window-excursion
+            (emacsvox-table-settings--preview)
+            (emacsvox-table-settings--help)))
+        (should (= 2 (length submissions)))
+        (should (string-match-p "Engineer" (emacsvox-aural-submission-content (cadr submissions))))
+        (should (string-match-p "Table reading settings" (emacsvox-aural-submission-content (car submissions))))
+        (dolist (submission submissions)
+          (should (eq (emacsvox-aural-submission-lane submission) 'main))
+          (should (eq (emacsvox-aural-submission-delivery-policy submission) 'replaceable)))))))
+
+(ert-deftest emacsvox-table-settings-graphical-choice-descriptions-and-help ()
+  "Browsing explains each value; inheritance Help describes both save scopes."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "s T"))
+    (dolist (key '("t" "o" "m" "a" "c" "e" "r" "v"))
+      (execute-kbd-macro (kbd key))
+      (dolist (object transient--suffixes)
+        (when (and (string-match-p "^[1-5]$" (oref object key))
+                   (emacsvox-table-settings--choice
+                    (1- (string-to-number (oref object key)))))
+          (let* ((emacsvox-transient-verbose-descriptions t)
+                 (description (emacsvox-transient--choice-text object))
+                 (emacsvox-transient-verbose-descriptions nil)
+                 (transient--docsp nil)
+                 (label (emacsvox-transient--choice-text object)))
+            (should (> (length description) (length label)))
+            (should-not (string-match-p "Stage this choice" description)))))
+      (execute-kbd-macro (kbd "q")))
+    (let ((emacsvox-transient-verbose-descriptions t) spoken)
+      (cl-letf (((symbol-function 'emacsvox-transient--submit-text)
+                 (lambda (text &rest _) (push text spoken))))
+        (execute-kbd-macro (kbd "t <down> <down> <down> <down>")))
+      (should (string-match-p "Apply follows the mode setting; Save mode follows common defaults" (car spoken)))
+      (should-not (plist-get (emacsvox-table-settings--draft) :changed))
+      (execute-kbd-macro (kbd "? 5"))
+      (should (string-match-p "Common defaults cannot inherit" (buffer-string)))
+      (should (string-match-p "saving inheritance for Org" (buffer-string)))
+      (execute-kbd-macro (kbd "q"))
+      (with-selected-window transient--window
+        (should (equal (oref (button-get (button-at (point)) 'button-data) key) "5")))
+      (execute-kbd-macro (kbd "q"))
+      (should-not (plist-get (emacsvox-table-settings--draft) :changed)))))
+
 (provide 'emacsvox-table-settings-tests)
 ;;; emacsvox-table-settings-tests.el ends here

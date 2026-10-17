@@ -34,21 +34,41 @@
 
 (defconst emacsvox-table-settings--specs
   '((titles "Titles" "Choose titles spoken with a cell. Row titles use the first column; column titles use the header row when available."
-     ((column) "Column titles") ((row) "Row titles") ((column row) "Both titles") (nil "No titles") (inherit "Inherit wider scope"))
+     ((column) "Column titles" "Read the header above the cell, when available.")
+     ((row) "Row titles" "Read the first cell in the row as its heading.")
+     ((column row) "Both titles" "Read both the column heading and the row heading.")
+     (nil "No titles" "Read the cell data without row or column headings.")
+     (inherit "Inherit wider scope"))
     (data-position "Order" "Read the cell data before or after its titles."
-     (first "Data first") (last "Titles first") (inherit "Inherit wider scope"))
+     (first "Data first" "Read the cell value before its selected headings.")
+     (last "Titles first" "Read the selected headings before the cell value.")
+     (inherit "Inherit wider scope"))
     (movement-speech "Plain Up and Down" "Choose cell or whole-row speech for plain vertical arrows. Control-Meta arrows always read a cell. Public row-reading commands still read rows."
-     (row "Read the row") (cell "Read the cell") (inherit "Inherit wider scope"))
+     (row "Read the row" "Plain Up and Down speak every cell in the destination row.")
+     (cell "Read the cell" "Plain Up and Down speak only the destination cell.")
+     (inherit "Inherit wider scope"))
     (activation "Activation" "Automatic reading starts when navigation enters a table. On demand starts with Control-Meta arrows or the table reading command. Quitting suspends automatic entry until you leave and return or explicitly enter again."
-     (automatic "Automatic") (on-demand "On demand") (nil "Mode defaults: Agent Shell automatic; others on demand") (inherit "Inherit wider scope"))
+     (automatic "Automatic" "Start table reading when navigation enters a supported table.")
+     (on-demand "On demand" "Start reading with Control-Meta arrows or the table reading command.")
+     (nil "Mode defaults: Agent Shell automatic; others on demand"
+          "Use the built-in activation policy, even if a broader setting differs.")
+     (inherit "Inherit wider scope"))
     (coordinates "Coordinates during movement" "Add row and column numbers to movement feedback. The coordinate inspection command always remains available."
-     (t "Announce coordinates") (nil "Omit coordinates") (inherit "Inherit wider scope"))
+     (t "Announce coordinates" "Include row and column numbers when moving between cells.")
+     (nil "Omit coordinates" "Leave numbers out of movement speech; coordinate inspection remains available.")
+     (inherit "Inherit wider scope"))
     (entry-detail "Entry detail" "Full entry announces table dimensions and the cell. Brief entry announces the table and cell; dimensions remain available on equals."
-     (full "Dimensions and cell") (brief "Brief: table and cell") (inherit "Inherit wider scope"))
+     (full "Dimensions and cell" "Announce the table size and current cell when reading starts.")
+     (brief "Brief: table and cell" "Announce the table and current cell; equals still reads its size.")
+     (inherit "Inherit wider scope"))
     (repeat-titles "Repeated titles" "When off, omit unchanged headings on consecutive cell moves. Explicit inspection always reads the selected titles."
-     (t "Repeat titles") (nil "Omit unchanged titles") (inherit "Inherit wider scope"))
+     (t "Repeat titles" "Include the selected headings on each cell move, even when unchanged.")
+     (nil "Omit unchanged titles" "Skip headings repeated from the previous cell; explicit inspection keeps them.")
+     (inherit "Inherit wider scope"))
     (edge-action "Vertical edges" "Leave moves to adjacent prose at the first or last row. Stop retains the cell. Application lists always stop. Explicit exit commands remain available."
-     (leave "Leave for adjacent prose") (stop "Stop at the edge") (inherit "Inherit wider scope")))
+     (leave "Leave for adjacent prose" "Moving past the first or last row leaves the table; application lists still stop.")
+     (stop "Stop at the edge" "Keep the current cell at the first or last row; q still exits reading.")
+     (inherit "Inherit wider scope")))
   "Settings, labels, explanations and ordered choices.")
 
 (defun emacsvox-table-settings--context ()
@@ -111,7 +131,9 @@
 (defun emacsvox-table-settings--say (text &optional intent)
   "Speak TEXT as INTENT, replacing obsolete menu speech."
   (emacsvox-transient--submit-text
-   text (emacsvox-transient--menu-facts 'tables 'command-menu-value-changed)
+   text (emacsvox-transient--menu-facts
+         'tables (when (memq intent '(nil state-change))
+                   'command-menu-value-changed))
    (or intent 'state-change) 'button))
 
 (defun emacsvox-table-settings--focus (command)
@@ -152,6 +174,22 @@
     (concat (cadr choice)
             (when (equal (car choice) (alist-get key (plist-get (emacsvox-table-settings--draft) :values)))
               ", selected"))))
+
+(defun emacsvox-table-settings--choice-documentation (index)
+  "Explain the effect of choice INDEX in the active choice menu."
+  (if (and transient--prefix
+           (eq (oref transient--prefix command) 'emacsvox-table-settings--choices))
+      (let ((choice (emacsvox-table-settings--choice index)))
+        (if (eq (car choice) 'inherit)
+            (concat
+             "Apply follows the mode setting; Save mode follows common defaults.\n\n"
+             "This removes the override at the scope you apply or save. "
+             "A buffer follows its mode setting, or common defaults if that mode has no override. "
+             "A mode follows the common default; existing buffer overrides still win. "
+             "For example, if common titles are Column titles, saving inheritance for Org makes Org follow that choice. "
+             "Common defaults cannot inherit. No titles and Off are explicit values, not inheritance.")
+          (nth 2 choice)))
+    "Stage this choice; Apply or Save in the parent menu makes it effective."))
 
 (defun emacsvox-table-settings--stage (key value)
   "Stage VALUE for KEY without changing runtime preferences."
@@ -316,8 +354,10 @@ Preserve the source buffer and runtime settings."
         (princ (nth 2 (assq key emacsvox-table-settings--specs)))
         (when object
           (princ "\n\n")
-          (princ (cadr (emacsvox-table-settings--choice
-                        (1- (string-to-number (oref object key)))))))
+          (let ((index (1- (string-to-number (oref object key)))))
+            (princ (cadr (emacsvox-table-settings--choice index)))
+            (princ ". ")
+            (princ (emacsvox-table-settings--choice-documentation index))))
         (princ "\n\n"))
       (princ "Browsing changes nothing. Selecting stages a pending choice. Space previews it. Apply affects only the captured buffer; Save common and Save mode persist only pending choices through Customize. Applied choices remain available to Save during this visit and are labelled not saved. Closing discards unapplied choices and keeps buffer applications.\n\nBuffer settings override mode settings, which override common defaults. Inherit skips older choices at the scope you apply or save. No titles is an explicit value. Mode defaults means automatic in Agent Shell and on demand elsewhere.\n\nOlder Agent Shell title and order settings remain effective, including saved values equal to their defaults. The effective label identifies them. A value set before loading may have uncertain origin; it is preserved until you explicitly select inheritance or a replacement. No old configuration is rewritten.\n\nUp and Down read rows by default. Control-Meta arrows enter reading and read cells. q leaves reading in place until explicit entry or leaving and returning. Agent Shell retains native Tab, Shift-Tab and Return actions. In its viewport, a second q can bury the buffer. Application lists retain their action keys. Org's native table editing and its movement feedback option remain independent.\n\nActivation and edge behavior are tried in the source table; the preview demonstrates speech only. Preview treats pending choices as buffer overrides, so inheritance follows current mode settings. Mode Save can resolve inheritance differently; the effective labels refresh after saving.")
       (princ (or (emacsvox-table-settings--legacy-details context) "")))
@@ -374,6 +414,14 @@ Explicit inspection remains available."
 (defun emacsvox-table-settings--choice-4 ()
   "Stage this choice; Apply or Save in the parent menu makes it effective."
   (interactive) (emacsvox-table-settings--choice-apply 4))
+
+;; Transient uses the first documentation line for its optional short
+;; descriptions.  Resolve it from the current setting, since these commands
+;; serve different values in each choice list.
+(dotimes (index 5)
+  (put (intern (format "emacsvox-table-settings--choice-%d" index))
+       'function-documentation
+       `(emacsvox-table-settings--choice-documentation ,index)))
 
 (transient-define-prefix emacsvox-table-settings--choices ()
   "Browse table choices; selecting stages a value without applying it."
