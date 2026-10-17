@@ -501,28 +501,9 @@ Also generates global keybindings if any."
 
 ;;;  Org Mode Structure Navigation:
 
-(with-eval-after-load "org"
-  (cl-declaim (special org-mode-map))
-  (define-key
-   org-mode-map
-   (kbd "C-c C-SPC")
-   (defhydra emacsvox-muggles-org-nav
-             (:body-pre
-              (progn
-                (emacsvox-hydra-toggle-talkative)
-                (emacsvox-hydra-body-pre "OrgNavView"))
-              :hint nil
-              :pre emacsvox-hydra-pre :post emacsvox-hydra-post
-              :color red :columns 3)
-             "Org Mode Navigate "
-             ("?" (emacsvox-hydra-self-help "emacsvox-muggles-org-nav"))
-             ("SPC" emacsvox-outline-speak-this-heading  "Speak this section")
-             ("n" emacsvox-outline-speak-next-heading  "next heading")
-             ("p" emacsvox-outline-speak-previous-heading "prev heading")
-             ("f" org-forward-heading-same-level "next heading at same level")
-             ("b" org-backward-heading-same-level "prev heading at same level")
-             ("u" outline-up-heading "up heading")
-             ("g" org-goto "goto" :exit t))))
+(require 'emacsvox-muggles-core)
+(require 'emacsvox-muggle-org-navigation)
+(emacsvox-muggles--legacy-enable 'org-navigation)
 
 (provide 'extra-muggles)
 ;;;  end of file

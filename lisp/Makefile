@@ -297,6 +297,7 @@ emacsvox-message.elc \
 emacsvox-mines.elc \
 emacsvox-mu4e.elc \
 emacsvox-multiple-cursors.elc \
+emacsvox-muggles-core.elc \
 emacsvox-net-utils.elc \
 emacsvox-newsticker.elc \
 emacsvox-notmuch.elc \
@@ -554,6 +555,8 @@ emacsvox-version.elc emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
 emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 
 muggles: emacsvox-muggles.elc
+muggle-org-navigation: emacsvox-muggle-org-navigation.elc
+extra-muggles.elc: emacsvox-muggles-core.elc emacsvox-muggle-org-navigation.elc
 extra-muggles: extra-muggles.elc
 maths: emacsvox-maths.elc
 
