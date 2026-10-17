@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1687 commands and 248 options.
+   This chapter documents a total of 1704 commands and 256 options.
 
 * Menu:
 
@@ -611,6 +611,8 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-message:: Speech enable Message.
 * emacsvox-mines:: Speech-enable MINES.
 * emacsvox-mu4e:: Speech-enable MU4E.
+* emacsvox-muggles-core:: Independently managed Muggles.
+* emacsvox-muggles-ui:: Browse managed Muggles.
 * emacsvox-multiple-cursors:: Speech-enable MULTIPLE-CURSORS.
 * emacsvox-net-utils:: net-utils.
 * emacsvox-newsticker:: newsticker.
@@ -673,6 +675,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-tab-bar:: Speech-enable tab-bar.
 * emacsvox-table:: Table data model.
 * emacsvox-table-reader:: Shared logical table reading.
+* emacsvox-table-settings:: Scoped table reading settings.
 * emacsvox-table-ui:: Table Navigation UI.
 * emacsvox-tabulate:: Handle table data.
 * emacsvox-tabulated-list:: Speech-enable.

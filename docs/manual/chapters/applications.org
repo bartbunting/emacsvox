@@ -364,6 +364,74 @@ changes take effect after restarting speech. Explicit word and partial-line
 reads at =some= or =none= use =tts-character-to-speech-table=, the Emacs table
 also used for character reading.
 
+*** Navigate Org headings with a Muggle
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: Muggles
+#+cindex: Org, heading navigation menu
+#+findex: emacsvox-muggles-enable
+#+findex: emacsvox-muggles-disable
+#+findex: emacsvox-muggles-save
+#+findex: emacsvox-muggles-status
+#+findex: emacsvox-muggles-org-nav/body
+#+findex: emacsvox-muggles-browse
+#+vindex: emacsvox-muggles-preferences
+
+A Muggle is a temporary menu of related commands, implemented with Hydra.
+The Org heading-navigation Muggle lets you repeat movement and section
+reading with single keys. It requires the Hydra package and an Org buffer.
+Start it directly with ~M-x emacsvox-muggles-org-nav/body RET~. Entry announces
+the menu without moving point or changing the document.
+
+Use ~n~ and ~p~ to move between visible headings and speak their sections.
+~SPC~ speaks the current section from point. ~f~ and ~b~ move between headings
+at the same level, and ~u~ moves to the parent. ~g~ opens Org's heading chooser
+and leaves the menu. ~?~ reads the available keys; ~q~ or ~C-g~ exits. Automatic
+Hydra hints are quiet during this menu; exit restores their previous setting
+unless it was changed during the visit.
+
+Press ~C-e H m~ to browse managed Muggles, or run
+~M-x emacsvox-muggles-browse RET~. Settings and action search also find the
+Muggles entry. The list currently contains Org heading navigation; other
+Muggles retain their legacy configuration until they gain individual switches.
+Opening or browsing the list does not load or activate the navigation menu.
+
+Up/down selects a row and reads its purpose, current choice, configured override
+and availability. Left/right inspects columns; ~SPC~ reads the full row.
+~RET~ or ~?~ explains the selected Muggle and its actions. Returning from Help
+with ~q~ restores the row and column. ~g~ refreshes the displayed state.
+
+On Org heading navigation, ~e~ requests ~C-c C-SPC~ in Org for this session.
+If Org has not loaded, activation waits for it. Existing personal or package
+bindings are preserved, and the availability column names any conflict or
+missing dependency. ~d~ removes only the managed entry key and closes this
+Muggle if active. It preserves completed actions and independently configured
+bindings. These choices apply throughout the session, rather than to one buffer.
+
+Enable and Disable retain the selected row and show the choice as not saved.
+~W~ saves all explicit session Muggle choices through Customize; the
+=emacsvox-muggles= customisation group contains the configured overrides.
+An absent override follows a legacy collection request, otherwise disabled;
+explicit Disabled takes precedence over a legacy request. Session choices
+take precedence until saved or changed. ~q~ closes the list and keeps session
+choices; when opened through settings, it returns to the same menu item.
+
+To try the Muggle, open the list from an Org document and press ~r~. This leaves
+the list and starts heading navigation at the captured source position, even
+when the managed key is disabled or blocked. It does not enable keys or save
+settings. A closed buffer, changed source item or different major mode requires
+reopening from the intended Org location. Run is an explicit action; browsing
+and Help never perform it. Once navigation starts, ~q~ exits its menu in Org.
+
+The named commands =emacsvox-muggles-enable=, =emacsvox-muggles-disable=,
+=emacsvox-muggles-status= and =emacsvox-muggles-save= offer the same management
+operations without the list. Direct ~M-x emacsvox-muggles-org-nav/body RET~
+also remains available while disabled. Loading =extra-muggles= requests Org
+heading navigation through the manager, respecting explicit Disabled choices
+and protecting conflicting bindings.
+
 *** Reading Markdown and Org tables
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Reading Markdown And Org Tables

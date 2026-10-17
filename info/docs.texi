@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 321 loaded; 0 intentionally omitted.
+@c Modules: 324 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -39,34 +39,34 @@
 @c Loaded: emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-line-cues.elc emacsvox-lispy.elc
 @c Loaded: emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc emacsvox-man.elc
 @c Loaded: emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc emacsvox-mines.elc
-@c Loaded: emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc emacsvox-nm.elc
-@c Loaded: emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc emacsvox-omnivox-components.elc
-@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-output-settings.elc
-@c Loaded: emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc
-@c Loaded: emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc
-@c Loaded: emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc
-@c Loaded: emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc
-@c Loaded: emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc
-@c Loaded: emacsvox-settings-changes.elc emacsvox-settings-integrations.elc emacsvox-settings-workflows.elc emacsvox-settings.elc emacsvox-setup.elc
-@c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-shr.elc emacsvox-slime.elc emacsvox-smartparens.elc
-@c Loaded: emacsvox-solitaire.elc emacsvox-sound-library.elc emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc
-@c Loaded: emacsvox-spelling.elc emacsvox-sql.elc emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc
-@c Loaded: emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc
-@c Loaded: emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc
-@c Loaded: emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-tone-editor.elc emacsvox-transient.elc emacsvox-treesit.elc
-@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc
-@c Loaded: emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc
-@c Loaded: emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc
-@c Loaded: emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc
-@c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
-@c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
-@c Loaded: light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc
-@c Loaded: omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc
-@c Loaded: omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc
-@c Loaded: omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc
-@c Loaded: plain-voices.elc soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc
-@c Loaded: tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc
-@c Loaded: xbacklight.elc
+@c Loaded: emacsvox-mu4e.elc emacsvox-muggles-core.elc emacsvox-muggles-ui.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc
+@c Loaded: emacsvox-newsticker.elc emacsvox-nm.elc emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc
+@c Loaded: emacsvox-ocr.elc emacsvox-omnivox-components.elc emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc
+@c Loaded: emacsvox-outline.elc emacsvox-output-settings.elc emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc
+@c Loaded: emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc
+@c Loaded: emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc
+@c Loaded: emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc
+@c Loaded: emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc
+@c Loaded: emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-settings-changes.elc emacsvox-settings-integrations.elc emacsvox-settings-workflows.elc
+@c Loaded: emacsvox-settings.elc emacsvox-setup.elc emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-shr.elc
+@c Loaded: emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc emacsvox-sound-library.elc emacsvox-sounds.elc
+@c Loaded: emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-spelling.elc emacsvox-sql.elc emacsvox-sudoku.elc
+@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-settings.elc
+@c Loaded: emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc
+@c Loaded: emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc
+@c Loaded: emacsvox-tone-editor.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc
+@c Loaded: emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc
+@c Loaded: emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc
+@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
+@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
+@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
+@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
+@c Loaded: omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc
+@c Loaded: omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc
+@c Loaded: omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc
+@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
+@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -74,7 +74,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1687 commands and 248 options.
+This chapter documents a total of 1704 commands and 256 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -264,6 +264,8 @@ This chapter documents a total of 1687 commands and 248 options.
 * emacsvox-message:: Speech enable Message.
 * emacsvox-mines:: Speech-enable MINES.
 * emacsvox-mu4e:: Speech-enable MU4E.
+* emacsvox-muggles-core:: Independently managed Muggles.
+* emacsvox-muggles-ui:: Browse managed Muggles.
 * emacsvox-multiple-cursors:: Speech-enable MULTIPLE-CURSORS.
 * emacsvox-net-utils:: net-utils.
 * emacsvox-newsticker:: newsticker.
@@ -326,6 +328,7 @@ This chapter documents a total of 1687 commands and 248 options.
 * emacsvox-tab-bar:: Speech-enable tab-bar.
 * emacsvox-table:: Table data model.
 * emacsvox-table-reader:: Shared logical table reading.
+* emacsvox-table-settings:: Scoped table reading settings.
 * emacsvox-table-ui:: Table Navigation UI.
 * emacsvox-tabulate:: Handle table data.
 * emacsvox-tabulated-list:: Speech-enable.
@@ -16470,6 +16473,205 @@ It covers the four main mu4e views:
 - Message view (reading a message)
 - Compose view (writing a message)
 
+@node emacsvox-muggles-core
+@section emacsvox-muggles-core
+
+Registration does not load a collection or install keys.  Session choices
+override configured defaults and legacy collection requests.  Direct M-x
+entry remains available when managed bindings are disabled.
+
+@subsection Emacsvox-Muggles-Core Commands
+
+@subsubsection emacsvox-muggles-disable
+@deffn {Command} emacsvox-muggles-disable  (id)
+@findex emacsvox-muggles-disable
+
+@format
+Disable ID’s managed keys and close its active menu, without saving.
+Direct M-x entry remains callable; completed actions are not undone.
+
+(fn ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-enable
+@deffn {Command} emacsvox-muggles-enable  (id)
+@findex emacsvox-muggles-enable
+
+@format
+Enable ID’s managed entry keys for this session, without saving.
+Conflicting bindings are preserved.  Dependencies are never installed.
+
+(fn ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-org-nav/body
+@deffn {Command} emacsvox-muggles-org-nav/body
+@findex emacsvox-muggles-org-nav/body
+
+@format
+Navigate and speak Org headings.  Managed entry keys are optional.
+Load the optional Org navigation library on first use.  Hydra is required.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-save
+@deffn {Command} emacsvox-muggles-save
+@findex emacsvox-muggles-save
+
+@format
+Save explicit session choices through Customize, preserving other entries.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-status
+@deffn {Command} emacsvox-muggles-status  (id)
+@findex emacsvox-muggles-status
+
+@format
+Report ID’s requested state, origin and binding availability.
+This command does not load a Muggle, change settings or install bindings.
+
+(fn ID)
+@end format
+@end deffn
+
+@subsection emacsvox-muggles-core Options
+
+@defvar {User Option} emacsvox-muggles-preferences
+@verbatim
+Configured enable/disable overrides for managed Muggles.
+Each entry is (ID . ENABLED).  An explicit nil disables managed entry keys,
+even when a legacy collection requests the Muggle.  An absent entry follows
+legacy collection requests, or remains disabled when none exists.
+Direct M-x entry stays callable.  Missing dependencies are never installed.
+Use ‘emacsvox-muggles-enable’ or ‘emacsvox-muggles-disable’ for a session
+choice, then ‘emacsvox-muggles-save’ to persist those choices with Customize.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-muggles-ui
+@section emacsvox-muggles-ui
+
+Inspect converted Muggles without loading their optional libraries.
+Session actions and explicit Customize saving retain the selected row.
+
+@subsection Emacsvox-Muggles-Ui Commands
+
+@subsubsection emacsvox-muggles-browse
+@deffn {Command} emacsvox-muggles-browse
+@findex emacsvox-muggles-browse
+
+@format
+Browse managed Muggles without enabling, running or saving anything.
+Only converted entries are listed.  RET explains the selected entry; e and d
+change its session choice, r runs it in the captured source, and W saves all
+session choices through Customize.  q keeps changes and returns.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-details
+@deffn {Command} emacsvox-muggles-ui-details
+@findex emacsvox-muggles-ui-details
+
+@format
+Explain the selected Muggle, its state, entry key and explicit actions.
+Help changes no settings; q returns to the exact list row and column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-disable
+@deffn {Command} emacsvox-muggles-ui-disable
+@findex emacsvox-muggles-ui-disable
+
+@format
+Remove the selected Muggle’s managed keys and close it if active.
+Keep personal bindings, completed actions and direct M-x use; do not save.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-enable
+@deffn {Command} emacsvox-muggles-ui-enable
+@findex emacsvox-muggles-ui-enable
+
+@format
+Enable the selected Muggle’s managed keys for this session.
+Preserve existing bindings.  This does not run the Muggle or save settings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-mode
+@deffn {Command} emacsvox-muggles-ui-mode
+@findex emacsvox-muggles-ui-mode
+
+@format
+Browse managed Muggles with explicit session changes and Customize Save.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-muggles-ui-mode-hook’, as the final or penultimate step
+during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-muggles-ui-details
+?		emacsvox-muggles-ui-details
+W		emacsvox-muggles-ui-save
+d		emacsvox-muggles-ui-disable
+e		emacsvox-muggles-ui-enable
+r		emacsvox-muggles-ui-run
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-refresh
+@deffn {Command} emacsvox-muggles-ui-refresh
+@findex emacsvox-muggles-ui-refresh
+
+@format
+Refresh state without loading Muggles, changing choices or moving selection.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-run
+@deffn {Command} emacsvox-muggles-ui-run
+@findex emacsvox-muggles-ui-run
+
+@format
+Enter the selected Muggle at the captured source location.
+Run works even when managed keys are disabled or blocked.  It leaves the list
+and starts navigation; this is an action, not a preview or an enable request.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-save
+@deffn {Command} emacsvox-muggles-ui-save
+@findex emacsvox-muggles-ui-save
+
+@format
+Save all explicit session Muggle choices through Customize.
+Retain the selected row.  Failed saves leave session choices pending.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-ui-speak-current
+@deffn {Command} emacsvox-muggles-ui-speak-current
+@findex emacsvox-muggles-ui-speak-current
+
+@format
+Read the selected Muggle’s purpose, choice and availability.
+@end format
+@end deffn
+
 @node emacsvox-multiple-cursors
 @section emacsvox-multiple-cursors
 
@@ -21515,7 +21717,7 @@ tabulated information.
 
 Common logical table formatting and navigation.  Adapters supply complete
 cell values and source positions; reading never calls native table editors.
-Agent Shell retains its public commands and presentation preferences.
+Agent Shell retains its public commands and host-owned reading context.
 
 @subsection Emacsvox-Table-Reader Commands
 
@@ -21574,16 +21776,17 @@ Leave table reading and move to following prose.
 @findex emacsvox-table-reader-mode
 
 @format
-Read a Markdown, Org or tabulated list table in place.
+Toggle logical table reading in the current supported buffer.
 
-Use a Control-Meta arrow inside a table to enter reading and move, or use
-the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
-logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
-right without editing and RET reads the cell.  q restores normal mode keys.
-Leaving the table or editing its source also ends this context.  Tabulated
-applications retain their action keys; use M-x reader commands when an action
-occupies a short key.  This mode is independent of Markdown’s markup-stripping
-speech preference.
+Control-Meta arrows enter and read the destination cell.  Plain Up and Down
+read rows by default; ‘emacsvox-table-reader-movement-speech’ can choose cells.
+Use r/c to inspect rows/columns, a for Tables settings, and q to leave in place.
+Quitting or editing suspends automatic entry until you leave the table and
+return, or explicitly enter again.  Source reading does not edit or align text.
+Agent Shell manages its own contextual map and retains native TAB and RET.
+Application lists retain their action keys.  Use M-x reading commands when
+an application action occupies a short key.  Native Org editing feedback and
+Markdown markup-stripping speech remain independent.
 
 This is a minor mode.  If called interactively, toggle the
 ‘Emacsvox-Table-Reader mode’ mode.  If the prefix argument is positive,
@@ -21625,6 +21828,17 @@ Move COUNT logical rows down, retaining the column and reading the row.
 @end format
 @end deffn
 
+@subsubsection emacsvox-table-reader-next-row-cell
+@deffn {Command} emacsvox-table-reader-next-row-cell  (&optional count)
+@findex emacsvox-table-reader-next-row-cell
+
+@format
+Move COUNT rows down, retaining the column and reading the cell.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
 @subsubsection emacsvox-table-reader-next-table
 @deffn {Command} emacsvox-table-reader-next-table
 @table @kbd
@@ -21656,6 +21870,17 @@ Move COUNT logical columns left and read the destination cell.
 
 @format
 Move COUNT logical rows up, retaining the column and reading the row.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-previous-row-cell
+@deffn {Command} emacsvox-table-reader-previous-row-cell  (&optional count)
+@findex emacsvox-table-reader-previous-row-cell
+
+@format
+Move COUNT rows up, retaining the column and reading the cell.
 
 (fn &optional COUNT)
 @end format
@@ -21733,6 +21958,36 @@ Speak the complete logical table row at point.
 
 @subsection emacsvox-table-reader Options
 
+@defvar {User Option} emacsvox-table-reader-activation
+@verbatim
+When table reading starts.
+Nil uses each adapter’s default: automatic in Agent Shell and on demand
+elsewhere.  An explicit choice applies to modes without an override.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-coordinates
+@verbatim
+Whether table movement also announces the destination coordinates.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-table-reader-data-position
 @verbatim
 Whether table cell data precedes or follows its titles.
@@ -21742,6 +21997,35 @@ Default Value:
 @verbatim
 
 first
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-edge-action
+@verbatim
+Whether vertical movement leaves a table or stops at its edge.
+Application lists always stop.  Explicit exit commands remain available.
+@end verbatim
+
+Default Value:
+@verbatim
+
+leave
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-entry-detail
+@verbatim
+Whether entering a table announces its dimensions as well as the cell.
+@end verbatim
+
+Default Value:
+@verbatim
+
+full
 
 @end verbatim
 
@@ -21763,10 +22047,59 @@ nil
 
 @end defvar
 
+@defvar {User Option} emacsvox-table-reader-mode-preferences
+@verbatim
+Table preferences by major mode.
+Each entry is (MODE . ((SETTING . VALUE) ...)).  SETTING is titles,
+data-position, movement-speech, activation, coordinates, entry-detail,
+repeat-titles or edge-action.  VALUE inherit explicitly follows common
+defaults, including when an older Agent Shell option is set.
+Agent Shell transcript and viewport share the agent-shell-mode entry.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-movement-speech
+@verbatim
+What plain Up and Down read while navigating a table.
+Control-Meta arrows always read the destination cell.
+@end verbatim
+
+Default Value:
+@verbatim
+
+row
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-repeat-titles
+@verbatim
+Whether movement repeats titles that were already spoken.
+When nil, omit unchanged row and column titles on consecutive cell moves.
+Explicit inspection always uses the selected titles.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-table-reader-titles
 @verbatim
-Titles spoken with cells in the explicit table reader.
-Agent Shell retains its own table speech preferences.
+Default titles spoken with logical table cells.
 @end verbatim
 
 Default Value:
@@ -21777,6 +22110,23 @@ Default Value:
 @end verbatim
 
 @end defvar
+
+@node emacsvox-table-settings
+@section emacsvox-table-settings
+
+Capture a source buffer, browse pending choices and save only explicitly.
+
+@subsection Emacsvox-Table-Settings Commands
+
+@subsubsection emacsvox-table-settings
+@deffn {Command} emacsvox-table-settings
+@findex emacsvox-table-settings
+
+@format
+Browse pending table choices for a captured source buffer.
+Apply temporarily to that buffer, or explicitly save common or mode defaults.
+@end format
+@end deffn
 
 @node emacsvox-table-ui
 @section emacsvox-table-ui

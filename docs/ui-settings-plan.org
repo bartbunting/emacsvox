@@ -1759,6 +1759,390 @@ checks, listening acceptance, migration results and commits separately. Do not
 wait until the last slice to test the complete read, adjust, save and return
 workflow introduced by an earlier slice.
 
+*** Individually managed Muggles proposal, 2026-10-17
+
+Status: source inventory and enable/disable contract accepted on 2026-10-18.
+The Org heading-navigation pilot and settings browser are implemented;
+verification is recorded below. Remaining conversions are future slices.
+Configurable context rules remain optional and undecided.
+
+Evidence: [[file:../lisp/emacsvox-muggles.el][the main collection]] and
+[[file:../lisp/extra-muggles.el][the extra collection]] combine Hydra definitions,
+dependency loading and immediate binding installation. The main collection
+loads unrelated packages including =xbacklight= and the media player, replaces
+=C-y= and =M-y=, and installs an Org binding through deferred loading. Both
+collections assign =s-m= to different actions: maths navigation and a generated
+media-player map command. Their current winner depends on load order.
+
+The extra collection also contains generated keymap Muggles, optional package
+checks and an autoload wizard. That wizard discovers loaded commands by name
+and emits a fixed library name, so it cannot serve unchanged as a module
+registry. Both collections currently have separate optional Make targets;
+preserve that distinction when reviewing build and packaging support.
+
+Local configuration already defines =my/org-navigation= independently, with
+=C-c C-SPC= in Org. Treat that as a possible pilot for opt-in adoption, not
+permission to rewrite personal configuration. The existing built-in Org table
+Muggle uses native Org editing commands; it is distinct from the shared table
+reader and the preceding table-settings proposal.
+
+**** Separate definitions, activation and discovery
+
+Give each Muggle a stable identity, explanation, entry command(s), required
+packages, proposed bindings and supported context. A small registry should
+make these discoverable without loading every integration or installing keys.
+Allow each Muggle to be loaded independently; whether that means one file per
+Muggle or a few cohesive files belongs to the implementation review. Coordinate
+paths with the separately planned Lisp directory reorganisation, without
+making that larger migration a prerequisite.
+
+Keep [[file:../lisp/emacsvox-hydra.el][Hydra speech support]] shared and independent
+of which Muggles are enabled. Disabling a Muggle must not disable speech for
+other Hydras. Audit entry/exit changes to hint verbosity and minor modes so
+temporary state does not leak between Muggles. Disabling must not undo edits
+or other completed actions performed through a Muggle.
+
+Enable/disable must manage bindings and deferred activation reversibly.
+Prefer owned keymaps over rewriting global or package maps. Where direct map
+changes are necessary, restore prior bindings only while the installed binding
+is still ours; preserve later personal/package changes. Repeated enable/disable
+must be harmless, and a delayed package load must not reactivate a disabled
+Muggle. Detect conflicts and explain the displaced action before adopting a
+binding; do not resolve the existing =s-m= collision by silent reassignment.
+
+Distinguish configuration from current availability: enabled, disabled,
+missing dependency, outside supported context, or binding conflict. Loading a
+package is not the same as enabling its Muggle. Disabling need not unload Lisp
+definitions. Decide whether direct legacy =M-x= entry commands remain callable
+when disabled, and how disabling an active Muggle exits its temporary map.
+Describe that contract explicitly before implementation.
+
+**** Settings and optional context rules
+
+Provide a browsable Muggles list with explanation, enabled state, entry keys,
+availability and effective scope. Offer Enable, Disable, Help and an explicit
+Save for startup choices. Merely selecting a row must not activate the Muggle.
+Keep runtime changes and persisted choices distinct; no bulk enable on opening
+the list. Show unavailable modules with a reason rather than silently hiding
+them or installing dependencies.
+
+The first version can use each module's supported context and an individual
+on/off switch. If configurable scope proves useful, start with simple choices
+such as all supported buffers, selected major modes or excluding selected
+modes. A current-buffer override is another possible later addition. Context
+rules would govern availability and bindings, not automatically open a Hydra.
+
+If rules are adopted, define precedence, derived-mode matching, overrides,
+buffer/mode changes and how to explain the effective result. Modes alone may
+be insufficient for Org table-at-point or Agent Shell editable-input contexts.
+Keep essential command preconditions even without configurable rules. A general
+predicate language or connection to presentation rules is not assumed.
+
+**** Inventory and implementation proposal, 2026-10-18
+
+Inventory baseline: =28f1cbd6c= on =master=. The original proposal and audit
+are retained below; the accepted contract and implementation checkpoints follow.
+The audit reads
+both collections, their shared Hydra adapter, optional Make targets, existing
+Hydra tests and the independently defined personal Org navigation menu.
+No collection was loaded into a running profile during the audit.
+
+***** Inventory
+
+There are 16 Hydra menus, two generated keymap menus and one standalone
+Ido-yank command. The latter can be managed independently of repeatable yank,
+giving 19 individually selectable entries. All Hydra entries require Hydra
+and the shared =emacsvox-hydra= speech adapter. Dependencies below describe
+the commands used by each entry, rather than the collections' broad current
+load requirements. IDs are proposed identifiers, not new public APIs.
+
+For Hydra rows, the listed stem is followed by =/body= for its entry command,
+unless a row explicitly identifies another entry. Keys are current source
+bindings, not permission to install them over existing bindings.
+
+| Proposed ID | Current command or Hydra stem | Current keys and context | Dependencies and effects to preserve or isolate |
+|-------------+-------------------------------+--------------------------+------------------------------------------------|
+| brightness | =emacsvox-muggles-brightness= | Global =<print>= and =s-.= | Uses =light-*= commands and the external =light= program; changes hardware brightness. Entry quiets hints. The collection requires =xbacklight= instead; normal autoloads supply =light-*=. |
+| org-table | =emacsvox-muggles-org-table= | Org =C-c t= | Org and =emacsvox-org= table commands; native field/row movement can edit or extend tables. Requires a table at point. Entry quiets hints. Distinct from the shared table reader. |
+| hideshow | =emacsvox-muggles-hideshow= | Global =C-, h= | Built-in Hideshow in a supported buffer. Entry enables =hs-minor-mode=; actions change folding. |
+| toggle-option | =emacsvox-muggles-toggle-option= | Global =C-c o= | Built-in abbrev/debug controls; the Lispy/Smartparens action needs both optional packages. Entry enables hints. Explicit actions change buffer or global options. |
+| navigate | =emacsvox-muggles-navigate= | Global =s-n= | Built-in text navigation. Entry toggles hints and immediately attempts =next-line=, suppressing its errors. |
+| yank | =emacsvox-muggles-yank-pop= | Global =C-y= and =M-y= invoke generated =/yank= and =/yank-pop= heads | Built-in yank commands; optional =browse-kill-ring= for list browsing and Ido helper for selection. Entry quiets hints. Preserve yank repetition and undo boundaries. |
+| ido-yank | =emacsvox-muggles-ido-yank=, ordinary command | Global =M-C-y= | Built-in Ido; selects and inserts kill-ring text, replacing the prior yank when appropriate. Also called by the yank menu. |
+| undo | =emacsvox-muggles-undo-only/undo-redo= | Global =s-/= | Built-in =undo-only= and =undo-redo=. Entry quiets hints; preserve editing and undo behavior. |
+| maths | =emacsvox-muggles-maths-navigator= | Global =s-m= | =emacsvox-maths= and its external service; some input routes need additional packages. Entry quiets hints; commands submit maths and navigate results. |
+| player-map | =emacsvox-muggles-emacsvox-m-player-mode-map-cmd=, generated command | Global =s-m= | =emacsvox-m-player-mode-map= and the media-player runtime. Uses a synchronous key-reading loop rather than Hydra. Collides with maths. |
+| pianobar-map | =emacsvox-muggles-pianobar-key-map-cmd=, generated command | Global =s-'= | Created only if =pianobar= is already loaded; needs its keymap and player runtime. Uses the same synchronous loop. |
+| player | =emacsvox-muggles-m-player= | Global =s-;= | =emacsvox-m-player=, =emacsvox-amark= and player dependencies. Starts or controls playback, changes filters and saves audio bookmarks. |
+| outliner | =emacsvox-muggles-outliner= | Global =C-. o= | Built-in Outline and its speech integration. Entry enables =outline-minor-mode=; actions change folding and point. |
+| info | =emacsvox-muggles-info-summary= | Info =?= | Built-in Info. Replaces =Info-summary=, which remains reachable with =?= inside the menu. Heads generally leave the menu. |
+| origami | =emacsvox-origami= | Global =C-, /= | Optional Origami. Entry enables =origami-mode= and toggles hints; actions change folding. Its stem does not match the existing enumeration pattern. |
+| smartparens | =emacsvox-muggles-smartparens= | Global =C-c ,= | Optional Smartparens and its applicable editing context. Entry quiets hints; heads edit structured text. |
+| view | =emacsvox-muggles-view= | Global =C-. v= | Built-in View commands and Emacsvox reading commands. Entry toggles hints but does not enable =view-mode=. Heads move, search, set marks, copy and change selective display. |
+| vuiet | =emacsvox-muggles-vuiet= | Global =C-; v= | Defined only when =locate-library= finds Vuiet. Needs Vuiet, its runtime and =emacsvox-vuiet-track-info=. Entry quiets hints; commands control playback and library state. |
+| org-navigation | =emacsvox-muggles-org-nav= | Org =C-c C-SPC= | Org, Outline and =emacsvox-outline=. Entry toggles hints. Conflicts with the independently configured =my/org-navigation/body=. |
+
+The first nine rows come from =emacsvox-muggles.el=; the remaining ten come
+from =extra-muggles.el=. No other =defhydra= forms were found in maintained
+=lisp/*.el=. The personal =my/org-navigation= Hydra is outside this inventory's
+management boundary and must not be rewritten as part of the pilot.
+
+***** Loading, binding and lifecycle findings
+
+- Both collections mix definitions with unconditional key installation and
+  broad dependency loading. Both require Org before their Org
+  =with-eval-after-load= forms, so those forms normally run immediately.
+  Merely postponing the existing collection load cannot provide independence.
+- The extra collection silently loads Smartparens and Origami if present but
+  still defines their menus if absent. Pianobar checks =featurep= once; Vuiet
+  checks library discovery once. Missing, installed and loaded need distinct
+  treatment. The collection prose mentions automatic Hydra installation, but
+  these collection bodies contain no package-install operation.
+- A fresh isolated Emacs 31.0.90 with Org 9.8.7 confirms the default replacements
+  =C-y= → =yank=, =M-y= → =yank-pop= and Info =?= → =Info-summary=.
+  Global =C-,=, =C-.= and =C-;= are not prefix maps in that baseline. A future
+  binding check must inspect the complete key sequence and prefix, not treat
+  an integer result from =lookup-key= as a free key. This is not a live-profile
+  or Agent Shell key audit.
+- The competing =s-m= assignments currently resolve by collection load order.
+  The personal configuration independently installs =C-c C-SPC= after Org
+  loads. No silent reassignment is acceptable for newly managed entries.
+- The installed Hydra is =hydra-20250316.1254=. Its current-map/body state and
+  exit function can identify and close an owned active Hydra. Verify the
+  supported dependency versions before implementing this lifecycle. Do not
+  close an unrelated Hydra when disabling one entry.
+- =emacsvox-hydra-post= stops speech and plays the close cue; it does not
+  restore hint verbosity or minor modes. Several entries change
+  =hydra-is-helpful= globally. Temporary entry adjustments need ownership and
+  restoration; explicit option changes should retain their intended effect.
+- The generated keymap helper calls commands in a =read-key-sequence= loop.
+  Its first nonmember key is dispatched through the global map, bypassing
+  buffer and minor-mode bindings. It needs a separate lifecycle adapter and
+  regression tests; it cannot inherit Hydra's exit behavior automatically.
+- The autoload wizard enumerates only loaded commands matching
+  =emacsvox-muggles-.*/body$=. It misses Origami, generated keymap commands and
+  Ido-yank; it assigns all discoveries to the main collection and emits global
+  bindings even for commands found through other maps. Keep its public command
+  until a reviewed replacement exists; do not use it as the registry source.
+- Both collections are outside ordinary compiled objects and have separate
+  =muggles= and =extra-muggles= Make targets. Existing Hydra tests cover speech
+  advice and LV, not collection loading, reversible bindings or dependencies.
+  Preserve source attribution when extracting definitions. The directory
+  reorganisation remains separate work; no file moves are required for the pilot.
+
+***** Accepted enable, disable and save contract
+
+Accepted on 2026-10-18. Disabled means no managed entry keys or deferred
+activation, while deliberate =M-x= use of an existing command remains possible.
+This follows ordinary Emacs command/minor-mode separation and preserves public
+entry commands. It is not a security or package-unloading switch. Direct
+command invocation is deliberately retained.
+
+Enable changes the requested session state. When dependencies and context are
+usable, it activates only that entry's managed bindings; it never enters the
+menu or performs its commands. Missing dependencies leave the request visible
+with an explanation and install nothing. Disabling withdraws owned bindings
+and closes that entry's active menu through its normal exit path. Commands
+already completed, text edits, playback, folding and intentional option changes
+remain. Enabling again does not rerun any previously invoked action.
+
+Use owned minor-mode maps where practical. Keep registration separate from
+loading a module or enabling bindings. Any necessary direct-map installation
+records the previous binding and restores it only if the current binding is
+still ours. Deferred callbacks recheck current requested state before acting.
+Repeated enable/disable is harmless. Package loading and major-mode changes
+must not revive an explicitly disabled entry.
+
+An enabled entry can be available by =M-x= while an entry key is blocked by a
+conflict. Report the actual conflicting command. Do not overwrite it, create
+an incompatible prefix, invent another key, or present the binding as active.
+Known legacy replacements such as yank and Info need explicit adoption with
+their displaced action explained. Package-specific maps, including Agent Shell
+prompt and viewport maps, require their own effective-binding checks before
+installing keys in those contexts.
+
+Treat current requested state, runtime availability and persisted startup
+preferences as separate information. The list should show, for example,
+"Enabled here, not saved; key blocked by my/org-navigation/body" or
+"Disabled; saved enabled". It must distinguish missing dependencies,
+unsupported context and binding conflicts. Opening the list, selecting a row
+and asking for Help change nothing. Enable and Disable take effect for the
+session; explicit Save persists the choices through Customize. No separate
+Muggles data store is needed. Context rules and arbitrary predicates remain
+deferred.
+
+***** Proposed defaults and compatibility migration
+
+New installations enable no Muggles implicitly. Keep both public collection
+features and current command names. An explicit load of a legacy collection
+continues to request its historical members, but an explicit per-entry saved
+or session Disabled choice takes precedence. Model preferences as per-entry
+overrides so absence and explicit Disabled are different; an empty list cannot
+ambiguously mean both "use legacy defaults" and "disable all".
+
+Convert collection members incrementally. When an entry is extracted, its old
+location delegates definition and activation to the managed module rather than
+defining it twice. Unconverted members remain visibly legacy-managed and retain
+their existing implementation; do not imply they already have working switches.
+The new browser may list all 19 records, but only converted entries offer
+Enable/Disable. Loading the browser must not load either collection.
+
+For converted entries, collision protection takes precedence over historical
+last-loader-wins binding replacement. This is a deliberate proposed migration
+change, not unchanged behavior. Document it, show the conflict, and offer the
+existing =M-x= command. Do not automatically edit personal configuration or
+write Customize merely because a collection was loaded. An explicit Adopt
+action for displacing known bindings belongs in a later migration slice if
+needed; the pilot can leave conflicting keys blocked.
+
+***** Pilot and delivery sequence
+
+1. After the contract is accepted, implement the registry, session/Customize
+   state and reversible binding ownership with one independently loadable Org
+   heading-navigation module. Retain =emacsvox-muggles-org-nav/body=. Use
+   =C-c C-SPC= only when available; otherwise show the conflicting command.
+   Preserve =my/org-navigation= and its key unchanged. A clean test profile can
+   exercise the managed binding; the normal profile can use the public command
+   deliberately until a separate personal migration is chosen.
+2. Add the browsable settings list and discovery through the existing settings
+   routes, following ADR 0027. Include useful short descriptions, longer Help,
+   effective keys, requested/saved state and availability. Enter opens details;
+   Enable, Disable, Run and Save are explicit actions. Keep focus after each
+   action and reject stale source context. Never perform a Muggle action as a
+   preview: yank, undo, brightness and playback have real effects.
+3. Convert the remaining native/navigation menus in small reviewed batches.
+   Retain native Org table editing separately from table reading. Establish
+   binding adoption for yank and Info before changing those defaults. Classify
+   prerequisite minor-mode changes separately from temporary UI state so
+   disabling a menu does not unexpectedly reveal folded text.
+4. Convert external-package and runtime-dependent entries, including brightness,
+   maths and the media players. Give optional heads explicit unavailable
+   feedback. Treat the generated keymap loops as a separate adapter slice,
+   including correct handling of the first key outside the menu.
+5. Finish the collection compatibility and autoload-wizard migration. Test both
+   collection load orders, startup preferences and absent dependencies. Keep
+   compatibility entry points; removal needs a separate decision. Revisit
+   optional context rules only after the simple switches have been tried.
+
+For the pilot, regression coverage must include saved Disabled before and after
+legacy collection load, enable/disable before deferred Org loading, repeated
+toggles, later personal rebinding, the personal key conflict, direct =M-x= while
+disabled, exit of an owned active Hydra and preservation of unrelated Hydras.
+Check hint restoration and explicit hint changes separately. Exercise actual
+graphical menus, source return, Help, focus, and restart persistence. Build
+ordinary code and the affected optional collection target, verify loaded paths
+in a fresh Emacs, and record listening acceptance separately.
+
+The inventory checkpoint changed documentation only. The isolated binding inspection
+does not prove runtime availability of every external player or device. No
+implementation, key migration or listening acceptance was claimed at that point.
+The Disabled semantics and conflict protection were accepted before the pilot.
+
+***** Org navigation pilot checkpoint, 2026-10-18
+
+=emacsvox-muggles-core= provides one converted registration, separate session
+and configured overrides, explicit Customize Save, read-only Status and
+binding reconciliation when Org loads. The independently loadable
+=emacsvox-muggle-org-navigation= retains the original public Hydra stem and
+generated command names. Loading it defines commands without installing keys.
+The core belongs to the ordinary build; the Hydra-dependent pilot keeps an
+optional =muggle-org-navigation= target and is also built by =extra-muggles=.
+The ordinary build does not acquire a mandatory Hydra dependency.
+=extra-muggles= loads those definitions and requests activation through the
+manager; it no longer defines the pilot twice or overwrites a conflicting key.
+
+The pilot manages the Org map directly because the legacy binding belongs
+there. It records the original binding, restores only an owned entry, checks
+the global binding and rejects blocked prefixes. An independently installed
+binding to the same command stays independently owned. Enable loads only the
+pilot after Org is ready, not either Muggles collection or the media player.
+Missing dependencies remain visible and are not installed. Disable closes only
+an active matching Hydra. Entry validates Org context before altering another
+menu, and exit or failed entry restores temporary hint state.
+
+Session changes do not write settings. Save preserves explicit nil overrides
+and retains pending choices on failure. It refuses saving from an unloaded
+init, where Customize would otherwise set only a temporary value. Personal
+=my/org-navigation= and its binding are untouched. The source tests cover
+real collection loading, deferred activation, conflicts, restart persistence,
+direct M-x use while disabled and graphical navigation. The core supplies a
+lazy entry command that the optional Hydra replaces on first use. This keeps
+direct M-x entry available without making Hydra a startup or documentation
+dependency.
+
+Twenty-one focused source checks passed in graphical Emacs: eighteen pilot
+checks and three shared Hydra checks. Twenty compiled checks passed before
+the final lazy-entry adjustment; a fresh graphical smoke check then verified
+the final normal loading path, compiled core with optional pilot source,
+including direct entry, movement, active Disable and personal-key protection.
+The optional collection compiled successfully. The normal rebuild and byte-code
+preflight passed, and the manual and reference were regenerated. Optional
+byte-code was tested before restoring the normal build: the reference generator
+requires its compiled-module set to match the ordinary build manifest.
+The non-mutating documentation gate and header check passed. Listening acceptance remains open;
+no live session or personal configuration was changed. The pilot is committed
+as =183175da4=; listening acceptance remains separate.
+
+Only the pilot has working management commands. The other 18 entries and
+optional context rules remain future work.
+
+***** Browsable Muggles settings, 2026-10-18
+
+=C-e H m= opens the managed list. Settings search and action search select the
+same menu item without opening or activating it. The list contains converted
+entries only, currently Org heading navigation. It uses the shared spoken
+tabulated interface and preserves row and column after Enable, Disable, Save
+and refresh. Enter and question mark open details; Help returns to the exact
+selection. Closing returns to the originating menu item and keeps session choices.
+
+Rows distinguish the current request, unsaved session choices, configured
+overrides, entry keys and availability. Configured means the current Customize
+or init override, rather than a claim to have reread the on-disk custom file.
+Explicit nil and absent overrides remain distinct. Short adjustment feedback
+announces the new state and availability; details explain purpose, dependencies,
+session-wide scope and all actions. The Actions chooser includes these controls.
+
+Run is separate from browsing and Help. It validates the captured source marker,
+content guard, Org mode and visible restriction before entering the Muggle in
+the source. Disabled or blocked managed keys do not prevent deliberate Run.
+Missing dependencies fail before leaving the list. Opening the browser loads
+neither optional Muggle collections nor Hydra. No package keys or personal
+configuration are changed merely by browsing.
+
+Fifty-five focused checks pass in fresh graphical Emacs, including seven
+browser checks and the existing manager and menu suites. The final run verifies
+the loaded byte-code paths for the browser, shared interface, menu and settings
+discovery. Coverage includes passive opening, explicit nil Save, failed Save,
+row/column retention, Help return, menu return, disabled Run and invalid source
+rejection. Source checks also exercised the browser and manager.
+
+Three older menu tests assumed a Speech menu without Spelling and Tables.
+They failed identically against the unchanged menu; their movement sequences
+and expected order now match the existing menu. No speech-menu behaviour changed.
+The incremental build, byte-code preflight and header check pass; the manual
+and reference are regenerated. The non-mutating documentation gate passes.
+Listening acceptance remains open. No live session or personal configuration
+was changed. The browser is committed as =c42008517=.
+
+**** Delivery and checks
+
+- [X] Inventory every Muggle, dependency, entry command, binding and side effect,
+  including generated maps and optional integrations in both collections.
+- [X] Agree enable/disable semantics, migration defaults and compatibility for
+  existing collection loads and command names before restructuring code.
+- [X] Implement a small registry and one independently loadable pilot; preserve
+  personal Org navigation until an explicit migration is agreed.
+- [X] Add the settings list, explanations, runtime activation and explicit Save
+  for converted entries.
+- [ ] Verify missing packages, deferred loads, conflicts, restoration after
+  personal rebinding, repeated toggles, active-map exit and restart persistence.
+- [ ] Check that unrelated Muggles and application keys retain their behaviour.
+  Any Agent Shell binding changes require the full upstream/contextual map audit.
+- [ ] Complete relevant source tests, optional-module builds, byte-code
+  preflight, fresh-Emacs and graphical interaction checks. Record listening
+  acceptance and commits separately from implementation.
+- [ ] Revisit context rules only after the simpler activation model is tried.
+
 *** Menu focus audit, 2026-10-17
 
 Status: implemented and rebuilt; listening acceptance pending. The audit covers

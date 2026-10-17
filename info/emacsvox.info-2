@@ -1155,10 +1155,74 @@ Explicit word and partial-line reads at ‘some’ or ‘none’ use
 ‘tts-character-to-speech-table’, the Emacs table also used for character
 reading.
 
+9.4.2 Navigate Org headings with a Muggle
+-----------------------------------------
+
+A Muggle is a temporary menu of related commands, implemented with
+Hydra.  The Org heading-navigation Muggle lets you repeat movement and
+section reading with single keys.  It requires the Hydra package and an
+Org buffer.  Start it directly with ‘M-x emacsvox-muggles-org-nav/body
+<RET>’.  Entry announces the menu without moving point or changing the
+document.
+
+   Use ‘n’ and ‘p’ to move between visible headings and speak their
+sections.  ‘<SPC>’ speaks the current section from point.  ‘f’ and ‘b’
+move between headings at the same level, and ‘u’ moves to the parent.
+‘g’ opens Org's heading chooser and leaves the menu.  ‘?’ reads the
+available keys; ‘q’ or ‘C-g’ exits.  Automatic Hydra hints are quiet
+during this menu; exit restores their previous setting unless it was
+changed during the visit.
+
+   Press ‘C-e H m’ to browse managed Muggles, or run ‘M-x
+emacsvox-muggles-browse <RET>’.  Settings and action search also find
+the Muggles entry.  The list currently contains Org heading navigation;
+other Muggles retain their legacy configuration until they gain
+individual switches.  Opening or browsing the list does not load or
+activate the navigation menu.
+
+   Up/down selects a row and reads its purpose, current choice,
+configured override and availability.  Left/right inspects columns;
+‘<SPC>’ reads the full row.  ‘<RET>’ or ‘?’ explains the selected Muggle
+and its actions.  Returning from Help with ‘q’ restores the row and
+column.  ‘g’ refreshes the displayed state.
+
+   On Org heading navigation, ‘e’ requests ‘C-c C-<SPC>’ in Org for this
+session.  If Org has not loaded, activation waits for it.  Existing
+personal or package bindings are preserved, and the availability column
+names any conflict or missing dependency.  ‘d’ removes only the managed
+entry key and closes this Muggle if active.  It preserves completed
+actions and independently configured bindings.  These choices apply
+throughout the session, rather than to one buffer.
+
+   Enable and Disable retain the selected row and show the choice as not
+saved.  ‘W’ saves all explicit session Muggle choices through Customize;
+the ‘emacsvox-muggles’ customisation group contains the configured
+overrides.  An absent override follows a legacy collection request,
+otherwise disabled; explicit Disabled takes precedence over a legacy
+request.  Session choices take precedence until saved or changed.  ‘q’
+closes the list and keeps session choices; when opened through settings,
+it returns to the same menu item.
+
+   To try the Muggle, open the list from an Org document and press ‘r’.
+This leaves the list and starts heading navigation at the captured
+source position, even when the managed key is disabled or blocked.  It
+does not enable keys or save settings.  A closed buffer, changed source
+item or different major mode requires reopening from the intended Org
+location.  Run is an explicit action; browsing and Help never perform
+it.  Once navigation starts, ‘q’ exits its menu in Org.
+
+   The named commands ‘emacsvox-muggles-enable’,
+‘emacsvox-muggles-disable’, ‘emacsvox-muggles-status’ and
+‘emacsvox-muggles-save’ offer the same management operations without the
+list.  Direct ‘M-x emacsvox-muggles-org-nav/body <RET>’ also remains
+available while disabled.  Loading ‘extra-muggles’ requests Org heading
+navigation through the manager, respecting explicit Disabled choices and
+protecting conflicting bindings.
+
 
 File: emacsvox.info,  Node: Reading Markdown And Org Tables,  Up: Browsing Structure
 
-9.4.2 Reading Markdown and Org tables
+9.4.3 Reading Markdown and Org tables
 -------------------------------------
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table
@@ -1228,7 +1292,7 @@ with automatic entry as its initial policy.  It retains native Tab,
 Shift-Tab and Return actions and handles character movement within
 rendered cells; see *note Agent Shell: Agent Shell.
 
-9.4.3 Reading application lists
+9.4.4 Reading application lists
 -------------------------------
 
 In an application built on Tabulated List mode, use a Control-Meta arrow
@@ -1258,7 +1322,7 @@ last row.  A refresh ends reading; enter again to inspect the refreshed
 list.  Custom table printers, image-only cells, and duplicate column
 names are not supported by this reader.
 
-9.4.4 Choose table reading preferences
+9.4.5 Choose table reading preferences
 --------------------------------------
 
 Open ‘M-x emacsvox-table-settings’ from the buffer you want to
@@ -1336,7 +1400,7 @@ replacement or inheritance explicitly to resolve it.  Opening the page
 never rewrites configuration.  Advanced configuration lives in the
 ‘emacsvox-table-reader’ customisation group.
 
-9.4.5 Browsing CSV data
+9.4.6 Browsing CSV data
 -----------------------
 
 Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table
@@ -5518,118 +5582,3 @@ configuration.
 * Selection, copying and editing: Editing Terms.  Translate selection, cut and paste into mark, region, kill and yank.
 * Voices and presentation resources: Presentation Resource Terms.  Distinguish physical voices, named voices, palettes, rules and profiles.
 * Changes and speech output: Speech And Settings Terms.  Distinguish preview, drafts, saving, application and speech workers.
-
-
-File: emacsvox.info,  Node: Working Context Terms,  Next: Editing Terms,  Up: Emacsvox Terminology
-
-17.1 Your working context
-=========================
-
-Buffer
-     An Emacs object containing a document or application view.  It is
-     not necessarily a file, and switching buffers does not close the
-     one you leave.  A window displays a buffer.  See *note Buffers hold
-     your work: (emacsvox)Desktop Objects.
-Window
-     A view of a buffer inside an Emacs frame.  Removing a window does
-     not kill its buffer.  Two windows showing the same buffer are views
-     of the same text, not independent copies.  See *note Working with
-     windows: (emacsvox)Working With Windows.
-Frame
-     An outer Emacs application window, or the corresponding display in
-     a terminal session.  It contains Emacs windows.  Selecting another
-     window within a frame differs from switching applications in the
-     operating system.  See *note Windows and frames: (emacsvox)Working
-     With Windows.
-Point
-     The current editing position, between characters.  Text is normally
-     inserted there.  Short reading often leaves it unchanged; tracked
-     reading advances it.  See *note Reading position and interruption:
-     (emacsvox)Reading From Point.
-Mode
-     The commands and behaviour associated with a buffer.  Its major
-     mode supplies its principal tools; minor modes add other behaviour.
-     See *note Let modes give each buffer its tools: (emacsvox)Object
-     Oriented Desktop.
-Read-only
-     A buffer state that prevents ordinary text edits.  It does not mean
-     the buffer has no unsaved changes, and making a buffer writable
-     does not grant permission to overwrite a protected file.  Special
-     applications may still provide their own operations.  See *note
-     Opening a document safely: (emacsvox)Opening A Document.
-Narrowing
-     Restricting access to part of a buffer without deleting the rest.
-     Reading, movement and many editing commands stay within that
-     portion; widening removes the restriction.  Ordinary file saving
-     still saves the entire buffer.  See *note Reading accessible text:
-     (emacsvox)Reading Without Moving Point. and *note Narrowing:
-     (emacs)Narrowing. in the GNU Emacs Manual.
-Captured source
-     The buffer and position retained when a settings workflow starts.
-     Contextual actions continue to refer to that source rather than
-     whichever menu or editor is currently selected.  A changed or
-     closed source may need to be captured again.  See *note Getting
-     started with settings menus: (emacsvox)Aural Home.
-Scope
-     Where a setting or rule applies, such as one buffer, a session, or
-     global defaults.  Scope is not the same as persistence: a global
-     change need not be saved, and a saved resource need not be active.
-     See *note Choose what persists: (emacsvox)Saving And Startup.
-
-
-File: emacsvox.info,  Node: Editing Terms,  Next: Presentation Resource Terms,  Prev: Working Context Terms,  Up: Emacsvox Terminology
-
-17.2 Selection, copying and editing
-===================================
-
-Mark
-     A remembered position in a buffer.  Point and mark delimit the
-     region, whichever comes first.  The mark can remain after the
-     selection is deactivated; it is not copied text.  See *note
-     Selecting and checking text: (emacsvox)Selecting Text With Speech.
-Region or selection
-     The text between point and mark, including any selected spaces and
-     newlines.  The character at its end is excluded.  The active region
-     is the current selection; some commands can also use an inactive
-     mark.  Establish a fresh region before cutting.  See *note
-     Selection boundaries and activation: (emacsvox)Selecting Text With
-     Speech.
-Transient Mark mode
-     Emacs's usual active-selection behaviour, used by the editing
-     examples.  It is unrelated to the Transient package that supplies
-     settings menus.  See *note Using the region through speech:
-     (emacsvox)Selecting Text With Speech. and *note The mark and the
-     region: (emacs)Mark. in the GNU Emacs Manual.
-Copy
-     Store a passage in the kill ring while leaving its source text
-     unchanged.  The destination becomes an independent text copy when
-     you paste it.  See *note Copying between buffers: (emacsvox)Copying
-     Text Between Buffers.
-Kill or cut
-     Remove text and keep it in the kill ring for later insertion.  Some
-     deletion commands do not keep that copy.  Killing a buffer is a
-     different operation: it closes the buffer rather than copying its
-     contents.  See *note Moving text safely: (emacsvox)Moving Text
-     Safely.
-Yank or paste
-     Insert text from the kill ring, or through configured clipboard
-     integration, at point.  It changes the destination buffer, not
-     automatically its saved file.  See *note Checking a paste:
-     (emacsvox)Copying Text Between Buffers.
-Kill ring
-     Emacs's shared history of copied and cut text.  It can contain more
-     than the latest passage, including text placed there by inspection
-     commands.  It is not a permanent backup or the same store as the
-     system clipboard.  See *note Choosing an earlier copy:
-     (emacsvox)Choosing Earlier Copied Text.
-Clipboard
-     The operating system's text-transfer facility.  Its connection to
-     Emacs depends on the display session and configuration; a new
-     external copy can affect the next paste.  See *note Testing
-     clipboard exchange: (emacsvox)Copying Through The Clipboard.
-Undo
-     Reverse recorded edits in the selected buffer.  It does not reverse
-     a settings save or an action already sent to another application.
-     When listening between successive corrections, use the recovery
-     guide's ‘undo-only’ procedure.  See *note Undo and spoken
-     inspection: (emacsvox)Recovering Text Edits.

@@ -18,6 +18,22 @@ gain. Guided installers pin the matching core and optional engines; Debian
 packages recommend Omnivox 1.18.0 or newer. Updating Emacsvox does not upgrade
 an existing Omnivox installation.
 
+** Independently managed Org navigation Muggle
+
+C-e H m opens a browsable Muggles list with details, session Enable/Disable,
+explicit Run in the source buffer, and Customize Save. State changes retain
+the selected row; Help and menu return retain focus. The list currently offers
+Org heading navigation and is also available through settings/action search.
+
+Org heading navigation can now be enabled and disabled independently with
+=emacsvox-muggles-enable= and =emacsvox-muggles-disable=. These manage the Org
+=C-c C-SPC= entry key without replacing personal bindings. Disable closes an
+active menu while preserving direct =M-x emacsvox-muggles-org-nav/body= use.
+=emacsvox-muggles-status= explains availability, and =emacsvox-muggles-save=
+persists session choices through Customize. Explicit Disabled choices take
+precedence over loading =extra-muggles=. Other collection members retain their
+existing configuration.
+
 ** Shared table reading settings
 
 =C-e H s T= or =M-x emacsvox-table-settings= opens Tables for Markdown,
