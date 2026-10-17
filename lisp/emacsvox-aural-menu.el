@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
 (autoload 'emacsvox-table-settings "emacsvox-table-settings" nil t)
+(autoload 'emacsvox-muggles-browse "emacsvox-muggles-ui" nil t)
 (autoload 'emacsvox-spelling "emacsvox-spelling" nil t)
 (autoload 'emacsvox-settings-changes "emacsvox-settings-changes" nil t)
 (autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
@@ -727,6 +728,22 @@ Cancelled prompts and failed opens restore the suspended menu too."
        (unless transient--prefix (funcall return))
        (signal (car failure) (cdr failure))))))
 
+(defun emacsvox-aural-menu--muggles ()
+  "Browse managed Muggles and their session-wide enable/disable choices.
+Inspect keys, conflicts and configured overrides without activating anything.
+The list offers explicit Run and Customize Save; q returns to this item."
+  (interactive)
+  (let ((context (emacsvox-aural-menu--context)))
+    (emacsvox-aural-menu--open-browser
+     (lambda ()
+       (let ((buffer (emacsvox-muggles-browse)))
+         (with-current-buffer buffer
+           (setq emacsvox-aural-ui-source-position
+                 (copy-marker (plist-get context :position) t)
+                 emacsvox-aural-ui-source-guard (plist-get context :guard)))
+         buffer))
+     #'emacsvox-aural-menu--muggles)))
+
 (defun emacsvox-aural-menu--manual ()
   "Read the offline Emacsvox manual; q returns to this menu.
 Info navigation and index lookup remain available.  Reading changes no
@@ -912,6 +929,7 @@ each editor explains its own draft, Apply and Save actions."
    ("v" "Voices and engines" emacsvox-aural-menu-voices)
    ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
    ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)
+   ("m" "Muggles: browse and enable navigation menus" emacsvox-aural-menu--muggles :transient transient--do-suspend)
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation :transient transient--do-stack)]
   ["This buffer and item"
    ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)

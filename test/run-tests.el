@@ -261,6 +261,7 @@
   (require 'emacsvox-helm-tests)
   (require 'emacsvox-hydra-tests)
   (require 'emacsvox-muggles-tests)
+  (require 'emacsvox-muggles-ui-tests)
   (require 'emacsvox-pydoc-tests)
   (require 'emacsvox-yaml-tests)
   (require 'emacsvox-flycheck-tests)

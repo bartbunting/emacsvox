@@ -298,6 +298,7 @@ emacsvox-mines.elc \
 emacsvox-mu4e.elc \
 emacsvox-multiple-cursors.elc \
 emacsvox-muggles-core.elc \
+emacsvox-muggles-ui.elc \
 emacsvox-net-utils.elc \
 emacsvox-newsticker.elc \
 emacsvox-notmuch.elc \

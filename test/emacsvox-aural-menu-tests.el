@@ -120,7 +120,7 @@
               (execute-kbd-macro (kbd "C-u <f8>"))
               (should-not transient--stack)
               (transient--show)
-              (execute-kbd-macro (kbd "<right> <down> <down> <down> C-j"))
+              (execute-kbd-macro (kbd "<right> <down> <down> <down> <down> C-j"))
               (should (eq (oref transient--prefix command) 'emacsvox-indentation))
               (should (cdr (emacsvox-indentation--state)))
               (execute-kbd-macro (kbd "q q"))
@@ -148,7 +148,7 @@
                 (execute-kbd-macro (kbd "<down> RET"))
                 (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech))
                 (transient--show)
-                (execute-kbd-macro (kbd "<right> <down> <down> <down> <return>"))
+                (execute-kbd-macro (kbd "<right> <down> <down> <down> <down> <return>"))
                 (should (eq (oref transient--prefix command) 'emacsvox-indentation))
                 (transient--show)
                 (execute-kbd-macro (kbd "<down> <down> RET"))
@@ -569,7 +569,7 @@
           (unwind-protect
               (progn
                 (execute-kbd-macro (kbd "C-u <f8> s <right>"))
-                (dolist (key '("r" "p" "c" "i" "t"))
+                (dolist (key '("r" "p" "c" "f" "i" "T" "t"))
                   (with-selected-window transient--window
                     (should (equal (oref (button-get (button-at (point)) 'button-data) key)
                                    key)))

@@ -31,6 +31,7 @@
 
 (defconst emacsvox-settings--destinations
   '(("Table reading and navigation" emacsvox-table-settings emacsvox-table-settings "m")
+    ("Muggles: enable, disable and save navigation menus" emacsvox-aural-menu emacsvox-aural-menu "m")
     ("Table titles and data order" emacsvox-table-settings emacsvox-table-settings "t")
     ("Automatic or on-demand table reading" emacsvox-table-settings emacsvox-table-settings "a")
     ("Table coordinates and repeated headings" emacsvox-table-settings emacsvox-table-settings "c")
@@ -122,6 +123,7 @@
 
 (defconst emacsvox-settings--actions
   '(("Change this feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
+    ("Browse Muggles" emacsvox-aural-menu emacsvox-aural-menu "m")
     ("Browse voices" emacsvox-aural-menu emacsvox-aural-menu-voices "b")
     ("Preferred speech engine" emacsvox-aural-menu emacsvox-aural-menu-voices "e")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
