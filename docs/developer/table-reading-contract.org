@@ -1,14 +1,14 @@
-#+title: Table Reading Consolidation: Slice 1 Contract
+#+title: Table Reading Consolidation: Contract and Implementation
 #+date: 2026-10-17
 #+startup: overview
 
 * Status and scope
 
-Slice 1 design and compatibility audit completed on 2026-10-17. This contract
-guides slices 2–5 of the [[file:../ui-settings-plan.org::table-reading-consolidation][table reading plan]]. The key, settings and activation changes
-below remain planned. No live bindings, preferences, packages or source modules
-were changed during the slice 1 audit. Slice 2's implementation checkpoint is
-recorded separately below; listening acceptance remains open.
+The design audit and adapter work are committed as =caba80207=. Slices 3–6
+of the [[file:../ui-settings-plan.org::table-reading-consolidation][table reading plan]] are implemented and automatically verified on
+2026-10-18. Listening acceptance remains open. The initial
+behaviour and inspected live-session identities below are historical audit
+evidence; implementation checks use isolated fresh Emacs processes.
 
 Consolidate reading operations and preferences across Markdown source, Org,
 rendered Agent Shell responses and supported Tabulated List applications.
@@ -139,7 +139,8 @@ compatible entry points while delegating suitable work to the shared reader.
 * Key precedence and displaced actions
 
 The current overlap regression passes on both dependency sets. These are the
-five existing intentional overrides in its complete public-map comparison:
+six intentional overrides in its comparison, including private and shared
+Emacsvox commands:
 
 | Context/key | Emacsvox action | Upstream action and retained route |
 |-------------+-----------------+------------------------------------|
@@ -148,10 +149,10 @@ five existing intentional overrides in its complete public-map comparison:
 | Viewport table =r= | Read row | =M-x agent-shell-viewport-reply=. |
 | Viewport table =c= | Read column | =M-x agent-shell-viewport-reply-continue=. |
 | Viewport table =a= | Table settings | =M-x agent-shell-viewport-reply-again=. |
+| Viewport table =q= | Leave reading in place | A second =q= or =M-x bury-buffer=. |
 
-Add one intentional override in slice 4: viewport table =q= leaves reading.
-After that, ordinary viewport =q= again runs =bury-buffer=; =M-x bury-buffer=
-also remains available. In the transcript, =q= is a reader command only while
+Viewport table =q= leaves reading in place. After that, ordinary viewport =q=
+again runs =bury-buffer=; =M-x bury-buffer= also remains available. In the transcript, =q= is a reader command only while
 reading; editable input continues to insert it literally.
 
 The audit compared shell, inherited Shell Maker, viewport view/edit, fragment,
@@ -264,7 +265,7 @@ Aural submission rules and explicit Customize saving remain in force.
 
 * Slice 2 implementation checkpoint
 
-Implemented on 2026-10-17; uncommitted. Existing Agent Shell commands invoke
+Implemented on 2026-10-17; committed as =caba80207=. Existing Agent Shell commands invoke
 shared inspection, copying and movement through a dynamically scoped adapter.
 The adapter supplies fresh logical cells and Agent Shell Aural submissions;
 its caller supplies the legacy presentation preferences and host exit action.
@@ -296,3 +297,44 @@ Enter in its displayed buffer. That fixture had inherited a previous arrow
 event when calling =push-button= interactively. All five MIME-row checks also
 pass in a fresh graphical Emacs; no Notmuch runtime change was needed.
 No live session was reloaded and no new listening acceptance is claimed.
+
+* Slices 3–6 implementation checkpoint
+
+Implemented on 2026-10-18. The common resolver uses explicit buffer choices,
+mode preferences and existing common defaults. Agent Shell's two legacy
+options remain scoped to that adapter; saved/customised values, buffer locals,
+late assignments and ambiguous pre-existing values are preserved. Explicit
+inheritance skips legacy choices at the selected scope. The Tables page
+captures its source and stages values independently of runtime preferences;
+only Apply or Save changes them. Applied choices remain available for a later
+Save in the same visit. Closing discards unapplied choices, including when
+reopening through search. Customize persists only changed settings.
+
+Source and application-list arrows now distinguish row speech on plain
+vertical arrows from cell speech on Control-Meta arrows. Plain-arrow speech
+is configurable without changing the public row commands. Agent Shell
+registers explicit entry/toggle callbacks while retaining its own contextual
+map. It preserves native actions and adds leave-in-place suspension. Conditional
+entry bindings survive speech-map reinstallation.
+
+Automatic source entry runs after navigation, never during a text-changing
+command. Quit and source editing suspend the current visit. Rendered-table
+suspension survives uncertain mappings, real fragment replacement and window
+resize; only explicit entry or deliberate navigation out of the table clears
+it. Coordinates, brief entry, title repetition and edge choices are optional;
+default feedback stays unchanged apart from the agreed shared vertical-cell
+keys. CSV and spreadsheet interfaces remain outside this contract.
+
+The maintained common table guide owns preferences, scopes and activation;
+the Agent Shell guide explains native-key and rendered-cell exceptions.
+Info node names remain stable. Automated verification and listening acceptance
+are recorded separately in the living plan.
+
+Final checks pass 74 compiled batch and 80 compiled graphical table cases,
+673 batch and 11 graphical pinned integration cases, and the 72-case settings
+menu run. The final context-copy correction also passes its three graphical
+menu regressions. A clean selected-Emacs rebuild, byte-code preflight, headers
+and documentation release gate pass. The broad batch suite retains exactly
+the same 15 failure names as =caba80207=; see the living plan for counts and
+evidence. Graphical/native-service skips and listening acceptance are separate
+from these passing automated checks.

@@ -217,6 +217,12 @@ Use `emacsvox-agent-shell-cycle-speech-level' to change it interactively.")
   :type 'symbol
   :group 'emacsvox-agent-shell)
 
+(unless emacsvox-table-reader--legacy-watching
+  (dolist (option '(emacsvox-agent-shell-table-titles
+                    emacsvox-agent-shell-table-data-position))
+    (when (boundp option)
+      (cl-pushnew option emacsvox-table-reader--legacy-preexisting))))
+
 (defcustom emacsvox-agent-shell-table-titles '(column)
   "Table titles spoken with the current Markdown table cell.
 Column titles come from the first row when the Markdown source has a
@@ -232,6 +238,8 @@ both, or neither kind of title."
   :type '(choice (const :tag "Data before titles" first)
                  (const :tag "Titles before data" last))
   :group 'emacsvox-agent-shell)
+
+(emacsvox-table-reader--watch-legacy)
 
 (defcustom emacsvox-agent-shell-status-speech-labels
   '((pending . "pending")
@@ -1927,7 +1935,9 @@ selects the configured foreground or background level."
                      ("e" . emacsvox-agent-shell-next-error)
                      ("E" . emacsvox-agent-shell-previous-error)))
     (define-key emacsvox-agent-shell--speech-control-map
-                (kbd (car binding)) (cdr binding))))
+                (kbd (car binding)) (cdr binding)))
+  (when (fboundp 'emacsvox-agent-shell--install-table-entry-bindings)
+    (emacsvox-agent-shell--install-table-entry-bindings)))
 
 (emacsvox-agent-shell--install-speech-control-bindings)
 
@@ -5496,9 +5506,7 @@ or changing the scope of existing presentation preferences."
   (let ((emacsvox-table-reader--adapter
          '(agent-shell-mode emacsvox-agent-shell--table-snapshot
                             emacsvox-agent-shell--table-submit))
-        (emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
+        (emacsvox-table-reader--preference-mode 'agent-shell-mode))
     (apply operation arguments)))
 
 (defun emacsvox-agent-shell--table-title (title face data)
@@ -5509,11 +5517,9 @@ or changing the scope of existing presentation preferences."
     (emacsvox-table-reader--title title face data)))
 
 (defun emacsvox-agent-shell--table-cell-speech (cell)
-  "Delegate table cell-speech to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--cell-speech cell)))
+  "Format table cell with the effective reading preferences."
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (emacsvox-table-reader--format cell 'cell)))
 
 (defun emacsvox-agent-shell--table-cell-facts (cell &optional event)
   "Return registered semantic facts for table CELL and optional EVENT."
@@ -5532,18 +5538,14 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
     t))
 
 (defun emacsvox-agent-shell--table-context-speech (cell)
-  "Delegate table context-speech to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--context-speech cell)))
+  "Format table context with the effective reading preferences."
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (emacsvox-table-reader--format cell 'context)))
 
 (defun emacsvox-agent-shell--table-dimensions-speech (cell)
-  "Delegate table dimensions-speech to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--dimensions-speech cell)))
+  "Format table dimensions with the effective reading preferences."
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (emacsvox-table-reader--format cell 'dimensions)))
 
 (defun emacsvox-agent-shell--table-entry-feedback (direction)
   "Enter and speak the table at point in navigation DIRECTION."
@@ -5552,13 +5554,13 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
                (emacsvox-agent-shell--markdown-table-cell-starts region)))
     (goto-char (if (eq direction 'forward) (car starts) (car (last starts))))
     (when-let* ((cell (emacsvox-agent-shell--table-snapshot)))
+      (setq emacsvox-table-reader--suspended nil
+            emacsvox-table-reader--last-titles nil)
       (emacsvox-agent-shell--table-track-region region)
       (setq emacsvox-agent-shell--table-navigation-active t
             emacsvox-agent-shell--table-navigation-table-start (car region))
       (emacsvox-agent-shell--submit-text-feedback
-       (concat (emacsvox-agent-shell--table-dimensions-speech cell)
-               " "
-               (emacsvox-agent-shell--table-cell-speech cell))
+       (emacsvox-agent-shell--table-entry-text cell)
        (emacsvox-agent-shell--presentation-facts
         'agent-table 'agent-table-entered)
        'navigation 'open-object)
@@ -5588,18 +5590,14 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
     (emacsvox-table-reader--leading-title-speech title face)))
 
 (defun emacsvox-agent-shell--table-row-speech (cell)
-  "Delegate table row-speech to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--row-speech cell)))
+  "Format table row with the effective reading preferences."
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (emacsvox-table-reader--format cell 'row)))
 
 (defun emacsvox-agent-shell--table-column-speech (cell)
-  "Delegate table column-speech to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--column-speech cell)))
+  "Format table column with the effective reading preferences."
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (emacsvox-table-reader--format cell 'column)))
 
 (defun emacsvox-agent-shell-table-speak-row ()
   "Speak the logical Markdown table row at point."
@@ -5754,8 +5752,8 @@ Retain the current column and use the current table title settings."
 
 (defvar emacsvox-agent-shell--table-navigation-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<down>") #'emacsvox-agent-shell-table-next-row)
-    (define-key map (kbd "<up>") #'emacsvox-agent-shell-table-previous-row)
+    (define-key map (kbd "<down>") #'emacsvox-agent-shell--table-plain-next-row)
+    (define-key map (kbd "<up>") #'emacsvox-agent-shell--table-plain-previous-row)
     (define-key map (kbd "M-<up>")
                 #'emacsvox-agent-shell-table-exit-backward)
     (define-key map (kbd "M-<down>")
@@ -5766,10 +5764,104 @@ Retain the current column and use the current table title settings."
     (define-key map (kbd ".") #'emacsvox-agent-shell-table-speak-context)
     (define-key map (kbd "=") #'emacsvox-agent-shell-table-speak-dimensions)
     (define-key map (kbd "w") #'emacsvox-agent-shell-table-copy-cell)
-    (define-key map (kbd "a")
-                #'emacsvox-agent-shell-table-select-speaking-method)
+    (define-key map (kbd "a") #'emacsvox-table-settings)
+    (define-key map (kbd "q") #'emacsvox-agent-shell--table-leave)
     map)
   "Contextual keymap active while point is in a rendered Markdown table.")
+
+(defun emacsvox-agent-shell--table-plain-next-row (count)
+  "Move COUNT rows with the selected plain-arrow speech."
+  (interactive "p")
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (emacsvox-agent-shell--table-move count 0
+     (eq (emacsvox-table-reader--preference 'movement-speech) 'cell))))
+(defun emacsvox-agent-shell--table-plain-previous-row (count)
+  "Move COUNT rows backwards with the selected plain-arrow speech."
+  (interactive "p")
+  (emacsvox-agent-shell--table-plain-next-row (- count)))
+
+(defun emacsvox-agent-shell--table-entry-text (cell)
+  "Return the selected entry detail for rendered CELL."
+  (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (concat
+     (if (eq (emacsvox-table-reader--preference 'entry-detail) 'full)
+         (concat (emacsvox-agent-shell--table-dimensions-speech cell) " ")
+       "Table. ")
+     (emacsvox-agent-shell--table-cell-speech cell))))
+
+(defun emacsvox-agent-shell--table-leave ()
+  "Leave table reading in place until explicit entry or a visit through prose.
+In a viewport, q now resumes its ordinary bury-buffer action."
+  (interactive)
+  (setq emacsvox-table-reader--suspended t
+        emacsvox-table-reader--last-titles nil
+        emacsvox-agent-shell--table-navigation-active nil)
+  (emacsvox-agent-shell--submit-text-feedback
+   "Table reading off."
+   (emacsvox-agent-shell--presentation-facts 'agent-table 'agent-table-exited)
+   'navigation 'close-object))
+
+(defun emacsvox-agent-shell--table-enter (cell &optional quiet)
+  "Enter rendered CELL with existing host keys; QUIET defers entry speech."
+  (emacsvox-agent-shell--table-navigation-setup)
+  (setq emacsvox-table-reader--suspended nil
+        emacsvox-table-reader--last-titles nil
+        emacsvox-agent-shell--table-navigation-active t
+        emacsvox-agent-shell--table-navigation-table-start
+        (car (plist-get cell :region)))
+  (emacsvox-agent-shell--table-track-region (plist-get cell :region))
+  (unless quiet (emacsvox-agent-shell--table-navigation-entry-feedback 'forward)))
+
+(defun emacsvox-agent-shell--table-toggle (arg)
+  "Toggle the rendered reader, or enable it when ARG is positive."
+  (if (if (null arg) (not emacsvox-agent-shell--table-navigation-active)
+        (> (prefix-numeric-value arg) 0))
+      (emacsvox-agent-shell--table-enter
+       (or (emacsvox-agent-shell--table-snapshot)
+           (user-error "Not in a rendered Markdown table")))
+    (emacsvox-agent-shell--table-leave)))
+
+(defun emacsvox-agent-shell--table-enter-move (rows columns)
+  "Enter a rendered table and move ROWS and COLUMNS with one announcement."
+  (emacsvox-agent-shell--table-enter
+   (or (emacsvox-agent-shell--table-snapshot)
+       (user-error "Not in a rendered Markdown table")) t)
+  (let ((emacsvox-table-reader--entering t))
+    (emacsvox-agent-shell--table-move rows columns t)))
+
+(dolist (entry '((emacsvox-agent-shell--table-enter-down 1 0)
+                 (emacsvox-agent-shell--table-enter-up -1 0)
+                 (emacsvox-agent-shell--table-enter-left 0 -1)
+                 (emacsvox-agent-shell--table-enter-right 0 1)))
+  (let ((rows (nth 1 entry)) (columns (nth 2 entry)))
+    (defalias (car entry)
+      (lambda (count)
+        "Enter table reading and move COUNT cells in this direction."
+        (interactive "p")
+        (emacsvox-agent-shell--table-enter-move (* count rows) (* count columns))))))
+
+(dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+  (setf (alist-get mode emacsvox-table-reader--adapters)
+        (list #'emacsvox-agent-shell--table-snapshot #'emacsvox-agent-shell--table-submit
+              nil (list :enter #'emacsvox-agent-shell--table-enter
+                        :toggle #'emacsvox-agent-shell--table-toggle))))
+
+(defun emacsvox-agent-shell--install-table-entry-bindings ()
+  "Install conditional table entry, including after speech controls refresh."
+  (dolist (binding '(("C-M-<down>" emacsvox-agent-shell--table-enter-down t)
+                   ("C-M-<up>" emacsvox-agent-shell--table-enter-up t)
+                   ("C-M-<left>" emacsvox-agent-shell--table-enter-left nil)
+                   ("C-M-<right>" emacsvox-agent-shell--table-enter-right nil)))
+  (let ((vertical (nth 2 binding)))
+    (define-key emacsvox-agent-shell--speech-control-map (kbd (car binding))
+      `(menu-item "Table reading" ,(cadr binding) :filter
+                  ,(lambda (command)
+                     (if (emacsvox-agent-shell--table-snapshot) command
+                       (when vertical #'ignore))))))))
+
+(emacsvox-agent-shell--install-table-entry-bindings)
+
+(add-to-list 'minor-mode-alist '(emacsvox-agent-shell--table-navigation-active " Table"))
 
 (defun emacsvox-agent-shell--install-table-column-bindings ()
   "Keep character arrows and modified table keys current across reloads."
@@ -5805,14 +5897,13 @@ Retain the current column and use the current table title settings."
   (if-let* ((region (emacsvox-agent-shell--markdown-table-region-at-point))
             (cell (emacsvox-agent-shell--table-snapshot)))
       (progn
+        (setq emacsvox-table-reader--last-titles nil)
         (emacsvox-agent-shell--table-track-region region)
         (setq emacsvox-agent-shell--table-navigation-active t
               emacsvox-agent-shell--table-navigation-table-start
               (car region))
         (emacsvox-agent-shell--submit-text-feedback
-         (concat (emacsvox-agent-shell--table-dimensions-speech cell)
-                 " "
-                 (emacsvox-agent-shell--table-cell-speech cell))
+         (emacsvox-agent-shell--table-entry-text cell)
          (emacsvox-agent-shell--presentation-facts
           'agent-table 'agent-table-entered)
          'navigation 'open-object))
@@ -5820,7 +5911,8 @@ Retain the current column and use the current table title settings."
 
 (defun emacsvox-agent-shell--table-navigation-pre-command ()
   "Remember point before a possible contextual table entry."
-  (setq emacsvox-agent-shell--table-navigation-origin (point)))
+  (setq emacsvox-agent-shell--table-navigation-origin (point))
+  (emacsvox-table-reader--before-command))
 
 (defun emacsvox-agent-shell--table-readable-region ()
   "Return a rendered region only while its logical mapping is usable.
@@ -5855,9 +5947,23 @@ Streaming elsewhere in the transcript must not interrupt table navigation."
          (table-start (and region (car region))))
     (cond
      ((not region)
+      ;; A redraw can temporarily remove the mapping.  Only navigation to
+      ;; prose releases a deliberate quit, never a render or text edit.
+      (when (and emacsvox-agent-shell--table-navigation-origin
+                 (/= (point) emacsvox-agent-shell--table-navigation-origin)
+                 (or (null emacsvox-table-reader--command-tick)
+                     (= emacsvox-table-reader--command-tick
+                        (buffer-chars-modified-tick)))
+                 (not (get-text-property (point) 'agent-shell-markdown-table-source)))
+        (setq emacsvox-table-reader--suspended nil))
       (emacsvox-agent-shell--table-track-region nil)
       (setq emacsvox-agent-shell--table-navigation-active nil
             emacsvox-agent-shell--table-navigation-table-start nil))
+     ((or emacsvox-table-reader--suspended
+          (and (not emacsvox-agent-shell--table-navigation-active)
+               (not (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+                      (eq (emacsvox-table-reader--preference 'activation) 'automatic)))))
+      (setq emacsvox-agent-shell--table-navigation-active nil))
      ((not (equal table-start
                   emacsvox-agent-shell--table-navigation-table-start))
       (setq emacsvox-agent-shell--table-navigation-active t)
@@ -5892,7 +5998,10 @@ Streaming elsewhere in the transcript must not interrupt table navigation."
             #'emacsvox-agent-shell--table-navigation-cleanup nil t)
   (add-hook 'change-major-mode-hook
             #'emacsvox-agent-shell--table-navigation-cleanup nil t)
-  (if-let* ((region (emacsvox-agent-shell--table-readable-region)))
+  (if-let* (((not emacsvox-table-reader--suspended))
+            ((let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
+               (eq (emacsvox-table-reader--preference 'activation) 'automatic)))
+            (region (emacsvox-agent-shell--table-readable-region)))
       (progn
         (emacsvox-agent-shell--table-track-region region)
         (setq emacsvox-agent-shell--table-navigation-active t
@@ -6082,8 +6191,11 @@ the corresponding buffer boundary."
 (defun emacsvox-agent-shell--table-discovery-feedback
     (origin direction)
   "Stop at and announce a table skipped from ORIGIN in DIRECTION."
-  (let ((destination (point)))
-    (when-let* ((table-position
+  (let ((destination (point))
+        (emacsvox-table-reader--preference-mode 'agent-shell-mode))
+    (when-let* (((not emacsvox-table-reader--suspended))
+                ((eq (emacsvox-table-reader--preference 'activation) 'automatic))
+                (table-position
                 (if (get-text-property
                      destination 'agent-shell-markdown-table-source)
                     destination

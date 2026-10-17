@@ -1162,35 +1162,46 @@ File: emacsvox.info,  Node: Reading Markdown And Org Tables,  Up: Browsing Struc
 -------------------------------------
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table
-reading and move immediately.  Left/right moves by cell; up/down moves
-by logical row.  The first movement announces table reading and the
-destination together.  Outside supported tables, these arrows retain
-their existing bindings, including inside code examples.
+reading and move immediately.  Left/right moves between columns; up/down
+moves between logical rows, retaining the column.  Every Control-Meta
+arrow reads the destination cell.  The first movement announces table
+reading and the destination together.  Table reading starts on demand by
+default in these source buffers; you can choose automatic entry in the
+Tables settings described below.  Outside supported tables, these arrows
+retain their existing bindings, including inside code examples.
 
-   ‘C-e C-t C-r’ enters without moving when the default speech prefix is
-used.  It announces the dimensions and current cell.  Press ‘q’ or the
-same command to restore ordinary editing keys.  From prose, ‘C-e C-t ]’
-and ‘C-e C-t [’ find and enter the next or previous table.  Inside table
-reading, ‘t’ and ‘T’ do the same; code examples are skipped.
+   ‘C-e C-t C-r’ enters at the current cell with the default speech
+prefix.  It announces the dimensions and current cell.  The equivalent
+named command is ‘M-x emacsvox-table-reader-mode’.  Press ‘q’ or the
+same command to restore ordinary editing keys without moving point.
+This suspends automatic entry for the current visit: another explicit
+entry command, or leaving the table and returning, can start reading
+again.  From prose, ‘C-e C-t ]’ and ‘C-e C-t [’ find and enter the next
+or previous table.  Inside table reading, ‘t’ and ‘T’ do the same; code
+examples are skipped.
 
    While table reading is active:
 
-   • Up/down and Control-Meta-up/down move by logical row, retain the
-     column, and read the complete destination row.
+   • Plain Up/down moves by logical row and reads the complete
+     destination row by default.  You can select cell speech for these
+     keys.  Control-Meta-up/down always reads the destination cell; both
+     retain the column.
    • Control-Meta-left/right moves between cells.  Plain left/right
      retains character movement.  ‘<TAB>’ and ‘S-<TAB>’ move between
      cells without editing; ‘<RET>’ or ‘<SPC>’ reads the current cell.
    • ‘r’ reads the row and ‘c’ the column.  ‘.’ announces coordinates
      and ‘=’ gives dimensions.
-   • ‘a’ changes column titles, row titles, or data/title order for this
-     buffer.  The ‘emacsvox-table-reader’ customisation group sets
-     defaults.
+   • ‘a’ opens Tables settings for titles, order, movement speech,
+     activation and optional detail.  Browsing settings leaves the table
+     untouched.
    • ‘w’ or ‘k k’ copies the cell, ‘k r’ copies the row with tabs
      between cells, and ‘k c’ copies the column with newlines between
      cells.
    • Meta-up/down leaves directly for preceding/following prose.
      Up/down also leaves across a vertical table edge when content
-     exists beyond it; otherwise point stays in the table.
+     exists beyond it by default.  Choose Stop at the edge to retain the
+     cell instead.  If no adjacent content exists, point stays in the
+     table.
 
    A horizontal edge or a missing cell in a shorter row leaves point
 unchanged and announces the boundary.  Separators are skipped.  A
@@ -1205,24 +1216,28 @@ code becomes its literal text.  Use the host mode to copy exact markup
 or formulas.  This reader covers simple pipe tables; HTML spans, nested
 tables, and spreadsheet-specific structures have separate interfaces.
 
-   Leaving restores ordinary mode keys.  Other editing commands retain
-their normal meaning, and an edit ends the reading context.  Org's
-table-editing feedback and Markdown's markup-stripping speech option
-remain independent.  Agent Shell has automatic contextual table entry
-and its own preferences.  In Agent Shell, Control-Meta-up/down reads the
-destination _cell_, whereas plain up/down reads the destination _row_.
-Do not assume identical spoken units merely because the keys are
-similar; see *note Agent Shell: Agent Shell.
+   Other editing commands retain their normal meaning.  An edit ends
+reading and suspends automatic re-entry while you continue typing.
+Org's native table editing feedback, including its table Muggle, remains
+independent; it can speak after native cell movement without starting
+this reader.  Markdown's markup-stripping speech preference also remains
+independent.
+
+   Agent Shell uses the same reading preferences and movement units,
+with automatic entry as its initial policy.  It retains native Tab,
+Shift-Tab and Return actions and handles character movement within
+rendered cells; see *note Agent Shell: Agent Shell.
 
 9.4.3 Reading application lists
 -------------------------------
 
 In an application built on Tabulated List mode, use a Control-Meta arrow
 or ‘C-e C-t C-r’ to enter shared reading.  Ordinary application
-navigation stays unchanged until you enter.  Within reading, up/down
-reads complete logical rows, Control-Meta-left/right reads cells, and
-plain left/right inspects characters.  ‘q’ leaves reading and restores
-the application's usual navigation.
+navigation stays unchanged until you enter, unless you select automatic
+entry.  Within reading, plain up/down reads complete logical rows by
+default, Control-Meta arrows read cells, and plain left/right inspects
+characters.  ‘q’ leaves reading and restores the application's usual
+navigation.
 
    Application actions take precedence over other shared reader keys.
 Opening, refreshing, sorting, searching, and editing keep their
@@ -1243,7 +1258,85 @@ last row.  A refresh ends reading; enter again to inspect the refreshed
 list.  Custom table printers, image-only cells, and duplicate column
 names are not supported by this reader.
 
-9.4.4 Browsing CSV data
+9.4.4 Choose table reading preferences
+--------------------------------------
+
+Open ‘M-x emacsvox-table-settings’ from the buffer you want to
+configure.  While reading a source or Agent Shell table, ‘a’ opens the
+same page.  The speech settings menu provides ‘C-e H s T’, and the
+focused Org and Agent Shell menus provide ‘T’.  Settings search at ‘C-e
+H /’ finds table reading, titles, activation and inheritance.  Each
+route captures the original buffer so moving through the menu does not
+redirect your changes.
+
+   A control shows its pending choice, its effective value and the
+source of that value.  Open the control, browse with arrows, then press
+‘<RET>’ to stage a choice and return to that control.  Press ‘q’ in the
+choice list to cancel.  Neither browsing nor selecting changes runtime
+behaviour yet.  Press ‘?’ and a choice's key for Help; returning
+restores the browsed choice.  The page's ‘h’ explains scopes, migration
+and host exceptions.
+
+   For example, open Titles with ‘t’, select Both titles, and press
+‘<SPC>’ to preview a small sample.  The sample includes a second row and
+a blank cell; it uses the pending speech choices without moving or
+editing your source.  ‘s’ stops it.  Preview treats pending choices as
+buffer overrides, so inheritance uses the current mode settings.  Saving
+inheritance for the mode can resolve to a different common value; the
+effective labels refresh after saving.  Try activation and edge
+behaviour in an actual table after applying them, since the speech
+sample does not navigate the source.
+
+   Choose one explicit action to use the pending settings:
+
+   • ‘A’ applies only the changed choices temporarily to the captured
+     buffer.
+   • ‘W’ saves only those choices as common defaults through Customize.
+   • ‘M’ saves only those choices for the captured major mode through
+     Customize.  Agent Shell's transcript and viewport share one mode
+     setting.
+
+   After Apply, choices are labelled applied here, not saved.  You can
+then Save without selecting them again.  Closing keeps applied buffer
+choices but does not persist them.
+
+   Buffer overrides take precedence over mode overrides, which take
+precedence over common defaults.  Saving a wider default preserves
+narrower overrides; the effective labels show when an override still
+wins.  No titles is an explicit choice, distinct from inheritance.
+Select Inherit wider scope and Apply to release a buffer choice, or Save
+mode to make that mode follow the common default.  ‘I’ stages
+inheritance for all settings; it still requires Apply or Save mode.
+Common defaults cannot inherit.  ‘D’ discards pending choices.  Closing
+the page discards choices that were neither applied nor saved.
+
+   The controls cover titles, data/title order, plain-arrow speech,
+activation, coordinates during movement, entry detail, repeated titles
+and vertical edges.  Initial defaults retain whole-row plain arrows,
+full entry detail, repeated titles, no extra movement coordinates and
+leaving at vertical edges when adjacent prose exists.  Brief entry still
+identifies a table and reads its cell.  Suppressing repeated titles
+affects consecutive cell moves; explicit cell inspection remains
+complete.  Application lists always stop at their edges.
+
+   Activation's Mode defaults choice means automatic entry in Agent
+Shell and on-demand entry in Org, Markdown and application lists.  A
+common Automatic or On demand choice applies wherever there is no
+narrower override.  Quitting always provides a temporary escape from
+automatic reading.  A redraw or Agent Shell response update alone cannot
+undo that quit.
+
+   Existing shared title/order settings retain their scope.  Older Agent
+Shell title/order choices remain effective as Agent Shell overrides,
+including saved choices equal to their original defaults.  The page
+identifies their source; Help lists retained older values even when a
+newer override takes precedence.  An older value whose origin cannot be
+determined is preserved and identified as uncertain.  Select a
+replacement or inheritance explicitly to resolve it.  Opening the page
+never rewrites configuration.  Advanced configuration lives in the
+‘emacsvox-table-reader’ customisation group.
+
+9.4.5 Browsing CSV data
 -----------------------
 
 Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table
@@ -2425,6 +2518,10 @@ opens the menu overview.
 announcements and processing cues.  Thought and tool content still
 depend on the effective speech level.
 
+   ‘T’ opens the shared Tables settings page described in *note Reading
+Markdown and Org tables: Reading Markdown And Org Tables.  It has
+separate buffer Apply, common Save and mode Save actions.
+
    The ‘a’, ‘n’ and ‘k’ controls set automatic-content, line-navigation
 and block-navigation character limits.  ‘<RET>’ accepts an exact
 positive integer or ‘none’; Shift-left/right adjusts by 100.  For line
@@ -2625,23 +2722,33 @@ File: emacsvox.info,  Node: Agent Shell Tables,  Next: Agent Shell Recovery,  Pr
 11.8 Navigate and copy rendered tables
 ======================================
 
-Agent Shell gives rendered Markdown tables their own navigation
-commands.  Moving into a table activates a contextual table map.  It
-announces the table dimensions and current cell.  Leaving the table
-restores the ordinary Agent Shell keys.  Markdown and Org source buffers
-offer explicit table reading with matching logical operations; see *note
-Browsing Structure: Browsing Structure.  Agent Shell retains its own
-table speech preferences and automatic contextual activation.  Plain
-Left and Right, or ‘C-b’ and ‘C-f’, move by character within the current
-cell.  ‘M-b’ and ‘M-f’, or Control-Left and Control-Right, move by word.
-These commands follow wrapped text within the same cell, skipping
-borders, padding, and neighbouring columns.  At the beginning or end of
-the cell, they stop and announce the boundary.  Use Control-Meta-Left
-and Control-Meta-Right to move between columns.  Control-Meta-Up and
-Control-Meta-Down move between logical rows in the current column and
-read only the destination cell.  Plain Up and Down make the same move
-and read the entire destination row.  Wrapped cells are read in full,
-using your table title settings.
+Agent Shell reads rendered Markdown tables through the shared table
+controls.  By default, moving into a table activates its contextual map
+and announces the dimensions and current cell.  Choose automatic or
+on-demand activation, headings and speech detail in the common Tables
+page; see *note Reading Markdown and Org tables: Reading Markdown And
+Org Tables.  Older Agent Shell title and order choices remain scoped to
+Agent Shell until you explicitly replace them or select inheritance.
+
+   Control-Meta arrows enter reading on demand and move to the next
+cell.  ‘C-e C-t C-r’ or ‘M-x emacsvox-table-reader-mode’ enters without
+moving.  Press ‘q’ to leave reading in place.  Automatic entry stays
+suspended until you explicitly enter again or navigate out of the table
+and return; rendering updates and resizing do not cancel that
+suspension.  Leaving restores ordinary Agent Shell keys.  Tab, Shift-Tab
+and Return retain Agent Shell's native actions throughout reading.
+
+   Plain Left and Right, or ‘C-b’ and ‘C-f’, move by character within
+the current cell.  ‘M-b’ and ‘M-f’, or Control-Left and Control-Right,
+move by word.  These commands follow wrapped text within the same cell,
+skipping borders, padding, and neighbouring columns.  At the beginning
+or end of the cell, they stop and announce the boundary.  Use
+Control-Meta-Left and Control-Meta-Right to move between columns.
+Control-Meta-Up and Control-Meta-Down move between logical rows in the
+current column and read only the destination cell.  Plain Up and Down
+make the same move and read the entire destination row by default; the
+Tables page can select cell speech for these plain arrows.  Wrapped
+cells are read in full, using your table title settings.
 
    ‘C-n’ and ‘C-p’ retain ordinary line movement.  They can move through
 wrapped cell text, but do not stay within the logical cell or skip other
@@ -2660,13 +2767,15 @@ the agent is working.
 In viewport view mode, ‘t’ takes the place of Agent Shell's
 thought-level shortcut; use ‘M-x
 agent-shell-viewport-set-session-thought-level’ for that action.  Inside
-a table, ‘r’, ‘c’, and ‘a’ read rows, read columns, and select the table
-speaking method.  To invoke the displaced viewport actions there, use
-‘M-x agent-shell-viewport-reply’, ‘M-x
-agent-shell-viewport-reply-continue’, or ‘M-x
-agent-shell-viewport-reply-again’.  In the shell transcript, table ‘r’
-replaces quoting; use ‘M-x agent-shell-quote-region’ with a selected
-region.  Leaving the table restores these ordinary bindings.
+a table, ‘r’, ‘c’, and ‘a’ read rows, read columns, and open Tables
+settings.  To invoke the displaced viewport actions there, use ‘M-x
+agent-shell-viewport-reply’, ‘M-x agent-shell-viewport-reply-continue’,
+or ‘M-x agent-shell-viewport-reply-again’.  In the shell transcript,
+table ‘r’ replaces quoting; use ‘M-x agent-shell-quote-region’ with a
+selected region.  Leaving reading restores these ordinary bindings.  In
+a viewport, table ‘q’ leaves reading rather than closing the view; a
+second ‘q’ runs ‘bury-buffer’.  ‘M-x bury-buffer’ remains available
+directly.
 
    Outside tables, ‘C-M-<up>’ and ‘C-M-<down>’ do nothing in Agent
 Shell, including its viewport and prompt editor.  Repeating a row key
@@ -2693,11 +2802,11 @@ character inspection.
 ‘C-M-<left>’
      Run ‘emacsvox-agent-shell-table-previous-column’.
 ‘<down>’
-     Run ‘emacsvox-agent-shell-table-next-row’ and read the destination
-     row.
+     Move down and read the row by default, or the cell when configured.
+     ‘emacsvox-agent-shell-table-next-row’ always reads the row.
 ‘<up>’
-     Run ‘emacsvox-agent-shell-table-previous-row’ and read the
-     destination row.
+     Move up and read the row by default, or the cell when configured.
+     ‘emacsvox-agent-shell-table-previous-row’ always reads the row.
 ‘C-M-<down>’
      Run ‘emacsvox-agent-shell-table-next-row-cell’ and read the
      destination cell.
@@ -2730,8 +2839,10 @@ character inspection.
      Run ‘emacsvox-agent-shell-table-copy-column’; copied cells are
      separated by newlines.
 ‘a’
-     Run ‘emacsvox-agent-shell-table-select-speaking-method’ to toggle
-     column titles, row titles, or whether data is spoken before titles.
+     Run ‘emacsvox-table-settings’ to browse and preview choices, then
+     apply or save explicitly.
+‘q’
+     Leave table reading in place and restore ordinary host bindings.
 
    Copy commands use logical cell values, excluding renderer padding and
 Markdown borders.  Wrapped cell contents remain complete.
@@ -5522,82 +5633,3 @@ Undo
      When listening between successive corrections, use the recovery
      guide's ‘undo-only’ procedure.  See *note Undo and spoken
      inspection: (emacsvox)Recovering Text Edits.
-
-
-File: emacsvox.info,  Node: Presentation Resource Terms,  Next: Speech And Settings Terms,  Prev: Editing Terms,  Up: Emacsvox Terminology
-
-17.3 Voices and presentation resources
-======================================
-
-Physical voice
-     A voice reported by a speech engine, such as an installed system
-     voice or a downloaded model's voice.  Installation alone does not
-     prove that it is enabled, active, or audible.  See *note Installed
-     voices and engines: (emacsvox)Installed Voices And Engines.
-Named voice
-     A presentation name such as ‘default’ or ‘bolden’, resolved through
-     a voice palette to physical choices and adjustments.  Editing a
-     shared named voice can affect several kinds of text that use it.
-     See *note Edit a named voice: (emacsvox)Editing Named Voices.
-Voice palette
-     A collection defining named voices, including their physical
-     choices, fallbacks, and adjustments.  Palettes can inherit values;
-     editing one is different from changing an engine preference.  See
-     *note Voices and routing: (emacsvox)Voices And Routing.
-Presentation rule
-     A match between application meaning or context and the feedback to
-     produce, such as a voice, cue, or silence.  A rule chooses
-     presentation; it does not install a physical voice.  See *note
-     Manage feedback rules: (emacsvox)Managing Feedback Rules.
-Auditory icon or cue
-     A short sound conveying an event or state.  A sound pack supplies
-     cues, while presentation rules determine when to use them.  Tones
-     can convey information without a recorded sound file.  See *note
-     Sounds and space: (emacsvox)Sounds And Space.
-Presentation profile
-     A saved selection of presentation resources and options.  It refers
-     to resources rather than copying everything into a full
-     configuration backup.  Applying a profile also retains its
-     selection for startup; individual palette operations have different
-     rules.  See *note Presentation profiles: (emacsvox)Presentation
-     Profiles.
-
-
-File: emacsvox.info,  Node: Speech And Settings Terms,  Prev: Presentation Resource Terms,  Up: Emacsvox Terminology
-
-17.4 Changes and speech output
-==============================
-
-Preview
-     An audition or comparison of a proposed result.  Previewing does
-     not by itself save the draft or make it the ordinary live
-     configuration.
-Retained draft
-     An unfinished edit kept in the current Emacs session for return to
-     its editor.  Retaining it is not a promise of recovery after Emacs
-     exits, and discarding it does not undo a save already completed.
-Save
-     Record data in the store owned by that editor or setting.  Read the
-     action's label: _Save and apply_ and _Save to collection without
-     selecting_ intentionally have different effects.
-Apply
-     Put a chosen configuration into use.  The operation may require
-     confirmation, validation, or a worker restart.  Its exact effect
-     depends on the resource; it is not a universal synonym for saving.
-Startup selection
-     The configuration to select when a later session starts.  Selecting
-     something for this session does not always select it for the next
-     one.  *note Choose what persists: (emacsvox)Saving And Startup.
-     compares these states and their owners.
-Speech server, engine, and worker
-     Emacsvox talks to a speech server; the server uses engines to
-     synthesise speech.  The manual uses _worker_ for a running speech
-     instance whose configuration and reported voices can differ from
-     another instance or from installed files.  See *note Speech
-     Backends: (emacsvox)Speech Backends.
-Main and notification speech
-     Separate output paths for foreground reading and other
-     announcements.  An integration decides which path to use for an
-     event; their existence is not a guarantee that all background text
-     is private.  See *note Speech output and notifications:
-     (emacsvox)Aural Speech Output.

@@ -37,6 +37,7 @@
                   "emacsvox-aural-feedback-details" (&optional arg))
 
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-table-settings "emacsvox-table-settings" nil t)
 (autoload 'emacsvox-spelling "emacsvox-spelling" nil t)
 (autoload 'emacsvox-settings-changes "emacsvox-settings-changes" nil t)
 (autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
@@ -66,7 +67,8 @@
   (let ((prefix (or transient--prefix transient-current-prefix)))
     (unless (and prefix
                  (memq (oref prefix command)
-                       '(emacsvox-aural-menu emacsvox-aural-menu-speech
+                       '(emacsvox-table-settings emacsvox-table-settings--choices
+                         emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-capitalization--presentation
@@ -546,6 +548,7 @@ When opened from the Emacsvox menu, share its selected scope."
    ("f" "Spelling feedback (global)" emacsvox-spelling :transient transient--do-stack)
    ("i" (lambda () (emacsvox-aural-menu--indentation-label))
     emacsvox-aural-menu--indentation :transient transient--do-stack)
+   ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)
    ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)]
   ["Menu navigation"
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation

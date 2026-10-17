@@ -18,6 +18,21 @@ gain. Guided installers pin the matching core and optional engines; Debian
 packages recommend Omnivox 1.18.0 or newer. Updating Emacsvox does not upgrade
 an existing Omnivox installation.
 
+** Shared table reading settings
+
+=C-e H s T= or =M-x emacsvox-table-settings= opens Tables for Markdown,
+Org, Agent Shell and supported application lists. Browse pending choices,
+preview with Space, then Apply to the buffer or Save common/mode defaults
+through Customize. Existing Agent Shell choices retain their scope.
+
+Plain Up/Down reads rows by default, with an optional cell setting.
+Control-Meta arrows enter reading and read cells across these integrations.
+Choose automatic or on-demand activation; defaults remain automatic for Agent
+Shell and on demand elsewhere. =q= leaves reading in place until explicit
+re-entry or leaving and returning. Render updates do not undo that quit.
+Optional coordinates, brief entry, title repetition and edge behaviour retain
+existing defaults. Org editing and application action keys stay independent.
+
 ** Spelling feedback
 
 =C-e H s f= opens global spelling feedback settings. Combine voice changes,

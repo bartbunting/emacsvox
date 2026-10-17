@@ -7007,14 +7007,20 @@ also used for character reading.
 @subsection Reading Markdown and Org tables
 
 In a Markdown or Org table@comma{} press a Control-Meta arrow to enter table reading
-and move immediately. Left/right moves by cell; up/down moves by logical row.
-The first movement announces table reading and the destination together.
+and move immediately. Left/right moves between columns; up/down moves between
+logical rows@comma{} retaining the column. Every Control-Meta arrow reads the
+destination cell. The first movement announces table reading and the destination
+together. Table reading starts on demand by default in these source buffers;
+you can choose automatic entry in the Tables settings described below.
 Outside supported tables@comma{} these arrows retain their existing bindings@comma{}
 including inside code examples.
 
-@kbd{C-e C-t C-r} enters without moving when the default speech prefix is used.
-It announces the dimensions and current cell. Press @kbd{q} or the same command
-to restore ordinary editing keys. From prose@comma{} @kbd{C-e C-t ]} and @kbd{C-e C-t [}
+@kbd{C-e C-t C-r} enters at the current cell with the default speech prefix.
+It announces the dimensions and current cell. The equivalent named command is
+@kbd{M-x emacsvox-table-reader-mode}. Press @kbd{q} or the same command to restore
+ordinary editing keys without moving point. This suspends automatic entry for
+the current visit: another explicit entry command@comma{} or leaving the table and
+returning@comma{} can start reading again. From prose@comma{} @kbd{C-e C-t ]} and @kbd{C-e C-t [}
 find and enter the next or previous table. Inside table reading@comma{} @kbd{t} and @kbd{T}
 do the same; code examples are skipped.
 
@@ -7022,8 +7028,9 @@ While table reading is active:
 
 @itemize
 @item
-Up/down and Control-Meta-up/down move by logical row@comma{} retain the column@comma{}
-and read the complete destination row.
+Plain Up/down moves by logical row and reads the complete destination row
+by default. You can select cell speech for these keys. Control-Meta-up/down
+always reads the destination cell; both retain the column.
 @item
 Control-Meta-left/right moves between cells. Plain left/right retains
 character movement. @kbd{@key{TAB}} and @kbd{S-@key{TAB}} move between cells without editing;
@@ -7032,15 +7039,16 @@ character movement. @kbd{@key{TAB}} and @kbd{S-@key{TAB}} move between cells wit
 @kbd{r} reads the row and @kbd{c} the column. @kbd{.} announces coordinates and @kbd{=}
 gives dimensions.
 @item
-@kbd{a} changes column titles@comma{} row titles@comma{} or data/title order for this buffer.
-The @code{emacsvox-table-reader} customisation group sets defaults.
+@kbd{a} opens Tables settings for titles@comma{} order@comma{} movement speech@comma{} activation
+and optional detail. Browsing settings leaves the table untouched.
 @item
 @kbd{w} or @kbd{k k} copies the cell@comma{} @kbd{k r} copies the row with tabs between cells@comma{}
 and @kbd{k c} copies the column with newlines between cells.
 @item
 Meta-up/down leaves directly for preceding/following prose. Up/down also
-leaves across a vertical table edge when content exists beyond it;
-otherwise point stays in the table.
+leaves across a vertical table edge when content exists beyond it by default.
+Choose Stop at the edge to retain the cell instead. If no adjacent content
+exists@comma{} point stays in the table.
 @end itemize
 
 A horizontal edge or a missing cell in a shorter row leaves point unchanged
@@ -7055,20 +7063,24 @@ its literal text. Use the host mode to copy exact markup or formulas. This
 reader covers simple pipe tables; HTML spans@comma{} nested tables@comma{} and
 spreadsheet-specific structures have separate interfaces.
 
-Leaving restores ordinary mode keys. Other editing commands retain their
-normal meaning@comma{} and an edit ends the reading context. Org's table-editing
-feedback and Markdown's markup-stripping speech option remain independent.
-Agent Shell has automatic contextual table entry and its own preferences.
-In Agent Shell@comma{} Control-Meta-up/down reads the destination @emph{cell}@comma{} whereas
-plain up/down reads the destination @emph{row}. Do not assume identical spoken
-units merely because the keys are similar; see @ref{Agent Shell, , Agent Shell}.
+Other editing commands retain their normal meaning. An edit ends reading and
+suspends automatic re-entry while you continue typing. Org's native table
+editing feedback@comma{} including its table Muggle@comma{} remains independent; it can
+speak after native cell movement without starting this reader. Markdown's
+markup-stripping speech preference also remains independent.
+
+Agent Shell uses the same reading preferences and movement units@comma{} with automatic
+entry as its initial policy. It retains native Tab@comma{} Shift-Tab and Return
+actions and handles character movement within rendered cells; see
+@ref{Agent Shell, , Agent Shell}.
 
 @subsection Reading application lists
 
 In an application built on Tabulated List mode@comma{} use a Control-Meta arrow or
 @kbd{C-e C-t C-r} to enter shared reading. Ordinary application navigation stays
-unchanged until you enter. Within reading@comma{} up/down reads complete logical rows@comma{}
-Control-Meta-left/right reads cells@comma{} and plain left/right inspects characters.
+unchanged until you enter@comma{} unless you select automatic entry. Within reading@comma{}
+plain up/down reads complete logical rows by default@comma{} Control-Meta arrows read
+cells@comma{} and plain left/right inspects characters.
 @kbd{q} leaves reading and restores the application's usual navigation.
 
 Application actions take precedence over other shared reader keys. Opening@comma{}
@@ -7086,6 +7098,79 @@ Coordinates count visible data rows; hidden rows are excluded and empty cells
 say “blank.” Movement stops at the first or last row. A refresh ends reading;
 enter again to inspect the refreshed list. Custom table printers@comma{} image-only
 cells@comma{} and duplicate column names are not supported by this reader.
+
+@subsection Choose table reading preferences
+
+Open @kbd{M-x emacsvox-table-settings} from the buffer you want to configure.
+While reading a source or Agent Shell table@comma{} @kbd{a} opens the same page. The
+speech settings menu provides @kbd{C-e H s T}@comma{} and the focused Org and Agent Shell
+menus provide @kbd{T}. Settings search at @kbd{C-e H /} finds table reading@comma{} titles@comma{}
+activation and inheritance. Each route captures the original buffer so moving
+through the menu does not redirect your changes.
+
+A control shows its pending choice@comma{} its effective value and the source of that
+value. Open the control@comma{} browse with arrows@comma{} then press @kbd{@key{RET}} to stage a
+choice and return to that control. Press @kbd{q} in the choice list to cancel.
+Neither browsing nor selecting changes runtime behaviour yet. Press @kbd{?} and a
+choice's key for Help; returning restores the browsed choice. The page's @kbd{h}
+explains scopes@comma{} migration and host exceptions.
+
+For example@comma{} open Titles with @kbd{t}@comma{} select Both titles@comma{} and press @kbd{@key{SPC}} to
+preview a small sample. The sample includes a second row and a blank cell;
+it uses the pending speech choices without moving or editing your source.
+@kbd{s} stops it. Preview treats pending choices as buffer overrides@comma{} so inheritance
+uses the current mode settings. Saving inheritance for the mode can resolve
+to a different common value; the effective labels refresh after saving.
+Try activation and edge behaviour in an actual table after
+applying them@comma{} since the speech sample does not navigate the source.
+
+Choose one explicit action to use the pending settings:
+
+@itemize
+@item
+@kbd{A} applies only the changed choices temporarily to the captured buffer.
+@item
+@kbd{W} saves only those choices as common defaults through Customize.
+@item
+@kbd{M} saves only those choices for the captured major mode through Customize.
+Agent Shell's transcript and viewport share one mode setting.
+@end itemize
+
+After Apply@comma{} choices are labelled applied here@comma{} not saved. You can then Save
+without selecting them again. Closing keeps applied buffer choices but does
+not persist them.
+
+Buffer overrides take precedence over mode overrides@comma{} which take precedence
+over common defaults. Saving a wider default preserves narrower overrides;
+the effective labels show when an override still wins. No titles is an
+explicit choice@comma{} distinct from inheritance. Select Inherit wider scope and
+Apply to release a buffer choice@comma{} or Save mode to make that mode follow the
+common default. @kbd{I} stages inheritance for all settings; it still requires
+Apply or Save mode. Common defaults cannot inherit. @kbd{D} discards pending
+choices. Closing the page discards choices that were neither applied nor saved.
+
+The controls cover titles@comma{} data/title order@comma{} plain-arrow speech@comma{} activation@comma{}
+coordinates during movement@comma{} entry detail@comma{} repeated titles and vertical edges.
+Initial defaults retain whole-row plain arrows@comma{} full entry detail@comma{} repeated
+titles@comma{} no extra movement coordinates and leaving at vertical edges when
+adjacent prose exists. Brief entry still identifies a table and reads its cell.
+Suppressing repeated titles affects consecutive cell moves; explicit cell
+inspection remains complete. Application lists always stop at their edges.
+
+Activation's Mode defaults choice means automatic entry in Agent Shell and
+on-demand entry in Org@comma{} Markdown and application lists. A common Automatic or
+On demand choice applies wherever there is no narrower override. Quitting
+always provides a temporary escape from automatic reading. A redraw or
+Agent Shell response update alone cannot undo that quit.
+
+Existing shared title/order settings retain their scope. Older Agent Shell
+title/order choices remain effective as Agent Shell overrides@comma{} including saved
+choices equal to their original defaults. The page identifies their source;
+Help lists retained older values even when a newer override takes precedence.
+An older value whose origin cannot be determined is preserved and identified
+as uncertain. Select a replacement or inheritance explicitly to resolve it.
+Opening the page never rewrites configuration. Advanced configuration lives
+in the @code{emacsvox-table-reader} customisation group.
 
 @subsection Browsing CSV data
 
@@ -8226,6 +8311,10 @@ The @kbd{p}@comma{} @kbd{c} and @kbd{l} controls toggle permission speech@comma{
 and processing cues. Thought and tool content still depend on the effective
 speech level.
 
+@kbd{T} opens the shared Tables settings page described in
+@ref{Reading Markdown And Org Tables, , Reading Markdown and Org tables}. It has separate buffer Apply@comma{} common Save
+and mode Save actions.
+
 The @kbd{a}@comma{} @kbd{n} and @kbd{k} controls set automatic-content@comma{} line-navigation and
 block-navigation character limits. @kbd{@key{RET}} accepts an exact positive integer or
 @code{none}; Shift-left/right adjusts by 100. For line navigation@comma{} @code{none} restores
@@ -8406,13 +8495,22 @@ changes@comma{} updated tool output and change-review entry. Use
 @node Agent Shell Tables
 @section Navigate and copy rendered tables
 
-Agent Shell gives rendered Markdown tables their own navigation commands.
-Moving into a table activates a contextual table map.  It
-announces the table dimensions and current cell.  Leaving the table restores
-the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
-table reading with matching logical operations; see
-@ref{Browsing Structure, , Browsing Structure}. Agent Shell retains its own table speech
-preferences and automatic contextual activation.
+Agent Shell reads rendered Markdown tables through the shared table controls.
+By default@comma{} moving into a table activates its contextual map and announces
+the dimensions and current cell. Choose automatic or on-demand activation@comma{}
+headings and speech detail in the common Tables page; see
+@ref{Reading Markdown And Org Tables, , Reading Markdown and Org tables}. Older Agent Shell title and order choices
+remain scoped to Agent Shell until you explicitly replace them or select
+inheritance.
+
+Control-Meta arrows enter reading on demand and move to the next cell.
+@kbd{C-e C-t C-r} or @kbd{M-x emacsvox-table-reader-mode} enters without moving.
+Press @kbd{q} to leave reading in place. Automatic entry stays suspended until
+you explicitly enter again or navigate out of the table and return; rendering
+updates and resizing do not cancel that suspension. Leaving restores ordinary
+Agent Shell keys. Tab@comma{} Shift-Tab and Return retain Agent Shell's native actions
+throughout reading.
+
 Plain Left and Right@comma{} or @kbd{C-b} and @kbd{C-f}@comma{} move by character within the current
 cell. @kbd{M-b} and @kbd{M-f}@comma{} or Control-Left and Control-Right@comma{} move by word. These
 commands follow wrapped text within the same cell@comma{} skipping borders@comma{} padding@comma{}
@@ -8420,7 +8518,8 @@ and neighbouring columns. At the beginning or end of the cell@comma{} they stop 
 announce the boundary. Use Control-Meta-Left and Control-Meta-Right to move
 between columns. Control-Meta-Up and Control-Meta-Down move between logical
 rows in the current column and read only the destination cell. Plain Up and
-Down make the same move and read the entire destination row. Wrapped cells
+Down make the same move and read the entire destination row by default;
+the Tables page can select cell speech for these plain arrows. Wrapped cells
 are read in full@comma{} using your table title settings.
 
 @kbd{C-n} and @kbd{C-p} retain ordinary line movement. They can move through wrapped
@@ -8437,12 +8536,14 @@ the agent is working.
 
 In viewport view mode@comma{} @kbd{t} takes the place of Agent Shell's thought-level
 shortcut; use @kbd{M-x agent-shell-viewport-set-session-thought-level} for that
-action. Inside a table@comma{} @kbd{r}@comma{} @kbd{c}@comma{} and @kbd{a} read rows@comma{} read columns@comma{} and select
-the table speaking method. To invoke the displaced viewport actions there@comma{}
+action. Inside a table@comma{} @kbd{r}@comma{} @kbd{c}@comma{} and @kbd{a} read rows@comma{} read columns@comma{} and open
+Tables settings. To invoke the displaced viewport actions there@comma{}
 use @kbd{M-x agent-shell-viewport-reply}@comma{} @kbd{M-x agent-shell-viewport-reply-continue}@comma{}
 or @kbd{M-x agent-shell-viewport-reply-again}. In the shell transcript@comma{} table @kbd{r}
 replaces quoting; use @kbd{M-x agent-shell-quote-region} with a selected region.
-Leaving the table restores these ordinary bindings.
+Leaving reading restores these ordinary bindings. In a viewport@comma{} table @kbd{q}
+leaves reading rather than closing the view; a second @kbd{q} runs @code{bury-buffer}.
+@kbd{M-x bury-buffer} remains available directly.
 
 Outside tables@comma{} @kbd{C-M-<up>} and @kbd{C-M-<down>} do nothing in Agent Shell@comma{}
 including its viewport and prompt editor. Repeating a row key after leaving
@@ -8468,9 +8569,11 @@ Run @code{emacsvox-agent-shell-table-next-column}.
 @item C-M-<left>
 Run @code{emacsvox-agent-shell-table-previous-column}.
 @item <down>
-Run @code{emacsvox-agent-shell-table-next-row} and read the destination row.
+Move down and read the row by default@comma{} or the cell when configured.
+@code{emacsvox-agent-shell-table-next-row} always reads the row.
 @item <up>
-Run @code{emacsvox-agent-shell-table-previous-row} and read the destination row.
+Move up and read the row by default@comma{} or the cell when configured.
+@code{emacsvox-agent-shell-table-previous-row} always reads the row.
 @item C-M-<down>
 Run @code{emacsvox-agent-shell-table-next-row-cell} and read the destination cell.
 @item C-M-<up>
@@ -8500,8 +8603,10 @@ Run @code{emacsvox-agent-shell-table-copy-row}; copied cells are tab-separated.
 Run @code{emacsvox-agent-shell-table-copy-column}; copied cells are separated by
 newlines.
 @item a
-Run @code{emacsvox-agent-shell-table-select-speaking-method} to toggle column
-titles@comma{} row titles@comma{} or whether data is spoken before titles.
+Run @code{emacsvox-table-settings} to browse and preview choices@comma{} then apply or
+save explicitly.
+@item q
+Leave table reading in place and restore ordinary host bindings.
 @end table
 
 Copy commands use logical cell values@comma{} excluding renderer padding and Markdown

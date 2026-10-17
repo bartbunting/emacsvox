@@ -14,6 +14,85 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Presentation Resource Terms,  Next: Speech And Settings Terms,  Prev: Editing Terms,  Up: Emacsvox Terminology
+
+17.3 Voices and presentation resources
+======================================
+
+Physical voice
+     A voice reported by a speech engine, such as an installed system
+     voice or a downloaded model's voice.  Installation alone does not
+     prove that it is enabled, active, or audible.  See *note Installed
+     voices and engines: (emacsvox)Installed Voices And Engines.
+Named voice
+     A presentation name such as ‘default’ or ‘bolden’, resolved through
+     a voice palette to physical choices and adjustments.  Editing a
+     shared named voice can affect several kinds of text that use it.
+     See *note Edit a named voice: (emacsvox)Editing Named Voices.
+Voice palette
+     A collection defining named voices, including their physical
+     choices, fallbacks, and adjustments.  Palettes can inherit values;
+     editing one is different from changing an engine preference.  See
+     *note Voices and routing: (emacsvox)Voices And Routing.
+Presentation rule
+     A match between application meaning or context and the feedback to
+     produce, such as a voice, cue, or silence.  A rule chooses
+     presentation; it does not install a physical voice.  See *note
+     Manage feedback rules: (emacsvox)Managing Feedback Rules.
+Auditory icon or cue
+     A short sound conveying an event or state.  A sound pack supplies
+     cues, while presentation rules determine when to use them.  Tones
+     can convey information without a recorded sound file.  See *note
+     Sounds and space: (emacsvox)Sounds And Space.
+Presentation profile
+     A saved selection of presentation resources and options.  It refers
+     to resources rather than copying everything into a full
+     configuration backup.  Applying a profile also retains its
+     selection for startup; individual palette operations have different
+     rules.  See *note Presentation profiles: (emacsvox)Presentation
+     Profiles.
+
+
+File: emacsvox.info,  Node: Speech And Settings Terms,  Prev: Presentation Resource Terms,  Up: Emacsvox Terminology
+
+17.4 Changes and speech output
+==============================
+
+Preview
+     An audition or comparison of a proposed result.  Previewing does
+     not by itself save the draft or make it the ordinary live
+     configuration.
+Retained draft
+     An unfinished edit kept in the current Emacs session for return to
+     its editor.  Retaining it is not a promise of recovery after Emacs
+     exits, and discarding it does not undo a save already completed.
+Save
+     Record data in the store owned by that editor or setting.  Read the
+     action's label: _Save and apply_ and _Save to collection without
+     selecting_ intentionally have different effects.
+Apply
+     Put a chosen configuration into use.  The operation may require
+     confirmation, validation, or a worker restart.  Its exact effect
+     depends on the resource; it is not a universal synonym for saving.
+Startup selection
+     The configuration to select when a later session starts.  Selecting
+     something for this session does not always select it for the next
+     one.  *note Choose what persists: (emacsvox)Saving And Startup.
+     compares these states and their owners.
+Speech server, engine, and worker
+     Emacsvox talks to a speech server; the server uses engines to
+     synthesise speech.  The manual uses _worker_ for a running speech
+     instance whose configuration and reported voices can differ from
+     another instance or from installed files.  See *note Speech
+     Backends: (emacsvox)Speech Backends.
+Main and notification speech
+     Separate output paths for foreground reading and other
+     announcements.  An integration decides which path to use for an
+     event; their existence is not a guarantee that all background text
+     is private.  See *note Speech output and notifications:
+     (emacsvox)Aural Speech Output.
+
+
 File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox Terminology,  Up: Top
 
 18 Copyright

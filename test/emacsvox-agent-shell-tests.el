@@ -579,8 +579,9 @@
     (should (= characters (- (length source) cut)))
     (should (= lines (1+ (cl-count ?\n source :start cut))))))
 
-(defun emacsvox-agent-shell-test--public-key-bindings (keymap)
-  "Return public Emacsvox Agent Shell bindings reachable from KEYMAP."
+(defun emacsvox-agent-shell-test--public-key-bindings (keymap &optional all)
+  "Return public Emacsvox Agent Shell bindings in KEYMAP.
+With ALL, include private and shared Emacsvox commands for conflict auditing."
   (cl-labels
       ((walk
         (map prefix)
@@ -594,8 +595,8 @@
                 ((and
                   (symbolp binding)
                   (string-prefix-p
-                   "emacsvox-agent-shell-" (symbol-name binding))
-                  (not (string-match-p "--" (symbol-name binding))))
+                   (if all "emacsvox-" "emacsvox-agent-shell-") (symbol-name binding))
+                  (or all (not (string-match-p "--" (symbol-name binding)))))
                  (push (cons (key-description key) binding) bindings)))))
            map)
           bindings)))
@@ -7593,7 +7594,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
              ("k k" . ,#'emacsvox-agent-shell-table-copy-cell)
              ("k r" . ,#'emacsvox-agent-shell-table-copy-row)
              ("k c" . ,#'emacsvox-agent-shell-table-copy-column)
-             ("a" . ,#'emacsvox-agent-shell-table-select-speaking-method)
+             ("a" . ,#'emacsvox-table-settings)
              ("M-<up>" . ,#'emacsvox-agent-shell-table-exit-backward)
              ("M-<down>" . ,#'emacsvox-agent-shell-table-exit-forward)))
         (should
@@ -10409,7 +10410,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                           agent-shell-elicitation-preview-map))
         (dolist (entry (append
                        (emacsvox-agent-shell-test--public-key-bindings
-                        (symbol-value own))
+                        (symbol-value own) t)
                        ;; No-op keys also displace upstream commands.
                        (when (eq own 'emacsvox-agent-shell--speech-control-map)
                          '(("C-M-<up>" . ignore) ("C-M-<down>" . ignore)))))
@@ -10432,6 +10433,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          agent-shell-viewport-view-mode-map "a" agent-shell-viewport-reply-again)
         (emacsvox-agent-shell--table-navigation-map
          agent-shell-viewport-view-mode-map "c" agent-shell-viewport-reply-continue)
+        (emacsvox-agent-shell--table-navigation-map
+         agent-shell-viewport-view-mode-map "q" bury-buffer)
         (emacsvox-agent-shell--table-navigation-map
          agent-shell-viewport-view-mode-map "r" agent-shell-viewport-reply))))))
 
@@ -11156,6 +11159,21 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (let* ((cell (emacsvox-agent-shell--table-snapshot))
                (region (plist-get cell :region)))
           (should (> (count-screen-lines (point) (cdr region)) 1)))
+        ;; A deliberate quit survives a real fragment replacement and redisplay.
+        (emacsvox-agent-shell-test--capture-presentations
+          (call-interactively (key-binding "q")))
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "tables" :block-id "answer" :body source)
+        (delete-other-windows)
+        (redisplay t)
+        (goto-char (point-min))
+        (search-forward "First")
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should emacsvox-table-reader--suspended)
+        (should-not emacsvox-agent-shell--table-navigation-active)
+        (emacsvox-agent-shell-test--capture-presentations
+          (emacsvox-table-reader-mode 1))
+        (should emacsvox-agent-shell--table-navigation-active)
         ;; Replacement by prose ends the contextual map before any next key.
         (emacsvox-agent-shell-test--render-response-section
          :namespace-id "tables" :block-id "answer" :body "Finished response.")
@@ -11513,6 +11531,87 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (when (buffer-live-p buffer)
         (with-current-buffer buffer (setq kill-buffer-query-functions nil))
         (kill-buffer buffer)))))
+
+
+(ert-deftest emacsvox-agent-shell-table-legacy-preferences-remain-scoped ()
+  "Saved, local, ambiguous and late legacy choices survive until explicit inheritance."
+  (let* ((symbol 'emacsvox-agent-shell-table-titles)
+         (properties (copy-tree (symbol-plist symbol)))
+         (old-default (default-value symbol))
+         (emacsvox-table-reader--legacy-assigned nil)
+         (emacsvox-table-reader--legacy-preexisting nil)
+         (emacsvox-table-reader-titles '(row))
+         (emacsvox-table-reader-mode-preferences nil))
+    (unwind-protect
+        (with-temp-buffer
+          (setq major-mode 'agent-shell-mode)
+          (set-default symbol '(column))
+          (setq emacsvox-table-reader--legacy-assigned nil)
+          (put symbol 'saved-value nil)
+          (put symbol 'customized-value nil)
+          (should (equal (emacsvox-table-reader--preference 'titles) '(row)))
+          (put symbol 'saved-value '('(column)))
+          (should (equal (emacsvox-table-reader--resolve 'titles) '(:value (column) :source legacy-mode)))
+          (put symbol 'saved-value nil)
+          (setq emacsvox-table-reader--legacy-preexisting (list symbol))
+          (should (eq (plist-get (emacsvox-table-reader--resolve 'titles) :source) 'legacy-ambiguous))
+          (setq emacsvox-table-reader--legacy-preexisting nil)
+          (set-default symbol '(column))
+          (should (eq (plist-get (emacsvox-table-reader--resolve 'titles) :source) 'legacy-mode))
+          (setq emacsvox-table-reader-mode-preferences '((agent-shell-mode (titles . inherit))))
+          (should (equal (emacsvox-table-reader--preference 'titles) '(row)))
+          (set (make-local-variable symbol) nil)
+          (should-not (emacsvox-table-reader--preference 'titles))
+          (setq emacsvox-table-reader--buffer-preferences '((titles . inherit)))
+          (should (equal (emacsvox-table-reader--preference 'titles) '(row)))
+          (setq major-mode 'org-mode)
+          (should (equal (emacsvox-table-reader--preference 'titles) '(row))))
+      (set-default symbol old-default)
+      (setplist symbol properties))))
+
+(ert-deftest emacsvox-agent-shell-table-on-demand-quit-and-explicit-entry ()
+  "On-demand policy keeps native keys until entry; quitting survives redraw invalidation."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (emacsvox-agent-shell-test--with-rendered-table
+        "Before\n| Name | Role |\n|---|---|\n| Alice | Engineer |\n| Bob | Writer |\nAfter\n"
+      (setq major-mode mode)
+      (use-local-map (symbol-value (intern (format "%s-map" mode))))
+      (let ((emacsvox-table-reader-activation 'on-demand)
+            (emacsvox-table-reader-movement-speech 'cell))
+        (goto-char (point-min))
+        (emacsvox-agent-shell--table-navigation-setup)
+        (emacsvox-agent-shell--install-speech-control-bindings)
+        (emacsvox-agent-shell--table-navigation-pre-command)
+        (search-forward "Engineer") (backward-char (length "Engineer"))
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should-not emacsvox-agent-shell--table-navigation-active)
+        (should-not (emacsvox-agent-shell--table-discovery-feedback (point-min) 'forward))
+        (let ((events (emacsvox-agent-shell-test--capture-events
+                        (call-interactively (key-binding (kbd "C-M-<down>"))))))
+          (should emacsvox-agent-shell--table-navigation-active)
+          (should (looking-at "Writer"))
+          (should (string-prefix-p "Table reading. Writer" (cadr (assq 'speak events)))))
+        (let ((origin (point)))
+          (emacsvox-agent-shell-test--capture-events (call-interactively (key-binding "q")))
+          (should (= (point) origin))
+          (should emacsvox-table-reader--suspended)
+          (let ((emacsvox-table-reader-activation 'automatic))
+            ;; Temporary loss of the renderer's mapping must not release q.
+            (cl-letf (((symbol-function 'emacsvox-agent-shell--table-readable-region) (lambda () nil)))
+              (emacsvox-agent-shell--table-navigation-post-command))
+            (emacsvox-agent-shell--table-navigation-post-command)
+            (should-not emacsvox-agent-shell--table-navigation-active)
+            (when (eq mode 'agent-shell-viewport-view-mode)
+              (should (eq (key-binding "q") 'bury-buffer))))
+          (emacsvox-agent-shell-test--capture-events (emacsvox-table-reader-mode 1))
+          (should emacsvox-agent-shell--table-navigation-active)
+          (emacsvox-agent-shell-test--capture-events (emacsvox-table-reader-mode -1))
+          (should-not emacsvox-agent-shell--table-navigation-active)
+          (emacsvox-agent-shell--table-navigation-pre-command)
+          (goto-char (point-min))
+          (emacsvox-agent-shell--table-navigation-post-command)
+          (should-not emacsvox-table-reader--suspended))
+        (emacsvox-agent-shell--table-navigation-cleanup)))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here

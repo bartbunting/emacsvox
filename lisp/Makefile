@@ -343,6 +343,7 @@ emacsvox-supercite.elc \
 emacsvox-syslog.elc \
 emacsvox-tab-bar.elc \
 emacsvox-table-reader.elc \
+emacsvox-table-settings.elc \
 emacsvox-table-ui.elc \
 emacsvox-table.elc \
 emacsvox-tabulate.elc \
@@ -428,6 +429,7 @@ emacsvox-capitalization.elc: emacsvox-aural-menu.elc emacsvox-aural-editor.elc e
 emacsvox-settings-changes.elc: emacsvox-aural-menu.elc emacsvox-aural-home.elc
 emacsvox-settings-integrations.elc: emacsvox-settings.elc
 emacsvox-settings-workflows.elc: emacsvox-aural-menu.elc
+emacsvox-table-settings.elc: emacsvox-table-reader.elc emacsvox-aural-menu.elc emacsvox-aural-preview.elc
 emacsvox-settings.elc: emacsvox-aural-menu.elc
 emacsvox-output-settings.elc: emacsvox-aural-menu.elc emacsvox-aural-spatial.elc emacsvox-aural-preview.elc
 emacsvox-line-cues.elc: emacsvox-tone-editor.elc emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc

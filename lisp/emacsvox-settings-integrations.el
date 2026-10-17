@@ -841,6 +841,8 @@ Enter a positive character count or none for the complete body." (interactive)
    ("l" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-processing))
     emacsvox-settings-integrations--agent-processing :transient t)
   ]
+  ["Shared table reading"
+   ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)]
   ["Global reading limits"
    ("a" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-automatic-limit))
     emacsvox-settings-integrations--agent-automatic-limit :transient t)
@@ -882,6 +884,8 @@ Change the global default; buffer-local settings still take precedence."
   ["Org table feedback (global); w saves"
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--org-feedback))
     emacsvox-settings-integrations--org-feedback :transient transient--do-suspend)]
+  ["Shared table reading"
+   ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)]
   ["Structured and advanced settings"
    ("t" "Org table options (Customize)" emacsvox-settings-integrations--org-tables :transient transient--do-suspend)
    ("A" "Advanced Emacsvox Org settings (Customize)" emacsvox-settings-integrations--org-custom :transient transient--do-suspend)]

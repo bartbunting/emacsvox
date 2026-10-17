@@ -30,7 +30,12 @@
 (require 'cus-edit)
 
 (defconst emacsvox-settings--destinations
-  '(("Emacs pronunciation dictionaries" emacsvox-settings-workflows emacsvox-settings-dictionaries "d")
+  '(("Table reading and navigation" emacsvox-table-settings emacsvox-table-settings "m")
+    ("Table titles and data order" emacsvox-table-settings emacsvox-table-settings "t")
+    ("Automatic or on-demand table reading" emacsvox-table-settings emacsvox-table-settings "a")
+    ("Table coordinates and repeated headings" emacsvox-table-settings emacsvox-table-settings "c")
+    ("Table settings inheritance and migration" emacsvox-table-settings emacsvox-table-settings "I")
+    ("Emacs pronunciation dictionaries" emacsvox-settings-workflows emacsvox-settings-dictionaries "d")
     ("Pronunciation substitution in source buffer" emacsvox-settings-workflows emacsvox-settings-dictionaries "t")
     ("Voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
     ("Omnivox average pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")

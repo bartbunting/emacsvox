@@ -29,7 +29,7 @@
 
 ;; Common logical table formatting and navigation.  Adapters supply complete
 ;; cell values and source positions; reading never calls native table editors.
-;; Agent Shell retains its public commands and presentation preferences.
+;; Agent Shell retains its public commands and host-owned reading context.
 
 ;;; Code:
 
@@ -42,8 +42,7 @@
   :group 'emacsvox)
 
 (defcustom emacsvox-table-reader-titles '(column)
-  "Titles spoken with cells in the explicit table reader.
-Agent Shell retains its own table speech preferences."
+  "Default titles spoken with logical table cells."
   :type '(set (const column) (const row))
   :group 'emacsvox-table-reader)
 
@@ -51,6 +50,164 @@ Agent Shell retains its own table speech preferences."
   "Whether table cell data precedes or follows its titles."
   :type '(choice (const first) (const last))
   :group 'emacsvox-table-reader)
+
+(defcustom emacsvox-table-reader-movement-speech 'row
+  "What plain Up and Down read while navigating a table.
+Control-Meta arrows always read the destination cell."
+  :type '(choice (const row) (const cell)) :group 'emacsvox-table-reader)
+(defcustom emacsvox-table-reader-activation nil
+  "When table reading starts.
+Nil uses each adapter's default: automatic in Agent Shell and on demand
+elsewhere.  An explicit choice applies to modes without an override."
+  :type '(choice (const :tag "Mode defaults" nil)
+                 (const automatic) (const on-demand)) :group 'emacsvox-table-reader)
+(defcustom emacsvox-table-reader-coordinates nil
+  "Whether table movement also announces the destination coordinates."
+  :type 'boolean :group 'emacsvox-table-reader)
+(defcustom emacsvox-table-reader-entry-detail 'full
+  "Whether entering a table announces its dimensions as well as the cell."
+  :type '(choice (const full) (const brief)) :group 'emacsvox-table-reader)
+(defcustom emacsvox-table-reader-repeat-titles t
+  "Whether movement repeats titles that were already spoken.
+When nil, omit unchanged row and column titles on consecutive cell moves.
+Explicit inspection always uses the selected titles."
+  :type 'boolean :group 'emacsvox-table-reader)
+(defcustom emacsvox-table-reader-edge-action 'leave
+  "Whether vertical movement leaves a table or stops at its edge.
+Application lists always stop.  Explicit exit commands remain available."
+  :type '(choice (const leave) (const stop)) :group 'emacsvox-table-reader)
+(defcustom emacsvox-table-reader-mode-preferences nil
+  "Table preferences by major mode.
+Each entry is (MODE . ((SETTING . VALUE) ...)).  SETTING is titles,
+data-position, movement-speech, activation, coordinates, entry-detail,
+repeat-titles or edge-action.  VALUE inherit explicitly follows common
+defaults, including when an older Agent Shell option is set.
+Agent Shell transcript and viewport share the agent-shell-mode entry."
+  :type '(alist :key-type symbol :value-type (alist :key-type symbol :value-type sexp))
+  :group 'emacsvox-table-reader)
+
+(defconst emacsvox-table-reader--options
+  '((titles . emacsvox-table-reader-titles)
+    (data-position . emacsvox-table-reader-data-position)
+    (movement-speech . emacsvox-table-reader-movement-speech)
+    (activation . emacsvox-table-reader-activation)
+    (coordinates . emacsvox-table-reader-coordinates)
+    (entry-detail . emacsvox-table-reader-entry-detail)
+    (repeat-titles . emacsvox-table-reader-repeat-titles)
+    (edge-action . emacsvox-table-reader-edge-action)))
+(defvar-local emacsvox-table-reader--buffer-preferences nil
+  "Explicit temporary choices, including inherit to ignore older local values.")
+(defvar emacsvox-table-reader--preference-mode nil
+  "Adapter's mode while running an operation outside its usual major mode.")
+(defvar emacsvox-table-reader--legacy-preexisting nil
+  "Legacy options already bound before their initial definition.")
+(defvar emacsvox-table-reader--legacy-assigned nil
+  "Legacy options assigned after definition, even to their old default.")
+(defvar emacsvox-table-reader--legacy-watching nil)
+(defvar-local emacsvox-table-reader--last-titles nil)
+
+(defun emacsvox-table-reader--mode ()
+  "Return the settings mode, grouping both Agent Shell reading views."
+  (or emacsvox-table-reader--preference-mode
+      (when (derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode)
+        'agent-shell-mode)
+      major-mode))
+
+(defun emacsvox-table-reader--legacy-watch (symbol _value operation where)
+  "Record explicit assignments to legacy SYMBOL with OPERATION and WHERE."
+  (when (eq operation 'set)
+    (if (bufferp where)
+        (with-current-buffer where
+          ;; The variable itself records a local legacy choice.
+          (setq emacsvox-table-reader--last-titles nil))
+      (cl-pushnew symbol emacsvox-table-reader--legacy-assigned))))
+
+(defun emacsvox-table-reader--watch-legacy ()
+  "Observe future legacy assignments without changing or saving values."
+  (unless emacsvox-table-reader--legacy-watching
+    (dolist (symbol '(emacsvox-agent-shell-table-titles
+                      emacsvox-agent-shell-table-data-position))
+      (add-variable-watcher symbol #'emacsvox-table-reader--legacy-watch))
+    (setq emacsvox-table-reader--legacy-watching t)))
+
+(defun emacsvox-table-reader--mode-choice (key)
+  "Return the most specific mode entry for KEY, retaining explicit nil."
+  (let ((mode (emacsvox-table-reader--mode)) choice)
+    (while (and mode (not choice))
+      (setq choice (assq key (alist-get mode emacsvox-table-reader-mode-preferences))
+            mode (get mode 'derived-mode-parent)))
+    choice))
+
+(defun emacsvox-table-reader--resolve (key)
+  "Return (:value VALUE :source SCOPE) for table preference KEY.
+An explicit nil title list is a value, never an inheritance marker."
+  (let* ((option (alist-get key emacsvox-table-reader--options))
+         (buffer-choice (assq key emacsvox-table-reader--buffer-preferences))
+         (mode-choice (emacsvox-table-reader--mode-choice key))
+         (legacy (and (eq (emacsvox-table-reader--mode) 'agent-shell-mode)
+                      (pcase key
+                        ('titles 'emacsvox-agent-shell-table-titles)
+                        ('data-position 'emacsvox-agent-shell-table-data-position))))
+         (legacy-bound (and legacy (boundp legacy)))
+         (old-default (if (eq key 'titles) '(column) 'first))
+         (local-inherit (eq (cdr buffer-choice) 'inherit))
+         value source)
+    (cond
+     ((and buffer-choice (not local-inherit))
+      (setq value (cdr buffer-choice) source 'buffer))
+     ((and (not local-inherit) (local-variable-p option))
+      (setq value (symbol-value option) source 'buffer))
+     ((and (not local-inherit) legacy-bound (local-variable-p legacy))
+      (setq value (symbol-value legacy) source 'legacy-buffer))
+     (mode-choice
+      (if (eq (cdr mode-choice) 'inherit)
+          (setq value (default-value option) source 'common)
+        (setq value (cdr mode-choice) source 'mode)))
+     ((and legacy-bound
+           (or (get legacy 'saved-value) (get legacy 'customized-value)
+               (memq legacy emacsvox-table-reader--legacy-assigned)
+               (memq legacy emacsvox-table-reader--legacy-preexisting)
+               (not (equal (default-value legacy) old-default))))
+      (setq value (default-value legacy)
+            source (if (and (equal value old-default)
+                            (memq legacy emacsvox-table-reader--legacy-preexisting)
+                            (not (or (get legacy 'saved-value) (get legacy 'customized-value)
+                                     (memq legacy emacsvox-table-reader--legacy-assigned))))
+                       'legacy-ambiguous 'legacy-mode)))
+     (t (setq value (default-value option) source 'common)))
+    (when (and (eq key 'activation) (null value))
+      (setq value (if (eq (emacsvox-table-reader--mode) 'agent-shell-mode)
+                      'automatic 'on-demand)
+            source 'built-in))
+    (list :value value :source source)))
+
+(defun emacsvox-table-reader--preference (key)
+  "Return the effective value for table preference KEY."
+  (plist-get (emacsvox-table-reader--resolve key) :value))
+
+(defun emacsvox-table-reader--format (cell presentation &optional movement)
+  "Format CELL as PRESENTATION using effective preferences.
+MOVEMENT enables optional coordinate and repeated-title feedback."
+  (let* ((emacsvox-table-reader-titles (emacsvox-table-reader--preference 'titles))
+         (emacsvox-table-reader-data-position (emacsvox-table-reader--preference 'data-position))
+         (titles (list (plist-get cell :row-title) (plist-get cell :column-title))))
+    (when (and movement (eq presentation 'cell)
+               (not (emacsvox-table-reader--preference 'repeat-titles)))
+      (when (equal (car titles) (car emacsvox-table-reader--last-titles))
+        (setq emacsvox-table-reader-titles (remq 'row emacsvox-table-reader-titles)))
+      (when (equal (cadr titles) (cadr emacsvox-table-reader--last-titles))
+        (setq emacsvox-table-reader-titles (remq 'column emacsvox-table-reader-titles))))
+    (let ((text (funcall
+                 (pcase presentation
+                   ('cell #'emacsvox-table-reader--cell-speech)
+                   ('row #'emacsvox-table-reader--row-speech)
+                   ('column #'emacsvox-table-reader--column-speech)
+                   ('context #'emacsvox-table-reader--context-speech)
+                   ('dimensions #'emacsvox-table-reader--dimensions-speech)) cell)))
+      (when movement (setq emacsvox-table-reader--last-titles titles))
+      (if (and movement (emacsvox-table-reader--preference 'coordinates))
+          (concat text " " (emacsvox-table-reader--context-speech cell))
+        text))))
 
 (defun emacsvox-table-reader--title (title face data)
   "Return TITLE voiced with FACE unless it is blank or duplicates DATA."
@@ -237,7 +394,8 @@ and a flat :positions list in row order.  Missing cells never clamp."
   "Non-nil during explicit table reading.")
 
 (defvar emacsvox-table-reader--adapters nil
-  "Alist of (MAJOR-MODE SNAPSHOT SUBMIT [KEYMAP]) table adapters.
+  "Alist of (MAJOR-MODE SNAPSHOT SUBMIT [KEYMAP LIFECYCLE]) adapters.
+LIFECYCLE may supply :enter and :toggle callbacks for host-owned contexts.
 SNAPSHOT returns a fresh cell plist at point, or nil outside a supported table.
 SUBMIT accepts text, occasion, presentation and icon.  Adapters retain their
 mode's registered Aural facts.  Optional KEYMAP preserves application actions
@@ -249,6 +407,10 @@ inside the reading context.  No adapter may edit the source to read it.")
   "Markers delimiting the table in the current reading context.")
 (defvar-local emacsvox-table-reader--map-override nil
   "Owned entry in `minor-mode-overriding-map-alist' during reading.")
+(defvar-local emacsvox-table-reader--suspended nil
+  "Non-nil after leaving or editing, until leaving the table or explicit entry.
+For rendered tables an uncertain identity remains suspended until prose is
+reached; a re-render alone never resumes reading.")
 
 (defvar emacsvox-table-reader--entering nil
   "Non-nil while the first arrow's feedback should announce reader entry.")
@@ -259,6 +421,7 @@ Returning nil lets Emacs resolve the existing binding in lower keymaps."
   (when (and (not emacsvox-table-reader-mode)
              (seq-some (lambda (entry) (derived-mode-p (car entry)))
                        emacsvox-table-reader--adapters)
+             (not (nth 4 (emacsvox-table-reader--adapter)))
              (save-excursion
                (save-match-data (emacsvox-table-reader--snapshot))))
     command))
@@ -271,7 +434,7 @@ Returning nil lets Emacs resolve the existing binding in lower keymaps."
     ;; Keep boundary and zero-count behaviour relative to the original point.
     (goto-char origin)
     (let ((emacsvox-table-reader--entering t))
-      (emacsvox-table-reader--move rows columns))))
+      (emacsvox-table-reader--move rows columns t))))
 
 (defun emacsvox-table-reader--enter-next-row (count)
   "Enter table reading and move COUNT rows down."
@@ -332,7 +495,9 @@ The entry map contributes no binding outside supported tables.")
 OCCASION, PRESENTATION and ICON describe the user's action."
   (funcall (nth 2 (or emacsvox-table-reader--adapter
                       (emacsvox-table-reader--adapter)))
-           (if (and emacsvox-table-reader--entering emacsvox-table-reader-mode)
+           (if (and emacsvox-table-reader--entering
+                    (or emacsvox-table-reader-mode
+                        (bound-and-true-p emacsvox-agent-shell--table-navigation-active)))
                (concat "Table reading. " text)
              text)
            occasion presentation icon))
@@ -340,6 +505,7 @@ OCCASION, PRESENTATION and ICON describe the user's action."
 (defun emacsvox-table-reader--release ()
   "Release the reading context without speech or source changes."
   (setq emacsvox-table-reader-mode nil)
+  (setq emacsvox-table-reader--last-titles nil)
   (when emacsvox-table-reader--map-override
     (setq minor-mode-overriding-map-alist
           (delq emacsvox-table-reader--map-override
@@ -355,13 +521,42 @@ OCCASION, PRESENTATION and ICON describe the user's action."
 
 (defun emacsvox-table-reader--leave ()
   "Leave explicit reading and announce restoration of ordinary mode keys."
+  (setq emacsvox-table-reader--suspended t)
   (emacsvox-table-reader--release)
   (emacsvox-table-reader--submit
    "Table reading off." 'navigation 'context 'close-object))
 
 (defun emacsvox-table-reader--after-change (&rest _)
   "End reading after a source edit; let the editing command give feedback."
+  (setq emacsvox-table-reader--suspended t)
   (emacsvox-table-reader--release))
+
+(defvar-local emacsvox-table-reader--command-tick nil)
+
+(defun emacsvox-table-reader--before-command ()
+  "Remember the text revision before a command, without parsing tables."
+  (setq emacsvox-table-reader--command-tick (buffer-chars-modified-tick)))
+
+(add-hook 'pre-command-hook #'emacsvox-table-reader--before-command)
+
+(defun emacsvox-table-reader--automatic-entry ()
+  "Enter source tables according to their policy after deliberate navigation."
+  (when (and (not emacsvox-table-reader-mode)
+             (or (null emacsvox-table-reader--command-tick)
+                 (= emacsvox-table-reader--command-tick (buffer-chars-modified-tick)))
+             (not (bound-and-true-p transient--prefix))
+             (seq-some (lambda (entry) (and (not (nth 4 entry))
+                                           (derived-mode-p (car entry))))
+                       emacsvox-table-reader--adapters)
+             (or emacsvox-table-reader--suspended
+                 (eq (emacsvox-table-reader--preference 'activation) 'automatic)))
+    (let ((cell (emacsvox-table-reader--snapshot)))
+      (cond
+       ((null cell) (setq emacsvox-table-reader--suspended nil))
+       ((not emacsvox-table-reader--suspended)
+        (emacsvox-table-reader--enter cell))))))
+
+(add-hook 'post-command-hook #'emacsvox-table-reader--automatic-entry)
 
 (defun emacsvox-table-reader--post-command ()
   "Restore ordinary keys when point leaves the table that was entered."
@@ -376,7 +571,10 @@ OCCASION, PRESENTATION and ICON describe the user's action."
 (defun emacsvox-table-reader--enter (cell &optional quiet)
   "Activate reading at CELL without modifying or aligning the source.
 With QUIET, let the following movement submit the single entry announcement."
-  (emacsvox-table-reader--release)
+  (setq emacsvox-table-reader--suspended nil)
+  (if-let* ((enter (plist-get (nth 4 (emacsvox-table-reader--adapter)) :enter)))
+      (funcall enter cell quiet)
+    (emacsvox-table-reader--release)
   (goto-char (cadr (emacsvox-table-reader--destination cell 0 0)))
   (setq emacsvox-table-reader--adapter (emacsvox-table-reader--adapter)
         emacsvox-table-reader-mode t
@@ -395,21 +593,18 @@ With QUIET, let the following movement submit the single entry announcement."
   (add-hook 'kill-buffer-hook #'emacsvox-table-reader--release nil t)
   (unless quiet
     (emacsvox-table-reader--submit
-     (concat "Table reading. " (emacsvox-table-reader--dimensions-speech cell)
-             " " (emacsvox-table-reader--cell-speech cell))
+     (concat "Table reading. "
+             (when (eq (emacsvox-table-reader--preference 'entry-detail) 'full)
+               (concat (emacsvox-table-reader--dimensions-speech cell) " "))
+             (emacsvox-table-reader--format cell 'cell))
      'navigation 'cell 'open-object))
-  (force-mode-line-update))
+  (force-mode-line-update)))
 
 (defun emacsvox-table-reader--inspect (presentation &optional occasion)
   "Speak PRESENTATION once, using OCCASION or the default inspection intent."
   (let ((cell (emacsvox-table-reader--cell)))
     (emacsvox-table-reader--submit
-     (funcall (pcase presentation
-                ('cell #'emacsvox-table-reader--cell-speech)
-                ('row #'emacsvox-table-reader--row-speech)
-                ('column #'emacsvox-table-reader--column-speech)
-                ('context #'emacsvox-table-reader--context-speech)
-                ('dimensions #'emacsvox-table-reader--dimensions-speech)) cell)
+     (emacsvox-table-reader--format cell presentation)
      (or occasion 'inspection) presentation 'item)))
 
 (defun emacsvox-table-reader-speak-cell ()
@@ -486,15 +681,19 @@ the host's exit lifecycle; otherwise use the explicit reader's exit."
   (pcase (emacsvox-table-reader--destination
           (emacsvox-table-reader--cell) rows columns)
     (`(exit ,direction)
-     (funcall (or exit-function #'emacsvox-table-reader--exit) direction))
+     (if (eq (emacsvox-table-reader--preference 'edge-action) 'stop)
+         (emacsvox-table-reader--submit
+          (if (eq direction 'backward) "First row of table." "Last row of table.")
+          'navigation 'context 'warn-user)
+       (funcall (or exit-function #'emacsvox-table-reader--exit) direction)))
     (`(boundary ,text)
      (emacsvox-table-reader--submit text 'navigation 'context 'warn-user))
     (`(cell ,position)
      (goto-char position)
      (let ((cell (emacsvox-table-reader--cell)))
        (emacsvox-table-reader--submit
-        (if (or cell-only (zerop rows)) (emacsvox-table-reader--cell-speech cell)
-          (emacsvox-table-reader--row-speech cell))
+        (emacsvox-table-reader--format
+         cell (if (or cell-only (zerop rows)) 'cell 'row) t)
         'navigation (if (or cell-only (zerop rows)) 'cell 'row) 'item)))))
 (defun emacsvox-table-reader-next-row (&optional count)
   "Move COUNT logical rows down, retaining the column and reading the row."
@@ -504,6 +703,23 @@ the host's exit lifecycle; otherwise use the explicit reader's exit."
   "Move COUNT logical rows up, retaining the column and reading the row."
   (interactive "p")
   (emacsvox-table-reader--move (- (or count 1)) 0))
+(defun emacsvox-table-reader-next-row-cell (&optional count)
+  "Move COUNT rows down, retaining the column and reading the cell."
+  (interactive "p")
+  (emacsvox-table-reader--move (or count 1) 0 t))
+(defun emacsvox-table-reader-previous-row-cell (&optional count)
+  "Move COUNT rows up, retaining the column and reading the cell."
+  (interactive "p")
+  (emacsvox-table-reader--move (- (or count 1)) 0 t))
+(defun emacsvox-table-reader--plain-next-row (count)
+  "Move COUNT rows down with the selected movement speech."
+  (interactive "p")
+  (emacsvox-table-reader--move count 0
+   (eq (emacsvox-table-reader--preference 'movement-speech) 'cell)))
+(defun emacsvox-table-reader--plain-previous-row (count)
+  "Move COUNT rows up with the selected movement speech."
+  (interactive "p")
+  (emacsvox-table-reader--plain-next-row (- count)))
 (defun emacsvox-table-reader-next-column (&optional count)
   "Move COUNT logical columns right and read the destination cell."
   (interactive "p")
@@ -580,10 +796,10 @@ Agent Shell and Org editing feedback retain their existing preferences."
 (defvar emacsvox-table-reader-mode-map
   (let ((map (make-sparse-keymap)) (copy (make-sparse-keymap)))
     (dolist (binding
-             '(("<up>" . emacsvox-table-reader-previous-row)
-               ("<down>" . emacsvox-table-reader-next-row)
-               ("C-M-<up>" . emacsvox-table-reader-previous-row)
-               ("C-M-<down>" . emacsvox-table-reader-next-row)
+             '(("<up>" . emacsvox-table-reader--plain-previous-row)
+               ("<down>" . emacsvox-table-reader--plain-next-row)
+               ("C-M-<up>" . emacsvox-table-reader-previous-row-cell)
+               ("C-M-<down>" . emacsvox-table-reader-next-row-cell)
                ("C-M-<left>" . emacsvox-table-reader-previous-column)
                ("C-M-<right>" . emacsvox-table-reader-next-column)
                ("<left>" . left-char) ("<right>" . right-char)
@@ -598,7 +814,7 @@ Agent Shell and Org editing feedback retain their existing preferences."
                ("." . emacsvox-table-reader-speak-context)
                ("=" . emacsvox-table-reader-speak-dimensions)
                ("w" . emacsvox-table-reader-copy-cell)
-               ("a" . emacsvox-table-reader-select-speaking-method)
+               ("a" . emacsvox-table-settings)
                ("t" . emacsvox-table-reader-next-table)
                ("T" . emacsvox-table-reader-previous-table)
                ("q" . emacsvox-table-reader-mode)))
@@ -613,23 +829,30 @@ Other editing commands retain their normal meaning; editing ends reading.")
 
 ;;;###autoload
 (define-minor-mode emacsvox-table-reader-mode
-  "Read a Markdown, Org or tabulated list table in place.
-Use a Control-Meta arrow inside a table to enter reading and move, or use
-the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
-logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
-right without editing and RET reads the cell.  q restores normal mode keys.
-Leaving the table or editing its source also ends this context.  Tabulated
-applications retain their action keys; use M-x reader commands when an action
-occupies a short key.  This mode is independent of Markdown's markup-stripping
-speech preference."
+  "Toggle logical table reading in the current supported buffer.
+Control-Meta arrows enter and read the destination cell.  Plain Up and Down
+read rows by default; `emacsvox-table-reader-movement-speech' can choose cells.
+Use r/c to inspect rows/columns, a for Tables settings, and q to leave in place.
+Quitting or editing suspends automatic entry until you leave the table and
+return, or explicitly enter again.  Source reading does not edit or align text.
+Agent Shell manages its own contextual map and retains native TAB and RET.
+Application lists retain their action keys.  Use M-x reading commands when
+an application action occupies a short key.  Native Org editing feedback and
+Markdown markup-stripping speech remain independent."
   :lighter " Table"
   :group 'emacsvox-table-reader
-  (if (not emacsvox-table-reader-mode)
+  (if-let* ((adapter (seq-find (lambda (entry) (derived-mode-p (car entry)))
+                              emacsvox-table-reader--adapters))
+            (toggle (plist-get (nth 4 adapter) :toggle)))
+      (progn (setq emacsvox-table-reader-mode nil) (funcall toggle arg))
+    (if (not emacsvox-table-reader-mode)
       (when emacsvox-table-reader--region (emacsvox-table-reader--leave))
     ;; A failed entry must not leave printable table keys active in prose.
     (setq emacsvox-table-reader-mode nil
           emacsvox-table-reader--adapter nil)
-    (emacsvox-table-reader--enter (emacsvox-table-reader--cell))))
+    (emacsvox-table-reader--enter (emacsvox-table-reader--cell)))))
+
+(autoload 'emacsvox-table-settings "emacsvox-table-settings" nil t)
 
 
 (defun emacsvox-table-reader--pipe-spans (begin end &optional markdown)

@@ -1393,8 +1393,8 @@ Important interaction and ownership findings:
 
 <<table-reading-consolidation>>
 
-Status: slice 1 design audit and slice 2 adapter implementation complete;
-listening acceptance and slices 3–6 remain open. The [[file:developer/table-reading-contract.org][slice 1 contract]] records the audit baseline, chosen reading
+Status: slices 1–2 committed as =caba80207=. Slices 3–6 are implemented and
+automatically verified. Listening acceptance is separate and remains open. The [[file:developer/table-reading-contract.org][slice 1 contract]] records the audit baseline, chosen reading
 operations, binding exceptions, dependency evidence and migration rules. Add a
 focused Tables page under reading settings, discoverable through settings
 search and the relevant integration menus. Select bindings after checking
@@ -1406,8 +1406,9 @@ and offer a configurable activation policy. Choose on-demand entry through
 the reader command or table-navigation keys, or automatic entry when point
 moves into a supported table. Provide a common preference with overrides for
 individual modes. Preserve current behaviour initially: automatic entry in
-Agent Shell, on-demand entry in Org and Markdown. These choices are planned;
-no activation setting or preference migration is implemented yet.
+Agent Shell, on-demand entry in Org and Markdown. The implemented settings
+retain these initial defaults and offer explicit common, mode and buffer
+choices without rewriting older configuration.
 
 Consolidation covers the reading commands, movement feedback, speech
 preferences and settings experience. Agent Shell tables originate as Markdown
@@ -1438,7 +1439,7 @@ not immediately turn it back on at the same position. Normal Org table-editing
 speech remains available outside the reader. Explain the active reading state
 and its effect on Enter, Tab and letter keys, with an accessible way to leave.
 
-Source inspection found three existing preference owners:
+The initial audit found three preference owners before consolidation:
 
 - The shared reader has =emacsvox-table-reader-titles= and
   =emacsvox-table-reader-data-position=. Its speaking-method command changes
@@ -1470,12 +1471,10 @@ Suppressing a repeated title that duplicates the cell is existing behaviour.
 | Table boundaries | Consider stopping at the first/last row versus leaving into surrounding text. Shared reading currently attempts to leave vertically and reports horizontal edges; wrapping would be a separate decision. |
 | Boundary feedback | Consider spoken feedback and existing earcon choices. Route sounds through event assignment; do not create a separate table sound library. |
 
-The controls beyond titles and data order need behavioural design and
-implementation; they are not existing settings waiting to be linked. Avoid
-adding arbitrary key remapping, blank-cell skipping or wrapping in the initial
-slice. Implement activation choices after defining entry, exit and editing
-behaviour. Reading must continue to leave source text unchanged and preserve
-application action keys in tabulated buffers.
+The implementation adds the movement, activation and optional detail controls
+below. Arbitrary key remapping, blank-cell skipping and wrapping remain outside
+these slices. Reading leaves source text unchanged and preserves application
+action keys in tabulated buffers.
 
 Scope and persistence must be explicit. Capture the source buffer before
 opening settings. Distinguish this-buffer overrides, inherited defaults and
@@ -1499,7 +1498,7 @@ is taken on.
 
 ***** 1. Establish the common behaviour and compatibility contract
 
-Completed on 2026-10-17; uncommitted. See the
+Completed on 2026-10-17; committed as =caba80207=. See the
 [[file:developer/table-reading-contract.org][behaviour and migration contract]] for the audit and implementation baseline.
 Both installed and locked dependency versions passed 64 focused batch tests
 and 67 graphical tests. The old cache selected by =local.mk= is stale; a
@@ -1535,7 +1534,7 @@ and does not authorise removing them.
 
 ***** 2. Connect the shared reader to each representation
 
-Implemented on 2026-10-17; uncommitted. Agent Shell's existing commands now
+Implemented on 2026-10-17; committed as =caba80207=. Agent Shell's existing commands now
 use a scoped rendered-table adapter for shared inspection, copying and logical
 movement. Its activation hooks, contextual map, row/cell speech distinction,
 legacy preferences and registered Aural facts retain their existing ownership.
@@ -1661,6 +1660,61 @@ Cycling from the last row or column back to the first, automatic blank-cell
 skipping and arbitrary key remapping remain outside these slices. Do not make
 this optional tuning a prerequisite for delivering the common reader and
 activation setting.
+
+**** Slices 3–6 implementation checkpoint, 2026-10-18
+
+Implementation and automated verification are complete. Generated references,
+byte-code and fresh compiled checks pass. Listening acceptance has not been
+collected; the implementation and its verification are recorded together in
+this checkpoint.
+
+- Slice 3: one Tables page is available from reading settings, search, table
+  =a= and Org/Agent Shell integration settings. Choices stay pending until
+  buffer Apply, Save common or Save mode. Labels identify the captured buffer,
+  effective value and scope. Preview, Stop, cancellation and Help retain source
+  point and menu focus. Applied choices are marked not saved and remain
+  available to Save during the visit. Reopening through search discards closed,
+  unapplied choices. Customize saves only changed choices; inheritance is
+  distinct from no titles. Saved, local and late legacy Agent Shell assignments
+  remain effective at their original scopes. Help exposes ambiguous and
+  overridden legacy values; no migration is written merely by opening menus.
+- Slice 4: Control-Meta arrows enter and read cells across supported adapters.
+  Plain vertical arrows read rows by default, with a cell preference. Public
+  row-reading commands retain row speech. Agent Shell keeps native Tab/Return
+  and host maps. Its viewport =q= override leaves reading; a second =q= can
+  bury the viewport. The complete overlap audit includes private/shared keys.
+- Slice 5: common, mode and buffer activation preferences preserve automatic
+  Agent Shell and on-demand source/list defaults. Quit and editing suspend
+  the current visit; explicit entry or navigation through prose restores it.
+  Real Agent Shell fragment replacement and window resizing preserve quit.
+  Prompt editors remain editable, and no settings action changes other buffers'
+  active reader state. Speech-map reinstallation retains conditional entry.
+- Slice 6: coordinates during movement, brief/full entry, repeated titles and
+  stop/leave at vertical edges are implemented with previous defaults. Complete
+  inspection stays available. Application lists always stop; explicit exit
+  remains available. Existing semantic boundary cues are reused.
+
+Source checks pass against installed and pinned Agent Shell dependencies.
+Fresh compiled checks pass 74 focused batch cases and 80 graphical cases,
+including the final search-reopening regression. All 673 pinned batch and 11
+graphical integration tests pass. The wider settings-menu run passes all 72
+cases; the final menu-context correction separately passes its three graphical
+cases. Checks cover restart persistence, scoped saves, Help focus, actual table
+rendering and preservation of prompt editing. The clean rebuild, byte-code
+preflight, headers, generated references and documentation release gate pass.
+
+The broad batch run reports 4,170 passes, 15 failures and 180 skips. A separate
+checkout of =caba80207= reports the same 15 failure names, with 4,164 passes and
+178 skips; no new broad-suite failure was introduced. Skips include graphical
+and native-service cases and are not counted as passes. Final menu tests were
+rerun graphically after the last context correction. The baseline failures
+remain separate work; logs are =/tmp/table-slices-unit.log= and
+=/tmp/table-baseline-unit2.log=. Final compiled evidence and documentation gates
+are under =/tmp/table-review-*=, from an isolated table-only checkout.
+
+Normal-profile listening remains to be checked after a restart. No live session
+was reloaded. CSV/spreadsheet readers, blank-cell skipping, cycling and key
+remapping remain outside the accepted scope.
 
 **** Verification and acceptance for every implemented slice
 
