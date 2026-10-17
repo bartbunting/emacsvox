@@ -1739,6 +1739,159 @@ Return the beginning of the inserted row."
       (should (memq 'shr-link (ensure-list (get-text-property 0 'face text))))
       (should-not (plist-get arguments :compatibility-actions)))))
 
+(defun emacsvox-notmuch-test--insert-part-row (indent &optional body)
+  "Insert a real Notmuch control with INDENT and optional BODY; return it."
+  (setq major-mode 'notmuch-show-mode)
+  (use-local-map notmuch-show-mode-map)
+  (insert "Before\n")
+  (let* ((start (point))
+         (button (notmuch-show-insert-part-header
+                  1 "application/pdf" "application/pdf" "report.pdf")))
+    (put-text-property start (point) :notmuch-part
+                       emacsvox-notmuch-test--attachment)
+    (indent-rigidly start (point) indent)
+    (goto-char (1- (point)))
+    (insert "   ")
+    (forward-char)
+    (when body
+      (let ((begin (point)))
+        (insert body "\n")
+        (button-put button 'overlay (make-overlay begin (point)))))
+    button))
+
+(ert-deftest emacsvox-notmuch-part-row-enter-toggles-from-whitespace ()
+  "Arrow navigation and Enter toggle the part from either side of its control."
+  (save-window-excursion
+    (with-temp-buffer
+      (let* ((button (emacsvox-notmuch-test--insert-part-row 6 "Part content"))
+             (body (button-get button 'overlay))
+             events)
+        (switch-to-buffer (current-buffer))
+        (goto-char (point-min))
+        (when (display-graphic-p) (redisplay t))
+        (let ((line-move-visual nil)) (call-interactively #'next-line))
+        (should (= (current-column) 0))
+        (should-not (button-at (point)))
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (emacsvox-test--notmuch-submission-recorder
+                    (lambda (event) (push event events)))))
+          (dolist (location '(leading trailing))
+            (when (eq location 'trailing) (end-of-line))
+            (let ((column (current-column)))
+              (call-interactively (key-binding (kbd "RET")))
+              (if (eq location 'trailing)
+                  (should (eolp))
+                (should (= (current-column) column))))
+            (should (eq (not (null (overlay-get body 'invisible)))
+                        (eq location 'leading)))))
+        (should (equal (nreverse events)
+                       '((icon close-object) (speak "attachment report.pdf hidden")
+                         (icon open-object) (speak "attachment report.pdf shown"))))))))
+
+(ert-deftest emacsvox-notmuch-part-row-enter-uses-configured-default ()
+  "A non-renderable control uses its configured action once from indentation."
+  (with-temp-buffer
+    (emacsvox-notmuch-test--insert-part-row 2)
+    (goto-char (point-min))
+    (forward-line)
+    (let ((notmuch-show-part-button-default-action 'notmuch-show-save-part)
+          (calls 0) events)
+      (cl-letf (((symbol-function 'notmuch-show-apply-to-current-part-handle)
+                 (lambda (function &optional _type)
+                   (should (eq function #'mm-save-part))
+                   (should (equal (notmuch-show-get-part-properties)
+                                  emacsvox-notmuch-test--attachment))
+                   (cl-incf calls)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (emacsvox-test--notmuch-submission-recorder
+                  (lambda (event) (push event events)))))
+        (call-interactively (key-binding (kbd "RET"))))
+      (should (= calls 1))
+      (should (= (current-column) 0))
+      (should (equal (nreverse events)
+                     '((icon save-object) (speak "Saved attachment report.pdf")))))))
+
+(ert-deftest emacsvox-notmuch-part-row-explicit-actions-resolve-part ()
+  "Save, view, viewer selection, MIME choice and pipe resolve the same row."
+  (with-temp-buffer
+    (let ((button (emacsvox-notmuch-test--insert-part-row 4)))
+      ;; A containing multipart may own the indentation's metadata.
+      (goto-char (button-start button))
+      (put-text-property (line-beginning-position) (button-start button)
+                         :notmuch-part '(:content-type "multipart/mixed")))
+    (goto-char (point-min))
+    (forward-line)
+    (dolist (position (list (point) (+ (point) 2) (line-end-position)))
+      (goto-char position)
+      (dolist (command '(notmuch-show-save-part notmuch-show-view-part
+                         notmuch-show-interactively-view-part
+                         notmuch-show-choose-mime-of-part notmuch-show-pipe-part))
+        (let ((calls 0) spoken)
+          (cl-letf (((symbol-function 'notmuch-show-apply-to-current-part-handle)
+                     (lambda (&rest _)
+                       (should (equal (notmuch-show-get-part-properties)
+                                      emacsvox-notmuch-test--attachment))
+                       (cl-incf calls)))
+                    ((symbol-function 'completing-read) (lambda (&rest _) "text/plain"))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (setq spoken text))))
+            (call-interactively command))
+          (should (= calls 1))
+          (unless (eq command 'notmuch-show-pipe-part)
+            (should (string-match-p "attachment report.pdf" spoken)))
+          (should (= (point) position)))))))
+
+(ert-deftest emacsvox-notmuch-part-row-rejects-hidden-mixed-and-ambiguous-rows ()
+  "Whitespace resolution never reaches hidden, mixed, multiple or other rows."
+  (dolist (case '(hidden partial-hidden mixed multiple other-row html))
+    (with-temp-buffer
+      (let ((button (emacsvox-notmuch-test--insert-part-row 3)))
+        (goto-char (button-start button))
+        (pcase case
+          ('hidden (overlay-put (make-overlay (button-start button) (button-end button))
+                                'invisible t))
+          ('partial-hidden (put-text-property (1+ (point)) (+ (point) 2) 'invisible t))
+          ('mixed (beginning-of-line) (insert "Quoted text "))
+          ('multiple (end-of-line)
+                     (insert-text-button "Second" 'type 'notmuch-show-part-button-type))
+          ('html (delete-region (button-start button) (button-end button))
+                 (insert-text-button "Link" 'shr-url "https://example.invalid/")))
+        (goto-char (point-min))
+        (unless (eq case 'other-row) (forward-line))
+        (let ((calls 0))
+          (cl-letf (((symbol-function 'notmuch-show-toggle-message)
+                     (lambda () (interactive) (cl-incf calls))))
+            (call-interactively (key-binding (kbd "RET"))))
+          (should (= calls 1)))
+        (should-error (notmuch-show-get-part-properties))))))
+
+(ert-deftest emacsvox-notmuch-part-row-preserves-direct-targets-and-errors ()
+  "Direct controls and links keep their actions; failed row actions retain point."
+  (with-temp-buffer
+    (let ((button (emacsvox-notmuch-test--insert-part-row 2))
+          activated)
+      (button-put button 'action (lambda (target) (setq activated target)))
+      (goto-char (button-start button))
+      (should (eq (key-binding (kbd "RET")) 'push-button))
+      (call-interactively #'push-button)
+      (should (eq activated button))
+      (should (equal (notmuch-show-get-part-properties)
+                     emacsvox-notmuch-test--attachment))
+      (button-put button 'action (lambda (_) (error "Action failed")))
+      (beginning-of-line)
+      (let ((position (point)))
+        (should-error (call-interactively (key-binding (kbd "RET"))))
+        (should (= (point) position))))
+    (goto-char (point-max))
+    (let ((start (point)))
+      (insert-text-button "Link" 'shr-url "https://example.invalid/"
+                          'action (lambda (_) 'link-action))
+      (put-text-property start (point) :notmuch-part '(:content-type "text/html"))
+      (goto-char start)
+      (should (eq (key-binding (kbd "RET")) 'push-button))
+      (should (equal (notmuch-show-get-part-properties) '(:content-type "text/html")))
+      (should (eq (button-activate (button-at (point))) 'link-action)))))
+
 (ert-deftest emacsvox-notmuch-show-save-part-confirms-filename ()
   "Saving one part confirms the attachment that was saved."
   (with-temp-buffer

@@ -124,26 +124,35 @@ changes are uncommitted.
 
 ** Notmuch indented MIME control rows, 2026-10-17
 
-Finding and proposed fix; not implemented. Arrow navigation can leave point
-in whitespace before an indented MIME control. Reproduction with Notmuch's
-part-header renderer and thread-style indentation confirms that Enter there
-resolves to message visibility, while Enter on the control activates its
-button. The indentation also lacks =:notmuch-part= metadata, so explicit
-part commands cannot reliably identify the intended part there.
+Implemented and included in this commit; listening acceptance remains separate.
+Arrow navigation can leave point in whitespace before an indented MIME control.
+Reproduction with Notmuch's part-header renderer and thread-style indentation
+confirmed that Enter there toggled message visibility, while Enter on the
+control activated its button. The indentation also lacked the control's
+=:notmuch-part= metadata, so explicit part commands could not reliably
+identify the intended part there.
 
-Treat a visible row containing one actual MIME-part control and only
-surrounding whitespace as an action target from anywhere on that row.
-Resolve the control for Enter and the explicit part actions, preserving
+The integration treats a visible row containing one actual MIME-part control
+and only surrounding whitespace as an action target from anywhere on that row.
+It resolves the control for Enter and the explicit part actions, preserving
 Notmuch's configured default action and the current reading position where
-possible. Keep direct button/link actions and ordinary message visibility
-behaviour intact. Do not search other rows, activate hidden controls, or use
-body-wide MIME metadata to infer a control. Ambiguous rows must not select an
-arbitrary part.
+possible. Direct button/link actions and ordinary message visibility retain
+their behaviour. It does not search other rows, activate hidden controls, or
+use body-wide MIME metadata to infer a control. Ambiguous rows retain normal
+message actions. A part button owns confirmation for its nested save/view
+action, preventing duplicate announcements. Confirmation names the selected
+part even when the indentation carries an enclosing multipart's metadata.
 
-Verification should cover leading/trailing whitespace, nested indentation,
-actual rendered controls, hide/show and save/view actions, ordinary text,
-HTML links, hidden controls, and graphical arrow navigation followed by
-Enter. Retain the earlier HTML link-feedback regression.
+The original implementation fails three new row-action regressions. All 137
+Notmuch tests now pass from source and compiled code. Seven focused checks
+also pass in a fresh graphical Emacs using repository byte-code and the same
+installed Notmuch package as the test session, including a repeated load.
+Coverage includes real rendered controls, arrow navigation followed by Enter,
+leading/trailing whitespace, indentation, hide/show, save/view, viewer and MIME
+selection, piping, hidden and ambiguous controls, direct links, and errors
+that preserve point. Compilation, byte-code preflight and the documentation
+release check pass. The compiled integration was loaded into the newest test
+session, preserving its selected buffer and point.
 
 ** Commit checkpoint: recording library and tone controls, 2026-10-17
 

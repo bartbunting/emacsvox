@@ -68,6 +68,7 @@
 (declare-function notmuch-show-get-part-properties "notmuch-show" ())
 (declare-function notmuch-show-next-button "notmuch-show" ())
 (declare-function notmuch-show-previous-button "notmuch-show" ())
+(declare-function notmuch-show-toggle-message "notmuch-show" ())
 (declare-function notmuch-show-mapc "notmuch-show" (function))
 (declare-function notmuch-show-message-extent "notmuch-show" ())
 (declare-function notmuch-show-move-to-message-top "notmuch-show" ())
@@ -1288,6 +1289,48 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
      (if button (button-start button) (point))
      :notmuch-part)))
 
+(defun emacsvox-notmuch--part-button-on-row ()
+  "Return the sole visible MIME control beside point on a whitespace-only row.
+Direct button targets retain their own actions.  Never search another line
+or infer a control from MIME metadata covering a rendered body."
+  (when (and (eq major-mode 'notmuch-show-mode)
+             (not (button-at (point)))
+             (not (invisible-p (point))))
+    (save-excursion
+      (let ((end (line-end-position)))
+        (beginning-of-line)
+        (skip-chars-forward " \t" end)
+        (when-let* ((button (button-at (point)))
+                    ((eq (button-type button) 'notmuch-show-part-button-type))
+                    ((<= (button-end button) end)))
+          (let ((position (button-start button))
+                (visible t))
+            (while (and visible (< position (button-end button)))
+              (when (invisible-p position) (setq visible nil))
+              (setq position (next-char-property-change position (button-end button))))
+            (goto-char (button-end button))
+            (skip-chars-forward " \t" end)
+            (when (and visible (= (point) end)) button)))))))
+
+(defun emacsvox-notmuch--activate-part-row-or-toggle-message ()
+  "Activate a MIME control from its row, or toggle the current message."
+  (interactive)
+  (if-let* ((button (emacsvox-notmuch--part-button-on-row)))
+      (save-excursion
+        (goto-char (button-start button))
+        (let ((ems--interactive-fn-name (button-get button 'action)))
+          (button-activate button)))
+    (call-interactively #'notmuch-show-toggle-message)))
+
+(defun emacsvox--advice-notmuch-show-get-part-properties-around
+    (original &rest arguments)
+  "Resolve the MIME control beside point before calling ORIGINAL with ARGUMENTS."
+  (if-let* ((button (emacsvox-notmuch--part-button-on-row)))
+      (save-excursion
+        (goto-char (button-start button))
+        (apply original arguments))
+    (apply original arguments)))
+
 (defun emacsvox-notmuch--part-content-length (part)
   "Return PART's content length as an integer, when available."
   (let ((length (plist-get part :content-length)))
@@ -1381,6 +1424,11 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
 (defvar emacsvox-notmuch--advice nil
   "Current Notmuch targets and their native advice functions.")
 (setq emacsvox-notmuch--advice nil)
+
+(push
+ '(notmuch-show-get-part-properties
+   :around emacsvox--advice-notmuch-show-get-part-properties-around)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox-notmuch--register-after-group (targets feedback)
   "Define and register after advice for TARGETS using FEEDBACK."
@@ -1751,16 +1799,20 @@ message, or announce the beginning of the thread when it does not change."
    notmuch-show-previous-button)
  #'emacsvox-notmuch--speak-show-button)
 
+(defvar emacsvox-notmuch--part-default-feedback-owner nil
+  "Non-nil while a part button owns feedback for its nested default action.")
+
 (defun emacsvox-notmuch--part-action-around
     (target action original arguments)
   "Confirm ACTION performed by TARGET on the current MIME part.
 Call ORIGINAL once with ARGUMENTS and preserve its result."
   (let ((part
          (or
-          (emacsvox-notmuch--part-at-point (button-at (point)))
-          (ignore-errors (notmuch-show-get-part-properties))))
+          (ignore-errors (notmuch-show-get-part-properties))
+          (emacsvox-notmuch--part-at-point (button-at (point)))))
         (result (apply original arguments)))
-    (when (and part (ems-interactive-p target))
+    (when (and part (not emacsvox-notmuch--part-default-feedback-owner)
+               (ems-interactive-p target))
       (emacsvox-notmuch--part-action-feedback action part))
     result))
 
@@ -1829,6 +1881,9 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
          (hidden-before
           (and button (button-get button :notmuch-part-hidden)))
          (action notmuch-show-part-button-default-action)
+         (emacsvox-notmuch--part-default-feedback-owner
+          (or emacsvox-notmuch--part-default-feedback-owner
+              (eq ems--interactive-fn-name 'notmuch-show-part-button-default)))
          (result (apply original arguments)))
     (when (and part
                (ems-interactive-p 'notmuch-show-part-button-default))
@@ -2926,6 +2981,8 @@ notifications."
    #'emacsvox-notmuch-speak-search-details))
 
 (with-eval-after-load 'notmuch-show
+  (define-key notmuch-show-mode-map [remap notmuch-show-toggle-message]
+              #'emacsvox-notmuch--activate-part-row-or-toggle-message)
   ;; SHR's text keymap otherwise overrides only forward Tab navigation.
   (define-key notmuch-show-mode-map [remap shr-next-link]
               #'notmuch-show-next-button)

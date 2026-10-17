@@ -1967,6 +1967,15 @@ without a navigation earcon; MIME controls keep their part descriptions
 and cues.  Link navigation does not speak the destination URL on the
 notification stream.
 
+   When a row contains one visible MIME control and otherwise only
+whitespace, you can use Enter or the part actions below from the
+indentation or trailing space.  Your reading position stays on that row.
+Enter shows or hides content that Notmuch can display; otherwise it uses
+‘notmuch-show-part-button-default-action’, normally saving the part.
+Speech confirms the visibility change or the save/view action once.
+Rows containing other text or multiple controls require you to move onto
+the intended control.
+
 ‘n’
      Run ‘notmuch-show-next-open-message’.
 ‘p’
@@ -1983,7 +1992,9 @@ notification stream.
 ‘DEL’
      Run ‘notmuch-show-rewind’ and read the resulting page or message.
 ‘RET’
-     Run ‘notmuch-show-toggle-message’ and cue the resulting visibility.
+     Activate the button or the single MIME control on its row.
+     Elsewhere, run ‘notmuch-show-toggle-message’ and cue the resulting
+     visibility.
 ‘M-RET’
      Run ‘notmuch-show-open-or-close-all’ to open every message and
      report the state and total, for example "Opened all 5 messages."

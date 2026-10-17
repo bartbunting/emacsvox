@@ -7803,6 +7803,14 @@ in either direction. HTML links retain their link voice without a navigation
 earcon; MIME controls keep their part descriptions and cues. Link navigation
 does not speak the destination URL on the notification stream.
 
+When a row contains one visible MIME control and otherwise only whitespace@comma{}
+you can use Enter or the part actions below from the indentation or trailing
+space. Your reading position stays on that row. Enter shows or hides content
+that Notmuch can display; otherwise it uses
+@code{notmuch-show-part-button-default-action}@comma{} normally saving the part. Speech
+confirms the visibility change or the save/view action once. Rows containing
+other text or multiple controls require you to move onto the intended control.
+
 @table @kbd
 @item n
 Run @code{notmuch-show-next-open-message}.
@@ -7819,7 +7827,8 @@ at the thread end it reports the actual archive outcome and destination.
 @item DEL
 Run @code{notmuch-show-rewind} and read the resulting page or message.
 @item RET
-Run @code{notmuch-show-toggle-message} and cue the resulting visibility.
+Activate the button or the single MIME control on its row. Elsewhere@comma{}
+run @code{notmuch-show-toggle-message} and cue the resulting visibility.
 @item M-RET
 Run @code{notmuch-show-open-or-close-all} to open every message and report the
 state and total@comma{} for example ``Opened all 5 messages.'' @kbd{C-u M-@key{RET}} closes
