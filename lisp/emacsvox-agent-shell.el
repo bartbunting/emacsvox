@@ -1282,6 +1282,9 @@ available so a timer created by an older loaded version can finish safely.")
 (defvar-local emacsvox-agent-shell--table-navigation-table-start nil
   "Start position of the rendered table currently being navigated.")
 
+(defvar-local emacsvox-agent-shell--table-navigation-region nil
+  "Marker pair tracking the table independently of a renderer's working point.")
+
 (defvar-local emacsvox-agent-shell--table-navigation-origin nil
   "Point before the command most recently tracked for table entry.")
 
@@ -5139,6 +5142,23 @@ At an editable prompt, a directly bound character key inserts itself instead."
   "Return non-nil if Markdown table ROW is a separator row."
   (string-match-p "\\`[ \t]*|[-:| \t]+|[ \t]*\\'" row))
 
+(defun emacsvox-agent-shell--table-cell-value (cell)
+  "Decode renderer escape placeholders in a copy of CELL.
+Table metadata is captured before the renderer's final escape decoding.
+Decode after splitting cells so an escaped pipe stays inside its cell."
+  (let ((value (copy-sequence cell)))
+    (dotimes (index (length value))
+      (when-let* ((literal (get-text-property index 'agent-shell-markdown-escaped value)))
+        (when (characterp literal)
+          (setq value
+                (concat (substring value 0 index)
+                        (apply #'propertize (char-to-string literal)
+                               (text-properties-at index value))
+                        (substring value (1+ index))))
+          (remove-text-properties index (1+ index)
+                                  '(agent-shell-markdown-escaped nil) value))))
+    value))
+
 (defun emacsvox-agent-shell--markdown-table-parse-row (row)
   "Return the logical cells parsed from Markdown table ROW.
 Preserve cell text properties and ignore pipes protected by agent-shell's
@@ -5172,7 +5192,7 @@ Markdown renderer."
             (setq position (1+ position))))))
       (unless ended-with-separator
         (push (string-trim (substring row cell-start length)) cells))
-    (nreverse cells))))
+    (mapcar #'emacsvox-agent-shell--table-cell-value (nreverse cells)))))
 
 (defun emacsvox-agent-shell--markdown-table-rows (source)
   "Parse Markdown table SOURCE into rows and separator metadata."
@@ -5428,6 +5448,59 @@ characters.  Return non-nil only when this function owns the movement."
                (unless (and column-titles-p (zerop row-index))
                  (car current-row))))))))))
 
+(defun emacsvox-agent-shell--table-snapshot ()
+  "Return a fresh rendered cell for the shared reader, or nil.
+Reject editable input and incomplete source-to-display mappings.  Never keep
+positions across a render or resize."
+  (let* ((input (emacsvox-agent-shell--live-input-bounds))
+         (region (emacsvox-agent-shell--markdown-table-region-at-point))
+         (cell
+          (and region
+               (not (derived-mode-p 'agent-shell-viewport-edit-mode))
+               (not (and input (>= (point) (car input))))
+               (emacsvox-agent-shell--markdown-table-cell-at-point))))
+    (if (and cell
+             (= (length (plist-get cell :positions))
+                (apply #'+ (mapcar #'length (plist-get cell :rows)))))
+        (plist-put cell :region region)
+      (setq emacsvox-agent-shell--table-navigation-active nil
+            emacsvox-agent-shell--table-navigation-table-start nil)
+      nil)))
+
+(defun emacsvox-agent-shell--table-submit (text occasion presentation icon)
+  "Submit shared-reader TEXT with Agent Shell's existing semantic facts.
+OCCASION, PRESENTATION and ICON identify inspection, movement or copying."
+  (emacsvox-agent-shell--submit-text-feedback
+   text
+   (cond
+    ((eq occasion 'state-change)
+     (emacsvox-agent-shell--presentation-facts
+      (if (eq presentation 'cell) 'agent-table-cell 'agent-table)
+      'agent-content-copied))
+    ((eq icon 'warn-user)
+     (emacsvox-agent-shell--presentation-facts 'agent-table 'boundary-entered))
+    ((eq presentation 'dimensions)
+     (emacsvox-agent-shell--presentation-facts
+      'agent-table 'agent-content-inspected))
+    (t
+     (emacsvox-agent-shell--table-cell-facts
+      (emacsvox-agent-shell--table-snapshot)
+      (if (eq occasion 'navigation) 'focus-entered 'agent-content-inspected))))
+   occasion icon))
+
+(defun emacsvox-agent-shell--table-read (operation &rest arguments)
+  "Run shared reader OPERATION with ARGUMENTS in the rendered-table adapter.
+Keep the contextual map and lifecycle with Agent Shell.  Binding the adapter
+only during an operation avoids installing the explicit reader's entry map
+or changing the scope of existing presentation preferences."
+  (let ((emacsvox-table-reader--adapter
+         '(agent-shell-mode emacsvox-agent-shell--table-snapshot
+                            emacsvox-agent-shell--table-submit))
+        (emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (apply operation arguments)))
+
 (defun emacsvox-agent-shell--table-title (title face data)
   "Delegate table title to the shared reader."
   (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
@@ -5453,13 +5526,9 @@ characters.  Return non-nil only when this function owns the movement."
 (defun emacsvox-agent-shell--table-cell-feedback (&optional whole-row)
   "Speak the rendered Markdown table cell at point semantically.
 When WHOLE-ROW is non-nil, speak its entire logical row."
-  (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-    (emacsvox-agent-shell--submit-text-feedback
-     (if whole-row
-         (emacsvox-agent-shell--table-row-speech cell)
-       (emacsvox-agent-shell--table-cell-speech cell))
-     (emacsvox-agent-shell--table-cell-facts cell 'focus-entered)
-     'navigation 'item)
+  (when (emacsvox-agent-shell--table-snapshot)
+    (emacsvox-agent-shell--table-read
+     #'emacsvox-table-reader--inspect (if whole-row 'row 'cell) 'navigation)
     t))
 
 (defun emacsvox-agent-shell--table-context-speech (cell)
@@ -5482,7 +5551,8 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
               (starts
                (emacsvox-agent-shell--markdown-table-cell-starts region)))
     (goto-char (if (eq direction 'forward) (car starts) (car (last starts))))
-    (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
+    (when-let* ((cell (emacsvox-agent-shell--table-snapshot)))
+      (emacsvox-agent-shell--table-track-region region)
       (setq emacsvox-agent-shell--table-navigation-active t
             emacsvox-agent-shell--table-navigation-table-start (car region))
       (emacsvox-agent-shell--submit-text-feedback
@@ -5497,13 +5567,7 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 (defun emacsvox-agent-shell-table-speak-context ()
   "Speak current Markdown table position and dimensions."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--submit-text-feedback
-       (emacsvox-agent-shell--table-context-speech cell)
-       (emacsvox-agent-shell--table-cell-facts
-        cell 'agent-content-inspected)
-       'inspection 'item)
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--inspect 'context))
 
 (defun emacsvox-agent-shell-table-speak-cell ()
   "Speak the logical Markdown table cell at point."
@@ -5514,13 +5578,7 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 (defun emacsvox-agent-shell-table-speak-dimensions ()
   "Speak the dimensions of the Markdown table at point."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--submit-text-feedback
-       (emacsvox-agent-shell--table-dimensions-speech cell)
-       (emacsvox-agent-shell--presentation-facts
-        'agent-table 'agent-content-inspected)
-       'inspection 'item)
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--inspect 'dimensions))
 
 (defun emacsvox-agent-shell--table-leading-title-speech (title face)
   "Delegate table leading-title-speech to the shared reader."
@@ -5546,24 +5604,12 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 (defun emacsvox-agent-shell-table-speak-row ()
   "Speak the logical Markdown table row at point."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--submit-text-feedback
-       (emacsvox-agent-shell--table-row-speech cell)
-       (emacsvox-agent-shell--table-cell-facts
-        cell 'agent-content-inspected)
-       'inspection 'item)
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--inspect 'row))
 
 (defun emacsvox-agent-shell-table-speak-column ()
   "Speak the logical Markdown table column at point."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--submit-text-feedback
-       (emacsvox-agent-shell--table-column-speech cell)
-       (emacsvox-agent-shell--table-cell-facts
-        cell 'agent-content-inspected)
-       'inspection 'item)
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--inspect 'column))
 
 ;; Agent-shell does not currently expose a current-cell value or copy command.
 ;; Prefer speech-enabling that command if agent-shell adds one in the future.
@@ -5589,38 +5635,19 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 Remove renderer padding, borders, and text properties.  Preserve the complete
 logical value of a wrapped cell."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--table-copy
-       (emacsvox-agent-shell--table-plain-cell (plist-get cell :data))
-       "cell")
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--copy 'cell))
 
 (defun emacsvox-agent-shell-table-copy-row ()
   "Copy the logical Markdown table row at point to the kill ring.
 Separate cells with tabs and omit Markdown separator syntax."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point))
-            (row (nth (plist-get cell :row-index)
-                      (plist-get cell :rows))))
-      (emacsvox-agent-shell--table-copy
-       (mapconcat #'emacsvox-agent-shell--table-plain-cell row "\t")
-       "row")
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--copy 'row))
 
 (defun emacsvox-agent-shell-table-copy-column ()
   "Copy the logical Markdown table column at point to the kill ring.
 Separate cells with newlines and omit Markdown separator syntax."
   (interactive)
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (let ((column (plist-get cell :column-index)))
-        (emacsvox-agent-shell--table-copy
-         (mapconcat
-          (lambda (row)
-            (emacsvox-agent-shell--table-plain-cell (nth column row)))
-          (plist-get cell :rows)
-          "\n")
-         "column"))
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--copy 'column))
 
 (defun emacsvox-agent-shell--table-cell-position (cell row column)
   "Return the rendered position for ROW and COLUMN relative to CELL.
@@ -5658,6 +5685,7 @@ Return nil when that logical cell does not exist."
              (emacsvox-agent-shell--table-exit-destination region direction)))
       (progn
         (goto-char destination)
+        (emacsvox-agent-shell--table-track-region nil)
         (setq emacsvox-agent-shell--table-navigation-active nil
               emacsvox-agent-shell--table-navigation-table-start nil)
         (let ((line
@@ -5688,15 +5716,9 @@ Return nil when that logical cell does not exist."
 (defun emacsvox-agent-shell--table-move (row-delta column-delta &optional cell-only)
   "Move by ROW-DELTA and COLUMN-DELTA in the logical table at point.
 When CELL-ONLY is non-nil, read only the destination cell after row movement."
-  (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (pcase (emacsvox-table-reader--destination cell row-delta column-delta)
-        (`(exit ,direction) (emacsvox-agent-shell--table-exit direction))
-        (`(boundary ,text) (emacsvox-agent-shell--table-boundary-feedback text))
-        (`(cell ,position)
-         (goto-char position)
-         (emacsvox-agent-shell--table-cell-feedback
-          (and (not cell-only) (not (zerop row-delta))))))
-    (user-error "Not in a rendered Markdown table")))
+  (emacsvox-agent-shell--table-read
+   #'emacsvox-table-reader--move row-delta column-delta cell-only
+   #'emacsvox-agent-shell--table-exit))
 
 (defun emacsvox-agent-shell-table-next-column (&optional count)
   "Move COUNT columns right in the current logical Markdown table row."
@@ -5781,8 +5803,9 @@ Retain the current column and use the current table title settings."
 (defun emacsvox-agent-shell--table-navigation-entry-feedback (direction)
   "Announce entry at point, falling back to table edge in DIRECTION."
   (if-let* ((region (emacsvox-agent-shell--markdown-table-region-at-point))
-            (cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
+            (cell (emacsvox-agent-shell--table-snapshot)))
       (progn
+        (emacsvox-agent-shell--table-track-region region)
         (setq emacsvox-agent-shell--table-navigation-active t
               emacsvox-agent-shell--table-navigation-table-start
               (car region))
@@ -5799,12 +5822,40 @@ Retain the current column and use the current table title settings."
   "Remember point before a possible contextual table entry."
   (setq emacsvox-agent-shell--table-navigation-origin (point)))
 
+(defun emacsvox-agent-shell--table-readable-region ()
+  "Return a rendered region only while its logical mapping is usable.
+At a leading table border, validate from the first navigable cell."
+  (when-let* ((region (emacsvox-agent-shell--markdown-table-region-at-point)))
+    (save-excursion
+      (when-let* ((start (car (emacsvox-agent-shell--markdown-table-cell-starts region))))
+        (goto-char start)
+        (when (emacsvox-agent-shell--table-snapshot) region)))))
+
+(defun emacsvox-agent-shell--table-track-region (region)
+  "Track rendered REGION through edits, releasing old markers first."
+  (when emacsvox-agent-shell--table-navigation-region
+    (set-marker (car emacsvox-agent-shell--table-navigation-region) nil)
+    (set-marker (cdr emacsvox-agent-shell--table-navigation-region) nil))
+  (setq emacsvox-agent-shell--table-navigation-region
+        (when region
+          (cons (copy-marker (car region)) (copy-marker (cdr region) t)))))
+
+(defun emacsvox-agent-shell--table-navigation-invalidate (begin end _old-length)
+  "Suspend table keys when the changed BEGIN..END range affects this table.
+Streaming elsewhere in the transcript must not interrupt table navigation."
+  (when emacsvox-agent-shell--table-navigation-active
+    (let ((region emacsvox-agent-shell--table-navigation-region))
+      (when (or (not region)
+                (and (<= begin (cdr region)) (>= end (car region))))
+        (setq emacsvox-agent-shell--table-navigation-active nil)))))
+
 (defun emacsvox-agent-shell--table-navigation-post-command ()
   "Track table entry and toggle the contextual table keymap."
-  (let* ((region (emacsvox-agent-shell--markdown-table-region-at-point))
+  (let* ((region (emacsvox-agent-shell--table-readable-region))
          (table-start (and region (car region))))
     (cond
      ((not region)
+      (emacsvox-agent-shell--table-track-region nil)
       (setq emacsvox-agent-shell--table-navigation-active nil
             emacsvox-agent-shell--table-navigation-table-start nil))
      ((not (equal table-start
@@ -5816,6 +5867,7 @@ Retain the current column and use the current table title settings."
            'backward
          'forward)))
      (t
+      (emacsvox-agent-shell--table-track-region region)
       (setq emacsvox-agent-shell--table-navigation-active t)))))
 
 (defun emacsvox-agent-shell--table-navigation-setup ()
@@ -5834,18 +5886,24 @@ Retain the current column and use the current table title settings."
             #'emacsvox-agent-shell--table-navigation-pre-command nil t)
   (add-hook 'post-command-hook
             #'emacsvox-agent-shell--table-navigation-post-command nil t)
+  (add-hook 'after-change-functions
+            #'emacsvox-agent-shell--table-navigation-invalidate nil t)
   (add-hook 'kill-buffer-hook
             #'emacsvox-agent-shell--table-navigation-cleanup nil t)
   (add-hook 'change-major-mode-hook
             #'emacsvox-agent-shell--table-navigation-cleanup nil t)
-  (if-let* ((region (emacsvox-agent-shell--markdown-table-region-at-point)))
-      (setq emacsvox-agent-shell--table-navigation-active t
-            emacsvox-agent-shell--table-navigation-table-start (car region))
+  (if-let* ((region (emacsvox-agent-shell--table-readable-region)))
+      (progn
+        (emacsvox-agent-shell--table-track-region region)
+        (setq emacsvox-agent-shell--table-navigation-active t
+              emacsvox-agent-shell--table-navigation-table-start (car region)))
+    (emacsvox-agent-shell--table-track-region nil)
     (setq emacsvox-agent-shell--table-navigation-active nil
           emacsvox-agent-shell--table-navigation-table-start nil)))
 
 (defun emacsvox-agent-shell--table-navigation-cleanup ()
   "Remove contextual Markdown table navigation from the current buffer."
+  (emacsvox-agent-shell--table-track-region nil)
   (emacsvox-agent-shell--vertical-toggle-hint-cleanup)
   (setq emacsvox-agent-shell--speech-control-active nil
         emacsvox-agent-shell--table-navigation-active nil
@@ -5855,6 +5913,8 @@ Retain the current column and use the current table title settings."
                #'emacsvox-agent-shell--table-navigation-pre-command t)
   (remove-hook 'post-command-hook
                #'emacsvox-agent-shell--table-navigation-post-command t)
+  (remove-hook 'after-change-functions
+               #'emacsvox-agent-shell--table-navigation-invalidate t)
   (remove-hook 'kill-buffer-hook
                #'emacsvox-agent-shell--table-navigation-cleanup t)
   (remove-hook 'change-major-mode-hook

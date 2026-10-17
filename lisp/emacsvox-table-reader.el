@@ -400,8 +400,8 @@ With QUIET, let the following movement submit the single entry announcement."
      'navigation 'cell 'open-object))
   (force-mode-line-update))
 
-(defun emacsvox-table-reader--inspect (presentation)
-  "Speak PRESENTATION of the current table as a single inspection."
+(defun emacsvox-table-reader--inspect (presentation &optional occasion)
+  "Speak PRESENTATION once, using OCCASION or the default inspection intent."
   (let ((cell (emacsvox-table-reader--cell)))
     (emacsvox-table-reader--submit
      (funcall (pcase presentation
@@ -410,7 +410,7 @@ With QUIET, let the following movement submit the single entry announcement."
                 ('column #'emacsvox-table-reader--column-speech)
                 ('context #'emacsvox-table-reader--context-speech)
                 ('dimensions #'emacsvox-table-reader--dimensions-speech)) cell)
-     'inspection presentation 'item)))
+     (or occasion 'inspection) presentation 'item)))
 
 (defun emacsvox-table-reader-speak-cell ()
   "Speak the complete logical table cell at point."
@@ -479,20 +479,23 @@ With QUIET, let the following movement submit the single entry announcement."
   (interactive)
   (emacsvox-table-reader--exit 'backward))
 
-(defun emacsvox-table-reader--move (rows columns)
-  "Move by logical ROWS and COLUMNS, speaking a row after vertical movement."
+(defun emacsvox-table-reader--move (rows columns &optional cell-only exit-function)
+  "Move by logical ROWS and COLUMNS, reading rows after vertical movement.
+With CELL-ONLY, read a cell instead.  EXIT-FUNCTION, when supplied, owns
+the host's exit lifecycle; otherwise use the explicit reader's exit."
   (pcase (emacsvox-table-reader--destination
           (emacsvox-table-reader--cell) rows columns)
-    (`(exit ,direction) (emacsvox-table-reader--exit direction))
+    (`(exit ,direction)
+     (funcall (or exit-function #'emacsvox-table-reader--exit) direction))
     (`(boundary ,text)
      (emacsvox-table-reader--submit text 'navigation 'context 'warn-user))
     (`(cell ,position)
      (goto-char position)
      (let ((cell (emacsvox-table-reader--cell)))
        (emacsvox-table-reader--submit
-        (if (zerop rows) (emacsvox-table-reader--cell-speech cell)
+        (if (or cell-only (zerop rows)) (emacsvox-table-reader--cell-speech cell)
           (emacsvox-table-reader--row-speech cell))
-        'navigation (if (zerop rows) 'cell 'row) 'item)))))
+        'navigation (if (or cell-only (zerop rows)) 'cell 'row) 'item)))))
 (defun emacsvox-table-reader-next-row (&optional count)
   "Move COUNT logical rows down, retaining the column and reading the row."
   (interactive "p")

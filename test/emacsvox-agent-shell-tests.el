@@ -7353,7 +7353,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let ((kill-ring nil)
         (kill-ring-yank-pointer nil))
     (emacsvox-agent-shell-test--with-rendered-table
-        "| Name | Value |\n|---|---|\n| Alice | `a|b` |\n"
+        "| Name | Value |\n|---|---|\n| Alice | `a|b` and x\\|y |\n"
       (goto-char (point-min))
       (search-forward "Alice")
       (agent-shell-markdown-table-next-cell)
@@ -7362,7 +7362,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell-test--capture-events
           (call-interactively #'emacsvox-agent-shell-table-copy-cell))
         '((icon save-object) (speak "Copied table cell."))))
-      (should (equal (car kill-ring) "a|b"))
+      (should (equal (car kill-ring) "a|b and x|y"))
       (should-not (text-properties-at 0 (car kill-ring))))))
 
 (ert-deftest emacsvox-agent-shell-table-copy-cell-handles-blank-and-outside ()
@@ -11066,10 +11066,111 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (= (length presentations) 1))
         (should (eq (nth 4 (car presentations)) 'navigation))))))
 
+(ert-deftest emacsvox-agent-shell-table-adapter-rejects-stale-mapping ()
+  "Incomplete rendering drops table keys and refuses stale copies or motion."
+  (emacsvox-agent-shell-test--with-rendered-table
+      "| Name | Role |\n|---|---|\n| Alice | Engineer |\nAfter\n"
+    (goto-char (point-min))
+    (search-forward "Engineer")
+    (emacsvox-agent-shell--table-navigation-setup)
+    (should emacsvox-agent-shell--table-navigation-active)
+    (save-excursion
+      (goto-char (point-max))
+      (insert "Unrelated response update.\n"))
+    (should emacsvox-agent-shell--table-navigation-active)
+    (let* ((cell (emacsvox-agent-shell--table-snapshot))
+           (start (car (plist-get cell :positions)))
+           (kill-ring '("previous copy")))
+      ;; Simulate a renderer between removal and replacement of cell markers.
+      (remove-text-properties start (1+ start)
+                              '(agent-shell-markdown-table-cell-start nil))
+      (should-not emacsvox-agent-shell--table-navigation-active)
+      (emacsvox-agent-shell--table-navigation-post-command)
+      (should-not emacsvox-agent-shell--table-navigation-active)
+      (let ((origin (point)))
+        (should-error (emacsvox-agent-shell-table-next-row) :type 'user-error)
+        (should-error (emacsvox-agent-shell-table-copy-cell) :type 'user-error)
+        (should (= origin (point)))
+        (should (equal kill-ring '("previous copy"))))
+      (emacsvox-agent-shell--table-navigation-cleanup)
+      (should-not (memq #'emacsvox-agent-shell--table-navigation-invalidate
+                        after-change-functions)))))
+
+(ert-deftest emacsvox-agent-shell-table-adapter-preserves-input ()
+  "Even rendered table properties in editable drafts cannot claim table keys."
+  (dolist (kind '(shell viewport))
+    (with-temp-buffer
+      (let ((table
+             (emacsvox-agent-shell-test--with-rendered-table
+                 "| Name | Role |\n|---|---|\n| Alice | Engineer |\n"
+               (buffer-string))))
+        (if (eq kind 'shell)
+            (emacsvox-agent-shell-test--insert-live-chat-input table)
+          (setq major-mode 'agent-shell-viewport-edit-mode)
+          (insert table)))
+      (goto-char (point-min))
+      (search-forward "Engineer")
+      (let ((original (buffer-string)) (origin (point)))
+        (should-not (emacsvox-agent-shell--table-snapshot))
+        (emacsvox-agent-shell--table-navigation-setup)
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should-not emacsvox-agent-shell--table-navigation-active)
+        (should-error (emacsvox-agent-shell-table-copy-cell) :type 'user-error)
+        (should (= origin (point)))
+        (should (equal original (buffer-string)))))))
+
+(defun emacsvox-agent-shell-test--table-render-refresh ()
+  "Check fresh cell mapping after graphical resize and fragment updates."
+  (save-window-excursion
+    (with-temp-buffer
+      (set-window-buffer (selected-window) (current-buffer))
+      (setq major-mode 'agent-shell-mode)
+      (use-local-map agent-shell-mode-map)
+      (setq-local agent-shell-section-functions nil)
+      (let ((source "| Name | Notes |\n|---|---|\n| Alice | First |\n")
+            (long (concat (apply #'concat (make-list 40 "long content ")) "FINAL"))
+            (kill-ring nil) (kill-ring-yank-pointer nil))
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "tables" :block-id "answer" :body source)
+        (goto-char (point-min))
+        (search-forward "First")
+        (emacsvox-agent-shell--table-navigation-setup)
+        (should emacsvox-agent-shell--table-navigation-active)
+        (split-window-right 50)
+        ;; The same fragment is re-rendered at the narrower width, as during
+        ;; response streaming.  The old mapping must not survive replacement.
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "tables" :block-id "answer"
+         :body (concat source "| Bob | " long " |\n"))
+        (redisplay t)
+        (should-not emacsvox-agent-shell--table-navigation-active)
+        (goto-char (point-min))
+        (search-forward "First")
+        (emacsvox-agent-shell-test--capture-presentations
+          (emacsvox-agent-shell--table-navigation-post-command)
+          (should emacsvox-agent-shell--table-navigation-active)
+          (call-interactively (key-binding (kbd "C-M-<down>")))
+          (should (equal (plist-get (emacsvox-agent-shell--table-snapshot) :data) long))
+          (call-interactively (key-binding (kbd "w")))
+          (should (equal (car kill-ring) long)))
+        (let* ((cell (emacsvox-agent-shell--table-snapshot))
+               (region (plist-get cell :region)))
+          (should (> (count-screen-lines (point) (cdr region)) 1)))
+        ;; Replacement by prose ends the contextual map before any next key.
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "tables" :block-id "answer" :body "Finished response.")
+        (should-not emacsvox-agent-shell--table-navigation-active)
+        (goto-char (point-min))
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should-not (emacsvox-agent-shell--table-snapshot))
+        (should-not (eq (key-binding "r") 'emacsvox-agent-shell-table-speak-row))
+        (emacsvox-agent-shell--table-navigation-cleanup)))))
+
 (ert-deftest emacsvox-agent-shell-table-graphical-wrapped-navigation ()
   "A real rendered and wrapped table retains full source values and row keys."
   (skip-unless (display-graphic-p))
   (emacsvox-agent-shell-test--wrapped-cell-motion)
+  (emacsvox-agent-shell-test--table-render-refresh)
   (save-window-excursion
     (with-temp-buffer
       (set-window-buffer (selected-window) (current-buffer))

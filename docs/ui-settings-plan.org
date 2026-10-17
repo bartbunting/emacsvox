@@ -1352,7 +1352,7 @@ global default is not necessarily a saved startup value.
 | Automatic punctuation policy | =tts-punctuation-mode-policy-alist= | Level/profile and return-to-policy controls exist; editing the mode-to-policy list needs an advanced Customize link. |
 | Message filtering and tooltips | =emacsvox-speak-messages-filter=; =emacsvox-speak-tooltips= | The message on/off control does not cover exclusions or tooltip speech. Add interaction discovery; use the filter's Custom setter. |
 | Emoji speech | =emacsvox-emoji-naming-enabled=; =emacsvox-emoji-custom-names= | Add reading discovery for the emoji group, including approved sequences and maximum count. Customize owns these defaults. |
-| Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Link general table preferences. Agent Shell and Org have separate controls; their integration links do not replace this group. |
+| Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Add a focused Tables page; see the table reading and navigation proposal below. Agent Shell and Org have separate controls; their integration links do not replace this group. |
 | Voice contrast and preview labels | =omnivox-average-pitch-contrast=; =emacsvox-aural-preview-label-verbosity= | Delivered at =v o=: browsable labels and numeric global contrast, with explicit Customize Save. Distinct from tuning one voice; the contrast setter updates logical voices. |
 | Startup feedback | =emacsvox-speak-ready-message=; =emacsvox-welcome-show-at-startup= | Add advanced interaction discovery; keep the routing timeout separate from announcement enablement. |
 | Mail and background output | =emacsvox-toggle-mail-alert=; =emacsvox-toggle-comint-output-monitor= | Missing context-sensitive controls. Mail spool/interval are Custom options; the two switches are local/global-default session state. |
@@ -1388,6 +1388,293 @@ Important interaction and ownership findings:
 - Quiet and earcon controls affect feedback used to navigate these menus.
   Listening must check restoration and source-buffer scope before accepting
   these entries. Source inspection alone does not establish usable feedback.
+
+*** Table reading and navigation proposal, 2026-10-17
+
+<<table-reading-consolidation>>
+
+Status: slice 1 design audit and slice 2 adapter implementation complete;
+listening acceptance and slices 3–6 remain open. The [[file:developer/table-reading-contract.org][slice 1 contract]] records the audit baseline, chosen reading
+operations, binding exceptions, dependency evidence and migration rules. Add a
+focused Tables page under reading settings, discoverable through settings
+search and the relevant integration menus. Select bindings after checking
+the existing maps. Keep table reading distinct from editing table contents
+or invoking an application's actions on a row.
+
+Design direction accepted on 2026-10-17: consolidate the reading experience
+and offer a configurable activation policy. Choose on-demand entry through
+the reader command or table-navigation keys, or automatic entry when point
+moves into a supported table. Provide a common preference with overrides for
+individual modes. Preserve current behaviour initially: automatic entry in
+Agent Shell, on-demand entry in Org and Markdown. These choices are planned;
+no activation setting or preference migration is implemented yet.
+
+Consolidation covers the reading commands, movement feedback, speech
+preferences and settings experience. Agent Shell tables originate as Markdown
+pipe tables. Its renderer retains source and cell-position metadata while
+displaying aligned, potentially wrapped cells. Org and Markdown editing
+buffers retain their source syntax, and Tabulated List applications supply
+structured entries. These representations need their own adapters, but do not
+require separate user-facing reading policies.
+
+Build on =emacsvox-table-reader.el= and its existing adapters. Slice 2 routes
+Agent Shell inspection, copying and logical movement through the shared reader,
+alongside its existing formatting reuse. Representation-specific code identifies cells,
+map their complete text to displayed positions and submit integration-specific
+Aural facts. Preserve Agent Shell's wrapped-cell character/word movement,
+protected Markdown pipes, streaming updates, prompt boundaries and viewport
+behaviour. Sharing the interface does not require replacing those mechanisms
+with a source-table parser or loading Agent Shell for Org reading.
+
+Org's native table-editing feedback and its table Muggle remain separate from
+reader activation. The Muggle currently invokes editing-aware Org commands;
+do not silently redirect those commands or remove that interface. Its future
+enable/disable controls belong to the Muggles workstream below. Consolidation
+also does not include spreadsheet, CSV-browser or arbitrary HTML-table engines.
+
+Automatic entry must leave editable Agent Shell prompts alone. Define how
+quitting or editing suspends automatic entry so that leaving the reader does
+not immediately turn it back on at the same position. Normal Org table-editing
+speech remains available outside the reader. Explain the active reading state
+and its effect on Enter, Tab and letter keys, with an accessible way to leave.
+
+Source inspection found three existing preference owners:
+
+- The shared reader has =emacsvox-table-reader-titles= and
+  =emacsvox-table-reader-data-position=. Its speaking-method command changes
+  these buffer-locally. Vertical movement currently reads the destination
+  row; horizontal cell movement reads the cell. Position and dimensions are
+  available on demand. Entry announces dimensions and the current cell.
+- Agent Shell has its own =emacsvox-agent-shell-table-titles= and
+  =emacsvox-agent-shell-table-data-position=, even where it reuses shared
+  formatting. Changing shared defaults does not change these preferences.
+- Org's =emacsvox-org-table-after-movement-function= controls native editing
+  feedback. Its existing integration menu is separate from explicit table
+  reading, which uses the shared reader's preferences.
+
+The first settings slice exposes existing speech choices through common
+preferences, with explanations and a short reading preview. For example, a
+Duration cell could speak either "1 hour, Duration"
+or "Duration, 1 hour". Header choices should offer neither, column, row or
+both; explain that titles depend on the table adapter identifying them.
+Suppressing a repeated title that duplicates the cell is existing behaviour.
+
+| Proposed control | Effect and scope |
+|------------------+------------------|
+| Titles and data order | Use common preferences with mode and buffer overrides. Show the effective value, its source and the buffer affected. |
+| Reader activation | Choose on-demand or automatic entry, with mode overrides and explicit saved defaults. Preserve existing activation behaviour until a different policy is selected. |
+| Vertical movement speech | Plain arrows read the row by default, with a cell option. Control-Meta vertical arrows read the cell under the slice 1 contract. Preserve today's bindings during the adapter-only slice. Keep explicit Read row and Read column commands available. |
+| Position announcements | Consider on demand only, after each movement, or on row/column changes. Define precisely when coordinates are included and avoid repeating information already spoken with titles. |
+| Entry announcement | Consider full dimensions plus cell, or a shorter entry announcement. Keep dimensions available on demand. |
+| Header repetition | Consider every cell or only when its relevant header changes. Define reset behaviour on table entry and explicit inspection so context remains recoverable. |
+| Table boundaries | Consider stopping at the first/last row versus leaving into surrounding text. Shared reading currently attempts to leave vertically and reports horizontal edges; wrapping would be a separate decision. |
+| Boundary feedback | Consider spoken feedback and existing earcon choices. Route sounds through event assignment; do not create a separate table sound library. |
+
+The controls beyond titles and data order need behavioural design and
+implementation; they are not existing settings waiting to be linked. Avoid
+adding arbitrary key remapping, blank-cell skipping or wrapping in the initial
+slice. Implement activation choices after defining entry, exit and editing
+behaviour. Reading must continue to leave source text unchanged and preserve
+application action keys in tabulated buffers.
+
+Scope and persistence must be explicit. Capture the source buffer before
+opening settings. Distinguish this-buffer overrides, inherited defaults and
+saved defaults; provide a way to remove local overrides. Explain that saving
+a default does not erase existing local choices. Consolidating speech
+preferences needs an explicit migration that preserves existing Agent Shell
+and Org choices and custom Org feedback functions. Use common defaults with
+optional overrides; do not silently merge or discard saved settings.
+Browsing a choice must not apply it; preview must not move point or change
+the source table. Menu Help should show the effective reader and explain
+which navigation commands use the selected setting.
+
+**** Delivery slices
+
+Slice 1 is complete as design work; slice 2 is implemented, with listening
+acceptance pending. Slices 3–6 remain unimplemented. Deliver them in order,
+keeping each change reviewable. Slice 4 implements the key
+behaviour selected in slice 1, which differs from today's shared-reader
+bindings. Settings and activation can be tried before optional verbosity work
+is taken on.
+
+***** 1. Establish the common behaviour and compatibility contract
+
+Completed on 2026-10-17; uncommitted. See the
+[[file:developer/table-reading-contract.org][behaviour and migration contract]] for the audit and implementation baseline.
+Both installed and locked dependency versions passed 64 focused batch tests
+and 67 graphical tests. The old cache selected by =local.mk= is stale; a
+separate current-lock dependency directory was prepared and verified without
+changing the installed packages or =local.mk=.
+
+The contract selects common movement and inspection keys while retaining
+Agent Shell's native Tab/Enter actions and application-list action keys.
+It adds a future =q= leave-in-place action to Agent Shell, with suspension of
+automatic re-entry and an explicit route to the displaced viewport action.
+Migration preserves nil title lists, legacy settings, session/local scope
+and custom Org editing feedback; only explicit Save writes preferences.
+No live binding or setting changed. Listening acceptance belongs to the
+implementation slices.
+
+Inventory the effective reading keys, speech units, entry/exit behaviour and
+saved preferences in Org, Markdown, Agent Shell shell/viewport buffers and
+Tabulated List applications. Include normal Org editing and the table Muggle
+so their actions remain distinguishable from reading. Check the actual loaded
+Agent Shell and Shell Maker paths and versions against the pinned tests.
+
+Define the common commands for entering/leaving, moving, inspecting a cell,
+row or column, reporting coordinates/dimensions and copying logical values.
+Settle the movement policy proposed in slice 4 and document any intentional
+change to existing keys or defaults. Audit all Agent Shell overlaps, including
+transcript navigation, viewport actions, speech/repeat maps, contextual actions
+and idle/busy prompt editors. Provide an accessible route to displaced actions.
+
+Completion criterion: the compatibility matrix and migration rules are concrete
+enough to test. Public option names and any compatibility removals still need
+their implementation review; this contract retains existing public commands
+and does not authorise removing them.
+
+***** 2. Connect the shared reader to each representation
+
+Implemented on 2026-10-17; uncommitted. Agent Shell's existing commands now
+use a scoped rendered-table adapter for shared inspection, copying and logical
+movement. Its activation hooks, contextual map, row/cell speech distinction,
+legacy preferences and registered Aural facts retain their existing ownership.
+The adapter is scoped to each operation: registering common explicit entry and
+leave-in-place support remains in slice 4. Org, Markdown and Tabulated List
+keep their existing adapters. No preference migration or settings page is
+included in this slice.
+
+Rendered cells are extracted afresh. Incomplete mappings and editable drafts
+are rejected. Changes touching the active table suspend its keys until
+navigation validates the mapping; streaming elsewhere does not suspend them.
+Region markers track the active table independently of the renderer's point
+and are released on exit or cleanup. Escaped Markdown punctuation is decoded
+from renderer metadata after cell splitting, preserving literal pipes in
+speech and copying without modifying the table.
+
+Focused checks cover all four representations, native speech facts, blank and
+uneven rows, links, inline code, escaped pipes, full values, application keys,
+and draft protection. Graphical checks include wrapped cells, a narrower window
+followed by re-rendering the same response fragment, and replacement by prose.
+Fresh compiled runs passed 68 batch checks and 71 graphical checks; the graphical
+checks passed with installed and locked Agent Shell dependencies. Incremental
+byte-code, its preflight, all 11 pinned graphical integration cases and the
+documentation release gate passed. Listening acceptance remains open.
+
+The broader pinned integration run now passes all 671 checks. Its initial
+Notmuch failure came from a test calling =push-button= interactively with a
+previous arrow event. The corrected fixture sends Enter in its displayed
+buffer and covers that preceding-arrow case. All five MIME-row checks also
+pass in a fresh graphical Emacs. No Notmuch runtime change was needed.
+
+Extend the existing reader only where the contract needs it. Adapt rendered
+Agent Shell cells to common operations while retaining source-backed Org and
+Markdown adapters and structured Tabulated List entries. Preserve existing
+commands as entry points during migration. Keep current activation and spoken
+movement units in this slice so adapter changes can be tested independently.
+
+Test equivalent cell, row, column, coordinate and copy results across formats.
+Include blanks, headers, uneven rows, escaped pipes, links, inline code and
+wrapped cells. In real graphical Emacs, check rendered-cell positions after
+resizing and streaming re-rendering; stale cell mappings must be refreshed or
+the reading context ended. Preserve application action keys and integration
+speech facts. Reading and copying must not modify source tables or formulas.
+
+Done when the shared operations work through every supported adapter without
+regressing the existing reader. Reassess the internal split here; do not turn
+this into the separate Lisp-directory reorganisation project.
+
+***** 3. Add common preferences and the Tables settings page
+
+Provide column/row/both/neither heading choices and data-before/after-heading
+order through one explained, browsable page. Add preview and Stop, Help,
+buffer Apply, Save defaults and removal of overrides. Preserve menu selection
+after applying or previewing. Settings search and integration menus should
+reach this same page with the source buffer captured.
+
+Use Customize for saved defaults and mode overrides, with temporary
+buffer-local overrides. Show the effective value and where it comes from.
+Precedence is buffer override, explicit mode override, then common default;
+activation also retains the compatibility defaults described above. Migration
+must distinguish explicitly saved/local choices from untouched package defaults
+so an old default does not accidentally prevent common inheritance. Preserve
+conflicting explicit choices as overrides and leave custom Org editing-feedback
+functions intact. Inspect the proposed migration before writing saved values.
+
+Done when a heading/order change can be previewed, applied, saved, inherited
+and reset across integrations, with restart tests proving persistence. Browsing
+or cancelling changes nothing, and preview neither moves nor edits the table.
+
+***** 4. Align navigation and spoken movement units
+
+Use the contract from slice 1 to give matching reading operations matching
+behaviour. Plain Up/Down reads the destination row by default;
+Control-Meta-Up/Down reads the destination cell; Control-Meta-Left/Right moves
+between columns and reads the cell. This preserves Agent Shell's current
+distinction and would change Control-Meta vertical feedback in the shared
+reader. Expose movement speech choices where useful, while retaining explicit
+Read cell, Read row and Read column actions.
+
+Retain normal character/word inspection, with rendered-cell handling where
+layout requires it. Preserve Agent Shell's Tab/Shift-Tab and Enter actions,
+and application-list action keys. Add =q= to leave reading in place, including
+the suspension needed to prevent immediate automatic re-entry. The broader
+activation-policy settings follow in slice 5. Recheck effective bindings,
+source-buffer focus, table edges, empty cells and wrapped rows. Describe the chosen behaviour in Help
+and the maintained guides before handing it back for listening.
+
+Done when the same reading task can be performed predictably in all supported
+contexts, and intentional host exceptions are explained. Changes to keys or
+default feedback are recorded explicitly rather than hidden in adapter work.
+
+***** 5. Make reader activation configurable
+
+Add on-demand and automatic entry choices to the same settings page, with
+common preferences and mode overrides. Retain automatic Agent Shell entry and
+on-demand Org, Markdown and application-list entry until a different policy
+is selected. The explicit reader command remains available with either policy.
+
+Automatic entry must identify a supported table and announce entry once.
+Quitting suspends automatic entry for that table visit; deliberately entering
+again or leaving and returning can re-enable it. Editing ends the reading
+context without immediately reactivating it while typing. Define table identity
+across rendering changes so a refresh cannot defeat this suspension. Protect
+Agent Shell prompt/viewport editors, including during a busy turn, and preserve
+source editing outside the reader. Restore ordinary keys on exit and mode or
+buffer changes, and avoid duplicate entry/exit speech at boundaries.
+
+Done when both policies work in every supported context, a mode override can
+be saved and removed, and quitting gives a reliable route back to editing.
+Verify these transitions graphically and through listening, not just by
+examining the policy variable.
+
+***** 6. Tune optional detail and boundary feedback
+
+After the common experience is accepted, evaluate the remaining controls:
+coordinates during movement, shorter entry announcements, repeated headings,
+and stopping or leaving at table edges. Implement only choices with a clear
+reading task and explained defaults. Keep full inspection available even when
+automatic feedback is brief. Assign boundary sounds through existing semantic
+events and the shared sound tools.
+
+Cycling from the last row or column back to the first, automatic blank-cell
+skipping and arbitrary key remapping remain outside these slices. Do not make
+this optional tuning a prerequisite for delivering the common reader and
+activation setting.
+
+**** Verification and acceptance for every implemented slice
+
+Use focused regression tests, the selected Emacs toolchain, incremental
+compilation and byte-code preflight. Test compiled code in fresh Emacs, with
+real graphical checks for rendering, focus and effective keys. Keep shell and
+viewport reading distinct from prompt editing in the test matrix; native Org
+editing must still work after leaving the reader.
+
+Update maintained guides and generated references at settled checkpoints and
+run the documentation release gate before review or commit. Record automated
+checks, listening acceptance, migration results and commits separately. Do not
+wait until the last slice to test the complete read, adjust, save and return
+workflow introduced by an earlier slice.
 
 *** Menu focus audit, 2026-10-17
 
@@ -1827,6 +2114,10 @@ They do not establish listening acceptance or the acoustic effect of pitch chang
 
 ** Next proposed slices
 
+Table work follows the six delivery slices in
+[[table-reading-consolidation][Table reading and navigation consolidation]], including common preferences,
+representation-specific adapters and configurable activation.
+
 History controls, scoped presentation switches, voice presentation options and
 Emacs dictionary discovery are implemented above. Remaining work is:
 
@@ -1893,6 +2184,17 @@ behaviour settles. Preserve earlier evidence without treating it as current
 verification of subsequently changed code.
 
 ** Findings queue
+
+- 2026-10-17, resolved: The Notmuch direct-button test inherited a Right Arrow
+  =last-command-event=. Native =push-button= interpreted it as a pointer event
+  and looked in the selected window instead of the undisplayed test buffer.
+  Supplying an arrow event reproduced the failure in isolation. The fixture
+  now displays its temporary buffer and sends a real Enter key, retaining an
+  explicit preceding-arrow case. The pinned integration suite passes all 671
+  checks, and all five MIME-row cases pass graphically. Runtime behaviour is
+  unchanged. Evidence: =/tmp/notmuch-button-probe.log=,
+  =/tmp/notmuch-button-down.log=, =/tmp/notmuch-button-fixed-integration.log=
+  and =/tmp/notmuch-button-gui.log=.
 
 - 2026-10-16: Proposed sound library and cue assignments. Registering each
   candidate recording as a semantic cue makes available audio look like

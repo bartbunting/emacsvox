@@ -1867,30 +1867,35 @@ Return the beginning of the inserted row."
 
 (ert-deftest emacsvox-notmuch-part-row-preserves-direct-targets-and-errors ()
   "Direct controls and links keep their actions; failed row actions retain point."
-  (with-temp-buffer
-    (let ((button (emacsvox-notmuch-test--insert-part-row 2))
-          activated)
-      (button-put button 'action (lambda (target) (setq activated target)))
-      (goto-char (button-start button))
-      (should (eq (key-binding (kbd "RET")) 'push-button))
-      (call-interactively #'push-button)
-      (should (eq activated button))
-      (should (equal (notmuch-show-get-part-properties)
-                     emacsvox-notmuch-test--attachment))
-      (button-put button 'action (lambda (_) (error "Action failed")))
-      (beginning-of-line)
-      (let ((position (point)))
-        (should-error (call-interactively (key-binding (kbd "RET"))))
-        (should (= (point) position))))
-    (goto-char (point-max))
-    (let ((start (point)))
-      (insert-text-button "Link" 'shr-url "https://example.invalid/"
-                          'action (lambda (_) 'link-action))
-      (put-text-property start (point) :notmuch-part '(:content-type "text/html"))
-      (goto-char start)
-      (should (eq (key-binding (kbd "RET")) 'push-button))
-      (should (equal (notmuch-show-get-part-properties) '(:content-type "text/html")))
-      (should (eq (button-activate (button-at (point))) 'link-action)))))
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (let ((button (emacsvox-notmuch-test--insert-part-row 2))
+            activated)
+        (button-put button 'action (lambda (target) (setq activated target)))
+        (goto-char (button-start button))
+        (should (eq (key-binding (kbd "RET")) 'push-button))
+        ;; `push-button' interprets non-character events as pointer events.
+        ;; Supply the real RET event instead of inheriting an earlier arrow key.
+        (let ((last-command-event 'right))
+          (execute-kbd-macro (kbd "RET")))
+        (should (eq activated button))
+        (should (equal (notmuch-show-get-part-properties)
+                       emacsvox-notmuch-test--attachment))
+        (button-put button 'action (lambda (_) (error "Action failed")))
+        (beginning-of-line)
+        (let ((position (point)))
+          (should-error (call-interactively (key-binding (kbd "RET"))))
+          (should (= (point) position))))
+      (goto-char (point-max))
+      (let ((start (point)))
+        (insert-text-button "Link" 'shr-url "https://example.invalid/"
+                            'action (lambda (_) 'link-action))
+        (put-text-property start (point) :notmuch-part '(:content-type "text/html"))
+        (goto-char start)
+        (should (eq (key-binding (kbd "RET")) 'push-button))
+        (should (equal (notmuch-show-get-part-properties) '(:content-type "text/html")))
+        (should (eq (button-activate (button-at (point))) 'link-action))))))
 
 (ert-deftest emacsvox-notmuch-show-save-part-confirms-filename ()
   "Saving one part confirms the attachment that was saved."

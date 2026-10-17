@@ -410,5 +410,83 @@
       (should-not emacsvox-table-reader-mode)
       (should (equal (mapcar #'car spoken) '("Before table. Before"))))))
 
+(ert-deftest emacsvox-table-reader-equivalent-adapter-operations ()
+  "All representations share logical reading/copying without editing data."
+  (skip-unless (require 'agent-shell nil t))
+  (require 'emacsvox-agent-shell)
+  (require 'emacsvox-tabulated-list)
+  (dolist (kind '(org markdown agent-shell tabulated-list))
+    (with-temp-buffer
+      (pcase kind
+        ('org (delay-mode-hooks (org-mode)) (insert emacsvox-table-reader-test--org))
+        ('markdown
+         (delay-mode-hooks (markdown-mode)) (insert emacsvox-table-reader-test--markdown))
+        ('agent-shell
+         (insert emacsvox-table-reader-test--markdown)
+         (agent-shell-markdown-replace-markup))
+        ('tabulated-list
+         (delay-mode-hooks (tabulated-list-mode))
+         (setq tabulated-list-format [("Name" 10 t) ("Role" 20 t)]
+               tabulated-list-entries '((1 ["Alice" "Engineer"]) (2 ["Bob" ""])))
+         (tabulated-list-print)))
+      (goto-char (point-min))
+      (search-forward "Engineer")
+      (backward-char 1)
+      (set-buffer-modified-p nil)
+      (let ((original (buffer-string)) (origin (point))
+            (emacsvox-table-reader-titles '(column))
+            (emacsvox-table-reader-data-position 'first)
+            (emacsvox-agent-shell-table-titles '(column))
+            (emacsvox-agent-shell-table-data-position 'first)
+            (kill-ring nil) (kill-ring-yank-pointer nil) spoken)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push (substring-no-properties text) spoken))))
+          (dolist (unit '(cell row column context dimensions))
+            (if (eq kind 'agent-shell)
+                (emacsvox-agent-shell--table-read #'emacsvox-table-reader--inspect unit)
+              (emacsvox-table-reader--inspect unit)))
+          (should
+           (equal (nreverse spoken)
+                  (list "Engineer, Role." "Alice, Name. Engineer, Role."
+                        "Role. Engineer. blank."
+                        (if (eq kind 'tabulated-list)
+                            "Row 1 of 2, column 2 of 2."
+                          "Data row 1 of 2, column 2 of 2.")
+                        (if (eq kind 'tabulated-list)
+                            "Table, 2 rows, 2 columns."
+                          "Table, 2 data rows, 2 columns."))))
+          (dolist (unit '(cell row column))
+            (if (eq kind 'agent-shell)
+                (emacsvox-agent-shell--table-read #'emacsvox-table-reader--copy unit)
+              (emacsvox-table-reader--copy unit)))
+          (should (equal kill-ring
+                         (list (if (eq kind 'tabulated-list)
+                                   "Engineer\n" "Role\nEngineer\n")
+                               "Alice\tEngineer" "Engineer")))
+          (should (= origin (point)))
+          (should (equal original (buffer-string)))
+          (should-not (buffer-modified-p)))))))
+
+(ert-deftest emacsvox-table-reader-markdown-rendered-logical-values ()
+  "Source and rendered Markdown retain links, code, pipes and uneven rows."
+  (skip-unless (require 'agent-shell nil t))
+  (require 'emacsvox-agent-shell)
+  (let ((source "| Name | Notes |\n|---|---|\n| [Alice](https://example.org) | `a|b` and x\\|y |\n| Bob |\n")
+        source-rows rendered-rows)
+    (with-temp-buffer
+      (delay-mode-hooks (markdown-mode))
+      (insert source)
+      (goto-char (point-min))
+      (search-forward "Alice")
+      (setq source-rows (plist-get (emacsvox-table-reader--cell) :rows)))
+    (with-temp-buffer
+      (insert source)
+      (agent-shell-markdown-replace-markup)
+      (goto-char (point-min))
+      (search-forward "Alice")
+      (setq rendered-rows (plist-get (emacsvox-agent-shell--table-snapshot) :rows)))
+    (should (equal source-rows '(("Name" "Notes") ("Alice" "a|b and x|y") ("Bob"))))
+    (should (equal source-rows rendered-rows))))
+
 (provide 'emacsvox-table-reader-tests)
 ;;; emacsvox-table-reader-tests.el ends here

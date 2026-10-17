@@ -1,0 +1,298 @@
+#+title: Table Reading Consolidation: Slice 1 Contract
+#+date: 2026-10-17
+#+startup: overview
+
+* Status and scope
+
+Slice 1 design and compatibility audit completed on 2026-10-17. This contract
+guides slices 2–5 of the [[file:../ui-settings-plan.org::table-reading-consolidation][table reading plan]]. The key, settings and activation changes
+below remain planned. No live bindings, preferences, packages or source modules
+were changed during the slice 1 audit. Slice 2's implementation checkpoint is
+recorded separately below; listening acceptance remains open.
+
+Consolidate reading operations and preferences across Markdown source, Org,
+rendered Agent Shell responses and supported Tabulated List applications.
+Keep representation-specific adapters, native editing and application actions.
+Org's table Muggle invokes native editing commands and remains separate.
+CSV/spreadsheet readers and the wider Lisp-directory reorganisation are outside
+this contract.
+
+* Inspected environments
+
+The selected Emacs is =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90.
+Read-only probes identified these sessions before inspecting their state:
+
+| Session | PID and socket | Relevant loaded code |
+|---------+----------------+----------------------|
+| Main | 1735546; =/run/user/1000/emacs/emacsvox= | Repository integration byte-code; installed Agent Shell 0.87.10 and Shell Maker 0.97.7. |
+| Newest test | 768046; =/run/user/1000/emacs/emacsvox-768046= | Repository shared-reader and Org byte-code; Agent Shell was not loaded. |
+
+The main session loads Agent Shell from
+=~/.emacs.d/elpa/agent-shell-20261016.111/=, package revision =9e3dd48f9aaa=,
+and Shell Maker from =~/.emacs.d/elpa/shell-maker-20261015.2327/=, revision
+=fc5fd0ef732f=. Markdown mode comes from
+=~/.emacs.d/elpa/markdown-mode-20261009.18/=; Org comes from the selected Emacs.
+
+The reviewed dependency lock selects Agent Shell 0.86.1, commit
+=137b574f041552cdd04ebc1edb02fd7b4490898c=, and Shell Maker 0.97.5, commit
+=dcc05a8cf24eb62f2f611fd2d009a161fada5f6e=. These differ materially from the
+installed packages. Both were audited independently; version strings alone
+were not used to infer compatibility.
+
+The cache selected by =local.mk= failed the dependency preparer's check because
+the lock changed. A separate copy at =/tmp/emacsvox-table-slice1-deps= was
+prepared from the current lock and verified successfully. Neither =local.mk=
+nor installed packages were changed. Use a verified current-lock directory for
+future integration gates; the earlier cache remains stale.
+
+* Current behaviour
+
+The following matrix describes the inspected implementation, before migration.
+
+| Context | Entry | Vertical movement while reading | Leave in place | Native behaviour outside reading |
+|---------+-------+---------------------------------+----------------+----------------------------------|
+| Org source | =C-e C-t C-r= or Control-Meta arrow | Plain and Control-Meta arrows read the row. | =q= | Org editing, including cell speech after native table movement. |
+| Markdown source | Same shared entry | Same shared row speech | =q= | Markdown editing. |
+| Tabulated List | Same shared entry | Same shared row speech | =q= | Application actions; these also take precedence over optional reader shortcuts. |
+| Agent Shell transcript/viewport | Automatic when ordinary navigation enters a rendered table | Plain arrows read the row; Control-Meta arrows read the cell. | No reader-specific action | Transcript/item navigation or editable prompt input. |
+
+The shared prefix command currently has no Agent Shell adapter. Adding that
+adapter is necessary before the prefix can provide common entry there.
+Agent Shell's current post-command handler reactivates table navigation while
+point remains in a rendered table; merely clearing its flag is not a working
+leave-in-place implementation.
+
+Shared reading binds Tab/Shift-Tab to cells, Enter/Space to cell speech, =r/c=
+to row/column speech, =.= to coordinates, === to dimensions and =w= or =k k=
+to cell copying. =k r= and =k c= copy a row or column. =a= changes speech
+settings. =t/T= finds tables. Meta-Up/Down exits towards adjacent content.
+
+Agent Shell shares most inspection/copy keys but keeps upstream Tab/Shift-Tab
+item navigation and Enter actions. It also has transcript block navigation
+and repeat maps. Its =q= is inherited: in the viewport it buries the buffer.
+Control-Meta vertical arrows deliberately do nothing outside rendered tables,
+including in editable prompts, to prevent repeated movement falling through
+to Lisp-list navigation.
+
+Source and Agent Shell readers can leave across vertical edges when surrounding
+content exists. Application lists stop at their edges. Horizontal boundaries
+and missing cells in uneven rows keep point in place. Tabulated List reading
+uses full entry values, even when the display truncates a column.
+
+** Current preference ownership
+
+| Owner | Options | Existing shortcut scope |
+|-------+---------+-------------------------|
+| Shared reader | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | =a= changes buffer-local values. |
+| Agent Shell | =emacsvox-agent-shell-table-titles=; =emacsvox-agent-shell-table-data-position= | =a= uses =setq=; changes normally affect other Agent Shell buffers in the session. |
+| Native Org editing | =emacsvox-org-table-after-movement-function= | Independent feedback function; supports custom functions. |
+
+Both reading defaults are column titles and data first. Native Org editing
+defaults to speaking cell contents. Neither audited session had saved Customize
+values, customised values or local overrides for these options. The known
+personal Org configuration and =custom.el= contained no assignments to them.
+This is a snapshot of those sessions and files, not a claim about every possible
+configuration source.
+
+Neither session had loaded the Muggles collections, and =C-c t= had no Org table
+Muggle binding. The separate personal =C-c C-SPC= Muggle navigates headings.
+Automatic cell speech during native Org movement therefore does not establish
+that the shared reader or a table Muggle is active.
+
+* Common reading contract
+
+The following behaviour is selected for the consolidation implementation.
+Slice 2 preserves current behaviour while connecting adapters; slice 4 applies
+the intentional movement/key changes listed here.
+
+| Operation | Common behaviour | Existing behaviour affected |
+|-----------+------------------+-----------------------------|
+| Enter/toggle | =C-e C-t C-r= and =M-x emacsvox-table-reader-mode= work in every supported reader context. | Agent Shell gains explicit entry and leave-in-place support. |
+| Enter and move | Control-Meta arrows enter on demand and perform one movement, with one combined entry announcement. | Agent Shell needs contextual entry support when automatic entry is disabled. |
+| Row movement | Plain Up/Down retains the column and reads the destination row by default. A movement-speech preference can choose the cell for these arrows. | Default row speech remains unchanged. |
+| Cell-oriented vertical movement | Control-Meta-Up/Down retains the column and reads the destination cell. | Shared Org, Markdown and Tabulated List reading changes from row to cell speech. |
+| Column movement | Control-Meta-Left/Right moves between logical cells and reads the cell. | No intended speech-unit change. |
+| Inspect | Space reads the cell; =r/c= reads the row/column; =.= reports coordinates; === reports dimensions. | Application actions can occupy these shortcuts; named reader commands remain available. |
+| Copy | =w= or =k k= copies the cell; =k r/k c= copies row/column values. | Preserve existing values, separators and application-key exceptions. |
+| Settings | =a= opens the common Tables page with the source buffer captured. | Replaces the short key's immediate toggle prompt; old commands remain callable. |
+| Leave in place | =q= disables reading for this table visit and keeps point. | Agent Shell gains this operation; viewport =q= is temporarily displaced. |
+| Leave towards content | Meta-Up/Down moves outside the table and restores ordinary keys. | Preserve current edge and no-content feedback. |
+
+Plain Left/Right, Control-b/f and word movement remain text inspection.
+Agent Shell retains its handling of wrapped cell spans, borders and padding.
+Control-n/p remains ordinary line movement, not a second row-reading binding.
+Do not make movement or inspection align tables, create rows, evaluate formulas,
+activate links or launch application actions.
+
+Tab, Shift-Tab and Enter are deliberate host exceptions in Agent Shell and
+application lists. Preserve item navigation and actions on links, buttons,
+permissions and forms. In Org/Markdown explicit reading, retain cell Tab
+navigation and Enter-to-read. The guaranteed common actions are the
+Control-Meta arrows and explicit reading commands; Help must explain host
+exceptions. Do not install the entire shared keymap over an Agent Shell buffer.
+
+Existing public row-reading commands keep their documented row speech;
+cell-reading commands keep cell speech. Rebinding a key must not silently
+change a callable command's meaning. Retain Agent Shell command names as
+compatible entry points while delegating suitable work to the shared reader.
+
+* Key precedence and displaced actions
+
+The current overlap regression passes on both dependency sets. These are the
+five existing intentional overrides in its complete public-map comparison:
+
+| Context/key | Emacsvox action | Upstream action and retained route |
+|-------------+-----------------+------------------------------------|
+| Viewport =t= | Next table | =M-x agent-shell-viewport-set-session-thought-level=; also =C-c C-t= in its editor. |
+| Transcript table =r= | Read row | =M-x agent-shell-quote-region=. |
+| Viewport table =r= | Read row | =M-x agent-shell-viewport-reply=. |
+| Viewport table =c= | Read column | =M-x agent-shell-viewport-reply-continue=. |
+| Viewport table =a= | Table settings | =M-x agent-shell-viewport-reply-again=. |
+
+Add one intentional override in slice 4: viewport table =q= leaves reading.
+After that, ordinary viewport =q= again runs =bury-buffer=; =M-x bury-buffer=
+also remains available. In the transcript, =q= is a reader command only while
+reading; editable input continues to insert it literally.
+
+The audit compared shell, inherited Shell Maker, viewport view/edit, fragment,
+list-edit, elicitation and preview maps with the speech-control, table and
+repeat maps, including prefixes that could hide a longer binding. Selected
+upstream bindings match across the installed and locked versions despite their
+different implementations. Recheck the whole overlap on future upgrades.
+
+Permission buttons carry generated action maps, fragment headers own Enter,
+and elicitation controls own Enter and preview Help. Table entry must not be
+inferred from text that merely resembles a table in one of these controls.
+Leaving a table for those controls must deactivate its map before the next
+action. Active transient maps retain priority. Block-repeat navigation must
+leave the table's =k= copy prefix usable rather than consuming it as a source
+block command. Speech controls and =C-e S= remain reachable.
+
+Both idle and busy prompt editors keep navigation letters literal, preserve
+their draft and retain send, override-send, cancel and history actions. The
+Agent Shell adapter must reject editable prompt regions before activating any
+reading map, even if the draft contains a Markdown table.
+
+* Preference and migration contract
+
+Use the existing shared title/order options as common defaults; add mode
+overrides and buffer-local overrides through the shared settings interface.
+Show both the effective value and its source. An empty title list means
+“no titles”; it must never double as “inherit”.
+
+Resolution is buffer override, explicit mode override, common preference,
+then the built-in fallback where a preference supports inheritance. For
+activation, the built-in fallbacks are automatic in Agent Shell and on demand
+in Org, Markdown and application lists. An explicit common activation choice
+must affect modes that have no explicit override; do not seed permanent mode
+overrides merely to retain the initial defaults.
+
+| Existing choice | Migration treatment |
+|-----------------+---------------------|
+| Shared default or buffer-local title/order value | Retain it at the corresponding common or buffer scope. |
+| Explicit Agent Shell saved/customised value, including one equal to its old default | Preserve as an Agent Shell override unless a new explicit choice already exists. |
+| Agent Shell value changed for this session | Preserve as a session override, without writing it to disk. |
+| Agent Shell buffer-local value | Preserve for that buffer. |
+| Untouched Agent Shell default | Inherit the common preference. |
+| Native Org feedback function | Keep it intact; do not translate arbitrary functions into reader settings. |
+| Both new and legacy explicit choices | The new explicit choice wins; show the retained legacy choice in migration details and do not delete it. |
+
+Compare saved/customised metadata, local bindings and current values; do not
+infer intent only from equality with a package default. Arbitrary Lisp can
+assign a value equal to the default without leaving provenance. Treat that
+case as ambiguous, expose it in migration details and retain compatibility
+until an explicit choice resolves it. Do not rewrite personal Lisp forms.
+
+Legacy Agent Shell options remain recognised during migration, including
+assignments made after package loading. Do not alias them directly to shared
+defaults: that would change their scope. The settings page offers an explicit
+return to inheritance. The old speaking-method commands remain callable;
+the =a= binding opens the common page, where browsing alone changes nothing.
+
+The page distinguishes buffer Apply from Save common defaults and Save mode
+override. Preview and Stop preserve the source buffer's point and table state.
+Save writes only the chosen settings through Customize, preserving unrelated
+entries. Migration discovery and session application never write a file;
+disk changes require the explicit Save action. Test fresh-session persistence,
+empty-title choices, reset-to-inheritance and cancelled previews.
+
+* Activation and exit contract
+
+The two user policies are on demand and automatic. Inheritance is a settings
+scope choice, not a third activation behaviour. Entry must be visible in the
+reader state and audible once, without repeating dimensions on every move.
+
+Quitting suspends automatic entry for the current table visit. An explicit
+reader command or Control-Meta entry movement can resume it; leaving the table
+and returning begins a new visit. Editing also ends reading and suspends
+automatic re-entry there. Resizing or re-rendering the same table must not
+clear that suspension simply because its buffer positions changed.
+
+When table identity or source-to-display mappings cannot be recovered after
+an update, end the reading context safely and wait for deliberate navigation;
+never retain stale cell positions. Mode changes and buffer death remove owned
+maps and hooks. A setting change must not activate reading in another buffer,
+move point, or produce background entry speech.
+
+* Evidence and implementation gates
+
+Fresh Emacs runs used the installed packages and, separately, verified current
+locked dependencies. Each passed 64 focused batch tests with no skips. Each
+fresh graphical run passed 67 tests with no skips, including wrapped Agent
+Shell cells, wrapped source tables and Tabulated List navigation. These were
+existing source tests and diagnostic key snapshots, not tests of a new reader.
+
+The selected cases cover source and rendered table movement, settings scope,
+copying, table edges, application actions, complete upstream binding overlap,
+block-repeat prefixes, context settings, and idle/busy shell and viewport
+editing. Additional graphical probes checked leaving a rendered table for
+fragment/elicitation controls and a real permission button, plus overriding
+transient-map precedence. No permission action or agent request was executed.
+
+Evidence was collected in =/tmp/table-slice1-*= logs and snapshots. Temporary
+fixtures ran in disposable Emacs processes; live probes only read package and
+preference state. No live hooks or timers were installed. No Emacs 30.2 run or
+new listening acceptance is claimed by this design audit.
+
+Before each implementation slice, recheck its actual dependency paths. Retain
+the existing tests and add coverage for the changed contract: common entry in
+Agent Shell, leave-in-place suspension, new cell-oriented key bindings, mode
+inheritance and migration, and restoration after editing or streaming changes.
+Run fresh compiled and graphical checks and the documentation release gate at
+the checkpoints required by =AGENTS.md=. The Emacs 30.2 support floor, native
+Aural submission rules and explicit Customize saving remain in force.
+
+* Slice 2 implementation checkpoint
+
+Implemented on 2026-10-17; uncommitted. Existing Agent Shell commands invoke
+shared inspection, copying and movement through a dynamically scoped adapter.
+The adapter supplies fresh logical cells and Agent Shell Aural submissions;
+its caller supplies the legacy presentation preferences and host exit action.
+Source and Tabulated List adapters keep their current entry and movement policy.
+Agent Shell retains automatic entry, its contextual map and its public command
+names. It does not yet register for common explicit-reader activation, which
+needs the leave-in-place suspension and binding work in slice 4.
+
+No cell positions are cached between operations. A partial rendered mapping
+or editable draft is rejected; changes touching the active table suspend its
+map until navigation validates it. Updates elsewhere leave navigation active.
+Owned region markers and hooks are removed during cleanup. The extraction
+adapter also decodes escaped punctuation retained as renderer placeholders,
+after splitting cells so a literal pipe remains inside its cell.
+
+Cross-format tests exercise cell, row, column, coordinates, dimensions and
+copying, accounting for application headers being metadata rather than data
+rows. They cover blanks, uneven rows, links, code and escaped pipes without
+editing source or invoking application actions. Graphical tests re-render
+the same response fragment after resizing, verify complete wrapped values,
+then replace it with prose and check that table keys are released.
+
+Fresh compiled checks passed 68 focused batch cases and 71 graphical cases;
+the graphical cases passed against both installed and locked dependencies.
+The byte-code build, preflight, all 11 pinned graphical integration cases and
+the documentation release gate passed. The full pinned batch integration run
+passes all 671 checks after correcting a separate Notmuch test fixture to send
+Enter in its displayed buffer. That fixture had inherited a previous arrow
+event when calling =push-button= interactively. All five MIME-row checks also
+pass in a fresh graphical Emacs; no Notmuch runtime change was needed.
+No live session was reloaded and no new listening acceptance is claimed.
