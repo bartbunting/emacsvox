@@ -66,6 +66,8 @@
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 (declare-function notmuch-show-get-message-properties "notmuch-show" ())
 (declare-function notmuch-show-get-part-properties "notmuch-show" ())
+(declare-function notmuch-show-next-button "notmuch-show" ())
+(declare-function notmuch-show-previous-button "notmuch-show" ())
 (declare-function notmuch-show-mapc "notmuch-show" (function))
 (declare-function notmuch-show-message-extent "notmuch-show" ())
 (declare-function notmuch-show-move-to-message-top "notmuch-show" ())
@@ -1340,18 +1342,27 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
 (defun emacsvox-notmuch--speak-show-button ()
   "Cue and identify the current button in a Notmuch Show buffer."
   (when-let* ((button (button-at (point))))
-    (if-let* ((part (emacsvox-notmuch--part-at-point button)))
+    ;; MIME metadata covers the body too, including rendered HTML links.
+    (if-let* (((eq (button-type button) 'notmuch-show-part-button-type))
+              (part (emacsvox-notmuch--part-at-point button)))
         (emacsvox-notmuch--submit-text-feedback
          (emacsvox-notmuch-part-facts part 'select 'focus-entered)
          'navigation
          (if (plist-get part :filename) 'item 'button)
          (emacsvox-notmuch-format-part part))
-      (emacsvox-notmuch--submit-text-feedback
-       '(:role message-part :message-part-kind button
-         :mail-action-kind select :events (focus-entered))
-       'navigation 'large-movement
-       (emacsvox-notmuch--prepare-field-text
-        (button-label button) "button label")))))
+      (if (button-get button 'shr-url)
+          (emacsvox-notmuch--submit-text-feedback
+           '(:role message-part :message-part-kind button
+             :mail-action-kind select :events (focus-entered))
+           'navigation nil
+           (emacsvox-notmuch--bounded-source-substring
+            (button-start button) (button-end button) "link label"))
+        (emacsvox-notmuch--submit-text-feedback
+         '(:role message-part :message-part-kind button
+           :mail-action-kind select :events (focus-entered))
+         'navigation 'large-movement
+         (emacsvox-notmuch--prepare-field-text
+          (button-label button) "button label"))))))
 
 (defun emacsvox-notmuch--part-action-feedback (action part)
   "Confirm ACTION on Notmuch MIME PART."
@@ -2915,6 +2926,15 @@ notifications."
    #'emacsvox-notmuch-speak-search-details))
 
 (with-eval-after-load 'notmuch-show
+  ;; SHR's text keymap otherwise overrides only forward Tab navigation.
+  (define-key notmuch-show-mode-map [remap shr-next-link]
+              #'notmuch-show-next-button)
+  (define-key notmuch-show-mode-map [remap shr-previous-link]
+              #'notmuch-show-previous-button)
+  (define-key notmuch-show-mode-map [remap forward-button]
+              #'notmuch-show-next-button)
+  (define-key notmuch-show-mode-map [remap backward-button]
+              #'notmuch-show-previous-button)
   (define-key
    notmuch-show-mode-map (kbd "C-c C-p")
    #'emacsvox-notmuch-speak-show-position))

@@ -1629,7 +1629,8 @@ Return the beginning of the inserted row."
 (ert-deftest emacsvox-notmuch-show-button-navigation-describes-attachment ()
   "TAB navigation gives attachment-specific semantic feedback."
   (with-temp-buffer
-    (insert-text-button "[ report.pdf: application/pdf ]" 'action #'ignore)
+    (insert-text-button "[ report.pdf: application/pdf ]"
+                        'type 'notmuch-show-part-button-type)
     (put-text-property
      (point-min) (point-max)
      :notmuch-part emacsvox-notmuch-test--attachment)
@@ -1647,6 +1648,96 @@ Return the beginning of the inserted row."
         '((icon item)
           (speak
            "Attachment report.pdf, application/pdf, 58 KiB")))))))
+
+(ert-deftest emacsvox-notmuch-show-html-link-navigation-speaks-label ()
+  "Both directions preserve link styling and reach adjacent MIME controls."
+  (require 'shr)
+  (save-window-excursion
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (use-local-map notmuch-show-mode-map)
+      (insert "Before the links\n")
+      (let ((shr-width 80) (shr-use-fonts nil))
+        (shr-insert-document
+         '(div nil
+               (a ((href . "https://example.invalid/reset")) "Reset password")
+               " and "
+               (a ((href . "https://example.invalid/help")) "Help"))))
+      (goto-char (point-max))
+      (insert "\n")
+      (put-text-property (point-min) (point-max) :notmuch-part
+                         '(:content-type "text/html" :content-length 41984))
+      (let ((start (point)))
+        (notmuch-show-insert-part-header
+         2 "application/pdf" "application/pdf" "report.pdf")
+        (put-text-property start (point) :notmuch-part
+                           emacsvox-notmuch-test--attachment))
+      (when (display-graphic-p)
+        (switch-to-buffer (current-buffer))
+        (redisplay t))
+      (goto-char (point-min))
+      (dolist (step '(("TAB" "Reset password") ("TAB" "Help")
+                      ("TAB" attachment) ("<backtab>" "Help")
+                      ("<backtab>" "Reset password")))
+        (let* ((command (key-binding (kbd (car step))))
+               (expected (cadr step))
+               (ems--interactive-fn-name command)
+               styled events)
+          (should (eq command (if (equal (car step) "TAB")
+                                  'notmuch-show-next-button
+                                'notmuch-show-previous-button)))
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (setq styled content)
+                       (apply (emacsvox-test--notmuch-submission-recorder
+                               (lambda (event) (push event events)))
+                              content arguments)))
+                    ((symbol-function 'emacsvox-icon)
+                     (lambda (icon) (push (list 'icon icon) events)))
+                    ((symbol-function 'emacsvox-speak-region)
+                     (lambda (start end)
+                       (setq styled (buffer-substring start end))
+                       (push (list 'speak (substring-no-properties styled)) events))))
+            (call-interactively command))
+          (if (eq expected 'attachment)
+              (should (equal (nreverse events)
+                             '((icon item)
+                               (speak "Attachment report.pdf, application/pdf, 58 KiB"))))
+            (should (equal (nreverse events) (list (list 'speak expected))))
+            (should (memq 'shr-link (ensure-list (get-text-property 0 'face styled))))))))))
+
+(ert-deftest emacsvox-notmuch-show-html-part-button-keeps-mime-description ()
+  "The HTML part's own control still announces its type and size."
+  (with-temp-buffer
+    (notmuch-show-insert-part-header 1 "text/html" "text/html")
+    (put-text-property (point-min) (point-max) :notmuch-part
+                       '(:content-type "text/html" :content-length 41984))
+    (goto-char (point-min))
+    (let (events)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (emacsvox-test--notmuch-submission-recorder
+                  (lambda (event) (push event events)))))
+        (emacsvox-notmuch--speak-show-button))
+      (should (equal (nreverse events)
+                     '((icon button) (speak "MIME part, text/html, 41 KiB")))))))
+
+(ert-deftest emacsvox-notmuch-show-link-label-keeps-automatic-limits ()
+  "Styled link feedback remains bounded and has no leading cue."
+  (with-temp-buffer
+    (insert-text-button (apply #'concat (make-list 400 "word "))
+                        'shr-url "https://example.invalid/"
+                        'face 'shr-link)
+    (goto-char (point-min))
+    (let ((emacsvox-notmuch-automatic-field-character-limit 160)
+          text arguments)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest args)
+                   (setq text content arguments args))))
+        (emacsvox-notmuch--speak-show-button))
+      (should (< (length text) 2000))
+      (should (string-match-p "link label shortened" text))
+      (should (memq 'shr-link (ensure-list (get-text-property 0 'face text))))
+      (should-not (plist-get arguments :compatibility-actions)))))
 
 (ert-deftest emacsvox-notmuch-show-save-part-confirms-filename ()
   "Saving one part confirms the attachment that was saved."
@@ -1794,7 +1885,7 @@ Return the beginning of the inserted row."
   (dolist (icons-enabled '(t nil))
     (with-temp-buffer
       (insert-text-button
-       "[ report.pdf: application/pdf ]" 'action #'ignore)
+       "[ report.pdf: application/pdf ]" 'type 'notmuch-show-part-button-type)
       (put-text-property
        (point-min) (point-max)
        :notmuch-part emacsvox-notmuch-test--attachment)

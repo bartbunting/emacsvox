@@ -301,6 +301,7 @@ without aborting other registrations or automatically retrying partial loads."
     ("ses" emacsvox-ses)
     ("sgml-mode" emacsvox-sgml-mode)
     ("sh-script" emacsvox-sh-script)
+    ("shr" emacsvox-shr)
     ("slime" emacsvox-slime)
     ("smartparens" emacsvox-smartparens)
     ("solitaire" emacsvox-solitaire)

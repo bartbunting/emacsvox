@@ -1961,6 +1961,12 @@ before speaking the next line, even when the current line is only partly
 visible.  Images or text taller than the window retain Emacs's partial
 scrolling.
 
+   Tab and Shift-Tab move through the same sequence of links and MIME
+controls in either direction.  HTML links retain their link voice
+without a navigation earcon; MIME controls keep their part descriptions
+and cues.  Link navigation does not speak the destination URL on the
+notification stream.
+
 ‘n’
      Run ‘notmuch-show-next-open-message’.
 ‘p’
@@ -5584,19 +5590,3 @@ Main and notification speech
      event; their existence is not a guarantee that all background text
      is private.  See *note Speech output and notifications:
      (emacsvox)Aural Speech Output.
-
-
-File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox Terminology,  Up: Top
-
-18 Copyright
-************
-
-This manual documents Emacsvox, a speech extension to Emacs.
-
-   Copyright (C)1994 – 2024 T.  V.  Raman All Rights Reserved.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual without charge provided the copyright notice and this permission
-notice are preserved on all copies.  Sections of this manual are
-auto-generated from the source code, and the documentation inherits the
-same license as the original source code.

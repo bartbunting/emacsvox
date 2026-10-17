@@ -470,6 +470,7 @@
 (eval-when-compile(require 'subr-x))
 (require 'emacsvox-preamble)
 (require 'eww  )
+(require 'emacsvox-shr)
 (require 'dom)
 (require 'dom-addons)
 (require 'emacsvox-we)
@@ -960,41 +961,6 @@ speech rate and any explicit punctuation override."
          (emacsvox-icon 'button)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
-(defvar-local emacsvox-eww-a-speaker nil
-  "Specialized link speaker.")
-
-(cl-loop
- for target in
- '(shr-next-link shr-previous-link)
- for function = (intern (format "emacsvox--advice-%s-after" target))
- do
- (eval
-  `(progn
-     (defun ,function (&rest _)
-       "Cue and speak after interactive EWW link navigation."
-       (when (ems-interactive-p ',target)
-         (let ((host
-                (condition-case nil
-                    (url-host
-                     (url-generic-parse-url
-                      (funcall emacsvox-eww-url-at-point)))
-                  (error ""))))
-           (emacsvox-icon
-            (if (or
-                 emacsvox-we-url-executor
-                 (string-match "reddit" host)
-                 (string-match "wikipedia" host))
-                'item
-              'button)))
-         (if emacsvox-eww-a-speaker
-             (funcall emacsvox-eww-a-speaker)
-           (emacsvox-speak-region
-            (point)
-            (next-single-property-change
-             (point) 'help-echo nil (point-max))))))
-     (advice-add
-      ',target :after #',function '((name . emacsvox))))))
-
 ;; Handle emacsvox-we-url-executor
 
 (defun emacsvox--advice-eww-follow-link-around (original &rest arguments)

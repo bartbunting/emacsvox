@@ -7798,6 +7798,11 @@ window@comma{} Down advances through ordinary body text before speaking the next
 line@comma{} even when the current line is only partly visible. Images or text taller
 than the window retain Emacs's partial scrolling.
 
+Tab and Shift-Tab move through the same sequence of links and MIME controls
+in either direction. HTML links retain their link voice without a navigation
+earcon; MIME controls keep their part descriptions and cues. Link navigation
+does not speak the destination URL on the notification stream.
+
 @table @kbd
 @item n
 Run @code{notmuch-show-next-open-message}.

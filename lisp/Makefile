@@ -332,6 +332,7 @@ emacsvox-sdcv.elc \
 emacsvox-ses.elc \
 emacsvox-sgml-mode.elc \
 emacsvox-sh-script.elc \
+emacsvox-shr.elc \
 emacsvox-slime.elc \
 emacsvox-smartparens.elc \
 emacsvox-solitaire.elc \
@@ -608,3 +609,6 @@ omnivox-remote.elc omnivox-voices.elc emacsvox-aural-transport.elc tts-speak.elc
 #fill-column: 90
 #outline-regexp: "^### "
 #end:
+
+# EWW shares HTML link feedback with mail and other SHR clients.
+emacsvox-eww.elc: emacsvox-shr.elc

@@ -25,6 +25,74 @@
 (defconst emacsvox-startup-tests--root
   (expand-file-name "../" (file-name-directory (or load-file-name buffer-file-name))))
 
+(ert-deftest emacsvox-startup-shr-feedback-does-not-need-eww ()
+  "HTML mail gets link feedback whether SHR loads before or after setup."
+  (let ((emacs (expand-file-name invocation-name invocation-directory))
+        (lisp (expand-file-name "lisp/" emacsvox-startup-tests--root))
+        (startup (symbol-file 'emacsvox--startup-thread)))
+    (dolist (preloaded '(nil t))
+      (with-temp-buffer
+        (let ((status
+               (call-process
+                emacs nil t nil "-Q" "--batch" "-L" lisp "--eval"
+                (prin1-to-string
+                 `(condition-case failure
+                      (progn
+                        (setq load-prefer-newer t)
+                        (load ,startup nil t t)
+                        (require 'emacsvox-advice)
+                        (when ,preloaded (require 'shr))
+                        (when (featurep 'eww) (error "EWW already loaded"))
+                        (let ((pair (assoc "shr" emacsvox-packages-to-prepare)))
+                          (unless pair (error "SHR has no startup registration"))
+                          (emacsvox-package-setup pair)
+                          (require 'shr)
+                          (unless (and (featurep 'emacsvox-shr)
+                                       (eq (plist-get
+                                            (gethash pair emacsvox--startup-adapters)
+                                            :state)
+                                           'completed))
+                            (error "SHR feedback did not load")))
+                        (when (featurep 'eww) (error "SHR loaded EWW unnecessarily"))
+                        ;; Check before and after optional EWW loading: one label,
+                        ;; no URL notification, and no duplicate navigation advice.
+                        (dolist (with-eww '(nil t))
+                          (when with-eww (require 'emacsvox-eww))
+                          (with-temp-buffer
+                            (setq major-mode 'notmuch-show-mode)
+                            (insert "Before\n")
+                            (let ((shr-width 80) (shr-use-fonts nil))
+                              (shr-insert-document
+                               '(div nil (a ((href . "https://example.invalid/link"))
+                                            "Mail link"))))
+                            (goto-char (point-min))
+                            (let ((emacsvox-speak-messages t)
+                                  (inhibit-message nil)
+                                  (emacsvox-last-message nil)
+                                  (ems--interactive-fn-name 'shr-next-link)
+                                  echo notifications labels)
+                              (cl-letf
+                                  (((symbol-function 'message)
+                                    (lambda (&rest args)
+                                      (emacsvox--message-around
+                                       (lambda (format &rest values)
+                                         (setq echo (apply #'format-message format values)))
+                                       args)))
+                                   ((symbol-function 'current-message) (lambda () echo))
+                                   ((symbol-function 'emacsvox-icon) #'ignore)
+                                   ((symbol-function 'tts-notify)
+                                    (lambda (text &rest _) (push text notifications)))
+                                   ((symbol-function 'emacsvox-speak-region)
+                                    (lambda (start end)
+                                      (push (buffer-substring-no-properties start end) labels))))
+                                (call-interactively #'shr-next-link))
+                              (unless (equal labels '("Mail link"))
+                                (error "Expected one link label: %S" labels))
+                              (when notifications
+                                (error "Unexpected URL notification"))))))
+                    (error (princ (format "%S" failure)) (kill-emacs 1)))))))
+          (unless (eq status 0) (ert-fail (buffer-string))))))))
+
 (let* ((test-directory
         (file-name-directory (or load-file-name buffer-file-name)))
        (setup

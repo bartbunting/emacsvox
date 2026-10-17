@@ -184,7 +184,7 @@
       '(speak-line (icon select-object) speak-line)))))
 
 (ert-deftest emacsvox-eww-link-navigation-preserves-feedback ()
-  "Interactive link movement selects an icon and speaks the link."
+  "Interactive link movement speaks the link without an earcon."
   (with-temp-buffer
     (insert (propertize "link" 'help-echo "Link"))
     (goto-char (point-min))
@@ -202,7 +202,101 @@
       (should
        (equal
         (nreverse events)
-        '((icon item) (speak-region 1 5)))))))
+        '((speak-region 1 5)))))))
+
+(ert-deftest emacsvox-eww-link-navigation-does-not-notify-url ()
+  "SHR speaks labels without URL notifications in web and mail buffers."
+  (require 'emacsvox-advice)
+  (dolist (mode '(eww-mode notmuch-show-mode))
+    (with-temp-buffer
+      (setq major-mode mode)
+      (insert "Before\n")
+      (let ((shr-width 80) (shr-use-fonts nil))
+        (shr-insert-document
+         '(div nil
+               (a ((href . "https://example.invalid/reset?key=private")) "Reset password")
+               " and "
+               (a ((href . "mailto:help@example.invalid")) "Contact support"))))
+      (goto-char (point-max))
+      (insert "\nAfter\n")
+      (goto-char (point-min))
+      (let ((emacsvox-speak-messages t)
+            (inhibit-message nil)
+            (emacsvox-last-message nil)
+            (emacsvox-eww-url-at-point #'shr-url-at-point)
+            (emacsvox-we-url-executor nil)
+            echo notifications labels)
+        (cl-letf
+            (((symbol-function 'message)
+              (lambda (&rest args)
+                (emacsvox--message-around
+                 (lambda (format &rest values)
+                   (setq echo (apply #'format-message format values)))
+                 args)))
+             ((symbol-function 'current-message) (lambda () echo))
+             ((symbol-function 'emacsvox-icon) #'ignore)
+             ((symbol-function 'tts-notify)
+              (lambda (text &rest _) (push text notifications)))
+             ((symbol-function 'emacsvox-speak-region)
+              (lambda (start end)
+                (push (buffer-substring-no-properties start end) labels))))
+          (dolist (command '(shr-next-link shr-next-link shr-previous-link))
+            (let ((ems--interactive-fn-name command))
+              (call-interactively command)))
+          (should (equal (nreverse labels)
+                         '("Reset password" "Contact support" "Reset password")))
+          (should (equal echo "https://example.invalid/reset?key=private"))
+          (should-not notifications)
+          ;; Boundary feedback and ordinary messages must remain audible.
+          (goto-char (point-max))
+          (let ((ems--interactive-fn-name 'shr-next-link))
+            (call-interactively #'shr-next-link))
+          (should (equal (car notifications) "No next link"))
+          (goto-char (point-min))
+          (let ((ems--interactive-fn-name 'shr-previous-link))
+            (call-interactively #'shr-previous-link))
+          (should (equal (car notifications) "No previous link"))
+          (message "Unrelated message")
+          (should (equal (car notifications) "Unrelated message"))
+          (message "%s" "https://example.invalid/explicit")
+          (should (equal (car notifications) "https://example.invalid/explicit")))
+        (should emacsvox-speak-messages)))))
+
+(ert-deftest emacsvox-eww-link-navigation-keeps-graphical-url-echo ()
+  "Real echo-area URL messages stay visible without notification speech."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-advice)
+  (save-window-excursion
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (switch-to-buffer (current-buffer))
+      (insert "Before\n")
+      (let ((shr-width 80) (shr-use-fonts nil))
+        (shr-insert-document
+         '(div nil (a ((href . "https://example.invalid/reset?key=private"))
+                      "Reset password"))))
+      (goto-char (point-min))
+      (redisplay t)
+      (let ((emacsvox-speak-messages t)
+            (inhibit-message nil)
+            (emacsvox-last-message nil)
+            (ems--interactive-fn-name 'shr-next-link)
+            (emacsvox-eww-url-at-point #'shr-url-at-point)
+            (emacsvox-we-url-executor nil)
+            notifications label)
+        (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                  ((symbol-function 'tts-notify)
+                   (lambda (text &rest _) (push text notifications)))
+                  ((symbol-function 'emacsvox-speak-region)
+                   (lambda (start end)
+                     (setq label (buffer-substring-no-properties start end)))))
+          (call-interactively #'shr-next-link)
+          (should (equal label "Reset password"))
+          (should (equal (current-message)
+                         "https://example.invalid/reset?key=private"))
+          (should-not notifications)
+          (message "Navigation check complete")
+          (should (equal notifications '("Navigation check complete"))))))))
 
 (ert-deftest emacsvox-eww-buffer-select-feedback-preserves-order ()
   "Selecting an EWW buffer cues, speaks the mode line, then opens."

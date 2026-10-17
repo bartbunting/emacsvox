@@ -20,6 +20,131 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Commit checkpoint: HTML mail navigation, 2026-10-17
+
+Listening accepted on 2026-10-17. This commit includes accurate HTML link
+labels, shared SHR feedback loaded independently of EWW, suppression of
+duplicate URL notifications, and consistent Tab/Shift-Tab navigation with
+styled link speech and no link earcon. MIME controls retain their descriptions
+and cues. The earlier uncommitted and pending-listening notes below are
+superseded for these implemented changes. Indented MIME-row actions remain
+a proposal.
+
+All 132 Notmuch, 31 batch EWW and 20 startup tests pass from source and
+compiled code. Fresh graphical checks cover navigation, MIME controls,
+URL echo, mail-only startup and repeated integration loading. Compilation,
+byte-code preflight, headers and the documentation release check pass.
+
+** Notmuch HTML link feedback, 2026-10-17
+
+Tab and Shift-Tab from ordinary mail text could identify an HTML link as
+"MIME part, text/html, 41 KiB" instead of speaking its label. Notmuch places
+=:notmuch-part= metadata across the whole rendered body. Button feedback now
+uses the MIME description only for an actual Notmuch part-control button;
+ordinary buttons and links retain their visible labels.
+
+The regression reproduces the original announcement with rendered HTML and
+real Notmuch navigation commands in both directions. Separate coverage keeps
+HTML part controls and attachments descriptive. All 131 focused tests pass
+from source and compiled code. A fresh graphical Emacs also passes the three
+focused navigation checks using the same installed Notmuch package as the
+affected session and repository byte-code. Compilation and byte-code preflight
+pass. Listening confirmed the corrected link labels on 2026-10-17. A separate
+URL notification remained during SHR link navigation; see below. The fix is
+uncommitted.
+
+** Duplicate URL notifications during HTML link navigation, 2026-10-17
+
+SHR's next/previous-link commands display the destination in the echo area.
+The general message speaker sent that URL to the notification stream while
+the link-navigation feedback separately spoke the visible label. This affects
+HTML mail and EWW and is independent of MIME-part identification.
+
+A narrowly scoped spoken-message filter now suppresses URL echo notifications
+only during those two SHR commands. The echo-area text remains available;
+the link label, boundary messages and messages outside navigation retain
+their existing speech behaviour. The existing personal message filter is
+preserved. No URL is opened by navigation.
+
+The regression reproduces the duplicate notifications and covers both
+directions, web/mail buffers, HTTPS and mail links, boundary feedback and
+unrelated messages. All 31 batch EWW checks pass against compiled code; the
+additional graphical-only check passes in a fresh graphical Emacs alongside
+the two other focused link checks. The real echo-area message path retains
+the URL without submitting notification speech. All 131 compiled Notmuch
+checks also pass. Compilation and byte-code preflight pass. Listening
+acceptance remains open after a fresh profile start. Uncommitted.
+
+Further listening exposed a load-order gap: a fresh mail-only session loaded
+SHR but not the EWW integration, so neither the shared link speaker nor the
+URL-message filter was installed. The session log recorded URL requests on
+the notification process, and live inspection confirmed the missing advice.
+Earlier tests had loaded EWW explicitly and did not cover this startup route.
+
+Shared HTML link feedback now lives in =emacsvox-shr.el=, registered against
+SHR by normal startup. EWW requires that same adapter and retains its existing
+optional link speaker and URL accessor. HTML mail no longer needs EWW loaded.
+Fresh subprocess regressions cover SHR both before and after registration,
+and one label with no URL notification before and after subsequent EWW loading.
+The regression fails against the previous startup registration. All 20 startup
+checks pass from source and compiled code, and the 31 batch EWW checks pass.
+A fresh graphical Emacs loads the compiled shared adapter without EWW and
+verifies the real echo-area path, then passes all three link checks after EWW
+loads. Headers, compilation and byte-code preflight pass; generated references
+include the shared adapter. The newest normal session already loaded the same
+source adapter during startup, with both direction filters installed and EWW
+absent. No live reload was needed. Listening acceptance remains open.
+
+** Consistent mail link navigation without earcons, 2026-10-17
+
+Forward Tab on an HTML link used SHR navigation, while Shift-Tab fell back
+to Notmuch button navigation. Notmuch extracted a plain label and played the
+large-movement cue, losing the link voice heard in the forward direction.
+MIME buttons also supply their own forward/backward bindings.
+
+Notmuch now remaps both SHR and generic button-navigation commands to its
+next/previous-button commands, preserving one sequence of links and MIME
+controls. HTML link feedback retains source styling and the existing automatic
+field/total limits, without a leading cue. Shared SHR navigation also omits
+its link earcon; ordinary MIME and attachment feedback remains unchanged.
+
+The regression traverses two rendered links and an actual MIME control in
+both directions, checking effective bindings, preserved link styling and
+cue-free link speech. A separate check protects automatic link-label limits.
+All 132 Notmuch tests pass from source and compiled code. The 31 batch EWW
+checks pass; its graphical-only URL-echo test retains the preceding validation
+of the unchanged filter. A fresh graphical Emacs passes the mixed navigation
+and MIME checks, including a second load of both integrations. Compilation,
+byte-code preflight and headers pass; the manual describes the consistent
+navigation and cue policy. The two compiled integrations were narrowly
+reloaded in the newest test session, preserving the selected mail buffer and
+point. Effective Tab/Shift-Tab bindings on a live HTML link now resolve to
+Notmuch's next/previous-button commands. Listening acceptance remains separate;
+changes are uncommitted.
+
+** Notmuch indented MIME control rows, 2026-10-17
+
+Finding and proposed fix; not implemented. Arrow navigation can leave point
+in whitespace before an indented MIME control. Reproduction with Notmuch's
+part-header renderer and thread-style indentation confirms that Enter there
+resolves to message visibility, while Enter on the control activates its
+button. The indentation also lacks =:notmuch-part= metadata, so explicit
+part commands cannot reliably identify the intended part there.
+
+Treat a visible row containing one actual MIME-part control and only
+surrounding whitespace as an action target from anywhere on that row.
+Resolve the control for Enter and the explicit part actions, preserving
+Notmuch's configured default action and the current reading position where
+possible. Keep direct button/link actions and ordinary message visibility
+behaviour intact. Do not search other rows, activate hidden controls, or use
+body-wide MIME metadata to infer a control. Ambiguous rows must not select an
+arbitrary part.
+
+Verification should cover leading/trailing whitespace, nested indentation,
+actual rendered controls, hide/show and save/view actions, ordinary text,
+HTML links, hidden controls, and graphical arrow navigation followed by
+Enter. Retain the earlier HTML link-feedback regression.
+
 ** Commit checkpoint: recording library and tone controls, 2026-10-17
 
 This commit includes the recording library, pending cue assignments, shared
