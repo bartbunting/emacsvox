@@ -66,29 +66,30 @@
 
 (ert-deftest emacsvox-message-advice-throttles-duplicates ()
   "A duplicate message preserves the original call without repeated feedback."
-  (let ((emacsvox-last-message "Repeated")
-        (emacsvox-speak-messages t)
-        (ems--message-filter "\\`never-match\\'")
-        (minibuffer-message-overlay nil)
-        (inhibit-message nil)
-        (calls 0)
-        feedback)
-    (cl-letf (((symbol-function 'current-message)
-               (lambda () "Repeated"))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (&rest _) (setq feedback t)))
-              ((symbol-function 'tts-notify)
-               (lambda (&rest _) (setq feedback t))))
-      (should
-       (eq
-        (emacsvox--advice-minibuffer-message-around
-         (lambda (&rest _)
-           (cl-incf calls)
-           'message-result)
-         "Repeated")
-        'message-result)))
-    (should (= calls 1))
-    (should-not feedback)))
+  (dolist (previous '("Repeated" "Repeated " " \tRepeated\n"))
+    (let ((emacsvox-last-message previous)
+          (emacsvox-speak-messages t)
+          (ems--message-filter "\\`never-match\\'")
+          (minibuffer-message-overlay nil)
+          (inhibit-message nil)
+          (calls 0)
+          feedback)
+      (cl-letf (((symbol-function 'current-message)
+                 (lambda () "Repeated"))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (&rest _) (setq feedback t)))
+                ((symbol-function 'tts-notify)
+                 (lambda (&rest _) (setq feedback t))))
+        (should
+         (eq
+          (emacsvox--advice-minibuffer-message-around
+           (lambda (&rest _)
+             (cl-incf calls)
+             'message-result)
+           "Repeated")
+          'message-result)))
+      (should (= calls 1))
+      (should-not feedback))))
 
 (ert-deftest emacsvox-message-advice-honors-suppression ()
   "Inhibited message speech calls the original without inspecting output."

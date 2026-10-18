@@ -3532,8 +3532,29 @@ unchanged. All 231 source and 230 applicable compiled cases pass; the graphical
 run retains its 57-of-58 baseline. The Lisp refactoring plan records commits,
 checks and the source-only scrolling fixture. Listening remains open.
 
-- [ ] Investigate duplicate reading-choice prompt speech in graphical Emacs.
+- [X] Investigate duplicate reading-choice prompt speech in graphical Emacs.
   The isolated =emacsvox-reading-unit-prompt-is-spoken-once-on-main= case
   receives a notification copy of a prompt already submitted to main speech.
   The pre-refactor compiled facade reproduces the same result; the batch case
-  passes. No production behavior or test expectation was changed for this issue.
+  passes. The fix and verification are recorded below.
+
+* Reading-choice prompt correction, 2026-10-19
+
+Implementation: message duplicate detection now trims both the displayed text
+and the cached speech for comparison. Reading prompts retain their full text
+and trailing space in main speech and the prompt cache. A notification copy
+with the same words is suppressed.
+
+Verification: padded-message regression cases fail before the fix and pass
+after it. The graphical reading-choice case also fails against the original
+compiled advice and passes with the correction. Each reading unit starts with
+an empty echo area and exercises all three choices. The case now runs in the
+maintained graphical suite, with compiled message and prompt advice checked.
+All 39 graphical voice/editor cases and all 58 focused completion, input and
+Vertico cases pass. The core advice suite passes all 231 source and 230
+applicable compiled cases; the existing source-only scrolling fixture remains
+unchanged.
+
+Commit slice: =Fix duplicate reading-choice prompt notifications=.
+Listening acceptance remains open. The running personal session was not
+reloaded; try the reading-choice prompt after a fresh profile restart.

@@ -97,7 +97,8 @@
             (and
              output
              (not (zerop (length output)))
-             (not (string= output emacsvox-last-message))
+             ;; Prompt readers cache their full text, including padding.
+             (not (string= output (string-trim (or emacsvox-last-message ""))))
              (not (string-match ems--message-filter output)))
           (setq emacsvox-last-message output)
           (emacsvox-icon 'key)

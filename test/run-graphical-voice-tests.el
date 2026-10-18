@@ -47,10 +47,13 @@
         (require 'omnivox-espeak-variants-tests)
         (require 'omnivox-catalogue-tests)
         (require 'omnivox-library-tests)
+        (require 'emacsvox-input-tests)
         ;; Loading minibuffer speech advice must not send ERT's own reports
         ;; to an audio device after a test's delivery stubs have unwound.
         (setq-default emacsvox-speak-messages nil)
-        (dolist (function '(emacsvox-aural-capture-context
+        (dolist (function '(emacsvox--message-around
+                            emacsvox--advice-read-char-before
+                            emacsvox-aural-capture-context
                             emacsvox-aural-feedback-details--insert-voice-links
                             emacsvox-aural-feedback-details--insert-speech-action
                             emacsvox-aural-voice-editor-refresh
@@ -66,6 +69,7 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        emacsvox-reading-unit-prompt-is-spoken-once-on-main
                         emacsvox-aural-voice-bulk-graphical-browser-review-cancel-and-save
                         emacsvox-engine-controls-graphical-groups-search-and-focus
                         emacsvox-engine-controls-help-is-spoken-and-returns-to-parameter
@@ -104,8 +108,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 38)
-                                (= (ert-stats-completed stats) 38)
+          (setq status (if (and (= (ert-stats-total stats) 39)
+                                (= (ert-stats-completed stats) 39)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

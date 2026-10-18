@@ -69,6 +69,8 @@
 (ert-deftest emacsvox-reading-unit-prompt-is-spoken-once-on-main ()
   "Reading choices keep their full instructions and return the chosen extent."
   (dolist (unit '("buffer" "line" "paragraph" "page" "word" "sexp"))
+    ;; Isolate each unit's echo area, then exercise repeated reading prompts.
+    (let ((emacsvox-speak-messages nil)) (message nil))
     (dolist (choice '((?s . -1) (?r . 1) (?x . nil)))
       (let ((unread-command-events (list (car choice)))
             (emacsvox-speak-messages t)
@@ -81,7 +83,8 @@
                   ((symbol-function 'tts-notify)
                    (lambda (text &rest _) (push text notifications))))
           (should (equal (emacsvox-ask-how-to-speak unit t) (cdr choice))))
-        (should-not notifications)
+        (ert-info ((format "Reading %s with choice %c" unit (car choice)))
+          (should-not notifications))
         (should
          (equal speech
                 (list (format
