@@ -48,7 +48,7 @@
     (emacsvox-icon (if helm-mode 'on 'off))
     (message "Turned %s helm-mode" (if helm-mode "on" "off"))))
 
-(declare-function emacsvox-minibuffer-setup-hook "emacsvox-advice" nil)
+(declare-function emacsvox-minibuffer-setup-hook "emacsvox-advice-input" nil)
 
 (defun emacsvox-helm-before-initialize-hook ()
   "Remove emacsvox minibuffer setup hook."

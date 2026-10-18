@@ -19,7 +19,8 @@
 (let* ((root (expand-file-name "../" (file-name-directory load-file-name)))
        (compiled (equal (getenv "EMACSVOX_CORE_ADVICE_TEST_LOAD") "compiled"))
        (extension (if compiled ".elc" ".el"))
-       (modules '(("emacsvox-advice-completion" . emacsvox--completion-around)))
+       (modules '(("emacsvox-advice-completion" . emacsvox--completion-around)
+                  ("emacsvox-advice-input" . emacsvox-minibuffer-setup-hook)))
        (targets '(pcomplete completion-at-point read-event read-passwd--hide-password
                   y-or-n-p message timer-event-handler))
        (variables '(minibuffer-setup-hook minibuffer-exit-hook

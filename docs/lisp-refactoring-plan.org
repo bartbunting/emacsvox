@@ -390,6 +390,24 @@ All 296 facade registration forms retain their targets and order. Incremental
 compilation is warning-free; byte-code preflight, headers, normal compiled
 startup, generated reference and the documentation release check pass.
 
+Completion committed as =3fdf76974=.
+
+Prompt and password handlers, the unchanged key-reader generator, question cues
+and minibuffer setup/cleanup now live in =emacsvox-advice-input=. Password edit
+tracking, prompt caches and the pronunciation dictionary move with their
+consumers. Vertico keeps its existing ownership check. The facade still selects
+hooks and keys in their original positions; Helm's declaration names the new
+owner without changing its setup/teardown behavior.
+
+All 231 source and 230 applicable compiled cases pass. Graphical verification
+retains the 57-of-58 baseline, including the known duplicate reading prompt.
+All 296 registration forms retain their targets and order. New core modules
+compile without warnings; rebuilding the unchanged Helm behavior reports its
+existing =helm-buffer-get= declaration warning, also reproduced before the
+change. Normal compiled startup, explicit fresh core advice activation,
+byte-code preflight, headers, generated reference and the documentation release
+check pass.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
