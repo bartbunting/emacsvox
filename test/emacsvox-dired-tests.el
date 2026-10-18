@@ -76,7 +76,7 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/emacsvox-dired.el"
+        "../lisp/integrations/emacsvox-dired.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
   (load module nil nil))
 

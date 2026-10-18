@@ -11,7 +11,7 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/emacsvox-tetris.el"
+        "../lisp/integrations/emacsvox-tetris.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
   ;; Exercise source even when a compiled integration module exists.
   (load module nil nil))

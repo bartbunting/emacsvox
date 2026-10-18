@@ -4,7 +4,7 @@
 (require 'enriched)
 (require 'ert)
 (load
- (expand-file-name "../lisp/emacsvox-enriched.el"
+ (expand-file-name "../lisp/integrations/emacsvox-enriched.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

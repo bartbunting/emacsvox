@@ -697,29 +697,29 @@
 (ert-deftest emacsvox-voice-defaults-resolve-late-and-preserve-user-values ()
   "Integration defaults keep names and never overwrite existing choices."
   (dolist (entry
-           '(("emacsvox-calendar.el"
+           '(("integrations/emacsvox-calendar.el"
               emacsvox-calendar-mark-personality voice-bolden)
              ("emacsvox-eterm.el"
               emacsvox-eterm-highlight-personality voice-bolden)
              ("emacsvox-eterm.el"
               emacsvox-eterm-bold-personality voice-bolden)
-             ("emacsvox-eudc.el"
+             ("integrations/emacsvox-eudc.el"
               emacsvox-eudc-attribute-value-personality voice-animate)
-             ("emacsvox-forms.el"
+             ("integrations/emacsvox-forms.el"
               emacsvox-forms-ro-voice voice-annotate)
              ("emacsvox-hide.el"
               emacsvox-hidden-header-line-personality voice-annotate)
              ("emacsvox-speak.el"
               emacsvox-speak-paragraph-personality voice-animate)
-             ("emacsvox-speedbar.el"
+             ("integrations/emacsvox-speedbar.el"
               emacsvox-speedbar-button-personality voice-bolden)
-             ("emacsvox-speedbar.el"
+             ("integrations/emacsvox-speedbar.el"
               emacsvox-speedbar-selected-personality voice-animate)
-             ("emacsvox-speedbar.el"
+             ("integrations/emacsvox-speedbar.el"
               emacsvox-speedbar-directory-personality voice-bolden-medium)
-             ("emacsvox-speedbar.el"
+             ("integrations/emacsvox-speedbar.el"
               emacsvox-speedbar-highlight-personality voice-animate)
-             ("emacsvox-speedbar.el"
+             ("integrations/emacsvox-speedbar.el"
               emacsvox-speedbar-tag-personality voice-monotone-extra)))
     (pcase-let ((`(,file ,option ,personality) entry))
       (let ((form

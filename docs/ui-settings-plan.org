@@ -1796,7 +1796,7 @@ Muggle or a few cohesive files belongs to the implementation review. Coordinate
 paths with the separately planned Lisp directory reorganisation, without
 making that larger migration a prerequisite.
 
-Keep [[file:../lisp/emacsvox-hydra.el][Hydra speech support]] shared and independent
+Keep [[file:../lisp/integrations/emacsvox-hydra.el][Hydra speech support]] shared and independent
 of which Muggles are enabled. Disabling a Muggle must not disable speech for
 other Hydras. Audit entry/exit changes to hint verbosity and minor modes so
 temporary state does not leak between Muggles. Disabling must not undo edits

@@ -6,7 +6,7 @@
 (require 'package)
 (package-initialize)
 (require 'denote)
-(load (expand-file-name "../lisp/emacsvox-denote.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-denote.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

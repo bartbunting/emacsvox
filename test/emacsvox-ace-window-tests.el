@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'ace-window)
-(load (expand-file-name "../lisp/emacsvox-ace-window.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-ace-window.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

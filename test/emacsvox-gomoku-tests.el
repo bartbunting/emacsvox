@@ -5,7 +5,7 @@
 (require 'gomoku)
 (defvar emacsvox-last-message)
 (load
- (expand-file-name "../lisp/emacsvox-gomoku.el"
+ (expand-file-name "../lisp/integrations/emacsvox-gomoku.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

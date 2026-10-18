@@ -4,7 +4,7 @@
 (require 'desktop)
 (require 'ert)
 (load
- (expand-file-name "../lisp/emacsvox-desktop.el"
+ (expand-file-name "../lisp/integrations/emacsvox-desktop.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

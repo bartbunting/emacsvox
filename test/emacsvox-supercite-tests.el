@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'supercite)
 (load
- (expand-file-name "../lisp/emacsvox-supercite.el"
+ (expand-file-name "../lisp/integrations/emacsvox-supercite.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

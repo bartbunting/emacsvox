@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'sudoku)
-(load (expand-file-name "../lisp/emacsvox-sudoku.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-sudoku.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -5,7 +5,7 @@
 (require 'calc)
 (require 'calc-prog)
 (load
- (expand-file-name "../lisp/emacsvox-calc.el"
+ (expand-file-name "../lisp/integrations/emacsvox-calc.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

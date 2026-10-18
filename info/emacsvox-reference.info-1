@@ -7977,6 +7977,8 @@ appropriately named hook functions.
 ..................................
 
  -- Command: emacsvox-dbus-lock-screen
+     ‘C-, C-d’
+     ‘C-x @ a C-d’
 
      Lock screen using DBus.
 

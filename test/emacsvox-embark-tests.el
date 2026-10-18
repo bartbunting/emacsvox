@@ -6,7 +6,7 @@
 (require 'package)
 (package-initialize)
 (require 'embark)
-(load (expand-file-name "../lisp/emacsvox-embark.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-embark.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

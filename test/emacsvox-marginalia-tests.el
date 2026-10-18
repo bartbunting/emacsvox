@@ -6,7 +6,7 @@
 (require 'package)
 (package-initialize)
 (require 'marginalia)
-(load (expand-file-name "../lisp/emacsvox-marginalia.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-marginalia.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

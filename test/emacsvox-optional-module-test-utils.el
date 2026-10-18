@@ -7,6 +7,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'emacsvox-paths)
 
 (defconst emacsvox-optional-module-test--root-directory
   (expand-file-name
@@ -21,11 +22,16 @@ failure containing the child output when the child exits unsuccessfully."
   (let* ((emacs (expand-file-name invocation-name invocation-directory))
          (lisp-directory
           (expand-file-name "lisp" emacsvox-optional-module-test--root-directory))
-         (module-file (expand-file-name module lisp-directory))
+         (module-file
+          (or (locate-file module (emacsvox-paths--source-directories lisp-directory))
+              (error "Missing optional integration source: %s" module)))
          (arguments
           (append
            (list "-Q" "--batch" "-L" lisp-directory
-                 "--eval" "(setq load-prefer-newer t)")
+                 "--eval" "(setq load-prefer-newer t)"
+                 "-l" (expand-file-name "emacsvox-paths.el" lisp-directory)
+                 "--eval" (prin1-to-string
+                           `(emacsvox-paths--register ,lisp-directory)))
            (when before-form
              (list "--eval" (prin1-to-string before-form)))
            (list "-l" module-file)

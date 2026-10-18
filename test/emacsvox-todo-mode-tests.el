@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'todo-mode)
 (load
- (expand-file-name "../lisp/emacsvox-todo-mode.el"
+ (expand-file-name "../lisp/integrations/emacsvox-todo-mode.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

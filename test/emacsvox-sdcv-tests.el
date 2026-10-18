@@ -7,7 +7,7 @@
 (require 'sdcv)
 (cl-letf (((symbol-function 'shell-command-to-string)
            (lambda (&rest _) "[]")))
-  (load (expand-file-name "../lisp/emacsvox-sdcv.el"
+  (load (expand-file-name "../lisp/integrations/emacsvox-sdcv.el"
                           (file-name-directory
                            (or load-file-name buffer-file-name)))
         nil nil))

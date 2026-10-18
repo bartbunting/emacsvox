@@ -141,5 +141,51 @@
           (should-not (gethash "integrations/fixture" self-document-map)))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-self-document-isolated-load-finds-nested-dependencies ()
+  "Reference isolation retains declared directories even with preamble loaded."
+  (require 'bytecomp)
+  (let* ((root (make-temp-file "emacsvox-reference-dependencies-" t))
+         (self-document-lisp-directory (expand-file-name "lisp/" root))
+         (self-document-files nil)
+         (self-document-module-results nil)
+         (self-document-temporary-user-directory nil)
+         (self-document-declared-module-omissions nil)
+         (package-activated-list nil)
+         (emacsvox-use-icons nil)
+         (native-comp-jit-compilation nil)
+         (modules '("emacsvox-setup.elc" "integrations/ev-reference-adapter.elc"
+                    "core/ev-reference-dependency.elc")))
+    (unwind-protect
+        (progn
+          (dolist (directory '("etc" "lisp/core" "lisp/integrations"))
+            (make-directory (expand-file-name directory root) t))
+          (with-temp-file (expand-file-name "etc/lisp-directories" root)
+            (insert ".\ncore\nintegrations\n"))
+          (dolist (entry '(("core/ev-reference-dependency.el"
+                           . "(defun ev-reference-dependency () 'nested)\n(provide 'ev-reference-dependency)\n")
+                          ("integrations/ev-reference-adapter.el"
+                           . "(require 'ev-reference-dependency)\n(provide 'ev-reference-adapter)\n")
+                          ("emacsvox-setup.el" . "; Fixture bootstrap.\n")))
+            (let* ((source (expand-file-name (car entry) self-document-lisp-directory))
+                   (load-path (append (emacsvox-paths--source-directories
+                                       self-document-lisp-directory) load-path)))
+              (with-temp-file source (insert (cdr entry)))
+              (should (byte-compile-file source))))
+          ;; Compilation loaded the dependency.  The isolated loader must find
+          ;; it again when the adapter is encountered before its dependency.
+          (when (featurep 'ev-reference-dependency)
+            (unload-feature 'ev-reference-dependency t))
+          (cl-letf (((symbol-function 'self-document--manifest-files)
+                     (lambda () modules)))
+            (self-document-load-modules))
+          (should (featurep 'ev-reference-adapter))
+          (should (eq (ev-reference-dependency) 'nested))
+          (should (equal (symbol-file 'ev-reference-dependency 'defun)
+                         (expand-file-name "core/ev-reference-dependency.elc"
+                                           self-document-lisp-directory))))
+      (dolist (feature '(ev-reference-adapter ev-reference-dependency))
+        (when (featurep feature) (unload-feature feature t)))
+      (delete-directory root t))))
+
 (provide 'emacsvox-self-document-tests)
 ;;; emacsvox-self-document-tests.el ends here

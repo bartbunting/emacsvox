@@ -180,8 +180,8 @@ generator always skips the declared module instead of probing the host.")
           (file-name-as-directory
            (expand-file-name "../lisp" data-directory)))
          (load-path
-          (cons
-           self-document-lisp-directory
+          (append
+           (emacsvox-paths--source-directories self-document-lisp-directory)
            (cl-remove-if-not
             (lambda (directory)
               (and directory

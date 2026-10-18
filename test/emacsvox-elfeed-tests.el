@@ -6,7 +6,7 @@
 (package-initialize)
 (dolist (feature '(elfeed elfeed-db elfeed-search elfeed-show))
   (require feature))
-(load (expand-file-name "../lisp/emacsvox-elfeed.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-elfeed.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -171,150 +171,150 @@ emacsvox.elc \
 emacsvox-setup.elc
 
 CORE_OBJECTS =  \
-amixer.elc \
-emacsvox-2048.elc \
+integrations/amixer.elc \
+integrations/emacsvox-2048.elc \
 integrations/emacsvox-abc-mode.elc \
-emacsvox-ace-window.elc \
+integrations/emacsvox-ace-window.elc \
 integrations/emacsvox-add-log.elc \
-emacsvox-amark.elc \
+integrations/emacsvox-amark.elc \
 emacsvox-agent-shell-render.elc \
 emacsvox-agent-shell.elc \
-emacsvox-annotate.elc \
-emacsvox-arc.elc \
-emacsvox-avy.elc \
+integrations/emacsvox-annotate.elc \
+integrations/emacsvox-arc.elc \
+integrations/emacsvox-avy.elc \
 integrations/emacsvox-auctex.elc \
-emacsvox-bbdb.elc \
+integrations/emacsvox-bbdb.elc \
 integrations/emacsvox-bibtex.elc \
-emacsvox-bookmark.elc \
-emacsvox-bookshare.elc \
-emacsvox-browse-kill-ring.elc \
-emacsvox-bs.elc \
-emacsvox-buff-menu.elc \
+integrations/emacsvox-bookmark.elc \
+integrations/emacsvox-bookshare.elc \
+integrations/emacsvox-browse-kill-ring.elc \
+integrations/emacsvox-bs.elc \
+integrations/emacsvox-buff-menu.elc \
 integrations/emacsvox-c.elc \
-emacsvox-calc.elc \
-emacsvox-calculator.elc \
-emacsvox-calendar.elc \
-emacsvox-calibredb.elc \
-emacsvox-chess.elc \
+integrations/emacsvox-calc.elc \
+integrations/emacsvox-calculator.elc \
+integrations/emacsvox-calendar.elc \
+integrations/emacsvox-calibredb.elc \
+integrations/emacsvox-chess.elc \
 integrations/emacsvox-cider.elc \
 integrations/emacsvox-clojure.elc \
 integrations/emacsvox-cmuscheme.elc \
 integrations/emacsvox-combobulate.elc \
 emacsvox-comint.elc \
-emacsvox-company.elc \
+integrations/emacsvox-company.elc \
 integrations/emacsvox-compile.elc \
-emacsvox-consult.elc \
-emacsvox-corfu.elc \
+integrations/emacsvox-consult.elc \
+integrations/emacsvox-corfu.elc \
 integrations/emacsvox-cperl.elc \
-emacsvox-custom.elc \
-emacsvox-dbus.elc \
-emacsvox-deadgrep.elc \
-emacsvox-denote.elc \
+integrations/emacsvox-custom.elc \
+integrations/emacsvox-dbus.elc \
+integrations/emacsvox-deadgrep.elc \
+integrations/emacsvox-denote.elc \
 integrations/emacsvox-debugger.elc \
-emacsvox-desktop.elc \
-emacsvox-devdocs.elc \
-emacsvox-dictionary.elc \
+integrations/emacsvox-desktop.elc \
+integrations/emacsvox-devdocs.elc \
+integrations/emacsvox-dictionary.elc \
 integrations/emacsvox-diff-mode.elc \
-emacsvox-dired.elc \
+integrations/emacsvox-dired.elc \
 integrations/emacsvox-dumb-jump.elc \
 emacsvox-eat-core.elc \
 emacsvox-eat-input.elc \
 emacsvox-eat-review.elc \
 emacsvox-eat.elc \
-emacsvox-embark.elc \
-emacsvox-ebuku.elc \
+integrations/emacsvox-embark.elc \
+integrations/emacsvox-ebuku.elc \
 integrations/emacsvox-ediff.elc \
 integrations/emacsvox-eglot.elc \
-emacsvox-ein.elc \
-emacsvox-elfeed.elc \
+integrations/emacsvox-ein.elc \
+integrations/emacsvox-elfeed.elc \
 integrations/emacsvox-elisp-refs.elc \
-emacsvox-ellama.elc \
-emacsvox-elpher.elc \
+integrations/emacsvox-ellama.elc \
+integrations/emacsvox-elpher.elc \
 integrations/emacsvox-elpy.elc \
-emacsvox-emms.elc \
-emacsvox-empv.elc \
-emacsvox-enriched.elc \
-emacsvox-entertain.elc \
-emacsvox-enwc.elc \
-emacsvox-epa.elc \
-emacsvox-epub.elc \
-emacsvox-erc.elc \
+integrations/emacsvox-emms.elc \
+integrations/emacsvox-empv.elc \
+integrations/emacsvox-enriched.elc \
+integrations/emacsvox-entertain.elc \
+integrations/emacsvox-enwc.elc \
+integrations/emacsvox-epa.elc \
+integrations/emacsvox-epub.elc \
+integrations/emacsvox-erc.elc \
 emacsvox-eshell.elc \
 integrations/emacsvox-ess.elc \
-emacsvox-etable.elc \
+integrations/emacsvox-etable.elc \
 emacsvox-eterm.elc \
-emacsvox-eudc.elc \
-emacsvox-evil.elc \
+integrations/emacsvox-eudc.elc \
+integrations/emacsvox-evil.elc \
 emacsvox-eww.elc \
 emacsvox-extras.elc \
-emacsvox-exwm.elc \
-emacsvox-feeds.elc \
-emacsvox-ffap.elc \
-emacsvox-ffip.elc \
+integrations/emacsvox-exwm.elc \
+integrations/emacsvox-feeds.elc \
+integrations/emacsvox-ffap.elc \
+integrations/emacsvox-ffip.elc \
 emacsvox-filtertext.elc \
 integrations/emacsvox-flycheck.elc \
 integrations/emacsvox-flymake.elc \
-emacsvox-flyspell.elc \
+integrations/emacsvox-flyspell.elc \
 integrations/emacsvox-folding.elc \
 integrations/emacsvox-forge.elc \
-emacsvox-forms.elc \
+integrations/emacsvox-forms.elc \
 integrations/emacsvox-geiser.elc \
 integrations/emacsvox-gnuplot.elc \
 emacsvox-gnus.elc\
 integrations/emacsvox-go-mode.elc \
-emacsvox-gomoku.elc \
-emacsvox-gptel.elc \
-emacsvox-gptel.elc \
-emacsvox-google.elc \
+integrations/emacsvox-gomoku.elc \
+integrations/emacsvox-gptel.elc \
+integrations/emacsvox-gptel.elc \
+integrations/emacsvox-google.elc \
 emacsvox-gridtext.elc \
 integrations/emacsvox-gud.elc \
 integrations/emacsvox-haskell.elc \
-emacsvox-helm.elc \
-emacsvox-helpful.elc \
-emacsvox-hide-lines.elc  \
+integrations/emacsvox-helm.elc \
+integrations/emacsvox-helpful.elc \
+integrations/emacsvox-hide-lines.elc  \
 emacsvox-hide.elc \
 integrations/emacsvox-hideshow.elc \
-emacsvox-hydra.elc \
-emacsvox-ibuffer.elc \
-emacsvox-ido.elc \
+integrations/emacsvox-hydra.elc \
+integrations/emacsvox-ibuffer.elc \
+integrations/emacsvox-ido.elc \
 integrations/emacsvox-iedit.elc \
-emacsvox-info.elc\
-emacsvox-ispell.elc \
-emacsvox-ivy.elc \
-emacsvox-journalctl.elc \
+integrations/emacsvox-info.elc\
+integrations/emacsvox-ispell.elc \
+integrations/emacsvox-ivy.elc \
+integrations/emacsvox-journalctl.elc \
 integrations/emacsvox-js2.elc \
-emacsvox-kmacro.elc  \
-emacsvox-librivox.elc \
+integrations/emacsvox-kmacro.elc  \
+integrations/emacsvox-librivox.elc \
 integrations/emacsvox-lispy.elc \
 integrations/emacsvox-lua.elc \
-emacsvox-m-player.elc \
+integrations/emacsvox-m-player.elc \
 integrations/emacsvox-magit.elc \
 integrations/emacsvox-make-mode.elc \
-emacsvox-man.elc \
-emacsvox-marginalia.elc \
+integrations/emacsvox-man.elc \
+integrations/emacsvox-marginalia.elc \
 emacsvox-markdown.elc \
-emacsvox-maths.elc \
-emacsvox-message.elc \
-emacsvox-mines.elc \
-emacsvox-mu4e.elc \
-emacsvox-multiple-cursors.elc \
+integrations/emacsvox-maths.elc \
+integrations/emacsvox-message.elc \
+integrations/emacsvox-mines.elc \
+integrations/emacsvox-mu4e.elc \
+integrations/emacsvox-multiple-cursors.elc \
 emacsvox-muggles-core.elc \
 emacsvox-muggles-ui.elc \
-emacsvox-net-utils.elc \
-emacsvox-newsticker.elc \
+integrations/emacsvox-net-utils.elc \
+integrations/emacsvox-newsticker.elc \
 emacsvox-notmuch.elc \
-emacsvox-nov.elc \
+integrations/emacsvox-nov.elc \
 integrations/emacsvox-nxml.elc \
-emacsvox-ocr.elc \
+integrations/emacsvox-ocr.elc \
 emacsvox-org.elc \
 emacsvox-org-srs.elc \
-emacsvox-orgalist.elc \
-emacsvox-outline.elc \
-emacsvox-package.elc \
+integrations/emacsvox-orgalist.elc \
+integrations/emacsvox-outline.elc \
+integrations/emacsvox-package.elc \
 integrations/emacsvox-perl.elc \
-emacsvox-pipewire.elc \
-emacsvox-popup.elc \
-emacsvox-proced.elc \
+integrations/emacsvox-pipewire.elc \
+integrations/emacsvox-popup.elc \
+integrations/emacsvox-proced.elc \
 integrations/emacsvox-project.elc \
 integrations/emacsvox-projectile.elc \
 integrations/emacsvox-py.elc \
@@ -323,72 +323,72 @@ integrations/emacsvox-python.elc \
 integrations/emacsvox-racket.elc \
 integrations/emacsvox-re-builder.elc \
 integrations/emacsvox-reftex.elc \
-emacsvox-related.elc \
+integrations/emacsvox-related.elc \
 integrations/emacsvox-rg.elc \
-emacsvox-rmail.elc \
+integrations/emacsvox-rmail.elc \
 integrations/emacsvox-rpm-spec.elc \
 integrations/emacsvox-rst.elc \
 integrations/emacsvox-ruby.elc \
 integrations/emacsvox-rust-mode.elc \
 integrations/emacsvox-sage.elc \
-emacsvox-sdcv.elc \
-emacsvox-ses.elc \
+integrations/emacsvox-sdcv.elc \
+integrations/emacsvox-ses.elc \
 integrations/emacsvox-sgml-mode.elc \
 integrations/emacsvox-sh-script.elc \
 emacsvox-shr.elc \
 integrations/emacsvox-slime.elc \
 integrations/emacsvox-smartparens.elc \
-emacsvox-solitaire.elc \
-emacsvox-speedbar.elc \
+integrations/emacsvox-solitaire.elc \
+integrations/emacsvox-speedbar.elc \
 integrations/emacsvox-sql.elc \
-emacsvox-sudoku.elc \
-emacsvox-supercite.elc \
-emacsvox-syslog.elc \
-emacsvox-tab-bar.elc \
+integrations/emacsvox-sudoku.elc \
+integrations/emacsvox-supercite.elc \
+integrations/emacsvox-syslog.elc \
+integrations/emacsvox-tab-bar.elc \
 emacsvox-table-reader.elc \
 emacsvox-table-settings.elc \
 emacsvox-table-ui.elc \
 emacsvox-table.elc \
 emacsvox-tabulate.elc \
 emacsvox-tabulated-list.elc \
-emacsvox-tar.elc \
+integrations/emacsvox-tar.elc \
 integrations/emacsvox-tcl.elc \
 integrations/emacsvox-tempo.elc \
-emacsvox-tetris.elc \
+integrations/emacsvox-tetris.elc \
 integrations/emacsvox-texinfo.elc \
-emacsvox-todo-mode.elc \
+integrations/emacsvox-todo-mode.elc \
 emacsvox-transient.elc \
 integrations/emacsvox-treesit.elc \
-emacsvox-typo.elc \
-emacsvox-url-template.elc \
+integrations/emacsvox-typo.elc \
+integrations/emacsvox-url-template.elc \
 integrations/emacsvox-vdiff.elc \
-emacsvox-vertico.elc \
-emacsvox-view.elc \
+integrations/emacsvox-vertico.elc \
+integrations/emacsvox-view.elc \
 emacsvox-vterm.elc \
-emacsvox-wdired.elc \
-emacsvox-we.elc \
-emacsvox-websearch.elc \
-emacsvox-webspace.elc \
-emacsvox-widget.elc \
-emacsvox-which-key.elc \
-emacsvox-windmove.elc \
+integrations/emacsvox-wdired.elc \
+integrations/emacsvox-we.elc \
+integrations/emacsvox-websearch.elc \
+integrations/emacsvox-webspace.elc \
+integrations/emacsvox-widget.elc \
+integrations/emacsvox-which-key.elc \
+integrations/emacsvox-windmove.elc \
 emacsvox-windows-speech.elc \
 emacsvox-wizards.elc  \
-emacsvox-woman.elc \
-emacsvox-xkcd.elc \
+integrations/emacsvox-woman.elc \
+integrations/emacsvox-xkcd.elc \
 integrations/emacsvox-xref.elc \
 emacsvox-xslt.elc \
 integrations/emacsvox-yaml.elc \
 integrations/emacsvox-yasnippet.elc \
-ladspa.elc \
+integrations/ladspa.elc \
 soundscape.elc \
 sox-gen.elc \
-sox.elc
+integrations/sox.elc
 
 ADDON_OBJECTS = \
-emacsvox-nm.elc  dom-addons.elc light.elc pip.elc  \
-xbacklight.elc   tetris.elc   \
-omaps.elc g-utils.elc gweb.elc gmaps.elc gm-nnir.elc
+integrations/emacsvox-nm.elc  dom-addons.elc integrations/light.elc pip.elc  \
+integrations/xbacklight.elc   integrations/tetris.elc   \
+integrations/omaps.elc g-utils.elc gweb.elc integrations/gmaps.elc integrations/gm-nnir.elc
 
 OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 
@@ -405,7 +405,7 @@ documentation-modules:
 aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 
-emacsvox-bookshare.elc emacsvox-epub.elc emacsvox-eww.elc emacsvox-librivox.elc: dom-addons.elc
+integrations/emacsvox-bookshare.elc integrations/emacsvox-epub.elc emacsvox-eww.elc integrations/emacsvox-librivox.elc: dom-addons.elc
 
 emacsvox-preamble.elc: emacsvox-version.elc emacsvox-paths.elc
 
@@ -438,7 +438,7 @@ emacsvox-output-settings.elc: emacsvox-aural-menu.elc emacsvox-aural-spatial.elc
 emacsvox-line-cues.elc: emacsvox-tone-editor.elc emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc
 emacsvox-interaction.elc: emacsvox-aural-menu.elc
 emacsvox-tone-editor.elc: emacsvox-aural-menu.elc
-emacsvox-spelling.elc: emacsvox-aural-menu.elc emacsvox-flyspell.elc emacsvox-tone-editor.elc
+emacsvox-spelling.elc: emacsvox-aural-menu.elc integrations/emacsvox-flyspell.elc emacsvox-tone-editor.elc
 emacsvox-aural-voice-bulk.elc: emacsvox-aural-voice-editor.elc
 emacsvox-aural-voice-engine-controls.elc: emacsvox-aural-voice-editor.elc omnivox-parameters.elc
 emacsvox-aural-voice-context.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-editor.elc emacsvox-aural-tools.elc
@@ -557,10 +557,10 @@ emacsvox-version.elc emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
 emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 
 muggles: emacsvox-muggles.elc
-muggle-org-navigation: emacsvox-muggle-org-navigation.elc
-extra-muggles.elc: emacsvox-muggles-core.elc emacsvox-muggle-org-navigation.elc
+muggle-org-navigation: integrations/emacsvox-muggle-org-navigation.elc
+extra-muggles.elc: emacsvox-muggles-core.elc integrations/emacsvox-muggle-org-navigation.elc
 extra-muggles: extra-muggles.elc
-maths: emacsvox-maths.elc
+maths: integrations/emacsvox-maths.elc
 
 lint:
 	$(EMACS) $(BATCH) $(DEPS) --eval \

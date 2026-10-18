@@ -3,7 +3,7 @@
 (require 'cl-lib)
 (require 'ert)
 (load
- (expand-file-name "../lisp/emacsvox-entertain.el"
+ (expand-file-name "../lisp/integrations/emacsvox-entertain.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

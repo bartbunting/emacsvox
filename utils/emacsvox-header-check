@@ -39,10 +39,10 @@ revision_keyword="${dollar}Revision:"
 
 for file in $(git ls-files 'lisp/*.el'); do
     case $file in
-        lisp/emacsvox-nm.el|lisp/tetris.el)
+        lisp/integrations/emacsvox-nm.el|lisp/integrations/tetris.el)
             continue
             ;;
-        lisp/g-utils.el|lisp/gm-nnir.el|lisp/gmaps.el|lisp/gweb.el|lisp/omaps.el)
+        lisp/g-utils.el|lisp/integrations/gm-nnir.el|lisp/integrations/gmaps.el|lisp/gweb.el|lisp/integrations/omaps.el)
             expected_spdx='BSD-3-Clause'
             ;;
         *)
@@ -132,10 +132,10 @@ for file in $(git ls-files 'lisp/*.el'); do
     fi
 done
 
-require_fixed lisp/emacsvox-nm.el \
+require_fixed lisp/integrations/emacsvox-nm.el \
     'License: Public domain, use at own risk, no warranties of any kind.' \
     'its public-domain declaration'
-require_fixed lisp/tetris.el \
+require_fixed lisp/integrations/tetris.el \
     'either version 3 of the License, or' 'its GNU GPL version 3-or-later notice'
 
 if test "$failures" -ne 0; then

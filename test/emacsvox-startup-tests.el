@@ -220,7 +220,8 @@
                       (dolist (entry load-history)
                         (when (and (stringp (car entry))
                                    (file-in-directory-p (car entry) ,lisp))
-                          (let ((source (concat (file-name-base (car entry)) ".el")))
+                          (let ((source (concat (file-name-sans-extension
+                                                (file-relative-name (car entry) ,lisp)) ".el")))
                             (unless (member source emacsvox-setup--startup-sources)
                               (error "Startup dependency missing from guard: %s"
                                      source)))))
@@ -234,7 +235,9 @@
     (dolist (module '(omnivox-voices omnivox-remote emacsvox-advice
                      emacsvox-spelling emacsvox-tone-editor))
       (let* ((root (make-temp-file "emacsvox-startup-fallback-" t))
-             (source (expand-file-name (format "%s.el" module) root)))
+             (relative (cl-find (format "%s.el" module) emacsvox-setup--startup-sources
+                                :key #'file-name-nondirectory :test #'equal))
+             (source (expand-file-name relative root)))
         (unwind-protect
             (progn
               (copy-file (expand-file-name "lisp/emacsvox-setup.el"
@@ -245,6 +248,7 @@
               (with-temp-file (expand-file-name "emacsvox.el" root)
                 (prin1 `(require ',module) (current-buffer))
                 (insert "\n(provide 'emacsvox)\n"))
+              (make-directory (file-name-directory source) t)
               (with-temp-file source
                 (insert "(defun ev-startup-fixture () 'compiled)\n")
                 (prin1 `(provide ',module) (current-buffer)))
@@ -260,6 +264,7 @@
                 (let ((status
                        (call-process
                         emacs nil t nil "-Q" "--batch" "-L" root
+                        "-L" (file-name-directory source)
                         "--eval" "(setq load-prefer-newer nil)"
                         "-l" (expand-file-name "emacsvox-setup.el" root)
                         "--eval"

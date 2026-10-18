@@ -8,7 +8,7 @@
 (require 'flyspell)
 (require 'message)
 (load
- (expand-file-name "../lisp/emacsvox-flyspell.el"
+ (expand-file-name "../lisp/integrations/emacsvox-flyspell.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

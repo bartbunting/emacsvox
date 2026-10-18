@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'avy)
-(load (expand-file-name "../lisp/emacsvox-avy.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-avy.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

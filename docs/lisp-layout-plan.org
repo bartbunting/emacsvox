@@ -475,3 +475,23 @@ its affected move batch. No other active worktree is on master.
 60 focused test files pass 342 tests; two cases need graphical Emacs and remain
 outside this batch run. The build and fresh compiled checks are recorded at
 the final verification checkpoint below.
+
+** Application adapters
+
+121 application, navigation and external-tool sources move unchanged to
+=integrations/=. Licence exception paths follow Tetris, Network Manager and
+the Google client libraries without changing their notices. Optional-module
+and DOM fixtures now resolve the moved sources; startup inventory checks use
+relative paths, and relocated fixtures preserve the complete declared tree.
+
+The focused run passes 560 tests, skips one unavailable Mu4e case and retains
+the known baseline Corfu transaction failure. No new failure appears in this
+batch. The language/development checkpoint is committed as =5b4cbfa15=.
+
+The generated-reference loader also needed the declared directories in its
+private =load-path=. Its preamble was already loaded before isolation, so a
+later =require= did not restore them. A compiled adapter/dependency fixture
+now reproduces and guards this case; all eight reference tests pass.
+The application batch passes all 314 non-skipped compatibility cases on Emacs
+31.0.90, fresh compiled startup, all 325 library resolutions, headers and the
+documentation gate.

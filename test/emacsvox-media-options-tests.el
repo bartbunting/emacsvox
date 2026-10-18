@@ -14,7 +14,7 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/emacsvox-amark.el"
+        "../lisp/integrations/emacsvox-amark.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
   (load module nil nil))
 

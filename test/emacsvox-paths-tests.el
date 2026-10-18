@@ -98,10 +98,11 @@
       ;; Use the real core sources: the preamble intentionally loads the TTS
       ;; libraries after registering paths.  No installed checkout may fill in
       ;; missing dependencies or supply another copy of the fixture.
-      (dolist (file (directory-files
-                    (expand-file-name "lisp" emacsvox-paths-tests--root)
-                    t "\\.el\\'"))
-        (copy-file file (expand-file-name (file-name-nondirectory file) directory)))
+      (let ((original (expand-file-name "lisp/" emacsvox-paths-tests--root)))
+        (dolist (file (emacsvox-paths--files original ".el"))
+          (let ((target (expand-file-name (file-relative-name file original) directory)))
+            (make-directory (file-name-directory target) t)
+            (copy-file file target))))
       (with-temp-file source
         (insert ";;; Fixture -*- lexical-binding: t; -*-\n"
                 "(defun ev-layout-fixture () 'nested)\n"

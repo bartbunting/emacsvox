@@ -17,11 +17,11 @@
   "Emacsvox checkout root used by face-symbol tests.")
 
 (defconst emacsvox-test--face-symbol-source-files
-  '("lisp/emacsvox-bookshare.el"
-    "lisp/emacsvox-webspace.el"
-    "lisp/gmaps.el"
-    "lisp/ladspa.el"
-    "lisp/sox.el")
+  '("lisp/integrations/emacsvox-bookshare.el"
+    "lisp/integrations/emacsvox-webspace.el"
+    "lisp/integrations/gmaps.el"
+    "lisp/integrations/ladspa.el"
+    "lisp/integrations/sox.el")
   "Source files migrated from obsolete face-variable evaluation.")
 
 (defun emacsvox-test--has-unquoted-obsolete-face-p (file)

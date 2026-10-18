@@ -6,7 +6,7 @@
 (require 'emacsvox-optional-module-test-utils)
 (package-initialize)
 (require 'ebuku)
-(load (expand-file-name "../lisp/emacsvox-ebuku.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-ebuku.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

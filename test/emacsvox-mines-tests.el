@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'mines)
-(load (expand-file-name "../lisp/emacsvox-mines.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-mines.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

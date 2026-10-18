@@ -7,7 +7,7 @@
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
-(load (expand-file-name "../lisp/emacsvox-bbdb.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-bbdb.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

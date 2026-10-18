@@ -86,7 +86,7 @@ The note's search word and expected correction are checked in the example.
 These are source checks, not an interactive execution of the lessons.
 
 Dired navigation, destination feedback, marking, metadata keys and smart-open
-behaviour were inspected in =lisp/emacsvox-dired.el=. EWW navigation, link-map
+behaviour were inspected in =lisp/integrations/emacsvox-dired.el=. EWW navigation, link-map
 overrides, title-based buffer naming, history feedback, ebook marks and view
 restoration were inspected in =lisp/emacsvox-eww.el=. The focused EWW controls
 were checked in =lisp/emacsvox-settings-integrations.el= at the rebased head.

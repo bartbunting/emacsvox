@@ -6,7 +6,7 @@
 (require 'emacsvox-optional-module-test-utils)
 (package-initialize)
 (require 'empv)
-(load (expand-file-name "../lisp/emacsvox-empv.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-empv.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'eudc)
 (load
- (expand-file-name "../lisp/emacsvox-eudc.el"
+ (expand-file-name "../lisp/integrations/emacsvox-eudc.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

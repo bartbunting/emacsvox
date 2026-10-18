@@ -11,7 +11,7 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/emacsvox-etable.el"
+        "../lisp/integrations/emacsvox-etable.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
   ;; Exercise source even when a compiled integration module exists.
   (load module nil nil))

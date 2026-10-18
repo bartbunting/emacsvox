@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'orgalist)
-(load (expand-file-name "../lisp/emacsvox-orgalist.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-orgalist.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

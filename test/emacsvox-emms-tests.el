@@ -7,7 +7,7 @@
 (dolist (feature
          '(emms emms-browser emms-info emms-playlist-mode emms-streams))
   (require feature))
-(load (expand-file-name "../lisp/emacsvox-emms.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-emms.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

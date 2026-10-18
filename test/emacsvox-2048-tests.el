@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require '2048-game)
-(load (expand-file-name "../lisp/emacsvox-2048.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-2048.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

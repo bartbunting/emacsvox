@@ -6,7 +6,7 @@
 (package-initialize)
 (require 'xkcd)
 (require 'browse-url)
-(load (expand-file-name "../lisp/emacsvox-xkcd.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-xkcd.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -15,9 +15,9 @@
    (file-name-directory (or load-file-name buffer-file-name)))
   "Emacsvox checkout root used by reading DOM tests.")
 
-(dolist (module '("emacsvox-bookshare.el"
-                  "emacsvox-epub.el"
-                  "emacsvox-librivox.el"))
+(dolist (module '("integrations/emacsvox-bookshare.el"
+                  "integrations/emacsvox-epub.el"
+                  "integrations/emacsvox-librivox.el"))
   (load
    (expand-file-name
     module
@@ -25,10 +25,10 @@
    nil nil))
 
 (defconst emacsvox-test--reading-dom-source-files
-  '("lisp/emacsvox-bookshare.el"
-    "lisp/emacsvox-epub.el"
+  '("lisp/integrations/emacsvox-bookshare.el"
+    "lisp/integrations/emacsvox-epub.el"
     "lisp/emacsvox-eww.el"
-    "lisp/emacsvox-librivox.el")
+    "lisp/integrations/emacsvox-librivox.el")
   "Source files migrated from obsolete DOM text APIs.")
 
 (defun emacsvox-test--has-obsolete-dom-text-call-p (file)

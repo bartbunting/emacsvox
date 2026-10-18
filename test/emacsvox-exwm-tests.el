@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (mapc #'require '(exwm exwm-floating exwm-input exwm-layout exwm-workspace))
-(load (expand-file-name "../lisp/emacsvox-exwm.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-exwm.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -3,7 +3,7 @@
 ;;; Code:
 (require 'ert)
 (mapc #'require '(url url-cookie url-history url-http))
-(load (expand-file-name "../lisp/emacsvox-we.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-we.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

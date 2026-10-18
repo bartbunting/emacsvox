@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'vertico)
-(load (expand-file-name "../lisp/emacsvox-vertico.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-vertico.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 (require 'emacsvox-advice)

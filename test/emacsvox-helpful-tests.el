@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'helpful)
-(load (expand-file-name "../lisp/emacsvox-helpful.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-helpful.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

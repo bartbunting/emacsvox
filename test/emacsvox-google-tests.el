@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'cl-lib)
 (require 'gmaps)
-(load (expand-file-name "../lisp/emacsvox-google.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-google.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

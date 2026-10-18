@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'journalctl-mode)
-(load (expand-file-name "../lisp/emacsvox-journalctl.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-journalctl.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

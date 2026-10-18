@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'pipewire)
-(load (expand-file-name "../lisp/emacsvox-pipewire.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-pipewire.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

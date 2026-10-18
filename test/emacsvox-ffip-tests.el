@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'find-file-in-project)
-(load (expand-file-name "../lisp/emacsvox-ffip.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-ffip.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

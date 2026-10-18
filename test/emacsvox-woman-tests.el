@@ -5,7 +5,7 @@
 (require 'woman)
 (require 'emacsvox-man)
 (load
- (expand-file-name "../lisp/emacsvox-woman.el"
+ (expand-file-name "../lisp/integrations/emacsvox-woman.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

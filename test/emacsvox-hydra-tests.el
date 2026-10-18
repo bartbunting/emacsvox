@@ -9,7 +9,7 @@
 
 (load
  (expand-file-name
-  "../lisp/emacsvox-hydra.el"
+  "../lisp/integrations/emacsvox-hydra.el"
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

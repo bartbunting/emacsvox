@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'hide-lines)
-(load (expand-file-name "../lisp/emacsvox-hide-lines.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-hide-lines.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -94,7 +94,7 @@ agent is busy. See the [[file:manual/chapters/agent-shell.org][maintained Agent 
 - [[file:../lisp/emacsvox-eww.el][EWW]] has its own DOM-based cell and row commands on Meta-arrows and can open
   a table in the separate table browser. Its current implementation explicitly
   limits support to plain, non-nested tables; merged-cell handling needs review.
-- [[file:../lisp/emacsvox-etable.el][table.el support]] and [[file:../lisp/emacsvox-ses.el][SES spreadsheet support]] are additional adapters to
+- [[file:../lisp/integrations/emacsvox-etable.el][table.el support]] and [[file:../lisp/integrations/emacsvox-ses.el][SES spreadsheet support]] are additional adapters to
   inventory before claiming coverage across Emacsvox. Their editing and formula
   semantics must remain available.
 

@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'ses)
 (load
- (expand-file-name "../lisp/emacsvox-ses.el"
+ (expand-file-name "../lisp/integrations/emacsvox-ses.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

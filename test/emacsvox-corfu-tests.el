@@ -7,7 +7,7 @@
 (require 'corfu)
 (require 'shell)
 (require 'emacsvox-advice)
-(load (expand-file-name "../lisp/emacsvox-corfu.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-corfu.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

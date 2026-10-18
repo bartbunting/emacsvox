@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'enwc)
-(load (expand-file-name "../lisp/emacsvox-enwc.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-enwc.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

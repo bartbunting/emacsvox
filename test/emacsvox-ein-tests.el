@@ -8,7 +8,7 @@
          '(ein ein-cell ein-classes ein-notebook ein-notebooklist
                ein-pytools ein-traceback ein-worksheet))
   (require feature))
-(load (expand-file-name "../lisp/emacsvox-ein.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-ein.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

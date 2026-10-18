@@ -12,7 +12,7 @@
 (defconst emacsvox-muggles-test--suffix
   (if (equal (getenv "EMACSVOX_MUGGLES_TEST_LOAD") "compiled") ".elc" ".el"))
 (dolist (entry '(("emacsvox-muggles-core" . emacsvox-muggles-enable)
-                 ("emacsvox-muggle-org-navigation" . emacsvox-muggle-org-navigation--begin)))
+                 ("integrations/emacsvox-muggle-org-navigation" . emacsvox-muggle-org-navigation--begin)))
   (let ((file (expand-file-name (concat (car entry) emacsvox-muggles-test--suffix)
                                 emacsvox-lisp-directory)))
     (load file nil nil t)

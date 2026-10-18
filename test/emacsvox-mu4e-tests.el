@@ -7,10 +7,10 @@
 (defconst emacsvox-mu4e-test--available (require 'mu4e nil t)
   "Non-nil when the optional Mu4e system package is installed.")
 
-(load (expand-file-name "../lisp/emacsvox-message.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-message.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
-(load (expand-file-name "../lisp/emacsvox-mu4e.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-mu4e.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

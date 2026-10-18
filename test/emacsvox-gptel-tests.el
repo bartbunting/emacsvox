@@ -7,7 +7,7 @@
 (package-initialize)
 (require 'gptel)
 (require 'gptel-transient)
-(load (expand-file-name "../lisp/emacsvox-gptel.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-gptel.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

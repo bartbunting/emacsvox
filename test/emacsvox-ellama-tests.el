@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'ellama)
-(load (expand-file-name "../lisp/emacsvox-ellama.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-ellama.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

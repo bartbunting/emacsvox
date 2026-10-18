@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'multiple-cursors)
-(load (expand-file-name "../lisp/emacsvox-multiple-cursors.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-multiple-cursors.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

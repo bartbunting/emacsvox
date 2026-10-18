@@ -9,7 +9,7 @@
 
 (load
  (expand-file-name
-  "../lisp/emacsvox-browse-kill-ring.el"
+  "../lisp/integrations/emacsvox-browse-kill-ring.el"
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

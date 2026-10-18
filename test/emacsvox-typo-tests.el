@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'typo)
-(load (expand-file-name "../lisp/emacsvox-typo.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-typo.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

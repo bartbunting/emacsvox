@@ -6,7 +6,7 @@
 (require 'package)
 (package-initialize)
 (require 'preview)
-(load (expand-file-name "../lisp/emacsvox-maths.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-maths.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

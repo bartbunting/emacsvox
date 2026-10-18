@@ -55,15 +55,15 @@ the inter-dependencies among some of the core Emacs modules.
 
     * lisp/emacspeak-autoload.el (dtk-quiet): Declare as dynbound.
 
-    * lisp/gm-nnir.el:
+    * lisp/integrations/gm-nnir.el:
     * lisp/plain-voices.el:
     * lisp/outloud-voices.el:
     * lisp/mac-voices.el:
     * lisp/espeak-voices.el:
     * lisp/dectalk-voices.el:
-    * lisp/amixer.el: Require `emacspeak-preamble`.
+    * lisp/integrations/amixer.el: Require `emacspeak-preamble`.
 
-    * lisp/ladspa.el, lisp/sox.el: Use `kbd` so it works even `ems-kbd` is
+    * lisp/integrations/ladspa.el, lisp/integrations/sox.el: Use `kbd` so it works even `ems-kbd` is
     not yet defined.
 
     * lisp/emacspeak-xslt.el: Don't autoload variables whose value depends
