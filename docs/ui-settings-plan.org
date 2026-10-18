@@ -3524,9 +3524,13 @@ and compiled code; existing playback handoff checks retain their baseline.
 The Lisp refactoring plan records commits and build checks. Listening acceptance
 remains separate, and the running personal session was not reloaded.
 
-Core completion feedback now lives in =emacsvox-advice-completion=. Advice,
-face maps and keys retain their original installation order. The Lisp refactoring
-plan records the source, compiled and graphical checks; listening remains open.
+Core completion feedback now lives in =emacsvox-advice-completion=, prompt and
+minibuffer interaction in =emacsvox-advice-input=, and message/error presentation
+in =emacsvox-advice-messages=. Advice, hooks, face maps and keys retain their
+original installation order. Message filter settings and password feedback are
+unchanged. All 231 source and 230 applicable compiled cases pass; the graphical
+run retains its 57-of-58 baseline. The Lisp refactoring plan records commits,
+checks and the source-only scrolling fixture. Listening remains open.
 
 - [ ] Investigate duplicate reading-choice prompt speech in graphical Emacs.
   The isolated =emacsvox-reading-unit-prompt-is-spoken-once-on-main= case

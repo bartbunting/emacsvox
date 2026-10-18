@@ -408,6 +408,23 @@ change. Normal compiled startup, explicit fresh core advice activation,
 byte-code preflight, headers, generated reference and the documentation release
 check pass.
 
+Input interaction committed as =c4c400700=.
+
+Message filtering, duplicate suppression, progress, Eldoc and error presentation
+now live in =emacsvox-advice-messages=. The existing caches, filter option and
+compatibility error state move with their consumers. Handler definitions are
+unchanged apart from one comment's trailing whitespace. The facade retains
+message/timer advice, Eldoc registration and command-error handler selection.
+
+All 231 source and 230 applicable compiled cases pass. Graphical verification
+retains the 57-of-58 baseline and its duplicate reading prompt. All 296
+registration forms retain their targets and order. Fresh compiled setup and
+normal core advice activation pass without starting speech processes. The
+final incremental build is warning-free; byte-code preflight, headers, generated
+reference and the documentation release check pass. The facade falls from
+3641 to 3100 lines; completion has 242 lines, input 230 and messages 221.
+The personal session remains unchanged, and listening acceptance is separate.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -422,10 +439,11 @@ and comments; extracted modules retain named authors and copyright holders.
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
 | emacsvox-speak.el | 3781 | 3550 |
+| emacsvox-advice.el | 3641 | 3100 |
 
 The original extraction pass, generic voice API, Agent Shell, Omnivox
-inventory/discovery and tracked-reading follow-ups are complete. Broad core
-utilities remain separate work, as scoped above. Further Agent Shell extraction should follow a concrete responsibility
+inventory/discovery, tracked-reading and core completion/input/message advice
+follow-ups are complete. Remaining broad core utilities stay separate work. Further Agent Shell extraction should follow a concrete responsibility
 problem rather than a target line count.
 
 * TTS lifecycle boundary
