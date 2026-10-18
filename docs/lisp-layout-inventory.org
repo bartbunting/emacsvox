@@ -5,7 +5,8 @@
 This is the migration review snapshot for all 330 tracked Lisp sources at
 the infrastructure checkpoint. The build inventory remains =lisp/Makefile=;
 no tool reads this report. The [[file:lisp-layout-plan.org][migration plan]] records ownership decisions,
-path-sensitive corrections and verification.
+path-sensitive corrections and verification. The completed tree was reconciled
+against every allocated path on 2026-10-18.
 
 The tables record old/new paths, literal feature declarations and dependencies
 found by reading complete Lisp forms without evaluating them. Requirements

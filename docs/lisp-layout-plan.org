@@ -4,11 +4,12 @@
 
 * Status and scope
 
-Implementation authorised on 2026-10-18. [[file:adr/0029-lisp-source-layout.org][ADR 0029]] accepts the directory
-and bootstrap contract. Nested-path infrastructure is implemented, and the
-three pilot integrations have moved to =lisp/integrations/=. These two slices
-pass their focused checks and native lifecycle acceptance and are committed as
-=01784f036=. The remaining migration is authorised in reviewed batches.
+Migration completed on 2026-10-18. [[file:adr/0029-lisp-source-layout.org][ADR 0029]] defines the directory
+and bootstrap contract. All 330 tracked Lisp sources match the reviewed
+[[file:lisp-layout-inventory.org][allocation inventory]]. Infrastructure, integrations, UI, shared services
+and the final tooling corrections are committed in separate checkpoints.
+Build, installation and compatibility results are recorded below; the known
+baseline suite failures and unperformed listening checks remain explicit.
 
 The aim is to make related code easier to find and ownership easier to
 understand as Emacsvox grows. Preserve behaviour, filenames, provided
@@ -522,7 +523,7 @@ are preserved, with consumers and test fixtures following their new paths.
 The tracked inventory reconciles exactly: seven root sources, 19 core,
 31 aural, 21 speech, five voices, 43 UI and 204 integration sources. All 330
 sources are accounted for, including the five outside ordinary compilation.
-Final cross-platform and complete-suite verification is in progress.
+Cross-platform and complete-suite results are recorded below.
 
 ** Complete-tree source and compatibility checks
 
@@ -549,7 +550,7 @@ cases with two skips; compiled aural parity and all 137 compiled Notmuch cases
 pass. All 78 selected graphical settings/editor checks pass again after the
 shared-service moves. References and manuals are regenerated, the accepted
 Info node topology is preserved, and the documentation gate passes. Native
-Windows lifecycle verification is the remaining acceptance checkpoint.
+Windows lifecycle acceptance is recorded below.
 
 ** Native provenance follow-up
 
@@ -568,3 +569,34 @@ audit suite now passes 12 cases; only its known stale-reference check fails.
 =make aural-audit= executes fully and reports that same baseline discrepancy.
 Native provenance additionally matches all 329 shipped Lisp source hashes in
 the complete staged Windows payload; the source template is not a runtime file.
+
+** Final native acceptance and completion
+
+Native Windows Emacs 31.1 built the complete layout from source. The isolated
+Setup fixture passes initial installation, shortcut diagnostics, busy-process
+refusal, repair, failed-activation recovery, upgrade and uninstall. Both the
+initial and upgraded builds resolve all 325 compiled libraries and load fresh
+setup without starting speech processes or eagerly loading optional packages.
+The test profile and voice data survive repair, upgrade and uninstall. The
+normal Windows installation and its shortcuts remain untouched.
+
+The fixture matches all 329 shipped Lisp sources, the directory registry,
+Make inventory and native builder in the completed migration. The later
+provenance helper has separate native fixture and full-payload hash coverage.
+The exported lifecycle result records =Passed: true= and =UpgradeRequested:
+true=. Audio checking and the separate intentionally broken configuration
+rollback fixture were not run; failed activation was tested.
+Graphical editor acceptance is covered by the separate Emacs/Xvfb checks.
+Logs are retained under
+=/mnt/c/Users/bart/AppData/Local/Temp/emacsvox-layout-lifecycle-complete/logs/=.
+
+All implementation slices are complete. The stable setup entry point and
+personal configuration require no change. Start a fresh Emacs to use the new
+layout; the selected local byte-code is rebuilt and current. No running user
+Emacs was reloaded, and no branch, release or documentation was published.
+
+Implementation commits are =01784f036= (infrastructure and pilot),
+=5b4cbfa15= (language adapters), =1c35a055a= (application adapters),
+=1b73479de= (workflow adapters), =55cd59073= (UI), =ad67a0dde= (shared
+services), =834596d0e= (native provenance) and =fd6680940= (standalone audit).
+The independent speech-menu commit =5fecf6210= is preserved.
