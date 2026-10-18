@@ -510,3 +510,13 @@ Markdown blank-line-tone failures. The application checkpoint is committed
 as =1c35a055a=. A concurrent speech-menu commit, =5fecf6210=, is retained;
 subsequent UI moves use those updated sources. Before moving UI, 78 selected
 graphical menu/editor tests pass against current compiled production modules.
+
+** Settings and editors
+
+43 UI sources move unchanged, preserving the speech-menu changes in
+=5fecf6210=. All 78 selected graphical checks pass against compiled modules
+before and after the move. The focused source run passes 1,352 tests, skips
+168 and reports nine failures. A pre-move snapshot reproduces the same nine:
+four known suite failures and five Muggles failures in this combined test
+order. Fresh compiled setup, all 325 library resolutions, the full rebuild
+and the documentation gate pass. No live profile was reloaded.

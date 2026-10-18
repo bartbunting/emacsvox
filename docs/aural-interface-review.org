@@ -90,12 +90,12 @@ editor. Palette copies must duplicate local choice ownership correctly, retain
 individual tuning, and state whether the result is independent or inherits.
 No command should collect several answers before rejecting the selected format.
 
-Evidence: [[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes-create][palette creation]],
-[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--copy][palette copying]],
-[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palette-previews-new][voice creation]],
-[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--install-entry-definition][definition-only guard]],
-[[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor--destination][save destination]] and
-[[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-keep-experiment][experiment destination]].
+Evidence: [[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes-create][palette creation]],
+[[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--copy][palette copying]],
+[[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palette-previews-new][voice creation]],
+[[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--install-entry-definition][definition-only guard]],
+[[file:../lisp/ui/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor--destination][save destination]] and
+[[file:../lisp/ui/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-keep-experiment][experiment destination]].
 
 ** F2 — High: Workbench advertises a superseded editing workflow
 
@@ -117,10 +117,10 @@ once their current replacements cover the useful operations. Keep engine order,
 engine disablement, health and global fallback controls: those are still active
 workstation responsibilities.
 
-Evidence: [[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-help][help]],
-[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--replace-binding][owned-voice guard]],
-[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--action-applicable-p][action applicability]],
-[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-tune][current editing route]].
+Evidence: [[file:../lisp/ui/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-help][help]],
+[[file:../lisp/ui/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--replace-binding][owned-voice guard]],
+[[file:../lisp/ui/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--action-applicable-p][action applicability]],
+[[file:../lisp/ui/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-tune][current editing route]].
 
 ** F3 — High: the voice list does not explain all voices that can be heard
 
@@ -152,11 +152,11 @@ guaranteed implicit lookup of every missing name in =acss-default=. The ordinary
 identically. Alias lookup and personality compilation must be tested explicitly;
 the UI must not promise that every deletion restores an equivalent voice.
 
-Evidence: [[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--preview-entries][listed entries]],
-[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--delete-voice][deletion fallback]],
+Evidence: [[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--preview-entries][listed entries]],
+[[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--delete-voice][deletion fallback]],
 [[file:../lisp/emacsvox-aural-voice-editing.el::(defun emacsvox-aural-voice-editing--snapshot][editor lookup]],
 [[file:../lisp/emacsvox-aural-compiler.el::(defun emacsvox-aural-compile-voice-style][compiler resolution]],
-[[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-details][existing ownership details]].
+[[file:../lisp/ui/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-details][existing ownership details]].
 
 ** F4 — Medium: Parent offers choices that the data model rejects
 
@@ -178,7 +178,7 @@ cycles before presenting a parent as selectable. Explain the impact of changing
 a parent and of editing an inherited voice. Do not change =bart='s parent or
 sound as an incidental review cleanup.
 
-Evidence: [[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--parent-candidates][parent choices]],
+Evidence: [[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--parent-candidates][parent choices]],
 [[file:../lisp/emacsvox-aural-resources.el::(defun emacsvox-aural-effective-voice-entries][inheritance validation]],
 [[file:voice-editor-data-contract.org::*Pure resolution and alias rules][alias and resolution contract]],
 [[file:voice-editor-data-contract.org::*Saved formats][current data contract]].
@@ -201,10 +201,10 @@ Keep stopping previews on navigation, boundaries without wrapping, retained
 selection and predictable return positions. Give every manager the same contract
 and test it through its actual arrow bindings.
 
-Evidence: [[file:../lisp/emacsvox-aural-ui.el::(defun emacsvox-aural-ui-move-row][shared movement]],
-[[file:../lisp/emacsvox-aural-sound-packs.el::(define-derived-mode emacsvox-aural-sound-packs-mode][Sound Packs]],
-[[file:../lisp/emacsvox-aural-profiles.el::(define-derived-mode emacsvox-aural-profiles-mode][Profiles]],
-[[file:../lisp/emacsvox-aural-overrides.el::(define-derived-mode emacsvox-aural-overrides-mode][Overrides]].
+Evidence: [[file:../lisp/ui/emacsvox-aural-ui.el::(defun emacsvox-aural-ui-move-row][shared movement]],
+[[file:../lisp/ui/emacsvox-aural-sound-packs.el::(define-derived-mode emacsvox-aural-sound-packs-mode][Sound Packs]],
+[[file:../lisp/ui/emacsvox-aural-profiles.el::(define-derived-mode emacsvox-aural-profiles-mode][Profiles]],
+[[file:../lisp/ui/emacsvox-aural-overrides.el::(define-derived-mode emacsvox-aural-overrides-mode][Overrides]].
 
 ** F6 — Medium: saved data, current selection and restart behavior are too separate
 
@@ -232,11 +232,11 @@ fields affected. Avoid silently capturing unrelated settings. Describe profiles
 as saved selections; offer an independent palette copy or explicit checkpoint
 when the user wants a recoverable snapshot of voice definitions.
 
-Evidence: [[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-details][restart guidance]],
+Evidence: [[file:../lisp/ui/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-details][restart guidance]],
 [[file:../lisp/emacsvox-aural-schemes.el::(defun emacsvox-aural-select-voice-palette][palette selection]],
 [[file:../lisp/emacsvox-aural-profile-service.el::(defun emacsvox-aural-capture-profile-data][profile capture]],
 [[file:../lisp/emacsvox-aural-profile-service.el::(defun emacsvox-aural-profile-differences][profile differences]],
-[[file:../lisp/emacsvox-aural-profiles.el::(defun emacsvox-aural-profiles-activate][profile application]].
+[[file:../lisp/ui/emacsvox-aural-profiles.el::(defun emacsvox-aural-profiles-activate][profile application]].
 
 ** F7 — Medium: default tables spend attention on implementation details
 
@@ -262,9 +262,9 @@ routing”, “compatibility baseline” and “adapter” should leave the ordi
 as the old model is retired. Keep meaningful distinctions such as requested,
 available, applied and last played; those protect users from misleading results.
 
-Evidence: [[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--format][Workbench columns]],
-[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--row][palette rows]],
-[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palette-previews--row][voice summaries]].
+Evidence: [[file:../lisp/ui/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--format][Workbench columns]],
+[[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--row][palette rows]],
+[[file:../lisp/ui/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palette-previews--row][voice summaries]].
 
 ** F8 — Medium: everyday output controls need a clearer destination
 
@@ -293,10 +293,10 @@ optional Presentation Option. Every supported configuration should leave control
 state discoverable without guessing; this is a walkthrough question, not a
 claimed reproduced playback defect.
 
-Evidence: [[file:../lisp/emacsvox-aural-home.el::(defun emacsvox-aural-home--all-entries][Home actions]],
+Evidence: [[file:../lisp/ui/emacsvox-aural-home.el::(defun emacsvox-aural-home--all-entries][Home actions]],
 [[file:../lisp/tts-speak.el::(defcustom tts-notification-device][notification choices]],
 [[file:../lisp/omnivox-voices.el::(defcustom omnivox-global-default-selector][global fallback setting]],
-[[file:../lisp/emacsvox-aural-ui.el::(defun emacsvox-aural-ui--expansion-text][panel state metadata]].
+[[file:../lisp/ui/emacsvox-aural-ui.el::(defun emacsvox-aural-ui--expansion-text][panel state metadata]].
 
 * Missing tools, without adding another control center
 
@@ -316,8 +316,8 @@ Existing sound-pack editing is metadata editing, not a complete asset-authoring
 workflow; the current “edit sound pack” wording should reflect that.
 
 Evidence: [[file:../lisp/emacsvox-aural-voice-data.el::(defun emacsvox-aural-voice-data--portable-export][portable export service]],
-[[file:../lisp/emacsvox-aural-sound-packs.el::(defun emacsvox-aural-sound-packs-edit-manifest][sound-pack editing]],
-[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-replace-engine][old bulk route operation]].
+[[file:../lisp/ui/emacsvox-aural-sound-packs.el::(defun emacsvox-aural-sound-packs-edit-manifest][sound-pack editing]],
+[[file:../lisp/ui/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-replace-engine][old bulk route operation]].
 
 * What to remove, and what to keep
 

@@ -67,8 +67,8 @@ omnivox-parameters-codec.elc \
 omnivox-parameters.elc \
 omnivox-native-codec.elc \
 omnivox-library-apply.elc \
-omnivox-library.elc \
-omnivox-catalogue.elc \
+ui/omnivox-library.elc \
+ui/omnivox-catalogue.elc \
 omnivox-preview.elc \
 omnivox-voices.elc
 
@@ -79,10 +79,10 @@ emacsvox-preamble.elc \
 tts-queue-state.elc \
 omnivox-remote.elc \
 omnivox-engine-settings.elc \
-omnivox-engine-configuration.elc \
-omnivox-punctuation.elc \
+ui/omnivox-engine-configuration.elc \
+ui/omnivox-punctuation.elc \
 omnivox-punctuation-profiles.elc \
-omnivox-espeak-variants.elc \
+ui/omnivox-espeak-variants.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)
 
@@ -104,21 +104,21 @@ emacsvox-aural-voice-data.elc \
 emacsvox-aural-voice-runtime.elc \
 emacsvox-aural-voice-drafts.elc \
 emacsvox-aural-voice-editing.elc \
-emacsvox-aural-voice-editor.elc \
-emacsvox-aural-voice-menu.elc \
-emacsvox-capitalization.elc \
-emacsvox-interaction.elc \
-emacsvox-spelling.elc \
-emacsvox-tone-editor.elc \
-emacsvox-line-cues.elc \
-emacsvox-output-settings.elc \
-emacsvox-settings.elc \
-emacsvox-settings-workflows.elc \
-emacsvox-settings-integrations.elc \
-emacsvox-settings-changes.elc \
-emacsvox-aural-voice-bulk.elc \
-emacsvox-aural-voice-engine-controls.elc \
-emacsvox-aural-voice-context.elc \
+ui/emacsvox-aural-voice-editor.elc \
+ui/emacsvox-aural-voice-menu.elc \
+ui/emacsvox-capitalization.elc \
+ui/emacsvox-interaction.elc \
+ui/emacsvox-spelling.elc \
+ui/emacsvox-tone-editor.elc \
+ui/emacsvox-line-cues.elc \
+ui/emacsvox-output-settings.elc \
+ui/emacsvox-settings.elc \
+ui/emacsvox-settings-workflows.elc \
+ui/emacsvox-settings-integrations.elc \
+ui/emacsvox-settings-changes.elc \
+ui/emacsvox-aural-voice-bulk.elc \
+ui/emacsvox-aural-voice-engine-controls.elc \
+ui/emacsvox-aural-voice-context.elc \
 emacsvox-aural-profile-service.elc \
 emacsvox-aural-compatibility-voice.elc \
 emacsvox-aural-providers.elc \
@@ -132,40 +132,40 @@ emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc \
 emacsvox-aural-replay.elc \
 emacsvox-aural-validation.elc \
-emacsvox-aural-ui.elc \
+ui/emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc \
-emacsvox-aural-semantics.elc \
+ui/emacsvox-aural-semantics.elc \
 emacsvox-aural-explanation.elc \
 emacsvox-aural-tools.elc \
-emacsvox-aural-recent-feedback.elc \
-emacsvox-aural-feedback-details.elc \
-emacsvox-aural-feature-fragments.elc \
-emacsvox-omnivox-components.elc \
-emacsvox-aural-home.elc \
-emacsvox-aural-editor.elc \
-emacsvox-aural-overrides.elc \
-emacsvox-aural-doctor.elc \
-emacsvox-aural-profiles.elc \
-emacsvox-aural-voice-palettes.elc \
-emacsvox-aural-voice-workbench.elc \
-emacsvox-aural-change-feedback.elc \
+ui/emacsvox-aural-recent-feedback.elc \
+ui/emacsvox-aural-feedback-details.elc \
+ui/emacsvox-aural-feature-fragments.elc \
+ui/emacsvox-omnivox-components.elc \
+ui/emacsvox-aural-home.elc \
+ui/emacsvox-aural-editor.elc \
+ui/emacsvox-aural-overrides.elc \
+ui/emacsvox-aural-doctor.elc \
+ui/emacsvox-aural-profiles.elc \
+ui/emacsvox-aural-voice-palettes.elc \
+ui/emacsvox-aural-voice-workbench.elc \
+ui/emacsvox-aural-change-feedback.elc \
 emacsvox-aural-provider-org.elc \
 emacsvox-aural-provider-workflows.elc \
 emacsvox-aural-provider-org-srs.elc \
 emacsvox-aural-provider-markdown.elc \
 emacsvox-aural-provider-notmuch.elc \
 emacsvox-sounds.elc \
-emacsvox-aural-sound-packs.elc \
-emacsvox-sound-library.elc
+ui/emacsvox-aural-sound-packs.elc \
+ui/emacsvox-sound-library.elc
 
 SPEAK_OBJECTS =   \
 emacsvox-pronounce.elc \
 emacsvox-speak.elc  \
 emacsvox-advice.elc\
 emacsvox-keymap.elc\
-emacsvox-indentation.elc\
-emacsvox-aural-menu.elc\
-emacsvox-welcome.elc\
+ui/emacsvox-indentation.elc\
+ui/emacsvox-aural-menu.elc\
+ui/emacsvox-welcome.elc\
 $(AURAL_OBJECTS) \
 emacsvox.elc \
 emacsvox-setup.elc
@@ -299,7 +299,7 @@ integrations/emacsvox-mines.elc \
 integrations/emacsvox-mu4e.elc \
 integrations/emacsvox-multiple-cursors.elc \
 emacsvox-muggles-core.elc \
-emacsvox-muggles-ui.elc \
+ui/emacsvox-muggles-ui.elc \
 integrations/emacsvox-net-utils.elc \
 integrations/emacsvox-newsticker.elc \
 integrations/emacsvox-notmuch.elc \
@@ -346,7 +346,7 @@ integrations/emacsvox-supercite.elc \
 integrations/emacsvox-syslog.elc \
 integrations/emacsvox-tab-bar.elc \
 emacsvox-table-reader.elc \
-emacsvox-table-settings.elc \
+ui/emacsvox-table-settings.elc \
 emacsvox-table-ui.elc \
 emacsvox-table.elc \
 emacsvox-tabulate.elc \
@@ -426,22 +426,22 @@ emacsvox-aural-voice-data.elc: emacsvox-aural-resources.elc emacsvox-aural-routi
 emacsvox-aural-voice-runtime.elc: emacsvox-aural-voice-data.elc emacsvox-aural-schemes.elc
 emacsvox-aural-voice-drafts.elc: emacsvox-aural-voice-runtime.elc
 emacsvox-aural-voice-editing.elc: emacsvox-aural-voice-drafts.elc emacsvox-aural-compiler.elc
-emacsvox-aural-voice-editor.elc: emacsvox-aural-voice-editing.elc emacsvox-aural-voice-workbench.elc
-emacsvox-aural-voice-menu.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-menu.elc
-emacsvox-capitalization.elc: emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-tone-editor.elc
-emacsvox-settings-changes.elc: emacsvox-aural-menu.elc emacsvox-aural-home.elc
-emacsvox-settings-integrations.elc: emacsvox-settings.elc
-emacsvox-settings-workflows.elc: emacsvox-aural-menu.elc
-emacsvox-table-settings.elc: emacsvox-table-reader.elc emacsvox-aural-menu.elc emacsvox-aural-preview.elc
-emacsvox-settings.elc: emacsvox-aural-menu.elc
-emacsvox-output-settings.elc: emacsvox-aural-menu.elc emacsvox-aural-spatial.elc emacsvox-aural-preview.elc
-emacsvox-line-cues.elc: emacsvox-tone-editor.elc emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc
-emacsvox-interaction.elc: emacsvox-aural-menu.elc
-emacsvox-tone-editor.elc: emacsvox-aural-menu.elc
-emacsvox-spelling.elc: emacsvox-aural-menu.elc integrations/emacsvox-flyspell.elc emacsvox-tone-editor.elc
-emacsvox-aural-voice-bulk.elc: emacsvox-aural-voice-editor.elc
-emacsvox-aural-voice-engine-controls.elc: emacsvox-aural-voice-editor.elc omnivox-parameters.elc
-emacsvox-aural-voice-context.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-editor.elc emacsvox-aural-tools.elc
+ui/emacsvox-aural-voice-editor.elc: emacsvox-aural-voice-editing.elc ui/emacsvox-aural-voice-workbench.elc
+ui/emacsvox-aural-voice-menu.elc: ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-menu.elc
+ui/emacsvox-capitalization.elc: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-editor.elc ui/emacsvox-tone-editor.elc
+ui/emacsvox-settings-changes.elc: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-home.elc
+ui/emacsvox-settings-integrations.elc: ui/emacsvox-settings.elc
+ui/emacsvox-settings-workflows.elc: ui/emacsvox-aural-menu.elc
+ui/emacsvox-table-settings.elc: emacsvox-table-reader.elc ui/emacsvox-aural-menu.elc emacsvox-aural-preview.elc
+ui/emacsvox-settings.elc: ui/emacsvox-aural-menu.elc
+ui/emacsvox-output-settings.elc: ui/emacsvox-aural-menu.elc emacsvox-aural-spatial.elc emacsvox-aural-preview.elc
+ui/emacsvox-line-cues.elc: ui/emacsvox-tone-editor.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc
+ui/emacsvox-interaction.elc: ui/emacsvox-aural-menu.elc
+ui/emacsvox-tone-editor.elc: ui/emacsvox-aural-menu.elc
+ui/emacsvox-spelling.elc: ui/emacsvox-aural-menu.elc integrations/emacsvox-flyspell.elc ui/emacsvox-tone-editor.elc
+ui/emacsvox-aural-voice-bulk.elc: ui/emacsvox-aural-voice-editor.elc
+ui/emacsvox-aural-voice-engine-controls.elc: ui/emacsvox-aural-voice-editor.elc omnivox-parameters.elc
+ui/emacsvox-aural-voice-context.elc: ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-editor.elc emacsvox-aural-tools.elc
 omnivox-choice-codec.elc: emacsvox-aural-rules.elc emacsvox-aural-routing-profiles.elc
 omnivox-parameters-codec.elc: omnivox-choice-codec.elc
 omnivox-parameters.elc: omnivox-parameters-codec.elc omnivox-native-codec.elc tts-queue-state.elc
@@ -486,60 +486,60 @@ emacsvox-aural-replay.elc: emacsvox-aural-preview.elc tts-speak.elc omnivox-voic
 emacsvox-aural-validation.elc: emacsvox-aural-transport.elc
 emacsvox-aural-inspection.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-rules.elc \
-emacsvox-aural-source.elc emacsvox-aural-ui.elc
-emacsvox-aural-semantics.elc: \
-emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+emacsvox-aural-source.elc ui/emacsvox-aural-ui.elc
+ui/emacsvox-aural-semantics.elc: \
+emacsvox-aural-schemes.elc ui/emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-validation.elc
 emacsvox-aural-explanation.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-transport.elc \
+ui/emacsvox-aural-ui.elc emacsvox-aural-transport.elc \
 emacsvox-aural-description.elc emacsvox-aural-validation.elc \
-emacsvox-aural-inspection.elc emacsvox-aural-semantics.elc
+emacsvox-aural-inspection.elc ui/emacsvox-aural-semantics.elc
 emacsvox-aural-tools.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-transport.elc \
 emacsvox-aural-description.elc emacsvox-aural-preview.elc \
-emacsvox-aural-inspection.elc emacsvox-aural-semantics.elc \
+emacsvox-aural-inspection.elc ui/emacsvox-aural-semantics.elc \
 emacsvox-aural-explanation.elc
-emacsvox-aural-recent-feedback.elc: \
+ui/emacsvox-aural-recent-feedback.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-explanation.elc
-emacsvox-aural-feedback-details.elc: \
-emacsvox-aural-recent-feedback.elc emacsvox-aural-planner.elc
-emacsvox-aural-change-feedback.elc: emacsvox-aural-feedback-details.elc
-emacsvox-aural-feature-fragments.elc: \
-emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+ui/emacsvox-aural-feedback-details.elc: \
+ui/emacsvox-aural-recent-feedback.elc emacsvox-aural-planner.elc
+ui/emacsvox-aural-change-feedback.elc: ui/emacsvox-aural-feedback-details.elc
+ui/emacsvox-aural-feature-fragments.elc: \
+emacsvox-aural-schemes.elc ui/emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
 emacsvox-aural-validation.elc emacsvox-aural-description.elc
-emacsvox-omnivox-components.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-inspection.elc
-emacsvox-aural-home.elc: \
+ui/emacsvox-omnivox-components.elc: \
+ui/emacsvox-aural-ui.elc emacsvox-aural-inspection.elc
+ui/emacsvox-aural-home.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-explanation.elc \
-emacsvox-aural-recent-feedback.elc \
-emacsvox-aural-feature-fragments.elc \
+ui/emacsvox-aural-recent-feedback.elc \
+ui/emacsvox-aural-feature-fragments.elc \
 emacsvox-aural-compatibility-voice.elc
-emacsvox-aural-editor.elc: \
-emacsvox-aural-semantics.elc emacsvox-aural-explanation.elc \
-emacsvox-aural-feature-fragments.elc emacsvox-aural-preview.elc
-emacsvox-aural-overrides.elc: \
-emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+ui/emacsvox-aural-editor.elc: \
+ui/emacsvox-aural-semantics.elc emacsvox-aural-explanation.elc \
+ui/emacsvox-aural-feature-fragments.elc emacsvox-aural-preview.elc
+ui/emacsvox-aural-overrides.elc: \
+emacsvox-aural-schemes.elc ui/emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
 emacsvox-aural-validation.elc emacsvox-aural-description.elc \
-emacsvox-aural-editor.elc
-emacsvox-aural-doctor.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-explanation.elc \
+ui/emacsvox-aural-editor.elc
+ui/emacsvox-aural-doctor.elc: \
+ui/emacsvox-aural-ui.elc emacsvox-aural-explanation.elc \
 emacsvox-aural-profile-service.elc
-emacsvox-aural-profiles.elc: \
-emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+ui/emacsvox-aural-profiles.elc: \
+emacsvox-aural-schemes.elc ui/emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-profile-service.elc
-emacsvox-aural-voice-palettes.elc: \
+ui/emacsvox-aural-voice-palettes.elc: \
 emacsvox-aural-voice-editing.elc \
-emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+emacsvox-aural-schemes.elc ui/emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc
-emacsvox-aural-voice-workbench.elc: \
+ui/emacsvox-aural-voice-workbench.elc: \
 emacsvox-aural-resources.elc emacsvox-aural-schemes.elc \
-emacsvox-aural-routing-profiles.elc emacsvox-aural-ui.elc \
-emacsvox-aural-voice-palettes.elc
+emacsvox-aural-routing-profiles.elc ui/emacsvox-aural-ui.elc \
+ui/emacsvox-aural-voice-palettes.elc
 emacsvox-aural-provider-org.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-workflows.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-org-srs.elc: emacsvox-aural-provider-workflows.elc
@@ -547,19 +547,19 @@ emacsvox-aural-provider-markdown.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-notmuch.elc: emacsvox-aural-provider-workflows.elc
 integrations/emacsvox-org-srs.elc: emacsvox-aural-provider-org-srs.elc
 emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
-emacsvox-sound-library.elc: emacsvox-aural-sound-packs.elc
-emacsvox-aural-sound-packs.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-inspection.elc \
+ui/emacsvox-sound-library.elc: ui/emacsvox-aural-sound-packs.elc
+ui/emacsvox-aural-sound-packs.elc: \
+ui/emacsvox-aural-ui.elc emacsvox-aural-inspection.elc \
 emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc emacsvox-sounds.elc
 emacsvox.elc: \
 emacsvox-version.elc emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
 emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 
-muggles: emacsvox-muggles.elc
+muggles: ui/emacsvox-muggles.elc
 muggle-org-navigation: integrations/emacsvox-muggle-org-navigation.elc
-extra-muggles.elc: emacsvox-muggles-core.elc integrations/emacsvox-muggle-org-navigation.elc
-extra-muggles: extra-muggles.elc
+ui/extra-muggles.elc: emacsvox-muggles-core.elc integrations/emacsvox-muggle-org-navigation.elc
+extra-muggles: ui/extra-muggles.elc
 maths: integrations/emacsvox-maths.elc
 
 lint:

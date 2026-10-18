@@ -398,7 +398,7 @@ silently resolve an open behavior question or remove a compatibility path.
 
 [[file:../../lisp/emacsvox-aural-explanation.el][Explanation]] now retains additional plans alongside its first-plan fields.
 The =EVX-2026-021= through =EVX-2026-023= fixes added retained-part inspection,
-captured-position guards and source-identity checks.  [[file:../../lisp/emacsvox-aural-change-feedback.el][Change Feedback]] already
+captured-position guards and source-identity checks.  [[file:../../lisp/ui/emacsvox-aural-change-feedback.el][Change Feedback]] already
 reuses the input assembly and source-identity helpers in [[file:../../lisp/emacsvox-aural-tools.el][remapping tools]],
 and the inspection service owns captured source access.  A complete common
 view of parts, component eligibility, summaries and explanation basis is still

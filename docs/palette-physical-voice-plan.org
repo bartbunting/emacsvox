@@ -156,10 +156,10 @@ Source inspection on 2026-09-24 identifies these boundaries:
    Extend guards narrowly where full local snapshots and overlapping draft
    scopes need coverage; preserve existing public command signatures.
 3. Add the spoken review and browser entry points using
-   [[file:../lisp/emacsvox-aural-voice-editor.el][voice-editor]] preview lifecycle and save presentation,
-   [[file:../lisp/emacsvox-aural-voice-palettes.el][voice-palettes]] inventory/copy/impact services,
-   [[file:../lisp/emacsvox-aural-voice-workbench.el][voice-workbench]] physical selection and
-   [[file:../lisp/omnivox-espeak-variants.el][espeak-variants]] validated base/variant selection. Use private draft
+   [[file:../lisp/ui/emacsvox-aural-voice-editor.el][voice-editor]] preview lifecycle and save presentation,
+   [[file:../lisp/ui/emacsvox-aural-voice-palettes.el][voice-palettes]] inventory/copy/impact services,
+   [[file:../lisp/ui/emacsvox-aural-voice-workbench.el][voice-workbench]] physical selection and
+   [[file:../lisp/ui/omnivox-espeak-variants.el][espeak-variants]] validated base/variant selection. Use private draft
    previews, rather than the saved-palette preview browser for proposed rows.
 4. Verify the complete workflow, then update the maintained voice guide and
    generated reference/manuals. Remove the backlog item only after the feature
@@ -208,7 +208,7 @@ or generated manual changes.
 
 * Delivery and verification — 2026-09-24
 
-The new [[file:../lisp/emacsvox-aural-voice-bulk.el][bulk review]] connects both browsers' =V= action to complete proposal
+The new [[file:../lisp/ui/emacsvox-aural-voice-bulk.el][bulk review]] connects both browsers' =V= action to complete proposal
 construction in =voice-editing= and one coordinated save in =voice-drafts=.
 It reuses private editor previews and per-stream acknowledged application.
 Draft and input guards run before preparation and between publication steps.

@@ -110,10 +110,10 @@ configuration or palettes.
 - Omnivox's RHVoice bridge uses the C API and matching data. An NVDA addon or
   SAPI voice installer is not automatically a compatible payload for it.
 
-Code evidence: [[file:../lisp/emacsvox-omnivox-components.el][component view]],
+Code evidence: [[file:../lisp/ui/emacsvox-omnivox-components.el][component view]],
 [[file:../bin/emacsvox-omnivox-components][component installer]],
 [[file:../lisp/omnivox-voices.el][live inventory]], and
-[[file:../lisp/emacsvox-aural-voice-workbench.el][voice browsing and workstation policy]].
+[[file:../lisp/ui/emacsvox-aural-voice-workbench.el][voice browsing and workstation policy]].
 The sibling Omnivox checkout at =54d401d= was also inspected:
 =omnivox-cli/src/engine.rs=, =omnivox-tts/src/piper.rs=,
 =omnivox-flite-helper/src/lib.rs=, =docs/FLITE.md=, =docs/RHVOICE.md=,

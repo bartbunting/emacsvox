@@ -47,7 +47,7 @@ way to leave the menu sequence. Verify that returning to a parent refreshes
 its displayed values. Exact grouping and keys remain part of the experiment.
 
 Start by mapping the actions in
-[[file:../../lisp/emacsvox-aural-home.el][Aural Home]] to the proposed menu. These include voices and engines,
+[[file:../../lisp/ui/emacsvox-aural-home.el][Aural Home]] to the proposed menu. These include voices and engines,
 speech settings, feedback inspection and changes, presentation profiles,
 sound packs, and diagnostics. Reuse the existing commands and preserve their
 source-buffer and source-item context.
@@ -115,7 +115,7 @@ the =C-e H= menu in this experiment.
 
 ** Existing action coverage
 
-[[file:../../lisp/emacsvox-aural-home.el][Aural Home]] defines 26 named actions, six task groups, and a Browse voices
+[[file:../../lisp/ui/emacsvox-aural-home.el][Aural Home]] defines 26 named actions, six task groups, and a Browse voices
 alias named =engine-modules=. The table maps every action to a candidate
 destination. These groupings are proposed; the existing direct shortcuts
 should be retained where practical and any reassignment reviewed explicitly.
@@ -304,7 +304,7 @@ path; its temporary suspension does not open the Emacsvox menu browser.
 The menu delegates its complete fallback to Aural Home; existing editors'
 =h= commands continue returning there.
 
-The new code is [[file:../../lisp/emacsvox-aural-menu.el][emacsvox-aural-menu.el]], with
+The new code is [[file:../../lisp/ui/emacsvox-aural-menu.el][emacsvox-aural-menu.el]], with
 [[file:../../test/emacsvox-aural-menu-tests.el][context and graphical regression tests]]. The indentation setup helper
 allows linked parents to share its source/scope pair. No global Transient
 bindings or personal settings are changed by loading the prototype.
@@ -392,7 +392,7 @@ continuation announces the destination. Engine preference has separate
 session, save, and restore actions, independent of the speech-settings scope.
 
 The named-voice editor's =m= command opens a focused shared-tuning menu.
-[[file:../../lisp/emacsvox-aural-voice-menu.el][emacsvox-aural-voice-menu.el]] owns menu focus and concise adjustment feedback;
+[[file:../../lisp/ui/emacsvox-aural-voice-menu.el][emacsvox-aural-voice-menu.el]] owns menu focus and concise adjustment feedback;
 the common editor still owns the draft, private preview, comparison, and save
 coordinator. Every operation checks the captured editor and context identity
 and rejects a changed fallback or engine-controls scope. Relative rate, pitch,
