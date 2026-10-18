@@ -3516,3 +3516,10 @@ unchanged; keymap registration stays in the integration facade. Implementation,
 verification and commit checkpoints remain in the Lisp refactoring plan.
 All 673 source and compiled integration cases and all 11 graphical integration
 cases pass. Listening acceptance remains separate.
+
+The tracked-reading chunk-size setting and rest-of-buffer command now live in
+=emacsvox-tracked-reading=. The setting's value, scope, command binding and
+interruption behavior are unchanged. All 35 core speech cases pass from source
+and compiled code; existing playback handoff checks retain their baseline.
+The Lisp refactoring plan records commits and build checks. Listening acceptance
+remains separate, and the running personal session was not reloaded.

@@ -695,6 +695,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-texinfo:: Speech enable texinfo.
 * emacsvox-todo-mode:: speech-enable todo.
 * emacsvox-tone-editor:: Draft tone adjustments.
+* emacsvox-tracked-reading:: Interruptible buffer reading.
 * emacsvox-transient:: TRANSIENT.
 * emacsvox-treesit:: Speech-enable TREESIT.
 * emacsvox-typo:: Speech-enable TYPO.

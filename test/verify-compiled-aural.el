@@ -79,6 +79,15 @@
       (error "Inventory and discovery definitions loaded speech runtime %S" feature)))
   (when (process-list)
     (error "Inventory and discovery definitions started a process"))
+  (load (expand-file-name "core/emacsvox-tracked-reading.elc" build-directory) nil nil)
+  (dolist (feature '(emacsvox-speak tts-speak))
+    (when (featurep feature)
+      (error "Tracked reader definitions loaded speech runtime %S" feature)))
+  (when (or (process-list)
+            (memq #'emacsvox--tracked-reading-pre-command pre-command-hook)
+            (and (boundp 'tts-stopped-hook)
+                 (memq #'emacsvox--tracked-reading-stopped tts-stopped-hook)))
+    (error "Tracked reader definitions activated a session"))
   ;; Generic voice definitions must not initialize an adapter or speech runtime.
   (load (expand-file-name "speech/tts-voice-api.elc" build-directory) nil nil)
   (dolist (feature '(tts-speak tts-lifecycle voice-setup omnivox-voices))
@@ -217,6 +226,8 @@
          omnivox-remote-make-process
          emacsvox-pronounce-refresh-pronunciations
          emacsvox-speak-line
+         emacsvox-speak-rest-of-buffer
+         emacsvox--tracked-reading-cancel
          voice-setup-face-mapping-diagnostic
          voice-setup-face-mapping-conflicts
          emacsvox-aural-compatibility-voice-enabled-p
@@ -398,6 +409,7 @@
                   "tts-preparation-tests.el"
                   "tts-queue-state-tests.el"
                   "emacsvox-tts-tests.el"
+                  "emacsvox-speak-tests.el"
                   "omnivox-preview-tests.el"
                   "emacsvox-emoji-tests.el"
                   "emacsvox-emoji-integration-tests.el"
@@ -489,6 +501,7 @@
                "^omnivox-preview-"
                "^tts-queue-"
                "^tts-handoff-"
+               "^emacsvox-speak-rest-of-buffer-"
                "^tts-preparation-"
                "^emacsvox-aural-voice-editor-"
                "^emacsvox-aural-voice-bulk-"

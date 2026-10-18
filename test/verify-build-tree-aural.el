@@ -33,6 +33,7 @@
           omnivox-remote
           emacsvox-pronounce
           emacsvox-speak
+          emacsvox-tracked-reading
           emacsvox-aural
           emacsvox-aural-compatibility-voice
           emacsvox-aural-concrete
@@ -95,6 +96,8 @@
           omnivox-remote-make-process
           emacsvox-pronounce-refresh-pronunciations
           emacsvox-speak-line
+          emacsvox-speak-rest-of-buffer
+          emacsvox--tracked-reading-cancel
           voice-setup-face-mapping-diagnostic
           voice-setup-face-mapping-conflicts
           emacsvox-aural-compatibility-voice-enabled-p

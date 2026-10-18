@@ -336,6 +336,24 @@ the documentation release check pass. Neither discovery nor inventory loads
 the speech adapter or starts processes when loaded alone. Compiler warnings
 remain limited to the existing entry-point baseline.
 
+Discovery committed as =21513816a=.
+
+Tracked buffer reading now lives in =core/emacsvox-tracked-reading=. The whole
+block moves unchanged, including its setting, session structure, markers,
+generation checks, completion callbacks and cleanup hooks. The core speech
+library loads it at the original definition site. Build and startup inventories
+include the module. The isolated compiled check also runs the existing tracked
+reading tests and verifies that loading definitions does not activate hooks or
+speech processes. Before extraction, all 35 core speech tests pass.
+
+All 35 core speech cases pass from source and fresh byte-code. The wider
+handoff suite retains its 712-of-713 result, with only the known capital-tone
+failure. Isolated compiled aural parity, normal compiled startup, byte-code
+preflight, headers, generated reference and the documentation release check
+pass. The incremental build has no warnings. The 234-line tracked-reading
+block is byte-for-byte unchanged; the speech facade falls from 3781 to 3550
+lines. No live session was changed, and listening acceptance remains open.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -349,10 +367,11 @@ and comments; extracted modules retain named authors and copyright holders.
 | omnivox-voices.el | 3117 | 2406 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
+| emacsvox-speak.el | 3781 | 3550 |
 
-The original extraction pass, generic voice API follow-up and Agent Shell
-follow-up are complete. Broad core utilities remain separate work, as scoped
-above. Further Agent Shell extraction should follow a concrete responsibility
+The original extraction pass, generic voice API, Agent Shell, Omnivox
+inventory/discovery and tracked-reading follow-ups are complete. Broad core
+utilities remain separate work, as scoped above. Further Agent Shell extraction should follow a concrete responsibility
 problem rather than a target line count.
 
 * TTS lifecycle boundary

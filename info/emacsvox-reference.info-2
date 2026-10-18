@@ -7778,7 +7778,8 @@ File: emacsvox-reference.info,  Node: emacsvox-speak,  Next: emacsvox-speedbar, 
 
 This module defines the core speech services used by emacsvox.  It
 depends on the speech server interface modules It protects other parts
-of emacsvox from becoming dependent on the speech server modules
+of emacsvox from becoming dependent on the speech server modules Tracked
+buffer reading lives in 'emacsvox-tracked-reading'.
 
 2.251.1 Emacsvox-Speak Commands
 -------------------------------
@@ -8586,17 +8587,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn START END)
 
-2.251.1.75 emacsvox-speak-rest-of-buffer
-........................................
-
- -- Command: emacsvox-speak-rest-of-buffer
-     ‘C-e i’
-
-     Speak from point to buffer end, tracking interrupt position by chunk.
-     Any subsequent user command interrupts speech.  Point remains at the start of
-     the sentence-oriented chunk that was audible when interruption occurred.
-
-2.251.1.76 emacsvox-speak-seconds-since-epoch
+2.251.1.75 emacsvox-speak-seconds-since-epoch
 .............................................
 
  -- Command: emacsvox-speak-seconds-since-epoch (seconds)
@@ -8605,7 +8596,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn SECONDS)
 
-2.251.1.77 emacsvox-speak-sentence
+2.251.1.76 emacsvox-speak-sentence
 ..................................
 
  -- Command: emacsvox-speak-sentence (&optional arg)
@@ -8616,7 +8607,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn &optional ARG)
 
-2.251.1.78 emacsvox-speak-sexp
+2.251.1.77 emacsvox-speak-sexp
 ..............................
 
  -- Command: emacsvox-speak-sexp (&optional arg)
@@ -8627,7 +8618,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn &optional ARG)
 
-2.251.1.79 emacsvox-speak-sexp-interactively
+2.251.1.78 emacsvox-speak-sexp-interactively
 ............................................
 
  -- Command: emacsvox-speak-sexp-interactively
@@ -8637,14 +8628,14 @@ of emacsvox from becoming dependent on the speech server modules
       ‘r’ to speak the rest.
      any other key to speak entire sexp.
 
-2.251.1.80 emacsvox-speak-skim-buffer
+2.251.1.79 emacsvox-speak-skim-buffer
 .....................................
 
  -- Command: emacsvox-speak-skim-buffer
 
      Skim the current buffer  a paragraph at a time.
 
-2.251.1.81 emacsvox-speak-spaces
+2.251.1.80 emacsvox-speak-spaces
 ................................
 
  -- Command: emacsvox-speak-spaces
@@ -8652,7 +8643,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Speak number of spaces at point.
 
-2.251.1.82 emacsvox-speak-spaces-at-point
+2.251.1.81 emacsvox-speak-spaces-at-point
 .........................................
 
  -- Command: emacsvox-speak-spaces-at-point
@@ -8660,14 +8651,14 @@ of emacsvox from becoming dependent on the speech server modules
 
      Speak the white space at point.
 
-2.251.1.83 emacsvox-speak-spell-current-word
+2.251.1.82 emacsvox-speak-spell-current-word
 ............................................
 
  -- Command: emacsvox-speak-spell-current-word
 
      Spell word at  point.
 
-2.251.1.84 emacsvox-speak-this-window
+2.251.1.83 emacsvox-speak-this-window
 .....................................
 
  -- Command: emacsvox-speak-this-window
@@ -8675,7 +8666,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Speak current window.
 
-2.251.1.85 emacsvox-speak-time
+2.251.1.84 emacsvox-speak-time
 ..............................
 
  -- Command: emacsvox-speak-time (&optional world)
@@ -8689,7 +8680,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn &optional WORLD)
 
-2.251.1.86 emacsvox-speak-version
+2.251.1.85 emacsvox-speak-version
 .................................
 
  -- Command: emacsvox-speak-version
@@ -8697,7 +8688,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Announce version information for running emacsvox.
 
-2.251.1.87 emacsvox-speak-visual-line
+2.251.1.86 emacsvox-speak-visual-line
 .....................................
 
  -- Command: emacsvox-speak-visual-line
@@ -8705,7 +8696,7 @@ of emacsvox from becoming dependent on the speech server modules
      Speaks current visual line.
      Cues the start of a physical line with auditory icon ‘left’.
 
-2.251.1.88 emacsvox-speak-voice-annotate-paragraphs
+2.251.1.87 emacsvox-speak-voice-annotate-paragraphs
 ...................................................
 
  -- Command: emacsvox-speak-voice-annotate-paragraphs
@@ -8714,7 +8705,7 @@ of emacsvox from becoming dependent on the speech server modules
      Here, paragraph is taken to mean a chunk of text preceded by a blank line.
      Useful to do this before you listen to an entire buffer.
 
-2.251.1.89 emacsvox-speak-which-function
+2.251.1.88 emacsvox-speak-which-function
 ........................................
 
  -- Command: emacsvox-speak-which-function
@@ -8723,7 +8714,7 @@ of emacsvox from becoming dependent on the speech server modules
      Speak which function we are on.  Uses which-function from
      which-func without turning that mode on.
 
-2.251.1.90 emacsvox-speak-window-information
+2.251.1.89 emacsvox-speak-window-information
 ............................................
 
  -- Command: emacsvox-speak-window-information
@@ -8731,7 +8722,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Speaks information about current window.
 
-2.251.1.91 emacsvox-speak-windowful
+2.251.1.90 emacsvox-speak-windowful
 ...................................
 
  -- Command: emacsvox-speak-windowful
@@ -8739,7 +8730,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Delete other windows, Line to top, then Speak window contents.
 
-2.251.1.92 emacsvox-speak-word
+2.251.1.91 emacsvox-speak-word
 ..............................
 
  -- Command: emacsvox-speak-word (&optional arg)
@@ -8753,7 +8744,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn &optional ARG)
 
-2.251.1.93 emacsvox-speak-word-interactively
+2.251.1.92 emacsvox-speak-word-interactively
 ............................................
 
  -- Command: emacsvox-speak-word-interactively
@@ -8763,7 +8754,7 @@ of emacsvox from becoming dependent on the speech server modules
       ‘r’ to speak the rest.
      any other key to speak entire word.
 
-2.251.1.94 emacsvox-speak-world-clock
+2.251.1.93 emacsvox-speak-world-clock
 .....................................
 
  -- Command: emacsvox-speak-world-clock (zone &optional set)
@@ -8773,21 +8764,21 @@ of emacsvox from becoming dependent on the speech server modules
 
      (fn ZONE &optional SET)
 
-2.251.1.95 emacsvox-submit-bug
+2.251.1.94 emacsvox-submit-bug
 ..............................
 
  -- Command: emacsvox-submit-bug
 
      Function to submit a bug to the Emacsvox list
 
-2.251.1.96 emacsvox-switch-to-reference-buffer
+2.251.1.95 emacsvox-switch-to-reference-buffer
 ..............................................
 
  -- Command: emacsvox-switch-to-reference-buffer
 
      Switch back to buffer that generated completions.
 
-2.251.1.97 emacsvox-toggle-audio-indentation
+2.251.1.96 emacsvox-toggle-audio-indentation
 ............................................
 
  -- Command: emacsvox-toggle-audio-indentation (&optional prefix)
@@ -8801,7 +8792,7 @@ of emacsvox from becoming dependent on the speech server modules
      line’s indentation.  Specifying ‘speak’
      results in the number of initial spaces being spoken.
 
-2.251.1.98 emacsvox-toggle-character-echo
+2.251.1.97 emacsvox-toggle-character-echo
 .........................................
 
  -- Command: emacsvox-toggle-character-echo (&optional prefix)
@@ -8811,15 +8802,15 @@ of emacsvox from becoming dependent on the speech server modules
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.251.1.99 emacsvox-toggle-header-line
+2.251.1.98 emacsvox-toggle-header-line
 ......................................
 
  -- Command: emacsvox-toggle-header-line
 
      Toggle Emacsvox’s default header line.
 
-2.251.1.100 emacsvox-toggle-line-echo
-.....................................
+2.251.1.99 emacsvox-toggle-line-echo
+....................................
 
  -- Command: emacsvox-toggle-line-echo (&optional prefix)
      ‘C-e d l’
@@ -8828,7 +8819,7 @@ of emacsvox from becoming dependent on the speech server modules
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.251.1.101 emacsvox-toggle-mail-alert
+2.251.1.100 emacsvox-toggle-mail-alert
 ......................................
 
  -- Command: emacsvox-toggle-mail-alert (&optional prefix)
@@ -8840,7 +8831,7 @@ of emacsvox from becoming dependent on the speech server modules
      Turning on this option results in Emacsvox producing an auditory icon
      indicating the arrival  of new mail when displaying the mode line.
 
-2.251.1.102 emacsvox-toggle-show-point
+2.251.1.101 emacsvox-toggle-show-point
 ......................................
 
  -- Command: emacsvox-toggle-show-point (&optional prefix)
@@ -8850,7 +8841,7 @@ of emacsvox from becoming dependent on the speech server modules
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.251.1.103 emacsvox-toggle-speak-line-invert-filter
+2.251.1.102 emacsvox-toggle-speak-line-invert-filter
 ....................................................
 
  -- Command: emacsvox-toggle-speak-line-invert-filter (&optional prefix)
@@ -8860,7 +8851,7 @@ of emacsvox from becoming dependent on the speech server modules
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.251.1.104 emacsvox-toggle-speak-messages
+2.251.1.103 emacsvox-toggle-speak-messages
 ..........................................
 
  -- Command: emacsvox-toggle-speak-messages (&optional prefix)
@@ -8868,7 +8859,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Toggle  state of whether emacsvox echoes messages.
 
-2.251.1.105 emacsvox-toggle-word-echo
+2.251.1.104 emacsvox-toggle-word-echo
 .....................................
 
  -- Command: emacsvox-toggle-word-echo (&optional prefix)
@@ -8878,7 +8869,7 @@ of emacsvox from becoming dependent on the speech server modules
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.251.1.106 emacsvox-view-notifications
+2.251.1.105 emacsvox-view-notifications
 .......................................
 
  -- Command: emacsvox-view-notifications
@@ -8888,7 +8879,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Display notifications.
 
-2.251.1.107 emacsvox-zap-tts
+2.251.1.106 emacsvox-zap-tts
 ............................
 
  -- Command: emacsvox-zap-tts
@@ -9090,16 +9081,6 @@ of emacsvox from becoming dependent on the speech server modules
      Default Value:
 
      "%l %M%p on %A %B %_e"
-
-
- -- Variable: User Option emacsvox-tracked-reading-max-chars
-     Maximum source characters in one tracked reading chunk.
-     Tracked reading prefers sentence boundaries and uses this limit to keep the
-     position retained after interruption reasonably close to audible playback.
-
-     Default Value:
-
-     280
 
 
 
