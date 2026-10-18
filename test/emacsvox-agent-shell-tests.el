@@ -30,6 +30,7 @@
                    ("integrations/emacsvox-agent-shell-navigation" . emacsvox-agent-shell-next-block-at-point)
                    ("integrations/emacsvox-agent-shell-events" . emacsvox-agent-shell--handle-lifecycle-event)
                    ("integrations/emacsvox-agent-shell-interaction" . emacsvox-agent-shell--question-feedback)
+                   ("integrations/emacsvox-agent-shell-presentation" . emacsvox-agent-shell--effective-speech-level)
                    ("integrations/emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
     (let ((path (expand-file-name (concat (car entry) suffix) directory)))
       (load path nil nil t)
@@ -112,7 +113,7 @@
 (declare-function emacsvox-agent-shell--execute-delayed-speech
                   "emacsvox-agent-shell" (buffer qualified-ids))
 (declare-function emacsvox-agent-shell--effective-speech-level
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--buffer-cleanup
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--block-locations
@@ -153,11 +154,11 @@
 (declare-function emacsvox-agent-shell--handle-lifecycle-event
                   "emacsvox-agent-shell" (event))
 (declare-function emacsvox-agent-shell--header-state
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--format-brief-header
-                  "emacsvox-agent-shell" (state))
+                  "emacsvox-agent-shell-presentation" (state))
 (declare-function emacsvox-agent-shell--format-full-header
-                  "emacsvox-agent-shell" (state))
+                  "emacsvox-agent-shell-presentation" (state))
 (declare-function emacsvox-agent-shell--lifecycle-event-cleanup
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--lifecycle-event-setup
@@ -180,11 +181,11 @@
                   "emacsvox-agent-shell-interaction"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--session-focused-p
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--session-buffer
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--speak-focus-header-if-needed
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-presentation" ())
 (declare-function emacsvox-agent-shell--prepare-speech-text
                   "emacsvox-agent-shell" (text))
 (declare-function emacsvox-agent-shell--chat-overlay-tag
@@ -262,13 +263,13 @@
 (declare-function emacsvox-agent-shell-previous-block-at-point
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell-cycle-speech-level
-                  "emacsvox-agent-shell" (&optional reset))
+                  "emacsvox-agent-shell-presentation" (&optional reset))
 (declare-function emacsvox-agent-shell-select-background-speech-level
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-presentation" ())
 (declare-function emacsvox-agent-shell-select-speech-level
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-presentation" ())
 (declare-function emacsvox-agent-shell--speak-content
-                  "emacsvox-agent-shell" (content block-type))
+                  "emacsvox-agent-shell-presentation" (content block-type))
 (declare-function emacsvox-agent-shell--tool-call-block-handled-p
                   "emacsvox-agent-shell" (block-id))
 (declare-function emacsvox-agent-shell--tool-call-event-cleanup
@@ -297,7 +298,7 @@
 (declare-function emacsvox-agent-shell-speech-setup
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell-speak-header
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-presentation" ())
 (declare-function emacsvox-agent-shell-speak-source-block
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell-copy-source-block

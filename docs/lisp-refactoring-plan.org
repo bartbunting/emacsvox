@@ -268,6 +268,18 @@ The final incremental build is warning-free after adding the forward
 declaration for the legacy configuration accessor. Byte-code preflight,
 headers, generated reference and the documentation release check pass.
 
+Session and compose interactions committed as =6cec18aaf=.
+
+The third slice moves foreground/background policy, bounded announcements,
+session header descriptions and common feedback submission into
+=emacsvox-agent-shell-presentation=. Speech commands keep their existing
+names. Configuration, the speech-control map and its installation stay in the
+facade, preserving table-map precedence and advice order. Existing event and
+navigation definitions continue calling the same feedback functions.
+All 673 source and compiled integration cases and all 11 graphical cases pass.
+Compilation has no warnings, byte-code preflight and headers pass, and the
+generated reference follows the four relocated speech commands.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

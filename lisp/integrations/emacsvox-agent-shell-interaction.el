@@ -44,23 +44,23 @@
 (require 'emacsvox-agent-shell-events)
 
 (declare-function emacsvox-agent-shell--speech-level-at-least-p
-                  "emacsvox-agent-shell" (level &optional buffer))
+                  "emacsvox-agent-shell-presentation" (level &optional buffer))
 (declare-function emacsvox-agent-shell--presentation-facts
-                  "emacsvox-agent-shell" (role &optional event states attributes))
+                  "emacsvox-agent-shell-presentation" (role &optional event states attributes))
 (declare-function emacsvox-agent-shell--deliver-announcement
-                  "emacsvox-agent-shell" (facts occasion icon text &optional delivery-policy))
+                  "emacsvox-agent-shell-presentation" (facts occasion icon text &optional delivery-policy))
 (declare-function emacsvox-agent-shell--session-buffer
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--submit-text-feedback
-                  "emacsvox-agent-shell" (text facts occasion &optional icon delivery-policy replacement-key))
+                  "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function agent-shell-elicitation--preview-open-p "agent-shell-elicitation" (elicitation key value))
 (declare-function agent-shell-elicitation--option-preview-at "agent-shell-elicitation" (elicitation key value))
 (defvar agent-shell--state)
 
 (declare-function emacsvox-agent-shell--header-state
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--notify-event
-                  "emacsvox-agent-shell" (text facts &optional icon occasion))
+                  "emacsvox-agent-shell-presentation" (text facts &optional icon occasion))
 (defvar emacsvox-agent-shell-signal-processing)
 (defvar emacsvox-agent-shell-processing-start-icon)
 (declare-function agent-shell-status "agent-shell" t)

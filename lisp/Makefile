@@ -188,6 +188,7 @@ integrations/emacsvox-agent-shell-tables.elc \
 integrations/emacsvox-agent-shell-navigation.elc \
 integrations/emacsvox-agent-shell-events.elc \
 integrations/emacsvox-agent-shell-interaction.elc \
+integrations/emacsvox-agent-shell-presentation.elc \
 integrations/emacsvox-agent-shell.elc \
 integrations/emacsvox-annotate.elc \
 integrations/emacsvox-arc.elc \
@@ -423,7 +424,8 @@ integrations/emacsvox-agent-shell-tables.elc: integrations/emacsvox-agent-shell-
 integrations/emacsvox-agent-shell-navigation.elc: integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-render.elc
 integrations/emacsvox-agent-shell-events.elc: integrations/emacsvox-agent-shell-navigation.elc
 integrations/emacsvox-agent-shell-interaction.elc: integrations/emacsvox-agent-shell-events.elc
-integrations/emacsvox-agent-shell.elc: integrations/emacsvox-agent-shell-interaction.elc integrations/emacsvox-agent-shell-events.elc integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-navigation.elc
+integrations/emacsvox-agent-shell-presentation.elc: integrations/emacsvox-agent-shell-events.elc
+integrations/emacsvox-agent-shell.elc: integrations/emacsvox-agent-shell-presentation.elc integrations/emacsvox-agent-shell-interaction.elc integrations/emacsvox-agent-shell-events.elc integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-navigation.elc
 integrations/emacsvox-markdown.elc integrations/emacsvox-org.elc: core/emacsvox-table-reader.elc
 
 integrations/emacsvox-eat-input.elc: integrations/emacsvox-eat-core.elc

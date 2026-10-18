@@ -3509,3 +3509,10 @@ retain their review, preview, save and Apply boundaries. The affected source
 and compiled tests and all 38 graphical voice/editor cases pass. Commit and
 verification checkpoints are in [[file:lisp-refactoring-plan.org][the Lisp refactoring plan]]. Existing listening
 acceptance remains open; the running personal session was not reloaded.
+
+Agent Shell speech-level commands and header feedback now live in
+=emacsvox-agent-shell-presentation=. Settings, keys and spoken feedback remain
+unchanged; keymap registration stays in the integration facade. Implementation,
+verification and commit checkpoints remain in the Lisp refactoring plan.
+All 673 source and compiled integration cases and all 11 graphical integration
+cases pass. Listening acceptance remains separate.

@@ -28,8 +28,9 @@
 ;;; Commentary:
 
 ;; Transcript locations, response summaries, semantic movement, fragment
-;; expansion and source-block interaction.  The facade retains activation,
-;; shared feedback, live-input policy and asynchronous response observation.
+;; expansion and source-block interaction. Presentation supplies shared
+;; feedback, and events owns asynchronous response observation. The facade
+;; retains activation and live-input policy.
 ;; Repeat-key installation is explicit so the facade controls activation order.
 ;; Load through `emacsvox-agent-shell'.
 
@@ -42,15 +43,15 @@
 (require 'emacsvox-agent-shell-tables)
 
 (declare-function emacsvox-agent-shell--presentation-facts
-                  "emacsvox-agent-shell" (role &optional event states attributes))
+                  "emacsvox-agent-shell-presentation" (role &optional event states attributes))
 (declare-function emacsvox-agent-shell--session-buffer
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--nonempty-text
-                  "emacsvox-agent-shell" (value))
+                  "emacsvox-agent-shell-presentation" (value))
 (declare-function emacsvox-agent-shell--submit-icon-feedback
-                  "emacsvox-agent-shell" (facts occasion icon))
+                  "emacsvox-agent-shell-presentation" (facts occasion icon))
 (declare-function emacsvox-agent-shell--submit-text-feedback
-                  "emacsvox-agent-shell" (text facts occasion &optional icon delivery-policy replacement-key))
+                  "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function emacsvox-agent-shell--semantic-item-feedback
                   "emacsvox-agent-shell" ())
 (defvar emacsvox-agent-shell-block-navigation-max-characters)

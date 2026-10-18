@@ -30,8 +30,9 @@
 ;; Capture rendered response sections and translate lifecycle, permission and
 ;; tool events into speech.  This module retains the event subscriptions,
 ;; timers, marker snapshots and caches with their existing cleanup functions.
-;; The facade owns shared feedback policy and calls setup and teardown in the
-;; established order.  Loading these definitions does not subscribe buffers.
+;; The presentation module owns shared feedback policy. The facade calls setup
+;; and teardown in the established order. Loading these definitions does not
+;; subscribe buffers.
 ;; Load through `emacsvox-agent-shell'.
 
 ;;; Code:
@@ -44,30 +45,30 @@
 (require 'emacsvox-agent-shell-navigation)
 
 (declare-function emacsvox-agent-shell--session-focused-p
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--effective-speech-level
-                  "emacsvox-agent-shell" (&optional buffer))
+                  "emacsvox-agent-shell-presentation" (&optional buffer))
 (declare-function emacsvox-agent-shell--speech-level-at-least-p
-                  "emacsvox-agent-shell" (level &optional buffer))
+                  "emacsvox-agent-shell-presentation" (level &optional buffer))
 (declare-function emacsvox-agent-shell--presentation-facts
-                  "emacsvox-agent-shell" (role &optional event states attributes))
+                  "emacsvox-agent-shell-presentation" (role &optional event states attributes))
 (declare-function emacsvox-agent-shell--permission-field-text
-                  "emacsvox-agent-shell" (text label))
+                  "emacsvox-agent-shell-presentation" (text label))
 (declare-function emacsvox-agent-shell--notify-background
-                  "emacsvox-agent-shell" (facts occasion icon text &optional separator))
+                  "emacsvox-agent-shell-presentation" (facts occasion icon text &optional separator))
 (declare-function emacsvox-agent-shell--deliver-announcement
-                  "emacsvox-agent-shell" (facts occasion icon text &optional delivery-policy))
+                  "emacsvox-agent-shell-presentation" (facts occasion icon text &optional delivery-policy))
 (declare-function emacsvox-agent-shell--submit-icon-feedback
-                  "emacsvox-agent-shell" (facts occasion icon))
+                  "emacsvox-agent-shell-presentation" (facts occasion icon))
 (declare-function emacsvox-agent-shell--submit-automatic-text-feedback
-                  "emacsvox-agent-shell" (text facts occasion
+                  "emacsvox-agent-shell-presentation" (text facts occasion
           &optional icon inspection-hint delivery-policy replacement-key))
 (declare-function emacsvox-agent-shell--speak-content
-                  "emacsvox-agent-shell" (content block-type))
+                  "emacsvox-agent-shell-presentation" (content block-type))
 (declare-function emacsvox-agent-shell--question-event
                   "emacsvox-agent-shell-interaction" (event))
 (declare-function emacsvox-agent-shell--notify-event
-                  "emacsvox-agent-shell" (text facts &optional icon occasion))
+                  "emacsvox-agent-shell-presentation" (text facts &optional icon occasion))
 (declare-function emacsvox-agent-shell--interaction-cleanup
                   "emacsvox-agent-shell-interaction" ())
 (declare-function emacsvox-agent-shell--initialized-p
