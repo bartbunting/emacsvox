@@ -560,3 +560,11 @@ paths, so nested modules retain their hashes without a second directory list.
 A real native Emacs test verifies nested hashes, changed contents and exclusion
 of undeclared personal directories. The complete native installer helper suite
 and all 40 Windows packaging tests pass after this correction.
+
+The command-line aural audit also registers declared directories before loading
+its registries. A fresh-process regression catches the dependency on a desktop
+bootstrap that the combined test runner had supplied implicitly. The 13-case
+audit suite now passes 12 cases; only its known stale-reference check fails.
+=make aural-audit= executes fully and reports that same baseline discrepancy.
+Native provenance additionally matches all 329 shipped Lisp source hashes in
+the complete staged Windows payload; the source template is not a runtime file.

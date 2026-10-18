@@ -36,6 +36,9 @@
   (expand-file-name "sounds" emacsvox-aural-audit-default-root)
   "Sound directory used while loading resource registries for the audit.")
 
+(emacsvox-paths--register
+ (expand-file-name "lisp" emacsvox-aural-audit-default-root))
+
 (require 'emacsvox-sounds)
 (require 'emacsvox-aural-validation)
 (require 'emacsvox-aural-provider-org)

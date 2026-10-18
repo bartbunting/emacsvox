@@ -20,6 +20,27 @@
     (file-name-directory (or load-file-name buffer-file-name))))
   "Repository root used by the aural audit tests.")
 
+(ert-deftest emacsvox-aural-audit-loads-independently-with-nested-sources ()
+  "The command-line audit registers sources without a preloaded desktop."
+  (with-temp-buffer
+    (let ((status
+           (call-process
+            (expand-file-name invocation-name invocation-directory)
+            nil t nil "-Q" "--batch"
+            "--eval" "(setq load-prefer-newer t)"
+            "-l" (expand-file-name "utils/emacsvox-aural-audit.el"
+                                   emacsvox-test--aural-audit-root)
+            "--eval"
+            (prin1-to-string
+             '(progn
+                (unless (and (featurep 'emacsvox-sounds)
+                             (featurep 'emacsvox-aural-validation)
+                             (featurep 'emacsvox-dired))
+                  (error "Audit registries failed to load"))
+                (when (process-list)
+                  (error "Audit loading started external processes")))))))
+      (ert-info ((buffer-string)) (should (eq 0 status))))))
+
 (cl-defmacro emacsvox-test--with-aural-audit-root ((root) &rest body)
   "Create temporary audit ROOT and evaluate BODY."
   (declare (indent 1) (debug (sexp body)))
