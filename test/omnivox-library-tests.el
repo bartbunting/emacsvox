@@ -7,6 +7,48 @@
 (require 'omnivox-library)
 (require 'omnivox-voices)
 
+(ert-deftest omnivox-library-selection-rejects-changed-target-and-releases-service ()
+  (dolist (failure '(target request))
+    (let ((service (make-pipe-process :name "selection fixture" :noquery t))
+          sent)
+      (unwind-protect
+          (cl-letf (((symbol-function 'omnivox-library--service) (lambda () service))
+                    ((symbol-function 'omnivox-library--source-key)
+                     (lambda () (if (eq failure 'target) '(changed) '(captured))))
+                    ((symbol-function 'omnivox-library--request)
+                     (lambda (_worker command)
+                       (setq sent command)
+                       (error "Captured library revision changed"))))
+            (should-error
+             (omnivox-library--edit-selection '(captured) "revision" 'slt))
+            (should (eq (not (null sent)) (eq failure 'request)))
+            (should-not (process-live-p service)))
+        (when (process-live-p service) (delete-process service))))))
+
+(ert-deftest omnivox-library-selection-keeps-import-and-enablement-separate-from-apply ()
+  (let ((operation "11111111-1111-4111-8111-111111111111") requests)
+    (cl-letf (((symbol-function 'omnivox-library--service)
+               (lambda () (make-pipe-process :name "selection fixture" :noquery t)))
+              ((symbol-function 'omnivox-library--source-key) (lambda () '(captured)))
+              ((symbol-function 'omnivox-library--request)
+               (lambda (_worker command) (push command requests) '(:type "saved")))
+              ((symbol-function 'tts-restart) (lambda () (ert-fail "Selection restarted speech")))
+              ((symbol-function 'omnivox-library--execute)
+               (lambda (&rest _) (ert-fail "Selection applied voices"))))
+      (omnivox-library--edit-selection '(captured) "revision" 'import nil operation)
+      (let ((request (car requests)))
+        (should (equal (plist-get request :operation) operation))
+        (should-not (plist-member request :enabled))
+        (omnivox-library-apply--uuid (plist-get request :package))
+        (omnivox-library-apply--uuid (plist-get request :revision)))
+      (dolist (enabled '(t :false))
+        (omnivox-library--edit-selection
+         '(captured) "revision" 'toggle
+         (list :engine_id "piper" :physical_id "voice" :enabled enabled))
+        (should (eq (plist-get (car requests) :enabled) (if (eq enabled t) :false t)))))
+    (dolist (request requests)
+      (should (equal (plist-get request :expected_sha256) "revision")))))
+
 (ert-deftest omnivox-library-runtime-load-is-independent-of-editors ()
   (let* ((runtime (symbol-file 'omnivox-library--prepare-engines 'defun))
          (root (file-name-directory (directory-file-name

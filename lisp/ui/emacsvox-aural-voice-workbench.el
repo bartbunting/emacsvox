@@ -795,22 +795,8 @@ Count voices before folding languages.  This uses cached evidence only."
        (when (and (eq action 'slt) (not (equal engine "flite")))
          (user-error "Open Flite voices to include bundled SLT"))
        (when (eq action 'import)
-         (setq operation (or operation (read-string "Native validation operation UUID: ")))
-         (omnivox-library-apply--uuid operation))
-       (let ((service (omnivox-library--service)))
-         (unwind-protect
-             (progn
-               (unless (equal source (omnivox-library--source-key))
-                 (user-error "Voice library target changed; press R to refresh"))
-               (omnivox-library--request
-                service (append
-                         (cond ((eq action 'slt) '(:command "include-flite-slt"))
-                               ((eq action 'import) (list :command "import" :operation operation
-                                                          :package (omnivox-library--uuid) :revision (omnivox-library--uuid)))
-                               (t (list :command "enable" :engine (car id) :voice (cadr id)
-                                        :enabled (if (eq (plist-get row :enabled) t) :false t))))
-                         (list :expected_sha256 sha))))
-           (when (process-live-p service) (delete-process service))))
+         (setq operation (or operation (read-string "Native validation operation UUID: "))))
+       (omnivox-library--edit-selection source sha action row operation)
        (message "Desired voice selection saved; a reviews Apply")))
     (unless (eq action 'download)
       (run-hooks 'omnivox-library--changed-hook))))

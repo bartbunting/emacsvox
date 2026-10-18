@@ -677,6 +677,32 @@ All attempted replacement processes remain owned until retirement is confirmed."
                '("mbrola" "rhvoice")))
     (list providers)))
 
+(defun omnivox-library--edit-selection (source sha action &optional row operation)
+  "Apply desired-state ACTION to captured SOURCE and library SHA.
+ROW supplies the native voice record for a toggle.  OPERATION identifies an
+already validated import.  This writes desired state only; callers own feedback,
+refresh and any later review of Apply.  Always release the private service."
+  (let ((command
+         (pcase action
+           ('toggle
+            (list :command "enable" :engine (plist-get row :engine_id)
+                  :voice (plist-get row :physical_id)
+                  :enabled (if (eq (plist-get row :enabled) t) :false t)))
+           ('slt '(:command "include-flite-slt"))
+           ('import
+            (omnivox-library-apply--uuid operation)
+            (list :command "import" :operation operation
+                  :package (omnivox-library--uuid) :revision (omnivox-library--uuid)))
+           (_ (error "Unknown voice selection action: %S" action)))))
+    (let ((service (omnivox-library--service)))
+      (unwind-protect
+          (progn
+            (unless (equal source (omnivox-library--source-key))
+              (user-error "Voice library target changed; press R to refresh"))
+            (omnivox-library--request
+             service (append command (list :expected_sha256 sha))))
+        (when (process-live-p service) (delete-process service))))))
+
 (provide 'omnivox-library-runtime)
 
 ;;; omnivox-library-runtime.el ends here

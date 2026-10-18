@@ -72,3 +72,18 @@ removal and workbench navigation; the separate engine-configuration graphical
 case was not run. Fresh compiled setup remains idle with no speech processes.
 Compilation, preflight, headers and reference generation pass. Existing root
 entry-point compiler warnings match the migration baseline.
+
+Committed as =690ad50e9=. The documentation release check passed.
+
+** Shared library selection operations
+
+Both library views now use one runtime operation for enablement, validated
+imports and bundled Flite inclusion. The operation owns request construction,
+captured-target checking, revision guards and private-service cleanup. Views
+retain selection, feedback and refresh. Apply remains a separate reviewed action.
+
+All 108 focused source and compiled cases pass. Seven graphical cases skip
+in batch and pass within the 38-case graphical voice/editor run. The optional
+native pair check remains unconfigured. New regressions cover target changes,
+request failures, cleanup, import/Apply separation and matching requests from
+the two views. Incremental compilation and byte-code preflight pass.

@@ -174,12 +174,9 @@ Press q to return to engine details.
            (row (seq-find (lambda (row) (and (equal (car id) (plist-get row :engine_id))
                                              (equal (cdr id) (plist-get row :physical_id))))
                           (plist-get omnivox-library--index :voices)))
-           (service (omnivox-library--service)))
-      (unwind-protect
-          (omnivox-library--request service (list :command "enable" :engine (car id) :voice (cdr id)
-                                                  :enabled (if (eq (plist-get row :enabled) t) :false t)
-                                                  :expected_sha256 omnivox-library--index-sha))
-        (when (process-live-p service) (delete-process service)))
+           (source (omnivox-library--source-key)))
+      (omnivox-library--edit-selection
+       source omnivox-library--index-sha 'toggle row)
       (omnivox-library-refresh)
       (run-hooks 'omnivox-library--changed-hook)
       (message "%s %s; press a to review and Apply"
@@ -191,13 +188,8 @@ Press q to return to engine details.
   (interactive "sNative validation operation UUID: ")
   (if (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
       (emacsvox-aural-voice-workbench--library-action 'import operation)
-    (omnivox-library-apply--uuid operation)
-    (let ((service (omnivox-library--service)))
-      (unwind-protect
-          (omnivox-library--request service (list :command "import" :operation operation
-                                                  :package (omnivox-library--uuid) :revision (omnivox-library--uuid)
-                                                  :expected_sha256 omnivox-library--index-sha))
-        (when (process-live-p service) (delete-process service))))
+    (omnivox-library--edit-selection
+     (omnivox-library--source-key) omnivox-library--index-sha 'import nil operation)
     (omnivox-library-refresh)
     (run-hooks 'omnivox-library--changed-hook)
     (message "Voices installed disabled; original files retained")))
@@ -209,11 +201,8 @@ Press q to return to engine details.
       (emacsvox-aural-voice-workbench--library-action 'slt)
     (when (equal omnivox-library--engine "piper")
       (user-error "Bundled SLT belongs to Flite; open the Flite library to add it"))
-    (let ((service (omnivox-library--service)))
-      (unwind-protect
-          (omnivox-library--request service (list :command "include-flite-slt"
-                                                  :expected_sha256 omnivox-library--index-sha))
-        (when (process-live-p service) (delete-process service))))
+    (omnivox-library--edit-selection
+     (omnivox-library--source-key) omnivox-library--index-sha 'slt)
     (omnivox-library-refresh)
     (run-hooks 'omnivox-library--changed-hook)
     (message "Built-in Flite SLT included and enabled for the next Apply")))

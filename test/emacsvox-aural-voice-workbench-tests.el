@@ -102,6 +102,38 @@
          (emacsvox-aural-voice-workbench-refresh)
          ,@body))))
 
+(ert-deftest emacsvox-aural-workbench-and-library-toggle-the-same-captured-voice ()
+  (let* ((row '(:engine_id "piper" :physical_id "voice" :enabled t
+                :display_name "Example"))
+         (index (list :voices (vector row))) requests)
+    (dolist (view '(library workbench))
+      (with-temp-buffer
+        (setq major-mode (if (eq view 'workbench)
+                             'emacsvox-aural-voice-workbench-mode
+                           'omnivox-library-mode))
+        (setq-local omnivox-library--index index)
+        (setq-local omnivox-library--index-sha "captured-revision")
+        (setq-local emacsvox-aural-voice-workbench-view 'physical)
+        (setq-local emacsvox-aural-voice-workbench-inventory '(:adapter "omnivox"))
+        (setq-local emacsvox-aural-voice-workbench--library-source '(captured))
+        (setq-local emacsvox-aural-voice-workbench--library-reply
+                    (list :index index :sha256 "captured-revision"))
+        (let ((omnivox-library--changed-hook nil))
+          (cl-letf (((symbol-function 'tabulated-list-get-id)
+                     (lambda () (if (eq view 'workbench) '("piper" "voice") '("piper" . "voice"))))
+                    ((symbol-function 'omnivox-library--source-key) (lambda () '(captured)))
+                    ((symbol-function 'omnivox-library--service)
+                     (lambda () (make-pipe-process :name "view selection fixture" :noquery t)))
+                    ((symbol-function 'omnivox-library--request)
+                     (lambda (_worker request) (push request requests)))
+                    ((symbol-function 'omnivox-library-refresh) #'ignore))
+            (omnivox-library-toggle)))))
+    (should (= 2 (length requests)))
+    (should (equal (car requests) (cadr requests)))
+    (should (equal (car requests)
+                   '(:command "enable" :engine "piper" :voice "voice"
+                     :enabled :false :expected_sha256 "captured-revision")))))
+
 (defun emacsvox-test--expand-voice-languages ()
   "Open collapsed headings using the browser's actual Return action."
   (dolist (row (copy-sequence tabulated-list-entries))
