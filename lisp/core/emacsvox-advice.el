@@ -29,13 +29,8 @@
 
 ;;; Commentary:
 
-;; This module defines the advice forms for making the core of Emacs speak
-;; Advice forms that are specific to Emacs subsystems do not belong here!
-;; I violate this at present by advising completion.
-;; Note that we needed to advice a lot more for Emacs 19 and
-;; Emacs 20 than we do for Emacs 21 and Emacs 22.
-;; As of August 2007, this file is being purged of advice forms
-;; not needed in Emacs 22.
+;; Core advice installation and shared activation order.
+;; Completion feedback lives in `emacsvox-advice-completion'.
 
 ;;; Code:
 
@@ -721,92 +716,22 @@ are passed through unchanged."
 
 ;;;  Advice PComplete
 
-(defun emacsvox--advice-pcomplete-list-after (&rest _)
-  "Announce an interactive PComplete listing."
-  (when (ems-interactive-p 'pcomplete-list)
-    (emacsvox-icon 'help) (emacsvox-icon 'complete)))
+(require 'emacsvox-advice-completion)
 
 (advice-add
  'pcomplete-list :after #'emacsvox--advice-pcomplete-list-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-pcomplete-show-completions-around
-    (original &rest arguments)
-  "Run ORIGINAL with PComplete messages silenced."
-  (ems-with-messages-silenced (apply original arguments)))
 
 (advice-add
  'pcomplete-show-completions :around
  #'emacsvox--advice-pcomplete-show-completions-around
  '((name . emacsvox)))
 
-(defun emacsvox--speak-completion-text (start end)
-  "Speak completion text between START and END."
-  (tts-speak (buffer-substring start end)))
-
-(defun emacsvox--completion-around
-    (target backward-syntax speaker original arguments)
-  "Call ORIGINAL once and announce an interactive completion.
-TARGET names the advised command.  BACKWARD-SYNTAX locates the beginning of
-the completion before the call.  SPEAKER receives the resulting start and end
-positions.  ARGUMENTS are passed to ORIGINAL unchanged."
-  (let ((start
-         (save-excursion
-           (skip-syntax-backward backward-syntax)
-           (point))))
-    (let ((result (apply original arguments)))
-      (when (ems-interactive-p target)
-        (funcall speaker start (point))
-        (emacsvox-icon 'complete))
-      result)))
-
-(defun emacsvox--advice-pcomplete-around (original &rest arguments)
-  "Speak text completed by an interactive `pcomplete' call."
-  (emacsvox--completion-around
-   'pcomplete "^ >" #'emacsvox-speak-region original arguments))
-
 (advice-add
  'pcomplete :around #'emacsvox--advice-pcomplete-around
  '((name . emacsvox)))
 
 ;;;  Advice hippie expand:
-
-(declare-function word-at-point "thingatpt" ())
-
-(defmacro emacsvox-advice--define-completion-around-advice
-    (targets helper)
-  "Define native around advice using HELPER for each command in TARGETS."
-  `(progn
-     ,@(mapcar
-        (lambda (target)
-          (let ((function
-                 (intern (format "emacsvox--advice-%s-around" target))))
-            `(progn
-               (defun ,function (original &rest arguments)
-                 ,(format "Provide completion feedback for `%s'." target)
-                 (,helper ',target original arguments))
-               (advice-add
-                ',target :around #',function '((name . emacsvox))))))
-        targets)))
-
-(defun emacsvox--expanding-completion-around
-    (target original arguments)
-  "Call ORIGINAL once and announce expansion by TARGET.
-ARGUMENTS are passed to ORIGINAL unchanged."
-  (if (ems-interactive-p target)
-      (let ((start
-             (save-excursion
-               (skip-syntax-backward "^ >")
-               (point)))
-            result)
-        (ems-with-messages-silenced
-          (setq result (apply original arguments))
-          (emacsvox-icon 'complete)
-          (if (< start (point))
-              (tts-speak (buffer-substring start (point)))
-            (tts-speak (word-at-point))))
-        result)
-    (apply original arguments)))
 
 (emacsvox-advice--define-completion-around-advice
  (hippie-expand complete)
@@ -860,34 +785,20 @@ ARGUMENTS are passed to ORIGINAL unchanged."
  #'emacsvox--advice-read-multiple-choice-before
  '((name . emacsvox)))
 
-(declare-function emacsvox-vertico--note-minibuffer-content-presented
-                  "emacsvox-vertico" nil)
-
 (emacsvox-advice--define-interactive-after-advice
     (minibuffer-complete-history
      next-history-element previous-history-element
      next-line-or-history-element previous-line-or-history-element
      previous-matching-history-element next-matching-history-element)
     "Speak the history or completion element just inserted."
-  (emacsvox-icon 'select-object)
-  (tts-with-punctuations
-   'all
-   (tts-speak
-    (or (minibuffer-contents)
-        (emacsvox-get-current-completion))))
-  (when
-      (fboundp 'emacsvox-vertico--note-minibuffer-content-presented)
-    (emacsvox-vertico--note-minibuffer-content-presented)))
+  (emacsvox-advice-completion--history))
 
 (emacsvox-advice--define-interactive-after-advice
     (minibuffer-next-completion minibuffer-previous-completion
                                 minibuffer-next-line-completion
                                 minibuffer-previous-line-completion)
     "Speak the newly selected minibuffer completion."
-  (tts-with-punctuations
-   'all
-   (emacsvox-icon 'item)
-   (tts-speak (emacsvox-get-current-completion))))
+  (emacsvox-advice-completion--minibuffer-candidate))
 
 (defvar emacsvox-last-message nil
   "Last output from `message'.")
@@ -1119,34 +1030,15 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;;;  Advice completion-at-point:
 
-(defun emacsvox--advice-completion-at-point-around
-    (original &rest arguments)
-  "Speak text completed by an interactive `completion-at-point' call."
-  (emacsvox--completion-around
-   'completion-at-point "^->_" #'emacsvox--speak-completion-text
-   original arguments))
-
 (advice-add
  'completion-at-point :around
  #'emacsvox--advice-completion-at-point-around
  '((name . emacsvox)))
 
-(defun emacsvox--advice-minibuffer-choose-completion-around
-    (original &rest arguments)
-  "Speak text inserted by interactive minibuffer completion."
-  (emacsvox--completion-around
-   'minibuffer-choose-completion "^ >_" #'emacsvox--speak-completion-text
-   original arguments))
-
 (advice-add
  'minibuffer-choose-completion :around
  #'emacsvox--advice-minibuffer-choose-completion-around
  '((name . emacsvox)))
-
-(defun emacsvox--advice-minibuffer-choose-completion-or-exit-after (&rest _)
-  "Announce accepting or exiting minibuffer completion."
-  (when (ems-interactive-p 'minibuffer-choose-completion-or-exit)
-    (emacsvox-speak-line) (emacsvox-icon 'close-object)))
 
 (advice-add
  'minibuffer-choose-completion-or-exit :after
@@ -1245,36 +1137,16 @@ Treat unknown state as hidden."
 
 ;;;  advice completion functions to speak:
 
-(defvar dabbrev--last-expansion)
-
 (emacsvox-advice--define-interactive-after-advice
     (dabbrev-expand dabbrev-completion)
     "Speak the expanded dabbrev text."
-  (accept-process-output)
-  (tts-with-punctuations 'all (tts-speak dabbrev--last-expansion)))
+  (emacsvox-advice-completion--expansion))
 
 (voice-setup-add-map
  '(
    (completions-annotations voice-annotate)
    (completions-common-part voice-monotone-extra)
    (completions-first-difference voice-bolden)))
-
-(defun emacsvox--minibuffer-completion-around
-    (target original arguments)
-  "Call ORIGINAL once and announce minibuffer completion by TARGET.
-ARGUMENTS are passed to ORIGINAL unchanged."
-  (if (ems-interactive-p target)
-      (let ((prior (point))
-            result)
-        (ems-with-messages-silenced
-          (emacsvox-kill-buffer-carefully "*Completions*")
-          (setq result (apply original arguments))
-          (if (> (point) prior)
-              (tts-with-punctuations
-               'all (tts-speak (buffer-substring (point) prior)))
-            (emacsvox-speak-completions-if-available)))
-        result)
-    (apply original arguments)))
 
 (emacsvox-advice--define-completion-around-advice
  (minibuffer-complete-word minibuffer-complete
@@ -1284,34 +1156,11 @@ ARGUMENTS are passed to ORIGINAL unchanged."
                            crm-minibuffer-complete-and-exit)
  emacsvox--minibuffer-completion-around)
 
-(defun emacsvox--symbol-completion-around
-    (_target original arguments)
-  "Call ORIGINAL once and announce symbol completion.
-ARGUMENTS are passed to ORIGINAL unchanged."
-  (let ((prior
-         (save-excursion
-           (skip-syntax-backward "^ >")
-           (point)))
-        result)
-    (ems-with-messages-silenced
-      (setq result (apply original arguments))
-      (if (> (point) prior)
-          (tts-with-punctuations
-           'all
-           (tts-speak (buffer-substring prior (point))))
-        (emacsvox-speak-completions-if-available)))
-    result))
-
 (emacsvox-advice--define-completion-around-advice
  (lisp-complete-symbol complete-symbol widget-complete)
  emacsvox--symbol-completion-around)
 
 (define-key minibuffer-local-completion-map "\C-o" 'switch-to-completions)
-
-(defun emacsvox--advice-switch-to-completions-after (&rest _)
-  "Speak the first completion after switching to the completions buffer."
-  (emacsvox-icon 'select-object)
-  (tts-speak (emacsvox-get-current-completion)))
 
 (advice-add
  'switch-to-completions :after
@@ -1322,14 +1171,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (next-line-completion previous-line-completion
                           next-completion previous-completion)
     "Speak the newly selected completion."
-  (emacsvox-icon 'select-object)
-  (tts-with-punctuations
-   'all (tts-speak (emacsvox-get-current-completion))))
-
-(defun emacsvox--advice-choose-completion-before (&rest _)
-  "Cue an interactive completion choice."
-  (when (ems-interactive-p 'choose-completion)
-    (emacsvox-icon 'button)))
+  (emacsvox-advice-completion--candidate))
 
 (advice-add
  'choose-completion :before #'emacsvox--advice-choose-completion-before
@@ -1337,29 +1179,14 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;;;  tmm support
 
-(defun emacsvox--advice-tmm-goto-completions-after (&rest _)
-  "Announce an interactive TMM completion."
-  (when (ems-interactive-p 'tmm-goto-completions)
-    (emacsvox-icon 'help)
-    (tts-speak (emacsvox-get-current-completion))))
-
 (advice-add
  'tmm-goto-completions :after
  #'emacsvox--advice-tmm-goto-completions-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-tmm-menubar-before (&rest _)
-  "Cue opening the text-mode menu bar interactively."
-  (when (ems-interactive-p 'tmm-menubar)
-    (emacsvox-icon 'open-object)))
-
 (advice-add
  'tmm-menubar :before #'emacsvox--advice-tmm-menubar-before
  '((name . emacsvox)))
-
-(defun emacsvox--advice-tmm-shortcut-after (&rest _)
-  "Cue a TMM shortcut."
-  (emacsvox-icon 'button))
 
 (advice-add
  'tmm-shortcut :after #'emacsvox--advice-tmm-shortcut-after
@@ -3406,19 +3233,6 @@ played afterward according to the result."
   (emacsvox-speak-line))
 
 ;;; Advice Semantic:
-
-(defun emacsvox--advice-semantic-complete-symbol-around
-    (original &rest arguments)
-  "Call ORIGINAL once and speak the resulting semantic completion."
-  (let ((prior (point))
-        (tts-stop-immediately t))
-    (emacsvox-kill-buffer-carefully "*Completions*")
-    (let ((result (apply original arguments)))
-      (if (> (point) prior)
-          (tts-with-punctuations 'all
-            (emacsvox-speak-rest-of-buffer))
-        (emacsvox-speak-completions-if-available))
-      result)))
 
 (advice-add
  'semantic-complete-symbol :around

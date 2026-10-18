@@ -3523,3 +3523,13 @@ interruption behavior are unchanged. All 35 core speech cases pass from source
 and compiled code; existing playback handoff checks retain their baseline.
 The Lisp refactoring plan records commits and build checks. Listening acceptance
 remains separate, and the running personal session was not reloaded.
+
+Core completion feedback now lives in =emacsvox-advice-completion=. Advice,
+face maps and keys retain their original installation order. The Lisp refactoring
+plan records the source, compiled and graphical checks; listening remains open.
+
+- [ ] Investigate duplicate reading-choice prompt speech in graphical Emacs.
+  The isolated =emacsvox-reading-unit-prompt-is-spoken-once-on-main= case
+  receives a notification copy of a prompt already submitted to main speech.
+  The pre-refactor compiled facade reproduces the same result; the batch case
+  passes. No production behavior or test expectation was changed for this issue.

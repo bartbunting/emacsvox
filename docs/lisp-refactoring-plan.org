@@ -354,6 +354,42 @@ pass. The incremental build has no warnings. The 234-line tracked-reading
 block is byte-for-byte unchanged; the speech facade falls from 3781 to 3550
 lines. No live session was changed, and listening acceptance remains open.
 
+** Core completion, input and message advice
+
+Accepted on 2026-10-18: extract completion feedback, prompt/minibuffer
+interaction, and message/error presentation into separate definition modules.
+The core advice facade retains registration, hooks, face maps, keys and their
+existing order. Preserve public names, interactive target checks, dynamic
+bindings, callback behavior and compatibility state.
+
+The fresh baseline passes all 231 focused core cases. The maintained
+=test/run-core-advice-tests.el= runner explicitly loads source or compiled
+modules and checks their ownership paths. Loading definitions must not load
+the activation facade, change advice/hooks/error-handler selection or start
+processes. The personal Emacs session remains untouched.
+
+Completion handlers and their existing generator now live in
+=emacsvox-advice-completion=. Four generated after-advice groups delegate to
+feedback helpers; their target guards and registration remain in the facade.
+Direct handlers and the generator are unchanged.
+
+The completion slice passes all 231 source cases and all 230 applicable
+compiled cases. The compiled runner explicitly excludes the existing scrolling
+fixture that mocks two inlined =defsubst= helpers; compiling the pre-extraction
+facade reproduces that failure. It remains covered by the source run.
+
+The isolated graphical completion/input/Vertico run passes 57 of 58 cases both
+before and after extraction. =emacsvox-reading-unit-prompt-is-spoken-once-on-main=
+receives duplicate notification speech in graphical Emacs; this pre-existing
+behavior is recorded in the UI findings queue. The runner loads the installed
+Vertico at =~/.emacs.d/elpa/vertico-20260913.1525/= and supplies Flyspell state
+required by its fixtures. Initial attempts to run unrelated batch search tests
+in a graphical reporting buffer were outside this focused graphical check.
+
+All 296 facade registration forms retain their targets and order. Incremental
+compilation is warning-free; byte-code preflight, headers, normal compiled
+startup, generated reference and the documentation release check pass.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

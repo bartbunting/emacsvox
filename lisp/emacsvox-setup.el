@@ -104,6 +104,7 @@
     "core/emacsvox-tracked-reading.el"
     "core/emacsvox-speak.el"
     "aural/sox-gen.el"
+    "core/emacsvox-advice-completion.el"
     "core/emacsvox-advice.el"
     "integrations/emacsvox-websearch.el"
     "integrations/emacsvox-google.el"
