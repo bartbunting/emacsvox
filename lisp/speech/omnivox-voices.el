@@ -57,7 +57,7 @@
 (declare-function emacsvox-aural-effective-voice-palette
                   "emacsvox-aural-providers" ())
 (declare-function tts--dispatch-playback-marker-event
-                  "tts-speak" (process event &optional observer))
+                  "tts-lifecycle" (process event &optional observer))
 (declare-function tts-stop "tts-speak" (&optional all))
 
 (defvar emacsvox-servers-directory)
@@ -513,8 +513,8 @@ Return non-nil when LINE is a control event, including a malformed one."
         (plist-get event :dispatch_id)
         (plist-get event :utterance_id)))
 
-(declare-function tts--dispatch-enqueue "tts-speak" (owner function arguments &optional terminal))
-(declare-function tts--consume-process-lines "tts-speak" (process output fragment busy handler limit))
+(declare-function tts--dispatch-enqueue "tts-lifecycle" (owner function arguments &optional terminal))
+(declare-function tts--consume-process-lines "tts-lifecycle" (process output fragment busy handler limit))
 
 (defun omnivox--notify-realized-route (route)
   "Notify route observers with independent copies of ROUTE."

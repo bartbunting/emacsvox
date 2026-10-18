@@ -37,7 +37,7 @@
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 (declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--preview-layered-request "omnivox-preview" (entry process &optional native))
-(declare-function tts--dispatch-copy-data "tts-speak" (value))
+(declare-function tts--dispatch-copy-data "tts-lifecycle" (value))
 (defvar omnivox-voice-configuration-timeout)
 (defvar omnivox--control-inventory-property)
 (defvar tts-stopped-hook)

@@ -44,7 +44,7 @@
 (declare-function emacsvox-aural-inspection-attach-source
                   "emacsvox-aural-inspection" (source-buffer))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
-(declare-function tts--retire-process "tts-speak" (process))
+(declare-function tts--retire-process "tts-lifecycle" (process))
 (declare-function tts-restart "tts-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 

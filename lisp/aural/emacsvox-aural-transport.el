@@ -50,12 +50,12 @@
 (declare-function omnivox-scale-average-pitch
                   "omnivox-voices" (value))
 (declare-function tts--protocol-dispatch "tts-speak" ())
-(declare-function tts--interrupt-process "tts-speak"
+(declare-function tts--interrupt-process "tts-lifecycle"
                   (process &optional notifications preserved preview))
-(declare-function tts--preparation-check "tts-speak" (&optional preparation))
-(declare-function tts--preparation-interrupt "tts-speak" (process))
-(declare-function tts--preparation-before-delivery "tts-speak" (process))
-(declare-function tts--call-with-preparation "tts-speak" (process function &rest arguments))
+(declare-function tts--preparation-check "tts-lifecycle" (&optional preparation))
+(declare-function tts--preparation-interrupt "tts-lifecycle" (process))
+(declare-function tts--preparation-before-delivery "tts-lifecycle" (process))
+(declare-function tts--call-with-preparation "tts-lifecycle" (process function &rest arguments))
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
@@ -63,12 +63,12 @@
                   (pitch duration &optional force))
 (declare-function tts--omnivox-program-p "tts-speak" (&optional program))
 (declare-function tts--prepare-structured-dispatch
-                  "tts-speak"
+                  "tts-lifecycle"
                   (marker-callback completion-callback semantic-actions))
 (declare-function tts-initialize "tts-speak" ())
 (declare-function tts-voice-reset-code "tts-speak" ())
 
-(declare-function tts--preparation-output-guard "tts-speak" (process))
+(declare-function tts--preparation-output-guard "tts-lifecycle" (process))
 
 (defvar tts-speaker-process)
 (defvar tts--marker-event-function)
@@ -133,13 +133,13 @@ delay.  Ordered and urgent transactions are never delayed."
 (defvar emacsvox-aural--delivery-dispatch-owners nil
   "Inactive or armed dispatch owners captured by the current transaction.")
 
-(declare-function tts--dispatch-write-packet "tts-speak" (process command owners &optional description))
-(declare-function tts--dispatch-abandon "tts-speak" (owner &optional status))
-(declare-function tts--dispatch-owner-id "tts-speak" (owner))
-(declare-function tts--dispatch-owner-published "tts-speak" (owner))
-(declare-function tts--dispatch-publish "tts-speak" (owner))
-(declare-function tts--preparation-cancel-current "tts-speak" ())
-(declare-function tts--preparation-set-queue-guard "tts-speak" (guard))
+(declare-function tts--dispatch-write-packet "tts-lifecycle" (process command owners &optional description))
+(declare-function tts--dispatch-abandon "tts-lifecycle" (owner &optional status))
+(declare-function tts--dispatch-owner-id "tts-lifecycle" (owner))
+(declare-function tts--dispatch-owner-published "tts-lifecycle" (owner))
+(declare-function tts--dispatch-publish "tts-lifecycle" (owner))
+(declare-function tts--preparation-cancel-current "tts-lifecycle" ())
+(declare-function tts--preparation-set-queue-guard "tts-lifecycle" (guard))
 
 (defvar emacsvox-aural--delivery-timeline-runs nil
   "Reverse-ordered concrete runs captured for structured delivery.")

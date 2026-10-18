@@ -115,6 +115,10 @@
   (when (featurep 'emacsvox-aural-transport)
     (error
      "Aural compiler, planner, source, and inspection loaded queue transport"))
+  ;; Lifecycle definitions load independently, without initializing the facade.
+  (load (expand-file-name "speech/tts-lifecycle.elc" build-directory) nil nil)
+  (when (or (featurep 'tts-speak) (process-list))
+    (error "Loading TTS lifecycle initialized speech"))
   (dolist
       (library
        '("speech/tts-queue-state"
@@ -169,7 +173,12 @@
        external-feature)))
   (dolist
       (function
-       '(tts--protocol-queue-text
+       '(tts--call-with-preparation
+         tts--dispatch-command
+         tts--interrupt-process
+         tts--retire-process
+         tts--speech-process-sentinel
+         tts--protocol-queue-text
          voice-from-acss
          dectalk-voice-capabilities
          plain-voice-capabilities

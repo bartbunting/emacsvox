@@ -85,6 +85,7 @@ ui/omnivox-engine-configuration.elc \
 ui/omnivox-punctuation.elc \
 speech/omnivox-punctuation-profiles.elc \
 ui/omnivox-espeak-variants.elc \
+speech/tts-lifecycle.elc \
 speech/tts-speak.elc \
 $(VOICE_OBJECTS)
 
@@ -482,7 +483,8 @@ aural/emacsvox-aural-schemes.elc aural/emacsvox-aural-source.elc
 aural/emacsvox-aural-submission.elc: \
 aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-planner.elc \
 aural/emacsvox-aural-source.elc
-speech/tts-speak.elc: aural/emacsvox-aural-transport.elc
+speech/tts-lifecycle.elc: aural/emacsvox-aural-transport.elc speech/tts-queue-state.elc
+speech/tts-speak.elc: speech/tts-lifecycle.elc aural/emacsvox-aural-transport.elc
 speech/voice-setup.elc: \
 speech/tts-speak.elc aural/emacsvox-aural-compatibility-voice.elc
 voices/voice-defs.elc: speech/voice-setup.elc

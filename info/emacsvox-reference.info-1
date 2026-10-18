@@ -751,6 +751,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * sox-gen:: Binaural Beats And More Using SoX.
 * swiftmac-voices:: Define  Swiftmac tags.
 * tetris:: Tetris for Emacs.
+* tts-lifecycle:: Speech preparation and dispatch lifecycle.
 * tts-queue-state:: Bounded speech input observation.
 * tts-speak:: Interface to speech server.
 * voice-defs:: Define voices for voice-lock.

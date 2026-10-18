@@ -172,7 +172,33 @@ Byte-code preflight, headers and generated reference pass. Fresh compiled
 setup starts no speech processes. The personal Emacs session is unchanged.
 The documentation release check passed before committing this checkpoint.
 
-* Result and next decision
+Committed as =b9149bd40=.
+
+** TTS lifecycle
+
+Preparation, dispatch tracking, output filtering, interruption and retirement
+now live together in =speech/tts-lifecycle=. The moved block, including
+all four structure definitions, is byte-for-byte unchanged. The existing
+=tts-speak= feature loads it at the original definition site and retains
+configuration, process creation, text preparation and notification commands.
+The entry file falls from 4830 to 3653 lines.
+
+Forward declarations name the new owner. Make, startup freshness inventories
+and isolated compiled checks include the new module.
+The existing handoff with aural transport and Omnivox previews is preserved.
+
+The affected suite passes 712 of 713 cases before extraction, from extracted
+source, and from fresh byte-code. Its only failure is the existing
+=emacsvox-aural-capital-tones-preserve-legacy-word-tails= case. Coverage includes
+preparation, dispatch, queue handoff, legacy and native preview contracts,
+remote speech, replay and voice-library Apply. Isolated compiled aural parity
+passes and verifies that loading lifecycle definitions neither loads the
+public speech facade nor starts processes. Fresh compiled setup verifies the
+new loaded paths and stays idle. Incremental compilation, byte-code preflight,
+headers and generated reference pass; compiler warnings match the baseline.
+The documentation release check passed before committing this checkpoint.
+
+* Result
 
 The completed slices reduce the main files as follows. Counts include headers
 and comments; extracted modules retain named authors and copyright holders.
@@ -184,9 +210,16 @@ and comments; extracted modules retain named authors and copyright holders.
 | omnivox-library.el | 1069 | 419 |
 | omnivox-voices.el | 3117 | 2744 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
+| tts-speak.el | 4829 | 3653 |
 
-The remaining large runtime is =tts-speak.el=, at 4830 lines. Its lifecycle
-crosses several runtime layers:
+The identified extraction pass is complete. Broad core utilities remain
+separate work, as scoped above.
+
+* TTS lifecycle boundary
+
+Accepted on 2026-10-18: keep preparation, dispatch tracking, interruption and
+retirement in one lifecycle module. Preserve the existing two-way TTS/aural
+dependency and callback order. These operations cross runtime layers:
 
 - =tts--dispatch-new-owner= reserves a dispatch in a preparation scope and
   records it in the enclosing aural delivery transaction.
@@ -198,20 +231,10 @@ crosses several runtime layers:
 - =emacsvox-aural--call-independent-callback= clears both TTS preparation and
   aural capture state before invoking callbacks that may submit more speech.
 
-Choose the next lifecycle scope before splitting those responsibilities:
-
-1. Extract preparation, dispatch tracking, interruption and retirement together
-   into one internal lifecycle module. Preserve the current two-way TTS/aural
-   dependency and existing callback order. This reduces the entry file while
-   retaining current lifecycle ownership.
-2. Redesign the private handoff between TTS and aural delivery first, then
-   extract independently owned services. This requires a separate design for
-   reservation, publication, cancellation and reentrant callback boundaries.
-
-Recommend option 1 as the next bounded refactor; option 2 is a separate
-architecture task. TTS lifecycle ownership and public interfaces remain as
-before. Xhigh would suit an ownership redesign because it crosses
-Emacs, Omnivox preview and queue-cancellation semantics.
+A deeper redesign of the private handoff remains a separate architecture
+task. Independently owned services would need an explicit contract for
+reservation, publication, cancellation and reentrant callback boundaries.
+The extraction retains current lifecycle ownership and public interfaces.
 
 Listening acceptance and optional native-service checks remain separate from
 the automated results above. The known tone-test failure remains unchanged.

@@ -68,6 +68,7 @@
     "ui/emacsvox-settings-integrations.el"
     "ui/emacsvox-settings-changes.el"
     "ui/emacsvox-welcome.el"
+    "speech/tts-lifecycle.el"
     "speech/tts-speak.el"
     "speech/tts-queue-state.el"
     "core/emacsvox-emoji.el"
