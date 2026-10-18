@@ -1,0 +1,54 @@
+#+title: Lisp responsibility refactoring
+#+date: 2026-10-18
+#+startup: content
+
+* Scope
+
+Follow the completed directory migration with internal responsibility splits.
+Preserve public commands, features, keys, saved data, speech protocols and
+optional-package behaviour. The directory registry and Make inventory retain
+their roles under ADR 0029. No compatibility removal or runtime dependency
+upgrade is included. Existing broad core utilities remain later work.
+
+Each slice gets affected source tests, current byte-code, fresh compiled
+verification, header and documentation checks, and its own commit. Graphical
+navigation uses isolated Xvfb Emacs sessions. The running personal session is
+not reloaded. Automated checks do not establish listening acceptance.
+
+* Delivery
+
+1. Extract Agent Shell's rendered-table adapter, retaining central activation.
+2. Separate library runtime activation from the interactive voice library;
+   share explicit library operations with the workbench.
+3. Separate workbench row construction and filtering from editing interaction.
+4. Extract Omnivox control and preview codecs and aural timeline encoding from
+   runtime lifecycle ownership where their dependencies permit it.
+5. Review the remaining Agent Shell navigation/event and TTS lifecycle splits
+   against the resulting boundaries. Record any design choice before changing
+   ownership, ordering or public contracts.
+
+* Verification baseline
+
+All 673 pinned integration tests pass before extraction. The dependency cache
+in =local.mk= predates the current lock; the verified existing cache at
+=/tmp/emacsvox-layout-final-test-deps= matches the current lock and selected
+Emacs 31.0.90. Neither configuration nor dependency pins were changed.
+
+The earlier complete-tree migration records known unrelated full-suite
+failures in [[file:lisp-layout-plan.org][the layout plan]]. Keep these separate from regressions.
+
+* Checkpoints
+
+** Agent Shell tables
+
+Extracted rendered-table mapping, movement, speech and contextual keys into
+=emacsvox-agent-shell-tables=. The main module still owns activation and calls
+the adapter registration after creating speech controls. Loading table
+registration earlier changed minor-map precedence; the existing contextual-key
+tests caught this, and explicit registration preserves the original order.
+
+All 673 integration cases pass with source and with the three Agent Shell
+modules explicitly loaded from byte-code. All 11 graphical integration cases
+pass in a fresh Xvfb Emacs. Incremental compilation, byte-code preflight and
+headers pass. Generated reference follows the relocated commands. Listening
+acceptance remains separate; the running session was not changed.

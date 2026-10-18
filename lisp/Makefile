@@ -178,6 +178,7 @@ integrations/emacsvox-ace-window.elc \
 integrations/emacsvox-add-log.elc \
 integrations/emacsvox-amark.elc \
 integrations/emacsvox-agent-shell-render.elc \
+integrations/emacsvox-agent-shell-tables.elc \
 integrations/emacsvox-agent-shell.elc \
 integrations/emacsvox-annotate.elc \
 integrations/emacsvox-arc.elc \
@@ -409,7 +410,8 @@ integrations/emacsvox-bookshare.elc integrations/emacsvox-epub.elc integrations/
 
 emacsvox-preamble.elc: emacsvox-version.elc emacsvox-paths.elc
 
-integrations/emacsvox-agent-shell.elc: integrations/emacsvox-agent-shell-render.elc core/emacsvox-table-reader.elc
+integrations/emacsvox-agent-shell-tables.elc: integrations/emacsvox-agent-shell-render.elc core/emacsvox-table-reader.elc
+integrations/emacsvox-agent-shell.elc: integrations/emacsvox-agent-shell-tables.elc
 integrations/emacsvox-markdown.elc integrations/emacsvox-org.elc: core/emacsvox-table-reader.elc
 
 integrations/emacsvox-eat-input.elc: integrations/emacsvox-eat-core.elc

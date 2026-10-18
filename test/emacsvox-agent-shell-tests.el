@@ -23,9 +23,10 @@
        (directory (expand-file-name
                    "../lisp/" (file-name-directory
                                (or load-file-name buffer-file-name)))))
-  ;; Exercise the exact renderer and facade in a fresh compiled run, or load
-  ;; both sources explicitly.  Other dependencies retain the runner's policy.
+  ;; Exercise each internal module and the facade from the selected files.
+  ;; Other dependencies retain the runner's policy.
   (dolist (entry '(("integrations/emacsvox-agent-shell-render" . emacsvox-agent-shell--semantic-block-type)
+                   ("integrations/emacsvox-agent-shell-tables" . emacsvox-agent-shell--table-snapshot)
                    ("integrations/emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
     (let ((path (expand-file-name (concat (car entry) suffix) directory)))
       (load path nil nil t)
