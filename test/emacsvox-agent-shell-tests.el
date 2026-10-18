@@ -31,6 +31,7 @@
                    ("integrations/emacsvox-agent-shell-events" . emacsvox-agent-shell--handle-lifecycle-event)
                    ("integrations/emacsvox-agent-shell-interaction" . emacsvox-agent-shell--question-feedback)
                    ("integrations/emacsvox-agent-shell-presentation" . emacsvox-agent-shell--effective-speech-level)
+                   ("integrations/emacsvox-agent-shell-motion" . emacsvox-agent-shell--vertical-motion-around)
                    ("integrations/emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
     (let ((path (expand-file-name (concat (car entry) suffix) directory)))
       (load path nil nil t)
@@ -187,13 +188,13 @@
 (declare-function emacsvox-agent-shell--speak-focus-header-if-needed
                   "emacsvox-agent-shell-presentation" ())
 (declare-function emacsvox-agent-shell--prepare-speech-text
-                  "emacsvox-agent-shell" (text))
+                  "emacsvox-agent-shell-motion" (text))
 (declare-function emacsvox-agent-shell--chat-overlay-tag
-                  "emacsvox-agent-shell" (overlay))
+                  "emacsvox-agent-shell-motion" (overlay))
 (declare-function emacsvox-agent-shell--chat-overlay-category
-                  "emacsvox-agent-shell" (overlay))
+                  "emacsvox-agent-shell-motion" (overlay))
 (declare-function emacsvox-agent-shell--replace-status-icons-for-speech
-                  "emacsvox-agent-shell" (text))
+                  "emacsvox-agent-shell-motion" (text))
 (declare-function emacsvox-agent-shell--remove-visual-chrome-for-speech
                   "emacsvox-agent-shell-render" (text))
 (declare-function emacsvox-agent-shell--record-response-section
@@ -220,33 +221,33 @@
 (declare-function emacsvox-agent-shell--install-speech-control-bindings
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--filter-vertical-toggle-hint
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--semantic-item-feedback
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--restore-message-filter
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--vertical-toggle-hint-cleanup
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--vertical-toggle-hint-setup
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--vertical-navigation-pre-command
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--vertical-navigation-post-command
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--next-line-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-motion"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--previous-line-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-motion"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--beginning-of-visual-line-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-motion"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--end-of-visual-line-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-motion"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--speak-line-around
-                  "emacsvox-agent-shell" (original-function &rest arguments))
+                  "emacsvox-agent-shell-motion" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--toggle-fragment-around
                   "emacsvox-agent-shell" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--toggle-fragment-action-around

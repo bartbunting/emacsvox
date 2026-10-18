@@ -29,8 +29,8 @@
 
 ;; Transcript locations, response summaries, semantic movement, fragment
 ;; expansion and source-block interaction. Presentation supplies shared
-;; feedback, and events owns asynchronous response observation. The facade
-;; retains activation and live-input policy.
+;; feedback, events owns asynchronous response observation, and motion owns
+;; visual movement and live-input policy. The facade retains activation.
 ;; Repeat-key installation is explicit so the facade controls activation order.
 ;; Load through `emacsvox-agent-shell'.
 

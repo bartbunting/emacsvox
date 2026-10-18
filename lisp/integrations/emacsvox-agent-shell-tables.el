@@ -40,15 +40,15 @@
 (declare-function agent-shell--point-in-live-input-p "agent-shell-prompt" ())
 
 (declare-function emacsvox-agent-shell--vertical-toggle-hint-setup
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--vertical-toggle-hint-cleanup
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--presentation-facts
                   "emacsvox-agent-shell-presentation" (role &optional event states attributes))
 (declare-function emacsvox-agent-shell--submit-text-feedback
                   "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function emacsvox-agent-shell--live-input-bounds
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-motion" ())
 (defvar emacsvox-agent-shell-table-titles)
 (defvar emacsvox-agent-shell-table-data-position)
 (defvar emacsvox-agent-shell--speech-control-active)

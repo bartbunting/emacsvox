@@ -280,6 +280,26 @@ All 673 source and compiled integration cases and all 11 graphical cases pass.
 Compilation has no warnings, byte-code preflight and headers pass, and the
 generated reference follows the four relocated speech commands.
 
+Presentation committed as =03551acf0= after the documentation release check.
+
+The fourth slice moves rendered chat labels and padding, visual and horizontal
+movement, folded-heading bounds, live-input limits and line-speech context into
+=emacsvox-agent-shell-motion=. The 1070-line definition block is unchanged;
+buffer-local hooks and dynamic flags stay with their cleanup. The facade still
+installs advice, registers maps and activates buffers in the original order.
+Forward declarations follow their new owners, and unused facade declarations
+for the extracted code are removed.
+
+All 673 source and compiled integration cases and all 11 graphical cases pass.
+The final build has no warnings; byte-code preflight, headers and generated
+reference pass. A fresh Emacs loads compiled setup and all three new internal
+modules without starting processes or installing Agent Shell activation. The four
+extracted definition blocks, speech-control registration, buffer setup/cleanup
+and advice installation are byte-for-byte unchanged. The facade falls from
+3814 to 1413 lines. Interaction has 651 lines, presentation 819 and motion 1151.
+Listening acceptance remains separate; the personal session was not reloaded.
+The documentation release check passed before committing the final slice.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -287,16 +307,17 @@ and comments; extracted modules retain named authors and copyright holders.
 
 | Main file | Before | After |
 |-----------+--------+-------|
-| emacsvox-agent-shell.el | 7688 | 3814 |
+| emacsvox-agent-shell.el | 7688 | 1413 |
 | emacsvox-aural-voice-workbench.el | 3013 | 2212 |
 | omnivox-library.el | 1069 | 419 |
 | omnivox-voices.el | 3117 | 2744 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
 
-The original extraction pass and generic voice API follow-up are complete.
-The Agent Shell follow-up is in progress. Broad core utilities remain separate
-work, as scoped above.
+The original extraction pass, generic voice API follow-up and Agent Shell
+follow-up are complete. Broad core utilities remain separate work, as scoped
+above. Further Agent Shell extraction should follow a concrete responsibility
+problem rather than a target line count.
 
 * TTS lifecycle boundary
 
