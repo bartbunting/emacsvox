@@ -125,7 +125,7 @@ try {
         }
         if ($running.HasExited) { throw 'Setup closed the running Emacs' }
         $running.Kill(); $running.WaitForExit(); $running.Dispose(); $running = $null
-        $missing = Join-Path $application 'lisp\emacsvox-wizards.el'
+        $missing = Join-Path $application 'lisp\core\emacsvox-wizards.el'
         Remove-Item -LiteralPath $missing
         Run-Setup $Setup 'repair.log'
         if (-not (Test-Path $missing) -or [IO.File]::ReadAllText($profile) -ne 'profile survives setup and uninstall') {

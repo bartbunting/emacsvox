@@ -237,10 +237,7 @@ Invoke-EmacsvoxNative $selected.Program $buildArguments $environment (Join-Path 
 $config = @{ Schema = 1; Role = $Role; Emacs = $selected.Program; EmacsVersion = $selected.Version;
     Omnivox = $omnivox; OmnivoxVersion = $pins.EMACSVOX_WSL_OMNIVOX_VERSION; Profile = $profile; Logs = $logs;
     ToolchainRoot = $ToolchainRoot; CacheDirectory = $CacheDirectory }
-$sourceHashes = @{}
-foreach ($file in Get-ChildItem (Join-Path $root 'lisp\*.el') -File) {
-    $sourceHashes[$file.Name] = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
-}
+$sourceHashes = Get-EmacsvoxLispSourceHashes $root $selected.Program
 Write-EmacsvoxJson (Join-Path $logs 'native-install-provenance.json') @{
     Configuration = $config; Sources = $sourceHashes; ReleasePins = $pins;
     WindowsPins = $windowsPins; InstalledUTC = [DateTime]::UtcNow.ToString('o')

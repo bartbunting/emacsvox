@@ -550,3 +550,13 @@ pass. All 78 selected graphical settings/editor checks pass again after the
 shared-service moves. References and manuals are regenerated, the accepted
 Info node topology is preserved, and the documentation gate passes. Native
 Windows lifecycle verification is the remaining acceptance checkpoint.
+
+** Native provenance follow-up
+
+The final PowerShell review found two remaining flat-path consumers. The
+repair fixture now removes the nested Wizards source. Native installation
+provenance obtains its source list from =emacsvox-paths= and records relative
+paths, so nested modules retain their hashes without a second directory list.
+A real native Emacs test verifies nested hashes, changed contents and exclusion
+of undeclared personal directories. The complete native installer helper suite
+and all 40 Windows packaging tests pass after this correction.

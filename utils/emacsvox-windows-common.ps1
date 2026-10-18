@@ -79,6 +79,21 @@ function Invoke-EmacsvoxNative {
     finally { $process.Dispose() }
 }
 
+function Get-EmacsvoxLispSourceHashes([string]$Root, [string]$Emacs) {
+    # Use the bootstrap's validated directory registry, including optional sources.
+    $lisp = Join-Path $Root 'lisp'
+    $expression = '(let ((directory ' + (ConvertTo-EmacsvoxLispString $lisp) + ')) ' +
+        '(princ (json-serialize (vconcat (mapcar (lambda (file) (file-relative-name file directory)) ' +
+        '(emacsvox-paths--files directory ".el"))))))'
+    $files = Invoke-EmacsvoxNative $Emacs @('-Q', '--batch', '--eval',
+        (Get-EmacsvoxLoadExpression (Join-Path $lisp 'emacsvox-paths.el')), '--eval', $expression) | ConvertFrom-Json
+    $hashes = @{}
+    foreach ($relative in $files) {
+        $hashes[$relative] = (Get-FileHash -LiteralPath (Join-Path $lisp $relative) -Algorithm SHA256).Hash
+    }
+    return $hashes
+}
+
 function Get-EmacsvoxNativeEmacs([string]$Program) {
     $command = Get-Command $Program -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $command) { throw "Selected Emacs does not exist: $Program" }

@@ -26,6 +26,25 @@ try {
         Get-ChildItem (Join-Path $repo $directory) -File |
             Where-Object { $_.Extension -in @('.ps1', '.conf') } | Copy-Item -Destination $target
     }
+    # Provenance includes declared nested sources and ignores unrelated directories.
+    $lisp = Join-Path $testRoot 'lisp'
+    New-Item -ItemType Directory (Join-Path $lisp 'core') -Force | Out-Null
+    New-Item -ItemType Directory (Join-Path $lisp 'personal') | Out-Null
+    Copy-Item (Join-Path $repo 'lisp\emacsvox-paths.el') $lisp
+    [IO.File]::WriteAllText((Join-Path $testRoot 'etc\lisp-directories'), ".`ncore`n")
+    $nested = Join-Path $lisp 'core\sample.el'
+    [IO.File]::WriteAllText($nested, "; nested source`n")
+    [IO.File]::WriteAllText((Join-Path $lisp 'personal\private.el'), "; unrelated`n")
+    $hashes = Get-EmacsvoxLispSourceHashes $testRoot $native.Program
+    if ($hashes.Count -ne 2 -or -not $hashes.ContainsKey('emacsvox-paths.el') -or
+        $hashes['core/sample.el'] -ne (Get-FileHash $nested -Algorithm SHA256).Hash) {
+        throw 'Native provenance did not retain declared relative source paths and hashes'
+    }
+    [IO.File]::WriteAllText($nested, "; changed nested source`n")
+    $changedHashes = Get-EmacsvoxLispSourceHashes $testRoot $native.Program
+    if ($changedHashes['core/sample.el'] -eq $hashes['core/sample.el']) {
+        throw 'Native provenance missed a nested source change'
+    }
     $installer = Join-Path $testRoot 'bin\emacsvox-install.ps1'
     $install = Join-Path $testRoot 'installation'
     $cache = Join-Path $testRoot 'downloads'
