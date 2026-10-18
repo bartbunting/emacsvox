@@ -50,6 +50,7 @@
 ;; the core load path.  Optional package preparation remains demand-driven.
 (defconst emacsvox-setup--startup-sources
   '("emacsvox-version.el"
+    "emacsvox-paths.el"
     "emacsvox-preamble.el"
     "emacsvox-loaddefs.el"
     "emacsvox-keymap.el"

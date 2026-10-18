@@ -1,10 +1,12 @@
 ;;; indent.el --- Indent Emacsvox Source Code.  -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
+(load (expand-file-name "../lisp/emacsvox-paths.el"
+                        (file-name-directory load-file-name)) nil t t)
 
 (defun batch-indent-files ()
   "Batch indent  elisp files in directory."
-  (let ((file-list (directory-files default-directory nil "\\.el$")))
+  (let ((file-list (emacsvox-paths--files default-directory ".el")))
     (setq-default indent-tabs-mode nil)
     (cl-loop
      for f in file-list do

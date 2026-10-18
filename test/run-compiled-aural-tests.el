@@ -15,7 +15,8 @@
         (file-name-directory (or load-file-name buffer-file-name)))
        (root-directory (expand-file-name "../" test-directory))
        (lisp-directory (expand-file-name "lisp/" root-directory))
-       (build-directory (make-temp-file "emacsvox-compiled-aural-" t))
+       (build-root (make-temp-file "emacsvox-compiled-aural-" t))
+       (build-directory (expand-file-name "lisp/" build-root))
        (files
         '("emacsvox-emoji.el"
           "emacsvox-aural.el"
@@ -90,7 +91,7 @@
        (byte-compile-dest-file-function
         (lambda (source)
           (expand-file-name
-           (concat (file-name-base source) ".elc")
+           (concat (file-relative-name source build-directory) "c")
            build-directory)))
        (child-program
         (expand-file-name invocation-name invocation-directory))
@@ -98,11 +99,24 @@
         (expand-file-name "verify-compiled-aural.el" test-directory)))
   (unwind-protect
       (progn
-        (add-to-list 'load-path lisp-directory)
-        (add-to-list 'load-path build-directory)
+        ;; Keep sources beside generated files so the real bootstrap can
+        ;; register this isolated installation without preferring the checkout.
+        (load (expand-file-name "emacsvox-paths.el" lisp-directory) nil t t)
+        (make-directory build-directory)
+        (dolist (source (emacsvox-paths--files lisp-directory ".el"))
+          (let ((target (expand-file-name (file-relative-name source lisp-directory)
+                                          build-directory)))
+            (make-directory (file-name-directory target) t)
+            (copy-file source target)))
+        (copy-file (expand-file-name "VERSION" root-directory)
+                   (expand-file-name "VERSION" build-root))
+        (dolist (name '("etc" "sounds"))
+          (copy-directory (expand-file-name name root-directory)
+                          (expand-file-name name build-root)))
+        (emacsvox-paths--register build-directory)
         (setq load-prefer-newer t)
         (dolist (file files)
-          (let ((source (expand-file-name file lisp-directory)))
+          (let ((source (expand-file-name file build-directory)))
             (unless (byte-compile-file source)
               (error "Could not byte-compile %s" source))))
         (let ((process-environment (copy-sequence process-environment))
@@ -117,7 +131,7 @@
             (unless (zerop status)
               (princ (with-current-buffer output (buffer-string)))
               (error "Compiled aural verification failed")))))
-    (delete-directory build-directory t)))
+    (delete-directory build-root t)))
 
 (princ "Compiled aural parity checks passed\n")
 

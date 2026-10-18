@@ -16,7 +16,8 @@
        (lisp-directory (expand-file-name "lisp/" root-directory))
        (setup (expand-file-name "emacsvox-setup.elc" lisp-directory))
        (features
-        '(tts-speak
+        '(emacsvox-paths
+          tts-speak
           voice-setup
           voice-defs
           dectalk-voices
@@ -70,7 +71,8 @@
           emacsvox-sounds
           emacsvox-aural-sound-packs))
        (functions
-        '(tts--protocol-queue-text
+        '(emacsvox-paths--register
+          tts--protocol-queue-text
           voice-from-acss
           dectalk-voice-capabilities
           plain-voice-capabilities

@@ -40,6 +40,8 @@
   (require 'cl-lib)
   (require 'subr-x))
 (add-to-list 'load-path (file-name-directory load-file-name))
+(require 'emacsvox-paths)
+(emacsvox-paths--register (file-name-directory load-file-name))
 
 ;;; Interactive command tracking:
 

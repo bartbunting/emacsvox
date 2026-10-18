@@ -590,6 +590,16 @@ isolated connected check.
 
 * Repository stewardship
 
+** TODO Introduce a reviewed Lisp directory structure
+
+The [[file:../lisp-layout-plan.org][Lisp directory reorganisation plan]] records the 2026-10-17 inventory,
+candidate ownership groups, flat-path assumptions in startup/build/packaging,
+and a staged migration beginning with three small integrations.
+[[file:../adr/0029-lisp-source-layout.org][ADR 0029]] accepts the directory contract. Nested-path infrastructure and the three-file
+pilot are implemented; their verification is recorded in the plan. Preserve
+public features and root startup paths, and keep file moves separate from
+behavioural refactoring and the shared tone-editor work.
+
 ** TODO Expand the licence and provenance audit
 
 Continue the repository-wide audit required by

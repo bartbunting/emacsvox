@@ -628,6 +628,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-outline:: Speech enable Outline.
 * emacsvox-output-settings:: Notification and spatial settings.
 * emacsvox-package:: Speech-enable PACKAGE.
+* emacsvox-paths:: Declared Lisp source directories.
 * emacsvox-perl:: Speech enable Perl Mode.
 * emacsvox-pipewire:: Speech-enable PIPEWIRE.
 * emacsvox-popup:: Speech-enable POPUP.

@@ -207,24 +207,10 @@ bytecode-check: check-emacs
 			echo "Emacsvox byte-code is missing or stale; run make bytecode." >&2; \
 			exit 1; \
 		fi; \
-		selected_version="$$($(EMACS) -Q --batch --eval '(princ emacs-version)')"; \
-		for compiled in lisp/*.elc; do \
-			if [ ! -e "$$compiled" ]; then continue; fi; \
-			source=$${compiled%c}; \
-			if [ ! -e "$$source" ]; then \
-				echo "Orphaned Emacsvox byte-code: $$compiled" >&2; \
-				echo "Run make bytecode-rebuild after branch changes." >&2; \
-				exit 1; \
-			fi; \
-			compiled_version="$$(sed -n \
-				'3s/^;;; in Emacs version //p' "$$compiled")"; \
-			if [ "$$compiled_version" != "$$selected_version" ]; then \
-				echo "Byte-code compiler mismatch: $$compiled" >&2; \
-				echo "Built by Emacs $$compiled_version; selected Emacs is $$selected_version." >&2; \
-				echo "Run make bytecode-rebuild." >&2; \
-				exit 1; \
-			fi; \
-		done; \
+		$(EMACS) -Q --batch -l lisp/emacsvox-paths.el \
+			--eval '(emacsvox-paths--check-bytecode (expand-file-name "lisp"))' \
+			-l utils/emacsvox-native-bytecode.el \
+			--eval '(emacsvox-native-bytecode-plan default-directory)'; \
 		echo "Emacsvox byte-code is current."
 
 bytecode-rebuild:
@@ -755,7 +741,7 @@ q:
 ###   user level target-- clean
 
 clean:
-	@cd lisp &&  $(MAKE) $(MAKEFLAGS) clean
+	@$(MAKE) -C lisp EMACS="$(EMACS)" clean
 
 ###  guarded releases
 

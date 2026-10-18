@@ -144,7 +144,9 @@ def checked_sources(root, assets, pair, setup):
         prefix = f'Applications/{pair["Build"]}/'
         app = {item['Path'][len(prefix):]: item['SHA256'] for item in setup['Files']
                if item['Path'].startswith(prefix)}
-        require(app == {name: digest for name, digest in hashes.items() if SOURCES.BUNDLE.include(name)},
+        directories = SOURCES.BUNDLE.LAYOUT.directory_names(
+            archive.read('emacsvox/etc/lisp-directories').decode())
+        require(app == {name: digest for name, digest in hashes.items() if SOURCES.BUNDLE.include(name, directories)},
                 'Installer application inventory differs from the source archive')
         pins = dict(line.split('=', 1) for line in
                     archive.read('emacsvox/etc/wsl-install.conf').decode().splitlines()

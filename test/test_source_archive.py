@@ -4,6 +4,7 @@
 
 import importlib.util
 import io
+import os
 from pathlib import Path
 import subprocess
 import tarfile
@@ -38,10 +39,23 @@ class SourceArchiveTests(unittest.TestCase):
             work = Path(directory)
             archive = work / "source.tar"
             version = (ROOT / "VERSION").read_text().strip()
+            environment = {**os.environ, "GIT_INDEX_FILE": str(work / "index")}
+            for arguments in (["read-tree", "HEAD"], ["add", "-A"]):
+                subprocess.run(["git", *arguments], cwd=ROOT, env=environment, check=True)
+            fixture = subprocess.check_output(["git", "hash-object", "-w", "--stdin"],
+                                              cwd=ROOT, input=b"; nested archive fixture\n").decode().strip()
+            subprocess.run(["git", "update-index", "--add", "--cacheinfo",
+                            f"100644,{fixture},lisp/integrations/archive-fixture.el"],
+                           cwd=ROOT, env=environment, check=True)
+            tree = subprocess.check_output(["git", "write-tree"], cwd=ROOT,
+                                           env=environment, text=True).strip()
             subprocess.run(["git", "archive", "--worktree-attributes", "--format=tar",
-                            f"--prefix=emacsvox-{version}/", f"--output={archive}", "HEAD"],
+                            f"--prefix=emacsvox-{version}/", f"--output={archive}", tree],
                            cwd=ROOT, check=True)
             root = ARCHIVE.extract(archive, work / "extracted tree")
+            self.assertEqual((root / "lisp/integrations/archive-fixture.el").read_text(),
+                             "; nested archive fixture\n")
+            self.assertTrue((root / "etc/lisp-directories").is_file())
             tools = subprocess.check_output(["git", "ls-files", "utils/"], cwd=ROOT, text=True)
             for name in tools.splitlines():
                 self.assertTrue((root / name).is_file(), name)

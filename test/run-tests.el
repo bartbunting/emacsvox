@@ -27,6 +27,7 @@
   (require 'emacsvox-emoji-tests)
   (require 'emacsvox-emoji-integration-tests)
   (require 'emacsvox-version-tests)
+  (require 'emacsvox-paths-tests)
   (require 'emacsvox-advice-tests)
   (require 'emacsvox-advice-audit-tests)
   (require 'emacsvox-cl-declare-tests)

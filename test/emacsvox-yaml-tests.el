@@ -9,7 +9,7 @@
 
 (load
  (expand-file-name
-  "../lisp/emacsvox-yaml.el"
+  "../lisp/integrations/emacsvox-yaml.el"
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

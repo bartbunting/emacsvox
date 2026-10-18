@@ -1,6 +1,8 @@
 ;;;$Id: elint-files.el 7425 2011-11-22 01:55:17Z tv.raman.tv $  -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
+(load (expand-file-name "../lisp/emacsvox-paths.el"
+                        (file-name-directory load-file-name)) nil t t)
 (require 'advice)
 (require 'derived)
 (push default-directory load-path)
@@ -13,7 +15,7 @@
 (require 'emacsvox-preamble)
 (defun batch-elint-files ()
   "Batch elint  elisp files in directory."
-  (let ((file-list (directory-files default-directory nil "\\.el\\'")))
+  (let ((file-list (emacsvox-paths--files default-directory ".el")))
     (cl-loop
      for f in file-list do
      (unless

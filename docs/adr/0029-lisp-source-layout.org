@@ -1,0 +1,85 @@
+#+title: ADR 0029: Declared Lisp Source Directories
+#+date: 2026-10-18
+#+startup: content
+
+* Status
+
+Accepted on 2026-10-18 for staged implementation. The
+[[file:../lisp-layout-plan.org][migration plan]] records implementation, verification and remaining work.
+Production file moves follow infrastructure checks; the first slice adds
+the directory registry and bootstrap support while existing sources stay flat.
+
+* Decision
+
+Use one level of directories below =lisp/=: =core= for shared reading and
+navigation, =aural= for presentation services, =speech= for transport and
+engine adapters, =voices= for logical voice data and resolution, =ui= for
+settings and editors, and =integrations= for package adaptations. Keep mixed
+modules intact and review their ownership before assigning paths. Directory
+names describe ownership; they do not imply new dependency boundaries.
+
+Keep setup, preamble, release metadata, the path bootstrap, the autoload
+generator and generated loaddefs at the Lisp root. Existing root setup
+commands and resource roots remain stable. Keep library basenames, provided
+features, public APIs, loading order, optional dependencies and personal
+settings unchanged. Do not introduce duplicate libraries at old paths.
+
+=etc/lisp-directories= is the shared, data-only directory registry. Each
+nonblank, noncomment line names one directory relative to =lisp/=. The first
+entry is =.=; remaining entries are unique lowercase names containing letters,
+digits and hyphens, beginning with a letter. There are no absolute paths,
+separators, parent traversals or executable expressions. Order is significant.
+This file already falls within the runtime =etc/= payload on both platforms.
+
+=lisp/Makefile= remains the canonical compiled-module and dependency inventory
+under ADR 0011. Its paths will become relative to =lisp/=. Directory membership
+does not imply compilation: templates, optional Muggles and generated autoloads
+retain their separate status. Consumers must validate module parents against
+the shared registry and reject duplicate library basenames, including Windows
+case collisions, before real modules move. Feature identity remains part of
+each batch's review.
+
+=emacsvox-paths.el= reads and registers the declared existing directories
+without loading speech or retaining a checkout-specific root. Callers supply
+their Lisp root. Registration validates the entire set first, places it ahead
+of unrelated load paths in registry order and is repeatable without adding
+duplicates. Missing subdirectories are allowed during migration. Existing
+nondirectories and linked subdirectories are errors; undeclared directories
+are never traversed. A linked checkout root remains usable.
+
+The preamble registers directories before loading its existing dependencies.
+Setup continues to detect stale startup byte-code before requiring the
+preamble. Every moved startup module must acquire its relative path in that
+guard. Autoloads, Make and native builds, freshness checks, reference generation
+and packaging must consume this same directory contract before the pilot.
+Native builds continue to work without Make. Old flat byte-code must not
+shadow a moved source; cleanup remains confined to owned generated files.
+
+* Delivery boundary
+
+First prepare and test nested-path infrastructure with isolated fixtures.
+Then move Diff Mode, RPM spec and YAML adaptations to =integrations/= in a
+separate batch. These modules keep their existing advice, face mapping and
+deferred registration. Review further batches by module responsibility,
+keeping multi-file integrations together. The remaining placement questions
+in the plan are resolved before their affected batch, rather than by prefix.
+
+Keep the source-only distribution, version-specific local compilation,
+attribution, offline manuals and installer ownership required by ADRs 0001,
+0003, 0011–0014 and 0024. This layout does not alter speech readiness, lane
+ownership, protocols, voice storage, Transient requirements or release policy.
+
+* Alternatives and verification
+
+A recursive load-path scan could admit fixtures, old copies and personal code.
+Independent directory lists in each tool would drift. Both are rejected.
+A small shared data file needs explicit installation coverage but can be read
+by Lisp, Make and Python without evaluating another language or starting speech.
+
+Test source and compiled loading from a relocated installation with spaces,
+actual loaded paths, unchanged resource roots, invalid registry entries and
+linked directories. Establish Emacs 30.2 and current-toolchain baselines in
+separate checkouts. Before production moves, require nested autoload, inventory,
+reference, stale-byte-code and payload checks, including native Windows
+acceptance as specified in the plan. Mocked packaging tests do not establish
+native installation or listening acceptance.

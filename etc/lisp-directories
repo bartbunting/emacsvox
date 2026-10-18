@@ -1,0 +1,9 @@
+# Lisp source directories, relative to lisp/, in load-path order.
+# Keep the bootstrap root first. One directory per line; no recursion.
+.
+core
+aural
+speech
+voices
+ui
+integrations

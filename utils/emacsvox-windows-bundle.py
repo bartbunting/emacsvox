@@ -6,6 +6,7 @@
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -17,6 +18,10 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parent.parent
+LAYOUT_SPEC = importlib.util.spec_from_file_location('emacsvox_lisp_layout', ROOT / 'utils/emacsvox_lisp_layout.py')
+LAYOUT = importlib.util.module_from_spec(LAYOUT_SPEC)
+LAYOUT_SPEC.loader.exec_module(LAYOUT)
+
 RUNTIME_FILES = {
     'VERSION', 'README.org', 'AUTHORS', 'COPYING', 'THIRD_PARTY_NOTICES',
     'lisp/Makefile', 'bin/emacsvox-install.ps1', 'bin/emacsvox.ps1',
@@ -26,6 +31,7 @@ RUNTIME_FILES = {
 RUNTIME_TREES = {'etc', 'sounds', 'xsl', 'js', 'LICENSES'}
 REQUIRED = RUNTIME_FILES | {
     'etc/windows-install.conf', 'etc/wsl-install.conf',
+    'etc/lisp-directories', 'lisp/emacsvox-paths.el',
     'lisp/emacsvox-setup.el', 'info/emacsvox.info',
     'sounds/packs/chimes/open-object.ogg',
 }
@@ -48,7 +54,7 @@ def pins(path):
     return result
 
 
-def include(name):
+def include(name, directories):
     path = Path(name)
     if any(part.startswith('.') for part in path.parts):
         return False
@@ -56,7 +62,7 @@ def include(name):
         return False
     return (name in RUNTIME_FILES or path.parts[0] in RUNTIME_TREES
             or path.parts[:2] == ('media', 'radio')
-            or (path.parent == Path('lisp') and path.suffix == '.el')
+            or LAYOUT.includes(name, directories)
             or (path.parent == Path('info') and '.info' in path.name))
 
 
@@ -96,6 +102,8 @@ def prepare(root, cache, destination, offline=False):
         if Path(name).name != name or not name.endswith('.zip'):
             raise ValueError(f'Invalid archive name: {name}')
         acquire(url, cache / name, expected, offline)
+    directories = LAYOUT.directories(root)
+    LAYOUT.sources(root)
     names = subprocess.check_output(
         ['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root
     ).decode().split('\0')
@@ -107,7 +115,7 @@ def prepare(root, cache, destination, offline=False):
     with tempfile.TemporaryDirectory(prefix='.windows-bundle-', dir=destination) as temporary:
         stage = Path(temporary)
         for name in sorted(set(names) - {''}):
-            if not include(name):
+            if not include(name, directories):
                 continue
             source = root / name
             if source.is_symlink() or not source.is_file():

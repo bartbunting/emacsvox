@@ -74,6 +74,7 @@ omnivox-voices.elc
 
 TTS_OBJECTS = \
 emacsvox-version.elc \
+emacsvox-paths.elc \
 emacsvox-preamble.elc \
 tts-queue-state.elc \
 omnivox-remote.elc \
@@ -213,7 +214,7 @@ emacsvox-debugger.elc \
 emacsvox-desktop.elc \
 emacsvox-devdocs.elc \
 emacsvox-dictionary.elc \
-emacsvox-diff-mode.elc \
+integrations/emacsvox-diff-mode.elc \
 emacsvox-dired.elc \
 emacsvox-dumb-jump.elc \
 emacsvox-eat-core.elc \
@@ -325,7 +326,7 @@ emacsvox-reftex.elc \
 emacsvox-related.elc \
 emacsvox-rg.elc \
 emacsvox-rmail.elc \
-emacsvox-rpm-spec.elc \
+integrations/emacsvox-rpm-spec.elc \
 emacsvox-rst.elc \
 emacsvox-ruby.elc \
 emacsvox-rust-mode.elc \
@@ -377,7 +378,7 @@ emacsvox-woman.elc \
 emacsvox-xkcd.elc \
 emacsvox-xref.elc \
 emacsvox-xslt.elc \
-emacsvox-yaml.elc \
+integrations/emacsvox-yaml.elc \
 emacsvox-yasnippet.elc \
 ladspa.elc \
 soundscape.elc \
@@ -406,7 +407,7 @@ $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 
 emacsvox-bookshare.elc emacsvox-epub.elc emacsvox-eww.elc emacsvox-librivox.elc: dom-addons.elc
 
-emacsvox-preamble.elc: emacsvox-version.elc
+emacsvox-preamble.elc: emacsvox-version.elc emacsvox-paths.elc
 
 emacsvox-agent-shell.elc: emacsvox-agent-shell-render.elc emacsvox-table-reader.elc
 emacsvox-markdown.elc emacsvox-org.elc: emacsvox-table-reader.elc
@@ -562,11 +563,8 @@ extra-muggles: extra-muggles.elc
 maths: emacsvox-maths.elc
 
 lint:
-	echo "." |\
-emacs -batch -q \
--f package-initialize \
--l advice.el -l emacsvox-preamble.el  -l emacsvox-loaddefs.el \
--f elint-directory
+	$(EMACS) $(BATCH) $(DEPS) --eval \
+	  '(progn (require (quote elint)) (dolist (file (emacsvox-paths--files default-directory ".el")) (elint-file file)))'
 
 ### build time target --loaddefs
 
@@ -576,7 +574,11 @@ emacsvox-loaddefs.el: config
 config:
 	@$(EMACS) $(BATCH)  -l ./emacsvox-preamble.el  \
 	-l ./emacsvox-autoload.el  \
+	--eval '(emacsvox-paths--validate-modules default-directory (split-string "$(OBJECTS)"))' \
 	-f emacsvox-auto-generate-autoloads
+
+# Read only declared source directories; relative names contain no shell syntax.
+LISP_SOURCES = $(shell $(EMACS) -Q --batch -l ./emacsvox-paths.el --eval '(progn (emacsvox-paths--check-sources default-directory) (dolist (file (emacsvox-paths--files default-directory ".el")) (princ (concat (file-relative-name file default-directory) " "))))')
 
 ### Development  target: indent, tags, relint
 indent:
@@ -584,25 +586,27 @@ indent:
 
 #identify long lines:
 ll:
-	wc -L *.el | sort -n
+	wc -L $(LISP_SOURCES) | sort -n
 
 list-execs:
-	grep executable-find *.el | cut -d '"' -f 2 | sort  | uniq
+	grep executable-find $(LISP_SOURCES) | cut -d '"' -f 2 | sort  | uniq
 spell:
-	codespell -I .codespell *.el
+	codespell -I .codespell $(LISP_SOURCES)
 elint:
 	$(EMACS) -batch -q -no-site-file -l ../utils/elint-files.el
 
 relint:
-	$(EMACS) -batch -f package-initialize -l relint.el -f relint-batch ./*.el
+	$(EMACS) -batch -f package-initialize -l relint.el -f relint-batch $(LISP_SOURCES)
 
 tags:
-	etags *.el
+	etags $(LISP_SOURCES)
 
 ###   user level target-- clean
 
 clean:
-	@rm -f *.elc  emacsvox-loaddefs.el
+	@$(EMACS) -Q --batch -l ./emacsvox-paths.el \
+	  --eval '(emacsvox-paths--clean-bytecode default-directory)'
+	@rm -f emacsvox-loaddefs.el
 
 
 # Queue descriptors and records must precede compiled consumers.

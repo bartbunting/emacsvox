@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'rpm-spec-mode)
-(load (expand-file-name "../lisp/emacsvox-rpm-spec.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-rpm-spec.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

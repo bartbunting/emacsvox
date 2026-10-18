@@ -14,6 +14,8 @@
 ;;; Code:
 
 (require 'cl-lib)
+(load (expand-file-name "../lisp/emacsvox-paths.el"
+                        (file-name-directory load-file-name)) nil t t)
 (require 'seq)
 (require 'subr-x)
 
@@ -116,8 +118,7 @@ listed calls, or in an internal function whose name ends in
 (defun emacsvox-aural-audit--source-files (root)
   "Return sorted Lisp source files below ROOT."
   (sort
-   (directory-files-recursively
-    (expand-file-name "lisp" root) "\\.el\\'")
+   (emacsvox-paths--files (expand-file-name "lisp" root) ".el" t)
    #'string-lessp))
 
 (defun emacsvox-aural-audit--record-source-usage (key relative usage)
@@ -477,8 +478,7 @@ below a presentation boundary."
         failures)
     (dolist
         (file
-         (directory-files
-          (expand-file-name "lisp" root) t "\\.el\\'" 'nosort))
+         (emacsvox-aural-audit--source-files root))
       (let (forms)
         (with-temp-buffer
           (insert-file-contents file)

@@ -27,7 +27,9 @@
      (unwind-protect
          (progn
            (make-directory (expand-file-name "lisp" ,root))
-           (make-directory (expand-file-name "etc" ,root))
+           (make-directory (expand-file-name "etc" ,root) t)
+           (copy-file (expand-file-name "etc/lisp-directories" emacsvox-test--aural-audit-root)
+                      (expand-file-name "etc/lisp-directories" ,root))
            ,@body)
        (delete-directory ,root t))))
 

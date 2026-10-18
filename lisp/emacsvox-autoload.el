@@ -30,6 +30,8 @@
 ;;; Code:
 
 (require 'loaddefs-gen)
+(load (expand-file-name "emacsvox-paths.el" (file-name-directory load-file-name))
+      nil t t)
 ;; Register Transient's autoload macro expansion before scanning.  Otherwise
 ;; loaddefs-gen may evaluate a whole menu module to discover the macro.
 (require 'transient)
@@ -43,8 +45,10 @@
   "Generate emacsvox autoloads."
   ;; A full scan also drops entries for deleted modules.  The incremental
   ;; generator can retain them even when configuration is explicitly rerun.
+  (emacsvox-paths--check-sources emacsvox-lisp-directory)
   (loaddefs-generate
-   emacsvox-lisp-directory emacsvox-auto-autoloads-file nil nil nil t))
+   (emacsvox-paths--source-directories emacsvox-lisp-directory)
+   emacsvox-auto-autoloads-file nil nil nil t))
 
 (provide 'emacsvox-autoload)
 

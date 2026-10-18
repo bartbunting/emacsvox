@@ -44,6 +44,13 @@ class DebianPackageTests(unittest.TestCase):
         self.assertIn("Recommends: omnivox (>= 1.18.0)\n", control)
         self.assertNotIn("omnivox", control.split("Depends: ")[1].splitlines()[0])
         self.assertTrue((self.runtime / "lisp/emacsvox-loaddefs.el").is_file())
+        self.assertEqual((self.runtime / "etc/lisp-directories").read_bytes(),
+                         (ROOT / "etc/lisp-directories").read_bytes())
+        self.assertTrue((self.runtime / "lisp/emacsvox-paths.el").is_file())
+        for library in ('emacsvox-diff-mode', 'emacsvox-rpm-spec', 'emacsvox-yaml'):
+            relative = f'lisp/integrations/{library}.el'
+            self.assertEqual((self.runtime / relative).read_bytes(), (ROOT / relative).read_bytes())
+            self.assertFalse((self.runtime / f'lisp/{library}.el').exists())
         self.assertFalse(list(self.runtime.rglob("*.elc")))
         for name in ("local.mk", ".git", "native-install.json", "servers/omnivox-bin"):
             self.assertFalse((self.runtime / name).exists())
@@ -90,6 +97,11 @@ class DebianPackageTests(unittest.TestCase):
               (error "Packaged menu is not an interactive autoload: %s" command)))
           (when (or (featurep 'transient) (featurep 'emacsvox-aural-menu))
             (error "Loading packaged autoloads eagerly loaded menus"))
+          (dolist (feature '(emacsvox-diff-mode emacsvox-rpm-spec emacsvox-yaml))
+            (require feature)
+            (unless (string-match-p "/lisp/integrations/"
+                                    (locate-library (symbol-name feature)))
+              (error "Packaged pilot library escaped the nested source tree: %s" feature)))
           (require 'eww) (require 'emacsvox-eww)
           (require 'emacsvox-ocr)
           (unless (file-executable-p emacsvox-ocr-engine)

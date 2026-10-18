@@ -116,5 +116,30 @@
             "original keys\n")))
       (delete-directory directory t))))
 
+(ert-deftest emacsvox-self-document-nested-manifest-retains-module-identity ()
+  (let* ((root (make-temp-file "emacsvox-reference-layout-" t))
+         (self-document-lisp-directory (expand-file-name "lisp" root))
+         (self-document-files '("integrations/fixture.elc"))
+         (self-document-map (make-hash-table :test #'equal)))
+    (unwind-protect
+        (progn
+          (make-directory (expand-file-name "integrations" self-document-lisp-directory) t)
+          (make-directory (expand-file-name "etc" root))
+          (with-temp-file (expand-file-name "etc/lisp-directories" root)
+            (insert ".\nintegrations\n"))
+          (with-temp-file (expand-file-name "integrations/fixture.elc" self-document-lisp-directory)
+            (insert "; fixture"))
+          (cl-letf (((symbol-function 'process-lines) (lambda (&rest _) self-document-files)))
+            (should (equal (self-document--manifest-files) self-document-files))
+            (with-temp-file (expand-file-name "old.elc" self-document-lisp-directory)
+              (insert "; old flat output"))
+            (should-error (self-document--manifest-files)))
+          (cl-letf (((symbol-function 'sd-get-commentary) (lambda (_) "Fixture."))
+                    ((symbol-function 'self-document-map-symbol) #'ignore))
+            (self-document-build-map))
+          (should (gethash "fixture" self-document-map))
+          (should-not (gethash "integrations/fixture" self-document-map)))
+      (delete-directory root t))))
+
 (provide 'emacsvox-self-document-tests)
 ;;; emacsvox-self-document-tests.el ends here

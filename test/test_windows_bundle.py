@@ -32,6 +32,7 @@ class WindowsBundleTests(unittest.TestCase):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('fixture\n')
+        (self.root / 'etc/lisp-directories').write_text('.\ncore\nintegrations\n')
         (self.root / 'VERSION').write_text('2026.9.5\n')
         (self.root / 'utils/emacsvox-windows-bundle-install.ps1').write_text('# wrapper fixture\n')
         emacs = self.cache / 'emacs.zip'
@@ -61,9 +62,16 @@ class WindowsBundleTests(unittest.TestCase):
     def test_source_only_payload_preserves_dirty_source_and_excludes_personal_state(self):
         source = self.root / 'lisp/emacsvox-setup.el'
         source.write_text('uncommitted change\n')
+        (self.root / 'etc/lisp-directories').write_text('.\ncore\nintegrations\n')
+        (self.root / 'lisp/emacsvox-paths.el').write_text('; path bootstrap\n')
         (self.root / 'lisp/emacsvox-setup.elc').write_bytes(b'private bytecode')
         (self.root / 'native-install.json').write_text('private settings')
         (self.root / 'local.mk').write_text('EMACS=private')
+        for name in ('integrations/nested.el', 'integrations/nested.elc',
+                     'private/personal.el', 'integrations/deeper/hidden.el'):
+            path = self.root / 'lisp' / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('; fixture')
         archive = self.prepare()
         with zipfile.ZipFile(archive) as payload:
             names = payload.namelist()
@@ -71,14 +79,41 @@ class WindowsBundleTests(unittest.TestCase):
             self.assertIn('Archives/omnivox.zip', names)
             self.assertIn('Install.ps1', names)
             self.assertIn('Install.cmd', names)
+            self.assertIn('Source/lisp/integrations/nested.el', names)
+            self.assertNotIn('Source/lisp/private/personal.el', names)
+            self.assertNotIn('Source/lisp/integrations/deeper/hidden.el', names)
             self.assertFalse(any(n.endswith(('.elc', 'local.mk', 'native-install.json')) for n in names))
             self.assertEqual(payload.read('Source/lisp/emacsvox-setup.el'), b'uncommitted change\n')
+            self.assertEqual(payload.read('Source/etc/lisp-directories'),
+                             b'.\ncore\nintegrations\n')
+            self.assertEqual(payload.read('Source/lisp/emacsvox-paths.el'), b'; path bootstrap\n')
             manifest = json.loads(payload.read('bundle.json'))
             self.assertIn('-dev-', manifest['Build'])
             for entry in manifest['Files']:
                 self.assertEqual(BUNDLE.hashlib.sha256(payload.read(entry['Path'])).hexdigest(), entry['SHA256'])
         self.assertEqual(source.read_text(), 'uncommitted change\n')
         self.assertEqual(archive.with_suffix('.zip.sha256').read_text().split()[0], BUNDLE.sha256(archive))
+
+    def test_registry_rejects_invalid_names_and_case_collisions(self):
+        registry = self.root / 'etc/lisp-directories'
+        for text in ('', 'core\n.\n', '.\n.\n', '.\nCORE\n', '.\n../private\n',
+                     '.\n/absolute\n', '.\ncore/old\n', '.\ncore\\old\n',
+                     '.\n(load "private.el")\n'):
+            with self.subTest(registry=text):
+                registry.write_text(text)
+                with self.assertRaises(ValueError):
+                    self.prepare()
+        registry.write_text('.\nintegrations\n')
+        nested = self.root / 'lisp/integrations'
+        nested.mkdir()
+        (nested / 'EMACSVOX-SETUP.el').write_text('; collision')
+        with self.assertRaisesRegex(ValueError, 'Duplicate Lisp library'):
+            self.prepare()
+
+    def test_declared_directory_link_is_rejected(self):
+        (self.root / 'lisp/integrations').symlink_to(self.cache, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, 'Invalid Lisp directory'):
+            self.prepare()
 
     def test_missing_or_corrupt_archive_creates_no_bundle(self):
         archive = self.cache / 'omnivox.zip'

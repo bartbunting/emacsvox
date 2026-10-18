@@ -44,6 +44,8 @@ class WindowsSetupTests(unittest.TestCase):
                 pins.write_text(pins.read_text().replace(old_hash, BUNDLE.sha256(path)))
         pins = self.root / 'etc/wsl-install.conf'
         pins.write_text(pins.read_text() + 'EMACSVOX_WSL_EMACS_VERSION=31.1\nEMACSVOX_WSL_OMNIVOX_VERSION=1.12.0\n')
+        (self.root / 'lisp/integrations').mkdir()
+        (self.root / 'lisp/integrations/nested.el').write_text('; nested source')
         self.bundle = fixture.prepare()
 
     def prepare(self):
@@ -60,6 +62,8 @@ class WindowsSetupTests(unittest.TestCase):
             self.assertEqual(BUNDLE.sha256(self.stage / 'payload' / file['Path']), file['SHA256'])
             self.assertNotIn(file['Path'].split('/')[0], ['profile', 'voices', 'logs'])
         deleted = (self.stage / 'setup-generated-uninstall.iss').read_text().splitlines()[1:]
+        self.assertTrue(any('\\integrations\\nested.elc' in entry for entry in deleted))
+        self.assertTrue(any('dirifempty' in entry and '\\integrations"' in entry for entry in deleted))
         for entry in deleted:
             self.assertTrue(entry.startswith(('Type: files; Name: "{app}\\Applications\\',
                                               'Type: dirifempty; Name: "{app}\\')) or

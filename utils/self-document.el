@@ -112,7 +112,9 @@ generator always skips the declared module instead of probing the host.")
           (process-lines
            "make" "--no-print-directory" "-s" "documentation-modules"))
          (compiled
-          (directory-files self-document-lisp-directory nil "\\.elc\\'")))
+          (mapcar (lambda (file) (file-relative-name file self-document-lisp-directory))
+                  (emacsvox-paths--files self-document-lisp-directory ".elc"))))
+    (emacsvox-paths--validate-modules self-document-lisp-directory manifest)
     (unless manifest
       (error "The documentation module manifest is empty"))
     (unless (equal manifest (sort (delete-dups (copy-sequence manifest))
@@ -305,7 +307,7 @@ generator always skips the declared module instead of probing the host.")
           self-document-option-count 0)
     (cl-loop
      for f in self-document-files do
-     (let ((module (file-name-sans-extension f)))
+     (let ((module (file-name-base f)))
        (puthash module
                 (make-self-document :name module
                                     :commentary (sd-get-commentary module))

@@ -23,7 +23,8 @@ REQUIRED = (
     "utils/emacsvox-native-bytecode.el", "utils/emacsvox-remote-startup.el",
     "utils/emacsvox-remote-check.el", "utils/emacsvox-version-check",
     "utils/emacsvox-header-check", "etc/wsl-install.conf", "etc/windows-install.conf",
-    "lisp/emacsvox-setup.el", "info/emacsvox.info",
+    "lisp/emacsvox-setup.el", "lisp/emacsvox-paths.el",
+    "etc/lisp-directories", "utils/emacsvox_lisp_layout.py", "info/emacsvox.info",
 )
 
 

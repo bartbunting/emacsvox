@@ -1,0 +1,427 @@
+#+title: Lisp directory reorganisation plan
+#+date: 2026-10-17
+#+startup: content
+
+* Status and scope
+
+Implementation authorised on 2026-10-18. [[file:adr/0029-lisp-source-layout.org][ADR 0029]] accepts the directory
+and bootstrap contract. Nested-path infrastructure is implemented, and the
+three pilot integrations have moved to =lisp/integrations/=. These two slices
+pass their focused checks and native lifecycle acceptance. Review the allocation
+of each later batch before moving its files.
+
+The aim is to make related code easier to find and ownership easier to
+understand as Emacsvox grows. Preserve behaviour, filenames, provided
+features, public commands, personal settings, speech protocols and package
+requirements. Directory moves do not establish new dependency boundaries by
+themselves. Function extraction, compatibility removal, feature retirement
+and changes to when integrations load are separate work.
+
+The original investigation baseline was =master= at =b8ccb8d6c=. The
+implementation baseline is =98b3263ea=. The existing changes to
+[[file:ui-settings-plan.org][the UI settings plan]] are independent work and must be preserved.
+Recheck the inventory and active development branches before implementation;
+the counts and examples below describe this investigation, not a permanent
+module manifest.
+
+* Findings
+
+At the implementation baseline there are 329 tracked =lisp/*.el= files and
+324 unique modules in =make -C lisp documentation-modules=. The five sources
+outside that ordinary compiled inventory are =.skeleton.el=,
+=emacsvox-autoload.el=, =emacsvox-muggle-org-navigation.el=,
+=emacsvox-muggles.el= and =extra-muggles.el=. The Muggles sources have separate
+build targets. Generated =emacsvox-loaddefs.el= is ignored and is not a
+tracked source. Do not confuse the tracked, compiled, autoload-scanned and
+distributed inventories.
+
+The tree contains 51 =emacsvox-aural-*= files and 15 =omnivox-*= files.
+Those prefixes span several responsibilities. For example:
+
+- =emacsvox-aural-voice-data= and =emacsvox-aural-voice-runtime= own data and
+  resolution; the voice editor and workbench own interaction.
+- =emacsvox-aural-voice-drafts= coordinates persistence and acknowledged
+  application independently of view buffers. It is more than editor UI.
+- =omnivox-library= contains a tabulated interface as well as runtime calls;
+  =omnivox-library-apply= owns a separate activation operation.
+- =emacsvox-spelling= requires both the Flyspell integration and the shared
+  tone editor. A directory named UI will not be independent of integrations.
+- =emacsvox-table-reader= supplies common logical table operations used by
+  Agent Shell, Markdown and Org. It should not be owned by one integration.
+- =emacsvox-aural-home= retains shared helpers and public entry points under
+  ADR 0027. Moving it must not become an incidental removal of those APIs.
+
+Build prerequisites also cross the proposed groups. =tts-speak= depends on
+aural transport; =voice-setup= depends on TTS and the compatibility voice
+bridge; =omnivox-voices= depends on voice resolution and protocol codecs;
+voice editing depends on the aural compiler. Preserve these relationships.
+An inventory of literal =require= forms is useful evidence, but is not a
+complete graph: backend names are constructed dynamically, and advice,
+autoloads, deferred requires and callbacks introduce other dependencies.
+
+* Accepted directory layout
+
+Use one level of subdirectories initially. The =core/= directory gives
+shared reading and navigation code an explicit destination.
+Do not introduce per-package subdirectories or a catch-all =misc/= directory.
+
+| Location | Responsibility and representative candidates |
+|----------+---------------------------------------------|
+| =lisp/= | Stable bootstrap and package entry: =emacsvox-setup.el=, =emacsvox-preamble.el=, =emacsvox-paths.el=, =emacsvox-version.el=, =emacsvox.el=, =emacsvox-autoload.el=, generated =emacsvox-loaddefs.el= and =Makefile=. |
+| =lisp/core/= | Shared reading, command/advice infrastructure and navigation, including =emacsvox-speak=, =emacsvox-advice=, =emacsvox-keymap= and =emacsvox-table-reader=. |
+| =lisp/aural/= | Presentation contracts, rules, resources, providers, compilation, planning, submission, transport, history and replay. |
+| =lisp/speech/= | TTS process and queue lifecycle, wire codecs, remote transport and engine adapters, including =tts-speak=, =tts-queue-state= and =omnivox-voices=. |
+| =lisp/voices/= | Logical voice definitions, palette data, resolution and save coordination, including =voice-defs= and the aural voice data/runtime/draft services. |
+| =lisp/ui/= | Settings menus and dedicated editors: tone, voice, palette, rule and sound editors, plus diagnostic views where their ownership is clear. |
+| =lisp/integrations/= | Adaptations for Emacs modes and external packages; keep Agent Shell's two files and EAT's four files together within this directory. |
+
+The representative module allocations still require review. Before each
+batch, review the full modules and record their old/new paths, provided
+features, load-time effects, resources and relevant checks.
+
+** Placement decisions still needed
+
+| Modules or family | Proposed treatment and question to settle |
+|-------------------+-------------------------------------------|
+| =voice-setup= and backend =*-voices= | Likely speech adapters, while =voice-defs= belongs with logical voices. Verify initialisation and dynamically selected backend loads before fixing their paths. |
+| =omnivox-library=, =omnivox-catalogue= and activation helpers | Classify views separately from data/activation services where the existing file boundaries permit it. Leave a mixed file intact; do not split it merely to make the directory names tidy. |
+| Aural inspection, explanation and tools | Inspection/explanation services may belong in aural while interactive views belong in UI. Review each file rather than moving this family wholesale. |
+| =emacsvox-indentation=, capitalization, spelling and line cues | Several combine reading policy and menus. Coordinate placement with the shared tone-editor work after that implementation settles. Preserve the existing saving scopes. |
+| Feature-specific aural providers | Keep in aural initially. The main package currently requires several providers eagerly; placing them with integrations must not silently make them optional or change registration order. |
+| =dom-addons=, =g-utils=, =gweb=, =soundscape= and other helpers | Place by actual consumers and ownership, or explicitly retain at the root pending review. Do not use an unreviewed move to infer that a helper is obsolete. |
+| =.skeleton= and optional Muggles files | Preserve template and separate-target status. Decide their eventual paths independently of the ordinary compiled inventory. |
+
+* Infrastructure that must change before the first move
+
+| Area | Current evidence | Migration requirement |
+|------+------------------+-----------------------|
+| Startup and resource roots | [[file:../lisp/emacsvox-setup.el][Setup]] adds one load directory; [[file:../lisp/emacsvox-preamble.el][preamble]] and [[file:../lisp/emacsvox-version.el][version]] derive the repository root from their own locations. | Retain these bootstrap paths. Register the declared source directories before any moved library is required. Preserve sound, server, Info and configuration locations. |
+| Autoloads | [[file:../lisp/emacsvox-autoload.el][The generator]] supplies one directory. The selected Emacs's =loaddefs-generate= documentation explicitly says it does not descend into subdirectories. Debian has a separate staged invocation. | Pass the same declared directory set to each generation route; verify moved commands in a fresh process and remove old generated entries. Retain Transient macro registration and full regeneration. |
+| Build inventory | [[file:../lisp/Makefile][The Lisp Makefile]] owns =OBJECTS= and dependency rules; targets currently use basenames. | Use paths relative to =lisp/= in the existing inventory and prerequisite rules. Preserve optional targets and dependency ordering. |
+| POSIX byte-code checks | [[file:../Makefile][The root Makefile]] checks =lisp/*.elc=; Lisp =clean= removes =*.elc=. | Check missing, stale, wrong-version and orphaned byte-code across declared directories, including the old flat locations. Rebuild cleanup must remain confined to generated files. |
+| Native byte-code | [[file:../utils/emacsvox-native-bytecode.el][The native builder]] rejects slashes in module names, uses basenames for dependency lookup, and scans one directory for compiled files. | Support validated relative module paths, preserve full path keys and extend cleanup/preflight. Keep parity with GNU Make and no native dependency on Make. |
+| Startup freshness | Setup maintains a basename list of startup sources. | Update or derive the moved paths without weakening source fallback. A fresh normal profile must still reject or avoid stale byte-code. |
+| Tests and audits | Many tests explicitly load =lisp/NAME.el=. [[file:../test/run-compiled-aural-tests.el][Compiled aural tests]] flatten output into a private directory. | Update literal paths and shared setup helpers. Preserve separate source/compiled modes, test loading from an installed nested tree, and assert actual loaded paths. Flat temporary compilation alone is insufficient. |
+| Generated reference | [[file:../utils/self-document.el][Reference generation]] compares the Make inventory with a one-directory compiled scan and maintains module-specific omissions. | Compare relative paths across the declared directories; retain complete coverage, intentional omissions and stable reference identities. |
+| Debian payload | [[file:../utils/emacsvox-package-deb.py][The packager]] accepts Lisp only when its immediate parent is =lisp=. | Include approved nested sources and generate their autoloads in staging. Preserve source-only installation and no user-profile changes. |
+| Windows payload and uninstall | [[file:../utils/emacsvox-windows-bundle.py][The bundle filter]] has the same immediate-parent restriction. [[file:../utils/emacsvox-windows-setup.py][Setup]] lists generated byte-code with =glob('*.el')=. | Include nested sources and own their generated files explicitly. Verify repair, upgrades, rollback and uninstall without deleting personal or unknown files. |
+| Licensing and package metadata | [[file:../utils/emacsvox-header-check][Header checking]] has path-specific exceptions; [[file:../THIRD_PARTY_NOTICES][third-party notices]] name current paths. | Update exception paths and test nested coverage. Preserve notices and attribution; keep release metadata in root =emacsvox.el=. |
+| Documentation and developer tools | Source links, explicit load examples, tags, lint and icon utilities name flat paths or globs. | Audit maintained references and tools. Keep public startup examples stable and preserve Info nodes. Historical reports may retain explicitly historical paths. |
+
+Source archives and source-provenance checks also need nested-source fixtures,
+even where Git-based selection already traverses subdirectories. Do not assume
+all consumers interpret =lisp/*.el= identically: Git pathspecs, shell globs,
+Python globs and Emacs directory scans have different semantics.
+
+* Loading and inventory contract
+
+Keep =lisp/Makefile= as the canonical compiled-module/dependency inventory,
+following ADR 0011. Do not create independent handwritten module lists for
+Windows, documentation and packaging. The data-only =etc/lisp-directories=
+registry is specified in ADR 0029; check that every manifested module's parent
+belongs to it. The first slice supplies its Lisp reader and preamble loading;
+the other consumers remain subsequent infrastructure work.
+
+Provide a small bootstrap facility usable by setup, preamble, batch tests and
+documentation without starting speech. It should register only explicit
+repository-owned directories in a deterministic order. Do not recursively add
+every directory found on disk, which could admit fixtures, obsolete copies or
+private packages. Retain globally unique library basenames and provided
+features so ordinary =require= and autoload names remain stable.
+
+Validate relative paths: reject absolute paths, parent traversal, unexpected
+directories and duplicate basenames/features. Native paths must remain inside
+the selected checkout. Exercise spaces in installation paths and Windows case
+handling. Preserve the distinction between compiled modules, optional sources,
+templates, generated autoloads and shipped runtime files.
+
+Maintain the documented root setup entry point for source, Debian, WSL,
+remote and native Windows routes. Audit direct internal file-path consumers
+in launch scripts, tests and local configuration before moving a batch. Update
+reviewed local callers explicitly; do not rewrite personal files wholesale.
+Avoid permanent duplicate libraries or forwarding files at every old path.
+Any additional compatibility requirement discovered in that audit must be
+decided before its affected batch moves.
+
+* Delivery stages
+
+** 1. Final map and baseline
+
+- [X] Refresh this inventory and review every candidate file in the first batch.
+- [X] Record old/new paths, features, direct/deferred dependencies and resource lookups.
+- [X] Resolve the bootstrap/directory-registry contract and record an accepted ADR.
+- [X] Establish passing focused compatibility baselines in separate checkouts.
+- [X] Coordinate active branches so structural moves do not overlap the same
+  files' behavioural changes. Keep shared tone editing a separate workstream.
+
+** 2. Support nested paths while production sources remain flat
+
+- [X] Add the shared directory registry and preamble bootstrap, with relocated
+  source/compiled fixtures and shipped-registry checks.
+- [X] Extend startup, inventory consumers, autoloads, checks and payload filters.
+- [X] Add small isolated nested-source fixtures to Make/native inventory parity,
+  autoload, package, reference and stale-byte-code tests.
+- [X] Cover both a nested source and an obsolete flat =.elc= that could shadow it.
+- [X] Verify source-only installation and compiled startup before moving real modules.
+
+This stage must pass with the current layout. It should introduce no new eager
+loads or speech processes. Use explicit fixtures rather than broadening every
+scan until tests happen to pass.
+
+** 3. Pilot with three small integrations
+
+Pilot move, implemented on 2026-10-18:
+
+| Existing path | Proposed path |
+|---------------+---------------|
+| =lisp/emacsvox-diff-mode.el= | =lisp/integrations/emacsvox-diff-mode.el= |
+| =lisp/emacsvox-rpm-spec.el= | =lisp/integrations/emacsvox-rpm-spec.el= |
+| =lisp/emacsvox-yaml.el= | =lisp/integrations/emacsvox-yaml.el= |
+
+Their inspected literal requires are limited to the preamble and, for Diff
+and YAML, =cl-lib=. This makes them reasonable pilot candidates, not proof of
+complete independence. Review their advice, autoload registration and focused
+tests before confirming the batch.
+
+Review refreshed on 2026-10-18: each provided feature matches its filename.
+All three use shared preamble resource services; none derives its own asset
+root. Diff registers face mappings and navigation advice directly. RPM spec
+registers face mappings and defers its guarded advice installation until
+=rpm-spec-mode= loads. YAML similarly defers advice until =yaml-mode= loads;
+its mode advice enables indentation feedback when needed. None supplies an
+autoload cookie. Preserve the three existing =emacsvox-packages-to-prepare=
+entries and update their dedicated tests' literal source paths in the move
+slice. Diff has two focused tests, RPM spec one and YAML five. Those tests
+and absent-optional-package checks must run before accepting the pilot.
+
+The reviewed personal configuration loads the stable root setup file and
+does not name these pilot paths. No personal configuration change is needed.
+
+Use =git mv=, preserve contents apart from necessary path references, update
+the inventory/tests and verify a fresh installed tree. Inspect rename detection
+and package contents. Keep the pilot independently revertible.
+
+** 4. Migrate coherent groups
+
+Move other integrations in bounded batches, keeping multi-file integrations
+together. Then move settled UI/editor groups. Move shared voice, aural,
+speech and reading services only after their placement and bootstrap paths
+are reviewed. The order can change when a prerequisite demands it; each
+batch must leave a usable build and installation.
+
+Do not split large modules, rename features or alter APIs in a move commit.
+Capture newly discovered architectural problems as separate work. A module
+may remain at the root with a recorded reason until its destination is clear.
+
+** 5. Complete the migration and operating guidance
+
+Reconcile every tracked Lisp source, including exceptions outside =OBJECTS=.
+Update maintained developer guidance and source links, regenerate references
+and manuals where affected, and record final path/feature coverage. Remove
+temporary migration helpers only after their callers have been accounted for.
+No release tagging or publication follows automatically from completing this
+plan.
+
+* Verification and rollback
+
+For each implementation batch, run affected source tests first. After moves,
+run =make check-emacs=, =make bytecode-rebuild= and =make bytecode-check=,
+then verify in a fresh Emacs that moved features load from the intended tree.
+Cover missing optional dependencies as well as prepared integration packages.
+Do not use a live session reload as proof of a filesystem migration.
+
+Before accepting the pilot and final layout, cover:
+
+- Make/native inventory and dependency parity, nested autoload discovery,
+  orphaned old byte-code, removed sources and compiler-version mismatches.
+- Source and compiled core/aural tests, affected integrations and the Emacs
+  30.2 compatibility route with the supported Transient version.
+- Debian and source-archive installation; native Windows bundle/setup tests,
+  plus a real Windows build and lifecycle check. Mocked packaging tests do not
+  establish native acceptance.
+- A fresh graphical settings/editor check when moving UI files, including
+  entry, Help, return focus, preserved drafts and preview/Apply/Save behaviour.
+- Representative reading, integration loading, main/notification readiness
+  and interruption. Listening remains distinct from captured submissions.
+- Header checks, regenerated references/manuals when affected, and the
+  non-mutating =make docs-release-check= gate after byte-code is current.
+
+On a failed batch, retain diagnostic evidence and correct it or revert only
+that batch's commits. Rebuild byte-code after reverting paths. Never reset,
+clean or stash unrelated source work to obtain a passing baseline. Generated
+cleanup must remove only owned build outputs, including obsolete locations;
+it must not sweep personal files or follow arbitrary directory links.
+
+* Governing decisions and investigation limits
+
+All 28 existing ADRs were read again before implementation. ADR 0029 records
+the accepted layout contract. In particular, preserve ADRs
+0001/0004 for documentation and publication, 0003 for attribution, 0007/0009/
+0010 for startup and speech ownership, 0011 for the canonical native build
+inventory, 0012/0027 for Emacs and Transient requirements, 0013/0014/0024 for
+installation ownership, and 0015–0023/0026/0027 for voice and editor contracts.
+Later refinements take precedence over historical context. No protocol,
+personal-data migration or release-policy change is proposed here.
+
+This investigation inspected current sources, build inventories and selected
+load/dependency sites. It did not move files, simulate a relocated production
+tree or run new runtime/installer acceptance tests. The full file map,
+dynamic dependency audit, compatibility baseline and native migration checks
+remain delivery work. Document-only verification is recorded separately below.
+
+* Planning checkpoint
+
+- [X] Inspect the flat inventory, representative dependencies and platform consumers.
+- [X] Record candidate groups, a concrete pilot and infrastructure prerequisites.
+- [X] Accept the directory-layout ADR and authorise staged implementation.
+- [ ] Execute and verify migration stages.
+
+Planning checks passed on 2026-10-17: =make docs-release-check=, local file
+link validation and =git diff --check=. The documentation gate confirmed
+current byte-code and structurally valid documentation. No Lisp build or new
+runtime tests were needed for this documentation-only change.
+
+* Implementation checkpoints
+
+** Directory registry and bootstrap, 2026-10-18
+
+The first slice adds =etc/lisp-directories= and =emacsvox-paths.el=. The
+preamble registers declared existing directories before its existing runtime
+loads. The path module joins the ordinary Make inventory and startup freshness
+guard. Runtime names, feature loading policy and resource locations are
+unchanged. No production module has moved.
+
+The compatibility baseline at =98b3263ea= passes in separate checkouts:
+304 passes and one graphical skip on Emacs 31.0.90; 303 passes and two skips
+on Emacs 30.2 with Transient 0.13.3. The additional Emacs 30 skip compares
+against a DOM API unavailable there. Logs are
+=/tmp/emacsvox-layout-baseline-31.log= and
+=/tmp/emacsvox-layout-baseline-30.log=. These are source compatibility
+baselines, not native Windows or listening acceptance.
+
+The baseline worktrees have distinct paths. Existing worktrees were inspected;
+no other worktree is on master. Behavioural work on the same files still needs
+coordination before each move batch. No other session or branch was modified.
+
+The remaining infrastructure at this checkpoint was autoload enumeration,
+relative build inventories, freshness checks, reference scans, packaging filters
+and Windows generated-file ownership. The next checkpoint records that work.
+
+The completed slice passes all six directory/bootstrap cases within the
+compatibility suite: 310 passes and one baseline skip on Emacs 31.0.90;
+309 passes and two baseline skips on Emacs 30.2 with Transient 0.13.3. The
+relocated fixture checks source and compiled helper/library paths, installation
+paths with spaces, resource roots and absence of speech processes. It also
+covers ordering, repeated registration, invalid entries, missing registry,
+linked subdirectories and a linked checkout root.
+
+Full 325-module rebuilds and byte-code preflights pass on both Emacs versions.
+Fresh compiled startup passes the build-tree aural check and all 27 startup
+tests on each version, including the actual compiled bootstrap path. The
+Debian package suite passes six tests, including extracted source startup;
+the Windows bundle suite passes five isolated tests. Header validation includes
+the new source through a temporary index and leaves the real index unchanged.
+Generated references are refreshed. Final documentation verification is recorded
+in =/tmp/emacsvox-layout-docs-check.log=; other check logs use
+=/tmp/emacsvox-layout-*=.
+
+This slice is not committed. No live session was reloaded and no production
+file moved. Native Windows lifecycle and listening acceptance remain separate
+from these Linux build, bootstrap and packaging checks.
+
+** Nested consumers and pilot, 2026-10-18
+
+The shared registry now drives autoload enumeration, existing byte-code checks
+and cleanup, reference scans, source tooling, Debian and Windows payloads, and
+Windows uninstall ownership. The canonical Make inventory accepts validated
+relative paths; native builds retain dependency keys with their directories.
+Source publication checks use the same payload filter, including when reading
+the registry from an archive. Reference module names and Info nodes retain
+library basenames.
+
+Fixtures cover moving and removing autoloaded commands, nested dependency
+freshness, invalid paths, case collisions, old flat byte-code, scoped cleanup,
+source archives, source-only packages and exact nested uninstall entries.
+The compiled aural test now creates a complete temporary source layout: the
+bootstrap must not prefer the real checkout over its compiled fixture.
+
+Native Emacs 31.1 does not expose directory junctions through
+=file-symlink-p=. On Windows the registry reader checks native attributes for
+existing child directories with one PowerShell query per enumeration. Registry
+text is never evaluated. Checkout-root junctions remain supported. Native tests
+confirm that child junctions are rejected before registration or cleanup and
+that external byte-code survives. Shared native byte-code errors direct repair
+to the Windows installer. Symbolic-link tests remain skipped when the
+Windows account lacks permission to create them; Unix link tests pass.
+
+The pilot moved Diff Mode, RPM spec and YAML with unchanged source contents,
+provided features, advice and optional-package registration. Eight focused tests
+pass before and after the move. A fresh source process confirms all three actual
+loaded paths and leaves YAML and RPM spec packages unloaded. The obsolete flat
+byte-code was rejected before cleanup, then removed by the owned cleanup target.
+Compiled, package and native lifecycle verification is recorded below.
+
+An unrelated baseline failure remains: =make aural-audit= reports a stale
+=etc/aural-presentation-reference.org=. The clean =98b3263ea= checkout has the
+same failure; its generated reference lacks existing capitalization and spelling
+tone attributes. This migration does not refresh that unrelated reference.
+
+Build, package and regression verification:
+
+- Emacs 31.0.90 and Emacs 30.2 both rebuild all 325 ordinary modules and pass
+  byte-code preflight, fresh compiled startup and all 27 compiled startup tests.
+  The eight pilot integration tests pass on both versions. Separate fresh
+  processes load each pilot from its nested =.elc= path with optional packages
+  still absent.
+- With the known baseline aural-reference case excluded, the focused
+  infrastructure suites pass 38 cases on each version; their one skip is the
+  Windows-only junction case. Native Emacs 31.1 passes ten cases,
+  including the junction case with mixed-case names and a missing target. Three
+  native symbolic-link cases require privileges unavailable in this account.
+  A separate native check confirms checkout-root junctions remain usable.
+- Isolated compiled aural checks pass on both versions. Compatibility suites
+  pass 314 cases on Emacs 31 and 313 on Emacs 30. Their skips are the graphical
+  EWW case, the Windows-only junction case, and on Emacs 30 the unavailable DOM
+  comparison API.
+- Debian passes six package tests. Windows payload, ownership, source-provenance
+  and preview fixtures pass forty tests; four source-archive fixtures also pass.
+  A real exported archive installs, compiles and starts in a private home, and
+  its remote helper reaches the expected credential check.
+- Header checks include the new helper through a temporary index. Generated
+  references and the documentation release check pass. All existing reference
+  node names and their order are preserved; only =emacsvox-paths= is added.
+  The icon-count utility gives identical results before and after the moves.
+
+The complete unit suite has the same fifteen failures as the clean
+=98b3263ea= baseline: 4,203 passes and 188 skips in this tree, versus 4,192
+passes and 187 skips at baseline. The additional skip is the Windows-only
+junction test, which passes natively. No new failure names occur. These existing
+failures concern Agent Shell queue completion, aural/tone cases, Corfu feedback,
+manual expectations and an old-worker diagnostic. Logs are
+=/tmp/emacsvox-layout-unit.log= and
+=/tmp/emacsvox-layout-baseline-unit.log=. They remain separate repair work.
+
+No live Emacs session has been reloaded. Listening acceptance remains separate
+from submission and startup checks. All reorganisation changes are uncommitted.
+The next stage is to review another coherent integration batch before moving it;
+shared UI, voice, transport and reading modules remain at their existing paths.
+
+Native Windows lifecycle acceptance passes on 2026-10-18 with Emacs 31.1 and
+Omnivox 1.18.0. Two isolated development installers exercise fresh installation,
+shortcut diagnostics, refusal while the test Emacs is running, repair of a
+missing source, failed activation with the previous selection preserved,
+successful upgrade and uninstall. Fresh processes inside both installed builds
+load all three pilot features from =lisp/integrations/*.elc= and leave the
+optional packages unloaded. Uninstall leaves no application files, including
+nested byte-code, while preserving the test profile and voice data. Existing
+Windows installations and shortcuts were not changed.
+
+The standard lifecycle script was copied to a private fixture with additional
+pilot-path assertions. Its log is =/tmp/emacsvox-layout-native-lifecycle.log=;
+native logs are retained below
+=C:/Users/bart/AppData/Local/Temp/emacsvox-layout-lifecycle/logs/=. The installer
+fixtures precede only the final repair-hint wording correction; the corrected
+native hints pass the native path tests separately. Graphical/audio acceptance
+and the separate deliberately failed-configuration rollback fixture were not
+run. Failed activation, recovery and uninstall cover the changed layout and
+ownership paths in this batch. No release was tagged or published.

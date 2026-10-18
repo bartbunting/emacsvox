@@ -8,6 +8,7 @@ import argparse
 from email.utils import formatdate
 import gzip
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,10 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parent.parent
+LAYOUT_SPEC = importlib.util.spec_from_file_location('emacsvox_lisp_layout', ROOT / 'utils/emacsvox_lisp_layout.py')
+LAYOUT = importlib.util.module_from_spec(LAYOUT_SPEC)
+LAYOUT_SPEC.loader.exec_module(LAYOUT)
+
 MAINTAINER = "Bart Bunting <bartbunting@users.noreply.github.com>"
 DEPENDS = " | ".join(f"{name} (>= 1:30.2)" for name in
                       ("emacs", "emacs-gtk", "emacs-pgtk", "emacs-lucid", "emacs-nox"))
@@ -64,7 +69,7 @@ def source_identity(root):
     }
 
 
-def include(name):
+def include(name, directories):
     path = Path(name)
     if any(part.startswith(".") for part in path.parts):
         return False
@@ -72,7 +77,7 @@ def include(name):
         return False
     return (name in RUNTIME_FILES or path.parts[0] in RUNTIME_TREES
             or path.parts[:2] == ("media", "radio")
-            or (path.parent == Path("lisp") and path.suffix == ".el")
+            or LAYOUT.includes(name, directories)
             or (path.parent == Path("info") and ".info" in path.name))
 
 
@@ -103,6 +108,8 @@ def package(root, destination, emacs, release=False):
         # documentation and checked-source-archive gates, even via this script.
         subprocess.run(["make", "release-artifact-check", f"EMACS={emacs}",
                         f"DIST_DIR={destination}"], cwd=root, check=True)
+    directories = LAYOUT.directories(root)
+    LAYOUT.sources(root)
     files, identity = source_identity(root)
     version = (root / "VERSION").read_text().strip()
     if not re.fullmatch(r"[0-9]{4}\.(?:[1-9]|1[0-2])\.(?:0|[1-9][0-9]*)", version):
@@ -117,7 +124,7 @@ def package(root, destination, emacs, release=False):
         stage = work / "package"
         runtime = stage / "usr/share/emacsvox"
         for name in files:
-            if include(name):
+            if include(name, directories):
                 copy_file(root / name, runtime / name)
         for name in RUNTIME_FILES | {"lisp/emacsvox-setup.el", "info/emacsvox.info",
                                      "sounds/packs/chimes/open-object.ogg"}:
@@ -133,9 +140,9 @@ def package(root, destination, emacs, release=False):
                        "SOURCE_DATE_EPOCH": identity["source_epoch"],
                        "EMACSVOX_DEB_LISP": str(runtime / "lisp")}
         subprocess.run([emacs, "-Q", "--batch", "--eval",
-                        '(progn (require \'loaddefs-gen) (require \'transient) '
-                        '(let ((dir (getenv "EMACSVOX_DEB_LISP"))) '
-                        '(loaddefs-generate dir (expand-file-name "emacsvox-loaddefs.el" dir))))'],
+                        '(progn (setq emacsvox-lisp-directory (getenv "EMACSVOX_DEB_LISP")) '
+                        '(load (expand-file-name "emacsvox-autoload.el" emacsvox-lisp-directory) nil t) '
+                        '(emacsvox-auto-generate-autoloads))'],
                        env=environment, cwd=work, check=True)
         launcher = stage / "usr/bin/emacsvox"
         launcher.parent.mkdir(parents=True)
@@ -210,7 +217,7 @@ def main():
     args = parser.parse_args()
     try:
         print(package(args.source, args.output_dir, args.emacs, args.release))
-    except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
+    except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"error: {error}\n")
 
 

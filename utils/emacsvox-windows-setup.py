@@ -21,7 +21,7 @@ PRODUCT = 'Emacsvox.Native.Development.1'
 INPUTS = ('utils/emacsvox-windows-setup-cleanup.ps1', 'utils/emacsvox-windows-setup.iss', 'utils/emacsvox-windows-setup-helper.ps1',
           'utils/emacsvox-windows-setup-launch.ps1', 'utils/emacsvox-windows-common.ps1',
           'utils/emacsvox-windows-setup.py', 'utils/emacsvox-windows-setup-build.ps1',
-          'etc/windows-setup.conf')
+          'etc/windows-setup.conf', 'utils/emacsvox_lisp_layout.py')
 
 
 def safe_name(name):
@@ -138,7 +138,7 @@ def prepare(bundle, destination, root=ROOT):
             # Only generated application files are explicitly deleted. No root,
             # profile, voice, runtime or application-directory wildcard removal.
             generated = ['native-install.json', 'lisp/emacsvox-loaddefs.el']
-            generated += [p.relative_to(application).as_posix() + 'c' for p in (application / 'lisp').glob('*.el')]
+            generated += [name + 'c' for name in BUNDLE.LAYOUT.sources(application)]
             uninstall = '[UninstallDelete]\n'
             for name in generated:
                 relative = f'Applications/{build}/{name}'.replace('/', '\\')

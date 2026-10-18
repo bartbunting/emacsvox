@@ -22,12 +22,23 @@
   (expand-file-name
    "../" (file-name-directory (or load-file-name buffer-file-name))))
 
+(defun emacsvox-autoload-tests--layout (directory)
+  (make-directory directory t)
+  (make-directory (expand-file-name "../etc" directory) t)
+  (copy-file (expand-file-name "etc/lisp-directories" emacsvox-autoload-tests--root)
+             (expand-file-name "../etc/lisp-directories" directory) t)
+  (copy-file (expand-file-name "lisp/emacsvox-paths.el" emacsvox-autoload-tests--root)
+             (expand-file-name "emacsvox-paths.el" directory) t))
+
 (ert-deftest emacsvox-autoload-generation-uses-loaddefs-gen ()
   "Autoload generation calls the supported Emacs 31 API directly."
   (let ((emacsvox-lisp-directory "/tmp/emacsvox-lisp")
         (emacsvox-auto-autoloads-file "/tmp/emacsvox-loaddefs.el")
         observed)
-    (cl-letf (((symbol-function 'loaddefs-generate)
+    (cl-letf (((symbol-function 'emacsvox-paths--check-sources) #'ignore)
+              ((symbol-function 'emacsvox-paths--source-directories)
+               (lambda (_) '("/tmp/emacsvox-lisp/" "/tmp/emacsvox-lisp/ui/")))
+              ((symbol-function 'loaddefs-generate)
                (lambda (&rest arguments)
                  (setq observed arguments)
                  'generated))
@@ -41,12 +52,13 @@
     (should
      (equal
       observed
-      '("/tmp/emacsvox-lisp" "/tmp/emacsvox-loaddefs.el" nil nil nil t)))))
+      '(("/tmp/emacsvox-lisp/" "/tmp/emacsvox-lisp/ui/") "/tmp/emacsvox-loaddefs.el" nil nil nil t)))))
 
 (ert-deftest emacsvox-make-config-refreshes-autoloads ()
   "Repeated configuration refreshes edited, added, and removed commands."
   (skip-unless (and (executable-find "make") (not (eq system-type 'windows-nt))))
-  (let* ((root (make-temp-file "emacsvox-autoload-refresh-" t))
+  (let* ((tree (make-temp-file "emacsvox-autoload-refresh-" t))
+         (root (expand-file-name "lisp" tree))
          (default-directory (file-name-as-directory root))
          (process-environment (copy-sequence process-environment))
          (emacs (expand-file-name invocation-name invocation-directory))
@@ -70,13 +82,15 @@
              (verify
               (form)
               ;; A fresh process must see only the newly generated index.
-              (run emacs "-Q" "--batch" "-L" root "-l" index
+              (run emacs "-Q" "--batch" "-L" root "-l" "emacsvox-paths"
+                   "--eval" (prin1-to-string `(emacsvox-paths--register ,root)) "-l" index
                    "--eval"
                    (prin1-to-string
                     `(progn
                        (require 'ert)
                        ,@(mapcar (lambda (check) `(should ,check))
                                  (cdr form)))))))
+          (emacsvox-autoload-tests--layout root)
           (dolist (name '("MAKEFLAGS" "MAKEOVERRIDES" "MFLAGS" "MAKELEVEL" "EMACS"))
             (setenv name nil))
           (copy-file (expand-file-name "lisp/Makefile" emacsvox-autoload-tests--root)
@@ -114,24 +128,33 @@
           (set-file-times (expand-file-name "added.el" root) '(0 1 0 0))
           (configure)
           (verify '(and (commandp 'ev-added) (eq (ev-added) 'added)))
-          (delete-file (expand-file-name "example.el" root))
+          (make-directory (expand-file-name "integrations" root))
+          (rename-file (expand-file-name "example.el" root)
+                       (expand-file-name "integrations/example.el" root))
+          (configure)
+          (verify '(and (eq (ev-fixture 'moved) 'moved)
+                        (string-match-p "/integrations/example.el"
+                                        (symbol-file 'ev-fixture))))
+          (delete-file (expand-file-name "integrations/example.el" root))
           (configure)
           (verify '(and (not (fboundp 'ev-fixture))
                         (commandp 'ev-added) (eq (ev-added) 'added)))
           (configure)
           (verify '(and (not (fboundp 'ev-fixture))
                         (commandp 'ev-added) (eq (ev-added) 'added))))
-      (delete-directory root t))))
+      (delete-directory tree t))))
 
 (ert-deftest emacsvox-autoload-transient-prefix-stays-lazy ()
   "Generate a command autoload without evaluating its Transient module."
-  (let* ((root (make-temp-file "emacsvox-transient-autoload-" t))
+  (let* ((tree (make-temp-file "emacsvox-transient-autoload-" t))
+         (root (expand-file-name "lisp" tree))
          (emacs (expand-file-name invocation-name invocation-directory))
          (index (expand-file-name "emacsvox-loaddefs.el" root))
          (generator (expand-file-name "lisp/emacsvox-autoload.el"
                                       emacsvox-autoload-tests--root)))
     (unwind-protect
         (progn
+          (emacsvox-autoload-tests--layout root)
           (with-temp-file (expand-file-name "fixture-menu.el" root)
             (insert ";;; fixture-menu.el -*- lexical-binding: t; -*-\n"
                     "(error \"Autoload generation evaluated the menu module\")\n"
@@ -158,7 +181,7 @@
               (unless (zerop (apply #'call-process emacs nil t nil
                                    "-Q" "--batch" arguments))
                 (ert-fail (buffer-string))))))
-      (delete-directory root t))))
+      (delete-directory tree t))))
 
 (ert-deftest emacsvox-portable-configure-generates-loaddefs ()
   "The Emacs-only first-run command works without Make or the current directory."
@@ -170,7 +193,7 @@
     (unwind-protect
         (progn
           (make-directory etc-directory)
-          (make-directory lisp-directory)
+          (emacsvox-autoload-tests--layout lisp-directory)
           (copy-file
            (expand-file-name
             "etc/configure-emacsvox.el" emacsvox-autoload-tests--root)

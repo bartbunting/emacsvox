@@ -7,12 +7,16 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'subr-x)
+(load (expand-file-name "../lisp/emacsvox-paths.el"
+                        (file-name-directory load-file-name)) nil t t)
 
 (defun emacsvox-native-bytecode--plan (root)
   "Return ordered :sources and their compiled :dependencies below ROOT."
   (let ((variables (make-hash-table :test #'equal))
         (dependencies (make-hash-table :test #'equal))
-        (visited (make-hash-table :test #'equal)) lines result)
+        (visited (make-hash-table :test #'equal))
+        (directory (expand-file-name "lisp" root)) lines result modules)
+    (emacsvox-paths--check-sources directory)
     (with-temp-buffer
       (insert-file-contents (expand-file-name "lisp/Makefile" root))
       (goto-char (point-min))
@@ -35,6 +39,7 @@
                                 (cons name seen)))) value t t)))
          (visit
            (module)
+           (push module modules)
            (pcase (gethash module visited)
              ('done nil)
              ('active (error "Cyclic module dependency: %s" module))
@@ -55,9 +60,8 @@
                                  (cl-remove-if-not (lambda (x) (string-suffix-p ".elc" x)) inputs))
                          dependencies))))))
       (dolist (module (split-string (expand-value (or (gethash "OBJECTS" variables) (error "Missing OBJECTS")))))
-        (unless (string-match-p "\\`[a-zA-Z0-9_-]+\\.elc\\'" module)
-          (error "Unsupported compiled module: %s" module))
         (visit module)))
+    (emacsvox-paths--validate-modules directory modules)
     (list :sources (nreverse result) :dependencies dependencies)))
 
 (defun emacsvox-native-bytecode-plan (root)
@@ -76,9 +80,7 @@
          (gc-cons-threshold 64000000))
     (if (equal (getenv "EMACSVOX_NATIVE_BYTECODE") "check")
         (progn
-          (dolist (compiled (directory-files directory t "\\.elc\\'"))
-            (unless (file-exists-p (string-remove-suffix "c" compiled))
-              (error "Orphaned native byte-code; rerun the Windows installer: %s" compiled)))
+          (emacsvox-paths--check-bytecode directory)
           (dolist (source sources)
             (let ((compiled (concat source "c")))
               (unless (and (file-exists-p compiled)
@@ -87,13 +89,13 @@
                              (insert-file-contents compiled nil 0 200)
                              (search-forward (concat ";;; in Emacs version " emacs-version "\n") nil t)))
                 (error "Missing or stale native byte-code; rerun the Windows installer: %s" compiled))
-              (dolist (dependency (gethash (file-name-nondirectory compiled)
+              (dolist (dependency (gethash (file-relative-name compiled directory)
                                           (plist-get plan :dependencies)))
                 (let ((input (expand-file-name dependency directory)))
                   (when (file-newer-than-file-p input compiled)
                     (error "Native byte-code %s is older than dependency %s; rerun the Windows installer"
                            compiled input)))))))
-      (dolist (compiled (directory-files directory t "\\.elc\\'")) (delete-file compiled))
+      (emacsvox-paths--clean-bytecode directory)
       (load (expand-file-name "emacsvox-preamble.el" directory) nil t)
       (load (expand-file-name "emacsvox-autoload.el" directory) nil t)
       (emacsvox-auto-generate-autoloads)

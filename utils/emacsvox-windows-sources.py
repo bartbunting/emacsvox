@@ -93,7 +93,9 @@ def checked_checkout(root, manifest):
     prefix = f'Applications/{manifest["Build"]}/'
     app = {item['Path'][len(prefix):]: item['SHA256'] for item in manifest['Files']
            if item['Path'].startswith(prefix)}
-    expected = {name: BUNDLE.sha256(root / name) for name in names if BUNDLE.include(name)}
+    directories = BUNDLE.LAYOUT.directories(root)
+    BUNDLE.LAYOUT.sources(root)
+    expected = {name: BUNDLE.sha256(root / name) for name in names if BUNDLE.include(name, directories)}
     if app != expected:
         raise ValueError('Installer application payload differs from committed source')
     return commit, names

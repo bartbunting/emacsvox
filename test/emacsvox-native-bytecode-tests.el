@@ -7,6 +7,19 @@
   (expand-file-name "../" (file-name-directory load-file-name)))
 (load (expand-file-name "utils/emacsvox-native-bytecode.el" emacsvox-native-tests-root) nil t)
 
+(defun emacsvox-native-tests--registry (root)
+  (make-directory (expand-file-name "etc" root) t)
+  (copy-file (expand-file-name "etc/lisp-directories" emacsvox-native-tests-root)
+             (expand-file-name "etc/lisp-directories" root) t))
+
+(defun emacsvox-native-tests--run ()
+  "Exercise the native builder guard on both test platforms."
+  (cl-letf (((symbol-function 'emacsvox-paths--check-native-directories)
+             (if (eq system-type 'windows-nt)
+                 (symbol-function 'emacsvox-paths--check-native-directories)
+               #'ignore)))
+    (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main))))
+
 (ert-deftest emacsvox-build-config-inherits-make-options ()
   "Recursive configuration accepts keep-going and dry-run flags as options."
   (skip-unless (executable-find "make"))
@@ -21,7 +34,7 @@
       (should (string-match-p "emacsvox-auto-generate-autoloads" (buffer-string))))))
 
 (ert-deftest emacsvox-native-build-matches-canonical-make-inventory ()
-  (let ((native (mapcar (lambda (path) (concat (file-name-nondirectory path) "c"))
+  (let ((native (mapcar (lambda (path) (concat (file-relative-name path (expand-file-name "lisp" emacsvox-native-tests-root)) "c"))
                         (emacsvox-native-bytecode-plan emacsvox-native-tests-root)))
         expected)
     (with-temp-buffer
@@ -36,6 +49,7 @@
     (unwind-protect
         (progn
           (make-directory (expand-file-name "lisp" root))
+          (emacsvox-native-tests--registry root)
           (with-temp-file (expand-file-name "lisp/Makefile" root)
             (insert "BASE = voice.elc\nOBJECTS = app.elc $(BASE)\napp.elc: $(BASE)\n"))
           (should (equal (mapcar #'file-name-nondirectory (emacsvox-native-bytecode-plan root))
@@ -52,17 +66,22 @@
     (unwind-protect
         (progn
           (make-directory (expand-file-name "lisp" root))
+          (emacsvox-native-tests--registry root)
           (with-temp-file (expand-file-name "lisp/Makefile" root) (insert "OBJECTS = app.elc\n"))
           (with-temp-file source (insert "; source\n"))
           (setenv "EMACSVOX_NATIVE_ROOT" (base64-encode-string (encode-coding-string root 'utf-8) t))
           (setenv "EMACSVOX_NATIVE_BYTECODE" "check")
-          (should-error (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))
+          (should-error (emacsvox-native-tests--run))
           (with-temp-file compiled (insert ";;; in Emacs version 29.4\n"))
-          (should-error (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))
+          (should (string-match-p "rerun the Windows installer"
+                                  (error-message-string
+                                   (should-error (emacsvox-native-tests--run)))))
           (with-temp-file compiled (insert ";;; in Emacs version " emacs-version "\n"))
-          (should (string-match-p "1 modules" (with-output-to-string (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))))
+          (should (string-match-p "1 modules" (with-output-to-string (emacsvox-native-tests--run))))
           (with-temp-file (expand-file-name "lisp/removed.elc" root) (insert "; orphan\n"))
-          (should-error (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main))))
+          (should (string-match-p "rerun the Windows installer"
+                                  (error-message-string
+                                   (should-error (emacsvox-native-tests--run))))))
       (delete-directory root t))))
 
 (ert-deftest emacsvox-native-check-matches-make-dependency-freshness ()
@@ -74,9 +93,11 @@
     (unwind-protect
         (progn
           (make-directory directory)
+          (emacsvox-native-tests--registry root)
+          (make-directory (expand-file-name "integrations" directory))
           (with-temp-file (expand-file-name "Makefile" directory)
-            (insert "OBJECTS = app.elc middle.elc base.elc\n"
-                    "all: $(OBJECTS)\napp.elc: middle.elc\nmiddle.elc: base.elc\n"
+            (insert "OBJECTS = integrations/app.elc middle.elc base.elc\n"
+                    "all: $(OBJECTS)\nintegrations/app.elc: middle.elc\nmiddle.elc: base.elc\n"
                     "%.elc: %.el\n\t@touch $@\n"))
           (setenv "EMACSVOX_NATIVE_ROOT"
                   (base64-encode-string (encode-coding-string root 'utf-8) t))
@@ -96,7 +117,7 @@
                    (with-temp-file compiled
                      (insert ";;; in Emacs version " emacs-version "\n"))
                    (set-file-times compiled (seconds-to-time (+ 1000000000 age)))))
-               '("base" "middle" "app") (nth 1 case))
+               '("base" "middle" "integrations/app") (nth 1 case))
               (pcase (nth 2 case)
                 ('missing (delete-file (expand-file-name "base.elc" directory)))
                 ('source (set-file-times (expand-file-name "base.el" directory)
@@ -104,7 +125,7 @@
               (let (failure)
                 (condition-case error-data
                     (with-output-to-string
-                      (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))
+                      (emacsvox-native-tests--run))
                   (error (setq failure (error-message-string error-data))))
                 (should (eq (not failure) (nth 3 case)))
                 (when (memq (car case) '(direct transitive))
@@ -114,6 +135,23 @@
                                             "--question" "all")))
                   (should (memq status '(0 1)))
                   (should (eq (zerop status) (nth 3 case))))))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-native-build-rejects-invalid-inventory-and-dependency-paths ()
+  (let ((root (make-temp-file "emacsvox-native-invalid-" t)))
+    (unwind-protect
+        (progn
+          (make-directory (expand-file-name "lisp" root))
+          (emacsvox-native-tests--registry root)
+          (dolist (input '("../escape.elc" "/escape.elc" "private/app.elc"
+                           "integrations/deeper/app.elc" "C:/app.elc"))
+            (dolist (text (list (concat "OBJECTS = " input "\n")
+                               (concat "OBJECTS = app.elc\napp.elc: " input "\n")))
+              (with-temp-file (expand-file-name "lisp/Makefile" root) (insert text))
+              (should-error (emacsvox-native-bytecode-plan root))))
+          (with-temp-file (expand-file-name "lisp/Makefile" root)
+            (insert "OBJECTS = app.elc integrations/App.elc\n"))
+          (should-error (emacsvox-native-bytecode-plan root)))
       (delete-directory root t))))
 
 (provide 'emacsvox-native-bytecode-tests)

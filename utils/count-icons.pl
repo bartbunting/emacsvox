@@ -5,7 +5,18 @@
 # And count them.
 
 use strict;
-my @raw = qx{grep -aF '(emacsvox-icon' ../lisp/*.el}; # matching lines
+use FindBin qw($Bin);
+open(my $files, '-|', 'python3', "$Bin/emacsvox_lisp_layout.py", "$Bin/..")
+  or die "Cannot enumerate Lisp sources: $!";
+my @sources = <$files>;
+close($files) or die "Lisp source validation failed";
+my @raw;
+foreach my $source (@sources) {
+  chomp($source);
+  open(my $input, '<', "$Bin/../$source") or die "Cannot read $source: $!";
+  push @raw, grep { index($_, '(emacsvox-icon') >= 0 } <$input>;
+  close($input);
+}
 chomp(@raw);
 
 # Load in defined icon names.
