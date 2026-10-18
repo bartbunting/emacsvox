@@ -300,6 +300,26 @@ and advice installation are byte-for-byte unchanged. The facade falls from
 Listening acceptance remains separate; the personal session was not reloaded.
 The documentation release check passed before committing the final slice.
 
+** Omnivox inventory, discovery and tracked reading
+
+Accepted on 2026-10-18: extract inventory normalization and capability reporting,
+then physical voice discovery and refresh coordination, followed by tracked
+buffer reading. Preserve existing names, callback contracts and activation order.
+Omnivox negotiation and control request ownership stay in the adapter. Tracked
+reading keeps chunking, point tracking, completion and cancellation together.
+Each slice uses fresh source and compiled checks; the personal session remains
+unchanged and listening acceptance stays separate.
+
+Inventory normalization and capability descriptions now live in
+=speech/omnivox-inventory=. Both extracted blocks are unchanged. Make and
+startup inventories include the module; declarations follow its new ownership.
+Source and compiled checks each pass 712 of 713 cases, matching the fresh
+baseline and its known capital-tone failure. Isolated compiled aural parity
+and normal compiled startup pass. Loading inventory definitions alone starts
+no processes and does not load the adapter. Incremental compilation, byte-code
+preflight, headers, generated reference and the documentation release check
+pass. Compiler warnings match the existing entry-point baseline.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -310,7 +330,7 @@ and comments; extracted modules retain named authors and copyright holders.
 | emacsvox-agent-shell.el | 7688 | 1413 |
 | emacsvox-aural-voice-workbench.el | 3013 | 2212 |
 | omnivox-library.el | 1069 | 419 |
-| omnivox-voices.el | 3117 | 2744 |
+| omnivox-voices.el | 3117 | 2491 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
 

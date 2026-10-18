@@ -735,6 +735,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omnivox-engine-configuration:: Local engine configuration.
 * omnivox-engine-settings:: Local engine startup settings.
 * omnivox-espeak-variants:: Bundled eSpeak variant selection.
+* omnivox-inventory:: Omnivox inventory and capabilities.
 * omnivox-library:: Local installed voices and Apply.
 * omnivox-library-apply:: Coordinate voice-library activation.
 * omnivox-library-runtime:: Native voice library runtime.

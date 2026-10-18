@@ -57,6 +57,7 @@
           "speech/omnivox-control-codec.el"
           "speech/omnivox-choice-codec.el"
           "speech/omnivox-preview.el"
+          "speech/omnivox-inventory.el"
           "speech/omnivox-voices.el"
           "core/emacsvox-pronounce.el"
           "core/emacsvox-speak.el"

@@ -92,6 +92,7 @@
     "ui/omnivox-library.el"
     "ui/omnivox-catalogue.el"
     "speech/omnivox-preview.el"
+    "speech/omnivox-inventory.el"
     "speech/omnivox-voices.el"
     "speech/omnivox-remote.el"
     "speech/omnivox-engine-settings.el"

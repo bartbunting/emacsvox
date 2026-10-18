@@ -44,7 +44,7 @@
 (require 'emacsvox-aural-voice-palettes)
 (require 'omnivox-library)
 (require 'emacsvox-aural-voice-workbench-views)
-(declare-function omnivox-voice-inventory "omnivox-voices" ())
+(declare-function omnivox-voice-inventory "omnivox-inventory" ())
 (defvar omnivox-engine-inventory)
 (defvar omnivox--control-inventory-property)
 (declare-function omnivox--send-control-request "omnivox-voices" (process request callback))

@@ -28,6 +28,7 @@
           mac-voices
           swiftmac-voices
           omnivox-voices
+          omnivox-inventory
           omnivox-remote
           emacsvox-pronounce
           emacsvox-speak
@@ -87,6 +88,7 @@
           mac-voice-capabilities
           swiftmac-voice-capabilities
           omnivox-voice-capabilities
+          omnivox-voice-inventory
           omnivox-remote-make-process
           emacsvox-pronounce-refresh-pronunciations
           emacsvox-speak-line

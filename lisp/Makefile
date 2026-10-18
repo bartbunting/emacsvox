@@ -72,6 +72,7 @@ speech/omnivox-library-runtime.elc \
 ui/omnivox-library.elc \
 ui/omnivox-catalogue.elc \
 speech/omnivox-preview.elc \
+speech/omnivox-inventory.elc \
 speech/omnivox-voices.elc
 
 TTS_OBJECTS = \
@@ -469,7 +470,8 @@ speech/omnivox-parameters-codec.elc: speech/omnivox-choice-codec.elc
 speech/omnivox-parameters.elc: speech/omnivox-parameters-codec.elc speech/omnivox-native-codec.elc speech/tts-queue-state.elc
 speech/omnivox-native-codec.elc: speech/omnivox-parameters-codec.elc
 speech/omnivox-preview.elc: speech/omnivox-control-codec.elc speech/tts-queue-state.elc speech/omnivox-choice-codec.elc speech/omnivox-native-codec.elc
-speech/omnivox-voices.elc: speech/omnivox-control-codec.elc voices/voice-defs.elc voices/emacsvox-aural-voice-runtime.elc speech/omnivox-choice-codec.elc speech/omnivox-preview.elc speech/omnivox-parameters.elc
+speech/omnivox-inventory.elc: speech/omnivox-control-codec.elc
+speech/omnivox-voices.elc: speech/omnivox-inventory.elc speech/omnivox-control-codec.elc voices/voice-defs.elc voices/emacsvox-aural-voice-runtime.elc speech/omnivox-choice-codec.elc speech/omnivox-preview.elc speech/omnivox-parameters.elc
 aural/emacsvox-aural-profile-service.elc: \
 aural/emacsvox-aural-schemes.elc aural/emacsvox-aural-spatial.elc
 aural/emacsvox-aural-compatibility-voice.elc: aural/emacsvox-aural.elc
