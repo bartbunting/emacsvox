@@ -101,3 +101,18 @@ All 108 focused source and compiled cases pass, with the same eight batch
 skips. All 38 graphical voice/editor cases pass and verify the new module's
 compiled path. Compilation, byte-code preflight, headers, generated reference
 and the documentation release check pass.
+
+Committed as =0053851b0=.
+
+** Omnivox control codec
+
+Extract bounded control and marker encoding, selector conversion, and preview
+validation/normalization into =omnivox-control-codec=. Choice encoding and the
+preview coordinator depend directly on this data module. Process capability
+checks, request admission, timers, callbacks and registration retain their
+existing owners. Pitch calibration still uses the adapter's established helper.
+
+All 357 affected source and compiled cases pass, covering generic TTS,
+preview ownership, native preview, choice encoding and registration. A fresh
+compiled codec load does not load TTS or the voice adapter or start processes.
+Compilation, byte-code preflight, headers and generated reference pass.

@@ -62,6 +62,7 @@ speech/espeak-voices.elc \
 speech/outloud-voices.elc \
 speech/mac-voices.elc \
 speech/swiftmac-voices.elc \
+speech/omnivox-control-codec.elc \
 speech/omnivox-choice-codec.elc \
 speech/omnivox-parameters-codec.elc \
 speech/omnivox-parameters.elc \
@@ -446,12 +447,12 @@ ui/emacsvox-spelling.elc: ui/emacsvox-aural-menu.elc integrations/emacsvox-flysp
 ui/emacsvox-aural-voice-bulk.elc: ui/emacsvox-aural-voice-editor.elc
 ui/emacsvox-aural-voice-engine-controls.elc: ui/emacsvox-aural-voice-editor.elc speech/omnivox-parameters.elc
 ui/emacsvox-aural-voice-context.elc: ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-editor.elc aural/emacsvox-aural-tools.elc
-speech/omnivox-choice-codec.elc: aural/emacsvox-aural-rules.elc aural/emacsvox-aural-routing-profiles.elc
+speech/omnivox-choice-codec.elc: speech/omnivox-control-codec.elc aural/emacsvox-aural-rules.elc aural/emacsvox-aural-routing-profiles.elc
 speech/omnivox-parameters-codec.elc: speech/omnivox-choice-codec.elc
 speech/omnivox-parameters.elc: speech/omnivox-parameters-codec.elc speech/omnivox-native-codec.elc speech/tts-queue-state.elc
 speech/omnivox-native-codec.elc: speech/omnivox-parameters-codec.elc
-speech/omnivox-preview.elc: speech/tts-queue-state.elc speech/omnivox-choice-codec.elc speech/omnivox-native-codec.elc
-speech/omnivox-voices.elc: voices/voice-defs.elc voices/emacsvox-aural-voice-runtime.elc speech/omnivox-choice-codec.elc speech/omnivox-preview.elc speech/omnivox-parameters.elc
+speech/omnivox-preview.elc: speech/omnivox-control-codec.elc speech/tts-queue-state.elc speech/omnivox-choice-codec.elc speech/omnivox-native-codec.elc
+speech/omnivox-voices.elc: speech/omnivox-control-codec.elc voices/voice-defs.elc voices/emacsvox-aural-voice-runtime.elc speech/omnivox-choice-codec.elc speech/omnivox-preview.elc speech/omnivox-parameters.elc
 aural/emacsvox-aural-profile-service.elc: \
 aural/emacsvox-aural-schemes.elc aural/emacsvox-aural-spatial.elc
 aural/emacsvox-aural-compatibility-voice.elc: aural/emacsvox-aural.elc

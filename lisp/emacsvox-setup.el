@@ -79,6 +79,7 @@
     "speech/outloud-voices.el"
     "speech/mac-voices.el"
     "speech/swiftmac-voices.el"
+    "speech/omnivox-control-codec.el"
     "speech/omnivox-choice-codec.el"
     "ui/omnivox-espeak-variants.el"
     "speech/omnivox-parameters-codec.el"

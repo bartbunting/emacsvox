@@ -32,12 +32,12 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'omnivox-control-codec)
 (require 'json)
 (require 'emacsvox-aural-rules)
 (require 'emacsvox-aural-routing-profiles)
 
 (declare-function omnivox-scale-average-pitch "omnivox-voices" (value))
-(declare-function omnivox--preview-selector-json "omnivox-voices" (selector))
 
 (defconst omnivox--choice-wire-fields
   '((:average-pitch :average_pitch acss)

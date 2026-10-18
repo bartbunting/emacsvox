@@ -28,6 +28,7 @@
 ;; samples preserve raw choices/context and validate server playback evidence.
 ;;; Code:
 (require 'cl-lib)
+(require 'omnivox-control-codec)
 (require 'tts-queue-state)
 (require 'omnivox-choice-codec)
 (require 'omnivox-native-codec)
@@ -43,13 +44,6 @@
 (declare-function omnivox--preview-individual-request "omnivox-voices" (entry process))
 (declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
-(declare-function omnivox--preview-validate-values "omnivox-voices" (entry))
-(declare-function omnivox--preview-validate-selector "omnivox-voices" (selector))
-(declare-function omnivox--preview-policy-json "omnivox-voices" (policy disabled))
-(declare-function omnivox--preview-valid-id-p "omnivox-voices" (value limit &optional pattern))
-(declare-function omnivox--normalize-complete-preview-response "omnivox-voices" (entry response))
-(declare-function omnivox--normalize-preview-response "omnivox-voices" (entry response effects-supported rate-supported))
-(declare-function omnivox--encode-control-request "omnivox-voices" (request))
 (declare-function omnivox--pending-requests "omnivox-voices" (process))
 (declare-function omnivox--next-control-request-id "omnivox-voices" ())
 (declare-function tts--interrupt-process "tts-speak" (process &optional notifications preserved preview))
