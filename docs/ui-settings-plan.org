@@ -764,8 +764,8 @@ making those adjustable remains a separate design decision.
   The manual covers the reading settings and separate cue drafts.
 
 Confirmed resources: =capital-letter-tone= and =capital-all-caps-tone= in
-[[file:../lisp/emacsvox-aural-resources.el][aural resources]], with distinct capitalization rules in
-[[file:../lisp/emacsvox-aural-schemes.el][aural schemes]]. Cue tuning uses two personal override rules per kind, one
+[[file:../lisp/aural/emacsvox-aural-resources.el][aural resources]], with distinct capitalization rules in
+[[file:../lisp/aural/emacsvox-aural-schemes.el][aural schemes]]. Cue tuning uses two personal override rules per kind, one
 for tone presentation and one for spoken-and-tone. It preserves spoken labels
 and unrelated rules. Other presentation rules may override these changes.
 Drafts persist for this session; adjusting or closing the menu writes nothing.
@@ -1301,7 +1301,7 @@ commands remain local interface operations.
   ownership. The widget editor has exact menu return while keeping letters
   editable and retaining in-memory changes. Template definitions, collection
   clearing and pronunciation emphasis remain in the original dispatcher.
-- [[file:../lisp/tts-speak.el][tts-set-character-scale]] supports local/global character-rate changes;
+- [[file:../lisp/speech/tts-speak.el][tts-set-character-scale]] supports local/global character-rate changes;
   =tts-add-cleanup-pattern= edits =tts-cleanup-repeats=. Both remain direct
   commands without a new focused search route. Their variables are not ordinary
   Customize defaults; establish persistence before adding any Save control.
@@ -1359,10 +1359,10 @@ global default is not necessarily a saved startup value.
 | Diagnostic logging | =emacsvox-aural-toggle-diagnostic-logging=; =tts-hide-diagnostic-buffers= | Extend the diagnostics slice with logging and advanced retention options. Diagnostic-buffer naming changes apply after speech restart. |
 | Speech server and language | =tts-select-server=; =tts-set-language=; =tts-set-next-language=; =tts-set-previous-language= | Capability-sensitive discovery only. Server selection restarts speech; legacy language commands refuse Omnivox, whose voice workbench already owns language routing. |
 
-Evidence: [[file:../lisp/emacsvox-keymap.el][speech keymaps]], [[file:../lisp/tts-speak.el][TTS commands and ownership]],
-[[file:../lisp/emacsvox-speak.el][reading, filters and mail]], [[file:../lisp/emacsvox-sounds.el][earcon switch]],
-[[file:../lisp/emacsvox-advice.el][messages and tooltips]], [[file:../lisp/emacsvox-emoji.el][emoji options]],
-[[file:../lisp/emacsvox-table-reader.el][general table reading]], and [[file:../lisp/integrations/emacsvox-comint.el][background output]].
+Evidence: [[file:../lisp/core/emacsvox-keymap.el][speech keymaps]], [[file:../lisp/speech/tts-speak.el][TTS commands and ownership]],
+[[file:../lisp/core/emacsvox-speak.el][reading, filters and mail]], [[file:../lisp/aural/emacsvox-sounds.el][earcon switch]],
+[[file:../lisp/core/emacsvox-advice.el][messages and tooltips]], [[file:../lisp/core/emacsvox-emoji.el][emoji options]],
+[[file:../lisp/core/emacsvox-table-reader.el][general table reading]], and [[file:../lisp/integrations/emacsvox-comint.el][background output]].
 
 The earlier character-scale, repeat-cleanup, Unicode, predefined-rate,
 dictionary, Voice Lock, training, and history findings remain part of this
@@ -1370,7 +1370,7 @@ inventory. Additional reading options suited to advanced discovery include
 =emacsvox-tracked-reading-max-chars=, =emacsvox-speak-time-format=,
 =emacsvox-speak-time-brief-format=, and =emacsvox-buffer-select-help=.
 The dictionary workflow also has smiley/XML namespace options and date
-pronunciation helpers in [[file:../lisp/emacsvox-wizards.el][the wizards module]].
+pronunciation helpers in [[file:../lisp/core/emacsvox-wizards.el][the wizards module]].
 
 Important interaction and ownership findings:
 
@@ -2232,16 +2232,16 @@ a short everyday menu does not require converting each option into a suffix.
   =emacsvox-aural-disabled-resource-overlays=; external-player configuration
   through =emacsvox-play-program=. The existing sound-pack editor remains the
   route for pack contents and activation.
-- [[file:../lisp/omnivox-engine-settings.el][Engine runtime/model paths]],
-  [[file:../lisp/omnivox-remote.el][remote host, connection and token-file options]],
-  [[file:../lisp/emacsvox-windows-speech.el][Windows launcher/audio defaults]], and component installation policy.
+- [[file:../lisp/speech/omnivox-engine-settings.el][Engine runtime/model paths]],
+  [[file:../lisp/speech/omnivox-remote.el][remote host, connection and token-file options]],
+  [[file:../lisp/speech/emacsvox-windows-speech.el][Windows launcher/audio defaults]], and component installation policy.
   These are separate from runtime notification routing and spatial rendering.
   Keep engine ordering, fallback choices, palettes, and native parameters in
   their already linked workbench/editors; avoid duplicate owners.
 - Voice fallback policy, transport/negotiation timeouts, unsupported-volume
   policy, diagnostic retention, and store locations. These need discoverable
   Customize or specialist routes, not ordinary adjustment arrows.
-- Keymap profile options in [[file:../lisp/emacsvox-keymap.el][the keymap module]], hooks, shell/project helpers,
+- Keymap profile options in [[file:../lisp/core/emacsvox-keymap.el][the keymap module]], hooks, shell/project helpers,
   network/service configuration, and startup loading such as
   =emacsvox-pip-enable=. Selecting an advanced group must not implicitly
   change bindings, initialize another service, or install components.

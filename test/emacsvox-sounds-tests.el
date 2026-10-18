@@ -12,6 +12,25 @@
 (require 'emacsvox-sounds)
 (require 'tts-speak)
 
+(ert-deftest emacsvox-sounds-independent-load-finds-bundled-resources ()
+  "The standalone fallback registers the installation's sound directory."
+  (require 'emacsvox-optional-module-test-utils)
+  (emacsvox-optional-module-test-load
+   "emacsvox-sounds.el"
+   `(progn
+      (require 'emacsvox-aural-resources)
+      (advice-add
+       'emacsvox-aural-register-bundled-resources :before
+       (lambda (directory)
+         (unless (equal directory
+                        ,(expand-file-name
+                          "sounds/"
+                          emacsvox-optional-module-test--root-directory))
+           (error "Bundled sounds resolved outside installation: %s"
+                  directory)))))
+   '(unless (featurep 'emacsvox-sounds)
+      (error "Sound library did not load independently"))))
+
 (defun emacsvox-test--sound-file (directory name)
   "Create an empty Ogg file named NAME in DIRECTORY and return its path."
   (let ((file (expand-file-name (concat name ".ogg") directory)))

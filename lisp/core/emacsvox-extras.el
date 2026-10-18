@@ -196,7 +196,7 @@ for the current voice family."
     (not (string-match "-settings$" (symbol-name v)))
     (string=
      (find-lisp-object-file-name v 'defvar)
-     (expand-file-name "voice-defs.el" emacsvox-lisp-directory)))
+     (expand-file-name "voices/voice-defs.el" emacsvox-lisp-directory)))
    collect v))
 
 ;;;###autoload

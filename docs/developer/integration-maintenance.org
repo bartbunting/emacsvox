@@ -688,7 +688,7 @@ by the Aural implementation, its generated reference, and accepted ADRs.
 :END:
 
 The private =emacsvox-aural--voice-style-fields= table in
-=lisp/emacsvox-aural-rules.el= owns accepted field names, groups, value types,
+=lisp/aural/emacsvox-aural-rules.el= owns accepted field names, groups, value types,
 and integer bounds.  The existing public dimension lists and private accepted
 key list are derived from it; validation traverses the descriptors directly.
 Composition and provenance continue to consume the accepted-key inventory.
@@ -768,7 +768,7 @@ process lifecycle or audible behavior.
 :TEXINFO_NODE: no
 :END:
 
-Two private helpers in =lisp/emacsvox-aural-transport.el= make preparation
+Two private helpers in =lisp/aural/emacsvox-aural-transport.el= make preparation
 inputs explicit.  =emacsvox-aural--timeline-effect-transition= takes previous
 effects, normalized next effects, and a span ID, returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;

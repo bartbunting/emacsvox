@@ -318,7 +318,7 @@ needed. Real-server and spoken acceptance of the future client remain pending.
 
 * Implemented coordinator slice
 
-[[file:../lisp/omnivox-preview.el][The private coordinator]] preflights all entries, copies mutable strings,
+[[file:../lisp/speech/omnivox-preview.el][The private coordinator]] preflights all entries, copies mutable strings,
 retains the actual foreground connection and uses one request/timer per entry.
 A startup guard permits exactly one clear from a proven boundary, including
 pending input, then becomes an ordinary empty-queue guard. Early responses are

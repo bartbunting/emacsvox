@@ -68,7 +68,7 @@
       (with-temp-buffer
         (should (zerop (call-process (expand-file-name invocation-name invocation-directory) nil t nil
                                     "-Q" "--batch" "--eval" "(setq load-prefer-newer t)" "-L" emacsvox-lisp-directory
-                                    "-l" "emacsvox-table-reader.el" "-l" custom-file
+                                    "-l" "core/emacsvox-table-reader.el" "-l" custom-file
                                     "--eval" "(prin1 (list emacsvox-table-reader-data-position emacsvox-table-reader-mode-preferences))")))
         (should (string-match-p "(last ((text-mode (titles row))))" (buffer-string))))
       ;; Reset this mode to common inheritance and persist that decision.

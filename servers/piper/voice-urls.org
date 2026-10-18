@@ -1,6 +1,6 @@
 * Piper Voice Downloads
 
-This file belongs to the experimental =lisp/pip.el= notification path, not the
+This file belongs to the experimental =lisp/speech/pip.el= notification path, not the
 Omnivox Piper engine.  The old hand-maintained model URLs and voice list were
 removed because Piper now provides a supported downloader and the direct URLs
 age independently.
@@ -18,7 +18,7 @@ python3 -m venv ~/.local/share/emacsvox-piper-venv
 #+end_src
 
 Put =~/.local/share/emacsvox-piper-venv/bin= on the environment inherited by
-Emacs so =lisp/pip.el= can find the =piper= command.
+Emacs so =lisp/speech/pip.el= can find the =piper= command.
 
 See [[https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/CLI.md][Piper's command-line reference]] for the maintained options and voice-download
 workflow.

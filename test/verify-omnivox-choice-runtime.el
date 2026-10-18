@@ -23,8 +23,8 @@
   (add-to-list 'load-path directory)
   (add-to-list 'load-path (expand-file-name "test/" root))
   (load (expand-file-name "emacsvox-preamble.el" directory) nil t)
-  (dolist (name '("tts-speak" "omnivox-choice-codec" "emacsvox-aural-transport" "omnivox-voices"
-                 "emacsvox-aural-history" "emacsvox-aural-replay"))
+  (dolist (name '("speech/tts-speak" "speech/omnivox-choice-codec" "aural/emacsvox-aural-transport" "speech/omnivox-voices"
+                 "aural/emacsvox-aural-history" "aural/emacsvox-aural-replay"))
     (load (expand-file-name (concat name (if source ".el" ".elc")) directory) nil t)))
 (require 'omnivox-choice-playback-tests)
 (require 'emacsvox-aural-replay)

@@ -1,6 +1,6 @@
 * Piper TTS
 
-These are experimental notes for the optional =lisp/pip.el= notification path.
+These are experimental notes for the optional =lisp/speech/pip.el= notification path.
 It invokes the locally installed Piper command through =pipspeak= and is not a
 primary Emacsvox speech-server adapter.  It is also separate from Omnivox's
 optional out-of-process Piper engine and packaging.

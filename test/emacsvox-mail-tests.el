@@ -12,7 +12,7 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/emacsvox-advice.el"
+        "../lisp/core/emacsvox-advice.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
   ;; Exercise the source under test even when a compiled core module exists.
   (load module nil nil))

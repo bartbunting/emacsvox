@@ -53,7 +53,7 @@
   (should
    (ems-name-audit--excluded-path-p "info/emacsvox-heritage.info"))
   (should-not
-   (ems-name-audit--excluded-path-p "lisp/emacsvox-speak.el"))
+   (ems-name-audit--excluded-path-p "lisp/core/emacsvox-speak.el"))
   (should-not
    (ems-name-audit--excluded-path-p "servers/tts-lib.tcl")))
 

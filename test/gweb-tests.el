@@ -4,7 +4,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'ido)
-(load (expand-file-name "../lisp/gweb.el"
+(load (expand-file-name "../lisp/core/gweb.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

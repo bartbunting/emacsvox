@@ -16,8 +16,8 @@
 (let* ((root (expand-file-name "../" (file-name-directory load-file-name)))
        (directory (expand-file-name "lisp/" root)))
   (add-to-list 'load-path directory)
-  (dolist (file '("emacsvox-preamble.el" "emacsvox-aural-transport.el"
-                  "tts-speak.el" "omnivox-voices.el" "emacsvox-speak.el"))
+  (dolist (file '("emacsvox-preamble.el" "aural/emacsvox-aural-transport.el"
+                  "speech/tts-speak.el" "speech/omnivox-voices.el" "core/emacsvox-speak.el"))
     (load (expand-file-name file directory) nil t)))
 (require 'cl-lib)
 (require 'emacsvox-aural-submission)

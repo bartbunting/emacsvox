@@ -2,18 +2,17 @@
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
 @c Modules: 325 loaded; 0 intentionally omitted.
-@c Loaded: dectalk-voices.elc dom-addons.elc emacsvox-advice.elc emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc
-@c Loaded: emacsvox-aural-concrete.elc emacsvox-aural-description.elc emacsvox-aural-explanation.elc emacsvox-aural-history.elc emacsvox-aural-inspection.elc
-@c Loaded: emacsvox-aural-planner.elc emacsvox-aural-preview.elc emacsvox-aural-profile-service.elc emacsvox-aural-provider-markdown.elc emacsvox-aural-provider-notmuch.elc
-@c Loaded: emacsvox-aural-provider-org-srs.elc emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc emacsvox-aural-replay.elc
-@c Loaded: emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc emacsvox-aural-schemes.elc emacsvox-aural-source.elc
-@c Loaded: emacsvox-aural-spatial.elc emacsvox-aural-submission.elc emacsvox-aural-tools.elc emacsvox-aural-transport.elc emacsvox-aural-validation.elc
-@c Loaded: emacsvox-aural-voice-data.elc emacsvox-aural-voice-drafts.elc emacsvox-aural-voice-editing.elc emacsvox-aural-voice-runtime.elc emacsvox-aural.elc
-@c Loaded: emacsvox-emoji.elc emacsvox-extras.elc emacsvox-filtertext.elc emacsvox-gridtext.elc emacsvox-hide.elc
-@c Loaded: emacsvox-keymap.elc emacsvox-muggles-core.elc emacsvox-paths.elc emacsvox-preamble.elc emacsvox-pronounce.elc
-@c Loaded: emacsvox-setup.elc emacsvox-sounds.elc emacsvox-speak.elc emacsvox-table-reader.elc emacsvox-table-ui.elc
-@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-version.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
-@c Loaded: emacsvox-xslt.elc emacsvox.elc espeak-voices.elc g-utils.elc gweb.elc
+@c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
+@c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
+@c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
+@c Loaded: aural/emacsvox-aural-providers.elc aural/emacsvox-aural-replay.elc aural/emacsvox-aural-resources.elc aural/emacsvox-aural-routing-profiles.elc aural/emacsvox-aural-rules.elc
+@c Loaded: aural/emacsvox-aural-schemes.elc aural/emacsvox-aural-source.elc aural/emacsvox-aural-spatial.elc aural/emacsvox-aural-submission.elc aural/emacsvox-aural-tools.elc
+@c Loaded: aural/emacsvox-aural-transport.elc aural/emacsvox-aural-validation.elc aural/emacsvox-aural.elc aural/emacsvox-sounds.elc aural/soundscape.elc
+@c Loaded: aural/sox-gen.elc core/dom-addons.elc core/emacsvox-advice.elc core/emacsvox-emoji.elc core/emacsvox-extras.elc
+@c Loaded: core/emacsvox-filtertext.elc core/emacsvox-gridtext.elc core/emacsvox-hide.elc core/emacsvox-keymap.elc core/emacsvox-muggles-core.elc
+@c Loaded: core/emacsvox-pronounce.elc core/emacsvox-speak.elc core/emacsvox-table-reader.elc core/emacsvox-table-ui.elc core/emacsvox-table.elc
+@c Loaded: core/emacsvox-tabulate.elc core/emacsvox-wizards.elc core/emacsvox-xslt.elc core/g-utils.elc core/gweb.elc
+@c Loaded: emacsvox-paths.elc emacsvox-preamble.elc emacsvox-setup.elc emacsvox-version.elc emacsvox.elc
 @c Loaded: integrations/amixer.elc integrations/emacsvox-2048.elc integrations/emacsvox-abc-mode.elc integrations/emacsvox-ace-window.elc integrations/emacsvox-add-log.elc
 @c Loaded: integrations/emacsvox-agent-shell-render.elc integrations/emacsvox-agent-shell.elc integrations/emacsvox-amark.elc integrations/emacsvox-annotate.elc integrations/emacsvox-arc.elc
 @c Loaded: integrations/emacsvox-auctex.elc integrations/emacsvox-avy.elc integrations/emacsvox-bbdb.elc integrations/emacsvox-bibtex.elc integrations/emacsvox-bookmark.elc
@@ -54,19 +53,20 @@
 @c Loaded: integrations/emacsvox-websearch.elc integrations/emacsvox-webspace.elc integrations/emacsvox-which-key.elc integrations/emacsvox-widget.elc integrations/emacsvox-windmove.elc
 @c Loaded: integrations/emacsvox-woman.elc integrations/emacsvox-xkcd.elc integrations/emacsvox-xref.elc integrations/emacsvox-yaml.elc integrations/emacsvox-yasnippet.elc
 @c Loaded: integrations/gm-nnir.elc integrations/gmaps.elc integrations/ladspa.elc integrations/light.elc integrations/omaps.elc
-@c Loaded: integrations/sox.elc integrations/tetris.elc integrations/xbacklight.elc mac-voices.elc omnivox-choice-codec.elc
-@c Loaded: omnivox-engine-settings.elc omnivox-library-apply.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc
-@c Loaded: omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
-@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc swiftmac-voices.elc
-@c Loaded: tts-queue-state.elc tts-speak.elc ui/emacsvox-aural-change-feedback.elc ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc
-@c Loaded: ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc
-@c Loaded: ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc
-@c Loaded: ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc
-@c Loaded: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc
-@c Loaded: ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc
-@c Loaded: ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc
-@c Loaded: ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc
-@c Loaded: ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc voice-defs.elc voice-setup.elc
+@c Loaded: integrations/sox.elc integrations/tetris.elc integrations/xbacklight.elc speech/dectalk-voices.elc speech/emacsvox-windows-speech.elc
+@c Loaded: speech/espeak-voices.elc speech/mac-voices.elc speech/omnivox-choice-codec.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc
+@c Loaded: speech/omnivox-native-codec.elc speech/omnivox-parameters-codec.elc speech/omnivox-parameters.elc speech/omnivox-preview.elc speech/omnivox-punctuation-profiles.elc
+@c Loaded: speech/omnivox-remote.elc speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc speech/plain-voices.elc
+@c Loaded: speech/swiftmac-voices.elc speech/tts-queue-state.elc speech/tts-speak.elc speech/voice-setup.elc ui/emacsvox-aural-change-feedback.elc
+@c Loaded: ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc
+@c Loaded: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc
+@c Loaded: ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc
+@c Loaded: ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc
+@c Loaded: ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc
+@c Loaded: ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc
+@c Loaded: ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc
+@c Loaded: ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc
+@c Loaded: voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 

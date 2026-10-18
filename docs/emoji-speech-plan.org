@@ -36,10 +36,10 @@ Follow all accepted [[file:adr/][ADRs]], particularly the Emacs minimum in
 
 * Evidence from the current implementation
 
-- [[file:../lisp/tts-speak.el][tts-speak.el]] already implements Unicode character names and explicit
+- [[file:../lisp/speech/tts-speak.el][tts-speak.el]] already implements Unicode character names and explicit
   character replacements. Its broad compatibility conversion can name letters
   as well as symbols; re-enabling it globally would undermine language fallback.
-- [[file:../lisp/omnivox-voices.el][omnivox-voices.el]] disables that broad conversion after every live speech
+- [[file:../lisp/speech/omnivox-voices.el][omnivox-voices.el]] disables that broad conversion after every live speech
   process advertises =text_repertoire_routing_v1=. Preserve that negotiation.
 - Omnivox filters engine candidates by the text each engine can encode, per
   synthesis chunk. This does not mark Eloquence unhealthy; a later compatible
@@ -51,7 +51,7 @@ Follow all accepted [[file:adr/][ADRs]], particularly the Emacs minimum in
   The same trial names were subsequently verified on Emacs 30.2.
 - Normal speech applies pronunciation entries in a temporary speech buffer.
   Complete voice previews construct their own text requests in
-  [[file:../lisp/emacsvox-aural-voice-editing.el][voice-editing.el]]. A change only in the ordinary speech cleanup would
+  [[file:../lisp/voices/emacsvox-aural-voice-editing.el][voice-editing.el]]. A change only in the ordinary speech cleanup would
   leave previews inconsistent.
 
 * Proposed policy for the first listening trial

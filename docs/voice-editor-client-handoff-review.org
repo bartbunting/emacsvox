@@ -53,9 +53,9 @@ shared -> actual choice -> context precedence or the server wire grammar.
 
 * Concrete finding
 
-=tts--prepare-structured-dispatch= in [[file:../lisp/tts-speak.el][tts-speak.el]] allocates an ID and
+=tts--prepare-structured-dispatch= in [[file:../lisp/speech/tts-speak.el][tts-speak.el]] allocates an ID and
 returns a registration effect. Its documented contract installs tracking only
-after the complete timeline write. [[file:../lisp/emacsvox-aural-transport.el][Aural transport]] retains that effect until
+after the complete timeline write. [[file:../lisp/aural/emacsvox-aural-transport.el][Aural transport]] retains that effect until
 =emacsvox-aural--commit-delivery-effects= runs after sending the commands.
 
 =tts--dispatch-playback-marker-event= requires an installed marker dispatch.

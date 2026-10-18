@@ -11,9 +11,19 @@
 (require 'emacsvox-optional-module-test-utils)
 
 (load (expand-file-name
-       "../lisp/pip.el"
+       "../lisp/speech/pip.el"
        (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
+
+(ert-deftest emacsvox-pip-finds-bundled-wrapper ()
+  "Loading Piper independently resolves the wrapper in the installation."
+  (emacsvox-optional-module-test-load
+   "pip.el" nil
+   `(unless (equal pip-pip
+                   ,(expand-file-name
+                     "servers/piper/pipspeak"
+                     emacsvox-optional-module-test--root-directory))
+      (error "Piper wrapper resolved outside the installation: %s" pip-pip))))
 
 (ert-deftest emacsvox-pip-loads-without-piper-or-voices ()
   "The Piper module should load before its runtime prerequisites exist."

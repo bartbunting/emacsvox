@@ -16,10 +16,10 @@ lisp/integrations/emacsvox-nm.el
   Authored by Øyvind Stegard and declared public domain with no warranty in
   the file.  Its declaration is retained verbatim.
 
-lisp/g-utils.el
+lisp/core/g-utils.el
 lisp/integrations/gm-nnir.el
 lisp/integrations/gmaps.el
-lisp/gweb.el
+lisp/core/gweb.el
 lisp/integrations/omaps.el
   Copyright Google Inc.  These files contain a BSD-style redistribution and
   warranty notice.  That embedded notice controls; the historical
@@ -33,7 +33,7 @@ The historical permission and warranty text in etc/COPYRIGHT is preserved.
 Its presence does not override a more specific licence notice in a source
 file.
 
-lisp/tts-speak.el retains the copyright and authorship notice for Unicode
+lisp/speech/tts-speak.el retains the copyright and authorship notice for Unicode
 character-pronunciation work by Lukas Loehrer.
 
 Other directories

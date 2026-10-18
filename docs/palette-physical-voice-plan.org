@@ -145,13 +145,13 @@ two files or speech streams is claimed.
 Source inspection on 2026-09-24 identifies these boundaries:
 
 1. Add pure bulk proposal construction beside
-   [[file:../lisp/emacsvox-aural-voice-editing.el][voice-editing]] and [[file:../lisp/emacsvox-aural-voice-data.el][voice-data]]. Reuse prepared resolution,
+   [[file:../lisp/voices/emacsvox-aural-voice-editing.el][voice-editing]] and [[file:../lisp/voices/emacsvox-aural-voice-data.el][voice-data]]. Reuse prepared resolution,
    =--move-choice=, =--copy-owned= and =--put-choices= with destination ownership
    checks. The current single-voice =--keep= prepends; it does not perform the
    required promotion. The single-voice proposal builder is not a bulk save
    loop. Preserve existing single-voice behavior while adding this operation.
 2. Add the bulk draft scope and conflict handling using
-   [[file:../lisp/emacsvox-aural-voice-drafts.el][voice-drafts]]. Its =--prepare= already accepts a complete palette plus
+   [[file:../lisp/voices/emacsvox-aural-voice-drafts.el][voice-drafts]]. Its =--prepare= already accepts a complete palette plus
    choice sets. Reuse =--save= and its acknowledged application/retry states.
    Extend guards narrowly where full local snapshots and overlapping draft
    scopes need coverage; preserve existing public command signatures.

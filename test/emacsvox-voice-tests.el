@@ -14,6 +14,11 @@
 (require 'emacsvox-speak)
 (require 'emacsvox-aural-compatibility-voice)
 
+(ert-deftest emacsvox-voice-browser-finds-bundled-definitions ()
+  "The voice browser includes definitions from the declared voice directory."
+  (require 'emacsvox-extras)
+  (should (memq 'voice-bolden (voice-setup-defined-voices))))
+
 (defvar emacsvox-pronounce-personality)
 (defvar emacsvox-pronounce-table)
 (defvar ems--voiceify-overlays)
@@ -707,9 +712,9 @@
               emacsvox-eudc-attribute-value-personality voice-animate)
              ("integrations/emacsvox-forms.el"
               emacsvox-forms-ro-voice voice-annotate)
-             ("emacsvox-hide.el"
+             ("core/emacsvox-hide.el"
               emacsvox-hidden-header-line-personality voice-annotate)
-             ("emacsvox-speak.el"
+             ("core/emacsvox-speak.el"
               emacsvox-speak-paragraph-personality voice-animate)
              ("integrations/emacsvox-speedbar.el"
               emacsvox-speedbar-button-personality voice-bolden)

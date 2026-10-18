@@ -98,7 +98,7 @@
 (defvar emacsvox-sounds-dir
   (eval-when-compile
     (expand-file-name
-     "../sounds/"
+     "../../sounds/"
      (file-name-directory
       (or load-file-name byte-compile-current-file buffer-file-name))))
   "Auditory icons directory.

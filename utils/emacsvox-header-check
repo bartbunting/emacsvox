@@ -42,7 +42,7 @@ for file in $(git ls-files 'lisp/*.el'); do
         lisp/integrations/emacsvox-nm.el|lisp/integrations/tetris.el)
             continue
             ;;
-        lisp/g-utils.el|lisp/integrations/gm-nnir.el|lisp/integrations/gmaps.el|lisp/gweb.el|lisp/integrations/omaps.el)
+        lisp/core/g-utils.el|lisp/integrations/gm-nnir.el|lisp/integrations/gmaps.el|lisp/core/gweb.el|lisp/integrations/omaps.el)
             expected_spdx='BSD-3-Clause'
             ;;
         *)

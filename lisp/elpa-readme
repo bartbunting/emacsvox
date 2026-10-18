@@ -15,7 +15,7 @@ the inter-dependencies among some of the core Emacs modules.
 
     * lisp/emacspeak.el: Add `Version:` and `Package-Requires:` headers.
     * lisp/emacspeak-preamble.el (acss): Move to `voice-setup.el`.
-    * lisp/voice-setup.el: Require `dtk-speak`.
+    * lisp/speech/voice-setup.el: Require `dtk-speak`.
     (acss): Move defstruct from `emacspeak-preamble`.
     (voice-setup): New function, to delay the calls to <foo>-configure-tts
     to when Emacspeak is activated.
@@ -41,7 +41,7 @@ the inter-dependencies among some of the core Emacs modules.
 
     
 
-    * lisp/sox-gen.el: Require `dtk-speak`.
+    * lisp/aural/sox-gen.el: Require `dtk-speak`.
 
     * lisp/emacspeak-wizards.el: Require `color`.
 
@@ -56,11 +56,11 @@ the inter-dependencies among some of the core Emacs modules.
     * lisp/emacspeak-autoload.el (dtk-quiet): Declare as dynbound.
 
     * lisp/integrations/gm-nnir.el:
-    * lisp/plain-voices.el:
-    * lisp/outloud-voices.el:
-    * lisp/mac-voices.el:
-    * lisp/espeak-voices.el:
-    * lisp/dectalk-voices.el:
+    * lisp/speech/plain-voices.el:
+    * lisp/speech/outloud-voices.el:
+    * lisp/speech/mac-voices.el:
+    * lisp/speech/espeak-voices.el:
+    * lisp/speech/dectalk-voices.el:
     * lisp/integrations/amixer.el: Require `emacspeak-preamble`.
 
     * lisp/integrations/ladspa.el, lisp/integrations/sox.el: Use `kbd` so it works even `ems-kbd` is

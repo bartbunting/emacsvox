@@ -14,7 +14,7 @@
        (directory (expand-file-name "../lisp/"
                                     (file-name-directory
                                      (or load-file-name buffer-file-name)))))
-  (dolist (entry '(("emacsvox-table-reader" . emacsvox-table-reader-mode)
+  (dolist (entry '(("core/emacsvox-table-reader" . emacsvox-table-reader-mode)
                    ("integrations/emacsvox-tabulated-list" . emacsvox-tabulated-list--snapshot)))
     (let ((file (expand-file-name (concat (car entry) suffix) directory)))
       (load file nil nil t)

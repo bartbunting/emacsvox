@@ -64,7 +64,7 @@
 
 (defvar pip-pip
   (expand-file-name
-   "../servers/piper/pipspeak" (file-name-directory load-file-name))
+   "../../servers/piper/pipspeak" (file-name-directory load-file-name))
   "Launch Piper TTS pipeline")
 
 (defvar pip-piper nil "process handle")

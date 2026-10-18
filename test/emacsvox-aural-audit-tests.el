@@ -38,6 +38,7 @@
   (let ((file
          (expand-file-name
           (concat "lisp/" (or basename "example.el")) root)))
+    (make-directory (file-name-directory file) t)
     (with-temp-buffer
       (insert text)
       (write-region (point-min) (point-max) file nil 'silent))
@@ -130,7 +131,7 @@
       "  (emacsvox-icon 'item))\n"
       "(defun leaked-compatibility-feedback ()\n"
       "  (old-feedback-compatibility))\n")
-     "emacsvox-notmuch.el")
+     "integrations/emacsvox-notmuch.el")
     (should
      (equal
       (emacsvox-aural-audit-context-free-icons root)
@@ -162,7 +163,7 @@
       "   :facts\n"
       "   (progn (emacsvox-aural-present '(:event boundary))\n"
       "          '(:event boundary))))\n")
-     "emacsvox-notmuch.el")
+     "integrations/emacsvox-notmuch.el")
     (should
      (equal
       (emacsvox-aural-audit-nested-submission-resolutions root)
@@ -279,7 +280,7 @@
       emacsvox-test--aural-audit-root
       (lambda (form file function)
         (when (and (eq (car form) 'tts-speak-using-voice)
-                   (not (equal file "lisp/tts-speak.el")))
+                   (not (equal file "lisp/speech/tts-speak.el")))
           (push (list file function 'bypasses-palette) early-evaluations))
         (when (memq (car form)
                     '(propertize put-text-property defvar defvar-local defcustom

@@ -7,7 +7,7 @@
 (require 'ert)
 (let ((file (expand-file-name
              (if (equal (getenv "EMACSVOX_TABLE_UI_TEST_LOAD") "compiled")
-                 "../lisp/emacsvox-table-ui.elc" "../lisp/emacsvox-table-ui.el")
+                 "../lisp/core/emacsvox-table-ui.elc" "../lisp/core/emacsvox-table-ui.el")
              (file-name-directory (or load-file-name buffer-file-name)))))
   (load file nil nil t)
   (should (equal (file-truename file)

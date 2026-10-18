@@ -11578,6 +11578,26 @@ is the exact inventory of Lisp commands@comma{} options@comma{} and keymaps; the
 that follow explain contracts and procedures that cannot be generated from
 those interfaces.
 
+The stable entry and bootstrap files remain directly under @code{lisp/}. Load
+@code{emacsvox-setup.el} there as before. Related modules occupy six directories:
+@code{core/} for shared reading and navigation@comma{} @code{aural/} for presentation services@comma{}
+@code{speech/} for engine and transport code@comma{} @code{voices/} for logical voice data@comma{}
+@code{ui/} for settings and editors@comma{} and @code{integrations/} for package adapters.
+Filenames@comma{} provided features and commands are unchanged.
+
+When adding a module@comma{} use its owning directory and update @code{lisp/Makefile}.
+That file remains the compilation and dependency inventory. The data-only
+@code{etc/lisp-directories} declares the directories used by bootstrap@comma{} builds@comma{}
+autoload discovery and distribution checks; do not add a recursive scan or
+a second module list. Keep optional Muggles targets separate from the ordinary
+compiled inventory. The source template remains @code{lisp/.skeleton.el}.
+
+After changing source locations@comma{} rebuild with @code{make bytecode-rebuild} and run
+@code{make bytecode-check} before starting a fresh Emacs. The rebuild removes owned
+obsolete byte-code; copying new sources over old compiled files is insufficient.
+A directory does not establish an independent dependency layer: preserve
+feature names@comma{} initialization order and deferred integration loading.
+
 @menu
 * Documentation Maintenance::    Author, validate, and publish Emacsvox documentation.
 * Speech Server Protocols::      Understand speech-server protocols.
@@ -12794,7 +12814,7 @@ by the Aural implementation@comma{} its generated reference@comma{} and accepted
 @subsection Voice-style metadata ownership
 
 The private @code{emacsvox-aural--voice-style-fields} table in
-@code{lisp/emacsvox-aural-rules.el} owns accepted field names@comma{} groups@comma{} value types@comma{}
+@code{lisp/aural/emacsvox-aural-rules.el} owns accepted field names@comma{} groups@comma{} value types@comma{}
 and integer bounds.  The existing public dimension lists and private accepted
 key list are derived from it; validation traverses the descriptors directly.
 Composition and provenance continue to consume the accepted-key inventory.
@@ -12871,7 +12891,7 @@ process lifecycle or audible behavior.
 
 @subsection Timeline preparation boundaries
 
-Two private helpers in @code{lisp/emacsvox-aural-transport.el} make preparation
+Two private helpers in @code{lisp/aural/emacsvox-aural-transport.el} make preparation
 inputs explicit.  @code{emacsvox-aural--timeline-effect-transition} takes previous
 effects@comma{} normalized next effects@comma{} and a span ID@comma{} returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;

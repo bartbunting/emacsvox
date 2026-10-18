@@ -82,7 +82,7 @@ agent is busy. See the [[file:manual/chapters/agent-shell.org][maintained Agent 
 
 ** Other table consumers
 
-- [[file:../lisp/emacsvox-table.el][The existing table model]] and [[file:../lisp/emacsvox-table-ui.el][table browser]] support CSV and extracted data,
+- [[file:../lisp/core/emacsvox-table.el][The existing table model]] and [[file:../lisp/core/emacsvox-table-ui.el][table browser]] support CSV and extracted data,
   cell navigation, coordinates, headers, searching, copying, and row/column
   filters. Movement normally speaks a cell through a configurable function.
   Left/Right move between cells; =r= and =c= mean header plus cell, not whole
@@ -146,8 +146,8 @@ also sampled in fresh Markdown, Org, table-browser and tabulated-list buffers.
 | Tabulated lists | Vertical movement presents the selected cell; =.= reads that cell. | Preserve application-specific cell navigation until that adapter's reviewed slice. |
 
 The global table prefix is not mostly empty. Although
-[[file:../lisp/emacsvox-keymap.el][emacsvox-keymap.el]] initially adds only =f= and comma, loading
-[[file:../lisp/emacsvox-table-ui.el][emacsvox-table-ui.el]] installs the browser's complete map there as well.
+[[file:../lisp/core/emacsvox-keymap.el][emacsvox-keymap.el]] initially adds only =f= and comma, loading
+[[file:../lisp/core/emacsvox-table-ui.el][emacsvox-table-ui.el]] installs the browser's complete map there as well.
 It also replaces =f= (find file) with filtered row speech. Reusing =r/c/k/T=
 for the new operations would change an existing global interface and introduce
 load-order problems. First-milestone proposal: add an unused entry under the

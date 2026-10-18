@@ -16,8 +16,8 @@
 (let ((root (expand-file-name "../" (file-name-directory load-file-name))))
   (add-to-list 'load-path (expand-file-name "lisp/" root))
   (add-to-list 'load-path (expand-file-name "test/" root))
-  (dolist (file '("emacsvox-preamble.el" "tts-speak.el" "omnivox-choice-codec.el"
-                  "emacsvox-aural-transport.el" "omnivox-voices.el"))
+  (dolist (file '("emacsvox-preamble.el" "speech/tts-speak.el" "speech/omnivox-choice-codec.el"
+                  "aural/emacsvox-aural-transport.el" "speech/omnivox-voices.el"))
     (load (expand-file-name file (expand-file-name "lisp/" root)) nil t)))
 (require 'omnivox-choice-playback-tests)
 

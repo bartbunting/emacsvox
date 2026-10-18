@@ -112,7 +112,7 @@ configuration or palettes.
 
 Code evidence: [[file:../lisp/ui/emacsvox-omnivox-components.el][component view]],
 [[file:../bin/emacsvox-omnivox-components][component installer]],
-[[file:../lisp/omnivox-voices.el][live inventory]], and
+[[file:../lisp/speech/omnivox-voices.el][live inventory]], and
 [[file:../lisp/ui/emacsvox-aural-voice-workbench.el][voice browsing and workstation policy]].
 The sibling Omnivox checkout at =54d401d= was also inspected:
 =omnivox-cli/src/engine.rs=, =omnivox-tts/src/piper.rs=,

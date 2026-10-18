@@ -11,7 +11,7 @@
 (require 'emacsvox-optional-module-test-utils)
 
 (load (expand-file-name
-       "../lisp/soundscape.el"
+       "../lisp/aural/soundscape.el"
        (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

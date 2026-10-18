@@ -75,21 +75,10 @@ Do not introduce per-package subdirectories or a catch-all =misc/= directory.
 | =lisp/ui/= | Settings menus and dedicated editors: tone, voice, palette, rule and sound editors, plus diagnostic views where their ownership is clear. |
 | =lisp/integrations/= | Adaptations for Emacs modes and external packages; keep Agent Shell's two files and EAT's four files together within this directory. |
 
-The representative module allocations still require review. Before each
-batch, review the full modules and record their old/new paths, provided
-features, load-time effects, resources and relevant checks.
-
-** Placement decisions still needed
-
-| Modules or family | Proposed treatment and question to settle |
-|-------------------+-------------------------------------------|
-| =voice-setup= and backend =*-voices= | Likely speech adapters, while =voice-defs= belongs with logical voices. Verify initialisation and dynamically selected backend loads before fixing their paths. |
-| =omnivox-library=, =omnivox-catalogue= and activation helpers | Classify views separately from data/activation services where the existing file boundaries permit it. Leave a mixed file intact; do not split it merely to make the directory names tidy. |
-| Aural inspection, explanation and tools | Inspection/explanation services may belong in aural while interactive views belong in UI. Review each file rather than moving this family wholesale. |
-| =emacsvox-indentation=, capitalization, spelling and line cues | Several combine reading policy and menus. Coordinate placement with the shared tone-editor work after that implementation settles. Preserve the existing saving scopes. |
-| Feature-specific aural providers | Keep in aural initially. The main package currently requires several providers eagerly; placing them with integrations must not silently make them optional or change registration order. |
-| =dom-addons=, =g-utils=, =gweb=, =soundscape= and other helpers | Place by actual consumers and ownership, or explicitly retain at the root pending review. Do not use an unreviewed move to infer that a helper is obsolete. |
-| =.skeleton= and optional Muggles files | Preserve template and separate-target status. Decide their eventual paths independently of the ordinary compiled inventory. |
+The full allocation review is recorded in [[file:lisp-layout-inventory.org][the migration inventory]]
+and the implementation checkpoints below. All placement decisions are settled;
+existing mixed modules remain intact. The inventory records this migration,
+not a second source of build dependencies.
 
 * Infrastructure that must change before the first move
 
@@ -520,3 +509,44 @@ before and after the move. The focused source run passes 1,352 tests, skips
 four known suite failures and five Muggles failures in this combined test
 order. Fresh compiled setup, all 325 library resolutions, the full rebuild
 and the documentation gate pass. No live profile was reloaded.
+
+** Shared services
+
+The remaining 76 sources move into =voices/=, =aural/=, =speech/= and =core/=.
+The voice browser follows the logical definitions into =voices/=; standalone
+sound loading and Piper resolve resources from the installation root. New
+regressions cover these three location-dependent behaviours; all 61 focused
+voice, sound and Piper cases pass. Other module contents and feature identities
+are preserved, with consumers and test fixtures following their new paths.
+
+The tracked inventory reconciles exactly: seven root sources, 19 core,
+31 aural, 21 speech, five voices, 43 UI and 204 integration sources. All 330
+sources are accounted for, including the five outside ordinary compilation.
+Final cross-platform and complete-suite verification is in progress.
+
+** Complete-tree source and compatibility checks
+
+The full Emacs 31.0.90 source run reports 4,205 passes, 188 skips and 17
+failures. Fifteen failure names match the original baseline. The two new
+failures exposed flat audit fixtures and a remaining root-only semantic
+boundary lookup. The lookup now uses declared source directories; both nested
+regressions pass in a subsequent 12-case audit run. Its only remaining failure
+is the baseline generated aural-reference discrepancy. No unrelated failures
+were changed or hidden.
+
+The final runtime sources build and pass byte-code preflight on Emacs 30.2
+in an isolated checkout. Fresh compiled startup resolves all 325 libraries;
+314 compatibility tests pass, three platform/display cases skip, and compiled
+aural parity passes. On Emacs 31.0.90, all 11 graphical integration tests pass
+using a separate cache prepared from the unchanged dependency lock. Six Debian
+package tests, four source-archive tests and 40 Windows bundle/setup/source/
+preview tests pass. These checks exercise installation and captured behaviour;
+they do not claim listening acceptance.
+
+The final Emacs 31.0.90 rebuild, byte-code preflight and fresh compiled setup
+pass, including all 325 library resolutions. Compatibility checks pass 315
+cases with two skips; compiled aural parity and all 137 compiled Notmuch cases
+pass. All 78 selected graphical settings/editor checks pass again after the
+shared-service moves. References and manuals are regenerated, the accepted
+Info node topology is preserved, and the documentation gate passes. Native
+Windows lifecycle verification is the remaining acceptance checkpoint.

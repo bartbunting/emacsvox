@@ -11,7 +11,7 @@
 (require 'emacsvox-optional-module-test-utils)
 (defconst emacsvox-muggles-test--suffix
   (if (equal (getenv "EMACSVOX_MUGGLES_TEST_LOAD") "compiled") ".elc" ".el"))
-(dolist (entry '(("emacsvox-muggles-core" . emacsvox-muggles-enable)
+(dolist (entry '(("core/emacsvox-muggles-core" . emacsvox-muggles-enable)
                  ("integrations/emacsvox-muggle-org-navigation" . emacsvox-muggle-org-navigation--begin)))
   (let ((file (expand-file-name (concat (car entry) emacsvox-muggles-test--suffix)
                                 emacsvox-lisp-directory)))

@@ -66,10 +66,10 @@ executable.
 ## Runtime architecture
 
 The ordinary speech path begins in high-level commands and package advice in
-`lisp/emacsvox-speak.el` and the `lisp/emacsvox-*.el` integrations.
-`lisp/tts-speak.el` owns generic speech-server processes, state, text
+`lisp/core/emacsvox-speak.el` and the `lisp/integrations/emacsvox-*.el` integrations.
+`lisp/speech/tts-speak.el` owns generic speech-server processes, state, text
 preparation, protocol writes, tracked callbacks, and process retirement.
-`lisp/voice-setup.el` and `lisp/voice-defs.el` map faces and personalities to
+`lisp/speech/voice-setup.el` and `lisp/voices/voice-defs.el` map faces and personalities to
 engine-independent voice properties.
 
 The semantic Aural path is:
@@ -89,7 +89,7 @@ The corresponding implementation is split across
 `emacsvox-aural-compiler.el`, `emacsvox-aural-concrete.el`, and
 `emacsvox-aural-transport.el`.
 
-For Omnivox, `lisp/omnivox-voices.el` negotiates capabilities, inventory,
+For Omnivox, `lisp/speech/omnivox-voices.el` negotiates capabilities, inventory,
 logical voices, runtime routing, marker events, and structured presentation
 timeline v3. Structured keyed replacement is sent immediately so Omnivox can
 cancel only the matching domain. The short Emacs idle delay is a legacy

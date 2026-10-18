@@ -19,7 +19,7 @@ that terminal without interrupting manual reading, another terminal, or the
 notification lane. This needs a negotiated Omnivox operation scoped to the
 delivery domain, with a generation boundary to protect newer work after focus
 returns. Specify compatibility and test delayed cancellation before adopting
-it. [[file:../../lisp/emacsvox-aural-transport.el][Local pending-delivery cancellation]] alone cannot provide that guarantee;
+it. [[file:../../lisp/aural/emacsvox-aural-transport.el][Local pending-delivery cancellation]] alone cannot provide that guarantee;
 a process-wide stop is not a substitute for targeted cancellation.
 
 ** TODO Complete listening acceptance of palette-wide physical voices
@@ -396,10 +396,10 @@ silently resolve an open behavior question or remove a compatibility path.
 
 *** Why this is needed
 
-[[file:../../lisp/emacsvox-aural-explanation.el][Explanation]] now retains additional plans alongside its first-plan fields.
+[[file:../../lisp/aural/emacsvox-aural-explanation.el][Explanation]] now retains additional plans alongside its first-plan fields.
 The =EVX-2026-021= through =EVX-2026-023= fixes added retained-part inspection,
 captured-position guards and source-identity checks.  [[file:../../lisp/ui/emacsvox-aural-change-feedback.el][Change Feedback]] already
-reuses the input assembly and source-identity helpers in [[file:../../lisp/emacsvox-aural-tools.el][remapping tools]],
+reuses the input assembly and source-identity helpers in [[file:../../lisp/aural/emacsvox-aural-tools.el][remapping tools]],
 and the inspection service owns captured source access.  A complete common
 view of parts, component eligibility, summaries and explanation basis is still
 missing; future consumers must combine those pieces and choose the correct
@@ -416,12 +416,12 @@ source-validity policy.
    automatic selection when only one part is eligible and explicit selection
    when several parts qualify.
 3. Move shared source-association policy to
-   [[file:../../lisp/emacsvox-aural-inspection.el][the inspection service]], retaining distinct policies for current-item
+   [[file:../../lisp/aural/emacsvox-aural-inspection.el][the inspection service]], retaining distinct policies for current-item
    operations and historical feedback.  Current-item changes need their
    captured-position/edit guards; historical feedback may outlive the source
    and can associate with a surviving source by identity.
 4. Keep live buffers and markers in temporary inspection state.  Preserve
-   [[file:../../lisp/emacsvox-aural-history.el][history]] as bounded frozen data, without retaining dead source buffers.
+   [[file:../../lisp/aural/emacsvox-aural-history.el][history]] as bounded frozen data, without retaining dead source buffers.
 
 *** Benefits
 
@@ -458,7 +458,7 @@ stale edits.  Run the focused inspection and guided-change suites as well.
 
 *** Why this is needed
 
-[[file:../../lisp/emacsvox-aural-transport.el][Transport]] combines span construction, suppression, effect transitions,
+[[file:../../lisp/aural/emacsvox-aural-transport.el][Transport]] combines span construction, suppression, effect transitions,
 action positioning, wire encoding and dispatch preparation.  Its structured
 and compatibility paths also interpret overlapping presentation policy.
 =EVX-2026-020= showed that adding a silent run could change delivery for the
@@ -530,7 +530,7 @@ protocol comparisons do not replace human listening if behavior is changed.
 *** Why this is needed
 
 =omnivox-apply-voice-configuration= in
-[[file:../../lisp/omnivox-voices.el][the Omnivox adapter]] owns definitions, generation, pending processes, results,
+[[file:../../lisp/speech/omnivox-voices.el][the Omnivox adapter]] owns definitions, generation, pending processes, results,
 timeout and completion through nested closures.  =EVX-2026-025= is fixed by
 capturing the generation with its definitions.  An explicit operation would
 make that ownership easier to inspect and make further lifecycle changes less

@@ -12,10 +12,10 @@
        (lisp (expand-file-name "../lisp" tests)))
   (add-to-list 'load-path lisp)
   (add-to-list 'load-path tests)
-  (dolist (file '("emacsvox-preamble.el" "tts-speak.el"
-                  "emacsvox-aural-compiler.el" "emacsvox-aural-planner.el"
-                  "emacsvox-aural-transport.el" "omnivox-choice-codec.el"
-                  "omnivox-voices.el" "emacsvox-speak.el"))
+  (dolist (file '("emacsvox-preamble.el" "speech/tts-speak.el"
+                  "aural/emacsvox-aural-compiler.el" "aural/emacsvox-aural-planner.el"
+                  "aural/emacsvox-aural-transport.el" "speech/omnivox-choice-codec.el"
+                  "speech/omnivox-voices.el" "core/emacsvox-speak.el"))
     (load (expand-file-name file lisp) nil t)))
 (require 'omnivox-choice-consumer-tests)
 

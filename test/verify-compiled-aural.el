@@ -26,11 +26,11 @@
   (emacsvox-paths--register build-directory)
   (dolist
       (library
-       '("emacsvox-aural"
-         "emacsvox-aural-concrete"
-         "emacsvox-aural-spatial"
-         "emacsvox-aural-rules"
-         "emacsvox-aural-description"))
+       '("aural/emacsvox-aural"
+         "aural/emacsvox-aural-concrete"
+         "aural/emacsvox-aural-spatial"
+         "aural/emacsvox-aural-rules"
+         "aural/emacsvox-aural-description"))
     (load
      (expand-file-name (concat library ".elc") build-directory)
      nil nil))
@@ -48,7 +48,7 @@
        "Pure aural description boundary loaded higher layer %S"
        feature)))
   (load
-   (expand-file-name "emacsvox-aural-history.elc" build-directory)
+   (expand-file-name "aural/emacsvox-aural-history.elc" build-directory)
    nil nil)
   (dolist
       (feature
@@ -64,7 +64,7 @@
        "Aural history boundary loaded higher layer %S"
        feature)))
   (load
-   (expand-file-name "emacsvox-aural-schemes.elc" build-directory)
+   (expand-file-name "aural/emacsvox-aural-schemes.elc" build-directory)
    nil nil)
   (when (featurep 'emacsvox-aural-profile-service)
     (error "Aural scheme storage loaded profile coordination"))
@@ -77,20 +77,20 @@
       (error "Aural scheme compatibility entry is not autoloaded: %S" function)))
   (dolist
       (library
-       '("emacsvox-aural-profile-service"
-         "emacsvox-aural-providers"
-         "emacsvox-aural-compiler"
-         "emacsvox-aural-source"
-         "emacsvox-aural-planner"
-         "emacsvox-aural-submission"
+       '("aural/emacsvox-aural-profile-service"
+         "aural/emacsvox-aural-providers"
+         "aural/emacsvox-aural-compiler"
+         "aural/emacsvox-aural-source"
+         "aural/emacsvox-aural-planner"
+         "aural/emacsvox-aural-submission"
          "ui/emacsvox-aural-ui"
-         "emacsvox-aural-inspection"))
+         "aural/emacsvox-aural-inspection"))
     (load
      (expand-file-name (concat library ".elc") build-directory)
      nil nil))
   (load
    (expand-file-name
-    "emacsvox-aural-compatibility-voice.elc"
+    "aural/emacsvox-aural-compatibility-voice.elc"
     build-directory)
    nil nil)
   (dolist (feature '(tts-speak voice-setup))
@@ -100,7 +100,7 @@
        feature)))
   (unless
       (string-match-p
-       "emacsvox-aural-compatibility-voice"
+       "aural/emacsvox-aural-compatibility-voice"
        (or (symbol-file 'voice-lock-mode 'defun) ""))
     (error "Aural compatibility policy does not own voice-lock-mode"))
   (when (featurep 'emacsvox-aural-transport)
@@ -108,33 +108,33 @@
      "Aural compiler, planner, source, and inspection loaded queue transport"))
   (dolist
       (library
-       '("tts-queue-state"
-         "omnivox-remote"
-         "tts-speak"
-         "voice-setup"
-         "voice-defs"
-         "dectalk-voices"
-         "plain-voices"
-         "espeak-voices"
-         "outloud-voices"
-         "mac-voices"
-         "swiftmac-voices"
-         "omnivox-preview"
-         "omnivox-voices"
-         "emacsvox-pronounce"
-         "emacsvox-speak"
-         "emacsvox-aural-transport"
-         "emacsvox-aural-preview"
-         "emacsvox-aural-validation"
+       '("speech/tts-queue-state"
+         "speech/omnivox-remote"
+         "speech/tts-speak"
+         "speech/voice-setup"
+         "voices/voice-defs"
+         "speech/dectalk-voices"
+         "speech/plain-voices"
+         "speech/espeak-voices"
+         "speech/outloud-voices"
+         "speech/mac-voices"
+         "speech/swiftmac-voices"
+         "speech/omnivox-preview"
+         "speech/omnivox-voices"
+         "core/emacsvox-pronounce"
+         "core/emacsvox-speak"
+         "aural/emacsvox-aural-transport"
+         "aural/emacsvox-aural-preview"
+         "aural/emacsvox-aural-validation"
          "ui/emacsvox-aural-semantics"
-         "emacsvox-aural-explanation"
-         "emacsvox-aural-tools"
+         "aural/emacsvox-aural-explanation"
+         "aural/emacsvox-aural-tools"
          "ui/emacsvox-aural-recent-feedback"
          "ui/emacsvox-aural-feedback-details"
          "ui/emacsvox-aural-feature-fragments"
          "ui/emacsvox-omnivox-components"
          "ui/emacsvox-aural-home"
-         "emacsvox-aural-routing-profiles"
+         "aural/emacsvox-aural-routing-profiles"
          "ui/emacsvox-aural-editor"
          "ui/emacsvox-aural-overrides"
          "ui/emacsvox-aural-doctor"
@@ -142,14 +142,14 @@
          "ui/emacsvox-aural-voice-palettes"
          "ui/emacsvox-aural-change-feedback"
          "ui/emacsvox-aural-voice-workbench"
-         "emacsvox-aural-provider-org"
-         "emacsvox-aural-provider-org-srs"
-         "emacsvox-aural-provider-workflows"
-         "emacsvox-aural-provider-markdown"
-         "emacsvox-aural-provider-notmuch"
-         "emacsvox-sounds"
+         "aural/emacsvox-aural-provider-org"
+         "aural/emacsvox-aural-provider-org-srs"
+         "aural/emacsvox-aural-provider-workflows"
+         "aural/emacsvox-aural-provider-markdown"
+         "aural/emacsvox-aural-provider-notmuch"
+         "aural/emacsvox-sounds"
          "ui/emacsvox-aural-sound-packs"
-         "emacsvox-keymap"))
+         "core/emacsvox-keymap"))
     (load
      (expand-file-name (concat library ".elc") build-directory)
      nil nil))

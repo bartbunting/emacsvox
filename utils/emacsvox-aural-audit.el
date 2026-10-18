@@ -346,10 +346,13 @@ below a presentation boundary."
     (dolist (entry emacsvox-aural-audit-migrated-icon-boundaries)
       (let* ((basename (symbol-name (car entry)))
              (boundaries (cdr entry))
-             (file (expand-file-name (concat "lisp/" basename) root))
+             (file (locate-file
+                    basename
+                    (emacsvox-paths--source-directories
+                     (expand-file-name "lisp" root))))
              forms
              (compatibility-icons (make-hash-table :test #'eq)))
-        (when (file-readable-p file)
+        (when (and file (file-readable-p file))
           (with-temp-buffer
             (insert-file-contents file)
             (emacs-lisp-mode)

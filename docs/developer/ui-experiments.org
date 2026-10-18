@@ -177,7 +177,7 @@ it does not itself mean buffer-local or global settings. Pass the source
 context and any applicable settings scope deliberately. The existing
 indentation menu stores a source buffer and global flag in its own scope.
 
-[[file:../../lisp/emacsvox-aural-inspection.el][Inspection context]] also includes a marker and a guard for the captured
+[[file:../../lisp/aural/emacsvox-aural-inspection.el][Inspection context]] also includes a marker and a guard for the captured
 source item. Merely calling Home helpers from the ordinary source buffer
 would use its current point instead of the captured location. The prototype
 needs an adapter that preserves the marker and guard, rejects a dead or

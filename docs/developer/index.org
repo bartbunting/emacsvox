@@ -16,3 +16,23 @@ generated [[info:emacsvox-reference#Top][Emacsvox Reference Manual]]
 is the exact inventory of Lisp commands, options, and keymaps; the chapters
 that follow explain contracts and procedures that cannot be generated from
 those interfaces.
+
+The stable entry and bootstrap files remain directly under =lisp/=. Load
+=emacsvox-setup.el= there as before. Related modules occupy six directories:
+=core/= for shared reading and navigation, =aural/= for presentation services,
+=speech/= for engine and transport code, =voices/= for logical voice data,
+=ui/= for settings and editors, and =integrations/= for package adapters.
+Filenames, provided features and commands are unchanged.
+
+When adding a module, use its owning directory and update =lisp/Makefile=.
+That file remains the compilation and dependency inventory. The data-only
+=etc/lisp-directories= declares the directories used by bootstrap, builds,
+autoload discovery and distribution checks; do not add a recursive scan or
+a second module list. Keep optional Muggles targets separate from the ordinary
+compiled inventory. The source template remains =lisp/.skeleton.el=.
+
+After changing source locations, rebuild with =make bytecode-rebuild= and run
+=make bytecode-check= before starting a fresh Emacs. The rebuild removes owned
+obsolete byte-code; copying new sources over old compiled files is insufficient.
+A directory does not establish an independent dependency layer: preserve
+feature names, initialization order and deferred integration loading.

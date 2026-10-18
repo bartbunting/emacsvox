@@ -3363,8 +3363,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Both module load orders preserve the prompt and speak only deleted input."
   (let ((emacs (expand-file-name invocation-name invocation-directory))
         (root emacsvox-agent-shell-test--repository-directory))
-    (dolist (order '(("emacsvox-advice.el" "integrations/emacsvox-agent-shell.el")
-                     ("integrations/emacsvox-agent-shell.el" "emacsvox-advice.el")))
+    (dolist (order '(("core/emacsvox-advice.el" "integrations/emacsvox-agent-shell.el")
+                     ("integrations/emacsvox-agent-shell.el" "core/emacsvox-advice.el")))
       (with-temp-buffer
         (let ((status
                (call-process
