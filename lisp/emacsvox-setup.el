@@ -85,6 +85,7 @@
     "speech/omnivox-parameters.el"
     "speech/omnivox-native-codec.el"
     "speech/omnivox-library-apply.el"
+    "speech/omnivox-library-runtime.el"
     "ui/omnivox-library.el"
     "ui/omnivox-catalogue.el"
     "speech/omnivox-preview.el"

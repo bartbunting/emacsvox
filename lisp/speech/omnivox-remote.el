@@ -74,7 +74,7 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defvar omnivox-control-capabilities)
 (defvar omnivox-available-voices)
 (defvar omnivox-library--timeout)
-(declare-function omnivox-library--control "omnivox-library" (process command))
+(declare-function omnivox-library--control "omnivox-library-runtime" (process command))
 (declare-function omnivox-library-apply--uuid "omnivox-library-apply" (value))
 (declare-function omnivox--install-control-filter "omnivox-voices" (process))
 (declare-function tts--omnivox-program-p "tts-speak" (&optional program))
@@ -106,7 +106,7 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
   "Verify PROCESS agrees with its live peer's workstation configuration.
 Older hosts without the feature retain ordinary negotiation. A restarted
 workstation can prepare a new activation when no old lane remains live."
-  (require 'omnivox-library)
+  (require 'omnivox-library-runtime)
   (omnivox--install-control-filter process)
   (let* ((omnivox-library--timeout 180)
          (capabilities (omnivox-library--control process '(:type "capabilities"))))

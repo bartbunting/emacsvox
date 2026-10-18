@@ -61,6 +61,7 @@
 (defvar omnivox-default-voice-id)
 
 (declare-function omnivox--negotiate-process "omnivox-voices" (process))
+(declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function emacsvox-aural-diagnostic-log-event
@@ -3876,14 +3877,14 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
 (defvar omnivox-library--birth-collector)
 (defvar omnivox--library-startup)
 (defvar omnivox--engine-startup nil)
-(declare-function omnivox-library--owner "omnivox-library" (process))
-(declare-function omnivox-library--prepare-engines "omnivox-library" ())
-(declare-function omnivox-library--engine-reference "omnivox-library" (process))
-(declare-function omnivox-library--current-engine-reference "omnivox-library" ())
-(declare-function omnivox-library--remember-engines "omnivox-library" (process))
-(declare-function omnivox-library--acknowledge-engines "omnivox-library" (process startup))
-(declare-function omnivox-library--command "omnivox-library" (program))
-(declare-function omnivox-library--startup-environment "omnivox-library" (environment))
+(declare-function omnivox-library--owner "omnivox-library-runtime" (process))
+(declare-function omnivox-library--prepare-engines "omnivox-library-runtime" ())
+(declare-function omnivox-library--engine-reference "omnivox-library-runtime" (process))
+(declare-function omnivox-library--current-engine-reference "omnivox-library-runtime" ())
+(declare-function omnivox-library--remember-engines "omnivox-library-runtime" (process))
+(declare-function omnivox-library--acknowledge-engines "omnivox-library-runtime" (process startup))
+(declare-function omnivox-library--command "omnivox-library-runtime" (program))
+(declare-function omnivox-library--startup-environment "omnivox-library-runtime" (environment))
 (defun tts--resolve-program (program)
   "Return the executable used for speech-server PROGRAM, or nil.
 
@@ -3945,7 +3946,7 @@ Signal a user error if no diagnostic buffer is available."
             (tts-queue--create
              (lambda ()
                (require 'omnivox-engine-settings)
-               (require 'omnivox-library)
+               (require 'omnivox-library-runtime)
                (let ((process-environment (omnivox-engine-settings--environment program)))
                  (setq process-environment
                        (omnivox-library--startup-environment process-environment))
@@ -3998,7 +3999,7 @@ Signal a user error if no diagnostic buffer is available."
   ;; fallback of fallbacks
   (unless tts-program (setq tts-program "espeak"))
   (when (omnivox-remote-enabled-p) (omnivox-remote--begin-activation))
-  (require 'omnivox-library)
+  (require 'omnivox-library-runtime)
   (let* ((tts--initializing t)
          (omnivox--engine-startup (omnivox-library--prepare-engines))
          (new (tts-make-process "Speaker"))
@@ -4052,7 +4053,7 @@ Signal a user error if no diagnostic buffer is available."
 
 (defun tts--recover-speaker ()
   "Recover main speech from its retained activation without restarting its peer."
-  (require 'omnivox-library)
+  (require 'omnivox-library-runtime)
   (if (omnivox-remote-enabled-p)
       (omnivox-remote--retry)
     (let ((omnivox--engine-startup
@@ -4505,7 +4506,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   "Initialize a separate notification TTS process when configured."
   (interactive)
   
-  (require 'omnivox-library)
+  (require 'omnivox-library-runtime)
   (let ((omnivox--engine-startup
          (or omnivox--engine-startup
              (omnivox-library--engine-reference tts-speaker-process)

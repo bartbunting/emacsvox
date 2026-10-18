@@ -67,6 +67,7 @@ speech/omnivox-parameters-codec.elc \
 speech/omnivox-parameters.elc \
 speech/omnivox-native-codec.elc \
 speech/omnivox-library-apply.elc \
+speech/omnivox-library-runtime.elc \
 ui/omnivox-library.elc \
 ui/omnivox-catalogue.elc \
 speech/omnivox-preview.elc \
@@ -624,3 +625,6 @@ speech/omnivox-remote.elc speech/omnivox-voices.elc aural/emacsvox-aural-transpo
 
 # EWW shares HTML link feedback with mail and other SHR clients.
 integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc
+
+speech/omnivox-library-runtime.elc: speech/tts-queue-state.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc
+ui/omnivox-library.elc speech/tts-speak.elc speech/omnivox-remote.elc: speech/omnivox-library-runtime.elc

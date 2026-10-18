@@ -52,3 +52,23 @@ modules explicitly loaded from byte-code. All 11 graphical integration cases
 pass in a fresh Xvfb Emacs. Incremental compilation, byte-code preflight and
 headers pass. Generated reference follows the relocated commands. Listening
 acceptance remains separate; the running session was not changed.
+
+Committed as =a058fe86e=. The documentation release check passed.
+
+** Library runtime
+
+Extract native inspection, startup, acknowledgement and Apply execution into
+=speech/omnivox-library-runtime=. Startup and remote acknowledgement depend
+on this service. The interactive library retains review, confirmation and
+view commands; the existing Apply state machine retains transition ownership.
+The startup freshness inventory includes the new runtime module.
+
+Source verification passes 330 cases, with eight graphical cases deferred to
+the graphical check and two optional native-service cases unconfigured. A
+fresh-process regression verifies that loading the runtime neither loads the
+library/editor UI nor starts processes. The same 330 cases pass with compiled
+runtime modules. All 38 graphical voice/editor cases pass, including library
+removal and workbench navigation; the separate engine-configuration graphical
+case was not run. Fresh compiled setup remains idle with no speech processes.
+Compilation, preflight, headers and reference generation pass. Existing root
+entry-point compiler warnings match the migration baseline.

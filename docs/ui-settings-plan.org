@@ -3499,3 +3499,12 @@ The settings, menus and editors now live under =lisp/ui/=. Their source
 contents and persistence rules are unchanged. All 78 selected graphical
 checks pass against compiled modules before and after relocation. This
 checks navigation and rendering; it adds no listening acceptance claim.
+
+* Internal responsibility refactoring, 2026-10-18
+
+The post-migration review found library process management and request
+construction mixed into the voice-library and workbench interfaces. Track
+extraction and verification in [[file:lisp-refactoring-plan.org][the Lisp refactoring plan]]. The interfaces retain
+their review, preview, save and Apply boundaries. Share native operation
+validation below the views before separating workbench row construction.
+This is internal refactoring; existing listening acceptance remains open.

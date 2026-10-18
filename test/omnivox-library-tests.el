@@ -7,6 +7,29 @@
 (require 'omnivox-library)
 (require 'omnivox-voices)
 
+(ert-deftest omnivox-library-runtime-load-is-independent-of-editors ()
+  (let* ((runtime (symbol-file 'omnivox-library--prepare-engines 'defun))
+         (root (file-name-directory (directory-file-name
+                                    (file-name-directory runtime))))
+         (program (expand-file-name invocation-name invocation-directory))
+         (form
+          `(progn
+             (load ,(expand-file-name "emacsvox-paths.el" root) nil t)
+             (emacsvox-paths--register ,root)
+             (load ,runtime nil t t)
+             (unless (and (fboundp 'omnivox-library--prepare-engines)
+                          (fboundp 'omnivox-library--execute))
+               (error "Library runtime did not load"))
+             (dolist (feature '(omnivox-library emacsvox-aural-ui
+                                emacsvox-aural-voice-workbench))
+               (when (featurep feature)
+                 (error "Runtime loaded editor %s" feature)))
+             (when (process-list) (error "Runtime started a process")))))
+    (with-temp-buffer
+      (let ((status (call-process program nil t nil "-Q" "--batch"
+                                  "--eval" (prin1-to-string form))))
+        (ert-info ((buffer-string)) (should (equal 0 status)))))))
+
 (ert-deftest omnivox-library-engine-acknowledgement-is-from-the-exact-worker ()
   (let* ((process (make-pipe-process :name "engine acknowledgement" :noquery t))
          (identity "11111111-1111-4111-8111-111111111111")
