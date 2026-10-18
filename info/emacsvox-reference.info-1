@@ -477,6 +477,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-aural-source:: Aural source boundary.
 * emacsvox-aural-spatial:: Portable aural spatialization.
 * emacsvox-aural-submission:: Aural presentation transactions.
+* emacsvox-aural-timeline-codec:: Structured timeline wire data.
 * emacsvox-aural-tools:: Contextual aural remapping.
 * emacsvox-aural-transport:: Concrete aural transport.
 * emacsvox-aural-ui:: Shared accessible aural interfaces.
@@ -4768,7 +4769,7 @@ backend.
 
 
 
-File: emacsvox-reference.info,  Node: emacsvox-aural-submission,  Next: emacsvox-aural-tools,  Prev: emacsvox-aural-spatial,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-aural-submission,  Next: emacsvox-aural-timeline-codec,  Prev: emacsvox-aural-spatial,  Up: Emacsvox Commands And Options
 
 2.53 emacsvox-aural-submission
 ==============================
@@ -4836,17 +4837,28 @@ adapters until their callers migrate to this service.
 
 
 
-File: emacsvox-reference.info,  Node: emacsvox-aural-tools,  Next: emacsvox-aural-transport,  Prev: emacsvox-aural-submission,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-aural-timeline-codec,  Next: emacsvox-aural-tools,  Prev: emacsvox-aural-submission,  Up: Emacsvox Commands And Options
 
-2.54 emacsvox-aural-tools
+2.54 emacsvox-aural-timeline-codec
+==================================
+
+Validate structured speech timelines, map UTF-8 action offsets, and
+produce bounded direct or multipart wire frames.  This module handles
+data only.  The transport retains plan construction, queue admission and
+delivery state.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-aural-tools,  Next: emacsvox-aural-transport,  Prev: emacsvox-aural-timeline-codec,  Up: Emacsvox Commands And Options
+
+2.55 emacsvox-aural-tools
 =========================
 
 Contextual voice and earcon remapping plus override reset commands.
 
-2.54.1 Emacsvox-Aural-Tools Commands
+2.55.1 Emacsvox-Aural-Tools Commands
 ------------------------------------
 
-2.54.1.1 emacsvox-aural-preview-rule
+2.55.1.1 emacsvox-aural-preview-rule
 ....................................
 
  -- Command: emacsvox-aural-preview-rule (arg1 &rest rest)
@@ -4855,7 +4867,7 @@ Contextual voice and earcon remapping plus override reset commands.
 
      (fn RULE-ID &optional FACTS (CONTEXT nil CONTEXT-SUPPLIED-P))
 
-2.54.1.2 emacsvox-aural-remap-earcon-at-point
+2.55.1.2 emacsvox-aural-remap-earcon-at-point
 .............................................
 
  -- Command: emacsvox-aural-remap-earcon-at-point (&optional record)
@@ -4868,7 +4880,7 @@ Contextual voice and earcon remapping plus override reset commands.
 
      (fn &optional RECORD)
 
-2.54.1.3 emacsvox-aural-remap-voice-at-point
+2.55.1.3 emacsvox-aural-remap-voice-at-point
 ............................................
 
  -- Command: emacsvox-aural-remap-voice-at-point (&optional record)
@@ -4884,7 +4896,7 @@ Contextual voice and earcon remapping plus override reset commands.
 
      (fn &optional RECORD)
 
-2.54.1.4 emacsvox-aural-reset-overrides
+2.55.1.4 emacsvox-aural-reset-overrides
 .......................................
 
  -- Command: emacsvox-aural-reset-overrides (scope)
@@ -4895,7 +4907,7 @@ Contextual voice and earcon remapping plus override reset commands.
 
      (fn SCOPE)
 
-2.54.1.5 emacsvox-preview-aural-rule
+2.55.1.5 emacsvox-preview-aural-rule
 ....................................
 
  -- Command: emacsvox-preview-aural-rule (arg1 &rest rest)
@@ -4904,7 +4916,7 @@ Contextual voice and earcon remapping plus override reset commands.
 
      (fn RULE-ID &optional FACTS (CONTEXT nil CONTEXT-SUPPLIED-P))
 
-2.54.1.6 emacsvox-reset-aural-overrides
+2.55.1.6 emacsvox-reset-aural-overrides
 .......................................
 
  -- Command: emacsvox-reset-aural-overrides (scope)
@@ -4918,13 +4930,13 @@ Contextual voice and earcon remapping plus override reset commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-transport,  Next: emacsvox-aural-ui,  Prev: emacsvox-aural-tools,  Up: Emacsvox Commands And Options
 
-2.55 emacsvox-aural-transport
+2.56 emacsvox-aural-transport
 =============================
 
 Queue backend-ready ordered actions through speech and sound transports,
 and expose the immediate and compatibility presentation entry points.
 
-2.55.1 emacsvox-aural-transport Options
+2.56.1 emacsvox-aural-transport Options
 ---------------------------------------
 
  -- Variable: User Option emacsvox-aural-replacement-idle-delay
@@ -4941,16 +4953,16 @@ and expose the immediate and compatibility presentation entry points.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-ui,  Next: emacsvox-aural-validation,  Prev: emacsvox-aural-transport,  Up: Emacsvox Commands And Options
 
-2.56 emacsvox-aural-ui
+2.57 emacsvox-aural-ui
 ======================
 
 Common interface identity, spoken tabulated-list navigation, refresh
 preservation, and dismissal feedback for the aural managers and editors.
 
-2.56.1 Emacsvox-Aural-Ui Commands
+2.57.1 Emacsvox-Aural-Ui Commands
 ---------------------------------
 
-2.56.1.1 emacsvox-aural-interface-mode
+2.57.1.1 emacsvox-aural-interface-mode
 ......................................
 
  -- Command: emacsvox-aural-interface-mode
@@ -4979,7 +4991,7 @@ preservation, and dismissal feedback for the aural managers and editors.
      C-c C-a		emacsvox-aural-ui-actions
      C-c TAB		emacsvox-aural-ui-open-manual
 
-2.56.1.2 emacsvox-aural-quit
+2.57.1.2 emacsvox-aural-quit
 ............................
 
  -- Command: emacsvox-aural-quit (&optional kill)
@@ -4990,7 +5002,7 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional KILL)
 
-2.56.1.3 emacsvox-aural-tabulated-mode
+2.57.1.3 emacsvox-aural-tabulated-mode
 ......................................
 
  -- Command: emacsvox-aural-tabulated-mode
@@ -5039,28 +5051,28 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      C-M-i		backward-button
 
-2.56.1.4 emacsvox-aural-ui-actions
+2.57.1.4 emacsvox-aural-ui-actions
 ..................................
 
  -- Command: emacsvox-aural-ui-actions
 
      Choose an available action by name.
 
-2.56.1.5 emacsvox-aural-ui-help-actions
+2.57.1.5 emacsvox-aural-ui-help-actions
 .......................................
 
  -- Command: emacsvox-aural-ui-help-actions
 
      Return to the interface that opened Help and choose one of its actions.
 
-2.56.1.6 emacsvox-aural-ui-help-quit
+2.57.1.6 emacsvox-aural-ui-help-quit
 ....................................
 
  -- Command: emacsvox-aural-ui-help-quit
 
      Quit Help and restore its originating aural interface and position.
 
-2.56.1.7 emacsvox-aural-ui-help-return-mode
+2.57.1.7 emacsvox-aural-ui-help-return-mode
 ...........................................
 
  -- Command: emacsvox-aural-ui-help-return-mode (&optional arg)
@@ -5084,49 +5096,49 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional ARG)
 
-2.56.1.8 emacsvox-aural-ui-next-column
+2.57.1.8 emacsvox-aural-ui-next-column
 ......................................
 
  -- Command: emacsvox-aural-ui-next-column
 
      Move right and speak the next column.
 
-2.56.1.9 emacsvox-aural-ui-next-row
+2.57.1.9 emacsvox-aural-ui-next-row
 ...................................
 
  -- Command: emacsvox-aural-ui-next-row
 
      Move to and speak the next row.
 
-2.56.1.10 emacsvox-aural-ui-open-manual
+2.57.1.10 emacsvox-aural-ui-open-manual
 .......................................
 
  -- Command: emacsvox-aural-ui-open-manual
 
      Read this interface’s offline task manual; q returns to the interface.
 
-2.56.1.11 emacsvox-aural-ui-previous-column
+2.57.1.11 emacsvox-aural-ui-previous-column
 ...........................................
 
  -- Command: emacsvox-aural-ui-previous-column
 
      Move left and speak the previous column.
 
-2.56.1.12 emacsvox-aural-ui-previous-row
+2.57.1.12 emacsvox-aural-ui-previous-row
 ........................................
 
  -- Command: emacsvox-aural-ui-previous-row
 
      Move to and speak the previous row.
 
-2.56.1.13 emacsvox-aural-ui-refresh
+2.57.1.13 emacsvox-aural-ui-refresh
 ...................................
 
  -- Command: emacsvox-aural-ui-refresh
 
      Refresh the current interface using its configured callback.
 
-2.56.1.14 emacsvox-aural-ui-speak-current-cell
+2.57.1.14 emacsvox-aural-ui-speak-current-cell
 ..............................................
 
  -- Command: emacsvox-aural-ui-speak-current-cell (&optional
@@ -5139,21 +5151,21 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional VALUE-FIRST)
 
-2.56.1.15 emacsvox-aural-ui-speak-current-row
+2.57.1.15 emacsvox-aural-ui-speak-current-row
 .............................................
 
  -- Command: emacsvox-aural-ui-speak-current-row
 
      Speak the complete current row using its configured callback.
 
-2.56.1.16 emacsvox-aural-ui-stop-preview
+2.57.1.16 emacsvox-aural-ui-stop-preview
 ........................................
 
  -- Command: emacsvox-aural-ui-stop-preview
 
      Stop the current preview and its remaining samples.
 
-2.56.2 emacsvox-aural-ui Options
+2.57.2 emacsvox-aural-ui Options
 --------------------------------
 
  -- Variable: User Option emacsvox-aural-ui-help-return-mode-hook
@@ -5169,7 +5181,7 @@ preservation, and dismissal feedback for the aural managers and editors.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-validation,  Next: emacsvox-aural-voice-bulk,  Prev: emacsvox-aural-ui,  Up: Emacsvox Commands And Options
 
-2.57 emacsvox-aural-validation
+2.58 emacsvox-aural-validation
 ==============================
 
 Shared validation for complete Aural configurations and Presentation
@@ -5179,66 +5191,66 @@ of the interactive managers that display its reports.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-bulk,  Next: emacsvox-aural-voice-context,  Prev: emacsvox-aural-validation,  Up: Emacsvox Commands And Options
 
-2.58 emacsvox-aural-voice-bulk
+2.59 emacsvox-aural-voice-bulk
 ==============================
 
 One unsaved review owns a complete palette proposal.  Private previews
 and coordinated persistence reuse the common voice editor's existing
 services.
 
-2.58.1 Emacsvox-Aural-Voice-Bulk Commands
+2.59.1 Emacsvox-Aural-Voice-Bulk Commands
 -----------------------------------------
 
-2.58.1.1 emacsvox-aural-voice-bulk-back
+2.59.1.1 emacsvox-aural-voice-bulk-back
 .......................................
 
  -- Command: emacsvox-aural-voice-bulk-back
 
      Return to the browser, retaining this review and any save recovery.
 
-2.58.1.2 emacsvox-aural-voice-bulk-cancel
+2.59.1.2 emacsvox-aural-voice-bulk-cancel
 .........................................
 
  -- Command: emacsvox-aural-voice-bulk-cancel
 
      Discard an unsaved review without changing its source or destination.
 
-2.58.1.3 emacsvox-aural-voice-bulk-close-result
+2.59.1.3 emacsvox-aural-voice-bulk-close-result
 ...............................................
 
  -- Command: emacsvox-aural-voice-bulk-close-result
 
      Close a saved result without undoing its data or changing live selection.
 
-2.58.1.4 emacsvox-aural-voice-bulk-collect
+2.59.1.4 emacsvox-aural-voice-bulk-collect
 ..........................................
 
  -- Command: emacsvox-aural-voice-bulk-collect
 
      Save all reviewed voices without selecting or applying the palette.
 
-2.58.1.5 emacsvox-aural-voice-bulk-compare
+2.59.1.5 emacsvox-aural-voice-bulk-compare
 ..........................................
 
  -- Command: emacsvox-aural-voice-bulk-compare
 
      Compare the original and proposed named voice without saving.
 
-2.58.1.6 emacsvox-aural-voice-bulk-details
+2.59.1.6 emacsvox-aural-voice-bulk-details
 ..........................................
 
  -- Command: emacsvox-aural-voice-bulk-details
 
      Show scope, fallback tuning, playback evidence and save status.
 
-2.58.1.7 emacsvox-aural-voice-bulk-examples
+2.59.1.7 emacsvox-aural-voice-bulk-examples
 ...........................................
 
  -- Command: emacsvox-aural-voice-bulk-examples
 
      Compare representative original and proposed named voices.
 
-2.58.1.8 emacsvox-aural-voice-bulk-mode
+2.59.1.8 emacsvox-aural-voice-bulk-mode
 .......................................
 
  -- Command: emacsvox-aural-voice-bulk-mode
@@ -5298,56 +5310,56 @@ services.
 
      C-M-i		backward-button
 
-2.58.1.9 emacsvox-aural-voice-bulk-original
+2.59.1.9 emacsvox-aural-voice-bulk-original
 ...........................................
 
  -- Command: emacsvox-aural-voice-bulk-original
 
      Play the original named voice.
 
-2.58.1.10 emacsvox-aural-voice-bulk-play
+2.59.1.10 emacsvox-aural-voice-bulk-play
 ........................................
 
  -- Command: emacsvox-aural-voice-bulk-play
 
      Play the proposed named voice with its complete fallback chain.
 
-2.58.1.11 emacsvox-aural-voice-bulk-refresh
+2.59.1.11 emacsvox-aural-voice-bulk-refresh
 ...........................................
 
  -- Command: emacsvox-aural-voice-bulk-refresh
 
      Rebuild the unsaved review from current saved inputs.
 
-2.58.1.12 emacsvox-aural-voice-bulk-resolve
+2.59.1.12 emacsvox-aural-voice-bulk-resolve
 ...........................................
 
  -- Command: emacsvox-aural-voice-bulk-resolve
 
      Open an unfinished draft that conflicts with this review.
 
-2.58.1.13 emacsvox-aural-voice-bulk-resume
+2.59.1.13 emacsvox-aural-voice-bulk-resume
 ..........................................
 
  -- Command: emacsvox-aural-voice-bulk-resume
 
      Resume a retained palette voice review or incomplete save.
 
-2.58.1.14 emacsvox-aural-voice-bulk-save
+2.59.1.14 emacsvox-aural-voice-bulk-save
 ........................................
 
  -- Command: emacsvox-aural-voice-bulk-save
 
      Save all reviewed voices and apply the palette to both speech streams.
 
-2.58.1.15 emacsvox-aural-voice-bulk-speak
+2.59.1.15 emacsvox-aural-voice-bulk-speak
 .........................................
 
  -- Command: emacsvox-aural-voice-bulk-speak
 
      Speak the selected named voice and proposed change.
 
-2.58.1.16 emacsvox-aural-voice-bulk-stop
+2.59.1.16 emacsvox-aural-voice-bulk-stop
 ........................................
 
  -- Command: emacsvox-aural-voice-bulk-stop
@@ -5357,45 +5369,45 @@ services.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-context,  Next: emacsvox-aural-voice-data,  Prev: emacsvox-aural-voice-bulk,  Up: Emacsvox Commands And Options
 
-2.59 emacsvox-aural-voice-context
+2.60 emacsvox-aural-voice-context
 =================================
 
 Inspect the existing cascade without flattening it into palette data.
 Contextual edits use the ordinary scoped rule editor and its save
 services.
 
-2.59.1 Emacsvox-Aural-Voice-Context Commands
+2.60.1 Emacsvox-Aural-Voice-Context Commands
 --------------------------------------------
 
-2.59.1.1 emacsvox-aural-voice-context-adjust
+2.60.1.1 emacsvox-aural-voice-context-adjust
 ............................................
 
  -- Command: emacsvox-aural-voice-context-adjust
 
      Prepare a dimension-only rule with an explicit match and lifetime.
 
-2.59.1.2 emacsvox-aural-voice-context-adjust-rule
+2.60.1.2 emacsvox-aural-voice-context-adjust-rule
 .................................................
 
  -- Command: emacsvox-aural-voice-context-adjust-rule
 
      Adjust one voice field in the selected rule; Inherit removes that field.
 
-2.59.1.3 emacsvox-aural-voice-context-choose
+2.60.1.3 emacsvox-aural-voice-context-choose
 ............................................
 
  -- Command: emacsvox-aural-voice-context-choose
 
      Choose a new current source item from the originating base voice editor.
 
-2.59.1.4 emacsvox-aural-voice-context-compare
+2.60.1.4 emacsvox-aural-voice-context-compare
 .............................................
 
  -- Command: emacsvox-aural-voice-context-compare
 
      Compare original and edited voices against the same captured context.
 
-2.59.1.5 emacsvox-aural-voice-context-mode
+2.60.1.5 emacsvox-aural-voice-context-mode
 ..........................................
 
  -- Command: emacsvox-aural-voice-context-mode
@@ -5437,14 +5449,14 @@ services.
      C-c C-a		emacsvox-aural-ui-actions
      C-c TAB		emacsvox-aural-ui-open-manual
 
-2.59.1.6 emacsvox-aural-voice-context-next
+2.60.1.6 emacsvox-aural-voice-context-next
 ..........................................
 
  -- Command: emacsvox-aural-voice-context-next
 
      Move to and read the next context field.
 
-2.59.1.7 emacsvox-aural-voice-context-open
+2.60.1.7 emacsvox-aural-voice-context-open
 ..........................................
 
  -- Command: emacsvox-aural-voice-context-open (&optional choose-source)
@@ -5454,42 +5466,42 @@ services.
 
      (fn &optional CHOOSE-SOURCE)
 
-2.59.1.8 emacsvox-aural-voice-context-play
+2.60.1.8 emacsvox-aural-voice-context-play
 ..........................................
 
  -- Command: emacsvox-aural-voice-context-play
 
      Play the edited voice against captured context without saving.
 
-2.59.1.9 emacsvox-aural-voice-context-previous
+2.60.1.9 emacsvox-aural-voice-context-previous
 ..............................................
 
  -- Command: emacsvox-aural-voice-context-previous
 
      Move to and read the previous context field.
 
-2.59.1.10 emacsvox-aural-voice-context-recapture
+2.60.1.10 emacsvox-aural-voice-context-recapture
 ................................................
 
  -- Command: emacsvox-aural-voice-context-recapture
 
      Refresh the captured rules and facts after validating the source identity.
 
-2.59.1.11 emacsvox-aural-voice-context-refresh
+2.60.1.11 emacsvox-aural-voice-context-refresh
 ..............................................
 
  -- Command: emacsvox-aural-voice-context-refresh
 
      Explain requested values and their origins for the captured item.
 
-2.59.1.12 emacsvox-aural-voice-context-return
+2.60.1.12 emacsvox-aural-voice-context-return
 .............................................
 
  -- Command: emacsvox-aural-voice-context-return
 
      Return to the same field in the base editor.
 
-2.59.1.13 emacsvox-aural-voice-context-stop
+2.60.1.13 emacsvox-aural-voice-context-stop
 ...........................................
 
  -- Command: emacsvox-aural-voice-context-stop
@@ -5499,7 +5511,7 @@ services.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-data,  Next: emacsvox-aural-voice-drafts,  Prev: emacsvox-aural-voice-context,  Up: Emacsvox Commands And Options
 
-2.60 emacsvox-aural-voice-data
+2.61 emacsvox-aural-voice-data
 ==============================
 
 Private, data-only operations for palette-owned physical choices.
@@ -5509,7 +5521,7 @@ engines, changes registries, or applies speech configuration.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-drafts,  Next: emacsvox-aural-voice-editing,  Prev: emacsvox-aural-voice-data,  Up: Emacsvox Commands And Options
 
-2.61 emacsvox-aural-voice-drafts
+2.62 emacsvox-aural-voice-drafts
 ================================
 
 Session drafts outlive their view buffers.  Frozen proposals coordinate
@@ -5520,7 +5532,7 @@ implied.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-editing,  Next: emacsvox-aural-voice-editor,  Prev: emacsvox-aural-voice-drafts,  Up: Emacsvox Commands And Options
 
-2.62 emacsvox-aural-voice-editing
+2.63 emacsvox-aural-voice-editing
 =================================
 
 Build complete named-voice proposals without writes or activation.
@@ -5530,7 +5542,7 @@ placement.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-editor,  Next: emacsvox-aural-voice-engine-controls,  Prev: emacsvox-aural-voice-editing,  Up: Emacsvox Commands And Options
 
-2.63 emacsvox-aural-voice-editor
+2.64 emacsvox-aural-voice-editor
 ================================
 
 One view for named voices and physical experiments, backed by retained
@@ -5538,52 +5550,52 @@ session drafts and the acknowledged save coordinator.  Shared tuning is
 the default; optional row tuning preserves inheritance and native
 defaults.
 
-2.63.1 Emacsvox-Aural-Voice-Editor Commands
+2.64.1 Emacsvox-Aural-Voice-Editor Commands
 -------------------------------------------
 
-2.63.1.1 emacsvox-aural-voice-editor-activate
+2.64.1.1 emacsvox-aural-voice-editor-activate
 .............................................
 
  -- Command: emacsvox-aural-voice-editor-activate
 
      Activate the current field, leaving its spoken result as the final feedback.
 
-2.63.1.2 emacsvox-aural-voice-editor-automatic
+2.64.1.2 emacsvox-aural-voice-editor-automatic
 ..............................................
 
  -- Command: emacsvox-aural-voice-editor-automatic
 
      Explicitly replace the saved choice chain with Automatic.
 
-2.63.1.3 emacsvox-aural-voice-editor-compare
+2.64.1.3 emacsvox-aural-voice-editor-compare
 ............................................
 
  -- Command: emacsvox-aural-voice-editor-compare
 
      Compare original and edited voices, or the selected tuning row.
 
-2.63.1.4 emacsvox-aural-voice-editor-decrease
+2.64.1.4 emacsvox-aural-voice-editor-decrease
 .............................................
 
  -- Command: emacsvox-aural-voice-editor-decrease
 
      Decrease a numeric adjustment, or move to the previous field.
 
-2.63.1.5 emacsvox-aural-voice-editor-default
+2.64.1.5 emacsvox-aural-voice-editor-default
 ............................................
 
  -- Command: emacsvox-aural-voice-editor-default
 
      Restore the current adjustment to the adapter default and audition it.
 
-2.63.1.6 emacsvox-aural-voice-editor-details
+2.64.1.6 emacsvox-aural-voice-editor-details
 ............................................
 
  -- Command: emacsvox-aural-voice-editor-details
 
      Show ownership, saved/requested values and actual playback evidence.
 
-2.63.1.7 emacsvox-aural-voice-editor-edit
+2.64.1.7 emacsvox-aural-voice-editor-edit
 .........................................
 
  -- Command: emacsvox-aural-voice-editor-edit (&optional dimension)
@@ -5592,14 +5604,14 @@ defaults.
 
      (fn &optional DIMENSION)
 
-2.63.1.8 emacsvox-aural-voice-editor-increase
+2.64.1.8 emacsvox-aural-voice-editor-increase
 .............................................
 
  -- Command: emacsvox-aural-voice-editor-increase
 
      Increase a numeric adjustment, or move to the next field.
 
-2.63.1.9 emacsvox-aural-voice-editor-keep-experiment
+2.64.1.9 emacsvox-aural-voice-editor-keep-experiment
 ....................................................
 
  -- Command: emacsvox-aural-voice-editor-keep-experiment (&optional part
@@ -5611,14 +5623,14 @@ defaults.
 
      (fn &optional PART PLACEMENT SOURCE)
 
-2.63.1.10 emacsvox-aural-voice-editor-leave
+2.64.1.10 emacsvox-aural-voice-editor-leave
 ...........................................
 
  -- Command: emacsvox-aural-voice-editor-leave
 
      Return to the originating field while retaining this session’s draft.
 
-2.63.1.11 emacsvox-aural-voice-editor-mode
+2.64.1.11 emacsvox-aural-voice-editor-mode
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-mode
@@ -5670,70 +5682,70 @@ defaults.
      C-c C-a		emacsvox-aural-ui-actions
      C-c TAB		emacsvox-aural-ui-open-manual
 
-2.63.1.12 emacsvox-aural-voice-editor-next
+2.64.1.12 emacsvox-aural-voice-editor-next
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-next
 
      Move to and read the next editor field.
 
-2.63.1.13 emacsvox-aural-voice-editor-play
+2.64.1.13 emacsvox-aural-voice-editor-play
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-play
 
      Play the edited voice or selected tuning row without saving.
 
-2.63.1.14 emacsvox-aural-voice-editor-previous
+2.64.1.14 emacsvox-aural-voice-editor-previous
 ..............................................
 
  -- Command: emacsvox-aural-voice-editor-previous
 
      Move to and read the previous editor field.
 
-2.63.1.15 emacsvox-aural-voice-editor-refresh
+2.64.1.15 emacsvox-aural-voice-editor-refresh
 .............................................
 
  -- Command: emacsvox-aural-voice-editor-refresh
 
      Refresh the common editor, preserving the current field and point’s column.
 
-2.63.1.16 emacsvox-aural-voice-editor-save
+2.64.1.16 emacsvox-aural-voice-editor-save
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-save
 
      Save and apply this named voice, or choose an experiment destination.
 
-2.63.1.17 emacsvox-aural-voice-editor-save-to-collection
+2.64.1.17 emacsvox-aural-voice-editor-save-to-collection
 ........................................................
 
  -- Command: emacsvox-aural-voice-editor-save-to-collection
 
      Save the named voice without selecting its palette.
 
-2.63.1.18 emacsvox-aural-voice-editor-speak
+2.64.1.18 emacsvox-aural-voice-editor-speak
 ...........................................
 
  -- Command: emacsvox-aural-voice-editor-speak
 
      Read the current labelled field using the ordinary navigation voice.
 
-2.63.1.19 emacsvox-aural-voice-editor-stop
+2.64.1.19 emacsvox-aural-voice-editor-stop
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-stop
 
      Stop this editor’s sample without stopping another editor’s newer preview.
 
-2.63.1.20 emacsvox-aural-voice-editor-text
+2.64.1.20 emacsvox-aural-voice-editor-text
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-text
 
      Change the common comparison text.
 
-2.63.1.21 emacsvox-aural-voice-editor-undo
+2.64.1.21 emacsvox-aural-voice-editor-undo
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-undo
@@ -5743,59 +5755,59 @@ defaults.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-engine-controls,  Next: emacsvox-aural-voice-menu,  Prev: emacsvox-aural-voice-editor,  Up: Emacsvox Commands And Options
 
-2.64 emacsvox-aural-voice-engine-controls
+2.65 emacsvox-aural-voice-engine-controls
 =========================================
 
 A descriptor-driven view of the existing voice draft.  Discovery never
 samples, edits are sparse and previews and saving retain their usual
 owners.
 
-2.64.1 Emacsvox-Aural-Voice-Engine-Controls Commands
+2.65.1 Emacsvox-Aural-Voice-Engine-Controls Commands
 ----------------------------------------------------
 
-2.64.1.1 emacsvox-aural-voice-engine-controls-back
+2.65.1.1 emacsvox-aural-voice-engine-controls-back
 ..................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-back
 
      Return to common settings, keeping the same draft and selected choice.
 
-2.64.1.2 emacsvox-aural-voice-engine-controls-decrease
+2.65.1.2 emacsvox-aural-voice-engine-controls-decrease
 ......................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-decrease
 
      Decrease the selected native parameter by one engine step.
 
-2.64.1.3 emacsvox-aural-voice-engine-controls-default
+2.65.1.3 emacsvox-aural-voice-engine-controls-default
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-default
 
      Request this control’s engine voice default without copying a measured value.
 
-2.64.1.4 emacsvox-aural-voice-engine-controls-help
+2.65.1.4 emacsvox-aural-voice-engine-controls-help
 ..................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-help
 
      Display and speak the current parameter’s help; q returns to its row.
 
-2.64.1.5 emacsvox-aural-voice-engine-controls-increase
+2.65.1.5 emacsvox-aural-voice-engine-controls-increase
 ......................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-increase
 
      Increase the selected native parameter by one engine step.
 
-2.64.1.6 emacsvox-aural-voice-engine-controls-inherit
+2.65.1.6 emacsvox-aural-voice-engine-controls-inherit
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-inherit
 
      Remove this control’s override, following common settings.
 
-2.64.1.7 emacsvox-aural-voice-engine-controls-mode
+2.65.1.7 emacsvox-aural-voice-engine-controls-mode
 ..................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-mode (&optional arg)
@@ -5819,14 +5831,14 @@ owners.
 
      (fn &optional ARG)
 
-2.64.1.8 emacsvox-aural-voice-engine-controls-open
+2.65.1.8 emacsvox-aural-voice-engine-controls-open
 ..................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-open
 
      Open described engine controls for a selected physical choice in this draft.
 
-2.64.1.9 emacsvox-aural-voice-engine-controls-refresh
+2.65.1.9 emacsvox-aural-voice-engine-controls-refresh
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-refresh
@@ -5834,21 +5846,21 @@ owners.
      Check controls asynchronously, retrying busy replies for up to five seconds.
      Do not stop speech or play a sample.  Leaving this view cancels retries.
 
-2.64.1.10 emacsvox-aural-voice-engine-controls-reset-all
+2.65.1.10 emacsvox-aural-voice-engine-controls-reset-all
 ........................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-reset-all
 
      Remove only this choice’s native settings, retaining an undo step.
 
-2.64.1.11 emacsvox-aural-voice-engine-controls-search
+2.65.1.11 emacsvox-aural-voice-engine-controls-search
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-search
 
      Filter controls by label, identifier or help, across collapsed groups.
 
-2.64.2 emacsvox-aural-voice-engine-controls Options
+2.65.2 emacsvox-aural-voice-engine-controls Options
 ---------------------------------------------------
 
  -- Variable: User Option emacsvox-aural-voice-engine-controls-mode-hook
@@ -5864,17 +5876,17 @@ owners.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-menu,  Next: emacsvox-aural-voice-palettes,  Prev: emacsvox-aural-voice-engine-controls,  Up: Emacsvox Commands And Options
 
-2.65 emacsvox-aural-voice-menu
+2.66 emacsvox-aural-voice-menu
 ==============================
 
 A focused view of the common editor's authoritative named-voice draft.
 Preview and saving use the editor's existing ownership and recovery
 paths.
 
-2.65.1 Emacsvox-Aural-Voice-Menu Commands
+2.66.1 Emacsvox-Aural-Voice-Menu Commands
 -----------------------------------------
 
-2.65.1.1 emacsvox-aural-voice-menu
+2.66.1.1 emacsvox-aural-voice-menu
 ..................................
 
  -- Command: emacsvox-aural-voice-menu
@@ -5884,15 +5896,15 @@ paths.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-palettes,  Next: emacsvox-aural-voice-runtime,  Prev: emacsvox-aural-voice-menu,  Up: Emacsvox Commands And Options
 
-2.66 emacsvox-aural-voice-palettes
+2.67 emacsvox-aural-voice-palettes
 ==================================
 
 Accessible management for inherited, data-safe ACSS voice palettes.
 
-2.66.1 Emacsvox-Aural-Voice-Palettes Commands
+2.67.1 Emacsvox-Aural-Voice-Palettes Commands
 ---------------------------------------------
 
-2.66.1.1 emacsvox-aural-list-voice-palettes
+2.67.1.1 emacsvox-aural-list-voice-palettes
 ...........................................
 
  -- Command: emacsvox-aural-list-voice-palettes (&optional palette)
@@ -5901,7 +5913,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional PALETTE)
 
-2.66.1.2 emacsvox-aural-voice-palette-previews-copy
+2.67.1.2 emacsvox-aural-voice-palette-previews-copy
 ...................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-copy
@@ -5909,35 +5921,35 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      Copy the complete voice at point under a new name.
      A built-in voice opens a personal draft; save it to create a personal child.
 
-2.66.1.3 emacsvox-aural-voice-palette-previews-delete
+2.67.1.3 emacsvox-aural-voice-palette-previews-delete
 .....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-delete
 
      Confirm deletion of the current personal voice and select a remaining row.
 
-2.66.1.4 emacsvox-aural-voice-palette-previews-edit
+2.67.1.4 emacsvox-aural-voice-palette-previews-edit
 ...................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-edit
 
      Open the complete voice editor for the effective voice at point.
 
-2.66.1.5 emacsvox-aural-voice-palette-previews-explain
+2.67.1.5 emacsvox-aural-voice-palette-previews-explain
 ......................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-explain
 
      Explain the effective voice at point.
 
-2.66.1.6 emacsvox-aural-voice-palette-previews-help
+2.67.1.6 emacsvox-aural-voice-palette-previews-help
 ...................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-help
 
      Display and speak voice-palette preview help.
 
-2.66.1.7 emacsvox-aural-voice-palette-previews-mode
+2.67.1.7 emacsvox-aural-voice-palette-previews-mode
 ...................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-mode
@@ -5972,70 +5984,70 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      u		emacsvox-aural-voice-palettes-where-used
      x		emacsvox-aural-voice-palette-previews-explain
 
-2.66.1.8 emacsvox-aural-voice-palette-previews-new
+2.67.1.8 emacsvox-aural-voice-palette-previews-new
 ..................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-new
 
      Draft a new complete voice in the palette shown by the current preview.
 
-2.66.1.9 emacsvox-aural-voice-palette-previews-next
+2.67.1.9 emacsvox-aural-voice-palette-previews-next
 ...................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-next
 
      Move to and speak the next effective voice.
 
-2.66.1.10 emacsvox-aural-voice-palette-previews-next-column
+2.67.1.10 emacsvox-aural-voice-palette-previews-next-column
 ...........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-next-column
 
      Move right and speak the next voice column.
 
-2.66.1.11 emacsvox-aural-voice-palette-previews-open-manager
+2.67.1.11 emacsvox-aural-voice-palette-previews-open-manager
 ............................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-open-manager
 
      Return to the palette manager for the current preview palette.
 
-2.66.1.12 emacsvox-aural-voice-palette-previews-open-source
+2.67.1.12 emacsvox-aural-voice-palette-previews-open-source
 ...........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-open-source
 
      Browse the defining palette of the selected voice.
 
-2.66.1.13 emacsvox-aural-voice-palette-previews-play
+2.67.1.13 emacsvox-aural-voice-palette-previews-play
 ....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-play
 
      Audition the effective voice at point with the comparison text.
 
-2.66.1.14 emacsvox-aural-voice-palette-previews-play-all
+2.67.1.14 emacsvox-aural-voice-palette-previews-play-all
 ........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-play-all
 
      Audition every effective voice using the same comparison text.
 
-2.66.1.15 emacsvox-aural-voice-palette-previews-previous
+2.67.1.15 emacsvox-aural-voice-palette-previews-previous
 ........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-previous
 
      Move to and speak the previous effective voice.
 
-2.66.1.16 emacsvox-aural-voice-palette-previews-previous-column
+2.67.1.16 emacsvox-aural-voice-palette-previews-previous-column
 ...............................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-previous-column
 
      Move left and speak the previous voice column.
 
-2.66.1.17 emacsvox-aural-voice-palette-previews-refresh
+2.67.1.17 emacsvox-aural-voice-palette-previews-refresh
 .......................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-refresh (&optional
@@ -6045,105 +6057,105 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional VOICE)
 
-2.66.1.18 emacsvox-aural-voice-palette-previews-rename
+2.67.1.18 emacsvox-aural-voice-palette-previews-rename
 ......................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-rename
 
      Rename a personal custom voice and update its personal and live face mappings.
 
-2.66.1.19 emacsvox-aural-voice-palette-previews-reset
+2.67.1.19 emacsvox-aural-voice-palette-previews-reset
 .....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-reset
 
      Reset the direct voice at point to its parent’s complete entry.
 
-2.66.1.20 emacsvox-aural-voice-palette-previews-set-text
+2.67.1.20 emacsvox-aural-voice-palette-previews-set-text
 ........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-set-text
 
      Set the comparison text used by this preview buffer.
 
-2.66.1.21 emacsvox-aural-voice-palette-previews-speak-current
+2.67.1.21 emacsvox-aural-voice-palette-previews-speak-current
 .............................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-speak-current
 
      Speak the complete palette voice row at point.
 
-2.66.1.22 emacsvox-aural-voice-palette-previews-speak-current-cell
+2.67.1.22 emacsvox-aural-voice-palette-previews-speak-current-cell
 ..................................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-speak-current-cell
 
      Speak the current preview column title and value.
 
-2.66.1.23 emacsvox-aural-voice-palette-previews-stop
+2.67.1.23 emacsvox-aural-voice-palette-previews-stop
 ....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-stop
 
      Stop the current voice audition.
 
-2.66.1.24 emacsvox-aural-voice-palette-previews-tune
+2.67.1.24 emacsvox-aural-voice-palette-previews-tune
 ....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-tune
 
      Open the common voice editor without changing the palette or its selection.
 
-2.66.1.25 emacsvox-aural-voice-palettes-activate
+2.67.1.25 emacsvox-aural-voice-palettes-activate
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-activate
 
      Use the selected voice palette for this session.
 
-2.66.1.26 emacsvox-aural-voice-palettes-audition
+2.67.1.26 emacsvox-aural-voice-palettes-audition
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-audition
 
      Audition the selected palette’s effective voices in order.
 
-2.66.1.27 emacsvox-aural-voice-palettes-backup
+2.67.1.27 emacsvox-aural-voice-palettes-backup
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-backup
 
      Back up complete palette ancestry and exact local choices for this machine.
 
-2.66.1.28 emacsvox-aural-voice-palettes-copy
+2.67.1.28 emacsvox-aural-voice-palettes-copy
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-copy
 
      Copy the voice palette at point to a personal palette.
 
-2.66.1.29 emacsvox-aural-voice-palettes-create
+2.67.1.29 emacsvox-aural-voice-palettes-create
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-create
 
      Create an empty personal voice palette.
 
-2.66.1.30 emacsvox-aural-voice-palettes-delete
+2.67.1.30 emacsvox-aural-voice-palettes-delete
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-delete
 
      Delete the personal voice palette at point when it is unreferenced.
 
-2.66.1.31 emacsvox-aural-voice-palettes-delete-entry
+2.67.1.31 emacsvox-aural-voice-palettes-delete-entry
 ....................................................
 
  -- Command: emacsvox-aural-voice-palettes-delete-entry
 
      Delete one direct entry from the personal palette at point.
 
-2.66.1.32 emacsvox-aural-voice-palettes-describe
+2.67.1.32 emacsvox-aural-voice-palettes-describe
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-describe (&optional id)
@@ -6152,21 +6164,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.66.1.33 emacsvox-aural-voice-palettes-edit-entry
+2.67.1.33 emacsvox-aural-voice-palettes-edit-entry
 ..................................................
 
  -- Command: emacsvox-aural-voice-palettes-edit-entry
 
      Open the complete editor for a voice in the palette at point.
 
-2.66.1.34 emacsvox-aural-voice-palettes-edit-metadata
+2.67.1.34 emacsvox-aural-voice-palettes-edit-metadata
 .....................................................
 
  -- Command: emacsvox-aural-voice-palettes-edit-metadata
 
      Edit summary and parent of the personal palette at point.
 
-2.66.1.35 emacsvox-aural-voice-palettes-explain
+2.67.1.35 emacsvox-aural-voice-palettes-explain
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-explain (&optional id voice)
@@ -6175,35 +6187,35 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID VOICE)
 
-2.66.1.36 emacsvox-aural-voice-palettes-export
+2.67.1.36 emacsvox-aural-voice-palettes-export
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-export
 
      Export effective portable voices, explicitly omitting local physical choices.
 
-2.66.1.37 emacsvox-aural-voice-palettes-follow-baseline
+2.67.1.37 emacsvox-aural-voice-palettes-follow-baseline
 .......................................................
 
  -- Command: emacsvox-aural-voice-palettes-follow-baseline
 
      Use the baseline voice palette again for this session.
 
-2.66.1.38 emacsvox-aural-voice-palettes-help
+2.67.1.38 emacsvox-aural-voice-palettes-help
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-help
 
      Display and speak voice-palette manager help.
 
-2.66.1.39 emacsvox-aural-voice-palettes-import
+2.67.1.39 emacsvox-aural-voice-palettes-import
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-import
 
      Import a portable palette or full backup as an independent saved palette.
 
-2.66.1.40 emacsvox-aural-voice-palettes-mode
+2.67.1.40 emacsvox-aural-voice-palettes-mode
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-mode
@@ -6240,21 +6252,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      w		emacsvox-aural-voice-palettes-export
      x		emacsvox-aural-voice-palettes-explain
 
-2.66.1.41 emacsvox-aural-voice-palettes-next
+2.67.1.41 emacsvox-aural-voice-palettes-next
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-next
 
      Move to and speak the next voice palette.
 
-2.66.1.42 emacsvox-aural-voice-palettes-next-column
+2.67.1.42 emacsvox-aural-voice-palettes-next-column
 ...................................................
 
  -- Command: emacsvox-aural-voice-palettes-next-column
 
      Move right and speak the next palette column.
 
-2.66.1.43 emacsvox-aural-voice-palettes-preview
+2.67.1.43 emacsvox-aural-voice-palettes-preview
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-preview (&optional id)
@@ -6263,21 +6275,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.66.1.44 emacsvox-aural-voice-palettes-previous
+2.67.1.44 emacsvox-aural-voice-palettes-previous
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-previous
 
      Move to and speak the previous voice palette.
 
-2.66.1.45 emacsvox-aural-voice-palettes-previous-column
+2.67.1.45 emacsvox-aural-voice-palettes-previous-column
 .......................................................
 
  -- Command: emacsvox-aural-voice-palettes-previous-column
 
      Move left and speak the previous palette column.
 
-2.66.1.46 emacsvox-aural-voice-palettes-refresh
+2.67.1.46 emacsvox-aural-voice-palettes-refresh
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-refresh (&optional id)
@@ -6286,42 +6298,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.66.1.47 emacsvox-aural-voice-palettes-rename
+2.67.1.47 emacsvox-aural-voice-palettes-rename
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-rename
 
      Rename a personal palette, preserving tuning, inheritance and profile uses.
 
-2.66.1.48 emacsvox-aural-voice-palettes-reset-entry
+2.67.1.48 emacsvox-aural-voice-palettes-reset-entry
 ...................................................
 
  -- Command: emacsvox-aural-voice-palettes-reset-entry
 
      Choose a direct voice to reset to its parent’s complete entry.
 
-2.66.1.49 emacsvox-aural-voice-palettes-speak-current
+2.67.1.49 emacsvox-aural-voice-palettes-speak-current
 .....................................................
 
  -- Command: emacsvox-aural-voice-palettes-speak-current
 
      Speak the complete voice-palette row at point.
 
-2.66.1.50 emacsvox-aural-voice-palettes-speak-current-cell
+2.67.1.50 emacsvox-aural-voice-palettes-speak-current-cell
 ..........................................................
 
  -- Command: emacsvox-aural-voice-palettes-speak-current-cell
 
      Speak the current palette column title and value.
 
-2.66.1.51 emacsvox-aural-voice-palettes-use-at-startup
+2.67.1.51 emacsvox-aural-voice-palettes-use-at-startup
 ......................................................
 
  -- Command: emacsvox-aural-voice-palettes-use-at-startup
 
      Use the selected palette in the saved startup profile without applying it.
 
-2.66.1.52 emacsvox-aural-voice-palettes-where-used
+2.67.1.52 emacsvox-aural-voice-palettes-where-used
 ..................................................
 
  -- Command: emacsvox-aural-voice-palettes-where-used (&optional palette
@@ -6331,7 +6343,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional PALETTE VOICE)
 
-2.66.2 emacsvox-aural-voice-palettes Options
+2.67.2 emacsvox-aural-voice-palettes Options
 --------------------------------------------
 
  -- Variable: User Option emacsvox-aural-voice-palettes-preview-text
@@ -6345,7 +6357,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-runtime,  Next: emacsvox-aural-voice-workbench,  Prev: emacsvox-aural-voice-palettes,  Up: Emacsvox Commands And Options
 
-2.67 emacsvox-aural-voice-runtime
+2.68 emacsvox-aural-voice-runtime
 =================================
 
 Connect immutable owned voice resolution to current configuration and
@@ -6355,7 +6367,7 @@ adapters.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-workbench,  Next: emacsvox-aural-voice-workbench-views,  Prev: emacsvox-aural-voice-runtime,  Up: Emacsvox Commands And Options
 
-2.68 emacsvox-aural-voice-workbench
+2.69 emacsvox-aural-voice-workbench
 ===================================
 
 A single accessible workbench presents logical voices, physical
@@ -6363,10 +6375,10 @@ inventory, engines, and portable style/effect information.
 Transactional previews use the same sample text without changing saved
 palettes or routing profiles.
 
-2.68.1 Emacsvox-Aural-Voice-Workbench Commands
+2.69.1 Emacsvox-Aural-Voice-Workbench Commands
 ----------------------------------------------
 
-2.68.1.1 emacsvox-aural-prefer-engine
+2.69.1.1 emacsvox-aural-prefer-engine
 .....................................
 
  -- Command: emacsvox-aural-prefer-engine (engine-id &optional save)
@@ -6383,14 +6395,14 @@ palettes or routing profiles.
 
      (fn ENGINE-ID &optional SAVE)
 
-2.68.1.2 emacsvox-aural-restore-saved-engine-order
+2.69.1.2 emacsvox-aural-restore-saved-engine-order
 ..................................................
 
  -- Command: emacsvox-aural-restore-saved-engine-order
 
      Clear the temporary preference and restore the saved or initial order.
 
-2.68.1.3 emacsvox-aural-voice-workbench
+2.69.1.3 emacsvox-aural-voice-workbench
 .......................................
 
  -- Command: emacsvox-aural-voice-workbench (&optional view)
@@ -6399,56 +6411,56 @@ palettes or routing profiles.
 
      (fn &optional VIEW)
 
-2.68.1.4 emacsvox-aural-voice-workbench-cancel-staged
+2.69.1.4 emacsvox-aural-voice-workbench-cancel-staged
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-cancel-staged
 
      Restore the exact profile snapshot from when the workbench opened.
 
-2.68.1.5 emacsvox-aural-voice-workbench-clear-filters
+2.69.1.5 emacsvox-aural-voice-workbench-clear-filters
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-clear-filters
 
      Clear all physical-voice filters and refresh.
 
-2.68.1.6 emacsvox-aural-voice-workbench-compare
+2.69.1.6 emacsvox-aural-voice-workbench-compare
 ...............................................
 
  -- Command: emacsvox-aural-voice-workbench-compare
 
      Compare the selected physical voice with another matching voice.
 
-2.68.1.7 emacsvox-aural-voice-workbench-describe
+2.69.1.7 emacsvox-aural-voice-workbench-describe
 ................................................
 
  -- Command: emacsvox-aural-voice-workbench-describe
 
      Display and speak exact Workbench row and configuration details.
 
-2.68.1.8 emacsvox-aural-voice-workbench-edit-preview-text
+2.69.1.8 emacsvox-aural-voice-workbench-edit-preview-text
 .........................................................
 
  -- Command: emacsvox-aural-voice-workbench-edit-preview-text
 
      Edit the common Voice Workbench comparison text.
 
-2.68.1.9 emacsvox-aural-voice-workbench-engine-view
+2.69.1.9 emacsvox-aural-voice-workbench-engine-view
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-engine-view
 
      Show speech engines and their capabilities.
 
-2.68.1.10 emacsvox-aural-voice-workbench-export-profile
+2.69.1.10 emacsvox-aural-voice-workbench-export-profile
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-export-profile
 
      Export the staged routing profile without activating it.
 
-2.68.1.11 emacsvox-aural-voice-workbench-find-voice
+2.69.1.11 emacsvox-aural-voice-workbench-find-voice
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-find-voice
@@ -6457,28 +6469,28 @@ palettes or routing profiles.
      Search respects engine and explicit filters.  If the quick filter hides the
      chosen voice, switch to All voices.  Nothing is enabled or played.
 
-2.68.1.12 emacsvox-aural-voice-workbench-help
+2.69.1.12 emacsvox-aural-voice-workbench-help
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-help
 
      Display and speak Voice Workbench navigation help.
 
-2.68.1.13 emacsvox-aural-voice-workbench-import-profile
+2.69.1.13 emacsvox-aural-voice-workbench-import-profile
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-import-profile
 
      Read one data-only routing profile into the staged workbench copy.
 
-2.68.1.14 emacsvox-aural-voice-workbench-logical-view
+2.69.1.14 emacsvox-aural-voice-workbench-logical-view
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-logical-view
 
      Show logical voices.
 
-2.68.1.15 emacsvox-aural-voice-workbench-mode
+2.69.1.15 emacsvox-aural-voice-workbench-mode
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-mode
@@ -6540,42 +6552,42 @@ palettes or routing profiles.
      C-c r		omnivox-library-show-result
      C-c u		omnivox-library-uninstall
 
-2.68.1.16 emacsvox-aural-voice-workbench-move-fallback-engine-down
+2.69.1.16 emacsvox-aural-voice-workbench-move-fallback-engine-down
 ..................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-fallback-engine-down
 
      Move the current engine later in global fallback order.
 
-2.68.1.17 emacsvox-aural-voice-workbench-move-fallback-engine-up
+2.69.1.17 emacsvox-aural-voice-workbench-move-fallback-engine-up
 ................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-fallback-engine-up
 
      Move the current engine earlier in global fallback order.
 
-2.68.1.18 emacsvox-aural-voice-workbench-move-preferred-engine-down
+2.69.1.18 emacsvox-aural-voice-workbench-move-preferred-engine-down
 ...................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-preferred-engine-down
 
      Move the selected engine later in preferred engine order.
 
-2.68.1.19 emacsvox-aural-voice-workbench-move-preferred-engine-up
+2.69.1.19 emacsvox-aural-voice-workbench-move-preferred-engine-up
 .................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-preferred-engine-up
 
      Move the selected engine earlier in preferred engine order.
 
-2.68.1.20 emacsvox-aural-voice-workbench-open-row
+2.69.1.20 emacsvox-aural-voice-workbench-open-row
 .................................................
 
  -- Command: emacsvox-aural-voice-workbench-open-row
 
      Open engine details, toggle a language, or preview the selected voice.
 
-2.68.1.21 emacsvox-aural-voice-workbench-physical-view
+2.69.1.21 emacsvox-aural-voice-workbench-physical-view
 ......................................................
 
  -- Command: emacsvox-aural-voice-workbench-physical-view
@@ -6583,21 +6595,21 @@ palettes or routing profiles.
      Browse the selected engine’s voices, or show the physical voice inventory.
      Outside the engine view, leave any temporary engine browsing scope.
 
-2.68.1.22 emacsvox-aural-voice-workbench-preview
+2.69.1.22 emacsvox-aural-voice-workbench-preview
 ................................................
 
  -- Command: emacsvox-aural-voice-workbench-preview
 
      Preview the selected voice, identifying physical samples by name.
 
-2.68.1.23 emacsvox-aural-voice-workbench-preview-all
+2.69.1.23 emacsvox-aural-voice-workbench-preview-all
 ....................................................
 
  -- Command: emacsvox-aural-voice-workbench-preview-all
 
      Preview usable matching voices in displayed order, identifying each sample.
 
-2.68.1.24 emacsvox-aural-voice-workbench-quick-filter
+2.69.1.24 emacsvox-aural-voice-workbench-quick-filter
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-quick-filter (&optional
@@ -6609,7 +6621,7 @@ palettes or routing profiles.
 
      (fn &optional FILTER)
 
-2.68.1.25 emacsvox-aural-voice-workbench-quit
+2.69.1.25 emacsvox-aural-voice-workbench-quit
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-quit
@@ -6621,7 +6633,7 @@ palettes or routing profiles.
      hide the workbench, retaining staged edits and warning
      when they remain unsaved.
 
-2.68.1.26 emacsvox-aural-voice-workbench-refresh
+2.69.1.26 emacsvox-aural-voice-workbench-refresh
 ................................................
 
  -- Command: emacsvox-aural-voice-workbench-refresh (&optional id)
@@ -6630,112 +6642,112 @@ palettes or routing profiles.
 
      (fn &optional ID)
 
-2.68.1.27 emacsvox-aural-voice-workbench-refresh-inventory
+2.69.1.27 emacsvox-aural-voice-workbench-refresh-inventory
 ..........................................................
 
  -- Command: emacsvox-aural-voice-workbench-refresh-inventory
 
      Request fresh adapter inventory and quietly rebuild the current view.
 
-2.68.1.28 emacsvox-aural-voice-workbench-request-recovery-probe
+2.69.1.28 emacsvox-aural-voice-workbench-request-recovery-probe
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-request-recovery-probe
 
      Request a live recovery probe for the current failed engine.
 
-2.68.1.29 emacsvox-aural-voice-workbench-retry-apply
+2.69.1.29 emacsvox-aural-voice-workbench-retry-apply
 ....................................................
 
  -- Command: emacsvox-aural-voice-workbench-retry-apply
 
      Idempotently retry the committed profile on all live speech streams.
 
-2.68.1.30 emacsvox-aural-voice-workbench-save-and-apply
+2.69.1.30 emacsvox-aural-voice-workbench-save-and-apply
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-save-and-apply
 
      Atomically save the staged profile and apply it to every speech stream.
 
-2.68.1.31 emacsvox-aural-voice-workbench-set-filter
+2.69.1.31 emacsvox-aural-voice-workbench-set-filter
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-set-filter
 
      Set or clear one physical-voice inventory filter.
 
-2.68.1.32 emacsvox-aural-voice-workbench-speak-current
+2.69.1.32 emacsvox-aural-voice-workbench-speak-current
 ......................................................
 
  -- Command: emacsvox-aural-voice-workbench-speak-current
 
      Speak the complete current Workbench row with titled values.
 
-2.68.1.33 emacsvox-aural-voice-workbench-stop-preview
+2.69.1.33 emacsvox-aural-voice-workbench-stop-preview
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-stop-preview
 
      Stop the active preview immediately.
 
-2.68.1.34 emacsvox-aural-voice-workbench-style-view
+2.69.1.34 emacsvox-aural-voice-workbench-style-view
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-style-view
 
      Show portable styles, routes, and advertised effects.
 
-2.68.1.35 emacsvox-aural-voice-workbench-toggle-disabled-engine
+2.69.1.35 emacsvox-aural-voice-workbench-toggle-disabled-engine
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-disabled-engine
 
      Disable or restore the current engine in the staged policy.
 
-2.68.1.36 emacsvox-aural-voice-workbench-toggle-fallback-engine
+2.69.1.36 emacsvox-aural-voice-workbench-toggle-fallback-engine
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-fallback-engine
 
      Add or remove the current engine from global fallback order.
 
-2.68.1.37 emacsvox-aural-voice-workbench-toggle-preferred-engine
+2.69.1.37 emacsvox-aural-voice-workbench-toggle-preferred-engine
 ................................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-preferred-engine
 
      Add or remove the current engine from global preferred order.
 
-2.68.1.38 emacsvox-aural-voice-workbench-tune
+2.69.1.38 emacsvox-aural-voice-workbench-tune
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-tune
 
      Open the common editor for a named voice or physical experiment.
 
-2.68.1.39 emacsvox-aural-voice-workbench-undo
+2.69.1.39 emacsvox-aural-voice-workbench-undo
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-undo
 
      Undo the most recent staged routing edit without changing saved state.
 
-2.68.1.40 emacsvox-aural-voice-workbench-undo-applied
+2.69.1.40 emacsvox-aural-voice-workbench-undo-applied
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-undo-applied
 
      Restore and apply the previous known-good profile revision.
 
-2.68.1.41 emacsvox-aural-voice-workbench-use-across-palette
+2.69.1.41 emacsvox-aural-voice-workbench-use-across-palette
 ...........................................................
 
  -- Command: emacsvox-aural-voice-workbench-use-across-palette
 
      Review the selected physical voice across every named voice in a palette.
 
-2.68.2 emacsvox-aural-voice-workbench Options
+2.69.2 emacsvox-aural-voice-workbench Options
 ---------------------------------------------
 
  -- Variable: User Option emacsvox-aural-voice-workbench-preview-text
@@ -6749,7 +6761,7 @@ palettes or routing profiles.
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-workbench-views,  Next: emacsvox-avy,  Prev: emacsvox-aural-voice-workbench,  Up: Emacsvox Commands And Options
 
-2.69 emacsvox-aural-voice-workbench-views
+2.70 emacsvox-aural-voice-workbench-views
 =========================================
 
 Row descriptions, columns, filtering and language trees for Voice
@@ -6761,7 +6773,7 @@ save/apply operations.  Load through 'emacsvox-aural-voice-workbench'.
 
 File: emacsvox-reference.info,  Node: emacsvox-avy,  Next: emacsvox-bbdb,  Prev: emacsvox-aural-voice-workbench-views,  Up: Emacsvox Commands And Options
 
-2.70 emacsvox-avy
+2.71 emacsvox-avy
 =================
 
 AVY == Jump to visible text using a char-based decision tree.  This
@@ -6770,7 +6782,7 @@ module speech-enables avy navigation commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-bbdb,  Next: emacsvox-bibtex,  Prev: emacsvox-avy,  Up: Emacsvox Commands And Options
 
-2.71 emacsvox-bbdb
+2.72 emacsvox-bbdb
 ==================
 
 Speech-enables BBDB. I have used BBDB to manage email address and
@@ -6779,7 +6791,7 @@ contact information since 1991.
 
 File: emacsvox-reference.info,  Node: emacsvox-bibtex,  Next: emacsvox-bookmark,  Prev: emacsvox-bbdb,  Up: Emacsvox Commands And Options
 
-2.72 emacsvox-bibtex
+2.73 emacsvox-bibtex
 ====================
 
 Speech extensions for bibtex mode.
@@ -6787,7 +6799,7 @@ Speech extensions for bibtex mode.
 
 File: emacsvox-reference.info,  Node: emacsvox-bookmark,  Next: emacsvox-bookshare,  Prev: emacsvox-bibtex,  Up: Emacsvox Commands And Options
 
-2.73 emacsvox-bookmark
+2.74 emacsvox-bookmark
 ======================
 
 Speech enable bookmarks
@@ -6795,7 +6807,7 @@ Speech enable bookmarks
 
 File: emacsvox-reference.info,  Node: emacsvox-bookshare,  Next: emacsvox-browse-kill-ring,  Prev: emacsvox-bookmark,  Up: Emacsvox Commands And Options
 
-2.74 emacsvox-bookshare
+2.75 emacsvox-bookshare
 =======================
 
 BOOKSHARE == http://www.bookshare.org provides book access to
@@ -6803,13 +6815,13 @@ print-disabled users.  It provides a simple Web API
 http://developer.bookshare.org This module implements an Emacsvox
 Bookshare client.
 
-2.74.1 requirements
+2.75.1 requirements
 -------------------
 
    • You need to get your own API key
    • You need Emacs built with libxml2 support
 
-2.74.2 Usage
+2.75.2 Usage
 ------------
 
 The main entry point is command ‘emacsvox-bookshare’ bound to ‘C-e C-b’.
@@ -6817,7 +6829,7 @@ This creates a special *Bookshare Interaction* buffer that is placed in
 *emacsvox-bookshare-mode*.  Se the help for that mode on detailed usage
 instructions and key-bindings.
 
-2.74.3 Sample Interaction
+2.75.3 Sample Interaction
 -------------------------
 
 Assuming you have correctly setup your API key:
@@ -6837,10 +6849,10 @@ Assuming you have correctly setup your API key:
    • Press ‘c’ to display the table of contents.
    • Now, use all of EWW *Note emacsvox-eww:: extensions and profit!
 
-2.74.4 Emacsvox-Bookshare Commands
+2.75.4 Emacsvox-Bookshare Commands
 ----------------------------------
 
-2.74.4.1 emacsvox-bookshare
+2.75.4.1 emacsvox-bookshare
 ...........................
 
  -- Command: emacsvox-bookshare
@@ -6848,14 +6860,14 @@ Assuming you have correctly setup your API key:
 
      Bookshare  Interaction.
 
-2.74.4.2 emacsvox-bookshare-action
+2.75.4.2 emacsvox-bookshare-action
 ..................................
 
  -- Command: emacsvox-bookshare-action
 
      Call action specified by  invoking key.
 
-2.74.4.3 emacsvox-bookshare-author-search
+2.75.4.3 emacsvox-bookshare-author-search
 .........................................
 
  -- Command: emacsvox-bookshare-author-search (query &optional category)
@@ -6865,21 +6877,21 @@ Assuming you have correctly setup your API key:
 
      (fn QUERY &optional CATEGORY)
 
-2.74.4.4 emacsvox-bookshare-browse
+2.75.4.4 emacsvox-bookshare-browse
 ..................................
 
  -- Command: emacsvox-bookshare-browse
 
      Browse Bookshare.
 
-2.74.4.5 emacsvox-bookshare-browse-latest
+2.75.4.5 emacsvox-bookshare-browse-latest
 .........................................
 
  -- Command: emacsvox-bookshare-browse-latest
 
      Return latest books.
 
-2.74.4.6 emacsvox-bookshare-browse-popular
+2.75.4.6 emacsvox-bookshare-browse-popular
 ..........................................
 
  -- Command: emacsvox-bookshare-browse-popular (&optional category)
@@ -6889,7 +6901,7 @@ Assuming you have correctly setup your API key:
 
      (fn &optional CATEGORY)
 
-2.74.4.7 emacsvox-bookshare-debugInfo-handler
+2.75.4.7 emacsvox-bookshare-debugInfo-handler
 .............................................
 
  -- Command: emacsvox-bookshare-debugInfo-handler (&rest arguments)
@@ -6900,7 +6912,7 @@ Assuming you have correctly setup your API key:
 
      (fn &rest ARGUMENTS)
 
-2.74.4.8 emacsvox-bookshare-download-audio
+2.75.4.8 emacsvox-bookshare-download-audio
 ..........................................
 
  -- Command: emacsvox-bookshare-download-audio (id target)
@@ -6909,7 +6921,7 @@ Assuming you have correctly setup your API key:
 
      (fn ID TARGET)
 
-2.74.4.9 emacsvox-bookshare-download-audio-at-point
+2.75.4.9 emacsvox-bookshare-download-audio-at-point
 ...................................................
 
  -- Command: emacsvox-bookshare-download-audio-at-point
@@ -6917,7 +6929,7 @@ Assuming you have correctly setup your API key:
      Download audio version of book under point.
      Target location is generated from author and title.
 
-2.74.4.10 emacsvox-bookshare-download-brf
+2.75.4.10 emacsvox-bookshare-download-brf
 .........................................
 
  -- Command: emacsvox-bookshare-download-brf (id target)
@@ -6926,7 +6938,7 @@ Assuming you have correctly setup your API key:
 
      (fn ID TARGET)
 
-2.74.4.11 emacsvox-bookshare-download-brf-at-point
+2.75.4.11 emacsvox-bookshare-download-brf-at-point
 ..................................................
 
  -- Command: emacsvox-bookshare-download-brf-at-point
@@ -6934,7 +6946,7 @@ Assuming you have correctly setup your API key:
      Download Braille version of book under point.
      Target location is generated from author and title.
 
-2.74.4.12 emacsvox-bookshare-download-daisy
+2.75.4.12 emacsvox-bookshare-download-daisy
 ...........................................
 
  -- Command: emacsvox-bookshare-download-daisy (id target)
@@ -6943,7 +6955,7 @@ Assuming you have correctly setup your API key:
 
      (fn ID TARGET)
 
-2.74.4.13 emacsvox-bookshare-download-daisy-at-point
+2.75.4.13 emacsvox-bookshare-download-daisy-at-point
 ....................................................
 
  -- Command: emacsvox-bookshare-download-daisy-at-point
@@ -6951,7 +6963,7 @@ Assuming you have correctly setup your API key:
      Download Daisy version of book under point.
      Target location is generated from author and title.
 
-2.74.4.14 emacsvox-bookshare-download-epub-3
+2.75.4.14 emacsvox-bookshare-download-epub-3
 ............................................
 
  -- Command: emacsvox-bookshare-download-epub-3 (id target)
@@ -6960,7 +6972,7 @@ Assuming you have correctly setup your API key:
 
      (fn ID TARGET)
 
-2.74.4.15 emacsvox-bookshare-download-epub-3-at-point
+2.75.4.15 emacsvox-bookshare-download-epub-3-at-point
 .....................................................
 
  -- Command: emacsvox-bookshare-download-epub-3-at-point
@@ -6968,7 +6980,7 @@ Assuming you have correctly setup your API key:
      Download epub-3 version of book under point.
      Target location is generated from author and title.
 
-2.74.4.16 emacsvox-bookshare-download-internal
+2.75.4.16 emacsvox-bookshare-download-internal
 ..............................................
 
  -- Command: emacsvox-bookshare-download-internal (url target)
@@ -6977,7 +6989,7 @@ Assuming you have correctly setup your API key:
 
      (fn URL TARGET)
 
-2.74.4.17 emacsvox-bookshare-eww
+2.75.4.17 emacsvox-bookshare-eww
 ................................
 
  -- Command: emacsvox-bookshare-eww (directory)
@@ -6987,7 +6999,7 @@ Assuming you have correctly setup your API key:
 
      (fn DIRECTORY)
 
-2.74.4.18 emacsvox-bookshare-expand-at-point
+2.75.4.18 emacsvox-bookshare-expand-at-point
 ............................................
 
  -- Command: emacsvox-bookshare-expand-at-point
@@ -6995,7 +7007,7 @@ Assuming you have correctly setup your API key:
      Expand entry at point by retrieving metadata.
      Once retrieved, memoize to avoid multiple retrievals.
 
-2.74.4.19 emacsvox-bookshare-extract-and-view
+2.75.4.19 emacsvox-bookshare-extract-and-view
 .............................................
 
  -- Command: emacsvox-bookshare-extract-and-view (url)
@@ -7004,7 +7016,7 @@ Assuming you have correctly setup your API key:
 
      (fn URL)
 
-2.74.4.20 emacsvox-bookshare-extract-xml
+2.75.4.20 emacsvox-bookshare-extract-xml
 ........................................
 
  -- Command: emacsvox-bookshare-extract-xml (url)
@@ -7013,7 +7025,7 @@ Assuming you have correctly setup your API key:
 
      (fn URL)
 
-2.74.4.21 emacsvox-bookshare-flush-lines
+2.75.4.21 emacsvox-bookshare-flush-lines
 ........................................
 
  -- Command: emacsvox-bookshare-flush-lines (regexp)
@@ -7022,7 +7034,7 @@ Assuming you have correctly setup your API key:
 
      (fn REGEXP)
 
-2.74.4.22 emacsvox-bookshare-fulltext
+2.75.4.22 emacsvox-bookshare-fulltext
 .....................................
 
  -- Command: emacsvox-bookshare-fulltext (directory)
@@ -7032,7 +7044,7 @@ Assuming you have correctly setup your API key:
 
      (fn DIRECTORY)
 
-2.74.4.23 emacsvox-bookshare-fulltext-search
+2.75.4.23 emacsvox-bookshare-fulltext-search
 ............................................
 
  -- Command: emacsvox-bookshare-fulltext-search (query)
@@ -7041,14 +7053,14 @@ Assuming you have correctly setup your API key:
 
      (fn QUERY)
 
-2.74.4.24 emacsvox-bookshare-get-more-results
+2.75.4.24 emacsvox-bookshare-get-more-results
 .............................................
 
  -- Command: emacsvox-bookshare-get-more-results
 
      Get next page of results for last query.
 
-2.74.4.25 emacsvox-bookshare-id-search
+2.75.4.25 emacsvox-bookshare-id-search
 ......................................
 
  -- Command: emacsvox-bookshare-id-search (query)
@@ -7057,7 +7069,7 @@ Assuming you have correctly setup your API key:
 
      (fn QUERY)
 
-2.74.4.26 emacsvox-bookshare-isbn-search
+2.75.4.26 emacsvox-bookshare-isbn-search
 ........................................
 
  -- Command: emacsvox-bookshare-isbn-search (query)
@@ -7066,14 +7078,14 @@ Assuming you have correctly setup your API key:
 
      (fn QUERY)
 
-2.74.4.27 emacsvox-bookshare-list-preferences
+2.75.4.27 emacsvox-bookshare-list-preferences
 .............................................
 
  -- Command: emacsvox-bookshare-list-preferences
 
      Return preference list.
 
-2.74.4.28 emacsvox-bookshare-mode
+2.75.4.28 emacsvox-bookshare-mode
 .................................
 
  -- Command: emacsvox-bookshare-mode
@@ -7143,28 +7155,28 @@ Assuming you have correctly setup your API key:
      run, this mode runs the hook ‘emacsvox-bookshare-mode-hook’, as the
      final or penultimate step during initialization.
 
-2.74.4.29 emacsvox-bookshare-next-result
+2.75.4.29 emacsvox-bookshare-next-result
 ........................................
 
  -- Command: emacsvox-bookshare-next-result
 
      Move to next result.
 
-2.74.4.30 emacsvox-bookshare-periodical-list
+2.75.4.30 emacsvox-bookshare-periodical-list
 ............................................
 
  -- Command: emacsvox-bookshare-periodical-list
 
      Return list of periodicals.
 
-2.74.4.31 emacsvox-bookshare-previous-result
+2.75.4.31 emacsvox-bookshare-previous-result
 ............................................
 
  -- Command: emacsvox-bookshare-previous-result
 
      Move to previous result.
 
-2.74.4.32 emacsvox-bookshare-set-preference
+2.75.4.32 emacsvox-bookshare-set-preference
 ...........................................
 
  -- Command: emacsvox-bookshare-set-preference (preference-id value)
@@ -7173,7 +7185,7 @@ Assuming you have correctly setup your API key:
 
      (fn PREFERENCE-ID VALUE)
 
-2.74.4.33 emacsvox-bookshare-since-search
+2.75.4.33 emacsvox-bookshare-since-search
 .........................................
 
  -- Command: emacsvox-bookshare-since-search (query &optional category)
@@ -7183,7 +7195,7 @@ Assuming you have correctly setup your API key:
 
      (fn QUERY &optional CATEGORY)
 
-2.74.4.34 emacsvox-bookshare-title-search
+2.75.4.34 emacsvox-bookshare-title-search
 .........................................
 
  -- Command: emacsvox-bookshare-title-search (query &optional category)
@@ -7193,7 +7205,7 @@ Assuming you have correctly setup your API key:
 
      (fn QUERY &optional CATEGORY)
 
-2.74.4.35 emacsvox-bookshare-toc
+2.75.4.35 emacsvox-bookshare-toc
 ................................
 
  -- Command: emacsvox-bookshare-toc (directory)
@@ -7202,7 +7214,7 @@ Assuming you have correctly setup your API key:
 
      (fn DIRECTORY)
 
-2.74.4.36 emacsvox-bookshare-toc-at-point
+2.75.4.36 emacsvox-bookshare-toc-at-point
 .........................................
 
  -- Command: emacsvox-bookshare-toc-at-point
@@ -7210,14 +7222,14 @@ Assuming you have correctly setup your API key:
      View TOC for book at point.
      Make sure it’s downloaded and unpacked first.
 
-2.74.4.37 emacsvox-bookshare-unpack-at-point
+2.75.4.37 emacsvox-bookshare-unpack-at-point
 ............................................
 
  -- Command: emacsvox-bookshare-unpack-at-point
 
      Unpack downloaded content if necessary.
 
-2.74.4.38 emacsvox-bookshare-url-executor
+2.75.4.38 emacsvox-bookshare-url-executor
 .........................................
 
  -- Command: emacsvox-bookshare-url-executor (url)
@@ -7226,7 +7238,7 @@ Assuming you have correctly setup your API key:
 
      (fn URL)
 
-2.74.4.39 emacsvox-bookshare-version-handler
+2.75.4.39 emacsvox-bookshare-version-handler
 ............................................
 
  -- Command: emacsvox-bookshare-version-handler (&rest arguments)
@@ -7237,7 +7249,7 @@ Assuming you have correctly setup your API key:
 
      (fn &rest ARGUMENTS)
 
-2.74.4.40 emacsvox-bookshare-view
+2.75.4.40 emacsvox-bookshare-view
 .................................
 
  -- Command: emacsvox-bookshare-view (directory)
@@ -7246,7 +7258,7 @@ Assuming you have correctly setup your API key:
 
      (fn DIRECTORY)
 
-2.74.4.41 emacsvox-bookshare-view-at-point
+2.75.4.41 emacsvox-bookshare-view-at-point
 ..........................................
 
  -- Command: emacsvox-bookshare-view-at-point
@@ -7254,7 +7266,7 @@ Assuming you have correctly setup your API key:
      View book at point.
      Make sure it’s downloaded and unpacked first.
 
-2.74.4.42 emacsvox-bookshare-view-page-range
+2.75.4.42 emacsvox-bookshare-view-page-range
 ............................................
 
  -- Command: emacsvox-bookshare-view-page-range (url)
@@ -7263,7 +7275,7 @@ Assuming you have correctly setup your API key:
 
      (fn URL)
 
-2.74.5 emacsvox-bookshare Options
+2.75.5 emacsvox-bookshare Options
 ---------------------------------
 
  -- Variable: User Option emacsvox-bookshare-api-key
@@ -7287,7 +7299,7 @@ Assuming you have correctly setup your API key:
 
 File: emacsvox-reference.info,  Node: emacsvox-browse-kill-ring,  Next: emacsvox-bs,  Prev: emacsvox-bookshare,  Up: Emacsvox Commands And Options
 
-2.75 emacsvox-browse-kill-ring
+2.76 emacsvox-browse-kill-ring
 ==============================
 
 Browse the kill ring using browse-kill-ring.el - interactively insert
@@ -7296,15 +7308,15 @@ items from kill-ring
 
 File: emacsvox-reference.info,  Node: emacsvox-bs,  Next: emacsvox-buff-menu,  Prev: emacsvox-browse-kill-ring,  Up: Emacsvox Commands And Options
 
-2.76 emacsvox-bs
+2.77 emacsvox-bs
 ================
 
 speech-enable bs.el - an alternative to Emacs' default list-buffers
 
-2.76.1 Emacsvox-Bs Commands
+2.77.1 Emacsvox-Bs Commands
 ---------------------------
 
-2.76.1.1 emacsvox-bs-speak-buffer-line
+2.77.1.1 emacsvox-bs-speak-buffer-line
 ......................................
 
  -- Command: emacsvox-bs-speak-buffer-line (&optional icon)
@@ -7317,15 +7329,15 @@ speech-enable bs.el - an alternative to Emacs' default list-buffers
 
 File: emacsvox-reference.info,  Node: emacsvox-buff-menu,  Next: emacsvox-c,  Prev: emacsvox-bs,  Up: Emacsvox Commands And Options
 
-2.77 emacsvox-buff-menu
+2.78 emacsvox-buff-menu
 =======================
 
 Speech-enable buffer-menus.
 
-2.77.1 Emacsvox-Buff-Menu Commands
+2.78.1 Emacsvox-Buff-Menu Commands
 ----------------------------------
 
-2.77.1.1 emacsvox-list-buffers-next-line
+2.78.1.1 emacsvox-list-buffers-next-line
 ........................................
 
  -- Command: emacsvox-list-buffers-next-line (count)
@@ -7334,7 +7346,7 @@ Speech-enable buffer-menus.
 
      (fn COUNT)
 
-2.77.1.2 emacsvox-list-buffers-previous-line
+2.78.1.2 emacsvox-list-buffers-previous-line
 ............................................
 
  -- Command: emacsvox-list-buffers-previous-line (count)
@@ -7343,14 +7355,14 @@ Speech-enable buffer-menus.
 
      (fn COUNT)
 
-2.77.1.3 emacsvox-list-buffers-speak-buffer-line
+2.78.1.3 emacsvox-list-buffers-speak-buffer-line
 ................................................
 
  -- Command: emacsvox-list-buffers-speak-buffer-line
 
      Speak information about this buffer
 
-2.77.1.4 emacsvox-list-buffers-speak-name
+2.78.1.4 emacsvox-list-buffers-speak-name
 .........................................
 
  -- Command: emacsvox-list-buffers-speak-name
@@ -7360,16 +7372,16 @@ Speech-enable buffer-menus.
 
 File: emacsvox-reference.info,  Node: emacsvox-c,  Next: emacsvox-calc,  Prev: emacsvox-buff-menu,  Up: Emacsvox Commands And Options
 
-2.78 emacsvox-c
+2.79 emacsvox-c
 ===============
 
 Make C and C++ mode more emacsvox friendly Works with both boring c-mode
 and the excellent cc-mode
 
-2.78.1 Emacsvox-C Commands
+2.79.1 Emacsvox-C Commands
 --------------------------
 
-2.78.1.1 emacsvox-c-speak-semantics
+2.79.1.1 emacsvox-c-speak-semantics
 ...................................
 
  -- Command: emacsvox-c-speak-semantics
@@ -7379,7 +7391,7 @@ and the excellent cc-mode
 
 File: emacsvox-reference.info,  Node: emacsvox-calc,  Next: emacsvox-calculator,  Prev: emacsvox-c,  Up: Emacsvox Commands And Options
 
-2.79 emacsvox-calc
+2.80 emacsvox-calc
 ==================
 
 This module extends the Emacs Calculator.  Extensions are minimal.  We
@@ -7389,7 +7401,7 @@ To fix all of calc's interactive functions
 
 File: emacsvox-reference.info,  Node: emacsvox-calculator,  Next: emacsvox-calendar,  Prev: emacsvox-calc,  Up: Emacsvox Commands And Options
 
-2.80 emacsvox-calculator
+2.81 emacsvox-calculator
 ========================
 
 Speech enable desktop calculator
@@ -7397,17 +7409,17 @@ Speech enable desktop calculator
 
 File: emacsvox-reference.info,  Node: emacsvox-calendar,  Next: emacsvox-calibredb,  Prev: emacsvox-calculator,  Up: Emacsvox Commands And Options
 
-2.81 emacsvox-calendar
+2.82 emacsvox-calendar
 ======================
 
 This module speech enables the Emacs Calendar.  Speech enabling is not
 the same as speaking the screen: This is an excellent example of the
 advantages of speech-enabled interaction.
 
-2.81.1 Emacsvox-Calendar Commands
+2.82.1 Emacsvox-Calendar Commands
 ---------------------------------
 
-2.81.1.1 emacsvox-appt-repeat-announcement
+2.82.1.1 emacsvox-appt-repeat-announcement
 ..........................................
 
  -- Command: emacsvox-appt-repeat-announcement
@@ -7415,7 +7427,7 @@ advantages of speech-enabled interaction.
 
      Speaks the most recently displayed appointment message if any.
 
-2.81.1.2 emacsvox-calendar-setup-sunrise-sunset
+2.82.1.2 emacsvox-calendar-setup-sunrise-sunset
 ...............................................
 
  -- Command: emacsvox-calendar-setup-sunrise-sunset
@@ -7423,14 +7435,14 @@ advantages of speech-enabled interaction.
      Set up geo-coordinates using Google Maps reverse geocoding.
      To use, configure variable gmaps-my-address via M-x customize-variable.
 
-2.81.1.3 emacsvox-calendar-speak-date
+2.82.1.3 emacsvox-calendar-speak-date
 .....................................
 
  -- Command: emacsvox-calendar-speak-date
 
      Speak the date under point when called in Calendar Mode.
 
-2.81.1.4 emacsvox-calendar-sunrise-sunset
+2.82.1.4 emacsvox-calendar-sunrise-sunset
 .........................................
 
  -- Command: emacsvox-calendar-sunrise-sunset (address &optional arg)
@@ -7442,15 +7454,15 @@ advantages of speech-enabled interaction.
 
 File: emacsvox-reference.info,  Node: emacsvox-calibredb,  Next: emacsvox-capitalization,  Prev: emacsvox-calendar,  Up: Emacsvox Commands And Options
 
-2.82 emacsvox-calibredb
+2.83 emacsvox-calibredb
 =======================
 
 CALIBREDB == Browse And Search Local Calibre Library
 
-2.82.1 Emacsvox-Calibredb Commands
+2.83.1 Emacsvox-Calibredb Commands
 ----------------------------------
 
-2.82.1.1 emacsvox-calibredb-epub-eww
+2.83.1.1 emacsvox-calibredb-epub-eww
 ....................................
 
  -- Command: emacsvox-calibredb-epub-eww (&optional broken-ncx)
@@ -7464,23 +7476,23 @@ CALIBREDB == Browse And Search Local Calibre Library
 
 File: emacsvox-reference.info,  Node: emacsvox-capitalization,  Next: emacsvox-chess,  Prev: emacsvox-calibredb,  Up: Emacsvox Commands And Options
 
-2.83 emacsvox-capitalization
+2.84 emacsvox-capitalization
 ============================
 
 Buffer/global reading options and two retained global cue drafts.  Apply
 and save beep defaults through Customize; preserve contextual rules.
 
-2.83.1 Emacsvox-Capitalization Commands
+2.84.1 Emacsvox-Capitalization Commands
 ---------------------------------------
 
-2.83.1.1 emacsvox-capitalization
+2.84.1.1 emacsvox-capitalization
 ................................
 
  -- Command: emacsvox-capitalization (&optional arg1)
 
      Choose capitalization indication, presentation, splitting, and global beep defaults.
 
-2.83.1.2 emacsvox-capitalization-cue
+2.84.1.2 emacsvox-capitalization-cue
 ....................................
 
  -- Command: emacsvox-capitalization-cue (arg1)
@@ -7492,7 +7504,7 @@ and save beep defaults through Customize; preserve contextual rules.
 
 File: emacsvox-reference.info,  Node: emacsvox-chess,  Next: emacsvox-cider,  Prev: emacsvox-capitalization,  Up: Emacsvox Commands And Options
 
-2.84 emacsvox-chess
+2.85 emacsvox-chess
 ===================
 
 The Emacs Chess package provides a rich environment for playing and
@@ -7507,7 +7519,7 @@ that announces moves.
    • Enable various means of exploring the state of game, perhaps with a
      view to being able to spot patterns from listening to the output.
 
-2.84.1 Navigating And Examining The Board
+2.85.1 Navigating And Examining The Board
 -----------------------------------------
 
 The board can be navigated along the 8 compass directions.  Arrow keys
@@ -7546,7 +7558,7 @@ well as a *knight's perspective *:
      non-empty squares seen by the King from the current position.  ‘v’
      followed by a rank-or-file char speaks that complete rank or file.
 
-2.84.2 Examining Games
+2.85.2 Examining Games
 ----------------------
 
 Package *Chess* allows one to browse through a game using ‘,’ and ‘.’ --
@@ -7555,24 +7567,24 @@ Emacsvox speech-enables these commands to speak the move that led to the
 currently displayed state of the game.  Finally, ‘m’ speaks the *current
 move* being displayed.
 
-2.84.3 Emacsvox-Chess Commands
+2.85.3 Emacsvox-Chess Commands
 ------------------------------
 
-2.84.3.1 emacsvox-chess-east
+2.85.3.1 emacsvox-chess-east
 ............................
 
  -- Command: emacsvox-chess-east
 
      Move east one step.
 
-2.84.3.2 emacsvox-chess-goto-target
+2.85.3.2 emacsvox-chess-goto-target
 ...................................
 
  -- Command: emacsvox-chess-goto-target
 
      Jump to the most recent target square.
 
-2.84.3.3 emacsvox-chess-jump
+2.85.3.3 emacsvox-chess-jump
 ............................
 
  -- Command: emacsvox-chess-jump (coord)
@@ -7581,126 +7593,126 @@ move* being displayed.
 
      (fn COORD)
 
-2.84.3.4 emacsvox-chess-look-east
+2.85.3.4 emacsvox-chess-look-east
 .................................
 
  -- Command: emacsvox-chess-look-east
 
      Look east
 
-2.84.3.5 emacsvox-chess-look-king
+2.85.3.5 emacsvox-chess-look-king
 .................................
 
  -- Command: emacsvox-chess-look-king
 
      Look along non-empty squares reachable by the king  from current position.
 
-2.84.3.6 emacsvox-chess-look-knight
+2.85.3.6 emacsvox-chess-look-knight
 ...................................
 
  -- Command: emacsvox-chess-look-knight
 
      Look along non-empty squares reachable by a knight from current position.
 
-2.84.3.7 emacsvox-chess-look-north
+2.85.3.7 emacsvox-chess-look-north
 ..................................
 
  -- Command: emacsvox-chess-look-north
 
      Look north
 
-2.84.3.8 emacsvox-chess-look-northeast
+2.85.3.8 emacsvox-chess-look-northeast
 ......................................
 
  -- Command: emacsvox-chess-look-northeast
 
      Look northeast
 
-2.84.3.9 emacsvox-chess-look-northwest
+2.85.3.9 emacsvox-chess-look-northwest
 ......................................
 
  -- Command: emacsvox-chess-look-northwest
 
      Look northwest
 
-2.84.3.10 emacsvox-chess-look-south
+2.85.3.10 emacsvox-chess-look-south
 ...................................
 
  -- Command: emacsvox-chess-look-south
 
      Look south
 
-2.84.3.11 emacsvox-chess-look-southeast
+2.85.3.11 emacsvox-chess-look-southeast
 .......................................
 
  -- Command: emacsvox-chess-look-southeast
 
      Look southeast
 
-2.84.3.12 emacsvox-chess-look-southwest
+2.85.3.12 emacsvox-chess-look-southwest
 .......................................
 
  -- Command: emacsvox-chess-look-southwest
 
      Look southwest
 
-2.84.3.13 emacsvox-chess-look-west
+2.85.3.13 emacsvox-chess-look-west
 ..................................
 
  -- Command: emacsvox-chess-look-west
 
      Look west
 
-2.84.3.14 emacsvox-chess-north
+2.85.3.14 emacsvox-chess-north
 ..............................
 
  -- Command: emacsvox-chess-north
 
      Move north one step.
 
-2.84.3.15 emacsvox-chess-northeast
+2.85.3.15 emacsvox-chess-northeast
 ..................................
 
  -- Command: emacsvox-chess-northeast
 
      Move northeast one step.
 
-2.84.3.16 emacsvox-chess-northwest
+2.85.3.16 emacsvox-chess-northwest
 ..................................
 
  -- Command: emacsvox-chess-northwest
 
      Move northwest one step.
 
-2.84.3.17 emacsvox-chess-south
+2.85.3.17 emacsvox-chess-south
 ..............................
 
  -- Command: emacsvox-chess-south
 
      Move south one step.
 
-2.84.3.18 emacsvox-chess-southeast
+2.85.3.18 emacsvox-chess-southeast
 ..................................
 
  -- Command: emacsvox-chess-southeast
 
      Move southeast one step.
 
-2.84.3.19 emacsvox-chess-southwest
+2.85.3.19 emacsvox-chess-southwest
 ..................................
 
  -- Command: emacsvox-chess-southwest
 
      Move southwest one step.
 
-2.84.3.20 emacsvox-chess-speak-board
+2.85.3.20 emacsvox-chess-speak-board
 ....................................
 
  -- Command: emacsvox-chess-speak-board
 
      Speak complete board. Only useful in end-states.
 
-2.84.3.21 emacsvox-chess-speak-piece-squares
+2.85.3.21 emacsvox-chess-speak-piece-squares
 ............................................
 
  -- Command: emacsvox-chess-speak-piece-squares (piece)
@@ -7712,7 +7724,7 @@ move* being displayed.
 
      (fn PIECE)
 
-2.84.3.22 emacsvox-chess-speak-that-square
+2.85.3.22 emacsvox-chess-speak-that-square
 ..........................................
 
  -- Command: emacsvox-chess-speak-that-square (coord)
@@ -7721,21 +7733,21 @@ move* being displayed.
 
      (fn COORD)
 
-2.84.3.23 emacsvox-chess-speak-this-move
+2.85.3.23 emacsvox-chess-speak-this-move
 ........................................
 
  -- Command: emacsvox-chess-speak-this-move
 
      Speak move at current display index.
 
-2.84.3.24 emacsvox-chess-speak-this-square
+2.85.3.24 emacsvox-chess-speak-this-square
 ..........................................
 
  -- Command: emacsvox-chess-speak-this-square
 
      Speak square under point.
 
-2.84.3.25 emacsvox-chess-speak-who-targets
+2.85.3.25 emacsvox-chess-speak-who-targets
 ..........................................
 
  -- Command: emacsvox-chess-speak-who-targets (piece)
@@ -7746,14 +7758,14 @@ move* being displayed.
 
      (fn PIECE)
 
-2.84.3.26 emacsvox-chess-view-rank-or-file
+2.85.3.26 emacsvox-chess-view-rank-or-file
 ..........................................
 
  -- Command: emacsvox-chess-view-rank-or-file
 
      View a complete rank or file from white’s perspective.
 
-2.84.3.27 emacsvox-chess-west
+2.85.3.27 emacsvox-chess-west
 .............................
 
  -- Command: emacsvox-chess-west
@@ -7763,7 +7775,7 @@ move* being displayed.
 
 File: emacsvox-reference.info,  Node: emacsvox-cider,  Next: emacsvox-clojure,  Prev: emacsvox-chess,  Up: Emacsvox Commands And Options
 
-2.85 emacsvox-cider
+2.86 emacsvox-cider
 ===================
 
 Speech-Enable CIDER -- Clojure IDE
@@ -7771,7 +7783,7 @@ Speech-Enable CIDER -- Clojure IDE
 
 File: emacsvox-reference.info,  Node: emacsvox-clojure,  Next: emacsvox-cmuscheme,  Prev: emacsvox-cider,  Up: Emacsvox Commands And Options
 
-2.86 emacsvox-clojure
+2.87 emacsvox-clojure
 =====================
 
 CLOJURE-mode: Specialized mode for Clojure programming.
@@ -7779,7 +7791,7 @@ CLOJURE-mode: Specialized mode for Clojure programming.
 
 File: emacsvox-reference.info,  Node: emacsvox-cmuscheme,  Next: emacsvox-combobulate,  Prev: emacsvox-clojure,  Up: Emacsvox Commands And Options
 
-2.87 emacsvox-cmuscheme
+2.88 emacsvox-cmuscheme
 =======================
 
 speech-enable scheme support
@@ -7787,7 +7799,7 @@ speech-enable scheme support
 
 File: emacsvox-reference.info,  Node: emacsvox-combobulate,  Next: emacsvox-comint,  Prev: emacsvox-cmuscheme,  Up: Emacsvox Commands And Options
 
-2.88 emacsvox-combobulate
+2.89 emacsvox-combobulate
 =========================
 
 COMBOBULATE: Navigate, Manipulate code with tree-sitter's concrete-tree;
@@ -7796,15 +7808,15 @@ https://github.com/mickeynp/combobulate.git (push)
 
 File: emacsvox-reference.info,  Node: emacsvox-comint,  Next: emacsvox-company,  Prev: emacsvox-combobulate,  Up: Emacsvox Commands And Options
 
-2.89 emacsvox-comint
+2.90 emacsvox-comint
 ====================
 
 comint == command interaction.  Advice comint and friends to speak.
 
-2.89.1 Emacsvox-Comint Commands
+2.90.1 Emacsvox-Comint Commands
 -------------------------------
 
-2.89.1.1 emacsvox-toggle-comint-autospeak
+2.90.1.1 emacsvox-toggle-comint-autospeak
 .........................................
 
  -- Command: emacsvox-toggle-comint-autospeak (&optional prefix)
@@ -7814,7 +7826,7 @@ comint == command interaction.  Advice comint and friends to speak.
 
      (fn &optional PREFIX)
 
-2.89.1.2 emacsvox-toggle-comint-output-monitor
+2.90.1.2 emacsvox-toggle-comint-output-monitor
 ..............................................
 
  -- Command: emacsvox-toggle-comint-output-monitor (&optional prefix)
@@ -7825,7 +7837,7 @@ comint == command interaction.  Advice comint and friends to speak.
 
      (fn &optional PREFIX)
 
-2.89.1.3 emacsvox-toggle-inaudible-or-comint-autospeak
+2.90.1.3 emacsvox-toggle-inaudible-or-comint-autospeak
 ......................................................
 
  -- Command: emacsvox-toggle-inaudible-or-comint-autospeak
@@ -7835,7 +7847,7 @@ comint == command interaction.  Advice comint and friends to speak.
      Otherwise call voice-setup-toggle-silence-personality which
      toggles personality under point.
 
-2.89.1.4 emacsvox-zoxide
+2.90.1.4 emacsvox-zoxide
 ........................
 
  -- Command: emacsvox-zoxide (q)
@@ -7848,7 +7860,7 @@ comint == command interaction.  Advice comint and friends to speak.
 
      (fn Q)
 
-2.89.2 emacsvox-comint Options
+2.90.2 emacsvox-comint Options
 ------------------------------
 
  -- Variable: User Option emacsvox-comint-autospeak
@@ -7881,7 +7893,7 @@ comint == command interaction.  Advice comint and friends to speak.
 
 File: emacsvox-reference.info,  Node: emacsvox-company,  Next: emacsvox-compile,  Prev: emacsvox-comint,  Up: Emacsvox Commands And Options
 
-2.90 emacsvox-company
+2.91 emacsvox-company
 =====================
 
 COMPANY -mode: Complete Anything Support for emacs.  This module
@@ -7897,15 +7909,15 @@ feedback.
 
 File: emacsvox-reference.info,  Node: emacsvox-compile,  Next: emacsvox-consult,  Prev: emacsvox-company,  Up: Emacsvox Commands And Options
 
-2.91 emacsvox-compile
+2.92 emacsvox-compile
 =====================
 
 This module makes compiling code from inside Emacs speech friendly.
 
-2.91.1 Emacsvox-Compile Commands
+2.92.1 Emacsvox-Compile Commands
 --------------------------------
 
-2.91.1.1 emacsvox-compilation-speak-error
+2.92.1.1 emacsvox-compilation-speak-error
 .........................................
 
  -- Command: emacsvox-compilation-speak-error
@@ -7915,7 +7927,7 @@ This module makes compiling code from inside Emacs speech friendly.
 
 File: emacsvox-reference.info,  Node: emacsvox-consult,  Next: emacsvox-corfu,  Prev: emacsvox-compile,  Up: Emacsvox Commands And Options
 
-2.92 emacsvox-consult
+2.93 emacsvox-consult
 =====================
 
 CONSULT == A modern completing-read
@@ -7927,7 +7939,7 @@ CONSULT == A modern completing-read
 
 File: emacsvox-reference.info,  Node: emacsvox-corfu,  Next: emacsvox-cperl,  Prev: emacsvox-consult,  Up: Emacsvox Commands And Options
 
-2.93 emacsvox-corfu
+2.94 emacsvox-corfu
 ===================
 
 CORFU == Completion Overlay Region FUnction.  This module speech-enables
@@ -7936,7 +7948,7 @@ corfu.
 
 File: emacsvox-reference.info,  Node: emacsvox-cperl,  Next: emacsvox-custom,  Prev: emacsvox-corfu,  Up: Emacsvox Commands And Options
 
-2.94 emacsvox-cperl
+2.95 emacsvox-cperl
 ===================
 
 Provide additional advice to CPerl mode
@@ -7944,23 +7956,23 @@ Provide additional advice to CPerl mode
 
 File: emacsvox-reference.info,  Node: emacsvox-custom,  Next: emacsvox-dbus,  Prev: emacsvox-cperl,  Up: Emacsvox Commands And Options
 
-2.95 emacsvox-custom
+2.96 emacsvox-custom
 ====================
 
 Advise custom to speak.  most of the work is actually done by
 emacsvox-widget.el which speech-enables the widget libraries.
 
-2.95.1 Emacsvox-Custom Commands
+2.96.1 Emacsvox-Custom Commands
 -------------------------------
 
-2.95.1.1 emacsvox-custom-goto-group
+2.96.1.1 emacsvox-custom-goto-group
 ...................................
 
  -- Command: emacsvox-custom-goto-group
 
      Jump to custom group when in a customization buffer.
 
-2.95.1.2 emacsvox-custom-goto-toolbar
+2.96.1.2 emacsvox-custom-goto-toolbar
 .....................................
 
  -- Command: emacsvox-custom-goto-toolbar
@@ -7970,14 +7982,14 @@ emacsvox-widget.el which speech-enables the widget libraries.
 
 File: emacsvox-reference.info,  Node: emacsvox-dbus,  Next: emacsvox-deadgrep,  Prev: emacsvox-custom,  Up: Emacsvox Commands And Options
 
-2.96 emacsvox-dbus
+2.97 emacsvox-dbus
 ==================
 
 Loading this module sets up Emacsvox to respond to DBus notifications.
 This module needs to be loaded explicitly from the user's init file
 after emacsvox has been started.
 
-2.96.1 Overview
+2.97.1 Overview
 ---------------
 
 This module provides integration via DBus for the following:
@@ -7999,10 +8011,10 @@ Note that each of the sleep/wake-up, UDisks2 and network/up-down can be
 separately enabled/disabled, and the actions customized via
 appropriately named hook functions.
 
-2.96.2 Emacsvox-Dbus Commands
+2.97.2 Emacsvox-Dbus Commands
 -----------------------------
 
-2.96.2.1 emacsvox-dbus-lock-screen
+2.97.2.1 emacsvox-dbus-lock-screen
 ..................................
 
  -- Command: emacsvox-dbus-lock-screen
@@ -8011,7 +8023,7 @@ appropriately named hook functions.
 
      Lock screen using DBus.
 
-2.96.2.2 emacsvox-dbus-sleep-disable
+2.97.2.2 emacsvox-dbus-sleep-disable
 ....................................
 
  -- Command: emacsvox-dbus-sleep-disable
@@ -8019,14 +8031,14 @@ appropriately named hook functions.
      Disable integration with login1 daemon. Does nothing if
      already disabled.
 
-2.96.2.3 emacsvox-dbus-sleep-enable
+2.97.2.3 emacsvox-dbus-sleep-enable
 ...................................
 
  -- Command: emacsvox-dbus-sleep-enable
 
      Enable integration with Login1. Does nothing if already enabled.
 
-2.96.2.4 emacsvox-dbus-udisks-disable
+2.97.2.4 emacsvox-dbus-udisks-disable
 .....................................
 
  -- Command: emacsvox-dbus-udisks-disable
@@ -8034,14 +8046,14 @@ appropriately named hook functions.
      Disable integration with UDisks2 daemon. Does nothing if
      already disabled.
 
-2.96.2.5 emacsvox-dbus-udisks-enable
+2.97.2.5 emacsvox-dbus-udisks-enable
 ....................................
 
  -- Command: emacsvox-dbus-udisks-enable
 
      Enable integration with UDisks2. Does nothing if already enabled.
 
-2.96.2.6 emacsvox-dbus-upower-disable
+2.97.2.6 emacsvox-dbus-upower-disable
 .....................................
 
  -- Command: emacsvox-dbus-upower-disable
@@ -8049,14 +8061,14 @@ appropriately named hook functions.
      Disable integration with UPower daemon. Does nothing if
      already disabled.
 
-2.96.2.7 emacsvox-dbus-upower-enable
+2.97.2.7 emacsvox-dbus-upower-enable
 ....................................
 
  -- Command: emacsvox-dbus-upower-enable
 
      Enable integration with UPower. Does nothing if already enabled.
 
-2.96.2.8 emacsvox-orca-toggle
+2.97.2.8 emacsvox-orca-toggle
 .............................
 
  -- Command: emacsvox-orca-toggle
@@ -8064,7 +8076,7 @@ appropriately named hook functions.
 
      Toggle state of orca.
 
-2.96.2.9 emacsvox-screen-saver-mode
+2.97.2.9 emacsvox-screen-saver-mode
 ...................................
 
  -- Command: emacsvox-screen-saver-mode
@@ -8080,7 +8092,7 @@ appropriately named hook functions.
 
 File: emacsvox-reference.info,  Node: emacsvox-deadgrep,  Next: emacsvox-debugger,  Prev: emacsvox-dbus,  Up: Emacsvox Commands And Options
 
-2.97 emacsvox-deadgrep
+2.98 emacsvox-deadgrep
 ======================
 
 DEADGREP == Front-end to ripgrep.
@@ -8088,7 +8100,7 @@ DEADGREP == Front-end to ripgrep.
 
 File: emacsvox-reference.info,  Node: emacsvox-debugger,  Next: emacsvox-denote,  Prev: emacsvox-deadgrep,  Up: Emacsvox Commands And Options
 
-2.98 emacsvox-debugger
+2.99 emacsvox-debugger
 ======================
 
 DEBUGGER == Emacs Interactive Debugger.  Speech-enable the debugger by
@@ -8097,8 +8109,8 @@ speech-enabling interactive commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-denote,  Next: emacsvox-desktop,  Prev: emacsvox-debugger,  Up: Emacsvox Commands And Options
 
-2.99 emacsvox-denote
-====================
+2.100 emacsvox-denote
+=====================
 
 DENOTE == Protesilaos Stavrou's note-taking package.  Speech-enable
 denote for creating, linking, and managing notes using a strict
@@ -8107,15 +8119,15 @@ file-naming scheme with org/markdown/text.
 
 File: emacsvox-reference.info,  Node: emacsvox-desktop,  Next: emacsvox-devdocs,  Prev: emacsvox-denote,  Up: Emacsvox Commands And Options
 
-2.100 emacsvox-desktop
+2.101 emacsvox-desktop
 ======================
 
 advice desktop package
 
-2.100.1 Emacsvox-Desktop Commands
+2.101.1 Emacsvox-Desktop Commands
 ---------------------------------
 
-2.100.1.1 emacsvox-desktop-preserve
+2.101.1.1 emacsvox-desktop-preserve
 ...................................
 
  -- Command: emacsvox-desktop-preserve (buffer)
@@ -8128,7 +8140,7 @@ advice desktop package
 
 File: emacsvox-reference.info,  Node: emacsvox-devdocs,  Next: emacsvox-dictionary,  Prev: emacsvox-desktop,  Up: Emacsvox Commands And Options
 
-2.101 emacsvox-devdocs
+2.102 emacsvox-devdocs
 ======================
 
 DEVDOCS == Browse DevDocs
@@ -8136,7 +8148,7 @@ DEVDOCS == Browse DevDocs
 
 File: emacsvox-reference.info,  Node: emacsvox-dictionary,  Next: emacsvox-diff-mode,  Prev: emacsvox-devdocs,  Up: Emacsvox Commands And Options
 
-2.102 emacsvox-dictionary
+2.103 emacsvox-dictionary
 =========================
 
 Speech-enables emacs client for accessing dictionary server at
@@ -8145,7 +8157,7 @@ dict.org:2628
 
 File: emacsvox-reference.info,  Node: emacsvox-diff-mode,  Next: emacsvox-dired,  Prev: emacsvox-dictionary,  Up: Emacsvox Commands And Options
 
-2.103 emacsvox-diff-mode
+2.104 emacsvox-diff-mode
 ========================
 
 DIFF-MODE support.
@@ -8153,24 +8165,24 @@ DIFF-MODE support.
 
 File: emacsvox-reference.info,  Node: emacsvox-dired,  Next: emacsvox-dumb-jump,  Prev: emacsvox-diff-mode,  Up: Emacsvox Commands And Options
 
-2.104 emacsvox-dired
+2.105 emacsvox-dired
 ====================
 
 This module speech enables dired.  It reduces the amount of speech you
 hear: Typically you hear the file names as you move through the dired
 buffer Voicification is used to indicate directories, marked files etc.
 
-2.104.1 Emacsvox-Dired Commands
+2.105.1 Emacsvox-Dired Commands
 -------------------------------
 
-2.104.1.1 emacsvox-dired-csv-open
+2.105.1.1 emacsvox-dired-csv-open
 .................................
 
  -- Command: emacsvox-dired-csv-open
 
      Open CSV file on current dired line.
 
-2.104.1.2 emacsvox-dired-downloads
+2.105.1.2 emacsvox-dired-downloads
 ..................................
 
  -- Command: emacsvox-dired-downloads
@@ -8179,21 +8191,21 @@ buffer Voicification is used to indicate directories, marked files etc.
 
      Open Downloads directory.
 
-2.104.1.3 emacsvox-dired-epub-eww
+2.105.1.3 emacsvox-dired-epub-eww
 .................................
 
  -- Command: emacsvox-dired-epub-eww
 
      Open epub on current line  in EWW
 
-2.104.1.4 emacsvox-dired-eww-open
+2.105.1.4 emacsvox-dired-eww-open
 .................................
 
  -- Command: emacsvox-dired-eww-open
 
      Open HTML file on current dired line.
 
-2.104.1.5 emacsvox-dired-label-fields
+2.105.1.5 emacsvox-dired-label-fields
 .....................................
 
  -- Command: emacsvox-dired-label-fields
@@ -8202,28 +8214,28 @@ buffer Voicification is used to indicate directories, marked files etc.
      Currently is a no-op  unless
      unless ‘dired-listing-switches’ contains -l
 
-2.104.1.6 emacsvox-dired-md-open
+2.105.1.6 emacsvox-dired-md-open
 ................................
 
  -- Command: emacsvox-dired-md-open
 
      Preview markdown  file on current dired line.
 
-2.104.1.7 emacsvox-dired-midi-play
+2.105.1.7 emacsvox-dired-midi-play
 ..................................
 
  -- Command: emacsvox-dired-midi-play
 
      Play midi  file on current dired line.
 
-2.104.1.8 emacsvox-dired-open-this-directory
+2.105.1.8 emacsvox-dired-open-this-directory
 ............................................
 
  -- Command: emacsvox-dired-open-this-directory
 
      Open directory corresponding to file on current line.
 
-2.104.1.9 emacsvox-dired-open-this-file
+2.105.1.9 emacsvox-dired-open-this-file
 .......................................
 
  -- Command: emacsvox-dired-open-this-file
@@ -8231,14 +8243,14 @@ buffer Voicification is used to indicate directories, marked files etc.
      Smart dired opener. Invokes appropriate Emacsvox handler on
      current file in DirEd.
 
-2.104.1.10 emacsvox-dired-pdf-open
+2.105.1.10 emacsvox-dired-pdf-open
 ..................................
 
  -- Command: emacsvox-dired-pdf-open
 
      Open PDF file on current dired line.
 
-2.104.1.11 emacsvox-dired-play-duration
+2.105.1.11 emacsvox-dired-play-duration
 .......................................
 
  -- Command: emacsvox-dired-play-duration
@@ -8248,14 +8260,14 @@ buffer Voicification is used to indicate directories, marked files etc.
      If on a directory, speak the total duration of all sound files under
        that directory.
 
-2.104.1.12 emacsvox-dired-rpm-query-in-dired
+2.105.1.12 emacsvox-dired-rpm-query-in-dired
 ............................................
 
  -- Command: emacsvox-dired-rpm-query-in-dired
 
      Run rpm -qi on current dired entry.
 
-2.104.1.13 emacsvox-dired-show-file-type
+2.105.1.13 emacsvox-dired-show-file-type
 ........................................
 
  -- Command: emacsvox-dired-show-file-type (&optional file
@@ -8267,28 +8279,28 @@ buffer Voicification is used to indicate directories, marked files etc.
 
      (fn &optional FILE DEREF-SYMLINKS)
 
-2.104.1.14 emacsvox-dired-speak-file-access-time
+2.105.1.14 emacsvox-dired-speak-file-access-time
 ................................................
 
  -- Command: emacsvox-dired-speak-file-access-time
 
      Speak access time  of the current file.
 
-2.104.1.15 emacsvox-dired-speak-file-modification-time
+2.105.1.15 emacsvox-dired-speak-file-modification-time
 ......................................................
 
  -- Command: emacsvox-dired-speak-file-modification-time
 
      Speak modification time  of the current file.
 
-2.104.1.16 emacsvox-dired-speak-file-permissions
+2.105.1.16 emacsvox-dired-speak-file-permissions
 ................................................
 
  -- Command: emacsvox-dired-speak-file-permissions
 
      Speak the permissions of the current file.
 
-2.104.1.17 emacsvox-dired-speak-file-size
+2.105.1.17 emacsvox-dired-speak-file-size
 .........................................
 
  -- Command: emacsvox-dired-speak-file-size
@@ -8296,21 +8308,21 @@ buffer Voicification is used to indicate directories, marked files etc.
      Speak the size of the current file.
      On a directory line, run du -s on the directory to speak its size.
 
-2.104.1.18 emacsvox-dired-speak-header-line
+2.105.1.18 emacsvox-dired-speak-header-line
 ...........................................
 
  -- Command: emacsvox-dired-speak-header-line
 
      Speak the header line of the dired buffer.
 
-2.104.1.19 emacsvox-dired-speak-symlink-target
+2.105.1.19 emacsvox-dired-speak-symlink-target
 ..............................................
 
  -- Command: emacsvox-dired-speak-symlink-target
 
      Speaks the target of the symlink on the current line.
 
-2.104.1.20 emacsvox-find-dired
+2.105.1.20 emacsvox-find-dired
 ..............................
 
  -- Command: emacsvox-find-dired
@@ -8318,7 +8330,7 @@ buffer Voicification is used to indicate directories, marked files etc.
 
      Prompt for find-dired arguments using context and completion.
 
-2.104.1.21 emacsvox-locate-play-results-as-playlist
+2.105.1.21 emacsvox-locate-play-results-as-playlist
 ...................................................
 
  -- Command: emacsvox-locate-play-results-as-playlist (&optional
@@ -8332,7 +8344,7 @@ buffer Voicification is used to indicate directories, marked files etc.
 
 File: emacsvox-reference.info,  Node: emacsvox-dumb-jump,  Next: emacsvox-eat,  Prev: emacsvox-dired,  Up: Emacsvox Commands And Options
 
-2.105 emacsvox-dumb-jump
+2.106 emacsvox-dumb-jump
 ========================
 
 DUMB-JUMP == Jump to imputed cross-references in source code.  This
@@ -8341,7 +8353,7 @@ module speech-enables dumb-jump
 
 File: emacsvox-reference.info,  Node: emacsvox-eat,  Next: emacsvox-eat-core,  Prev: emacsvox-dumb-jump,  Up: Emacsvox Commands And Options
 
-2.106 emacsvox-eat
+2.107 emacsvox-eat
 ==================
 
 Public entry point for Emacsvox speech access to EAT terminals.  The
@@ -8356,16 +8368,16 @@ details.
 
 File: emacsvox-reference.info,  Node: emacsvox-eat-core,  Next: emacsvox-eat-input,  Prev: emacsvox-eat,  Up: Emacsvox Commands And Options
 
-2.107 emacsvox-eat-core
+2.108 emacsvox-eat-core
 =======================
 
 Internal screen observation, lifecycle, and presentation core for EAT.
 Load 'emacsvox-eat' rather than requiring this module directly.
 
-2.107.1 Emacsvox-Eat-Core Commands
+2.108.1 Emacsvox-Eat-Core Commands
 ----------------------------------
 
-2.107.1.1 emacsvox-eat-cycle-verbosity
+2.108.1.1 emacsvox-eat-cycle-verbosity
 ......................................
 
  -- Command: emacsvox-eat-cycle-verbosity
@@ -8374,7 +8386,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Cycle terse, normal, and verbose policy for this EAT terminal.
      The command also works from the terminal’s frozen review buffer.
 
-2.107.1.2 emacsvox-eat-toggle-autospeak
+2.108.1.2 emacsvox-eat-toggle-autospeak
 .......................................
 
  -- Command: emacsvox-eat-toggle-autospeak (&optional argument)
@@ -8386,7 +8398,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional ARGUMENT)
 
-2.107.1.3 emacsvox-eat-toggle-background-monitoring
+2.108.1.3 emacsvox-eat-toggle-background-monitoring
 ...................................................
 
  -- Command: emacsvox-eat-toggle-background-monitoring (&optional
@@ -8399,7 +8411,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional ARGUMENT)
 
-2.107.2 emacsvox-eat-core Options
+2.108.2 emacsvox-eat-core Options
 ---------------------------------
 
  -- Variable: User Option emacsvox-eat-autospeak
@@ -8455,7 +8467,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
 File: emacsvox-reference.info,  Node: emacsvox-eat-input,  Next: emacsvox-eat-review,  Prev: emacsvox-eat-core,  Up: Emacsvox Commands And Options
 
-2.108 emacsvox-eat-input
+2.109 emacsvox-eat-input
 ========================
 
 Input, navigation, deletion, paste, mode, and completion feedback for
@@ -8464,30 +8476,30 @@ EAT.  Load 'emacsvox-eat' rather than requiring this module directly.
 
 File: emacsvox-reference.info,  Node: emacsvox-eat-review,  Next: emacsvox-ebuku,  Prev: emacsvox-eat-input,  Up: Emacsvox Commands And Options
 
-2.109 emacsvox-eat-review
+2.110 emacsvox-eat-review
 =========================
 
 Frozen, read-only review and explicit inspection for EAT screen state.
 Load 'emacsvox-eat' rather than requiring this module directly.
 
-2.109.1 Emacsvox-Eat-Review Commands
+2.110.1 Emacsvox-Eat-Review Commands
 ------------------------------------
 
-2.109.1.1 emacsvox-eat-review-goto-cursor
+2.110.1.1 emacsvox-eat-review-goto-cursor
 .........................................
 
  -- Command: emacsvox-eat-review-goto-cursor
 
      Return to the frozen screen’s captured terminal cursor row.
 
-2.109.1.2 emacsvox-eat-review-goto-focus
+2.110.1.2 emacsvox-eat-review-goto-focus
 ........................................
 
  -- Command: emacsvox-eat-review-goto-focus
 
      Move to the frozen conservative focus row and speak it.
 
-2.109.1.3 emacsvox-eat-review-mode
+2.110.1.3 emacsvox-eat-review-mode
 ..................................
 
  -- Command: emacsvox-eat-review-mode
@@ -8538,7 +8550,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      <down>		emacsvox-eat-review-next-line
      <up>		emacsvox-eat-review-previous-line
 
-2.109.1.4 emacsvox-eat-review-next-line
+2.110.1.4 emacsvox-eat-review-next-line
 .......................................
 
  -- Command: emacsvox-eat-review-next-line (&optional count)
@@ -8547,14 +8559,14 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional COUNT)
 
-2.109.1.5 emacsvox-eat-review-next-styled-region
+2.110.1.5 emacsvox-eat-review-next-styled-region
 ................................................
 
  -- Command: emacsvox-eat-review-next-styled-region
 
      Move to and speak the next frozen selection-like styled region.
 
-2.109.1.6 emacsvox-eat-review-previous-line
+2.110.1.6 emacsvox-eat-review-previous-line
 ...........................................
 
  -- Command: emacsvox-eat-review-previous-line (&optional count)
@@ -8563,21 +8575,21 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional COUNT)
 
-2.109.1.7 emacsvox-eat-review-previous-styled-region
+2.110.1.7 emacsvox-eat-review-previous-styled-region
 ....................................................
 
  -- Command: emacsvox-eat-review-previous-styled-region
 
      Move to and speak the previous frozen selection-like styled region.
 
-2.109.1.8 emacsvox-eat-review-quit
+2.110.1.8 emacsvox-eat-review-quit
 ..................................
 
  -- Command: emacsvox-eat-review-quit
 
      Kill the content-bearing frozen EAT review and restore its prior window.
 
-2.109.1.9 emacsvox-eat-review-screen
+2.110.1.9 emacsvox-eat-review-screen
 ....................................
 
  -- Command: emacsvox-eat-review-screen
@@ -8586,21 +8598,21 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Open a read-only review copied from retained EAT screen state.
      The command never captures mutable live terminal-buffer text.
 
-2.109.1.10 emacsvox-eat-review-show-completion
+2.110.1.10 emacsvox-eat-review-show-completion
 ..............................................
 
  -- Command: emacsvox-eat-review-show-completion
 
      Render and speak the frozen terminal candidate or help-row presentation.
 
-2.109.1.11 emacsvox-eat-review-show-screen
+2.110.1.11 emacsvox-eat-review-show-screen
 ..........................................
 
  -- Command: emacsvox-eat-review-show-screen
 
      Render the frozen terminal screen and move to its captured cursor row.
 
-2.109.1.12 emacsvox-eat-review-speak-current-line
+2.110.1.12 emacsvox-eat-review-speak-current-line
 .................................................
 
  -- Command: emacsvox-eat-review-speak-current-line (&optional
@@ -8612,14 +8624,14 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional INTRODUCTION REPLACEABLE-P)
 
-2.109.1.13 emacsvox-eat-review-speak-view
+2.110.1.13 emacsvox-eat-review-speak-view
 .........................................
 
  -- Command: emacsvox-eat-review-speak-view
 
      Speak a bounded overview of the current immutable review view.
 
-2.109.1.14 emacsvox-eat-speak-completion-output
+2.110.1.14 emacsvox-eat-speak-completion-output
 ...............................................
 
  -- Command: emacsvox-eat-speak-completion-output
@@ -8627,7 +8639,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained terminal candidate or help-row presentation.
 
-2.109.1.15 emacsvox-eat-speak-current-row
+2.110.1.15 emacsvox-eat-speak-current-row
 .........................................
 
  -- Command: emacsvox-eat-speak-current-row
@@ -8635,7 +8647,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the terminal cursor row from the latest retained screen snapshot.
 
-2.109.1.16 emacsvox-eat-speak-last-change
+2.110.1.16 emacsvox-eat-speak-last-change
 .........................................
 
  -- Command: emacsvox-eat-speak-last-change
@@ -8643,7 +8655,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the most recent quiesced terminal change from retained state.
 
-2.109.1.17 emacsvox-eat-speak-likely-focus
+2.110.1.17 emacsvox-eat-speak-likely-focus
 ..........................................
 
  -- Command: emacsvox-eat-speak-likely-focus
@@ -8651,7 +8663,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest conservative terminal focus inference for review.
 
-2.109.1.18 emacsvox-eat-speak-prompt
+2.110.1.18 emacsvox-eat-speak-prompt
 ....................................
 
  -- Command: emacsvox-eat-speak-prompt
@@ -8660,7 +8672,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Read the most recently identified EAT shell prompt.
      This explicit command works regardless of autospeak or prompt preference.
 
-2.109.1.19 emacsvox-eat-speak-retained-metadata
+2.110.1.19 emacsvox-eat-speak-retained-metadata
 ...............................................
 
  -- Command: emacsvox-eat-speak-retained-metadata
@@ -8668,7 +8680,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained or explicitly frozen title/directory change.
 
-2.109.1.20 emacsvox-eat-speak-retained-status
+2.110.1.20 emacsvox-eat-speak-retained-status
 .............................................
 
  -- Command: emacsvox-eat-speak-retained-status
@@ -8676,7 +8688,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained or explicitly frozen terminal status row.
 
-2.109.1.21 emacsvox-eat-speak-visible-screen
+2.110.1.21 emacsvox-eat-speak-visible-screen
 ............................................
 
  -- Command: emacsvox-eat-speak-visible-screen
@@ -8687,7 +8699,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
 File: emacsvox-reference.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacsvox-eat-review,  Up: Emacsvox Commands And Options
 
-2.110 emacsvox-ebuku
+2.111 emacsvox-ebuku
 ====================
 
 EBUKU == Emacs Buku front-end to manage bookmarks.
@@ -8695,7 +8707,7 @@ EBUKU == Emacs Buku front-end to manage bookmarks.
 
 File: emacsvox-reference.info,  Node: emacsvox-ediff,  Next: emacsvox-eglot,  Prev: emacsvox-ebuku,  Up: Emacsvox Commands And Options
 
-2.111 emacsvox-ediff
+2.112 emacsvox-ediff
 ====================
 
 Ediff provides a nice visual interface to diff.  ;;;Comparing and
@@ -8711,10 +8723,10 @@ found in Emacs 19.29 and later.
 ediff-window-setup-function 'ediff-setup-windows-plain) so that Emacs
 always displays Ediff windows in a single frame.
 
-2.111.1 Emacsvox-Ediff Commands
+2.112.1 Emacsvox-Ediff Commands
 -------------------------------
 
-2.111.1.1 emacsvox-ediff-speak-current-difference
+2.112.1.1 emacsvox-ediff-speak-current-difference
 .................................................
 
  -- Command: emacsvox-ediff-speak-current-difference
@@ -8724,7 +8736,7 @@ always displays Ediff windows in a single frame.
 
 File: emacsvox-reference.info,  Node: emacsvox-eglot,  Next: emacsvox-ein,  Prev: emacsvox-ediff,  Up: Emacsvox Commands And Options
 
-2.112 emacsvox-eglot
+2.113 emacsvox-eglot
 ====================
 
 EGLOT == LSP Support for emacs
@@ -8732,16 +8744,16 @@ EGLOT == LSP Support for emacs
 
 File: emacsvox-reference.info,  Node: emacsvox-ein,  Next: emacsvox-elfeed,  Prev: emacsvox-eglot,  Up: Emacsvox Commands And Options
 
-2.113 emacsvox-ein
+2.114 emacsvox-ein
 ==================
 
 EIN == Emacs IPython Notebook You can install package EIN via Melpa This
 module speech-enables EIN
 
-2.113.1 Emacsvox-Ein Commands
+2.114.1 Emacsvox-Ein Commands
 -----------------------------
 
-2.113.1.1 emacsvox-ein-speak-current-cell
+2.114.1.1 emacsvox-ein-speak-current-cell
 .........................................
 
  -- Command: emacsvox-ein-speak-current-cell
@@ -8751,7 +8763,7 @@ module speech-enables EIN
 
 File: emacsvox-reference.info,  Node: emacsvox-elfeed,  Next: emacsvox-elisp-refs,  Prev: emacsvox-ein,  Up: Emacsvox Commands And Options
 
-2.114 emacsvox-elfeed
+2.115 emacsvox-elfeed
 =====================
 
 ELFEED == Feed Reader for Emacs.  Install from elpa M-x package-install
@@ -8759,38 +8771,38 @@ elfeed
 
    Required modules:
 
-2.114.1 Emacsvox-Elfeed Commands
+2.115.1 Emacsvox-Elfeed Commands
 --------------------------------
 
-2.114.1.1 emacsvox-elfeed-eww-entry-at-point
+2.115.1.1 emacsvox-elfeed-eww-entry-at-point
 ............................................
 
  -- Command: emacsvox-elfeed-eww-entry-at-point
 
      Display current article in EWW.
 
-2.114.1.2 emacsvox-elfeed-filter-entry-at-point
+2.115.1.2 emacsvox-elfeed-filter-entry-at-point
 ...............................................
 
  -- Command: emacsvox-elfeed-filter-entry-at-point
 
      Display current article after filtering.
 
-2.114.1.3 emacsvox-elfeed-next-entry
+2.115.1.3 emacsvox-elfeed-next-entry
 ....................................
 
  -- Command: emacsvox-elfeed-next-entry
 
      Move to next entry and speak it.
 
-2.114.1.4 emacsvox-elfeed-previous-entry
+2.115.1.4 emacsvox-elfeed-previous-entry
 ........................................
 
  -- Command: emacsvox-elfeed-previous-entry
 
      Move to previous entry and speak it.
 
-2.114.1.5 emacsvox-elfeed-speak-entry-at-point
+2.115.1.5 emacsvox-elfeed-speak-entry-at-point
 ..............................................
 
  -- Command: emacsvox-elfeed-speak-entry-at-point
@@ -8800,7 +8812,7 @@ elfeed
 
 File: emacsvox-reference.info,  Node: emacsvox-elisp-refs,  Next: emacsvox-ellama,  Prev: emacsvox-elfeed,  Up: Emacsvox Commands And Options
 
-2.115 emacsvox-elisp-refs
+2.116 emacsvox-elisp-refs
 =========================
 
 Speech-enable package elisp-refs.  ELISP-REFS ==
@@ -8808,7 +8820,7 @@ Speech-enable package elisp-refs.  ELISP-REFS ==
 
 File: emacsvox-reference.info,  Node: emacsvox-ellama,  Next: emacsvox-elpher,  Prev: emacsvox-elisp-refs,  Up: Emacsvox Commands And Options
 
-2.116 emacsvox-ellama
+2.117 emacsvox-ellama
 =====================
 
 ELLAMA == Emacs LLM Interaction.  ellama uses package llm, and this
@@ -8817,7 +8829,7 @@ module speech-enables ellama.
 
 File: emacsvox-reference.info,  Node: emacsvox-elpher,  Next: emacsvox-elpy,  Prev: emacsvox-ellama,  Up: Emacsvox Commands And Options
 
-2.117 emacsvox-elpher
+2.118 emacsvox-elpher
 =====================
 
 ELPHER == gopher/gemini client Let's see if we can rescue the
@@ -8826,7 +8838,7 @@ Content-Oriented Web
 
 File: emacsvox-reference.info,  Node: emacsvox-elpy,  Next: emacsvox-embark,  Prev: emacsvox-elpher,  Up: Emacsvox Commands And Options
 
-2.118 emacsvox-elpy
+2.119 emacsvox-elpy
 ===================
 
 ELPY == Emacs Lisp Python IDE Speech-enables all aspects of elpy.
@@ -8834,7 +8846,7 @@ ELPY == Emacs Lisp Python IDE Speech-enables all aspects of elpy.
 
 File: emacsvox-reference.info,  Node: emacsvox-embark,  Next: emacsvox-emms,  Prev: emacsvox-elpy,  Up: Emacsvox Commands And Options
 
-2.119 emacsvox-embark
+2.120 emacsvox-embark
 =====================
 
 EMBARK == Context actions framework.  This module speech-enables embark.
@@ -8844,7 +8856,7 @@ right-click menu.  It works with vertico/consult for completion actions.
 
 File: emacsvox-reference.info,  Node: emacsvox-emms,  Next: emacsvox-emoji,  Prev: emacsvox-embark,  Up: Emacsvox Commands And Options
 
-2.120 emacsvox-emms
+2.121 emacsvox-emms
 ===================
 
 Speech-enables EMMS -- the Emacs equivalent of XMMS available from the
@@ -8852,10 +8864,10 @@ Emacs package archive.  http://savannah.gnu.org/project/emms EMMS is
 under active development, to get the current CVS version, use Emacsvox
 command M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
 
-2.120.1 Emacsvox-Emms Commands
+2.121.1 Emacsvox-Emms Commands
 ------------------------------
 
-2.120.1.1 emacsvox-emms-speak-current-track
+2.121.1.1 emacsvox-emms-speak-current-track
 ...........................................
 
  -- Command: emacsvox-emms-speak-current-track
@@ -8865,7 +8877,7 @@ command M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
 
 File: emacsvox-reference.info,  Node: emacsvox-emoji,  Next: emacsvox-empv,  Prev: emacsvox-emms,  Up: Emacsvox Commands And Options
 
-2.121 emacsvox-emoji
+2.122 emacsvox-emoji
 ====================
 
 Optional speech naming uses exact entries from Emacs's bundled emoji
@@ -8873,7 +8885,7 @@ data.  Keep the private upstream table behind this adapter; never use
 the picker helper, which can fall back to naming the first character of
 a sequence.
 
-2.121.1 emacsvox-emoji Options
+2.122.1 emacsvox-emoji Options
 ------------------------------
 
  -- Variable: User Option emacsvox-emoji-approved-sequences
@@ -8921,7 +8933,7 @@ a sequence.
 
 File: emacsvox-reference.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emoji,  Up: Emacsvox Commands And Options
 
-2.122 emacsvox-empv
+2.123 emacsvox-empv
 ===================
 
 ‘EMPV’ == Emacs Front-End To ‘mpv’ -- the GNU media player -- Provides
@@ -8931,7 +8943,7 @@ better Youtube integration.
 interface of choice to the GNU ‘MPV’ media player.  This section should
 be read alongside the ‘EMPV’ documentation; Install ‘EMPV’ from ELPA.
 
-2.122.1 Interactive Commands
+2.123.1 Interactive Commands
 ----------------------------
 
 Emacsvox adds a few convenience commands to the those provided by
@@ -8943,7 +8955,7 @@ package ‘empv’:
   4. Command ‘emacsvox-empv-play-file to play local media and’ Internet
      streams.
 
-2.122.2 Navigating In Time
+2.123.2 Navigating In Time
 --------------------------
 
 Emacsvox defines additional convenience commands to seek in streams at
@@ -8964,7 +8976,7 @@ in the empv-map.
    • ‘emacsvox-empv-percentage-seek’
    • ‘emacsvox-empv-relative-seek’
 
-2.122.3 Toggling Filters
+2.123.3 Toggling Filters
 ------------------------
 
 Command ‘mpv’ provides a number of audio filters.  Emacsvox exposes a
@@ -8977,10 +8989,10 @@ select few for interactive use.
   5. Toggle left output: ‘emacsvox-empv-toggle-left’
   6. Toggle right output: ‘emacsvox-empv-toggle-right’
 
-2.122.4 Emacsvox-Empv Commands
+2.123.4 Emacsvox-Empv Commands
 ------------------------------
 
-2.122.4.1 emacsvox-empv-absolute-seek
+2.123.4.1 emacsvox-empv-absolute-seek
 .....................................
 
  -- Command: emacsvox-empv-absolute-seek (target)
@@ -8989,42 +9001,42 @@ select few for interactive use.
 
      (fn TARGET)
 
-2.122.4.2 emacsvox-empv-accumulate-to-register
+2.123.4.2 emacsvox-empv-accumulate-to-register
 ..............................................
 
  -- Command: emacsvox-empv-accumulate-to-register
 
      Accumulate media links to register u
 
-2.122.4.3 emacsvox-empv-backward-10-minutes
+2.123.4.3 emacsvox-empv-backward-10-minutes
 ...........................................
 
  -- Command: emacsvox-empv-backward-10-minutes
 
      Move backward by 10 minutes
 
-2.122.4.4 emacsvox-empv-backward-10-seconds
+2.123.4.4 emacsvox-empv-backward-10-seconds
 ...........................................
 
  -- Command: emacsvox-empv-backward-10-seconds
 
      Move back  10 seconds.
 
-2.122.4.5 emacsvox-empv-backward-30-minutes
+2.123.4.5 emacsvox-empv-backward-30-minutes
 ...........................................
 
  -- Command: emacsvox-empv-backward-30-minutes
 
      Move backward by 30 minutes
 
-2.122.4.6 emacsvox-empv-backward-5-minutes
+2.123.4.6 emacsvox-empv-backward-5-minutes
 ..........................................
 
  -- Command: emacsvox-empv-backward-5-minutes
 
      Move backward by 5 minutes
 
-2.122.4.7 emacsvox-empv-backward-minute
+2.123.4.7 emacsvox-empv-backward-minute
 .......................................
 
  -- Command: emacsvox-empv-backward-minute (&optional count)
@@ -9033,49 +9045,49 @@ select few for interactive use.
 
      (fn &optional COUNT)
 
-2.122.4.8 emacsvox-empv-clear-filter
+2.123.4.8 emacsvox-empv-clear-filter
 ....................................
 
  -- Command: emacsvox-empv-clear-filter
 
      Clear all filters.
 
-2.122.4.9 emacsvox-empv-current-title
+2.123.4.9 emacsvox-empv-current-title
 .....................................
 
  -- Command: emacsvox-empv-current-title
 
      Speak title of currently selected item.
 
-2.122.4.10 emacsvox-empv-forward-10-minutes
+2.123.4.10 emacsvox-empv-forward-10-minutes
 ...........................................
 
  -- Command: emacsvox-empv-forward-10-minutes
 
      Move forward by 10 minutes
 
-2.122.4.11 emacsvox-empv-forward-10-seconds
+2.123.4.11 emacsvox-empv-forward-10-seconds
 ...........................................
 
  -- Command: emacsvox-empv-forward-10-seconds
 
      Move forward 10 seconds.
 
-2.122.4.12 emacsvox-empv-forward-30-minutes
+2.123.4.12 emacsvox-empv-forward-30-minutes
 ...........................................
 
  -- Command: emacsvox-empv-forward-30-minutes
 
      Move forward by 30 minutes
 
-2.122.4.13 emacsvox-empv-forward-5-minutes
+2.123.4.13 emacsvox-empv-forward-5-minutes
 ..........................................
 
  -- Command: emacsvox-empv-forward-5-minutes
 
      Move forward by 5 minutes
 
-2.122.4.14 emacsvox-empv-forward-minute
+2.123.4.14 emacsvox-empv-forward-minute
 .......................................
 
  -- Command: emacsvox-empv-forward-minute (&optional count)
@@ -9084,7 +9096,7 @@ select few for interactive use.
 
      (fn &optional COUNT)
 
-2.122.4.15 emacsvox-empv-percentage-seek
+2.123.4.15 emacsvox-empv-percentage-seek
 ........................................
 
  -- Command: emacsvox-empv-percentage-seek (target)
@@ -9093,7 +9105,7 @@ select few for interactive use.
 
      (fn TARGET)
 
-2.122.4.16 emacsvox-empv-play-file
+2.123.4.16 emacsvox-empv-play-file
 ..................................
 
  -- Command: emacsvox-empv-play-file (file &optional prefix)
@@ -9105,7 +9117,7 @@ select few for interactive use.
 
      (fn FILE &optional PREFIX)
 
-2.122.4.17 emacsvox-empv-play-last
+2.123.4.17 emacsvox-empv-play-last
 ..................................
 
  -- Command: emacsvox-empv-play-last
@@ -9113,7 +9125,7 @@ select few for interactive use.
 
      Play most recently played URL.
 
-2.122.4.18 emacsvox-empv-play-url
+2.123.4.18 emacsvox-empv-play-url
 .................................
 
  -- Command: emacsvox-empv-play-url (url)
@@ -9123,7 +9135,7 @@ select few for interactive use.
 
      (fn URL)
 
-2.122.4.19 emacsvox-empv-relative-seek
+2.123.4.19 emacsvox-empv-relative-seek
 ......................................
 
  -- Command: emacsvox-empv-relative-seek (target)
@@ -9132,14 +9144,14 @@ select few for interactive use.
 
      (fn TARGET)
 
-2.122.4.20 emacsvox-empv-time-pos
+2.123.4.20 emacsvox-empv-time-pos
 .................................
 
  -- Command: emacsvox-empv-time-pos
 
      Speak time and percent position.
 
-2.122.4.21 emacsvox-empv-toggle-balance
+2.123.4.21 emacsvox-empv-toggle-balance
 .......................................
 
  -- Command: emacsvox-empv-toggle-balance (value)
@@ -9148,14 +9160,14 @@ select few for interactive use.
 
      (fn VALUE)
 
-2.122.4.22 emacsvox-empv-toggle-custom
+2.123.4.22 emacsvox-empv-toggle-custom
 ......................................
 
  -- Command: emacsvox-empv-toggle-custom
 
      Toggle our custom filters.
 
-2.122.4.23 emacsvox-empv-toggle-filter
+2.123.4.23 emacsvox-empv-toggle-filter
 ......................................
 
  -- Command: emacsvox-empv-toggle-filter (filter)
@@ -9165,35 +9177,35 @@ select few for interactive use.
 
      (fn FILTER)
 
-2.122.4.24 emacsvox-empv-toggle-left
+2.123.4.24 emacsvox-empv-toggle-left
 ....................................
 
  -- Command: emacsvox-empv-toggle-left
 
      Toggle output to being just on the left.
 
-2.122.4.25 emacsvox-empv-toggle-right
+2.123.4.25 emacsvox-empv-toggle-right
 .....................................
 
  -- Command: emacsvox-empv-toggle-right
 
      Toggle output to being just on the right.
 
-2.122.4.26 emacsvox-empv-yt-after
+2.123.4.26 emacsvox-empv-yt-after
 .................................
 
  -- Command: emacsvox-empv-yt-after
 
      Youtube Search  from calendar -- add after:date-at-point..
 
-2.122.4.27 emacsvox-empv-yt-before
+2.123.4.27 emacsvox-empv-yt-before
 ..................................
 
  -- Command: emacsvox-empv-yt-before
 
      Youtube Search  from calendar -- add before:date-at-point..
 
-2.122.4.28 emacsvox-empv-yt-search
+2.123.4.28 emacsvox-empv-yt-search
 ..................................
 
  -- Command: emacsvox-empv-yt-search (query)
@@ -9203,7 +9215,7 @@ select few for interactive use.
 
      (fn QUERY)
 
-2.122.5 emacsvox-empv Options
+2.123.5 emacsvox-empv Options
 -----------------------------
 
  -- Variable: User Option emacsvox-empv-custom-filters

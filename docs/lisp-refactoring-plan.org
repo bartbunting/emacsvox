@@ -116,3 +116,26 @@ All 357 affected source and compiled cases pass, covering generic TTS,
 preview ownership, native preview, choice encoding and registration. A fresh
 compiled codec load does not load TTS or the voice adapter or start processes.
 Compilation, byte-code preflight, headers and generated reference pass.
+
+Committed as =3ca988237=. The documentation release check passed.
+
+** Timeline codec
+
+Extract timeline validation, UTF-8 action offsets and bounded frame construction
+into =emacsvox-aural-timeline-codec=. Plan construction, queue admission and
+delivery transactions stay in the transport. The isolated compiled check now
+includes the new codecs, library runtime and workbench views, verifies their
+compiled paths, and checks that codecs do not load speech runtimes or editors
+or start processes.
+
+Source and compiled verification each pass 617 of 618 cases. The remaining
+=emacsvox-aural-capital-tones-preserve-legacy-word-tails= failure also occurs
+with the pre-extraction transport and in the migration baseline; it expects
+no shape where the existing default supplies a sine waveform. The initial
+focused runner omitted the workflow provider required by the notification
+fixture; loading it resolves that runner-only failure. No production or test
+expectation was changed for either finding.
+
+Isolated compiled aural parity passes, including the new module boundaries.
+Incremental compilation, byte-code preflight, headers and generated reference
+pass. Compiler warnings match the existing migration build baseline.

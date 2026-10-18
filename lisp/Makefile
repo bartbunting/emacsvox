@@ -129,6 +129,7 @@ core/emacsvox-emoji.elc \
 aural/emacsvox-aural-source.elc \
 aural/emacsvox-aural-planner.elc \
 aural/emacsvox-aural-submission.elc \
+aural/emacsvox-aural-timeline-codec.elc \
 aural/emacsvox-aural-transport.elc \
 aural/emacsvox-aural-description.elc \
 aural/emacsvox-aural-preview.elc \
@@ -468,7 +469,9 @@ core/emacsvox-emoji.elc aural/emacsvox-aural-history.elc aural/emacsvox-aural-sc
 aural/emacsvox-aural-planner.elc: \
 aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc \
 aural/emacsvox-aural-schemes.elc aural/emacsvox-aural-source.elc
+aural/emacsvox-aural-timeline-codec.elc: aural/emacsvox-aural-concrete.elc speech/omnivox-choice-codec.elc
 aural/emacsvox-aural-transport.elc: \
+aural/emacsvox-aural-timeline-codec.elc \
 aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc \
 aural/emacsvox-aural-history.elc aural/emacsvox-aural-planner.elc \
 aural/emacsvox-aural-schemes.elc aural/emacsvox-aural-source.elc

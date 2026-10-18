@@ -63,6 +63,15 @@
       (error
        "Aural history boundary loaded higher layer %S"
        feature)))
+  (dolist (library '("speech/omnivox-control-codec"
+                     "aural/emacsvox-aural-timeline-codec"))
+    (load (expand-file-name (concat library ".elc") build-directory) nil nil))
+  (dolist (feature '(tts-speak omnivox-voices emacsvox-aural-transport
+                    omnivox-library emacsvox-aural-voice-workbench))
+    (when (featurep feature)
+      (error "Wire codec loaded runtime or editor %S" feature)))
+  (when (process-list)
+    (error "Wire codec started a process"))
   (load
    (expand-file-name "aural/emacsvox-aural-schemes.elc" build-directory)
    nil nil)
@@ -169,6 +178,11 @@
          mac-voice-capabilities
          swiftmac-voice-capabilities
          omnivox-voice-capabilities
+         omnivox--encode-control-request
+         omnivox--preview-selector-json
+         omnivox-library--edit-selection
+         emacsvox-aural--frame-structured-timeline
+         emacsvox-aural-voice-workbench--entries
          omnivox-remote-make-process
          emacsvox-pronounce-refresh-pronunciations
          emacsvox-speak-line
