@@ -537,9 +537,6 @@ as the default across restarts; mode policies still take precedence."
 With prefix GLOBAL, start with global defaults when opening directly.
 When opened from the Emacsvox menu, share its selected scope."
   :refresh-suffixes t
-  ["Scope"
-   ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label)))
-    emacsvox-aural-menu--toggle-scope :transient t)]
   ["Speech settings"
    ("r" (lambda () (format "Rate: %s" (emacsvox-aural-menu--rate-value)))
     emacsvox-aural-menu--rate :transient t)
@@ -550,12 +547,14 @@ When opened from the Emacsvox menu, share its selected scope."
    ("i" (lambda () (emacsvox-aural-menu--indentation-label))
     emacsvox-aural-menu--indentation :transient transient--do-stack)
    ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)
-   ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)]
+   ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)
+   ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label)))
+    emacsvox-aural-menu--toggle-scope :transient t)]
   ["Menu navigation"
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation
     :transient transient--do-stack)]
   ["Save and finish"
-   ("S" "Save rate and punctuation as defaults. Other settings are saved in their own menus."
+   ("S" "Save displayed rate and punctuation as startup defaults"
     emacsvox-aural-menu--save-speech :transient t)
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]

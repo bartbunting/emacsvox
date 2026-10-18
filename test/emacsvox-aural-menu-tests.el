@@ -120,7 +120,11 @@
               (execute-kbd-macro (kbd "C-u <f8>"))
               (should-not transient--stack)
               (transient--show)
-              (execute-kbd-macro (kbd "<right> <down> <down> <down> <down> C-j"))
+              (execute-kbd-macro (kbd "<down>"))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-aural-menu--rate)))
+              (execute-kbd-macro (kbd "<down> <down> <down> <down> C-j"))
               (should (eq (oref transient--prefix command) 'emacsvox-indentation))
               (should (cdr (emacsvox-indentation--state)))
               (execute-kbd-macro (kbd "q q"))
@@ -148,7 +152,7 @@
                 (execute-kbd-macro (kbd "<down> RET"))
                 (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech))
                 (transient--show)
-                (execute-kbd-macro (kbd "<right> <down> <down> <down> <down> <return>"))
+                (execute-kbd-macro (kbd "<down> <down> <down> <down> <down> <return>"))
                 (should (eq (oref transient--prefix command) 'emacsvox-indentation))
                 (transient--show)
                 (execute-kbd-macro (kbd "<down> <down> RET"))
@@ -185,7 +189,7 @@
                         (lambda (text &rest _) (push text spoken))))
                (unwind-protect
                    (progn
-                     (execute-kbd-macro (kbd "<f8> s <right>"))
+                     (execute-kbd-macro (kbd "<f8> s <down>"))
                      (let ((position (window-point transient--window))
                            (value tts-speech-rate))
                        (setq spoken nil)
@@ -568,12 +572,12 @@
               (emacsvox-transient-navigation-style style))
           (unwind-protect
               (progn
-                (execute-kbd-macro (kbd "C-u <f8> s <right>"))
-                (dolist (key '("r" "p" "c" "f" "i" "T" "t"))
+                (execute-kbd-macro (kbd "C-u <f8> s <down>"))
+                (dolist (key '("r" "p" "c" "f" "i" "T" "t" "g"))
                   (with-selected-window transient--window
                     (should (equal (oref (button-get (button-at (point)) 'button-data) key)
                                    key)))
-                  (unless (equal key "t") (execute-kbd-macro (kbd "<down>"))))
+                  (unless (equal key "g") (execute-kbd-macro (kbd "<down>"))))
                 (execute-kbd-macro (kbd "<right> RET"))
                 (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-navigation))
                 (execute-kbd-macro (kbd "q q n"))
@@ -1079,10 +1083,10 @@
                       (lambda (text &rest _) (push text spoken))))
              (unwind-protect
                  (progn
-                   (execute-kbd-macro (kbd "<f8> s <down> S-<right>"))
+                   (execute-kbd-macro (kbd "<f8> s <down> <down> S-<right>"))
                    (should (string-prefix-p "Not adjustable" (car spoken)))
                    (should (= tts-speech-rate 60))
-                   (execute-kbd-macro (kbd "<right>"))
+                   (execute-kbd-macro (kbd "<up>"))
                    (setq spoken nil)
                    (execute-kbd-macro (kbd "S-<right> S-<right> S-<left>"))
                    (should (equal (reverse spoken) '("68" "76" "68")))

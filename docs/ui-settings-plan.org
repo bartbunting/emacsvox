@@ -2652,6 +2652,16 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-18, implemented locally: Speech settings starts with Rate. The
+  Scope toggle remains available as =g= at the end of the same section,
+  removing its separate one-item opening section. Save now reads “Save
+  displayed rate and punctuation as startup defaults”. Scope and persistence
+  behaviour are unchanged; other settings retain their own Save actions.
+  All 27 relevant menu checks pass in a fresh graphical Emacs using current
+  byte-code, including navigation, scope and saving. The documentation gate
+  is blocked by a missing =emacsvox-we= load during the separate integration
+  directory move. Listening acceptance remains pending.
+
 - 2026-10-17, resolved: The Notmuch direct-button test inherited a Right Arrow
   =last-command-event=. Native =push-button= interpreted it as a pointer event
   and looked in the selected window instead of the undisplayed test buffer.
