@@ -87,3 +87,17 @@ in batch and pass within the 38-case graphical voice/editor run. The optional
 native pair check remains unconfigured. New regressions cover target changes,
 request failures, cleanup, import/Apply separation and matching requests from
 the two views. Incremental compilation and byte-code preflight pass.
+
+Committed as =16fc2ceae=. Headers and the documentation release check pass.
+
+** Workbench views
+
+Extract row construction, descriptions, filtering and language trees into
+=emacsvox-aural-voice-workbench-views=. The workbench retains buffer state,
+editing, asynchronous observations, preview and saving. Existing internal
+function names remain stable; no interaction or key changes are included.
+
+All 108 focused source and compiled cases pass, with the same eight batch
+skips. All 38 graphical voice/editor cases pass and verify the new module's
+compiled path. Compilation, byte-code preflight, headers, generated reference
+and the documentation release check pass.

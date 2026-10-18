@@ -148,6 +148,7 @@ ui/emacsvox-aural-overrides.elc \
 ui/emacsvox-aural-doctor.elc \
 ui/emacsvox-aural-profiles.elc \
 ui/emacsvox-aural-voice-palettes.elc \
+ui/emacsvox-aural-voice-workbench-views.elc \
 ui/emacsvox-aural-voice-workbench.elc \
 ui/emacsvox-aural-change-feedback.elc \
 aural/emacsvox-aural-provider-org.elc \
@@ -628,3 +629,6 @@ integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc
 
 speech/omnivox-library-runtime.elc: speech/tts-queue-state.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc
 ui/omnivox-library.elc speech/tts-speak.elc speech/omnivox-remote.elc: speech/omnivox-library-runtime.elc
+
+ui/emacsvox-aural-voice-workbench-views.elc: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-ui.elc aural/emacsvox-aural-routing-profiles.elc
+ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-views.elc
