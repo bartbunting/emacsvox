@@ -3502,9 +3502,10 @@ checks navigation and rendering; it adds no listening acceptance claim.
 
 * Internal responsibility refactoring, 2026-10-18
 
-The post-migration review found library process management and request
-construction mixed into the voice-library and workbench interfaces. Track
-extraction and verification in [[file:lisp-refactoring-plan.org][the Lisp refactoring plan]]. The interfaces retain
-their review, preview, save and Apply boundaries. Share native operation
-validation below the views before separating workbench row construction.
-This is internal refactoring; existing listening acceptance remains open.
+Library process management now lives in =omnivox-library-runtime=. Both
+library views share guarded selection operations, and workbench row construction
+and filtering live in =emacsvox-aural-voice-workbench-views=. The interfaces
+retain their review, preview, save and Apply boundaries. The affected source
+and compiled tests and all 38 graphical voice/editor cases pass. Commit and
+verification checkpoints are in [[file:lisp-refactoring-plan.org][the Lisp refactoring plan]]. Existing listening
+acceptance remains open; the running personal session was not reloaded.

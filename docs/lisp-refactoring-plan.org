@@ -155,3 +155,63 @@ All 673 integration cases pass from source and compiled modules; all 11
 graphical integration cases pass. A missing forward declaration found by
 compilation was added to the new module. The final incremental compilation,
 byte-code preflight, headers and generated reference pass.
+
+Committed as =a22a36e0d=. The documentation release check passed.
+
+** Agent Shell events
+
+Extract response capture, permission, lifecycle and tool-event handling into
+=emacsvox-agent-shell-events=. Keep subscription tokens, timers, marker
+snapshots and caches beside their cleanup functions. The facade still calls
+buffer setup and teardown in the established order and owns shared feedback
+policy. Legacy pending timers and caches remain available for compatibility.
+
+All 673 integration cases pass from source and compiled modules; all 11
+graphical integration cases pass. Incremental compilation has no warnings.
+Byte-code preflight, headers and generated reference pass. Fresh compiled
+setup starts no speech processes. The personal Emacs session is unchanged.
+The documentation release check passed before committing this checkpoint.
+
+* Result and next decision
+
+The completed slices reduce the main files as follows. Counts include headers
+and comments; extracted modules retain named authors and copyright holders.
+
+| Main file | Before | After |
+|-----------+--------+-------|
+| emacsvox-agent-shell.el | 7688 | 3814 |
+| emacsvox-aural-voice-workbench.el | 3013 | 2212 |
+| omnivox-library.el | 1069 | 419 |
+| omnivox-voices.el | 3117 | 2744 |
+| emacsvox-aural-transport.el | 2689 | 2305 |
+
+The remaining large runtime is =tts-speak.el=, at 4830 lines. Its lifecycle
+crosses several runtime layers:
+
+- =tts--dispatch-new-owner= reserves a dispatch in a preparation scope and
+  records it in the enclosing aural delivery transaction.
+- =tts--dispatch-command= creates aural delivery entries, while
+  =emacsvox-aural--finalize-timeline-delivery= binds their TTS semantic owners.
+- =tts--interrupt-process= coordinates preparation invalidation, queue guards,
+  cancellation epochs and preview observers. Process retirement and the
+  sentinel share the same callback-retirement rules.
+- =emacsvox-aural--call-independent-callback= clears both TTS preparation and
+  aural capture state before invoking callbacks that may submit more speech.
+
+Choose the next lifecycle scope before splitting those responsibilities:
+
+1. Extract preparation, dispatch tracking, interruption and retirement together
+   into one internal lifecycle module. Preserve the current two-way TTS/aural
+   dependency and existing callback order. This reduces the entry file while
+   retaining current lifecycle ownership.
+2. Redesign the private handoff between TTS and aural delivery first, then
+   extract independently owned services. This requires a separate design for
+   reservation, publication, cancellation and reentrant callback boundaries.
+
+Recommend option 1 as the next bounded refactor; option 2 is a separate
+architecture task. TTS lifecycle ownership and public interfaces remain as
+before. Xhigh would suit an ownership redesign because it crosses
+Emacs, Omnivox preview and queue-cancellation semantics.
+
+Listening acceptance and optional native-service checks remain separate from
+the automated results above. The known tone-test failure remains unchanged.

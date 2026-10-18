@@ -28,6 +28,7 @@
   (dolist (entry '(("integrations/emacsvox-agent-shell-render" . emacsvox-agent-shell--semantic-block-type)
                    ("integrations/emacsvox-agent-shell-tables" . emacsvox-agent-shell--table-snapshot)
                    ("integrations/emacsvox-agent-shell-navigation" . emacsvox-agent-shell-next-block-at-point)
+                   ("integrations/emacsvox-agent-shell-events" . emacsvox-agent-shell--handle-lifecycle-event)
                    ("integrations/emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
     (let ((path (expand-file-name (concat (car entry) suffix) directory)))
       (load path nil nil t)
