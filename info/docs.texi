@@ -29031,7 +29031,9 @@ Default Value:
 @node tts-voice-api
 @section tts-voice-api
 
-Define generic voice capabilities, inventory and configuration callbacks.
+Define generic voice capabilities, inventory, configuration, selection and
+preview callbacks. Preview preparation uses the shared speech helpers in
+`tts-speak'; dispatch and process ownership remain in the speech runtime.
 Speech adapters install their implementations through these existing hooks.
 The public `tts-speak' entry point loads this module; loading these
 definitions alone does not select an adapter or start speech processes.

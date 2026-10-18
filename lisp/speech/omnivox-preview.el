@@ -47,7 +47,7 @@
 (declare-function omnivox--pending-requests "omnivox-voices" (process))
 (declare-function omnivox--next-control-request-id "omnivox-voices" ())
 (declare-function tts--interrupt-process "tts-lifecycle" (process &optional notifications preserved preview))
-(declare-function tts--voice-preview-callback "tts-speak" (callback result))
+(declare-function tts--voice-preview-callback "tts-voice-api" (callback result))
 (declare-function emacsvox-aural--call-independent-callback "emacsvox-aural-transport" (function &rest arguments))
 (declare-function emacsvox-aural-cancel-pending-deliveries "emacsvox-aural-transport" (&optional process))
 

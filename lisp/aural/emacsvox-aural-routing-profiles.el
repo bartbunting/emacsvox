@@ -55,7 +55,7 @@
 (declare-function tts-apply-voice-configuration "tts-voice-api"
                   (&optional callback))
 (declare-function tts-voice-capabilities "tts-voice-api" ())
-(declare-function tts-voice-family-id "tts-speak" (family &optional capabilities))
+(declare-function tts-voice-family-id "tts-voice-api" (family &optional capabilities))
 (declare-function tts-voice-inventory "tts-voice-api" ())
 (declare-function emacsvox-aural-voice "emacsvox-aural-resources"
                   (name &optional palette-id))

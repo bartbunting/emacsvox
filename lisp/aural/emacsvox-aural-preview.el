@@ -99,7 +99,7 @@ their concrete audio resources do not use the speech queue."
    (process-live-p tts-speaker-process)
    (emacsvox-aural-structured-timeline-available-p)))
 
-(declare-function tts--emoji-preview-entries "tts-speak" (entries &optional captured-policy))
+(declare-function tts--emoji-preview-entries "tts-voice-api" (entries &optional captured-policy))
 
 (defun emacsvox-aural-preview--prepare-plan (plan)
   "Prepare fresh PLAN's speech using its captured source naming policy.

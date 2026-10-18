@@ -39,8 +39,8 @@
 (require 'subr-x)
 
 (declare-function omnivox-scale-average-pitch "omnivox-voices" (value))
-(declare-function tts--voice-preview-dimensions "tts-speak" (plist))
-(declare-function tts--voice-preview-selector-kind "tts-speak" (selector))
+(declare-function tts--voice-preview-dimensions "tts-voice-api" (plist))
+(declare-function tts--voice-preview-selector-kind "tts-voice-api" (selector))
 
 (defconst omnivox-control-protocol-version 1
   "Control protocol version supported by this adapter.")

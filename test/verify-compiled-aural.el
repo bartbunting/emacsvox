@@ -183,6 +183,8 @@
        '(tts-voice-capabilities
          tts-voice-inventory
          tts-apply-voice-configuration
+         tts-preview-voices
+         tts-voice-family-id
          tts--call-with-preparation
          tts--dispatch-command
          tts--interrupt-process

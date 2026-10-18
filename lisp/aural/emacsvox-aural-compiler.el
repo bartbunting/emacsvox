@@ -43,7 +43,7 @@
 (declare-function tts-get-voice-command "tts-speak" (voice))
 (declare-function tts-voice-capabilities "tts-voice-api" ())
 (declare-function tts-voice-family-id
-                  "tts-speak" (family &optional capabilities))
+                  "tts-voice-api" (family &optional capabilities))
 (declare-function voice-from-acss "voice-setup" (style &optional logical-voice))
 (declare-function voice-setup--generated-acss-p "voice-setup" (voice))
 (declare-function voice-setup--generated-acss "voice-setup" (voice))

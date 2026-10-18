@@ -216,7 +216,26 @@ Source and compiled verification each pass 712 of 713 cases, matching the
 pre-extraction baseline and its known capital-tone failure. Isolated compiled
 aural parity and normal compiled startup pass. Incremental compilation,
 byte-code preflight, headers, generated reference and the documentation release
-check pass. Selection and previews remain the second slice of this follow-up.
+check pass for the first slice.
+
+Committed as =bbc964e58=.
+
+The second slice moves selector resolution, family and parameter lookup,
+standalone preview submission, preview validation and emoji preparation into
+the same API module. Both extracted definition blocks remain byte-for-byte
+unchanged. The shared pronunciation helper remains in =tts-speak=, and preview
+delivery still uses its existing speech primitives. Forward declarations name
+these dependencies without loading the runtime when the API is loaded alone.
+The entry file falls from 3653 to 3078 lines; the API module has 638 lines.
+
+Source and compiled verification retain the same 712-of-713 baseline. All 36
+applicable emoji cases pass in both modes; the graphical case skipped in batch
+passes in the 38-case graphical voice run. Isolated compiled aural parity,
+normal compiled startup, incremental compilation, byte-code preflight and
+headers pass. Compiler warnings match the first slice. The running personal
+session remains unchanged, and native listening acceptance is separate.
+Generated reference and the documentation release check pass before committing
+the second slice.
 
 * Result
 
@@ -230,10 +249,10 @@ and comments; extracted modules retain named authors and copyright holders.
 | omnivox-library.el | 1069 | 419 |
 | omnivox-voices.el | 3117 | 2744 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
-| tts-speak.el | 4829 | 3653 |
+| tts-speak.el | 4829 | 3078 |
 
-The original extraction pass is complete. The generic voice API follow-up is
-in progress. Broad core utilities remain separate work, as scoped above.
+The original extraction pass and generic voice API follow-up are complete.
+Broad core utilities remain separate work, as scoped above.
 
 * TTS lifecycle boundary
 

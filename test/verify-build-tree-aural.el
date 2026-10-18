@@ -76,6 +76,8 @@
           tts-voice-capabilities
           tts-voice-inventory
           tts-apply-voice-configuration
+          tts-preview-voices
+          tts-voice-family-id
           tts--protocol-queue-text
           voice-from-acss
           dectalk-voice-capabilities

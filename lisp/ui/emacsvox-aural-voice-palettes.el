@@ -61,12 +61,12 @@
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
-(declare-function tts-preview-voice "tts-speak"
+(declare-function tts-preview-voice "tts-voice-api"
                   (text selector &rest arguments))
 (declare-function tts-voice-family-capability
-                  "tts-speak" (family &optional capabilities))
+                  "tts-voice-api" (family &optional capabilities))
 (declare-function tts-voice-family-id
-                  "tts-speak" (family &optional capabilities))
+                  "tts-voice-api" (family &optional capabilities))
 
 (defcustom emacsvox-aural-voice-palettes-preview-text
   "The quick brown fox jumps over the lazy dog. Numbers one, two, three."
