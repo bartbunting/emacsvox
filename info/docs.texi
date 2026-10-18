@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 330 loaded; 0 intentionally omitted.
+@c Modules: 331 loaded; 0 intentionally omitted.
 @c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
 @c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
 @c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
@@ -14,60 +14,61 @@
 @c Loaded: core/emacsvox-table.elc core/emacsvox-tabulate.elc core/emacsvox-wizards.elc core/emacsvox-xslt.elc core/g-utils.elc
 @c Loaded: core/gweb.elc emacsvox-paths.elc emacsvox-preamble.elc emacsvox-setup.elc emacsvox-version.elc
 @c Loaded: emacsvox.elc integrations/amixer.elc integrations/emacsvox-2048.elc integrations/emacsvox-abc-mode.elc integrations/emacsvox-ace-window.elc
-@c Loaded: integrations/emacsvox-add-log.elc integrations/emacsvox-agent-shell-render.elc integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell.elc integrations/emacsvox-amark.elc
-@c Loaded: integrations/emacsvox-annotate.elc integrations/emacsvox-arc.elc integrations/emacsvox-auctex.elc integrations/emacsvox-avy.elc integrations/emacsvox-bbdb.elc
-@c Loaded: integrations/emacsvox-bibtex.elc integrations/emacsvox-bookmark.elc integrations/emacsvox-bookshare.elc integrations/emacsvox-browse-kill-ring.elc integrations/emacsvox-bs.elc
-@c Loaded: integrations/emacsvox-buff-menu.elc integrations/emacsvox-c.elc integrations/emacsvox-calc.elc integrations/emacsvox-calculator.elc integrations/emacsvox-calendar.elc
-@c Loaded: integrations/emacsvox-calibredb.elc integrations/emacsvox-chess.elc integrations/emacsvox-cider.elc integrations/emacsvox-clojure.elc integrations/emacsvox-cmuscheme.elc
-@c Loaded: integrations/emacsvox-combobulate.elc integrations/emacsvox-comint.elc integrations/emacsvox-company.elc integrations/emacsvox-compile.elc integrations/emacsvox-consult.elc
-@c Loaded: integrations/emacsvox-corfu.elc integrations/emacsvox-cperl.elc integrations/emacsvox-custom.elc integrations/emacsvox-dbus.elc integrations/emacsvox-deadgrep.elc
-@c Loaded: integrations/emacsvox-debugger.elc integrations/emacsvox-denote.elc integrations/emacsvox-desktop.elc integrations/emacsvox-devdocs.elc integrations/emacsvox-dictionary.elc
-@c Loaded: integrations/emacsvox-diff-mode.elc integrations/emacsvox-dired.elc integrations/emacsvox-dumb-jump.elc integrations/emacsvox-eat-core.elc integrations/emacsvox-eat-input.elc
-@c Loaded: integrations/emacsvox-eat-review.elc integrations/emacsvox-eat.elc integrations/emacsvox-ebuku.elc integrations/emacsvox-ediff.elc integrations/emacsvox-eglot.elc
-@c Loaded: integrations/emacsvox-ein.elc integrations/emacsvox-elfeed.elc integrations/emacsvox-elisp-refs.elc integrations/emacsvox-ellama.elc integrations/emacsvox-elpher.elc
-@c Loaded: integrations/emacsvox-elpy.elc integrations/emacsvox-embark.elc integrations/emacsvox-emms.elc integrations/emacsvox-empv.elc integrations/emacsvox-enriched.elc
-@c Loaded: integrations/emacsvox-entertain.elc integrations/emacsvox-enwc.elc integrations/emacsvox-epa.elc integrations/emacsvox-epub.elc integrations/emacsvox-erc.elc
-@c Loaded: integrations/emacsvox-eshell.elc integrations/emacsvox-ess.elc integrations/emacsvox-etable.elc integrations/emacsvox-eterm.elc integrations/emacsvox-eudc.elc
-@c Loaded: integrations/emacsvox-evil.elc integrations/emacsvox-eww.elc integrations/emacsvox-exwm.elc integrations/emacsvox-feeds.elc integrations/emacsvox-ffap.elc
-@c Loaded: integrations/emacsvox-ffip.elc integrations/emacsvox-flycheck.elc integrations/emacsvox-flymake.elc integrations/emacsvox-flyspell.elc integrations/emacsvox-folding.elc
-@c Loaded: integrations/emacsvox-forge.elc integrations/emacsvox-forms.elc integrations/emacsvox-geiser.elc integrations/emacsvox-gnuplot.elc integrations/emacsvox-gnus.elc
-@c Loaded: integrations/emacsvox-go-mode.elc integrations/emacsvox-gomoku.elc integrations/emacsvox-google.elc integrations/emacsvox-gptel.elc integrations/emacsvox-gud.elc
-@c Loaded: integrations/emacsvox-haskell.elc integrations/emacsvox-helm.elc integrations/emacsvox-helpful.elc integrations/emacsvox-hide-lines.elc integrations/emacsvox-hideshow.elc
-@c Loaded: integrations/emacsvox-hydra.elc integrations/emacsvox-ibuffer.elc integrations/emacsvox-ido.elc integrations/emacsvox-iedit.elc integrations/emacsvox-info.elc
-@c Loaded: integrations/emacsvox-ispell.elc integrations/emacsvox-ivy.elc integrations/emacsvox-journalctl.elc integrations/emacsvox-js2.elc integrations/emacsvox-kmacro.elc
-@c Loaded: integrations/emacsvox-librivox.elc integrations/emacsvox-lispy.elc integrations/emacsvox-lua.elc integrations/emacsvox-m-player.elc integrations/emacsvox-magit.elc
-@c Loaded: integrations/emacsvox-make-mode.elc integrations/emacsvox-man.elc integrations/emacsvox-marginalia.elc integrations/emacsvox-markdown.elc integrations/emacsvox-maths.elc
-@c Loaded: integrations/emacsvox-message.elc integrations/emacsvox-mines.elc integrations/emacsvox-mu4e.elc integrations/emacsvox-multiple-cursors.elc integrations/emacsvox-net-utils.elc
-@c Loaded: integrations/emacsvox-newsticker.elc integrations/emacsvox-nm.elc integrations/emacsvox-notmuch.elc integrations/emacsvox-nov.elc integrations/emacsvox-nxml.elc
-@c Loaded: integrations/emacsvox-ocr.elc integrations/emacsvox-org-srs.elc integrations/emacsvox-org.elc integrations/emacsvox-orgalist.elc integrations/emacsvox-outline.elc
-@c Loaded: integrations/emacsvox-package.elc integrations/emacsvox-perl.elc integrations/emacsvox-pipewire.elc integrations/emacsvox-popup.elc integrations/emacsvox-proced.elc
-@c Loaded: integrations/emacsvox-project.elc integrations/emacsvox-projectile.elc integrations/emacsvox-py.elc integrations/emacsvox-pydoc.elc integrations/emacsvox-python.elc
-@c Loaded: integrations/emacsvox-racket.elc integrations/emacsvox-re-builder.elc integrations/emacsvox-reftex.elc integrations/emacsvox-related.elc integrations/emacsvox-rg.elc
-@c Loaded: integrations/emacsvox-rmail.elc integrations/emacsvox-rpm-spec.elc integrations/emacsvox-rst.elc integrations/emacsvox-ruby.elc integrations/emacsvox-rust-mode.elc
-@c Loaded: integrations/emacsvox-sage.elc integrations/emacsvox-sdcv.elc integrations/emacsvox-ses.elc integrations/emacsvox-sgml-mode.elc integrations/emacsvox-sh-script.elc
-@c Loaded: integrations/emacsvox-shr.elc integrations/emacsvox-slime.elc integrations/emacsvox-smartparens.elc integrations/emacsvox-solitaire.elc integrations/emacsvox-speedbar.elc
-@c Loaded: integrations/emacsvox-sql.elc integrations/emacsvox-sudoku.elc integrations/emacsvox-supercite.elc integrations/emacsvox-syslog.elc integrations/emacsvox-tab-bar.elc
-@c Loaded: integrations/emacsvox-tabulated-list.elc integrations/emacsvox-tar.elc integrations/emacsvox-tcl.elc integrations/emacsvox-tempo.elc integrations/emacsvox-tetris.elc
-@c Loaded: integrations/emacsvox-texinfo.elc integrations/emacsvox-todo-mode.elc integrations/emacsvox-transient.elc integrations/emacsvox-treesit.elc integrations/emacsvox-typo.elc
-@c Loaded: integrations/emacsvox-url-template.elc integrations/emacsvox-vdiff.elc integrations/emacsvox-vertico.elc integrations/emacsvox-view.elc integrations/emacsvox-vterm.elc
-@c Loaded: integrations/emacsvox-wdired.elc integrations/emacsvox-we.elc integrations/emacsvox-websearch.elc integrations/emacsvox-webspace.elc integrations/emacsvox-which-key.elc
-@c Loaded: integrations/emacsvox-widget.elc integrations/emacsvox-windmove.elc integrations/emacsvox-woman.elc integrations/emacsvox-xkcd.elc integrations/emacsvox-xref.elc
-@c Loaded: integrations/emacsvox-yaml.elc integrations/emacsvox-yasnippet.elc integrations/gm-nnir.elc integrations/gmaps.elc integrations/ladspa.elc
-@c Loaded: integrations/light.elc integrations/omaps.elc integrations/sox.elc integrations/tetris.elc integrations/xbacklight.elc
-@c Loaded: speech/dectalk-voices.elc speech/emacsvox-windows-speech.elc speech/espeak-voices.elc speech/mac-voices.elc speech/omnivox-choice-codec.elc
-@c Loaded: speech/omnivox-control-codec.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc speech/omnivox-library-runtime.elc speech/omnivox-native-codec.elc
-@c Loaded: speech/omnivox-parameters-codec.elc speech/omnivox-parameters.elc speech/omnivox-preview.elc speech/omnivox-punctuation-profiles.elc speech/omnivox-remote.elc
-@c Loaded: speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc speech/plain-voices.elc speech/swiftmac-voices.elc
-@c Loaded: speech/tts-queue-state.elc speech/tts-speak.elc speech/voice-setup.elc ui/emacsvox-aural-change-feedback.elc ui/emacsvox-aural-doctor.elc
-@c Loaded: ui/emacsvox-aural-editor.elc ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc ui/emacsvox-aural-menu.elc
-@c Loaded: ui/emacsvox-aural-overrides.elc ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc ui/emacsvox-aural-sound-packs.elc
-@c Loaded: ui/emacsvox-aural-ui.elc ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc
-@c Loaded: ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc
-@c Loaded: ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc
-@c Loaded: ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc
-@c Loaded: ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc
-@c Loaded: ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc
-@c Loaded: voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
+@c Loaded: integrations/emacsvox-add-log.elc integrations/emacsvox-agent-shell-navigation.elc integrations/emacsvox-agent-shell-render.elc integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell.elc
+@c Loaded: integrations/emacsvox-amark.elc integrations/emacsvox-annotate.elc integrations/emacsvox-arc.elc integrations/emacsvox-auctex.elc integrations/emacsvox-avy.elc
+@c Loaded: integrations/emacsvox-bbdb.elc integrations/emacsvox-bibtex.elc integrations/emacsvox-bookmark.elc integrations/emacsvox-bookshare.elc integrations/emacsvox-browse-kill-ring.elc
+@c Loaded: integrations/emacsvox-bs.elc integrations/emacsvox-buff-menu.elc integrations/emacsvox-c.elc integrations/emacsvox-calc.elc integrations/emacsvox-calculator.elc
+@c Loaded: integrations/emacsvox-calendar.elc integrations/emacsvox-calibredb.elc integrations/emacsvox-chess.elc integrations/emacsvox-cider.elc integrations/emacsvox-clojure.elc
+@c Loaded: integrations/emacsvox-cmuscheme.elc integrations/emacsvox-combobulate.elc integrations/emacsvox-comint.elc integrations/emacsvox-company.elc integrations/emacsvox-compile.elc
+@c Loaded: integrations/emacsvox-consult.elc integrations/emacsvox-corfu.elc integrations/emacsvox-cperl.elc integrations/emacsvox-custom.elc integrations/emacsvox-dbus.elc
+@c Loaded: integrations/emacsvox-deadgrep.elc integrations/emacsvox-debugger.elc integrations/emacsvox-denote.elc integrations/emacsvox-desktop.elc integrations/emacsvox-devdocs.elc
+@c Loaded: integrations/emacsvox-dictionary.elc integrations/emacsvox-diff-mode.elc integrations/emacsvox-dired.elc integrations/emacsvox-dumb-jump.elc integrations/emacsvox-eat-core.elc
+@c Loaded: integrations/emacsvox-eat-input.elc integrations/emacsvox-eat-review.elc integrations/emacsvox-eat.elc integrations/emacsvox-ebuku.elc integrations/emacsvox-ediff.elc
+@c Loaded: integrations/emacsvox-eglot.elc integrations/emacsvox-ein.elc integrations/emacsvox-elfeed.elc integrations/emacsvox-elisp-refs.elc integrations/emacsvox-ellama.elc
+@c Loaded: integrations/emacsvox-elpher.elc integrations/emacsvox-elpy.elc integrations/emacsvox-embark.elc integrations/emacsvox-emms.elc integrations/emacsvox-empv.elc
+@c Loaded: integrations/emacsvox-enriched.elc integrations/emacsvox-entertain.elc integrations/emacsvox-enwc.elc integrations/emacsvox-epa.elc integrations/emacsvox-epub.elc
+@c Loaded: integrations/emacsvox-erc.elc integrations/emacsvox-eshell.elc integrations/emacsvox-ess.elc integrations/emacsvox-etable.elc integrations/emacsvox-eterm.elc
+@c Loaded: integrations/emacsvox-eudc.elc integrations/emacsvox-evil.elc integrations/emacsvox-eww.elc integrations/emacsvox-exwm.elc integrations/emacsvox-feeds.elc
+@c Loaded: integrations/emacsvox-ffap.elc integrations/emacsvox-ffip.elc integrations/emacsvox-flycheck.elc integrations/emacsvox-flymake.elc integrations/emacsvox-flyspell.elc
+@c Loaded: integrations/emacsvox-folding.elc integrations/emacsvox-forge.elc integrations/emacsvox-forms.elc integrations/emacsvox-geiser.elc integrations/emacsvox-gnuplot.elc
+@c Loaded: integrations/emacsvox-gnus.elc integrations/emacsvox-go-mode.elc integrations/emacsvox-gomoku.elc integrations/emacsvox-google.elc integrations/emacsvox-gptel.elc
+@c Loaded: integrations/emacsvox-gud.elc integrations/emacsvox-haskell.elc integrations/emacsvox-helm.elc integrations/emacsvox-helpful.elc integrations/emacsvox-hide-lines.elc
+@c Loaded: integrations/emacsvox-hideshow.elc integrations/emacsvox-hydra.elc integrations/emacsvox-ibuffer.elc integrations/emacsvox-ido.elc integrations/emacsvox-iedit.elc
+@c Loaded: integrations/emacsvox-info.elc integrations/emacsvox-ispell.elc integrations/emacsvox-ivy.elc integrations/emacsvox-journalctl.elc integrations/emacsvox-js2.elc
+@c Loaded: integrations/emacsvox-kmacro.elc integrations/emacsvox-librivox.elc integrations/emacsvox-lispy.elc integrations/emacsvox-lua.elc integrations/emacsvox-m-player.elc
+@c Loaded: integrations/emacsvox-magit.elc integrations/emacsvox-make-mode.elc integrations/emacsvox-man.elc integrations/emacsvox-marginalia.elc integrations/emacsvox-markdown.elc
+@c Loaded: integrations/emacsvox-maths.elc integrations/emacsvox-message.elc integrations/emacsvox-mines.elc integrations/emacsvox-mu4e.elc integrations/emacsvox-multiple-cursors.elc
+@c Loaded: integrations/emacsvox-net-utils.elc integrations/emacsvox-newsticker.elc integrations/emacsvox-nm.elc integrations/emacsvox-notmuch.elc integrations/emacsvox-nov.elc
+@c Loaded: integrations/emacsvox-nxml.elc integrations/emacsvox-ocr.elc integrations/emacsvox-org-srs.elc integrations/emacsvox-org.elc integrations/emacsvox-orgalist.elc
+@c Loaded: integrations/emacsvox-outline.elc integrations/emacsvox-package.elc integrations/emacsvox-perl.elc integrations/emacsvox-pipewire.elc integrations/emacsvox-popup.elc
+@c Loaded: integrations/emacsvox-proced.elc integrations/emacsvox-project.elc integrations/emacsvox-projectile.elc integrations/emacsvox-py.elc integrations/emacsvox-pydoc.elc
+@c Loaded: integrations/emacsvox-python.elc integrations/emacsvox-racket.elc integrations/emacsvox-re-builder.elc integrations/emacsvox-reftex.elc integrations/emacsvox-related.elc
+@c Loaded: integrations/emacsvox-rg.elc integrations/emacsvox-rmail.elc integrations/emacsvox-rpm-spec.elc integrations/emacsvox-rst.elc integrations/emacsvox-ruby.elc
+@c Loaded: integrations/emacsvox-rust-mode.elc integrations/emacsvox-sage.elc integrations/emacsvox-sdcv.elc integrations/emacsvox-ses.elc integrations/emacsvox-sgml-mode.elc
+@c Loaded: integrations/emacsvox-sh-script.elc integrations/emacsvox-shr.elc integrations/emacsvox-slime.elc integrations/emacsvox-smartparens.elc integrations/emacsvox-solitaire.elc
+@c Loaded: integrations/emacsvox-speedbar.elc integrations/emacsvox-sql.elc integrations/emacsvox-sudoku.elc integrations/emacsvox-supercite.elc integrations/emacsvox-syslog.elc
+@c Loaded: integrations/emacsvox-tab-bar.elc integrations/emacsvox-tabulated-list.elc integrations/emacsvox-tar.elc integrations/emacsvox-tcl.elc integrations/emacsvox-tempo.elc
+@c Loaded: integrations/emacsvox-tetris.elc integrations/emacsvox-texinfo.elc integrations/emacsvox-todo-mode.elc integrations/emacsvox-transient.elc integrations/emacsvox-treesit.elc
+@c Loaded: integrations/emacsvox-typo.elc integrations/emacsvox-url-template.elc integrations/emacsvox-vdiff.elc integrations/emacsvox-vertico.elc integrations/emacsvox-view.elc
+@c Loaded: integrations/emacsvox-vterm.elc integrations/emacsvox-wdired.elc integrations/emacsvox-we.elc integrations/emacsvox-websearch.elc integrations/emacsvox-webspace.elc
+@c Loaded: integrations/emacsvox-which-key.elc integrations/emacsvox-widget.elc integrations/emacsvox-windmove.elc integrations/emacsvox-woman.elc integrations/emacsvox-xkcd.elc
+@c Loaded: integrations/emacsvox-xref.elc integrations/emacsvox-yaml.elc integrations/emacsvox-yasnippet.elc integrations/gm-nnir.elc integrations/gmaps.elc
+@c Loaded: integrations/ladspa.elc integrations/light.elc integrations/omaps.elc integrations/sox.elc integrations/tetris.elc
+@c Loaded: integrations/xbacklight.elc speech/dectalk-voices.elc speech/emacsvox-windows-speech.elc speech/espeak-voices.elc speech/mac-voices.elc
+@c Loaded: speech/omnivox-choice-codec.elc speech/omnivox-control-codec.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc speech/omnivox-library-runtime.elc
+@c Loaded: speech/omnivox-native-codec.elc speech/omnivox-parameters-codec.elc speech/omnivox-parameters.elc speech/omnivox-preview.elc speech/omnivox-punctuation-profiles.elc
+@c Loaded: speech/omnivox-remote.elc speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc speech/plain-voices.elc
+@c Loaded: speech/swiftmac-voices.elc speech/tts-queue-state.elc speech/tts-speak.elc speech/voice-setup.elc ui/emacsvox-aural-change-feedback.elc
+@c Loaded: ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc
+@c Loaded: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc
+@c Loaded: ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc
+@c Loaded: ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc
+@c Loaded: ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc
+@c Loaded: ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc
+@c Loaded: ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc
+@c Loaded: ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc ui/omnivox-library.elc
+@c Loaded: ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc
+@c Loaded: voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -88,6 +89,7 @@ This chapter documents a total of 1704 commands and 256 options.
 * emacsvox-add-log:: Speech-enable add-log.
 * emacsvox-advice:: Advice Emacs Core.
 * emacsvox-agent-shell:: Speech-enable AGENT-SHELL.
+* emacsvox-agent-shell-navigation:: Semantic Agent Shell navigation.
 * emacsvox-agent-shell-render:: Interpret Agent Shell renderings.
 * emacsvox-agent-shell-tables:: Rendered Agent Shell tables.
 * emacsvox-amark:: BookMarks For Audio.
@@ -894,15 +896,6 @@ See https://github.com/xenodium/agent-shell for agent-shell itself.
 
 @subsection Emacsvox-Agent-Shell Commands
 
-@subsubsection emacsvox-agent-shell-copy-source-block
-@deffn {Command} emacsvox-agent-shell-copy-source-block
-@findex emacsvox-agent-shell-copy-source-block
-
-@format
-Copy the rendered Markdown source block at point using agent-shell.
-@end format
-@end deffn
-
 @subsubsection emacsvox-agent-shell-cycle-speech-level
 @deffn {Command} emacsvox-agent-shell-cycle-speech-level  (&optional reset)
 @findex emacsvox-agent-shell-cycle-speech-level
@@ -935,202 +928,6 @@ Enable Emacsvox support for Agent Shell 0.85.3 or newer.
 @end format
 @end deffn
 
-@subsubsection emacsvox-agent-shell-next-block-at-point
-@deffn {Command} emacsvox-agent-shell-next-block-at-point
-@findex emacsvox-agent-shell-next-block-at-point
-
-@format
-Move to the next block matching the semantic block at point.
-When invoked by ‘]’ at an editable prompt, insert that character instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-block-of-type
-@deffn {Command} emacsvox-agent-shell-next-block-of-type
-@findex emacsvox-agent-shell-next-block-of-type
-
-@format
-Select a semantic block type and move to its next occurrence.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-error
-@deffn {Command} emacsvox-agent-shell-next-error
-@findex emacsvox-agent-shell-next-error
-
-@format
-Move to the next error or failed tool call.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-heading
-@deffn {Command} emacsvox-agent-shell-next-heading
-@findex emacsvox-agent-shell-next-heading
-
-@format
-Move to the next visible Markdown heading.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-link
-@deffn {Command} emacsvox-agent-shell-next-link
-@findex emacsvox-agent-shell-next-link
-
-@format
-Move to the next visible rendered link.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-response
-@deffn {Command} emacsvox-agent-shell-next-response
-@findex emacsvox-agent-shell-next-response
-
-@format
-Move to the next agent response and announce its body.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-source-block
-@deffn {Command} emacsvox-agent-shell-next-source-block
-@findex emacsvox-agent-shell-next-source-block
-
-@format
-Move to the next source block and announce its language and line count.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-table
-@deffn {Command} emacsvox-agent-shell-next-table
-@findex emacsvox-agent-shell-next-table
-
-@format
-Move to the next rendered Markdown table and announce it.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-next-user-prompt
-@deffn {Command} emacsvox-agent-shell-next-user-prompt
-@findex emacsvox-agent-shell-next-user-prompt
-
-@format
-Move to the next submitted user prompt.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-block-at-point
-@deffn {Command} emacsvox-agent-shell-previous-block-at-point
-@findex emacsvox-agent-shell-previous-block-at-point
-
-@format
-Move to the previous block matching the semantic block at point.
-When invoked by ‘[’ at an editable prompt, insert that character instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-block-of-type
-@deffn {Command} emacsvox-agent-shell-previous-block-of-type
-@findex emacsvox-agent-shell-previous-block-of-type
-
-@format
-Select a semantic block type and move to its previous occurrence.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-error
-@deffn {Command} emacsvox-agent-shell-previous-error
-@findex emacsvox-agent-shell-previous-error
-
-@format
-Move to the previous error or failed tool call.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-heading
-@deffn {Command} emacsvox-agent-shell-previous-heading
-@findex emacsvox-agent-shell-previous-heading
-
-@format
-Move to the previous visible Markdown heading.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-link
-@deffn {Command} emacsvox-agent-shell-previous-link
-@findex emacsvox-agent-shell-previous-link
-
-@format
-Move to the previous visible rendered link.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-response
-@deffn {Command} emacsvox-agent-shell-previous-response
-@findex emacsvox-agent-shell-previous-response
-
-@format
-Move to the previous agent response and announce its body.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-source-block
-@deffn {Command} emacsvox-agent-shell-previous-source-block
-@findex emacsvox-agent-shell-previous-source-block
-
-@format
-Move to the previous source block and announce its language and line count.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-table
-@deffn {Command} emacsvox-agent-shell-previous-table
-@findex emacsvox-agent-shell-previous-table
-
-@format
-Move to the previous rendered Markdown table and announce it.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-previous-user-prompt
-@deffn {Command} emacsvox-agent-shell-previous-user-prompt
-@findex emacsvox-agent-shell-previous-user-prompt
-
-@format
-Move to the previous submitted user prompt.
-At an editable prompt, a directly bound character key inserts itself instead.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-repeat-next-block
-@deffn {Command} emacsvox-agent-shell-repeat-next-block
-@findex emacsvox-agent-shell-repeat-next-block
-
-@format
-Move to the next occurrence of the selected semantic block type.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-repeat-previous-block
-@deffn {Command} emacsvox-agent-shell-repeat-previous-block
-@findex emacsvox-agent-shell-repeat-previous-block
-
-@format
-Move to the previous occurrence of the selected semantic block type.
-@end format
-@end deffn
-
 @subsubsection emacsvox-agent-shell-select-background-speech-level
 @deffn {Command} emacsvox-agent-shell-select-background-speech-level
 @findex emacsvox-agent-shell-select-background-speech-level
@@ -1155,33 +952,6 @@ Select the automatic speech level for the current agent-shell session.
 
 @format
 Speak the full semantic header for the current agent-shell session.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-speak-last-response
-@deffn {Command} emacsvox-agent-shell-speak-last-response
-@findex emacsvox-agent-shell-speak-last-response
-
-@format
-Speak the latest completed agent answer in full without moving point.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-speak-response-overview
-@deffn {Command} emacsvox-agent-shell-speak-response-overview
-@findex emacsvox-agent-shell-speak-response-overview
-
-@format
-Speak a concise overview of the latest completed agent answer.
-@end format
-@end deffn
-
-@subsubsection emacsvox-agent-shell-speak-source-block
-@deffn {Command} emacsvox-agent-shell-speak-source-block
-@findex emacsvox-agent-shell-speak-source-block
-
-@format
-Read the complete rendered Markdown source block at point.
 @end format
 @end deffn
 
@@ -1464,6 +1234,249 @@ summary
 @end verbatim
 
 @end defvar
+
+@node emacsvox-agent-shell-navigation
+@section emacsvox-agent-shell-navigation
+
+Transcript locations, response summaries, semantic movement, fragment
+expansion and source-block interaction.  The facade retains activation,
+shared feedback, live-input policy and asynchronous response observation.
+Repeat-key installation is explicit so the facade controls activation order.
+Load through `emacsvox-agent-shell'.
+
+@subsection Emacsvox-Agent-Shell-Navigation Commands
+
+@subsubsection emacsvox-agent-shell-copy-source-block
+@deffn {Command} emacsvox-agent-shell-copy-source-block
+@findex emacsvox-agent-shell-copy-source-block
+
+@format
+Copy the rendered Markdown source block at point using agent-shell.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-block-at-point
+@deffn {Command} emacsvox-agent-shell-next-block-at-point
+@findex emacsvox-agent-shell-next-block-at-point
+
+@format
+Move to the next block matching the semantic block at point.
+When invoked by ‘]’ at an editable prompt, insert that character instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-block-of-type
+@deffn {Command} emacsvox-agent-shell-next-block-of-type
+@findex emacsvox-agent-shell-next-block-of-type
+
+@format
+Select a semantic block type and move to its next occurrence.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-error
+@deffn {Command} emacsvox-agent-shell-next-error
+@findex emacsvox-agent-shell-next-error
+
+@format
+Move to the next error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-heading
+@deffn {Command} emacsvox-agent-shell-next-heading
+@findex emacsvox-agent-shell-next-heading
+
+@format
+Move to the next visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-link
+@deffn {Command} emacsvox-agent-shell-next-link
+@findex emacsvox-agent-shell-next-link
+
+@format
+Move to the next visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-response
+@deffn {Command} emacsvox-agent-shell-next-response
+@findex emacsvox-agent-shell-next-response
+
+@format
+Move to the next agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-source-block
+@deffn {Command} emacsvox-agent-shell-next-source-block
+@findex emacsvox-agent-shell-next-source-block
+
+@format
+Move to the next source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-table
+@deffn {Command} emacsvox-agent-shell-next-table
+@findex emacsvox-agent-shell-next-table
+
+@format
+Move to the next rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-user-prompt
+@deffn {Command} emacsvox-agent-shell-next-user-prompt
+@findex emacsvox-agent-shell-next-user-prompt
+
+@format
+Move to the next submitted user prompt.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-block-at-point
+@deffn {Command} emacsvox-agent-shell-previous-block-at-point
+@findex emacsvox-agent-shell-previous-block-at-point
+
+@format
+Move to the previous block matching the semantic block at point.
+When invoked by ‘[’ at an editable prompt, insert that character instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-block-of-type
+@deffn {Command} emacsvox-agent-shell-previous-block-of-type
+@findex emacsvox-agent-shell-previous-block-of-type
+
+@format
+Select a semantic block type and move to its previous occurrence.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-error
+@deffn {Command} emacsvox-agent-shell-previous-error
+@findex emacsvox-agent-shell-previous-error
+
+@format
+Move to the previous error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-heading
+@deffn {Command} emacsvox-agent-shell-previous-heading
+@findex emacsvox-agent-shell-previous-heading
+
+@format
+Move to the previous visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-link
+@deffn {Command} emacsvox-agent-shell-previous-link
+@findex emacsvox-agent-shell-previous-link
+
+@format
+Move to the previous visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-response
+@deffn {Command} emacsvox-agent-shell-previous-response
+@findex emacsvox-agent-shell-previous-response
+
+@format
+Move to the previous agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-source-block
+@deffn {Command} emacsvox-agent-shell-previous-source-block
+@findex emacsvox-agent-shell-previous-source-block
+
+@format
+Move to the previous source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-table
+@deffn {Command} emacsvox-agent-shell-previous-table
+@findex emacsvox-agent-shell-previous-table
+
+@format
+Move to the previous rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-user-prompt
+@deffn {Command} emacsvox-agent-shell-previous-user-prompt
+@findex emacsvox-agent-shell-previous-user-prompt
+
+@format
+Move to the previous submitted user prompt.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-repeat-next-block
+@deffn {Command} emacsvox-agent-shell-repeat-next-block
+@findex emacsvox-agent-shell-repeat-next-block
+
+@format
+Move to the next occurrence of the selected semantic block type.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-repeat-previous-block
+@deffn {Command} emacsvox-agent-shell-repeat-previous-block
+@findex emacsvox-agent-shell-repeat-previous-block
+
+@format
+Move to the previous occurrence of the selected semantic block type.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-last-response
+@deffn {Command} emacsvox-agent-shell-speak-last-response
+@findex emacsvox-agent-shell-speak-last-response
+
+@format
+Speak the latest completed agent answer in full without moving point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-response-overview
+@deffn {Command} emacsvox-agent-shell-speak-response-overview
+@findex emacsvox-agent-shell-speak-response-overview
+
+@format
+Speak a concise overview of the latest completed agent answer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-source-block
+@deffn {Command} emacsvox-agent-shell-speak-source-block
+@findex emacsvox-agent-shell-speak-source-block
+
+@format
+Read the complete rendered Markdown source block at point.
+@end format
+@end deffn
 
 @node emacsvox-agent-shell-render
 @section emacsvox-agent-shell-render
@@ -29196,7 +29209,6 @@ Settings for voice-indent
 
 Default Value:
 @verbatim
-
 (nil nil 3 1 3)
 
 @end verbatim

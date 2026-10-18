@@ -139,3 +139,19 @@ expectation was changed for either finding.
 Isolated compiled aural parity passes, including the new module boundaries.
 Incremental compilation, byte-code preflight, headers and generated reference
 pass. Compiler warnings match the existing migration build baseline.
+
+Committed as =125fdd404=. The documentation release check passed.
+
+** Agent Shell navigation
+
+Extract transcript locations, response summaries, semantic movement, fragment
+expansion and source-block interaction into =emacsvox-agent-shell-navigation=.
+The facade retains repeat-key installation and table-adapter activation in
+their original order. Navigation reads captured response state and uses shared
+feedback through the existing internal functions. Bindings and optional
+dependency versions are unchanged.
+
+All 673 integration cases pass from source and compiled modules; all 11
+graphical integration cases pass. A missing forward declaration found by
+compilation was added to the new module. The final incremental compilation,
+byte-code preflight, headers and generated reference pass.
