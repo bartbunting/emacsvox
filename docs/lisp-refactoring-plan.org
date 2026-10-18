@@ -237,6 +237,26 @@ session remains unchanged, and native listening acceptance is separate.
 Generated reference and the documentation release check pass before committing
 the second slice.
 
+** Agent Shell interaction, presentation and visual movement
+
+Accepted on 2026-10-18: complete the remaining Agent Shell responsibility
+splits in four commits: question forms; session and compose interactions;
+presentation and speech policy; visual movement and editable input boundaries.
+Keep configuration, advice installation, keymap registration and buffer
+activation in the facade. Preserve callback order, dynamic bindings and
+cleanup ownership. The existing semantic navigation module retains block and
+source navigation. No binding or optional-package version changes are included.
+
+The pre-extraction pinned integration baseline passes all 673 cases. Each
+slice uses explicit source and compiled module paths and the graphical
+integration suite. The personal session remains unchanged.
+
+Question forms move unchanged into =emacsvox-agent-shell-interaction=. Event
+subscriptions and advice installation retain their original owners.
+All 673 source and compiled integration cases and all 11 graphical cases pass.
+Incremental compilation has no warnings; byte-code preflight, headers and
+generated reference pass.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -252,7 +272,8 @@ and comments; extracted modules retain named authors and copyright holders.
 | tts-speak.el | 4829 | 3078 |
 
 The original extraction pass and generic voice API follow-up are complete.
-Broad core utilities remain separate work, as scoped above.
+The Agent Shell follow-up is in progress. Broad core utilities remain separate
+work, as scoped above.
 
 * TTS lifecycle boundary
 

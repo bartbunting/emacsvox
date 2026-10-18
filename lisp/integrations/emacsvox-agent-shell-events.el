@@ -65,7 +65,7 @@
 (declare-function emacsvox-agent-shell--speak-content
                   "emacsvox-agent-shell" (content block-type))
 (declare-function emacsvox-agent-shell--question-event
-                  "emacsvox-agent-shell" (event))
+                  "emacsvox-agent-shell-interaction" (event))
 (declare-function emacsvox-agent-shell--notify-event
                   "emacsvox-agent-shell" (text facts &optional icon occasion))
 (declare-function emacsvox-agent-shell--interaction-cleanup
