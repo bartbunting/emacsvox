@@ -72,6 +72,13 @@
       (error "Wire codec loaded runtime or editor %S" feature)))
   (when (process-list)
     (error "Wire codec started a process"))
+  ;; Generic voice definitions must not initialize an adapter or speech runtime.
+  (load (expand-file-name "speech/tts-voice-api.elc" build-directory) nil nil)
+  (dolist (feature '(tts-speak tts-lifecycle voice-setup omnivox-voices))
+    (when (featurep feature)
+      (error "Voice API loaded speech runtime %S" feature)))
+  (when (process-list)
+    (error "Voice API started a process"))
   (load
    (expand-file-name "aural/emacsvox-aural-schemes.elc" build-directory)
    nil nil)
@@ -173,7 +180,10 @@
        external-feature)))
   (dolist
       (function
-       '(tts--call-with-preparation
+       '(tts-voice-capabilities
+         tts-voice-inventory
+         tts-apply-voice-configuration
+         tts--call-with-preparation
          tts--dispatch-command
          tts--interrupt-process
          tts--retire-process

@@ -4641,7 +4641,7 @@ does not own a queue or replay output.  Unknown input preserves legacy
 delivery.
 
 
-File: emacsvox-reference.info,  Node: tts-speak,  Next: voice-defs,  Prev: tts-queue-state,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: tts-speak,  Next: tts-voice-api,  Prev: tts-queue-state,  Up: Emacsvox Commands And Options
 
 2.330 tts-speak
 ===============
@@ -5291,15 +5291,27 @@ This module defines the generic TTS interface.
 
 
 
-File: emacsvox-reference.info,  Node: voice-defs,  Next: voice-setup,  Prev: tts-speak,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: tts-voice-api,  Next: voice-defs,  Prev: tts-speak,  Up: Emacsvox Commands And Options
 
-2.331 voice-defs
+2.331 tts-voice-api
+===================
+
+Define generic voice capabilities, inventory and configuration
+callbacks.  Speech adapters install their implementations through these
+existing hooks.  The public 'tts-speak' entry point loads this module;
+loading these definitions alone does not select an adapter or start
+speech processes.
+
+
+File: emacsvox-reference.info,  Node: voice-defs,  Next: voice-setup,  Prev: tts-voice-api,  Up: Emacsvox Commands And Options
+
+2.332 voice-defs
 ================
 
 Contains just the voice definitions.  Voices are defined using the macro
 ‘defvoice’ from module voice-setup.
 
-2.331.1 An Overview Of Voice Design
+2.332.1 An Overview Of Voice Design
 -----------------------------------
 
 Aural CSS defines 4 primary device-independent dimensions.
@@ -5311,7 +5323,7 @@ possible settings.
 these dimensions to device-specific parameters and are responsible for
 generating the final device-specific codes.
 
-2.331.2 Creating Distinct Voices Via Aural CSS
+2.332.2 Creating Distinct Voices Via Aural CSS
 ----------------------------------------------
 
 Along each dimension, a setting of 5 is mapped to the default setting
@@ -5328,7 +5340,7 @@ there are 4 *overlay* voices, corresponding to the 4 dimensions; these
 each set one of the dimensions to ‘8’.  Thus, we have a total of 25
 unique voices defined in this module.
 
-2.331.3 Things to note
+2.332.3 Things to note
 ----------------------
 
    • These voices are designed to be distinctive when used in a given
@@ -5339,7 +5351,7 @@ unique voices defined in this module.
      content so that when used in context, one can easily pick-out
      distinct parts of the utterance.
 
-2.331.4 voice-defs Options
+2.332.4 voice-defs Options
 --------------------------
 
  -- Variable: User Option voice-animate-extra-settings
@@ -5545,7 +5557,7 @@ unique voices defined in this module.
 
 File: emacsvox-reference.info,  Node: voice-setup,  Next: xbacklight,  Prev: voice-defs,  Up: Emacsvox Commands And Options
 
-2.332 voice-setup
+2.333 voice-setup
 =================
 
 A voice is to audio as a font is to a visual display.  A personality is
@@ -5566,7 +5578,7 @@ mapping, and local compatibility-provider machinery.  When this minor
 mode is on, the voices of the current line are updated with every
 insertion or deletion.
 
-2.332.1 Voice-Lock And Aural CSS
+2.333.1 Voice-Lock And Aural CSS
 --------------------------------
 
 The CSS Speech Style Sheet specification defines a number of abstract
@@ -5598,10 +5610,10 @@ dectalk-voices.el and outloud-voices.el map ACSS dimensions to
 engine-specific codes.  Emacsvox modules use voice-setup-add-map when
 defining face->personality mappings.  For use from other modules.
 
-2.332.2 Voice-Setup Commands
+2.333.2 Voice-Setup Commands
 ----------------------------
 
-2.332.2.1 voice-setup-toggle-silence-personality
+2.333.2.1 voice-setup-toggle-silence-personality
 ................................................
 
  -- Command: voice-setup-toggle-silence-personality
@@ -5611,7 +5623,7 @@ defining face->personality mappings.  For use from other modules.
 
 File: emacsvox-reference.info,  Node: xbacklight,  Next: URL Templates,  Prev: voice-setup,  Up: Emacsvox Commands And Options
 
-2.333 xbacklight
+2.334 xbacklight
 ================
 
 Provide an emacs front-end to xbacklight.  This is a tool that controls
@@ -5621,38 +5633,38 @@ xbacklight
    This module is most easily used in conjunction with hydra: M-x
 package-install hydra
 
-2.333.1 Xbacklight Commands
+2.334.1 Xbacklight Commands
 ---------------------------
 
-2.333.1.1 xbacklight-black
+2.334.1.1 xbacklight-black
 ..........................
 
  -- Command: xbacklight-black
 
      Black screen.
 
-2.333.1.2 xbacklight-decrement
+2.334.1.2 xbacklight-decrement
 ..............................
 
  -- Command: xbacklight-decrement
 
      Decrease brightness.
 
-2.333.1.3 xbacklight-get
+2.334.1.3 xbacklight-get
 ........................
 
  -- Command: xbacklight-get
 
      Get  brightness level.
 
-2.333.1.4 xbacklight-increment
+2.334.1.4 xbacklight-increment
 ..............................
 
  -- Command: xbacklight-increment
 
      Increase brightness.
 
-2.333.1.5 xbacklight-set
+2.334.1.5 xbacklight-set
 ........................
 
  -- Command: xbacklight-set (brightness)
@@ -5661,7 +5673,7 @@ package-install hydra
 
      (fn BRIGHTNESS)
 
-2.333.1.6 xbacklight-white
+2.334.1.6 xbacklight-white
 ..........................
 
  -- Command: xbacklight-white
@@ -5671,7 +5683,7 @@ package-install hydra
 
 File: emacsvox-reference.info,  Node: URL Templates,  Prev: xbacklight,  Up: Emacsvox Commands And Options
 
-2.334 URL Templates
+2.335 URL Templates
 ===================
 
 This section documents a total of 66 URL Templates.

@@ -41,7 +41,7 @@
 (require 'emacsvox-aural-spatial)
 
 (declare-function tts-get-voice-command "tts-speak" (voice))
-(declare-function tts-voice-capabilities "tts-speak" ())
+(declare-function tts-voice-capabilities "tts-voice-api" ())
 (declare-function tts-voice-family-id
                   "tts-speak" (family &optional capabilities))
 (declare-function voice-from-acss "voice-setup" (style &optional logical-voice))

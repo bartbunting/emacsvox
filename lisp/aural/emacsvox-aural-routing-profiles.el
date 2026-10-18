@@ -52,11 +52,11 @@
 
 (declare-function omnivox-register-logical-voices "omnivox-voices" ())
 (declare-function omnivox-set-routing-policy "omnivox-voices" ())
-(declare-function tts-apply-voice-configuration "tts-speak"
+(declare-function tts-apply-voice-configuration "tts-voice-api"
                   (&optional callback))
-(declare-function tts-voice-capabilities "tts-speak" ())
+(declare-function tts-voice-capabilities "tts-voice-api" ())
 (declare-function tts-voice-family-id "tts-speak" (family &optional capabilities))
-(declare-function tts-voice-inventory "tts-speak" ())
+(declare-function tts-voice-inventory "tts-voice-api" ())
 (declare-function emacsvox-aural-voice "emacsvox-aural-resources"
                   (name &optional palette-id))
 (declare-function emacsvox-aural-voice-runtime--owned "emacsvox-aural-voice-runtime"

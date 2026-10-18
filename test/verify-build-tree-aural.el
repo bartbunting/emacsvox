@@ -18,6 +18,7 @@
        (features
         '(emacsvox-paths
           tts-speak
+          tts-voice-api
           voice-setup
           voice-defs
           dectalk-voices
@@ -72,6 +73,9 @@
           emacsvox-aural-sound-packs))
        (functions
         '(emacsvox-paths--register
+          tts-voice-capabilities
+          tts-voice-inventory
+          tts-apply-voice-configuration
           tts--protocol-queue-text
           voice-from-acss
           dectalk-voice-capabilities

@@ -44,6 +44,7 @@
           "speech/omnivox-library-runtime.el"
           "speech/omnivox-remote.el"
           "speech/tts-lifecycle.el"
+          "speech/tts-voice-api.el"
           "speech/tts-speak.el"
           "speech/voice-setup.el"
           "voices/voice-defs.el"

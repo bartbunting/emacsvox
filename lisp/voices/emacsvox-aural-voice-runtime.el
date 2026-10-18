@@ -33,8 +33,8 @@
 (require 'emacsvox-aural-voice-data)
 (require 'emacsvox-aural-schemes)
 
-(declare-function tts-apply-voice-configuration "tts-speak" (&optional callback))
-(declare-function tts-voice-inventory "tts-speak" ())
+(declare-function tts-apply-voice-configuration "tts-voice-api" (&optional callback))
+(declare-function tts-voice-inventory "tts-voice-api" ())
 (declare-function voice-setup--generated-acss-p "voice-setup" (voice))
 (declare-function voice-setup--generated-acss "voice-setup" (voice))
 

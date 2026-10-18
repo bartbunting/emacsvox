@@ -198,6 +198,26 @@ new loaded paths and stays idle. Incremental compilation, byte-code preflight,
 headers and generated reference pass; compiler warnings match the baseline.
 The documentation release check passed before committing this checkpoint.
 
+** Generic voice API
+
+Accepted on 2026-10-18: extract the generic adapter voice API into
+=speech/tts-voice-api= in two slices. First move capabilities, inventory,
+configuration and realized-route callbacks. Then move selection, family lookup
+and preview preparation. Keep the existing function names, callback contracts
+and =tts-speak= entry point. Shared pronunciation replacement stays with text
+preparation, and the lifecycle module retains dispatch ownership.
+
+The first slice moves the inventory and configuration definitions unchanged.
+Build and startup inventories include the module, and forward declarations
+name its new owner. Fresh compiled checks require that loading the API alone
+neither loads a speech runtime nor starts processes.
+
+Source and compiled verification each pass 712 of 713 cases, matching the
+pre-extraction baseline and its known capital-tone failure. Isolated compiled
+aural parity and normal compiled startup pass. Incremental compilation,
+byte-code preflight, headers, generated reference and the documentation release
+check pass. Selection and previews remain the second slice of this follow-up.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -212,8 +232,8 @@ and comments; extracted modules retain named authors and copyright holders.
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3653 |
 
-The identified extraction pass is complete. Broad core utilities remain
-separate work, as scoped above.
+The original extraction pass is complete. The generic voice API follow-up is
+in progress. Broad core utilities remain separate work, as scoped above.
 
 * TTS lifecycle boundary
 
