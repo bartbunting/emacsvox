@@ -1252,8 +1252,10 @@ Load through `emacsvox-agent-shell'.
 @node emacsvox-agent-shell-interaction
 @section emacsvox-agent-shell-interaction
 
-Handle interactive questions and their confirmed outcomes. The facade owns
-advice installation and activation; event subscriptions call these helpers.
+Handle questions, session settings, steering, push, queue and compose
+outcomes. Keep callback generations and interaction snapshots with cleanup.
+The facade owns advice installation and activation; event subscriptions call
+these helpers.
 Load through `emacsvox-agent-shell'. Loading definitions installs no advice
 or buffer hooks.
 
@@ -15998,6 +16000,7 @@ Set Volume in steps from 1 to 9.
 (fn &optional ARG)
 @end format
 @end deffn
+
 @subsubsection emacsvox-m-player-volume-up
 @deffn {Command} emacsvox-m-player-volume-up
 @findex emacsvox-m-player-volume-up

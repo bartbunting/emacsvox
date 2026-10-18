@@ -69,15 +69,15 @@
 (declare-function emacsvox-agent-shell--notify-event
                   "emacsvox-agent-shell" (text facts &optional icon occasion))
 (declare-function emacsvox-agent-shell--interaction-cleanup
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-interaction" ())
 (declare-function emacsvox-agent-shell--initialized-p
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-interaction" ())
 (declare-function emacsvox-agent-shell--config-options
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-interaction" ())
 (declare-function emacsvox-agent-shell--observe-config-options
-                  "emacsvox-agent-shell" (options announce))
+                  "emacsvox-agent-shell-interaction" (options announce))
 (declare-function emacsvox-agent-shell--queue-feedback
-                  "emacsvox-agent-shell" (state))
+                  "emacsvox-agent-shell-interaction" (state))
 (defvar emacsvox-agent-shell-tool-output-verbosity)
 (defvar emacsvox-agent-shell-speak-permissions)
 (defvar emacsvox-agent-shell-speak-tool-calls)

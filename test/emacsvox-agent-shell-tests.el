@@ -171,13 +171,13 @@
 (declare-function emacsvox-agent-shell--permission-event-setup
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--set-session-model-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-interaction"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--set-session-mode-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-interaction"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--cycle-session-mode-around
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-interaction"
                   (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--session-focused-p
                   "emacsvox-agent-shell" (&optional buffer))
@@ -288,10 +288,10 @@
 (declare-function emacsvox-agent-shell--table-between
                   "emacsvox-agent-shell" (origin destination direction))
 (declare-function emacsvox-agent-shell--viewport-submit-announcement
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-interaction"
                   (disposition keep-composing dismiss))
 (declare-function emacsvox-agent-shell--viewport-submit-disposition
-                  "emacsvox-agent-shell" ())
+                  "emacsvox-agent-shell-interaction" ())
 (declare-function emacsvox-agent-shell-disable "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell-enable "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell-speech-setup

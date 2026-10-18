@@ -257,6 +257,17 @@ All 673 source and compiled integration cases and all 11 graphical cases pass.
 Incremental compilation has no warnings; byte-code preflight, headers and
 generated reference pass.
 
+Question forms committed as =0bf9bef96= after the documentation release check.
+The second slice moves session configuration callbacks, steering and pushed
+turns, prompt queues and compose submission/cancellation into the interaction
+module. Callback generations, dynamic request flags and session snapshots
+move with their existing cleanup. Event cache cleanup remains in the same
+operation and order; subscriptions and activation remain centralized.
+All 673 source and compiled integration cases and all 11 graphical cases pass.
+The final incremental build is warning-free after adding the forward
+declaration for the legacy configuration accessor. Byte-code preflight,
+headers, generated reference and the documentation release check pass.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

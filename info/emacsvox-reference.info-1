@@ -1415,10 +1415,11 @@ File: emacsvox-reference.info,  Node: emacsvox-agent-shell-interaction,  Next: e
 2.12 emacsvox-agent-shell-interaction
 =====================================
 
-Handle interactive questions and their confirmed outcomes.  The facade
-owns advice installation and activation; event subscriptions call these
-helpers.  Load through 'emacsvox-agent-shell'.  Loading definitions
-installs no advice or buffer hooks.
+Handle questions, session settings, steering, push, queue and compose
+outcomes.  Keep callback generations and interaction snapshots with
+cleanup.  The facade owns advice installation and activation; event
+subscriptions call these helpers.  Load through 'emacsvox-agent-shell'.
+Loading definitions installs no advice or buffer hooks.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-agent-shell-navigation,  Next: emacsvox-agent-shell-render,  Prev: emacsvox-agent-shell-interaction,  Up: Emacsvox Commands And Options
