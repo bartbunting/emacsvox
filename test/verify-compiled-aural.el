@@ -73,11 +73,12 @@
   (when (process-list)
     (error "Wire codec started a process"))
   (load (expand-file-name "speech/omnivox-inventory.elc" build-directory) nil nil)
+  (load (expand-file-name "speech/omnivox-discovery.elc" build-directory) nil nil)
   (dolist (feature '(omnivox-voices tts-speak))
     (when (featurep feature)
-      (error "Inventory definitions loaded speech runtime %S" feature)))
+      (error "Inventory and discovery definitions loaded speech runtime %S" feature)))
   (when (process-list)
-    (error "Inventory definitions started a process"))
+    (error "Inventory and discovery definitions started a process"))
   ;; Generic voice definitions must not initialize an adapter or speech runtime.
   (load (expand-file-name "speech/tts-voice-api.elc" build-directory) nil nil)
   (dolist (feature '(tts-speak tts-lifecycle voice-setup omnivox-voices))
@@ -206,6 +207,8 @@
          swiftmac-voice-capabilities
          omnivox-voice-capabilities
          omnivox-voice-inventory
+         omnivox-query-voices
+         omnivox-refresh-voice-inventory
          omnivox--encode-control-request
          omnivox--preview-selector-json
          omnivox-library--edit-selection

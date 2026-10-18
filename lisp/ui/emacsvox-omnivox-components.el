@@ -56,7 +56,7 @@
 (defvar omnivox-engine-inventory-time)
 (defvar omnivox--control-inventory-property)
 (declare-function omnivox-voice-inventory "omnivox-inventory" ())
-(declare-function omnivox-refresh-voice-inventory "omnivox-voices" ())
+(declare-function omnivox-refresh-voice-inventory "omnivox-discovery" ())
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 (declare-function tts-notify "tts-speak" (text &optional dont-log))
 (declare-function emacsvox-aural-voice-workbench--open-engine

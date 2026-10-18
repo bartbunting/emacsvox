@@ -320,6 +320,22 @@ no processes and does not load the adapter. Incremental compilation, byte-code
 preflight, headers, generated reference and the documentation release check
 pass. Compiler warnings match the existing entry-point baseline.
 
+Inventory reporting committed as =422df7bfb=.
+
+Physical voice discovery, its cache and refresh entry points now live in
+=speech/omnivox-discovery=. Local executable discovery and remote inventory
+selection retain their existing behavior. Request coalescing and inventory
+responses stay in the adapter: responses also coordinate routing registration,
+so moving them would cross the lifecycle boundary. All extracted definitions
+are unchanged, including temporary-file cleanup and request ordering.
+
+Discovery verification matches the first slice: 712 of 713 source and compiled
+cases pass, with only the baseline capital-tone failure. Isolated compiled
+parity, normal startup, byte-code preflight, headers, generated reference and
+the documentation release check pass. Neither discovery nor inventory loads
+the speech adapter or starts processes when loaded alone. Compiler warnings
+remain limited to the existing entry-point baseline.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -330,7 +346,7 @@ and comments; extracted modules retain named authors and copyright holders.
 | emacsvox-agent-shell.el | 7688 | 1413 |
 | emacsvox-aural-voice-workbench.el | 3013 | 2212 |
 | omnivox-library.el | 1069 | 419 |
-| omnivox-voices.el | 3117 | 2491 |
+| omnivox-voices.el | 3117 | 2406 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
 

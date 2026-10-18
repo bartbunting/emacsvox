@@ -29,6 +29,7 @@
 ;; Voice and rate support for the Omnivox speech server.  Omnivox accepts
 ;; generic Emacsvox protocol commands and uses [[pitch FLOAT]] inline codes.
 ;; Inventory snapshots and capability descriptions live in `omnivox-inventory'.
+;; Physical voice discovery and refresh entry points live in `omnivox-discovery'.
 
 ;;; Code:
 
@@ -39,7 +40,7 @@
 (require 'subr-x)
 (require 'emacsvox-aural-voice-runtime)
 (require 'omnivox-control-codec)
-(require 'omnivox-inventory)
+(require 'omnivox-discovery)
 (require 'omnivox-choice-codec)
 (require 'omnivox-preview)
 (require 'omnivox-parameters)
@@ -174,10 +175,6 @@ The value is nil or one selector in the format documented by
   "Whether Omnivox may try another same-language voice on an engine."
   :group 'omnivox
   :type 'boolean)
-
-(defvar omnivox-available-voices nil
-  "Physical voices most recently discovered from Omnivox.
-Each entry has the form (ID NAME LANGUAGE QUALITY).")
 
 (defconst omnivox--maximum-event-line-bytes
   (+ (length omnivox-marker-event-prefix)
@@ -2140,80 +2137,6 @@ taken effect on the server.  Reapply to confirm the desired configuration."
     (when (process-live-p process)
       (omnivox--negotiate-process process))))
 
-(defun omnivox--server-program ()
-  "Return the Omnivox server program used for discovery, or nil."
-  (let ((program (tts--resolve-program tts-program)))
-    (and program (file-executable-p program) program)))
-
-(defun omnivox--voice-entry-p (entry)
-  "Return non-nil when ENTRY is a valid discovered voice record."
-  (and (listp entry)
-       (= (length entry) 4)
-       (cl-every #'stringp entry)))
-
-(defun omnivox--parse-voices (output)
-  "Parse and validate Omnivox voice discovery OUTPUT."
-  (condition-case error-data
-      (let* ((parsed (read-from-string output))
-             (voices (car parsed))
-             (remainder (substring output (cdr parsed))))
-        (unless (string-empty-p (string-trim remainder))
-          (error "Unexpected data after voice list"))
-        (unless (and (listp voices)
-                     (cl-every #'omnivox--voice-entry-p voices))
-          (error "Invalid Omnivox voice list"))
-        voices)
-    (error
-     (error "Could not parse Omnivox voices: %s"
-            (error-message-string error-data)))))
-
-(defun omnivox-query-voices ()
-  "Return physical voices reported by the current Omnivox workstation.
-Signal an error if discovery cannot run or returns malformed data."
-  (if (omnivox-remote-enabled-p)
-      (let ((inventory
-             (and (process-live-p tts-speaker-process)
-                  (process-get tts-speaker-process omnivox--control-inventory-property))))
-        (unless inventory
-          (user-error "Workstation voice inventory is not ready; connect and wait for routing readiness"))
-        (cl-mapcan
-         (lambda (engine)
-           (mapcar
-            (lambda (voice)
-              (list (plist-get (plist-get voice :id) :voice_id)
-                    (plist-get voice :display_name)
-                    (or (plist-get voice :language) "")
-                    (or (plist-get voice :quality) "")))
-            (append (plist-get engine :voices) nil)))
-         (append (plist-get inventory :engines) nil)))
-    (let ((program (omnivox--server-program)))
-      (unless program
-        (error "Could not find the Omnivox server executable"))
-      (let ((stderr-file (make-temp-file "omnivox-discovery-")))
-        (unwind-protect
-            (with-temp-buffer
-              (let ((status
-                     (process-file program nil (list t stderr-file) nil
-                                   "--list-voices-alist")))
-                (unless (and (integerp status) (zerop status))
-                  (goto-char (point-max))
-                  (insert "\n")
-                  (insert-file-contents stderr-file)
-                  (error "Omnivox voice discovery failed%s"
-                         (if (string-empty-p (string-trim (buffer-string)))
-                             ""
-                           (format ": %s" (string-trim (buffer-string))))))
-                (omnivox--parse-voices (buffer-string))))
-          (delete-file stderr-file))))))
-
-(defun omnivox-refresh-voices ()
-  "Refresh and return the physical voices available from Omnivox."
-  (interactive)
-  (setq omnivox-available-voices (omnivox-query-voices))
-  (when (called-interactively-p 'interactive)
-    (message "Found %d Omnivox voices" (length omnivox-available-voices)))
-  omnivox-available-voices)
-
 (defun omnivox--send-state-command (command &optional effects)
   "Send Omnivox state COMMAND to the live speaker processes.
 Return the number of distinct processes that received the command."
@@ -2283,14 +2206,6 @@ Return the number of distinct processes that received the command."
          (omnivox--pending-requests process))
         identifier)
       (omnivox--send-control-request process '(:type "inventory") #'omnivox--handle-inventory-response)))
-
-(defun omnivox-refresh-voice-inventory ()
-  "Request fresh inventories from live Omnivox processes and return a snapshot."
-  (dolist (process (delete-dups (list tts-speaker-process tts-notify-process)))
-    (when (and (process-live-p process)
-               (omnivox--process-supports-p process "engine_inventory"))
-      (omnivox--request-inventory process)))
-  (omnivox-voice-inventory))
 
 (defun omnivox--handle-recovery-probe-response (callback process response)
   "Handle engine recovery probe RESPONSE and invoke CALLBACK."

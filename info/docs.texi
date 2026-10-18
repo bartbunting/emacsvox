@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 338 loaded; 0 intentionally omitted.
+@c Modules: 339 loaded; 0 intentionally omitted.
 @c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
 @c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
 @c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
@@ -56,20 +56,20 @@
 @c Loaded: integrations/emacsvox-yaml.elc integrations/emacsvox-yasnippet.elc integrations/gm-nnir.elc integrations/gmaps.elc integrations/ladspa.elc
 @c Loaded: integrations/light.elc integrations/omaps.elc integrations/sox.elc integrations/tetris.elc integrations/xbacklight.elc
 @c Loaded: speech/dectalk-voices.elc speech/emacsvox-windows-speech.elc speech/espeak-voices.elc speech/mac-voices.elc speech/omnivox-choice-codec.elc
-@c Loaded: speech/omnivox-control-codec.elc speech/omnivox-engine-settings.elc speech/omnivox-inventory.elc speech/omnivox-library-apply.elc speech/omnivox-library-runtime.elc
-@c Loaded: speech/omnivox-native-codec.elc speech/omnivox-parameters-codec.elc speech/omnivox-parameters.elc speech/omnivox-preview.elc speech/omnivox-punctuation-profiles.elc
-@c Loaded: speech/omnivox-remote.elc speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc speech/plain-voices.elc
-@c Loaded: speech/swiftmac-voices.elc speech/tts-lifecycle.elc speech/tts-queue-state.elc speech/tts-speak.elc speech/tts-voice-api.elc
-@c Loaded: speech/voice-setup.elc ui/emacsvox-aural-change-feedback.elc ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc ui/emacsvox-aural-feature-fragments.elc
-@c Loaded: ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc ui/emacsvox-aural-profiles.elc
-@c Loaded: ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc ui/emacsvox-aural-voice-bulk.elc
-@c Loaded: ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc
-@c Loaded: ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc
-@c Loaded: ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc
-@c Loaded: ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc
-@c Loaded: ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc
-@c Loaded: ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc
-@c Loaded: voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
+@c Loaded: speech/omnivox-control-codec.elc speech/omnivox-discovery.elc speech/omnivox-engine-settings.elc speech/omnivox-inventory.elc speech/omnivox-library-apply.elc
+@c Loaded: speech/omnivox-library-runtime.elc speech/omnivox-native-codec.elc speech/omnivox-parameters-codec.elc speech/omnivox-parameters.elc speech/omnivox-preview.elc
+@c Loaded: speech/omnivox-punctuation-profiles.elc speech/omnivox-remote.elc speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc
+@c Loaded: speech/plain-voices.elc speech/swiftmac-voices.elc speech/tts-lifecycle.elc speech/tts-queue-state.elc speech/tts-speak.elc
+@c Loaded: speech/tts-voice-api.elc speech/voice-setup.elc ui/emacsvox-aural-change-feedback.elc ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc
+@c Loaded: ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc
+@c Loaded: ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc
+@c Loaded: ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc
+@c Loaded: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc
+@c Loaded: ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc
+@c Loaded: ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc
+@c Loaded: ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc
+@c Loaded: ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc
+@c Loaded: voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -388,6 +388,7 @@ This chapter documents a total of 1704 commands and 256 options.
 * omnivox-catalogue:: Available voices and downloads.
 * omnivox-choice-codec:: Individual voice wire values.
 * omnivox-control-codec:: Omnivox control wire data.
+* omnivox-discovery:: Omnivox voice discovery and refresh.
 * omnivox-engine-configuration:: Local engine configuration.
 * omnivox-engine-settings:: Local engine startup settings.
 * omnivox-espeak-variants:: Bundled eSpeak variant selection.
@@ -23570,11 +23571,11 @@ the same value without generating a second version source.
 
 Vertico is a modern completion UI that uses Emacs's native completion engine
 This module speech-enables Vertico's UI
-
 @node emacsvox-view
 @section emacsvox-view
 
 Provide additional advice to view-mode
+
 @subsection Emacsvox-View Commands
 
 @subsubsection emacsvox-view-line-to-top
@@ -27273,6 +27274,15 @@ process capability checks, request admission, callbacks and registration.
 Pitch conversion and generic preview metadata use the established adapter
 and TTS helpers; loading this module does not initialize either runtime.
 
+@node omnivox-discovery
+@section omnivox-discovery
+
+Discover physical voices locally or from the connected workstation and
+request inventory refreshes through the voice adapter's control service.
+The adapter retains negotiation, request coalescing and response handling,
+including the routing registration that follows an inventory response.
+Loading these definitions does not run discovery or start speech processes.
+
 @node omnivox-engine-configuration
 @section omnivox-engine-configuration
 
@@ -27378,6 +27388,7 @@ authentication, heartbeats, lane recovery, and bundled resource identifiers.
 Voice and rate support for the Omnivox speech server.  Omnivox accepts
 generic Emacsvox protocol commands and uses [[pitch FLOAT]] inline codes.
 Inventory snapshots and capability descriptions live in `omnivox-inventory'.
+Physical voice discovery and refresh entry points live in `omnivox-discovery'.
 
 @node outloud-voices
 @section outloud-voices
