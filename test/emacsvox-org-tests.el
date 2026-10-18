@@ -13,7 +13,7 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/emacsvox-org.el"
+        "../lisp/integrations/emacsvox-org.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
   ;; Exercise source even when a compiled integration module exists.
   (load module nil nil))

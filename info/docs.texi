@@ -2,62 +2,62 @@
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
 @c Modules: 325 loaded; 0 intentionally omitted.
-@c Loaded: dectalk-voices.elc dom-addons.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
-@c Loaded: emacsvox-aural-change-feedback.elc emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc emacsvox-aural-description.elc
-@c Loaded: emacsvox-aural-doctor.elc emacsvox-aural-editor.elc emacsvox-aural-explanation.elc emacsvox-aural-feature-fragments.elc emacsvox-aural-feedback-details.elc
-@c Loaded: emacsvox-aural-history.elc emacsvox-aural-home.elc emacsvox-aural-inspection.elc emacsvox-aural-menu.elc emacsvox-aural-overrides.elc
-@c Loaded: emacsvox-aural-planner.elc emacsvox-aural-preview.elc emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc emacsvox-aural-provider-markdown.elc
-@c Loaded: emacsvox-aural-provider-notmuch.elc emacsvox-aural-provider-org-srs.elc emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc
-@c Loaded: emacsvox-aural-recent-feedback.elc emacsvox-aural-replay.elc emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc
-@c Loaded: emacsvox-aural-schemes.elc emacsvox-aural-semantics.elc emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc
-@c Loaded: emacsvox-aural-submission.elc emacsvox-aural-tools.elc emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc
-@c Loaded: emacsvox-aural-voice-bulk.elc emacsvox-aural-voice-context.elc emacsvox-aural-voice-data.elc emacsvox-aural-voice-drafts.elc emacsvox-aural-voice-editing.elc
-@c Loaded: emacsvox-aural-voice-editor.elc emacsvox-aural-voice-engine-controls.elc emacsvox-aural-voice-menu.elc emacsvox-aural-voice-palettes.elc emacsvox-aural-voice-runtime.elc
-@c Loaded: emacsvox-aural-voice-workbench.elc emacsvox-aural.elc emacsvox-capitalization.elc emacsvox-comint.elc emacsvox-eat-core.elc
-@c Loaded: emacsvox-eat-input.elc emacsvox-eat-review.elc emacsvox-eat.elc emacsvox-emoji.elc emacsvox-eshell.elc
-@c Loaded: emacsvox-eterm.elc emacsvox-eww.elc emacsvox-extras.elc emacsvox-filtertext.elc emacsvox-gnus.elc
-@c Loaded: emacsvox-gridtext.elc emacsvox-hide.elc emacsvox-indentation.elc emacsvox-interaction.elc emacsvox-keymap.elc
-@c Loaded: emacsvox-line-cues.elc emacsvox-markdown.elc emacsvox-muggles-core.elc emacsvox-muggles-ui.elc emacsvox-notmuch.elc
-@c Loaded: emacsvox-omnivox-components.elc emacsvox-org-srs.elc emacsvox-org.elc emacsvox-output-settings.elc emacsvox-paths.elc
+@c Loaded: dectalk-voices.elc dom-addons.elc emacsvox-advice.elc emacsvox-aural-change-feedback.elc emacsvox-aural-compatibility-voice.elc
+@c Loaded: emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc emacsvox-aural-description.elc emacsvox-aural-doctor.elc emacsvox-aural-editor.elc
+@c Loaded: emacsvox-aural-explanation.elc emacsvox-aural-feature-fragments.elc emacsvox-aural-feedback-details.elc emacsvox-aural-history.elc emacsvox-aural-home.elc
+@c Loaded: emacsvox-aural-inspection.elc emacsvox-aural-menu.elc emacsvox-aural-overrides.elc emacsvox-aural-planner.elc emacsvox-aural-preview.elc
+@c Loaded: emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc emacsvox-aural-provider-markdown.elc emacsvox-aural-provider-notmuch.elc emacsvox-aural-provider-org-srs.elc
+@c Loaded: emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc emacsvox-aural-recent-feedback.elc emacsvox-aural-replay.elc
+@c Loaded: emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc emacsvox-aural-schemes.elc emacsvox-aural-semantics.elc
+@c Loaded: emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc emacsvox-aural-submission.elc emacsvox-aural-tools.elc
+@c Loaded: emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc emacsvox-aural-voice-bulk.elc emacsvox-aural-voice-context.elc
+@c Loaded: emacsvox-aural-voice-data.elc emacsvox-aural-voice-drafts.elc emacsvox-aural-voice-editing.elc emacsvox-aural-voice-editor.elc emacsvox-aural-voice-engine-controls.elc
+@c Loaded: emacsvox-aural-voice-menu.elc emacsvox-aural-voice-palettes.elc emacsvox-aural-voice-runtime.elc emacsvox-aural-voice-workbench.elc emacsvox-aural.elc
+@c Loaded: emacsvox-capitalization.elc emacsvox-emoji.elc emacsvox-extras.elc emacsvox-filtertext.elc emacsvox-gridtext.elc
+@c Loaded: emacsvox-hide.elc emacsvox-indentation.elc emacsvox-interaction.elc emacsvox-keymap.elc emacsvox-line-cues.elc
+@c Loaded: emacsvox-muggles-core.elc emacsvox-muggles-ui.elc emacsvox-omnivox-components.elc emacsvox-output-settings.elc emacsvox-paths.elc
 @c Loaded: emacsvox-preamble.elc emacsvox-pronounce.elc emacsvox-settings-changes.elc emacsvox-settings-integrations.elc emacsvox-settings-workflows.elc
-@c Loaded: emacsvox-settings.elc emacsvox-setup.elc emacsvox-shr.elc emacsvox-sound-library.elc emacsvox-sounds.elc
-@c Loaded: emacsvox-speak.elc emacsvox-spelling.elc emacsvox-table-reader.elc emacsvox-table-settings.elc emacsvox-table-ui.elc
-@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tone-editor.elc emacsvox-transient.elc
-@c Loaded: emacsvox-version.elc emacsvox-vterm.elc emacsvox-welcome.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
-@c Loaded: emacsvox-xslt.elc emacsvox.elc espeak-voices.elc g-utils.elc gweb.elc
-@c Loaded: integrations/amixer.elc integrations/emacsvox-2048.elc integrations/emacsvox-abc-mode.elc integrations/emacsvox-ace-window.elc integrations/emacsvox-add-log.elc
-@c Loaded: integrations/emacsvox-amark.elc integrations/emacsvox-annotate.elc integrations/emacsvox-arc.elc integrations/emacsvox-auctex.elc integrations/emacsvox-avy.elc
-@c Loaded: integrations/emacsvox-bbdb.elc integrations/emacsvox-bibtex.elc integrations/emacsvox-bookmark.elc integrations/emacsvox-bookshare.elc integrations/emacsvox-browse-kill-ring.elc
-@c Loaded: integrations/emacsvox-bs.elc integrations/emacsvox-buff-menu.elc integrations/emacsvox-c.elc integrations/emacsvox-calc.elc integrations/emacsvox-calculator.elc
-@c Loaded: integrations/emacsvox-calendar.elc integrations/emacsvox-calibredb.elc integrations/emacsvox-chess.elc integrations/emacsvox-cider.elc integrations/emacsvox-clojure.elc
-@c Loaded: integrations/emacsvox-cmuscheme.elc integrations/emacsvox-combobulate.elc integrations/emacsvox-company.elc integrations/emacsvox-compile.elc integrations/emacsvox-consult.elc
-@c Loaded: integrations/emacsvox-corfu.elc integrations/emacsvox-cperl.elc integrations/emacsvox-custom.elc integrations/emacsvox-dbus.elc integrations/emacsvox-deadgrep.elc
-@c Loaded: integrations/emacsvox-debugger.elc integrations/emacsvox-denote.elc integrations/emacsvox-desktop.elc integrations/emacsvox-devdocs.elc integrations/emacsvox-dictionary.elc
-@c Loaded: integrations/emacsvox-diff-mode.elc integrations/emacsvox-dired.elc integrations/emacsvox-dumb-jump.elc integrations/emacsvox-ebuku.elc integrations/emacsvox-ediff.elc
-@c Loaded: integrations/emacsvox-eglot.elc integrations/emacsvox-ein.elc integrations/emacsvox-elfeed.elc integrations/emacsvox-elisp-refs.elc integrations/emacsvox-ellama.elc
-@c Loaded: integrations/emacsvox-elpher.elc integrations/emacsvox-elpy.elc integrations/emacsvox-embark.elc integrations/emacsvox-emms.elc integrations/emacsvox-empv.elc
-@c Loaded: integrations/emacsvox-enriched.elc integrations/emacsvox-entertain.elc integrations/emacsvox-enwc.elc integrations/emacsvox-epa.elc integrations/emacsvox-epub.elc
-@c Loaded: integrations/emacsvox-erc.elc integrations/emacsvox-ess.elc integrations/emacsvox-etable.elc integrations/emacsvox-eudc.elc integrations/emacsvox-evil.elc
-@c Loaded: integrations/emacsvox-exwm.elc integrations/emacsvox-feeds.elc integrations/emacsvox-ffap.elc integrations/emacsvox-ffip.elc integrations/emacsvox-flycheck.elc
-@c Loaded: integrations/emacsvox-flymake.elc integrations/emacsvox-flyspell.elc integrations/emacsvox-folding.elc integrations/emacsvox-forge.elc integrations/emacsvox-forms.elc
-@c Loaded: integrations/emacsvox-geiser.elc integrations/emacsvox-gnuplot.elc integrations/emacsvox-go-mode.elc integrations/emacsvox-gomoku.elc integrations/emacsvox-google.elc
-@c Loaded: integrations/emacsvox-gptel.elc integrations/emacsvox-gud.elc integrations/emacsvox-haskell.elc integrations/emacsvox-helm.elc integrations/emacsvox-helpful.elc
-@c Loaded: integrations/emacsvox-hide-lines.elc integrations/emacsvox-hideshow.elc integrations/emacsvox-hydra.elc integrations/emacsvox-ibuffer.elc integrations/emacsvox-ido.elc
-@c Loaded: integrations/emacsvox-iedit.elc integrations/emacsvox-info.elc integrations/emacsvox-ispell.elc integrations/emacsvox-ivy.elc integrations/emacsvox-journalctl.elc
-@c Loaded: integrations/emacsvox-js2.elc integrations/emacsvox-kmacro.elc integrations/emacsvox-librivox.elc integrations/emacsvox-lispy.elc integrations/emacsvox-lua.elc
-@c Loaded: integrations/emacsvox-m-player.elc integrations/emacsvox-magit.elc integrations/emacsvox-make-mode.elc integrations/emacsvox-man.elc integrations/emacsvox-marginalia.elc
-@c Loaded: integrations/emacsvox-maths.elc integrations/emacsvox-message.elc integrations/emacsvox-mines.elc integrations/emacsvox-mu4e.elc integrations/emacsvox-multiple-cursors.elc
-@c Loaded: integrations/emacsvox-net-utils.elc integrations/emacsvox-newsticker.elc integrations/emacsvox-nm.elc integrations/emacsvox-nov.elc integrations/emacsvox-nxml.elc
-@c Loaded: integrations/emacsvox-ocr.elc integrations/emacsvox-orgalist.elc integrations/emacsvox-outline.elc integrations/emacsvox-package.elc integrations/emacsvox-perl.elc
-@c Loaded: integrations/emacsvox-pipewire.elc integrations/emacsvox-popup.elc integrations/emacsvox-proced.elc integrations/emacsvox-project.elc integrations/emacsvox-projectile.elc
-@c Loaded: integrations/emacsvox-py.elc integrations/emacsvox-pydoc.elc integrations/emacsvox-python.elc integrations/emacsvox-racket.elc integrations/emacsvox-re-builder.elc
-@c Loaded: integrations/emacsvox-reftex.elc integrations/emacsvox-related.elc integrations/emacsvox-rg.elc integrations/emacsvox-rmail.elc integrations/emacsvox-rpm-spec.elc
-@c Loaded: integrations/emacsvox-rst.elc integrations/emacsvox-ruby.elc integrations/emacsvox-rust-mode.elc integrations/emacsvox-sage.elc integrations/emacsvox-sdcv.elc
-@c Loaded: integrations/emacsvox-ses.elc integrations/emacsvox-sgml-mode.elc integrations/emacsvox-sh-script.elc integrations/emacsvox-slime.elc integrations/emacsvox-smartparens.elc
-@c Loaded: integrations/emacsvox-solitaire.elc integrations/emacsvox-speedbar.elc integrations/emacsvox-sql.elc integrations/emacsvox-sudoku.elc integrations/emacsvox-supercite.elc
-@c Loaded: integrations/emacsvox-syslog.elc integrations/emacsvox-tab-bar.elc integrations/emacsvox-tar.elc integrations/emacsvox-tcl.elc integrations/emacsvox-tempo.elc
-@c Loaded: integrations/emacsvox-tetris.elc integrations/emacsvox-texinfo.elc integrations/emacsvox-todo-mode.elc integrations/emacsvox-treesit.elc integrations/emacsvox-typo.elc
-@c Loaded: integrations/emacsvox-url-template.elc integrations/emacsvox-vdiff.elc integrations/emacsvox-vertico.elc integrations/emacsvox-view.elc integrations/emacsvox-wdired.elc
+@c Loaded: emacsvox-settings.elc emacsvox-setup.elc emacsvox-sound-library.elc emacsvox-sounds.elc emacsvox-speak.elc
+@c Loaded: emacsvox-spelling.elc emacsvox-table-reader.elc emacsvox-table-settings.elc emacsvox-table-ui.elc emacsvox-table.elc
+@c Loaded: emacsvox-tabulate.elc emacsvox-tone-editor.elc emacsvox-version.elc emacsvox-welcome.elc emacsvox-windows-speech.elc
+@c Loaded: emacsvox-wizards.elc emacsvox-xslt.elc emacsvox.elc espeak-voices.elc g-utils.elc
+@c Loaded: gweb.elc integrations/amixer.elc integrations/emacsvox-2048.elc integrations/emacsvox-abc-mode.elc integrations/emacsvox-ace-window.elc
+@c Loaded: integrations/emacsvox-add-log.elc integrations/emacsvox-agent-shell-render.elc integrations/emacsvox-agent-shell.elc integrations/emacsvox-amark.elc integrations/emacsvox-annotate.elc
+@c Loaded: integrations/emacsvox-arc.elc integrations/emacsvox-auctex.elc integrations/emacsvox-avy.elc integrations/emacsvox-bbdb.elc integrations/emacsvox-bibtex.elc
+@c Loaded: integrations/emacsvox-bookmark.elc integrations/emacsvox-bookshare.elc integrations/emacsvox-browse-kill-ring.elc integrations/emacsvox-bs.elc integrations/emacsvox-buff-menu.elc
+@c Loaded: integrations/emacsvox-c.elc integrations/emacsvox-calc.elc integrations/emacsvox-calculator.elc integrations/emacsvox-calendar.elc integrations/emacsvox-calibredb.elc
+@c Loaded: integrations/emacsvox-chess.elc integrations/emacsvox-cider.elc integrations/emacsvox-clojure.elc integrations/emacsvox-cmuscheme.elc integrations/emacsvox-combobulate.elc
+@c Loaded: integrations/emacsvox-comint.elc integrations/emacsvox-company.elc integrations/emacsvox-compile.elc integrations/emacsvox-consult.elc integrations/emacsvox-corfu.elc
+@c Loaded: integrations/emacsvox-cperl.elc integrations/emacsvox-custom.elc integrations/emacsvox-dbus.elc integrations/emacsvox-deadgrep.elc integrations/emacsvox-debugger.elc
+@c Loaded: integrations/emacsvox-denote.elc integrations/emacsvox-desktop.elc integrations/emacsvox-devdocs.elc integrations/emacsvox-dictionary.elc integrations/emacsvox-diff-mode.elc
+@c Loaded: integrations/emacsvox-dired.elc integrations/emacsvox-dumb-jump.elc integrations/emacsvox-eat-core.elc integrations/emacsvox-eat-input.elc integrations/emacsvox-eat-review.elc
+@c Loaded: integrations/emacsvox-eat.elc integrations/emacsvox-ebuku.elc integrations/emacsvox-ediff.elc integrations/emacsvox-eglot.elc integrations/emacsvox-ein.elc
+@c Loaded: integrations/emacsvox-elfeed.elc integrations/emacsvox-elisp-refs.elc integrations/emacsvox-ellama.elc integrations/emacsvox-elpher.elc integrations/emacsvox-elpy.elc
+@c Loaded: integrations/emacsvox-embark.elc integrations/emacsvox-emms.elc integrations/emacsvox-empv.elc integrations/emacsvox-enriched.elc integrations/emacsvox-entertain.elc
+@c Loaded: integrations/emacsvox-enwc.elc integrations/emacsvox-epa.elc integrations/emacsvox-epub.elc integrations/emacsvox-erc.elc integrations/emacsvox-eshell.elc
+@c Loaded: integrations/emacsvox-ess.elc integrations/emacsvox-etable.elc integrations/emacsvox-eterm.elc integrations/emacsvox-eudc.elc integrations/emacsvox-evil.elc
+@c Loaded: integrations/emacsvox-eww.elc integrations/emacsvox-exwm.elc integrations/emacsvox-feeds.elc integrations/emacsvox-ffap.elc integrations/emacsvox-ffip.elc
+@c Loaded: integrations/emacsvox-flycheck.elc integrations/emacsvox-flymake.elc integrations/emacsvox-flyspell.elc integrations/emacsvox-folding.elc integrations/emacsvox-forge.elc
+@c Loaded: integrations/emacsvox-forms.elc integrations/emacsvox-geiser.elc integrations/emacsvox-gnuplot.elc integrations/emacsvox-gnus.elc integrations/emacsvox-go-mode.elc
+@c Loaded: integrations/emacsvox-gomoku.elc integrations/emacsvox-google.elc integrations/emacsvox-gptel.elc integrations/emacsvox-gud.elc integrations/emacsvox-haskell.elc
+@c Loaded: integrations/emacsvox-helm.elc integrations/emacsvox-helpful.elc integrations/emacsvox-hide-lines.elc integrations/emacsvox-hideshow.elc integrations/emacsvox-hydra.elc
+@c Loaded: integrations/emacsvox-ibuffer.elc integrations/emacsvox-ido.elc integrations/emacsvox-iedit.elc integrations/emacsvox-info.elc integrations/emacsvox-ispell.elc
+@c Loaded: integrations/emacsvox-ivy.elc integrations/emacsvox-journalctl.elc integrations/emacsvox-js2.elc integrations/emacsvox-kmacro.elc integrations/emacsvox-librivox.elc
+@c Loaded: integrations/emacsvox-lispy.elc integrations/emacsvox-lua.elc integrations/emacsvox-m-player.elc integrations/emacsvox-magit.elc integrations/emacsvox-make-mode.elc
+@c Loaded: integrations/emacsvox-man.elc integrations/emacsvox-marginalia.elc integrations/emacsvox-markdown.elc integrations/emacsvox-maths.elc integrations/emacsvox-message.elc
+@c Loaded: integrations/emacsvox-mines.elc integrations/emacsvox-mu4e.elc integrations/emacsvox-multiple-cursors.elc integrations/emacsvox-net-utils.elc integrations/emacsvox-newsticker.elc
+@c Loaded: integrations/emacsvox-nm.elc integrations/emacsvox-notmuch.elc integrations/emacsvox-nov.elc integrations/emacsvox-nxml.elc integrations/emacsvox-ocr.elc
+@c Loaded: integrations/emacsvox-org-srs.elc integrations/emacsvox-org.elc integrations/emacsvox-orgalist.elc integrations/emacsvox-outline.elc integrations/emacsvox-package.elc
+@c Loaded: integrations/emacsvox-perl.elc integrations/emacsvox-pipewire.elc integrations/emacsvox-popup.elc integrations/emacsvox-proced.elc integrations/emacsvox-project.elc
+@c Loaded: integrations/emacsvox-projectile.elc integrations/emacsvox-py.elc integrations/emacsvox-pydoc.elc integrations/emacsvox-python.elc integrations/emacsvox-racket.elc
+@c Loaded: integrations/emacsvox-re-builder.elc integrations/emacsvox-reftex.elc integrations/emacsvox-related.elc integrations/emacsvox-rg.elc integrations/emacsvox-rmail.elc
+@c Loaded: integrations/emacsvox-rpm-spec.elc integrations/emacsvox-rst.elc integrations/emacsvox-ruby.elc integrations/emacsvox-rust-mode.elc integrations/emacsvox-sage.elc
+@c Loaded: integrations/emacsvox-sdcv.elc integrations/emacsvox-ses.elc integrations/emacsvox-sgml-mode.elc integrations/emacsvox-sh-script.elc integrations/emacsvox-shr.elc
+@c Loaded: integrations/emacsvox-slime.elc integrations/emacsvox-smartparens.elc integrations/emacsvox-solitaire.elc integrations/emacsvox-speedbar.elc integrations/emacsvox-sql.elc
+@c Loaded: integrations/emacsvox-sudoku.elc integrations/emacsvox-supercite.elc integrations/emacsvox-syslog.elc integrations/emacsvox-tab-bar.elc integrations/emacsvox-tabulated-list.elc
+@c Loaded: integrations/emacsvox-tar.elc integrations/emacsvox-tcl.elc integrations/emacsvox-tempo.elc integrations/emacsvox-tetris.elc integrations/emacsvox-texinfo.elc
+@c Loaded: integrations/emacsvox-todo-mode.elc integrations/emacsvox-transient.elc integrations/emacsvox-treesit.elc integrations/emacsvox-typo.elc integrations/emacsvox-url-template.elc
+@c Loaded: integrations/emacsvox-vdiff.elc integrations/emacsvox-vertico.elc integrations/emacsvox-view.elc integrations/emacsvox-vterm.elc integrations/emacsvox-wdired.elc
 @c Loaded: integrations/emacsvox-we.elc integrations/emacsvox-websearch.elc integrations/emacsvox-webspace.elc integrations/emacsvox-which-key.elc integrations/emacsvox-widget.elc
 @c Loaded: integrations/emacsvox-windmove.elc integrations/emacsvox-woman.elc integrations/emacsvox-xkcd.elc integrations/emacsvox-xref.elc integrations/emacsvox-yaml.elc
 @c Loaded: integrations/emacsvox-yasnippet.elc integrations/gm-nnir.elc integrations/gmaps.elc integrations/ladspa.elc integrations/light.elc
@@ -9287,6 +9287,11 @@ Load `emacsvox-eat' rather than requiring this module directly.
 
 @subsubsection emacsvox-eat-cycle-verbosity
 @deffn {Command} emacsvox-eat-cycle-verbosity
+@table @kbd
+@item C-e q v
+@kindex C-e q v
+@end table
+
 @findex emacsvox-eat-cycle-verbosity
 
 @format
@@ -9311,6 +9316,11 @@ remain available.  This also works from the terminal’s frozen review buffer.
 
 @subsubsection emacsvox-eat-toggle-background-monitoring
 @deffn {Command} emacsvox-eat-toggle-background-monitoring  (&optional argument)
+@table @kbd
+@item C-e q m
+@kindex C-e q m
+@end table
+
 @findex emacsvox-eat-toggle-background-monitoring
 
 @format
@@ -9535,6 +9545,11 @@ Kill the content-bearing frozen EAT review and restore its prior window.
 
 @subsubsection emacsvox-eat-review-screen
 @deffn {Command} emacsvox-eat-review-screen
+@table @kbd
+@item C-e q r
+@kindex C-e q r
+@end table
+
 @findex emacsvox-eat-review-screen
 
 @format
@@ -9585,6 +9600,11 @@ Speak a bounded overview of the current immutable review view.
 
 @subsubsection emacsvox-eat-speak-completion-output
 @deffn {Command} emacsvox-eat-speak-completion-output
+@table @kbd
+@item C-e q c
+@kindex C-e q c
+@end table
+
 @findex emacsvox-eat-speak-completion-output
 
 @format
@@ -9594,6 +9614,11 @@ Speak the latest retained terminal candidate or help-row presentation.
 
 @subsubsection emacsvox-eat-speak-current-row
 @deffn {Command} emacsvox-eat-speak-current-row
+@table @kbd
+@item C-e q l
+@kindex C-e q l
+@end table
+
 @findex emacsvox-eat-speak-current-row
 
 @format
@@ -9603,6 +9628,11 @@ Speak the terminal cursor row from the latest retained screen snapshot.
 
 @subsubsection emacsvox-eat-speak-last-change
 @deffn {Command} emacsvox-eat-speak-last-change
+@table @kbd
+@item C-e q d
+@kindex C-e q d
+@end table
+
 @findex emacsvox-eat-speak-last-change
 
 @format
@@ -9612,6 +9642,11 @@ Speak the most recent quiesced terminal change from retained state.
 
 @subsubsection emacsvox-eat-speak-likely-focus
 @deffn {Command} emacsvox-eat-speak-likely-focus
+@table @kbd
+@item C-e q h
+@kindex C-e q h
+@end table
+
 @findex emacsvox-eat-speak-likely-focus
 
 @format
@@ -9621,6 +9656,11 @@ Speak the latest conservative terminal focus inference for review.
 
 @subsubsection emacsvox-eat-speak-prompt
 @deffn {Command} emacsvox-eat-speak-prompt
+@table @kbd
+@item C-e q p
+@kindex C-e q p
+@end table
+
 @findex emacsvox-eat-speak-prompt
 
 @format
@@ -9631,6 +9671,11 @@ This explicit command works regardless of autospeak or prompt preference.
 
 @subsubsection emacsvox-eat-speak-retained-metadata
 @deffn {Command} emacsvox-eat-speak-retained-metadata
+@table @kbd
+@item C-e q i
+@kindex C-e q i
+@end table
+
 @findex emacsvox-eat-speak-retained-metadata
 
 @format
@@ -9640,6 +9685,11 @@ Speak the latest retained or explicitly frozen title/directory change.
 
 @subsubsection emacsvox-eat-speak-retained-status
 @deffn {Command} emacsvox-eat-speak-retained-status
+@table @kbd
+@item C-e q t
+@kindex C-e q t
+@end table
+
 @findex emacsvox-eat-speak-retained-status
 
 @format
@@ -9649,6 +9699,11 @@ Speak the latest retained or explicitly frozen terminal status row.
 
 @subsubsection emacsvox-eat-speak-visible-screen
 @deffn {Command} emacsvox-eat-speak-visible-screen
+@table @kbd
+@item C-e q s
+@kindex C-e q s
+@end table
+
 @findex emacsvox-eat-speak-visible-screen
 
 @format

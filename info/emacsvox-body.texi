@@ -13013,8 +13013,8 @@ literal input@comma{} and repeat navigation must release unrelated keys.
 @anchor{Internal ownership and renderer tests}Internal ownership and renderer tests
 
 
-The main @code{lisp/emacsvox-agent-shell.el} module requires the internal
-@code{lisp/emacsvox-agent-shell-render.el} module.  The renderer module depends
+The main @code{lisp/integrations/emacsvox-agent-shell.el} module requires the internal
+@code{lisp/integrations/emacsvox-agent-shell-render.el} module.  The renderer module depends
 only on Emacs libraries@comma{} with no reverse dependency on the main integration.
 Its private helper names and argument contracts remain available through the
 main module.

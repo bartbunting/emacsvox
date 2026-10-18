@@ -27,7 +27,7 @@
 (defconst emacsvox-test--reading-dom-source-files
   '("lisp/integrations/emacsvox-bookshare.el"
     "lisp/integrations/emacsvox-epub.el"
-    "lisp/emacsvox-eww.el"
+    "lisp/integrations/emacsvox-eww.el"
     "lisp/integrations/emacsvox-librivox.el")
   "Source files migrated from obsolete DOM text APIs.")
 

@@ -699,9 +699,9 @@
   (dolist (entry
            '(("integrations/emacsvox-calendar.el"
               emacsvox-calendar-mark-personality voice-bolden)
-             ("emacsvox-eterm.el"
+             ("integrations/emacsvox-eterm.el"
               emacsvox-eterm-highlight-personality voice-bolden)
-             ("emacsvox-eterm.el"
+             ("integrations/emacsvox-eterm.el"
               emacsvox-eterm-bold-personality voice-bolden)
              ("integrations/emacsvox-eudc.el"
               emacsvox-eudc-attribute-value-personality voice-animate)

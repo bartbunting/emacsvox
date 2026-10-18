@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'markdown-mode)
-(load (expand-file-name "../lisp/emacsvox-markdown.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-markdown.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

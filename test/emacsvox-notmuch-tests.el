@@ -48,7 +48,7 @@
 (defconst emacsvox-notmuch-test--loaded-module-path
   (let* ((source
           (expand-file-name
-           "lisp/emacsvox-notmuch.el"
+           "lisp/integrations/emacsvox-notmuch.el"
            emacsvox-notmuch-test--repository-directory))
          (module
           (if (eq emacsvox-notmuch-test--module-load-kind 'compiled)

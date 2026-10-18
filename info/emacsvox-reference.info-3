@@ -5689,6 +5689,26 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e N:                                 emacsvox-wizards.   (line  280)
 * C-e p:                                 emacsvox-speak.     (line   25)
 * C-e P:                                 emacsvox-speak.     (line  747)
+* C-e q c:                               emacsvox-eat-review.
+                                                             (line  163)
+* C-e q d:                               emacsvox-eat-review.
+                                                             (line  179)
+* C-e q h:                               emacsvox-eat-review.
+                                                             (line  187)
+* C-e q i:                               emacsvox-eat-review.
+                                                             (line  204)
+* C-e q l:                               emacsvox-eat-review.
+                                                             (line  171)
+* C-e q m:                               emacsvox-eat-core.  (line   39)
+* C-e q p:                               emacsvox-eat-review.
+                                                             (line  195)
+* C-e q r:                               emacsvox-eat-review.
+                                                             (line  121)
+* C-e q s:                               emacsvox-eat-review.
+                                                             (line  220)
+* C-e q t:                               emacsvox-eat-review.
+                                                             (line  212)
+* C-e q v:                               emacsvox-eat-core.  (line   17)
 * C-e R:                                 emacsvox-speak.     (line  799)
 * C-e r:                                 emacsvox-speak.     (line  811)
 * C-e RET:                               emacsvox-websearch. (line   47)
@@ -7990,7 +8010,7 @@ Function Index
 * emacsvox-dired-speak-symlink-target:   emacsvox-dired.     (line  156)
 * emacsvox-dired-speak-symlink-target <1>: emacsvox-dired.   (line  157)
 * emacsvox-eat-cycle-verbosity:          emacsvox-eat-core.  (line   15)
-* emacsvox-eat-cycle-verbosity <1>:      emacsvox-eat-core.  (line   16)
+* emacsvox-eat-cycle-verbosity <1>:      emacsvox-eat-core.  (line   18)
 * emacsvox-eat-review-goto-cursor:       emacsvox-eat-review.
                                                              (line   15)
 * emacsvox-eat-review-goto-cursor <1>:   emacsvox-eat-review.
@@ -8026,61 +8046,61 @@ Function Index
 * emacsvox-eat-review-screen:            emacsvox-eat-review.
                                                              (line  119)
 * emacsvox-eat-review-screen <1>:        emacsvox-eat-review.
-                                                             (line  120)
+                                                             (line  122)
 * emacsvox-eat-review-show-completion:   emacsvox-eat-review.
-                                                             (line  127)
-* emacsvox-eat-review-show-completion <1>: emacsvox-eat-review.
                                                              (line  128)
+* emacsvox-eat-review-show-completion <1>: emacsvox-eat-review.
+                                                             (line  129)
 * emacsvox-eat-review-show-screen:       emacsvox-eat-review.
-                                                             (line  134)
-* emacsvox-eat-review-show-screen <1>:   emacsvox-eat-review.
                                                              (line  135)
+* emacsvox-eat-review-show-screen <1>:   emacsvox-eat-review.
+                                                             (line  136)
 * emacsvox-eat-review-speak-current-line: emacsvox-eat-review.
-                                                             (line  141)
+                                                             (line  142)
 * emacsvox-eat-review-speak-current-line <1>: emacsvox-eat-review.
-                                                             (line  143)
+                                                             (line  144)
 * emacsvox-eat-review-speak-view:        emacsvox-eat-review.
-                                                             (line  153)
-* emacsvox-eat-review-speak-view <1>:    emacsvox-eat-review.
                                                              (line  154)
+* emacsvox-eat-review-speak-view <1>:    emacsvox-eat-review.
+                                                             (line  155)
 * emacsvox-eat-speak-completion-output:  emacsvox-eat-review.
-                                                             (line  160)
-* emacsvox-eat-speak-completion-output <1>: emacsvox-eat-review.
                                                              (line  161)
+* emacsvox-eat-speak-completion-output <1>: emacsvox-eat-review.
+                                                             (line  164)
 * emacsvox-eat-speak-current-row:        emacsvox-eat-review.
-                                                             (line  167)
+                                                             (line  169)
 * emacsvox-eat-speak-current-row <1>:    emacsvox-eat-review.
-                                                             (line  168)
+                                                             (line  172)
 * emacsvox-eat-speak-last-change:        emacsvox-eat-review.
-                                                             (line  174)
+                                                             (line  177)
 * emacsvox-eat-speak-last-change <1>:    emacsvox-eat-review.
-                                                             (line  175)
+                                                             (line  180)
 * emacsvox-eat-speak-likely-focus:       emacsvox-eat-review.
-                                                             (line  181)
+                                                             (line  185)
 * emacsvox-eat-speak-likely-focus <1>:   emacsvox-eat-review.
-                                                             (line  182)
-* emacsvox-eat-speak-prompt:             emacsvox-eat-review.
                                                              (line  188)
+* emacsvox-eat-speak-prompt:             emacsvox-eat-review.
+                                                             (line  193)
 * emacsvox-eat-speak-prompt <1>:         emacsvox-eat-review.
-                                                             (line  189)
-* emacsvox-eat-speak-retained-metadata:  emacsvox-eat-review.
                                                              (line  196)
+* emacsvox-eat-speak-retained-metadata:  emacsvox-eat-review.
+                                                             (line  202)
 * emacsvox-eat-speak-retained-metadata <1>: emacsvox-eat-review.
-                                                             (line  197)
+                                                             (line  205)
 * emacsvox-eat-speak-retained-status:    emacsvox-eat-review.
-                                                             (line  203)
-* emacsvox-eat-speak-retained-status <1>: emacsvox-eat-review.
-                                                             (line  204)
-* emacsvox-eat-speak-visible-screen:     emacsvox-eat-review.
                                                              (line  210)
+* emacsvox-eat-speak-retained-status <1>: emacsvox-eat-review.
+                                                             (line  213)
+* emacsvox-eat-speak-visible-screen:     emacsvox-eat-review.
+                                                             (line  218)
 * emacsvox-eat-speak-visible-screen <1>: emacsvox-eat-review.
-                                                             (line  211)
-* emacsvox-eat-toggle-autospeak:         emacsvox-eat-core.  (line   23)
-* emacsvox-eat-toggle-autospeak <1>:     emacsvox-eat-core.  (line   24)
+                                                             (line  221)
+* emacsvox-eat-toggle-autospeak:         emacsvox-eat-core.  (line   24)
+* emacsvox-eat-toggle-autospeak <1>:     emacsvox-eat-core.  (line   25)
 * emacsvox-eat-toggle-background-monitoring: emacsvox-eat-core.
-                                                             (line   35)
+                                                             (line   36)
 * emacsvox-eat-toggle-background-monitoring <1>: emacsvox-eat-core.
-                                                             (line   37)
+                                                             (line   40)
 * emacsvox-ediff-speak-current-difference: emacsvox-ediff.   (line   25)
 * emacsvox-ediff-speak-current-difference <1>: emacsvox-ediff.
                                                              (line   26)

@@ -15,8 +15,8 @@
 (defconst emacsvox-agent-shell-render-test--file
   (expand-file-name
    (pcase (or (getenv "EMACSVOX_AGENT_SHELL_TEST_LOAD") "source")
-     ("source" "../lisp/emacsvox-agent-shell-render.el")
-     ("compiled" "../lisp/emacsvox-agent-shell-render.elc")
+     ("source" "../lisp/integrations/emacsvox-agent-shell-render.el")
+     ("compiled" "../lisp/integrations/emacsvox-agent-shell-render.elc")
      (kind (error "Unknown Agent Shell test load kind: %s" kind)))
    (file-name-directory (or load-file-name buffer-file-name))))
 

@@ -25,8 +25,8 @@
                                (or load-file-name buffer-file-name)))))
   ;; Exercise the exact renderer and facade in a fresh compiled run, or load
   ;; both sources explicitly.  Other dependencies retain the runner's policy.
-  (dolist (entry '(("emacsvox-agent-shell-render" . emacsvox-agent-shell--semantic-block-type)
-                   ("emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
+  (dolist (entry '(("integrations/emacsvox-agent-shell-render" . emacsvox-agent-shell--semantic-block-type)
+                   ("integrations/emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
     (let ((path (expand-file-name (concat (car entry) suffix) directory)))
       (load path nil nil t)
       (unless (equal (file-truename path)
@@ -3363,8 +3363,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Both module load orders preserve the prompt and speak only deleted input."
   (let ((emacs (expand-file-name invocation-name invocation-directory))
         (root emacsvox-agent-shell-test--repository-directory))
-    (dolist (order '(("emacsvox-advice.el" "emacsvox-agent-shell.el")
-                     ("emacsvox-agent-shell.el" "emacsvox-advice.el")))
+    (dolist (order '(("emacsvox-advice.el" "integrations/emacsvox-agent-shell.el")
+                     ("integrations/emacsvox-agent-shell.el" "emacsvox-advice.el")))
       (with-temp-buffer
         (let ((status
                (call-process

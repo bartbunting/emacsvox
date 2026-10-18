@@ -22,6 +22,8 @@
        (lisp-directory (expand-file-name "lisp/" root-directory)))
   (add-to-list 'load-path lisp-directory)
   (add-to-list 'load-path build-directory)
+  (load (expand-file-name "emacsvox-paths.el" build-directory) nil t t)
+  (emacsvox-paths--register build-directory)
   (dolist
       (library
        '("emacsvox-aural"

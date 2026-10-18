@@ -11,10 +11,10 @@
         (file-name-directory (or load-file-name buffer-file-name)))))
   ;; Load every implementation source explicitly.  Requiring the facade alone
   ;; could otherwise select a stale internal .elc during source test runs.
-  (dolist (file '("emacsvox-eat-core.el"
-                  "emacsvox-eat-input.el"
-                  "emacsvox-eat-review.el"
-                  "emacsvox-eat.el"))
+  (dolist (file '("integrations/emacsvox-eat-core.el"
+                  "integrations/emacsvox-eat-input.el"
+                  "integrations/emacsvox-eat-review.el"
+                  "integrations/emacsvox-eat.el"))
     (load (expand-file-name file lisp-directory) nil nil t)))
 (require 'emacsvox-aural-provider-workflows)
 

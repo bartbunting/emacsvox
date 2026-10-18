@@ -11,7 +11,7 @@
   (defun vterm--redraw (&rest _))
   (provide 'vterm-module))
 (require 'vterm)
-(load (expand-file-name "../lisp/emacsvox-vterm.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-vterm.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -186,7 +186,7 @@ the last globally remembered source when navigating nested menus.
 
 ** Navigation and speech
 
-The existing [[file:../../lisp/emacsvox-transient.el][Transient integration]] uses up/down for choices, left/right for
+The existing [[file:../../lisp/integrations/emacsvox-transient.el][Transient integration]] uses up/down for choices, left/right for
 sections, and =C-j= to activate. It forces a single column and announces
 menu openings, values, unavailable choices, section changes, and shortcuts.
 It already distinguishes redisplay from a newly opened menu.

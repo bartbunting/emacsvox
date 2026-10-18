@@ -134,11 +134,11 @@
     (should
      (equal
       (emacsvox-aural-audit-context-free-icons root)
-      '((:file "lisp/emacsvox-notmuch.el"
+      '((:file "lisp/integrations/emacsvox-notmuch.el"
          :function leaked-compatibility-feedback
          :icon-function emacsvox-icon
          :compatibility-function old-feedback-compatibility)
-        (:file "lisp/emacsvox-notmuch.el"
+        (:file "lisp/integrations/emacsvox-notmuch.el"
          :function unsafe-feedback
          :icon-function emacsvox-icon))))))
 
@@ -166,13 +166,13 @@
     (should
      (equal
       (emacsvox-aural-audit-nested-submission-resolutions root)
-      '((:file "lisp/emacsvox-notmuch.el"
+      '((:file "lisp/integrations/emacsvox-notmuch.el"
          :function duplicate-action-feedback
          :resolver emacsvox-aural-present)
-        (:file "lisp/emacsvox-notmuch.el"
+        (:file "lisp/integrations/emacsvox-notmuch.el"
          :function duplicate-feedback
          :resolver emacsvox-icon)
-        (:file "lisp/emacsvox-notmuch.el"
+        (:file "lisp/integrations/emacsvox-notmuch.el"
          :function duplicate-feedback
          :resolver tts-speak))))))
 

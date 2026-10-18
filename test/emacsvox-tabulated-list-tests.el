@@ -15,7 +15,7 @@
                                     (file-name-directory
                                      (or load-file-name buffer-file-name)))))
   (dolist (entry '(("emacsvox-table-reader" . emacsvox-table-reader-mode)
-                   ("emacsvox-tabulated-list" . emacsvox-tabulated-list--snapshot)))
+                   ("integrations/emacsvox-tabulated-list" . emacsvox-tabulated-list--snapshot)))
     (let ((file (expand-file-name (concat (car entry) suffix) directory)))
       (load file nil nil t)
       (should (equal (file-truename file)

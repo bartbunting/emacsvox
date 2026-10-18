@@ -8340,6 +8340,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ......................................
 
  -- Command: emacsvox-eat-cycle-verbosity
+     ‘C-e q v’
 
      Cycle terse, normal, and verbose policy for this EAT terminal.
      The command also works from the terminal’s frozen review buffer.
@@ -8361,6 +8362,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
  -- Command: emacsvox-eat-toggle-background-monitoring (&optional
           argument)
+     ‘C-e q m’
 
      Toggle content-free background-output monitoring for this EAT terminal.
      With positive prefix ARGUMENT, enable monitoring; with zero or a negative
@@ -8550,6 +8552,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ....................................
 
  -- Command: emacsvox-eat-review-screen
+     ‘C-e q r’
 
      Open a read-only review copied from retained EAT screen state.
      The command never captures mutable live terminal-buffer text.
@@ -8591,6 +8594,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ...............................................
 
  -- Command: emacsvox-eat-speak-completion-output
+     ‘C-e q c’
 
      Speak the latest retained terminal candidate or help-row presentation.
 
@@ -8598,6 +8602,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 .........................................
 
  -- Command: emacsvox-eat-speak-current-row
+     ‘C-e q l’
 
      Speak the terminal cursor row from the latest retained screen snapshot.
 
@@ -8605,6 +8610,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 .........................................
 
  -- Command: emacsvox-eat-speak-last-change
+     ‘C-e q d’
 
      Speak the most recent quiesced terminal change from retained state.
 
@@ -8612,6 +8618,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ..........................................
 
  -- Command: emacsvox-eat-speak-likely-focus
+     ‘C-e q h’
 
      Speak the latest conservative terminal focus inference for review.
 
@@ -8619,6 +8626,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ....................................
 
  -- Command: emacsvox-eat-speak-prompt
+     ‘C-e q p’
 
      Read the most recently identified EAT shell prompt.
      This explicit command works regardless of autospeak or prompt preference.
@@ -8627,6 +8635,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ...............................................
 
  -- Command: emacsvox-eat-speak-retained-metadata
+     ‘C-e q i’
 
      Speak the latest retained or explicitly frozen title/directory change.
 
@@ -8634,6 +8643,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 .............................................
 
  -- Command: emacsvox-eat-speak-retained-status
+     ‘C-e q t’
 
      Speak the latest retained or explicitly frozen terminal status row.
 
@@ -8641,6 +8651,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 ............................................
 
  -- Command: emacsvox-eat-speak-visible-screen
+     ‘C-e q s’
 
      Speak a bounded frozen copy of the latest retained visible EAT screen.
 

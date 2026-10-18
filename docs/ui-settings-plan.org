@@ -1362,7 +1362,7 @@ global default is not necessarily a saved startup value.
 Evidence: [[file:../lisp/emacsvox-keymap.el][speech keymaps]], [[file:../lisp/tts-speak.el][TTS commands and ownership]],
 [[file:../lisp/emacsvox-speak.el][reading, filters and mail]], [[file:../lisp/emacsvox-sounds.el][earcon switch]],
 [[file:../lisp/emacsvox-advice.el][messages and tooltips]], [[file:../lisp/emacsvox-emoji.el][emoji options]],
-[[file:../lisp/emacsvox-table-reader.el][general table reading]], and [[file:../lisp/emacsvox-comint.el][background output]].
+[[file:../lisp/emacsvox-table-reader.el][general table reading]], and [[file:../lisp/integrations/emacsvox-comint.el][background output]].
 
 The earlier character-scale, repeat-cleanup, Unicode, predefined-rate,
 dictionary, Voice Lock, training, and history findings remain part of this

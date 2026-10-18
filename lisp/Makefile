@@ -177,8 +177,8 @@ integrations/emacsvox-abc-mode.elc \
 integrations/emacsvox-ace-window.elc \
 integrations/emacsvox-add-log.elc \
 integrations/emacsvox-amark.elc \
-emacsvox-agent-shell-render.elc \
-emacsvox-agent-shell.elc \
+integrations/emacsvox-agent-shell-render.elc \
+integrations/emacsvox-agent-shell.elc \
 integrations/emacsvox-annotate.elc \
 integrations/emacsvox-arc.elc \
 integrations/emacsvox-avy.elc \
@@ -200,7 +200,7 @@ integrations/emacsvox-cider.elc \
 integrations/emacsvox-clojure.elc \
 integrations/emacsvox-cmuscheme.elc \
 integrations/emacsvox-combobulate.elc \
-emacsvox-comint.elc \
+integrations/emacsvox-comint.elc \
 integrations/emacsvox-company.elc \
 integrations/emacsvox-compile.elc \
 integrations/emacsvox-consult.elc \
@@ -217,10 +217,10 @@ integrations/emacsvox-dictionary.elc \
 integrations/emacsvox-diff-mode.elc \
 integrations/emacsvox-dired.elc \
 integrations/emacsvox-dumb-jump.elc \
-emacsvox-eat-core.elc \
-emacsvox-eat-input.elc \
-emacsvox-eat-review.elc \
-emacsvox-eat.elc \
+integrations/emacsvox-eat-core.elc \
+integrations/emacsvox-eat-input.elc \
+integrations/emacsvox-eat-review.elc \
+integrations/emacsvox-eat.elc \
 integrations/emacsvox-embark.elc \
 integrations/emacsvox-ebuku.elc \
 integrations/emacsvox-ediff.elc \
@@ -239,13 +239,13 @@ integrations/emacsvox-enwc.elc \
 integrations/emacsvox-epa.elc \
 integrations/emacsvox-epub.elc \
 integrations/emacsvox-erc.elc \
-emacsvox-eshell.elc \
+integrations/emacsvox-eshell.elc \
 integrations/emacsvox-ess.elc \
 integrations/emacsvox-etable.elc \
-emacsvox-eterm.elc \
+integrations/emacsvox-eterm.elc \
 integrations/emacsvox-eudc.elc \
 integrations/emacsvox-evil.elc \
-emacsvox-eww.elc \
+integrations/emacsvox-eww.elc \
 emacsvox-extras.elc \
 integrations/emacsvox-exwm.elc \
 integrations/emacsvox-feeds.elc \
@@ -260,7 +260,7 @@ integrations/emacsvox-forge.elc \
 integrations/emacsvox-forms.elc \
 integrations/emacsvox-geiser.elc \
 integrations/emacsvox-gnuplot.elc \
-emacsvox-gnus.elc\
+integrations/emacsvox-gnus.elc\
 integrations/emacsvox-go-mode.elc \
 integrations/emacsvox-gomoku.elc \
 integrations/emacsvox-gptel.elc \
@@ -292,7 +292,7 @@ integrations/emacsvox-magit.elc \
 integrations/emacsvox-make-mode.elc \
 integrations/emacsvox-man.elc \
 integrations/emacsvox-marginalia.elc \
-emacsvox-markdown.elc \
+integrations/emacsvox-markdown.elc \
 integrations/emacsvox-maths.elc \
 integrations/emacsvox-message.elc \
 integrations/emacsvox-mines.elc \
@@ -302,12 +302,12 @@ emacsvox-muggles-core.elc \
 emacsvox-muggles-ui.elc \
 integrations/emacsvox-net-utils.elc \
 integrations/emacsvox-newsticker.elc \
-emacsvox-notmuch.elc \
+integrations/emacsvox-notmuch.elc \
 integrations/emacsvox-nov.elc \
 integrations/emacsvox-nxml.elc \
 integrations/emacsvox-ocr.elc \
-emacsvox-org.elc \
-emacsvox-org-srs.elc \
+integrations/emacsvox-org.elc \
+integrations/emacsvox-org-srs.elc \
 integrations/emacsvox-orgalist.elc \
 integrations/emacsvox-outline.elc \
 integrations/emacsvox-package.elc \
@@ -335,7 +335,7 @@ integrations/emacsvox-sdcv.elc \
 integrations/emacsvox-ses.elc \
 integrations/emacsvox-sgml-mode.elc \
 integrations/emacsvox-sh-script.elc \
-emacsvox-shr.elc \
+integrations/emacsvox-shr.elc \
 integrations/emacsvox-slime.elc \
 integrations/emacsvox-smartparens.elc \
 integrations/emacsvox-solitaire.elc \
@@ -350,21 +350,21 @@ emacsvox-table-settings.elc \
 emacsvox-table-ui.elc \
 emacsvox-table.elc \
 emacsvox-tabulate.elc \
-emacsvox-tabulated-list.elc \
+integrations/emacsvox-tabulated-list.elc \
 integrations/emacsvox-tar.elc \
 integrations/emacsvox-tcl.elc \
 integrations/emacsvox-tempo.elc \
 integrations/emacsvox-tetris.elc \
 integrations/emacsvox-texinfo.elc \
 integrations/emacsvox-todo-mode.elc \
-emacsvox-transient.elc \
+integrations/emacsvox-transient.elc \
 integrations/emacsvox-treesit.elc \
 integrations/emacsvox-typo.elc \
 integrations/emacsvox-url-template.elc \
 integrations/emacsvox-vdiff.elc \
 integrations/emacsvox-vertico.elc \
 integrations/emacsvox-view.elc \
-emacsvox-vterm.elc \
+integrations/emacsvox-vterm.elc \
 integrations/emacsvox-wdired.elc \
 integrations/emacsvox-we.elc \
 integrations/emacsvox-websearch.elc \
@@ -405,17 +405,17 @@ documentation-modules:
 aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 
-integrations/emacsvox-bookshare.elc integrations/emacsvox-epub.elc emacsvox-eww.elc integrations/emacsvox-librivox.elc: dom-addons.elc
+integrations/emacsvox-bookshare.elc integrations/emacsvox-epub.elc integrations/emacsvox-eww.elc integrations/emacsvox-librivox.elc: dom-addons.elc
 
 emacsvox-preamble.elc: emacsvox-version.elc emacsvox-paths.elc
 
-emacsvox-agent-shell.elc: emacsvox-agent-shell-render.elc emacsvox-table-reader.elc
-emacsvox-markdown.elc emacsvox-org.elc: emacsvox-table-reader.elc
+integrations/emacsvox-agent-shell.elc: integrations/emacsvox-agent-shell-render.elc emacsvox-table-reader.elc
+integrations/emacsvox-markdown.elc integrations/emacsvox-org.elc: emacsvox-table-reader.elc
 
-emacsvox-eat-input.elc: emacsvox-eat-core.elc
-emacsvox-eat-review.elc: emacsvox-eat-core.elc emacsvox-eat-input.elc
-emacsvox-eat.elc: \
-emacsvox-eat-core.elc emacsvox-eat-input.elc emacsvox-eat-review.elc
+integrations/emacsvox-eat-input.elc: integrations/emacsvox-eat-core.elc
+integrations/emacsvox-eat-review.elc: integrations/emacsvox-eat-core.elc integrations/emacsvox-eat-input.elc
+integrations/emacsvox-eat.elc: \
+integrations/emacsvox-eat-core.elc integrations/emacsvox-eat-input.elc integrations/emacsvox-eat-review.elc
 
 emacsvox-aural-spatial.elc: emacsvox-aural.elc
 emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
@@ -545,7 +545,7 @@ emacsvox-aural-provider-workflows.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-org-srs.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-markdown.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-notmuch.elc: emacsvox-aural-provider-workflows.elc
-emacsvox-org-srs.elc: emacsvox-aural-provider-org-srs.elc
+integrations/emacsvox-org-srs.elc: emacsvox-aural-provider-org-srs.elc
 emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
 emacsvox-sound-library.elc: emacsvox-aural-sound-packs.elc
 emacsvox-aural-sound-packs.elc: \
@@ -621,4 +621,4 @@ omnivox-remote.elc omnivox-voices.elc emacsvox-aural-transport.elc tts-speak.elc
 #end:
 
 # EWW shares HTML link feedback with mail and other SHR clients.
-emacsvox-eww.elc: emacsvox-shr.elc
+integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc

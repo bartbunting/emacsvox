@@ -1721,8 +1721,9 @@ unrelated keys.
 
   1. Internal ownership and renderer tests
 
-     The main ‘lisp/emacsvox-agent-shell.el’ module requires the
-     internal ‘lisp/emacsvox-agent-shell-render.el’ module.  The
+     The main ‘lisp/integrations/emacsvox-agent-shell.el’ module
+     requires the internal
+     ‘lisp/integrations/emacsvox-agent-shell-render.el’ module.  The
      renderer module depends only on Emacs libraries, with no reverse
      dependency on the main integration.  Its private helper names and
      argument contracts remain available through the main module.

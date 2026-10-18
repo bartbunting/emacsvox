@@ -495,3 +495,18 @@ now reproduces and guards this case; all eight reference tests pass.
 The application batch passes all 314 non-skipped compatibility cases on Emacs
 31.0.90, fresh compiled startup, all 325 library resolutions, headers and the
 documentation gate.
+
+** Rich workflow adapters
+
+19 sources move unchanged, including both Agent Shell modules and all four
+EAT modules. Shared HTML navigation, Org, Markdown, Notmuch, terminal and
+Transients adapters retain their existing loading and advice order. Dynamic
+source/compiled test paths now select their exact nested implementations.
+Historical benchmark provenance remains unchanged.
+
+The focused run passes 1,004 tests and skips 16 graphical cases. Its three
+failures are the existing Agent Shell queue-completion, terminal-guide and
+Markdown blank-line-tone failures. The application checkpoint is committed
+as =1c35a055a=. A concurrent speech-menu commit, =5fecf6210=, is retained;
+subsequent UI moves use those updated sources. Before moving UI, 78 selected
+graphical menu/editor tests pass against current compiled production modules.

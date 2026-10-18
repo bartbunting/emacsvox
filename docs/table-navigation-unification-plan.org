@@ -35,7 +35,7 @@ The inspected session used Emacs 31.0.90, its bundled Org, Markdown Mode package
 
 ** Markdown
 
-[[file:../lisp/emacsvox-markdown.el][The Markdown integration]] provides table-aware line speech, but no equivalent
+[[file:../lisp/integrations/emacsvox-markdown.el][The Markdown integration]] provides table-aware line speech, but no equivalent
 of Agent Shell's contextual cell/row/column navigation. Markdown Mode's Tab and
 Shift-Tab move between cells; Return moves to the next row. These are editing
 operations: they can align a table or create a row.
@@ -52,7 +52,7 @@ editing protection.
 
 ** Org
 
-[[file:../lisp/emacsvox-org.el][The Org integration]] speaks after native field and row movement. Tab/Shift-Tab
+[[file:../lisp/integrations/emacsvox-org.el][The Org integration]] speaks after native field and row movement. Tab/Shift-Tab
 move between fields, Return moves down, and Emacsvox binds Shift-Return to
 previous-row movement. Plain Up/Down remain ordinary line movement.
 
@@ -69,7 +69,7 @@ are editing commands that can reorder rows.
 
 ** Agent Shell
 
-[[file:../lisp/emacsvox-agent-shell.el][The Agent Shell integration]] reads logical cells from rendered-table metadata
+[[file:../lisp/integrations/emacsvox-agent-shell.el][The Agent Shell integration]] reads logical cells from rendered-table metadata
 and Markdown source. Its contextual map provides full-row vertical navigation,
 modified horizontal cell movement, cell/row/column inspection and copying,
 position and dimensions, header preferences, and table exit. Logical cells are
@@ -87,11 +87,11 @@ agent is busy. See the [[file:manual/chapters/agent-shell.org][maintained Agent 
   filters. Movement normally speaks a cell through a configurable function.
   Left/Right move between cells; =r= and =c= mean header plus cell, not whole
   row and column. The model normally treats the first row/column as headers.
-- [[file:../lisp/emacsvox-tabulated-list.el][Tabulated-list support]] binds arrows to cell-oriented movement and =.= to
+- [[file:../lisp/integrations/emacsvox-tabulated-list.el][Tabulated-list support]] binds arrows to cell-oriented movement and =.= to
   current-cell speech. Application-specific maps and presentations may override
   that base behavior. For example, selected-cell navigation is an explicit
   existing requirement in the [[file:aural-interface-consolidation-plan.org][Aural interface delivery contract]].
-- [[file:../lisp/emacsvox-eww.el][EWW]] has its own DOM-based cell and row commands on Meta-arrows and can open
+- [[file:../lisp/integrations/emacsvox-eww.el][EWW]] has its own DOM-based cell and row commands on Meta-arrows and can open
   a table in the separate table browser. Its current implementation explicitly
   limits support to plain, non-nested tables; merged-cell handling needs review.
 - [[file:../lisp/integrations/emacsvox-etable.el][table.el support]] and [[file:../lisp/integrations/emacsvox-ses.el][SES spreadsheet support]] are additional adapters to
