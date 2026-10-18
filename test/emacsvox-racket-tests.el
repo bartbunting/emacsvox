@@ -6,7 +6,7 @@
 (package-initialize)
 (mapc #'require '(racket-mode racket-collection racket-profile
                   racket-xp))
-(load (expand-file-name "../lisp/emacsvox-racket.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-racket.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

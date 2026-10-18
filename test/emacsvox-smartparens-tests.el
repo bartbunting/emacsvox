@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (mapc #'require '(smartparens smartparens-html smartparens-ruby))
-(load (expand-file-name "../lisp/emacsvox-smartparens.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-smartparens.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

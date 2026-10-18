@@ -5,7 +5,7 @@
 (require 'eldoc)
 (require 'ert)
 (load
- (expand-file-name "../lisp/emacsvox-eglot.el"
+ (expand-file-name "../lisp/integrations/emacsvox-eglot.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

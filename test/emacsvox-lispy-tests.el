@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'lispy)
-(load (expand-file-name "../lisp/emacsvox-lispy.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-lispy.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

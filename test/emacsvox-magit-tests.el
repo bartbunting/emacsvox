@@ -16,8 +16,8 @@
 (load
  (expand-file-name
   (if (equal (getenv "EMACSVOX_MAGIT_TEST_LOAD") "compiled")
-      "../lisp/emacsvox-magit.elc"
-    "../lisp/emacsvox-magit.el")
+      "../lisp/integrations/emacsvox-magit.elc"
+    "../lisp/integrations/emacsvox-magit.el")
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

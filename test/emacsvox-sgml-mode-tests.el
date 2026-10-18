@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'sgml-mode)
 (load
- (expand-file-name "../lisp/emacsvox-sgml-mode.el"
+ (expand-file-name "../lisp/integrations/emacsvox-sgml-mode.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

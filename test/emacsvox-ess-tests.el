@@ -6,7 +6,7 @@
 (package-initialize)
 (dolist (feature '(ess-site ess-mode ess-inf ess-help))
   (require feature nil t))
-(load (expand-file-name "../lisp/emacsvox-ess.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-ess.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

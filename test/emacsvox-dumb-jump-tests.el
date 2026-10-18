@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'dumb-jump)
-(load (expand-file-name "../lisp/emacsvox-dumb-jump.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-dumb-jump.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

@@ -6,7 +6,7 @@
 (package-initialize)
 (require 'tex-site)
 (require 'latex)
-(load (expand-file-name "../lisp/emacsvox-auctex.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-auctex.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

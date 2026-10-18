@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'rg)
-(load (expand-file-name "../lisp/emacsvox-rg.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-rg.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

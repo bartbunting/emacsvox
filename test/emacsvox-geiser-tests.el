@@ -6,7 +6,7 @@
 (package-initialize)
 (mapc #'require '(geiser geiser-compile geiser-doc geiser-edit geiser-mode
                   geiser-repl geiser-xref))
-(load (expand-file-name "../lisp/emacsvox-geiser.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-geiser.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

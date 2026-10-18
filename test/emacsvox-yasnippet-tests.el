@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'yasnippet)
-(load (expand-file-name "../lisp/emacsvox-yasnippet.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-yasnippet.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

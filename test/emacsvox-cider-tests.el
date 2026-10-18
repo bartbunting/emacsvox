@@ -10,7 +10,7 @@
            cider-mode cider-popup cider-repl cider-scratch cider-selector
            cider-stacktrace))
   (require feature))
-(load (expand-file-name "../lisp/emacsvox-cider.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-cider.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

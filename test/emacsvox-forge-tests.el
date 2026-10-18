@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'forge)
-(load (expand-file-name "../lisp/emacsvox-forge.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-forge.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

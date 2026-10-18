@@ -6,7 +6,7 @@
 (package-initialize)
 (require 'rust-mode)
 (require 'rustic)
-(load (expand-file-name "../lisp/emacsvox-rust-mode.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-rust-mode.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

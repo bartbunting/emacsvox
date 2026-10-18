@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'gud)
 (load
- (expand-file-name "../lisp/emacsvox-gud.el"
+ (expand-file-name "../lisp/integrations/emacsvox-gud.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

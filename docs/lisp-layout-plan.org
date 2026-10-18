@@ -7,8 +7,8 @@
 Implementation authorised on 2026-10-18. [[file:adr/0029-lisp-source-layout.org][ADR 0029]] accepts the directory
 and bootstrap contract. Nested-path infrastructure is implemented, and the
 three pilot integrations have moved to =lisp/integrations/=. These two slices
-pass their focused checks and native lifecycle acceptance. Review the allocation
-of each later batch before moving its files.
+pass their focused checks and native lifecycle acceptance and are committed as
+=01784f036=. The remaining migration is authorised in reviewed batches.
 
 The aim is to make related code easier to find and ownership easier to
 understand as Emacsvox grows. Preserve behaviour, filenames, provided
@@ -425,3 +425,53 @@ native hints pass the native path tests separately. Graphical/audio acceptance
 and the separate deliberately failed-configuration rollback fixture were not
 run. Failed activation, recovery and uninstall cover the changed layout and
 ownership paths in this batch. No release was tagged or published.
+
+** Remaining group allocation, 2026-10-18
+
+The [[file:lisp-layout-inventory.org][allocation review]] records all 330 source paths, feature declarations and
+literal dependencies. The remaining work uses language/development adapters, application adapters,
+rich workflow adapters, UI, logical voices, aural services, speech adapters and
+shared reading/helpers as separate move batches. Each batch retains library
+basenames, features and source contents except necessary path corrections.
+Tests and maintained source references follow the new locations.
+
+The ownership review resolves the earlier placement questions:
+
+- =voice-setup= and all backend =*-voices= modules belong in =speech/=. Their
+  dynamic backend requires retain their feature names and registration order.
+  =voice-defs= and voice data, runtime, draft and editing-proposal services
+  belong in =voices/=; editing proposals are reusable data operations.
+- =omnivox-library= and =omnivox-catalogue= remain whole in =ui/=, including
+  their runtime calls. The existing separate activation coordinator belongs
+  in =speech/= alongside engine settings and protocol handling.
+- Aural inspection, explanation, validation and remapping services remain
+  in =aural/=. Their existing interactive commands remain available.
+  Dedicated browsers, editors, menus and diagnostic views belong in =ui/=.
+- Indentation, capitalization, spelling and line-cue modules remain intact
+  in =ui/= alongside the shared tone editor. They retain their policy helpers,
+  scope rules and Customize/personal-store persistence contracts.
+- Feature-specific aural providers remain in =aural/= and keep their existing
+  eager/deferred registration. Moving an adapter does not move its provider.
+- =dom-addons=, =g-utils=, =gweb= and XSLT helpers belong in =core/= because
+  multiple applications consume them. =soundscape= and =sox-gen= belong in
+  =aural/=; standalone external-tool clients remain in =integrations/=.
+- The shared table data model, reader and navigation surface belong in
+  =core/=; table settings belong in =ui/= and mode adapters in =integrations/=.
+- The managed Muggles registry belongs in =core/=, its browser and optional
+  Hydra collections in =ui/=, and the optional Org navigation Muggle in
+  =integrations/=. Existing separate build targets remain separate.
+- The source template remains =lisp/.skeleton.el= beside the stable bootstrap
+  and package entry files. It is neither compiled nor an application adapter.
+
+The local configuration loads =lisp/emacsvox-setup.el= and contains no direct
+paths to the moved modules. It needs no change. The dependency review found
+location-sensitive sound and Piper fallback paths, the voice-source browser,
+startup freshness names, and flat test fixtures; each correction belongs to
+its affected move batch. No other active worktree is on master.
+
+** Language and development adapters
+
+61 adapter sources move to =integrations/= with identical contents. Their
+60 focused test files pass 342 tests; two cases need graphical Emacs and remain
+outside this batch run. The build and fresh compiled checks are recorded at
+the final verification checkpoint below.

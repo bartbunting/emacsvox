@@ -1,0 +1,385 @@
+#+title: Lisp layout allocation review
+#+date: 2026-10-18
+#+startup: overview
+
+This is the migration review snapshot for all 330 tracked Lisp sources at
+the infrastructure checkpoint. The build inventory remains =lisp/Makefile=;
+no tool reads this report. The [[file:lisp-layout-plan.org][migration plan]] records ownership decisions,
+path-sensitive corrections and verification.
+
+The tables record old/new paths, literal feature declarations and dependencies
+found by reading complete Lisp forms without evaluating them. Requirements
+inside delayed forms are included; this is not a complete dynamic dependency
+graph. Existing hooks, advice and registration calls retain their order.
+The exceptional feature declarations in advice, Chess, COMINT and SoX remain
+unchanged, including the existing COMINT/Wizards relationship.
+
+Ordinary modules retain their compilation status. The template, autoload
+generator and three optional Muggles sources retain their separate status.
+Generated loaddefs are not tracked source. Dedicated tests follow module
+basenames where available; shared and installed-tree coverage supplements them.
+
+* root
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/.skeleton.el= | =lisp/.skeleton.el= | =emacsvox-<skeleton>= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-autoload.el= | =lisp/emacsvox-autoload.el= | =emacsvox-autoload= | =loaddefs-gen=, =transient= |
+| =lisp/emacsvox-paths.el= | =lisp/emacsvox-paths.el= | =emacsvox-paths= | =subr-x= |
+| =lisp/emacsvox-preamble.el= | =lisp/emacsvox-preamble.el= | =emacsvox-preamble= | =cl-lib=, =subr-x=, =emacsvox-paths=, =emacsvox-version= |
+| =lisp/emacsvox-setup.el= | =lisp/emacsvox-setup.el= | =emacsvox-setup= | =cl-lib=, =emacsvox-preamble=, =emacsvox= |
+| =lisp/emacsvox-version.el= | =lisp/emacsvox-version.el= | =emacsvox-version= | None |
+| =lisp/emacsvox.el= | =lisp/emacsvox.el= | =emacsvox= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-profile-service=, =emacsvox-aural-routing-profiles=, =emacsvox-aural-semantics=, =emacsvox-aural-explanation=, =emacsvox-aural-tools=, =emacsvox-aural-home=, =emacsvox-aural-voice-workbench=, =emacsvox-aural-editor=, =emacsvox-aural-sound-packs=, =emacsvox-aural-provider-org=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-provider-org-srs=, =emacsvox-aural-provider-markdown=, =emacsvox-aural-provider-notmuch=, =info=, =emacsvox-welcome= |
+
+* integrations
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/amixer.el= | =lisp/integrations/amixer.el= | =amixer= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-2048.el= | =lisp/integrations/emacsvox-2048.el= | =emacsvox-2048= | =cl-lib=, =emacsvox-preamble=, =2048-game= |
+| =lisp/emacsvox-abc-mode.el= | =lisp/integrations/emacsvox-abc-mode.el= | =emacsvox-abc-mode= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-ace-window.el= | =lisp/integrations/emacsvox-ace-window.el= | =emacsvox-ace-window= | =cl-lib=, =emacsvox-preamble=, =ace-window= |
+| =lisp/emacsvox-add-log.el= | =lisp/integrations/emacsvox-add-log.el= | =emacsvox-add-log= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-agent-shell-render.el= | =lisp/integrations/emacsvox-agent-shell-render.el= | =emacsvox-agent-shell-render= | =cl-lib=, =map=, =seq=, =subr-x= |
+| =lisp/emacsvox-agent-shell.el= | =lisp/integrations/emacsvox-agent-shell.el= | =emacsvox-agent-shell= | =cl-lib=, =emacsvox-preamble=, =emacsvox-agent-shell-render=, =emacsvox-table-reader=, =emacsvox-aural-transport=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-submission=, =agent-shell=, =shell-maker= |
+| =lisp/emacsvox-amark.el= | =lisp/integrations/emacsvox-amark.el= | =emacsvox-amark= | =cl-lib=, =dired= |
+| =lisp/emacsvox-annotate.el= | =lisp/integrations/emacsvox-annotate.el= | =emacsvox-annotate= | =cl-lib=, =emacsvox-preamble=, =annotate= |
+| =lisp/emacsvox-arc.el= | =lisp/integrations/emacsvox-arc.el= | =emacsvox-arc= | =emacsvox-preamble=, =arc-mode= |
+| =lisp/emacsvox-auctex.el= | =lisp/integrations/emacsvox-auctex.el= | =emacsvox-auctex= | =emacsvox-preamble= |
+| =lisp/emacsvox-avy.el= | =lisp/integrations/emacsvox-avy.el= | =emacsvox-avy= | =cl-lib=, =emacsvox-preamble=, =avy= |
+| =lisp/emacsvox-bbdb.el= | =lisp/integrations/emacsvox-bbdb.el= | =emacsvox-bbdb= | =emacsvox-preamble= |
+| =lisp/emacsvox-bibtex.el= | =lisp/integrations/emacsvox-bibtex.el= | =emacsvox-bibtex= | =emacsvox-preamble=, =bibtex= |
+| =lisp/emacsvox-bookmark.el= | =lisp/integrations/emacsvox-bookmark.el= | =emacsvox-bookmark= | =emacsvox-preamble=, =bookmark= |
+| =lisp/emacsvox-bookshare.el= | =lisp/integrations/emacsvox-bookshare.el= | =emacsvox-bookshare= | =cl-lib=, =emacsvox-preamble=, =emacsvox-xslt=, =derived=, =g-utils=, =dom=, =dom-addons=, =xml= |
+| =lisp/emacsvox-browse-kill-ring.el= | =lisp/integrations/emacsvox-browse-kill-ring.el= | =emacsvox-browse-kill-ring= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-bs.el= | =lisp/integrations/emacsvox-bs.el= | =emacsvox-bs= | =emacsvox-preamble=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-submission=, =bs= |
+| =lisp/emacsvox-buff-menu.el= | =lisp/integrations/emacsvox-buff-menu.el= | =emacsvox-buff-menu= | =emacsvox-preamble= |
+| =lisp/emacsvox-c.el= | =lisp/integrations/emacsvox-c.el= | =emacsvox-c= | =emacsvox-preamble= |
+| =lisp/emacsvox-calc.el= | =lisp/integrations/emacsvox-calc.el= | =emacsvox-calc= | =emacsvox-preamble=, =calc= |
+| =lisp/emacsvox-calculator.el= | =lisp/integrations/emacsvox-calculator.el= | =emacsvox-calculator= | =emacsvox-preamble=, =calculator= |
+| =lisp/emacsvox-calendar.el= | =lisp/integrations/emacsvox-calendar.el= | =emacsvox-calendar= | =emacsvox-preamble=, =calendar=, =solar=, =g-utils=, =appt= |
+| =lisp/emacsvox-calibredb.el= | =lisp/integrations/emacsvox-calibredb.el= | =emacsvox-calibredb= | =cl-lib=, =emacsvox-preamble=, =calibredb=, =emacsvox-epub= |
+| =lisp/emacsvox-chess.el= | =lisp/integrations/emacsvox-chess.el= | =chess-emacsvox=, =emacsvox-chess= | =cl-lib=, =emacsvox-preamble=, =chess-pos=, =chess-display= |
+| =lisp/emacsvox-cider.el= | =lisp/integrations/emacsvox-cider.el= | =emacsvox-cider= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-clojure.el= | =lisp/integrations/emacsvox-clojure.el= | =emacsvox-clojure= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-cmuscheme.el= | =lisp/integrations/emacsvox-cmuscheme.el= | =emacsvox-cmuscheme= | =emacsvox-preamble=, =cmuscheme= |
+| =lisp/emacsvox-combobulate.el= | =lisp/integrations/emacsvox-combobulate.el= | =emacsvox-combobulate= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-comint.el= | =lisp/integrations/emacsvox-comint.el= | =emacsvox-wizards=, =emacsvox-comint= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-submission=, =comint=, =shell= |
+| =lisp/emacsvox-company.el= | =lisp/integrations/emacsvox-company.el= | =emacsvox-company= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-compile.el= | =lisp/integrations/emacsvox-compile.el= | =emacsvox-compile= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-consult.el= | =lisp/integrations/emacsvox-consult.el= | =emacsvox-consult= | =cl-lib=, =emacsvox-preamble=, =consult= |
+| =lisp/emacsvox-corfu.el= | =lisp/integrations/emacsvox-corfu.el= | =emacsvox-corfu= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-submission=, =corfu= |
+| =lisp/emacsvox-cperl.el= | =lisp/integrations/emacsvox-cperl.el= | =emacsvox-cperl= | =emacsvox-preamble=, =emacsvox-perl= |
+| =lisp/emacsvox-custom.el= | =lisp/integrations/emacsvox-custom.el= | =emacsvox-custom= | =emacsvox-preamble=, =cus-edit= |
+| =lisp/emacsvox-dbus.el= | =lisp/integrations/emacsvox-dbus.el= | =emacsvox-dbus= | =cl-lib=, =emacsvox-preamble=, =amixer=, =derived=, =dbus=, =emacsvox-nm= |
+| =lisp/emacsvox-deadgrep.el= | =lisp/integrations/emacsvox-deadgrep.el= | =emacsvox-deadgrep= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-debugger.el= | =lisp/integrations/emacsvox-debugger.el= | =emacsvox-debugger= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-denote.el= | =lisp/integrations/emacsvox-denote.el= | =emacsvox-denote= | =cl-lib=, =emacsvox-preamble=, =denote= |
+| =lisp/emacsvox-desktop.el= | =lisp/integrations/emacsvox-desktop.el= | =emacsvox-desktop= | =cl-lib=, =emacsvox-preamble=, =desktop= |
+| =lisp/emacsvox-devdocs.el= | =lisp/integrations/emacsvox-devdocs.el= | =emacsvox-devdocs= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-dictionary.el= | =lisp/integrations/emacsvox-dictionary.el= | =emacsvox-dictionary= | =emacsvox-preamble=, =dictionary= |
+| =lisp/emacsvox-dired.el= | =lisp/integrations/emacsvox-dired.el= | =emacsvox-dired= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-workflows=, =dired= |
+| =lisp/emacsvox-dumb-jump.el= | =lisp/integrations/emacsvox-dumb-jump.el= | =emacsvox-dumb-jump= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-eat-core.el= | =lisp/integrations/emacsvox-eat-core.el= | =emacsvox-eat-core= | =cl-lib=, =emacsvox-preamble=, =eat= |
+| =lisp/emacsvox-eat-input.el= | =lisp/integrations/emacsvox-eat-input.el= | =emacsvox-eat-input= | =emacsvox-eat-core= |
+| =lisp/emacsvox-eat-review.el= | =lisp/integrations/emacsvox-eat-review.el= | =emacsvox-eat-review= | =emacsvox-eat-input= |
+| =lisp/emacsvox-eat.el= | =lisp/integrations/emacsvox-eat.el= | =emacsvox-eat= | =emacsvox-eat-core=, =emacsvox-eat-input=, =emacsvox-eat-review= |
+| =lisp/emacsvox-ebuku.el= | =lisp/integrations/emacsvox-ebuku.el= | =emacsvox-ebuku= | =cl-lib=, =emacsvox-preamble=, =ebuku= |
+| =lisp/emacsvox-ediff.el= | =lisp/integrations/emacsvox-ediff.el= | =emacsvox-ediff= | =cl-lib=, =emacsvox-preamble=, =voice-setup=, =ediff= |
+| =lisp/emacsvox-eglot.el= | =lisp/integrations/emacsvox-eglot.el= | =emacsvox-eglot= | =cl-lib=, =emacsvox-preamble=, =eglot=, =eldoc= |
+| =lisp/emacsvox-ein.el= | =lisp/integrations/emacsvox-ein.el= | =emacsvox-ein= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-provider-workflows= |
+| =lisp/emacsvox-elfeed.el= | =lisp/integrations/emacsvox-elfeed.el= | =emacsvox-elfeed= | =cl-lib=, =emacsvox-preamble=, =emacsvox-we=, =elfeed= |
+| =lisp/emacsvox-elisp-refs.el= | =lisp/integrations/emacsvox-elisp-refs.el= | =emacsvox-elisp-refs= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-ellama.el= | =lisp/integrations/emacsvox-ellama.el= | =emacsvox-ellama= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-elpher.el= | =lisp/integrations/emacsvox-elpher.el= | =emacsvox-elpher= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-elpy.el= | =lisp/integrations/emacsvox-elpy.el= | =emacsvox-elpy= | =cl-lib=, =emacsvox-preamble=, =emacsvox-python= |
+| =lisp/emacsvox-embark.el= | =lisp/integrations/emacsvox-embark.el= | =emacsvox-embark= | =cl-lib=, =emacsvox-preamble=, =embark= |
+| =lisp/emacsvox-emms.el= | =lisp/integrations/emacsvox-emms.el= | =emacsvox-emms= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-empv.el= | =lisp/integrations/emacsvox-empv.el= | =emacsvox-empv= | =cl-lib=, =emacsvox-preamble=, =gweb=, =empv=, =iimage= |
+| =lisp/emacsvox-enriched.el= | =lisp/integrations/emacsvox-enriched.el= | =emacsvox-enriched= | =emacsvox-preamble=, =enriched= |
+| =lisp/emacsvox-entertain.el= | =lisp/integrations/emacsvox-entertain.el= | =emacsvox-entertain= | =emacsvox-preamble= |
+| =lisp/emacsvox-enwc.el= | =lisp/integrations/emacsvox-enwc.el= | =emacsvox-enwc= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-epa.el= | =lisp/integrations/emacsvox-epa.el= | =emacsvox-epa= | =cl-lib=, =emacsvox-preamble=, =epa=, =epa-dired=, =epa-file=, =epa-mail= |
+| =lisp/emacsvox-epub.el= | =lisp/integrations/emacsvox-epub.el= | =emacsvox-epub= | =cl-lib=, =emacsvox-preamble=, =dired=, =emacsvox-xslt=, =eww=, =emacsvox-eww=, =derived=, =subr-x=, =dom=, =dom-addons= |
+| =lisp/emacsvox-erc.el= | =lisp/integrations/emacsvox-erc.el= | =emacsvox-erc= | =cl-lib=, =emacsvox-preamble=, =erc= |
+| =lisp/emacsvox-eshell.el= | =lisp/integrations/emacsvox-eshell.el= | =emacsvox-eshell= | =emacsvox-preamble=, =esh-arg= |
+| =lisp/emacsvox-ess.el= | =lisp/integrations/emacsvox-ess.el= | =emacsvox-ess= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-etable.el= | =lisp/integrations/emacsvox-etable.el= | =emacsvox-etable= | =emacsvox-preamble=, =table= |
+| =lisp/emacsvox-eterm.el= | =lisp/integrations/emacsvox-eterm.el= | =emacsvox-eterm= | =cl-lib=, =emacsvox-preamble=, =term= |
+| =lisp/emacsvox-eudc.el= | =lisp/integrations/emacsvox-eudc.el= | =emacsvox-eudc= | =emacsvox-preamble=, =widget=, =emacsvox-widget=, =eudc= |
+| =lisp/emacsvox-evil.el= | =lisp/integrations/emacsvox-evil.el= | =emacsvox-evil= | =cl-lib=, =emacsvox-preamble=, =evil= |
+| =lisp/emacsvox-eww.el= | =lisp/integrations/emacsvox-eww.el= | =emacsvox-eww= | =cl-lib=, =subr-x=, =emacsvox-preamble=, =eww=, =emacsvox-shr=, =dom=, =dom-addons=, =emacsvox-we=, =emacsvox-google=, =empv=, =emacsvox-epub=, =emacsvox-bookshare= |
+| =lisp/emacsvox-exwm.el= | =lisp/integrations/emacsvox-exwm.el= | =emacsvox-exwm= | =cl-lib=, =emacsvox-preamble=, =exwm= |
+| =lisp/emacsvox-feeds.el= | =lisp/integrations/emacsvox-feeds.el= | =emacsvox-feeds= | =cl-lib=, =cl-extra=, =emacsvox-preamble=, =emacsvox-xslt=, =url=, =eww=, =browse-url= |
+| =lisp/emacsvox-ffap.el= | =lisp/integrations/emacsvox-ffap.el= | =emacsvox-ffap= | =cl-lib=, =emacsvox-preamble=, =ffap= |
+| =lisp/emacsvox-ffip.el= | =lisp/integrations/emacsvox-ffip.el= | =emacsvox-ffip= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-flycheck.el= | =lisp/integrations/emacsvox-flycheck.el= | =emacsvox-flycheck= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-flymake.el= | =lisp/integrations/emacsvox-flymake.el= | =emacsvox-flymake= | =cl-lib=, =emacsvox-preamble=, =flymake= |
+| =lisp/emacsvox-flyspell.el= | =lisp/integrations/emacsvox-flyspell.el= | =emacsvox-flyspell= | =cl-lib=, =emacsvox-preamble=, =flyspell= |
+| =lisp/emacsvox-folding.el= | =lisp/integrations/emacsvox-folding.el= | =emacsvox-folding= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-forge.el= | =lisp/integrations/emacsvox-forge.el= | =emacsvox-forge= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-forms.el= | =lisp/integrations/emacsvox-forms.el= | =emacsvox-forms= | =forms=, =emacsvox-preamble= |
+| =lisp/emacsvox-geiser.el= | =lisp/integrations/emacsvox-geiser.el= | =emacsvox-geiser= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-gnuplot.el= | =lisp/integrations/emacsvox-gnuplot.el= | =emacsvox-gnuplot= | =emacsvox-preamble= |
+| =lisp/emacsvox-gnus.el= | =lisp/integrations/emacsvox-gnus.el= | =emacsvox-gnus= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-workflows=, =emacsvox-hide=, =gnus=, =gnus-art=, =gnus-sum=, =gm-nnir= |
+| =lisp/emacsvox-go-mode.el= | =lisp/integrations/emacsvox-go-mode.el= | =emacsvox-go-mode= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-gomoku.el= | =lisp/integrations/emacsvox-gomoku.el= | =emacsvox-gomoku= | =emacsvox-preamble=, =gomoku= |
+| =lisp/emacsvox-google.el= | =lisp/integrations/emacsvox-google.el= | =emacsvox-google= | =cl-lib=, =derived=, =emacsvox-preamble=, =emacsvox-we=, =gweb= |
+| =lisp/emacsvox-gptel.el= | =lisp/integrations/emacsvox-gptel.el= | =emacsvox-gptel= | =cl-lib=, =emacsvox-preamble=, =gptel= |
+| =lisp/emacsvox-gud.el= | =lisp/integrations/emacsvox-gud.el= | =emacsvox-gud= | =emacsvox-preamble=, =gud= |
+| =lisp/emacsvox-haskell.el= | =lisp/integrations/emacsvox-haskell.el= | =emacsvox-haskell= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-helm.el= | =lisp/integrations/emacsvox-helm.el= | =emacsvox-helm= | =cl-lib=, =emacsvox-google=, =emacsvox-preamble= |
+| =lisp/emacsvox-helpful.el= | =lisp/integrations/emacsvox-helpful.el= | =emacsvox-helpful= | =cl-lib=, =emacsvox-preamble=, =helpful= |
+| =lisp/emacsvox-hide-lines.el= | =lisp/integrations/emacsvox-hide-lines.el= | =emacsvox-hide-lines= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-hideshow.el= | =lisp/integrations/emacsvox-hideshow.el= | =emacsvox-hideshow= | =emacsvox-preamble=, =hideshow= |
+| =lisp/emacsvox-hydra.el= | =lisp/integrations/emacsvox-hydra.el= | =emacsvox-hydra= | =cl-lib=, =emacsvox-preamble=, =hydra= |
+| =lisp/emacsvox-ibuffer.el= | =lisp/integrations/emacsvox-ibuffer.el= | =emacsvox-ibuffer= | =cl-lib=, =emacsvox-preamble=, =ibuffer=, =ibuf-ext= |
+| =lisp/emacsvox-ido.el= | =lisp/integrations/emacsvox-ido.el= | =emacsvox-ido= | =emacsvox-preamble=, =ido= |
+| =lisp/emacsvox-iedit.el= | =lisp/integrations/emacsvox-iedit.el= | =emacsvox-iedit= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-info.el= | =lisp/integrations/emacsvox-info.el= | =emacsvox-info= | =emacsvox-preamble=, =info= |
+| =lisp/emacsvox-ispell.el= | =lisp/integrations/emacsvox-ispell.el= | =emacsvox-ispell= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-ivy.el= | =lisp/integrations/emacsvox-ivy.el= | =emacsvox-ivy= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-journalctl.el= | =lisp/integrations/emacsvox-journalctl.el= | =emacsvox-journalctl= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-js2.el= | =lisp/integrations/emacsvox-js2.el= | =emacsvox-js2= | =cl-lib=, =emacsvox-preamble=, =js2-imenu-extras= |
+| =lisp/emacsvox-kmacro.el= | =lisp/integrations/emacsvox-kmacro.el= | =emacsvox-kmacro= | =emacsvox-preamble=, =kmacro= |
+| =lisp/emacsvox-librivox.el= | =lisp/integrations/emacsvox-librivox.el= | =emacsvox-librivox= | =cl-lib=, =emacsvox-preamble=, =dom=, =dom-addons=, =g-utils= |
+| =lisp/emacsvox-lispy.el= | =lisp/integrations/emacsvox-lispy.el= | =emacsvox-lispy= | =cl-lib=, =emacsvox-preamble=, =lispy= |
+| =lisp/emacsvox-lua.el= | =lisp/integrations/emacsvox-lua.el= | =emacsvox-lua= | =cl-lib=, =emacsvox-preamble=, =lua-mode= |
+| =lisp/emacsvox-m-player.el= | =lisp/integrations/emacsvox-m-player.el= | =emacsvox-m-player= | =cl-lib=, =emacsvox-preamble=, =dired=, =emacsvox-dired=, =emacsvox-amark=, =ladspa= |
+| =lisp/emacsvox-magit.el= | =lisp/integrations/emacsvox-magit.el= | =emacsvox-magit= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-provider-workflows= |
+| =lisp/emacsvox-make-mode.el= | =lisp/integrations/emacsvox-make-mode.el= | =emacsvox-make-mode= | =emacsvox-preamble=, =make-mode= |
+| =lisp/emacsvox-man.el= | =lisp/integrations/emacsvox-man.el= | =emacsvox-man= | =emacsvox-preamble=, =voice-setup=, =man= |
+| =lisp/emacsvox-marginalia.el= | =lisp/integrations/emacsvox-marginalia.el= | =emacsvox-marginalia= | =emacsvox-preamble=, =marginalia= |
+| =lisp/emacsvox-markdown.el= | =lisp/integrations/emacsvox-markdown.el= | =emacsvox-markdown= | =cl-lib=, =emacsvox-preamble=, =emacsvox-table-reader=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-markdown= |
+| =lisp/emacsvox-maths.el= | =lisp/integrations/emacsvox-maths.el= | =emacsvox-maths= | =emacsvox-preamble=, =cl-lib=, =comint=, =derived=, =nvm=, =texmathp= |
+| =lisp/emacsvox-message.el= | =lisp/integrations/emacsvox-message.el= | =emacsvox-message= | =emacsvox-preamble=, =message=, =mml=, =subr-x= |
+| =lisp/emacsvox-mines.el= | =lisp/integrations/emacsvox-mines.el= | =emacsvox-mines= | =cl-lib=, =emacsvox-preamble=, =mines= |
+| =lisp/emacsvox-mu4e.el= | =lisp/integrations/emacsvox-mu4e.el= | =emacsvox-mu4e= | =cl-lib=, =emacsvox-preamble=, =mu4e= |
+| =lisp/emacsvox-muggle-org-navigation.el= | =lisp/integrations/emacsvox-muggle-org-navigation.el= | =emacsvox-muggle-org-navigation= | =org=, =hydra=, =emacsvox-hydra=, =emacsvox-outline= |
+| =lisp/emacsvox-multiple-cursors.el= | =lisp/integrations/emacsvox-multiple-cursors.el= | =emacsvox-multiple-cursors= | =cl-lib=, =emacsvox-preamble=, =multiple-cursors= |
+| =lisp/emacsvox-net-utils.el= | =lisp/integrations/emacsvox-net-utils.el= | =emacsvox-net-utils= | =emacsvox-preamble=, =net-utils= |
+| =lisp/emacsvox-newsticker.el= | =lisp/integrations/emacsvox-newsticker.el= | =emacsvox-newsticker= | =emacsvox-preamble=, =newsticker= |
+| =lisp/emacsvox-nm.el= | =lisp/integrations/emacsvox-nm.el= | =emacsvox-nm= | =dbus= |
+| =lisp/emacsvox-notmuch.el= | =lisp/integrations/emacsvox-notmuch.el= | =emacsvox-notmuch= | =cl-lib=, =button=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-notmuch=, =subr-x=, =wid-edit= |
+| =lisp/emacsvox-nov.el= | =lisp/integrations/emacsvox-nov.el= | =emacsvox-nov= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-nxml.el= | =lisp/integrations/emacsvox-nxml.el= | =emacsvox-nxml= | =emacsvox-preamble=, =nxml-mode= |
+| =lisp/emacsvox-ocr.el= | =lisp/integrations/emacsvox-ocr.el= | =emacsvox-ocr= | =emacsvox-preamble= |
+| =lisp/emacsvox-org-srs.el= | =lisp/integrations/emacsvox-org-srs.el= | =emacsvox-org-srs= | =cl-lib=, =subr-x=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-source=, =emacsvox-aural-provider-org-srs= |
+| =lisp/emacsvox-org.el= | =lisp/integrations/emacsvox-org.el= | =emacsvox-org= | =cl-lib=, =subr-x=, =emacsvox-preamble=, =emacsvox-table-reader=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-org=, =emacsvox-amark=, =org=, =org-element=, =org-table=, =ol-eww= |
+| =lisp/emacsvox-orgalist.el= | =lisp/integrations/emacsvox-orgalist.el= | =emacsvox-orgalist= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-outline.el= | =lisp/integrations/emacsvox-outline.el= | =emacsvox-outline= | =emacsvox-preamble=, =outline= |
+| =lisp/emacsvox-package.el= | =lisp/integrations/emacsvox-package.el= | =emacsvox-package= | =cl-lib=, =emacsvox-preamble=, =calendar=, =package= |
+| =lisp/emacsvox-perl.el= | =lisp/integrations/emacsvox-perl.el= | =emacsvox-perl= | =emacsvox-preamble=, =perl-mode= |
+| =lisp/emacsvox-pipewire.el= | =lisp/integrations/emacsvox-pipewire.el= | =emacsvox-pipewire= | =cl-lib=, =emacsvox-preamble=, =pipewire= |
+| =lisp/emacsvox-popup.el= | =lisp/integrations/emacsvox-popup.el= | =emacsvox-popup= | =cl-lib=, =emacsvox-preamble=, =popup= |
+| =lisp/emacsvox-proced.el= | =lisp/integrations/emacsvox-proced.el= | =emacsvox-proced= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-project.el= | =lisp/integrations/emacsvox-project.el= | =emacsvox-project= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-projectile.el= | =lisp/integrations/emacsvox-projectile.el= | =emacsvox-projectile= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-py.el= | =lisp/integrations/emacsvox-py.el= | =emacsvox-py= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-workflows=, =python-mode= |
+| =lisp/emacsvox-pydoc.el= | =lisp/integrations/emacsvox-pydoc.el= | =emacsvox-pydoc= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-provider-workflows= |
+| =lisp/emacsvox-python.el= | =lisp/integrations/emacsvox-python.el= | =emacsvox-python= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-workflows=, =python= |
+| =lisp/emacsvox-racket.el= | =lisp/integrations/emacsvox-racket.el= | =emacsvox-racket= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-re-builder.el= | =lisp/integrations/emacsvox-re-builder.el= | =emacsvox-re-builder= | =emacsvox-preamble=, =re-builder= |
+| =lisp/emacsvox-reftex.el= | =lisp/integrations/emacsvox-reftex.el= | =emacsvox-reftex= | =emacsvox-preamble= |
+| =lisp/emacsvox-related.el= | =lisp/integrations/emacsvox-related.el= | =emacsvox-related= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-rg.el= | =lisp/integrations/emacsvox-rg.el= | =emacsvox-rg= | =cl-lib=, =emacsvox-preamble=, =rg= |
+| =lisp/emacsvox-rmail.el= | =lisp/integrations/emacsvox-rmail.el= | =emacsvox-rmail= | =emacsvox-preamble= |
+| =lisp/emacsvox-rst.el= | =lisp/integrations/emacsvox-rst.el= | =emacsvox-rst= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-ruby.el= | =lisp/integrations/emacsvox-ruby.el= | =emacsvox-ruby= | =emacsvox-preamble=, =ruby-mode= |
+| =lisp/emacsvox-rust-mode.el= | =lisp/integrations/emacsvox-rust-mode.el= | =emacsvox-rust-mode= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-sage.el= | =lisp/integrations/emacsvox-sage.el= | =emacsvox-sage= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-sdcv.el= | =lisp/integrations/emacsvox-sdcv.el= | =emacsvox-sdcv= | =cl-lib=, =let-alist=, =emacsvox-preamble= |
+| =lisp/emacsvox-ses.el= | =lisp/integrations/emacsvox-ses.el= | =emacsvox-ses= | =emacsvox-preamble=, =ses= |
+| =lisp/emacsvox-sgml-mode.el= | =lisp/integrations/emacsvox-sgml-mode.el= | =emacsvox-sgml-mode= | =emacsvox-preamble=, =sgml-mode= |
+| =lisp/emacsvox-sh-script.el= | =lisp/integrations/emacsvox-sh-script.el= | =emacsvox-sh-script= | =emacsvox-preamble=, =sh-script= |
+| =lisp/emacsvox-shr.el= | =lisp/integrations/emacsvox-shr.el= | =emacsvox-shr= | =emacsvox-preamble=, =shr= |
+| =lisp/emacsvox-slime.el= | =lisp/integrations/emacsvox-slime.el= | =emacsvox-slime= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-smartparens.el= | =lisp/integrations/emacsvox-smartparens.el= | =emacsvox-smartparens= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-solitaire.el= | =lisp/integrations/emacsvox-solitaire.el= | =emacsvox-solitaire= | =emacsvox-preamble=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-submission=, =solitaire= |
+| =lisp/emacsvox-speedbar.el= | =lisp/integrations/emacsvox-speedbar.el= | =emacsvox-speedbar= | =emacsvox-preamble=, =speedbar= |
+| =lisp/emacsvox-sql.el= | =lisp/integrations/emacsvox-sql.el= | =emacsvox-sql= | =cl-lib=, =emacsvox-preamble=, =sql= |
+| =lisp/emacsvox-sudoku.el= | =lisp/integrations/emacsvox-sudoku.el= | =emacsvox-sudoku= | =cl-lib=, =emacsvox-preamble=, =sudoku= |
+| =lisp/emacsvox-supercite.el= | =lisp/integrations/emacsvox-supercite.el= | =emacsvox-supercite= | =emacsvox-preamble=, =supercite= |
+| =lisp/emacsvox-syslog.el= | =lisp/integrations/emacsvox-syslog.el= | =emacsvox-syslog= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-tab-bar.el= | =lisp/integrations/emacsvox-tab-bar.el= | =emacsvox-tab-bar= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-tabulated-list.el= | =lisp/integrations/emacsvox-tabulated-list.el= | =emacsvox-tabulated-list= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-provider-workflows=, =emacsvox-aural-submission=, =tabulated-list=, =emacsvox-table-reader= |
+| =lisp/emacsvox-tar.el= | =lisp/integrations/emacsvox-tar.el= | =emacsvox-tar= | =emacsvox-preamble=, =tar-mode= |
+| =lisp/emacsvox-tcl.el= | =lisp/integrations/emacsvox-tcl.el= | =emacsvox-tcl= | =emacsvox-preamble= |
+| =lisp/emacsvox-tempo.el= | =lisp/integrations/emacsvox-tempo.el= | =emacsvox-tempo= | =emacsvox-preamble=, =tempo= |
+| =lisp/emacsvox-tetris.el= | =lisp/integrations/emacsvox-tetris.el= | =emacsvox-tetris= | =emacsvox-preamble=, =tetris=, =emacsvox-pronounce= |
+| =lisp/emacsvox-texinfo.el= | =lisp/integrations/emacsvox-texinfo.el= | =emacsvox-texinfo= | =emacsvox-preamble=, =texinfo= |
+| =lisp/emacsvox-todo-mode.el= | =lisp/integrations/emacsvox-todo-mode.el= | =emacsvox-todo-mode= | =emacsvox-preamble=, =todo-mode= |
+| =lisp/emacsvox-transient.el= | =lisp/integrations/emacsvox-transient.el= | =emacsvox-transient= | =cl-lib=, =package=, =transient=, =emacsvox-preamble=, =emacsvox-aural-submission=, =emacsvox-aural-provider-workflows=, =derived= |
+| =lisp/emacsvox-treesit.el= | =lisp/integrations/emacsvox-treesit.el= | =emacsvox-treesit= | =cl-lib=, =emacsvox-preamble=, =treesit= |
+| =lisp/emacsvox-typo.el= | =lisp/integrations/emacsvox-typo.el= | =emacsvox-typo= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-url-template.el= | =lisp/integrations/emacsvox-url-template.el= | =emacsvox-url-template= | =cl-lib=, =subr-x=, =emacsvox-preamble=, =eww=, =dom-addons=, =emacsvox-eww=, =emacsvox-feeds=, =gweb=, =gmaps=, =g-utils=, =emacsvox-we=, =emacsvox-xslt= |
+| =lisp/emacsvox-vdiff.el= | =lisp/integrations/emacsvox-vdiff.el= | =emacsvox-vdiff= | =cl-lib=, =emacsvox-preamble=, =vdiff= |
+| =lisp/emacsvox-vertico.el= | =lisp/integrations/emacsvox-vertico.el= | =emacsvox-vertico= | =cl-lib=, =emacsvox-preamble=, =emacsvox-aural-source=, =emacsvox-aural-submission=, =emacsvox-aural-transport=, =emacsvox-aural-provider-workflows=, =vertico= |
+| =lisp/emacsvox-view.el= | =lisp/integrations/emacsvox-view.el= | =emacsvox-view= | =emacsvox-preamble=, =view= |
+| =lisp/emacsvox-vterm.el= | =lisp/integrations/emacsvox-vterm.el= | =emacsvox-vterm= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-wdired.el= | =lisp/integrations/emacsvox-wdired.el= | =emacsvox-wdired= | =cl-lib=, =emacsvox-preamble=, =emacsvox-dired= |
+| =lisp/emacsvox-we.el= | =lisp/integrations/emacsvox-we.el= | =emacsvox-we= | =cl-lib=, =emacsvox-preamble=, =emacsvox-xslt= |
+| =lisp/emacsvox-websearch.el= | =lisp/integrations/emacsvox-websearch.el= | =emacsvox-websearch= | =cl-lib=, =emacsvox-preamble=, =emacsvox-google=, =gweb= |
+| =lisp/emacsvox-webspace.el= | =lisp/integrations/emacsvox-webspace.el= | =emacsvox-webspace= | =cl-lib=, =emacsvox-preamble=, =emacsvox-we=, =ring=, =derived=, =gweb=, =emacsvox-feeds= |
+| =lisp/emacsvox-which-key.el= | =lisp/integrations/emacsvox-which-key.el= | =emacsvox-which-key= | =cl-lib=, =emacsvox-preamble=, =which-key= |
+| =lisp/emacsvox-widget.el= | =lisp/integrations/emacsvox-widget.el= | =emacsvox-widget= | =cl-lib=, =emacsvox-preamble=, =voice-setup=, =wid-edit= |
+| =lisp/emacsvox-windmove.el= | =lisp/integrations/emacsvox-windmove.el= | =emacsvox-windmove= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-woman.el= | =lisp/integrations/emacsvox-woman.el= | =emacsvox-woman= | =cl-lib=, =emacsvox-preamble=, =dired=, =woman= |
+| =lisp/emacsvox-xkcd.el= | =lisp/integrations/emacsvox-xkcd.el= | =emacsvox-xkcd= | =cl-lib=, =emacsvox-preamble=, =json=, =xkcd= |
+| =lisp/emacsvox-xref.el= | =lisp/integrations/emacsvox-xref.el= | =emacsvox-xref= | =cl-lib=, =emacsvox-preamble=, =xref= |
+| =lisp/emacsvox-yasnippet.el= | =lisp/integrations/emacsvox-yasnippet.el= | =emacsvox-yasnippet= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/gm-nnir.el= | =lisp/integrations/gm-nnir.el= | =gm-nnir= | =cl-lib=, =emacsvox-preamble=, =nnir=, =gnus-group= |
+| =lisp/gmaps.el= | =lisp/integrations/gmaps.el= | =gmaps= | =cl-lib=, =g-utils= |
+| =lisp/integrations/emacsvox-diff-mode.el= | =lisp/integrations/emacsvox-diff-mode.el= | =emacsvox-diff-mode= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/integrations/emacsvox-rpm-spec.el= | =lisp/integrations/emacsvox-rpm-spec.el= | =emacsvox-rpm-spec= | =emacsvox-preamble= |
+| =lisp/integrations/emacsvox-yaml.el= | =lisp/integrations/emacsvox-yaml.el= | =emacsvox-yaml= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/ladspa.el= | =lisp/integrations/ladspa.el= | =ladspa= | =cl-lib=, =subr-x=, =derived= |
+| =lisp/light.el= | =lisp/integrations/light.el= | =light= | =cl-lib= |
+| =lisp/omaps.el= | =lisp/integrations/omaps.el= | =omaps= | =cl-lib=, =g-utils= |
+| =lisp/sox.el= | =lisp/integrations/sox.el= | =sox=, =emacsvox-sox= | =cl-lib=, =derived=, =ladspa=, =emacsvox-preamble= |
+| =lisp/tetris.el= | =lisp/integrations/tetris.el= | =tetris= | =cl-lib=, =gamegrid= |
+| =lisp/xbacklight.el= | =lisp/integrations/xbacklight.el= | =xbacklight= | =cl-lib= |
+
+* ui
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/emacsvox-aural-change-feedback.el= | =lisp/ui/emacsvox-aural-change-feedback.el= | =emacsvox-aural-change-feedback= | =emacsvox-aural-editor=, =emacsvox-aural-tools=, =emacsvox-aural-ui=, =emacsvox-aural-preview=, =emacsvox-aural-recent-feedback=, =emacsvox-aural-feedback-details=, =emacsvox-aural-voice-runtime=, =emacsvox-aural-voice-editor= |
+| =lisp/emacsvox-aural-doctor.el= | =lisp/ui/emacsvox-aural-doctor.el= | =emacsvox-aural-doctor= | =cl-lib=, =subr-x=, =tabulated-list=, =emacsvox-aural-ui=, =emacsvox-aural-explanation=, =emacsvox-aural-profile-service=, =emacsvox-sounds= |
+| =lisp/emacsvox-aural-editor.el= | =lisp/ui/emacsvox-aural-editor.el= | =emacsvox-aural-editor= | =cl-lib=, =seq=, =subr-x=, =emacsvox-aural-semantics=, =emacsvox-aural-explanation=, =emacsvox-aural-feature-fragments=, =emacsvox-aural-preview=, =emacsvox-aural-providers= |
+| =lisp/emacsvox-aural-feature-fragments.el= | =lisp/ui/emacsvox-aural-feature-fragments.el= | =emacsvox-aural-feature-fragments= | =cl-lib=, =help-mode=, =pp=, =subr-x=, =tabulated-list=, =emacsvox-aural-schemes=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-preview=, =emacsvox-aural-validation=, =emacsvox-aural-description=, =emacsvox-aural-editor= |
+| =lisp/emacsvox-aural-feedback-details.el= | =lisp/ui/emacsvox-aural-feedback-details.el= | =emacsvox-aural-feedback-details= | =button=, =outline=, =pp=, =emacsvox-aural-recent-feedback=, =emacsvox-aural-planner=, =emacsvox-aural-replay=, =emacsvox-aural-change-feedback=, =emacsvox-aural-voice-runtime=, =emacsvox-aural-voice-editor=, =emacsvox-outline=, =emacsvox-speak= |
+| =lisp/emacsvox-aural-home.el= | =lisp/ui/emacsvox-aural-home.el= | =emacsvox-aural-home= | =subr-x=, =tabulated-list=, =emacsvox-aural-history=, =emacsvox-aural-tools=, =emacsvox-aural-explanation=, =emacsvox-aural-recent-feedback=, =emacsvox-aural-feature-fragments=, =emacsvox-aural-voice-workbench=, =emacsvox-aural-profiles=, =emacsvox-aural-overrides=, =emacsvox-aural-voice-palettes=, =emacsvox-aural-doctor=, =emacsvox-aural-change-feedback=, =omnivox-punctuation=, =emacsvox-aural-editor=, =emacsvox-aural-sound-packs= |
+| =lisp/emacsvox-aural-menu.el= | =lisp/ui/emacsvox-aural-menu.el= | =emacsvox-aural-menu= | =emacsvox-indentation=, =emacsvox-aural-inspection=, =info= |
+| =lisp/emacsvox-aural-overrides.el= | =lisp/ui/emacsvox-aural-overrides.el= | =emacsvox-aural-overrides= | =cl-lib=, =subr-x=, =tabulated-list=, =emacsvox-aural-schemes=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-preview=, =emacsvox-aural-validation=, =emacsvox-aural-description=, =emacsvox-aural-editor= |
+| =lisp/emacsvox-aural-profiles.el= | =lisp/ui/emacsvox-aural-profiles.el= | =emacsvox-aural-profiles= | =cl-lib=, =seq=, =subr-x=, =tabulated-list=, =emacsvox-aural-schemes=, =emacsvox-aural-profile-service=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-description= |
+| =lisp/emacsvox-aural-recent-feedback.el= | =lisp/ui/emacsvox-aural-recent-feedback.el= | =emacsvox-aural-recent-feedback= | =cl-lib=, =help-mode=, =subr-x=, =tabulated-list=, =emacsvox-aural-history=, =emacsvox-aural-tools=, =emacsvox-aural-explanation=, =emacsvox-aural-description=, =emacsvox-aural-feedback-details=, =emacsvox-aural-replay=, =emacsvox-aural-change-feedback= |
+| =lisp/emacsvox-aural-semantics.el= | =lisp/ui/emacsvox-aural-semantics.el= | =emacsvox-aural-semantics= | =cl-lib=, =help-mode=, =subr-x=, =tabulated-list=, =emacsvox-aural-schemes=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-description=, =emacsvox-aural-validation= |
+| =lisp/emacsvox-aural-sound-packs.el= | =lisp/ui/emacsvox-aural-sound-packs.el= | =emacsvox-aural-sound-packs= | =cl-lib=, =pp=, =subr-x=, =tabulated-list=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-description=, =emacsvox-aural-preview=, =emacsvox-sounds= |
+| =lisp/emacsvox-aural-ui.el= | =lisp/ui/emacsvox-aural-ui.el= | =emacsvox-aural-ui= | =cl-lib=, =subr-x=, =tabulated-list=, =info=, =emacsvox-aural-preview= |
+| =lisp/emacsvox-aural-voice-bulk.el= | =lisp/ui/emacsvox-aural-voice-bulk.el= | =emacsvox-aural-voice-bulk= | =emacsvox-aural-voice-editor= |
+| =lisp/emacsvox-aural-voice-context.el= | =lisp/ui/emacsvox-aural-voice-context.el= | =emacsvox-aural-voice-context= | =emacsvox-aural-voice-editor=, =emacsvox-aural-editor=, =emacsvox-aural-tools= |
+| =lisp/emacsvox-aural-voice-editor.el= | =lisp/ui/emacsvox-aural-voice-editor.el= | =emacsvox-aural-voice-editor= | =button=, =emacsvox-aural-voice-editing=, =emacsvox-aural-voice-workbench=, =omnivox-parameters= |
+| =lisp/emacsvox-aural-voice-engine-controls.el= | =lisp/ui/emacsvox-aural-voice-engine-controls.el= | =emacsvox-aural-voice-engine-controls= | =emacsvox-aural-voice-editor=, =omnivox-parameters= |
+| =lisp/emacsvox-aural-voice-menu.el= | =lisp/ui/emacsvox-aural-voice-menu.el= | =emacsvox-aural-voice-menu= | =emacsvox-aural-menu=, =emacsvox-aural-voice-editor=, =emacsvox-aural-voice-engine-controls= |
+| =lisp/emacsvox-aural-voice-palettes.el= | =lisp/ui/emacsvox-aural-voice-palettes.el= | =emacsvox-aural-voice-palettes= | =emacsvox-aural-voice-editing=, =cl-lib=, =subr-x=, =tabulated-list=, =emacsvox-aural-schemes=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-description=, =emacsvox-aural-preview=, =emacsvox-aural-voice-editor=, =emacsvox-aural-profile-service=, =emacsvox-aural-voice-workbench= |
+| =lisp/emacsvox-aural-voice-workbench.el= | =lisp/ui/emacsvox-aural-voice-workbench.el= | =emacsvox-aural-voice-workbench= | =cl-lib=, =subr-x=, =tabulated-list=, =tts-speak=, =emacsvox-aural-resources=, =emacsvox-aural-schemes=, =emacsvox-aural-routing-profiles=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =emacsvox-aural-preview=, =emacsvox-aural-voice-palettes=, =omnivox-library=, =omnivox-voices=, =omnivox-catalogue=, =emacsvox-omnivox-components=, =emacsvox-aural-voice-bulk=, =emacsvox-aural-voice-editor= |
+| =lisp/emacsvox-capitalization.el= | =lisp/ui/emacsvox-capitalization.el= | =emacsvox-capitalization= | =emacsvox-aural-menu=, =emacsvox-aural-editor=, =emacsvox-aural-preview=, =emacsvox-tone-editor= |
+| =lisp/emacsvox-indentation.el= | =lisp/ui/emacsvox-indentation.el= | =emacsvox-indentation= | =cus-edit=, =emacsvox-speak=, =emacsvox-transient=, =emacsvox-tone-editor= |
+| =lisp/emacsvox-interaction.el= | =lisp/ui/emacsvox-interaction.el= | =emacsvox-interaction= | =emacsvox-aural-menu= |
+| =lisp/emacsvox-line-cues.el= | =lisp/ui/emacsvox-line-cues.el= | =emacsvox-line-cues= | =emacsvox-aural-menu=, =emacsvox-aural-editor=, =emacsvox-aural-preview=, =emacsvox-aural-tools=, =emacsvox-tone-editor= |
+| =lisp/emacsvox-muggles-ui.el= | =lisp/ui/emacsvox-muggles-ui.el= | =emacsvox-muggles-ui= | =emacsvox-muggles-core=, =emacsvox-aural-ui=, =emacsvox-aural-inspection= |
+| =lisp/emacsvox-muggles.el= | =lisp/ui/emacsvox-muggles.el= | =emacsvox-muggles= | =cl-lib=, =emacsvox-preamble=, =hydra=, =emacsvox-hydra=, =org=, =hideshow=, =ido=, =emacsvox-maths=, =emacsvox-outline=, =emacsvox-dired=, =smartparens=, =browse-kill-ring=, =xbacklight=, =view=, =emacsvox-m-player= |
+| =lisp/emacsvox-omnivox-components.el= | =lisp/ui/emacsvox-omnivox-components.el= | =emacsvox-omnivox-components= | =cl-lib=, =subr-x=, =tabulated-list=, =emacsvox-aural-ui=, =emacsvox-aural-inspection=, =omnivox-engine-settings=, =omnivox-library=, =omnivox-catalogue=, =omnivox-espeak-variants=, =emacsvox-aural-voice-workbench=, =omnivox-engine-configuration= |
+| =lisp/emacsvox-output-settings.el= | =lisp/ui/emacsvox-output-settings.el= | =emacsvox-output-settings= | =emacsvox-aural-menu=, =emacsvox-aural-spatial=, =emacsvox-aural-preview= |
+| =lisp/emacsvox-settings-changes.el= | =lisp/ui/emacsvox-settings-changes.el= | =emacsvox-settings-changes= | =cus-edit=, =emacsvox-aural-menu=, =emacsvox-aural-home= |
+| =lisp/emacsvox-settings-integrations.el= | =lisp/ui/emacsvox-settings-integrations.el= | =emacsvox-settings-integrations= | =emacsvox-settings=, =emacsvox-comint=, =emacsvox-eat=, =emacsvox-agent-shell=, =org-table=, =emacsvox-org=, =emacsvox-eww=, =emacsvox-notmuch=, =emacsvox-aural-feature-fragments= |
+| =lisp/emacsvox-settings-workflows.el= | =lisp/ui/emacsvox-settings-workflows.el= | =emacsvox-settings-workflows= | =emacsvox-aural-menu=, =emacsvox-aural-history=, =emacsvox-pronounce=, =emacsvox-aural-recent-feedback=, =voice-setup=, =emacsvox-aural-preview=, =omnivox-voices=, =emacsvox-aural-compatibility-voice=, =wid-edit=, =emacsvox-settings= |
+| =lisp/emacsvox-settings.el= | =lisp/ui/emacsvox-settings.el= | =emacsvox-settings= | =emacsvox-aural-menu=, =cus-edit= |
+| =lisp/emacsvox-sound-library.el= | =lisp/ui/emacsvox-sound-library.el= | =emacsvox-sound-library= | =emacsvox-aural-sound-packs= |
+| =lisp/emacsvox-spelling.el= | =lisp/ui/emacsvox-spelling.el= | =emacsvox-spelling= | =emacsvox-aural-menu=, =emacsvox-flyspell=, =emacsvox-tone-editor= |
+| =lisp/emacsvox-table-settings.el= | =lisp/ui/emacsvox-table-settings.el= | =emacsvox-table-settings= | =emacsvox-table-reader=, =emacsvox-aural-menu=, =emacsvox-aural-preview=, =cus-edit= |
+| =lisp/emacsvox-tone-editor.el= | =lisp/ui/emacsvox-tone-editor.el= | =emacsvox-tone-editor= | =emacsvox-aural-menu= |
+| =lisp/emacsvox-welcome.el= | =lisp/ui/emacsvox-welcome.el= | =emacsvox-welcome= | =button=, =subr-x=, =seq=, =emacsvox-aural-home= |
+| =lisp/extra-muggles.el= | =lisp/ui/extra-muggles.el= | =extra-muggles= | =cl-lib=, =emacsvox-preamble=, =emacsvox-dired=, =hydra=, =emacsvox-hydra=, =org=, =emacsvox-outline=, =emacsvox-m-player=, =view=, =smartparens=, =vuiet=, =eww=, =origami=, =emacsvox-muggles-core=, =emacsvox-muggle-org-navigation= |
+| =lisp/omnivox-catalogue.el= | =lisp/ui/omnivox-catalogue.el= | =omnivox-catalogue= | =omnivox-library=, =emacsvox-preamble= |
+| =lisp/omnivox-engine-configuration.el= | =lisp/ui/omnivox-engine-configuration.el= | =omnivox-engine-configuration= | =cl-lib=, =json=, =subr-x=, =emacsvox-aural-ui=, =omnivox-library=, =emacsvox-aural-voice-workbench= |
+| =lisp/omnivox-espeak-variants.el= | =lisp/ui/omnivox-espeak-variants.el= | =omnivox-espeak-variants= | =cl-lib=, =tabulated-list=, =tts-speak=, =emacsvox-aural-ui=, =emacsvox-aural-voice-editor=, =emacsvox-aural-voice-bulk=, =emacsvox-aural-voice-workbench= |
+| =lisp/omnivox-library.el= | =lisp/ui/omnivox-library.el= | =omnivox-library= | =cl-lib=, =json=, =seq=, =subr-x=, =tabulated-list=, =emacsvox-aural-ui=, =omnivox-engine-settings=, =omnivox-library-apply=, =omnivox-voices=, =emacsvox-aural-voice-runtime=, =omnivox-catalogue=, =emacsvox-aural-voice-workbench= |
+| =lisp/omnivox-punctuation.el= | =lisp/ui/omnivox-punctuation.el= | =omnivox-punctuation= | =cl-lib=, =json=, =subr-x=, =emacsvox-aural-ui=, =omnivox-library=, =omnivox-punctuation-profiles= |
+
+* voices
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/emacsvox-aural-voice-data.el= | =lisp/voices/emacsvox-aural-voice-data.el= | =emacsvox-aural-voice-data= | =emacsvox-aural-resources=, =emacsvox-aural-routing-profiles= |
+| =lisp/emacsvox-aural-voice-drafts.el= | =lisp/voices/emacsvox-aural-voice-drafts.el= | =emacsvox-aural-voice-drafts= | =emacsvox-aural-voice-runtime=, =map= |
+| =lisp/emacsvox-aural-voice-editing.el= | =lisp/voices/emacsvox-aural-voice-editing.el= | =emacsvox-aural-voice-editing= | =emacsvox-aural-voice-drafts=, =emacsvox-aural-compiler= |
+| =lisp/emacsvox-aural-voice-runtime.el= | =lisp/voices/emacsvox-aural-voice-runtime.el= | =emacsvox-aural-voice-runtime= | =emacsvox-aural-voice-data=, =emacsvox-aural-schemes= |
+| =lisp/voice-defs.el= | =lisp/voices/voice-defs.el= | =voice-defs= | =cl-lib=, =voice-setup= |
+
+* aural
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/emacsvox-aural-compatibility-voice.el= | =lisp/aural/emacsvox-aural-compatibility-voice.el= | =emacsvox-aural-compatibility-voice= | =emacsvox-aural= |
+| =lisp/emacsvox-aural-compiler.el= | =lisp/aural/emacsvox-aural-compiler.el= | =emacsvox-aural-compiler= | =cl-lib=, =seq=, =subr-x=, =emacsvox-aural-concrete=, =emacsvox-aural-providers=, =emacsvox-aural-schemes=, =emacsvox-aural-voice-runtime=, =emacsvox-aural-spatial= |
+| =lisp/emacsvox-aural-concrete.el= | =lisp/aural/emacsvox-aural-concrete.el= | =emacsvox-aural-concrete= | =cl-lib= |
+| =lisp/emacsvox-aural-description.el= | =lisp/aural/emacsvox-aural-description.el= | =emacsvox-aural-description= | =subr-x=, =emacsvox-aural-concrete=, =emacsvox-aural-rules= |
+| =lisp/emacsvox-aural-explanation.el= | =lisp/aural/emacsvox-aural-explanation.el= | =emacsvox-aural-explanation= | =cl-lib=, =help-mode=, =pp=, =subr-x=, =emacsvox-aural-ui=, =emacsvox-aural-history=, =emacsvox-aural-transport=, =emacsvox-aural-description=, =emacsvox-aural-validation=, =emacsvox-aural-inspection=, =emacsvox-aural-semantics=, =emacsvox-aural-feedback-details= |
+| =lisp/emacsvox-aural-history.el= | =lisp/aural/emacsvox-aural-history.el= | =emacsvox-aural-history= | =cl-lib=, =emacsvox-aural=, =emacsvox-aural-concrete=, =emacsvox-aural-rules= |
+| =lisp/emacsvox-aural-inspection.el= | =lisp/aural/emacsvox-aural-inspection.el= | =emacsvox-aural-inspection= | =cl-lib=, =emacsvox-aural-ui=, =emacsvox-aural-concrete=, =emacsvox-aural-rules=, =emacsvox-aural-source= |
+| =lisp/emacsvox-aural-planner.el= | =lisp/aural/emacsvox-aural-planner.el= | =emacsvox-aural-planner= | =cl-lib=, =subr-x=, =emacsvox-aural-concrete=, =emacsvox-aural-compiler=, =emacsvox-aural-schemes=, =emacsvox-aural-source= |
+| =lisp/emacsvox-aural-preview.el= | =lisp/aural/emacsvox-aural-preview.el= | =emacsvox-aural-preview= | =emacsvox-aural-transport=, =tts-speak= |
+| =lisp/emacsvox-aural-profile-service.el= | =lisp/aural/emacsvox-aural-profile-service.el= | =emacsvox-aural-profile-service= | =cl-lib=, =subr-x=, =emacsvox-aural-spatial=, =emacsvox-aural-schemes=, =emacsvox-aural-voice-runtime=, =emacsvox-sounds= |
+| =lisp/emacsvox-aural-provider-markdown.el= | =lisp/aural/emacsvox-aural-provider-markdown.el= | =emacsvox-aural-provider-markdown= | =emacsvox-aural-schemes=, =emacsvox-aural-provider-workflows= |
+| =lisp/emacsvox-aural-provider-notmuch.el= | =lisp/aural/emacsvox-aural-provider-notmuch.el= | =emacsvox-aural-provider-notmuch= | =emacsvox-aural-provider-workflows= |
+| =lisp/emacsvox-aural-provider-org-srs.el= | =lisp/aural/emacsvox-aural-provider-org-srs.el= | =emacsvox-aural-provider-org-srs= | =emacsvox-aural-provider-workflows= |
+| =lisp/emacsvox-aural-provider-org.el= | =lisp/aural/emacsvox-aural-provider-org.el= | =emacsvox-aural-provider-org= | =emacsvox-aural-schemes= |
+| =lisp/emacsvox-aural-provider-workflows.el= | =lisp/aural/emacsvox-aural-provider-workflows.el= | =emacsvox-aural-provider-workflows= | =emacsvox-aural=, =emacsvox-aural-schemes= |
+| =lisp/emacsvox-aural-providers.el= | =lisp/aural/emacsvox-aural-providers.el= | =emacsvox-aural-providers= | =cl-lib=, =emacsvox-aural-schemes= |
+| =lisp/emacsvox-aural-replay.el= | =lisp/aural/emacsvox-aural-replay.el= | =emacsvox-aural-replay= | =cl-lib=, =emacsvox-aural-preview=, =tts-speak=, =omnivox-voices= |
+| =lisp/emacsvox-aural-resources.el= | =lisp/aural/emacsvox-aural-resources.el= | =emacsvox-aural-resources= | =cl-lib=, =subr-x=, =emacsvox-aural=, =emacsvox-aural-rules=, =emacsvox-aural-routing-profiles= |
+| =lisp/emacsvox-aural-routing-profiles.el= | =lisp/aural/emacsvox-aural-routing-profiles.el= | =emacsvox-aural-routing-profiles= | =cl-lib=, =pp=, =subr-x=, =emacsvox-aural= |
+| =lisp/emacsvox-aural-rules.el= | =lisp/aural/emacsvox-aural-rules.el= | =emacsvox-aural-rules= | =cl-lib=, =subr-x=, =emacsvox-aural=, =emacsvox-aural-spatial= |
+| =lisp/emacsvox-aural-schemes.el= | =lisp/aural/emacsvox-aural-schemes.el= | =emacsvox-aural-schemes= | =cl-lib=, =pp=, =subr-x=, =emacsvox-aural-resources=, =emacsvox-aural-voice-runtime= |
+| =lisp/emacsvox-aural-source.el= | =lisp/aural/emacsvox-aural-source.el= | =emacsvox-aural-source= | =cl-lib=, =subr-x=, =emacsvox-emoji=, =emacsvox-aural-history=, =emacsvox-aural-schemes= |
+| =lisp/emacsvox-aural-spatial.el= | =lisp/aural/emacsvox-aural-spatial.el= | =emacsvox-aural-spatial= | =cl-lib= |
+| =lisp/emacsvox-aural-submission.el= | =lisp/aural/emacsvox-aural-submission.el= | =emacsvox-aural-submission= | =cl-lib=, =subr-x=, =emacsvox-aural-concrete=, =emacsvox-aural-history=, =emacsvox-aural-planner=, =emacsvox-aural-source= |
+| =lisp/emacsvox-aural-tools.el= | =lisp/aural/emacsvox-aural-tools.el= | =emacsvox-aural-tools= | =cl-lib=, =subr-x=, =emacsvox-aural-schemes=, =emacsvox-aural-history=, =emacsvox-aural-transport=, =emacsvox-aural-description=, =emacsvox-aural-preview=, =emacsvox-aural-inspection=, =emacsvox-aural-semantics=, =emacsvox-aural-explanation=, =emacsvox-aural-editor= |
+| =lisp/emacsvox-aural-transport.el= | =lisp/aural/emacsvox-aural-transport.el= | =emacsvox-aural-transport= | =cl-lib=, =tts-queue-state=, =json=, =subr-x=, =omnivox-remote=, =emacsvox-aural-concrete=, =emacsvox-aural-compiler=, =emacsvox-aural-history=, =emacsvox-aural-planner=, =emacsvox-aural-source=, =emacsvox-aural-schemes=, =emacsvox-aural-replay= |
+| =lisp/emacsvox-aural-validation.el= | =lisp/aural/emacsvox-aural-validation.el= | =emacsvox-aural-validation= | =cl-lib=, =help-mode=, =subr-x=, =emacsvox-aural-transport= |
+| =lisp/emacsvox-aural.el= | =lisp/aural/emacsvox-aural.el= | =emacsvox-aural= | =cl-lib=, =subr-x= |
+| =lisp/emacsvox-sounds.el= | =lisp/aural/emacsvox-sounds.el= | =emacsvox-sounds= | =cl-lib=, =emacsvox-aural-resources=, =emacsvox-aural-schemes=, =emacsvox-aural-transport= |
+| =lisp/soundscape.el= | =lisp/aural/soundscape.el= | =soundscape= | =cl-lib=, =subr-x= |
+| =lisp/sox-gen.el= | =lisp/aural/sox-gen.el= | =sox-gen= | =cl-lib=, =tts-speak= |
+
+* speech
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/dectalk-voices.el= | =lisp/speech/dectalk-voices.el= | =dectalk-voices= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-windows-speech.el= | =lisp/speech/emacsvox-windows-speech.el= | =emacsvox-windows-speech= | =cl-lib=, =subr-x=, =tts-speak=, =emacsvox-sounds= |
+| =lisp/espeak-voices.el= | =lisp/speech/espeak-voices.el= | =espeak-voices= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/mac-voices.el= | =lisp/speech/mac-voices.el= | =mac-voices= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/omnivox-choice-codec.el= | =lisp/speech/omnivox-choice-codec.el= | =omnivox-choice-codec= | =cl-lib=, =json=, =emacsvox-aural-rules=, =emacsvox-aural-routing-profiles= |
+| =lisp/omnivox-engine-settings.el= | =lisp/speech/omnivox-engine-settings.el= | =omnivox-engine-settings= | =cl-lib=, =subr-x=, =json= |
+| =lisp/omnivox-library-apply.el= | =lisp/speech/omnivox-library-apply.el= | =omnivox-library-apply= | =cl-lib=, =seq=, =subr-x= |
+| =lisp/omnivox-native-codec.el= | =lisp/speech/omnivox-native-codec.el= | =omnivox-native-codec= | =omnivox-parameters-codec= |
+| =lisp/omnivox-parameters-codec.el= | =lisp/speech/omnivox-parameters-codec.el= | =omnivox-parameters-codec= | =omnivox-choice-codec= |
+| =lisp/omnivox-parameters.el= | =lisp/speech/omnivox-parameters.el= | =omnivox-parameters= | =omnivox-parameters-codec=, =omnivox-native-codec=, =tts-queue-state= |
+| =lisp/omnivox-preview.el= | =lisp/speech/omnivox-preview.el= | =omnivox-preview= | =cl-lib=, =tts-queue-state=, =omnivox-choice-codec=, =omnivox-native-codec= |
+| =lisp/omnivox-punctuation-profiles.el= | =lisp/speech/omnivox-punctuation-profiles.el= | =omnivox-punctuation-profiles= | =cl-lib=, =seq= |
+| =lisp/omnivox-remote.el= | =lisp/speech/omnivox-remote.el= | =omnivox-remote= | =cl-lib=, =seq=, =subr-x=, =tts-queue-state=, =omnivox-library=, =tts-speak= |
+| =lisp/omnivox-voices.el= | =lisp/speech/omnivox-voices.el= | =omnivox-voices= | =cl-lib=, =tts-queue-state=, =emacsvox-preamble=, =json=, =subr-x=, =emacsvox-aural-voice-runtime=, =omnivox-choice-codec=, =omnivox-preview=, =omnivox-parameters= |
+| =lisp/outloud-voices.el= | =lisp/speech/outloud-voices.el= | =outloud-voices= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/pip.el= | =lisp/speech/pip.el= | =pip= | =cl-lib= |
+| =lisp/plain-voices.el= | =lisp/speech/plain-voices.el= | =plain-voices= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/swiftmac-voices.el= | =lisp/speech/swiftmac-voices.el= | =swiftmac-voices= | =cl-lib=, =emacsvox-preamble=, =json=, =subr-x= |
+| =lisp/tts-queue-state.el= | =lisp/speech/tts-queue-state.el= | =tts-queue-state= | =cl-lib=, =subr-x=, =nadvice= |
+| =lisp/tts-speak.el= | =lisp/speech/tts-speak.el= | =tts-speak= | =cl-lib=, =subr-x=, =omnivox-remote=, =emacsvox-aural-transport=, =omnivox-punctuation-profiles=, =omnivox-engine-settings=, =omnivox-library=, =omnivox-voices=, =voice-setup= |
+| =lisp/voice-setup.el= | =lisp/speech/voice-setup.el= | =voice-setup= | =cl-lib=, =emacsvox-aural=, =tts-speak=, =easy-mmode=, =outloud-voices=, =dectalk-voices=, =swiftmac-voices=, =mac-voices=, =espeak-voices=, =omnivox-voices=, =plain-voices=, =emacsvox-aural-compatibility-voice= |
+
+* core
+
+| Previous path | Allocated path | Provided features | Literal requirements |
+|---+---+---+---|
+| =lisp/dom-addons.el= | =lisp/core/dom-addons.el= | =dom-addons= | =cl-lib=, =dom=, =g-utils= |
+| =lisp/emacsvox-advice.el= | =lisp/core/emacsvox-advice.el= | =emacsvox-cedet=, =emacsvox-advice= | =cl-lib=, =advice=, =emacsvox-preamble=, =emacsvox-aural-submission=, =which-func=, =cus-edit= |
+| =lisp/emacsvox-emoji.el= | =lisp/core/emacsvox-emoji.el= | =emacsvox-emoji= | =cl-lib=, =subr-x=, =emoji-labels= |
+| =lisp/emacsvox-extras.el= | =lisp/core/emacsvox-extras.el= | =emacsvox-extras= | =cl-lib=, =emacsvox-preamble=, =term=, =cperl-mode=, =man= |
+| =lisp/emacsvox-filtertext.el= | =lisp/core/emacsvox-filtertext.el= | =emacsvox-filtertext= | =emacsvox-preamble= |
+| =lisp/emacsvox-gridtext.el= | =lisp/core/emacsvox-gridtext.el= | =emacsvox-gridtext= | =emacsvox-preamble=, =emacsvox-table=, =emacsvox-table-ui= |
+| =lisp/emacsvox-hide.el= | =lisp/core/emacsvox-hide.el= | =emacsvox-hide= | =cl-lib=, =emacsvox-preamble= |
+| =lisp/emacsvox-keymap.el= | =lisp/core/emacsvox-keymap.el= | =emacsvox-keymap= | =cl-lib=, =subr-x= |
+| =lisp/emacsvox-muggles-core.el= | =lisp/core/emacsvox-muggles-core.el= | =emacsvox-muggles-core= | =cl-lib=, =cus-edit=, =emacsvox-muggle-org-navigation= |
+| =lisp/emacsvox-pronounce.el= | =lisp/core/emacsvox-pronounce.el= | =emacsvox-pronounce= | =cl-lib=, =emacsvox-sounds= |
+| =lisp/emacsvox-speak.el= | =lisp/core/emacsvox-speak.el= | =emacsvox-speak= | =cl-lib=, =subr-x=, =voice-setup=, =voice-defs=, =tts-speak=, =emacsvox-pronounce=, =emacsvox-sounds=, =emacsvox-aural-submission=, =sox-gen=, =shr=, =text-property-search=, =emacsvox-preamble=, =which-func=, =rect=, =battery=, =reporter= |
+| =lisp/emacsvox-table-reader.el= | =lisp/core/emacsvox-table-reader.el= | =emacsvox-table-reader= | =cl-lib=, =seq=, =subr-x= |
+| =lisp/emacsvox-table-ui.el= | =lisp/core/emacsvox-table-ui.el= | =emacsvox-table-ui= | =cl-lib=, =derived=, =emacsvox-preamble=, =emacsvox-table=, =emacsvox-table-reader=, =emacsvox-aural-submission= |
+| =lisp/emacsvox-table.el= | =lisp/core/emacsvox-table.el= | =emacsvox-table= | =emacsvox-preamble= |
+| =lisp/emacsvox-tabulate.el= | =lisp/core/emacsvox-tabulate.el= | =emacsvox-tabulate= | =emacsvox-preamble= |
+| =lisp/emacsvox-wizards.el= | =lisp/core/emacsvox-wizards.el= | None | =cl-lib=, =cl-extra=, =subr-x=, =derived=, =light=, =let-alist=, =g-utils=, =gmaps=, =find-func=, =comint=, =shell=, =dired=, =org=, =emacsvox-preamble=, =emacsvox-we=, =name-this-color=, =color=, =calendar=, =cus-edit=, =desktop=, =emacsvox-table-ui=, =emacsvox-xslt=, =find-dired=, =gweb=, =lisp-mnt=, =solar=, =term=, =texinfo=, =emacsvox-url-template= |
+| =lisp/emacsvox-xslt.el= | =lisp/core/emacsvox-xslt.el= | =emacsvox-xslt= | =emacsvox-preamble= |
+| =lisp/g-utils.el= | =lisp/core/g-utils.el= | =g-utils= | =cl-lib=, =emacsvox-preamble=, =json= |
+| =lisp/gweb.el= | =lisp/core/gweb.el= | =gweb= | =cl-lib=, =json=, =g-utils= |

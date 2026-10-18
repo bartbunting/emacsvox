@@ -17,7 +17,7 @@
           (push icon load-icons))))
     (load
      (expand-file-name
-      "../lisp/emacsvox-sage.el"
+      "../lisp/integrations/emacsvox-sage.el"
       (file-name-directory (or load-file-name buffer-file-name)))
      nil nil))
   (setq

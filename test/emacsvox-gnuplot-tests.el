@@ -6,7 +6,7 @@
 (require 'package)
 (package-initialize)
 (require 'gnuplot)
-(load (expand-file-name "../lisp/emacsvox-gnuplot.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-gnuplot.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

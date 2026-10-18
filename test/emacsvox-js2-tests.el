@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'js2-mode)
-(load (expand-file-name "../lisp/emacsvox-js2.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-js2.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

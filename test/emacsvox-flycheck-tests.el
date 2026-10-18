@@ -9,7 +9,7 @@
 
 (load
  (expand-file-name
-  "../lisp/emacsvox-flycheck.el"
+  "../lisp/integrations/emacsvox-flycheck.el"
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'abc-mode)
-(load (expand-file-name "../lisp/emacsvox-abc-mode.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-abc-mode.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

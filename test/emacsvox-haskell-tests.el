@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (mapc #'require '(haskell-mode haskell-cabal haskell-indentation))
-(load (expand-file-name "../lisp/emacsvox-haskell.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-haskell.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

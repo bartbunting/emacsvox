@@ -6,7 +6,7 @@
 (package-initialize)
 (require 'slime)
 (slime-setup '(slime-fancy slime-asdf))
-(load (expand-file-name "../lisp/emacsvox-slime.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-slime.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

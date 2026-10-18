@@ -4,7 +4,7 @@
 (require 'ert)
 (require 'tempo)
 (load
- (expand-file-name "../lisp/emacsvox-tempo.el"
+ (expand-file-name "../lisp/integrations/emacsvox-tempo.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 

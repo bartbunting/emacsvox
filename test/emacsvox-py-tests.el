@@ -7,7 +7,7 @@
 (package-initialize)
 (require 'python-mode)
 (defvar emacsvox-comint-autospeak)
-(load (expand-file-name "../lisp/emacsvox-py.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-py.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 

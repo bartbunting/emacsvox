@@ -5,7 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'clojure-mode)
-(load (expand-file-name "../lisp/emacsvox-clojure.el"
+(load (expand-file-name "../lisp/integrations/emacsvox-clojure.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 
