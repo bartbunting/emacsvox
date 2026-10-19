@@ -700,6 +700,21 @@ Core now has 2002 lines; the focus module has 442.
 
 Commit slice: =Extract Eat focus inference and navigation feedback=.
 
+** Rendered output collection
+
+Implementation moves 40 unchanged definitions into =emacsvox-eat-output=:
+prompt ranges, output markers, partial and complete lines, redaction and
+bounded output construction. Core retains prompt-observer installation,
+quiescence timers, foreground policy and generation cleanup. Focus uses the
+output module's text-bounding helpers without loading core recursively.
+All 217 applicable source and compiled tests and all three isolated graphical
+checks pass. Original definitions remain unchanged and uniquely owned. The
+warning-free build, fresh compiled facade startup, preflight and headers pass.
+Core now has 1491 lines; the output module has 568. Reference generation and
+the documentation review gate pass.
+
+Commit slice: =Extract Eat rendered output collection=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

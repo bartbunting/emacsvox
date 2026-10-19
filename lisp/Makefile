@@ -256,6 +256,7 @@ integrations/emacsvox-dired.elc \
 integrations/emacsvox-dumb-jump.elc \
 integrations/emacsvox-eat-screen.elc \
 integrations/emacsvox-eat-focus.elc \
+integrations/emacsvox-eat-output.elc \
 integrations/emacsvox-eat-core.elc \
 integrations/emacsvox-eat-input.elc \
 integrations/emacsvox-eat-review.elc \
@@ -462,8 +463,10 @@ integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-n
 integrations/emacsvox-markdown.elc integrations/emacsvox-org.elc: core/emacsvox-table-reader.elc
 
 integrations/emacsvox-eat-core.elc: integrations/emacsvox-eat-screen.elc
-integrations/emacsvox-eat-focus.elc: integrations/emacsvox-eat-screen.elc
+integrations/emacsvox-eat-output.elc: integrations/emacsvox-eat-screen.elc
+integrations/emacsvox-eat-focus.elc: integrations/emacsvox-eat-output.elc
 integrations/emacsvox-eat-core.elc: integrations/emacsvox-eat-focus.elc
+integrations/emacsvox-eat-core.elc: integrations/emacsvox-eat-output.elc
 integrations/emacsvox-eat-input.elc: integrations/emacsvox-eat-core.elc
 integrations/emacsvox-eat-review.elc: integrations/emacsvox-eat-core.elc integrations/emacsvox-eat-input.elc
 integrations/emacsvox-eat.elc: \

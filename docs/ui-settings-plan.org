@@ -3661,3 +3661,8 @@ Focus inference and navigation feedback now belong to =emacsvox-eat-focus=.
 Confidence thresholds, repeated-focus suppression and spoken navigation text
 remain unchanged. Source, compiled, fresh facade startup and all three isolated
 graphical checks pass.
+
+Rendered output collection now belongs to =emacsvox-eat-output=. Prompt
+exclusion, concealment redaction, partial lines and output limits retain their
+existing behavior. All 217 applicable source and compiled tests and all three
+isolated graphical checks pass, including the real =ed= interruption case.

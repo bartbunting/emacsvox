@@ -32,14 +32,12 @@
 
 ;;; Code:
 
-(require 'emacsvox-eat-screen)
+(require 'emacsvox-eat-output)
 (eval-when-compile (require 'cl-lib))
 
 ;; Observation and presentation state is initialized and cleared by core.
 (defvar emacsvox-eat--update-serial)
 (defvar emacsvox-eat--last-focus-presentation-identity)
-(declare-function emacsvox-eat--sanitize-output-row "emacsvox-eat-core" (row))
-(declare-function emacsvox-eat--bounded-output "emacsvox-eat-core" (rows))
 (declare-function emacsvox-eat--facts "emacsvox-eat-core"
                   (role event &optional operation properties))
 (declare-function emacsvox-eat--submit "emacsvox-eat-core"
