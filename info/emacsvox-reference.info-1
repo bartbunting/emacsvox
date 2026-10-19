@@ -638,6 +638,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-nm:: NM using  D-Bus..
 * emacsvox-notmuch:: Speech-enable NOTMUCH.
 * emacsvox-notmuch-search:: Notmuch search-result presentation.
+* emacsvox-notmuch-show:: Notmuch message and attachment reading.
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.

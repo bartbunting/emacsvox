@@ -838,9 +838,9 @@ The initial sequence is:
 2. Notmuch message and attachment reading.
 3. Notmuch tag and archive outcomes.
 4. Notmuch asynchronous search feedback.
-5. Magit blame feedback.
-6. Magit repository-list feedback.
-7. Magit commit-editing and rebase feedback, splitting further only if useful.
+5. Magit repository-list feedback.
+6. Magit commit-editing feedback.
+7. Magit rebase feedback.
 8. Core search advice.
 9. Core editing advice.
 10. Core help and window advice, keeping activation in the facade.
@@ -875,6 +875,10 @@ cancellation, ownership and callbacks further is a separate architecture task.
 
 ** Verification checkpoints
 
+Boundary inspection keeps Magit's small blame-specific block with shared
+navigation. Repository lists, commit editing and rebase each have a clearer
+operation boundary and form the three Magit slices.
+
 *** Notmuch search-result presentation
 
 The search module owns eleven unchanged definitions for field/tag formatting,
@@ -893,6 +897,18 @@ review gate passes.
 
 Commit slice: =Extract Notmuch search-result presentation=.
 Listening acceptance remains separate for this round.
+
+*** Notmuch message and attachment reading
+
+The show module owns 23 unchanged definitions for bounded attachment scans,
+message fields, body landing, thread position and MIME-button reading and
+activation. The facade retains advice installation and key bindings.
+All 137 tests pass from source, fresh byte-code and an isolated graphical
+Emacs, including displayed message and MIME controls. Definition parity and
+isolated loading pass, as do incremental compilation, byte-code preflight,
+headers, reference generation and the documentation review gate.
+
+Commit slice: =Extract Notmuch message and attachment reading=.
 
 * Result
 
