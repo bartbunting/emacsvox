@@ -999,6 +999,17 @@ the documentation gate pass.
 
 Commit slice: =Extract core search and replacement feedback=.
 
+*** Core editing feedback
+
+The editing module owns 31 unchanged definitions for case conversion,
+insertion, deletion, formatting, comments, region changes and abbrev expansion.
+Registration macros and calls stay in the facade. All 231 source cases and
+230 compiled cases pass; all 230 compiled cases also pass graphically.
+Definition and activation parity, passive loading, compilation, preflight,
+headers, generated reference and the documentation gate pass.
+
+Commit slice: =Extract core editing feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

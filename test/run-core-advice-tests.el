@@ -19,12 +19,14 @@
 (let* ((root (expand-file-name "../" (file-name-directory load-file-name)))
        (compiled (equal (getenv "EMACSVOX_CORE_ADVICE_TEST_LOAD") "compiled"))
        (extension (if compiled ".elc" ".el"))
-       (modules '(("emacsvox-advice-search" . emacsvox-isearch-setup)
+       (modules '(("emacsvox-advice-editing" . emacsvox--case-word-around)
+                  ("emacsvox-advice-search" . emacsvox-isearch-setup)
                   ("emacsvox-advice-completion" . emacsvox--completion-around)
                   ("emacsvox-advice-input" . emacsvox-minibuffer-setup-hook)
                   ("emacsvox-advice-messages" . emacsvox--message-around)))
        (targets '(pcomplete completion-at-point read-event read-passwd--hide-password
-                  y-or-n-p message timer-event-handler perform-replace isearch-search))
+                  y-or-n-p message timer-event-handler perform-replace isearch-search
+                  upcase-word delete-char comment-region))
        (variables '(minibuffer-setup-hook minibuffer-exit-hook
                     eldoc-display-functions command-error-function
                     isearch-mode-hook isearch-mode-end-hook)))

@@ -507,55 +507,15 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 
 ;;;  Advise modify case commands to speak
 
-(defun emacsvox--case-word-around
-    (target operation final-message original arguments)
-  "Call ORIGINAL once, then speak TARGET's case change.
-OPERATION is presented before an interactive change.  FINAL-MESSAGE is
-announced when the change leaves point at the end of the buffer.  ARGUMENTS
-are passed through unchanged."
-  (if (ems-interactive-p target)
-      (progn
-        (emacsvox-speak-edit-operation operation)
-        (let ((result (apply original arguments)))
-          (cond
-           ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
-            (let ((start (point)))
-              (save-excursion
-                (forward-word current-prefix-arg)
-                (emacsvox-speak-region start (point)))))
-           (t
-            (save-excursion
-              (skip-syntax-forward " ")
-              (if (eobp) (message "%s" final-message)
-                (emacsvox-speak-word)))))
-          result))
-    (apply original arguments)))
-
-(defun emacsvox--advice-upcase-word-around (original &rest arguments)
-  "Present the edit, then speak after `upcase-word'."
-  (emacsvox--case-word-around
-   'upcase-word 'uppercase "Upper cased final word in buffer"
-   original arguments))
+(require 'emacsvox-advice-editing)
 
 (advice-add
  'upcase-word :around #'emacsvox--advice-upcase-word-around
  '((name . emacsvox)))
 
-(defun emacsvox--advice-downcase-word-around (original &rest arguments)
-  "Present the edit, then speak after `downcase-word'."
-  (emacsvox--case-word-around
-   'downcase-word 'lowercase "Lower cased final word in buffer"
-   original arguments))
-
 (advice-add
  'downcase-word :around #'emacsvox--advice-downcase-word-around
  '((name . emacsvox)))
-
-(defun emacsvox--advice-capitalize-word-around (original &rest arguments)
-  "Present the edit, then speak after `capitalize-word'."
-  (emacsvox--case-word-around
-   'capitalize-word 'capitalize "Capitalized final word in buffer"
-   original arguments))
 
 (advice-add
  'capitalize-word :around #'emacsvox--advice-capitalize-word-around
@@ -563,23 +523,11 @@ are passed through unchanged."
 
 ;;;  Advice insert-char:
 
-(defun emacsvox--advice-insert-char-after (character &rest _)
-  "Speak char."
-  (when (ems-interactive-p 'insert-char)
-    (emacsvox-speak-char-name character)))
-
 (advice-add
  'insert-char :after #'emacsvox--advice-insert-char-after
  '((name . emacsvox)))
 
 ;;;  Advice deletion commands:
-
-(defun emacsvox--backward-delete-char-around (target original arguments)
-  "Speak before TARGET deletes backward, then call ORIGINAL with ARGUMENTS."
-  (when (ems-interactive-p target)
-    (emacsvox-speak-edit-operation 'deletion)
-    (emacsvox-speak-this-char (preceding-char)))
-  (apply original arguments))
 
 (defmacro emacsvox-advice--define-backward-delete-advice (targets)
   "Define native around advice for backward-deletion commands in TARGETS."
@@ -600,50 +548,17 @@ are passed through unchanged."
 (emacsvox-advice--define-backward-delete-advice
  (backward-delete-char backward-delete-char-untabify delete-backward-char))
 
-(defun emacsvox--delete-char-around (target original arguments)
-  "Speak before TARGET deletes a character, then call ORIGINAL with ARGUMENTS."
-  (when (ems-interactive-p target)
-    (emacsvox-speak-edit-operation 'deletion)
-    (emacsvox-speak-char t))
-  (apply original arguments))
-
-(defun emacsvox--advice-delete-forward-char-around (original &rest arguments)
-  "Speak the character deleted by `delete-forward-char'."
-  (emacsvox--delete-char-around
-   'delete-forward-char original arguments))
-
 (advice-add
  'delete-forward-char :around #'emacsvox--advice-delete-forward-char-around
  '((name . emacsvox)))
-
-(defun emacsvox--advice-delete-char-around (original &rest arguments)
-  "Speak the character deleted by `delete-char'."
-  (emacsvox--delete-char-around 'delete-char original arguments))
 
 (advice-add
  'delete-char :around #'emacsvox--advice-delete-char-around
  '((name . emacsvox)))
 
-(defun emacsvox--advice-kill-word-before (&rest _)
-  "Speak word beingkilled."
-  (when (ems-interactive-p 'kill-word)
-    (save-excursion
-      (skip-syntax-forward " ")
-      (emacsvox-speak-edit-operation 'deletion)
-      (emacsvox-speak-word 1))))
-
 (advice-add
  'kill-word :before #'emacsvox--advice-kill-word-before
  '((name . emacsvox)))
-
-(defun emacsvox--advice-backward-kill-word-before (&rest _)
-  "Speak word beingkilled."
-  (when (ems-interactive-p 'backward-kill-word)
-    (save-excursion
-      (let ((start (point)))
-        (forward-word -1)
-        (emacsvox-speak-edit-operation 'deletion)
-        (emacsvox-speak-region (point) start)))))
 
 (advice-add
  'backward-kill-word :before #'emacsvox--advice-backward-kill-word-before
@@ -656,58 +571,19 @@ are passed through unchanged."
   (emacsvox-speak-edit-operation 'deletion)
   (emacsvox-speak-line 1))
 
-(defun emacsvox--advice-kill-sexp-before (&rest _)
-  "Speak the killed  sexp."
-  (when (ems-interactive-p 'kill-sexp)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-speak-edit-operation 'deletion)
-    (emacsvox-speak-sexp 1)))
-
 (advice-add
  'kill-sexp :before #'emacsvox--advice-kill-sexp-before
  '((name . emacsvox)))
 
-(defun emacsvox--advice-kill-sentence-before (&rest _)
-  "Speak the kill."
-  (when (ems-interactive-p 'kill-sentence)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-speak-edit-operation 'deletion)
-    (emacsvox-speak-line 1)))
-
 (advice-add
  'kill-sentence :before #'emacsvox--advice-kill-sentence-before
  '((name . emacsvox)))
-
-(defun emacsvox--advice-delete-blank-lines-before (&rest _)
-  "speak."
-  (when (ems-interactive-p 'delete-blank-lines)
-    (let (thisblank singleblank)
-      (save-excursion
-        (forward-line 0) (setq thisblank (looking-at "[         ]*$"))
-        (setq singleblank
-              (and thisblank (not (looking-at "[        ]*\n[   ]*$"))
-                   (or (bobp)
-                       (progn
-                         (forward-line -1) (not (looking-at "[  ]*$")))))))
-      (cond
-       ((and thisblank singleblank)
-        (message "Deleting current blank line"))
-       (thisblank (message "Deleting surrounding blank lines"))
-       (t (message "Deleting possible subsequent blank lines"))))))
 
 (advice-add
  'delete-blank-lines :before #'emacsvox--advice-delete-blank-lines-before
  '((name . emacsvox)))
 
 ;;;  advice tabify:
-
-(defun emacsvox--advice-untabify-after (start end &rest _)
-  "Fix NBSP chars."
-  (save-excursion
-    (save-restriction
-      (narrow-to-region start end) (goto-char start)
-      (while (re-search-forward (format "[%c]+" 160) end 'no-error)
-        (replace-match " ")))))
 
 (advice-add
  'untabify :after #'emacsvox--advice-untabify-after
@@ -921,32 +797,13 @@ are passed through unchanged."
 
 ;;;  Advice centering and filling commands:
 
-(defun emacsvox--advice-center-line-after (&optional _count)
-  "Announce completion of interactive line centering."
-  (when (ems-interactive-p 'center-line)
-    (emacsvox-icon 'center)
-    (message "Centered current line")))
-
 (advice-add
  'center-line :after #'emacsvox--advice-center-line-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-center-region-after (beginning end)
-  "Announce centering the region from BEGINNING to END."
-  (when (ems-interactive-p 'center-region)
-    (emacsvox-icon 'center)
-    (message "Centered current region containing %s lines"
-             (count-lines beginning end))))
-
 (advice-add
  'center-region :after #'emacsvox--advice-center-region-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-center-paragraph-after ()
-  "Announce completion of interactive paragraph centering."
-  (when (ems-interactive-p 'center-paragraph)
-    (emacsvox-icon 'center)
-    (message "Centered current paragraph")))
 
 (advice-add
  'center-paragraph :after #'emacsvox--advice-center-paragraph-after
@@ -957,13 +814,6 @@ are passed through unchanged."
     "Announce completion of interactive paragraph filling."
   (emacsvox-icon 'fill-object)
   (message "Filled current paragraph"))
-
-(defun emacsvox--advice-fill-region-after (beginning end &rest _)
-  "Announce filling the region from BEGINNING to END."
-  (when (ems-interactive-p 'fill-region)
-    (emacsvox-icon 'fill-object)
-    (message "Filled current region containing %s lines"
-             (count-lines beginning end))))
 
 (advice-add
  'fill-region :after #'emacsvox--advice-fill-region-after
@@ -1155,31 +1005,9 @@ to ORIGINAL unchanged."
  'not-modified :after #'emacsvox--advice-not-modified-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-comment-dwim-after (&rest _)
-  "Speak the affected text after an interactive comment command."
-  (when (ems-interactive-p 'comment-dwim)
-    (cond
-     ((use-region-p)
-      (emacsvox-speak-region (region-beginning) (region-end)))
-     (t (emacsvox-speak-line)))
-    (emacsvox-icon 'task-done)))
-
 (advice-add
  'comment-dwim :after #'emacsvox--advice-comment-dwim-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-comment-region-after
-    (beginning end &optional argument)
-  "Announce an interactive comment operation on BEGINNING through END.
-ARGUMENT is the optional prefix argument accepted by `comment-region'."
-  (when (ems-interactive-p 'comment-region)
-    (message
-     "%s region containing %s lines"
-     (if (or (consp argument)
-             (and (numberp argument) (< argument 0)))
-         "Uncommented"
-       "Commented")
-     (count-lines beginning end))))
 
 (advice-add
  'comment-region :after #'emacsvox--advice-comment-region-after
@@ -1190,57 +1018,18 @@ ARGUMENT is the optional prefix argument accepted by `comment-region'."
     "Indicate completion of an interactive save."
   (emacsvox-icon 'save-object))
 
-(defun emacsvox--region-deletion-around
-    (target original beginning end arguments)
-  "Call ORIGINAL and announce an interactive region deletion.
-TARGET identifies the advised command.  BEGINNING and END are the affected
-range, and ARGUMENTS contains any remaining arguments for ORIGINAL."
-  (if (ems-interactive-p target)
-      (let ((count (count-lines beginning end))
-            (result (apply original beginning end arguments)))
-        (emacsvox-icon 'delete-object)
-        (message "Killed region containing %s lines" count)
-        result)
-    (apply original beginning end arguments)))
-
-(defun emacsvox--advice-delete-region-around
-    (original beginning end)
-  "Call ORIGINAL and announce interactive deletion from BEGINNING to END."
-  (emacsvox--region-deletion-around
-   'delete-region original beginning end nil))
-
 (advice-add
  'delete-region :around #'emacsvox--advice-delete-region-around
  '((name . emacsvox)))
-
-(defun emacsvox--advice-kill-region-around
-    (original beginning end &rest arguments)
-  "Call ORIGINAL and announce an interactive kill from BEGINNING to END."
-  (emacsvox--region-deletion-around
-   'kill-region original beginning end arguments))
 
 (advice-add
  'kill-region :around #'emacsvox--advice-kill-region-around
  '((name . emacsvox)))
 
-(defun emacsvox--advice-completion-kill-region-around
-    (original beginning end &rest arguments)
-  "Call ORIGINAL and announce an interactive completion-region kill.
-BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
-  (emacsvox--region-deletion-around
-   'completion-kill-region original beginning end arguments))
-
 (advice-add
  'completion-kill-region :around
  #'emacsvox--advice-completion-kill-region-around
  '((name . emacsvox)))
-
-(defun emacsvox--advice-kill-ring-save-after (&rest _)
-  "Indicate that region has been copied to the kill ring.\nProduce an auditory icon if possible."
-  (when (ems-interactive-p 'kill-ring-save)
-    (emacsvox-icon 'mark-object)
-    (message "region containing %s lines copied to kill ring "
-             (count-lines (region-beginning) (region-end)))))
 
 (advice-add
  'kill-ring-save :after #'emacsvox--advice-kill-ring-save-after
@@ -1603,28 +1392,9 @@ TARGET identifies the evaluation command."
  'suspend-emacs :around #'emacsvox--advice-suspend-emacs-around
  '((name . emacsvox)))
 
-(defun emacsvox--case-region-after (target action beginning end)
-  "Announce an interactive case conversion from BEGINNING to END.
-TARGET identifies the case command, and ACTION describes its result."
-  (when (ems-interactive-p target)
-    (message "%s region containing %s lines"
-             action (count-lines beginning end))))
-
-(defun emacsvox--advice-downcase-region-after
-    (beginning end &optional _region-noncontiguous-p)
-  "Announce an interactive downcase from BEGINNING to END."
-  (emacsvox--case-region-after
-   'downcase-region "Downcased" beginning end))
-
 (advice-add
  'downcase-region :after #'emacsvox--advice-downcase-region-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-upcase-region-after
-    (beginning end &optional _region-noncontiguous-p)
-  "Announce an interactive upcase from BEGINNING to END."
-  (emacsvox--case-region-after
-   'upcase-region "Upcased" beginning end))
 
 (advice-add
  'upcase-region :after #'emacsvox--advice-upcase-region-after
@@ -1733,14 +1503,6 @@ TARGET identifies the case command, and ACTION describes its result."
     "Cue a sexp transpose and speak the resulting expression."
   (emacsvox-icon 'yank-object)
   (emacsvox-speak-sexp))
-
-(defun emacsvox--advice-open-line-after (count)
-  "Announce COUNT lines opened by an interactive `open-line'."
-  (when (ems-interactive-p 'open-line)
-    (emacsvox-icon 'open-object)
-    (message "Opened %s blank line%s"
-             (if (= count 1) "a" count)
-             (if (= count 1) "" "s"))))
 
 (advice-add
  'open-line :after #'emacsvox--advice-open-line-after
@@ -2272,19 +2034,6 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     "Cue opening the abbrev editor and speak its mode line."
   (emacsvox-icon 'open-object)
   (emacsvox-speak-mode-line))
-
-(defun emacsvox--advice-expand-abbrev-around
-    (original &rest arguments)
-  "Call ORIGINAL once and speak an interactive abbrev expansion."
-  (when buffer-read-only
-    (tts-speak "Buffer is read-only. "))
-  (if (ems-interactive-p 'expand-abbrev)
-      (let ((start (save-excursion (backward-word 1) (point)))
-            result)
-        (setq result (apply original arguments))
-        (tts-speak (buffer-substring start (point)))
-        result)
-    (apply original arguments)))
 
 (advice-add
  'expand-abbrev :around #'emacsvox--advice-expand-abbrev-around

@@ -197,6 +197,7 @@ core/emacsvox-advice-completion.elc \
 core/emacsvox-advice-input.elc \
 core/emacsvox-advice-messages.elc \
 core/emacsvox-advice-search.elc \
+core/emacsvox-advice-editing.elc \
 core/emacsvox-advice.elc\
 core/emacsvox-keymap.elc\
 ui/emacsvox-indentation.elc\
@@ -757,3 +758,6 @@ integrations/emacsvox-magit.elc: integrations/emacsvox-magit-rebase.elc
 
 core/emacsvox-advice-search.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
 core/emacsvox-advice.elc: core/emacsvox-advice-search.elc
+
+core/emacsvox-advice-editing.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
+core/emacsvox-advice.elc: core/emacsvox-advice-editing.elc
