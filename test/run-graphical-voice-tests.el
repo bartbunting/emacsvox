@@ -105,6 +105,7 @@
                         emacsvox-aural-feedback-details-graphical-folding-and-draft-return
                         emacsvox-emoji-graphical-explanation-is-visible
                         emacsvox-aural-voice-editor-feedback-link-resumes-and-returns
+                        emacsvox-aural-voice-editor-help-retains-field-and-draft
                         emacsvox-aural-voice-editor-spoken-label-link-retains-palette-and-return
                         emacsvox-aural-voice-editor-save-actions-follow-settings-and-previews
                         emacsvox-aural-voice-editor-field-navigation-stops-at-both-ends
@@ -112,8 +113,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 39)
-                                (= (ert-stats-completed stats) 39)
+          (setq status (if (and (= (ert-stats-total stats) 40)
+                                (= (ert-stats-completed stats) 40)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

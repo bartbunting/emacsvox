@@ -34,6 +34,61 @@
 (require 'subr-x)
 (require 'tabulated-list)
 
+(defvar emacsvox-aural-ui--search-aliases nil
+  "Aliases dynamically bound for one interface choice prompt.")
+
+(defun emacsvox-aural-ui--search-matches (string table predicate)
+  "Return labels in TABLE matching literal STRING or an alias.
+Respect PREDICATE and ignore case."
+  (let ((case-fold-search t)
+        (pattern (regexp-quote string)))
+    (cl-remove-if-not
+     (lambda (label)
+       (cl-some (lambda (term) (string-match-p pattern term))
+                (cons label (cdr (assoc label emacsvox-aural-ui--search-aliases)))))
+     (all-completions "" table predicate))))
+
+(defun emacsvox-aural-ui--search-all (string table predicate _point)
+  "Complete STRING against TABLE and PREDICATE for an interface choice."
+  (let ((matches (emacsvox-aural-ui--search-matches string table predicate)))
+    (when matches (nconc matches 0))))
+
+(defun emacsvox-aural-ui--search-try (string table predicate point)
+  "Complete a unique label in TABLE, keeping ambiguous STRING at POINT."
+  (let ((matches (emacsvox-aural-ui--search-matches string table predicate)))
+    (cond
+     ((null matches) nil)
+     ((test-completion string matches) t)
+     ((null (cdr matches)) (cons (car matches) (length (car matches))))
+     (t (cons string point)))))
+
+(defun emacsvox-aural-ui--read-choice (prompt choices &optional aliases)
+  "Read a canonical label from CHOICES with PROMPT and optional ALIASES.
+Match literal substrings without case sensitivity.  Space inserts a space;
+Tab completes.  Keep completion configuration and shared keymaps unchanged."
+  (let* ((completion-ignore-case t)
+         (completion-styles '(emacsvox-aural-choice))
+         (completion-category-defaults nil)
+         (completion-category-overrides nil)
+         (emacsvox-aural-ui--search-aliases aliases)
+         (completion-styles-alist
+          (cons '(emacsvox-aural-choice emacsvox-aural-ui--search-try
+                  emacsvox-aural-ui--search-all "Find a label or alias.")
+                completion-styles-alist))
+         (answer
+          (minibuffer-with-setup-hook
+              (lambda ()
+                (use-local-map (copy-keymap (current-local-map)))
+                (local-set-key (kbd "SPC") #'self-insert-command))
+            (completing-read prompt choices nil t))))
+    (let* ((labels (all-completions "" choices))
+           (matches (cl-remove-if-not
+                     (lambda (label) (equal (downcase label) (downcase answer)))
+                     labels)))
+      (or (car (member answer labels))
+          (and (= (length matches) 1) (car matches))
+          (user-error "Choose a specific available item")))))
+
 (defvar emacsvox-aural-submission-facts)
 (defvar emacsvox-aural-submission-context)
 (defvar emacsvox-aural-submission-module)

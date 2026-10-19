@@ -693,7 +693,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (unless choices (user-error "No available physical voices"))
     (unwind-protect
         (while (not selected)
-          (let* ((name (completing-read "Physical voice (search engine or name): " choices nil t))
+          (let* ((name (emacsvox-aural-ui--read-choice "Physical voice (search engine or name): " choices))
                  (pair (cdr (assoc name choices)))
                  (selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)
                                  :voice-id (plist-get (cadr pair) :voice-id)))
@@ -1138,7 +1138,8 @@ SOURCE optionally supplies the return buffer for the destination editor."
                "\n")))))
 
 (defun emacsvox-aural-voice-editor--leave-choice ()
-  "Resolve unsaved work before hiding or killing this editor."
+  "Resolve unsaved work before hiding or killing this editor.
+Return nil to stay, a feedback string for a draft decision, or t when clean."
   (if (not (emacsvox-aural-voice-drafts--dirty-fields (emacsvox-aural-voice-editor--draft))) t
     (pcase (completing-read "Unsaved voice changes: " '("Keep draft and return" "Discard changes and return" "Continue editing") nil t nil nil "Keep draft and return")
       ("Continue editing" nil)
@@ -1150,12 +1151,12 @@ SOURCE optionally supplies the return buffer for the destination editor."
            (remhash (emacsvox-aural-voice-draft-key draft) emacsvox-aural-voice-drafts--registry)
            (remhash (emacsvox-aural-voice-draft-key draft) emacsvox-aural-voice-editor--contexts)
            (emacsvox-aural-voice-editor--put :discarded t)))
-       t)
-      (_ t))))
+       "Unsaved voice changes discarded.")
+      (_ "Voice draft kept for this session. Resume it from Changed settings and drafts."))))
 (defun emacsvox-aural-voice-editor-leave ()
   "Return to the originating field while retaining this session's draft."
   (interactive)
-  (when (emacsvox-aural-voice-editor--leave-choice)
+  (when-let* ((decision (emacsvox-aural-voice-editor--leave-choice)))
     (emacsvox-aural-voice-editor-stop)
     (let ((origin (emacsvox-aural-voice-editor--get :origin))
           (row (emacsvox-aural-voice-editor--get :origin-row))
@@ -1170,7 +1171,53 @@ SOURCE optionally supplies the return buffer for the destination editor."
           (progn (pop-to-buffer (marker-buffer origin))
                  (if (and row (derived-mode-p 'tabulated-list-mode))
                      (progn (emacsvox-aural-ui-goto-row row) (move-to-column (or column 0)))
-                   (goto-char origin)))))))
+                   (goto-char origin))))
+      (when (stringp decision)
+        (emacsvox-aural-ui-speak decision)))))
+
+(defun emacsvox-aural-voice-editor-help ()
+  "Explain navigation, preview, saving and draft recovery; q returns here."
+  (interactive)
+  (let* ((draft (emacsvox-aural-voice-editor--draft))
+         (status (plist-get (emacsvox-aural-voice-drafts--status draft) :label))
+         (proposal (emacsvox-aural-voice-draft-proposal draft))
+         (result (and proposal (plist-get (emacsvox-aural-voice-save-result proposal) :message)))
+         (editor (current-buffer))
+         (field (get-text-property (point) 'voice-field))
+         (column (current-column))
+         (help-window-select t))
+    (emacsvox-aural-voice-editor-stop)
+    (emacsvox-aural-ui-with-help-window
+     (princ (format "Voice editor\n\nCurrent state: %s\n" status))
+     (when result (princ (format "Last save: %s\n" result)))
+     (princ
+      (concat
+       "\nUp/down, n/p or Tab/Shift-Tab moves between fields without wrapping.\n"
+       "Left/right adjusts a numeric field; elsewhere it moves between fields.\n"
+       "Enter edits or activates the field. Space repeats it. u undoes the last draft edit.\n"
+       "d restores the adapter default. For a fallback override, i uses the shared value.\n\n"
+       "Physical voice search matches text anywhere, ignoring case. Space inserts; Tab completes.\n"
+       "Selecting a candidate offers audition before Use this voice changes the draft.\n"
+       "P plays the edited base voice; B compares original and edited; S stops; T changes sample text.\n"
+       "Preview uses the draft without saving it. Automatic samples can be turned off in the editor.\n\n"
+       "w or C-c C-c saves and applies the named voice. An experiment first asks for a destination.\n"
+       "Save to collection stores the voice without selecting its palette.\n"
+       "Saving and worker application are separate results. Check Current state and Last save above.\n"
+       "A failed or partial save can be retried; keep the draft to preserve recovery information.\n\n"
+       "q returns to the source. With unsaved changes, choose Keep draft, Discard, or Continue editing.\n"
+       "Kept drafts last for this Emacs session, including after closing the editor buffer.\n"
+       "Resume them from Changed settings and drafts, or by reopening the same named voice.\n")))
+    (with-current-buffer (help-buffer)
+      ;; Save callbacks can redraw the editor while Help is visible.  Its
+      ;; field identity survives a redraw; an ordinary position marker does not.
+      (setq-local emacsvox-aural-ui--help-return-function
+                  (lambda ()
+                    (when (eq (current-buffer) editor)
+                      (emacsvox-aural-voice-editor--locate field)
+                      (move-to-column column)
+                      (emacsvox-aural-voice-editor-speak)
+                      t)))
+      (emacsvox-aural-ui-speak (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defvar emacsvox-aural-voice-editor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -1190,7 +1237,7 @@ SOURCE optionally supplies the return buffer for the destination editor."
                     ("i" . emacsvox-aural-voice-editor--inherit)
                     ("w" . emacsvox-aural-voice-editor-save) ("C-c C-c" . emacsvox-aural-voice-editor-save)
                     ("h" . emacsvox-aural-menu)
-                    ("q" . emacsvox-aural-voice-editor-leave) ("?" . describe-mode)))
+                    ("q" . emacsvox-aural-voice-editor-leave) ("?" . emacsvox-aural-voice-editor-help)))
       (define-key map (kbd (car pair)) (cdr pair))) map))
 (define-derived-mode emacsvox-aural-voice-editor-mode emacsvox-aural-interface-mode "Voice-Editor"
   "Edit shared named-voice adjustments and ordered physical choices."

@@ -9,7 +9,45 @@
 (require 'ert)
 (require 'emacsvox-aural-ui)
 
+(ert-deftest emacsvox-aural-ui-choice-search-is-literal-and-local ()
+  "Find inner words and literal punctuation without changing completion policy."
+  (let ((completion-ignore-case nil)
+        (completion-styles '(basic))
+        (completion-category-overrides '((voice (styles basic))))
+        (completion-category-defaults '((voice (styles basic)))))
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (_prompt choices &rest _)
+                 (dolist (case '(("IGITTE" "Brigitte [French]")
+                                 ("[" "Brigitte [French]")
+                                 ("*" "Star * voice")
+                                 ("voice" "Star * voice" "Other voice")))
+                   (let ((matches (completion-all-completions
+                                   (car case) choices nil (length (car case)))))
+                     (when matches (setcdr (last matches) nil))
+                     (should (equal matches (cdr case)))))
+                 (should (equal (completion-try-completion "voice" choices nil 5)
+                                '("voice" . 5)))
+                 "bRIGITTE [fRENCH]")))
+      (should (equal
+               (emacsvox-aural-ui--read-choice
+                "Voice: " '("Brigitte [French]" "Star * voice" "Other voice"))
+               "Brigitte [French]")))
+    (should-not completion-ignore-case)
+    (should (equal completion-styles '(basic)))
+    (should (equal completion-category-overrides '((voice (styles basic)))))
+    (should (equal completion-category-defaults '((voice (styles basic)))))))
+
 (defvar-local emacsvox-test-aural-ui-entries nil)
+
+(ert-deftest emacsvox-aural-ui-choice-search-preserves-case-distinct-identities ()
+  "An exact selection wins; ambiguous casing cannot silently select another ID."
+  (dolist (answer '("Voice [id]" "Voice [ID]" "VOICE [Id]"))
+    (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) answer)))
+      (if (equal answer "VOICE [Id]")
+          (should-error (emacsvox-aural-ui--read-choice
+                         "Voice: " '("Voice [id]" "Voice [ID]")) :type 'user-error)
+        (should (equal (emacsvox-aural-ui--read-choice
+                        "Voice: " '("Voice [id]" "Voice [ID]")) answer))))))
 
 (defun emacsvox-test-aural-ui--populate ()
   "Populate a test interface from `emacsvox-test-aural-ui-entries'."

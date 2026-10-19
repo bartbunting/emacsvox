@@ -166,30 +166,6 @@
     ("Recent feedback" "Recent aural feedback"))
   "Additional search terms for settings, displayed under their original labels.")
 
-(defun emacsvox-settings--search-matches (string table predicate)
-  "Return labels in TABLE matching STRING or an alias, respecting PREDICATE."
-  (let ((case-fold-search t)
-        (pattern (regexp-quote string)))
-    (cl-remove-if-not
-     (lambda (label)
-       (cl-some (lambda (term) (string-match-p pattern term))
-                (cons label (cdr (assoc label emacsvox-settings--search-aliases)))))
-     (all-completions "" table predicate))))
-
-(defun emacsvox-settings--search-all (string table predicate _point)
-  "Complete STRING against settings labels and aliases in TABLE with PREDICATE."
-  (let ((matches (emacsvox-settings--search-matches string table predicate)))
-    (when matches (nconc matches 0))))
-
-(defun emacsvox-settings--search-try (string table predicate point)
-  "Complete a unique setting in TABLE, keeping ambiguous STRING at POINT."
-  (let ((matches (emacsvox-settings--search-matches string table predicate)))
-    (cond
-     ((null matches) nil)
-     ((test-completion string matches) t)
-     ((null (cdr matches)) (cons (car matches) (length (car matches))))
-     (t (cons string point)))))
-
 (defun emacsvox-settings--open (entry)
   "Open settings ENTRY with the current captured source and scope."
   (let* ((context (emacsvox-aural-menu--context))
@@ -206,25 +182,10 @@
                 :key (lambda (suffix) (oref suffix key)) :test #'equal)))))
 (defun emacsvox-settings--find (prompt entries)
   "Read a destination from ENTRIES with PROMPT, then focus its control."
-  (let ((completion-ignore-case t)
-        ;; Keep the completion frontend, but give these searches consistent matching.
-        (completion-styles '(emacsvox-settings))
-        (completion-category-defaults nil)
-        (completion-category-overrides nil)
-        (completion-styles-alist
-         (cons '(emacsvox-settings emacsvox-settings--search-try
-                 emacsvox-settings--search-all "Find settings by label or alias.")
-               completion-styles-alist)))
-    (emacsvox-settings--open
-     (or (assoc-string
-          (minibuffer-with-setup-hook
-              (lambda ()
-                ;; Preserve the frontend's other bindings and shared maps.
-                (use-local-map (copy-keymap (current-local-map)))
-                (local-set-key (kbd "SPC") #'self-insert-command))
-            (emacsvox-transient--read #'completing-read prompt entries nil t))
-          entries t)
-         (user-error "Choose a destination")))))
+  (emacsvox-settings--open
+   (assoc (emacsvox-transient--read #'emacsvox-aural-ui--read-choice
+                                   prompt entries emacsvox-settings--search-aliases)
+          entries)))
 
 ;;;###autoload
 (defun emacsvox-settings-search ()

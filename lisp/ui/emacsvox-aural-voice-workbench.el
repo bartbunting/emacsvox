@@ -426,11 +426,9 @@ chosen voice, switch to All voices.  Nothing is enabled or played."
                                      (or (plist-get voice :display-name) (plist-get voice :voice-id))
                                      engine (or (plist-get voice :language) "Unknown language")
                                      (plist-get voice :voice-id))
-                             (list engine (plist-get voice :voice-id))))) pairs))
-         (completion-ignore-case t)
-         (completion-styles '(substring basic)))
+                             (list engine (plist-get voice :voice-id))))) pairs)))
     (unless choices (user-error "No voices in this scope; R refreshes, C clears filters"))
-    (let* ((id (cdr (assoc (completing-read "Find voice: " choices nil t) choices)))
+    (let* ((id (cdr (assoc (emacsvox-aural-ui--read-choice "Find voice: " choices) choices)))
            (pair (emacsvox-aural-voice-workbench--physical-pair id)))
       (unless (or (not (emacsvox-aural-voice-workbench--library-p))
                   (memq emacsvox-aural-voice-workbench--quick-filter
@@ -563,6 +561,7 @@ when they remain unsaved."
       "Needs Apply compares selection with both workers; unchecked voices are reported separately.\n"
       "A selection change does not establish runtime health or remove engine overrides.\n"
       "/ finds a voice across collapsed groups, revealing it in All if needed.\n"
+      "Voice search and B match text anywhere, ignoring case. Space inserts; Tab completes.\n"
       "F filters voices; C clears filters; R refreshes the inventory.\n"
       "t opens the complete editor for a named voice or physical experiment.\n"
       "Physical experiments stay unsaved until kept in a named voice draft.\n"

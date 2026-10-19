@@ -179,9 +179,10 @@
                          transient--suffixes))
     (with-selected-window transient--window
       (should-not (string-match-p "Aural Home" (buffer-string))))
-    (dolist (row (emacsvox-aural-home--all-entries))
-      (should (emacsvox-settings--search-matches
-               (aref (cadr row) 0) emacsvox-settings--actions nil)))
+    (let ((emacsvox-aural-ui--search-aliases emacsvox-settings--search-aliases))
+      (dolist (row (emacsvox-aural-home--all-entries))
+        (should (emacsvox-aural-ui--search-matches
+                 (aref (cadr row) 0) emacsvox-settings--actions nil))))
     (cl-letf (((symbol-function 'emacsvox-aural)
                (lambda () (interactive) (error "Unexpected Home entry"))))
       (dolist (entry emacsvox-settings--actions)
@@ -201,9 +202,10 @@
   (dolist (case '(("Feedback for this item" "Explain this item")
                   ("recent AURAL" "Recent feedback")
                   ("MANUAL" "Read the Emacsvox manual")))
-    (should (equal (emacsvox-settings--search-matches
-                    (car case) emacsvox-settings--actions nil)
-                   (cdr case))))
+    (let ((emacsvox-aural-ui--search-aliases emacsvox-settings--search-aliases))
+      (should (equal (emacsvox-aural-ui--search-matches
+                      (car case) emacsvox-settings--actions nil)
+                     (cdr case)))))
   (emacsvox-test--with-settings
     (dolist (case '(("Feedback for this item" emacsvox-settings-feedback "x")
                     ("Recent aural feedback" emacsvox-settings-feedback "h")

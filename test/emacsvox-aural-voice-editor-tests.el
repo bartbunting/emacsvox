@@ -254,6 +254,7 @@
              (should (equal before (emacsvox-aural-voice-editor--working))))
            (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) "Keep draft and return")))
              (emacsvox-aural-voice-editor-leave))
+           (should (string-match-p "Voice draft kept for this session" (car speech)))
            (should (eq (current-buffer) origin))
            (should (= (point) 12)))
        (kill-buffer origin)))))
@@ -310,7 +311,7 @@
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
    (let ((before (emacsvox-aural-voice-editor--working))
-         (answers '("Candidate" "Audition candidate" "Cancel")))
+         (answers '("cANDIDATE" "Audition candidate" "Cancel")))
      (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--physical-candidates)
                 (lambda (&rest _) '(("Candidate" (:engine-id "test") (:voice-id "one")))))
                ((symbol-function 'completing-read) (lambda (&rest _) (pop answers))))
@@ -1184,6 +1185,41 @@
        (should-error (emacsvox-aural-voice-editor-keep-experiment)))
      (should (eq destination emacsvox-aural-voice-editor--context))
      (should (equal before (emacsvox-aural-voice-editor--working))))))
+
+(ert-deftest emacsvox-aural-voice-editor-help-retains-field-and-draft ()
+  "Help speaks the actual save state and returns to the same editable draft."
+  (skip-unless (display-graphic-p))
+  (emacsvox-test--with-voice-editor
+   (save-window-excursion
+     (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
+     (emacsvox-aural-voice-editor--put :automatic-sample nil)
+     (emacsvox-aural-voice-editor--set 'average-pitch 8)
+     (emacsvox-aural-voice-editor--locate 'save)
+     (let* ((editor (current-buffer))
+            (position (point))
+            (draft (emacsvox-aural-voice-editor--draft))
+            (snapshot (emacsvox-aural-voice-editor--working))
+            (proposal (emacsvox-aural-voice-drafts--make-save
+                       :draft draft :state 'apply-failed
+                       :result '(:message "Notification worker timed out"))))
+       (setf (emacsvox-aural-voice-draft-proposal draft) proposal)
+       (execute-kbd-macro (kbd "?"))
+       (should (derived-mode-p 'help-mode))
+       (should (string-search "Saved; apply failed" (car speech)))
+       (should (string-search "Notification worker timed out" (car speech)))
+       ;; An asynchronous save result can redraw the editor while Help is open.
+       (with-current-buffer editor
+         (emacsvox-aural-voice-editor-refresh)
+         (setq position (point)))
+       (execute-kbd-macro (kbd "q"))
+       (should (eq (current-buffer) editor))
+       (should (eq (window-buffer (selected-window)) editor))
+       (should (= position (point)))
+       (should (eq (get-text-property (point) 'voice-field) 'save))
+       (should (equal snapshot (emacsvox-aural-voice-editor--working)))
+       (should (eq proposal (emacsvox-aural-voice-draft-proposal draft)))
+       (should-not requests)
+       (should-not callbacks)))))
 
 (provide 'emacsvox-aural-voice-editor-tests)
 ;;; emacsvox-aural-voice-editor-tests.el ends here

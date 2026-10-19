@@ -340,14 +340,14 @@
          (candidates (cl-remove first (emacsvox-aural-voice-workbench--physical-candidates t)
                                 :key #'cdr :test #'equal))
          (all-choice "Search all engines")
-         (name (completing-read "Compare with B: "
-                                (append candidates (list (cons all-choice nil))) nil t))
+         (name (emacsvox-aural-ui--read-choice "Compare with B: "
+                                              (append candidates (list (cons all-choice nil)))))
          (second
           (if (equal name all-choice)
               (let* ((all (cl-remove first (emacsvox-aural-voice-workbench--physical-candidates)
                                      :key #'cdr :test #'equal)))
                 (unless all (user-error "No other available physical voices"))
-                (cdr (assoc (completing-read "B voice, all engines: " all nil t) all)))
+                (cdr (assoc (emacsvox-aural-ui--read-choice "B voice, all engines: " all) all)))
             (cdr (assoc name candidates)))))
     (emacsvox-aural-voice-workbench--preview-entries
      (append (emacsvox-aural-voice-workbench--labelled-physical-entry first "A")
