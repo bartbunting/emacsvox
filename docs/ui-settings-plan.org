@@ -1302,9 +1302,10 @@ commands remain local interface operations.
   editable and retaining in-memory changes. Template definitions, collection
   clearing and pronunciation emphasis remain in the original dispatcher.
 - [[file:../lisp/speech/tts-speak.el][tts-set-character-scale]] supports local/global character-rate changes;
-  =tts-add-cleanup-pattern= edits =tts-cleanup-repeats=. Both remain direct
-  commands without a new focused search route. Their variables are not ordinary
-  Customize defaults; establish persistence before adding any Save control.
+  the session control and preview are searchable at =s R=. The direct command
+  =tts-add-cleanup-pattern= edits =tts-cleanup-repeats=; =s R a= now provides
+  global session editing, pattern previews and recovery. These variables are
+  not ordinary Customize defaults.
 - =tts-speech-rate-base= and =tts-speech-rate-step= configure predefined rates;
   they are not the shifted-arrow menu's adjustment step. Unicode replacements,
   name transformations, and untouched charsets already have Customize options.
@@ -1345,14 +1346,16 @@ global default is not necessarily a saved startup value.
 | Area | Existing command or option | Coverage and proposed treatment |
 |------+----------------------------+---------------------------------|
 | Earcon enablement | =emacsvox-toggle-icons=; =emacsvox-use-icons= | Delivered at =r l=: source, inherit and global-default controls. Separate from volume/pack selection; no Customize save. |
-| Quiet speech | =tts-toggle-quiet=; =tts-quiet= | Add a scoped reading control with an accessible way to restore speech. Buffer-local/global-default session state; stopping current speech is a separate action. |
-| Nonprinting text | =tts-toggle-speak-nonprinting-chars=; =tts-toggle-strip-octals= | Missing reading controls. Existing local/global switches are ordinary variables; retain their interaction and do not invent a Customize save. |
-| Speech chunking | =tts-toggle-splitting-on-white-space=; =tts-set-chunk-separator-syntax= | Advanced reading commands acting on buffer-local separator syntax. Keep distinct from tracked-reading chunk limits. |
-| Column filtering | =emacsvox-speak-line-set-column-filter=; =emacsvox-toggle-speak-line-invert-filter= | Missing reading workflow. Uses its own filter store; see persistence caveat below. |
-| Automatic punctuation policy | =tts-punctuation-mode-policy-alist= | Level/profile and return-to-policy controls exist; editing the mode-to-policy list needs an advanced Customize link. |
-| Message filtering and tooltips | =emacsvox-speak-messages-filter=; =emacsvox-speak-tooltips= | The message on/off control does not cover exclusions or tooltip speech. Add interaction discovery; use the filter's Custom setter. |
-| Emoji speech | =emacsvox-emoji-naming-enabled=; =emacsvox-emoji-custom-names= | Add reading discovery for the emoji group, including approved sequences and maximum count. Customize owns these defaults. |
-| Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Add a focused Tables page; see the table reading and navigation proposal below. Agent Shell and Org have separate controls; their integration links do not replace this group. |
+| Quiet speech | =tts-toggle-quiet=; =tts-quiet= | Implemented at =s R Q= with source/global-default session scope. Explicit menu feedback and input remain spoken; =s R r= restores source and default speech. Stopping playback is separate. |
+| Nonprinting text | =tts-toggle-speak-nonprinting-chars=; =tts-toggle-strip-octals= | Implemented at =s R n= and =s R o=. Octal stripping suppresses naming; Help explains the legacy byte range. Session controls have no Customize save. |
+| Character rate | =tts-set-character-scale= | Implemented at =s R c=, with exact input, shifted arrows and preview. The selected source multiplier accompanies each letter on both speech streams. |
+| Speech chunking | =tts-toggle-splitting-on-white-space=; =tts-set-chunk-separator-syntax= | Implemented at =s R s=: explicit whitespace choices, advanced syntax entry, preview, inheritance and undo. Source-buffer session state; tracked-reading chunk limits are separate. |
+| Column filtering | =emacsvox-speak-line-set-column-filter=; =emacsvox-toggle-speak-line-invert-filter= | Implemented at =s R f=: inclusive range entry, direction, preview, disable, remembered-range restoration and undo. Uses its existing file/mode filter store; see persistence caveat below. |
+| Repeat cleanup | =tts-add-cleanup-pattern=; =tts-cleanup-repeats= | Implemented at =s R a=: browse patterns by character names, add/remove literal strings, preview, disable and restore the opening list. Global session changes have no Customize Save. |
+| Automatic punctuation policy | =tts-punctuation-mode-policy-alist= | Implemented at =s A p=: Customize the mode-to-policy list. Restore automatic policy in affected buffers to re-evaluate it; explicit overrides retain precedence. |
+| Message filtering and tooltips | =emacsvox-speak-messages-filter=; =emacsvox-speak-tooltips= | Implemented at =s A m=: Customize exclusions through their setter and the independent tooltip switch. |
+| Emoji speech | =emacsvox-emoji-naming-enabled=; =emacsvox-emoji-custom-names= | Implemented at =s A e=, including approved sequences and maximum count. Customize owns defaults; local policy overrides retain precedence. |
+| Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Delivered at =s T=; see the table reading and navigation checkpoint below. Agent Shell and Org retain their integration-specific controls. |
 | Voice contrast and preview labels | =omnivox-average-pitch-contrast=; =emacsvox-aural-preview-label-verbosity= | Delivered at =v o=: browsable labels and numeric global contrast, with explicit Customize Save. Distinct from tuning one voice; the contrast setter updates logical voices. |
 | Startup feedback | =emacsvox-speak-ready-message=; =emacsvox-welcome-show-at-startup= | Add advanced interaction discovery; keep the routing timeout separate from announcement enablement. |
 | Mail and background output | =emacsvox-toggle-mail-alert=; =emacsvox-toggle-comint-output-monitor= | Missing context-sensitive controls. Mail spool/interval are Custom options; the two switches are local/global-default session state. |
@@ -2262,13 +2265,14 @@ options, generated voice-font settings, mixer/soundscape settings, ordinary
 variables, unloaded modules, and separate stores are not a complete part of
 that snapshot. Do not use its row count as a migration-completeness measure.
 
-** Outstanding decision: consistent search matching
+** Search matching policy and remaining scope
 
-Open as of 2026-10-15. Decide whether searches across the settings menus and
-linked editors should share case-insensitive matching anywhere in a label,
-including inside words, or continue to follow their individual rules and your
-Emacs completion configuration. Both menu searches use local substring matching
-and aliases; no wider conversion is agreed here.
+Implemented locally on 2026-10-19: settings and action searches, physical-voice
+browser search, the editor's physical-voice picker and comparison voice pickers
+share case-insensitive literal substring matching, including inside words.
+Settings retain aliases. Matching is local to these prompts and keeps the
+configured completion frontend. Other selection prompts retain their existing
+matching rules. Listening acceptance of the additional voice routes is pending.
 
 Input decision accepted on 2026-10-15: Space inserts a literal space in
 =C-e H /= and =C-e H a=; Tab remains available for completion. This prevents
@@ -2276,7 +2280,7 @@ multiword queries and aliases from expanding before typing is finished.
 The implementation copies the active minibuffer map for each search, retaining
 its other bindings and leaving shared maps and unrelated prompts untouched.
 Substring matching, aliases, and the two-Enter selection flow are retained.
-The broader matching-policy decision remains open.
+The same input behaviour now applies to the physical-voice pickers above.
 
 Current source inventory:
 
@@ -2285,9 +2289,9 @@ Current source inventory:
 | Find a setting | =C-e H /=; =emacsvox-settings-search= | Case-insensitive substring matching over labels and a small alias catalogue. Results retain canonical labels without duplicates. Matching styles are local to this prompt. |
 | Find an action | =C-e H a=; =emacsvox-settings-search-actions= | Case-insensitive substring matching over canonical labels and aliases, including the manual. One result per destination. Accepting a result focuses its menu control; a second Enter activates it. |
 | Retained Home search | =/= after =M-x emacsvox-aural=; =emacsvox-aural-home-search= | Ordinary completion over action names, including collapsed actions. Matching depends on completion configuration; no local substring or case policy. This is outside the ordinary settings-menu route. |
-| Find a physical voice | =/= in the physical-voice browser; =emacsvox-aural-voice-workbench-find-voice= | Locally requests substring/basic completion and ignores case. Searches voice names, engine IDs, languages and voice IDs, within the current engine and explicit filters. |
-| Choose a physical voice | Physical voice field in the editor; =emacsvox-aural-voice-editor--pick= | Ordinary completion over voice names and engine/voice identifiers. Matching depends on completion configuration. |
-| Choose a comparison voice | Compare with B and its Search all engines choice; =emacsvox-aural-voice-workbench-compare= | Ordinary completion. The second prompt broadens the inventory beyond current filters; it does not introduce different matching rules. |
+| Find a physical voice | =/= in the physical-voice browser; =emacsvox-aural-voice-workbench-find-voice= | Local case-insensitive literal substring matching. Searches voice names, engine IDs, languages and voice IDs, within the current engine and explicit filters. Accepting reveals the row without playing or enabling it. |
+| Choose a physical voice | Physical voice field in the editor; =emacsvox-aural-voice-editor--pick= | Shared substring matching over voice names and engine/voice identifiers. A selected candidate still offers audition, Use this voice, Search again and Cancel. |
+| Choose a comparison voice | Compare with B and its Search all engines choice; =emacsvox-aural-voice-workbench-compare= | Shared substring matching in both prompts. The second prompt broadens the inventory beyond current filters. The accepted choice starts the comparison. |
 | Find engine controls | =/= or Search controls in native engine controls; =emacsvox-aural-voice-engine-controls-search= | Literal, case-insensitive substring filtering of labels, identifiers and help across collapsed groups. Empty input clears the filter. |
 | Find available voices | =/= in the download catalogue; =omnivox-catalogue-search= | Literal, case-insensitive substring filtering of voice names, language codes and language names within the selected engine. Empty input clears the search and restores the retained browsing scope. |
 
@@ -2310,12 +2314,12 @@ its =Q= selects a predefined view. The overrides view filters by scope, module
 and semantic role. Their choice prompts use completion, but the resulting
 filters select attributes rather than arbitrary substrings of row text.
 
-Before implementation, decide which searches and selection prompts share the
-policy, which retain configured completion styles, and where aliases are useful.
-Also settle ambiguity and selection behavior: finding/focusing a setting,
+Before extending this policy to other selection prompts, decide which should
+retain configured completion styles and where aliases are useful.
+Preserve ambiguity and selection behaviour: finding/focusing a setting,
 choosing a voice, running a Home action, and filtering a list have different
 effects. Consistent matching must not silently make those effects identical.
-Then add focused regression coverage and listening tasks for candidate speech,
+Keep focused regression coverage and listening tasks for candidate speech,
 partial-word matching, cancellation, scope and return. This inventory records
 source behavior; it is not listening acceptance of all these paths.
 
@@ -2581,6 +2585,176 @@ They do not establish listening acceptance or the acoustic effect of pitch chang
 
 ** Next proposed slices
 
+*** Settings consistency checkpoint, 2026-10-19
+
+Implemented locally: use the existing settings search policy for the physical-voice
+browser, the editor's physical-voice picker and both comparison prompts.
+Match literal substrings without case sensitivity; Space inserts a space and
+Tab completes. Keep aliases in settings searches. Preserve filtering,
+audition, selection and activation as separate actions. Other selection
+prompts keep their existing completion behaviour for this slice.
+
+Reading discovery classification:
+
+- Focused controls: character-rate scaling, quiet speech, nonprinting speech
+  and octal stripping. These are session variables, not saved Custom options.
+  Quiet needs a listening check of speech restoration; nonprinting and octal
+  stripping need their existing interaction preserved.
+- Advanced options: predefined-rate base and step, automatic punctuation
+  policy, emoji naming and limits, legacy Unicode replacement rules, message
+  exclusions and tooltip speech. Link their existing Custom options with
+  explicit Apply/Save and return navigation. Unicode handling remains owned
+  by the speech adapter; do not add a general enable switch.
+- Advanced commands: repeat-pattern cleanup and speech chunk separator syntax.
+  Keep source-buffer scope and session persistence explicit. Tracked-reading
+  chunk limits are a separate setting.
+- Separate workflow: column filters have an automatically persisted file/mode
+  store. They need their own persistence explanation and recovery task.
+- Already delivered: the focused Tables page and integration-specific table
+  controls. Verify its existing scope and inheritance rather than add another
+  page.
+
+Advanced reading discovery is available at =C-e H s A= and through settings
+search. Each link opens existing Customize options and returns to its original
+menu item. Voice-editor =?= speaks navigation, preview and recovery guidance,
+including the current draft state and last save result. Keeping or discarding
+unsaved changes announces the decision after returning. Existing draft, undo
+and Save/Apply models remain in place.
+
+A graphical regression reproduced Help returning to the top after a save
+callback redraws the editor. Help now restores the original field by identity,
+including after a redraw, and speaks that field on return.
+
+Shared search preserves exact selections when voice identifiers differ only
+by case. Typed casing that matches multiple labels without an exact match
+requires a specific selection rather than silently choosing the first voice.
+
+Verification on Emacs 31.0.90:
+- 133 focused batch checks pass; 77 graphical or optional-integration checks
+  skip in that batch environment.
+- All 16 focused settings/search graphical checks and all 40 checks in
+  =make graphical-voice-test= pass in fresh Emacs processes using current
+  byte-code. These include real minibuffer input, captured source and scope,
+  Customize return paths, retained drafts and Help return after a redraw.
+- Incremental compilation, byte-code preflight and the non-mutating
+  documentation release gate pass. Command references are regenerated.
+
+The broader ad-hoc graphical run lacked some integration registrations and
+audio stubs, and exposed a Changed settings fixture whose cue module was not
+loaded. Those results do not establish wider integration acceptance. The final
+focused graphical harness loads the providers it exercises and suppresses
+physical cue playback; listening remains a separate check.
+
+Restart the normal profile for listening. Try =C-e H s A=, a partial-word
+physical-voice search, =?= and =q= in a voice editor, then leaving and resuming
+an unfinished draft. Check candidate speech, return-field feedback and the
+spoken distinction between saved settings and successful worker application.
+
+Listening acceptance remains pending. The changes are committed in focused
+slices. Public manual narrative is
+deferred until listening settles the interaction; generated command references
+include the new commands. Focused reading controls follow in the next checkpoint.
+
+*** Reading controls follow-up, 2026-10-19
+
+Implemented locally: scoped character-rate scaling, quiet speech, nonprinting
+character naming and octal stripping at =C-e H s R=. These are session values;
+the menu has no Customize Save. Global scope changes the default and
+captured source, preserving other explicit buffer overrides. An inheritance
+action removes the source's overrides for these four controls.
+
+Explicit menu feedback and minibuffer input bypass quiet mode temporarily.
+The source, default and minibuffer state are preserved after input, cancellation
+or errors. Restore speech clears quiet in the source and global default, without
+clearing unrelated buffers' explicit overrides. Quiet remains distinct from
+stopping current playback.
+
+Character scale now accompanies each letter, fixing stale server state when
+switching between buffers with different multipliers. Regression coverage
+alternates buffers on main and notification lanes through both legacy and
+palette-aware letter delivery. Transport identifies scale synchronization
+separately so a structured letter retains its voice and delivery format.
+
+Octal stripping takes precedence over nonprinting naming and removes DEL and
+raw eight-bit bytes 128 through 255, preserving decoded Unicode accents. The
+displayed value and Help explain the suppressed naming setting.
+
+Source verification on Emacs 31.0.90: 1,017 core checks pass, with 18 graphical
+or native-service checks skipped. All 27 semantic speech traces match. Focused
+character, reading and Transient checks pass; the graphical run covers real
+numeric input while quiet, cancellation, shifted arrows, scope, inheritance,
+and restoration through quiet parent menus. All 20 focused graphical checks
+and all 40 maintained graphical voice checks pass in fresh Emacs processes.
+The focused run verifies compiled paths for the changed reading, Transient,
+letter and transport functions. Incremental compilation and byte-code preflight
+pass, and all nine character-voice checks pass with compiled letter and transport
+functions. Command references are regenerated; the non-mutating documentation
+release gate passes.
+
+Restart the normal profile for listening at =C-e H s R=. Try character rate
+with =c= and preview with =p=, quiet with =Q=, then return through the parent
+menus and restore speech with =r=. Check both source and global scope with =g=.
+Both settings slices are committed; listening acceptance remains pending.
+
+*** Reading workflow follow-up, 2026-10-19
+
+Implemented locally: repeat cleanup at =s R a=, column filtering at =s R f=
+and chunking at =s R s=, with settings search destinations, source previews
+and recovery actions. Repeat cleanup retains global session scope. Chunking retains source-buffer
+scope and its mode syntax table. Column edits retain the existing file/mode
+filter store and save-on-exit behaviour; direction stays buffer-local.
+Opening a menu, browsing and previewing do not update the filter store.
+
+Column entry uses one-based inclusive ranges, converted to the existing
+zero-based, end-exclusive character offsets. Tabs count as one character.
+Existing filtering ignores a range whose end exceeds the line length; Help
+explains this. Remembered ranges are offered for explicit restoration, not
+automatically enabled on file entry.
+
+Repeat cleanup matches literal strings. Source inspection shows that runs of
+three or more are counted when punctuation is All and removed otherwise;
+the old variable documentation says more than three. The new controls preserve
+implementation behaviour and explain it. Empty patterns and line breaks are
+rejected before they can reach cleanup. Pattern completion includes character
+names so punctuation-only patterns can be found and distinguished through speech.
+
+Restoring the opening list reverses global repeat edits made since menu entry.
+Column undo restores source bindings, direction and the remembered entry from
+before the first edit, preserving other store entries. Disabling the active
+column filter retains remembered ranges. Chunking undo restores the opening
+value and local/inherited state; its inheritance action follows the global
+default, including when replacing a mode-specific local choice.
+
+First use previously failed when the filter store did not exist. The loader
+now retains in-memory entries and installs the existing save-on-exit hook
+without creating a file. Tests cover first use, remembered empty versus absent
+entries, saving and reloading, source identity changes and undo across persistence.
+
+Search entry now runs these menus' setup functions to capture their undo state.
+A graphical regression reproduced search followed by Restore opening list
+clearing the list; search now uses the same undo boundary as submenu entry.
+
+Source checks pass, including real cleanup and chunk boundaries, literal range
+validation, captured-line preview, source preservation and cancellation.
+The batch settings/filter selection passes 13 checks and skips 72 graphical
+checks. All 27 focused graphical checks pass in a fresh Emacs using compiled
+workflow and filter functions; the three filter checks also pass separately
+with the compiled loader. Incremental compilation and byte-code preflight pass.
+Command references are regenerated; the non-mutating documentation release
+gate passes.
+Listening will use a fresh normal profile. The implementation is committed in
+separate search/editor, character-rate, quiet-menu, reading-control, repeat,
+column and chunking slices. The roadmap and generated references are collected
+in a documentation commit. Listening acceptance and public manual narrative
+remain pending.
+
+Commit boundaries were checked in an exported copy of the index. Focused batch
+checks passed for each implementation slice; all 27 focused graphical checks
+passed on the combined staged source. The final code matches the previously
+verified working tree.
+
+*** Remaining delivery
+
 Table work follows the six delivery slices in
 [[table-reading-consolidation][Table reading and navigation consolidation]], including common preferences,
 representation-specific adapters and configurable activation.
@@ -2588,16 +2762,16 @@ representation-specific adapters and configurable activation.
 History controls, scoped presentation switches, voice presentation options and
 Emacs dictionary discovery are implemented above. Remaining work is:
 
-1. Reading discovery: classify character-scale, repeat cleanup, predefined-rate,
-   Unicode, emoji, quiet/nonprinting speech, column filtering, chunking and
-   punctuation-policy settings as focused or advanced controls. Include general
-   table preferences and interaction exclusions. Dictionary template definitions,
+1. Listen to the implemented reading workflows: repeat cleanup, column
+   filtering and chunking, alongside character, quiet and nonprinting controls.
+   Advanced default links and the Tables page are implemented. Dictionary
+   template definitions,
    collection clearing and pronunciation emphasis remain in the existing
    dispatcher; they are not new focused controls in this slice.
-2. Decide shared search policy using the inventory above. Settings and action
-   searches use case-insensitive substrings and literal spaces; voice pickers
-   and other prompts still need a decision. Preserve each prompt's distinction
-   between focusing, selecting, filtering and activating.
+2. Listen to the shared search policy implemented for settings and physical
+   voices. Consider other selection prompts separately using the inventory
+   above. Preserve each prompt's distinction between focusing, selecting,
+   filtering and activating.
 3. Improve the named-voice editor and browser using their existing major modes,
    then apply useful conventions to another editor. The dictionary widget editor
    now has a return link but retains its immediate in-memory editing model;

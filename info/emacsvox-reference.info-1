@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1704 commands and 256 options.
+   This chapter documents a total of 1710 commands and 256 options.
 
 * Menu:
 
@@ -5792,15 +5792,22 @@ defaults.
 
      (fn &optional DIMENSION)
 
-2.76.1.8 emacsvox-aural-voice-editor-increase
+2.76.1.8 emacsvox-aural-voice-editor-help
+.........................................
+
+ -- Command: emacsvox-aural-voice-editor-help
+
+     Explain navigation, preview, saving and draft recovery; q returns here.
+
+2.76.1.9 emacsvox-aural-voice-editor-increase
 .............................................
 
  -- Command: emacsvox-aural-voice-editor-increase
 
      Increase a numeric adjustment, or move to the next field.
 
-2.76.1.9 emacsvox-aural-voice-editor-keep-experiment
-....................................................
+2.76.1.10 emacsvox-aural-voice-editor-keep-experiment
+.....................................................
 
  -- Command: emacsvox-aural-voice-editor-keep-experiment (&optional part
           placement source)
@@ -5811,14 +5818,14 @@ defaults.
 
      (fn &optional PART PLACEMENT SOURCE)
 
-2.76.1.10 emacsvox-aural-voice-editor-leave
+2.76.1.11 emacsvox-aural-voice-editor-leave
 ...........................................
 
  -- Command: emacsvox-aural-voice-editor-leave
 
      Return to the originating field while retaining this session’s draft.
 
-2.76.1.11 emacsvox-aural-voice-editor-mode
+2.76.1.12 emacsvox-aural-voice-editor-mode
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-mode
@@ -5838,7 +5845,7 @@ defaults.
      0 .. 9		digit-argument
      <		beginning-of-buffer
      >		end-of-buffer
-     ?		describe-mode
+     ?		emacsvox-aural-voice-editor-help
      B		emacsvox-aural-voice-editor-compare
      P		emacsvox-aural-voice-editor-play
      S		emacsvox-aural-voice-editor-stop
@@ -5870,70 +5877,70 @@ defaults.
      C-c C-a		emacsvox-aural-ui-actions
      C-c TAB		emacsvox-aural-ui-open-manual
 
-2.76.1.12 emacsvox-aural-voice-editor-next
+2.76.1.13 emacsvox-aural-voice-editor-next
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-next
 
      Move to and read the next editor field.
 
-2.76.1.13 emacsvox-aural-voice-editor-play
+2.76.1.14 emacsvox-aural-voice-editor-play
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-play
 
      Play the edited voice or selected tuning row without saving.
 
-2.76.1.14 emacsvox-aural-voice-editor-previous
+2.76.1.15 emacsvox-aural-voice-editor-previous
 ..............................................
 
  -- Command: emacsvox-aural-voice-editor-previous
 
      Move to and read the previous editor field.
 
-2.76.1.15 emacsvox-aural-voice-editor-refresh
+2.76.1.16 emacsvox-aural-voice-editor-refresh
 .............................................
 
  -- Command: emacsvox-aural-voice-editor-refresh
 
      Refresh the common editor, preserving the current field and point’s column.
 
-2.76.1.16 emacsvox-aural-voice-editor-save
+2.76.1.17 emacsvox-aural-voice-editor-save
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-save
 
      Save and apply this named voice, or choose an experiment destination.
 
-2.76.1.17 emacsvox-aural-voice-editor-save-to-collection
+2.76.1.18 emacsvox-aural-voice-editor-save-to-collection
 ........................................................
 
  -- Command: emacsvox-aural-voice-editor-save-to-collection
 
      Save the named voice without selecting its palette.
 
-2.76.1.18 emacsvox-aural-voice-editor-speak
+2.76.1.19 emacsvox-aural-voice-editor-speak
 ...........................................
 
  -- Command: emacsvox-aural-voice-editor-speak
 
      Read the current labelled field using the ordinary navigation voice.
 
-2.76.1.19 emacsvox-aural-voice-editor-stop
+2.76.1.20 emacsvox-aural-voice-editor-stop
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-stop
 
      Stop this editor’s sample without stopping another editor’s newer preview.
 
-2.76.1.20 emacsvox-aural-voice-editor-text
+2.76.1.21 emacsvox-aural-voice-editor-text
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-text
 
      Change the common comparison text.
 
-2.76.1.21 emacsvox-aural-voice-editor-undo
+2.76.1.22 emacsvox-aural-voice-editor-undo
 ..........................................
 
  -- Command: emacsvox-aural-voice-editor-undo

@@ -12,6 +12,75 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-speedbar,  Next: emacsvox-spelling,  Prev: emacsvox-speak-windows,  Up: Emacsvox Commands And Options
+
+2.283 emacsvox-speedbar
+=======================
+
+This module advises speedbar.el for use with Emacs.  The latest speedbar
+can be obtained from ftp://ftp.ultranet.com/pub/zappo/ This module
+ensures that speedbar works smoothly outside a windowing system in
+addition to speech enabling all interactive commands.  Emacsvox also
+adds an Emacsvox environment specific entry point to speedbar
+-emacsvox-speedbar-goto-speedbar- and binds this
+
+2.283.1 Emacsvox-Speedbar Commands
+----------------------------------
+
+2.283.1.1 emacsvox-speedbar-click
+.................................
+
+ -- Command: emacsvox-speedbar-click
+
+     Does the equivalent of the mouse click from the keyboard
+
+2.283.1.2 emacsvox-speedbar-goto-speedbar
+.........................................
+
+ -- Command: emacsvox-speedbar-goto-speedbar
+
+     Switch to the speedbar
+
+
+File: emacsvox-reference.info,  Node: emacsvox-spelling,  Next: emacsvox-sql,  Prev: emacsvox-speedbar,  Up: Emacsvox Commands And Options
+
+2.284 emacsvox-spelling
+=======================
+
+Independent spelling voice, tone and earcon controls with tone
+adjustment.  Changes apply to the current session; saving startup
+defaults is explicit.
+
+2.284.1 Emacsvox-Spelling Commands
+----------------------------------
+
+2.284.1.1 emacsvox-spelling
+...........................
+
+ -- Command: emacsvox-spelling
+
+     Choose global spelling feedback and adjust its tone.
+     Voice, tone and earcon combine independently. All off silences spelling
+     feedback without disabling Flyspell. Voice changes apply while reading;
+     tone and earcon also report errors detected while editing. Settings apply
+     immediately; S saves across restarts. Spelling tone volume affects only
+     this tone; Shared tone volume scales all main-stream tones.
+     E opens a private tone draft with waveform, sweep and envelope controls.
+     In this parent menu, Space reads the selected feedback sample and b plays
+     the tone alone. In the tone editor, Space plays only the draft tone, P reads
+     its sample, S stops, and W saves only tone defaults. Return here and use S
+     to save voice, tone and earcon enablement as well.
+
+2.284.1.2 emacsvox-spelling-timing
+..................................
+
+ -- Command: emacsvox-spelling-timing
+
+     Choose global spelling tone timing; browsing does not change the setting.
+     Enter applies and returns. Cancel keeps the original choice.
+     Read the spelling sample to compare timing; a tone alone cannot demonstrate it.
+
+
 File: emacsvox-reference.info,  Node: emacsvox-sql,  Next: emacsvox-sudoku,  Prev: emacsvox-spelling,  Up: Emacsvox Commands And Options
 
 2.285 emacsvox-sql
@@ -8435,62 +8504,66 @@ Function Index
                                                              (line   59)
 * emacsvox-aural-voice-editor-edit <1>:  emacsvox-aural-voice-editor.
                                                              (line   60)
-* emacsvox-aural-voice-editor-increase:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-help:      emacsvox-aural-voice-editor.
                                                              (line   68)
-* emacsvox-aural-voice-editor-increase <1>: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-help <1>:  emacsvox-aural-voice-editor.
                                                              (line   69)
-* emacsvox-aural-voice-editor-keep-experiment: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-increase:  emacsvox-aural-voice-editor.
                                                              (line   75)
+* emacsvox-aural-voice-editor-increase <1>: emacsvox-aural-voice-editor.
+                                                             (line   76)
+* emacsvox-aural-voice-editor-keep-experiment: emacsvox-aural-voice-editor.
+                                                             (line   82)
 * emacsvox-aural-voice-editor-keep-experiment <1>: emacsvox-aural-voice-editor.
-                                                             (line   77)
+                                                             (line   84)
 * emacsvox-aural-voice-editor-leave:     emacsvox-aural-voice-editor.
-                                                             (line   87)
-* emacsvox-aural-voice-editor-leave <1>: emacsvox-aural-voice-editor.
-                                                             (line   88)
-* emacsvox-aural-voice-editor-mode:      emacsvox-aural-voice-editor.
                                                              (line   94)
-* emacsvox-aural-voice-editor-mode <1>:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-leave <1>: emacsvox-aural-voice-editor.
                                                              (line   95)
+* emacsvox-aural-voice-editor-mode:      emacsvox-aural-voice-editor.
+                                                             (line  101)
+* emacsvox-aural-voice-editor-mode <1>:  emacsvox-aural-voice-editor.
+                                                             (line  102)
 * emacsvox-aural-voice-editor-next:      emacsvox-aural-voice-editor.
-                                                             (line  146)
-* emacsvox-aural-voice-editor-next <1>:  emacsvox-aural-voice-editor.
-                                                             (line  147)
-* emacsvox-aural-voice-editor-play:      emacsvox-aural-voice-editor.
                                                              (line  153)
-* emacsvox-aural-voice-editor-play <1>:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-next <1>:  emacsvox-aural-voice-editor.
                                                              (line  154)
-* emacsvox-aural-voice-editor-previous:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-play:      emacsvox-aural-voice-editor.
                                                              (line  160)
-* emacsvox-aural-voice-editor-previous <1>: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-play <1>:  emacsvox-aural-voice-editor.
                                                              (line  161)
-* emacsvox-aural-voice-editor-refresh:   emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-previous:  emacsvox-aural-voice-editor.
                                                              (line  167)
-* emacsvox-aural-voice-editor-refresh <1>: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-previous <1>: emacsvox-aural-voice-editor.
                                                              (line  168)
-* emacsvox-aural-voice-editor-save:      emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-refresh:   emacsvox-aural-voice-editor.
                                                              (line  174)
-* emacsvox-aural-voice-editor-save <1>:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-refresh <1>: emacsvox-aural-voice-editor.
                                                              (line  175)
-* emacsvox-aural-voice-editor-save-to-collection: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-save:      emacsvox-aural-voice-editor.
                                                              (line  181)
-* emacsvox-aural-voice-editor-save-to-collection <1>: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-save <1>:  emacsvox-aural-voice-editor.
                                                              (line  182)
-* emacsvox-aural-voice-editor-speak:     emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-save-to-collection: emacsvox-aural-voice-editor.
                                                              (line  188)
-* emacsvox-aural-voice-editor-speak <1>: emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-save-to-collection <1>: emacsvox-aural-voice-editor.
                                                              (line  189)
-* emacsvox-aural-voice-editor-stop:      emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-speak:     emacsvox-aural-voice-editor.
                                                              (line  195)
-* emacsvox-aural-voice-editor-stop <1>:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-speak <1>: emacsvox-aural-voice-editor.
                                                              (line  196)
-* emacsvox-aural-voice-editor-text:      emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-stop:      emacsvox-aural-voice-editor.
                                                              (line  202)
-* emacsvox-aural-voice-editor-text <1>:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-stop <1>:  emacsvox-aural-voice-editor.
                                                              (line  203)
-* emacsvox-aural-voice-editor-undo:      emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-text:      emacsvox-aural-voice-editor.
                                                              (line  209)
-* emacsvox-aural-voice-editor-undo <1>:  emacsvox-aural-voice-editor.
+* emacsvox-aural-voice-editor-text <1>:  emacsvox-aural-voice-editor.
                                                              (line  210)
+* emacsvox-aural-voice-editor-undo:      emacsvox-aural-voice-editor.
+                                                             (line  216)
+* emacsvox-aural-voice-editor-undo <1>:  emacsvox-aural-voice-editor.
+                                                             (line  217)
 * emacsvox-aural-voice-engine-controls-back: emacsvox-aural-voice-engine-controls.
                                                              (line   16)
 * emacsvox-aural-voice-engine-controls-back <1>: emacsvox-aural-voice-engine-controls.
@@ -10549,22 +10622,42 @@ Function Index
                                                              (line   54)
 * emacsvox-settings-preview-labels <1>:  emacsvox-settings-workflows.
                                                              (line   55)
+* emacsvox-settings-reading:             emacsvox-settings-workflows.
+                                                             (line   62)
+* emacsvox-settings-reading <1>:         emacsvox-settings-workflows.
+                                                             (line   63)
+* emacsvox-settings-reading-chunks:      emacsvox-settings-workflows.
+                                                             (line   70)
+* emacsvox-settings-reading-chunks <1>:  emacsvox-settings-workflows.
+                                                             (line   71)
+* emacsvox-settings-reading-columns:     emacsvox-settings-workflows.
+                                                             (line   78)
+* emacsvox-settings-reading-columns <1>: emacsvox-settings-workflows.
+                                                             (line   79)
+* emacsvox-settings-reading-controls:    emacsvox-settings-workflows.
+                                                             (line   87)
+* emacsvox-settings-reading-controls <1>: emacsvox-settings-workflows.
+                                                             (line   88)
+* emacsvox-settings-reading-repeats:     emacsvox-settings-workflows.
+                                                             (line   96)
+* emacsvox-settings-reading-repeats <1>: emacsvox-settings-workflows.
+                                                             (line   97)
 * emacsvox-settings-search:              emacsvox-settings.  (line   21)
 * emacsvox-settings-search <1>:          emacsvox-settings.  (line   22)
 * emacsvox-settings-search-actions:      emacsvox-settings.  (line   28)
 * emacsvox-settings-search-actions <1>:  emacsvox-settings.  (line   29)
 * emacsvox-settings-setups:              emacsvox-settings-workflows.
-                                                             (line   62)
+                                                             (line  104)
 * emacsvox-settings-setups <1>:          emacsvox-settings-workflows.
-                                                             (line   63)
+                                                             (line  105)
 * emacsvox-settings-switches:            emacsvox-settings-workflows.
-                                                             (line   69)
+                                                             (line  111)
 * emacsvox-settings-switches <1>:        emacsvox-settings-workflows.
-                                                             (line   70)
+                                                             (line  112)
 * emacsvox-settings-voice-presentation:  emacsvox-settings-workflows.
-                                                             (line   78)
+                                                             (line  120)
 * emacsvox-settings-voice-presentation <1>: emacsvox-settings-workflows.
-                                                             (line   79)
+                                                             (line  121)
 * emacsvox-shell-command:                emacsvox-speak.     (line   48)
 * emacsvox-shell-command <1>:            emacsvox-speak.     (line   49)
 * emacsvox-show-property-at-point:       emacsvox-wizards.   (line  148)
