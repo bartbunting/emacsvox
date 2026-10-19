@@ -96,6 +96,7 @@ AURAL_RUNTIME_OBJECTS = \
 $(TTS_OBJECTS) \
 core/emacsvox-pronounce.elc \
 core/emacsvox-tracked-reading.elc \
+core/emacsvox-speak-filters.elc \
 core/emacsvox-speak.elc
 
 AURAL_OBJECTS = \
@@ -170,6 +171,7 @@ ui/emacsvox-sound-library.elc
 SPEAK_OBJECTS =   \
 core/emacsvox-pronounce.elc \
 core/emacsvox-tracked-reading.elc \
+core/emacsvox-speak-filters.elc \
 core/emacsvox-speak.elc  \
 core/emacsvox-advice-completion.elc \
 core/emacsvox-advice-input.elc \
@@ -515,7 +517,8 @@ core/emacsvox-advice-messages.elc: emacsvox-preamble.elc
 core/emacsvox-advice-messages.elc: aural/emacsvox-aural-submission.elc
 core/emacsvox-advice.elc: core/emacsvox-advice-completion.elc \
 core/emacsvox-advice-input.elc core/emacsvox-advice-messages.elc
-core/emacsvox-speak.elc: core/emacsvox-tracked-reading.elc \
+core/emacsvox-speak-filters.elc: speech/tts-speak.elc
+core/emacsvox-speak.elc: core/emacsvox-tracked-reading.elc core/emacsvox-speak-filters.elc \
 speech/tts-speak.elc speech/voice-setup.elc voices/voice-defs.elc core/emacsvox-pronounce.elc \
 aural/emacsvox-aural-submission.elc emacsvox-version.elc
 aural/emacsvox-aural-description.elc: \

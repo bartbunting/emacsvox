@@ -34,6 +34,7 @@
           emacsvox-pronounce
           emacsvox-speak
           emacsvox-tracked-reading
+          emacsvox-speak-filters
           emacsvox-aural
           emacsvox-aural-compatibility-voice
           emacsvox-aural-concrete
@@ -98,6 +99,8 @@
           emacsvox-speak-line
           emacsvox-speak-rest-of-buffer
           emacsvox--tracked-reading-cancel
+          emacsvox-speak-line-apply-column-filter
+          emacsvox-speak-load-filter-settings
           voice-setup-face-mapping-diagnostic
           voice-setup-face-mapping-conflicts
           emacsvox-aural-compatibility-voice-enabled-p
@@ -152,6 +155,9 @@
   (unless (file-exists-p setup)
     (error "Normal build did not create %s" setup))
   (load setup nil nil)
+  (when (or emacsvox-speak-filters-loaded-p
+            (memq #'emacsvox-speak-persist-filter-settings kill-emacs-hook))
+    (error "Normal startup activated column-filter persistence"))
   (dolist (feature features)
     (require feature))
   (dolist (external-feature '(org markdown-mode notmuch))

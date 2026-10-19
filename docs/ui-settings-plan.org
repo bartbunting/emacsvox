@@ -3558,3 +3558,13 @@ unchanged.
 Commit slice: =Fix duplicate reading-choice prompt notifications=.
 Listening acceptance remains open. The running personal session was not
 reloaded; try the reading-choice prompt after a fresh profile restart.
+
+* Reading column-filter ownership, 2026-10-19
+
+Column selection, inversion and saved defaults now live in
+=emacsvox-speak-filters=. Commands, keys, buffer scope and the saved-data format
+are unchanged. Saved filters still load on demand and install the existing
+save-on-exit hook only then. All 131 focused reading, filter and Org cases pass
+from source and byte-code. Fresh compiled startup and isolated aural checks
+pass. The [[file:lisp-refactoring-plan.org][Lisp refactoring plan]] records the commit slice and verification.
+Listening acceptance remains separate; the running session was not reloaded.

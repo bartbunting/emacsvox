@@ -142,6 +142,13 @@
   (load (expand-file-name "speech/tts-lifecycle.elc" build-directory) nil nil)
   (when (or (featurep 'tts-speak) (process-list))
     (error "Loading TTS lifecycle initialized speech"))
+  ;; Filters use the TTS switcher generator but must leave persistence idle.
+  (load (expand-file-name "core/emacsvox-speak-filters.elc" build-directory) nil nil)
+  (when (or (featurep 'emacsvox-speak)
+            emacsvox-speak-filters-loaded-p
+            (memq #'emacsvox-speak-persist-filter-settings kill-emacs-hook)
+            (process-list))
+    (error "Loading column filters activated reading, persistence or speech"))
   (dolist
       (library
        '("speech/tts-queue-state"
@@ -228,6 +235,8 @@
          emacsvox-speak-line
          emacsvox-speak-rest-of-buffer
          emacsvox--tracked-reading-cancel
+         emacsvox-speak-line-apply-column-filter
+         emacsvox-speak-load-filter-settings
          voice-setup-face-mapping-diagnostic
          voice-setup-face-mapping-conflicts
          emacsvox-aural-compatibility-voice-enabled-p
@@ -410,6 +419,7 @@
                   "tts-queue-state-tests.el"
                   "emacsvox-tts-tests.el"
                   "emacsvox-speak-tests.el"
+                  "emacsvox-speak-filters-tests.el"
                   "omnivox-preview-tests.el"
                   "emacsvox-emoji-tests.el"
                   "emacsvox-emoji-integration-tests.el"
@@ -502,6 +512,7 @@
                "^tts-queue-"
                "^tts-handoff-"
                "^emacsvox-speak-rest-of-buffer-"
+               "^emacsvox-speak-filters-"
                "^tts-preparation-"
                "^emacsvox-aural-voice-editor-"
                "^emacsvox-aural-voice-bulk-"

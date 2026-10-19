@@ -425,6 +425,34 @@ reference and the documentation release check pass. The facade falls from
 3641 to 3100 lines; completion has 242 lines, input 230 and messages 221.
 The personal session remains unchanged, and listening acceptance is separate.
 
+** Reading column filters
+
+Accepted on 2026-10-19: extract column selection, inversion and saved filter
+settings into =core/emacsvox-speak-filters=. Keep existing commands, names,
+buffer scope, saved-data format and lazy persistence activation. The shared
+=emacsvox--persist-variable= writer stays in the core speech library.
+
+The filter block now loads at its original definition point. Its definitions
+are unchanged apart from trailing whitespace. Make, startup freshness and
+compiled verification inventories include the new module. The core speech
+library falls from 3550 to 3424 lines; the filter module has 177 lines including
+its preserved attribution and licence header.
+
+All 131 focused reading, filter and Org cases pass before extraction and from
+source and byte-code afterward. New cases cover normal and inverted selection,
+text properties, buffer-local settings, saved defaults and real temporary-file
+round trips, including the save-on-exit hook. The tests join the ordinary and
+isolated compiled suites. Fresh compiled startup and isolated aural parity
+checks pass. Loading filter definitions alone does not load the speech facade,
+start processes, read saved settings or install the persistence hook.
+
+The incremental build is warning-free; byte-code preflight, headers, reference
+generation and the documentation release check pass. The isolated aural build
+reports warnings in unchanged modules. The personal session remains untouched,
+and listening acceptance stays separate.
+
+Commit slice: =Extract reading column filters and saved settings=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -438,13 +466,14 @@ and comments; extracted modules retain named authors and copyright holders.
 | omnivox-voices.el | 3117 | 2406 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
-| emacsvox-speak.el | 3781 | 3550 |
+| emacsvox-speak.el | 3781 | 3424 |
 | emacsvox-advice.el | 3641 | 3100 |
 
 The original extraction pass, generic voice API, Agent Shell, Omnivox
-inventory/discovery, tracked-reading and core completion/input/message advice
-follow-ups are complete. Remaining broad core utilities stay separate work. Further Agent Shell extraction should follow a concrete responsibility
-problem rather than a target line count.
+inventory/discovery, tracked-reading, core completion/input/message advice and
+column-filter follow-ups are complete. Remaining broad core utilities stay
+separate work. Further Agent Shell extraction should follow a concrete
+responsibility problem rather than a target line count.
 
 * TTS lifecycle boundary
 

@@ -102,6 +102,7 @@
     "ui/omnivox-engine-configuration.el"
     "core/emacsvox-pronounce.el"
     "core/emacsvox-tracked-reading.el"
+    "core/emacsvox-speak-filters.el"
     "core/emacsvox-speak.el"
     "aural/sox-gen.el"
     "core/emacsvox-advice-completion.el"
