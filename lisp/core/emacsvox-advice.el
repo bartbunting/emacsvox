@@ -39,6 +39,10 @@
 ;;  Required modules: 
 
 (eval-when-compile (require 'cl-lib))
+
+;; Cross-module declarations.
+(defvar read-passwd--hide-password)
+;; End cross-module declarations.
 (eval-when-compile (require 'advice))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
@@ -100,18 +104,11 @@ DOCSTRING and BODY define the feedback function for each command."
     "Cue completion of an interactive query replacement."
   (emacsvox-icon 'task-done))
 
-(defun emacsvox--advice-perform-replace-around
-    (original &rest arguments)
-  "Call ORIGINAL with replacement messages silenced."
-  (ems-with-messages-silenced (apply original arguments)))
+(require 'emacsvox-advice-search)
 
 (advice-add
  'perform-replace :around #'emacsvox--advice-perform-replace-around
  '((name . emacsvox)))
-
-(defun emacsvox--advice-replace-highlight-after (&rest _)
-  "Speak the line after highlighting a replacement."
-  (emacsvox-speak-line))
 
 (advice-add
  'replace-highlight :after #'emacsvox--advice-replace-highlight-after
@@ -1970,43 +1967,6 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (define-key isearch-mode-map (kbd "M-C-f") 'emacsvox-speak-face-forward )
 ;; ISearch setup/teardown
 
-(defvar emacsvox-isearch--message-states nil
-  "Stack of message-speech states owned by active Isearch sessions.
-Each entry records the originating buffer, prior locality, and prior value.
-Keep the owner because multi-buffer searches can end in a different buffer.")
-
-(defun emacsvox-isearch--restore-message-state ()
-  "Restore and retire the innermost owned message-speech state."
-  (when emacsvox-isearch--message-states
-    (pcase-let ((`(,buffer ,local ,value)
-                 (pop emacsvox-isearch--message-states)))
-      (when (buffer-live-p buffer)
-        (with-current-buffer buffer
-          (if local
-              (setq-local emacsvox-speak-messages value)
-            (kill-local-variable 'emacsvox-speak-messages)))))))
-
-(defun emacsvox-isearch-setup ()
-  "Setup emacsvox isearch."
-  (push (list (current-buffer)
-              (local-variable-p 'emacsvox-speak-messages)
-              emacsvox-speak-messages)
-        emacsvox-isearch--message-states)
-  (condition-case error-data
-      (progn
-        (emacsvox-icon 'open-object)
-        (setq-local emacsvox-speak-messages isearch-lazy-count)
-        (tts-speak (isearch-message-prefix)))
-    ((error quit)
-     (emacsvox-isearch--restore-message-state)
-     (signal (car error-data) (cdr error-data)))))
-
-(defun emacsvox-isearch-teardown ()
-  "Teardown emacsvox isearch."
-  (when emacsvox-isearch--message-states
-    (emacsvox-isearch--restore-message-state)
-    (emacsvox-icon 'close-object)))
-
 (add-hook 'isearch-mode-hook 'emacsvox-isearch-setup)
 (add-hook 'isearch-mode-end-hook 'emacsvox-isearch-teardown)
 ;; `isearch-mode-end-hook-quit' is a boolean bound while the end hook runs,
@@ -2014,37 +1974,9 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
 
 ;; Advice isearch-search to speak
 
-(defun emacsvox--advice-isearch-search-after (&rest _)
-  "Speak the hit."
-  (cond ((null isearch-success) (emacsvox-icon 'search-miss))
-        (t (emacsvox-icon 'search-hit)
-           (when (sit-for 0.1)
-             (save-excursion
-               (ems-set-personality-temporarily (point)
-                                                isearch-other-end
-                                                'voice-bolden
-                                                (tts-speak
-                                                 (buffer-substring
-                                                  (line-beginning-position)
-                                                  (line-end-position)))))))))
-
 (advice-add
  'isearch-search :after #'emacsvox--advice-isearch-search-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-isearch-delete-char-after (&rest _)
-  "Speak the shortened isearch string and current hit."
-  (tts-speak (propertize isearch-string 'personality 'voice-bolden))
-  (when (sit-for 0.1)
-    (emacsvox-icon 'search-hit)
-    (ems-set-personality-temporarily (point)
-                                     (if isearch-forward
-                                         (- (point)
-                                            (length isearch-string))
-                                       (+ (point)
-                                          (length isearch-string)))
-                                     'voice-bolden
-                                     (emacsvox-speak-line))))
 
 (advice-add
  'isearch-delete-char :after #'emacsvox--advice-isearch-delete-char-after
@@ -2068,32 +2000,15 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
 ;; When our advice is called, emacs has not yet reflected
 ;; the newly toggled state.
 
-(defun emacsvox--advice-isearch-toggle-case-fold-after (&rest _)
-  "Announce the new isearch case-fold state."
-  (emacsvox-icon (if isearch-case-fold-search 'off 'on))
-  (tts-speak
-   (format " Case is %s significant in search"
-           (if isearch-case-fold-search " not" " "))))
-
 (advice-add
  'isearch-toggle-case-fold :after
  #'emacsvox--advice-isearch-toggle-case-fold-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-isearch-toggle-regexp-after (&rest _)
-  "Announce the new isearch regexp state."
-  (emacsvox-icon (if isearch-regexp 'on 'off))
-  (tts-speak (if isearch-regexp "Regexp search" "text search")))
-
 (advice-add
  'isearch-toggle-regexp :after
  #'emacsvox--advice-isearch-toggle-regexp-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-isearch-occur-after (&rest _)
-  "Cue interactively opening isearch matches in Occur."
-  (when (ems-interactive-p 'isearch-occur)
-    (emacsvox-icon 'open-object)))
 
 (advice-add
  'isearch-occur :after #'emacsvox--advice-isearch-occur-after

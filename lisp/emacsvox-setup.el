@@ -116,6 +116,7 @@
     "core/emacsvox-advice-completion.el"
     "core/emacsvox-advice-input.el"
     "core/emacsvox-advice-messages.el"
+    "core/emacsvox-advice-search.el"
     "core/emacsvox-advice.el"
     "integrations/emacsvox-websearch.el"
     "integrations/emacsvox-google.el"

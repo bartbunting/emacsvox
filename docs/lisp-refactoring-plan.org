@@ -978,6 +978,27 @@ to 2338 lines; shared section, process and navigation ownership stays together.
 
 Commit slice: =Extract Magit rebase feedback=.
 
+*** Core search and replacement feedback
+
+The search module owns eleven unchanged definitions for replacement feedback,
+Isearch speech and nested message-preference restoration. Advice and hook
+registration, generated wrappers and search keymaps remain in the facade.
+The startup inventory includes the new module. The focused runner checks its
+loaded path and passive loading before activating the facade.
+
+All 231 source tests and 230 compiled tests pass; the compiled runner retains
+its existing exclusion of a scrolling fixture that mocks inlined helpers.
+All 230 compiled cases also pass in isolated graphical Emacs. The temporary
+graphical logger was corrected to remove prompt text properties before writing
+its log; the corrected baseline passed before extraction.
+
+All 167 original facade definitions remain unchanged with unique ownership.
+The original activation forms and their order are unchanged in core advice,
+Notmuch and Magit. Compilation, preflight, headers, generated reference and
+the documentation gate pass.
+
+Commit slice: =Extract core search and replacement feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
