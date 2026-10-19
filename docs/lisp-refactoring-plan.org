@@ -824,6 +824,76 @@ load the completed extraction.
 
 Commit slice: =Extract voice workbench save and apply=.
 
+* Next bounded extraction round
+
+Accepted on 2026-10-19: continue with Notmuch, Magit and selected core advice
+responsibilities. The assessment suggests roughly eight to twelve focused
+commits, subject to dependency inspection. This is a maintenance estimate,
+not a target number of files or lines. Preserve public names, optional-package
+loading, activation order, keys, speech behaviour and saved data.
+
+The initial sequence is:
+
+1. Notmuch search-result presentation.
+2. Notmuch message and attachment reading.
+3. Notmuch tag and archive outcomes.
+4. Notmuch asynchronous search feedback.
+5. Magit blame feedback.
+6. Magit repository-list feedback.
+7. Magit commit-editing and rebase feedback, splitting further only if useful.
+8. Core search advice.
+9. Core editing advice.
+10. Core help and window advice, keeping activation in the facade.
+
+Inspect each boundary before extraction. Keep definitions unchanged where
+possible and retain registration in the existing integration entry point.
+Run affected source tests, incremental compilation, fresh compiled tests,
+loaded-path checks, headers and the documentation review gate for each slice.
+Use real graphical checks for affected display and focus behaviour. Refresh
+generated references when definition ownership changes their output.
+Keep a separate commit and verification checkpoint for each slice.
+
+The normal-profile restart and listening check for the preceding workbench
+extractions and Dired size fix are accepted on 2026-10-19. New extractions
+require their own listening acceptance through a fresh normal profile; do not
+reload the running session during this round.
+
+After this round, reassess aural configuration and resources: saved-data
+validation and persistence could be separated from active configuration, and
+voice-palette compilation from sound-pack discovery and resolution. Shared
+registry state needs closer review before scheduling those changes.
+
+Org and EWW have possible agenda, table, source-editing and DOM boundaries.
+The broad Wizards collection could be organised by responsibility. TTS text
+preparation and rule compilation also warrant inspection when those areas
+need changes, but have wider regression exposure. These are later candidates,
+not implementation commitments in this round.
+
+Keep the completed Agent Shell, Eat and workbench boundaries unless a concrete
+problem appears. Preserve the accepted TTS lifecycle boundary below; splitting
+cancellation, ownership and callbacks further is a separate architecture task.
+
+** Verification checkpoints
+
+*** Notmuch search-result presentation
+
+The search module owns eleven unchanged definitions for field/tag formatting,
+result submission and explicit detail reading. Shared semantic facts, bounded
+content preparation and status-cue coordination remain in the facade. Advice,
+keys and hooks retain their original activation order.
+
+All 137 Notmuch tests pass from source and fresh byte-code. The focused runner
+explicitly loads each extracted module in the selected form. All 170 original
+definitions retain identical forms and unique ownership. Isolated source and
+compiled loads confirm that definitions do not load the facade or change
+existing hooks, advice or processes. Incremental compilation, byte-code
+preflight and headers pass. All 137 cases also pass in an isolated graphical
+Emacs. Generated reference ownership is refreshed and the documentation
+review gate passes.
+
+Commit slice: =Extract Notmuch search-result presentation=.
+Listening acceptance remains separate for this round.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

@@ -65,6 +65,23 @@
           (error
            "Compiled Notmuch test module uses Emacs %s, running %s: %s"
            (or compiled-version "unknown") emacs-version module))))
+    ;; Select every extracted definition module explicitly.  A source test
+    ;; must not silently reuse newer byte-code after an incremental build.
+    (dolist (definition-source
+             (directory-files
+              (file-name-directory source) t "\\`emacsvox-notmuch-.+\\.el\\'"))
+      (let ((definition-file
+             (if (eq emacsvox-notmuch-test--module-load-kind 'compiled)
+                 (concat definition-source "c")
+               definition-source)))
+        (when (eq emacsvox-notmuch-test--module-load-kind 'compiled)
+          (unless (and (file-readable-p definition-file)
+                       (not (file-newer-than-file-p definition-source definition-file))
+                       (equal emacs-version
+                              (emacsvox-notmuch-test--compiled-file-version definition-file)))
+            (error "Missing, stale or incompatible Notmuch byte-code: %s"
+                   definition-file)))
+        (load definition-file nil t t)))
     (load module nil nil)
     (let ((loaded
            (symbol-file 'emacsvox-notmuch--bounded-source-range 'defun)))

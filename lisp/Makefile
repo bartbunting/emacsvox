@@ -347,6 +347,7 @@ core/emacsvox-muggles-core.elc \
 ui/emacsvox-muggles-ui.elc \
 integrations/emacsvox-net-utils.elc \
 integrations/emacsvox-newsticker.elc \
+integrations/emacsvox-notmuch-search.elc \
 integrations/emacsvox-notmuch.elc \
 integrations/emacsvox-nov.elc \
 integrations/emacsvox-nxml.elc \
@@ -725,3 +726,6 @@ ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-routing
 
 ui/emacsvox-aural-voice-workbench-apply.elc: ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench-routing.elc
 ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-apply.elc
+
+integrations/emacsvox-notmuch-search.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
+integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-search.elc

@@ -3732,3 +3732,15 @@ open; restart the normal profile to load the fix. The running session was
 not reloaded.
 
 Commit slice: =Fix Dired size interruption and binding initialization=.
+
+* Listening acceptance and next refactoring round, 2026-10-19
+
+The fresh normal-profile restart and listening check for the voice-workbench
+extractions and Dired size interruption/binding fix are accepted. This closes
+their listening items above; it does not establish optional native-service
+test coverage.
+
+The next bounded round is recorded in the [[file:lisp-refactoring-plan.org][Lisp refactoring plan]]:
+Notmuch, Magit and selected core advice responsibilities. It preserves settings,
+keys and spoken interaction. Implementation, automated verification and new
+listening acceptance remain separate checkpoints.
