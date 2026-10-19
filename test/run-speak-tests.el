@@ -13,7 +13,8 @@
 (require 'subr-x)
 
 (defvar emacsvox-speak-test-modules
-  '(("emacsvox-speak-windows" emacsvox-speak-other-window emacsvox-describe-tapestry emacsvox-cycle-to-next-buffer)
+  '(("emacsvox-speak-status" emacsvox-speak-mode-line emacsvox-speak-header-line emacsvox-battery-alarm emacsvox-speak-net-id)
+    ("emacsvox-speak-windows" emacsvox-speak-other-window emacsvox-describe-tapestry emacsvox-cycle-to-next-buffer)
     ("emacsvox-speak-time" emacsvox-speak-time emacsvox-speak-collect-date emacsvox-speak-message-at-time)
     ("emacsvox-speak-completion" emacsvox-get-current-completion emacsvox-completions-move-to-completion-group)
     ("emacsvox-speak-presentation" emacsvox-speak--point-facts emacsvox-speak--indentation-facts emacsvox-set-indentation-presentation)

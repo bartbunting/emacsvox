@@ -40,6 +40,7 @@
           emacsvox-speak-messages
           emacsvox-speak-time
           emacsvox-speak-windows
+          emacsvox-speak-status
           emacsvox-speak-filters
           emacsvox-aural
           emacsvox-aural-compatibility-voice
@@ -122,6 +123,10 @@
           emacsvox-speak-other-window
           emacsvox-describe-tapestry
           emacsvox-cycle-to-next-buffer
+          emacsvox-speak-mode-line
+          emacsvox-speak-header-line
+          emacsvox-battery-alarm
+          emacsvox-speak-net-id
           emacsvox-speak-line-apply-column-filter
           emacsvox-speak-load-filter-settings
           voice-setup-face-mapping-diagnostic

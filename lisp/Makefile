@@ -102,6 +102,7 @@ core/emacsvox-speak-completion.elc \
 core/emacsvox-speak-messages.elc \
 core/emacsvox-speak-time.elc \
 core/emacsvox-speak-windows.elc \
+core/emacsvox-speak-status.elc \
 core/emacsvox-speak-filters.elc \
 core/emacsvox-speak.elc
 
@@ -183,6 +184,7 @@ core/emacsvox-speak-completion.elc \
 core/emacsvox-speak-messages.elc \
 core/emacsvox-speak-time.elc \
 core/emacsvox-speak-windows.elc \
+core/emacsvox-speak-status.elc \
 core/emacsvox-speak-filters.elc \
 core/emacsvox-speak.elc  \
 core/emacsvox-advice-completion.elc \
@@ -535,8 +537,9 @@ core/emacsvox-speak-completion.elc: speech/tts-speak.elc
 core/emacsvox-speak-messages.elc: speech/tts-speak.elc
 core/emacsvox-speak-time.elc: speech/tts-speak.elc core/emacsvox-speak-messages.elc aural/sox-gen.elc
 core/emacsvox-speak-windows.elc: speech/tts-speak.elc aural/emacsvox-aural-source.elc aural/sox-gen.elc
+core/emacsvox-speak-status.elc: speech/tts-speak.elc core/emacsvox-speak-time.elc core/emacsvox-speak-windows.elc
 core/emacsvox-speak-filters.elc: speech/tts-speak.elc
-core/emacsvox-speak.elc: core/emacsvox-speak-windows.elc core/emacsvox-speak-time.elc core/emacsvox-speak-messages.elc core/emacsvox-speak-completion.elc core/emacsvox-speak-presentation.elc core/emacsvox-speak-characters.elc core/emacsvox-tracked-reading.elc core/emacsvox-speak-filters.elc \
+core/emacsvox-speak.elc: core/emacsvox-speak-status.elc core/emacsvox-speak-windows.elc core/emacsvox-speak-time.elc core/emacsvox-speak-messages.elc core/emacsvox-speak-completion.elc core/emacsvox-speak-presentation.elc core/emacsvox-speak-characters.elc core/emacsvox-tracked-reading.elc core/emacsvox-speak-filters.elc \
 speech/tts-speak.elc speech/voice-setup.elc voices/voice-defs.elc core/emacsvox-pronounce.elc \
 aural/emacsvox-aural-submission.elc emacsvox-version.elc
 aural/emacsvox-aural-description.elc: \

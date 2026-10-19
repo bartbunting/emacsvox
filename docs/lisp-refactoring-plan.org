@@ -579,6 +579,26 @@ pass. The facade has 2061 lines.
 
 Commit slice: =Extract window reading and buffer selection=.
 
+*** Buffer and system status
+
+=emacsvox-speak-status= owns mode and header lines, buffer and frame status,
+percentage reporting, mail alerts, volume, battery and network reporting.
+Header voice-map registration, optional battery loading and battery-hook
+registration stay in the facade. Date formats and window cues use the new
+definition modules without loading the facade recursively.
+
+Source verification passes 264 cases and compiled verification passes 263,
+with nine graphical cases deferred. All 28 graphical cases pass against both
+the original facade and the extracted code. The new status fixture supplies
+the normal Comint default missing from the isolated runner. Tests cover header
+routing, real mode-line formatting, modification cues, battery crossing and
+network text retained for yanking. Original definitions are unchanged. Fresh
+compiled startup, the warning-free build, preflight and headers pass. The
+facade has 1690 lines. Reference generation and the documentation review gate
+also pass.
+
+Commit slice: =Extract buffer and system status speech=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

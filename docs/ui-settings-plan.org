@@ -3601,3 +3601,9 @@ Window reading, layout descriptions, spatial cues and buffer selection now
 belong to =emacsvox-speak-windows=. All 27 graphical reading checks pass,
 including visible bounds and focus preservation in real split windows.
 Spatial audio playback remains outside automated listening acceptance.
+
+Mode-line and header-line speech, mail, battery, volume and network reporting
+now belong to =emacsvox-speak-status=. Header voice-map and battery-hook
+registration remain in the facade. All 28 graphical reading checks pass,
+including header routing, real status formatting and modification cues.
+Battery and network output also pass source and compiled checks.
