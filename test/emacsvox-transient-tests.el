@@ -1251,6 +1251,33 @@
       (lookup-key transient-sticky-map (kbd "M-n"))
       sticky-next))))
 
+(ert-deftest emacsvox-transient-quiet-keeps-explicit-menu-feedback-audible ()
+  "Quiet source speech must not hide the controls needed to restore it."
+  (with-temp-buffer
+    (setq-local tts-quiet t)
+    (let ((emacsvox-use-icons nil) observed)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (_text) (push tts-quiet observed))))
+        (emacsvox-transient--submit-text
+         "Restore speech" (emacsvox-transient--menu-facts 'restore) 'navigation)
+        (should (equal observed '(nil)))
+        (should tts-quiet)
+        (tts-speak "Ordinary source speech")
+        (should (equal observed '(t nil)))))))
+
+(ert-deftest emacsvox-transient-quiet-menu-reader-restores-state-on-error ()
+  "Explicit menu input is audible; errors and ordinary reads retain quiet state."
+  (with-temp-buffer
+    (setq-local tts-quiet t)
+    (let ((transient--prefix nil))
+      (should (emacsvox-transient--read (lambda () tts-quiet))))
+    (let ((transient--prefix (transient-prefix :command #'ignore))
+          (transient--window nil))
+      (should-not (emacsvox-transient--read (lambda () tts-quiet)))
+      (should-error (emacsvox-transient--read
+                     (lambda () (should-not tts-quiet) (error "Cancelled input")))))
+    (should tts-quiet)))
+
 (ert-deftest emacsvox-transient-feedback-interrupts-main-speech ()
   "Navigation and state changes replace old feedback on the main lane."
   (with-temp-buffer

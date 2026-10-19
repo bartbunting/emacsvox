@@ -658,12 +658,29 @@ suffix from the parent menu when Enter opens a child menu."
 Restore focus after acceptance, cancellation or an error, only while the same
 prefix remains active. Outside a displayed menu, call READER normally."
   (let* ((prefix transient--prefix)
+         (quiet-minibuffers nil)
          (focus (when (and prefix (window-live-p transient--window))
                   (or (emacsvox-transient--menu-suffix this-command)
                       (with-selected-window transient--window
                         (get-text-property (point) 'button-data))))))
     (unwind-protect
-        (apply reader arguments)
+        (let ((tts-quiet (if prefix nil tts-quiet))
+              (minibuffer-setup-hook
+               (if (not prefix) minibuffer-setup-hook
+                 (cons (lambda ()
+                         ;; A source-local binding does not follow point into
+                         ;; the minibuffer when the global default is quiet.
+                         (push (list (current-buffer)
+                                     (local-variable-p 'tts-quiet) tts-quiet)
+                               quiet-minibuffers)
+                         (setq-local tts-quiet nil))
+                       minibuffer-setup-hook))))
+          (apply reader arguments))
+      (dolist (entry quiet-minibuffers)
+        (when (buffer-live-p (car entry))
+          (with-current-buffer (car entry)
+            (if (nth 1 entry) (setq-local tts-quiet (nth 2 entry))
+              (kill-local-variable 'tts-quiet)))))
       ;; A real minibuffer can destroy the popup and its saved point.
       (when (and focus prefix (eq transient--prefix prefix))
         (transient--show)
@@ -703,20 +720,23 @@ prefix remains active. Outside a displayed menu, call READER normally."
     (content facts occasion &optional icon icon-phase)
   "Submit CONTENT under FACTS and OCCASION with an optional compatibility ICON.
 ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
-  (if (and (stringp content) (> (length content) 0))
-      (emacsvox-aural-submit
-       content
-       :facts facts
-       :module 'transient
-       :occasion occasion
-       :lane 'main :delivery-policy 'replaceable
-       :replacement-key 'speaker :interruption-policy 'lane
-       :compatibility-actions
-       (when icon
-         (list
-          (emacsvox-aural-compatibility-icon icon icon-phase))))
-    (when icon
-      (emacsvox-transient--submit-actions facts occasion icon))))
+  ;; Explicit menu feedback must remain available to restore quiet speech.
+  ;; This binding does not change the source buffer or its global default.
+  (let ((tts-quiet nil))
+    (if (and (stringp content) (> (length content) 0))
+        (emacsvox-aural-submit
+         content
+         :facts facts
+         :module 'transient
+         :occasion occasion
+         :lane 'main :delivery-policy 'replaceable
+         :replacement-key 'speaker :interruption-policy 'lane
+         :compatibility-actions
+         (when icon
+           (list
+            (emacsvox-aural-compatibility-icon icon icon-phase))))
+      (when icon
+        (emacsvox-transient--submit-actions facts occasion icon)))))
 
 (defun emacsvox-transient--line-content ()
   "Return the current menu line with source presentation metadata."
