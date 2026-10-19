@@ -936,6 +936,22 @@ from 3006 to 1510 lines. The test package is loaded from
 
 Commit slice: =Extract Notmuch asynchronous search feedback=.
 
+*** Magit repository-list feedback
+
+The repositories module owns fourteen unchanged definitions for repository
+marking, destination summaries and aggregate fetch outcomes. Advice installation
+stays in the facade. The test runner explicitly selects all extracted modules
+as source or byte-code. Source and compiled runs each pass 105 cases with the
+graphical Transient case skipped; all 106 pass in isolated graphical Emacs.
+These results match the baseline. The loaded Magit package is
+=~/.emacs.d/elpa/magit-20261013.900/magit.elc= with Emacs 31.0.90.
+
+All 168 original definitions retain identical forms and unique ownership.
+Isolated loading, compilation, preflight, headers, generated reference and the
+documentation gate pass.
+
+Commit slice: =Extract Magit repository-list feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

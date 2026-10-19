@@ -622,6 +622,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-lua:: Speech-enable LUA.
 * emacsvox-m-player:: Media Player.
 * emacsvox-magit:: Speech-enable MAGIT.
+* emacsvox-magit-repositories:: Magit repository-list feedback.
 * emacsvox-make-mode:: Speech enable make.
 * emacsvox-man:: Speech enable Man.
 * emacsvox-marginalia:: Speech-enable Marginalia.

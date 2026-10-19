@@ -13,13 +13,18 @@
 (require 'git-rebase)
 (require 'emacsvox-advice)
 
-(load
- (expand-file-name
-  (if (equal (getenv "EMACSVOX_MAGIT_TEST_LOAD") "compiled")
-      "../lisp/integrations/emacsvox-magit.elc"
-    "../lisp/integrations/emacsvox-magit.el")
-  (file-name-directory (or load-file-name buffer-file-name)))
- nil nil)
+(let* ((directory
+        (expand-file-name
+         "../lisp/integrations/"
+         (file-name-directory (or load-file-name buffer-file-name))))
+       (extension
+        (if (equal (getenv "EMACSVOX_MAGIT_TEST_LOAD") "compiled")
+            ".elc" ".el")))
+  ;; Select all definition modules explicitly, even when newer byte-code
+  ;; exists beside the source.  The facade remains the activation owner.
+  (dolist (source (directory-files directory t "\\`emacsvox-magit-.+\\.el\\'"))
+    (load (concat (file-name-sans-extension source) extension) nil t t))
+  (load (expand-file-name (concat "emacsvox-magit" extension) directory) nil t t))
 
 (ert-deftest emacsvox-magit-confirmation-prompt-uses-main-speech ()
   "Both short and long file confirmations speak on the main stream."
