@@ -1182,27 +1182,16 @@ Consume the interactive marker before cleanup can kill related buffers."
  #'emacsvox--advice-modify-syntax-entry-before
  '((name . emacsvox)))
 
-(defun emacsvox--advice-help-do-xref-after (&rest _)
-  "Speak the Help reference just selected."
-  (emacsvox-speak-line)
-  (emacsvox-icon 'item))
+(require 'emacsvox-advice-help)
 
 (advice-add
  'help-do-xref :after #'emacsvox--advice-help-do-xref-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-help-xref-go-back-after (&rest _)
-  "Speak the Help reference reached by moving backward."
-  (emacsvox-speak-line))
-
 (advice-add
  'help-xref-go-back :after
  #'emacsvox--advice-help-xref-go-back-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-help-xref-go-forward-after (&rest _)
-  "Speak the Help reference reached by moving forward."
-  (emacsvox-speak-line))
 
 (advice-add
  'help-xref-go-forward :after
@@ -1223,37 +1212,15 @@ Consume the interactive marker before cleanup can kill related buffers."
 
 ;; Silence help for help
 
-(defun emacsvox--advice-help-window-display-message-around
-    (original &rest arguments)
-  "Call ORIGINAL with Help window messages silenced."
-  (ems-with-messages-silenced (apply original arguments)))
-
 (advice-add
  'help-window-display-message :around
  #'emacsvox--advice-help-window-display-message-around
  '((name . emacsvox)))
 
-(defun emacsvox--describe-key-filter-return (target result)
-  "Announce interactive key help and return RESULT unchanged.
-TARGET identifies the key-description command."
-  (when (ems-interactive-p target)
-    (emacsvox-icon 'help)
-    (unless result
-      (emacsvox-speak-help)))
-  result)
-
-(defun emacsvox--advice-describe-key-filter-return (result)
-  "Announce interactive `describe-key' help and return RESULT."
-  (emacsvox--describe-key-filter-return 'describe-key result))
-
 (advice-add
  'describe-key :filter-return
  #'emacsvox--advice-describe-key-filter-return
  '((name . emacsvox)))
-
-(defun emacsvox--advice-describe-keymap-filter-return (result)
-  "Announce interactive `describe-keymap' help and return RESULT."
-  (emacsvox--describe-key-filter-return 'describe-keymap result))
 
 (advice-add
  'describe-keymap :filter-return
@@ -1527,16 +1494,6 @@ TARGET identifies the evaluation command."
     "Cue and speak the mode line after displaying Emacs news."
   (emacsvox-icon 'open-object)
   (emacsvox-speak-mode-line))
-
-(defvar emacsvox--help-char-helpbuf " *Char Help*"
-  "This is hard-coded in subr.el")
-
-(defun emacsvox--advice-help-form-show-after (&rest _)
-  "Speak displayed help form."
-  (when (buffer-live-p (get-buffer emacsvox--help-char-helpbuf))
-    (with-current-buffer emacsvox--help-char-helpbuf
-      (goto-char (point-min))
-      (emacsvox-speak-buffer))))
 
 (advice-add
  'help-form-show :after #'emacsvox--advice-help-form-show-after
@@ -2047,84 +2004,10 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  advice where-is and friends
 
-(defun ems-canonicalize-key-description (desc)
-  "Change key description to a speech-friendly form."
-  (let ((shift-regexp "S-\\(.\\)")
-        (ctrl-regexp "C-\\(.\\)")
-        (meta-regexp "M-\\(.\\)")
-        (caps-regexp "\\b[A-Z]\\b")
-        (hyper-regexp "C-x @ h")
-        (alt-regexp "C-x @ a")
-        (super-regexp "C-x @ s")
-        (buffer-undo-list t))
-    (with-temp-buffer
-      
-      (setq case-fold-search nil)
-      (erase-buffer)
-      (insert desc)
-      (goto-char (point-min))
-      (while (search-forward "SPC" nil t)
-        (replace-match "space"))
-      (goto-char (point-min))
-      (while (search-forward "ESC" nil t)
-        (replace-match "escape"))
-      (goto-char (point-min))
-      (while (search-forward "RET" nil t)
-        (replace-match "return"))
-      (goto-char (point-min))
-      (while (re-search-forward hyper-regexp nil t)
-        (replace-match "hyper "))
-      (goto-char (point-min))
-      (while (re-search-forward alt-regexp nil t)
-        (replace-match "alt "))
-      (goto-char (point-min))
-      (while (re-search-forward super-regexp nil t)
-        (replace-match "super "))
-      (goto-char (point-min))
-      (while (re-search-forward shift-regexp nil t)
-        (replace-match "shift \\1"))
-      (goto-char (point-min))
-      (while (re-search-forward ctrl-regexp nil t)
-        (replace-match "control \\1"))
-      (goto-char (point-min))
-      (while (re-search-forward meta-regexp nil t)
-        (replace-match "meta \\1"))
-      (goto-char (point-min))
-      (goto-char (point-min))
-      (while (re-search-forward caps-regexp nil t)
-        (replace-match " cap \\& " t))
-      (buffer-string))))
-
-(defun emacsvox--advice-describe-key-briefly-around
-    (original &rest arguments)
-  "Call ORIGINAL once and speak an interactive key description."
-  (if (ems-interactive-p 'describe-key-briefly)
-      (let* ((emacsvox-speak-messages nil)
-             (result (apply original arguments)))
-        (tts-speak (ems-canonicalize-key-description result))
-        result)
-    (apply original arguments)))
-
 (advice-add
  'describe-key-briefly :around
  #'emacsvox--advice-describe-key-briefly-around
  '((name . emacsvox)))
-
-(defun ems--get-where-is (cmd )
-  "Return string describing keys that invoke `cmd'. "
-  (let* ((keys (where-is-internal cmd overriding-local-map nil nil ))
-         (desc
-          (if (zerop (length keys))
-              "is not on any key"
-            (mapconcat 'key-description keys ", "))))
-    (concat
-     (format "%s  " cmd)
-     (ems-canonicalize-key-description desc))))
-
-(defun emacsvox--advice-where-is-after (definition &optional _insert)
-  "Speak keys for interactive `where-is' DEFINITION."
-  (when (ems-interactive-p 'where-is)
-    (tts-speak (ems--get-where-is definition))))
 
 (advice-add
  'where-is :after #'emacsvox--advice-where-is-after

@@ -1010,6 +1010,18 @@ headers, generated reference and the documentation gate pass.
 
 Commit slice: =Extract core editing feedback=.
 
+*** Core Help and key-description feedback
+
+The Help module owns thirteen definitions for Help navigation, key descriptions
+and private Help-buffer reading. Their Lisp forms remain identical; one blank
+line loses trailing whitespace. Generated advice and registration stay in the
+facade. All 231 source cases and 230 compiled cases pass; all 230 compiled
+cases also pass graphically. Definition and activation parity, passive loading,
+compilation, preflight, headers, generated reference and the documentation gate
+pass.
+
+Commit slice: =Extract core Help and key-description feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
