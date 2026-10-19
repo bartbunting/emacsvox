@@ -164,27 +164,42 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
 ;; helper function: speak a field
 
 (defun emacsvox-speak-field ()
-  "Speak current field."
+  "Speak the field at point, choosing the right-hand field at a boundary.
+At the accessible buffer end, speak the final field."
   (interactive)
-  (tts-speak (field-string (point))))
+  ;; Use the same property boundaries as navigation.  `field-string' chooses
+  ;; the left-hand field at an edge, even after moving to the next field.
+  (tts-speak
+   (if (= (point-min) (point-max)) ""
+     (let* ((position (min (point) (1- (point-max))))
+            (start (previous-single-property-change
+                    (1+ position) 'field nil (point-min)))
+            (end (next-single-property-change
+                  position 'field nil (point-max))))
+       (buffer-substring start end)))))
 
 (defun emacsvox-speak-next-field ()
-  "Move to and speak next field."
+  "Move to and speak next field.
+Signal a user error without moving if there is no next field."
   (interactive)
 
   (let ((inhibit-field-text-motion t))
-    (when
-        (goto-char (next-single-property-change (point) 'field))
-      (emacsvox-speak-field))))
+    (if-let* ((destination (next-single-property-change (point) 'field)))
+        (progn
+          (goto-char destination)
+          (emacsvox-speak-field))
+      (user-error "No next field"))))
 
 (defun emacsvox-speak-previous-field ()
-  "Move to previous field and speak it."
+  "Move to previous field boundary and speak the field starting there.
+Signal a user error without moving at the accessible buffer beginning."
   (interactive)
 
   (let ((inhibit-field-text-motion t))
-    (when
-        (goto-char (previous-single-property-change (point) 'field))
-      (emacsvox-speak-field))))
+    (when (bobp) (user-error "No previous field"))
+    (goto-char (previous-single-property-change
+                (point) 'field nil (point-min)))
+    (emacsvox-speak-field)))
 
 (defun emacsvox-speak-current-column ()
   "Speak the current column."

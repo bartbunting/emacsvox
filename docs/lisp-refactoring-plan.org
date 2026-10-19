@@ -626,9 +626,32 @@ lines; the eight new modules range from 132 to 422 lines. Listening acceptance r
 Field-navigation follow-up, outside this extraction: =field-string= reads the
 left-adjacent field at a boundary. Backward navigation can pass nil to
 =goto-char= when the preceding field begins at the accessible buffer start.
-These existing semantics remain unchanged; a behavior fix needs its own slice.
+The extraction retained these semantics. The separate field-navigation fix
+below resolves them.
 
 Commit slice: =Extract reading navigation and repeat feedback=.
+
+** Field-navigation correction
+
+Fixed on 2026-10-19: field reading uses the same property boundaries as
+navigation, so landing at a boundary reads the destination field. Backward
+navigation can reach the accessible buffer beginning, including under
+narrowing. When no destination exists, commands report "No next field" or
+"No previous field" without moving. Reading at the buffer end speaks the
+final field; empty buffers remain safe.
+
+Four regression cases fail before the correction. The source suite passes
+272 cases afterward and the compiled suite passes 271, including destination
+speech, first-field navigation,
+missing destinations, single-character fields, text properties and narrowing.
+Ten unrelated graphical cases remain skipped in batch; this correction
+changes text-property navigation and does not depend on graphical layout.
+The warning-free incremental build, byte-code preflight and fresh compiled
+startup pass. Command-reference generation and the documentation review gate
+pass.
+Listening acceptance remains open; no live session was reloaded.
+
+Commit slice: =Fix field navigation boundaries and destination speech=.
 
 * Result
 

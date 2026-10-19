@@ -3614,7 +3614,10 @@ All eight extraction slices are implemented. Source and compiled checks pass,
 and all 29 graphical reading checks pass, including percentage jumps and
 visible destination checks. Listening acceptance remains open.
 
-Field-navigation finding: boundary speech currently reads the left-adjacent
-field, and backward navigation can error when the previous field starts at
-the accessible buffer boundary. This behavior predates extraction and remains
-unchanged; a correction belongs in a separate behavior slice.
+Field-navigation finding resolved on 2026-10-19: navigation now reads the
+destination field, and backward navigation reaches the accessible buffer
+beginning. Missing destinations report "No next field" or "No previous field"
+without moving. The separate correction preserves text properties and handles
+narrowing, single-character fields, buffer ends and empty buffers. Four
+regression cases reproduce the old failures; all 272 applicable source checks
+and 271 compiled checks pass with the correction. Listening acceptance remains open.

@@ -10244,9 +10244,9 @@ Function Index
 * emacsvox-speak-net-id <1>:             emacsvox-speak-status.
                                                              (line   64)
 * emacsvox-speak-next-field:             emacsvox-speak-navigation.
-                                                             (line  113)
-* emacsvox-speak-next-field <1>:         emacsvox-speak-navigation.
                                                              (line  114)
+* emacsvox-speak-next-field <1>:         emacsvox-speak-navigation.
+                                                             (line  115)
 * emacsvox-speak-other-buffer:           emacsvox-speak.     (line  195)
 * emacsvox-speak-other-buffer <1>:       emacsvox-speak.     (line  198)
 * emacsvox-speak-other-window:           emacsvox-speak-windows.
@@ -10279,13 +10279,13 @@ Function Index
 * emacsvox-speak-predefined-window <1>:  emacsvox-speak-windows.
                                                              (line  142)
 * emacsvox-speak-previous-field:         emacsvox-speak-navigation.
-                                                             (line  120)
+                                                             (line  122)
 * emacsvox-speak-previous-field <1>:     emacsvox-speak-navigation.
-                                                             (line  121)
+                                                             (line  123)
 * emacsvox-speak-range:                  emacsvox-speak-navigation.
-                                                             (line  127)
+                                                             (line  130)
 * emacsvox-speak-range <1>:              emacsvox-speak-navigation.
-                                                             (line  128)
+                                                             (line  131)
 * emacsvox-speak-rectangle:              emacsvox-speak.     (line  259)
 * emacsvox-speak-rectangle <1>:          emacsvox-speak.     (line  262)
 * emacsvox-speak-region:                 emacsvox-speak.     (line  271)
@@ -10305,9 +10305,9 @@ Function Index
 * emacsvox-speak-sexp-interactively:     emacsvox-speak.     (line  303)
 * emacsvox-speak-sexp-interactively <1>: emacsvox-speak.     (line  304)
 * emacsvox-speak-skim-buffer:            emacsvox-speak-navigation.
-                                                             (line  136)
+                                                             (line  139)
 * emacsvox-speak-skim-buffer <1>:        emacsvox-speak-navigation.
-                                                             (line  137)
+                                                             (line  140)
 * emacsvox-speak-spaces:                 emacsvox-speak.     (line  313)
 * emacsvox-speak-spaces <1>:             emacsvox-speak.     (line  316)
 * emacsvox-speak-spaces-at-point:        emacsvox-speak.     (line  321)

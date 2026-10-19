@@ -269,8 +269,8 @@
     (should (= (mark) 6))
     (should (equal (mapcar #'marker-position mark-ring) '(2 3)))))
 
-(ert-deftest emacsvox-speak-navigation-fields-preserve-boundary-speech ()
-  "Field navigation preserves Emacs's left-adjacent text at field boundaries."
+(ert-deftest emacsvox-speak-navigation-fields-speak-destination ()
+  "Field navigation reads the destination in both directions."
   (with-temp-buffer
     (insert "_" (propertize "one" 'field 'first)
             (propertize "two" 'field 'second) "tail")
@@ -282,7 +282,64 @@
         (should (= (point) 5))
         (emacsvox-speak-previous-field)
         (should (= (point) 2))
-        (should (equal spoken '("_" "one")))))))
+        (should (equal spoken '("one" "two")))))))
+
+(ert-deftest emacsvox-speak-navigation-fields-reach-buffer-start ()
+  "Backward navigation reaches a field starting at the accessible beginning."
+  (dolist (narrow '(nil t))
+    (with-temp-buffer
+      (insert (propertize "first" 'field 'first)
+              (propertize "second" 'field 'second))
+      (when narrow (narrow-to-region 3 (point-max)))
+      (goto-char 6)
+      (let (spoken)
+        (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+          (emacsvox-speak-previous-field)
+          (should (= (point) (point-min)))
+          (should (equal spoken (if narrow "rst" "first"))))))))
+
+(ert-deftest emacsvox-speak-navigation-fields-stop-at-ends ()
+  "Missing fields give user errors without moving point or submitting speech."
+  (dolist (text '("" "only field"))
+    (with-temp-buffer
+      (insert (propertize text 'field 'only))
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (&rest _) (ert-fail "Unexpected field speech"))))
+        (goto-char (point-min))
+        (should-error (emacsvox-speak-previous-field) :type 'user-error)
+        (should (= (point) (point-min)))
+        (should-error (emacsvox-speak-next-field) :type 'user-error)
+        (should (= (point) (point-min)))
+        (goto-char (point-max))
+        (should-error (emacsvox-speak-next-field) :type 'user-error)
+        (should (= (point) (point-max)))))))
+
+(ert-deftest emacsvox-speak-navigation-fields-read-single-characters ()
+  "Read the character at a boundary, retaining properties and buffer state."
+  (with-temp-buffer
+    (insert (propertize "a" 'field 'first)
+            (propertize "b" 'field 'second 'personality 'voice-bolden))
+    (set-buffer-modified-p nil)
+    (let ((buffer-read-only t) spoken)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+        (goto-char 2)
+        (emacsvox-speak-field)
+        (should (equal spoken "b"))
+        (should (eq (get-text-property 0 'personality spoken) 'voice-bolden))
+        (should (= (point) 2))
+        (goto-char (point-max))
+        (emacsvox-speak-field)
+        (should (equal spoken "b"))
+        (should (= (point) (point-max)))
+        (should-not (buffer-modified-p))))))
+
+(ert-deftest emacsvox-speak-navigation-fields-read-empty-buffer ()
+  "Reading an empty accessible buffer does not look outside its bounds."
+  (with-temp-buffer
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+        (emacsvox-speak-field)
+        (should (equal spoken ""))))))
 
 (ert-deftest emacsvox-speak-navigation-repeat-feedback-follows-transitions ()
   "Repeat entry, continuation and exit retain their distinct cues."

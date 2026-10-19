@@ -8911,7 +8911,8 @@ activation in its established order.
 
  -- Command: emacsvox-speak-field
 
-     Speak current field.
+     Speak the field at point, choosing the right-hand field at a boundary.
+     At the accessible buffer end, speak the final field.
 
 2.259.1.12 emacsvox-speak-next-field
 ....................................
@@ -8919,13 +8920,15 @@ activation in its established order.
  -- Command: emacsvox-speak-next-field
 
      Move to and speak next field.
+     Signal a user error without moving if there is no next field.
 
 2.259.1.13 emacsvox-speak-previous-field
 ........................................
 
  -- Command: emacsvox-speak-previous-field
 
-     Move to previous field and speak it.
+     Move to previous field boundary and speak the field starting there.
+     Signal a user error without moving at the accessible buffer beginning.
 
 2.259.1.14 emacsvox-speak-range
 ...............................
