@@ -153,6 +153,7 @@ This does not save retained feedback or restore discarded records."
                      (button-get button 'button-data))))
          (command (and object (oref object command))))
     (if (memq command '(emacsvox-settings-workflows--history-limit
+                        emacsvox-settings-workflows--character-scale
                         emacsvox-settings-workflows--pitch-contrast))
         (funcall command delta)
       (emacsvox-settings-workflows--say
@@ -168,6 +169,7 @@ This does not save retained feedback or restore discarded records."
   "Add numeric workflow adjustments to transient MAP."
   (when (and transient-enable-menu-navigation transient--prefix
              (memq (oref transient--prefix command) '(emacsvox-settings-history
+                       emacsvox-settings-reading-controls
                        emacsvox-settings-voice-presentation)))
     (keymap-set map "S-<left>" #'emacsvox-settings-workflows--decrease)
     (keymap-set map "S-<right>" #'emacsvox-settings-workflows--increase))
@@ -779,6 +781,233 @@ save a startup default.  Advanced options control the file and retention."
    (emacsvox-settings-workflows--logging-label)
    (emacsvox-transient--menu-facts 'diagnostics 'command-menu-value-changed)
    'state-change 'select-object))
+
+(defun emacsvox-settings-workflows--reading-value (option)
+  "Return reading OPTION in the selected buffer or global-default scope."
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context)))
+    (if (cdr (plist-get context :settings)) (default-value option)
+      (buffer-local-value option source))))
+
+(defun emacsvox-settings-workflows--reading-set (option value)
+  "Set reading OPTION to VALUE in the captured scope for this session."
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context)))
+    (when (cdr (plist-get context :settings)) (set-default option value))
+    (with-current-buffer source (set (make-local-variable option) value))))
+
+(defun emacsvox-settings-workflows--quiet-label ()
+  "Describe quiet speech in the selected scope."
+  (format "Quiet speech: %s"
+          (if (emacsvox-settings-workflows--reading-value 'tts-quiet) "on" "off")))
+
+(defun emacsvox-settings-workflows--quiet ()
+  "Toggle quiet speech in the selected scope for this session.
+Quiet suppresses subsequent source speech; it does not stop current playback.
+Explicit menu feedback remains spoken. r restores speech in the source and
+global default. Global scope changes both the default and captured source,
+preserving other buffers' explicit overrides. There is no startup Save."
+  (interactive)
+  (emacsvox-settings-workflows--reading-set
+   'tts-quiet (not (emacsvox-settings-workflows--reading-value 'tts-quiet)))
+  (emacsvox-settings-workflows--say
+   (concat (emacsvox-settings-workflows--quiet-label) ". r restores speech")))
+
+(defun emacsvox-settings-workflows--restore-reading-speech ()
+  "Restore source speech and the global default, regardless of selected scope.
+Remove the captured source's quiet override. Other buffers with explicit quiet
+overrides remain quiet. This neither restarts speech nor saves startup settings."
+  (interactive)
+  (let ((source (emacsvox-aural-menu--source (emacsvox-aural-menu--context))))
+    (set-default 'tts-quiet nil)
+    (with-current-buffer source (kill-local-variable 'tts-quiet)))
+  (emacsvox-settings-workflows--say "Speech restored in source and global default"))
+
+(defun emacsvox-settings-workflows--nonprinting-label ()
+  "Describe nonprinting naming and any overriding octal-stripping policy."
+  (concat "Name nonprinting characters: "
+          (if (emacsvox-settings-workflows--reading-value 'tts-speak-nonprinting-chars)
+              (if (emacsvox-settings-workflows--reading-value 'tts-strip-octals)
+                  "on, suppressed by octal stripping" "on")
+            "off")))
+
+(defun emacsvox-settings-workflows--nonprinting ()
+  "Toggle naming selected control characters and legacy bytes 127 through 255.
+Octal stripping takes precedence and suppresses this naming step entirely.
+Source text stays unchanged. Global scope changes the default and captured
+source; other explicit buffer overrides remain. This is session state only."
+  (interactive)
+  (emacsvox-settings-workflows--reading-set
+   'tts-speak-nonprinting-chars
+   (not (emacsvox-settings-workflows--reading-value 'tts-speak-nonprinting-chars)))
+  (emacsvox-settings-workflows--say (emacsvox-settings-workflows--nonprinting-label)))
+
+(defun emacsvox-settings-workflows--octals-label ()
+  "Describe removal of legacy bytes 127 through 255 from speech."
+  (format "Strip octals (legacy bytes): %s"
+          (if (emacsvox-settings-workflows--reading-value 'tts-strip-octals) "on" "off")))
+
+(defun emacsvox-settings-workflows--octals ()
+  "Toggle removing legacy bytes 127 through 255 from spoken text.
+This affects DEL and raw eight-bit bytes, not decoded Unicode accents. It also
+suppresses nonprinting naming, even for controls outside the stripped range.
+Source text stays unchanged. Global scope changes the default and captured
+source; other explicit overrides remain. This is session state only."
+  (interactive)
+  (emacsvox-settings-workflows--reading-set
+   'tts-strip-octals (not (emacsvox-settings-workflows--reading-value 'tts-strip-octals)))
+  (emacsvox-settings-workflows--say
+   (concat (emacsvox-settings-workflows--octals-label) ". "
+           (emacsvox-settings-workflows--nonprinting-label))))
+
+(defun emacsvox-settings-workflows--character-scale-label ()
+  "Describe the selected multiplier for isolated-letter speech rate."
+  (format "Character rate: %g times"
+          (emacsvox-settings-workflows--reading-value 'tts-character-scale)))
+
+(defun emacsvox-settings-workflows--character-scale (&optional delta)
+  "Set isolated-letter rate scaling from 0.1 to 4; Shift arrows adjust by 0.1.
+One uses the ordinary rate; smaller values slow letters and larger values
+speed them up. Omnivox supports this; some legacy backends ignore it.
+Phonetic names and spoken punctuation names use ordinary speech instead.
+Global scope changes the default and captured source. Local scope changes
+only the source. This is session state, with no startup Save."
+  (interactive)
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         (global (cdr (plist-get context :settings))))
+    (unless (process-live-p tts-speaker-process)
+      (user-error "Start speech before changing character rate"))
+    (let* ((current (emacsvox-settings-workflows--reading-value 'tts-character-scale))
+           (value (if delta (max 0.1 (min 4.0 (+ current (* delta 0.1))))
+                    (emacsvox-aural-menu--read-number "Character rate multiplier (0.1 to 4): " current))))
+      (unless (and (numberp value) (<= 0.1 value 4.0))
+        (user-error "Character rate must be from 0.1 to 4"))
+      (with-current-buffer source (tts-set-character-scale value global))
+      (emacsvox-settings-workflows--say
+       (emacsvox-settings-workflows--character-scale-label)))))
+
+(defun emacsvox-settings-workflows--reading-inherit ()
+  "Follow global defaults for all four reading controls in the source buffer.
+Remove its character-rate, quiet, nonprinting-naming and octal-stripping
+overrides. The current defaults apply immediately; letter rate is sent with
+the next letter. Menu feedback remains spoken if the default is quiet."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (dolist (option '(tts-character-scale tts-quiet tts-speak-nonprinting-chars tts-strip-octals))
+      (kill-local-variable option)))
+  (emacsvox-settings-workflows--say "Source reading controls now follow global defaults"))
+
+(defun emacsvox-settings-workflows--reading-preview ()
+  "Speak a sample letter a at the displayed character-rate multiplier.
+This explicit preview speaks even while quiet is enabled. It uses the source
+buffer's ordinary rate and voice, without changing its reading settings."
+  (interactive)
+  (let ((value (emacsvox-settings-workflows--reading-value 'tts-character-scale)))
+    (unless (process-live-p tts-speaker-process) (user-error "Start speech before previewing"))
+    (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+      (let ((tts-quiet nil) (tts-character-scale value)) (tts-letter "a")))))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-reading-controls ()
+  "Adjust session reading controls for the captured buffer or global defaults.
+Menu feedback remains spoken while quiet is enabled. r restores source speech
+and the global default. These controls do not save startup settings."
+  :refresh-suffixes t
+  ["Reading controls (session)"
+   ("c" (lambda () (emacsvox-settings-workflows--character-scale-label)) emacsvox-settings-workflows--character-scale :transient t)
+   ("Q" (lambda () (emacsvox-settings-workflows--quiet-label)) emacsvox-settings-workflows--quiet :transient t)
+   ("n" (lambda () (emacsvox-settings-workflows--nonprinting-label)) emacsvox-settings-workflows--nonprinting :transient t)
+   ("o" (lambda () (emacsvox-settings-workflows--octals-label)) emacsvox-settings-workflows--octals :transient t)
+   ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label))) emacsvox-aural-menu--toggle-scope :transient t)]
+  ["Preview and restore"
+   ("p" "Preview letter a (even while quiet)" emacsvox-settings-workflows--reading-preview :transient t)
+   ("r" "Restore speech in source and global default" emacsvox-settings-workflows--restore-reading-speech :transient t)
+   ("i" "Follow defaults for all four source reading controls" emacsvox-settings-workflows--reading-inherit :if emacsvox-aural-menu--local-scope-p :transient t)]
+  ["Finish"
+   ("q" "Back (keep session changes)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-reading-controls nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-workflows--reading-options (options title command)
+  "Customize OPTIONS in TITLE and return to the menu item COMMAND."
+  (require 'emacsvox-settings)
+  (emacsvox-aural-menu--open-browser
+   (lambda ()
+     (custom-buffer-create
+      (mapcar (lambda (option) (list option 'custom-variable)) options) title)
+     (let ((buffer (window-buffer (selected-window))))
+       (with-current-buffer buffer
+         (use-local-map (copy-keymap (current-local-map)))
+         (local-set-key (kbd "q") #'emacsvox-settings--custom-quit))
+       buffer)) command))
+
+(defun emacsvox-settings-workflows--reading-rates ()
+  "Customize the global base and step used by predefined speech-rate levels.
+These options change the calculation for future level selections, not the
+current rate. Use Customize's Apply or Save; q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--reading-options
+   '(tts-speech-rate-base tts-speech-rate-step)
+   "*Customize Predefined Speech Rates*" 'emacsvox-settings-workflows--reading-rates))
+
+(defun emacsvox-settings-workflows--reading-punctuation ()
+  "Customize automatic punctuation policies by major mode.
+The first matching mode wins; explicit buffer overrides take precedence.
+Use Customize's Apply or Save, then restore automatic policy in affected
+buffers to re-evaluate it. q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--reading-options
+   '(tts-punctuation-mode-policy-alist)
+   "*Customize Punctuation Policy*" 'emacsvox-settings-workflows--reading-punctuation))
+
+(defun emacsvox-settings-workflows--reading-emoji ()
+  "Customize global emoji naming, approved sequences, limits and names.
+Buffer-local or mode-hook settings still take precedence. Source text stays
+unchanged. Use Customize's Apply or Save; q returns to this menu."
+  (interactive)
+  (require 'emacsvox-emoji)
+  (emacsvox-settings-workflows--reading-options
+   '(emacsvox-emoji-naming-enabled emacsvox-emoji-approved-sequences
+     emacsvox-emoji-maximum-count emacsvox-emoji-custom-names)
+   "*Customize Emoji Speech*" 'emacsvox-settings-workflows--reading-emoji))
+
+(defun emacsvox-settings-workflows--reading-unicode ()
+  "Customize legacy Unicode replacements and spoken-name transformations.
+These global options apply only when the speech adapter enables client-side
+Unicode conversion. Modern Omnivox can handle the original text instead.
+Use Customize's Apply or Save; q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--reading-options
+   '(tts-unicode-character-replacement-alist tts-unicode-name-transformation-rules-alist)
+   "*Customize Legacy Unicode Speech*" 'emacsvox-settings-workflows--reading-unicode))
+
+(defun emacsvox-settings-workflows--reading-messages ()
+  "Customize global spoken-message exclusions and tooltip speech.
+Exclusions are literal strings; Customize updates the active filter when
+you Apply or Save. Tooltip speech is a separate switch. q returns here."
+  (interactive)
+  (require 'emacsvox-advice)
+  (emacsvox-settings-workflows--reading-options
+   '(emacsvox-speak-messages-filter emacsvox-speak-tooltips)
+   "*Customize Message Speech*" 'emacsvox-settings-workflows--reading-messages))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-reading ()
+  "Discover advanced reading defaults without changing them on entry.
+Each item opens Customize, where Apply and Save remain explicit."
+  ["Advanced reading defaults (Customize)"
+   ("r" "Predefined speech-rate base and step" emacsvox-settings-workflows--reading-rates :transient transient--do-suspend)
+   ("p" "Automatic punctuation by major mode" emacsvox-settings-workflows--reading-punctuation :transient transient--do-suspend)
+   ("e" "Emoji names, sequences and limits" emacsvox-settings-workflows--reading-emoji :transient transient--do-suspend)
+   ("u" "Legacy Unicode replacements and names" emacsvox-settings-workflows--reading-unicode :transient transient--do-suspend)
+   ("m" "Message exclusions and tooltip speech" emacsvox-settings-workflows--reading-messages :transient transient--do-suspend)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-reading nil nil :scope (emacsvox-aural-menu--context)))
 
 (defun emacsvox-settings-workflows--diagnostic-options ()
   "Customize diagnostic log location, size, retention, and buffer visibility.

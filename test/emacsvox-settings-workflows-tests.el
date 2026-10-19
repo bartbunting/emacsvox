@@ -11,6 +11,170 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(defmacro emacsvox-test--with-reading-defaults (&rest body)
+  "Run BODY with isolated session reading defaults."
+  (declare (indent 0) (debug t))
+  `(let* ((options '(tts-character-scale tts-quiet tts-speak-nonprinting-chars tts-strip-octals))
+          (defaults (mapcar (lambda (s) (cons s (default-value s))) options)))
+     (unwind-protect
+         (progn
+           (set-default 'tts-character-scale 1.1)
+           (dolist (option (cdr options)) (set-default option nil))
+           ,@body)
+       (dolist (entry defaults) (set-default (car entry) (cdr entry))))))
+
+(ert-deftest emacsvox-settings-reading-controls-scope-and-nonprinting-precedence ()
+  "Reading switches target the captured source and retain stripping precedence."
+  (emacsvox-test--with-reading-defaults
+    (emacsvox-test--with-aural-menu
+      (let ((before (buffer-string)))
+        (with-temp-buffer
+          (setq-local tts-speak-nonprinting-chars nil tts-strip-octals nil tts-quiet t)
+          (emacsvox-settings-workflows--nonprinting)
+          (should (buffer-local-value 'tts-speak-nonprinting-chars source))
+          (should-not (default-value 'tts-speak-nonprinting-chars))
+          (should-not tts-speak-nonprinting-chars)
+          (setcdr (plist-get context :settings) t)
+          (emacsvox-settings-workflows--octals)
+          (should (default-value 'tts-strip-octals))
+          (should (buffer-local-value 'tts-strip-octals source))
+          (should-not tts-strip-octals)
+          (setcdr (plist-get context :settings) nil)
+          (should (string-search "suppressed" (emacsvox-settings-workflows--nonprinting-label)))
+          (let ((tts-speak-nonprinting-chars t) (tts-strip-octals t))
+            (insert "\001é" (unibyte-string 233) "Z")
+            (tts-fix-control-chars)
+            (should (equal (buffer-string) "\001é Z")))
+          (emacsvox-settings-workflows--restore-reading-speech)
+          (should tts-quiet)
+          (should-not (buffer-local-value 'tts-quiet source)))
+        (should (equal before (buffer-string)))))))
+
+(ert-deftest emacsvox-settings-reading-controls-character-validation-and-preview ()
+  "Invalid input writes nothing; valid scaling and preview preserve captured scope."
+  (emacsvox-test--with-reading-defaults
+    (emacsvox-test--with-aural-menu
+      (let ((tts-speaker-process (make-pipe-process :name "reading-scale-test" :noquery t))
+            sent preview)
+        (unwind-protect
+            (cl-letf (((symbol-function 'tts--protocol-set-character-scale)
+                       (lambda (value) (push (list (current-buffer) value) sent))))
+              (dolist (invalid '(0 -1 4.1 "bad"))
+                (cl-letf (((symbol-function 'emacsvox-aural-menu--read-number)
+                           (lambda (&rest _) invalid)))
+                  (should-error (emacsvox-settings-workflows--character-scale) :type 'user-error)))
+              (should-not sent)
+              (should-not (local-variable-p 'tts-character-scale source))
+              (cl-letf (((symbol-function 'emacsvox-aural-menu--read-number)
+                         (lambda (&rest _) 0.7)))
+                (emacsvox-settings-workflows--character-scale))
+              (should (equal sent (list (list source 0.7))))
+              (should (= (default-value 'tts-character-scale) 1.1))
+              (setq-local tts-quiet t)
+              (setcdr (plist-get context :settings) t)
+              (cl-letf (((symbol-function 'tts-letter)
+                         (lambda (letter)
+                           (setq preview (list letter (current-buffer) tts-character-scale tts-quiet)))))
+                (emacsvox-settings-workflows--reading-preview))
+              (should (equal preview (list "a" source 1.1 nil)))
+              (should tts-quiet)
+              (should (= tts-character-scale 0.7))
+              (emacsvox-settings-workflows--character-scale 1)
+              (should (< (abs (- tts-character-scale 1.2)) 0.00001))
+              (should (= tts-character-scale (default-value 'tts-character-scale)))
+              (emacsvox-settings-workflows--reading-inherit)
+              (dolist (option options) (should-not (local-variable-p option source))))
+          (delete-process tts-speaker-process))))))
+
+(ert-deftest emacsvox-settings-reading-controls-graphical-quiet-and-restore ()
+  "Quiet stays reversible through real menu navigation in both scopes."
+  (emacsvox-test--with-reading-defaults
+    (emacsvox-test--with-settings
+      (let (heard)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _)
+                     (should-not tts-quiet)
+                     (push (substring-no-properties text) heard))))
+          (execute-kbd-macro (kbd "s R Q"))
+          (should (buffer-local-value 'tts-quiet source))
+          (should-not (default-value 'tts-quiet))
+          (execute-kbd-macro (kbd "<down> g Q"))
+          (should (default-value 'tts-quiet))
+          (should (buffer-local-value 'tts-quiet source))
+          (setq heard nil)
+          ;; Re-enter through the parent menus while the global default is quiet.
+          (execute-kbd-macro (kbd "q q s R <down> r"))
+          (should (cl-some (lambda (text) (string-search "Reading controls (session)" text)) heard))
+          (should-not (default-value 'tts-quiet))
+          (should-not (buffer-local-value 'tts-quiet source))
+          (should-not (local-variable-p 'tts-quiet source))
+          (execute-kbd-macro (kbd "n o"))
+          (with-selected-window transient--window
+            (should (string-search "suppressed by octal stripping" (buffer-string))))
+          (execute-kbd-macro (kbd "g i"))
+          (dolist (option options) (should-not (local-variable-p option source)))
+          (should-not (file-exists-p custom-file)))))))
+
+(ert-deftest emacsvox-settings-reading-controls-graphical-rate-and-cancel ()
+  "Numeric edits retain focus, cancel safely and support shifted arrows."
+  (emacsvox-test--with-reading-defaults
+    (emacsvox-test--with-settings
+      (let ((tts-speaker-process (make-pipe-process :name "reading-rate-gui" :noquery t)))
+        (unwind-protect
+            (cl-letf (((symbol-function 'tts--protocol-set-character-scale) #'ignore))
+              (set-default 'tts-quiet t)
+              (setq-local tts-quiet t)
+              (let (quiet-in-minibuffer)
+                (minibuffer-with-setup-hook
+                    (lambda () (push (cons (current-buffer) tts-quiet) quiet-in-minibuffer))
+                  (execute-kbd-macro (kbd "s R c 0 . 8 RET")))
+                (should (equal (mapcar #'cdr quiet-in-minibuffer) '(nil)))
+                (dolist (entry quiet-in-minibuffer)
+                  (should-not (local-variable-p 'tts-quiet (car entry)))
+                  (should (buffer-local-value 'tts-quiet (car entry)))))
+              (should (default-value 'tts-quiet))
+              (should (buffer-local-value 'tts-quiet source))
+              (should (= (buffer-local-value 'tts-character-scale source) 0.8))
+              (execute-kbd-macro (kbd "c C-g"))
+              (should (= (buffer-local-value 'tts-character-scale source) 0.8))
+              (with-selected-window transient--window
+                (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
+              (execute-kbd-macro (kbd "S-<right>"))
+              (should (< (abs (- (buffer-local-value 'tts-character-scale source) 0.9)) 0.00001))
+              (should (= (default-value 'tts-character-scale) 1.1))
+              (should-not (file-exists-p custom-file)))
+          (delete-process tts-speaker-process))))))
+
+(ert-deftest emacsvox-settings-reading-customize-and-return ()
+  "Advanced reading links preserve source scope and never apply on entry."
+  (emacsvox-test--with-settings
+    (require 'emacsvox-emoji)
+    (require 'emacsvox-advice)
+    (let* ((options '(tts-speech-rate-base tts-speech-rate-step
+                      tts-punctuation-mode-policy-alist emacsvox-emoji-naming-enabled
+                      emacsvox-emoji-approved-sequences emacsvox-emoji-maximum-count
+                      emacsvox-emoji-custom-names tts-unicode-character-replacement-alist
+                      tts-unicode-name-transformation-rules-alist
+                      emacsvox-speak-messages-filter emacsvox-speak-tooltips))
+           (before (mapcar (lambda (symbol) (copy-tree (default-value symbol))) options)))
+      (execute-kbd-macro (kbd "s A"))
+      (dolist (entry '(("r" . "Predefined Speech Rates") ("p" . "Punctuation Policy")
+                       ("e" . "Emoji Speech") ("u" . "Legacy Unicode Speech")
+                       ("m" . "Message Speech")))
+        (execute-kbd-macro (kbd (car entry)))
+        (should (derived-mode-p 'Custom-mode))
+        (should (string-search (cdr entry) (buffer-name)))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-reading))
+        (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+        (with-selected-window transient--window
+          (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                         (car entry)))))
+      (should (equal before (mapcar #'default-value options)))
+      (should-not (file-exists-p custom-file))
+      (execute-kbd-macro (kbd "q q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))))
+
 (ert-deftest emacsvox-settings-workflows-task-section-targets ()
   "Section arrows name their task and select its first action without applying."
   (emacsvox-test--with-settings

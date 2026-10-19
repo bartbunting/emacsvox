@@ -31,6 +31,16 @@
 
 (defconst emacsvox-settings--destinations
   '(("Table reading and navigation" emacsvox-table-settings emacsvox-table-settings "m")
+    ("Predefined speech-rate base and step" emacsvox-settings-workflows emacsvox-settings-reading "r")
+    ("Character speech rate multiplier" emacsvox-settings-workflows emacsvox-settings-reading-controls "c")
+    ("Quiet speech" emacsvox-settings-workflows emacsvox-settings-reading-controls "Q")
+    ("Restore speech from quiet mode" emacsvox-settings-workflows emacsvox-settings-reading-controls "r")
+    ("Name nonprinting characters" emacsvox-settings-workflows emacsvox-settings-reading-controls "n")
+    ("Strip octals from spoken text" emacsvox-settings-workflows emacsvox-settings-reading-controls "o")
+    ("Automatic punctuation policy by major mode" emacsvox-settings-workflows emacsvox-settings-reading "p")
+    ("Emoji names, approved sequences and limits" emacsvox-settings-workflows emacsvox-settings-reading "e")
+    ("Legacy Unicode replacements and names" emacsvox-settings-workflows emacsvox-settings-reading "u")
+    ("Message exclusions and tooltip speech" emacsvox-settings-workflows emacsvox-settings-reading "m")
     ("Muggles: enable, disable and save navigation menus" emacsvox-aural-menu emacsvox-aural-menu "m")
     ("Table titles and data order" emacsvox-table-settings emacsvox-table-settings "t")
     ("Automatic or on-demand table reading" emacsvox-table-settings emacsvox-table-settings "a")

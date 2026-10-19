@@ -47,6 +47,8 @@
 (autoload 'emacsvox-settings-diagnostics "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-voice-presentation "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-dictionaries "emacsvox-settings-workflows" nil t)
+(autoload 'emacsvox-settings-reading "emacsvox-settings-workflows" nil t)
+(autoload 'emacsvox-settings-reading-controls "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-feedback "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-search "emacsvox-settings" nil t)
 (autoload 'emacsvox-settings-search-actions "emacsvox-settings" nil t)
@@ -81,7 +83,8 @@
                          emacsvox-tone-editor-envelope emacsvox-tone-editor-presets emacsvox-tone-editor-curve
                          emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
-                         emacsvox-settings-dictionaries emacsvox-settings-history emacsvox-settings-switches
+                         emacsvox-settings-dictionaries emacsvox-settings-reading emacsvox-settings-reading-controls
+                         emacsvox-settings-history emacsvox-settings-switches
                          emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
                          emacsvox-settings-diagnostics emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                          emacsvox-settings-integrations--comint
@@ -548,6 +551,8 @@ When opened from the Emacsvox menu, share its selected scope."
     emacsvox-aural-menu--indentation :transient transient--do-stack)
    ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)
    ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)
+   ("A" "Advanced reading defaults" emacsvox-settings-reading :transient transient--do-stack)
+   ("R" "Reading controls: characters and quiet speech" emacsvox-settings-reading-controls :transient transient--do-stack)
    ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label)))
     emacsvox-aural-menu--toggle-scope :transient t)]
   ["Menu navigation"
