@@ -334,6 +334,7 @@ integrations/emacsvox-lispy.elc \
 integrations/emacsvox-lua.elc \
 integrations/emacsvox-m-player.elc \
 integrations/emacsvox-magit-repositories.elc \
+integrations/emacsvox-magit-commit.elc \
 integrations/emacsvox-magit.elc \
 integrations/emacsvox-make-mode.elc \
 integrations/emacsvox-man.elc \
@@ -745,3 +746,6 @@ integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-events.elc
 
 integrations/emacsvox-magit-repositories.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
 integrations/emacsvox-magit.elc: integrations/emacsvox-magit-repositories.elc
+
+integrations/emacsvox-magit-commit.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
+integrations/emacsvox-magit.elc: integrations/emacsvox-magit-commit.elc

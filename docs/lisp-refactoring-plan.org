@@ -952,6 +952,17 @@ documentation gate pass.
 
 Commit slice: =Extract Magit repository-list feedback=.
 
+*** Magit commit-message feedback
+
+The commit module owns seventeen unchanged definitions for history, trailers,
+insertions, saved-message feedback and editor outcomes. Generated wrappers,
+advice installation and buffer-local lifecycle hook setup stay in the facade.
+Source and compiled runs pass 105 cases, and all 106 pass graphically.
+Definition parity, isolated loading, compilation, preflight, headers,
+generated reference and the documentation gate pass.
+
+Commit slice: =Extract Magit commit-message feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
