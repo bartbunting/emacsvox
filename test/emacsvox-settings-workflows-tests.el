@@ -11,6 +11,73 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(defun emacsvox-test--open-reading-workflow (command)
+  "Capture COMMAND's real setup context without requiring a graphical popup."
+  (cl-letf (((symbol-function 'transient-setup)
+             (lambda (prefix _arg _layout &rest options)
+               (setq transient--prefix
+                     (transient-prefix :command prefix :scope (plist-get options :scope))))))
+    (funcall command)))
+
+(defmacro emacsvox-test--with-reading-store (&rest body)
+  "Run BODY with isolated reading defaults and a temporary column store."
+  (declare (indent 0) (debug t))
+  `(let* ((directory (make-temp-file "emacsvox-reading-store-" t))
+          (emacsvox-speak-filter-persistent-store (expand-file-name ".filters" directory))
+          (emacsvox-speak-filter-table (make-hash-table))
+          (emacsvox-speak-filters-loaded-p nil)
+          (kill-emacs-hook nil)
+          (repeat-default (default-value 'tts-cleanup-repeats))
+          (chunk-default (default-value 'tts-chunk-separator-syntax)))
+     (unwind-protect
+         (progn (set-default 'tts-cleanup-repeats '("-" "=")) ,@body)
+       (set-default 'tts-cleanup-repeats repeat-default)
+       (set-default 'tts-chunk-separator-syntax chunk-default)
+       (dolist (buffer (buffer-list))
+         (when-let* ((file (buffer-file-name buffer)) ((file-in-directory-p file directory)))
+           (with-current-buffer buffer (set-buffer-modified-p nil))
+           (kill-buffer buffer)))
+       (delete-directory directory t))))
+
+(ert-deftest emacsvox-settings-reading-repeats-global-preview-and-recovery ()
+  "Pattern changes are global, literal, reversible, and use actual cleanup rules."
+  (emacsvox-test--with-reading-store
+    (emacsvox-test--with-aural-menu
+      (emacsvox-test--open-reading-workflow #'emacsvox-settings-reading-repeats)
+      (dolist (bad '("" "a\nb" "\r"))
+        (cl-letf (((symbol-function 'read-string) (lambda (&rest _) bad)))
+          (should-error (emacsvox-settings-workflows--repeat-add) :type 'user-error)))
+      (should (equal (default-value 'tts-cleanup-repeats) '("-" "=")))
+      (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "[")))
+        (with-temp-buffer (emacsvox-settings-workflows--repeat-add)))
+      (should (equal (default-value 'tts-cleanup-repeats) '("[" "-" "=")))
+      (dolist (punctuation '(all some none))
+        (with-temp-buffer
+          (insert "a[[[b")
+          (tts-handle-repeating-patterns punctuation)
+          (should (equal (buffer-string) (if (eq punctuation 'all) "a aw 3 [b" "ab")))))
+      (let ((tts-speaker-process (make-pipe-process :name "repeat-preview" :noquery t)) heard)
+        (unwind-protect
+            (cl-letf (((symbol-function 'emacsvox-aural-ui--read-choice)
+                       (lambda (_prompt choices &rest _)
+                         (should (string-search "left square bracket" (caar choices)))
+                         (caar choices)))
+                      ((symbol-function 'tts-speak)
+                       (lambda (text) (setq heard (list (current-buffer) text tts-quiet)))))
+              (setq-local tts-quiet t)
+              (emacsvox-settings-workflows--repeat-browse)
+              (should (equal heard (list source "Before [[[[ after" nil)))
+              (should tts-quiet)
+              (should (equal (default-value 'tts-cleanup-repeats) '("[" "-" "=")))
+              (emacsvox-settings-workflows--repeat-remove)
+              (should (equal (default-value 'tts-cleanup-repeats) '("-" "="))))
+          (delete-process tts-speaker-process)))
+      (emacsvox-settings-workflows--repeat-disable)
+      (should-not (default-value 'tts-cleanup-repeats))
+      (emacsvox-settings-workflows--repeat-restore)
+      (should (equal (default-value 'tts-cleanup-repeats) '("-" "=")))
+      (should-not (file-exists-p emacsvox-speak-filter-persistent-store)))))
+
 (defmacro emacsvox-test--with-reading-defaults (&rest body)
   "Run BODY with isolated session reading defaults."
   (declare (indent 0) (debug t))

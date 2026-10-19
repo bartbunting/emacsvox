@@ -924,11 +924,128 @@ and the global default. These controls do not save startup settings."
    ("p" "Preview letter a (even while quiet)" emacsvox-settings-workflows--reading-preview :transient t)
    ("r" "Restore speech in source and global default" emacsvox-settings-workflows--restore-reading-speech :transient t)
    ("i" "Follow defaults for all four source reading controls" emacsvox-settings-workflows--reading-inherit :if emacsvox-aural-menu--local-scope-p :transient t)]
+  ["Reading workflows"
+   ("a" "Repeat cleanup (global session)" emacsvox-settings-reading-repeats :transient transient--do-stack)]
   ["Finish"
    ("q" "Back (keep session changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-reading-controls nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-workflows--reading-source ()
+  "Return the live captured source for a reading workflow."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-workflows--reading-line-preview ()
+  "Read the captured line with its current reading settings, even while quiet.
+Use the source's punctuation, repeat patterns, column filter and chunking.
+This does not edit text, move source point or remember new settings."
+  (interactive)
+  (unless (process-live-p tts-speaker-process) (user-error "Start speech before previewing"))
+  (emacsvox-aural-menu--call-at-item
+   (lambda ()
+     (interactive)
+     (let ((tts-quiet nil))
+       (tts-stop)
+       (emacsvox-speak-line)))))
+
+(defun emacsvox-settings-workflows--repeat-label ()
+  "Describe the global session pattern list."
+  (format "Browse and preview patterns: %d active"
+          (length (default-value 'tts-cleanup-repeats))))
+
+(defun emacsvox-settings-workflows--repeat-choice ()
+  "Choose a literal pattern by its text or spoken character names."
+  (let ((choices
+         (mapcar
+          (lambda (pattern)
+            (cons (format "%S: %s" pattern
+                          (mapconcat (lambda (char)
+                                       (downcase (or (get-char-code-property char 'name)
+                                                     (format "character %d" char))))
+                                     pattern ", ")) pattern))
+          (default-value 'tts-cleanup-repeats))))
+    (unless choices (user-error "No active repeat patterns; add one first"))
+    (cdr (assoc (emacsvox-transient--read
+                 #'emacsvox-aural-ui--read-choice "Pattern (Tab lists choices): " choices)
+                choices))))
+
+(defun emacsvox-settings-workflows--repeat-browse ()
+  "Browse active patterns without editing; select one to hear four repetitions.
+With punctuation All, runs of three or more become a count and pattern.
+Other punctuation modes remove the run. Preview uses the source punctuation
+mode, speaks even while quiet, and leaves the global pattern list unchanged."
+  (interactive)
+  (unless (process-live-p tts-speaker-process) (user-error "Start speech before previewing"))
+  (let ((pattern (emacsvox-settings-workflows--repeat-choice)))
+    (with-current-buffer (emacsvox-settings-workflows--reading-source)
+      (let ((tts-quiet nil))
+        (tts-stop)
+        (tts-speak (concat "Before " (apply #'concat (make-list 4 pattern)) " after"))))))
+
+(defun emacsvox-settings-workflows--repeat-add ()
+  "Add a literal repeating pattern to the global session list.
+Runs of three or more are counted with punctuation All, removed otherwise.
+Spaces are literal; empty patterns and line breaks are rejected. Changes
+affect subsequent speech in all buffers and have no startup Save here."
+  (interactive)
+  (emacsvox-settings-workflows--reading-source)
+  (let ((pattern (emacsvox-transient--read #'read-string "Literal repeat pattern: ")))
+    (when (or (string-empty-p pattern) (string-match-p "[\n\r]" pattern))
+      (user-error "Enter a nonempty pattern without line breaks"))
+    (set-default 'tts-cleanup-repeats
+                 (cons pattern (delete pattern (copy-sequence (default-value 'tts-cleanup-repeats)))))
+    (emacsvox-settings-workflows--say "Pattern active globally for this session")))
+
+(defun emacsvox-settings-workflows--repeat-remove ()
+  "Choose and remove one pattern from the global session list.
+Tab lists patterns with spoken character names. Cancellation changes nothing.
+Restore opening list reverses this menu visit's changes."
+  (interactive)
+  (emacsvox-settings-workflows--reading-source)
+  (let ((pattern (emacsvox-settings-workflows--repeat-choice)))
+    (set-default 'tts-cleanup-repeats
+                 (delete pattern (copy-sequence (default-value 'tts-cleanup-repeats))))
+    (emacsvox-settings-workflows--say "Pattern removed from global session cleanup")))
+
+(defun emacsvox-settings-workflows--repeat-disable ()
+  "Disable repeat cleanup globally for this session by clearing its pattern list.
+Restore opening list recovers the patterns present when this menu opened.
+This does not change punctuation settings or edit source text."
+  (interactive)
+  (emacsvox-settings-workflows--reading-source)
+  (set-default 'tts-cleanup-repeats nil)
+  (emacsvox-settings-workflows--say "Repeat cleanup disabled globally for this session"))
+
+(defun emacsvox-settings-workflows--repeat-restore ()
+  "Restore the global pattern list captured on entry to this menu.
+This reverses all list changes since entry, including disabling cleanup.
+Leaving and reopening captures a new opening list. No startup file is written."
+  (interactive)
+  (let ((context (emacsvox-aural-menu--context)))
+    (emacsvox-aural-menu--source context)
+    (set-default 'tts-cleanup-repeats (copy-sequence (plist-get context :repeat-opening))))
+  (emacsvox-settings-workflows--say "Opening repeat list restored globally"))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-reading-repeats ()
+  "Manage repeat cleanup globally for this session; no startup Save.
+Browsing leaves settings unchanged. Restore opening list reverses edits."
+  :refresh-suffixes t
+  ["Repeat cleanup (global session)"
+   ("b" (lambda () (emacsvox-settings-workflows--repeat-label)) emacsvox-settings-workflows--repeat-browse :transient t)
+   ("a" "Add literal pattern" emacsvox-settings-workflows--repeat-add :transient t)
+   ("d" "Remove chosen pattern" emacsvox-settings-workflows--repeat-remove :transient t)
+   ("x" "Disable all repeat cleanup" emacsvox-settings-workflows--repeat-disable :transient t)]
+  ["Preview and recovery"
+   ("p" "Preview captured line" emacsvox-settings-workflows--reading-line-preview :transient t)
+   ("u" "Restore opening list" emacsvox-settings-workflows--repeat-restore :transient t)]
+  ["Finish" ("q" "Back (keep session changes)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-reading-repeats nil nil
+                   :scope (plist-put (copy-sequence (emacsvox-aural-menu--context))
+                                     :repeat-opening (copy-sequence (default-value 'tts-cleanup-repeats)))))
 
 (defun emacsvox-settings-workflows--reading-options (options title command)
   "Customize OPTIONS in TITLE and return to the menu item COMMAND."

@@ -37,6 +37,7 @@
     ("Restore speech from quiet mode" emacsvox-settings-workflows emacsvox-settings-reading-controls "r")
     ("Name nonprinting characters" emacsvox-settings-workflows emacsvox-settings-reading-controls "n")
     ("Strip octals from spoken text" emacsvox-settings-workflows emacsvox-settings-reading-controls "o")
+    ("Repeat cleanup patterns" emacsvox-settings-workflows emacsvox-settings-reading-repeats "b")
     ("Automatic punctuation policy by major mode" emacsvox-settings-workflows emacsvox-settings-reading "p")
     ("Emoji names, approved sequences and limits" emacsvox-settings-workflows emacsvox-settings-reading "e")
     ("Legacy Unicode replacements and names" emacsvox-settings-workflows emacsvox-settings-reading "u")
@@ -182,9 +183,13 @@
          (command (nth 2 entry)))
     (emacsvox-aural-menu--source context)
     (require (nth 1 entry))
-    (transient-setup command nil nil :scope
-                     (if (memq command '(emacsvox-indentation emacsvox-indentation-tone))
-                         (plist-get context :settings) context))
+    ;; These entry functions capture an undo boundary without applying edits.
+    ;; Search must establish it just as ordinary submenu entry does.
+    (if (memq command '(emacsvox-settings-reading-repeats))
+        (funcall command)
+      (transient-setup command nil nil :scope
+                       (if (memq command '(emacsvox-indentation emacsvox-indentation-tone))
+                           (plist-get context :settings) context)))
     (transient--show)
     (with-selected-window transient--window
       (transient--goto-button
