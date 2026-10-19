@@ -683,6 +683,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-speak-filters:: Reading column filters.
 * emacsvox-speak-messages:: Message history and replay.
 * emacsvox-speak-presentation:: Point and indentation presentation.
+* emacsvox-speak-time:: Time and date speech.
 * emacsvox-speedbar:: speedbar -.
 * emacsvox-spelling:: Spelling feedback settings.
 * emacsvox-sql:: Speech enable sql-mode.

@@ -3592,3 +3592,7 @@ Message controls and notification history now belong to
 =emacsvox-speak-messages=. Buffer and timer activation stay in the core facade;
 message-menu behavior and replay text are unchanged. Source and compiled
 checks cover history trimming, recreation, replay and Piper fallback.
+
+Time formats, timezone speech and scheduled-message commands now belong to
+=emacsvox-speak-time=. Calendar defaults and alarm delivery pass source and
+compiled checks; no formats, prompts or activation behavior change.

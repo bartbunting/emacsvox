@@ -96,5 +96,47 @@
       (emacsvox-pip "piper")
       (should (equal spoken '((piper . "piper") (notification . "fallback")))))))
 
+(ert-deftest emacsvox-speak-date-collector-uses-calendar-date ()
+  "Calendar date collection offers the selected date in each requested format."
+  (with-temp-buffer
+    (setq major-mode 'calendar-mode)
+    (cl-letf (((symbol-function 'calendar-cursor-to-nearest-date)
+               (lambda () '(2 29 2024)))
+              ((symbol-function 'read-from-minibuffer)
+               (lambda (_prompt initial &rest _) initial)))
+      (should (equal (emacsvox-speak-read-date-year/month/date) "2024/02/29"))
+      (should (equal (emacsvox-speak-date-YearMonthDate) "20240229"))
+      (should (equal (emacsvox-speak-date-month/date) "02/29"))
+      (should (equal (emacsvox-speak-year-month-date) "2024-02-29")))))
+
+(ert-deftest emacsvox-speak-scheduled-message-delivers-at-callback ()
+  "Scheduling defers delivery and preserves the message and alarm cues."
+  (let ((emacsvox-use-icons t) scheduled spoken cues tones)
+    (cl-letf (((symbol-function 'run-at-time)
+               (lambda (&rest arguments) (setq scheduled arguments)))
+              ((symbol-function 'tts-notify) (lambda (text) (push text spoken)))
+              ((symbol-function 'emacsvox-icon) (lambda (cue) (push cue cues)))
+              ((symbol-function 'sox-tones) (lambda (&rest _) (setq tones t)))
+              ((symbol-function 'message) #'ignore))
+      (emacsvox-speak-message-at-time "5 min" "Take a break")
+      (should (equal (seq-take scheduled 2) '("5 min" nil)))
+      (should-not spoken)
+      (apply (nth 2 scheduled) (nthcdr 3 scheduled))
+      (should (equal spoken '("Take a break")))
+      (should (equal cues '(alarm button)))
+      (should tones))))
+
+(ert-deftest emacsvox-speak-time-conversions-preserve-units ()
+  "Duration parsing and epoch helpers retain their time units."
+  (should (= (ems--duration-to-seconds "-01:02:03") -3723))
+  (should (equal (ems--seconds-to-duration "3723") "01:02:03"))
+  (should (equal (ems--format-clock 125) "02:05"))
+  (let (seconds)
+    (cl-letf (((symbol-function 'emacsvox-speak-seconds-since-epoch)
+               (lambda (value) (push value seconds))))
+      (emacsvox-speak-milliseconds-since-epoch 2000)
+      (emacsvox-speak-microseconds-since-epoch 3000000)
+      (should (equal seconds '(3 2))))))
+
 (provide 'emacsvox-speak-command-tests)
 ;;; emacsvox-speak-command-tests.el ends here

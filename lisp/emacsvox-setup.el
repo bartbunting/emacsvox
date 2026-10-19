@@ -106,6 +106,7 @@
     "core/emacsvox-speak-presentation.el"
     "core/emacsvox-speak-completion.el"
     "core/emacsvox-speak-messages.el"
+    "core/emacsvox-speak-time.el"
     "core/emacsvox-speak-filters.el"
     "core/emacsvox-speak.el"
     "aural/sox-gen.el"

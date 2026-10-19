@@ -13,7 +13,8 @@
 (require 'subr-x)
 
 (defvar emacsvox-speak-test-modules
-  '(("emacsvox-speak-completion" emacsvox-get-current-completion emacsvox-completions-move-to-completion-group)
+  '(("emacsvox-speak-time" emacsvox-speak-time emacsvox-speak-collect-date emacsvox-speak-message-at-time)
+    ("emacsvox-speak-completion" emacsvox-get-current-completion emacsvox-completions-move-to-completion-group)
     ("emacsvox-speak-presentation" emacsvox-speak--point-facts emacsvox-speak--indentation-facts emacsvox-set-indentation-presentation)
     ("emacsvox-speak-characters" emacsvox-speak-this-char emacsvox--delayed-phonetic-schedule emacsvox-post-self-insert-hook)
     ("emacsvox-speak-filters" emacsvox-speak-line-apply-column-filter))

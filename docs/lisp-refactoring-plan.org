@@ -546,6 +546,22 @@ preflight, headers, reference generation and documentation review gate pass.
 
 Commit slice: =Extract message history and replay=.
 
+*** Time and date commands
+
+=emacsvox-speak-time= owns time and timezone speech, date collection and
+filters, duration and epoch conversions, and scheduled messages. Scheduling
+still happens only when the command is invoked. All original definitions
+remain unchanged, and loading the module does not create timers.
+
+Source verification passes 262 cases and compiled verification passes 261;
+seven graphical cases remain covered by the preceding graphical run. New
+checks cover calendar defaults, time units and delayed alarm delivery. Fresh
+compiled startup, the warning-free build, preflight and headers pass. The
+facade has 2394 lines. Reference generation and the documentation review gate
+also pass.
+
+Commit slice: =Extract time and date speech commands=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
