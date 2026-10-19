@@ -562,6 +562,23 @@ also pass.
 
 Commit slice: =Extract time and date speech commands=.
 
+*** Windows and buffer selection
+
+=emacsvox-speak-windows= owns visible-window reading, other-window navigation,
+layout descriptions, spatial cues and buffer selection. Reading-region calls
+remain runtime calls into the core pipeline. The existing buffer-cycle tests
+continue to cover ordering and feedback.
+
+Source verification passes 262 cases and compiled verification passes 261,
+with eight graphical cases deferred to the graphical run. All 27 graphical
+cases pass before and after extraction, including actual window bounds,
+other-window reading, preserved focus and layout descriptions. All original
+definition forms remain unchanged. Fresh compiled startup, the warning-free
+build, preflight, headers, reference generation and documentation review gate
+pass. The facade has 2061 lines.
+
+Commit slice: =Extract window reading and buffer selection=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

@@ -684,6 +684,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-speak-messages:: Message history and replay.
 * emacsvox-speak-presentation:: Point and indentation presentation.
 * emacsvox-speak-time:: Time and date speech.
+* emacsvox-speak-windows:: Window reading and buffer selection.
 * emacsvox-speedbar:: speedbar -.
 * emacsvox-spelling:: Spelling feedback settings.
 * emacsvox-sql:: Speech enable sql-mode.
@@ -9003,58 +9004,3 @@ command M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
  -- Command: emacsvox-emms-speak-current-track
 
      Speak current track.
-
-
-File: emacsvox-reference.info,  Node: emacsvox-emoji,  Next: emacsvox-empv,  Prev: emacsvox-emms,  Up: Emacsvox Commands And Options
-
-2.130 emacsvox-emoji
-====================
-
-Optional speech naming uses exact entries from Emacs's bundled emoji
-data.  Keep the private upstream table behind this adapter; never use
-the picker helper, which can fall back to naming the first character of
-a sequence.
-
-2.130.1 emacsvox-emoji Options
-------------------------------
-
- -- Variable: User Option emacsvox-emoji-approved-sequences
-     Complete sequences eligible for automatic speech naming.
-     The default t uses Emacs’s emoji table, Unicode arrow, harpoon and box-drawing
-     names, and custom names.  A list of strings restricts naming to those complete
-     sequences; inclusion does not imply that this Emacs version supplies a name.
-
-     Default Value:
-
-     t
-
-
- -- Variable: User Option emacsvox-emoji-custom-names
-     Spoken names overriding Emacs data for eligible complete sequences.
-     Names must contain 1 to 80 characters with no control characters.  Empty
-     names are invalid; use an explicit pronunciation to omit a symbol.
-
-     Default Value:
-
-     nil
-
-
- -- Variable: User Option emacsvox-emoji-maximum-count
-     Maximum eligible occurrences per speech object or preview sample.
-     Accepts zero through 64; repetitions count separately.  The default 64 allows
-     ordinary decorated messages to retain their preferred speech engine.
-     Above this limit, the entire item retains its emoji, arrows and box drawings.
-
-     Default Value:
-
-     64
-
-
- -- Variable: User Option emacsvox-emoji-naming-enabled
-     Whether speech names occasional emoji, regardless of engine.
-     This option and the other emoji options can be set buffer-locally or in a
-     mode hook.  Source buffers keep their original text.
-
-     Default Value:
-
-     t

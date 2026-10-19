@@ -39,6 +39,7 @@
           emacsvox-speak-completion
           emacsvox-speak-messages
           emacsvox-speak-time
+          emacsvox-speak-windows
           emacsvox-speak-filters
           emacsvox-aural
           emacsvox-aural-compatibility-voice
@@ -118,6 +119,9 @@
           emacsvox-speak-time
           emacsvox-speak-collect-date
           emacsvox-speak-message-at-time
+          emacsvox-speak-other-window
+          emacsvox-describe-tapestry
+          emacsvox-cycle-to-next-buffer
           emacsvox-speak-line-apply-column-filter
           emacsvox-speak-load-filter-settings
           voice-setup-face-mapping-diagnostic

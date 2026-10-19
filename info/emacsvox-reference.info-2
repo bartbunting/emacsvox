@@ -12,6 +12,62 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-emoji,  Next: emacsvox-empv,  Prev: emacsvox-emms,  Up: Emacsvox Commands And Options
+
+2.130 emacsvox-emoji
+====================
+
+Optional speech naming uses exact entries from Emacs's bundled emoji
+data.  Keep the private upstream table behind this adapter; never use
+the picker helper, which can fall back to naming the first character of
+a sequence.
+
+2.130.1 emacsvox-emoji Options
+------------------------------
+
+ -- Variable: User Option emacsvox-emoji-approved-sequences
+     Complete sequences eligible for automatic speech naming.
+     The default t uses Emacs’s emoji table, Unicode arrow, harpoon and box-drawing
+     names, and custom names.  A list of strings restricts naming to those complete
+     sequences; inclusion does not imply that this Emacs version supplies a name.
+
+     Default Value:
+
+     t
+
+
+ -- Variable: User Option emacsvox-emoji-custom-names
+     Spoken names overriding Emacs data for eligible complete sequences.
+     Names must contain 1 to 80 characters with no control characters.  Empty
+     names are invalid; use an explicit pronunciation to omit a symbol.
+
+     Default Value:
+
+     nil
+
+
+ -- Variable: User Option emacsvox-emoji-maximum-count
+     Maximum eligible occurrences per speech object or preview sample.
+     Accepts zero through 64; repetitions count separately.  The default 64 allows
+     ordinary decorated messages to retain their preferred speech engine.
+     Above this limit, the entire item retains its emoji, arrows and box drawings.
+
+     Default Value:
+
+     64
+
+
+ -- Variable: User Option emacsvox-emoji-naming-enabled
+     Whether speech names occasional emoji, regardless of engine.
+     This option and the other emoji options can be set buffer-locally or in a
+     mode hook.  Source buffers keep their original text.
+
+     Default Value:
+
+     t
+
+
+
 File: emacsvox-reference.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emoji,  Up: Emacsvox Commands And Options
 
 2.131 emacsvox-empv
@@ -8089,57 +8145,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Move to start or end of buffer.
 
-2.254.1.2 emacsvox-buffer-select
-................................
-
- -- Command: emacsvox-buffer-select
-     ‘C-e p’
-     ‘C-e n’
-     ‘C-e .’
-     ‘C-e ,’
-
-     Select buffer by smart cycling.
-     Use option emacsvox-buffer-select-help to customize interactive feedback.
-     By default, this command is bound to multiple keys.
-     The final key of the initial  key-sequence, and  further invocations
-     of the keys below call the following bindings:
-
-     , previous-buffer
-     . next-buffer
-     b switch-to-buffer
-     f find-file
-     k emacsvox-kill-buffer-quietly
-     n emacsvox-cycle-to-next-buffer
-     o other-window
-     p emacsvox-cycle-to-previous-buffer
-
-2.254.1.3 emacsvox-cycle-to-next-buffer
-.......................................
-
- -- Command: emacsvox-cycle-to-next-buffer
-
-     Cycles to next buffer having same mode.
-
-2.254.1.4 emacsvox-cycle-to-previous-buffer
-...........................................
-
- -- Command: emacsvox-cycle-to-previous-buffer
-
-     Cycles to previous buffer having same mode.
-
-2.254.1.5 emacsvox-describe-tapestry
-....................................
-
- -- Command: emacsvox-describe-tapestry (&optional details)
-     ‘C-e M-t’
-
-     Describe the current layout of visible buffers in current frame.
-     Use interactive prefix arg to get coordinate positions of the
-     displayed buffers.
-
-     (fn &optional DETAILS)
-
-2.254.1.6 emacsvox-goto-percent
+2.254.1.2 emacsvox-goto-percent
 ...............................
 
  -- Command: emacsvox-goto-percent (percent)
@@ -8151,7 +8157,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn PERCENT)
 
-2.254.1.7 emacsvox-mark-backward-mark
+2.254.1.3 emacsvox-mark-backward-mark
 .....................................
 
  -- Command: emacsvox-mark-backward-mark
@@ -8159,7 +8165,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Cycle backward through the mark ring.
      To cycle forward, use pop-to-mark-command bound to M-x pop-to-mark-command
 
-2.254.1.8 emacsvox-open-info
+2.254.1.4 emacsvox-open-info
 ............................
 
  -- Command: emacsvox-open-info
@@ -8167,55 +8173,8 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Open Emacsvox Info Manual.
 
-2.254.1.9 emacsvox-owindow-next-line
-....................................
-
- -- Command: emacsvox-owindow-next-line (count)
-     ‘ESC <down>’
-
-     Move to the next line in the other window and speak it.
-     Numeric prefix arg COUNT can specify number of lines to move.
-
-     (fn COUNT)
-
-2.254.1.10 emacsvox-owindow-previous-line
-.........................................
-
- -- Command: emacsvox-owindow-previous-line (count)
-     ‘ESC <up>’
-
-     Move to the next line in the other window and speak it.
-     Numeric prefix arg COUNT specifies number of lines to move.
-
-     (fn COUNT)
-
-2.254.1.11 emacsvox-owindow-scroll-down
-.......................................
-
- -- Command: emacsvox-owindow-scroll-down
-     ‘ESC <prior>’
-
-     Scroll down  the window that command ‘other-window’ would move to.
-     Speak the window contents after scrolling.
-
-2.254.1.12 emacsvox-owindow-scroll-up
-.....................................
-
- -- Command: emacsvox-owindow-scroll-up
-     ‘ESC <next>’
-
-     Scroll up the window that command ‘other-window’ would move to.
-     Speak the window contents after scrolling.
-
-2.254.1.13 emacsvox-owindow-speak-line
-......................................
-
- -- Command: emacsvox-owindow-speak-line
-
-     Speak the current line in the other window.
-
-2.254.1.14 emacsvox-read-next-line
-..................................
+2.254.1.5 emacsvox-read-next-line
+.................................
 
  -- Command: emacsvox-read-next-line (&optional arg)
      ‘C-e <down>’
@@ -8225,8 +8184,8 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.15 emacsvox-read-previous-line
-......................................
+2.254.1.6 emacsvox-read-previous-line
+.....................................
 
  -- Command: emacsvox-read-previous-line (&optional arg)
      ‘C-e <up>’
@@ -8236,21 +8195,8 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.16 emacsvox-select-window-by-name
-.........................................
-
- -- Command: emacsvox-select-window-by-name (buffer-name)
-     ‘C-e W’
-
-     Select window by the name of the buffer it displays.
-     This is useful when using modes like ECB or the new GDB UI where
-       you want to preserve the window layout
-     but quickly switch to a window by name.
-
-     (fn BUFFER-NAME)
-
-2.254.1.17 emacsvox-selective-display
-.....................................
+2.254.1.7 emacsvox-selective-display
+....................................
 
  -- Command: emacsvox-selective-display (&optional arg)
      ‘C-e C-c’
@@ -8261,8 +8207,8 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.18 emacsvox-shell-command
-.................................
+2.254.1.8 emacsvox-shell-command
+................................
 
  -- Command: emacsvox-shell-command (command)
 
@@ -8270,8 +8216,8 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn COMMAND)
 
-2.254.1.19 emacsvox-silence
-...........................
+2.254.1.9 emacsvox-silence
+..........................
 
  -- Command: emacsvox-silence
      ‘<silence>’
@@ -8281,7 +8227,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      streams. Runs ‘emacsvox-silence-hook’ which can be used to
      configure which media players get silenced or paused/resumed.
 
-2.254.1.20 emacsvox-speak-buffer
+2.254.1.10 emacsvox-speak-buffer
 ................................
 
  -- Command: emacsvox-speak-buffer (&optional arg)
@@ -8293,7 +8239,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.21 emacsvox-speak-buffer-filename
+2.254.1.11 emacsvox-speak-buffer-filename
 .........................................
 
  -- Command: emacsvox-speak-buffer-filename (&optional filename)
@@ -8307,7 +8253,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional FILENAME)
 
-2.254.1.22 emacsvox-speak-buffer-interactively
+2.254.1.12 emacsvox-speak-buffer-interactively
 ..............................................
 
  -- Command: emacsvox-speak-buffer-interactively
@@ -8318,7 +8264,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire buffer.
 
-2.254.1.23 emacsvox-speak-continuously
+2.254.1.13 emacsvox-speak-continuously
 ......................................
 
  -- Command: emacsvox-speak-continuously
@@ -8332,7 +8278,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      was spoken.  Pressing SPC  continues to speak the buffer; any other
        key quits.
 
-2.254.1.24 emacsvox-speak-current-column
+2.254.1.14 emacsvox-speak-current-column
 ........................................
 
  -- Command: emacsvox-speak-current-column
@@ -8340,7 +8286,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak the current column.
 
-2.254.1.25 emacsvox-speak-current-kill
+2.254.1.15 emacsvox-speak-current-kill
 ......................................
 
  -- Command: emacsvox-speak-current-kill (&optional count)
@@ -8355,7 +8301,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional COUNT)
 
-2.254.1.26 emacsvox-speak-current-mark
+2.254.1.16 emacsvox-speak-current-mark
 ......................................
 
  -- Command: emacsvox-speak-current-mark (count)
@@ -8372,7 +8318,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn COUNT)
 
-2.254.1.27 emacsvox-speak-current-percentage
+2.254.1.17 emacsvox-speak-current-percentage
 ............................................
 
  -- Command: emacsvox-speak-current-percentage
@@ -8380,15 +8326,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Announce the percentage into the current buffer.
 
-2.254.1.28 emacsvox-speak-current-window
-........................................
-
- -- Command: emacsvox-speak-current-window
-
-     Speak contents of current window.
-     Speaks entire window irrespective of point.
-
-2.254.1.29 emacsvox-speak-extent
+2.254.1.18 emacsvox-speak-extent
 ................................
 
  -- Command: emacsvox-speak-extent (beg end &optional no-case)
@@ -8401,14 +8339,14 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn BEG END &optional NO-CASE)
 
-2.254.1.30 emacsvox-speak-face-backward
+2.254.1.19 emacsvox-speak-face-backward
 .......................................
 
  -- Command: emacsvox-speak-face-backward
 
      Property search for face at point see M-x text-property-search-backward
 
-2.254.1.31 emacsvox-speak-face-browse
+2.254.1.20 emacsvox-speak-face-browse
 .....................................
 
  -- Command: emacsvox-speak-face-browse
@@ -8416,21 +8354,21 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Use C-f and C-b or left/right arrows to browse by current face.
 
-2.254.1.32 emacsvox-speak-face-forward
+2.254.1.21 emacsvox-speak-face-forward
 ......................................
 
  -- Command: emacsvox-speak-face-forward
 
      Property search for face -- see M-x text-property-search-forward
 
-2.254.1.33 emacsvox-speak-field
+2.254.1.22 emacsvox-speak-field
 ...............................
 
  -- Command: emacsvox-speak-field
 
      Speak current field.
 
-2.254.1.34 emacsvox-speak-header-line
+2.254.1.23 emacsvox-speak-header-line
 .....................................
 
  -- Command: emacsvox-speak-header-line
@@ -8438,7 +8376,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak header line if set.
 
-2.254.1.35 emacsvox-speak-help
+2.254.1.24 emacsvox-speak-help
 ..............................
 
  -- Command: emacsvox-speak-help
@@ -8446,7 +8384,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak help buffer if one present.
 
-2.254.1.36 emacsvox-speak-line
+2.254.1.25 emacsvox-speak-line
 ..............................
 
  -- Command: emacsvox-speak-line (&optional arg)
@@ -8473,7 +8411,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.37 emacsvox-speak-line-interactively
+2.254.1.26 emacsvox-speak-line-interactively
 ............................................
 
  -- Command: emacsvox-speak-line-interactively
@@ -8484,7 +8422,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire line.
 
-2.254.1.38 emacsvox-speak-load-directory-settings
+2.254.1.27 emacsvox-speak-load-directory-settings
 .................................................
 
  -- Command: emacsvox-speak-load-directory-settings (&optional dir)
@@ -8497,7 +8435,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional DIR)
 
-2.254.1.39 emacsvox-speak-minor-mode-line
+2.254.1.28 emacsvox-speak-minor-mode-line
 .........................................
 
  -- Command: emacsvox-speak-minor-mode-line (&optional log-msg)
@@ -8509,7 +8447,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional LOG-MSG)
 
-2.254.1.40 emacsvox-speak-mode-line
+2.254.1.29 emacsvox-speak-mode-line
 ...................................
 
  -- Command: emacsvox-speak-mode-line (&optional buffer-info)
@@ -8521,7 +8459,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional BUFFER-INFO)
 
-2.254.1.41 emacsvox-speak-net-id
+2.254.1.30 emacsvox-speak-net-id
 ................................
 
  -- Command: emacsvox-speak-net-id
@@ -8530,14 +8468,14 @@ and saved filters live in 'emacsvox-speak-filters'.
      Shows active network interfaces in the echo area.
       The address is also copied to the kill ring for convenient yanking.
 
-2.254.1.42 emacsvox-speak-next-field
+2.254.1.31 emacsvox-speak-next-field
 ....................................
 
  -- Command: emacsvox-speak-next-field
 
      Move to and speak next field.
 
-2.254.1.43 emacsvox-speak-other-buffer
+2.254.1.32 emacsvox-speak-other-buffer
 ......................................
 
  -- Command: emacsvox-speak-other-buffer (buffer)
@@ -8548,15 +8486,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn BUFFER)
 
-2.254.1.44 emacsvox-speak-other-window
-......................................
-
- -- Command: emacsvox-speak-other-window
-     ‘C-e 2’
-
-     Speak other window
-
-2.254.1.45 emacsvox-speak-overlay-properties
+2.254.1.33 emacsvox-speak-overlay-properties
 ............................................
 
  -- Command: emacsvox-speak-overlay-properties
@@ -8564,7 +8494,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak display, before-string or after-string property if any.
 
-2.254.1.46 emacsvox-speak-page
+2.254.1.34 emacsvox-speak-page
 ..............................
 
  -- Command: emacsvox-speak-page (&optional arg)
@@ -8576,7 +8506,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.47 emacsvox-speak-page-interactively
+2.254.1.35 emacsvox-speak-page-interactively
 ............................................
 
  -- Command: emacsvox-speak-page-interactively
@@ -8586,7 +8516,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire page.
 
-2.254.1.48 emacsvox-speak-paragraph
+2.254.1.36 emacsvox-speak-paragraph
 ...................................
 
  -- Command: emacsvox-speak-paragraph (&optional arg)
@@ -8598,7 +8528,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.49 emacsvox-speak-paragraph-interactively
+2.254.1.37 emacsvox-speak-paragraph-interactively
 .................................................
 
  -- Command: emacsvox-speak-paragraph-interactively
@@ -8609,25 +8539,14 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire paragraph.
 
-2.254.1.50 emacsvox-speak-predefined-window
-...........................................
-
- -- Command: emacsvox-speak-predefined-window (&optional arg)
-
-     Speak one of the first 10 windows on the screen, 0 is current window.
-     Speaks entire window irrespective of point.  Semantics of ‘other’
-     is the same as for the Emacs builtin ‘other-window’.
-
-     (fn &optional ARG)
-
-2.254.1.51 emacsvox-speak-previous-field
+2.254.1.38 emacsvox-speak-previous-field
 ........................................
 
  -- Command: emacsvox-speak-previous-field
 
      Move to previous field and speak it.
 
-2.254.1.52 emacsvox-speak-range
+2.254.1.39 emacsvox-speak-range
 ...............................
 
  -- Command: emacsvox-speak-range (&optional prop)
@@ -8636,7 +8555,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional PROP)
 
-2.254.1.53 emacsvox-speak-rectangle
+2.254.1.40 emacsvox-speak-rectangle
 ...................................
 
  -- Command: emacsvox-speak-rectangle (start end)
@@ -8648,7 +8567,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn START END)
 
-2.254.1.54 emacsvox-speak-region
+2.254.1.41 emacsvox-speak-region
 ................................
 
  -- Command: emacsvox-speak-region (start end)
@@ -8658,7 +8577,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn START END)
 
-2.254.1.55 emacsvox-speak-sentence
+2.254.1.42 emacsvox-speak-sentence
 ..................................
 
  -- Command: emacsvox-speak-sentence (&optional arg)
@@ -8669,7 +8588,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.56 emacsvox-speak-sexp
+2.254.1.43 emacsvox-speak-sexp
 ..............................
 
  -- Command: emacsvox-speak-sexp (&optional arg)
@@ -8680,7 +8599,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.57 emacsvox-speak-sexp-interactively
+2.254.1.44 emacsvox-speak-sexp-interactively
 ............................................
 
  -- Command: emacsvox-speak-sexp-interactively
@@ -8690,14 +8609,14 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire sexp.
 
-2.254.1.58 emacsvox-speak-skim-buffer
+2.254.1.45 emacsvox-speak-skim-buffer
 .....................................
 
  -- Command: emacsvox-speak-skim-buffer
 
      Skim the current buffer  a paragraph at a time.
 
-2.254.1.59 emacsvox-speak-spaces
+2.254.1.46 emacsvox-speak-spaces
 ................................
 
  -- Command: emacsvox-speak-spaces
@@ -8705,7 +8624,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak number of spaces at point.
 
-2.254.1.60 emacsvox-speak-spaces-at-point
+2.254.1.47 emacsvox-speak-spaces-at-point
 .........................................
 
  -- Command: emacsvox-speak-spaces-at-point
@@ -8713,22 +8632,14 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak the white space at point.
 
-2.254.1.61 emacsvox-speak-spell-current-word
+2.254.1.48 emacsvox-speak-spell-current-word
 ............................................
 
  -- Command: emacsvox-speak-spell-current-word
 
      Spell word at  point.
 
-2.254.1.62 emacsvox-speak-this-window
-.....................................
-
- -- Command: emacsvox-speak-this-window
-     ‘C-e 1’
-
-     Speak current window.
-
-2.254.1.63 emacsvox-speak-version
+2.254.1.49 emacsvox-speak-version
 .................................
 
  -- Command: emacsvox-speak-version
@@ -8736,7 +8647,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Announce version information for running emacsvox.
 
-2.254.1.64 emacsvox-speak-visual-line
+2.254.1.50 emacsvox-speak-visual-line
 .....................................
 
  -- Command: emacsvox-speak-visual-line
@@ -8744,7 +8655,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Speaks current visual line.
      Cues the start of a physical line with auditory icon ‘left’.
 
-2.254.1.65 emacsvox-speak-voice-annotate-paragraphs
+2.254.1.51 emacsvox-speak-voice-annotate-paragraphs
 ...................................................
 
  -- Command: emacsvox-speak-voice-annotate-paragraphs
@@ -8753,7 +8664,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Here, paragraph is taken to mean a chunk of text preceded by a blank line.
      Useful to do this before you listen to an entire buffer.
 
-2.254.1.66 emacsvox-speak-which-function
+2.254.1.52 emacsvox-speak-which-function
 ........................................
 
  -- Command: emacsvox-speak-which-function
@@ -8762,23 +8673,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Speak which function we are on.  Uses which-function from
      which-func without turning that mode on.
 
-2.254.1.67 emacsvox-speak-window-information
-............................................
-
- -- Command: emacsvox-speak-window-information
-     ‘C-e C-w’
-
-     Speaks information about current window.
-
-2.254.1.68 emacsvox-speak-windowful
-...................................
-
- -- Command: emacsvox-speak-windowful
-     ‘C-e SPC’
-
-     Delete other windows, Line to top, then Speak window contents.
-
-2.254.1.69 emacsvox-speak-word
+2.254.1.53 emacsvox-speak-word
 ..............................
 
  -- Command: emacsvox-speak-word (&optional arg)
@@ -8792,7 +8687,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.254.1.70 emacsvox-speak-word-interactively
+2.254.1.54 emacsvox-speak-word-interactively
 ............................................
 
  -- Command: emacsvox-speak-word-interactively
@@ -8802,21 +8697,21 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire word.
 
-2.254.1.71 emacsvox-submit-bug
+2.254.1.55 emacsvox-submit-bug
 ..............................
 
  -- Command: emacsvox-submit-bug
 
      Function to submit a bug to the Emacsvox list
 
-2.254.1.72 emacsvox-toggle-header-line
+2.254.1.56 emacsvox-toggle-header-line
 ......................................
 
  -- Command: emacsvox-toggle-header-line
 
      Toggle Emacsvox’s default header line.
 
-2.254.1.73 emacsvox-toggle-mail-alert
+2.254.1.57 emacsvox-toggle-mail-alert
 .....................................
 
  -- Command: emacsvox-toggle-mail-alert (&optional prefix)
@@ -8828,7 +8723,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Turning on this option results in Emacsvox producing an auditory icon
      indicating the arrival  of new mail when displaying the mode line.
 
-2.254.1.74 emacsvox-zap-tts
+2.254.1.58 emacsvox-zap-tts
 ...........................
 
  -- Command: emacsvox-zap-tts
@@ -8838,15 +8733,6 @@ and saved filters live in 'emacsvox-speak-filters'.
 
 2.254.2 emacsvox-speak Options
 ------------------------------
-
- -- Variable: User Option emacsvox-buffer-select-help
-     String passed to speak help.
-     Set this to the empty string once you’ve learnt this command.
-
-     Default Value:
-
-     ""
-
 
  -- Variable: User Option emacsvox-mail-alert-interval
      Interval in seconds between mail alerts for the same pending
@@ -9336,7 +9222,7 @@ activation in its established order.
 
 
 
-File: emacsvox-reference.info,  Node: emacsvox-speak-time,  Next: emacsvox-speedbar,  Prev: emacsvox-speak-presentation,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-speak-time,  Next: emacsvox-speak-windows,  Prev: emacsvox-speak-presentation,  Up: Emacsvox Commands And Options
 
 2.260 emacsvox-speak-time
 =========================
@@ -9465,9 +9351,194 @@ established order.
 
 
 
-File: emacsvox-reference.info,  Node: emacsvox-speedbar,  Next: emacsvox-spelling,  Prev: emacsvox-speak-time,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-speak-windows,  Next: emacsvox-speedbar,  Prev: emacsvox-speak-time,  Up: Emacsvox Commands And Options
 
-2.261 emacsvox-speedbar
+2.261 emacsvox-speak-windows
+============================
+
+Window reading and buffer selection.  The core speech facade retains
+activation in its established order.
+
+2.261.1 Emacsvox-Speak-Windows Commands
+---------------------------------------
+
+2.261.1.1 emacsvox-buffer-select
+................................
+
+ -- Command: emacsvox-buffer-select
+     ‘C-e p’
+     ‘C-e n’
+     ‘C-e .’
+     ‘C-e ,’
+
+     Select buffer by smart cycling.
+     Use option emacsvox-buffer-select-help to customize interactive feedback.
+     By default, this command is bound to multiple keys.
+     The final key of the initial  key-sequence, and  further invocations
+     of the keys below call the following bindings:
+
+     , previous-buffer
+     . next-buffer
+     b switch-to-buffer
+     f find-file
+     k emacsvox-kill-buffer-quietly
+     n emacsvox-cycle-to-next-buffer
+     o other-window
+     p emacsvox-cycle-to-previous-buffer
+
+2.261.1.2 emacsvox-cycle-to-next-buffer
+.......................................
+
+ -- Command: emacsvox-cycle-to-next-buffer
+
+     Cycles to next buffer having same mode.
+
+2.261.1.3 emacsvox-cycle-to-previous-buffer
+...........................................
+
+ -- Command: emacsvox-cycle-to-previous-buffer
+
+     Cycles to previous buffer having same mode.
+
+2.261.1.4 emacsvox-describe-tapestry
+....................................
+
+ -- Command: emacsvox-describe-tapestry (&optional details)
+     ‘C-e M-t’
+
+     Describe the current layout of visible buffers in current frame.
+     Use interactive prefix arg to get coordinate positions of the
+     displayed buffers.
+
+     (fn &optional DETAILS)
+
+2.261.1.5 emacsvox-owindow-next-line
+....................................
+
+ -- Command: emacsvox-owindow-next-line (count)
+     ‘ESC <down>’
+
+     Move to the next line in the other window and speak it.
+     Numeric prefix arg COUNT can specify number of lines to move.
+
+     (fn COUNT)
+
+2.261.1.6 emacsvox-owindow-previous-line
+........................................
+
+ -- Command: emacsvox-owindow-previous-line (count)
+     ‘ESC <up>’
+
+     Move to the next line in the other window and speak it.
+     Numeric prefix arg COUNT specifies number of lines to move.
+
+     (fn COUNT)
+
+2.261.1.7 emacsvox-owindow-scroll-down
+......................................
+
+ -- Command: emacsvox-owindow-scroll-down
+     ‘ESC <prior>’
+
+     Scroll down  the window that command ‘other-window’ would move to.
+     Speak the window contents after scrolling.
+
+2.261.1.8 emacsvox-owindow-scroll-up
+....................................
+
+ -- Command: emacsvox-owindow-scroll-up
+     ‘ESC <next>’
+
+     Scroll up the window that command ‘other-window’ would move to.
+     Speak the window contents after scrolling.
+
+2.261.1.9 emacsvox-owindow-speak-line
+.....................................
+
+ -- Command: emacsvox-owindow-speak-line
+
+     Speak the current line in the other window.
+
+2.261.1.10 emacsvox-select-window-by-name
+.........................................
+
+ -- Command: emacsvox-select-window-by-name (buffer-name)
+     ‘C-e W’
+
+     Select window by the name of the buffer it displays.
+     This is useful when using modes like ECB or the new GDB UI where
+       you want to preserve the window layout
+     but quickly switch to a window by name.
+
+     (fn BUFFER-NAME)
+
+2.261.1.11 emacsvox-speak-current-window
+........................................
+
+ -- Command: emacsvox-speak-current-window
+
+     Speak contents of current window.
+     Speaks entire window irrespective of point.
+
+2.261.1.12 emacsvox-speak-other-window
+......................................
+
+ -- Command: emacsvox-speak-other-window
+     ‘C-e 2’
+
+     Speak other window
+
+2.261.1.13 emacsvox-speak-predefined-window
+...........................................
+
+ -- Command: emacsvox-speak-predefined-window (&optional arg)
+
+     Speak one of the first 10 windows on the screen, 0 is current window.
+     Speaks entire window irrespective of point.  Semantics of ‘other’
+     is the same as for the Emacs builtin ‘other-window’.
+
+     (fn &optional ARG)
+
+2.261.1.14 emacsvox-speak-this-window
+.....................................
+
+ -- Command: emacsvox-speak-this-window
+     ‘C-e 1’
+
+     Speak current window.
+
+2.261.1.15 emacsvox-speak-window-information
+............................................
+
+ -- Command: emacsvox-speak-window-information
+     ‘C-e C-w’
+
+     Speaks information about current window.
+
+2.261.1.16 emacsvox-speak-windowful
+...................................
+
+ -- Command: emacsvox-speak-windowful
+     ‘C-e SPC’
+
+     Delete other windows, Line to top, then Speak window contents.
+
+2.261.2 emacsvox-speak-windows Options
+--------------------------------------
+
+ -- Variable: User Option emacsvox-buffer-select-help
+     String passed to speak help.
+     Set this to the empty string once you’ve learnt this command.
+
+     Default Value:
+
+     ""
+
+
+
+File: emacsvox-reference.info,  Node: emacsvox-speedbar,  Next: emacsvox-spelling,  Prev: emacsvox-speak-windows,  Up: Emacsvox Commands And Options
+
+2.262 emacsvox-speedbar
 =======================
 
 This module advises speedbar.el for use with Emacs.  The latest speedbar
@@ -9477,17 +9548,17 @@ addition to speech enabling all interactive commands.  Emacsvox also
 adds an Emacsvox environment specific entry point to speedbar
 -emacsvox-speedbar-goto-speedbar- and binds this
 
-2.261.1 Emacsvox-Speedbar Commands
+2.262.1 Emacsvox-Speedbar Commands
 ----------------------------------
 
-2.261.1.1 emacsvox-speedbar-click
+2.262.1.1 emacsvox-speedbar-click
 .................................
 
  -- Command: emacsvox-speedbar-click
 
      Does the equivalent of the mouse click from the keyboard
 
-2.261.1.2 emacsvox-speedbar-goto-speedbar
+2.262.1.2 emacsvox-speedbar-goto-speedbar
 .........................................
 
  -- Command: emacsvox-speedbar-goto-speedbar
@@ -9497,17 +9568,17 @@ adds an Emacsvox environment specific entry point to speedbar
 
 File: emacsvox-reference.info,  Node: emacsvox-spelling,  Next: emacsvox-sql,  Prev: emacsvox-speedbar,  Up: Emacsvox Commands And Options
 
-2.262 emacsvox-spelling
+2.263 emacsvox-spelling
 =======================
 
 Independent spelling voice, tone and earcon controls with tone
 adjustment.  Changes apply to the current session; saving startup
 defaults is explicit.
 
-2.262.1 Emacsvox-Spelling Commands
+2.263.1 Emacsvox-Spelling Commands
 ----------------------------------
 
-2.262.1.1 emacsvox-spelling
+2.263.1.1 emacsvox-spelling
 ...........................
 
  -- Command: emacsvox-spelling
@@ -9524,7 +9595,7 @@ defaults is explicit.
      its sample, S stops, and W saves only tone defaults. Return here and use S
      to save voice, tone and earcon enablement as well.
 
-2.262.1.2 emacsvox-spelling-timing
+2.263.1.2 emacsvox-spelling-timing
 ..................................
 
  -- Command: emacsvox-spelling-timing
@@ -9536,7 +9607,7 @@ defaults is explicit.
 
 File: emacsvox-reference.info,  Node: emacsvox-sql,  Next: emacsvox-sudoku,  Prev: emacsvox-spelling,  Up: Emacsvox Commands And Options
 
-2.263 emacsvox-sql
+2.264 emacsvox-sql
 ==================
 
 This module speech enables sql-mode- available from the Emacs package
@@ -9546,7 +9617,7 @@ to SQL interface where you can interactively evaluate SQL expressions.
 
 File: emacsvox-reference.info,  Node: emacsvox-sudoku,  Next: emacsvox-supercite,  Prev: emacsvox-sql,  Up: Emacsvox Commands And Options
 
-2.264 emacsvox-sudoku
+2.265 emacsvox-sudoku
 =====================
 
 Playing SuDoku using speech output.  Written to discover what type of
@@ -9554,38 +9625,38 @@ feedback one needs for this task.
 
    Required modules:
 
-2.264.1 Emacsvox-Sudoku Commands
+2.265.1 Emacsvox-Sudoku Commands
 --------------------------------
 
-2.264.1.1 emacsvox-sudoku-board-columns-summarize
+2.265.1.1 emacsvox-sudoku-board-columns-summarize
 .................................................
 
  -- Command: emacsvox-sudoku-board-columns-summarize
 
      Summarize columns -- speaks number of remaining cells.
 
-2.264.1.2 emacsvox-sudoku-board-distribution-summarize
+2.265.1.2 emacsvox-sudoku-board-distribution-summarize
 ......................................................
 
  -- Command: emacsvox-sudoku-board-distribution-summarize
 
      Shows distribution of filled numbers.
 
-2.264.1.3 emacsvox-sudoku-board-rows-summarize
+2.265.1.3 emacsvox-sudoku-board-rows-summarize
 ..............................................
 
  -- Command: emacsvox-sudoku-board-rows-summarize
 
      Summarize rows -- speaks number of remaining cells.
 
-2.264.1.4 emacsvox-sudoku-board-sub-squares-summarize
+2.265.1.4 emacsvox-sudoku-board-sub-squares-summarize
 .....................................................
 
  -- Command: emacsvox-sudoku-board-sub-squares-summarize
 
      Summarize sub-squares -- speaks number of remaining cells.
 
-2.264.1.5 emacsvox-sudoku-board-summarizer
+2.265.1.5 emacsvox-sudoku-board-summarizer
 ..........................................
 
  -- Command: emacsvox-sudoku-board-summarizer
@@ -9597,133 +9668,133 @@ feedback one needs for this task.
      c   Column Distribution
      s   Sub-square Distribution.
 
-2.264.1.6 emacsvox-sudoku-down-sub-square
+2.265.1.6 emacsvox-sudoku-down-sub-square
 .........................................
 
  -- Command: emacsvox-sudoku-down-sub-square
 
      Move to top-left corner of  sub-square below current one.
 
-2.264.1.7 emacsvox-sudoku-erase-current-column
+2.265.1.7 emacsvox-sudoku-erase-current-column
 ..............................................
 
  -- Command: emacsvox-sudoku-erase-current-column
 
      Erase current column.
 
-2.264.1.8 emacsvox-sudoku-erase-current-row
+2.265.1.8 emacsvox-sudoku-erase-current-row
 ...........................................
 
  -- Command: emacsvox-sudoku-erase-current-row
 
      Erase current row.
 
-2.264.1.9 emacsvox-sudoku-erase-current-sub-square
+2.265.1.9 emacsvox-sudoku-erase-current-sub-square
 ..................................................
 
  -- Command: emacsvox-sudoku-erase-current-sub-square
 
      Erase current sub-square.
 
-2.264.1.10 emacsvox-sudoku-hint
+2.265.1.10 emacsvox-sudoku-hint
 ...............................
 
  -- Command: emacsvox-sudoku-hint
 
      Provide hint for current cell.
 
-2.264.1.11 emacsvox-sudoku-history-pop
+2.265.1.11 emacsvox-sudoku-history-pop
 ......................................
 
  -- Command: emacsvox-sudoku-history-pop
 
      Pop saved state off stack and redraw board.
 
-2.264.1.12 emacsvox-sudoku-history-push
+2.265.1.12 emacsvox-sudoku-history-push
 .......................................
 
  -- Command: emacsvox-sudoku-history-push
 
      Push current state on to history stack.
 
-2.264.1.13 emacsvox-sudoku-how-many-remaining
+2.265.1.13 emacsvox-sudoku-how-many-remaining
 .............................................
 
  -- Command: emacsvox-sudoku-how-many-remaining
 
      Speak number of remaining squares to fill.
 
-2.264.1.14 emacsvox-sudoku-next-sub-square
+2.265.1.14 emacsvox-sudoku-next-sub-square
 ..........................................
 
  -- Command: emacsvox-sudoku-next-sub-square
 
      Move to top-left corner of next sub-square.
 
-2.264.1.15 emacsvox-sudoku-previous-sub-square
+2.265.1.15 emacsvox-sudoku-previous-sub-square
 ..............................................
 
  -- Command: emacsvox-sudoku-previous-sub-square
 
      Move to top-left corner of previous sub-square.
 
-2.264.1.16 emacsvox-sudoku-speak-current-cell-coordinates
+2.265.1.16 emacsvox-sudoku-speak-current-cell-coordinates
 .........................................................
 
  -- Command: emacsvox-sudoku-speak-current-cell-coordinates
 
      speak current cell coordinates.
 
-2.264.1.17 emacsvox-sudoku-speak-current-cell-value
+2.265.1.17 emacsvox-sudoku-speak-current-cell-value
 ...................................................
 
  -- Command: emacsvox-sudoku-speak-current-cell-value
 
      Speak value in current cell.
 
-2.264.1.18 emacsvox-sudoku-speak-current-column
+2.265.1.18 emacsvox-sudoku-speak-current-column
 ...............................................
 
  -- Command: emacsvox-sudoku-speak-current-column
 
      Speak current column.
 
-2.264.1.19 emacsvox-sudoku-speak-current-row
+2.265.1.19 emacsvox-sudoku-speak-current-row
 ............................................
 
  -- Command: emacsvox-sudoku-speak-current-row
 
      Speak current row.
 
-2.264.1.20 emacsvox-sudoku-speak-current-sub-square
+2.265.1.20 emacsvox-sudoku-speak-current-sub-square
 ...................................................
 
  -- Command: emacsvox-sudoku-speak-current-sub-square
 
      Speak current sub-square.
 
-2.264.1.21 emacsvox-sudoku-speak-remaining-in-column
+2.265.1.21 emacsvox-sudoku-speak-remaining-in-column
 ....................................................
 
  -- Command: emacsvox-sudoku-speak-remaining-in-column
 
      Speaks number of remaining cells in current column.
 
-2.264.1.22 emacsvox-sudoku-speak-remaining-in-row
+2.265.1.22 emacsvox-sudoku-speak-remaining-in-row
 .................................................
 
  -- Command: emacsvox-sudoku-speak-remaining-in-row
 
      Speaks number of remaining cells in current row.
 
-2.264.1.23 emacsvox-sudoku-speak-remaining-in-sub-square
+2.265.1.23 emacsvox-sudoku-speak-remaining-in-sub-square
 ........................................................
 
  -- Command: emacsvox-sudoku-speak-remaining-in-sub-square
 
      Speaks number of remaining cells in current sub-square.
 
-2.264.1.24 emacsvox-sudoku-up-sub-square
+2.265.1.24 emacsvox-sudoku-up-sub-square
 ........................................
 
  -- Command: emacsvox-sudoku-up-sub-square
@@ -9733,7 +9804,7 @@ feedback one needs for this task.
 
 File: emacsvox-reference.info,  Node: emacsvox-supercite,  Next: emacsvox-syslog,  Prev: emacsvox-sudoku,  Up: Emacsvox Commands And Options
 
-2.265 emacsvox-supercite
+2.266 emacsvox-supercite
 ========================
 
 Speech-enable supercite.
@@ -9741,7 +9812,7 @@ Speech-enable supercite.
 
 File: emacsvox-reference.info,  Node: emacsvox-syslog,  Next: emacsvox-tab-bar,  Prev: emacsvox-supercite,  Up: Emacsvox Commands And Options
 
-2.266 emacsvox-syslog
+2.267 emacsvox-syslog
 =====================
 
 SYSLOG-MODE == Working with various log files.  Install package
@@ -9750,7 +9821,7 @@ syslog-mode from melpa.
 
 File: emacsvox-reference.info,  Node: emacsvox-tab-bar,  Next: emacsvox-table,  Prev: emacsvox-syslog,  Up: Emacsvox Commands And Options
 
-2.267 emacsvox-tab-bar
+2.268 emacsvox-tab-bar
 ======================
 
 tab-bar == tabs for window configuration.  Speech-enable tab-bar
@@ -9761,7 +9832,7 @@ EWW-BROWSE-URL-NEW-WINDOW-IS-TAB to nil to avoid leaking tabs.
 
 File: emacsvox-reference.info,  Node: emacsvox-table,  Next: emacsvox-table-reader,  Prev: emacsvox-tab-bar,  Up: Emacsvox Commands And Options
 
-2.268 emacsvox-table
+2.269 emacsvox-table
 ====================
 
 Implements a module that provides a high level interface to tabulated
@@ -9770,7 +9841,7 @@ information.
 
 File: emacsvox-reference.info,  Node: emacsvox-table-reader,  Next: emacsvox-table-settings,  Prev: emacsvox-table,  Up: Emacsvox Commands And Options
 
-2.269 emacsvox-table-reader
+2.270 emacsvox-table-reader
 ===========================
 
 Common logical table formatting and navigation.  Adapters supply
@@ -9778,45 +9849,45 @@ complete cell values and source positions; reading never calls native
 table editors.  Agent Shell retains its public commands and host-owned
 reading context.
 
-2.269.1 Emacsvox-Table-Reader Commands
+2.270.1 Emacsvox-Table-Reader Commands
 --------------------------------------
 
-2.269.1.1 emacsvox-table-reader-copy-cell
+2.270.1.1 emacsvox-table-reader-copy-cell
 .........................................
 
  -- Command: emacsvox-table-reader-copy-cell
 
      Copy the logical cell as plain text.
 
-2.269.1.2 emacsvox-table-reader-copy-column
+2.270.1.2 emacsvox-table-reader-copy-column
 ...........................................
 
  -- Command: emacsvox-table-reader-copy-column
 
      Copy the logical column as newline-separated plain text.
 
-2.269.1.3 emacsvox-table-reader-copy-row
+2.270.1.3 emacsvox-table-reader-copy-row
 ........................................
 
  -- Command: emacsvox-table-reader-copy-row
 
      Copy the logical row as tab-separated plain text.
 
-2.269.1.4 emacsvox-table-reader-exit-backward
+2.270.1.4 emacsvox-table-reader-exit-backward
 .............................................
 
  -- Command: emacsvox-table-reader-exit-backward
 
      Leave table reading and move to preceding prose.
 
-2.269.1.5 emacsvox-table-reader-exit-forward
+2.270.1.5 emacsvox-table-reader-exit-forward
 ............................................
 
  -- Command: emacsvox-table-reader-exit-forward
 
      Leave table reading and move to following prose.
 
-2.269.1.6 emacsvox-table-reader-mode
+2.270.1.6 emacsvox-table-reader-mode
 ....................................
 
  -- Command: emacsvox-table-reader-mode (&optional arg)
@@ -9850,7 +9921,7 @@ reading context.
 
      (fn &optional ARG)
 
-2.269.1.7 emacsvox-table-reader-next-column
+2.270.1.7 emacsvox-table-reader-next-column
 ...........................................
 
  -- Command: emacsvox-table-reader-next-column (&optional count)
@@ -9859,7 +9930,7 @@ reading context.
 
      (fn &optional COUNT)
 
-2.269.1.8 emacsvox-table-reader-next-row
+2.270.1.8 emacsvox-table-reader-next-row
 ........................................
 
  -- Command: emacsvox-table-reader-next-row (&optional count)
@@ -9868,7 +9939,7 @@ reading context.
 
      (fn &optional COUNT)
 
-2.269.1.9 emacsvox-table-reader-next-row-cell
+2.270.1.9 emacsvox-table-reader-next-row-cell
 .............................................
 
  -- Command: emacsvox-table-reader-next-row-cell (&optional count)
@@ -9877,7 +9948,7 @@ reading context.
 
      (fn &optional COUNT)
 
-2.269.1.10 emacsvox-table-reader-next-table
+2.270.1.10 emacsvox-table-reader-next-table
 ...........................................
 
  -- Command: emacsvox-table-reader-next-table
@@ -9885,7 +9956,7 @@ reading context.
 
      Find the next supported table and enter explicit reading.
 
-2.269.1.11 emacsvox-table-reader-previous-column
+2.270.1.11 emacsvox-table-reader-previous-column
 ................................................
 
  -- Command: emacsvox-table-reader-previous-column (&optional count)
@@ -9894,7 +9965,7 @@ reading context.
 
      (fn &optional COUNT)
 
-2.269.1.12 emacsvox-table-reader-previous-row
+2.270.1.12 emacsvox-table-reader-previous-row
 .............................................
 
  -- Command: emacsvox-table-reader-previous-row (&optional count)
@@ -9903,7 +9974,7 @@ reading context.
 
      (fn &optional COUNT)
 
-2.269.1.13 emacsvox-table-reader-previous-row-cell
+2.270.1.13 emacsvox-table-reader-previous-row-cell
 ..................................................
 
  -- Command: emacsvox-table-reader-previous-row-cell (&optional count)
@@ -9912,7 +9983,7 @@ reading context.
 
      (fn &optional COUNT)
 
-2.269.1.14 emacsvox-table-reader-previous-table
+2.270.1.14 emacsvox-table-reader-previous-table
 ...............................................
 
  -- Command: emacsvox-table-reader-previous-table
@@ -9920,7 +9991,7 @@ reading context.
 
      Find the previous supported table and enter explicit reading.
 
-2.269.1.15 emacsvox-table-reader-select-speaking-method
+2.270.1.15 emacsvox-table-reader-select-speaking-method
 .......................................................
 
  -- Command: emacsvox-table-reader-select-speaking-method
@@ -9929,42 +10000,42 @@ reading context.
      Press c for column titles, r for row titles, or o for data order.
      Agent Shell and Org editing feedback retain their existing preferences.
 
-2.269.1.16 emacsvox-table-reader-speak-cell
+2.270.1.16 emacsvox-table-reader-speak-cell
 ...........................................
 
  -- Command: emacsvox-table-reader-speak-cell
 
      Speak the complete logical table cell at point.
 
-2.269.1.17 emacsvox-table-reader-speak-column
+2.270.1.17 emacsvox-table-reader-speak-column
 .............................................
 
  -- Command: emacsvox-table-reader-speak-column
 
      Speak the complete logical table column at point.
 
-2.269.1.18 emacsvox-table-reader-speak-context
+2.270.1.18 emacsvox-table-reader-speak-context
 ..............................................
 
  -- Command: emacsvox-table-reader-speak-context
 
      Speak the current logical table coordinates.
 
-2.269.1.19 emacsvox-table-reader-speak-dimensions
+2.270.1.19 emacsvox-table-reader-speak-dimensions
 .................................................
 
  -- Command: emacsvox-table-reader-speak-dimensions
 
      Speak the current table dimensions, distinguishing headers from data.
 
-2.269.1.20 emacsvox-table-reader-speak-row
+2.270.1.20 emacsvox-table-reader-speak-row
 ..........................................
 
  -- Command: emacsvox-table-reader-speak-row
 
      Speak the complete logical table row at point.
 
-2.269.2 emacsvox-table-reader Options
+2.270.2 emacsvox-table-reader Options
 -------------------------------------
 
  -- Variable: User Option emacsvox-table-reader-activation

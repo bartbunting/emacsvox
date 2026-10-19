@@ -3596,3 +3596,8 @@ checks cover history trimming, recreation, replay and Piper fallback.
 Time formats, timezone speech and scheduled-message commands now belong to
 =emacsvox-speak-time=. Calendar defaults and alarm delivery pass source and
 compiled checks; no formats, prompts or activation behavior change.
+
+Window reading, layout descriptions, spatial cues and buffer selection now
+belong to =emacsvox-speak-windows=. All 27 graphical reading checks pass,
+including visible bounds and focus preservation in real split windows.
+Spatial audio playback remains outside automated listening acceptance.
