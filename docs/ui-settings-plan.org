@@ -3687,3 +3687,9 @@ Preview and comparison now belong to =emacsvox-aural-voice-workbench-preview=.
 All 127 applicable source and compiled tests and all 39 isolated graphical
 voice checks pass. Listening acceptance remains separate and uses a fresh
 normal profile; the running profile has not been reloaded.
+
+Library inspection and selection actions now belong to
+=emacsvox-aural-voice-workbench-library=. Installed, enabled, active and
+Needs Apply states still use the same target and worker evidence. All 127
+applicable source and compiled tests and all 39 graphical checks pass.
+Listening acceptance remains open.

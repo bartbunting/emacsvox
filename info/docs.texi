@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 357 loaded; 0 intentionally omitted.
+@c Modules: 358 loaded; 0 intentionally omitted.
 @c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
 @c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
 @c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
@@ -67,13 +67,13 @@
 @c Loaded: ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc
 @c Loaded: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc
 @c Loaded: ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc
-@c Loaded: ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-preview.elc ui/emacsvox-aural-voice-workbench-views.elc
-@c Loaded: ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc
-@c Loaded: ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc
-@c Loaded: ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc
-@c Loaded: ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc
-@c Loaded: ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc
-@c Loaded: voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
+@c Loaded: ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-library.elc ui/emacsvox-aural-voice-workbench-preview.elc
+@c Loaded: ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc
+@c Loaded: ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc
+@c Loaded: ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc
+@c Loaded: ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc
+@c Loaded: ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc
+@c Loaded: voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -161,6 +161,7 @@ This chapter documents a total of 1704 commands and 256 options.
 * emacsvox-aural-voice-palettes:: Spoken voice-palette manager.
 * emacsvox-aural-voice-runtime:: Owned voice routing.
 * emacsvox-aural-voice-workbench:: Spoken voice routing UI.
+* emacsvox-aural-voice-workbench-library:: Voice workbench library integration.
 * emacsvox-aural-voice-workbench-preview:: Voice workbench preview and comparison.
 * emacsvox-aural-voice-workbench-views:: Voice workbench views.
 * emacsvox-avy:: Speech-enable AVY.
@@ -7540,6 +7541,12 @@ Restore and apply the previous known-good profile revision.
 Review the selected physical voice across every named voice in a palette.
 @end format
 @end deffn
+
+@node emacsvox-aural-voice-workbench-library
+@section emacsvox-aural-voice-workbench-library
+
+Voice workbench library integration.
+Load through `emacsvox-aural-voice-workbench'.
 
 @node emacsvox-aural-voice-workbench-preview
 @section emacsvox-aural-voice-workbench-preview

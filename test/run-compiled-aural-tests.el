@@ -93,6 +93,7 @@
           "ui/emacsvox-aural-voice-palettes.el"
           "ui/emacsvox-aural-voice-workbench-views.el"
           "ui/emacsvox-aural-voice-workbench-preview.el"
+          "ui/emacsvox-aural-voice-workbench-library.el"
           "ui/emacsvox-aural-voice-workbench.el"
           "ui/emacsvox-aural-voice-editor.el"
           "ui/emacsvox-aural-voice-bulk.el"

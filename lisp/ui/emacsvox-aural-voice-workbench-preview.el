@@ -36,11 +36,11 @@
 (declare-function emacsvox-aural-voice-workbench--active-palette
                   "emacsvox-aural-voice-workbench" ())
 (declare-function emacsvox-aural-voice-workbench--browse-pairs
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-library" ())
 (declare-function emacsvox-aural-voice-workbench--library-active
-                  "emacsvox-aural-voice-workbench" (id role))
+                  "emacsvox-aural-voice-workbench-library" (id role))
 (declare-function emacsvox-aural-voice-workbench--library-p
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-library" ())
 (defvar emacsvox-aural-voice-workbench-inventory)
 (defvar emacsvox-aural-voice-workbench-rendered-view)
 (defvar emacsvox-aural-voice-workbench-view)

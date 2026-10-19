@@ -166,6 +166,7 @@ ui/emacsvox-aural-profiles.elc \
 ui/emacsvox-aural-voice-palettes.elc \
 ui/emacsvox-aural-voice-workbench-views.elc \
 ui/emacsvox-aural-voice-workbench-preview.elc \
+ui/emacsvox-aural-voice-workbench-library.elc \
 ui/emacsvox-aural-voice-workbench.elc \
 ui/emacsvox-aural-change-feedback.elc \
 aural/emacsvox-aural-provider-org.elc \
@@ -713,3 +714,6 @@ ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-views.e
 
 ui/emacsvox-aural-voice-workbench-preview.elc: ui/emacsvox-aural-voice-workbench-views.elc aural/emacsvox-aural-preview.elc
 ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-preview.elc
+
+ui/emacsvox-aural-voice-workbench-library.elc: ui/emacsvox-aural-voice-workbench-views.elc ui/omnivox-library.elc
+ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-library.elc

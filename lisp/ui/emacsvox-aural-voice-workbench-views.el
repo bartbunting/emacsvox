@@ -54,17 +54,17 @@
 (declare-function emacsvox-aural-voice-workbench--apply-status-description
                   "emacsvox-aural-voice-workbench" ())
 (declare-function emacsvox-aural-voice-workbench--library-p
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-library" ())
 (declare-function emacsvox-aural-voice-workbench--library-index
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-library" ())
 (declare-function emacsvox-aural-voice-workbench--browse-pairs
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-library" ())
 (declare-function emacsvox-aural-voice-workbench--filtered-pairs
-                  "emacsvox-aural-voice-workbench" (&optional all))
+                  "emacsvox-aural-voice-workbench-library" (&optional all))
 (declare-function emacsvox-aural-voice-workbench--quick-description
-                  "emacsvox-aural-voice-workbench" (filter))
+                  "emacsvox-aural-voice-workbench-library" (filter))
 (declare-function emacsvox-aural-voice-workbench--library-states
-                  "emacsvox-aural-voice-workbench" (id))
+                  "emacsvox-aural-voice-workbench-library" (id))
 (declare-function emacsvox-aural-voice-workbench--unavailable-reason
                   "emacsvox-aural-voice-workbench-preview" (pair))
 (defvar emacsvox-aural-voice-workbench--library-error)
