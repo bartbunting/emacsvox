@@ -66,9 +66,14 @@
         (progn
           (emacsvox-speak-set-persistent-filter key '((0 4) (8 10)))
           (emacsvox-speak-set-persistent-filter "fundamental-mode" '((2 6)))
+          ;; First use must retain unsaved entries when no store exists yet.
+          (emacsvox-speak-load-filter-settings)
+          (should-not (file-exists-p emacsvox-speak-filter-persistent-store))
+          (should (equal (emacsvox-speak-lookup-persistent-filter key) '((0 4) (8 10))))
           (emacsvox-speak-persist-filter-settings)
           (should (file-exists-p emacsvox-speak-filter-persistent-store))
-          (setq emacsvox-speak-filter-table (make-hash-table))
+          (setq emacsvox-speak-filter-table (make-hash-table)
+                emacsvox-speak-filters-loaded-p nil)
           (emacsvox-speak-load-filter-settings)
           (should (equal (emacsvox-speak-lookup-persistent-filter key)
                          '((0 4) (8 10))))

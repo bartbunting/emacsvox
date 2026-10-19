@@ -130,7 +130,10 @@ emacsvox-speak-filter-table)\n" k v)))
     ;; us, so we can't require it at top-level.
     (require 'emacsvox-preamble)
     (declare-function ems--fastload "emacsvox-preamble" (file))
-    (ems--fastload emacsvox-speak-filter-persistent-store)
+    ;; A fresh profile has no remembered ranges yet.  Keep in-memory edits
+    ;; and register the ordinary save-on-exit path without creating a file.
+    (when (file-exists-p emacsvox-speak-filter-persistent-store)
+      (ems--fastload emacsvox-speak-filter-persistent-store))
     (setq emacsvox-speak-filters-loaded-p t)
     (add-hook 'kill-emacs-hook 'emacsvox-speak-persist-filter-settings)))
 

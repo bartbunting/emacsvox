@@ -50,6 +50,7 @@
 (autoload 'emacsvox-settings-reading "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-reading-controls "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-reading-repeats "emacsvox-settings-workflows" nil t)
+(autoload 'emacsvox-settings-reading-columns "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-feedback "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-search "emacsvox-settings" nil t)
 (autoload 'emacsvox-settings-search-actions "emacsvox-settings" nil t)
@@ -85,7 +86,7 @@
                          emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
                          emacsvox-settings-dictionaries emacsvox-settings-reading emacsvox-settings-reading-controls
-                         emacsvox-settings-reading-repeats
+                         emacsvox-settings-reading-repeats emacsvox-settings-reading-columns
                          emacsvox-settings-history emacsvox-settings-switches
                          emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
                          emacsvox-settings-diagnostics emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations

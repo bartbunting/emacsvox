@@ -29,6 +29,7 @@
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-aural-history)
 (require 'emacsvox-pronounce)
+(require 'emacsvox-speak-filters)
 (defvar omnivox-average-pitch-contrast)
 (defvar emacsvox-aural-preview-label-verbosity)
 (declare-function emacsvox-aural-set-history-limit "emacsvox-aural-recent-feedback" (limit))
@@ -925,7 +926,8 @@ and the global default. These controls do not save startup settings."
    ("r" "Restore speech in source and global default" emacsvox-settings-workflows--restore-reading-speech :transient t)
    ("i" "Follow defaults for all four source reading controls" emacsvox-settings-workflows--reading-inherit :if emacsvox-aural-menu--local-scope-p :transient t)]
   ["Reading workflows"
-   ("a" "Repeat cleanup (global session)" emacsvox-settings-reading-repeats :transient transient--do-stack)]
+   ("a" "Repeat cleanup (global session)" emacsvox-settings-reading-repeats :transient transient--do-stack)
+   ("f" "Column filtering (source; remembered ranges)" emacsvox-settings-reading-columns :transient transient--do-stack)]
   ["Finish"
    ("q" "Back (keep session changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
@@ -935,6 +937,20 @@ and the global default. These controls do not save startup settings."
 (defun emacsvox-settings-workflows--reading-source ()
   "Return the live captured source for a reading workflow."
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-workflows--reading-snapshot (options)
+  "Capture local bindings of OPTIONS in the reading source."
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (mapcar (lambda (option)
+              (list option (local-variable-p option) (copy-tree (symbol-value option))))
+            options)))
+
+(defun emacsvox-settings-workflows--reading-restore (snapshot)
+  "Restore source bindings from SNAPSHOT, including inheritance."
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (dolist (entry snapshot)
+      (if (nth 1 entry) (set (make-local-variable (car entry)) (copy-tree (nth 2 entry)))
+        (kill-local-variable (car entry))))))
 
 (defun emacsvox-settings-workflows--reading-line-preview ()
   "Read the captured line with its current reading settings, even while quiet.
@@ -1046,6 +1062,154 @@ Browsing leaves settings unchanged. Restore opening list reverses edits."
   (transient-setup 'emacsvox-settings-reading-repeats nil nil
                    :scope (plist-put (copy-sequence (emacsvox-aural-menu--context))
                                      :repeat-opening (copy-sequence (default-value 'tts-cleanup-repeats)))))
+
+(defun emacsvox-settings-workflows--column-key ()
+  "Return the source's existing file or mode filter-store key."
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (or (buffer-file-name) (symbol-name major-mode))))
+
+(defun emacsvox-settings-workflows--column-state ()
+  "Return the column visit state, rejecting a changed file or mode identity."
+  (let ((state (plist-get (emacsvox-aural-menu--context) :column-visit)))
+    (unless (equal (plist-get state :key) (emacsvox-settings-workflows--column-key))
+      (user-error "Source file or mode changed; reopen Column filtering"))
+    state))
+
+(defun emacsvox-settings-workflows--column-format (ranges)
+  "Show zero-based, end-exclusive RANGES as inclusive character positions."
+  (if (null ranges) "none"
+    (mapconcat (lambda (range) (format "%d-%d" (1+ (car range)) (cadr range))) ranges ", ")))
+
+(defun emacsvox-settings-workflows--column-parse (text)
+  "Parse inclusive one-based ranges in TEXT without evaluating Lisp."
+  (unless (string-empty-p (string-trim text))
+    (mapcar
+     (lambda (part)
+       (unless (string-match "\\`[ \t]*\\([0-9]+\\)\\(?:[ \t]*-[ \t]*\\([0-9]+\\)\\)?[ \t]*\\'" part)
+         (user-error "Use ranges such as 1-10, 21-25, or a single position"))
+       (let* ((start (string-to-number (match-string 1 part)))
+              (end (if (match-string 2 part) (string-to-number (match-string 2 part)) start)))
+         (unless (<= 1 start end most-positive-fixnum)
+           (user-error "Positions must be positive integers, with start no greater than end"))
+         (list (1- start) end)))
+     (split-string text "," nil))))
+
+(defun emacsvox-settings-workflows--column-label ()
+  "Describe active character ranges in the source buffer."
+  (format "Ranges: %s"
+          (emacsvox-settings-workflows--column-format
+           (buffer-local-value 'emacsvox-speak-line-column-filter
+                               (emacsvox-settings-workflows--reading-source)))))
+
+(defun emacsvox-settings-workflows--column-direction-label ()
+  "Describe whether selected ranges are skipped or spoken."
+  (if (buffer-local-value 'emacsvox-speak-line-invert-filter
+                          (emacsvox-settings-workflows--reading-source))
+      "Direction: speak only selected ranges" "Direction: skip selected ranges"))
+
+(defun emacsvox-settings-workflows--column-edit ()
+  "Set source ranges using inclusive character positions, such as 1-10, 21-25.
+Tabs count as one character, not their displayed width. A range extending
+past a short line is ignored entirely. Empty input disables and remembers
+no ranges. Ranges are remembered by file, or mode for non-file buffers, and
+saved on normal Emacs exit. They are offered for explicit restoration later;
+they do not automatically activate on file entry. Direction is session-only.
+This affects whole-line speech, not partial-line commands or table reading."
+  (interactive)
+  (let* ((state (emacsvox-settings-workflows--column-state))
+         (source (emacsvox-settings-workflows--reading-source))
+         (current (buffer-local-value 'emacsvox-speak-line-column-filter source))
+         (ranges (emacsvox-settings-workflows--column-parse
+                  (emacsvox-transient--read #'read-string "Character ranges (empty disables): "
+                                            (if current (emacsvox-settings-workflows--column-format current) "")))))
+    (emacsvox-settings-workflows--column-state)
+    (emacsvox-speak-load-filter-settings)
+    (unless (plist-get state :store-captured)
+      (setf (plist-get state :stored)
+            (copy-tree (gethash (intern (plist-get state :key)) emacsvox-speak-filter-table 'absent))
+            (plist-get state :store-captured) t))
+    (with-current-buffer source (emacsvox-speak-line-set-column-filter ranges))
+    (emacsvox-settings-workflows--say
+     (concat (emacsvox-settings-workflows--column-label) ". Remembered; saved on Emacs exit"))))
+
+(defun emacsvox-settings-workflows--column-direction ()
+  "Switch between skipping the ranges and speaking only those ranges.
+This affects the captured buffer for this session; direction is not saved
+with remembered ranges. With no active ranges, whole-line speech is unchanged."
+  (interactive)
+  (emacsvox-settings-workflows--column-state)
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (setq-local emacsvox-speak-line-invert-filter (not emacsvox-speak-line-invert-filter)))
+  (emacsvox-settings-workflows--say (emacsvox-settings-workflows--column-direction-label)))
+
+(defun emacsvox-settings-workflows--column-disable ()
+  "Speak complete lines in the captured buffer, retaining remembered ranges.
+This disables its active filter for this session. Restore remembered ranges
+enables the stored selection again, using the current direction."
+  (interactive)
+  (emacsvox-settings-workflows--column-state)
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (setq-local emacsvox-speak-line-column-filter nil))
+  (emacsvox-settings-workflows--say "Column filtering disabled here; remembered ranges retained"))
+
+(defun emacsvox-settings-workflows--column-recall ()
+  "Activate remembered ranges for the captured file or non-file buffer mode.
+Read the existing filter store without changing it. Direction is unchanged;
+no remembered entry is an error, not an invented default range."
+  (interactive)
+  (let ((state (emacsvox-settings-workflows--column-state)))
+    (emacsvox-speak-load-filter-settings)
+    (let ((ranges (gethash (intern (plist-get state :key)) emacsvox-speak-filter-table 'absent)))
+      (when (eq ranges 'absent) (user-error "No remembered ranges for this file or mode"))
+      (unless (and (proper-list-p ranges)
+                   (cl-every (lambda (range)
+                               (and (proper-list-p range) (= (length range) 2)
+                                    (integerp (car range)) (integerp (cadr range))
+                                    (<= 0 (car range)) (< (car range) (cadr range)))) ranges))
+        (user-error "Remembered ranges are invalid; enter new ranges"))
+      (with-current-buffer (emacsvox-settings-workflows--reading-source)
+        (setq-local emacsvox-speak-line-column-filter (copy-tree ranges)))))
+  (emacsvox-settings-workflows--say (emacsvox-settings-workflows--column-label)))
+
+(defun emacsvox-settings-workflows--column-restore ()
+  "Undo this visit's range and direction changes in the source.
+Restore its opening local bindings and the remembered entry from before the
+first edit. Other files and modes retain their entries. The restored store
+will be written on normal Emacs exit. Reopening begins a new undo boundary."
+  (interactive)
+  (let ((state (emacsvox-settings-workflows--column-state)))
+    (when (plist-get state :store-captured)
+      (let ((key (intern (plist-get state :key))) (stored (plist-get state :stored)))
+        (if (eq stored 'absent) (remhash key emacsvox-speak-filter-table)
+          (puthash key (copy-tree stored) emacsvox-speak-filter-table))))
+    (emacsvox-settings-workflows--reading-restore (plist-get state :opening)))
+  (emacsvox-settings-workflows--say "Opening column settings and remembered entry restored"))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-reading-columns ()
+  "Filter whole-line speech in the captured source, regardless of parent scope.
+Edited ranges are remembered by file or mode and saved on Emacs exit.
+Direction is session-only. Opening, preview and navigation do not edit the store."
+  :refresh-suffixes t
+  ["Column filtering (source buffer)"
+   ("e" (lambda () (emacsvox-settings-workflows--column-label)) emacsvox-settings-workflows--column-edit :transient t)
+   ("v" (lambda () (emacsvox-settings-workflows--column-direction-label)) emacsvox-settings-workflows--column-direction :transient t)
+   ("p" "Preview captured line" emacsvox-settings-workflows--reading-line-preview :transient t)]
+  ["Recovery"
+   ("x" "Disable here; keep remembered ranges" emacsvox-settings-workflows--column-disable :transient t)
+   ("r" "Restore remembered ranges" emacsvox-settings-workflows--column-recall :transient t)
+   ("u" "Undo this visit, including remembered edits" emacsvox-settings-workflows--column-restore :transient t)]
+  ["Finish" ("q" "Back (keep changes; ranges saved on exit)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (let ((context (copy-sequence (emacsvox-aural-menu--context))))
+    (transient-setup
+     'emacsvox-settings-reading-columns nil nil
+     :scope (plist-put context :column-visit
+                       (list :key (emacsvox-settings-workflows--column-key)
+                             :opening (emacsvox-settings-workflows--reading-snapshot
+                                       '(emacsvox-speak-line-column-filter emacsvox-speak-line-invert-filter))
+                             :store-captured nil :stored nil)))))
 
 (defun emacsvox-settings-workflows--reading-options (options title command)
   "Customize OPTIONS in TITLE and return to the menu item COMMAND."
