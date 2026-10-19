@@ -33,6 +33,7 @@
 ;; - `emacsvox-eat-screen' owns screen snapshots and differences.
 ;; - `emacsvox-eat-focus' owns focus inference and navigation feedback.
 ;; - `emacsvox-eat-output' owns prompt boundaries and output collection.
+;; - `emacsvox-eat-presentation' owns status, metadata, bells, and output cues.
 ;; - `emacsvox-eat-core' owns observation, lifecycle, and presentation timing.
 ;; - `emacsvox-eat-input' owns input, deletion, navigation, and completion.
 ;; - `emacsvox-eat-review' owns frozen screen review and inspection.

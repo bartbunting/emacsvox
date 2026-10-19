@@ -14,6 +14,7 @@
   (dolist (file '("integrations/emacsvox-eat-screen.el"
                   "integrations/emacsvox-eat-output.el"
                   "integrations/emacsvox-eat-focus.el"
+                  "integrations/emacsvox-eat-presentation.el"
                   "integrations/emacsvox-eat-core.el"
                   "integrations/emacsvox-eat-input.el"
                   "integrations/emacsvox-eat-review.el"

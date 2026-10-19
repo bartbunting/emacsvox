@@ -43,7 +43,6 @@
 (defvar emacsvox-eat--terminal-id)
 (defvar emacsvox-eat--secure-input-active-p)
 (declare-function emacsvox-eat--foreground-p "emacsvox-eat-core" ())
-(declare-function eat-term-live-p "eat" (object))
 (declare-function eat-term-beginning "eat" (terminal))
 (declare-function eat-term-display-beginning "eat" (terminal))
 (declare-function eat-term-end "eat" (terminal))

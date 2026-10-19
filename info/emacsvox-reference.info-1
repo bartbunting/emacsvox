@@ -539,10 +539,11 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-dired:: Speech enable Dired Mode.
 * emacsvox-dumb-jump:: DUMB-JUMP.
 * emacsvox-eat:: Speech-enable EAT.
-* emacsvox-eat-core:: EAT speech observation core.
+* emacsvox-eat-core:: EAT lifecycle and observation coordination.
 * emacsvox-eat-focus:: EAT focus inference and navigation feedback.
 * emacsvox-eat-input:: EAT interactive input feedback.
 * emacsvox-eat-output:: EAT rendered output collection.
+* emacsvox-eat-presentation:: EAT status and output presentation.
 * emacsvox-eat-review:: Frozen EAT screen review.
 * emacsvox-eat-screen:: EAT screen snapshots and differences.
 * emacsvox-ebuku:: Speech-enable EBUKU.
@@ -8496,7 +8497,8 @@ Public entry point for Emacsvox speech access to EAT terminals.  The
 implementation is split by responsibility: - 'emacsvox-eat-screen' owns
 screen snapshots and differences.  - 'emacsvox-eat-focus' owns focus
 inference and navigation feedback.  - 'emacsvox-eat-output' owns prompt
-boundaries and output collection.  - 'emacsvox-eat-core' owns
+boundaries and output collection.  - 'emacsvox-eat-presentation' owns
+status, metadata, bells, and output cues.  - 'emacsvox-eat-core' owns
 observation, lifecycle, and presentation timing.  - 'emacsvox-eat-input'
 owns input, deletion, navigation, and completion.  -
 'emacsvox-eat-review' owns frozen screen review and inspection.
@@ -8510,8 +8512,8 @@ File: emacsvox-reference.info,  Node: emacsvox-eat-core,  Next: emacsvox-eat-foc
 2.116 emacsvox-eat-core
 =======================
 
-Internal screen observation, lifecycle, and presentation core for EAT.
-Load 'emacsvox-eat' rather than requiring this module directly.
+Lifecycle, foreground policy, timers, and observation coordination for
+EAT.  Load 'emacsvox-eat' rather than requiring this module directly.
 
 2.116.1 Emacsvox-Eat-Core Commands
 ----------------------------------
@@ -8622,7 +8624,7 @@ Input, navigation, deletion, paste, mode, and completion feedback for
 EAT.  Load 'emacsvox-eat' rather than requiring this module directly.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-eat-output,  Next: emacsvox-eat-review,  Prev: emacsvox-eat-input,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-eat-output,  Next: emacsvox-eat-presentation,  Prev: emacsvox-eat-input,  Up: Emacsvox Commands And Options
 
 2.119 emacsvox-eat-output
 =========================
@@ -8631,32 +8633,41 @@ EAT rendered output collection.  Load 'emacsvox-eat' rather than
 requiring this module directly.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-eat-review,  Next: emacsvox-eat-screen,  Prev: emacsvox-eat-output,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-eat-presentation,  Next: emacsvox-eat-review,  Prev: emacsvox-eat-output,  Up: Emacsvox Commands And Options
 
-2.120 emacsvox-eat-review
+2.120 emacsvox-eat-presentation
+===============================
+
+EAT status and output presentation.  Load 'emacsvox-eat' rather than
+requiring this module directly.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-eat-review,  Next: emacsvox-eat-screen,  Prev: emacsvox-eat-presentation,  Up: Emacsvox Commands And Options
+
+2.121 emacsvox-eat-review
 =========================
 
 Frozen, read-only review and explicit inspection for EAT screen state.
 Load 'emacsvox-eat' rather than requiring this module directly.
 
-2.120.1 Emacsvox-Eat-Review Commands
+2.121.1 Emacsvox-Eat-Review Commands
 ------------------------------------
 
-2.120.1.1 emacsvox-eat-review-goto-cursor
+2.121.1.1 emacsvox-eat-review-goto-cursor
 .........................................
 
  -- Command: emacsvox-eat-review-goto-cursor
 
      Return to the frozen screen’s captured terminal cursor row.
 
-2.120.1.2 emacsvox-eat-review-goto-focus
+2.121.1.2 emacsvox-eat-review-goto-focus
 ........................................
 
  -- Command: emacsvox-eat-review-goto-focus
 
      Move to the frozen conservative focus row and speak it.
 
-2.120.1.3 emacsvox-eat-review-mode
+2.121.1.3 emacsvox-eat-review-mode
 ..................................
 
  -- Command: emacsvox-eat-review-mode
@@ -8707,7 +8718,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      <down>		emacsvox-eat-review-next-line
      <up>		emacsvox-eat-review-previous-line
 
-2.120.1.4 emacsvox-eat-review-next-line
+2.121.1.4 emacsvox-eat-review-next-line
 .......................................
 
  -- Command: emacsvox-eat-review-next-line (&optional count)
@@ -8716,14 +8727,14 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional COUNT)
 
-2.120.1.5 emacsvox-eat-review-next-styled-region
+2.121.1.5 emacsvox-eat-review-next-styled-region
 ................................................
 
  -- Command: emacsvox-eat-review-next-styled-region
 
      Move to and speak the next frozen selection-like styled region.
 
-2.120.1.6 emacsvox-eat-review-previous-line
+2.121.1.6 emacsvox-eat-review-previous-line
 ...........................................
 
  -- Command: emacsvox-eat-review-previous-line (&optional count)
@@ -8732,21 +8743,21 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional COUNT)
 
-2.120.1.7 emacsvox-eat-review-previous-styled-region
+2.121.1.7 emacsvox-eat-review-previous-styled-region
 ....................................................
 
  -- Command: emacsvox-eat-review-previous-styled-region
 
      Move to and speak the previous frozen selection-like styled region.
 
-2.120.1.8 emacsvox-eat-review-quit
+2.121.1.8 emacsvox-eat-review-quit
 ..................................
 
  -- Command: emacsvox-eat-review-quit
 
      Kill the content-bearing frozen EAT review and restore its prior window.
 
-2.120.1.9 emacsvox-eat-review-screen
+2.121.1.9 emacsvox-eat-review-screen
 ....................................
 
  -- Command: emacsvox-eat-review-screen
@@ -8755,21 +8766,21 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Open a read-only review copied from retained EAT screen state.
      The command never captures mutable live terminal-buffer text.
 
-2.120.1.10 emacsvox-eat-review-show-completion
+2.121.1.10 emacsvox-eat-review-show-completion
 ..............................................
 
  -- Command: emacsvox-eat-review-show-completion
 
      Render and speak the frozen terminal candidate or help-row presentation.
 
-2.120.1.11 emacsvox-eat-review-show-screen
+2.121.1.11 emacsvox-eat-review-show-screen
 ..........................................
 
  -- Command: emacsvox-eat-review-show-screen
 
      Render the frozen terminal screen and move to its captured cursor row.
 
-2.120.1.12 emacsvox-eat-review-speak-current-line
+2.121.1.12 emacsvox-eat-review-speak-current-line
 .................................................
 
  -- Command: emacsvox-eat-review-speak-current-line (&optional
@@ -8781,14 +8792,14 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      (fn &optional INTRODUCTION REPLACEABLE-P)
 
-2.120.1.13 emacsvox-eat-review-speak-view
+2.121.1.13 emacsvox-eat-review-speak-view
 .........................................
 
  -- Command: emacsvox-eat-review-speak-view
 
      Speak a bounded overview of the current immutable review view.
 
-2.120.1.14 emacsvox-eat-speak-completion-output
+2.121.1.14 emacsvox-eat-speak-completion-output
 ...............................................
 
  -- Command: emacsvox-eat-speak-completion-output
@@ -8796,7 +8807,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained terminal candidate or help-row presentation.
 
-2.120.1.15 emacsvox-eat-speak-current-row
+2.121.1.15 emacsvox-eat-speak-current-row
 .........................................
 
  -- Command: emacsvox-eat-speak-current-row
@@ -8804,7 +8815,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the terminal cursor row from the latest retained screen snapshot.
 
-2.120.1.16 emacsvox-eat-speak-last-change
+2.121.1.16 emacsvox-eat-speak-last-change
 .........................................
 
  -- Command: emacsvox-eat-speak-last-change
@@ -8812,7 +8823,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the most recent quiesced terminal change from retained state.
 
-2.120.1.17 emacsvox-eat-speak-likely-focus
+2.121.1.17 emacsvox-eat-speak-likely-focus
 ..........................................
 
  -- Command: emacsvox-eat-speak-likely-focus
@@ -8820,7 +8831,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest conservative terminal focus inference for review.
 
-2.120.1.18 emacsvox-eat-speak-prompt
+2.121.1.18 emacsvox-eat-speak-prompt
 ....................................
 
  -- Command: emacsvox-eat-speak-prompt
@@ -8829,7 +8840,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Read the most recently identified EAT shell prompt.
      This explicit command works regardless of autospeak or prompt preference.
 
-2.120.1.19 emacsvox-eat-speak-retained-metadata
+2.121.1.19 emacsvox-eat-speak-retained-metadata
 ...............................................
 
  -- Command: emacsvox-eat-speak-retained-metadata
@@ -8837,7 +8848,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained or explicitly frozen title/directory change.
 
-2.120.1.20 emacsvox-eat-speak-retained-status
+2.121.1.20 emacsvox-eat-speak-retained-status
 .............................................
 
  -- Command: emacsvox-eat-speak-retained-status
@@ -8845,7 +8856,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained or explicitly frozen terminal status row.
 
-2.120.1.21 emacsvox-eat-speak-visible-screen
+2.121.1.21 emacsvox-eat-speak-visible-screen
 ............................................
 
  -- Command: emacsvox-eat-speak-visible-screen
@@ -8856,7 +8867,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
 File: emacsvox-reference.info,  Node: emacsvox-eat-screen,  Next: emacsvox-ebuku,  Prev: emacsvox-eat-review,  Up: Emacsvox Commands And Options
 
-2.121 emacsvox-eat-screen
+2.122 emacsvox-eat-screen
 =========================
 
 EAT screen snapshots and differences.  Load 'emacsvox-eat' rather than
@@ -8865,7 +8876,7 @@ requiring this module directly.
 
 File: emacsvox-reference.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacsvox-eat-screen,  Up: Emacsvox Commands And Options
 
-2.122 emacsvox-ebuku
+2.123 emacsvox-ebuku
 ====================
 
 EBUKU == Emacs Buku front-end to manage bookmarks.
@@ -8873,7 +8884,7 @@ EBUKU == Emacs Buku front-end to manage bookmarks.
 
 File: emacsvox-reference.info,  Node: emacsvox-ediff,  Next: emacsvox-eglot,  Prev: emacsvox-ebuku,  Up: Emacsvox Commands And Options
 
-2.123 emacsvox-ediff
+2.124 emacsvox-ediff
 ====================
 
 Ediff provides a nice visual interface to diff.  ;;;Comparing and
@@ -8889,10 +8900,10 @@ found in Emacs 19.29 and later.
 ediff-window-setup-function 'ediff-setup-windows-plain) so that Emacs
 always displays Ediff windows in a single frame.
 
-2.123.1 Emacsvox-Ediff Commands
+2.124.1 Emacsvox-Ediff Commands
 -------------------------------
 
-2.123.1.1 emacsvox-ediff-speak-current-difference
+2.124.1.1 emacsvox-ediff-speak-current-difference
 .................................................
 
  -- Command: emacsvox-ediff-speak-current-difference
@@ -8902,7 +8913,7 @@ always displays Ediff windows in a single frame.
 
 File: emacsvox-reference.info,  Node: emacsvox-eglot,  Next: emacsvox-ein,  Prev: emacsvox-ediff,  Up: Emacsvox Commands And Options
 
-2.124 emacsvox-eglot
+2.125 emacsvox-eglot
 ====================
 
 EGLOT == LSP Support for emacs
@@ -8910,16 +8921,16 @@ EGLOT == LSP Support for emacs
 
 File: emacsvox-reference.info,  Node: emacsvox-ein,  Next: emacsvox-elfeed,  Prev: emacsvox-eglot,  Up: Emacsvox Commands And Options
 
-2.125 emacsvox-ein
+2.126 emacsvox-ein
 ==================
 
 EIN == Emacs IPython Notebook You can install package EIN via Melpa This
 module speech-enables EIN
 
-2.125.1 Emacsvox-Ein Commands
+2.126.1 Emacsvox-Ein Commands
 -----------------------------
 
-2.125.1.1 emacsvox-ein-speak-current-cell
+2.126.1.1 emacsvox-ein-speak-current-cell
 .........................................
 
  -- Command: emacsvox-ein-speak-current-cell
@@ -8929,7 +8940,7 @@ module speech-enables EIN
 
 File: emacsvox-reference.info,  Node: emacsvox-elfeed,  Next: emacsvox-elisp-refs,  Prev: emacsvox-ein,  Up: Emacsvox Commands And Options
 
-2.126 emacsvox-elfeed
+2.127 emacsvox-elfeed
 =====================
 
 ELFEED == Feed Reader for Emacs.  Install from elpa M-x package-install
@@ -8937,38 +8948,38 @@ elfeed
 
    Required modules:
 
-2.126.1 Emacsvox-Elfeed Commands
+2.127.1 Emacsvox-Elfeed Commands
 --------------------------------
 
-2.126.1.1 emacsvox-elfeed-eww-entry-at-point
+2.127.1.1 emacsvox-elfeed-eww-entry-at-point
 ............................................
 
  -- Command: emacsvox-elfeed-eww-entry-at-point
 
      Display current article in EWW.
 
-2.126.1.2 emacsvox-elfeed-filter-entry-at-point
+2.127.1.2 emacsvox-elfeed-filter-entry-at-point
 ...............................................
 
  -- Command: emacsvox-elfeed-filter-entry-at-point
 
      Display current article after filtering.
 
-2.126.1.3 emacsvox-elfeed-next-entry
+2.127.1.3 emacsvox-elfeed-next-entry
 ....................................
 
  -- Command: emacsvox-elfeed-next-entry
 
      Move to next entry and speak it.
 
-2.126.1.4 emacsvox-elfeed-previous-entry
+2.127.1.4 emacsvox-elfeed-previous-entry
 ........................................
 
  -- Command: emacsvox-elfeed-previous-entry
 
      Move to previous entry and speak it.
 
-2.126.1.5 emacsvox-elfeed-speak-entry-at-point
+2.127.1.5 emacsvox-elfeed-speak-entry-at-point
 ..............................................
 
  -- Command: emacsvox-elfeed-speak-entry-at-point
@@ -8978,25 +8989,7 @@ elfeed
 
 File: emacsvox-reference.info,  Node: emacsvox-elisp-refs,  Next: emacsvox-ellama,  Prev: emacsvox-elfeed,  Up: Emacsvox Commands And Options
 
-2.127 emacsvox-elisp-refs
+2.128 emacsvox-elisp-refs
 =========================
 
 Speech-enable package elisp-refs.  ELISP-REFS ==
-
-
-File: emacsvox-reference.info,  Node: emacsvox-ellama,  Next: emacsvox-elpher,  Prev: emacsvox-elisp-refs,  Up: Emacsvox Commands And Options
-
-2.128 emacsvox-ellama
-=====================
-
-ELLAMA == Emacs LLM Interaction.  ellama uses package llm, and this
-module speech-enables ellama.
-
-
-File: emacsvox-reference.info,  Node: emacsvox-elpher,  Next: emacsvox-elpy,  Prev: emacsvox-ellama,  Up: Emacsvox Commands And Options
-
-2.129 emacsvox-elpher
-=====================
-
-ELPHER == gopher/gemini client Let's see if we can rescue the
-Content-Oriented Web

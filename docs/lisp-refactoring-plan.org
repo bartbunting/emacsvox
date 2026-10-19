@@ -715,6 +715,30 @@ the documentation review gate pass.
 
 Commit slice: =Extract Eat rendered output collection=.
 
+** Status and output presentation
+
+Implementation moves 35 unchanged definitions into =emacsvox-eat-presentation=.
+It owns semantic submissions, replacement keys, status and metadata feedback,
+prompt feedback, bell callbacks, background cues and unread-count feedback.
+Core retains callback installation, lifecycle cleanup, timers and the ordering
+of competing terminal responses. Focus calls the presentation functions at
+runtime without a circular require.
+
+All 217 applicable source and compiled tests pass. The two graphical cases
+skipped in batch and the real =ed= case pass on an isolated display. All six
+build-inventory checks pass. Fresh compiled facade startup works both with
+the installed Eat package and without Eat on the load path; loading the
+integration does not acquire the optional package eagerly. The incremental
+build is warning-free, and byte-code preflight and headers pass.
+Reference generation and the documentation review gate also pass.
+
+All 210 original core definitions remain unchanged with exactly one owner.
+Core now has 1136 lines; the four new modules range from 404 to 567 lines.
+All four slices are implemented. Listening acceptance remains open; the live
+profile was not reloaded.
+
+Commit slice: =Extract Eat status and output presentation=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -730,12 +754,15 @@ and comments; extracted modules retain named authors and copyright holders.
 | tts-speak.el | 4829 | 3078 |
 | emacsvox-speak.el | 3781 | 1431 |
 | emacsvox-advice.el | 3641 | 3100 |
+| emacsvox-eat-core.el | 2863 | 1136 |
 
 The original extraction pass, generic voice API, Agent Shell, Omnivox
 inventory/discovery, tracked-reading, core completion/input/message advice and
 column-filter follow-ups and all eight core speech slices are complete. The
 eight speech slices reduce the facade from 3424 to 1431 lines while preserving
-public names and definition forms. Further extraction should follow a concrete
+public names and definition forms. The four Eat slices separate screen data,
+focus inference, output collection and presentation from lifecycle coordination.
+Further extraction should follow a concrete
 responsibility problem rather than a target line count.
 
 * TTS lifecycle boundary

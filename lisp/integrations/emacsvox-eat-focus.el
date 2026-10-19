@@ -38,11 +38,11 @@
 ;; Observation and presentation state is initialized and cleared by core.
 (defvar emacsvox-eat--update-serial)
 (defvar emacsvox-eat--last-focus-presentation-identity)
-(declare-function emacsvox-eat--facts "emacsvox-eat-core"
+(declare-function emacsvox-eat--facts "emacsvox-eat-presentation"
                   (role event &optional operation properties))
-(declare-function emacsvox-eat--submit "emacsvox-eat-core"
+(declare-function emacsvox-eat--submit "emacsvox-eat-presentation"
                   (content facts occasion &optional icon delivery-policy replacement-key))
-(declare-function emacsvox-eat--terminal-delivery-key "emacsvox-eat-core" (kind))
+(declare-function emacsvox-eat--terminal-delivery-key "emacsvox-eat-presentation" (kind))
 
 (defconst emacsvox-eat--maximum-focus-characters 240
   "Maximum characters retained for one inferred terminal focus object.")

@@ -3666,3 +3666,12 @@ Rendered output collection now belongs to =emacsvox-eat-output=. Prompt
 exclusion, concealment redaction, partial lines and output limits retain their
 existing behavior. All 217 applicable source and compiled tests and all three
 isolated graphical checks pass, including the real =ed= interruption case.
+
+Status, metadata, prompt feedback, bells and background-output cues now belong
+to =emacsvox-eat-presentation=. Core still installs callbacks and controls
+timing, foreground eligibility and response ordering. All four extractions
+are implemented with unchanged original definitions. All 217 applicable
+source and compiled checks, three isolated graphical checks and six build
+inventory checks pass. Fresh compiled startup also works without Eat installed
+on the load path. Listening acceptance remains separate; restart the profile
+to load the completed extraction.
