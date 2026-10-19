@@ -81,8 +81,8 @@
     (pcase implementation
       ("emacsvox"
        (emacsvox-trace--load-source root "emacsvox-preamble")
-       (emacsvox-trace--load-source root "emacsvox-speak")
-       (emacsvox-trace--load-source root "emacsvox-advice")
+       (emacsvox-trace--load-source root "core/emacsvox-speak")
+       (emacsvox-trace--load-source root "core/emacsvox-advice")
        (setq-default emacsvox-use-icons t)
        (setq-default emacsvox-speak-messages t))
       ("emacspeak"

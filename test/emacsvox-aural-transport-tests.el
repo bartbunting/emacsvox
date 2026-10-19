@@ -1588,7 +1588,8 @@ write.  State synchronization lines in a combined write are ignored."
               (lambda (text) (push (list 'text text) events)))
              ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
               (lambda (pitch duration mode &optional gain shape)
-                (should-not shape)
+                ;; Default tones carry their classic sine shape explicitly.
+                (should (equal shape '(:waveform sine)))
                 (should (= (or gain 1) 1))
                 (push (list 'tone pitch duration mode) events))))
           (tts-audio-format (point-min) (point-max))))

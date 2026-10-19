@@ -1121,4 +1121,30 @@ reservation, publication, cancellation and reentrant callback boundaries.
 The extraction retains current lifecycle ownership and public interfaces.
 
 Listening acceptance and optional native-service checks remain separate from
-the automated results above. The known tone-test failure remains unchanged.
+the automated results above. The tone-test failure recorded during extraction
+is resolved in the CI follow-up below.
+
+* CI follow-up, 2026-10-19
+
+The four workbench operation modules were missing from the startup freshness
+inventory. Add preview, library, routing and apply alongside the existing
+workbench entries. Both the build-inventory and fresh-load dependency tests
+now pass.
+
+The legacy capital-tone test still expected no shape. Default tones carry an
+explicit sine waveform; the assertion now checks that value while retaining
+gain, tone order and complete word-tail checks. No tone delivery code changed.
+
+Completing the core gate exposed obsolete flat source paths in the trace
+runner. Its Emacsvox entry points now load from =lisp/core/=. The original
+Emacspeak reference paths and golden traces remain unchanged.
+
+Verification uses Emacs 31.0.90: 1017 core tests pass with 17 environment-specific
+skips; 315 compatibility tests pass with two skips. All 27 semantic traces match,
+and isolated compiled aural parity checks pass. The three initially failing
+tests pass independently. Incremental compilation and byte-code preflight pass.
+
+The EAT download failure was transient: rerunning the affected GitHub Emacs 30.2
+integration job succeeds without changing its dependency pin or download code.
+The corrected Lisp and trace code still needs a pushed CI run on Emacs 30.2
+and 31.1; the local results do not establish that full matrix.
