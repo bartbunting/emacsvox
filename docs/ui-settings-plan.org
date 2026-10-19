@@ -3577,3 +3577,8 @@ checks are unchanged; the speech facade retains hook and advice activation.
 The [[file:lisp-refactoring-plan.org][Lisp refactoring plan]] records the eight accepted slices and their
 verification checkpoints. Listening acceptance remains separate. The running
 session is not reloaded during this work.
+
+Point and indentation presentation now live in =emacsvox-speak-presentation=;
+the existing indentation menus retain their ownership and behavior. All 25
+isolated graphical reading/presentation checks pass, with concrete cue playback
+stubbed. Source and compiled checks retain local/global scope and saved defaults.

@@ -493,6 +493,25 @@ the documentation release check pass. All 258 original definition forms remain
 unchanged across the facade and extracted modules. The facade now has 3148
 lines. Commit slice: =Extract character speech and typing feedback=.
 
+*** Point and indentation presentation
+
+Point options, indentation options, semantic facts, text annotations, previews
+and setters now live in =emacsvox-speak-presentation=. Menu ownership remains
+in =ui/emacsvox-indentation=. All original definition forms remain unchanged.
+
+Source verification passes 256 cases and compiled verification passes 255;
+six graphical cases skip in batch and pass in the dedicated graphical run.
+All 25 graphical reading/presentation checks pass against both the original
+facade and the extracted implementation. The runner stubs concrete cue playback
+because two existing menu fixtures otherwise try to use the desktop audio
+server. This establishes interaction and cue construction, not listening.
+Fresh compiled startup, the warning-free incremental build, byte-code preflight,
+headers, generated reference and the documentation release check pass. The
+header template now includes the conventional filename suffix; this also
+corrects the character module's header. The facade has 2772 lines.
+
+Commit slice: =Extract point and indentation presentation=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

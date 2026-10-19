@@ -359,6 +359,10 @@ compiled-aural-test:
 graphical-voice-test: check-emacs bytecode-check
 	sh test/run-graphical-voice-tests.sh "$(EMACS)"
 
+.PHONY: graphical-speak-test
+graphical-speak-test: check-emacs bytecode-check
+	sh test/run-graphical-speak-tests.sh "$(EMACS)"
+
 BENCHMARK_PLAN ?= .benchmarks/voices.json
 BENCHMARK_PRESET ?= full
 

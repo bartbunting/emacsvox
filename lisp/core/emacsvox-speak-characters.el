@@ -1,4 +1,4 @@
-;;; emacsvox-speak-characters --- Character speech and typing feedback -*- lexical-binding: t; -*-
+;;; emacsvox-speak-characters.el --- Character speech and typing feedback -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 1995 -- 2024, T. V. Raman
 ;; Copyright (c) 1994, 1995 by Digital Equipment Corporation.
