@@ -30,6 +30,37 @@
                 ((symbol-function 'tts-voice-reset-code) (lambda () "")))
         ,@body))))
 
+(ert-deftest emacsvox-character-voice-scale-follows-buffer-and-lane ()
+  "Each letter uses its buffer's scale, including after another buffer spoke."
+  (emacsvox-character-test--with-runtime
+   (with-temp-buffer
+     (setq-local tts-character-scale 0.7)
+     (let ((first (current-buffer)))
+       (with-temp-buffer
+         (setq-local tts-character-scale 1.4)
+         (let ((second (current-buffer))
+               (supported (symbol-function 'omnivox--choice-tuning-supported-p)))
+           (dolist (native '(nil t))
+             (cl-letf (((symbol-function 'omnivox--choice-tuning-supported-p)
+                        (lambda (process) (and native (funcall supported process)))))
+               (dolist (process (list speaker notification))
+                 (dolist (buffer (list first second first))
+                   (with-current-buffer buffer
+                     (let ((tts-speaker-process process) writes)
+                       (cl-letf (((symbol-function 'process-send-string)
+                                  (lambda (target command)
+                                    (should (eq target process))
+                                    (push command writes))))
+                         (tts-letter "a"))
+                       (let* ((wire (apply #'concat (reverse writes)))
+                              (scale (string-search
+                                      (format "tts_set_character_scale %s\n" tts-character-scale) wire))
+                              (letter (string-search (if native "emacsvox_letter " "l {a}") wire)))
+                         (ert-info ((format "Native %S, wire %S" native wire))
+                           (should scale)
+                           (should letter)
+                           (should (< scale letter))))))))))))))))
+
 (defun emacsvox-character-test--capture (function)
   "Call FUNCTION and decode its actual character or ordinary timeline."
   (let (writes)

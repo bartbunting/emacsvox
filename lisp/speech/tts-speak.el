@@ -290,7 +290,7 @@ use their existing isolated-letter behavior."
   (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "tts_set_character_scale %s\n"
-           factor) 'neutral))
+           factor) 'neutral 'sync-character-scale))
 
 ;;;;   split caps
 
@@ -2653,6 +2653,7 @@ Keep character pronunciation, rate and pitch handling in the speech server."
                                :voice-command (emacsvox-aural-compiled-voice-command voice)
                                :voice-style (emacsvox-aural-compiled-voice-style voice)))))
          (tts--protocol-sync)
+         (tts--protocol-set-character-scale tts-character-scale)
          (emacsvox-aural-queue-concrete-plan plan letter)
          (tts--protocol-dispatch))))))
 
@@ -2668,6 +2669,7 @@ Keep character pronunciation, rate and pitch handling in the speech server."
                (omnivox--process-supports-p tts-speaker-process "palette_letter_v1"))
           (tts--palette-letter letter)
         (tts--protocol-sync-capitalization-presentation)
+        (tts--protocol-set-character-scale tts-character-scale)
         (tts--protocol-letter letter)))))
 ;;;  Notify:
 

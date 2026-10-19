@@ -4134,6 +4134,7 @@
               (nreverse writes)
               (list
                (list process "tts_set_capitalization_presentation none\n")
+               (list process (format "tts_set_character_scale %s\n" tts-character-scale))
                (list process "l {A}\n"))))))
       (delete-process process))))
 
