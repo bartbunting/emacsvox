@@ -3707,3 +3707,28 @@ and compiled tests, all 39 graphical checks, six build-inventory checks and
 isolated compiled aural parity checks pass. The optional native-service test
 was not run. Listening acceptance remains open; restart the normal profile
 to load the completed extraction.
+
+* Dired size interruption and binding initialization, 2026-10-19
+
+Findings: size inspection used ordered speech with no interruption. Logs from
+the active session show a second =z= arriving while the first announcement
+was playing; the first finished normally. The Messages buffer also records
+=z is undefined=. A fresh Emacs reproduces the missing binding when Dired is
+opened noninteractively before any interactive entry command initializes the
+shared map. The earlier opening route is not recorded in the logs.
+
+Implemented: load the existing Dired speech bindings when the integration
+loads, covering existing and newly created listings. The size command stops
+main speech and pending deliveries before inspecting the entry or starting
+=du=. Notification speech continues independently, and directory progress
+and result feedback retain their order.
+
+Regression coverage checks existing and new buffers without interactive
+entry, plus file, directory, failed-directory and missing-entry size requests.
+All 57 Dired and Wdired tests pass from source and compiled code. Fresh
+compiled startup verifies the binding in existing and new listings. The
+incremental build and byte-code preflight pass. Listening acceptance remains
+open; restart the normal profile to load the fix. The running session was
+not reloaded.
+
+Commit slice: =Fix Dired size interruption and binding initialization=.

@@ -91,6 +91,83 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-dired-size-binding-does-not-require-interactive-entry ()
+  "Loading speech support binds size in existing and newly created listings."
+  (let ((directory (make-temp-file "emacsvox-dired-keys-" t))
+        (dired-mode-map (copy-keymap dired-mode-map))
+        (module (symbol-file 'emacsvox-dired-speak-file-size))
+        buffer)
+    (unwind-protect
+        (progn
+          (define-key dired-mode-map "z" nil)
+          (setq buffer (dired-noselect directory))
+          (load module nil t t)
+          (with-current-buffer buffer
+            (should (eq (key-binding "z") #'emacsvox-dired-speak-file-size)))
+          (with-temp-buffer
+            (dired-mode directory)
+            (should (eq (key-binding "z") #'emacsvox-dired-speak-file-size))))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (delete-directory directory))))
+
+(ert-deftest emacsvox-dired-size-stops-main-before-inspection ()
+  "Size stops obsolete main speech before lookup, preserving notifications."
+  (let* ((directory (make-temp-file "emacsvox-dired-size-" t))
+         (file (expand-file-name "sample" directory))
+         (subdirectory (expand-file-name "folder" directory))
+         (tts-speaker-process 'main)
+         (tts-notify-process 'notifications)
+         buffer)
+    (unwind-protect
+        (progn
+          (write-region "abc" nil file nil 'silent)
+          (make-directory subdirectory)
+          (setq buffer (dired-noselect directory))
+          (with-current-buffer buffer
+            (dolist (kind '(file directory failed-directory missing))
+              (ert-info ((format "Size inspection: %s" kind))
+                (if (eq kind 'missing)
+                    (goto-char (point-max))
+                  (should (dired-goto-file (if (eq kind 'file) file subdirectory))))
+                (let ((emacsvox-aural--pending-deliveries
+                       (make-hash-table :test #'equal))
+                      events result)
+                  (dolist (owner '(main notifications))
+                    (puthash owner (emacsvox-aural--make-pending-delivery
+                                    :owner owner :sequence 1)
+                             emacsvox-aural--pending-deliveries))
+                  (cl-letf
+                      (((symbol-function 'tts--interrupt-process)
+                        (lambda (owner &rest _) (push (list 'stop owner) events)))
+                       ((symbol-function 'emacsvox-aural-submit-actions)
+                        (lambda (&rest _) (push 'progress events)))
+                       ((symbol-function 'call-process)
+                        (lambda (program &rest _)
+                          (should (equal program "du"))
+                          (push 'du events)
+                          (insert "4\tfixture directory\n")
+                          (if (eq kind 'failed-directory) 1 0)))
+                       ((symbol-function 'emacsvox-aural-submit)
+                        (lambda (content &rest arguments)
+                          (push 'result events)
+                          (setq result (cons content arguments)))))
+                    (call-interactively #'emacsvox-dired-speak-file-size))
+                  (should (equal (nreverse events)
+                                 (if (memq kind '(directory failed-directory))
+                                     '((stop main) progress du result)
+                                   '((stop main) result))))
+                  (should-not (gethash 'main emacsvox-aural--pending-deliveries))
+                  (should (gethash 'notifications emacsvox-aural--pending-deliveries))
+                  (should (eq (plist-get (cdr result) :occasion) 'inspection))
+                  (pcase kind
+                    ('file (should (equal (car result) "File size 3")))
+                    ('directory (should (equal (car result) "4\tfixture directory")))
+                    ('failed-directory
+                     (should (string-prefix-p "Could not determine directory size" (car result))))
+                    ('missing (should (equal (car result) "No file on current line")))))))))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (delete-directory directory t))))
+
 (defun emacsvox-test--dired-feedback (target)
   "Call TARGET's migrated advice and return its semantic feedback events."
   (let ((ems--interactive-fn-name target)

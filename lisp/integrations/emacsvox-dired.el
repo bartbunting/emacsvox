@@ -1007,6 +1007,8 @@ options passed to command `file'."
   "Speak the size of the current file.
 On a directory line, run du -s on the directory to speak its size."
   (interactive)
+  ;; Stop obsolete main speech before a potentially slow directory scan.
+  (tts-stop)
   (let ((filename (dired-get-filename nil t))
         (size 0))
     (cond
@@ -1120,6 +1122,9 @@ On a directory line, run du -s on the directory to speak its size."
   (define-key dired-mode-map "\M-t" 'emacsvox-dired-speak-symlink-target)
   (define-key dired-mode-map "\C-i" 'emacsvox-speak-next-field)
   (define-key dired-mode-map  "," 'emacsvox-dired-speak-header-line))
+
+;; Cover existing listings and entry through callers such as `dired-noselect'.
+(emacsvox-dired-setup-keys)
 
 ;;;  Advice locate:
 (defun emacsvox-dired-open-this-directory ()
