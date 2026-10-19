@@ -31,7 +31,7 @@
                                 #'ignore))
                       (let ((stats
                             (ert-run-tests-batch
-                             '(or "^emacsvox-indentation-"
+                             '(or "^emacsvox-indentation-" "^emacsvox-speak-completion-"
                                   (member emacsvox-reading-unit-prompt-is-spoken-once-on-main)))))
                        (kill-emacs
                         (if (and (> (ert-stats-total stats) 0)

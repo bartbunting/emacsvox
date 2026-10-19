@@ -13,7 +13,8 @@
 (require 'subr-x)
 
 (defvar emacsvox-speak-test-modules
-  '(("emacsvox-speak-presentation" emacsvox-speak--point-facts emacsvox-speak--indentation-facts emacsvox-set-indentation-presentation)
+  '(("emacsvox-speak-completion" emacsvox-get-current-completion emacsvox-completions-move-to-completion-group)
+    ("emacsvox-speak-presentation" emacsvox-speak--point-facts emacsvox-speak--indentation-facts emacsvox-set-indentation-presentation)
     ("emacsvox-speak-characters" emacsvox-speak-this-char emacsvox--delayed-phonetic-schedule emacsvox-post-self-insert-hook)
     ("emacsvox-speak-filters" emacsvox-speak-line-apply-column-filter))
   "Extracted modules and representative definitions whose owners are checked.")
@@ -74,7 +75,7 @@
                    '(tts-speak tts-letter tts-dispatch tts-stop))))
   (setq-default emacsvox-speak-messages nil)
   (load (expand-file-name (concat "lisp/core/emacsvox-advice" extension) root) nil t t)
-  (dolist (suite '(speak speak-filters org completion input message navigation
+  (dolist (suite '(speak speak-filters speak-command org completion input message navigation
                   position display timer core-migration indentation))
     (load (expand-file-name (format "test/emacsvox-%s-tests.el" suite) root) nil t t))
   (dolist (module (cons '("emacsvox-speak" emacsvox-speak-line)

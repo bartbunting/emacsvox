@@ -40,6 +40,7 @@
   (require 'omnivox-remote-tests)
   (require 'emacsvox-speak-tests)
   (require 'emacsvox-speak-filters-tests)
+  (require 'emacsvox-speak-command-tests)
   (require 'emacsvox-aural-tests)
   (require 'emacsvox-aural-audit-tests)
   (require 'emacsvox-aural-rules-tests)

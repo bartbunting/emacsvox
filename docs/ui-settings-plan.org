@@ -3582,3 +3582,8 @@ Point and indentation presentation now live in =emacsvox-speak-presentation=;
 the existing indentation menus retain their ownership and behavior. All 25
 isolated graphical reading/presentation checks pass, with concrete cue playback
 stubbed. Source and compiled checks retain local/global scope and saved defaults.
+
+Completion-reading commands now live in =emacsvox-speak-completion=. The main
+speech library still installs completion hooks and keys in their original
+order. All 26 graphical reading checks pass, including real candidates,
+Space navigation and C-o return with the reference buffer's draft preserved.

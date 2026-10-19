@@ -98,6 +98,7 @@ core/emacsvox-pronounce.elc \
 core/emacsvox-tracked-reading.elc \
 core/emacsvox-speak-characters.elc \
 core/emacsvox-speak-presentation.elc \
+core/emacsvox-speak-completion.elc \
 core/emacsvox-speak-filters.elc \
 core/emacsvox-speak.elc
 
@@ -175,6 +176,7 @@ core/emacsvox-pronounce.elc \
 core/emacsvox-tracked-reading.elc \
 core/emacsvox-speak-characters.elc \
 core/emacsvox-speak-presentation.elc \
+core/emacsvox-speak-completion.elc \
 core/emacsvox-speak-filters.elc \
 core/emacsvox-speak.elc  \
 core/emacsvox-advice-completion.elc \
@@ -523,8 +525,9 @@ core/emacsvox-advice.elc: core/emacsvox-advice-completion.elc \
 core/emacsvox-advice-input.elc core/emacsvox-advice-messages.elc
 core/emacsvox-speak-characters.elc: speech/tts-speak.elc
 core/emacsvox-speak-presentation.elc: speech/tts-speak.elc
+core/emacsvox-speak-completion.elc: speech/tts-speak.elc
 core/emacsvox-speak-filters.elc: speech/tts-speak.elc
-core/emacsvox-speak.elc: core/emacsvox-speak-presentation.elc core/emacsvox-speak-characters.elc core/emacsvox-tracked-reading.elc core/emacsvox-speak-filters.elc \
+core/emacsvox-speak.elc: core/emacsvox-speak-completion.elc core/emacsvox-speak-presentation.elc core/emacsvox-speak-characters.elc core/emacsvox-tracked-reading.elc core/emacsvox-speak-filters.elc \
 speech/tts-speak.elc speech/voice-setup.elc voices/voice-defs.elc core/emacsvox-pronounce.elc \
 aural/emacsvox-aural-submission.elc emacsvox-version.elc
 aural/emacsvox-aural-description.elc: \

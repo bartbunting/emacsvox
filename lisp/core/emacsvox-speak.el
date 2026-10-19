@@ -214,22 +214,7 @@ message area.  You can use command
   (run-at-time 43200 43200 #'emacsvox-notifications-truncate)
   "Idle timer that runs every 12 hours  to cleanup notifications.")
 
-;;;  Completion helper:
-
-(defun emacsvox-speak-completions-if-available ()
-  "Speak completions if available."
-  (interactive)
-  (let ((completions (get-buffer "*Completions*")))
-    (cond
-     ((and completions
-           (window-live-p (get-buffer-window completions)))
-      (with-minibuffer-completions-window
-        (emacsvox-icon 'help)
-        (tts-chunk-on-white-space-and-punctuations)
-        (next-completion 1)
-        (tts-with-punctuations
-         'all (emacsvox-speak-line))))
-     (t (emacsvox-speak-line)))))
+(require 'emacsvox-speak-completion)
 
 ;;; Minibuffer Helpers:
 ;;;###autoload
@@ -1115,27 +1100,6 @@ Useful to listen to a buffer without switching  contexts."
         (select-window (get-buffer-window help-buffer))
         (call-interactively #'emacsvox-speak-windowful))
     (tts-speak "First ask for help")))
-
-(defun emacsvox-get-current-completion ()
-  "Return the completion under point in the *Completions* buffer."
-  (with-minibuffer-completions-window
-    (let (beg end)
-      (if (and (not (eobp)) (get-text-property (point) 'completion--string))
-          (setq end (point) beg (1+ (point))))
-      (if (and (not (bobp))
-               (get-text-property (1- (point)) 'completion--string))
-          (setq end (1- (point)) beg (point)))
-      (if (and  (bobp)
-                (next-completion 1))
-          (setq end (1- (point)) beg (point)))
-      (if (null beg) (error "No current  completion "))
-      (setq beg (or
-                 (previous-single-property-change beg 'completion--string)
-                 (point-min)))
-      (setq end
-            (or (next-single-property-change end 'completion--string)
-                (point-max)))
-      (emacsvox-aural-source-substring beg end))))
 
 ;;;  mail check
 
@@ -2187,16 +2151,6 @@ Argument O specifies overlay."
       (message "Space %s of %s"
                (1+ (- orig start)) (- end start))))))
 
-;;;   completion helpers
-
-;; switching to completions window from minibuffer:
-
-(defun emacsvox-get-minibuffer-contents ()
-  "Return contents of the minibuffer."
-  (save-current-buffer
-    (set-buffer (window-buffer (minibuffer-window)))
-    (minibuffer-contents)))
-
 ;; Make all occurrences of string inaudible
 (defun emacsvox-make-string-inaudible (string)
   (unless (string-match "^ *$" string)
@@ -2207,44 +2161,6 @@ Argument O specifies overlay."
           (put-text-property
            (match-beginning 0) (match-end 0)
            'personality 'inaudible))))))
-
-(defun emacsvox-switch-to-reference-buffer ()
-  "Switch back to buffer that generated completions."
-  (interactive)
-  
-  (if completion-reference-buffer
-      (switch-to-buffer completion-reference-buffer)
-    (error "Reference buffer not found."))
-  (when (called-interactively-p 'interactive)
-    (emacsvox-speak-line)
-    (emacsvox-icon 'select-object)))
-
-(defun emacsvox-completions-move-to-completion-group ()
-  "Move to group of choices beginning with character last
-typed. If no such group exists, then we try to search for that
-char, or dont move. "
-  (interactive)
-  
-  (let ((pattern
-         (format
-          "[ \t\n]%s%c"
-          (or (emacsvox-get-minibuffer-contents) "")
-          last-input-event))
-        (input (format "%c" last-input-event))
-        (case-fold-search t))
-    (when (or (re-search-forward pattern nil t)
-              (re-search-backward pattern nil t)
-              (search-forward input nil t)
-              (search-backward input nil t))
-      (skip-syntax-forward " ")
-      (emacsvox-icon 'search-hit))
-    (tts-speak (emacsvox-get-current-completion))))
-
-(defun emacsvox-completion-setup-hook ()
-  "Set things up for emacsvox."
-  (with-minibuffer-completions-window 
-    (goto-char (point-min))
-    (emacsvox-icon 'help)))
 
 (add-hook 'completion-setup-hook 'emacsvox-completion-setup-hook)
 

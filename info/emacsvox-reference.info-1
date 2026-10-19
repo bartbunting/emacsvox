@@ -679,6 +679,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
 * emacsvox-speak-characters:: Character speech and typing feedback.
+* emacsvox-speak-completion:: Completion reading and navigation.
 * emacsvox-speak-filters:: Reading column filters.
 * emacsvox-speak-presentation:: Point and indentation presentation.
 * emacsvox-speedbar:: speedbar -.

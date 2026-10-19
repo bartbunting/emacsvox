@@ -512,6 +512,24 @@ corrects the character module's header. The facade has 2772 lines.
 
 Commit slice: =Extract point and indentation presentation=.
 
+*** Completion commands
+
+Candidate extraction, completion reading, group navigation and reference-buffer
+return now live in =emacsvox-speak-completion=. Completion hooks and all key
+bindings remain in the facade. Advice feedback remains in its existing owner.
+All original definition forms remain unchanged.
+
+Source verification passes 256 cases and compiled verification passes 255,
+with seven graphical cases deferred to the graphical run. All 26 graphical
+cases pass, including a new real-completion-buffer test for candidate reading,
+Space navigation and C-o return. Fresh compiled startup, the warning-free
+incremental build, preflight and headers pass.
+
+Reference generation and the documentation review gate pass. The facade has
+2688 lines.
+
+Commit slice: =Extract completion reading commands=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
