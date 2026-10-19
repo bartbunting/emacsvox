@@ -109,6 +109,7 @@
     "core/emacsvox-speak-time.el"
     "core/emacsvox-speak-windows.el"
     "core/emacsvox-speak-status.el"
+    "core/emacsvox-speak-navigation.el"
     "core/emacsvox-speak-filters.el"
     "core/emacsvox-speak.el"
     "aural/sox-gen.el"

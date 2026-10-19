@@ -8,6 +8,7 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'ert)
+(require 'repeat)
 (require 'emacsvox-advice)
 
 (ert-deftest emacsvox-speak-completion-graphical-candidates-and-return ()
@@ -238,6 +239,83 @@
                  (should (equal command "iwgetid --raw")) "Test network\n")))
       (emacsvox-speak-net-id)
       (should (equal (car kill-ring) "Test network: 192.0.2.1")))))
+
+(ert-deftest emacsvox-speak-navigation-mark-reader-restores-buffer ()
+  "Mark speech highlights its text without changing point or buffer properties."
+  (with-temp-buffer
+    (insert "one\ntwo\n")
+    (put-text-property 2 3 'personality 'voice-bolden)
+    (set-mark 2)
+    (goto-char 6)
+    (set-buffer-modified-p nil)
+    (let ((buffer-read-only t) spoken)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+        (emacsvox-speak-current-mark 1)
+        (should (equal (substring-no-properties spoken) "mark 0 one"))
+        (should (eq (get-text-property 8 'personality spoken) 'voice-animate))
+        (should (eq (get-text-property 2 'personality) 'voice-bolden))
+        (should (= (point) 6))
+        (should-not (buffer-modified-p))))))
+
+(ert-deftest emacsvox-speak-navigation-mark-ring-rotates-backward ()
+  "Backward mark navigation preserves the current position and rotates history."
+  (with-temp-buffer
+    (insert "abcdef")
+    (set-mark 2)
+    (setq mark-ring (list (copy-marker 3) (copy-marker 5)))
+    (goto-char 6)
+    (emacsvox-mark-backward-mark)
+    (should (= (point) 5))
+    (should (= (mark) 6))
+    (should (equal (mapcar #'marker-position mark-ring) '(2 3)))))
+
+(ert-deftest emacsvox-speak-navigation-fields-preserve-boundary-speech ()
+  "Field navigation preserves Emacs's left-adjacent text at field boundaries."
+  (with-temp-buffer
+    (insert "_" (propertize "one" 'field 'first)
+            (propertize "two" 'field 'second) "tail")
+    (goto-char 3)
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (push (substring-no-properties text) spoken))))
+        (emacsvox-speak-next-field)
+        (should (= (point) 5))
+        (emacsvox-speak-previous-field)
+        (should (= (point) 2))
+        (should (equal spoken '("_" "one")))))))
+
+(ert-deftest emacsvox-speak-navigation-repeat-feedback-follows-transitions ()
+  "Repeat entry, continuation and exit retain their distinct cues."
+  (let ((emacsvox-repeat-was-active nil) (repeat-in-progress nil) cues)
+    (cl-letf (((symbol-function 'emacsvox-icon) (lambda (cue) (push cue cues))))
+      (emacsvox-repeat-check-hook)
+      (setq repeat-in-progress t)
+      (emacsvox-repeat-check-hook)
+      (emacsvox-repeat-check-hook)
+      (setq repeat-in-progress nil)
+      (emacsvox-repeat-check-hook)
+      (emacsvox-repeat-check-hook)
+      (should (equal cues '(repeat-end repeat-active repeat-start))))))
+
+(ert-deftest emacsvox-speak-navigation-graphical-percentage-jump ()
+  "Percentage navigation saves the mark and displays the destination."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (let ((buffer (generate-new-buffer " *reading percentage*")) spoken)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'emacsvox-speak-line)
+                     (lambda (&rest _) (setq spoken (point)))))
+            (switch-to-buffer buffer)
+            (insert (make-string 1000 ?x))
+            (goto-char 10)
+            (emacsvox-goto-percent 50)
+            (redisplay t)
+            (should (= (mark) 10))
+            (should (= (point) 501))
+            (should (= spoken 501))
+            (should (pos-visible-in-window-p (point))))
+        (kill-buffer buffer)))))
 
 (provide 'emacsvox-speak-command-tests)
 ;;; emacsvox-speak-command-tests.el ends here

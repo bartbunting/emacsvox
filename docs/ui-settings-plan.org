@@ -3607,3 +3607,14 @@ now belong to =emacsvox-speak-status=. Header voice-map and battery-hook
 registration remain in the facade. All 28 graphical reading checks pass,
 including header routing, real status formatting and modification cues.
 Battery and network output also pass source and compiled checks.
+
+Navigation and repeat feedback now belong to =emacsvox-speak-navigation=.
+Repeat-hook registration and the shared mark-reading helpers stay in core.
+All eight extraction slices are implemented. Source and compiled checks pass,
+and all 29 graphical reading checks pass, including percentage jumps and
+visible destination checks. Listening acceptance remains open.
+
+Field-navigation finding: boundary speech currently reads the left-adjacent
+field, and backward navigation can error when the previous field starts at
+the accessible buffer boundary. This behavior predates extraction and remains
+unchanged; a correction belongs in a separate behavior slice.

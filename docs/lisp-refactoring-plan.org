@@ -453,7 +453,7 @@ and listening acceptance stays separate.
 
 Commit slice: =Extract reading column filters and saved settings=.
 
-** Remaining core speech responsibilities
+** Core speech responsibility extractions
 
 Accepted on 2026-10-19: complete eight further extractions, each in its own
 verified commit, preserving public names, settings, keys and startup order:
@@ -599,6 +599,37 @@ also pass.
 
 Commit slice: =Extract buffer and system status speech=.
 
+*** Navigation and repeat feedback
+
+=emacsvox-speak-navigation= owns percentage jumps, property and field
+navigation, mark-ring rotation, continuous reading, repeat feedback and
+selective display. Repeat-hook registration stays in the facade. The two mark
+readers remain beside their shared temporary-personality macro in core;
+mark-ring navigation calls the existing helper. This retains the shared macro
+boundary without a circular compile-time or runtime require.
+
+All 258 original definition forms remain unchanged. Source verification passes
+268 cases and compiled verification passes 267, with ten graphical cases
+covered by the graphical run. All 29 graphical cases pass against both the
+original facade and the extracted code. Checks cover mark properties and
+modification state, mark-ring rotation, existing field-boundary speech, repeat
+transitions, and visible percentage jumps. The original facade also passes
+the expanded source suite.
+
+Fresh compiled startup and isolated aural parity pass. The normal incremental
+build is warning-free; the isolated build retains warnings in unchanged
+modules, with none from the extracted speech modules. Preflight and headers
+pass. Reference generation and the documentation review gate pass. All 187
+original functions and macros have exactly one owner. The facade has 1431
+lines; the eight new modules range from 132 to 422 lines. Listening acceptance remains separate; no live session was reloaded.
+
+Field-navigation follow-up, outside this extraction: =field-string= reads the
+left-adjacent field at a boundary. Backward navigation can pass nil to
+=goto-char= when the preceding field begins at the accessible buffer start.
+These existing semantics remain unchanged; a behavior fix needs its own slice.
+
+Commit slice: =Extract reading navigation and repeat feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -612,13 +643,14 @@ and comments; extracted modules retain named authors and copyright holders.
 | omnivox-voices.el | 3117 | 2406 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
-| emacsvox-speak.el | 3781 | 3424 |
+| emacsvox-speak.el | 3781 | 1431 |
 | emacsvox-advice.el | 3641 | 3100 |
 
 The original extraction pass, generic voice API, Agent Shell, Omnivox
 inventory/discovery, tracked-reading, core completion/input/message advice and
-column-filter follow-ups are complete. Remaining broad core utilities stay
-separate work. Further Agent Shell extraction should follow a concrete
+column-filter follow-ups and all eight core speech slices are complete. The
+eight speech slices reduce the facade from 3424 to 1431 lines while preserving
+public names and definition forms. Further extraction should follow a concrete
 responsibility problem rather than a target line count.
 
 * TTS lifecycle boundary

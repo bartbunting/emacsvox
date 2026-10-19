@@ -13,7 +13,8 @@
 (require 'subr-x)
 
 (defvar emacsvox-speak-test-modules
-  '(("emacsvox-speak-status" emacsvox-speak-mode-line emacsvox-speak-header-line emacsvox-battery-alarm emacsvox-speak-net-id)
+  '(("emacsvox-speak-navigation" emacsvox-goto-percent emacsvox-mark-backward-mark emacsvox-speak-next-field emacsvox-repeat-check-hook)
+    ("emacsvox-speak-status" emacsvox-speak-mode-line emacsvox-speak-header-line emacsvox-battery-alarm emacsvox-speak-net-id)
     ("emacsvox-speak-windows" emacsvox-speak-other-window emacsvox-describe-tapestry emacsvox-cycle-to-next-buffer)
     ("emacsvox-speak-time" emacsvox-speak-time emacsvox-speak-collect-date emacsvox-speak-message-at-time)
     ("emacsvox-speak-completion" emacsvox-get-current-completion emacsvox-completions-move-to-completion-group)
@@ -67,6 +68,10 @@
   (unless (and (buffer-live-p emacsvox-notifications-buffer)
                (memq emacsvox-notifications-gc-timer timer-list))
     (error "Reading activation did not initialize notification history and timer"))
+  (unless (and (memq #'emacsvox-repeat-mode-hook repeat-mode-hook)
+               (or (not (boundp 'battery-update-functions))
+                   (memq #'emacsvox-battery-alarm battery-update-functions)))
+    (error "Reading activation did not install repeat and battery hooks"))
   (unless (and (memq #'emacsvox-post-self-insert-hook post-self-insert-hook)
                (memq #'emacsvox--delayed-phonetic-cancel
                      (default-value 'pre-command-hook))

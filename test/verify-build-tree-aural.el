@@ -41,6 +41,7 @@
           emacsvox-speak-time
           emacsvox-speak-windows
           emacsvox-speak-status
+          emacsvox-speak-navigation
           emacsvox-speak-filters
           emacsvox-aural
           emacsvox-aural-compatibility-voice
@@ -127,6 +128,10 @@
           emacsvox-speak-header-line
           emacsvox-battery-alarm
           emacsvox-speak-net-id
+          emacsvox-goto-percent
+          emacsvox-mark-backward-mark
+          emacsvox-speak-next-field
+          emacsvox-repeat-check-hook
           emacsvox-speak-line-apply-column-filter
           emacsvox-speak-load-filter-settings
           voice-setup-face-mapping-diagnostic

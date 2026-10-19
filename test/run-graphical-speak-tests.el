@@ -34,6 +34,7 @@
                              '(or "^emacsvox-indentation-" "^emacsvox-speak-completion-"
                                   "^emacsvox-speak-windows-"
                                   "^emacsvox-speak-status-graphical-"
+                                  "^emacsvox-speak-navigation-graphical-"
                                   (member emacsvox-reading-unit-prompt-is-spoken-once-on-main)))))
                        (kill-emacs
                         (if (and (> (ert-stats-total stats) 0)
