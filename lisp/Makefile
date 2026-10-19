@@ -350,6 +350,7 @@ integrations/emacsvox-newsticker.elc \
 integrations/emacsvox-notmuch-search.elc \
 integrations/emacsvox-notmuch-show.elc \
 integrations/emacsvox-notmuch-operations.elc \
+integrations/emacsvox-notmuch-events.elc \
 integrations/emacsvox-notmuch.elc \
 integrations/emacsvox-nov.elc \
 integrations/emacsvox-nxml.elc \
@@ -737,3 +738,6 @@ integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-show.elc
 
 integrations/emacsvox-notmuch-operations.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
 integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-operations.elc
+
+integrations/emacsvox-notmuch-events.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
+integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-events.elc

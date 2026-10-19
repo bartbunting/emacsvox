@@ -637,6 +637,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-newsticker:: newsticker.
 * emacsvox-nm:: NM using  D-Bus..
 * emacsvox-notmuch:: Speech-enable NOTMUCH.
+* emacsvox-notmuch-events:: Notmuch asynchronous search feedback.
 * emacsvox-notmuch-operations:: Notmuch tag and archive outcomes.
 * emacsvox-notmuch-search:: Notmuch search-result presentation.
 * emacsvox-notmuch-show:: Notmuch message and attachment reading.

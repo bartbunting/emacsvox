@@ -921,6 +921,21 @@ preflight, headers, generated reference and the documentation gate pass.
 
 Commit slice: =Extract Notmuch tag and archive outcomes=.
 
+*** Notmuch asynchronous search feedback
+
+The events module owns 21 unchanged definitions for search-process state,
+initial results, completion, interaction tracking and cleanup. Refresh feedback
+retains its ordered, interruptible main-lane delivery; other asynchronous
+completions retain notification delivery. Registration stays in the facade.
+
+All 137 tests pass from source, fresh byte-code and graphical Emacs. Definition
+parity, isolated loading, compilation, preflight, headers, generated reference
+and the documentation gate pass. The four Notmuch slices reduce the facade
+from 3006 to 1510 lines. The test package is loaded from
+=~/.emacs.d/elpa/notmuch-20260314.2247/notmuch.elc= with Emacs 31.0.90.
+
+Commit slice: =Extract Notmuch asynchronous search feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
