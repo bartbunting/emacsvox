@@ -1,5 +1,5 @@
 #+title: Lisp responsibility refactoring
-#+date: 2026-10-18
+#+date: 2026-10-19
 #+startup: content
 
 * Scope
@@ -1022,6 +1022,51 @@ pass.
 
 Commit slice: =Extract core Help and key-description feedback=.
 
+*** Core buffer and window feedback
+
+The windows module owns fifteen unchanged definitions for buffer entry,
+closure and renaming, window changes and Emacs server-buffer announcements.
+Advice, generated wrappers and server hooks remain in the facade. The startup
+inventory includes all four new core modules. All 231 source cases and
+230 compiled cases pass; all 230 compiled cases also pass graphically.
+Definition and activation parity, passive loading, compilation, preflight,
+headers, generated reference and the documentation gate pass.
+
+Commit slice: =Extract core buffer and window feedback=.
+
+*** Completed round
+
+All eleven slices are implemented. Notmuch's facade falls from 3006 to 1510
+lines, Magit's from 2884 to 2338, and core advice from 3100 to 2559. All 505
+original definitions retain identical Lisp forms and unique ownership.
+Activation forms and their order are unchanged. The additional module headers
+and explicit declarations increase total source size; the benefit is narrower
+maintenance responsibility, not fewer lines overall.
+
+Final verification after the core changes passes:
+
+- Fresh compiled setup loading, explicit activation through the core startup
+  loader, and both integration entry points. Named definitions load from the
+  expected in-tree byte-code. Batch setup deliberately does not run the full
+  interactive desktop initializer.
+- Six canonical Make/native build-inventory checks and byte-code preflight.
+- Notmuch: 137 source, compiled and graphical cases in each run.
+- Magit: 105 source and compiled batch cases, with its one GUI-only case
+  excluded there; all 106 cases pass graphically.
+- Core advice: 231 source cases; 230 compiled and graphical cases, retaining
+  the existing source-only scrolling-fixture exclusion described above.
+- All 29 maintained graphical reading checks.
+- Header checks, generated reference updates and the documentation review gate.
+
+The final startup check loads Notmuch and Magit from the package paths recorded
+above and Transient from =~/.emacs.d/elpa/transient-20261001.1359/transient.elc=.
+The selected Emacs is 31.0.90. No package pins or runtime dependencies changed.
+
+Listening acceptance for this round remains open through a fresh normal
+profile. The running profile was not reloaded. Further aural configuration,
+resource, Org/EWW, Wizards and TTS work remains the candidate assessment above;
+it is not needed to complete this bounded round.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -1036,8 +1081,10 @@ and comments; extracted modules retain named authors and copyright holders.
 | emacsvox-aural-transport.el | 2689 | 2305 |
 | tts-speak.el | 4829 | 3078 |
 | emacsvox-speak.el | 3781 | 1431 |
-| emacsvox-advice.el | 3641 | 3100 |
+| emacsvox-advice.el | 3641 | 2559 |
 | emacsvox-eat-core.el | 2863 | 1136 |
+| emacsvox-notmuch.el | 3006 | 1510 |
+| emacsvox-magit.el | 2884 | 2338 |
 
 The original extraction pass, generic voice API, Agent Shell, Omnivox
 inventory/discovery, tracked-reading, core completion/input/message advice and
@@ -1047,6 +1094,8 @@ public names and definition forms. The four Eat slices separate screen data,
 focus inference, output collection and presentation from lifecycle coordination.
 The four workbench operation slices reduce its remaining facade from 2212
 to 842 lines, leaving buffer coordination together.
+The bounded follow-up completes four Notmuch, three Magit and four core-advice
+extractions, retaining activation in each facade.
 Further extraction should follow a concrete
 responsibility problem rather than a target line count.
 

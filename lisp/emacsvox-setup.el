@@ -119,6 +119,7 @@
     "core/emacsvox-advice-search.el"
     "core/emacsvox-advice-editing.el"
     "core/emacsvox-advice-help.el"
+    "core/emacsvox-advice-windows.el"
     "core/emacsvox-advice.el"
     "integrations/emacsvox-websearch.el"
     "integrations/emacsvox-google.el"

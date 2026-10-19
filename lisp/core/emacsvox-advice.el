@@ -1035,25 +1035,11 @@ to ORIGINAL unchanged."
  'kill-ring-save :after #'emacsvox--advice-kill-ring-save-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-find-file-after (&rest _)
-  "Play an auditory icon if possible."
-  (when (ems-interactive-p 'find-file)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(require 'emacsvox-advice-windows)
 
 (advice-add
  'find-file :after #'emacsvox--advice-find-file-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-kill-buffer-around (original &rest arguments)
-  "Announce the destination after ORIGINAL finishes killing a buffer.
-Consume the interactive marker before cleanup can kill related buffers."
-  (let* ((interactive (ems-interactive-p 'kill-buffer))
-         (result (apply original arguments)))
-    (when (and interactive result)
-      (emacsvox-icon 'close-object)
-      (tts-stop 'all)
-      (emacsvox-speak-mode-line))
-    result))
 
 (advice-add
  'kill-buffer :around #'emacsvox--advice-kill-buffer-around
@@ -1084,68 +1070,29 @@ Consume the interactive marker before cleanup can kill related buffers."
   (emacsvox-icon 'select-object)
   (emacsvox-speak-mode-line))
 
-(defun emacsvox--advice-pop-to-buffer-after (&rest _)
-  "Announce an interactive buffer pop."
-  (when (ems-interactive-p 'pop-to-buffer)
-    (emacsvox-icon 'tick-tick) (emacsvox-speak-mode-line)))
-
 (advice-add
  'pop-to-buffer :after #'emacsvox--advice-pop-to-buffer-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-scratch-buffer-after (&rest _)
-  "Announce switching to the scratch buffer."
-  (when (ems-interactive-p 'scratch-buffer)
-    (emacsvox-icon 'tick-tick) (emacsvox-speak-mode-line)))
 
 (advice-add
  'scratch-buffer :after #'emacsvox--advice-scratch-buffer-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-display-buffer-after (buffer-or-name &rest _)
-  "Announce interactively displaying BUFFER-OR-NAME."
-  (when (ems-interactive-p 'display-buffer)
-    (emacsvox-icon 'open-object)
-    (message "Displayed %s"
-             (if (bufferp buffer-or-name)
-                 (buffer-name buffer-or-name)
-               buffer-or-name))))
-
 (advice-add
  'display-buffer :after #'emacsvox--advice-display-buffer-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-make-frame-command-after (&rest _)
-  "Announce interactively creating a frame."
-  (when (ems-interactive-p 'make-frame-command)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add
  'make-frame-command :after #'emacsvox--advice-make-frame-command-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-move-to-window-line-after (&rest _)
-  "Speak after interactively moving within a window."
-  (when (ems-interactive-p 'move-to-window-line)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
 (advice-add
  'move-to-window-line :after #'emacsvox--advice-move-to-window-line-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-rename-buffer-after (&rest _)
-  "Speak the mode line after interactively renaming a buffer."
-  (when (ems-interactive-p 'rename-buffer)
-    (emacsvox-speak-mode-line)))
-
 (advice-add
  'rename-buffer :after #'emacsvox--advice-rename-buffer-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-rename-uniquely-after (&rest _)
-  "Speak the mode line after interactively making a buffer name unique."
-  (when (ems-interactive-p 'rename-uniquely)
-    (emacsvox-speak-mode-line)))
 
 (advice-add
  'rename-uniquely :after #'emacsvox--advice-rename-uniquely-after
@@ -1397,32 +1344,14 @@ TARGET identifies the evaluation command."
  'widen :after #'emacsvox--advice-widen-after
  '((name . emacsvox)))
 
-(defun emacsvox--advice-delete-other-windows-after (&rest _)
-  "Announce interactively deleting all other windows."
-  (when (ems-interactive-p 'delete-other-windows)
-    (message "Deleted all other windows")
-    (emacsvox-icon 'window-resize) (emacsvox-speak-mode-line)))
-
 (advice-add
  'delete-other-windows :after #'emacsvox--advice-delete-other-windows-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-split-window-vertically-after (&rest _)
-  "Announce an interactive vertical window split."
-  (when (ems-interactive-p 'split-window-vertically)
-    (message "Split window vertically, current window has %s lines "
-             (window-height))
-    (emacsvox-speak-mode-line)))
 
 (advice-add
  'split-window-vertically :after
  #'emacsvox--advice-split-window-vertically-after
  '((name . emacsvox)))
-
-(defun emacsvox--advice-delete-window-after (&rest _)
-  "Announce interactively deleting the selected window."
-  (when (ems-interactive-p 'delete-window)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
 (advice-add
  'delete-window :after #'emacsvox--advice-delete-window-after
@@ -1433,14 +1362,6 @@ TARGET identifies the evaluation command."
     "Announce the current window dimensions."
   (message "Current window has %s lines and %s columns"
            (window-height) (window-width)))
-
-(defun emacsvox--advice-split-window-horizontally-after (&rest _)
-  "Announce an interactive horizontal window split."
-  (when (ems-interactive-p 'split-window-horizontally)
-    (message
-     "Split window horizontally current window has %s columns "
-     (window-width))
-    (emacsvox-speak-mode-line)))
 
 (advice-add
  'split-window-horizontally :after
@@ -1562,10 +1483,6 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
  '((name . emacsvox)))
 
 ;;;  Emacs server
-(defun emacsvox-speak-announce-server-buffer ()
-  "Announce opening of an emacsclient buffer."
-  (emacsvox-speak-mode-line)
-  (emacsvox-icon 'open-object))
 (add-hook 'server-done-hook
           #'(lambda nil
               (emacsvox-icon 'close-object)))
@@ -2510,11 +2427,6 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
   (emacsvox-speak-line))
 
 ;;; C-x x commands
-
-(defun emacsvox--advice-revert-buffer-quick-after (&rest _)
-  "speak."
-  (when (ems-interactive-p 'revert-buffer-quick)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add
  'revert-buffer-quick :after #'emacsvox--advice-revert-buffer-quick-after

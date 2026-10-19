@@ -199,6 +199,7 @@ core/emacsvox-advice-messages.elc \
 core/emacsvox-advice-search.elc \
 core/emacsvox-advice-editing.elc \
 core/emacsvox-advice-help.elc \
+core/emacsvox-advice-windows.elc \
 core/emacsvox-advice.elc\
 core/emacsvox-keymap.elc\
 ui/emacsvox-indentation.elc\
@@ -765,3 +766,6 @@ core/emacsvox-advice.elc: core/emacsvox-advice-editing.elc
 
 core/emacsvox-advice-help.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
 core/emacsvox-advice.elc: core/emacsvox-advice-help.elc
+
+core/emacsvox-advice-windows.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
+core/emacsvox-advice.elc: core/emacsvox-advice-windows.elc

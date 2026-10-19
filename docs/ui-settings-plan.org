@@ -3744,3 +3744,14 @@ The next bounded round is recorded in the [[file:lisp-refactoring-plan.org][Lisp
 Notmuch, Magit and selected core advice responsibilities. It preserves settings,
 keys and spoken interaction. Implementation, automated verification and new
 listening acceptance remain separate checkpoints.
+
+The eleven-slice round is now implemented. Four Notmuch modules, three Magit
+modules and four core-advice modules separate definitions while their facades
+retain activation. Original Lisp definitions and activation order are preserved.
+Affected source, compiled and graphical suites, fresh compiled loading, six
+build-inventory checks, 29 graphical reading checks, headers and the
+documentation gate pass. The refactoring plan records counts and the existing
+batch/compiled test exclusions.
+
+Listening acceptance remains open for this round through a fresh normal
+profile. The earlier workbench and Dired acceptance remains complete.

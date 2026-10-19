@@ -19,7 +19,8 @@
 (let* ((root (expand-file-name "../" (file-name-directory load-file-name)))
        (compiled (equal (getenv "EMACSVOX_CORE_ADVICE_TEST_LOAD") "compiled"))
        (extension (if compiled ".elc" ".el"))
-       (modules '(("emacsvox-advice-help" . ems-canonicalize-key-description)
+       (modules '(("emacsvox-advice-windows" . emacsvox--advice-kill-buffer-around)
+                  ("emacsvox-advice-help" . ems-canonicalize-key-description)
                   ("emacsvox-advice-editing" . emacsvox--case-word-around)
                   ("emacsvox-advice-search" . emacsvox-isearch-setup)
                   ("emacsvox-advice-completion" . emacsvox--completion-around)
@@ -28,10 +29,12 @@
        (targets '(pcomplete completion-at-point read-event read-passwd--hide-password
                   y-or-n-p message timer-event-handler perform-replace isearch-search
                   upcase-word delete-char comment-region
-                  help-do-xref describe-key where-is))
+                  help-do-xref describe-key where-is
+                  kill-buffer display-buffer delete-window))
        (variables '(minibuffer-setup-hook minibuffer-exit-hook
                     eldoc-display-functions command-error-function
-                    isearch-mode-hook isearch-mode-end-hook)))
+                    isearch-mode-hook isearch-mode-end-hook
+                    server-done-hook server-switch-hook)))
   (setq load-prefer-newer (not compiled))
   (dolist (directory '("lisp" "test" "utils"))
     (add-to-list 'load-path (expand-file-name directory root)))
