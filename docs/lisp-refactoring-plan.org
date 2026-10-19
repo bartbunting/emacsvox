@@ -910,6 +910,17 @@ headers, reference generation and the documentation review gate.
 
 Commit slice: =Extract Notmuch message and attachment reading=.
 
+*** Notmuch tag and archive outcomes
+
+The operations module owns 28 unchanged definitions for tag snapshots,
+observed changes, nested archive ownership and outcome presentation.
+Registration helpers and their calls remain in the facade. All 137 tests pass
+from source, fresh byte-code and graphical Emacs. All 170 original definitions
+retain identical forms and unique ownership; isolated loading, compilation,
+preflight, headers, generated reference and the documentation gate pass.
+
+Commit slice: =Extract Notmuch tag and archive outcomes=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
