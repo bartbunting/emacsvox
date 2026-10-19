@@ -3552,6 +3552,128 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           :occasion continuous
           :compatibility-actions nil))))))
 
+(ert-deftest emacsvox-eat-return-interrupts-main-only ()
+  "Return stops main speech and its pending work without touching notifications."
+  (with-temp-buffer
+    (let ((eat-terminal t)
+          (tts-speaker-process 'main)
+          (tts-notify-process 'notifications)
+          (emacsvox-aural--pending-deliveries (make-hash-table :test #'equal))
+          stopped)
+      (dolist (owner '(main notifications))
+        (puthash owner (emacsvox-aural--make-pending-delivery
+                        :owner owner :sequence 1)
+                 emacsvox-aural--pending-deliveries))
+      (cl-letf (((symbol-function 'emacsvox-eat--foreground-p) (lambda () t))
+                ((symbol-function 'tts--interrupt-process)
+                 (lambda (owner &rest _) (push owner stopped))))
+        (dolist (event '(13 10 return linefeed))
+          (emacsvox--advice-eat-self-input-before 1 event))
+        (should (equal stopped '(main main main main)))
+        (should-not (gethash 'main emacsvox-aural--pending-deliveries))
+        (should (gethash 'notifications emacsvox-aural--pending-deliveries))))))
+
+(ert-deftest emacsvox-eat-return-does-not-stop-for-background-or-empty-input ()
+  "Background input, absent terminals and zero repeats do not stop speech."
+  (with-temp-buffer
+    (let ((eat-terminal t) foreground stopped)
+      (cl-letf (((symbol-function 'emacsvox-eat--foreground-p)
+                 (lambda () foreground))
+                ((symbol-function 'tts-stop) (lambda (&rest _) (setq stopped t))))
+        (emacsvox--advice-eat-self-input-before 1 13)
+        (setq foreground t eat-terminal nil)
+        (emacsvox--advice-eat-self-input-before 1 13)
+        (setq eat-terminal t)
+        (emacsvox--advice-eat-self-input-before 0 13)
+        (should-not stopped)))))
+
+(ert-deftest emacsvox-eat-line-submit-stops-only-sent-newlines ()
+  "Line input interrupts when sending a newline, not when editing scrollback."
+  (with-temp-buffer
+    (insert "old\ndraft")
+    (let ((eat-terminal t) (foreground t) (stops 0))
+      (cl-letf (((symbol-function 'emacsvox-eat--foreground-p)
+                 (lambda () foreground))
+                ((symbol-function 'eat-term-end) (lambda (_) 5))
+                ((symbol-function 'tts-stop)
+                 (lambda (&optional all) (should-not all) (cl-incf stops))))
+        (emacsvox--advice-eat-line-send-input-before)
+        (should (= stops 1))
+        (emacsvox--advice-eat-line-send-input-before t)
+        (goto-char 1)
+        (emacsvox--advice-eat-line-send-input-before)
+        (goto-char (point-max))
+        (setq foreground nil)
+        (emacsvox--advice-eat-line-send-input-before)
+        (should (= stops 1))))))
+
+(ert-deftest emacsvox-eat-ed-return-stops-before-next-line ()
+  "Real ed input interrupts the preceding response in both terminal input modes."
+  (skip-unless (executable-find "ed"))
+  (let ((file (make-temp-file "emacsvox-eat-ed-")))
+    (unwind-protect
+        (progn
+          (with-temp-file file
+            (insert "First line for terminal reading.\nSecond line for terminal reading.\n"))
+          (dolist (mode '(eat-line-mode eat-semi-char-mode))
+            (let ((buffer (generate-new-buffer " *EAT ed submit test*"))
+                  process events)
+              (unwind-protect
+                  (save-window-excursion
+                    (switch-to-buffer buffer)
+                    (cl-letf (((symbol-function 'emacsvox-eat--foreground-p)
+                               (lambda () t))
+                              ((symbol-function 'emacsvox-eat--following-live-p)
+                               (lambda () t))
+                              ((symbol-function 'emacsvox-icon) #'ignore)
+                              ((symbol-function 'emacsvox-speak-this-char) #'ignore)
+                              ((symbol-function 'tts--interrupt-process)
+                               (lambda (_owner &rest _) (push 'stop events)))
+                              ((symbol-function 'emacsvox-eat--submit)
+                               (lambda (text facts occasion &rest _)
+                                 (when (eq (plist-get facts :role) 'command-output)
+                                   (should (eq occasion 'continuous))
+                                   (push text events)))))
+                      (eat-mode)
+                      (setq-local eat-enable-shell-prompt-annotation nil
+                                  eat-enable-auto-line-mode nil)
+                      (eat-exec buffer "EAT-ed-test" (executable-find "sh") nil
+                                (list "-c" "printf 'READY> '; exec \"$1\" -s \"$2\""
+                                      "ed-test" (executable-find "ed") file))
+                      (setq process (get-buffer-process buffer))
+                      (set-process-query-on-exit-flag process nil)
+                      (should (emacsvox-eat-test--wait-until
+                               process (lambda () (string-suffix-p
+                                                   "READY> " (emacsvox-eat-test--screen-text)))))
+                      (should (emacsvox-eat-test--wait-until
+                               process (lambda () (null emacsvox-eat--quiescence-timer))))
+                      (funcall mode)
+                      (setq events nil)
+                      (if (eq mode 'eat-line-mode)
+                          (progn (goto-char (point-max)) (insert "1p")
+                                 (eat-line-send-input))
+                        (eat-self-input 1 ?1)
+                        (eat-self-input 1 ?p)
+                        (eat-self-input 1 13))
+                      (unless (emacsvox-eat-test--wait-until
+                               process
+                               (lambda () (member "First line for terminal reading." events)))
+                        (ert-fail (list mode events (emacsvox-eat-test--screen-text))))
+                      (should (equal (reverse events)
+                                     '(stop "First line for terminal reading.")))
+                      (setq events nil)
+                      (if (eq mode 'eat-line-mode)
+                          (eat-line-send-input)
+                        (eat-self-input 1 13))
+                      (should (emacsvox-eat-test--wait-until
+                               process
+                               (lambda () (member "Second line for terminal reading." events))))
+                      (should (equal (reverse events)
+                                     '(stop "Second line for terminal reading.")))))
+                (when (process-live-p process) (delete-process process))
+                (when (buffer-live-p buffer) (kill-buffer buffer))))))
+      (delete-file file))))
+
 (ert-deftest emacsvox-eat-output-suppresses-empty-presentations ()
   "Whitespace-only terminal changes do not submit empty speech."
   (let (submissions)

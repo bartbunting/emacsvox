@@ -8861,10 +8861,17 @@ retained cursor row in that situation.
 
 @subsection Hear input and deletion results
 
-On the main screen in semi-character and character modes@comma{} @kbd{@key{RET}} is silent.
-After rendered left/right movement@comma{} Emacsvox names the reached character;
-after up/down it speaks the resulting input or history row without the
-observed shell prompt. @kbd{M-b}@comma{} @kbd{M-f}@comma{} and modified left/right word movements
+When the terminal has keyboard focus@comma{} @kbd{@key{RET}} stops earlier main speech before
+sending a newline in line@comma{} semi-character@comma{} or character mode. For example@comma{}
+advancing to the next line in @code{ed} cuts off the preceding line. Output chunks
+within one response still play in order@comma{} and notification speech continues
+independently. @kbd{@key{RET}} itself adds no spoken text. Sending line input without a
+newline or editing scrollback does not trigger this stop.
+
+On the main screen in semi-character and character modes@comma{} Emacsvox names the
+character reached by rendered left/right movement. After up/down it speaks
+the resulting input or history row without the observed shell prompt.
+@kbd{M-b}@comma{} @kbd{M-f}@comma{} and modified left/right word movements
 speak the rendered text crossed. A boundary key that produces no movement
 stays silent.
 

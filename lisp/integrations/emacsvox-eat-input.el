@@ -339,11 +339,26 @@ reaches this advice."
           '(eat))
   "Current Eat targets that receive native after advice.")
 
+(defun emacsvox-eat--interrupt-for-submit ()
+  "Stop main speech before submitting foreground terminal input."
+  (when (and eat-terminal (emacsvox-eat--foreground-p))
+    ;; Output chunks remain ordered.  The input boundary, rather than every
+    ;; arriving chunk, makes the preceding response obsolete.
+    (tts-stop)))
+
+(defun emacsvox--advice-eat-line-send-input-before (&optional no-newline)
+  "Prepare line input, interrupting speech only when sending a newline.
+NO-NEWLINE and edits before the terminal end leave speech running."
+  (emacsvox-eat--output-input-boundary)
+  (when (and (not no-newline) eat-terminal
+             (<= (eat-term-end eat-terminal) (point)))
+    (emacsvox-eat--interrupt-for-submit)))
+
 (defconst emacsvox-eat--before-advice
   (append
    '((eat-reset . emacsvox--advice-eat-reset-before)
      (eat-reload . emacsvox--advice-eat-reload-before)
-     (eat-line-send-input . emacsvox-eat--output-input-boundary))
+     (eat-line-send-input . emacsvox--advice-eat-line-send-input-before))
    (mapcar
     (lambda (target)
       (cons target #'emacsvox-eat--before-terminal-paste))
@@ -879,7 +894,7 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
             (list emacsvox-eat--generation basic
                   (+ (float-time) 0.5))))))
 
-(defun emacsvox--advice-eat-self-input-before (_count &optional event)
+(defun emacsvox--advice-eat-self-input-before (count &optional event)
   "Capture terminal completion context before EAT sends Tab EVENT."
   (emacsvox-eat--output-input-boundary)
   (let* ((event (or event last-command-event))
@@ -906,6 +921,7 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
      (action
       (emacsvox-eat--cancel-completion)
       (when (eq action 'submit)
+        (when (> (or count 1) 0) (emacsvox-eat--interrupt-for-submit))
         (setq emacsvox-eat--input-row-offset nil
               emacsvox-eat--input-start-row nil))
       (setq emacsvox-eat--recent-input nil

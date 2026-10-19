@@ -3621,3 +3621,27 @@ without moving. The separate correction preserves text properties and handles
 narrowing, single-character fields, buffer ends and empty buffers. Four
 regression cases reproduce the old failures; all 272 applicable source checks
 and 271 compiled checks pass with the correction. Listening acceptance remains open.
+
+* Eat newline interruption, 2026-10-19
+
+Finding: pressing Enter to advance through =ed= left the preceding line
+speaking. Automatic terminal output uses ordered speech, but the input
+boundary only cleared unfinished output collection; it did not interrupt
+speech already submitted.
+
+Implemented: submitting a newline in a foreground Eat terminal now stops main
+speech and its pending deliveries before sending input. Line, semi-character
+and character modes share this behavior. Output chunks within a response stay
+ordered, and notification speech continues independently. Background input,
+line input sent without a newline, and edits in scrollback do not stop speech.
+
+Verification: all 217 applicable Eat tests pass from source and compiled code;
+the two graphical cases skipped in batch pass on an isolated display. A real
+=ed= process also passes there and in batch, checking stop-before-output order
+in line and semi-character modes. The tests use the same Eat 0.9.4 installation
+as the running session, and fresh compiled checks confirm the integration's
+loaded paths.
+
+Commit slice: =Interrupt previous Eat output when submitting input=.
+Listening acceptance remains open. The running session was not reloaded;
+try Enter in =ed= after a fresh profile restart.
