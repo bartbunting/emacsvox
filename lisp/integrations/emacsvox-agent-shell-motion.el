@@ -646,6 +646,7 @@ a positive argument to the advised command."
                      (setq padding
                            (emacsvox-agent-shell--chat-padding-source-bounds))
                      (emacsvox-agent-shell--end-of-prompt-marker-line-p)
+                     (emacsvox-agent-shell--diff-border-line-p)
                      (and
                       origin-source-bounds
                       (or
@@ -664,7 +665,8 @@ a positive argument to the advised command."
            (padding
             (emacsvox-agent-shell--move-beyond-visual-source-row
              direction padding))
-           ((emacsvox-agent-shell--end-of-prompt-marker-line-p)
+           ((or (emacsvox-agent-shell--end-of-prompt-marker-line-p)
+                (emacsvox-agent-shell--diff-border-line-p))
             (emacsvox-agent-shell--move-through-prompt-marker direction))
            (t
             (emacsvox-agent-shell--move-beyond-visual-source-row
@@ -675,6 +677,14 @@ a positive argument to the advised command."
       (ems-interactive-p target)
       (emacsvox-agent-shell--present-current-navigation-line))
     result))
+
+(defun emacsvox-agent-shell--diff-border-line-p ()
+  "Return non-nil on a purely decorative generated diff-heading line."
+  (let ((start (line-beginning-position))
+        (end (line-end-position)))
+    (and (< start end)
+         (not (text-property-not-all
+               start end 'emacsvox-agent-shell-diff-heading 'border)))))
 
 (defun emacsvox-agent-shell--next-line-around
     (original-function &rest arguments)

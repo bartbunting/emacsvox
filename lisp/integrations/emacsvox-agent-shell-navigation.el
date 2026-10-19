@@ -464,8 +464,9 @@ PREDICATE receives TEXT and the start position of each property run."
             ;; Keep renderer provenance until decorative table borders have
             ;; been removed; plain copies cannot distinguish them from data.
             (push (substring-no-properties
-                   (emacsvox-agent-shell--without-table-borders-for-speech
-                    (buffer-substring position next)))
+                   (emacsvox-agent-shell--diff-headings-for-speech
+                    (emacsvox-agent-shell--without-table-borders-for-speech
+                     (buffer-substring position next))))
                   parts))
           (setq position next)))
       (let ((text (string-trim (string-join (nreverse parts)))))

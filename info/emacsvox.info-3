@@ -14,6 +14,32 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Emacsvox Terminology,  Next: Copyright,  Prev: Finding Tasks,  Up: Top
+
+17 Terms used in this manual
+****************************
+
+These definitions help you choose a procedure.  They do not replace a
+control's specific scope, save, or recovery instructions.  *note Find a
+task: Finding Tasks. starts from what you want to accomplish rather than
+the names below.  For a key reminder, use *note Everyday commands and
+key prefixes: (emacsvox)Emacsvox Keyboard Commands.
+
+   *note Working context: (emacsvox)Working Context Terms. covers
+buffers and views; *note selection and editing: (emacsvox)Editing Terms.
+covers mark, region, copying and recovery.  *note Presentation
+resources: (emacsvox)Presentation Resource Terms. and *note changes and
+speech output: (emacsvox)Speech And Settings Terms. explain
+configuration.
+
+* Menu:
+
+* Your working context: Working Context Terms.  Distinguish buffers, views, editing positions and restrictions.
+* Selection, copying and editing: Editing Terms.  Translate selection, cut and paste into mark, region, kill and yank.
+* Voices and presentation resources: Presentation Resource Terms.  Distinguish physical voices, named voices, palettes, rules and profiles.
+* Changes and speech output: Speech And Settings Terms.  Distinguish preview, drafts, saving, application and speech workers.
+
+
 File: emacsvox.info,  Node: Working Context Terms,  Next: Editing Terms,  Up: Emacsvox Terminology
 
 17.1 Your working context

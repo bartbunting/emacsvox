@@ -313,6 +313,77 @@ in cells, prose and source blocks.  Keep the source and cell properties intact."
         (setq position next)))
     (if changed (apply #'concat (nreverse parts)) text)))
 
+(defconst emacsvox-agent-shell--diff-heading-regexp
+  "╭─+╮\n│ \\([^\n]*\\) │\n╰─+╯"
+  "Complete three-line filename box emitted by Agent Shell's diff renderer.")
+
+(defun emacsvox-agent-shell--mark-diff-heading (text)
+  "Mark generated diff heading TEXT for speech, preserving visible text.
+This filter belongs only on `agent-shell--diff-box', not arbitrary output."
+  (save-match-data
+    (if (and (stringp text)
+             (string-match
+              (concat "\\`" emacsvox-agent-shell--diff-heading-regexp "\\'") text))
+        (let ((copy (copy-sequence text))
+              (start (match-beginning 1))
+              (end (match-end 1)))
+          (put-text-property 0 (length copy)
+                             'emacsvox-agent-shell-diff-heading 'border copy)
+          (put-text-property start end
+                             'emacsvox-agent-shell-diff-heading 'label copy)
+          copy)
+      text)))
+
+(defun emacsvox-agent-shell--mark-existing-diff-headings ()
+  "Recognize existing filename boxes immediately before rendered diff hunks.
+Require fragment body provenance and the renderer's frozen hunk property.
+Code, Markdown source blocks and ordinary tool output remain unchanged."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (while (re-search-forward
+              (concat "^" emacsvox-agent-shell--diff-heading-regexp "\n\n@@ ") nil t)
+        (let* ((start (match-beginning 0))
+               (end (- (match-end 0) 5))
+               (label-start (match-beginning 1))
+               (label-end (match-end 1))
+               (hunk (+ end 2))
+               (state (get-text-property start 'agent-shell-ui-state)))
+          (when (and state
+                     (eq (get-text-property start 'agent-shell-ui-section) 'body)
+                     (equal state (get-text-property hunk 'agent-shell-ui-state))
+                     (get-text-property hunk 'agent-shell-markdown-frozen)
+                     (not (text-property-not-all
+                           start end 'agent-shell-markdown-frozen nil))
+                     (not (text-property-not-all
+                           start end 'agent-shell-markdown-source-block-body nil)))
+            (with-silent-modifications
+              (put-text-property start end 'emacsvox-agent-shell-diff-heading 'border)
+              (put-text-property label-start label-end
+                                 'emacsvox-agent-shell-diff-heading 'label))))))))
+
+(defun emacsvox-agent-shell--diff-headings-for-speech (text)
+  "Replace marked diff boxes in TEXT with spoken file headings."
+  (if (not (text-property-not-all
+            0 (length text) 'emacsvox-agent-shell-diff-heading nil text))
+      text
+    (let ((position 0) parts)
+      (while (< position (length text))
+        (let* ((kind (get-text-property
+                      position 'emacsvox-agent-shell-diff-heading text))
+               (next (next-single-property-change
+                      position 'emacsvox-agent-shell-diff-heading text (length text))))
+          (pcase kind
+            ('border nil)
+            ('label
+             (let ((label (substring text position next)))
+               (remove-text-properties 0 (length label)
+                                       '(emacsvox-agent-shell-diff-heading nil) label)
+               (push (concat "File: " label) parts)))
+            (_ (push (substring text position next) parts)))
+          (setq position next)))
+      (apply #'concat (nreverse parts)))))
+
 (defun emacsvox-agent-shell--remove-visual-chrome-for-speech (text)
   "Return TEXT without Agent Shell's decorative fragment prefixes.
 Remove property-scoped fold indicators from every fragment.  For semantic
@@ -321,7 +392,8 @@ Rendered source-block copy controls are likewise omitted from continuous
 speech; item navigation announces their action semantically.
 Only the returned speech copy changes; pointwise character review still names
 the original characters in the buffer."
-  (setq text (emacsvox-agent-shell--without-table-borders-for-speech text))
+  (setq text (emacsvox-agent-shell--diff-headings-for-speech
+              (emacsvox-agent-shell--without-table-borders-for-speech text)))
   (let ((position 0)
         (length (length text))
         removals)

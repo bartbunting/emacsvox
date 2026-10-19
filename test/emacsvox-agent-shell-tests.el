@@ -9683,6 +9683,105 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal (substring-no-properties rendered)
                      "… ordinary …")))))
 
+(ert-deftest emacsvox-agent-shell-diff-headings-preserve-content ()
+  "Real diff rendering speaks filenames and preserves literal boxes in code."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let* ((literal (concat "╭──────╮\n│ code │\n╰──────╯\n"))
+           (body (agent-shell--format-diffs-as-text
+                  (list (list (cons :file "src/example.el")
+                              (cons :old "old\n") (cons :new literal)))))
+           (before (copy-sequence body))
+           (spoken (emacsvox-agent-shell--prepare-speech-text body)))
+      (should (string-prefix-p "File: src/example.el\n\n@@" spoken))
+      (should (string-match-p (regexp-quote "+│ code │") spoken))
+      (should (equal-including-properties before body))
+      (should (equal-including-properties
+               spoken (emacsvox-agent-shell--prepare-speech-text spoken)))
+      (insert body)
+      (should (equal (emacsvox-agent-shell--visible-block-text (point-min) (point-max))
+                     (string-trim (substring-no-properties spoken))))
+      ;; Character review and source copying keep the original border glyphs.
+      (goto-char (point-min))
+      (should (eq (char-after) ?╭))
+      (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                     (substring-no-properties body)))
+      (should (eq (emacsvox-agent-shell--prepare-speech-text literal) literal)))))
+
+(ert-deftest emacsvox-agent-shell-diff-headings-recognize-existing-fragments ()
+  "Existing fragments need a frozen diff, and marking preserves buffer state."
+  (dolist (kind '(diff ordinary source))
+    (with-temp-buffer
+      (let ((body (agent-shell--format-diffs-as-text
+                   '(((:file . "src/example.el") (:old . "old\n") (:new . "new\n"))))))
+        ;; Simulate a fragment rendered before speech support was enabled.
+        (remove-text-properties 0 (length body)
+                                '(emacsvox-agent-shell-diff-heading nil) body)
+        (when (eq kind 'ordinary)
+          (remove-text-properties 0 (length body) '(agent-shell-markdown-frozen nil) body))
+        (when (eq kind 'source)
+          (put-text-property 0 (length body) 'agent-shell-markdown-source-block-body t body))
+        (agent-shell-ui-update-fragment
+         (agent-shell-ui-make-fragment-model
+          :namespace-id "diff" :block-id "edit" :label-left "Editing files" :body body)
+         :expanded t)
+        (setq major-mode 'agent-shell-mode)
+        (set-buffer-modified-p nil)
+        (let ((before (buffer-substring-no-properties (point-min) (point-max)))
+              (origin (point)) (undo buffer-undo-list))
+          (emacsvox-agent-shell--mark-existing-diff-headings)
+          (should (= (point) origin))
+          (should-not (buffer-modified-p))
+          (should (eq undo buffer-undo-list))
+          (should (equal before (buffer-substring-no-properties (point-min) (point-max)))))
+        (let ((spoken (emacsvox-agent-shell--prepare-speech-text (buffer-string))))
+          (if (eq kind 'diff)
+              (progn
+                (should (string-match-p "File: src/example.el" spoken))
+                (should-not (string-match-p "[╭╰│─]" spoken)))
+            (should (string-match-p "╭" spoken))))))))
+
+(ert-deftest emacsvox-agent-shell-diff-headings-graphical-navigation ()
+  "Real visual arrows skip generated borders and speak the filename once."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (insert "Before\n" (agent-shell--diff-box "src/example.el") "\nAfter\n")
+      (setq major-mode 'agent-shell-mode
+            line-move-visual t truncate-lines nil)
+      (use-local-map agent-shell-mode-map)
+      (setq-local emacsvox-aural-source-transform-function
+                  #'emacsvox-agent-shell--prepare-speech-text)
+      (emacsvox-agent-shell--vertical-toggle-hint-setup)
+      (unwind-protect
+          (dolist (direction '(forward backward))
+            (goto-char (point-min))
+            (when (eq direction 'backward)
+              (search-forward "After") (beginning-of-line))
+            (redisplay t)
+            (let (spoken)
+              (cl-letf (((symbol-function 'tts-speak)
+                         (lambda (text) (push (substring-no-properties text) spoken)))
+                        ((symbol-function 'tts-stop) #'ignore)
+                        ((symbol-function 'emacsvox-icon) #'ignore))
+                (emacsvox-agent-shell-test--heading-arrow
+                 (if (eq direction 'forward) "<down>" "<up>")))
+              (should (equal spoken '("File: src/example.el")))
+              (should (string-match-p "│ src/example.el │"
+                                      (buffer-substring-no-properties
+                                       (line-beginning-position) (line-end-position))))
+              (redisplay t)
+              (setq spoken nil)
+              (cl-letf (((symbol-function 'tts-speak)
+                         (lambda (text) (push (substring-no-properties text) spoken)))
+                        ((symbol-function 'tts-stop) #'ignore)
+                        ((symbol-function 'emacsvox-icon) #'ignore))
+                (emacsvox-agent-shell-test--heading-arrow
+                 (if (eq direction 'forward) "<down>" "<up>")))
+              (should (equal spoken (list (if (eq direction 'forward) "After" "Before"))))))
+        (emacsvox-agent-shell--vertical-toggle-hint-cleanup)))))
+
 (ert-deftest emacsvox-agent-shell-speech-omits-fragment-visual-chrome ()
   "Line speech should omit fold and thought icons without changing source."
   (with-temp-buffer

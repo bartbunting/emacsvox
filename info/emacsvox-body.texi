@@ -8548,6 +8548,12 @@ policy.
 
 @subsection Review proposed changes
 
+In an expanded editing tool@comma{} file headings speak as “File:” followed by the
+filename. Up and Down skip the decorative lines above and below each filename;
+continuous speech also omits those borders. Diff text retains its contents@comma{}
+including literal box-drawing characters in code. Character movement and
+copying still expose the original displayed text.
+
 Opening an Agent Shell change review announces its file and hunk counts and@comma{}
 for a single file@comma{} its name.  The normal Diff Mode hunk navigation remains
 available; opening the review does not accept or reject changes.

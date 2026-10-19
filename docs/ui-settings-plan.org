@@ -3755,3 +3755,30 @@ batch/compiled test exclusions.
 
 Listening acceptance remains open for this round through a fresh normal
 profile. The earlier workbench and Dired acceptance remains complete.
+
+* Agent Shell file-heading borders, 2026-10-19
+
+Observed: expanding editing tools exposes three-line Unicode boxes around
+filenames. Navigation logs from the live Agent Shell 0.87.10 session show
+=next-line= and =previous-line= submitting the literal top, filename and bottom
+lines. Existing table-border filtering does not cover these generated headers.
+
+Implemented: mark headers at Agent Shell's diff-box renderer. Speech replaces
+each marked header with “File:” and its filename; vertical movement skips the
+purely decorative lines. Visible text and character review remain intact.
+Activation also recognises existing boxes when fragment body properties and
+the immediately following frozen diff hunk establish their origin. Ordinary
+tool output and literal boxes in source remain unchanged. Disabling support
+removes the added buffer properties.
+
+Source and compiled integration gates each pass 679 cases; source and compiled
+graphical gates each pass 12 cases, including bidirectional file-heading
+navigation. These use the repository's pinned Agent Shell 0.86.1 dependencies
+in a separately verified cache. Three focused regressions also pass in a fresh
+graphical Emacs against the live session's Agent Shell 0.87.10 source paths and
+compiled Emacsvox modules. Incremental compilation, byte-code preflight, manual
+generation and the documentation review gate pass.
+
+Listening acceptance remains open through a fresh normal-profile restart.
+The running session has not been reloaded. This change does not address the
+separately diagnosed startup-inventory and capital-tone CI failures.

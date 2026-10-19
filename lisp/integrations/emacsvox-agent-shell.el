@@ -1170,6 +1170,7 @@ Return non-nil when point represents one of those semantic items."
 
 (defun emacsvox-agent-shell--buffer-setup ()
   "Activate speech, event support, and centralized cleanup in this shell."
+  (emacsvox-agent-shell--mark-existing-diff-headings)
   (emacsvox-agent-shell--activate-buffer-values)
   (unless emacsvox-agent-shell--config-option-cache
     (emacsvox-agent-shell--observe-config-options
@@ -1186,6 +1187,9 @@ Return non-nil when point represents one of those semantic items."
 
 (defun emacsvox-agent-shell--buffer-cleanup ()
   "Cancel speech work and remove all support state from this shell buffer."
+  (with-silent-modifications
+    (remove-text-properties (point-min) (point-max)
+                            '(emacsvox-agent-shell-diff-heading nil)))
   (emacsvox-agent-shell--interaction-cleanup)
   (emacsvox-agent-shell--response-section-cleanup)
   (emacsvox-agent-shell--cancel-pending-speech)
@@ -1203,7 +1207,8 @@ Return non-nil when point represents one of those semantic items."
 ;;;  Enable/Disable support:
 
 (defconst emacsvox-agent-shell--advice-list
-  '((agent-shell-elicitation-act :around emacsvox-agent-shell--question-action-around)
+  '((agent-shell--diff-box :filter-return emacsvox-agent-shell--mark-diff-heading)
+    (agent-shell-elicitation-act :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-toggle-preview :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-interrupt :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-next-field :filter-return emacsvox-agent-shell--question-navigation-after)
