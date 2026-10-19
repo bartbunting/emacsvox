@@ -63,6 +63,7 @@
                             omnivox-punctuation--render
                             emacsvox-aural-voice-workbench--preview-entries
                             emacsvox-aural-voice-workbench--library-start
+                            emacsvox-aural-voice-workbench--stage
                             emacsvox-aural-voice-workbench--entries
                             emacsvox-aural-voice-workbench--open-engine))
           (let ((file (symbol-file function)))

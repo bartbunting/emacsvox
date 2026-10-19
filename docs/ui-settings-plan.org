@@ -3693,3 +3693,8 @@ Library inspection and selection actions now belong to
 Needs Apply states still use the same target and worker evidence. All 127
 applicable source and compiled tests and all 39 graphical checks pass.
 Listening acceptance remains open.
+
+Routing edits now belong to =emacsvox-aural-voice-workbench-routing=.
+Staged edits, temporary preferences, saved order and undo retain their
+existing scope. All 127 applicable source and compiled tests and all 39
+graphical checks pass. Listening acceptance remains open.

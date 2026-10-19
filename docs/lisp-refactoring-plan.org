@@ -789,6 +789,19 @@ startup, byte-code preflight and headers pass. The facade now has 1567 lines.
 
 Commit slice: =Extract voice workbench library integration=.
 
+** Routing edits
+
+Implementation moves 39 unchanged definitions to
+=emacsvox-aural-voice-workbench-routing=. It owns staged and committed
+snapshots, engine-order edits, temporary preferences, import/export and
+staged undo. Quick engine preferences retain their existing save and apply
+path. Workbench refresh and announcements remain facade callbacks.
+All 127 applicable source and compiled tests and all 39 isolated graphical
+checks pass. Definition parity, fresh compiled startup, preflight and headers
+pass. The facade now has 1035 lines.
+
+Commit slice: =Extract voice workbench routing edits=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

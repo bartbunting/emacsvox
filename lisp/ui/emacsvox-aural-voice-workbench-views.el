@@ -50,7 +50,7 @@
 (declare-function emacsvox-aural-voice-workbench--active-palette
                   "emacsvox-aural-voice-workbench" ())
 (declare-function emacsvox-aural-voice-workbench--dirty-p
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-routing" ())
 (declare-function emacsvox-aural-voice-workbench--apply-status-description
                   "emacsvox-aural-voice-workbench" ())
 (declare-function emacsvox-aural-voice-workbench--library-p
