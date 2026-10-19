@@ -50,7 +50,7 @@
                (cons target entries)))
            '(tts-speak tts-letter tts-dispatch tts-stop))
           (copy-sequence timer-list) (copy-sequence timer-idle-list)
-          (process-list))))
+          (process-list) (get-buffer " *Notifications*"))))
     (let ((before (activation)))
       (dolist (module emacsvox-speak-test-modules)
         (load (expand-file-name (concat "lisp/core/" (car module) extension) root)
@@ -61,6 +61,9 @@
         (error "Reading definitions changed hooks, advice, timers or processes"))))
   (require 'emacsvox-preamble)
   (load (expand-file-name (concat "lisp/core/emacsvox-speak" extension) root) nil t t)
+  (unless (and (buffer-live-p emacsvox-notifications-buffer)
+               (memq emacsvox-notifications-gc-timer timer-list))
+    (error "Reading activation did not initialize notification history and timer"))
   (unless (and (memq #'emacsvox-post-self-insert-hook post-self-insert-hook)
                (memq #'emacsvox--delayed-phonetic-cancel
                      (default-value 'pre-command-hook))

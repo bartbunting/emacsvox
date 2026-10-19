@@ -117,14 +117,7 @@ speech library load independently during native compilation.")
   "Return active Wifi ESSId"
   (string-trim (shell-command-to-string "iwgetid --raw")))
 
-;;; Helper: Log Message Quietly
-
-(defun ems--log-message (m)
-  "Log  message M without echoing it."
-  (let ((inhibit-read-only t))
-    (with-current-buffer (messages-buffer)
-      (goto-char (point-max))
-      (insert (format "%s\n" m)))))
+(require 'emacsvox-speak-messages)
 
 ;;; Helper: Speak Frame Title
 
@@ -137,13 +130,6 @@ speech library load independently during native compilation.")
 (add-hook 'post-self-insert-hook 'emacsvox-post-self-insert-hook)
 
 ;;;  Shell Command Helper:
-
-(defvar-local emacsvox-speak-messages t
-  "Option indicating if messages are spoken.  If nil,
-emacsvox will not speak messages as they are echoed to the
-message area.  You can use command
-`emacsvox-toggle-speak-messages' bound to
-\\[emacsvox-toggle-speak-messages].")
 
 ;; Emacsvox silences messages from shell-command when called
 ;; non-interactively.  This replacement is used within Emacsvox to
@@ -167,48 +153,9 @@ message area.  You can use command
 
 ;;;  Notifications:
 
-(defun emacsvox--notifications-init ()
-  "Init Notifications buffer."
-  (let ((buffer (get-buffer-create " *Notifications*")))
-    (with-current-buffer buffer
-      (special-mode)
-      buffer)))
-
 (defvar emacsvox-notifications-buffer
   (emacsvox--notifications-init)
   "Notifications buffer. Retains at most `emacsvox-notifications-max lines.")
-
-(defun emacsvox-view-notifications ()
-  "Display notifications."
-  (interactive)
-  
-  (unless (buffer-live-p emacsvox-notifications-buffer)
-    (setq emacsvox-notifications-buffer (emacsvox--notifications-init)))
-  (emacsvox-icon 'open-object)
-  (funcall-interactively #'pop-to-buffer emacsvox-notifications-buffer))
-
-(defconst emacsvox-notifications-max 128
-  " notifications cache-size")
-
-(defun emacsvox-notifications-truncate ()
-  "Trim notifications cache."
-  (with-current-buffer emacsvox-notifications-buffer
-    (let ((lines (count-lines (point-min) (point-max)))
-          (inhibit-read-only t))
-      (when (> lines emacsvox-notifications-max)
-        (goto-char (point-min))
-        (forward-line (- lines emacsvox-notifications-max))
-        (delete-region (point-min) (point))))))
-
-(defun emacsvox-log-notification (text)
-  "Log a notification in our notifications buffer."
-  
-  (unless (buffer-live-p emacsvox-notifications-buffer)
-    (setq emacsvox-notifications-buffer (emacsvox--notifications-init)))
-  (with-current-buffer emacsvox-notifications-buffer
-    (let ((inhibit-read-only t))
-      (goto-char (point-max))
-      (insert (format "%s\n" text)))))
 
 (defvar emacsvox-notifications-gc-timer
   (run-at-time 43200 43200 #'emacsvox-notifications-truncate)
@@ -1830,12 +1777,6 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
   (interactive)
   (emacsvox-execute-repeatedly 'forward-paragraph))
 
-;;;    quieten messages
-
-(ems-generate-switcher 'emacsvox-toggle-speak-messages
-                       'emacsvox-speak-messages
-                       "Toggle  state of whether emacsvox echoes messages.")
-
 ;;;   Moving across fields:
 
 ;; Fields are defined by property 'field
@@ -1875,29 +1816,6 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
   (interactive)
   (message "Point is  %d%% into  the current buffer"
            (emacsvox-get-current-percentage-into-buffer)))
-
-;;;   Speak the last message again:
-
-(defvar ems--message-filter nil
-  "Internal variable holding  pattern used to filter spoken messages.")
-
-(defun emacsvox-speak-message-again (&optional from-message-cache)
-  "Speak the last message from Emacs once again.
-The message is also placed in the kill ring for convenient yanking "
-  (interactive "P")
-  
-  (when  (and emacsvox-last-message (called-interactively-p 'interactive))
-    (kill-new emacsvox-last-message))
-  (cond
-   (from-message-cache (tts-speak emacsvox-last-message))
-   (t
-    (save-current-buffer
-      (set-buffer "*Messages*")
-      (goto-char (point-max))
-      (skip-syntax-backward " >")
-      (emacsvox-speak-line)
-      (when  (called-interactively-p 'interactive)
-        (kill-new (ems--this-line)))))))
 
 ;;;   Using emacs's windows usefully:
 
@@ -2643,15 +2561,6 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
      (propertize
       (format "Selective Display: %s" selective-display)
       'personality 'voice-bolden))))
-
-;;; Pip: Use Piper if available.
-;; Uses pip if piper loaded, otherwise falls back to notifications
-
-(defun emacsvox-pip (text)
-  "Speak text, either using piper or regular notification stream."
-  (cond
-   ((featurep 'pip) (pip-speak text))
-   (t (tts-notify text))))
 
 ;;; Bug Reporter:
 (defconst emacsvox-bug-address "emacsvox@emacsvox.net" "List address")

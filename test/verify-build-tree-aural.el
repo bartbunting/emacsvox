@@ -37,6 +37,7 @@
           emacsvox-speak-characters
           emacsvox-speak-presentation
           emacsvox-speak-completion
+          emacsvox-speak-messages
           emacsvox-speak-filters
           emacsvox-aural
           emacsvox-aural-compatibility-voice
@@ -110,6 +111,9 @@
           emacsvox-set-indentation-presentation
           emacsvox-get-current-completion
           emacsvox-completions-move-to-completion-group
+          emacsvox-log-notification
+          emacsvox-speak-message-again
+          emacsvox-pip
           emacsvox-speak-line-apply-column-filter
           emacsvox-speak-load-filter-settings
           voice-setup-face-mapping-diagnostic

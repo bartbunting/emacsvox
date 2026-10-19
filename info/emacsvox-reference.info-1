@@ -681,6 +681,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-speak-characters:: Character speech and typing feedback.
 * emacsvox-speak-completion:: Completion reading and navigation.
 * emacsvox-speak-filters:: Reading column filters.
+* emacsvox-speak-messages:: Message history and replay.
 * emacsvox-speak-presentation:: Point and indentation presentation.
 * emacsvox-speedbar:: speedbar -.
 * emacsvox-spelling:: Spelling feedback settings.

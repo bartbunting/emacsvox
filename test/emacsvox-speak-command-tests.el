@@ -46,5 +46,55 @@
           (when (get-buffer "*Completions*") (kill-buffer "*Completions*")))
         (kill-buffer reference)))))
 
+(ert-deftest emacsvox-speak-notification-history-retains-newest-lines ()
+  "Keep the newest history entries and recreate a killed history buffer."
+  (let ((emacsvox-notifications-buffer (generate-new-buffer " *history test*")))
+    (unwind-protect
+        (progn
+          (dotimes (index (+ emacsvox-notifications-max 3))
+            (emacsvox-log-notification (number-to-string index)))
+          (emacsvox-notifications-truncate)
+          (with-current-buffer emacsvox-notifications-buffer
+            (should (= (count-lines (point-min) (point-max))
+                       emacsvox-notifications-max))
+            (should (string-prefix-p "3\n" (buffer-string))))
+          (kill-buffer emacsvox-notifications-buffer)
+          (cl-letf (((symbol-function 'emacsvox--notifications-init)
+                     (lambda () (generate-new-buffer " *history replacement*"))))
+            (emacsvox-log-notification "new history"))
+          (with-current-buffer emacsvox-notifications-buffer
+            (should (equal (buffer-string) "new history\n"))))
+      (when (buffer-live-p emacsvox-notifications-buffer)
+        (kill-buffer emacsvox-notifications-buffer)))))
+
+(ert-deftest emacsvox-speak-message-cache-replay-preserves-text ()
+  "Interactive cached replay also makes the text available for yanking."
+  (let ((emacsvox-last-message "cached message")
+        (current-prefix-arg '(4))
+        (kill-ring nil)
+        spoken)
+    (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text)))
+              ((symbol-function 'called-interactively-p) (lambda (&rest _) t)))
+      (funcall-interactively #'emacsvox-speak-message-again t)
+      (should (equal spoken "cached message"))
+      (should (equal (car kill-ring) "cached message")))))
+
+(ert-deftest emacsvox-speak-pip-uses-available-notification-service ()
+  "Use Piper when loaded and the notification stream otherwise."
+  (let ((original-featurep (symbol-function 'featurep))
+        available spoken)
+    (cl-letf (((symbol-function 'pip-speak)
+               (lambda (text) (push (cons 'piper text) spoken)))
+              ((symbol-function 'tts-notify)
+               (lambda (text) (push (cons 'notification text) spoken)))
+              ((symbol-function 'featurep)
+               (lambda (feature &optional subfeature)
+                 (if (eq feature 'pip) available
+                   (funcall original-featurep feature subfeature)))))
+      (emacsvox-pip "fallback")
+      (setq available t)
+      (emacsvox-pip "piper")
+      (should (equal spoken '((piper . "piper") (notification . "fallback")))))))
+
 (provide 'emacsvox-speak-command-tests)
 ;;; emacsvox-speak-command-tests.el ends here

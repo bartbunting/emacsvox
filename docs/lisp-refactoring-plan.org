@@ -530,6 +530,22 @@ Reference generation and the documentation review gate pass. The facade has
 
 Commit slice: =Extract completion reading commands=.
 
+*** Message history and replay
+
+=emacsvox-speak-messages= owns notification history operations, message
+controls, replay, quiet logging and Piper fallback. The facade still creates
+the history buffer and its cleanup timer at their original activation points.
+Definition loading leaves buffers, timers, hooks and advice unchanged.
+
+All 258 original definition forms remain unchanged. Source verification passes
+259 cases and compiled verification passes 258, with seven graphical cases
+covered by the preceding graphical run. New tests cover history trimming and
+recreation, cached replay and notification-service selection. The facade has
+2597 lines. Fresh compiled startup, the warning-free incremental build,
+preflight, headers, reference generation and documentation review gate pass.
+
+Commit slice: =Extract message history and replay=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

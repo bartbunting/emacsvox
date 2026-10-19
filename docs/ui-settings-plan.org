@@ -3587,3 +3587,8 @@ Completion-reading commands now live in =emacsvox-speak-completion=. The main
 speech library still installs completion hooks and keys in their original
 order. All 26 graphical reading checks pass, including real candidates,
 Space navigation and C-o return with the reference buffer's draft preserved.
+
+Message controls and notification history now belong to
+=emacsvox-speak-messages=. Buffer and timer activation stay in the core facade;
+message-menu behavior and replay text are unchanged. Source and compiled
+checks cover history trimming, recreation, replay and Piper fallback.
