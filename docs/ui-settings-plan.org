@@ -3656,3 +3656,8 @@ Screen snapshots and differences now belong to =emacsvox-eat-screen=.
 All 217 applicable source and compiled Eat tests pass. The two graphical
 cases skipped in batch and the real =ed= case pass on an isolated display.
 Listening acceptance remains open; the running profile is not reloaded.
+
+Focus inference and navigation feedback now belong to =emacsvox-eat-focus=.
+Confidence thresholds, repeated-focus suppression and spoken navigation text
+remain unchanged. Source, compiled, fresh facade startup and all three isolated
+graphical checks pass.

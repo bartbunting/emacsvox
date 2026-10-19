@@ -686,6 +686,20 @@ Listening acceptance remains separate.
 
 Commit slice: =Extract Eat screen snapshots and differences=.
 
+** Focus inference and navigation feedback
+
+Implementation moves 15 unchanged definitions into =emacsvox-eat-focus=.
+Rendered highlights, cursor direction, confidence scoring and navigation text
+stay together. Core still owns observation serials and resets the last spoken
+focus identity. Presentation calls retain their existing runtime boundary.
+All 217 applicable source and compiled cases pass, along with the three
+isolated graphical checks. All 210 original definitions remain unchanged and
+uniquely owned. The warning-free build, fresh compiled facade startup,
+preflight, headers, reference generation and documentation review gate pass.
+Core now has 2002 lines; the focus module has 442.
+
+Commit slice: =Extract Eat focus inference and navigation feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers

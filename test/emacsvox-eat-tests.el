@@ -12,6 +12,7 @@
   ;; Load every implementation explicitly.  Requiring the facade alone could
   ;; otherwise select stale internal byte-code during source test runs.
   (dolist (file '("integrations/emacsvox-eat-screen.el"
+                  "integrations/emacsvox-eat-focus.el"
                   "integrations/emacsvox-eat-core.el"
                   "integrations/emacsvox-eat-input.el"
                   "integrations/emacsvox-eat-review.el"
