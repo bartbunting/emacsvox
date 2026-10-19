@@ -542,6 +542,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-eat-core:: EAT speech observation core.
 * emacsvox-eat-input:: EAT interactive input feedback.
 * emacsvox-eat-review:: Frozen EAT screen review.
+* emacsvox-eat-screen:: EAT screen snapshots and differences.
 * emacsvox-ebuku:: Speech-enable EBUKU.
 * emacsvox-ediff:: Speech enable  ediff.
 * emacsvox-eglot:: Speech-enable EGLOT.
@@ -8490,10 +8491,11 @@ File: emacsvox-reference.info,  Node: emacsvox-eat,  Next: emacsvox-eat-core,  P
 ==================
 
 Public entry point for Emacsvox speech access to EAT terminals.  The
-implementation is split by responsibility: - 'emacsvox-eat-core' owns
-screen observation, lifecycle, and output.  - 'emacsvox-eat-input' owns
-input, deletion, navigation, and completion.  - 'emacsvox-eat-review'
-owns frozen screen review and inspection.
+implementation is split by responsibility: - 'emacsvox-eat-screen' owns
+screen snapshots and differences.  - 'emacsvox-eat-core' owns screen
+observation, lifecycle, and output.  - 'emacsvox-eat-input' owns input,
+deletion, navigation, and completion.  - 'emacsvox-eat-review' owns
+frozen screen review and inspection.
 
    Keep requiring 'emacsvox-eat'; the internal features are load-order
 details.
@@ -8607,7 +8609,7 @@ Input, navigation, deletion, paste, mode, and completion feedback for
 EAT.  Load 'emacsvox-eat' rather than requiring this module directly.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-eat-review,  Next: emacsvox-ebuku,  Prev: emacsvox-eat-input,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-eat-review,  Next: emacsvox-eat-screen,  Prev: emacsvox-eat-input,  Up: Emacsvox Commands And Options
 
 2.118 emacsvox-eat-review
 =========================
@@ -8830,9 +8832,18 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Speak a bounded frozen copy of the latest retained visible EAT screen.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacsvox-eat-review,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-eat-screen,  Next: emacsvox-ebuku,  Prev: emacsvox-eat-review,  Up: Emacsvox Commands And Options
 
-2.119 emacsvox-ebuku
+2.119 emacsvox-eat-screen
+=========================
+
+EAT screen snapshots and differences.  Load 'emacsvox-eat' rather than
+requiring this module directly.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacsvox-eat-screen,  Up: Emacsvox Commands And Options
+
+2.120 emacsvox-ebuku
 ====================
 
 EBUKU == Emacs Buku front-end to manage bookmarks.
@@ -8840,7 +8851,7 @@ EBUKU == Emacs Buku front-end to manage bookmarks.
 
 File: emacsvox-reference.info,  Node: emacsvox-ediff,  Next: emacsvox-eglot,  Prev: emacsvox-ebuku,  Up: Emacsvox Commands And Options
 
-2.120 emacsvox-ediff
+2.121 emacsvox-ediff
 ====================
 
 Ediff provides a nice visual interface to diff.  ;;;Comparing and
@@ -8856,10 +8867,10 @@ found in Emacs 19.29 and later.
 ediff-window-setup-function 'ediff-setup-windows-plain) so that Emacs
 always displays Ediff windows in a single frame.
 
-2.120.1 Emacsvox-Ediff Commands
+2.121.1 Emacsvox-Ediff Commands
 -------------------------------
 
-2.120.1.1 emacsvox-ediff-speak-current-difference
+2.121.1.1 emacsvox-ediff-speak-current-difference
 .................................................
 
  -- Command: emacsvox-ediff-speak-current-difference
@@ -8869,7 +8880,7 @@ always displays Ediff windows in a single frame.
 
 File: emacsvox-reference.info,  Node: emacsvox-eglot,  Next: emacsvox-ein,  Prev: emacsvox-ediff,  Up: Emacsvox Commands And Options
 
-2.121 emacsvox-eglot
+2.122 emacsvox-eglot
 ====================
 
 EGLOT == LSP Support for emacs
@@ -8877,16 +8888,16 @@ EGLOT == LSP Support for emacs
 
 File: emacsvox-reference.info,  Node: emacsvox-ein,  Next: emacsvox-elfeed,  Prev: emacsvox-eglot,  Up: Emacsvox Commands And Options
 
-2.122 emacsvox-ein
+2.123 emacsvox-ein
 ==================
 
 EIN == Emacs IPython Notebook You can install package EIN via Melpa This
 module speech-enables EIN
 
-2.122.1 Emacsvox-Ein Commands
+2.123.1 Emacsvox-Ein Commands
 -----------------------------
 
-2.122.1.1 emacsvox-ein-speak-current-cell
+2.123.1.1 emacsvox-ein-speak-current-cell
 .........................................
 
  -- Command: emacsvox-ein-speak-current-cell
@@ -8896,7 +8907,7 @@ module speech-enables EIN
 
 File: emacsvox-reference.info,  Node: emacsvox-elfeed,  Next: emacsvox-elisp-refs,  Prev: emacsvox-ein,  Up: Emacsvox Commands And Options
 
-2.123 emacsvox-elfeed
+2.124 emacsvox-elfeed
 =====================
 
 ELFEED == Feed Reader for Emacs.  Install from elpa M-x package-install
@@ -8904,38 +8915,38 @@ elfeed
 
    Required modules:
 
-2.123.1 Emacsvox-Elfeed Commands
+2.124.1 Emacsvox-Elfeed Commands
 --------------------------------
 
-2.123.1.1 emacsvox-elfeed-eww-entry-at-point
+2.124.1.1 emacsvox-elfeed-eww-entry-at-point
 ............................................
 
  -- Command: emacsvox-elfeed-eww-entry-at-point
 
      Display current article in EWW.
 
-2.123.1.2 emacsvox-elfeed-filter-entry-at-point
+2.124.1.2 emacsvox-elfeed-filter-entry-at-point
 ...............................................
 
  -- Command: emacsvox-elfeed-filter-entry-at-point
 
      Display current article after filtering.
 
-2.123.1.3 emacsvox-elfeed-next-entry
+2.124.1.3 emacsvox-elfeed-next-entry
 ....................................
 
  -- Command: emacsvox-elfeed-next-entry
 
      Move to next entry and speak it.
 
-2.123.1.4 emacsvox-elfeed-previous-entry
+2.124.1.4 emacsvox-elfeed-previous-entry
 ........................................
 
  -- Command: emacsvox-elfeed-previous-entry
 
      Move to previous entry and speak it.
 
-2.123.1.5 emacsvox-elfeed-speak-entry-at-point
+2.124.1.5 emacsvox-elfeed-speak-entry-at-point
 ..............................................
 
  -- Command: emacsvox-elfeed-speak-entry-at-point
@@ -8945,7 +8956,7 @@ elfeed
 
 File: emacsvox-reference.info,  Node: emacsvox-elisp-refs,  Next: emacsvox-ellama,  Prev: emacsvox-elfeed,  Up: Emacsvox Commands And Options
 
-2.124 emacsvox-elisp-refs
+2.125 emacsvox-elisp-refs
 =========================
 
 Speech-enable package elisp-refs.  ELISP-REFS ==
@@ -8953,7 +8964,7 @@ Speech-enable package elisp-refs.  ELISP-REFS ==
 
 File: emacsvox-reference.info,  Node: emacsvox-ellama,  Next: emacsvox-elpher,  Prev: emacsvox-elisp-refs,  Up: Emacsvox Commands And Options
 
-2.125 emacsvox-ellama
+2.126 emacsvox-ellama
 =====================
 
 ELLAMA == Emacs LLM Interaction.  ellama uses package llm, and this
@@ -8962,7 +8973,7 @@ module speech-enables ellama.
 
 File: emacsvox-reference.info,  Node: emacsvox-elpher,  Next: emacsvox-elpy,  Prev: emacsvox-ellama,  Up: Emacsvox Commands And Options
 
-2.126 emacsvox-elpher
+2.127 emacsvox-elpher
 =====================
 
 ELPHER == gopher/gemini client Let's see if we can rescue the
@@ -8971,7 +8982,7 @@ Content-Oriented Web
 
 File: emacsvox-reference.info,  Node: emacsvox-elpy,  Next: emacsvox-embark,  Prev: emacsvox-elpher,  Up: Emacsvox Commands And Options
 
-2.127 emacsvox-elpy
+2.128 emacsvox-elpy
 ===================
 
 ELPY == Emacs Lisp Python IDE Speech-enables all aspects of elpy.
@@ -8979,7 +8990,7 @@ ELPY == Emacs Lisp Python IDE Speech-enables all aspects of elpy.
 
 File: emacsvox-reference.info,  Node: emacsvox-embark,  Next: emacsvox-emms,  Prev: emacsvox-elpy,  Up: Emacsvox Commands And Options
 
-2.128 emacsvox-embark
+2.129 emacsvox-embark
 =====================
 
 EMBARK == Context actions framework.  This module speech-enables embark.
@@ -8989,7 +9000,7 @@ right-click menu.  It works with vertico/consult for completion actions.
 
 File: emacsvox-reference.info,  Node: emacsvox-emms,  Next: emacsvox-emoji,  Prev: emacsvox-embark,  Up: Emacsvox Commands And Options
 
-2.129 emacsvox-emms
+2.130 emacsvox-emms
 ===================
 
 Speech-enables EMMS -- the Emacs equivalent of XMMS available from the
@@ -8997,10 +9008,10 @@ Emacs package archive.  http://savannah.gnu.org/project/emms EMMS is
 under active development, to get the current CVS version, use Emacsvox
 command M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
 
-2.129.1 Emacsvox-Emms Commands
+2.130.1 Emacsvox-Emms Commands
 ------------------------------
 
-2.129.1.1 emacsvox-emms-speak-current-track
+2.130.1.1 emacsvox-emms-speak-current-track
 ...........................................
 
  -- Command: emacsvox-emms-speak-current-track

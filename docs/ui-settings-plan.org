@@ -3645,3 +3645,14 @@ loaded paths.
 Commit slice: =Interrupt previous Eat output when submitting input=.
 Listening acceptance remains open. The running session was not reloaded;
 try Enter in =ed= after a fresh profile restart.
+
+* Eat responsibility extraction, 2026-10-19
+
+The [[file:lisp-refactoring-plan.org][Lisp refactoring plan]] tracks four accepted slices: screen snapshots,
+focus inference, output collection and presentation. Interaction, speech
+ordering, settings and the Enter interruption fix remain unchanged.
+
+Screen snapshots and differences now belong to =emacsvox-eat-screen=.
+All 217 applicable source and compiled Eat tests pass. The two graphical
+cases skipped in batch and the real =ed= case pass on an isolated display.
+Listening acceptance remains open; the running profile is not reloaded.

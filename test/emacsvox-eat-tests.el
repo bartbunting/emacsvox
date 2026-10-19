@@ -9,13 +9,19 @@
        (expand-file-name
         "../lisp/"
         (file-name-directory (or load-file-name buffer-file-name)))))
-  ;; Load every implementation source explicitly.  Requiring the facade alone
-  ;; could otherwise select a stale internal .elc during source test runs.
-  (dolist (file '("integrations/emacsvox-eat-core.el"
+  ;; Load every implementation explicitly.  Requiring the facade alone could
+  ;; otherwise select stale internal byte-code during source test runs.
+  (dolist (file '("integrations/emacsvox-eat-screen.el"
+                  "integrations/emacsvox-eat-core.el"
                   "integrations/emacsvox-eat-input.el"
                   "integrations/emacsvox-eat-review.el"
                   "integrations/emacsvox-eat.el"))
-    (load (expand-file-name file lisp-directory) nil nil t)))
+    (load (expand-file-name
+           (if (equal (getenv "EMACSVOX_EAT_TEST_LOAD") "compiled")
+               (concat file "c")
+             file)
+           lisp-directory)
+          nil nil t)))
 (require 'emacsvox-aural-provider-workflows)
 
 (defun emacsvox-eat-test--screen (text &optional width generation)

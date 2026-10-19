@@ -30,6 +30,7 @@
 ;; Public entry point for Emacsvox speech access to EAT terminals.
 ;;
 ;; The implementation is split by responsibility:
+;; - `emacsvox-eat-screen' owns screen snapshots and differences.
 ;; - `emacsvox-eat-core' owns screen observation, lifecycle, and output.
 ;; - `emacsvox-eat-input' owns input, deletion, navigation, and completion.
 ;; - `emacsvox-eat-review' owns frozen screen review and inspection.

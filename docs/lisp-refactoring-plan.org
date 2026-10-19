@@ -653,6 +653,39 @@ Listening acceptance remains open; no live session was reloaded.
 
 Commit slice: =Fix field navigation boundaries and destination speech=.
 
+* Eat core responsibility extractions
+
+Accepted on 2026-10-19: extract four responsibilities from the 2863-line
+=emacsvox-eat-core= while preserving public names, settings, keys, speech
+ordering and terminal behavior. Keep lifecycle, timers, generation state and
+coordination in core. The recent newline interruption fix remains unchanged.
+
+1. Screen snapshots and differences: rendered styles, concealed-text redaction,
+   cursor coordinates and generation-aware comparison.
+2. Focus inference: highlighted regions, cursor movement and navigation feedback.
+3. Output collection: prompt boundaries, partial lines and completed output.
+4. Presentation: status, metadata, bells and background-output cues.
+
+Each extraction receives its own commit after source and compiled Eat tests,
+an incremental build, byte-code preflight, applicable graphical checks, header
+validation and the documentation review gate. Tests use the installed Eat
+0.9.4 package and fresh Emacs processes. Listening acceptance remains separate;
+the running profile is not reloaded.
+
+** Screen snapshots and differences
+
+Implementation moves 22 unchanged definitions into =emacsvox-eat-screen=.
+The module reads the generation owned by core and installs no hooks or timers.
+Tests can explicitly select source or compiled implementations, including every
+internal module. All 210 original core definitions retain exactly one owner
+and unchanged forms. All 217 applicable source and compiled tests pass; the two
+graphical cases skipped in batch and the real =ed= case pass on an isolated
+display. The incremental build, preflight and header check pass. Core now has
+2393 lines. Reference generation and the documentation review gate pass.
+Listening acceptance remains separate.
+
+Commit slice: =Extract Eat screen snapshots and differences=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
