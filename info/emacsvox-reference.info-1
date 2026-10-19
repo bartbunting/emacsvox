@@ -623,6 +623,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-m-player:: Media Player.
 * emacsvox-magit:: Speech-enable MAGIT.
 * emacsvox-magit-commit:: Magit commit-message feedback.
+* emacsvox-magit-rebase:: Magit rebase feedback.
 * emacsvox-magit-repositories:: Magit repository-list feedback.
 * emacsvox-make-mode:: Speech enable make.
 * emacsvox-man:: Speech enable Man.

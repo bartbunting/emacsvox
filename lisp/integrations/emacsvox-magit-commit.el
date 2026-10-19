@@ -36,7 +36,7 @@
 (require 'cl-lib)
 
 ;; Cross-module declarations.
-(declare-function emacsvox-magit--rebase-operation-label "emacsvox-magit" (operation))
+(declare-function emacsvox-magit--rebase-operation-label "emacsvox-magit-rebase" (operation))
 (declare-function emacsvox-magit--submit-text "emacsvox-magit" (content facts occasion &optional icon icon-phase))
 (declare-function emacsvox-magit-view-facts "emacsvox-magit" (kind event))
 (defvar git-commit-mode)

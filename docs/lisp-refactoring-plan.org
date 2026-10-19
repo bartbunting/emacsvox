@@ -843,7 +843,8 @@ The initial sequence is:
 7. Magit rebase feedback.
 8. Core search advice.
 9. Core editing advice.
-10. Core help and window advice, keeping activation in the facade.
+10. Core Help and key-description advice.
+11. Core buffer and window advice, keeping activation in the facade.
 
 Inspect each boundary before extraction. Keep definitions unchanged where
 possible and retain registration in the existing integration entry point.
@@ -878,6 +879,8 @@ cancellation, ownership and callbacks further is a separate architecture task.
 Boundary inspection keeps Magit's small blame-specific block with shared
 navigation. Repository lists, commit editing and rebase each have a clearer
 operation boundary and form the three Magit slices.
+Core Help/key descriptions and buffer/window feedback also have independent
+boundaries; keep them in separate slices rather than a mixed module.
 
 *** Notmuch search-result presentation
 
@@ -962,6 +965,18 @@ Definition parity, isolated loading, compilation, preflight, headers,
 generated reference and the documentation gate pass.
 
 Commit slice: =Extract Magit commit-message feedback=.
+
+*** Magit rebase feedback
+
+The rebase module owns eleven unchanged definitions for action descriptions,
+line presentation and editor outcomes. Generated wrappers, advice installation
+and buffer-local lifecycle hook setup stay in the facade. Source and compiled
+runs pass 105 cases, and all 106 pass graphically. Definition parity, isolated
+loading, compilation, preflight, headers, generated reference and the
+documentation gate pass. The three Magit slices reduce the facade from 2884
+to 2338 lines; shared section, process and navigation ownership stays together.
+
+Commit slice: =Extract Magit rebase feedback=.
 
 * Result
 
