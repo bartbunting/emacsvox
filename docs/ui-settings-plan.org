@@ -3568,3 +3568,12 @@ save-on-exit hook only then. All 131 focused reading, filter and Org cases pass
 from source and byte-code. Fresh compiled startup and isolated aural checks
 pass. The [[file:lisp-refactoring-plan.org][Lisp refactoring plan]] records the commit slice and verification.
 Listening acceptance remains separate; the running session was not reloaded.
+
+* Core reading responsibility extraction, 2026-10-19
+
+Character reading, phonetic names, delayed phonetics and typing feedback now
+live in =emacsvox-speak-characters=. Options, cancellation and source-context
+checks are unchanged; the speech facade retains hook and advice activation.
+The [[file:lisp-refactoring-plan.org][Lisp refactoring plan]] records the eight accepted slices and their
+verification checkpoints. Listening acceptance remains separate. The running
+session is not reloaded during this work.

@@ -34,6 +34,7 @@
           emacsvox-pronounce
           emacsvox-speak
           emacsvox-tracked-reading
+          emacsvox-speak-characters
           emacsvox-speak-filters
           emacsvox-aural
           emacsvox-aural-compatibility-voice
@@ -99,6 +100,9 @@
           emacsvox-speak-line
           emacsvox-speak-rest-of-buffer
           emacsvox--tracked-reading-cancel
+          emacsvox-speak-this-char
+          emacsvox--delayed-phonetic-schedule
+          emacsvox-post-self-insert-hook
           emacsvox-speak-line-apply-column-filter
           emacsvox-speak-load-filter-settings
           voice-setup-face-mapping-diagnostic

@@ -678,6 +678,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-sound-library:: Recordings and explicit cue assignments.
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
+* emacsvox-speak-characters:: Character speech and typing feedback.
 * emacsvox-speak-filters:: Reading column filters.
 * emacsvox-speedbar:: speedbar -.
 * emacsvox-spelling:: Spelling feedback settings.

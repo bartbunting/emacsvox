@@ -453,6 +453,46 @@ and listening acceptance stays separate.
 
 Commit slice: =Extract reading column filters and saved settings=.
 
+** Remaining core speech responsibilities
+
+Accepted on 2026-10-19: complete eight further extractions, each in its own
+verified commit, preserving public names, settings, keys and startup order:
+
+1. Character speech, delayed phonetics and typing feedback.
+2. Point and indentation presentation.
+3. Completion reading and navigation commands.
+4. Notification history and message commands.
+5. Time, date and scheduled announcement commands.
+6. Window reading, layout and buffer selection.
+7. Mode/header-line, buffer and system status.
+8. Mark, property and field navigation, continuous reading and repeat feedback.
+
+Keep physical and visual line reading, ordinary text units, paragraph
+annotations and shared compatibility helpers in =emacsvox-speak=. Definition
+modules must not install hooks, advice, keys or timers merely by being loaded;
+the facade retains activation at the existing points. Preserve existing
+runtime calls between reading services without adding recursive requires of
+the facade. Stop for a decision if preserving these boundaries would require
+an interface or behavior change.
+
+The fresh baseline passes 242 source and 241 applicable compiled cases. The
+existing scrolling fixture remains source-only because it mocks inlined
+helpers. =test/run-speak-tests.el= checks definition ownership and catches
+changes to hooks, advice, timers and speech processes before loading the facade.
+
+*** Characters
+
+Character classification, phonetic names, delayed announcements and typing
+feedback now live in =emacsvox-speak-characters=. The facade retains typing-hook
+installation and delayed-phonetic activation at their original positions.
+Definitions preserve cancellation, source validation and input context.
+
+All 242 source and 241 applicable compiled cases pass. Fresh compiled startup,
+incremental compilation, byte-code preflight, headers, reference generation and
+the documentation release check pass. All 258 original definition forms remain
+unchanged across the facade and extracted modules. The facade now has 3148
+lines. Commit slice: =Extract character speech and typing feedback=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
