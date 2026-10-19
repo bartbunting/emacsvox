@@ -802,6 +802,28 @@ pass. The facade now has 1035 lines.
 
 Commit slice: =Extract voice workbench routing edits=.
 
+** Save and apply
+
+Implementation moves 11 unchanged definitions to
+=emacsvox-aural-voice-workbench-apply=. It owns inventory diagnostics,
+save/apply commands, acknowledgement status, retry and saved-revision undo.
+Saving still records the profile separately from confirming each speech
+process's apply result. Timeout feedback continues to report an unconfirmed
+server outcome. All 127 applicable source and compiled tests and all 39
+isolated graphical checks pass. All 150 original definitions remain unchanged
+with one owner each. The six build-inventory checks, fresh compiled startup,
+byte-code preflight, headers and isolated compiled aural parity checks pass.
+The isolated build exposed a missing declaration for the library module's
+optional catalogue command; the declaration is now explicit.
+
+All four operation slices are implemented. The facade has 842 lines and
+the new modules range from 241 to 577 lines. Seven graphical tests skipped
+in batch pass in the graphical runner. The optional native-service test was
+not run. Listening acceptance remains open; restart the normal profile to
+load the completed extraction.
+
+Commit slice: =Extract voice workbench save and apply=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
@@ -810,7 +832,7 @@ and comments; extracted modules retain named authors and copyright holders.
 | Main file | Before | After |
 |-----------+--------+-------|
 | emacsvox-agent-shell.el | 7688 | 1413 |
-| emacsvox-aural-voice-workbench.el | 3013 | 2212 |
+| emacsvox-aural-voice-workbench.el | 3013 | 842 |
 | omnivox-library.el | 1069 | 419 |
 | omnivox-voices.el | 3117 | 2406 |
 | emacsvox-aural-transport.el | 2689 | 2305 |
@@ -825,6 +847,8 @@ column-filter follow-ups and all eight core speech slices are complete. The
 eight speech slices reduce the facade from 3424 to 1431 lines while preserving
 public names and definition forms. The four Eat slices separate screen data,
 focus inference, output collection and presentation from lifecycle coordination.
+The four workbench operation slices reduce its remaining facade from 2212
+to 842 lines, leaving buffer coordination together.
 Further extraction should follow a concrete
 responsibility problem rather than a target line count.
 

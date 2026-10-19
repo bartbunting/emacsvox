@@ -95,6 +95,7 @@
           "ui/emacsvox-aural-voice-workbench-preview.el"
           "ui/emacsvox-aural-voice-workbench-library.el"
           "ui/emacsvox-aural-voice-workbench-routing.el"
+          "ui/emacsvox-aural-voice-workbench-apply.el"
           "ui/emacsvox-aural-voice-workbench.el"
           "ui/emacsvox-aural-voice-editor.el"
           "ui/emacsvox-aural-voice-bulk.el"

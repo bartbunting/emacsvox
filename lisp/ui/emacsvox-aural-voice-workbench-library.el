@@ -50,6 +50,7 @@
 (declare-function omnivox--send-control-request "omnivox-voices" (process request callback))
 (declare-function omnivox--pending-requests "omnivox-voices" (process))
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
+(declare-function omnivox-catalogue "omnivox-catalogue" (&optional engine))
 
 (defvar-local emacsvox-aural-voice-workbench--library-source nil)
 

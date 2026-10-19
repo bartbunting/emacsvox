@@ -3698,3 +3698,12 @@ Routing edits now belong to =emacsvox-aural-voice-workbench-routing=.
 Staged edits, temporary preferences, saved order and undo retain their
 existing scope. All 127 applicable source and compiled tests and all 39
 graphical checks pass. Listening acceptance remains open.
+
+Save and apply now belong to =emacsvox-aural-voice-workbench-apply=.
+Save confirmation, per-process acknowledgement, timeout feedback, retry and
+saved-revision undo retain their existing behavior. All four slices are
+implemented with unchanged original definitions. All 127 applicable source
+and compiled tests, all 39 graphical checks, six build-inventory checks and
+isolated compiled aural parity checks pass. The optional native-service test
+was not run. Listening acceptance remains open; restart the normal profile
+to load the completed extraction.

@@ -485,6 +485,9 @@
                       emacsvox-aural--build-structured-timeline
                       emacsvox-aural--finalize-structured-delivery
                       emacsvox-aural-voice-workbench--preview-effects
+                      emacsvox-aural-voice-workbench--library-start
+                      emacsvox-aural-voice-workbench--stage
+                      emacsvox-aural-voice-workbench-save-and-apply
                       emacsvox-aural-voice-editor--set))
     (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
       (error "Aural contract escaped compiled build: %S" function)))

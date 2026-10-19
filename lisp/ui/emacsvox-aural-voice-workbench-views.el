@@ -52,7 +52,7 @@
 (declare-function emacsvox-aural-voice-workbench--dirty-p
                   "emacsvox-aural-voice-workbench-routing" ())
 (declare-function emacsvox-aural-voice-workbench--apply-status-description
-                  "emacsvox-aural-voice-workbench" ())
+                  "emacsvox-aural-voice-workbench-apply" ())
 (declare-function emacsvox-aural-voice-workbench--library-p
                   "emacsvox-aural-voice-workbench-library" ())
 (declare-function emacsvox-aural-voice-workbench--library-index
