@@ -118,10 +118,13 @@
         (setq-local emacsvox-aural-voice-workbench--library-source '(captured))
         (setq-local emacsvox-aural-voice-workbench--library-reply
                     (list :index index :sha256 "captured-revision"))
+        ;; Use the real row property: compiled callers inline this lookup.
+        (insert (propertize "Example\n" 'tabulated-list-id
+                            (if (eq view 'workbench)
+                                '("piper" "voice") '("piper" . "voice"))))
+        (goto-char (point-min))
         (let ((omnivox-library--changed-hook nil))
-          (cl-letf (((symbol-function 'tabulated-list-get-id)
-                     (lambda () (if (eq view 'workbench) '("piper" "voice") '("piper" . "voice"))))
-                    ((symbol-function 'omnivox-library--source-key) (lambda () '(captured)))
+          (cl-letf (((symbol-function 'omnivox-library--source-key) (lambda () '(captured)))
                     ((symbol-function 'omnivox-library--service)
                      (lambda () (make-pipe-process :name "view selection fixture" :noquery t)))
                     ((symbol-function 'omnivox-library--request)

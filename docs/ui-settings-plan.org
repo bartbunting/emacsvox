@@ -3675,3 +3675,15 @@ source and compiled checks, three isolated graphical checks and six build
 inventory checks pass. Fresh compiled startup also works without Eat installed
 on the load path. Listening acceptance remains separate; restart the profile
 to load the completed extraction.
+
+* Voice workbench responsibility extraction, 2026-10-19
+
+The [[file:lisp-refactoring-plan.org][Lisp refactoring plan]] tracks four accepted slices: preview and
+comparison, voice-library integration, routing edits, and save and apply.
+The facade retains buffer setup, navigation, refresh and hook registration.
+Settings, keys and spoken interaction retain their existing behavior.
+
+Preview and comparison now belong to =emacsvox-aural-voice-workbench-preview=.
+All 127 applicable source and compiled tests and all 39 isolated graphical
+voice checks pass. Listening acceptance remains separate and uses a fresh
+normal profile; the running profile has not been reloaded.

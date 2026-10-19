@@ -165,6 +165,7 @@ ui/emacsvox-aural-doctor.elc \
 ui/emacsvox-aural-profiles.elc \
 ui/emacsvox-aural-voice-palettes.elc \
 ui/emacsvox-aural-voice-workbench-views.elc \
+ui/emacsvox-aural-voice-workbench-preview.elc \
 ui/emacsvox-aural-voice-workbench.elc \
 ui/emacsvox-aural-change-feedback.elc \
 aural/emacsvox-aural-provider-org.elc \
@@ -709,3 +710,6 @@ ui/omnivox-library.elc speech/tts-speak.elc speech/omnivox-remote.elc: speech/om
 
 ui/emacsvox-aural-voice-workbench-views.elc: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-ui.elc aural/emacsvox-aural-routing-profiles.elc
 ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-views.elc
+
+ui/emacsvox-aural-voice-workbench-preview.elc: ui/emacsvox-aural-voice-workbench-views.elc aural/emacsvox-aural-preview.elc
+ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-preview.elc

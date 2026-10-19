@@ -66,7 +66,7 @@
 (declare-function emacsvox-aural-voice-workbench--library-states
                   "emacsvox-aural-voice-workbench" (id))
 (declare-function emacsvox-aural-voice-workbench--unavailable-reason
-                  "emacsvox-aural-voice-workbench" (pair))
+                  "emacsvox-aural-voice-workbench-preview" (pair))
 (defvar emacsvox-aural-voice-workbench--library-error)
 (defvar emacsvox-aural-voice-workbench--library-ticket)
 (defvar emacsvox-aural-voice-workbench--views)

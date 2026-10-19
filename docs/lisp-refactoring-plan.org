@@ -739,6 +739,43 @@ profile was not reloaded.
 
 Commit slice: =Extract Eat status and output presentation=.
 
+* Voice workbench operations
+
+Accepted on 2026-10-19: extract four operation groups from the remaining
+2212-line workbench facade. Keep mode setup, keymaps, navigation, refresh and
+hook registration in the facade. Preserve command names, saved data, callback
+guards, speech ordering and the distinction between saving and applying.
+
+1. Preview and comparison, including sample construction and preview state.
+2. Voice-library integration, including worker observations and selection actions.
+3. Routing edits, including staged snapshots, engine ordering and undo.
+4. Save and apply, including diagnostics, acknowledgements and applied undo.
+
+Verify each slice with focused source and compiled workbench tests, the
+isolated graphical voice checks and a fresh compiled facade load. Compile
+with the configured Emacs 31.0.90 before the byte-code preflight and reference
+generation. Listening acceptance uses a fresh normal profile; do not reload
+the running session during extraction.
+
+The baseline exposed a shared-library selection fixture that mocked
+=tabulated-list-get-id=, which the byte compiler inlines. The fixture now
+uses the real table-row property so it exercises both source and compiled
+implementations. All 39 maintained graphical voice checks passed before
+the extraction.
+
+** Preview and comparison
+
+Implementation moves 23 unchanged definitions to
+=emacsvox-aural-voice-workbench-preview=. Exact physical samples, logical
+voice styles, displayed-order previews, comparison and obsolete-callback
+suppression retain their existing behavior. All 127 applicable source and
+compiled tests and all 39 isolated graphical voice checks pass. All 150
+original definitions remain unchanged with one owner each. Fresh compiled
+facade startup and byte-code preflight pass. Compiler warnings are confined
+to unchanged startup declarations in =emacsvox.el=.
+
+Commit slice: =Extract voice workbench preview and comparison=.
+
 * Result
 
 The completed slices reduce the main files as follows. Counts include headers
