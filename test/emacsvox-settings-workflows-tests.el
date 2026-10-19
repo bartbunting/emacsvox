@@ -140,6 +140,36 @@
               (should (eq (get-text-property index 'personality line)
                           (when (if invert (not (memq index '(1 2))) (memq index '(1 2))) 'inaudible))))))))))
 
+(ert-deftest emacsvox-settings-reading-chunks-source-syntax-and-recovery ()
+  "Chunk choices retain other classes, change real boundaries, and recover mode scope."
+  (emacsvox-test--with-reading-store
+    (emacsvox-test--with-aural-menu
+      (setq-local tts-chunk-separator-syntax ".)")
+      (emacsvox-test--open-reading-workflow #'emacsvox-settings-reading-chunks)
+      (with-temp-buffer (emacsvox-settings-workflows--chunk-words))
+      (should (equal tts-chunk-separator-syntax ".)-"))
+      (should (equal chunk-default (default-value 'tts-chunk-separator-syntax)))
+      (dolist (case '((".)" "one two. ") (".)-" "one ")))
+        ;; The actual boundary primitive uses the source mode's syntax table.
+        (with-temp-buffer
+          (insert "one two. three") (goto-char 1)
+          (tts-move-across-a-chunk (car case) (concat "^" (car case)))
+          (skip-syntax-forward "-")
+          (should (equal (buffer-substring 1 (point)) (cadr case)))))
+      (emacsvox-settings-workflows--chunk-clauses)
+      (should (equal tts-chunk-separator-syntax ".)"))
+      (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "^w")))
+        (should-error (emacsvox-settings-workflows--chunk-edit) :type 'user-error))
+      (should (equal tts-chunk-separator-syntax ".)"))
+      (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "")))
+        (emacsvox-settings-workflows--chunk-edit))
+      (should (equal tts-chunk-separator-syntax ""))
+      (emacsvox-settings-workflows--chunk-inherit)
+      (should-not (local-variable-p 'tts-chunk-separator-syntax))
+      (emacsvox-settings-workflows--chunk-restore)
+      (should (local-variable-p 'tts-chunk-separator-syntax))
+      (should (equal tts-chunk-separator-syntax ".)")))))
+
 (ert-deftest emacsvox-settings-reading-workflow-preview-preserves-source ()
   "Actual line preview uses the captured point and preserves quiet, text and position."
   (emacsvox-test--with-aural-menu
@@ -160,6 +190,47 @@
             (should (= (point) (point-max)))
             (should (equal before (buffer-string))))
         (delete-process tts-speaker-process)))))
+
+(ert-deftest emacsvox-settings-reading-workflows-graphical-navigation-and-cancel ()
+  "Real nested menus preserve parent scope, cancel input, and restore opening choices."
+  (emacsvox-test--with-reading-store
+    (emacsvox-test--with-settings
+      (execute-kbd-macro (kbd "s g R a <down> <down>"))
+      (should (equal (default-value 'tts-cleanup-repeats) '("-" "=")))
+      (execute-kbd-macro (kbd "a C-g"))
+      (execute-kbd-macro (kbd "a ~ RET x u q"))
+      (should (equal (default-value 'tts-cleanup-repeats) '("-" "=")))
+      (should (eq (oref transient--prefix command) 'emacsvox-settings-reading-controls))
+      (execute-kbd-macro (kbd "f <down> <down> e C-g"))
+      (should-not emacsvox-speak-filters-loaded-p)
+      (execute-kbd-macro (kbd "e 1 - 2 RET v x r u q"))
+      (should-not (buffer-local-value 'emacsvox-speak-line-column-filter source))
+      (should (= 0 (hash-table-count emacsvox-speak-filter-table)))
+      (execute-kbd-macro (kbd "s <down> <down>"))
+      (let ((before (buffer-local-value 'tts-chunk-separator-syntax source)))
+        (execute-kbd-macro (kbd "e C-g w"))
+        (should (string-search "-" (buffer-local-value 'tts-chunk-separator-syntax source)))
+        (execute-kbd-macro (kbd "u q"))
+        (should (equal before (buffer-local-value 'tts-chunk-separator-syntax source))))
+      (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+      (should-not (file-exists-p custom-file))
+      (should-not (file-exists-p emacsvox-speak-filter-persistent-store)))))
+
+(ert-deftest emacsvox-settings-reading-workflows-search-then-edit ()
+  "Search captures the same undo state as ordinary submenu entry."
+  (emacsvox-test--with-reading-store
+    (emacsvox-test--with-settings
+      (let ((before (buffer-local-value 'tts-chunk-separator-syntax source)))
+        (dolist (case '(("Repeat cleanup patterns" "x u q")
+                        ("Column filtering for line speech" "e 1 - 2 RET u q")
+                        ("Speech chunking and whitespace boundaries" "w u q")))
+          (execute-kbd-macro (vconcat (kbd "/") (car case) (kbd "RET")))
+          (execute-kbd-macro (kbd (cadr case)))
+          (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+          (should (equal (default-value 'tts-cleanup-repeats) '("-" "=")))
+          (should-not (buffer-local-value 'emacsvox-speak-line-column-filter source))
+          (should (equal before (buffer-local-value 'tts-chunk-separator-syntax source)))
+          (should (= 0 (hash-table-count emacsvox-speak-filter-table))))))))
 
 (defmacro emacsvox-test--with-reading-defaults (&rest body)
   "Run BODY with isolated session reading defaults."

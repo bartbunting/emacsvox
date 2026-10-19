@@ -927,7 +927,8 @@ and the global default. These controls do not save startup settings."
    ("i" "Follow defaults for all four source reading controls" emacsvox-settings-workflows--reading-inherit :if emacsvox-aural-menu--local-scope-p :transient t)]
   ["Reading workflows"
    ("a" "Repeat cleanup (global session)" emacsvox-settings-reading-repeats :transient transient--do-stack)
-   ("f" "Column filtering (source; remembered ranges)" emacsvox-settings-reading-columns :transient transient--do-stack)]
+   ("f" "Column filtering (source; remembered ranges)" emacsvox-settings-reading-columns :transient transient--do-stack)
+   ("s" "Speech chunking (source session)" emacsvox-settings-reading-chunks :transient transient--do-stack)]
   ["Finish"
    ("q" "Back (keep session changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
@@ -1210,6 +1211,91 @@ Direction is session-only. Opening, preview and navigation do not edit the store
                              :opening (emacsvox-settings-workflows--reading-snapshot
                                        '(emacsvox-speak-line-column-filter emacsvox-speak-line-invert-filter))
                              :store-captured nil :stored nil)))))
+
+(defun emacsvox-settings-workflows--chunk-label ()
+  "Describe the source's syntax-class separators without changing them."
+  (format "Separator syntax: %S"
+          (buffer-local-value 'tts-chunk-separator-syntax (emacsvox-settings-workflows--reading-source))))
+
+(defun emacsvox-settings-workflows--chunk-whitespace-p ()
+  "Return non-nil when source chunking includes whitespace."
+  (string-match-p "[- ]" (buffer-local-value 'tts-chunk-separator-syntax
+                                            (emacsvox-settings-workflows--reading-source))))
+
+(defun emacsvox-settings-workflows--chunk-set-whitespace (enabled)
+  "Set whitespace chunking to ENABLED, retaining the other separator classes."
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (let ((syntax (replace-regexp-in-string "[- ]" "" tts-chunk-separator-syntax)))
+      (tts-set-chunk-separator-syntax (concat syntax (if enabled "-" "")))))
+  (emacsvox-settings-workflows--say
+   (if enabled "Whitespace boundaries included in this buffer"
+     "Whitespace boundaries excluded in this buffer")))
+
+(defun emacsvox-settings-workflows--chunk-clauses ()
+  "Exclude whitespace boundaries, retaining the source's other syntax classes.
+Text is generally grouped around punctuation and clause boundaries, according
+to the mode syntax table. This changes only the captured buffer this session."
+  (interactive) (emacsvox-settings-workflows--chunk-set-whitespace nil))
+
+(defun emacsvox-settings-workflows--chunk-words ()
+  "Include whitespace boundaries for smaller, often word-sized speech pieces.
+Retain the source's other separator classes. This affects speech processing;
+audible phrasing depends on the engine. Tracked-reading limits are separate."
+  (interactive) (emacsvox-settings-workflows--chunk-set-whitespace t))
+
+(defun emacsvox-settings-workflows--chunk-edit ()
+  "Set source separator syntax classes for this session, not literal characters.
+Use . for punctuation, - or space for whitespace, w for words, _ for symbols,
+parentheses for opening or closing delimiters, double quote for strings,
+$ for paired delimiters, backslash for escape, apostrophe for character quote,
+< or > for comment start or end, ! for generic comment, and | for generic string.
+The source mode's syntax table defines membership. Empty means no separators.
+There is no startup Save; Restore opening setting reverses this visit's edits."
+  (interactive)
+  (let* ((source (emacsvox-settings-workflows--reading-source))
+         (value (emacsvox-transient--read #'read-string "Separator syntax classes: "
+                                         (buffer-local-value 'tts-chunk-separator-syntax source))))
+    (unless (cl-every (lambda (char) (memq char '(?\s ?- ?. ?w ?_ ?\( ?\) ?\" ?$ ?\\ ?' ?< ?> ?! ?|))) value)
+      (user-error "Invalid syntax class; use Help for the supported codes"))
+    (with-current-buffer source (tts-set-chunk-separator-syntax value))
+    (emacsvox-settings-workflows--say (emacsvox-settings-workflows--chunk-label))))
+
+(defun emacsvox-settings-workflows--chunk-inherit ()
+  "Remove the source's chunking override and follow the current global default.
+This also replaces a mode-installed local separator choice. It changes no
+startup setting or tracked-reading size limit. Undo can restore the mode choice."
+  (interactive)
+  (with-current-buffer (emacsvox-settings-workflows--reading-source)
+    (kill-local-variable 'tts-chunk-separator-syntax))
+  (emacsvox-settings-workflows--say "Source chunking now follows the global default"))
+
+(defun emacsvox-settings-workflows--chunk-restore ()
+  "Restore the source's opening chunking choice and local or inherited scope.
+This reverses this menu visit's changes. Reopening captures a new setting."
+  (interactive)
+  (emacsvox-settings-workflows--reading-restore
+   (plist-get (emacsvox-aural-menu--context) :chunk-opening))
+  (emacsvox-settings-workflows--say "Opening chunking setting restored"))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-reading-chunks ()
+  "Choose source speech boundaries for this session, regardless of parent scope.
+Arrow navigation does not apply a choice. Use preview to compare phrasing."
+  :refresh-suffixes t
+  ["Speech chunking (source buffer)"
+   ("c" (lambda () (concat "Exclude whitespace boundaries" (unless (emacsvox-settings-workflows--chunk-whitespace-p) " (current)"))) emacsvox-settings-workflows--chunk-clauses :transient t)
+   ("w" (lambda () (concat "Include whitespace boundaries" (when (emacsvox-settings-workflows--chunk-whitespace-p) " (current)"))) emacsvox-settings-workflows--chunk-words :transient t)
+   ("e" (lambda () (emacsvox-settings-workflows--chunk-label)) emacsvox-settings-workflows--chunk-edit :transient t)
+   ("p" "Preview captured line" emacsvox-settings-workflows--reading-line-preview :transient t)]
+  ["Recovery"
+   ("i" "Follow global separator default" emacsvox-settings-workflows--chunk-inherit :transient t)
+   ("u" "Restore opening setting" emacsvox-settings-workflows--chunk-restore :transient t)]
+  ["Finish" ("q" "Back (keep session changes)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-reading-chunks nil nil
+                   :scope (plist-put (copy-sequence (emacsvox-aural-menu--context)) :chunk-opening
+                                     (emacsvox-settings-workflows--reading-snapshot '(tts-chunk-separator-syntax)))))
 
 (defun emacsvox-settings-workflows--reading-options (options title command)
   "Customize OPTIONS in TITLE and return to the menu item COMMAND."

@@ -40,6 +40,8 @@
     ("Repeat cleanup patterns" emacsvox-settings-workflows emacsvox-settings-reading-repeats "b")
     ("Column filtering for line speech" emacsvox-settings-workflows emacsvox-settings-reading-columns "e")
     ("Column filter direction" emacsvox-settings-workflows emacsvox-settings-reading-columns "v")
+    ("Speech chunking and whitespace boundaries" emacsvox-settings-workflows emacsvox-settings-reading-chunks "w")
+    ("Advanced speech chunk separator syntax" emacsvox-settings-workflows emacsvox-settings-reading-chunks "e")
     ("Automatic punctuation policy by major mode" emacsvox-settings-workflows emacsvox-settings-reading "p")
     ("Emoji names, approved sequences and limits" emacsvox-settings-workflows emacsvox-settings-reading "e")
     ("Legacy Unicode replacements and names" emacsvox-settings-workflows emacsvox-settings-reading "u")
@@ -187,7 +189,8 @@
     (require (nth 1 entry))
     ;; These entry functions capture an undo boundary without applying edits.
     ;; Search must establish it just as ordinary submenu entry does.
-    (if (memq command '(emacsvox-settings-reading-repeats emacsvox-settings-reading-columns))
+    (if (memq command '(emacsvox-settings-reading-repeats
+                        emacsvox-settings-reading-columns emacsvox-settings-reading-chunks))
         (funcall command)
       (transient-setup command nil nil :scope
                        (if (memq command '(emacsvox-indentation emacsvox-indentation-tone))
