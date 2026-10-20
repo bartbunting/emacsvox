@@ -78,6 +78,189 @@
 
 ;;;  Helper Functions
 
+(defvar emacsvox-agent-shell-input-activation)
+(defvar emacsvox-agent-shell--speech-control-active)
+(declare-function agent-shell--point-in-live-input-p "agent-shell-prompt" ())
+(declare-function agent-shell--prompt-input-start "agent-shell-prompt" ())
+(declare-function agent-shell--prompt-input "agent-shell-prompt" ())
+(declare-function emacsvox-agent-shell--prompt-compose-after "emacsvox-agent-shell" (&rest args))
+
+(defvar-local emacsvox-agent-shell--input-active nil
+  "Non-nil when explicit inline input activation is enabled in this shell.")
+(defvar-local emacsvox-agent-shell--input-editing nil
+  "Non-nil when inline input has been explicitly activated.")
+(defvar-local emacsvox-agent-shell--input-read-only-saved nil
+  "Saved read-only value in a list while browse mode owns buffer protection.")
+(defvar emacsvox-agent-shell--input-interactive-submit nil
+  "Non-nil during an interactive override submission.")
+
+(defun emacsvox-agent-shell--input-browsing-p ()
+  "Whether this shell uses explicit input activation and is browsing."
+  (and (derived-mode-p 'agent-shell-mode)
+       emacsvox-agent-shell--speech-control-active
+       (eq emacsvox-agent-shell-input-activation 'explicit)
+       (not emacsvox-agent-shell--input-editing)))
+
+(defun emacsvox-agent-shell--input-unlock ()
+  "Restore the buffer protection owned by explicit browsing."
+  (when emacsvox-agent-shell--input-read-only-saved
+    (setq buffer-read-only (car emacsvox-agent-shell--input-read-only-saved)
+          emacsvox-agent-shell--input-read-only-saved nil)))
+
+(defun emacsvox-agent-shell--input-sync ()
+  "Synchronize inline input protection with the effective setting."
+  (let ((active (and (derived-mode-p 'agent-shell-mode)
+                     emacsvox-agent-shell--speech-control-active
+                     (eq emacsvox-agent-shell-input-activation 'explicit))))
+    (unless (eq (not (null active)) emacsvox-agent-shell--input-active)
+      (setq emacsvox-agent-shell--input-editing nil))
+    (setq emacsvox-agent-shell--input-active (not (null active)))
+    (if (and active (not emacsvox-agent-shell--input-editing))
+        (progn
+          (unless emacsvox-agent-shell--input-read-only-saved
+            (setq emacsvox-agent-shell--input-read-only-saved (list buffer-read-only)))
+          (setq buffer-read-only t))
+      (emacsvox-agent-shell--input-unlock))
+    (force-mode-line-update)))
+
+(defun emacsvox-agent-shell--input-feedback (text)
+  "Announce input state TEXT on the interruptible main speech stream."
+  (emacsvox-aural-submit
+   text
+   :facts (emacsvox-agent-shell--presentation-facts 'agent-prompt-editor 'agent-setting-changed)
+   :module 'agent-shell :occasion 'state-change
+   :lane 'main :delivery-policy 'replaceable
+   :replacement-key 'speaker :interruption-policy 'lane))
+
+(defun emacsvox-agent-shell-edit-input ()
+  "Activate inline input, preserving a draft and its current editing position.
+From the transcript, move to the end of the live draft.  In Explicit mode,
+`C-c e' returns to browsing without sending or discarding text."
+  (interactive)
+  (unless (and (derived-mode-p 'agent-shell-mode)
+               (agent-shell--prompt-input-start))
+    (user-error "No live input; use M-x agent-shell-prompt-compose"))
+  (emacsvox-agent-shell--input-unlock)
+  (when buffer-read-only (user-error "This buffer is read-only"))
+  (unless (agent-shell--point-in-live-input-p) (goto-char (point-max)))
+  (setq emacsvox-agent-shell--input-editing t)
+  (emacsvox-agent-shell--input-sync)
+  (emacsvox-agent-shell--input-feedback "Editing input"))
+
+(defun emacsvox-agent-shell-browse ()
+  "Return to Explicit browsing at point, preserving the live draft and undo."
+  (interactive)
+  (unless (and (derived-mode-p 'agent-shell-mode)
+               (eq emacsvox-agent-shell-input-activation 'explicit))
+    (user-error "Choose Explicit input activation in Agent Shell settings first"))
+  (setq emacsvox-agent-shell--input-editing nil)
+  (emacsvox-agent-shell--input-sync)
+  (emacsvox-agent-shell--input-feedback "Browsing; draft preserved"))
+
+(defun emacsvox-agent-shell--input-post-command ()
+  "Return to browsing when editing navigation leaves the live input."
+  (when (and emacsvox-agent-shell--input-active
+             emacsvox-agent-shell--input-editing
+             (not (agent-shell--point-in-live-input-p)))
+    (setq emacsvox-agent-shell--input-editing nil)
+    (emacsvox-agent-shell--input-feedback "Browsing; draft preserved"))
+  (emacsvox-agent-shell--input-sync))
+
+(defun emacsvox-agent-shell--input-typing-p (typing)
+  "Keep upstream character TYPING only while input is editable."
+  (and typing (not (emacsvox-agent-shell--input-browsing-p))))
+
+(defun emacsvox-agent-shell--input-return-filter (command)
+  "Offer COMMAND only at a live prompt awaiting explicit activation."
+  (when (and (emacsvox-agent-shell--input-browsing-p)
+             (agent-shell--point-in-live-input-p))
+    command))
+
+(defvar emacsvox-agent-shell--input-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c i") #'emacsvox-agent-shell-edit-input)
+    (define-key map (kbd "C-c e") #'emacsvox-agent-shell-browse)
+    (dolist (key '("RET" "<return>"))
+      (define-key map (kbd key)
+                  '(menu-item "Edit input" emacsvox-agent-shell-edit-input
+                              :filter emacsvox-agent-shell--input-return-filter)))
+    map)
+  "Explicit input keys, active only in inline Agent Shell buffers.")
+(add-to-list 'minor-mode-map-alist
+             (cons 'emacsvox-agent-shell--input-active emacsvox-agent-shell--input-map))
+(add-to-list 'minor-mode-alist
+             '(emacsvox-agent-shell--input-active
+               (:eval (if emacsvox-agent-shell--input-editing " Agent edit" " Agent browse"))))
+
+(defun emacsvox-agent-shell--input-submit-override-around (original &rest args)
+  "Preserve interactive intent while ORIGINAL delegates submission with ARGS."
+  (let ((emacsvox-agent-shell--input-interactive-submit
+         (called-interactively-p 'any)))
+    (apply original args)))
+
+(defun emacsvox-agent-shell--input-submit-around (original &rest args)
+  "Run ORIGINAL with ARGS, returning to browsing after a consumed draft.
+Rejected submissions retain their edit state.  Explicit interactive submission
+requires editing first; programmatic context submission retains upstream policy."
+  (when (and (emacsvox-agent-shell--input-browsing-p)
+             (or (called-interactively-p 'any)
+                 emacsvox-agent-shell--input-interactive-submit))
+    (user-error "Browse mode; press RET at the prompt or C-c i to edit input"))
+  (let ((buffer (current-buffer))
+        (draft (and emacsvox-agent-shell--input-active
+                    (agent-shell--prompt-input))))
+    (prog1 (emacsvox-agent-shell--input-write-around original args)
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (when (and draft emacsvox-agent-shell--input-active
+                     (not (equal draft (agent-shell--prompt-input))))
+            (setq emacsvox-agent-shell--input-editing nil)
+            (emacsvox-agent-shell--input-sync)
+            (emacsvox-agent-shell--input-feedback "Browsing")))))))
+
+(defun emacsvox-agent-shell--input-write-around (original args)
+  "Allow upstream ORIGINAL with ARGS to manage a browse-protected draft.
+Only relax protection owned by this integration, for the duration of the call."
+  (let ((inhibit-read-only (or inhibit-read-only
+                               (and emacsvox-agent-shell--input-active
+                                    emacsvox-agent-shell--input-read-only-saved
+                                    (not (car emacsvox-agent-shell--input-read-only-saved))))))
+    (apply original args)))
+
+(defun emacsvox-agent-shell--input-compose-around (original &rest args)
+  "Allow ORIGINAL with ARGS to transfer a protected draft to its own editor."
+  (let ((shell (current-buffer)))
+    (prog1 (emacsvox-agent-shell--input-write-around original args)
+      (when (buffer-live-p shell)
+        (with-current-buffer shell
+          (when emacsvox-agent-shell--input-active
+            (setq emacsvox-agent-shell--input-editing nil)
+            (emacsvox-agent-shell--input-sync))))
+      (emacsvox-agent-shell--prompt-compose-after))))
+
+(defun emacsvox-agent-shell--input-setup ()
+  "Install explicit input state tracking in this shell."
+  (add-hook 'pre-command-hook #'emacsvox-agent-shell--input-sync nil t)
+  (add-hook 'post-command-hook #'emacsvox-agent-shell--input-post-command nil t)
+  (emacsvox-agent-shell--input-sync))
+
+(defun emacsvox-agent-shell--input-cleanup ()
+  "Release input protection and remove its hooks from this buffer."
+  (emacsvox-agent-shell--input-unlock)
+  (setq emacsvox-agent-shell--input-active nil
+        emacsvox-agent-shell--input-editing nil)
+  (remove-hook 'pre-command-hook #'emacsvox-agent-shell--input-sync t)
+  (remove-hook 'post-command-hook #'emacsvox-agent-shell--input-post-command t)
+  (force-mode-line-update))
+
+(defun emacsvox-agent-shell--input-refresh ()
+  "Apply input activation defaults to existing supported shells."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (and (derived-mode-p 'agent-shell-mode)
+                 (bound-and-true-p emacsvox-agent-shell--speech-control-active))
+        (emacsvox-agent-shell--input-sync)))))
+
 (defvar emacsvox-agent-shell--chat-label-context nil
   "Dynamically bound visible chat label for the current line speech.")
 
@@ -297,7 +480,14 @@ before the first response character, including when approaching from below."
       (let* ((category (plist-get context :category))
              (prompt-state
               (when (plist-get context :editable)
-                (emacsvox-agent-shell--live-prompt-state-speech)))
+                (let ((status (emacsvox-agent-shell--live-prompt-state-speech)))
+                  (if emacsvox-agent-shell--input-active
+                      (string-join
+                       (delq nil (list status
+                                       (if emacsvox-agent-shell--input-editing
+                                           "Editing input."
+                                         "Browsing input; Enter edits."))) " ")
+                    status))))
              (content
               (if (eq category 'agent-shell-chat-me)
                   (emacsvox-agent-shell--without-leading-chat-prompt text)

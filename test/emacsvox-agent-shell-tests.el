@@ -10456,6 +10456,318 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                (let ((overriding-local-map (symbol-value map)))
                  (should (eq (key-binding (kbd "C-e S")) 'emacsvox-settings-for-buffer)))))))))))
 
+(defmacro emacsvox-agent-shell-test--with-explicit-input (&rest body)
+  "Run BODY in a protected shell with an unfinished multiline draft."
+  (declare (indent 0) (debug t))
+  `(save-window-excursion
+     (emacsvox-agent-shell-test--with-current-session
+       (switch-to-buffer (current-buffer))
+       (use-local-map agent-shell-mode-map)
+       (insert "first line\nsecond line")
+       (setq-local comint-accum-marker (copy-marker (agent-shell--prompt-input-start)))
+       (set-marker (process-mark (get-buffer-process (current-buffer)))
+                   (agent-shell--prompt-input-start))
+       (buffer-enable-undo)
+       (setq-local emacsvox-agent-shell-input-activation 'explicit)
+       (emacsvox-agent-shell--table-navigation-setup)
+       (emacsvox-agent-shell--input-setup)
+       ,@body)))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-edit-and-browse ()
+  "Activation preserves the draft; all navigation letters become literal in edit."
+  (dolist (busy '(nil t))
+    (emacsvox-agent-shell-test--with-explicit-input
+      (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy)))
+        (should buffer-read-only)
+        (should (eq (key-binding (kbd "RET")) 'emacsvox-agent-shell-edit-input))
+        (emacsvox-agent-shell-test--capture-events
+          (execute-kbd-macro (kbd "RET")))
+        (should emacsvox-agent-shell--input-editing)
+        (should-not buffer-read-only)
+        (let ((text "[]tThHkKuUlLeEjJnpS"))
+          (emacsvox-agent-shell-test--capture-events (execute-kbd-macro text))
+          (should (equal (agent-shell--prompt-input) (concat "first line\nsecond line" text))))
+        (let ((draft (buffer-string)) (origin (point)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-c e")))
+          (should buffer-read-only)
+          (should-not emacsvox-agent-shell--input-editing)
+          (should (equal draft (buffer-string)))
+          (should (= origin (point)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-c i")))
+          (should-not buffer-read-only)
+          (should (equal draft (buffer-string)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-/")))
+          (should (equal (buffer-string) (substring draft 0 -1))))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-navigation ()
+  "Bare response and prompt keys navigate from a protected live draft."
+  (dolist (key '("J" "U" "[" "t"))
+    (emacsvox-agent-shell-test--with-explicit-input
+      (let ((draft (buffer-string)) selected)
+        (cl-letf (((symbol-function 'emacsvox-agent-shell--select-and-jump-block)
+                   (lambda (&rest _) (setq selected t)))
+                  ((symbol-function 'emacsvox-agent-shell--jump-block-of-type)
+                   (lambda (&rest _) (setq selected t)))
+                  ((symbol-function 'emacsvox-agent-shell--activate-block-repeat-map) #'ignore))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd key))))
+        (should selected)
+        (should (equal draft (buffer-string)))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-protects-paste-and-deletion ()
+  "Browsing rejects ordinary edits; input activation restores those operations."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (buffer-string)) (kill-ring '("pasted")))
+      (should-error (insert "x") :type 'buffer-read-only)
+      (should-error (call-interactively #'yank) :type 'buffer-read-only)
+      (should-error (delete-char -1) :type 'buffer-read-only)
+      (should (equal draft (buffer-string)))
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "C-c i C-y")))
+      (should (string-suffix-p "pasted" (agent-shell--prompt-input))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-leaves-and-resumes-draft ()
+  "Multiline movement keeps editing; leaving input returns to browsing."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (emacsvox-agent-shell-test--capture-events
+      (execute-kbd-macro (kbd "C-c i C-p")))
+    (should emacsvox-agent-shell--input-editing)
+    (emacsvox-agent-shell-test--capture-events
+      (execute-kbd-macro (kbd "M-<")))
+    (should-not emacsvox-agent-shell--input-editing)
+    (should buffer-read-only)
+    (emacsvox-agent-shell-test--capture-events
+      (execute-kbd-macro (kbd "M->")))
+    (should-not emacsvox-agent-shell--input-editing)
+    (emacsvox-agent-shell-test--capture-events
+      (execute-kbd-macro (kbd "C-c i")))
+    (should emacsvox-agent-shell--input-editing)
+    (should (equal (agent-shell--prompt-input) "first line\nsecond line"))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-queue-and-rejection ()
+  "Rejected input remains editable; successfully queued input returns to browsing."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (emacsvox-agent-shell-test--capture-events
+      (execute-kbd-macro (kbd "RET")))
+    (let ((draft (agent-shell--prompt-input))
+          (agent-shell-busy-submit-default-function 'agent-shell-busy-submit-queue))
+      (cl-letf (((symbol-function 'shell-maker-busy) (lambda () t))
+                ((symbol-function 'agent-shell--busy-submit)
+                 (lambda (&rest _) (user-error "Submission rejected"))))
+        (should-error (call-interactively #'agent-shell-submit) :type 'user-error))
+      (should emacsvox-agent-shell--input-editing)
+      (should-not buffer-read-only)
+      (should (equal draft (agent-shell--prompt-input)))
+      (cl-letf (((symbol-function 'shell-maker-busy) (lambda () t))
+                ((symbol-function 'agent-shell--prompt-queue-echo) #'ignore))
+        (emacsvox-agent-shell-test--capture-events
+          (call-interactively #'agent-shell-submit)))
+      (should (equal (car (map-elt agent-shell--state :pending-prompts)) draft))
+      (should-not (agent-shell--prompt-input))
+      (should-not emacsvox-agent-shell--input-editing)
+      (should buffer-read-only))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-output-and-context ()
+  "Streaming and inserted context preserve a protected draft and browse state."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (agent-shell--prompt-input)))
+      (emacsvox-agent-shell-test--capture-events
+        (agent-shell--update-text :state agent-shell--state :block-id "stream"
+                                  :text "Streaming answer\n" :create-new t))
+      (should (string-match-p "Streaming answer" (buffer-string)))
+      (should (equal draft (agent-shell--prompt-input)))
+      (agent-shell--insert-to-shell-buffer :shell-buffer (current-buffer)
+                                          :text "Source context" :no-focus t)
+      (should (string-prefix-p draft (agent-shell--prompt-input)))
+      (should (string-suffix-p "Source context" (agent-shell--prompt-input)))
+      (should buffer-read-only)
+      (should-not emacsvox-agent-shell--input-editing))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-table-and-permission-actions ()
+  "Browse protection preserves real table keys and permission button activation."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (agent-shell--prompt-input)) acted)
+      (emacsvox-agent-shell-test--capture-events
+        (agent-shell--update-fragment
+         :state agent-shell--state :block-id "table" :create-new t :expanded t
+         :body "| Name | Count |\n|---|---|\n| Apple | 2 |\n"))
+      (goto-char (point-min))
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "t")))
+      (should emacsvox-agent-shell--table-navigation-active)
+      (should (eq (key-binding (kbd "k r")) 'emacsvox-agent-shell-table-copy-row))
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "q C-c i C-c e")))
+      (should-not emacsvox-agent-shell--table-navigation-active)
+      (should (equal draft (agent-shell--prompt-input)))
+      (let ((inhibit-read-only t))
+        (goto-char (point-min))
+        (insert-before-markers
+         (agent-shell--make-permission-button
+          :text "Allow" :help "Allow" :action (lambda () (interactive) (setq acted t)))
+         "\n"))
+      (goto-char (point-min))
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "RET")))
+      (should acted)
+      (should buffer-read-only)
+      (should-not emacsvox-agent-shell--input-editing)
+      (should (equal draft (agent-shell--prompt-input))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-submit-requires-activation ()
+  "Override submission cannot send a browse-protected draft accidentally."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (agent-shell--prompt-input)))
+      (should-error (call-interactively #'agent-shell-submit) :type 'user-error)
+      (let ((this-command 'agent-shell-submit-override))
+        (should-error (call-interactively #'agent-shell-submit-override) :type 'user-error))
+      (should (equal draft (agent-shell--prompt-input)))
+      (should buffer-read-only))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-setting-and-cleanup ()
+  "Changing preferences releases only owned protection and preserves drafts."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (buffer-string)))
+      (setq-local emacsvox-agent-shell-input-activation 'automatic)
+      (emacsvox-agent-shell--input-sync)
+      (should-not buffer-read-only)
+      (should-not emacsvox-agent-shell--input-active)
+      (should (equal (buffer-string) draft))
+      (setq-local emacsvox-agent-shell-input-activation 'explicit)
+      (emacsvox-agent-shell--input-sync)
+      (should buffer-read-only)
+      (emacsvox-agent-shell--input-cleanup)
+      (should-not buffer-read-only)
+      (should-not emacsvox-agent-shell--input-active)
+      (should (equal (buffer-string) draft))
+      ;; Existing read-only ownership must survive our setup and teardown.
+      (setq buffer-read-only t)
+      (emacsvox-agent-shell--input-setup)
+      (emacsvox-agent-shell--input-cleanup)
+      (should buffer-read-only))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-programmatic-submit ()
+  "Programmatic submission does not inherit the last keyboard command's guard."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((this-command 'agent-shell-submit-override))
+      (emacsvox-agent-shell-test--capture-events
+        (should
+         (eq 'submitted
+             (emacsvox-agent-shell--input-submit-around
+              (lambda () (agent-shell--clear-prompt-input) 'submitted)))))
+      (should-not (agent-shell--prompt-input))
+      (should buffer-read-only))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-queue-drains-with-draft ()
+  "Automatic queue processing can set aside and restore a protected draft."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (agent-shell--prompt-input)) sent)
+      (map-put! agent-shell--state :pending-prompts '("Queued prompt"))
+      (cl-letf (((symbol-function 'shell-maker-busy) #'ignore)
+                ((symbol-function 'shell-maker-submit)
+                 (lambda ()
+                   (setq sent (agent-shell--prompt-input))
+                   (agent-shell--clear-prompt-input))))
+        (emacsvox-agent-shell-test--capture-events
+          (agent-shell--prompt-queue-process-next)))
+      (should (equal sent "Queued prompt"))
+      (should (equal draft (agent-shell--prompt-input)))
+      (should buffer-read-only)
+      (should-not emacsvox-agent-shell--input-editing))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-compose-transfers-draft ()
+  "Opening the dedicated editor transfers a protected draft without sending it."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((draft (agent-shell--prompt-input)) transferred)
+      (cl-letf (((symbol-function 'agent-shell--shell-buffer)
+                 (lambda (&rest _) (current-buffer)))
+                ((symbol-function 'agent-shell-viewport--buffer) #'ignore)
+                ((symbol-function 'agent-shell-viewport--show-buffer)
+                 (lambda (&rest args) (setq transferred (plist-get args :override)))))
+        (emacsvox-agent-shell-test--capture-events
+          (call-interactively #'agent-shell-prompt-compose)))
+      (should (equal transferred draft))
+      (should-not (agent-shell--prompt-input))
+      (should buffer-read-only)
+      (should-not emacsvox-agent-shell--input-editing))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-graphical-wrapping ()
+  "Real wrapped input keeps edit state while browsing remains explicit."
+  (skip-unless (display-graphic-p))
+  (emacsvox-agent-shell-test--with-explicit-input
+    (emacsvox-agent-shell-test--capture-events
+      (execute-kbd-macro (kbd "RET")))
+    (visual-line-mode 1)
+    (insert (make-string (* 3 (window-body-width)) ?x))
+    (redisplay t)
+    (let ((origin (point)) (draft (agent-shell--prompt-input)))
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "<up>")))
+      (should (< (point) origin))
+      (should emacsvox-agent-shell--input-editing)
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "C-c e M->")))
+      (should buffer-read-only)
+      (should-not emacsvox-agent-shell--input-editing)
+      (should (string-match-p "Agent browse" (format-mode-line minor-mode-alist)))
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "RET")))
+      (should (string-match-p "Agent edit" (format-mode-line minor-mode-alist)))
+      (should (equal draft (agent-shell--prompt-input))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-spoken-state ()
+  "Prompt reading distinguishes browsing and editing while retaining busy state."
+  (emacsvox-agent-shell-test--with-explicit-input
+    (let ((emacsvox-agent-shell--chat-label-context
+           '(:text "Me" :category agent-shell-chat-me :editable t)))
+      (cl-letf (((symbol-function 'agent-shell-status) (lambda (&rest _) 'busy)))
+        (should (equal (emacsvox-agent-shell--add-chat-label-for-speech "Draft")
+                       "Me. Agent busy. Browsing input; Enter edits. Draft"))
+        (emacsvox-agent-shell-test--capture-events
+          (execute-kbd-macro (kbd "RET")))
+        (should (equal (emacsvox-agent-shell--add-chat-label-for-speech "Draft")
+                       "Me. Agent busy. Editing input. Draft"))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-global-binding-restoration ()
+  "The explicit input key overrides Org's global link key only in its scope."
+  (let ((original (lookup-key global-map (kbd "C-c i"))))
+    (unwind-protect
+        (progn
+          (define-key global-map (kbd "C-c i") #'org-insert-link)
+          (emacsvox-agent-shell-test--with-explicit-input
+            (should (eq (key-binding (kbd "C-c i")) 'emacsvox-agent-shell-edit-input))
+            (setq-local emacsvox-agent-shell-input-activation 'automatic)
+            (emacsvox-agent-shell--input-sync)
+            (should (eq (key-binding (kbd "C-c i")) 'org-insert-link))
+            (setq-local emacsvox-agent-shell-input-activation 'explicit)
+            (emacsvox-agent-shell--input-sync)
+            (emacsvox-agent-shell--input-cleanup)
+            (should (eq (key-binding (kbd "C-c i")) 'org-insert-link))))
+      (define-key global-map (kbd "C-c i") original))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-upstream-bindings ()
+  "Input entry keys are free upstream; conditional RET leaves contextual actions."
+  (dolist (map '(agent-shell-mode-map shell-maker-mode-map
+                 agent-shell-viewport-view-mode-map agent-shell-viewport-edit-mode-map
+                 agent-shell-ui-fragment-map agent-shell-list-edit-mode-map
+                 agent-shell-elicitation-map agent-shell-elicitation-preview-map))
+    (dolist (key '("C-c i" "C-c e"))
+      (should-not (commandp (lookup-key (symbol-value map) (kbd key))))))
+  (emacsvox-agent-shell-test--with-explicit-input
+    (goto-char (point-min))
+    (should (eq (key-binding (kbd "RET"))
+                (let ((emacsvox-agent-shell--input-active nil))
+                  (key-binding (kbd "RET")))))
+    (dolist (map '(agent-shell-elicitation-map agent-shell-elicitation-preview-map
+                   agent-shell-ui-fragment-map))
+      (let ((overriding-local-map (symbol-value map)))
+        (should (eq (key-binding (kbd "RET"))
+                    (let ((emacsvox-agent-shell--input-active nil))
+                      (key-binding (kbd "RET")))))))))
+
 (ert-deftest emacsvox-agent-shell-persistent-prompt-keeps-navigation-keys-editable ()
   "Busy live prompts insert navigation letters; transcript keys navigate."
   (skip-unless (fboundp 'agent-shell--point-in-live-input-p))
@@ -10503,7 +10815,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 (ert-deftest emacsvox-agent-shell-upstream-binding-overlap-is-reviewed ()
   "Pin upgrades must not silently introduce additional command overrides."
   (let (overlap)
-    (dolist (own '(emacsvox-agent-shell--speech-control-map
+    (dolist (own '(emacsvox-agent-shell--input-map
+                   emacsvox-agent-shell--speech-control-map
                    emacsvox-agent-shell--table-navigation-map
                    emacsvox-agent-shell--block-repeat-map))
       (dolist (upstream '(agent-shell-mode-map shell-maker-mode-map

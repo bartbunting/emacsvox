@@ -36,32 +36,66 @@ re-enabling support after it was disabled or while diagnosing a live reload.
 :TEXINFO_NODE: no
 :END:
 
-Compose and submit prompts with Agent Shell's normal editing commands.  The
-live prompt retains Emacs undo. Interactive text yanks speak the inserted
-text, including when a prefix argument selects a different kill-ring entry.
+By default, reaching the live prompt lets you type immediately. The
+/Input activation/ setting offers an explicit editing step if you prefer to
+keep browsing at the end of the transcript. Open ~C-e S i~, choose /Automatic/
+or /Explicit/, and press ~w~ in the parent menu to save. Settings search also
+finds /Agent Shell input activation/. The choice applies to existing and new
+shells; buffer-local overrides take precedence.
+
+With /Explicit/ selected, ~J~, ~U~ and the other navigation letters keep their
+navigation meanings at the live prompt. Press ~RET~ there to activate editing,
+or ~C-c i~ (=emacsvox-agent-shell-edit-input=) from anywhere in the shell to
+focus the draft. From the transcript, this moves to the end of the draft;
+within input it preserves point. Emacsvox says “Editing input.” Ordinary typing,
+paste and editing commands then work, and submission uses Agent Shell's normal
+commands. ~RET~ on links, permission buttons and question controls retains its
+existing action; only the inactive live prompt uses it to start editing.
+
+The ~C-c i~ and ~C-c e~ bindings apply only to inline shells using Explicit
+activation. Emacsvox's Org support can assign ~C-c i~ globally to link
+insertion; Explicit mode uses it for input focus instead. Use
+~M-x org-insert-link~ for that action while editing, or choose Automatic to
+restore the ordinary binding.
+
+Press ~C-c e~ (=emacsvox-agent-shell-browse=) to return to browsing at point
+without sending or discarding the draft. Emacsvox says “Browsing; draft
+preserved.” Moving out of the live input also returns to browsing; moving
+between its lines keeps editing active. A successful submission or queueing
+returns to browsing, while a rejected submission keeps its draft editable.
+The mode line shows /Agent browse/ or /Agent edit/. Reading the first input
+line identifies that state along with the agent's busy or waiting status.
+Browsing protects the draft from ordinary typing, paste and deletion.
+
+The live prompt retains Emacs undo across these transitions. Interactive text
+yanks speak the inserted text, including when a prefix argument selects a
+different kill-ring entry.
 Image attachment keeps Agent Shell's existing feedback. Submitted transcript
 text is history rather than editable prompt input.  Press ~C-c C-c~ to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 
 With Agent Shell's persistent prompt enabled, you can keep typing while the
-agent works.  Brackets and navigation letters remain ordinary input at
-that prompt.  Reading the live prompt says “Agent busy” while the agent works.
+agent works. Brackets and navigation letters are ordinary text while editing
+that prompt. Reading the live prompt says “Agent busy” while the agent works.
 A pending permission is announced
 as “Waiting for permission”; a pending question says “Waiting for an answer.”
 These cues also precede the first line of a draft;
 later lines keep ordinary reading feedback.  “Ready for input” is reserved for
-an empty prompt when the agent is idle.
+an empty prompt when the agent is idle and input activation is Automatic.
 
 Quoting a selected region, sending source context,
 dropping files, and inserting shell-command output can add to that live draft
-while the agent works. These insertions do not submit the draft. If there is
-no live prompt while busy, Agent Shell offers its queue editor instead.
+while the agent works, including in Explicit browse mode. These insertions do
+not submit the draft or activate editing. If there is no live prompt while
+busy, Agent Shell offers its queue editor instead.
 Use ~M-x yank-media~ to attach a clipboard image on a display that supports
 native clipboard access. Image previews survive queueing and steering.
 The animated busy marker does not add repeated speech; reading the prompt
 continues to give its current state.
 
-In the viewport prompt editor, continuing a list announces its bullet or next
+The dedicated viewport prompt editor always opens ready for typing, regardless
+of the inline input setting. ~M-x agent-shell-prompt-compose~ transfers the
+inline draft to that editor. Continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
 
@@ -203,6 +237,9 @@ choices. Each list starts on the current value and explains its choices.
 Browse with arrows, press ~RET~ to apply and return, or ~q~ to cancel. Press
 ~?~ followed by a choice's key for its effect and scope; ~q~ returns from
 Help. ~? ?~ opens the menu overview.
+
+~i~ chooses inline input activation, described under
+[[*Start and control a session][Start and control a session]]. It shares this menu's explicit Save action.
 
 The ~p~, ~c~ and ~l~ controls toggle permission speech, tool-call announcements
 and processing cues. Thought and tool content still depend on the effective
@@ -382,7 +419,8 @@ visibility cue replaces this default cue. Reading the current line with
 
 After a successful typed jump, ~]~ and ~[~ repeat in that direction.
 At an editable live prompt or viewport editor, bare brackets and navigation
-letters insert themselves instead of taking over prompt editing.
+letters insert themselves instead of taking over prompt editing. With Explicit
+input activation, the inline prompt remains navigable until you activate editing.
 
 ** Read and copy source blocks
 :PROPERTIES:
@@ -469,8 +507,8 @@ Use character and word movement to follow the cell's text in order.
 Outside editable input, press ~t~ for the next table or
 ~T~ for the previous table. These keys skip the current table
 and announce the destination table and cell. Like the bracket navigation keys,
-they insert themselves in a live prompt or viewport editor, including while
-the agent is working.
+they insert themselves in an active inline editor or viewport editor, including
+while the agent is working.
 
 *** Understand table key conflicts
 :PROPERTIES:

@@ -478,11 +478,14 @@ callbacks, arguments, return values, and transport behavior."
       (list :agent-queue-state state :agent-queue-count count))
      (if (eq state 'started) 'progress 'warn-user))))
 
+(declare-function emacsvox-agent-shell--input-write-around
+                  "emacsvox-agent-shell-motion" (original args))
+
 (defun emacsvox-agent-shell--queue-process-around (original &rest arguments)
   "Capture ORIGINAL's queue size so public input events describe actual draining."
   (let ((emacsvox-agent-shell--queue-start-count
          (emacsvox-agent-shell--pending-prompt-count)))
-    (apply original arguments)))
+    (emacsvox-agent-shell--input-write-around original arguments)))
 
 (defun emacsvox-agent-shell--queue-display-after (&rest _)
   "Announce the pending queue that Agent Shell has paused."

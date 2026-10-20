@@ -148,6 +148,20 @@ cues."
   :type 'boolean
   :group 'emacsvox-agent-shell)
 
+(defcustom emacsvox-agent-shell-input-activation 'automatic
+  "How the inline Agent Shell prompt becomes editable.
+Automatic preserves ordinary typing at the live prompt.  Explicit keeps the
+shell in browse mode until RET at the prompt or `C-c i' activates editing.
+`C-c e' returns to browsing without discarding the draft.  Dedicated viewport
+editors retain their normal editing behaviour."
+  :type '(choice (const :tag "Automatic" automatic)
+                 (const :tag "Explicit" explicit))
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (fboundp 'emacsvox-agent-shell--input-refresh)
+           (emacsvox-agent-shell--input-refresh)))
+  :group 'emacsvox-agent-shell)
+
 (defcustom emacsvox-agent-shell-foreground-speech-level 'response
   "Automatic speech level for the focused agent-shell session.
 The focused session is the selected agent-shell buffer or the shell associated
@@ -1183,7 +1197,8 @@ Return non-nil when point represents one of those semantic items."
   (emacsvox-agent-shell--permission-event-setup)
   (emacsvox-agent-shell--lifecycle-event-setup)
   (emacsvox-agent-shell--tool-call-event-setup)
-  (emacsvox-agent-shell--table-navigation-setup))
+  (emacsvox-agent-shell--table-navigation-setup)
+  (emacsvox-agent-shell--input-setup))
 
 (defun emacsvox-agent-shell--buffer-cleanup ()
   "Cancel speech work and remove all support state from this shell buffer."
@@ -1198,6 +1213,7 @@ Return non-nil when point represents one of those semantic items."
   (emacsvox-agent-shell--lifecycle-event-cleanup)
   (emacsvox-agent-shell--tool-call-event-cleanup)
   (emacsvox-agent-shell--table-navigation-cleanup)
+  (emacsvox-agent-shell--input-cleanup)
   (emacsvox-agent-shell--restore-buffer-values)
   (remove-hook 'kill-buffer-hook
                #'emacsvox-agent-shell--buffer-cleanup t)
@@ -1208,6 +1224,9 @@ Return non-nil when point represents one of those semantic items."
 
 (defconst emacsvox-agent-shell--advice-list
   '((agent-shell--diff-box :filter-return emacsvox-agent-shell--mark-diff-heading)
+    (agent-shell--typing-at-prompt-p :filter-return emacsvox-agent-shell--input-typing-p)
+    (agent-shell-submit :around emacsvox-agent-shell--input-submit-around)
+    (agent-shell-submit-override :around emacsvox-agent-shell--input-submit-override-around)
     (agent-shell-elicitation-act :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-toggle-preview :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-interrupt :around emacsvox-agent-shell--question-action-around)
@@ -1303,8 +1322,8 @@ Return non-nil when point represents one of those semantic items."
      emacsvox-agent-shell--viewport-next-item-around)
     (agent-shell-viewport-previous-item :around
      emacsvox-agent-shell--viewport-previous-item-around)
-    (agent-shell-prompt-compose :after
-     emacsvox-agent-shell--prompt-compose-after)
+    (agent-shell-prompt-compose :around
+     emacsvox-agent-shell--input-compose-around)
     (agent-shell-viewport-refresh :after
      emacsvox-agent-shell--viewport-refresh-after)
     (agent-shell-viewport-compose-send :around

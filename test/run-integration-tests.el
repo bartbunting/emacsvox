@@ -16,6 +16,7 @@
 
 (defconst emacsvox-integration-test--graphical-tests
   '(emacsvox-agent-shell-folded-heading-graphical-wrapping
+    emacsvox-agent-shell-explicit-input-graphical-wrapping
     emacsvox-agent-shell-diff-headings-graphical-navigation
     emacsvox-agent-shell-question-graphical-controls
     emacsvox-agent-shell-live-input-graphical-visual-speech

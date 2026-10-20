@@ -69,6 +69,7 @@
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
 (declare-function agent-shell--point-in-live-input-p "agent-shell-prompt" ())
+(declare-function emacsvox-agent-shell--input-browsing-p "emacsvox-agent-shell-motion" ())
 
 ;;;  Navigation Commands
 
@@ -1614,6 +1615,7 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
        (eq (key-binding (this-command-keys-vector)) this-command)
        (or (derived-mode-p 'agent-shell-viewport-edit-mode)
            (and (derived-mode-p 'agent-shell-mode)
+                (not (emacsvox-agent-shell--input-browsing-p))
                 (agent-shell--point-in-live-input-p)))))
 
 (defun emacsvox-agent-shell--navigate-block-at-point (direction &optional type)

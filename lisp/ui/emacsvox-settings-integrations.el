@@ -414,6 +414,9 @@ A nil group denotes a focused menu with buffer-only controls.")
     (emacsvox-settings-integrations--agent-foreground emacsvox-agent-shell
      emacsvox-agent-shell-foreground-speech-level "Foreground speech"
      ((full . "full") (response . "responses") (notify . "notifications") (quiet . "quiet")))
+    (emacsvox-settings-integrations--agent-input emacsvox-agent-shell
+     emacsvox-agent-shell-input-activation "Input activation"
+     ((automatic . "automatic") (explicit . "explicit")))
     (emacsvox-settings-integrations--agent-background emacsvox-agent-shell
      emacsvox-agent-shell-background-speech-level "Background speech"
      ((full . "full") (response . "responses") (notify . "notifications") (quiet . "quiet")))
@@ -573,6 +576,9 @@ Numeric controls accept positive integers or none.")
                  (summary . "Count only: announce the number of results")
                  (cue . "Cue only: signal successful completion with a sound")
                  (silent . "Silent: suppress successful completion feedback; failures remain audible")))
+              ('emacsvox-agent-shell-input-activation
+               '((automatic . "Automatic: type as soon as you reach the prompt")
+                 (explicit . "Explicit: browse until you activate input")))
               (_ (nth 4 entry)))))
     entry))
 (defun emacsvox-settings-integrations--choice-entry ()
@@ -591,6 +597,9 @@ Numeric controls accept positive integers or none.")
     (concat (cdr choice)
             (when (equal (car choice) (emacsvox-settings-integrations--choice-value entry))
               ", selected"))))
+(defun emacsvox-settings-integrations--choice-third-p ()
+  "Whether the current control has a third choice."
+  (nth 2 (nth 4 (emacsvox-settings-integrations--choice-entry))))
 (defun emacsvox-settings-integrations--choice-fourth-p ()
   "Whether the current control has a fourth choice."
   (nth 3 (nth 4 (emacsvox-settings-integrations--choice-entry))))
@@ -670,6 +679,8 @@ Numeric controls accept positive integers or none.")
        (pcase (nth 2 entry)
          ('emacsvox-org-table-after-movement-function
           "This controls speech after moving between Org table cells. Column headers come from the first row; row headers come from the first column. Buffer-local settings take precedence over this global default.")
+         ('emacsvox-agent-shell-input-activation
+          "Automatic preserves ordinary inline prompt editing. Explicit keeps navigation letters active at the prompt: RET there or C-c i starts editing; C-c e returns to browsing and preserves your draft. Leaving input or submitting it also returns to browsing. The choice applies to existing and new shells; buffer-local overrides take precedence. Dedicated viewport editors keep normal editing. Browse mode protects the draft from typing and ordinary paste; incoming output and inserted source context can still arrive.")
          ('emacsvox-notmuch-search-completion-style
           "This controls successful asynchronous searches. Adaptive can read the selected result while results arrive, then announce the final count. After another command or leaving the search, it announces only a count. Counts normally use the notification stream; refresh feedback uses the primary stream and can be interrupted. Failures remain audible in every style.")
          ((or 'emacsvox-agent-shell-speak-thought-process
@@ -722,6 +733,7 @@ Numeric controls accept positive integers or none.")
     :show-help emacsvox-settings-integrations--choice-help :transient transient--do-replace)
    ("3" (lambda () (emacsvox-settings-integrations--choice-label 2))
     emacsvox-settings-integrations--choice-third
+    :if emacsvox-settings-integrations--choice-third-p
     :show-help emacsvox-settings-integrations--choice-help :transient transient--do-replace)
    ("4" (lambda () (emacsvox-settings-integrations--choice-label 3))
     emacsvox-settings-integrations--choice-fourth
@@ -819,6 +831,14 @@ Limit the body read after block navigation; block labels stay concise.
 Enter a positive character count or none for the complete body." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-block-limit))
 
+(defun emacsvox-settings-integrations--agent-input ()
+  "Choose automatic or explicit activation of the inline Agent Shell prompt.
+Apply to existing and new shells, preserving local overrides and drafts.
+Explicit uses RET at the prompt or C-c i to edit, and C-c e to browse.
+Viewport editors retain normal editing. Use w to save for future sessions."
+  (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-input))
+
 (transient-define-prefix emacsvox-settings-integrations--agent ()
   "Control Agent Shell speech, separating session overrides and global defaults."
   ["Captured session (temporary)"
@@ -843,6 +863,9 @@ Enter a positive character count or none for the complete body." (interactive)
   ]
   ["Shared table reading"
    ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)]
+  ["Global input preference; w saves"
+   ("i" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-input))
+    emacsvox-settings-integrations--agent-input :transient transient--do-suspend)]
   ["Global reading limits"
    ("a" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-automatic-limit))
     emacsvox-settings-integrations--agent-automatic-limit :transient t)

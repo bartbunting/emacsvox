@@ -1245,6 +1245,45 @@
        (with-selected-window transient--window
          (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))))))
 
+(ert-deftest emacsvox-settings-integrations-agent-input-activation ()
+  "The input preference browses, applies to shells, and saves without losing drafts."
+  (skip-unless (require 'agent-shell nil t))
+  (emacsvox-test--integration-defaults 'emacsvox-agent-shell
+   (lambda ()
+     (emacsvox-test--with-settings
+       (set-default 'emacsvox-agent-shell-input-activation 'automatic)
+       (with-current-buffer source
+         (setq major-mode 'agent-shell-mode)
+         (insert "Unsent draft")
+         (setq-local emacsvox-agent-shell--speech-control-active t)
+         (emacsvox-agent-shell--input-setup))
+       (unwind-protect
+           (progn
+             (execute-kbd-macro (kbd "C-q C-e S i <down> q"))
+             (should (eq (default-value 'emacsvox-agent-shell-input-activation) 'automatic))
+             (should-not (buffer-local-value 'buffer-read-only source))
+             (execute-kbd-macro (kbd "i ? 2"))
+             (should (derived-mode-p 'help-mode))
+             (should (string-match-p "C-c e" (buffer-string)))
+             (should (string-match-p "viewport editors" (buffer-string)))
+             (execute-kbd-macro (kbd "q 2"))
+             (should (buffer-local-value 'buffer-read-only source))
+             (should (eq (default-value 'emacsvox-agent-shell-input-activation) 'explicit))
+             (should-not (file-exists-p custom-file))
+             (execute-kbd-macro (kbd "w q"))
+             (should (eq (current-buffer) source))
+             (should (string-match-p "Unsent draft" (buffer-string)))
+             (customize-set-variable 'emacsvox-agent-shell-input-activation 'automatic)
+             (should-not buffer-read-only)
+             (load custom-file nil t)
+             (should (eq (default-value 'emacsvox-agent-shell-input-activation) 'explicit))
+             (should buffer-read-only)
+             ;; A local Automatic preference wins over another global selection.
+             (setq-local emacsvox-agent-shell-input-activation 'automatic)
+             (customize-set-variable 'emacsvox-agent-shell-input-activation 'explicit)
+             (should-not buffer-read-only))
+         (with-current-buffer source (emacsvox-agent-shell--input-cleanup)))))))
+
 (ert-deftest emacsvox-settings-integrations-agent-choice-lists ()
   "Choices browse without applying, preserve global scope and return to their control."
   (skip-unless (require 'agent-shell nil t))
