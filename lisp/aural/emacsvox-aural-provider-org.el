@@ -276,7 +276,7 @@
          (:role heading :module org :occasion navigation
           :org-action structure-navigation)
          :render
-         (:after
+         (:before
           ((:id org-heading-navigation-movement
             :kind cue
             :cue large-movement))))

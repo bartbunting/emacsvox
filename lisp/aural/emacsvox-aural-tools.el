@@ -569,6 +569,8 @@ than every presentation of an object."
        "The selected earcon has no precise lifecycle anchor: %S"
        anchor))
     (setq data (plist-put data :anchor anchor))
+    (when (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert)
+      (setq data (plist-put data :audio-mode 'insert)))
     (when (numberp volume)
       (setq data (plist-put data :volume volume)))
     (when space

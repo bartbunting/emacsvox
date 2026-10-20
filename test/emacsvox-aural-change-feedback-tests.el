@@ -166,6 +166,137 @@
       (should-not (emacsvox-aural-concrete-content-speak (emacsvox-aural-concrete-plan-content plan)))
       (should (= 1 (length (emacsvox-aural-concrete-plan-before plan)))))))
 
+(ert-deftest emacsvox-aural-guided-sound-timing-preserves-other-feedback ()
+  "Moving a cue both ways preserves same-ID neighbours and stays unapplied."
+  (dolist (phase '(before after))
+    (emacsvox-test--with-guided-feedback
+      (setq emacsvox-aural-session-rules
+            '((:id original-cues :match (:role heading)
+               :render
+               (:before ((:id cue :kind cue :cue open-object
+                          :volume 0.6 :space (:balance -0.2) :anchor object)
+                         (:id label :kind speech :text "Heading"))
+                :after ((:id cue :kind cue :cue close-object
+                         :volume 0.4 :space (:balance 0.3) :anchor transition)
+                        (:id tail :kind speech :text "Done"))))))
+      (let* ((original-rules (copy-tree emacsvox-aural-session-rules))
+             (original (emacsvox-aural-compile-plan
+                        (emacsvox-aural-resolve-active facts context) facts context))
+             (target (if (eq phase 'after) 'before 'after))
+             (timing (if (eq target 'before) "Alongside speech" "After speech")))
+        (setq emacsvox-aural-change-feedback-input
+              (plist-put emacsvox-aural-change-feedback-input :concrete original))
+        (let* ((choices (emacsvox-aural-change-feedback--components 'cue))
+               (choice (seq-find (lambda (entry)
+                                   (eq (plist-get (cdr entry) :phase) phase))
+                                 choices))
+               (selected (plist-get (cdr choice) :action)))
+          (should (member "Change sound timing"
+                          (emacsvox-aural-change-feedback--operations)))
+          (emacsvox-test--guided-choose "Change sound timing" (car choice) timing)
+          (let* ((plan (emacsvox-test--guided-proposed))
+                 (before (emacsvox-aural-concrete-plan-before plan))
+                 (after (emacsvox-aural-concrete-plan-after plan))
+                 (moved (if (eq target 'before) (car (last before)) (car after))))
+            (should (= (+ (length before) (length after)) 4))
+            (should (equal (emacsvox-aural-concrete-plan-content plan)
+                           (emacsvox-aural-concrete-plan-content original)))
+            (should (eq (emacsvox-aural-concrete-action-cue moved)
+                        (emacsvox-aural-concrete-action-cue selected)))
+            (should (eq (emacsvox-aural-concrete-action-anchor moved)
+                        (emacsvox-aural-concrete-action-anchor selected)))
+            (should (equal (emacsvox-aural-concrete-action-requested-volume moved)
+                           (emacsvox-aural-concrete-action-requested-volume selected)))
+            (should (equal (emacsvox-aural-concrete-action-requested-space moved)
+                           (emacsvox-aural-concrete-action-requested-space selected)))
+            (should (equal (mapcar #'emacsvox-aural-concrete-action-id
+                                  (if (eq target 'before) (butlast before) (cdr after)))
+                           (if (eq target 'before) '(cue label) '(cue tail))))
+            (should (equal original-rules emacsvox-aural-session-rules))
+            (should-not emacsvox-aural-user-rules)
+            (should-not (buffer-local-value 'emacsvox-aural-buffer-rules source))
+            (setq emacsvox-aural-change-feedback-selector
+                  (emacsvox-aural-change-feedback--suggested-selector)
+                  emacsvox-aural-change-feedback-scope 'buffer)
+            (emacsvox-aural-change-feedback-apply)
+            (let* ((applied-context
+                    (plist-put (copy-tree context) :buffer-rules
+                               (buffer-local-value 'emacsvox-aural-buffer-rules source)))
+                   (applied (emacsvox-aural-compile-plan
+                             (emacsvox-aural-resolve-active facts applied-context)
+                             facts applied-context)))
+              (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                                    (emacsvox-aural-concrete-plan-before applied))
+                             (mapcar #'emacsvox-aural-concrete-action-cue before))))))))))
+
+(ert-deftest emacsvox-aural-guided-sound-timing-current-and-cancel ()
+  "Timing choices describe overlap and cancellation retains an existing draft."
+  (emacsvox-test--with-guided-feedback
+    (should-not (member "Change sound timing"
+                        (emacsvox-aural-change-feedback--operations)))
+    (emacsvox-test--guided-choose "Change the content voice" "bolden")
+    (let ((draft (copy-tree emacsvox-aural-change-feedback-render)))
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (_prompt choices &rest args)
+                   (should (equal (mapcar #'car choices)
+                                  '("Before speech" "Alongside speech" "After speech")))
+                   (should (equal (nth 4 args) "After speech"))
+                   (let ((annotate (plist-get completion-extra-properties :annotation-function)))
+                     (should (string-match-p "\\[current\\]" (funcall annotate "After speech")))
+                     (should (string-match-p "overlap speech" (funcall annotate "Alongside speech"))))
+                   (signal 'quit nil))))
+        (condition-case nil
+            (emacsvox-aural-change-feedback--sound-timing '(:phase after))
+          (quit nil)))
+      (should (equal draft emacsvox-aural-change-feedback-render)))))
+
+(ert-deftest emacsvox-aural-guided-all-sound-timing-transitions ()
+  "Every timing change previews correctly, including changes within Before."
+  (let ((timings '(("Before speech" :before insert)
+                   ("Alongside speech" :before overlay)
+                   ("After speech" :after overlay))))
+    (dolist (from timings)
+      (dolist (to timings)
+        (unless (equal from to)
+          (emacsvox-test--with-guided-feedback
+            (setq emacsvox-aural-session-rules
+                  (list (list :id 'original :match '(:role heading)
+                              :render
+                              (list (cadr from)
+                                    (list (list :id 'cue :kind 'cue :cue 'large-movement
+                                                :audio-mode (nth 2 from) :anchor 'object))))))
+            (setq emacsvox-aural-change-feedback-input
+                  (plist-put emacsvox-aural-change-feedback-input :concrete
+                             (emacsvox-aural-compile-plan
+                              (emacsvox-aural-resolve-active facts context) facts context)))
+            (let* ((choices (emacsvox-aural-change-feedback--components 'cue))
+                   (choice (cdar choices)))
+              (cl-letf (((symbol-function 'completing-read)
+                         (lambda (_prompt _choices &rest args)
+                           (should (equal (nth 4 args) (car from)))
+                           (car to))))
+                (should (equal (emacsvox-aural-change-feedback--sound-timing choice)
+                               (list (intern (substring (symbol-name (cadr to)) 1))
+                                     (nth 2 to))))))
+            (emacsvox-test--guided-choose
+             "Change sound timing"
+             (caar (emacsvox-aural-change-feedback--components 'cue)) (car to))
+            (let* ((plan (emacsvox-test--guided-proposed))
+                   (actions (if (eq (cadr to) :before)
+                                (emacsvox-aural-concrete-plan-before plan)
+                              (emacsvox-aural-concrete-plan-after plan))))
+              (should (= 1 (length actions)))
+              (should (eq (emacsvox-aural-concrete-action-audio-mode (car actions))
+                          (nth 2 to)))
+              (should-not (if (eq (cadr to) :before)
+                              (emacsvox-aural-concrete-plan-after plan)
+                            (emacsvox-aural-concrete-plan-before plan)))
+              ;; Remapping the recording must preserve waiting semantics too.
+              (let* ((data (emacsvox-aural-tools--earcon-action-data (car actions) 'item))
+                     (roundtrip (emacsvox-aural--compile-action data 'remap 'before 0 'object)))
+                (should (eq (emacsvox-aural-action-cue roundtrip) 'item))
+                (should (eq (emacsvox-aural-action-audio-mode roundtrip) (nth 2 to)))))))))))
+
 (ert-deftest emacsvox-aural-guided-cancel-choice-retains-draft ()
   "Aborting a later minibuffer leaves the previous candidate and live state intact."
   (emacsvox-test--with-guided-feedback
@@ -467,6 +598,45 @@
     (call-interactively (key-binding (kbd "q")))
     (should (eq (tabulated-list-get-id) 'target))
     (should-not emacsvox-aural-change-feedback--expanded)))
+
+(ert-deftest emacsvox-aural-guided-graphical-sound-timing-choice ()
+  "Real completion shows current timing and leaves changes in the draft."
+  (skip-unless (display-graphic-p))
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-session-rules
+          '((:id original-cue :match (:role heading)
+             :render (:after ((:id movement :kind cue :cue large-movement))))))
+    (setq emacsvox-aural-change-feedback-input
+          (plist-put emacsvox-aural-change-feedback-input :concrete
+                     (emacsvox-aural-compile-plan
+                      (emacsvox-aural-resolve-active facts context) facts context)))
+    (let ((original (copy-tree emacsvox-aural-session-rules))
+          (editor (current-buffer)))
+      (cl-letf (((symbol-function 'emacsvox-aural-change-feedback--choose-component)
+                 (lambda (&rest _)
+                   (cdar (emacsvox-aural-change-feedback--components 'cue)))))
+        (minibuffer-with-setup-hook
+            (lambda ()
+              (should (equal minibuffer-default "After speech"))
+              (should (string-match-p
+                       "\\[current\\]"
+                       (funcall (plist-get completion-extra-properties :annotation-function)
+                                "After speech")))
+              (with-current-buffer editor
+                (should-not emacsvox-aural-change-feedback-render))
+              (setq unread-command-events
+                    (append (string-to-list "Before speech") (list ?\r))))
+          (emacsvox-aural-change-feedback--change "Change sound timing")))
+      (should (eq (current-buffer) editor))
+      (should (equal original emacsvox-aural-session-rules))
+      (let ((plan (emacsvox-test--guided-proposed)))
+        (should-not (emacsvox-aural-concrete-plan-after plan))
+        (should (eq (emacsvox-aural-concrete-action-audio-mode
+                     (car (emacsvox-aural-concrete-plan-before plan)))
+                    'insert))
+        (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                              (emacsvox-aural-concrete-plan-before plan))
+                       '(large-movement)))))))
 
 (ert-deftest emacsvox-aural-guided-graphical-minibuffer-history-follows-origin ()
   "Real lifetime prompts exclude Aural feedback but retain ordinary completion."

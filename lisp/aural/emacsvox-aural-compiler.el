@@ -883,6 +883,7 @@ according to `emacsvox-aural-unsupported-volume-policy'."
         :id (emacsvox-aural-action-id action)
         :kind 'cue
         :cue resolved-cue
+        :audio-mode (emacsvox-aural-action-audio-mode action)
         :resource resource
         :sample-id sample-id
         :source (emacsvox-aural-action-source action)

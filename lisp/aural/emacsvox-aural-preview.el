@@ -166,7 +166,8 @@ legacy inline voice command."
   (emacsvox-aural-call-with-delivery-transaction
    tts-speaker-process
    (lambda ()
-     (let ((emacsvox-aural--exact-tone-preview t))
+     (let ((emacsvox-aural--exact-tone-preview t)
+           (emacsvox-aural--exact-cue-preview t))
        (emacsvox-aural-queue-concrete-plan concrete)
        (emacsvox-aural-preview-dispatch concrete)))))
 
@@ -179,7 +180,8 @@ TRANSACTION-ID, when non-nil, retains the replay as one history transaction."
   (emacsvox-aural-call-with-delivery-transaction
    tts-speaker-process
    (lambda ()
-     (let ((emacsvox-aural--exact-tone-preview t))
+     (let ((emacsvox-aural--exact-tone-preview t)
+           (emacsvox-aural--exact-cue-preview t))
        (if transaction-id
            (emacsvox-aural-call-with-presentation-transaction
             transaction-id #'emacsvox-aural-queue-concrete-runs runs)

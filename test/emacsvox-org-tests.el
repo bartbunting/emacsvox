@@ -874,7 +874,7 @@
        (eq (plist-get (cdr submission) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-default-plan-preserves-navigation-output-order ()
-  "Explicit Org structure navigation retains line then movement cue."
+  "Explicit Org structure navigation starts its cue before heading content."
   (let ((emacsvox-aural-active-scheme 'default)
         (emacsvox-aural-user-rules nil)
         (emacsvox-aural-session-rules nil)
@@ -892,7 +892,7 @@
         (should
          (emacsvox-aural-content-style-speak
           (emacsvox-aural-render-plan-content plan)))
-        (should-not (emacsvox-aural-render-plan-before plan))
+        (should-not (emacsvox-aural-render-plan-after plan))
         (should
          (equal
           (mapcar
@@ -900,8 +900,35 @@
              (list
               (emacsvox-aural-action-kind action)
               (emacsvox-aural-action-cue action)))
-           (emacsvox-aural-render-plan-after plan))
+           (emacsvox-aural-render-plan-before plan))
           '((cue large-movement))))))))
+
+(ert-deftest emacsvox-org-heading-navigation-overlays-cue-at-start ()
+  "Forward and backward heading commands start one cue with their speech."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (emacsvox-use-icons t))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode #'org-mode)
+      (insert "* First heading with several words\n* Second heading with more words\n")
+      (goto-char (point-min))
+      (dolist (command '(org-next-visible-heading org-previous-visible-heading))
+        (let* ((ems--interactive-fn-name command)
+               (runs (emacsvox-test--org-line-runs command 1))
+               (envelope (car (emacsvox-aural--build-structured-timeline 1 1 runs)))
+               (audio (seq-filter
+                       (lambda (action) (equal (plist-get action :type) "audio"))
+                       (append (plist-get envelope :actions) nil))))
+          (should (org-at-heading-p))
+          (should (= (length audio) 1))
+          (should (equal (file-name-base (plist-get (car audio) :path))
+                         "large-movement"))
+          (should (equal (plist-get (car audio) :mode) "overlay"))
+          (should (equal (plist-get (car audio) :position)
+                         '(:position "span_boundary" :span_id 1 :affinity "before"))))))))
 
 (ert-deftest emacsvox-org-explanation-infers-navigation-and-speaks-options ()
   "Org point help explains the option occasion and multimodal order."
@@ -1069,22 +1096,22 @@
            (equal
             (mapcar
              #'emacsvox-aural-concrete-action-text
-             (emacsvox-aural-concrete-plan-before plan))
+             (seq-filter
+              (lambda (action)
+                (eq (emacsvox-aural-concrete-action-kind action) 'speech))
+              (emacsvox-aural-concrete-plan-before plan)))
             '("Heading 2"))))
         (should
          (equal
-          (mapcar
-           #'emacsvox-aural-concrete-action-id
-           (emacsvox-aural-concrete-plan-before (nth 0 plans)))
-          (mapcar
-           #'emacsvox-aural-concrete-action-id
-           (emacsvox-aural-concrete-plan-before (nth 1 plans)))))
-        (should
-         (equal
-          (mapcar
-           #'emacsvox-aural-concrete-action-cue
-           (emacsvox-aural-concrete-plan-after (nth 0 plans)))
+          (delq nil (mapcar
+                     #'emacsvox-aural-concrete-action-cue
+                     (emacsvox-aural-concrete-plan-before (nth 0 plans))))
           '(large-movement)))
+        (should-not
+         (cl-some #'emacsvox-aural-concrete-action-cue
+                  (emacsvox-aural-concrete-plan-before (nth 1 plans))))
+        (should-not
+         (emacsvox-aural-concrete-plan-after (nth 0 plans)))
         (should-not
          (emacsvox-aural-concrete-plan-after (nth 1 plans)))))))
 
@@ -1224,10 +1251,10 @@
      (equal
       (nreverse events)
       '((text "Heading 1")
+        (cue "large-movement")
         (cue "section")
         (code "RESET")
-        (text "Title")
-        (cue "large-movement"))))))
+        (text "Title"))))))
 
 (ert-deftest emacsvox-org-user-overrides-cover-every-context-axis ()
   "Org headings honor global, mode, derived-mode, module, and buffer rules."

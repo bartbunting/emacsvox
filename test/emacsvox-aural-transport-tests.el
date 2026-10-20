@@ -154,6 +154,89 @@ Use a private process advertising structured delivery, without sending audio."
                        (:chorus . 1.0)))
         (should (= (plist-get effects (car entry)) (cdr entry)))))))
 
+(ert-deftest emacsvox-aural-native-cue-timing-reaches-final-wire ()
+  "Saved cue rules preserve all three timing choices through final delivery."
+  (emacsvox-test--with-transport-scheme
+    (let ((file (make-temp-file "emacsvox-cue-timing-"))
+          (emacsvox-use-icons t))
+      (unwind-protect
+          (dolist (timing '((:before nil "overlay" "before")
+                            (:before insert "insert" "before")
+                            (:before overlay "overlay" "before")
+                            (:after overlay "overlay" "after")))
+            (setq emacsvox-aural-user-rules
+                  (list (list :id 'timed-cue :match '(:role heading)
+                              :render
+                              (list (nth 0 timing)
+                                    (list (append
+                                           '(:id movement :kind cue :cue large-movement)
+                                           (when (nth 1 timing)
+                                             (list :audio-mode (nth 1 timing)))))))))
+            (emacsvox-aural-save-user-data file)
+            (setq emacsvox-aural-user-rules nil)
+            (emacsvox-aural-load-user-data file)
+            (let* ((result (emacsvox-test--capture-native-timeline
+                            "Heading" :facts '(:role heading)))
+                   (timeline (plist-get result :timeline))
+                   (audio (seq-filter
+                           (lambda (action) (equal (plist-get action :type) "audio"))
+                           (plist-get timeline :actions))))
+              (should (= 1 (length audio)))
+              (should (equal (plist-get (car audio) :mode) (nth 2 timing)))
+              (should (equal (plist-get (car audio) :position)
+                             (list :position "span_boundary" :span_id 1
+                                   :affinity (nth 3 timing))))
+              (should (equal (plist-get (car (plist-get timeline :spans)) :text)
+                             "Heading"))))
+        (delete-file file)
+        (when (file-exists-p (concat file "~"))
+          (delete-file (concat file "~")))))))
+
+(ert-deftest emacsvox-aural-inserted-cue-legacy-fallback ()
+  "Legacy delivery retains speech and warns; exact previews cannot fake waiting."
+  (dolist (structured '(nil t))
+    (let* ((process (make-pipe-process :name "cue-fallback-test" :noquery t))
+           (tts-speaker-process process)
+           (emacsvox-aural-submission-delivery-policy nil)
+           (plan (emacsvox-aural--make-concrete-plan
+                  :before (list (emacsvox-aural--make-concrete-action
+                                 :id 'movement :kind 'cue :cue 'large-movement
+                                 :resource "/tmp/movement.ogg" :audio-mode 'insert))
+                  :content (emacsvox-aural--make-concrete-content :speak t :text "Heading")
+                  :context '(:icons-enabled t)))
+           writes warnings)
+      (unwind-protect
+          (progn
+            (when structured
+              (process-put process emacsvox-aural--structured-timeline-process-property 3))
+            (cl-letf (((symbol-function 'process-send-string)
+                       (lambda (_process command) (push command writes)))
+                      ((symbol-function 'tts-voice-reset-code) (lambda () ""))
+                      ((symbol-function 'display-warning)
+                       (lambda (&rest args) (push args warnings))))
+              (cl-labels
+                  ((deliver ()
+                     (emacsvox-aural-call-with-delivery-transaction
+                      process
+                      (lambda ()
+                        (emacsvox-aural-queue-concrete-plan plan)
+                        ;; An opaque command forces a negotiated worker back
+                        ;; to legacy delivery too.
+                        (when structured
+                          (emacsvox-aural-delivery-send process "c {opaque}\n"))
+                        (tts--protocol-dispatch)))))
+                (deliver)
+                (let ((wire (apply #'concat (reverse writes))))
+                  (should (string-match-p "Heading" wire))
+                  (should-not (string-match-p "movement.ogg\\|emacsvox_timeline" wire)))
+                (should (= 1 (length warnings)))
+                (setq writes nil)
+                (let ((emacsvox-aural--exact-cue-preview t))
+                  (should-error (deliver) :type 'user-error))
+                (should-not writes)
+                (should (= 1 (length warnings))))))
+        (delete-process process)))))
+
 (ert-deftest emacsvox-aural-native-saved-style-matches-voice-previews ()
   "Edited values survive saving and agree in the common editor, Workbench and final wire."
   (require 'emacsvox-aural-voice-workbench)

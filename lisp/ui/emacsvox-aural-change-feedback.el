@@ -304,7 +304,9 @@
                                    (concat "  " operation))
                                  (if voicep
                                      (emacsvox-aural-change-feedback--voice-description)
-                                   "RET chooses this change"))))
+                                   (if (equal operation "Change sound timing")
+                                       "Play an existing sound before, alongside or after speech; preview before applying"
+                                     "RET chooses this change")))))
              (when (and voicep (eq emacsvox-aural-change-feedback--expanded 'voices))
                (emacsvox-aural-change-feedback--voice-rows)))))))))))
 
@@ -546,7 +548,8 @@
   "Return component changes supported by this example's existing presentation."
   (append (when (emacsvox-aural-change-feedback--content-p) '("Change the content voice"))
           '("Add a sound" "Add a tone" "Add a spoken label")
-          (when (emacsvox-aural-change-feedback--components 'cue) '("Replace a sound"))
+          (when (emacsvox-aural-change-feedback--components 'cue)
+            '("Replace a sound" "Change sound timing"))
           (when (emacsvox-aural-change-feedback--components 'tone) '("Change a tone"))
           (when (or (emacsvox-aural-change-feedback--content-p)
                     (emacsvox-aural-change-feedback--components)) '("Suppress one component"))))
@@ -570,6 +573,59 @@
   "Choose whether added feedback precedes or follows content."
   (if (equal (completing-read "Place added feedback: " '("Before content" "After content") nil t)
              "Before content") :before :after))
+
+(defun emacsvox-aural-change-feedback--sound-timing (choice)
+  "Read the new timing for the cue in CHOICE without changing live rules."
+  (let* ((action (plist-get choice :action))
+         (current (if (eq (plist-get choice :phase) 'after) "After speech"
+                    (if (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert)
+                        "Before speech" "Alongside speech")))
+         (choices '(("Before speech" before insert)
+                    ("Alongside speech" before overlay)
+                    ("After speech" after overlay)))
+         (completion-extra-properties
+          (list :annotation-function
+                (lambda (name)
+                  (concat
+                   (when (equal name current) " [current]")
+                   (pcase name
+                     ("Before speech" " — Finish the sound before content starts; requires a structured speech timeline")
+                     ("Alongside speech" " — Start at the content boundary and overlap speech")
+                     (_ " — Start when the content finishes")))))))
+    (cdr (assoc (completing-read
+                 "Sound timing: " choices nil t nil nil
+                 current)
+                choices))))
+
+(defun emacsvox-aural-change-feedback--move-sound (choice timing selector)
+  "Set CHOICE to TIMING for SELECTOR, preserving other feedback."
+  (let* ((phase (car timing))
+         (mode (cadr timing))
+         (action (plist-get choice :action))
+         (original (plist-get choice :phase))
+         (anchor (emacsvox-aural-concrete-action-anchor action))
+         (id (emacsvox-aural-concrete-action-id action))
+         (data (emacsvox-aural-tools--earcon-action-data
+                action (emacsvox-aural-concrete-action-cue action))))
+    (when (and (eq original phase)
+               (eq (or (emacsvox-aural-concrete-action-audio-mode action) 'overlay)
+                   mode))
+      (user-error "This sound already uses that timing"))
+    ;; A phase may contain another cue with the same ID.  Give the moved
+    ;; action its own identity so both cues survive resolution.
+    (setq data
+          (plist-put data :id
+                     (emacsvox-aural-tools--remap-rule-id
+                      'timing selector (list original anchor id))))
+    (setq data (plist-put data :audio-mode mode))
+    (let ((insertion (list (if (eq phase 'before) :append :prepend) (list data))))
+      (if (eq original phase)
+          (list (intern (format ":%s" phase))
+                (append (list :anchor anchor :remove (list id)) insertion))
+        (list (intern (format ":%s" original))
+              (list :anchor anchor :remove (list id))
+              (intern (format ":%s" phase))
+              (append (list :anchor anchor) insertion))))))
 
 (defun emacsvox-aural-change-feedback--replace-action (choice data)
   "Build an isolated replacement for CHOICE using DATA and its original identity."
@@ -624,6 +680,20 @@
                description (format "%s %s content: %s" operation (substring (symbol-name phase) 1)
                                    (or (plist-get data :cue) (plist-get data :tone) (plist-get data :text)
                                        (format "%s Hertz, %s milliseconds" (plist-get data :pitch) (plist-get data :duration)))))))
+      ("Change sound timing"
+       (let* ((choice (emacsvox-aural-change-feedback--choose-component 'cue))
+              (action (plist-get choice :action))
+              (timing (emacsvox-aural-change-feedback--sound-timing choice)))
+         (setq component (list 'timing (plist-get choice :phase)
+                               (emacsvox-aural-concrete-action-id action))
+               render (emacsvox-aural-change-feedback--move-sound
+                       choice timing selector)
+               description
+               (format "%s %s"
+                       (emacsvox-aural-concrete-action-cue action)
+                       (cond ((eq (car timing) 'after) "after speech")
+                             ((eq (cadr timing) 'insert) "before speech")
+                             (t "alongside speech"))))))
       ((or "Replace a sound" "Change a tone")
        (let* ((choice (emacsvox-aural-change-feedback--choose-component
                        (if (equal operation "Replace a sound") 'cue 'tone)))
@@ -940,6 +1010,10 @@
                       (if emacsvox-aural-change-feedback--simulation
                           "O plays the simulated baseline. S stops.\n"
                         "O plays the original. S stops.\n")
+                      "Change sound timing plays an existing earcon before, alongside or after the selected content. The timing list marks the current choice.\n"
+                      "Before speech finishes the sound before content starts. Alongside speech overlaps it. After speech starts it at the end of the content.\n"
+                      "Before speech requires a structured speech timeline. Unsupported previews report the limitation; ordinary speech continues with that cue omitted and a warning. Exact overlap also depends on the speech backend.\n"
+                      "Other feedback keeps its order. The sound keeps its volume and spatial settings. Choose matching facts and a lifetime to control where the timing change applies.\n"
                       "m expands matching facts; RET on a criterion includes or excludes it. l chooses lifetime.\n"
                       "All included conditions must match. Excluded conditions are ignored, not forbidden.\n"
                       "Exclude a state such as unread to match regardless of that state. A buffer rule affects every matching item in that buffer.\n"

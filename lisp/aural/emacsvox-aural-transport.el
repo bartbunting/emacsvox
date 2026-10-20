@@ -301,6 +301,27 @@ server still produces the relevant protocol diagnostic."
 (defvar emacsvox-aural--exact-tone-preview nil
   "Non-nil makes unsupported tone previews fail instead of omitting their cue.")
 
+(defvar emacsvox-aural--exact-cue-preview nil
+  "Non-nil makes unsupported inserted cue previews fail.")
+
+(defvar emacsvox-aural--inserted-cues nil
+  "Inserted cues in the current delivery, paired with exact-preview flags.")
+
+(defun emacsvox-aural--omit-inserted-cues (cues &optional owner)
+  "Report CUES omitted from OWNER's delivery, or reject an exact preview."
+  (when cues
+    (if (seq-some #'cdr cues)
+        (user-error "Before speech needs a structured speech timeline; cannot preview this timing")
+      (let ((owner (or owner tts-speaker-process)))
+        (unless (and (processp owner)
+                     (process-get owner 'emacsvox-aural-inserted-cue-warning))
+          (when (processp owner)
+            (process-put owner 'emacsvox-aural-inserted-cue-warning t))
+          (display-warning
+           'emacsvox-aural
+           "Before-speech earcons omitted: this delivery cannot wait for recorded audio. Speech continues."
+           :warning))))))
+
 (defun emacsvox-aural--tone-volume-supported-p ()
   "Return non-nil when the selected worker supports standalone tone gain."
   (and (processp tts-speaker-process)
@@ -978,6 +999,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
              (emacsvox-aural--delivery-transaction-entries nil)
              (emacsvox-aural--delivery-transaction-effects nil)
              (emacsvox-aural--delivery-timeline-runs nil)
+             (emacsvox-aural--inserted-cues nil)
              (emacsvox-aural--capture-journal nil)
              (emacsvox-aural--capture-count 0)
              (emacsvox-aural--capture-bytes 0)
@@ -1529,7 +1551,10 @@ when the recorded plans have no speech span and require legacy lowering."
                       (omnivox-remote-resource
                        (expand-file-name
                         (emacsvox-aural-concrete-action-resource action)))
-                      :mode "overlay" :volume 1.0
+                      :mode (symbol-name
+                             (or (emacsvox-aural-concrete-action-audio-mode action)
+                                 'overlay))
+                      :volume 1.0
                       :pan (emacsvox-aural--timeline-action-pan action)
                       :effect_bus "dry")
                      semantic-value)
@@ -1802,6 +1827,20 @@ when the recorded plans have no speech span and require legacy lowering."
                           named (omnivox--choice-current-registration owner)))
               (tts--preparation-check))
             (emacsvox-aural--finalize-timeline-delivery owner generation entries effects runs)))
+    (unless (cl-some
+             (lambda (entry)
+               (eq (emacsvox-aural--delivery-entry-kind entry) 'structured))
+             (car selected))
+      ;; Inserted cues have no legacy command.  Reject inaccurate previews
+      ;; before submission; ordinary delivery retains the surrounding speech.
+      (if (seq-some #'cdr emacsvox-aural--inserted-cues)
+          (emacsvox-aural--omit-inserted-cues emacsvox-aural--inserted-cues)
+        (when emacsvox-aural--inserted-cues
+          (let ((cues emacsvox-aural--inserted-cues))
+            (setf (cadr selected)
+                  (append (cadr selected)
+                          (list (lambda ()
+                                  (emacsvox-aural--omit-inserted-cues cues owner)))))))))
     (when named
       (unless (cl-some (lambda (entry) (eq (emacsvox-aural--delivery-entry-kind entry) 'structured))
                        (car selected))
@@ -1886,19 +1925,25 @@ when the recorded plans have no speech span and require legacy lowering."
   (pcase (emacsvox-aural-concrete-action-kind action)
     ('cue
      (when (emacsvox-aural-icons-enabled-p context)
-       (let ((resource
-              (emacsvox-aural-concrete-action-resource action))
-             (balance
-              (emacsvox-aural-concrete-action-balance action)))
-         (if
-             (and
-              (numberp balance)
-              (not (zerop balance))
-              (functionp emacsvox-aural-queued-cue-balance-function))
-             (funcall
-              emacsvox-aural-queued-cue-balance-function
-              resource balance)
-           (emacsvox-queue-resource resource)))))
+       (if (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert)
+           (let ((cue (cons (emacsvox-aural-concrete-action-id action)
+                            emacsvox-aural--exact-cue-preview)))
+             (if emacsvox-aural--delivery-transaction-active-p
+                 (push cue emacsvox-aural--inserted-cues)
+               (emacsvox-aural--omit-inserted-cues (list cue))))
+         (let ((resource
+                (emacsvox-aural-concrete-action-resource action))
+               (balance
+                (emacsvox-aural-concrete-action-balance action)))
+           (if
+               (and
+                (numberp balance)
+                (not (zerop balance))
+                (functionp emacsvox-aural-queued-cue-balance-function))
+               (funcall
+                emacsvox-aural-queued-cue-balance-function
+                resource balance)
+             (emacsvox-queue-resource resource))))))
     ('pause
      (tts--protocol-silence
       (emacsvox-aural-concrete-action-duration action)))

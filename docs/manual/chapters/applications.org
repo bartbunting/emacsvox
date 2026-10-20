@@ -355,7 +355,11 @@ in either direction, without changing the usual cursor position. Moving through
 the remaining title words does not repeat that count or heading-level
 announcement. Character reading and spelling retain the individual stars.
 Collapsed headings have a collapse cue at every level; the large-movement cue
-belongs to Org structure navigation.
+starts alongside heading speech during Org structure navigation, such as
+~C-c C-n~ and ~C-c C-p~. Hold Control for the final key too. Ordinary line
+movement with arrows or ~C-n~/~C-p~ does not request that movement cue.
+To change its timing, capture the navigation in Recent Feedback and use
+[[info:emacsvox#Guided Feedback Changes][Change sound timing]].
 
 Counts preserve the configured character name without adding a plural ending.
 At =all= punctuation, the speech server names =*=, so an active Omnivox

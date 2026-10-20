@@ -119,6 +119,21 @@
     (should (eq (emacsvox-aural-action-audio-mode action) 'overlay))
     (should-not (emacsvox-aural-action-duration action))))
 
+(ert-deftest emacsvox-aural-rules-cue-timing ()
+  "Old cue rules overlay; explicit modes validate without affecting anchors."
+  (dolist (mode '(nil overlay insert))
+    (let* ((data (append '(:kind cue :cue large-movement :anchor transition)
+                         (when mode (list :audio-mode mode))))
+           (action (emacsvox-aural--compile-action data 'test 'before 0 'object)))
+      (should (eq (emacsvox-aural-action-audio-mode action) (or mode 'overlay)))
+      (should (eq (emacsvox-aural-action-anchor action) 'transition))))
+  (dolist (mode '(nil simultaneous "insert"))
+    (should-error
+     (emacsvox-aural--compile-action
+      (list :kind 'cue :cue 'large-movement :audio-mode mode)
+      'test 'before 0 'object)
+     :type 'emacsvox-aural-rule-error)))
+
 (ert-deftest emacsvox-aural-rules-compile-fact-backed-tone-actions ()
   "Tone pitch and duration may be frozen from selector-guaranteed facts."
   (let* ((rule

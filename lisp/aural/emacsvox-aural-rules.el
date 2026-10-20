@@ -176,7 +176,10 @@ endpoints.  The other dimensions use the ordinary linear mapping."
 (cl-defstruct
     (emacsvox-aural-action
      (:constructor emacsvox-aural--make-action))
-  "A validated backend-independent action."
+  "A validated backend-independent action.
+Cue and tone AUDIO-MODE is `overlay' by default.  `insert' waits for the
+audio to finish before subsequent speech.  The containing before/after
+phase determines where the action starts."
   id kind text text-template template-fields cue pitch duration voice volume space
   anchor source tone audio-mode shape
   ;; A one-element snapshot distinguishes resolved empty facts from an action
@@ -1007,7 +1010,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
               ('speech
                '(:id :kind :text :text-template :voice :volume :space
                  :anchor))
-              ('cue '(:id :kind :cue :name :volume :space :anchor))
+              ('cue '(:id :kind :cue :name :volume :space :anchor :audio-mode))
               ('pause '(:id :kind :duration :anchor))
               ('tone
                '(:id :kind :tone :pitch :duration :volume :audio-mode :anchor :shape))
@@ -1041,6 +1044,10 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
          (emacsvox-aural--rule-error
           "Speech action %S requires :text or :text-template" id))))
       ('cue
+       (unless (memq audio-mode '(overlay insert))
+         (emacsvox-aural--rule-error
+          "Cue action %S audio mode must be overlay or insert: %S"
+          id audio-mode))
        (when (and (plist-member data :cue) (plist-member data :name))
          (emacsvox-aural--rule-error
           "Cue action %S cannot combine :cue and compatibility :name" id))
@@ -1120,7 +1127,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
      :shape (copy-tree shape)
      :pitch pitch
      :duration duration
-     :audio-mode (and (eq kind 'tone) audio-mode)
+     :audio-mode (and (memq kind '(cue tone)) audio-mode)
      :voice voice
      :volume volume
      :space (copy-tree space)

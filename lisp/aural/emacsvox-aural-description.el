@@ -137,10 +137,12 @@
      (pcase (emacsvox-aural-concrete-action-kind action)
        ('cue
         (format
-         "%s: cue %s -> %s"
+         "%s: cue %s -> %s, %s timing"
          (emacsvox-aural-concrete-action-id action)
          (emacsvox-aural-concrete-action-cue action)
-         (emacsvox-aural-concrete-action-resource action)))
+         (emacsvox-aural-concrete-action-resource action)
+         (if (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert)
+             "wait until finished" "overlapping")))
        ('speech
         (format
          "%s: speak %S%s"
