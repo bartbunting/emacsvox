@@ -1565,6 +1565,91 @@
              (should-not transient--prefix)
              (should (eq (current-buffer) source)))))))))
 
+(ert-deftest emacsvox-settings-integrations-markdown-startup-and-save ()
+  "The default affects new Markdown buffers and survives an explicit Save."
+  (skip-unless (require 'markdown-mode nil t))
+  (emacsvox-test--integration-defaults 'emacsvox-markdown
+   (lambda ()
+     (emacsvox-test--with-settings
+       (set-default 'emacsvox-markdown-auto-reading-mode nil)
+       (with-current-buffer source (markdown-mode))
+       (execute-kbd-macro (kbd "C-q C-e S"))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--markdown))
+       (execute-kbd-macro (kbd "r"))
+       (should (default-value 'emacsvox-markdown-auto-reading-mode))
+       (should-not (buffer-local-value 'emacsvox-markdown-reading-mode source))
+       (with-temp-buffer
+         (markdown-mode)
+         (should emacsvox-markdown-reading-mode))
+       (should-not (file-exists-p custom-file))
+       (execute-kbd-macro (kbd "? r"))
+       (should (derived-mode-p 'help-mode))
+       (should (string-match-p "without switching existing buffers" (buffer-string)))
+       (execute-kbd-macro (kbd "q w q"))
+       (should-not transient--prefix)
+       (should (eq (current-buffer) source))
+       (set-default 'emacsvox-markdown-auto-reading-mode nil)
+       (load custom-file nil t)
+       (should (default-value 'emacsvox-markdown-auto-reading-mode))
+       ;; GFM has the same contextual entry; switching off preserves active readers.
+       (with-current-buffer source
+         (gfm-mode)
+         (should emacsvox-markdown-reading-mode)
+         (setq-local emacsvox-markdown-auto-reading-mode 'local-override))
+       (execute-kbd-macro (kbd "C-e S r q"))
+       (should-not (default-value 'emacsvox-markdown-auto-reading-mode))
+       (should (buffer-local-value 'emacsvox-markdown-reading-mode source))
+       (should (eq (buffer-local-value 'emacsvox-markdown-auto-reading-mode source) 'local-override))
+       (with-temp-buffer
+         (markdown-mode)
+         (should-not emacsvox-markdown-reading-mode))))))
+
+(ert-deftest emacsvox-settings-integrations-info-choice-help-and-save ()
+  "Browse, Help and cancel preserve Info defaults; selection and Save are explicit."
+  (emacsvox-test--integration-defaults 'emacsvox-info
+   (lambda ()
+     (emacsvox-test--with-settings
+       (set-default 'emacsvox-info-select-node-speak-chunk 'screenfull)
+       (with-current-buffer source
+         (setq major-mode 'Info-mode)
+         (setq-local emacsvox-info-select-node-speak-chunk 'local-override))
+       (execute-kbd-macro (kbd "C-q C-e S c"))
+       (with-selected-window transient--window
+         (should (= (how-many "^ +[1-6] " (point-min) (point-max)) 2)))
+       (execute-kbd-macro (kbd "<down> ? 1"))
+       (should (derived-mode-p 'help-mode))
+       (should (string-match-p "window height" (buffer-string)))
+       (should-not (string-match-p "Permissions and errors" (buffer-string)))
+       (execute-kbd-macro (kbd "q"))
+       (with-selected-window transient--window
+         (should (equal (oref (button-get (button-at (point)) 'button-data) key) "2")))
+       (execute-kbd-macro (kbd "q"))
+       (should (eq (default-value 'emacsvox-info-select-node-speak-chunk) 'screenfull))
+       (with-selected-window transient--window
+         (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
+       (execute-kbd-macro (kbd "c 2"))
+       (should (eq (default-value 'emacsvox-info-select-node-speak-chunk) 'node))
+       (should (eq (buffer-local-value 'emacsvox-info-select-node-speak-chunk source) 'local-override))
+       (should-not (file-exists-p custom-file))
+       (execute-kbd-macro (kbd "w q"))
+       (should (eq (current-buffer) source))
+       (set-default 'emacsvox-info-select-node-speak-chunk 'screenfull)
+       (load custom-file nil t)
+       (should (eq (default-value 'emacsvox-info-select-node-speak-chunk) 'node))
+       ;; The saved choice reaches the existing node reader; local values survive.
+       (let (read)
+         (cl-letf (((symbol-function 'emacsvox-speak-buffer) (lambda () (setq read 'node)))
+                   ((symbol-function 'emacsvox-info-speak-current-window) (lambda () (setq read 'screenfull)))
+                   ((symbol-function 'emacsvox-speak-line) (lambda () (setq read 'line))))
+           (with-temp-buffer (emacsvox-info-visit-node))
+           (should (eq read 'node))
+           (with-current-buffer source (emacsvox-info-visit-node))
+           (should (eq read 'line))))
+       ;; Preserve a previously configured value outside the menu's two choices.
+       (set-default 'emacsvox-info-select-node-speak-chunk 'line)
+       (execute-kbd-macro (kbd "C-e S c q q"))
+       (should (eq (default-value 'emacsvox-info-select-node-speak-chunk) 'line))))))
+
 (ert-deftest emacsvox-settings-integrations-eww-rendering-and-save ()
   "Image changes affect subsequent rendering without reloading or losing overrides."
   (require 'shr)

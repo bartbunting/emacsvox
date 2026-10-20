@@ -106,6 +106,8 @@
     ("EWW section navigation autospeak" emacsvox-settings-integrations emacsvox-settings-integrations--eww "s")
     ("EWW suppress images" emacsvox-settings-integrations emacsvox-settings-integrations--eww "i")
     ("Org table movement feedback" emacsvox-settings-integrations emacsvox-settings-integrations--org "c")
+    ("Markdown automatic reading mode" emacsvox-settings-integrations emacsvox-settings-integrations--markdown "r")
+    ("Info node speech amount" emacsvox-settings-integrations emacsvox-settings-integrations--info "c")
     ("Changed settings, saved defaults and drafts" emacsvox-settings-workflows emacsvox-settings-setups "c")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
     ("Punctuation levels and profiles" emacsvox-aural-menu emacsvox-aural-menu-punctuation "p")

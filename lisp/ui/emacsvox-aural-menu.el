@@ -98,6 +98,8 @@
                          emacsvox-settings-integrations--agent
                          emacsvox-settings-integrations--choice
                          emacsvox-settings-integrations--org
+                         emacsvox-settings-integrations--markdown
+                         emacsvox-settings-integrations--info
                          emacsvox-settings-integrations--eww
                          emacsvox-settings-integrations--notmuch)))
       (user-error "Open the Emacsvox menu first"))

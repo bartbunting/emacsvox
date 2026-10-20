@@ -38,6 +38,8 @@
   '((notmuch . emacsvox-settings-integrations--notmuch)
     (eww . emacsvox-settings-integrations--eww)
     (org . emacsvox-settings-integrations--org)
+    (markdown . emacsvox-settings-integrations--markdown)
+    (info . emacsvox-settings-integrations--info)
     (agent . emacsvox-settings-integrations--agent)
     (comint . emacsvox-settings-integrations--comint)
     (eat . emacsvox-settings-integrations--eat))
@@ -63,6 +65,8 @@ settings.  Changes retain the scope shown by each control."
     (agent "Agent Shell" agent-shell emacsvox-agent-shell emacsvox-agent-shell)
     (eat "EAT terminals" eat emacsvox-eat emacsvox-eat)
     (org "Org tables" org emacsvox-org emacsvox-org)
+    (markdown "Markdown reading" markdown-mode emacsvox-markdown emacsvox)
+    (info "Info reading" info emacsvox-info emacsvox-info)
     (notmuch "Notmuch mail" notmuch emacsvox-notmuch emacsvox-notmuch)
     (eww "EWW browser" eww emacsvox-eww emacsvox-eww))
   "Integration ID, label, package library, speech feature, and Custom group.
@@ -78,6 +82,8 @@ A nil group denotes a focused menu with buffer-only controls.")
                     (emacsvox-eat--terminal-buffer-p))) 'eat)
           ((derived-mode-p 'comint-mode) 'comint)
           ((derived-mode-p 'org-mode) 'org)
+          ((derived-mode-p 'markdown-mode 'gfm-mode) 'markdown)
+          ((derived-mode-p 'Info-mode) 'info)
           ((derived-mode-p 'notmuch-hello-mode 'notmuch-search-mode 'notmuch-show-mode 'notmuch-tree-mode) 'notmuch)
           ((derived-mode-p 'eww-mode) 'eww))))
 (defun emacsvox-settings-integrations--open (kind suffix)
@@ -403,6 +409,11 @@ A nil group denotes a focused menu with buffer-only controls.")
      emacsvox-eww-autospeak "Section navigation autospeak" ((t . "on") (nil . "off")))
     (emacsvox-settings-integrations--eww-images emacsvox-eww
      emacsvox-eww-inhibit-images "Suppress images (next rendering)" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--markdown-auto emacsvox-markdown
+     emacsvox-markdown-auto-reading-mode "Reading mode in new buffers" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--info-chunk emacsvox-info
+     emacsvox-info-select-node-speak-chunk "Read when entering a node"
+     ((screenfull . "screenful from point") (node . "entire node")))
     (emacsvox-settings-integrations--org-feedback emacsvox-org
      emacsvox-org-table-after-movement-function "After moving in a table"
      ((emacsvox-org-table-speak-current-element . "cell")
@@ -576,6 +587,9 @@ Numeric controls accept positive integers or none.")
                  (summary . "Count only: announce the number of results")
                  (cue . "Cue only: signal successful completion with a sound")
                  (silent . "Silent: suppress successful completion feedback; failures remain audible")))
+              ('emacsvox-info-select-node-speak-chunk
+               '((screenfull . "Screenful: read about one window height from point")
+                 (node . "Entire node: read all of the selected node")))
               ('emacsvox-agent-shell-input-activation
                '((automatic . "Automatic: type as soon as you reach the prompt")
                  (explicit . "Explicit: browse until you activate input")))
@@ -679,6 +693,8 @@ Numeric controls accept positive integers or none.")
        (pcase (nth 2 entry)
          ('emacsvox-org-table-after-movement-function
           "This controls speech after moving between Org table cells. Column headers come from the first row; row headers come from the first column. Buffer-local settings take precedence over this global default.")
+         ('emacsvox-info-select-node-speak-chunk
+          "This controls automatic speech after interactive Info node navigation. Screenful starts at point and uses the window height; it is not restricted to the visible text. Changing this default does not read the current node. Buffer-local settings take precedence.")
          ('emacsvox-agent-shell-input-activation
           "Automatic preserves ordinary inline prompt editing. Explicit keeps navigation letters active at the prompt: RET there or C-c i starts editing; C-c e returns to browsing and preserves your draft. Leaving input or submitting it also returns to browsing. The choice applies to existing and new shells; buffer-local overrides take precedence. Dedicated viewport editors keep normal editing. Browse mode protects the draft from typing and ordinary paste; incoming output and inserted source context can still arrive.")
          ('emacsvox-notmuch-search-completion-style
@@ -919,6 +935,55 @@ Change the global default; buffer-local settings still take precedence."
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--org nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-integrations--markdown-auto ()
+  "Toggle automatic reading mode for newly initialized Markdown buffers.
+Reading mode removes literal markup from speech while retaining voice cues.
+This changes the global default without switching existing buffers. Use
+`emacsvox-markdown-reading-mode' to switch the current buffer. Local overrides
+take precedence. Use w to save the default for future sessions."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--markdown-auto))
+(defun emacsvox-settings-integrations--markdown-save ()
+  "Save automatic Markdown reading mode for future sessions.
+Existing buffers keep their current reading mode and local overrides."
+  (interactive)
+  (emacsvox-settings-integrations--save-options 'emacsvox-markdown))
+(transient-define-prefix emacsvox-settings-integrations--markdown ()
+  "Control automatic Markdown reading mode."
+  ["Markdown default (global); w saves"
+   ("r" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--markdown-auto))
+    emacsvox-settings-integrations--markdown-auto :transient t)
+   ("w" "Save automatic reading default" emacsvox-settings-integrations--markdown-save :transient t)]
+  ["Finish"
+   ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--markdown nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-integrations--info-chunk ()
+  "Choose automatic speech after interactive Info node navigation.
+Browse a screenful from point or the entire node without changing the default
+until selecting a choice. Changing it does not read the current node.
+Buffer-local overrides take precedence. Use w to save for future sessions."
+  (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--info-chunk))
+(defun emacsvox-settings-integrations--info-save ()
+  "Save the global Info node reading amount for future sessions.
+Buffer-local overrides remain unchanged."
+  (interactive)
+  (emacsvox-settings-integrations--save-options 'emacsvox-info))
+(transient-define-prefix emacsvox-settings-integrations--info ()
+  "Control automatic speech when entering Info nodes."
+  ["Info default (global); w saves"
+   ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--info-chunk))
+    emacsvox-settings-integrations--info-chunk :transient transient--do-suspend)
+   ("w" "Save node reading default" emacsvox-settings-integrations--info-save :transient t)]
+  ["Finish"
+   ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--info nil nil :scope (emacsvox-aural-menu--context)))
 
 (defun emacsvox-settings-integrations--eww-autospeak ()
   "Toggle global automatic speech during EWW section navigation."
