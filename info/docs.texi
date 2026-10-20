@@ -84,7 +84,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1712 commands and 257 options.
+This chapter documents a total of 1712 commands and 258 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -1106,6 +1106,25 @@ Default Value:
 @verbatim
 
 automatic
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-input-state-feedback
+@verbatim
+Feedback when entering inline editing or explicitly returning to browsing.
+Speech says Editing or Browsing.  Earcon plays agent-input-on for editing and
+agent-input-off for browsing; Both combines them.  The bundled recordings are
+08-pop-and-collapse-on and 08-pop-and-collapse-off.  Earcons require auditory
+icons to be enabled.  Submission confirmations remain separate.
+This default applies immediately; buffer-local overrides take precedence.
+@end verbatim
+
+Default Value:
+@verbatim
+
+speech
 
 @end verbatim
 

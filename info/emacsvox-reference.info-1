@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1712 commands and 257 options.
+   This chapter documents a total of 1712 commands and 258 options.
 
 * Menu:
 
@@ -1357,6 +1357,19 @@ agent-shell itself.
      Default Value:
 
      automatic
+
+
+ -- Variable: User Option emacsvox-agent-shell-input-state-feedback
+     Feedback when entering inline editing or explicitly returning to browsing.
+     Speech says Editing or Browsing.  Earcon plays agent-input-on for editing and
+     agent-input-off for browsing; Both combines them.  The bundled recordings are
+     08-pop-and-collapse-on and 08-pop-and-collapse-off.  Earcons require auditory
+     icons to be enabled.  Submission confirmations remain separate.
+     This default applies immediately; buffer-local overrides take precedence.
+
+     Default Value:
+
+     speech
 
 
  -- Variable: User Option

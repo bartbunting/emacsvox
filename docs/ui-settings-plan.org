@@ -2916,6 +2916,101 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-20, Agent Shell input recordings implemented: the =agent-input-on=
+  and =agent-input-off= cues use unchanged copies of
+  =08-pop-and-collapse-on= and =08-pop-and-collapse-off= from the
+  =on-off-creative= library collection. The distributed Agent Shell module
+  supplies them to every sound pack; personal assignments can replace them.
+  Missing or disabled module resources fall back to =open-object= and
+  =close-object=. Earcon and Both use these cues for entering editing and
+  explicitly returning to browsing. Speech remains the default; submission
+  confirmation remains separate.
+
+  Source verification passes all 59 resource and sound checks and all 697
+  integration checks. Coverage verifies the exact recording hashes,
+  resolution across bundled and personal packs, fallback behaviour, and both
+  input transitions under Speech, Earcon and Both. Incremental compilation
+  and byte-code preflight pass. Fresh compiled runs pass the same 59 resource
+  and sound checks, all 697 integration checks with pinned Agent Shell 0.86.1,
+  and 22 focused graphical checks with current Agent Shell 0.87.10. Both Ogg
+  files decode correctly as 100 ms recordings. Bundled resources and their
+  tests are committed in =745021590=; input feedback uses them in =0bb90df37=.
+  Listening acceptance remains pending; the live sessions retain their loaded
+  code. The maintained guide and generated manuals are current, and the
+  documentation release check passes.
+
+- 2026-10-20, live prompt activation boundary: the newer Emacs session,
+  PID =189704= on socket =emacsvox-189704=, rejected Enter on the displayed
+  =Codex>= label while accepting it at the editable position after the label.
+  At 21:25:32 Sydney time, point was =15287= and Enter selected
+  =agent-shell-submit=, producing the browse-mode guard. A later activation
+  succeeded at =15292=. In a read-only live inspection, the current prompt's
+  seven source characters were outside =agent-shell--point-in-live-input-p=;
+  the key filter therefore fell through to submission on the label.
+  Aural session =20261020T102434Z-189704=, submission =53= and dispatch =86=
+  correlate with the Notify process =190428= and Omnivox's completed playback
+  of the guard message. The main speech process is =190054=.
+
+  The Enter filter now uses the validated live prompt's start, including its
+  label and draft. Activation preserves the draft and moves from the label
+  into editing. Old prompts followed by output remain excluded; transcript
+  buttons and their Return actions retain their scope. The existing binding
+  audit and contextual-action checks cover this intentional live-prompt
+  override with the same upstream versions. No live hooks, advice or settings
+  were changed during diagnosis.
+
+  The new boundary regression fails against the previous filter. With the
+  fix, all 697 source integration checks pass, and 22 focused graphical
+  checks pass with current Agent Shell 0.87.10. The graphical regression
+  navigates down onto real chat prompt overlays before pressing Return;
+  it covers empty, populated and multiline drafts. Incremental compilation
+  and byte-code preflight pass. Fresh compiled runs pass all 697 batch
+  checks, all 14 graphical integration checks with pinned Agent Shell 0.86.1,
+  and the same 22 focused graphical checks with current Agent Shell 0.87.10.
+  Committed in =0bb90df37=. Listening acceptance remains pending; both live
+  sessions retain their existing loaded code.
+
+- 2026-10-20, input-feedback refinement implemented: Explicit Agent Shell
+  submission announced only “Browsing”; reading the live prompt repeated
+  “Me” and editing instructions. Both behaviours are reproduced by regression
+  tests against the committed motion code.
+
+  The revised submission path reports “Prompt submitted”, “Prompt queued” or
+  “Steering sent”, using the existing submission disposition tracking. It
+  returns to browsing without a second announcement. Rejected input remains
+  editable. Reading live input uses the short “Input” label and retains
+  busy or waiting status, without repeating editing instructions.
+
+  Agent Shell settings now offer Input state feedback at =C-e S e=:
+  Speech, Earcon or Both, with Speech as the default and explicit Save at
+  =w=. The initial prototype used =open-object= and =close-object=;
+  the recording entry above documents their replacement. Earcons
+  require auditory icons to be enabled. The setting applies immediately,
+  with local overrides taking precedence. It controls explicit entry to
+  editing and return to browsing; submission confirmation remains separate.
+  Moving out of input preserves the destination's navigation speech.
+  State feedback carries its own event and state for presentation rules.
+
+  Verification: all 696 integration checks pass against source and compiled
+  code. Twenty focused graphical checks pass with compiled code and pinned
+  Agent Shell 0.86.1, and again with the current 0.87.10 checkout. These cover
+  submission, queueing, steering, concise input labels, all three feedback
+  choices, wrapped editing, contextual settings, Help, Save, local overrides
+  and the new search destination. Actual loaded paths confirm compiled
+  Emacsvox modules in the fresh sessions. The configured dependency cache
+  had an older lock identity; tests use a separately verified cache at
+  =/home/bart/.cache/emacsvox/test-deps/input-feedback-20261020= with the
+  unchanged repository pins.
+
+  The broader all-destinations menu-search check fails on a missing
+  =mail-message-status-cues= preview fragment in its isolated fixture.
+  The same failure occurs with the committed settings code. This is not
+  changed here; the new destination passes its focused graphical check.
+  Full recompilation and byte-code preflight pass. The maintained guide and
+  generated references describe the revised feedback. Committed in =0bb90df37=.
+  Listening acceptance remains pending; the running profile has not been
+  reloaded.
+
 - 2026-10-20, source audit: after-speech earcons remain outside Org heading
   navigation. Reading the Lisp forms finds ten declarative rules with cues
   in their After phase. Explicit compatibility-action callers add other

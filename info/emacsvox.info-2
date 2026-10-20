@@ -2427,14 +2427,15 @@ applies to existing and new shells; buffer-local overrides take
 precedence.
 
    With _Explicit_ selected, ‘J’, ‘U’ and the other navigation letters
-keep their navigation meanings at the live prompt.  Press ‘<RET>’ there
-to activate editing, or ‘C-c i’ (‘emacsvox-agent-shell-edit-input’) from
-anywhere in the shell to focus the draft.  From the transcript, this
-moves to the end of the draft; within input it preserves point.
-Emacsvox says “Editing input.” Ordinary typing, paste and editing
-commands then work, and submission uses Agent Shell's normal commands.
-‘<RET>’ on links, permission buttons and question controls retains its
-existing action; only the inactive live prompt uses it to start editing.
+keep their navigation meanings at the live prompt.  Press ‘<RET>’ on its
+label or anywhere in the draft to activate editing, or ‘C-c i’
+(‘emacsvox-agent-shell-edit-input’) from anywhere in the shell to focus
+the draft.  From the transcript or prompt label, this moves to the end
+of the draft; within input it preserves point.  By default, Emacsvox
+says “Editing.” Ordinary typing, paste and editing commands then work,
+and submission uses Agent Shell's normal commands.  ‘<RET>’ on links,
+permission buttons and question controls retains its existing action;
+only the inactive live prompt uses it to start editing.
 
    The ‘C-c i’ and ‘C-c e’ bindings apply only to inline shells using
 Explicit activation.  Emacsvox's Org support can assign ‘C-c i’ globally
@@ -2444,13 +2445,24 @@ to restore the ordinary binding.
 
    Press ‘C-c e’ (‘emacsvox-agent-shell-browse’) to return to browsing
 at point without sending or discarding the draft.  Emacsvox says
-“Browsing; draft preserved.” Moving out of the live input also returns
-to browsing; moving between its lines keeps editing active.  A
-successful submission or queueing returns to browsing, while a rejected
-submission keeps its draft editable.  The mode line shows _Agent browse_
-or _Agent edit_.  Reading the first input line identifies that state
-along with the agent's busy or waiting status.  Browsing protects the
-draft from ordinary typing, paste and deletion.
+“Browsing.” Moving out of the live input also returns to browsing and
+keeps the destination's navigation speech; moving between its lines
+keeps editing active.  A successful submission or queueing returns to
+browsing, while a rejected submission keeps its draft editable.  The
+mode line shows _Agent browse_ or _Agent edit_.  Reading the first input
+line says “Input” along with the agent's busy or waiting status.
+Browsing protects the draft from ordinary typing, paste and deletion.
+
+   For sound-only feedback when activating editing or pressing ‘C-c e’,
+open ‘C-e S e’ and choose _Earcon_.  _Speech_ is the default; _Both_
+combines speech and sound.  Editing uses ‘08-pop-and-collapse-on’ and
+browsing uses ‘08-pop-and-collapse-off’.  These recordings are bundled
+with Emacsvox as the ‘agent-input-on’ and ‘agent-input-off’ cues,
+available with every sound pack.  You can assign different recordings to
+those cues in a personal pack.  Auditory icons must be enabled to hear
+these sounds.  The choice applies immediately; buffer-local overrides
+take precedence.  Press ‘w’ in the parent menu to save the global
+default.  Submission confirmations remain separate from this setting.
 
    The live prompt retains Emacs undo across these transitions.
 Interactive text yanks speak the inserted text, including when a prefix
@@ -2494,12 +2506,14 @@ network pause does not make a partial answer sound complete.  A
 cancelled, refused, or failed turn reports its outcome without replacing
 the last successfully completed response.
 
-   In the viewport editor, Emacsvox announces whether a prompt was
-submitted, queued, or sent for steering, and whether the editor stays
-open.  The normal and override send commands follow Agent Shell's
-configured busy routes, including queueing when the provider does not
-support steering.  “Steering sent” confirms dispatch; the agent's
-acceptance or refusal follows separately.
+   In Explicit inline input and the viewport editor, Emacsvox announces
+whether a prompt was submitted, queued, or sent for steering.  Inline
+input returns to browsing without another state announcement.  The
+viewport also reports whether its editor stays open.  The normal and
+override send commands follow Agent Shell's configured busy routes,
+including queueing when the provider does not support steering.
+“Steering sent” confirms dispatch; the agent's acceptance or refusal
+follows separately.
 
    When you use ‘M-x agent-shell-prompt-steer’, Emacsvox confirms
 whether the agent accepted the steer, declined it, or started a separate
@@ -2619,8 +2633,9 @@ current value and explains its choices.  Browse with arrows, press
 choice's key for its effect and scope; ‘q’ returns from Help.  ‘? ?’
 opens the menu overview.
 
-   ‘i’ chooses inline input activation, described under *note Start and
-control a session: Starting An Agent Shell Session.  It shares this
+   ‘i’ chooses inline input activation; ‘e’ chooses speech, an earcon or
+both for editing and browsing feedback, described under *note Start and
+control a session: Starting An Agent Shell Session.  Both share this
 menu's explicit Save action.
 
    The ‘p’, ‘c’ and ‘l’ controls toggle permission speech, tool-call
