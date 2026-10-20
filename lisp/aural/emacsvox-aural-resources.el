@@ -1994,6 +1994,15 @@ PERSISTENT requires durable references instead of generated handles."
        :summary (nth 1 definition)
        :fallback (nth 2 definition)
        :owner 'mail)))
+  (dolist (definition
+           '((agent-input-on "Inline Agent Shell input was activated" open-object)
+             (agent-input-off "Inline Agent Shell input was deactivated" close-object)))
+    (unless (emacsvox-aural-cue (car definition))
+      (emacsvox-aural-register-cue
+       (car definition)
+       :summary (nth 1 definition)
+       :fallback (nth 2 definition)
+       :owner 'agent-shell)))
   (unless (emacsvox-aural-cue 'point-marker)
     (emacsvox-aural-register-cue
      'point-marker
@@ -2116,6 +2125,16 @@ compatibility source."
          :summary "HTML reading earcons"
          :owner 'html
          :directory html-directory)))
+    (let ((agent-directory (expand-file-name "modules/agent-shell" root)))
+      (when
+          (and
+           (file-directory-p agent-directory)
+           (not (emacsvox-aural-resource-overlay 'agent-shell-earcons)))
+        (emacsvox-aural-register-resource-overlay
+         'agent-shell-earcons
+         :summary "Agent Shell input-state earcons"
+         :owner 'agent-shell
+         :directory agent-directory)))
     ;; Load bundled parents before personal children.  Configured precedence
     ;; still gives personal packs priority over bundled copies.
     (dolist (discovery-root (reverse discovery-roots))

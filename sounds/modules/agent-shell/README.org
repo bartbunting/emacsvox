@@ -1,0 +1,23 @@
+#+title: Agent Shell input sounds
+
+These module defaults are distributed with Emacsvox and available with every
+sound pack. =agent-input-on.ogg= accompanies activation of inline editing;
+=agent-input-off.ogg= accompanies an explicit return to browsing.
+Choose /Earcon/ or /Both/ in Agent Shell's /Input state feedback/ setting.
+
+The recordings are unchanged copies of =08-pop-and-collapse-on.ogg= and
+=08-pop-and-collapse-off.ogg= from the =on-off-creative= recording collection.
+They were procedurally synthesized in =eleven_labs_scripts= under
+=sounds/emacsvox-on-off-creative/= on 2026-10-14. Each is a 100 ms mono
+Vorbis recording at 44,100 Hz. The on sound is an upward rubber pop; the off
+sound is a collapsing bubble.
+
+SHA-256 identities of the distributed files:
+
+- =agent-input-on.ogg=: =20a3344e3b5c54c466ea1217da22431ed8b2f21b81f3c793a2acbfc09e28f0c0=
+- =agent-input-off.ogg=: =4f86a155fa8fe6687111fad6608b163ea3b1177dd01d05fdacb812ada8e4f6a9=
+
+You can assign other recordings to =agent-input-on= and =agent-input-off=
+in a personal pack. Packs can also supply those cue files in an
+=agent-shell/= subdirectory. If the module defaults are unavailable or
+disabled, the cues fall back to =open-object= and =close-object=.

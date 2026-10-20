@@ -187,6 +187,40 @@
              (concat "modules/mail/" (nth 2 definition))
              emacsvox-test--sounds-directory))))))))
 
+(ert-deftest emacsvox-aural-resources-agent-input-bundles-pop-and-collapse ()
+  "Input cues use the selected recordings across packs, with generic fallbacks."
+  (emacsvox-test--with-empty-resource-packs
+    (emacsvox-aural-register-bundled-resources
+     emacsvox-test--sounds-directory)
+    (emacsvox-test--with-resource-directory
+      (emacsvox-aural-register-resource-pack
+       'personal-agent-test :summary "Personal Agent Shell test pack"
+       :kind 'sound :directory parent-directory :parent 'accent)
+      (dolist
+          (entry
+           '((agent-input-on open-object
+              "20a3344e3b5c54c466ea1217da22431ed8b2f21b81f3c793a2acbfc09e28f0c0")
+             (agent-input-off close-object
+              "4f86a155fa8fe6687111fad6608b163ea3b1177dd01d05fdacb812ada8e4f6a9")))
+        (let* ((id (car entry))
+               (cue (emacsvox-aural-cue id))
+               (file (expand-file-name
+                      (format "modules/agent-shell/%s.ogg" id)
+                      emacsvox-test--sounds-directory)))
+          (should (eq (emacsvox-aural-cue-owner cue) 'agent-shell))
+          (should (eq (emacsvox-aural-cue-fallback cue) (nth 1 entry)))
+          (with-temp-buffer
+            (set-buffer-multibyte nil)
+            (insert-file-contents-literally file)
+            (should (equal (secure-hash 'sha256 (current-buffer)) (nth 2 entry))))
+          (dolist (pack '(chimes 3d accent personal-agent-test))
+            (should (equal (emacsvox-aural-resolve-cue id pack) file))
+            (should (eq (emacsvox-aural-resource-spatialization file pack)
+                        'neutral))
+            (let ((emacsvox-aural-disabled-resource-overlays '(agent-shell-earcons)))
+              (should (equal (emacsvox-aural-resolve-cue id pack)
+                             (emacsvox-aural-resolve-cue (nth 1 entry) pack))))))))))
+
 (ert-deftest emacsvox-aural-resources-html-table-shares-quiet-default ()
   "HTML tables use the same quiet asset across bundled and personal packs."
   (emacsvox-test--with-empty-resource-packs
