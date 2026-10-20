@@ -915,6 +915,12 @@
      :owner agent-shell
      :value-type symbol
      :allowed-values (view edit))
+    (agent-input-state
+     :kind attribute
+     :summary "Whether inline Agent Shell input is being browsed or edited"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values (browsing editing))
     (agent-prompt-disposition
      :kind attribute
      :summary "Whether an Agent Shell prompt was submitted, queued, steered, or sent"
@@ -1007,6 +1013,12 @@
      :summary "The user interrupted an Agent Shell request"
      :owner agent-shell
      :occasions (state-change notification)
+     :phases (before content after))
+    (agent-input-state-changed
+     :kind event
+     :summary "Inline Agent Shell input switched between browsing and editing"
+     :owner agent-shell
+     :occasions (state-change)
      :phases (before content after))
     (agent-setting-changed
      :kind event

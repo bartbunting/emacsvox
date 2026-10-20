@@ -83,6 +83,7 @@
     ("EAT automatic feedback detail" emacsvox-settings-integrations emacsvox-settings-integrations--eat "d")
     ("Agent session speech level" emacsvox-settings-integrations emacsvox-settings-integrations--agent "s")
     ("Agent Shell input activation automatic or explicit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "i")
+    ("Agent Shell input state feedback speech earcon or both" emacsvox-settings-integrations emacsvox-settings-integrations--agent "e")
     ("Agent foreground speech default" emacsvox-settings-integrations emacsvox-settings-integrations--agent "f")
     ("Agent background speech default" emacsvox-settings-integrations emacsvox-settings-integrations--agent "b")
     ("Agent thought feedback" emacsvox-settings-integrations emacsvox-settings-integrations--agent "t")

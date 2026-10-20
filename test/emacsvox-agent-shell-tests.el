@@ -10198,7 +10198,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          agent-table agent-table-cell agent-viewport agent-prompt-editor
          agent-error agent-block-kind agent-tool-status agent-table-row
          agent-table-column agent-source-language agent-speech-level
-         agent-viewport-mode agent-prompt-disposition
+         agent-viewport-mode agent-prompt-disposition agent-input-state
+         agent-input-state-changed
          agent-permission-result agent-session-opened
          agent-session-interrupted agent-setting-changed
          agent-content-inspected agent-content-copied agent-table-entered
@@ -10502,6 +10503,69 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (execute-kbd-macro (kbd "C-/")))
           (should (equal (buffer-string) (substring draft 0 -1))))))))
 
+(ert-deftest emacsvox-agent-shell-explicit-input-prompt-label ()
+  "Return activates the whole live prompt label without submitting its draft."
+  (dolist (busy '(nil t))
+    (dolist (key '("RET" "<return>"))
+      (emacsvox-agent-shell-test--with-explicit-input
+        (let* ((start (marker-position (car comint-last-prompt)))
+               (end (agent-shell--prompt-input-start))
+               (draft (agent-shell--prompt-input)))
+          (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy))
+                    ((symbol-function 'shell-maker-submit)
+                     (lambda () (ert-fail "Activation submitted a draft"))))
+            (cl-loop for position from start below end do
+                     (goto-char position)
+                     (should (eq (key-binding (kbd key)) 'emacsvox-agent-shell-edit-input))
+                     (emacsvox-agent-shell-test--capture-events
+                       (execute-kbd-macro (kbd key)))
+                     (should emacsvox-agent-shell--input-editing)
+                     (should-not buffer-read-only)
+                     (should (= (point) (point-max)))
+                     (should (equal draft (agent-shell--prompt-input)))
+                     (emacsvox-agent-shell-test--capture-events
+                       (execute-kbd-macro (kbd "C-c e")))))
+          ;; Output below an old prompt must not make that label an input target.
+          (let ((inhibit-read-only t))
+            (goto-char (point-max))
+            (insert (propertize "\nAgent output" 'field 'output)))
+          (goto-char start)
+          (should-not (agent-shell--prompt-input-start))
+          (should-not (eq (key-binding (kbd key)) 'emacsvox-agent-shell-edit-input)))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-graphical-prompt-label ()
+  "Return activates real chat label rows reached through vertical navigation."
+  (skip-unless (display-graphic-p))
+  (require 'agent-shell-chat-mode)
+  (dolist (draft '("" "draft" "first\nsecond"))
+    (save-window-excursion
+      (with-temp-buffer
+        (emacsvox-agent-shell-test--insert-live-chat-input draft)
+        (use-local-map agent-shell-mode-map)
+        (setq-local emacsvox-agent-shell--speech-control-active t
+                    emacsvox-agent-shell-input-activation 'explicit)
+        (emacsvox-agent-shell--input-setup)
+        (unwind-protect
+            (progn
+              (switch-to-buffer (current-buffer))
+              (goto-char (point-min))
+              (redisplay t)
+              (let ((start (marker-position (car comint-last-prompt)))
+                    (input-start (agent-shell--prompt-input-start)))
+                (cl-loop repeat 5 while (< (point) start) do
+                         (emacsvox-agent-shell-test--capture-events
+                           (execute-kbd-macro (kbd "<down>"))))
+                (should (<= start (point)))
+                (should (< (point) input-start))
+                (should (pos-visible-in-window-p (point)))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "RET"))))
+              (should emacsvox-agent-shell--input-editing)
+              (should-not buffer-read-only)
+              (should (= (point) (point-max)))
+              (should (equal draft (or (agent-shell--prompt-input) ""))))
+          (emacsvox-agent-shell--input-cleanup))))))
+
 (ert-deftest emacsvox-agent-shell-explicit-input-navigation ()
   "Bare response and prompt keys navigate from a protected live draft."
   (dolist (key '("J" "U" "[" "t"))
@@ -10661,6 +10725,55 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should-not (agent-shell--prompt-input))
       (should buffer-read-only))))
 
+(ert-deftest emacsvox-agent-shell-explicit-input-submit-feedback ()
+  "Interactive sends report their outcome without a trailing browse announcement."
+  (dolist (route '(submitted queued steered))
+    (emacsvox-agent-shell-test--with-explicit-input
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "RET")))
+      (let ((agent-shell-busy-submit-default-function
+             (if (eq route 'steered)
+                 (lambda (&rest _) (emacsvox-agent-shell--steering-sent-after))
+               'agent-shell-busy-submit-queue))
+            (emacsvox-agent-shell-input-state-feedback 'earcon))
+        (cl-letf (((symbol-function 'shell-maker-busy)
+                   (lambda () (not (eq route 'submitted))))
+                  ((symbol-function 'agent-shell-status)
+                   (lambda (&rest _) (if (eq route 'submitted) 'ready 'busy)))
+                  ((symbol-function 'shell-maker-submit)
+                   (lambda () (agent-shell--clear-prompt-input)))
+                  ((symbol-function 'agent-shell--prompt-queue-echo) #'ignore))
+          (let ((events (emacsvox-agent-shell-test--capture-events
+                          (execute-kbd-macro (kbd "RET")))))
+            (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
+                           (list (list 'speak (pcase route
+                                               ('queued "Prompt queued.")
+                                               ('steered "Steering sent.")
+                                               (_ "Prompt submitted."))))))
+            (should buffer-read-only)
+            (should-not emacsvox-agent-shell--input-editing)
+            (should-not (agent-shell--prompt-input))))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-feedback-choices ()
+  "State feedback follows the local speech/earcon choice without changing drafts."
+  (dolist (style '(speech earcon both))
+    (emacsvox-agent-shell-test--with-explicit-input
+      (setq-local emacsvox-agent-shell-input-state-feedback style)
+      (let ((draft (agent-shell--prompt-input)))
+        (dolist (entry '(("RET" "Editing" agent-input-on)
+                         ("C-c e" "Browsing" agent-input-off)))
+          (should
+           (equal
+            (seq-remove
+             (lambda (event) (equal event '(message "")))
+             (emacsvox-agent-shell-test--capture-events
+               (execute-kbd-macro (kbd (car entry)))))
+            (append (when (memq style '(earcon both))
+                      (list (list 'icon (nth 2 entry))))
+                    (when (memq style '(speech both))
+                      (list (list 'speak (nth 1 entry))))))))
+        (should (equal draft (agent-shell--prompt-input)))))))
+
 (ert-deftest emacsvox-agent-shell-explicit-input-queue-drains-with-draft ()
   "Automatic queue processing can set aside and restore a protected draft."
   (emacsvox-agent-shell-test--with-explicit-input
@@ -10719,17 +10832,21 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal draft (agent-shell--prompt-input))))))
 
 (ert-deftest emacsvox-agent-shell-explicit-input-spoken-state ()
-  "Prompt reading distinguishes browsing and editing while retaining busy state."
+  "Prompt reading stays concise while retaining the agent's busy state."
   (emacsvox-agent-shell-test--with-explicit-input
     (let ((emacsvox-agent-shell--chat-label-context
            '(:text "Me" :category agent-shell-chat-me :editable t)))
       (cl-letf (((symbol-function 'agent-shell-status) (lambda (&rest _) 'busy)))
         (should (equal (emacsvox-agent-shell--add-chat-label-for-speech "Draft")
-                       "Me. Agent busy. Browsing input; Enter edits. Draft"))
+                       "Input. Agent busy. Draft"))
         (emacsvox-agent-shell-test--capture-events
           (execute-kbd-macro (kbd "RET")))
         (should (equal (emacsvox-agent-shell--add-chat-label-for-speech "Draft")
-                       "Me. Agent busy. Editing input. Draft"))))))
+                       "Input. Agent busy. Draft")))
+      (cl-letf (((symbol-function 'agent-shell-status) (lambda (&rest _) 'ready)))
+        (should (equal (emacsvox-agent-shell--add-chat-label-for-speech "") "Input."))
+        (should (equal (emacsvox-agent-shell--add-chat-label-for-speech "Draft")
+                       "Input. Draft"))))))
 
 (ert-deftest emacsvox-agent-shell-explicit-input-global-binding-restoration ()
   "The explicit input key overrides Org's global link key only in its scope."
@@ -10757,6 +10874,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (dolist (key '("C-c i" "C-c e"))
       (should-not (commandp (lookup-key (symbol-value map) (kbd key))))))
   (emacsvox-agent-shell-test--with-explicit-input
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (insert-before-markers "Earlier response\n"))
     (goto-char (point-min))
     (should (eq (key-binding (kbd "RET"))
                 (let ((emacsvox-agent-shell--input-active nil))

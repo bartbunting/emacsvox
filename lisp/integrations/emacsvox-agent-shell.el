@@ -162,6 +162,18 @@ editors retain their normal editing behaviour."
            (emacsvox-agent-shell--input-refresh)))
   :group 'emacsvox-agent-shell)
 
+(defcustom emacsvox-agent-shell-input-state-feedback 'speech
+  "Feedback when entering inline editing or explicitly returning to browsing.
+Speech says Editing or Browsing.  Earcon plays agent-input-on for editing and
+agent-input-off for browsing; Both combines them.  The bundled recordings are
+08-pop-and-collapse-on and 08-pop-and-collapse-off.  Earcons require auditory
+icons to be enabled.  Submission confirmations remain separate.
+This default applies immediately; buffer-local overrides take precedence."
+  :type '(choice (const :tag "Speech" speech)
+                 (const :tag "Earcon" earcon)
+                 (const :tag "Both" both))
+  :group 'emacsvox-agent-shell)
+
 (defcustom emacsvox-agent-shell-foreground-speech-level 'response
   "Automatic speech level for the focused agent-shell session.
 The focused session is the selected agent-shell buffer or the shell associated

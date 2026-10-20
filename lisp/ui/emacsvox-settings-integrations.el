@@ -428,6 +428,9 @@ A nil group denotes a focused menu with buffer-only controls.")
     (emacsvox-settings-integrations--agent-input emacsvox-agent-shell
      emacsvox-agent-shell-input-activation "Input activation"
      ((automatic . "automatic") (explicit . "explicit")))
+    (emacsvox-settings-integrations--agent-input-feedback emacsvox-agent-shell
+     emacsvox-agent-shell-input-state-feedback "Input state feedback"
+     ((speech . "speech") (earcon . "earcon") (both . "both")))
     (emacsvox-settings-integrations--agent-background emacsvox-agent-shell
      emacsvox-agent-shell-background-speech-level "Background speech"
      ((full . "full") (response . "responses") (notify . "notifications") (quiet . "quiet")))
@@ -590,6 +593,10 @@ Numeric controls accept positive integers or none.")
               ('emacsvox-info-select-node-speak-chunk
                '((screenfull . "Screenful: read about one window height from point")
                  (node . "Entire node: read all of the selected node")))
+              ('emacsvox-agent-shell-input-state-feedback
+               '((speech . "Speech: say Editing or Browsing")
+                 (earcon . "Earcon: play the editing or browsing sound")
+                 (both . "Both: speak the state and play its sound")))
               ('emacsvox-agent-shell-input-activation
                '((automatic . "Automatic: type as soon as you reach the prompt")
                  (explicit . "Explicit: browse until you activate input")))
@@ -695,6 +702,8 @@ Numeric controls accept positive integers or none.")
           "This controls speech after moving between Org table cells. Column headers come from the first row; row headers come from the first column. Buffer-local settings take precedence over this global default.")
          ('emacsvox-info-select-node-speak-chunk
           "This controls automatic speech after interactive Info node navigation. Screenful starts at point and uses the window height; it is not restricted to the visible text. Changing this default does not read the current node. Buffer-local settings take precedence.")
+         ('emacsvox-agent-shell-input-state-feedback
+          "This controls feedback when activating inline editing or explicitly returning to browsing. Editing uses agent-input-on; browsing uses agent-input-off. The bundled sounds are 08-pop-and-collapse-on and 08-pop-and-collapse-off. Earcons require auditory icons to be enabled. Submission confirmations and prompt reading remain separate. The global default applies immediately; buffer-local overrides take precedence.")
          ('emacsvox-agent-shell-input-activation
           "Automatic preserves ordinary inline prompt editing. Explicit keeps navigation letters active at the prompt: RET there or C-c i starts editing; C-c e returns to browsing and preserves your draft. Leaving input or submitting it also returns to browsing. The choice applies to existing and new shells; buffer-local overrides take precedence. Dedicated viewport editors keep normal editing. Browse mode protects the draft from typing and ordinary paste; incoming output and inserted source context can still arrive.")
          ('emacsvox-notmuch-search-completion-style
@@ -855,6 +864,14 @@ Viewport editors retain normal editing. Use w to save for future sessions."
   (interactive)
   (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-input))
 
+(defun emacsvox-settings-integrations--agent-input-feedback ()
+  "Choose speech, an earcon, or both for inline Editing and Browsing feedback.
+Editing uses agent-input-on; browsing uses agent-input-off. Earcons require auditory
+icons to be enabled. Submission confirmations remain separate. The global
+default applies immediately; local overrides take precedence. Use w to save."
+  (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-input-feedback))
+
 (transient-define-prefix emacsvox-settings-integrations--agent ()
   "Control Agent Shell speech, separating session overrides and global defaults."
   ["Captured session (temporary)"
@@ -879,9 +896,11 @@ Viewport editors retain normal editing. Use w to save for future sessions."
   ]
   ["Shared table reading"
    ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)]
-  ["Global input preference; w saves"
+  ["Global input preferences; w saves"
    ("i" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-input))
-    emacsvox-settings-integrations--agent-input :transient transient--do-suspend)]
+    emacsvox-settings-integrations--agent-input :transient transient--do-suspend)
+   ("e" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-input-feedback))
+    emacsvox-settings-integrations--agent-input-feedback :transient transient--do-suspend)]
   ["Global reading limits"
    ("a" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-automatic-limit))
     emacsvox-settings-integrations--agent-automatic-limit :transient t)

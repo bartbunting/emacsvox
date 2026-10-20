@@ -79,11 +79,20 @@
 ;;;  Helper Functions
 
 (defvar emacsvox-agent-shell-input-activation)
+(defvar emacsvox-agent-shell-input-state-feedback)
+(defvar emacsvox-agent-shell--viewport-submission)
 (defvar emacsvox-agent-shell--speech-control-active)
 (declare-function agent-shell--point-in-live-input-p "agent-shell-prompt" ())
 (declare-function agent-shell--prompt-input-start "agent-shell-prompt" ())
 (declare-function agent-shell--prompt-input "agent-shell-prompt" ())
 (declare-function emacsvox-agent-shell--prompt-compose-after "emacsvox-agent-shell" (&rest args))
+(declare-function emacsvox-agent-shell--viewport-submit-disposition
+                  "emacsvox-agent-shell-interaction" ())
+(declare-function emacsvox-agent-shell--viewport-submit-announcement
+                  "emacsvox-agent-shell-interaction" (disposition keep-composing dismiss))
+(declare-function emacsvox-agent-shell--submit-text-feedback
+                  "emacsvox-agent-shell-presentation"
+                  (text facts occasion &optional icon delivery-policy replacement-key))
 
 (defvar-local emacsvox-agent-shell--input-active nil
   "Non-nil when explicit inline input activation is enabled in this shell.")
@@ -123,14 +132,25 @@
       (emacsvox-agent-shell--input-unlock))
     (force-mode-line-update)))
 
-(defun emacsvox-agent-shell--input-feedback (text)
-  "Announce input state TEXT on the interruptible main speech stream."
-  (emacsvox-aural-submit
-   text
-   :facts (emacsvox-agent-shell--presentation-facts 'agent-prompt-editor 'agent-setting-changed)
-   :module 'agent-shell :occasion 'state-change
-   :lane 'main :delivery-policy 'replaceable
-   :replacement-key 'speaker :interruption-policy 'lane))
+(defun emacsvox-agent-shell--input-feedback (state)
+  "Announce input STATE using the selected speech and earcon preference."
+  (let* ((speech (memq emacsvox-agent-shell-input-state-feedback '(speech both)))
+         (arguments
+          (list
+           :facts (emacsvox-agent-shell--presentation-facts
+                   'agent-prompt-editor 'agent-input-state-changed nil
+                   (list :agent-input-state state))
+           :module 'agent-shell :occasion 'state-change
+           :lane 'main :delivery-policy 'replaceable
+           :replacement-key 'speaker :interruption-policy 'lane
+           :compatibility-actions
+           (when (memq emacsvox-agent-shell-input-state-feedback '(earcon both))
+             (list (emacsvox-aural-compatibility-icon
+                    (if (eq state 'editing) 'agent-input-on 'agent-input-off)))))))
+    (if speech
+        (apply #'emacsvox-aural-submit
+               (if (eq state 'editing) "Editing" "Browsing") arguments)
+      (apply #'emacsvox-aural-submit-actions arguments))))
 
 (defun emacsvox-agent-shell-edit-input ()
   "Activate inline input, preserving a draft and its current editing position.
@@ -145,7 +165,7 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
   (unless (agent-shell--point-in-live-input-p) (goto-char (point-max)))
   (setq emacsvox-agent-shell--input-editing t)
   (emacsvox-agent-shell--input-sync)
-  (emacsvox-agent-shell--input-feedback "Editing input"))
+  (emacsvox-agent-shell--input-feedback 'editing))
 
 (defun emacsvox-agent-shell-browse ()
   "Return to Explicit browsing at point, preserving the live draft and undo."
@@ -155,15 +175,15 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
     (user-error "Choose Explicit input activation in Agent Shell settings first"))
   (setq emacsvox-agent-shell--input-editing nil)
   (emacsvox-agent-shell--input-sync)
-  (emacsvox-agent-shell--input-feedback "Browsing; draft preserved"))
+  (emacsvox-agent-shell--input-feedback 'browsing))
 
 (defun emacsvox-agent-shell--input-post-command ()
   "Return to browsing when editing navigation leaves the live input."
   (when (and emacsvox-agent-shell--input-active
              emacsvox-agent-shell--input-editing
              (not (agent-shell--point-in-live-input-p)))
-    (setq emacsvox-agent-shell--input-editing nil)
-    (emacsvox-agent-shell--input-feedback "Browsing; draft preserved"))
+    ;; Navigation already speaks the destination.  Do not replace it.
+    (setq emacsvox-agent-shell--input-editing nil))
   (emacsvox-agent-shell--input-sync))
 
 (defun emacsvox-agent-shell--input-typing-p (typing)
@@ -171,9 +191,10 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
   (and typing (not (emacsvox-agent-shell--input-browsing-p))))
 
 (defun emacsvox-agent-shell--input-return-filter (command)
-  "Offer COMMAND only at a live prompt awaiting explicit activation."
+  "Offer COMMAND at the live prompt, including its label, while browsing."
   (when (and (emacsvox-agent-shell--input-browsing-p)
-             (agent-shell--point-in-live-input-p))
+             (agent-shell--prompt-input-start)
+             (>= (point) (marker-position (car comint-last-prompt))))
     command))
 
 (defvar emacsvox-agent-shell--input-map
@@ -206,9 +227,17 @@ requires editing first; programmatic context submission retains upstream policy.
              (or (called-interactively-p 'any)
                  emacsvox-agent-shell--input-interactive-submit))
     (user-error "Browse mode; press RET at the prompt or C-c i to edit input"))
-  (let ((buffer (current-buffer))
-        (draft (and emacsvox-agent-shell--input-active
-                    (agent-shell--prompt-input))))
+  (let* ((buffer (current-buffer))
+         (draft (and emacsvox-agent-shell--input-active
+                     (agent-shell--prompt-input)))
+         (announce (and draft
+                        (not emacsvox-agent-shell--viewport-submission)
+                        (or (called-interactively-p 'any)
+                            emacsvox-agent-shell--input-interactive-submit)))
+         (emacsvox-agent-shell--viewport-submission
+          (if announce
+              (list (emacsvox-agent-shell--viewport-submit-disposition))
+            emacsvox-agent-shell--viewport-submission)))
     (prog1 (emacsvox-agent-shell--input-write-around original args)
       (when (buffer-live-p buffer)
         (with-current-buffer buffer
@@ -216,7 +245,15 @@ requires editing first; programmatic context submission retains upstream policy.
                      (not (equal draft (agent-shell--prompt-input))))
             (setq emacsvox-agent-shell--input-editing nil)
             (emacsvox-agent-shell--input-sync)
-            (emacsvox-agent-shell--input-feedback "Browsing")))))))
+            (when announce
+              (emacsvox-agent-shell--submit-text-feedback
+               (emacsvox-agent-shell--viewport-submit-announcement
+                (car emacsvox-agent-shell--viewport-submission) nil nil)
+               (emacsvox-agent-shell--presentation-facts
+                'agent-prompt-editor 'agent-prompt-submitted nil
+                (list :agent-prompt-disposition
+                      (or (car emacsvox-agent-shell--viewport-submission) 'sent)))
+               'state-change 'task-done))))))))
 
 (defun emacsvox-agent-shell--input-write-around (original args)
   "Allow upstream ORIGINAL with ARGS to manage a browse-protected draft.
@@ -478,16 +515,12 @@ before the first response character, including when approaching from below."
   (if-let* ((context emacsvox-agent-shell--chat-label-context)
             (label (plist-get context :text)))
       (let* ((category (plist-get context :category))
+             (explicit-input (and (plist-get context :editable)
+                                  emacsvox-agent-shell--input-active))
+             (label (if explicit-input "Input" label))
              (prompt-state
               (when (plist-get context :editable)
-                (let ((status (emacsvox-agent-shell--live-prompt-state-speech)))
-                  (if emacsvox-agent-shell--input-active
-                      (string-join
-                       (delq nil (list status
-                                       (if emacsvox-agent-shell--input-editing
-                                           "Editing input."
-                                         "Browsing input; Enter edits."))) " ")
-                    status))))
+                (emacsvox-agent-shell--live-prompt-state-speech)))
              (content
               (if (eq category 'agent-shell-chat-me)
                   (emacsvox-agent-shell--without-leading-chat-prompt text)
@@ -514,7 +547,9 @@ before the first response character, including when approaching from below."
         (setq content (string-trim-left content))
         (if (string-empty-p (string-trim (substring-no-properties content)))
             (if (plist-get context :editable)
-                (concat label ". " (or prompt-state "Ready for input."))
+                (if (and explicit-input (not prompt-state))
+                    (concat label ".")
+                  (concat label ". " (or prompt-state "Ready for input.")))
               label)
           (concat label ". "
                   (when prompt-state (concat prompt-state " ")) content)))

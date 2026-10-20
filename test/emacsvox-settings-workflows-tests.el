@@ -1284,6 +1284,39 @@
              (should-not buffer-read-only))
          (with-current-buffer source (emacsvox-agent-shell--input-cleanup)))))))
 
+(ert-deftest emacsvox-settings-integrations-agent-input-feedback ()
+  "Feedback choices support browsing, Help, local overrides and explicit Save."
+  (skip-unless (require 'agent-shell nil t))
+  (emacsvox-test--integration-defaults 'emacsvox-agent-shell
+   (lambda ()
+     (emacsvox-test--with-settings
+       (set-default 'emacsvox-agent-shell-input-state-feedback 'speech)
+       (with-current-buffer source
+         (setq major-mode 'agent-shell-mode)
+         (setq-local emacsvox-agent-shell-input-state-feedback 'both))
+       (execute-kbd-macro (kbd "C-q C-e S e <down> q"))
+       (should (eq (default-value 'emacsvox-agent-shell-input-state-feedback) 'speech))
+       (execute-kbd-macro (kbd "e ? 2"))
+       (should (derived-mode-p 'help-mode))
+       (should (string-match-p "Submission confirmations" (buffer-string)))
+       (should (string-match-p "auditory icons" (buffer-string)))
+       (execute-kbd-macro (kbd "q 2"))
+       (should (eq (default-value 'emacsvox-agent-shell-input-state-feedback) 'earcon))
+       (should (eq (buffer-local-value 'emacsvox-agent-shell-input-state-feedback source) 'both))
+       (should-not (file-exists-p custom-file))
+       (execute-kbd-macro (kbd "w q"))
+       (should (eq (current-buffer) source))
+       (set-default 'emacsvox-agent-shell-input-state-feedback 'speech)
+       (load custom-file nil t)
+       (should (eq (default-value 'emacsvox-agent-shell-input-state-feedback) 'earcon))
+       (execute-kbd-macro
+        (vconcat (kbd "<f8> /")
+                 "Agent Shell input state feedback speech earcon or both"
+                 (kbd "RET")))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--agent))
+       (with-selected-window transient--window
+         (should (equal (oref (button-get (button-at (point)) 'button-data) key) "e")))))))
+
 (ert-deftest emacsvox-settings-integrations-agent-choice-lists ()
   "Choices browse without applying, preserve global scope and return to their control."
   (skip-unless (require 'agent-shell nil t))
