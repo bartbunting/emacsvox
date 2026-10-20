@@ -12,12 +12,18 @@
 (when (version< emacs-version "30.2")
   (error "Emacsvox tests require Emacs 30.2 or later"))
 
-(setq load-prefer-newer t)
+(setq load-prefer-newer t
+      ring-bell-function #'ignore)
+;; Batch `ding' bypasses ring-bell-function.
+(fset 'ding #'ignore)
+(setq-default emacsvox-play-program nil)
 
 (let* ((test-directory
         (file-name-directory (or load-file-name buffer-file-name)))
        (root-directory (expand-file-name "../" test-directory))
        (lisp-directory (expand-file-name "lisp/" root-directory)))
+  ;; Native submission tests must not launch the invoking profile's server.
+  (setenv "TTS_PROGRAM" (expand-file-name "servers/log-null" root-directory))
   (add-to-list 'load-path test-directory)
   (add-to-list 'load-path lisp-directory)
   (require 'emacsvox-notmuch-tests))

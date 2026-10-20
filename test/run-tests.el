@@ -11,13 +11,21 @@
 (when (version< emacs-version "30.2")
   (error "Emacsvox tests require Emacs 30.2 or later"))
 
-(setq load-prefer-newer t)
+(setq load-prefer-newer t
+      ring-bell-function #'ignore)
+;; Batch `ding' writes a terminal BEL without consulting ring-bell-function.
+(fset 'ding #'ignore)
+;; Keep cue dispatch active, but send unmocked playback to the silent server.
+(setq-default emacsvox-play-program nil)
 
 (let* ((test-directory
         (file-name-directory (or load-file-name buffer-file-name)))
        (root-directory (expand-file-name "../" test-directory))
        (lisp-directory (expand-file-name "lisp/" root-directory))
        (utils-directory (expand-file-name "utils/" root-directory)))
+  ;; Set this before loading code that initializes tts-program.  Tests must
+  ;; not inherit a live speech backend from the invoking profile.
+  (setenv "TTS_PROGRAM" (expand-file-name "servers/log-null" root-directory))
   (add-to-list 'load-path test-directory)
   (add-to-list 'load-path lisp-directory)
   (add-to-list 'load-path utils-directory)

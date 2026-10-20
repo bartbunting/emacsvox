@@ -191,7 +191,10 @@
           starts configured negotiated synchronized timers)
      (unwind-protect
          (cl-letf
-             (((symbol-function 'tts-make-process)
+             (;; The local recovery case must not probe or start a real
+              ;; voice-library service before creating the mocked workers.
+              ((symbol-function 'omnivox-library--prepare-engines) #'ignore)
+              ((symbol-function 'tts-make-process)
                (lambda (name)
                  (push name starts)
                  (if (equal name "Speaker") speaker
