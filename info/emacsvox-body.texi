@@ -4072,9 +4072,10 @@ Press @kbd{c} to expand component changes and @kbd{@key{RET}} on a choice. @emph
 voice} expands named voices@comma{} identifies original and replacement@comma{} and lists
 the original first when available@comma{} then alternatives alphabetically.
 Selecting a voice with @kbd{@key{RET}} keeps the panel open for comparison. Changes
-can add a cue@comma{} tone@comma{} or spoken label@comma{} replace a sound@comma{} change a tone@comma{} or
-suppress a component. A cue can be added when none existed. Choices depend
-on integration facts; they cannot create missing semantic distinctions.
+can add a cue@comma{} tone@comma{} or spoken label@comma{} replace a sound@comma{} change its timing@comma{}
+change a tone@comma{} or suppress a component. A cue can be added when none existed.
+Choices depend on integration facts; they cannot create missing semantic
+distinctions.
 
 @kbd{@key{RET}} on @emph{Parts} reopens the parts; each retains its unfinished choices.
 @kbd{q} goes up one level@comma{} for example from a voice to @emph{Content voice} and
@@ -4120,6 +4121,20 @@ through @kbd{C-e H p d}@comma{} which opens the retained draft in its owning edi
 Aborting a choice or leaving before Apply does not change live rules.
 Failed saves retain the draft and report failure.
 @end enumerate
+
+To change an existing earcon's timing@comma{} choose @emph{Change sound timing} and
+select the sound. @emph{Before speech} finishes the sound before the selected
+content starts. @emph{Alongside speech} starts it at the content boundary and
+overlaps speech. @emph{After speech} starts it when that content finishes.
+The completion list marks the current timing and explains each choice;
+browsing applies nothing. The sound keeps its volume and spatial settings@comma{}
+and other feedback keeps its order. Preview@comma{} matching criteria@comma{} lifetime
+and Apply work as described above.
+
+@emph{Before speech} requires structured speech delivery@comma{} supported by Omnivox.
+If a delivery cannot preserve that timing@comma{} ordinary speech continues with
+the cue omitted and a warning. Preview reports the limitation instead of
+playing a different timing. Exact overlap also depends on the speech backend.
 
 Replacing or suppressing a sound targets its identity in a before- or
 after-content phase while retaining other components. Existing rule data can
@@ -5281,7 +5296,9 @@ with @kbd{d}. It also expires when Emacs exits.
 
 To add a missing cue@comma{} choose @emph{Add a sound}@comma{} @emph{Before content} or @emph{After content}@comma{}
 then a registered cue. Preview and review criteria/lifetime. Adding and later
-removing use the same rule workflow.
+removing use the same rule workflow. For an existing cue@comma{} @emph{Change sound timing}
+offers playback before@comma{} alongside or after speech; see
+@ref{Guided Feedback Changes,Make a guided feedback change,,emacsvox,}.
 
 @node Changing Tones
 @subsection Change A Blank-Line Tone
@@ -6994,7 +7011,11 @@ in either direction@comma{} without changing the usual cursor position. Moving t
 the remaining title words does not repeat that count or heading-level
 announcement. Character reading and spelling retain the individual stars.
 Collapsed headings have a collapse cue at every level; the large-movement cue
-belongs to Org structure navigation.
+starts alongside heading speech during Org structure navigation@comma{} such as
+@kbd{C-c C-n} and @kbd{C-c C-p}. Hold Control for the final key too. Ordinary line
+movement with arrows or @kbd{C-n~/~C-p} does not request that movement cue.
+To change its timing@comma{} capture the navigation in Recent Feedback and use
+@ref{Guided Feedback Changes,Change sound timing,,emacsvox,}.
 
 Counts preserve the configured character name without adding a plural ending.
 At @code{all} punctuation@comma{} the speech server names @code{*}@comma{} so an active Omnivox
@@ -8228,32 +8249,66 @@ re-enabling support after it was disabled or while diagnosing a live reload.
 
 @subsection Write and edit prompts
 
-Compose and submit prompts with Agent Shell's normal editing commands.  The
-live prompt retains Emacs undo. Interactive text yanks speak the inserted
-text@comma{} including when a prefix argument selects a different kill-ring entry.
+By default@comma{} reaching the live prompt lets you type immediately. The
+@emph{Input activation} setting offers an explicit editing step if you prefer to
+keep browsing at the end of the transcript. Open @kbd{C-e S i}@comma{} choose @emph{Automatic}
+or @emph{Explicit}@comma{} and press @kbd{w} in the parent menu to save. Settings search also
+finds @emph{Agent Shell input activation}. The choice applies to existing and new
+shells; buffer-local overrides take precedence.
+
+With @emph{Explicit} selected@comma{} @kbd{J}@comma{} @kbd{U} and the other navigation letters keep their
+navigation meanings at the live prompt. Press @kbd{@key{RET}} there to activate editing@comma{}
+or @kbd{C-c i} (@code{emacsvox-agent-shell-edit-input}) from anywhere in the shell to
+focus the draft. From the transcript@comma{} this moves to the end of the draft;
+within input it preserves point. Emacsvox says “Editing input.” Ordinary typing@comma{}
+paste and editing commands then work@comma{} and submission uses Agent Shell's normal
+commands. @kbd{@key{RET}} on links@comma{} permission buttons and question controls retains its
+existing action; only the inactive live prompt uses it to start editing.
+
+The @kbd{C-c i} and @kbd{C-c e} bindings apply only to inline shells using Explicit
+activation. Emacsvox's Org support can assign @kbd{C-c i} globally to link
+insertion; Explicit mode uses it for input focus instead. Use
+@kbd{M-x org-insert-link} for that action while editing@comma{} or choose Automatic to
+restore the ordinary binding.
+
+Press @kbd{C-c e} (@code{emacsvox-agent-shell-browse}) to return to browsing at point
+without sending or discarding the draft. Emacsvox says “Browsing; draft
+preserved.” Moving out of the live input also returns to browsing; moving
+between its lines keeps editing active. A successful submission or queueing
+returns to browsing@comma{} while a rejected submission keeps its draft editable.
+The mode line shows @emph{Agent browse} or @emph{Agent edit}. Reading the first input
+line identifies that state along with the agent's busy or waiting status.
+Browsing protects the draft from ordinary typing@comma{} paste and deletion.
+
+The live prompt retains Emacs undo across these transitions. Interactive text
+yanks speak the inserted text@comma{} including when a prefix argument selects a
+different kill-ring entry.
 Image attachment keeps Agent Shell's existing feedback. Submitted transcript
 text is history rather than editable prompt input.  Press @kbd{C-c C-c} to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 
 With Agent Shell's persistent prompt enabled@comma{} you can keep typing while the
-agent works.  Brackets and navigation letters remain ordinary input at
-that prompt.  Reading the live prompt says “Agent busy” while the agent works.
+agent works. Brackets and navigation letters are ordinary text while editing
+that prompt. Reading the live prompt says “Agent busy” while the agent works.
 A pending permission is announced
 as “Waiting for permission”; a pending question says “Waiting for an answer.”
 These cues also precede the first line of a draft;
 later lines keep ordinary reading feedback.  “Ready for input” is reserved for
-an empty prompt when the agent is idle.
+an empty prompt when the agent is idle and input activation is Automatic.
 
 Quoting a selected region@comma{} sending source context@comma{}
 dropping files@comma{} and inserting shell-command output can add to that live draft
-while the agent works. These insertions do not submit the draft. If there is
-no live prompt while busy@comma{} Agent Shell offers its queue editor instead.
+while the agent works@comma{} including in Explicit browse mode. These insertions do
+not submit the draft or activate editing. If there is no live prompt while
+busy@comma{} Agent Shell offers its queue editor instead.
 Use @kbd{M-x yank-media} to attach a clipboard image on a display that supports
 native clipboard access. Image previews survive queueing and steering.
 The animated busy marker does not add repeated speech; reading the prompt
 continues to give its current state.
 
-In the viewport prompt editor@comma{} continuing a list announces its bullet or next
+The dedicated viewport prompt editor always opens ready for typing@comma{} regardless
+of the inline input setting. @kbd{M-x agent-shell-prompt-compose} transfers the
+inline draft to that editor. Continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
 
@@ -8371,6 +8426,9 @@ choices. Each list starts on the current value and explains its choices.
 Browse with arrows@comma{} press @kbd{@key{RET}} to apply and return@comma{} or @kbd{q} to cancel. Press
 @kbd{?} followed by a choice's key for its effect and scope; @kbd{q} returns from
 Help. @kbd{? ?} opens the menu overview.
+
+@kbd{i} chooses inline input activation@comma{} described under
+@ref{Starting An Agent Shell Session, , Start and control a session}. It shares this menu's explicit Save action.
 
 The @kbd{p}@comma{} @kbd{c} and @kbd{l} controls toggle permission speech@comma{} tool-call announcements
 and processing cues. Thought and tool content still depend on the effective
@@ -8525,7 +8583,8 @@ to its preceding occurrence.
 
 After a successful typed jump@comma{} @kbd{]} and @kbd{[} repeat in that direction.
 At an editable live prompt or viewport editor@comma{} bare brackets and navigation
-letters insert themselves instead of taking over prompt editing.
+letters insert themselves instead of taking over prompt editing. With Explicit
+input activation@comma{} the inline prompt remains navigable until you activate editing.
 
 @node Agent Shell Source Blocks
 @section Read and copy source blocks
@@ -8600,8 +8659,8 @@ Use character and word movement to follow the cell's text in order.
 Outside editable input@comma{} press @kbd{t} for the next table or
 @kbd{T} for the previous table. These keys skip the current table
 and announce the destination table and cell. Like the bracket navigation keys@comma{}
-they insert themselves in a live prompt or viewport editor@comma{} including while
-the agent is working.
+they insert themselves in an active inline editor or viewport editor@comma{} including
+while the agent is working.
 
 @subsection Understand table key conflicts
 

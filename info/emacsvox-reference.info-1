@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1710 commands and 256 options.
+   This chapter documents a total of 1712 commands and 257 options.
 
 * Menu:
 
@@ -1347,6 +1347,18 @@ agent-shell itself.
      response
 
 
+ -- Variable: User Option emacsvox-agent-shell-input-activation
+     How the inline Agent Shell prompt becomes editable.
+     Automatic preserves ordinary typing at the live prompt.  Explicit keeps the
+     shell in browse mode until RET at the prompt or ‘C-c i’ activates editing.
+     ‘C-c e’ returns to browsing without discarding the draft.  Dedicated viewport
+     editors retain their normal editing behaviour.
+
+     Default Value:
+
+     automatic
+
+
  -- Variable: User Option
           emacsvox-agent-shell-line-speech-max-characters
      Maximum Agent Shell characters compiled for line-navigation speech.
@@ -1513,6 +1525,25 @@ hooks.  Semantic block and source navigation remain in
 'emacsvox-agent-shell-navigation'.  The facade retains advice
 installation and activation order.  Load through 'emacsvox-agent-shell';
 loading definitions does not install command hooks.
+
+2.20.1 Emacsvox-Agent-Shell-Motion Commands
+-------------------------------------------
+
+2.20.1.1 emacsvox-agent-shell-browse
+....................................
+
+ -- Command: emacsvox-agent-shell-browse
+
+     Return to Explicit browsing at point, preserving the live draft and undo.
+
+2.20.1.2 emacsvox-agent-shell-edit-input
+........................................
+
+ -- Command: emacsvox-agent-shell-edit-input
+
+     Activate inline input, preserving a draft and its current editing position.
+     From the transcript, move to the end of the live draft.  In Explicit mode,
+     ‘C-c e’ returns to browsing without sending or discarding text.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-agent-shell-navigation,  Next: emacsvox-agent-shell-presentation,  Prev: emacsvox-agent-shell-motion,  Up: Emacsvox Commands And Options

@@ -84,7 +84,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1710 commands and 256 options.
+This chapter documents a total of 1712 commands and 257 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -1093,6 +1093,24 @@ response
 
 @end defvar
 
+@defvar {User Option} emacsvox-agent-shell-input-activation
+@verbatim
+How the inline Agent Shell prompt becomes editable.
+Automatic preserves ordinary typing at the live prompt.  Explicit keeps the
+shell in browse mode until RET at the prompt or ‘C-c i’ activates editing.
+‘C-c e’ returns to browsing without discarding the draft.  Dedicated viewport
+editors retain their normal editing behaviour.
+@end verbatim
+
+Default Value:
+@verbatim
+
+automatic
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-agent-shell-line-speech-max-characters
 @verbatim
 Maximum Agent Shell characters compiled for line-navigation speech.
@@ -1321,6 +1339,28 @@ including their dynamic context and buffer-local command hooks. Semantic
 block and source navigation remain in `emacsvox-agent-shell-navigation'.
 The facade retains advice installation and activation order. Load through
 `emacsvox-agent-shell'; loading definitions does not install command hooks.
+
+@subsection Emacsvox-Agent-Shell-Motion Commands
+
+@subsubsection emacsvox-agent-shell-browse
+@deffn {Command} emacsvox-agent-shell-browse
+@findex emacsvox-agent-shell-browse
+
+@format
+Return to Explicit browsing at point, preserving the live draft and undo.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-edit-input
+@deffn {Command} emacsvox-agent-shell-edit-input
+@findex emacsvox-agent-shell-edit-input
+
+@format
+Activate inline input, preserving a draft and its current editing position.
+From the transcript, move to the end of the live draft.  In Explicit mode,
+‘C-c e’ returns to browsing without sending or discarding text.
+@end format
+@end deffn
 
 @node emacsvox-agent-shell-navigation
 @section emacsvox-agent-shell-navigation
@@ -7174,6 +7214,7 @@ existing adapter apply service.  Physical discovery stays in the adapters.
 
 @node emacsvox-aural-voice-workbench
 @section emacsvox-aural-voice-workbench
+
 A single accessible workbench presents logical voices, physical inventory,
 engines, and portable style/effect information. Transactional previews use
 the same sample text without changing saved palettes or routing profiles.

@@ -1144,8 +1144,12 @@ reaches the first heading word, in either direction, without changing
 the usual cursor position.  Moving through the remaining title words
 does not repeat that count or heading-level announcement.  Character
 reading and spelling retain the individual stars.  Collapsed headings
-have a collapse cue at every level; the large-movement cue belongs to
-Org structure navigation.
+have a collapse cue at every level; the large-movement cue starts
+alongside heading speech during Org structure navigation, such as ‘C-c
+C-n’ and ‘C-c C-p’.  Hold Control for the final key too.  Ordinary line
+movement with arrows or ‘C-n~/~C-p’ does not request that movement cue.
+To change its timing, capture the navigation in Recent Feedback and use
+*note Change sound timing: (emacsvox)Guided Feedback Changes.
 
    Counts preserve the configured character name without adding a plural
 ending.  At ‘all’ punctuation, the speech server names ‘*’, so an active
@@ -2414,36 +2418,73 @@ diagnosing a live reload.
 11.1.1 Write and edit prompts
 -----------------------------
 
-Compose and submit prompts with Agent Shell's normal editing commands.
-The live prompt retains Emacs undo.  Interactive text yanks speak the
-inserted text, including when a prefix argument selects a different
-kill-ring entry.  Image attachment keeps Agent Shell's existing
-feedback.  Submitted transcript text is history rather than editable
-prompt input.  Press ‘C-c C-c’ to ask Agent Shell to interrupt an active
-request; its normal confirmation setting still applies.
+By default, reaching the live prompt lets you type immediately.  The
+_Input activation_ setting offers an explicit editing step if you prefer
+to keep browsing at the end of the transcript.  Open ‘C-e S i’, choose
+_Automatic_ or _Explicit_, and press ‘w’ in the parent menu to save.
+Settings search also finds _Agent Shell input activation_.  The choice
+applies to existing and new shells; buffer-local overrides take
+precedence.
+
+   With _Explicit_ selected, ‘J’, ‘U’ and the other navigation letters
+keep their navigation meanings at the live prompt.  Press ‘<RET>’ there
+to activate editing, or ‘C-c i’ (‘emacsvox-agent-shell-edit-input’) from
+anywhere in the shell to focus the draft.  From the transcript, this
+moves to the end of the draft; within input it preserves point.
+Emacsvox says “Editing input.” Ordinary typing, paste and editing
+commands then work, and submission uses Agent Shell's normal commands.
+‘<RET>’ on links, permission buttons and question controls retains its
+existing action; only the inactive live prompt uses it to start editing.
+
+   The ‘C-c i’ and ‘C-c e’ bindings apply only to inline shells using
+Explicit activation.  Emacsvox's Org support can assign ‘C-c i’ globally
+to link insertion; Explicit mode uses it for input focus instead.  Use
+‘M-x org-insert-link’ for that action while editing, or choose Automatic
+to restore the ordinary binding.
+
+   Press ‘C-c e’ (‘emacsvox-agent-shell-browse’) to return to browsing
+at point without sending or discarding the draft.  Emacsvox says
+“Browsing; draft preserved.” Moving out of the live input also returns
+to browsing; moving between its lines keeps editing active.  A
+successful submission or queueing returns to browsing, while a rejected
+submission keeps its draft editable.  The mode line shows _Agent browse_
+or _Agent edit_.  Reading the first input line identifies that state
+along with the agent's busy or waiting status.  Browsing protects the
+draft from ordinary typing, paste and deletion.
+
+   The live prompt retains Emacs undo across these transitions.
+Interactive text yanks speak the inserted text, including when a prefix
+argument selects a different kill-ring entry.  Image attachment keeps
+Agent Shell's existing feedback.  Submitted transcript text is history
+rather than editable prompt input.  Press ‘C-c C-c’ to ask Agent Shell
+to interrupt an active request; its normal confirmation setting still
+applies.
 
    With Agent Shell's persistent prompt enabled, you can keep typing
-while the agent works.  Brackets and navigation letters remain ordinary
-input at that prompt.  Reading the live prompt says “Agent busy” while
-the agent works.  A pending permission is announced as “Waiting for
-permission”; a pending question says “Waiting for an answer.” These cues
-also precede the first line of a draft; later lines keep ordinary
-reading feedback.  “Ready for input” is reserved for an empty prompt
-when the agent is idle.
+while the agent works.  Brackets and navigation letters are ordinary
+text while editing that prompt.  Reading the live prompt says “Agent
+busy” while the agent works.  A pending permission is announced as
+“Waiting for permission”; a pending question says “Waiting for an
+answer.” These cues also precede the first line of a draft; later lines
+keep ordinary reading feedback.  “Ready for input” is reserved for an
+empty prompt when the agent is idle and input activation is Automatic.
 
    Quoting a selected region, sending source context, dropping files,
 and inserting shell-command output can add to that live draft while the
-agent works.  These insertions do not submit the draft.  If there is no
-live prompt while busy, Agent Shell offers its queue editor instead.
-Use ‘M-x yank-media’ to attach a clipboard image on a display that
-supports native clipboard access.  Image previews survive queueing and
-steering.  The animated busy marker does not add repeated speech;
-reading the prompt continues to give its current state.
+agent works, including in Explicit browse mode.  These insertions do not
+submit the draft or activate editing.  If there is no live prompt while
+busy, Agent Shell offers its queue editor instead.  Use ‘M-x yank-media’
+to attach a clipboard image on a display that supports native clipboard
+access.  Image previews survive queueing and steering.  The animated
+busy marker does not add repeated speech; reading the prompt continues
+to give its current state.
 
-   In the viewport prompt editor, continuing a list announces its bullet
-or next number and indentation.  Indenting and dedenting announce the
-new indentation; leaving an empty list item announces that the list
-ended.
+   The dedicated viewport prompt editor always opens ready for typing,
+regardless of the inline input setting.  ‘M-x
+agent-shell-prompt-compose’ transfers the inline draft to that editor.
+Continuing a list announces its bullet or next number and indentation.
+Indenting and dedenting announce the new indentation; leaving an empty
+list item announces that the list ended.
 
 11.1.2 Follow a response and steer a running turn
 -------------------------------------------------
@@ -2577,6 +2618,10 @@ current value and explains its choices.  Browse with arrows, press
 ‘<RET>’ to apply and return, or ‘q’ to cancel.  Press ‘?’ followed by a
 choice's key for its effect and scope; ‘q’ returns from Help.  ‘? ?’
 opens the menu overview.
+
+   ‘i’ chooses inline input activation, described under *note Start and
+control a session: Starting An Agent Shell Session.  It shares this
+menu's explicit Save action.
 
    The ‘p’, ‘c’ and ‘l’ controls toggle permission speech, tool-call
 announcements and processing cues.  Thought and tool content still
@@ -2745,7 +2790,8 @@ the current line with ‘C-e l’ continues to indicate hidden content.
    After a successful typed jump, ‘]’ and ‘[’ repeat in that direction.
 At an editable live prompt or viewport editor, bare brackets and
 navigation letters insert themselves instead of taking over prompt
-editing.
+editing.  With Explicit input activation, the inline prompt remains
+navigable until you activate editing.
 
 
 File: emacsvox.info,  Node: Agent Shell Source Blocks,  Next: Agent Shell Tables,  Prev: Agent Shell Transcript Navigation,  Up: Agent Shell
@@ -2829,8 +2875,8 @@ order.
    Outside editable input, press ‘t’ for the next table or ‘T’ for the
 previous table.  These keys skip the current table and announce the
 destination table and cell.  Like the bracket navigation keys, they
-insert themselves in a live prompt or viewport editor, including while
-the agent is working.
+insert themselves in an active inline editor or viewport editor,
+including while the agent is working.
 
 11.8.1 Understand table key conflicts
 -------------------------------------
@@ -5512,62 +5558,3 @@ File: emacsvox.info,  Node: Finding Application Tasks,  Next: Finding Problem Ta
    For other applications, begin with *note Applications and
 Integrations: (emacsvox)Emacs Packages. and the active buffer's mode
 Help.
-
-
-File: emacsvox.info,  Node: Finding Problem Tasks,  Prev: Finding Application Tasks,  Up: Finding Tasks
-
-16.6 Something is wrong
-=======================
-
-Start with the closest symptom.  These routes preserve existing work and
-help you decide what to inspect before attempting a repair.  A failed
-preview, an unsaved draft and a failed application are different
-problems.
-
-   • *note There is no speech at all: (emacsvox)Recovering From No
-     Speech.: restore a working speech route before using tools that
-     depend on spoken inspection.
-   • *note Reading restarted part of a sentence: Reading From Point.:
-     distinguish chunk-based tracking from exact-word pause/resume and
-     inspect the retained position.
-   • *note Text was pasted in the wrong place: Recovering Text Edits.:
-     undo in the affected buffer and check the result before trying the
-     transfer again.
-   • *note A paste inserted a filename or message instead of my passage:
-     (emacsvox)Copying Text Between Buffers.: inspect which command
-     changed the kill ring before choosing the earlier copy.
-   • *note Help replaced my other windows: (emacsvox)Using Online Help.:
-     check the selected buffer and restore the desired views; a
-     collapsed layout need not mean lost documents.
-   • *note I saved a voice, but it still sounds the same:
-     (emacsvox)Saved Voice Change Not Audible.: check selection,
-     matching rules, individual tuning and engine support in that order.
-   • *note My settings disappeared after restarting: (emacsvox)Settings
-     Lost After Restart.: distinguish temporary changes from saved
-     resources and their startup selection.
-   • *note Only one application or document sounds wrong:
-     (emacsvox)Feedback Differs Between Buffers.: compare the same kind
-     of action and inspect local settings, integration policy and
-     matching rules.
-   • *note There is too much talking: (emacsvox)Feedback Differs Between
-     Buffers.: distinguish automatic content, training explanations,
-     extra labels and the notification stream before silencing it.
-   • *note I cannot tell whether a change succeeded:
-     (emacsvox)Unconfirmed Speech Changes.: keep the saved result and
-     unfinished work while checking stream acknowledgements or a
-     timeout.
-   • *note I cannot get back to what I was reading: (emacsvox)Returning
-     From Settings.: leave the current editor using its own return
-     action, then use the menu's captured-source return.
-   • *note A web page is cluttered or missing content: Recovering A Web
-     Page.: restore its reading view, distinguish a fresh request from
-     history, or use an external browser.
-   • *note I need to report an unresolved problem: (emacsvox)Reporting
-     Speech Problems.: collect a reproducible example and a reviewed
-     diagnostic report without exposing private speech or paths.
-
-   For a missing cue, an unfamiliar profile status or another symptom,
-use *note Troubleshooting and recovery: (emacsvox)Presentation
-Troubleshooting.  Avoid resetting unrelated settings to test one
-explanation; change only the cause you have identified and repeat the
-original action to check the result.

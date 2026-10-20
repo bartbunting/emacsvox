@@ -14,6 +14,65 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Finding Problem Tasks,  Prev: Finding Application Tasks,  Up: Finding Tasks
+
+16.6 Something is wrong
+=======================
+
+Start with the closest symptom.  These routes preserve existing work and
+help you decide what to inspect before attempting a repair.  A failed
+preview, an unsaved draft and a failed application are different
+problems.
+
+   • *note There is no speech at all: (emacsvox)Recovering From No
+     Speech.: restore a working speech route before using tools that
+     depend on spoken inspection.
+   • *note Reading restarted part of a sentence: Reading From Point.:
+     distinguish chunk-based tracking from exact-word pause/resume and
+     inspect the retained position.
+   • *note Text was pasted in the wrong place: Recovering Text Edits.:
+     undo in the affected buffer and check the result before trying the
+     transfer again.
+   • *note A paste inserted a filename or message instead of my passage:
+     (emacsvox)Copying Text Between Buffers.: inspect which command
+     changed the kill ring before choosing the earlier copy.
+   • *note Help replaced my other windows: (emacsvox)Using Online Help.:
+     check the selected buffer and restore the desired views; a
+     collapsed layout need not mean lost documents.
+   • *note I saved a voice, but it still sounds the same:
+     (emacsvox)Saved Voice Change Not Audible.: check selection,
+     matching rules, individual tuning and engine support in that order.
+   • *note My settings disappeared after restarting: (emacsvox)Settings
+     Lost After Restart.: distinguish temporary changes from saved
+     resources and their startup selection.
+   • *note Only one application or document sounds wrong:
+     (emacsvox)Feedback Differs Between Buffers.: compare the same kind
+     of action and inspect local settings, integration policy and
+     matching rules.
+   • *note There is too much talking: (emacsvox)Feedback Differs Between
+     Buffers.: distinguish automatic content, training explanations,
+     extra labels and the notification stream before silencing it.
+   • *note I cannot tell whether a change succeeded:
+     (emacsvox)Unconfirmed Speech Changes.: keep the saved result and
+     unfinished work while checking stream acknowledgements or a
+     timeout.
+   • *note I cannot get back to what I was reading: (emacsvox)Returning
+     From Settings.: leave the current editor using its own return
+     action, then use the menu's captured-source return.
+   • *note A web page is cluttered or missing content: Recovering A Web
+     Page.: restore its reading view, distinguish a fresh request from
+     history, or use an external browser.
+   • *note I need to report an unresolved problem: (emacsvox)Reporting
+     Speech Problems.: collect a reproducible example and a reviewed
+     diagnostic report without exposing private speech or paths.
+
+   For a missing cue, an unfamiliar profile status or another symptom,
+use *note Troubleshooting and recovery: (emacsvox)Presentation
+Troubleshooting.  Avoid resetting unrelated settings to test one
+explanation; change only the cause you have identified and repeat the
+original action to check the result.
+
+
 File: emacsvox.info,  Node: Emacsvox Terminology,  Next: Copyright,  Prev: Finding Tasks,  Up: Top
 
 17 Terms used in this manual
@@ -2657,7 +2716,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * move a paragraph:                      Finding Editing Tasks.
                                                               (line   6)
 * moving paragraphs:                     Moving Text Safely.  (line   6)
-* Muggles:                               Browsing Structure.  (line  48)
+* Muggles:                               Browsing Structure.  (line  52)
 * named voice, meaning:                  Presentation Resource Terms.
                                                               (line   6)
 * narrowing, meaning:                    Working Context Terms.
@@ -2690,7 +2749,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * open a file:                           Finding Application Tasks.
                                                               (line   6)
 * ordinary reading voice:                Finding Voice Tasks. (line   6)
-* Org, heading navigation menu:          Browsing Structure.  (line  48)
+* Org, heading navigation menu:          Browsing Structure.  (line  52)
 * Org, writing a document:               Writing An Org Document.
                                                               (line   6)
 * OSC 52, EAT:                           EAT Clipboard Trust. (line   6)

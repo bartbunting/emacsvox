@@ -2209,17 +2209,17 @@ do not establish listening acceptance; the live profile has not been reloaded.
 
 *** Integration coverage beyond the initial catalogue
 
-Updated on 2026-10-15: the six catalogue entries are Shell/comint, Agent Shell,
-EAT, Org, Notmuch and EWW, all with focused Transients. Comint and EAT expose
-background monitoring directly. Vterm and eterm are not yet recognized by the
+Updated on 2026-10-19: the eight catalogue entries are Shell/comint, Agent Shell,
+EAT, Org, Notmuch, EWW, Markdown and Info, all with focused Transients. Comint
+and EAT expose background monitoring directly. Vterm and eterm are not yet recognized by the
 contextual integration selector.
 
 | Integration or workflow | Concrete settings or commands | Proposed treatment |
 |-------------------------+-------------------------------+--------------------|
 | EWW | =emacsvox-eww-inhibit-images= | Resolved on 2026-10-15: exposed directly in the EWW Transient and settings search despite its different Customize group. |
-| Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
+| Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Implemented on 2026-10-19: focused menus through contextual settings and search, explanatory Help and explicit Save. Listening acceptance is pending. |
 | Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
-| Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
+| Spelling options | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct= | Deferred for ownership review on 2026-10-19; see Spelling options to revisit below. Org spaced repetition is outside this scope. |
 | Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume=; =emacsvox-flyspell-tone-timing=; =emacsvox-flyspell-tone-shape= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, before/alongside timing, tone and reading previews, explicit Save. The draft tone editor at =E= adds waveform and ADSR. Alongside timing passed listening and is the default; saved choices remain authoritative. Tone-editor listening is pending. |
 | Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
 | Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
@@ -2753,6 +2753,96 @@ checks passed for each implementation slice; all 27 focused graphical checks
 passed on the combined staged source. The final code matches the previously
 verified working tree.
 
+*** Markdown and Info reading settings, 2026-10-19
+
+Accepted scope: focused integration menus, contextual =C-e S= entry, settings
+search, explanatory Help and explicit Save for the existing Markdown automatic
+reading option and Info node speech amount. Reuse the integration controls and
+choice browser; preserve buffer-local overrides.
+
+Implementation: Markdown changes the default for newly initialized buffers;
+it does not switch reading mode in existing buffers. Info offers a browsable
+screenful/entire-node choice, applied only on selection. Screenful means about
+one window height from point, matching the existing reader. Both menus save
+only their displayed default.
+
+Verification: four focused graphical checks pass against source and again in
+a fresh Emacs using the compiled menus. They cover the new settings, Help and
+return focus, local overrides, explicit persistence, every search destination
+and the existing six-choice Org menu. Markdown startup checks use the installed
+Markdown mode at =markdown-mode-20261009.18=; the isolated Org menu fixture
+suppresses its full-profile programming setup helper. Incremental compilation
+and byte-code preflight pass. Command reference regeneration produces no tracked
+changes, and the documentation release check passes.
+Listening acceptance and public manual narrative remain pending; restart the
+normal profile to try these controls. The live session has not been reloaded.
+Committed on 2026-10-20 as =48dd93538=.
+
+*** Agent Shell input activation, 2026-10-20
+
+Accepted scope: a global Automatic/Explicit choice in Agent Shell settings and
+search, with explicit Save. Automatic remains the default. Explicit separates
+transcript browsing from inline editing, preserving drafts and local overrides.
+Dedicated viewport editors retain their existing input model.
+
+Implemented interaction: RET at live input or =C-c i= starts editing; =C-c e=
+returns to browsing without discarding text. Leaving input or successfully
+submitting a draft returns to browsing. Brief speech and a mode-line indicator
+identify the state. Incoming output and source context insertion must continue
+while browsing; ordinary typing and paste require editing first. RET on links,
+permission buttons and question controls retains its existing action.
+
+The choice is at =C-e S i= and in settings search. Browse protection preserves
+incoming output, context insertion, queue processing and transfer to the
+dedicated composer. Keyboard submission requires editing; programmatic
+submission retains upstream behaviour. Reading the first input line says
+“Browsing input; Enter edits” or “Editing input” alongside the agent status.
+
+Binding audit: =C-c i= and =C-c e= are free in the checked shell, inherited
+Shell Maker, viewport, fragment, list-edit and question maps. The conditional
+Return binding intentionally activates inactive live input; submission remains
+available after activation. Transcript Return actions, contextual table
+prefixes, repeat navigation, permission buttons and viewport editing retain
+their effective bindings. The dedicated viewport editor is outside this option.
+Emacsvox's Org setup also assigns =C-c i= globally to =org-insert-link=.
+Explicit inline shells intentionally use it for input focus; the displaced
+action remains available through =M-x org-insert-link=. Automatic activation
+and disabling support restore the global binding.
+
+Verification: 694 source and compiled integration checks pass with the pinned
+Agent Shell 0.86.1 dependencies. All 13 graphical integration checks pass with
+compiled code, including actual wrapped input. Twenty-one focused graphical checks
+also pass with compiled Emacsvox and the paths confirmed in the live session:
+=/home/bart/src/agent-shell/= at commit =1cfb569= (0.87.10), installed Shell Maker
+=20261015.2327=, ACP =20261010.330= and Compat =31.1.0.0=. These cover idle and
+busy editing, draft and undo preservation, rejected and queued submissions,
+streaming, tables, permission actions, viewport keys and cleanup.
+Four focused graphical settings checks also pass against source and compiled
+menus, covering choice browsing, Help, local overrides, Save and search return.
+Their isolated Org fixture suppresses full-profile setup and hardware state sync.
+
+The full rebuild and final incremental build pass their byte-code preflight.
+The maintained guide describes the choice and its interaction. Listening
+acceptance remains pending through a fresh normal-profile restart; the running
+session has not been reloaded. Committed on 2026-10-20 as =7727ae174=.
+
+*** Spelling options to revisit, 2026-10-19
+
+Status: deferred for review; no new spelling controls are scheduled in this
+slice. Org spaced repetition is excluded from this work.
+
+The spoken-suggestion limit belongs to Emacsvox: it limits automatic speech
+while Ispell retains the full correction list. Consider exposing it in the
+existing spelling feedback menu.
+
+Review ownership of the correction interface before adding another control.
+Emacsvox currently selects and loads a Flyspell correction module, but interface
+selection belongs more naturally with the spelling package. Prefer links to
+package-owned configuration for correction interfaces, dictionaries and
+languages. Check whether the existing Emacsvox selector is still needed and
+how changes should affect an already running session. Any migration or removal
+needs a separate compatibility review. This entry records future work only.
+
 *** Remaining delivery
 
 Table work follows the six delivery slices in
@@ -2825,6 +2915,101 @@ behaviour settles. Preserve earlier evidence without treating it as current
 verification of subsequently changed code.
 
 ** Findings queue
+
+- 2026-10-20, source audit: after-speech earcons remain outside Org heading
+  navigation. Reading the Lisp forms finds ten declarative rules with cues
+  in their After phase. Explicit compatibility-action callers add other
+  cases. The confirmed inventory is:
+
+  - Org: =emacsvox-org-speak-line-semantically= still places its fallback cue
+    after non-heading content, including =large-movement= for structural
+    navigation. Item-boundary movement uses =select-object= afterwards;
+    beginning/end of line uses =left=/=right=. Heading edits use an After
+    =open-object= rule. Subtree cut/copy/paste/narrowing, Return, the three
+    list-creation conveniences and non-heading document-state feedback also
+    explicitly retain trailing cues. See
+    [[file:../lisp/integrations/emacsvox-org.el][the Org integration]] and
+    [[file:../lisp/aural/emacsvox-aural-provider-org.el][its provider]].
+  - Python: both built-in Python and the separate Python Mode integration
+    emit boundary-navigation facts matched by
+    =python-navigation-boundary-cue=, which puts =paragraph= after speech.
+    Successful built-in Python line dedentation puts =left= afterwards.
+    See [[file:../lisp/aural/emacsvox-aural-provider-workflows.el][the workflow provider]].
+  - Comint/Shell: previous/next history input and matching-history movement,
+    forward/backward shell command movement, showing maximum output and
+    moving to the input boundary place =item=, =select-object= or =scroll=
+    after the spoken line. See
+    [[file:../lisp/integrations/emacsvox-comint.el][the Comint integration]].
+  - Magit: previous/next blame chunk movement places =large-movement= after
+    the chunk. Section folding, unfolding and visibility commands place
+    =close-object=/=open-object= after the announcement; the optional
+    section-visibility presentation rules also use After. See
+    [[file:../lisp/integrations/emacsvox-magit.el][the Magit integration]].
+  - Mail: the optional message-status rules place =mail-has-attachment=
+    after message navigation speech. Notmuch also has an explicit After
+    attachment compatibility action when the semantic status option is not
+    supplying it. See [[file:../lisp/integrations/emacsvox-notmuch.el][the Notmuch integration]].
+  - Locate results: =locate= and =locate-with-filter= append =open-object=
+    after the result line through
+    [[file:../lisp/integrations/emacsvox-dired.el][the Dired integration]].
+  - Org-srs: session completion and stopping append =task-done= and
+    =close-object= respectively. See
+    [[file:../lisp/aural/emacsvox-aural-provider-org-srs.el][the Org-srs provider]].
+  - Point indication: the =earcon= and =voice-earcon= styles place
+    =point-marker= after the final unit when point is at its end. This
+    placement represents position, so changing it would change the meaning.
+    See [[file:../lisp/aural/emacsvox-aural-schemes.el][the core rules]].
+
+  Proposed follow-up: review Org's remaining navigation paths, Python
+  boundary movement, Comint navigation and Magit blame movement for the
+  same alongside-speech policy. Review edit, status and completion cues
+  separately. No additional playback changes are implemented by this audit.
+  A standalone =emacsvox-icon= call after a speech function does not itself
+  wait for speech to finish; such call order is excluded from the confirmed
+  list. Findings establish source scheduling, not listening acceptance or
+  the effects of personal presentation rules.
+
+- 2026-10-20, implemented locally: Org structural heading navigation now
+  starts =large-movement= alongside heading speech. Previously the
+  =org-heading-navigation-compatibility= rule put it after the heading.
+  Ordinary line movement retains its existing feedback without this cue.
+  Use =C-c C-n= and =C-c C-p=, including Control on the final key.
+
+  The guided feedback editor's Change sound timing action offers Before
+  speech, Alongside speech and After speech. Before speech finishes the sound
+  before the selected content starts. Completion marks the current timing
+  and explains each choice. Preview leaves live rules intact;
+  applying uses the selected matching criteria and lifetime. Sound identity,
+  requested volume and spatial settings are retained; unrelated actions keep
+  their order, including another action with the same original ID.
+
+  Extension accepted on 2026-10-20: add Before speech, meaning that the sound
+  finishes before content starts. The Before phase alone sets the start
+  position rather than waiting. Omnivox 1.18.0 already supports inserted audio.
+  Cue rules now accept =:audio-mode insert=; compilation, structured delivery,
+  preview and replacement retain it. Existing rules default to overlay.
+  The guided timing list has all three choices, including changes between
+  waiting and overlapping within the Before phase. Unsupported ordinary
+  delivery omits inserted cues with a warning while retaining speech; exact
+  preview rejects that fallback.
+
+  Verification: 163 targeted source checks pass. A fresh Emacs loads the
+  compiled changed modules and passes 948 checks. All six timing transitions,
+  saved-rule delivery, replacement preservation, legacy fallback and Org
+  navigation pass. Four graphical checks pass, including selecting Before
+  speech in a real minibuffer and both heading directions. Four graphical
+  tests are skipped in batch; three of those run in the graphical group.
+  The separate feedback-outline graphical test is not part of this check.
+  Full recompilation, an incremental refresh after a formatting edit,
+  byte-code preflight and documentation release checks pass.
+
+  Three broader-suite failures also occur with the previous rules, compiler,
+  transport, preview, description and tools code: a tone mock accepts four
+  arguments instead of five; a default-rule assertion expects 41 rules
+  instead of 49; and a replacement-preview resource fixture fails when run
+  with the other tests but passes alone. These remain unchanged. Listening
+  acceptance remains pending; the running profile has not been reloaded.
+  Committed on 2026-10-20 as =f007a2015=.
 
 - 2026-10-18, implemented locally: Speech settings starts with Rate. The
   Scope toggle remains available as =g= at the end of the same section,

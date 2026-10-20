@@ -4322,10 +4322,10 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      replacement, and lists the original first when available, then
      alternatives alphabetically.  Selecting a voice with ‘<RET>’ keeps
      the panel open for comparison.  Changes can add a cue, tone, or
-     spoken label, replace a sound, change a tone, or suppress a
-     component.  A cue can be added when none existed.  Choices depend
-     on integration facts; they cannot create missing semantic
-     distinctions.
+     spoken label, replace a sound, change its timing, change a tone, or
+     suppress a component.  A cue can be added when none existed.
+     Choices depend on integration facts; they cannot create missing
+     semantic distinctions.
 
      ‘<RET>’ on _Parts_ reopens the parts; each retains its unfinished
      choices.  ‘q’ goes up one level, for example from a voice to
@@ -4373,6 +4373,21 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      draft in its owning editor.  Aborting a choice or leaving before
      Apply does not change live rules.  Failed saves retain the draft
      and report failure.
+
+   To change an existing earcon's timing, choose _Change sound timing_
+and select the sound.  _Before speech_ finishes the sound before the
+selected content starts.  _Alongside speech_ starts it at the content
+boundary and overlaps speech.  _After speech_ starts it when that
+content finishes.  The completion list marks the current timing and
+explains each choice; browsing applies nothing.  The sound keeps its
+volume and spatial settings, and other feedback keeps its order.
+Preview, matching criteria, lifetime and Apply work as described above.
+
+   _Before speech_ requires structured speech delivery, supported by
+Omnivox.  If a delivery cannot preserve that timing, ordinary speech
+continues with the cue omitted and a warning.  Preview reports the
+limitation instead of playing a different timing.  Exact overlap also
+depends on the speech backend.
 
    Replacing or suppressing a sound targets its identity in a before- or
 after-content phase while retaining other components.  Existing rule
@@ -5607,7 +5622,9 @@ File: emacsvox.info,  Node: Changing One Sound,  Next: Changing Tones,  Prev: So
    To add a missing cue, choose _Add a sound_, _Before content_ or
 _After content_, then a registered cue.  Preview and review
 criteria/lifetime.  Adding and later removing use the same rule
-workflow.
+workflow.  For an existing cue, _Change sound timing_ offers playback
+before, alongside or after speech; see *note Make a guided feedback
+change: (emacsvox)Guided Feedback Changes.
 
 
 File: emacsvox.info,  Node: Changing Tones,  Next: Spatial Presentation Controls,  Prev: Changing One Sound,  Up: Sounds And Space
