@@ -129,6 +129,8 @@ Operational semantic contract version: =1=.
 | =agent-diff-hunks= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | Number of hunks in the opened change review |
 | =agent-diff-opened= | =event= | =agent-shell= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | An agent change review was opened |
 | =agent-error= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | Error content produced while running an agent session |
+| =agent-input-state= | =attribute= | =agent-shell= | =browsing=, =editing= | - | - | - | - | - | - | - | Whether inline Agent Shell input is being browsed or edited |
+| =agent-input-state-changed= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Inline Agent Shell input switched between browsing and editing |
 | =agent-list-ended= | =event= | =agent-shell= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | An empty list item was removed to leave a prompt list |
 | =agent-list-indent= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | The list item's indentation in columns |
 | =agent-list-indentation-changed= | =event= | =agent-shell= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A prompt list item was indented or dedented |
@@ -195,6 +197,10 @@ Operational semantic contract version: =1=.
 | =capitalization-kind= | =attribute= | =core= | =capital=, =all-caps= | - | - | - | - | - | =before= | - | Whether a boundary begins one capital or an all-capitals run |
 | =capitalization-located= | =event= | =core= | - | - | - | - | - | - | - | - | A spoken text boundary begins capitalized content |
 | =capitalization-presentation= | =attribute= | =core= | =spoken=, =tone=, =spoken-tone=, =custom= | - | - | - | - | - | =before= | - | The user-requested presentation for capitalization |
+| =capitalization-tone-duration= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Capitalization tone duration in milliseconds |
+| =capitalization-tone-pitch= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Capitalization tone pitch in Hz |
+| =capitalization-tone-shape= | =attribute= | =core= | - | - | - | - | - | - | =before= | - | Capitalization tone waveform, sweep and envelope |
+| =capitalization-tone-volume= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Individual capitalization tone gain from 0 to 1 |
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
 | =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =state-change=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
 | =code-edit-kind= | =attribute= | =core= | =symbol= | =code-construct= | - | - | - | - | - | - | The editing operation applied to source code |
@@ -268,7 +274,9 @@ Operational semantic contract version: =1=.
 | =indentation-presentation= | =attribute= | =core= | =spoken=, =duration-tone=, =pitch-tone=, =spoken-duration-tone=, =spoken-pitch-tone=, =custom= | - | - | - | - | - | =before= | - | The user-requested presentation for line indentation |
 | =indentation-tone-duration= | =attribute= | =core= | =integer= | - | - | - | - | - | =before= | - | Computed indentation tone duration in milliseconds |
 | =indentation-tone-pitch= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Computed indentation tone pitch in hertz |
+| =indentation-tone-shape= | =attribute= | =core= | - | - | - | - | - | - | =before= | - | Indentation tone waveform, sweep and envelope |
 | =indentation-tone-timing= | =attribute= | =core= | =overlay=, =insert= | - | - | - | - | - | =before= | - | Whether the indentation tone plays alongside or before speech |
+| =indentation-tone-volume= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Individual indentation tone gain from 0 to 1 |
 | =learning-answer-revealed= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item's answer was revealed |
 | =learning-cloze-updated= | =event= | =org-srs= | - | =learning-item= | - | - | - | =edit=, =state-change=, =notification= | =before=, =content=, =after= | - | The cloze items in an Org entry were updated |
 | =learning-item= | =role= | =org-srs= | - | - | - | - | - | =navigation=, =state-change=, =notification=, =inspection=, =edit= | =before=, =content=, =after= | - | A question and answer reviewed through spaced repetition |
@@ -367,6 +375,14 @@ Operational semantic contract version: =1=.
 | =section-kind= | =attribute= | =magit= | =symbol= | =vcs-section= | - | - | - | - | - | - | The integration-defined kind of a structural section |
 | =selected= | =state= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | An item is the current selection |
 | =selection-cleared= | =event= | =core= | - | - | - | - | - | - | - | - | A mark or selection was removed |
+| =spelling-earcon= | =attribute= | =core= | =boolean= | - | - | - | - | - | =before= | - | Play an earcon at a spelling error |
+| =spelling-error-located= | =event= | =core= | - | - | - | - | - | - | - | - | A spoken word is marked by the spell checker |
+| =spelling-tone= | =attribute= | =core= | =boolean= | - | - | - | - | - | =before= | - | Play a tone at a spelling error |
+| =spelling-tone-duration= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Spelling tone duration in milliseconds |
+| =spelling-tone-pitch= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Spelling tone pitch in hertz |
+| =spelling-tone-shape= | =attribute= | =core= | - | - | - | - | - | - | =before= | - | Spelling waveform and envelope |
+| =spelling-tone-timing= | =attribute= | =core= | =insert=, =overlay= | - | - | - | - | - | =before= | - | Whether spelling tones play before or alongside speech |
+| =spelling-tone-volume= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Spelling tone gain from 0 to 1 |
 | =staged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is staged for commit |
 | =state-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered state changed |
 | =syntax-role= | =attribute= | =core= | =symbol= | - | - | - | - | - | - | - | The language-defined structural role of source code |
@@ -411,7 +427,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =38= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =49= | Compatibility-preserving Emacsvox presentation |
 
 * Built-in Presentation Options
 
@@ -470,6 +486,8 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 
 | Identifier | Kind | Owner | Fallback | Intent |
 |------------+------+-------+----------+--------|
+| =agent-input-off= | =cue= | =agent-shell= | =close-object= | Inline Agent Shell input was deactivated |
+| =agent-input-on= | =cue= | =agent-shell= | =open-object= | Inline Agent Shell input was activated |
 | =alarm= | =cue= | =core= | - | An urgent alarm |
 | =alert-user= | =cue= | =core= | - | Immediate attention is required |
 | =ask-question= | =cue= | =core= | - | A question is awaiting an answer |

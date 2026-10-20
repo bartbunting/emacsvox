@@ -3011,6 +3011,95 @@ verification of subsequently changed code.
   Listening acceptance remains pending; the running profile has not been
   reloaded.
 
+- 2026-10-20, Agent Shell input boundary feedback: moving out of an active
+  inline editor previously returned to browsing without feedback. The off cue
+  was restricted to explicit =C-c e=. With Earcon or Both selected, leaving
+  input now submits =agent-input-off= on the notification lane without
+  interrupting destination speech. Speech-only navigation retains destination
+  reading without an extra “Browsing” announcement. Movement within input and
+  further browsing do not repeat the cue; the draft remains protected.
+  The arrow test fails against the previous code because the cue is missing.
+  All 698 integration checks pass against source and compiled code. All 23
+  focused graphical input/settings checks pass against source and compiled
+  code with pinned Agent Shell 0.86.1, and compiled code with the 0.87.10
+  checkout. Loaded paths confirm compiled motion and settings modules.
+  Compilation, byte-code preflight, the cue audit and the documentation gate
+  pass. Help and the maintained guide describe the boundary cue. Listening
+  acceptance remains pending. Committed in =b93c75246=.
+
+- 2026-10-20, follow-up on the 15 unit-test failures: Agent Shell 0.87 batches
+  streamed text before rendering. Push completion now flushes that batch
+  before collecting the completed answer and starting the next queued turn.
+  The existing regression checks that the answer is spoken once and retained
+  before queue processing. Older Agent Shell versions keep their existing path.
+
+  The other failures came from stale test expectations and incomplete fixtures:
+  optional tone and network arguments, inherited default rules, revised manual
+  wording and menu order, command-loop undo boundaries, a missing mock prompt
+  regexp, and an undo check using Consult's =C-/= binding. Tests now exercise
+  the current interfaces and instructions; the input check uses =C-x u=.
+  Documentation checks ignore prose wrapping and retain their behavioral
+  requirements.
+
+  All 15 focused checks pass with installed Agent Shell 0.87.10 and compiled
+  Emacsvox integration modules. All 698 pinned integration checks pass from
+  source and compiled code. All 23 graphical input/settings checks pass with
+  compiled modules and the Agent Shell 0.87.10 checkout. Actual loaded paths
+  are verified. Compilation, byte-code preflight and the documentation gate
+  pass. The full unit run completes 4,501 tests: 4,295 pass, none fail and 206
+  skip. Those skips include graphical cases and optional native services;
+  the separate graphical results above cover the affected input behavior.
+  Streamed push completion is committed in =e2b67f2a2=; test repairs are in
+  =a9937e58d= and the input fixture changes in =b93c75246=. Listening acceptance
+  remains pending; no live session was reloaded.
+
+- 2026-10-20, implemented locally: the remaining navigation, edit and status
+  cues from the audit below now start alongside speech. This covers Org,
+  Python and Python Mode, Comint/Shell, Magit, Notmuch attachment feedback,
+  Locate results and Org-srs completion or stopping. Both semantic rules and
+  compatibility fallbacks use the same timing. Explicit personal timing rules
+  still apply. The point marker at the end of text retains its positional
+  meaning and remains after that text.
+
+  Regression coverage checks concrete overlay actions, compatibility
+  submissions and single-cue behavior. All 506 focused checks pass against
+  source and fresh compiled code, with loaded paths verified for all eight
+  changed modules. One graphical Magit check is skipped in batch. The
+  standalone Notmuch suite passes all 137 checks against source and compiled
+  code. Compilation, byte-code preflight, the cue audit and the documentation
+  gate pass. The generated cue reference also incorporates existing core
+  timing and Agent Shell entries missing from the previous snapshot.
+  The broader run completes 4,500 tests: 4,279 pass, 15 fail and 206 skip.
+  Fourteen failures also occur in the unchanged baseline. The remaining
+  network-report failure occurred in the first run before the test-isolation
+  changes; its mock rejects the arguments supplied to
+  =network-interface-list=. The follow-up above addresses these failures.
+  Cue timing is committed in =cb6299d91=. Listening acceptance remains pending;
+  no live session was reloaded by this work.
+
+  Test isolation finding: the unit runner and a temporary focused runner
+  inherited =TTS_PROGRAM= from the invoking profile and launched real
+  Omnivox processes. Runtime logs confirm synthesis of test strings “x” and
+  “2”. The Notmuch fixtures also contain “report.pdf”, matching the reported
+  attachment speech, although that utterance was not found in the inspected
+  runtime logs. The unit and focused Notmuch runners now select =log-null=
+  before loading speech code, route local cues through that silent server,
+  and suppress the Emacs bell. Batch =ding= bypasses =ring-bell-function= and
+  writes a terminal BEL, so the batch runners also replace =ding= with
+  =ignore=. An explicit =ding=/=beep= probe through the Notmuch runner emits
+  no BEL and all 137 tests still pass. Process tracing of the focused run
+  records only =log-null= for playback. Playback tests retain their transport
+  mocks.
+
+  The full trace also exposes a separate remote-recovery fixture gap:
+  its local-mode case probes and starts the installed voice-library service
+  before reaching mocked speech workers. The fixture now mocks engine
+  preparation as well. All 12 remote tests pass under process tracing without
+  launching an Omnivox executable. The full run preceded the final =ding= fix
+  and still emitted one BEL; the explicit probe above verifies that correction.
+  The final full unit run also emits no BEL. Test isolation is committed in
+  =e62347f25=.
+
 - 2026-10-20, source audit: after-speech earcons remain outside Org heading
   navigation. Reading the Lisp forms finds ten declarative rules with cues
   in their After phase. Explicit compatibility-action callers add other

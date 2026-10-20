@@ -8282,13 +8282,16 @@ The mode line shows @emph{Agent browse} or @emph{Agent edit}. Reading the first 
 line says “Input” along with the agent's busy or waiting status.
 Browsing protects the draft from ordinary typing@comma{} paste and deletion.
 
-For sound-only feedback when activating editing or pressing @kbd{C-c e}@comma{} open
+For sound-only feedback when activating editing or returning to browsing@comma{} open
 @kbd{C-e S e} and choose @emph{Earcon}. @emph{Speech} is the default; @emph{Both} combines speech
 and sound. Editing uses @code{08-pop-and-collapse-on} and browsing uses
 @code{08-pop-and-collapse-off}. These recordings are bundled with Emacsvox as
 the @code{agent-input-on} and @code{agent-input-off} cues@comma{} available with every sound
 pack. You can assign different recordings to those cues in a personal pack.
 Auditory icons must be enabled to hear these sounds.
+With @emph{Earcon} or @emph{Both} selected@comma{} arrowing out of the input field also plays
+the browsing sound without replacing the destination's speech or adding
+“Browsing.” Moving between lines within the field does not play it.
 The choice applies immediately; buffer-local overrides take precedence.
 Press @kbd{w} in the parent menu to save the global default. Submission
 confirmations remain separate from this setting.

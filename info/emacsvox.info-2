@@ -2453,16 +2453,20 @@ mode line shows _Agent browse_ or _Agent edit_.  Reading the first input
 line says “Input” along with the agent's busy or waiting status.
 Browsing protects the draft from ordinary typing, paste and deletion.
 
-   For sound-only feedback when activating editing or pressing ‘C-c e’,
-open ‘C-e S e’ and choose _Earcon_.  _Speech_ is the default; _Both_
-combines speech and sound.  Editing uses ‘08-pop-and-collapse-on’ and
-browsing uses ‘08-pop-and-collapse-off’.  These recordings are bundled
-with Emacsvox as the ‘agent-input-on’ and ‘agent-input-off’ cues,
-available with every sound pack.  You can assign different recordings to
-those cues in a personal pack.  Auditory icons must be enabled to hear
-these sounds.  The choice applies immediately; buffer-local overrides
-take precedence.  Press ‘w’ in the parent menu to save the global
-default.  Submission confirmations remain separate from this setting.
+   For sound-only feedback when activating editing or returning to
+browsing, open ‘C-e S e’ and choose _Earcon_.  _Speech_ is the default;
+_Both_ combines speech and sound.  Editing uses ‘08-pop-and-collapse-on’
+and browsing uses ‘08-pop-and-collapse-off’.  These recordings are
+bundled with Emacsvox as the ‘agent-input-on’ and ‘agent-input-off’
+cues, available with every sound pack.  You can assign different
+recordings to those cues in a personal pack.  Auditory icons must be
+enabled to hear these sounds.  With _Earcon_ or _Both_ selected,
+arrowing out of the input field also plays the browsing sound without
+replacing the destination's speech or adding “Browsing.” Moving between
+lines within the field does not play it.  The choice applies
+immediately; buffer-local overrides take precedence.  Press ‘w’ in the
+parent menu to save the global default.  Submission confirmations remain
+separate from this setting.
 
    The live prompt retains Emacs undo across these transitions.
 Interactive text yanks speak the inserted text, including when a prefix
