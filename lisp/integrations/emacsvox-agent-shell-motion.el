@@ -204,11 +204,23 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
   (and typing (not (emacsvox-agent-shell--input-browsing-p))))
 
 (defun emacsvox-agent-shell--input-return-filter (command)
-  "Offer COMMAND at the live prompt, including its label, while browsing."
+  "Offer COMMAND at the live prompt, its label and adjoining blank rows."
   (when (and (emacsvox-agent-shell--input-browsing-p)
-             (agent-shell--prompt-input-start)
-             (>= (point) (marker-position (car comint-last-prompt))))
-    command))
+             (agent-shell--prompt-input-start))
+    (let ((prompt-start (marker-position (car comint-last-prompt))))
+      (when (or (>= (point) prompt-start)
+                (and
+                 ;; Contextual buttons retain their own Return action.
+                 (not (get-char-property (point) 'keymap))
+                 (>= (point)
+                     (save-excursion
+                       (goto-char prompt-start)
+                       (skip-chars-backward " \t\n")
+                       ;; Keep the preceding content line, including its
+                       ;; terminating newline, outside the activation area.
+                       (unless (bolp) (forward-line 1))
+                       (min prompt-start (point))))))
+        command))))
 
 (defvar emacsvox-agent-shell--input-map
   (let ((map (make-sparse-keymap)))

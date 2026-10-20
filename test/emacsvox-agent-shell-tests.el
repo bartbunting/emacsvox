@@ -10534,6 +10534,58 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not (agent-shell--prompt-input-start))
           (should-not (eq (key-binding (kbd key)) 'emacsvox-agent-shell-edit-input)))))))
 
+(ert-deftest emacsvox-agent-shell-explicit-input-prompt-padding ()
+  "Return activates adjoining prompt padding without taking transcript actions."
+  (require 'agent-shell-chat-mode)
+  (dolist (draft '("" "draft" "\n\n"))
+    (dolist (key '("RET" "<return>"))
+      (save-window-excursion
+        (with-temp-buffer
+          (emacsvox-agent-shell-test--insert-live-chat-input draft)
+          (use-local-map agent-shell-mode-map)
+          (setq-local emacsvox-agent-shell--speech-control-active t
+                      emacsvox-agent-shell-input-activation 'explicit)
+          (emacsvox-agent-shell--input-setup)
+          (unwind-protect
+              (progn
+                (switch-to-buffer (current-buffer))
+                (when (display-graphic-p) (redisplay t))
+                ;; Up from input can land on the newline before the prompt.
+                (goto-char (agent-shell--prompt-input-start))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "<up>")))
+                (let ((prompt (marker-position (car comint-last-prompt))))
+                  (should (= (point) (1- prompt)))
+                  (should (eq (key-binding (kbd key)) 'emacsvox-agent-shell-edit-input))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd key)))
+                  (should emacsvox-agent-shell--input-editing)
+                  (should-not buffer-read-only)
+                  (should (= (point) (point-max)))
+                  (should (equal draft (buffer-substring-no-properties
+                                       (agent-shell--prompt-input-start) (point-max))))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd "C-c e")))
+                  ;; The previous response and its line terminator stay outside.
+                  (dolist (position (list (point-min) (- prompt 2)))
+                    (goto-char position)
+                    (should-not (eq (key-binding (kbd key))
+                                    'emacsvox-agent-shell-edit-input)))
+                  ;; A contextual action on a padding character still owns RET.
+                  (let ((inhibit-read-only t))
+                    (put-text-property (1- prompt) prompt 'keymap agent-shell-ui-fragment-map))
+                  (goto-char (1- prompt))
+                  (should (eq (key-binding (kbd "RET")) 'agent-shell-ui-toggle-fragment))
+                  ;; The same space is not an activation target for a stale prompt.
+                  (let ((inhibit-read-only t))
+                    (remove-text-properties (1- prompt) prompt '(keymap nil))
+                    (goto-char (point-max))
+                    (insert (propertize "\nAgent output" 'field 'output)))
+                  (goto-char (1- prompt))
+                  (should-not (eq (key-binding (kbd key))
+                                  'emacsvox-agent-shell-edit-input))))
+            (emacsvox-agent-shell--input-cleanup)))))))
+
 (ert-deftest emacsvox-agent-shell-explicit-input-horizontal-boundaries ()
   "Browsing crosses the input start and uses ordinary buffer-end feedback."
   (require 'agent-shell-chat-mode)

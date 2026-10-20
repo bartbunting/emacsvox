@@ -3044,6 +3044,47 @@ verification of subsequently changed code.
   try the fix; no live session was reloaded.
   Commit slice: =Let Agent Shell browsing cross input boundaries=.
 
+- 2026-10-20, startup input investigation remains open. In a fresh isolated
+  startup with ACP initialization held pending, Return activates inline
+  editing. A bounded trace in Emacs PID 439157 also finds the activation
+  binding present before initialization finishes. All three recorded
+  activation commands in the new shell leave editing enabled and the buffer
+  writable; subsequent typing succeeds.
+
+  Navigation exposes a separate mismatch: a position immediately before the
+  prompt can speak prompt text while Return still selects submission rather
+  than activation. This may make the editing target hard to locate, but the
+  trace does not establish it as the cause of the reported startup failure.
+  =C-c i= remains bound to activation from that position. The diagnostic
+  records commands, positions and state without draft text; its temporary
+  hooks were removed after two minutes. The reported Return failure remains
+  unresolved; the successful activations do not establish its cause.
+
+  The separate row mismatch is now fixed: Return on blank padding immediately
+  above the live prompt activates editing. The preceding transcript line and
+  its terminating newline stay outside that area, and contextual buttons
+  retain their actions. A stale prompt cannot activate input. Empty rows in
+  the draft remain editable; no draft text is removed.
+
+  The new keyboard regression fails against the earlier filter and passes
+  with the change. All 700 pinned Agent Shell 0.86.1 integration checks pass
+  from source and compiled code. All 25 graphical input/settings checks pass
+  with source code and installed Agent Shell 0.87.10, and with compiled code
+  and the sibling checkout, now at 0.88.1. The latter also passes all 337
+  applicable Agent Shell batch checks, including binding overlap; nine
+  graphical cases are skipped in that batch run. Shell, prompt and chat
+  implementation paths are verified. The incremental build, byte-code
+  preflight and documentation gate pass. Listening acceptance for the
+  prompt-row activation fix is recorded on 2026-10-20.
+  Commit slice: =Activate Agent Shell input from adjoining blank rows=.
+
+  Blank-line finding: Agent Shell 0.87.10 returns an empty string as context
+  for an empty source line. Its context insertion adds two newline characters
+  before that empty string, leaving two empty rows in the draft. An isolated
+  reproduction confirms this behavior. Chat mode also adds display padding
+  around its label. The activation fix does not change either source of
+  spacing.
+
 - 2026-10-20, follow-up on the 15 unit-test failures: Agent Shell 0.87 batches
   streamed text before rendering. Push completion now flushes that batch
   before collecting the completed answer and starting the next queued turn.

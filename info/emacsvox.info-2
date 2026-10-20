@@ -2428,14 +2428,15 @@ precedence.
 
    With _Explicit_ selected, ‘J’, ‘U’ and the other navigation letters
 keep their navigation meanings at the live prompt.  Press ‘<RET>’ on its
-label or anywhere in the draft to activate editing, or ‘C-c i’
-(‘emacsvox-agent-shell-edit-input’) from anywhere in the shell to focus
-the draft.  From the transcript or prompt label, this moves to the end
-of the draft; within input it preserves point.  By default, Emacsvox
-says “Editing.” Ordinary typing, paste and editing commands then work,
-and submission uses Agent Shell's normal commands.  ‘<RET>’ on links,
-permission buttons and question controls retains its existing action;
-only the inactive live prompt uses it to start editing.
+label, on blank padding immediately above it, or anywhere in the draft
+to activate editing, or ‘C-c i’ (‘emacsvox-agent-shell-edit-input’) from
+anywhere in the shell to focus the draft.  From the transcript or prompt
+label, this moves to the end of the draft; within input it preserves
+point.  By default, Emacsvox says “Editing.” Ordinary typing, paste and
+editing commands then work, and submission uses Agent Shell's normal
+commands.  ‘<RET>’ on links, permission buttons and question controls
+retains its existing action; only the inactive live prompt uses it to
+start editing.
 
    The ‘C-c i’ and ‘C-c e’ bindings apply only to inline shells using
 Explicit activation.  Emacsvox's Org support can assign ‘C-c i’ globally

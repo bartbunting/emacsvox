@@ -8257,8 +8257,8 @@ finds @emph{Agent Shell input activation}. The choice applies to existing and ne
 shells; buffer-local overrides take precedence.
 
 With @emph{Explicit} selected@comma{} @kbd{J}@comma{} @kbd{U} and the other navigation letters keep their
-navigation meanings at the live prompt. Press @kbd{@key{RET}} on its label or anywhere
-in the draft to activate editing@comma{}
+navigation meanings at the live prompt. Press @kbd{@key{RET}} on its label@comma{} on blank
+padding immediately above it@comma{} or anywhere in the draft to activate editing@comma{}
 or @kbd{C-c i} (@code{emacsvox-agent-shell-edit-input}) from anywhere in the shell to
 focus the draft. From the transcript or prompt label@comma{} this moves to the end of the draft;
 within input it preserves point. By default@comma{} Emacsvox says “Editing.”
