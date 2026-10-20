@@ -43,12 +43,13 @@
 
 (defun emacsvox-manual-tests--command (command &rest arguments)
   "Invoke COMMAND with ARGUMENTS and retain its resulting command identity.
-Model the command-loop mark-deactivation boundary, but do not run global hooks.
+Model command-loop undo and mark-deactivation boundaries, without global hooks.
 ARGUMENTS are explicit: this helper does not test interactive prompt parsing."
   (let ((this-command command)
         (real-this-command command)
         (current-prefix-arg nil)
         (deactivate-mark nil))
+    (undo-boundary)
     (prog1 (apply #'funcall-interactively command arguments)
       (when deactivate-mark (deactivate-mark))
       (setq last-command this-command

@@ -229,7 +229,10 @@
   "Report the first non-loopback interface and retain its identity for yanking."
   (let ((kill-ring nil))
     (cl-letf (((symbol-function 'network-interface-list)
-               (lambda () '(("lo" . [127 0 0 1 0]) ("wlan0" . [192 0 2 1 0]))))
+               (lambda (&optional full family)
+                 (should-not full)
+                 (should-not family)
+                 '(("lo" . [127 0 0 1 0]) ("wlan0" . [192 0 2 1 0]))))
               ((symbol-function 'network-interface-info)
                (lambda (device)
                  (should (equal device "wlan0"))

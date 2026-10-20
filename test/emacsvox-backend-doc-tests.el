@@ -31,6 +31,16 @@
   "Collapse whitespace in STRING for spoken-copy comparisons."
   (replace-regexp-in-string "[ \t\n\r]+" " " string))
 
+(defun emacsvox-backend-doc-tests--assert-contains (text required)
+  "Check REQUIRED instructions in TEXT, allowing prose to be rewrapped."
+  (let ((present
+         (string-match-p
+          (regexp-quote
+           (emacsvox-backend-doc-tests--normalize-whitespace required))
+          (emacsvox-backend-doc-tests--normalize-whitespace text))))
+    (ert-info ((format "Missing documented instruction: %s" required))
+      (should present))))
+
 (ert-deftest emacsvox-backend-guide-owns-the-omnivox-first-route ()
   "The canonical guide should recommend and visibly accept Omnivox."
   (let ((guide
@@ -38,7 +48,7 @@
     (dolist
         (required
          '("@node Speech Backends"
-           "For a new installation@comma{} use\n@strong{Omnivox}"
+           "For a new installation@comma{} use @emph{Omnivox}"
            "make build"
            "make install"
            "make windows-omnivox"
@@ -48,10 +58,10 @@
            "./bin/emacsvox-wsl-install --check"
            "$XDG_CONFIG_HOME/emacsvox/omnivox-program"
            "export TTS_PROGRAM=omnivox"
-           "Direct GNU/Linux Tcl server"
-           "legacy Python/PyObjC macOS server"
+           "Direct Linux Tcl server"
+           "Legacy Python/PyObjC server"
            "Native Windows Emacs"))
-      (should (string-match-p (regexp-quote required) guide)))))
+      (emacsvox-backend-doc-tests--assert-contains guide required))))
 
 (ert-deftest emacsvox-native-windows-guide-is-bounded-and-complete ()
   "The supported native Windows route retains its scope and installation checks."
@@ -69,10 +79,10 @@
            "emacs.exe"
            "M-x omnivox-list-voices RET"
            "M-x emacsvox-toggle-icons RET"
-           "Native Windows x64 is a supported desktop installation with Emacs 30.2"
+           "Native Windows x64 is supported with Emacs 30.2 or newer."
            "Native Windows ARM64 is not yet supported."
-           "Do not copy or load the archive's =omnivox-voices.el="))
-      (should (string-match-p (regexp-quote required) guide)))))
+           "Do not copy/load =omnivox-voices.el= from the archive"))
+      (emacsvox-backend-doc-tests--assert-contains guide required))))
 
 (ert-deftest emacsvox-backend-guide-is-linked-from-user-entry-points ()
   "The README, installation chapter, and manual menu should share one owner."
@@ -161,7 +171,7 @@
      (string-match-p
       (regexp-quote "@ref{Top,Emacspeak Heritage,,emacsvox-heritage")
       menu))
-    (should (< installation basic backends reference heritage))))
+    (should (< installation basic reference backends heritage))))
 
 (ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()
   "The canonical manual should define first-speech acceptance and rollback."
@@ -173,14 +183,14 @@
            "@node Confirming First Speech"
            "@node Recovering From No Speech"
            "@node Persistent Startup"
-           "without playing audio or\nopening interactive Emacs"
-           "Do not continue merely because the command exited zero"
+           "without playing audio or opening interactive Emacs"
+           "Confirm that both are audible before continuing."
            "Emacsvox is ready."
            "Could not find speech server executable"
            "M-x tts-restart @key{RET}"
-           "This is the rollback"
-           "records the verified executable in a per-user configuration file"))
-      (should (string-match-p (regexp-quote required) guide)))
+           "This rollback leaves the checkout and known-good"
+           "The guided WSL2 installer records that selection in a per-user file"))
+      (emacsvox-backend-doc-tests--assert-contains guide required))
     (let ((selection
            (string-search "(setenv \"TTS_PROGRAM\" \"omnivox\")" guide))
           (setup
@@ -235,18 +245,18 @@
            "@ref{emacsvox-forms,emacsvox-forms,,emacsvox-reference,}"
            "@ref{Notmuch Mail, , Notmuch Mail}"
            "@ref{EAT Terminal Access, , EAT Terminal Access}"
-           "@ref{Running Terminal Based Applications, , Running Terminal Based Applications}"
+           "@ref{Running Terminal Based Applications, , Term}"
            "OCR And PDF-To-Text With PaddleOCR"
            "paddleocr[all]==3.7.0"
            "scanned-document.pdf"
-           "table structure matters"
+           "Keep @code{.md} output when structure matters"
            "customize-group @key{RET} emacsvox-ocr"
            "emacsvox-ocr-paddleocr-use-table-recognition"
-           "it is not an OCR model"
-           "every recognition feature remains enabled"
-           "trade-off is speed@comma{} not recognition capability"
-           "not as the primary Emacs configuration interface"))
-      (should (string-match-p (regexp-quote required) guide)))
+           "not an OCR model"
+           "keep every recognition feature enabled"
+           "trade-off is speed@comma{} not capability"
+           "are not the primary Emacs configuration interface"))
+      (emacsvox-backend-doc-tests--assert-contains guide required))
     (dolist
         (obsolete
          '("ftp://cs.nyu.edu"

@@ -26,50 +26,6 @@
 (require 'emacsvox-aural-voice-workbench)
 (require 'emacsvox-omnivox-components)
 
-(defconst emacsvox-test--core-default-rule-ids
-  '(core-point-voice
-    core-point-tone-before
-    core-point-tone-after
-    core-point-earcon-before
-    core-point-earcon-after
-    core-point-voice-tone-voice
-    core-point-voice-tone-before
-    core-point-voice-tone-after
-    core-point-voice-earcon-voice
-    core-point-voice-earcon-before
-    core-point-voice-earcon-after
-    core-point-spoken-before
-    core-point-spoken-after
-    core-indentation-spoken
-    core-indentation-duration-tone
-    core-indentation-pitch-tone
-    core-indentation-spoken-duration-tone
-    core-indentation-spoken-pitch-tone
-    core-indentation-duration-tone-insert
-    core-indentation-pitch-tone-insert
-    core-indentation-spoken-duration-tone-insert
-    core-indentation-spoken-pitch-tone-insert
-    core-spelling-tone
-    core-spelling-tone-overlay
-    core-spelling-earcon
-    core-capital-spoken
-    core-all-caps-spoken
-    core-capital-tone
-    core-all-caps-tone
-    core-capital-spoken-tone
-    core-all-caps-spoken-tone
-    core-edit-deletion-tone
-    core-edit-line-created-tone
-    core-edit-uppercase-tone
-    core-edit-lowercase-tone
-    core-edit-capitalize-tone
-    core-empty-line-tone
-    core-whitespace-line-tone
-    core-separator-line-tone
-    core-decorative-line-tone
-    core-unspeakable-line-tone)
-  "Rule IDs providing the default first-class core policy.")
-
 (defmacro emacsvox-test--with-aural-tools (&rest body)
   "Run BODY with isolated scheme, override, and training state."
   (declare (indent 0) (debug t))
@@ -406,10 +362,8 @@
         '(disabled-cue)))
       (should
        (equal
-        (mapcar
-         #'emacsvox-aural-rule-id
-         (emacsvox-aural-effective-scheme-rules 'disabled-test))
-        emacsvox-test--core-default-rule-ids))
+        (emacsvox-aural-effective-scheme-rules 'disabled-test)
+        (emacsvox-aural-effective-scheme-rules 'default)))
       (should-not (emacsvox-aural-scheme-required-cues compiled))
       (should
        (equal

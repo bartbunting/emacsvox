@@ -366,7 +366,9 @@
 
 (ert-deftest emacsvox-eterm-current-guide-owns-the-supported-workflow ()
   "Current Term guidance should be separate from the inherited survey."
-  (let ((guide (emacsvox-test--eterm-file-string "info/emacsvox-body.texi"))
+  (let ((guide (replace-regexp-in-string
+                "[ \t\n\r]+" " "
+                (emacsvox-test--eterm-file-string "info/emacsvox-body.texi")))
         (survey (emacsvox-test--eterm-file-string "info/eterm.texi"))
         (master (emacsvox-test--eterm-file-string "docs/manual/emacsvox.org"))
         (heritage
@@ -390,7 +392,7 @@
     (dolist
         (required
          '("@chapter Term Terminal Access"
-           "prefer @ref{EAT Terminal Access, , EAT Terminal Access}"
+           "@ref{EAT Terminal Access, , EAT Terminal Access} provides the richer"
            "@kbd{M-x term @key{RET}}"
            "fill the frame"
            "@kbd{C-c C-j}"
@@ -399,11 +401,14 @@
            "@kbd{C-t C-t}"
            "@code{emacsvox-eterm-autospeak}"
            "@kbd{C-t C-q}"
-           "The older spelling\n@code{eterm-autospeak} is not an Emacsvox variable"
-           "hidden Term buffer can continue running without speaking"
+           "The older spelling @code{eterm-autospeak} is not an Emacsvox variable"
+           "must be displayed in a live window for automatic output speech"
+           "A hidden buffer can keep running silently."
            "@kbd{C-t q}"
            "@ref{emacsvox-eterm,emacsvox-eterm,,emacsvox-reference,}"))
-      (should (string-match-p (regexp-quote required) guide)))
+      (let ((present (string-match-p (regexp-quote required) guide)))
+        (ert-info ((format "Missing Term instruction: %s" required))
+          (should present))))
     (should-not
      (string-match-p
       (regexp-quote
@@ -416,7 +421,7 @@
     (dolist
         (reference
          '("@ref{EAT Terminal Access, , EAT Terminal Access}"
-           "@ref{Running Terminal Based Applications, , Running Terminal Based Applications}"))
+           "@ref{Running Terminal Based Applications, , Term}"))
       (should (string-match-p (regexp-quote reference) applications)))))
 
 (ert-deftest emacsvox-eterm-current-guide-keys-match-live-maps ()
