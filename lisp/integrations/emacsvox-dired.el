@@ -1141,7 +1141,7 @@ On a directory line, run du -s on the directory to speak its size."
    (emacsvox-dired--line-content)
    '(:role filesystem-listing
      :events (filesystem-listing-opened))
-   'state-change 'open-object 'after nil 'replaceable 'lane))
+   'state-change 'open-object 'before nil 'replaceable 'lane))
 (load "locate" t t)
 
 (cl-declaim (special locate-mode-map))

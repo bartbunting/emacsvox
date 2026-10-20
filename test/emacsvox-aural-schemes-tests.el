@@ -195,6 +195,52 @@
        '(:line-condition empty)
        '(:mode text-mode :occasion navigation))))))
 
+(ert-deftest emacsvox-aural-workflow-cues-overlap-content ()
+  "Navigation, edit and result cues compile at speech onset without waiting."
+  (require 'emacsvox-aural-provider-org)
+  (require 'emacsvox-aural-provider-org-srs)
+  (require 'emacsvox-aural-provider-workflows)
+  (require 'emacsvox-aural-compiler)
+  (emacsvox-test--with-isolated-schemes
+    (emacsvox-org-register-aural-presentation)
+    (emacsvox-org-srs-register-aural-presentation)
+    (emacsvox-aural-register-workflow-provider)
+    (dolist
+        (case
+         '((org edit (:role heading) open-object)
+           (python navigation
+            (:role code-construct :events (boundary-entered)) paragraph)
+           (python edit
+            (:role code-construct :events (object-changed)
+             :code-edit-kind dedent-line) left)
+           (notmuch navigation
+            (:role message :states (has-attachments))
+            mail-has-attachment mail-message-status-cues)
+           (magit state-change
+            (:role vcs-section :events (visibility-changed) :visibility folded)
+            close-object magit-section-visibility-cues)
+           (magit state-change
+            (:role vcs-section :events (visibility-changed) :visibility expanded)
+            open-object magit-section-visibility-cues)
+           (org-srs notification
+            (:role learning-session :events (learning-session-finished)) task-done)
+           (org-srs notification
+            (:role learning-session :events (learning-session-stopped)) close-object)))
+      (pcase-let ((`(,module ,occasion ,facts ,cue . ,fragments) case))
+        (ert-info ((format "%s %s %S" module occasion facts))
+          (let* ((emacsvox-aural-enabled-feature-fragments fragments)
+                 (emacsvox-aural--effective-assets-cache
+                  (make-hash-table :test #'equal))
+                 (context (list :module module :occasion occasion :icons-enabled t))
+                 (plan (emacsvox-aural-resolve-active facts context))
+                 (compiled (emacsvox-aural-compile-plan plan facts context))
+                 (actions (emacsvox-aural-concrete-plan-before compiled)))
+            (should (equal (mapcar #'emacsvox-aural-concrete-action-cue actions)
+                           (list cue)))
+            (should-not (emacsvox-aural-concrete-plan-after compiled))
+            (should (eq (emacsvox-aural-concrete-action-audio-mode (car actions))
+                        'overlay))))))))
+
 (ert-deftest emacsvox-aural-default-scheme-presents-point-modalities ()
   "Point styles select voice, tone, earcon, speech, or personal policy."
   (emacsvox-test--with-isolated-schemes

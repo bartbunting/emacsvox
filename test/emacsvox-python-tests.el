@@ -504,7 +504,7 @@
       (should (= ems--speak-max-length 8)))))
 
 (ert-deftest emacsvox-python-navigation-native-submission-presents-once ()
-  "Python line speech and its trailing cue form one native transaction."
+  "Python line speech and its overlapping cue form one native transaction."
   (dolist (icons-enabled '(t nil))
     (with-temp-buffer
       (insert (propertize "value = 1" 'personality 'voice-lighten))
@@ -553,7 +553,7 @@
          (equal
           (nreverse events)
           (if icons-enabled
-              '((text "value = 1") cue)
+              '(cue (text "value = 1"))
             '((text "value = 1")))))
         (should (= (length emacsvox-aural-presentation-history) 1))
         (should
@@ -572,12 +572,12 @@
             (plist-get facts :events)
             '(boundary-entered focus-entered)))
           (should (eq (plist-get facts :syntax-role) 'statement))
-          (should-not (emacsvox-aural-concrete-plan-before plan))
+          (should-not (emacsvox-aural-concrete-plan-after plan))
           (should
            (equal
             (mapcar
              #'emacsvox-aural-concrete-action-cue
-             (emacsvox-aural-concrete-plan-after plan))
+             (emacsvox-aural-concrete-plan-before plan))
             (and icons-enabled '(paragraph))))
           (should
            (eq
@@ -634,7 +634,7 @@
            (apply
             #'append
             (mapcar #'emacsvox-aural-concrete-plan-before plans)))
-          '(item)))
+          '(item paragraph)))
         (should
          (equal
           (mapcar
@@ -642,7 +642,7 @@
            (apply
             #'append
             (mapcar #'emacsvox-aural-concrete-plan-after plans)))
-          '(paragraph))))
+          nil)))
       (should
        (eq
         (emacsvox-aural-concrete-content-voice-request
@@ -763,7 +763,7 @@
           state-change (progress) nil)
          ((:role code-construct :events (object-changed)
            :syntax-role indentation :code-edit-kind dedent-line)
-          edit nil (left))
+          edit (left) nil)
          ((:role code-construct :events (object-changed)
            :syntax-role paragraph :code-edit-kind fill-paragraph)
           edit (fill-object) nil)

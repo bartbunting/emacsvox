@@ -1998,7 +1998,7 @@
       (should
        (eq
         (emacsvox-aural-compatibility-action-phase action)
-        'after)))))
+        'before)))))
 
 (ert-deftest emacsvox-org-return-reports-a-real-table-move-once ()
   "The table command called by `org-return' owns its one cell announcement."
@@ -2144,7 +2144,7 @@
       (should
        (eq
         (emacsvox-aural-compatibility-action-phase action)
-        'after)))))
+        'before)))))
 
 (ert-deftest emacsvox-org-generic-end-of-line-delegates-in-org-mode ()
   "Interactive generic line movement invokes Org's line endpoint logic."
@@ -2176,7 +2176,7 @@
       (should
        (eq
         (emacsvox-aural-compatibility-action-phase action)
-        'after)))))
+        'before)))))
 
 (ert-deftest emacsvox-org-source-edit-feedback-is-target-aware ()
   "Only the matching source edit command reports its window transition."

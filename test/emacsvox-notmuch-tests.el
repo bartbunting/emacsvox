@@ -845,8 +845,8 @@ Return the beginning of the inserted row."
        actions)
       '(mail-replied mail-forwarded)))))
 
-(ert-deftest emacsvox-notmuch-attachment-cue-follows-message-content ()
-  "The compatibility path places one attachment cue after the message."
+(ert-deftest emacsvox-notmuch-attachment-cue-overlaps-message-content ()
+  "The compatibility path places one attachment cue alongside the message."
   (let* ((emacsvox-aural-enabled-feature-fragments nil)
          (actions
           (emacsvox-notmuch--status-compatibility-actions
@@ -860,7 +860,7 @@ Return the beginning of the inserted row."
     (should
      (eq
       (emacsvox-aural-compatibility-action-phase (car actions))
-      'after))))
+      'before))))
 
 (ert-deftest emacsvox-notmuch-inspection-retains-compatibility-status-cues ()
   "Navigation-only semantic rules do not silence inspection feedback."
@@ -880,7 +880,7 @@ Return the beginning of the inserted row."
        actions)
       '((mail-unread before)
         (mark-object before)
-        (mail-has-attachment after))))))
+        (mail-has-attachment before))))))
 
 (ert-deftest emacsvox-notmuch-boundary-feedback-uses-one-native-submission ()
   "A search boundary carries its cue and semantics in one submission."
@@ -1082,11 +1082,9 @@ Return the beginning of the inserted row."
         '(workflow-mail-unread-cue
           workflow-mail-replied-cue
           workflow-mail-forwarded-cue
-          workflow-mail-flagged-cue)))
-      (should
-       (equal
-        (cadddr (car (last traces)))
-        '(workflow-mail-attachments-cue)))
+          workflow-mail-flagged-cue
+          workflow-mail-attachments-cue)))
+      (should-not after)
       (should (= (length separators) 5))
       (dolist (separator separators)
         (should (equal (cddr separator) '(nil nil))))
@@ -1100,7 +1098,7 @@ Return the beginning of the inserted row."
       (should (= (cl-count 'workflow-mail-replied-cue before) 1))
       (should (= (cl-count 'workflow-mail-forwarded-cue before) 1))
       (should (= (cl-count 'workflow-mail-flagged-cue before) 1))
-      (should (= (cl-count 'workflow-mail-attachments-cue after) 1)))))
+      (should (= (cl-count 'workflow-mail-attachments-cue before) 1)))))
 
 (ert-deftest emacsvox-notmuch-search-result-fields-are-configurable ()
   "Search-result fields can be reordered and omitted."
@@ -2331,7 +2329,7 @@ Return the beginning of the inserted row."
         '((open-object before)
           (mail-unread before)
           (mark-object before)
-          (mail-has-attachment after)))))))
+          (mail-has-attachment before)))))))
 
 (ert-deftest emacsvox-notmuch-body-position-keeps-attachment-fallback ()
   "An attachment-only message selects its actionable leaf-part button."
@@ -3323,7 +3321,7 @@ Return the beginning of the inserted row."
          actions)
         '((deselect-object before)
           (mark-object before)
-          (mail-has-attachment after)))))))
+          (mail-has-attachment before)))))))
 
 (ert-deftest emacsvox-notmuch-tag-menu-reports-structured-difference ()
   "The common tag menu reports changes made by its nested tag command."

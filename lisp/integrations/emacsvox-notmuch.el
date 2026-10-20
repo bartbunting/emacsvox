@@ -659,8 +659,8 @@ DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
   "Return ordered status adapters present in Notmuch RESULT.
 
 STATUS-ICONS maps tags to compatibility cues.  OCCASION identifies the
-presentation being prepared.  When INCLUDE-ATTACHMENTS is non-nil, append an
-after-content attachment cue when RESULT contains a named MIME attachment."
+presentation being prepared.  When INCLUDE-ATTACHMENTS is non-nil and RESULT
+contains a named MIME attachment, add an attachment cue alongside speech."
   (let* ((tags (plist-get result :tags))
          (semantic-navigation
           (and
@@ -694,7 +694,7 @@ after-content attachment cue when RESULT contains a named MIME attachment."
         actions
         (list
          (emacsvox-aural-compatibility-icon
-          'mail-has-attachment 'after)))))
+          'mail-has-attachment)))))
     actions))
 
 ;;;  Show Messages:

@@ -334,7 +334,7 @@ compatibility ICON."
 
 Return the heading facts when point is on a heading, or nil after using the
 ordinary compatibility path for any other Org line.  ACTION describes the
-operation, and FALLBACK-ICON follows a non-heading line."
+operation, and FALLBACK-ICON plays alongside a non-heading line."
   (let ((facts (emacsvox-org-heading-facts event action)))
     (when facts
       (emacsvox-org-refresh-aural-heading))
@@ -345,8 +345,7 @@ operation, and FALLBACK-ICON follows a non-heading line."
       (emacsvox-org--feedback-facts
        'org-content event action))
      occasion
-     (unless facts fallback-icon)
-     'after)
+     (unless facts fallback-icon))
     facts))
 
 (add-hook 'org-mode-hook #'emacsvox-org-enable-aural-annotations)
@@ -798,7 +797,7 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
           (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-content 'object-changed 'subtree-changed)
-          'edit 'yank-object 'after)))
+          'edit 'yank-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -1306,7 +1305,7 @@ FALLBACK is used when neither provides useful content."
        (emacsvox-org--line-content)
        (emacsvox-org--feedback-facts
         'org-content 'object-changed 'line-inserted)
-       'edit 'select-object 'after)))))
+       'edit 'select-object)))))
 
 (advice-add
  'org-return :after #'emacsvox--advice-org-return-after
@@ -1421,7 +1420,7 @@ FALLBACK is used when neither provides useful content."
           (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-item 'focus-entered 'item-boundary)
-          'navigation 'select-object 'after)))
+          'navigation 'select-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -1432,7 +1431,7 @@ FALLBACK is used when neither provides useful content."
      (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-content 'focus-entered 'line-start)
-     'navigation 'left 'after)))
+     'navigation 'left)))
 
 (advice-add
  'org-beginning-of-line :after
@@ -1446,7 +1445,7 @@ FALLBACK is used when neither provides useful content."
      (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-content 'focus-entered 'line-end)
-     'navigation 'right 'after)))
+     'navigation 'right)))
 
 (advice-add
  'org-end-of-line :after #'emacsvox--advice-org-end-of-line-after
@@ -2445,7 +2444,7 @@ Use optional compatibility ICON before the line."
    (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-item 'object-changed 'list-item-created)
-   'edit 'item 'after))
+   'edit 'item))
 
 (defun tvr-org-enumerate ()
   "Start a numbered  list."
@@ -2456,7 +2455,7 @@ Use optional compatibility ICON before the line."
    (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-item 'object-changed 'list-item-created)
-   'edit 'item 'after))
+   'edit 'item))
 
 (defun tvr-org-alphabetize ()
   "Start an alphabetized   list."
@@ -2467,7 +2466,7 @@ Use optional compatibility ICON before the line."
    (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-item 'object-changed 'list-item-created)
-   'edit 'item 'after))
+   'edit 'item))
 
 ;;;  specialized input buffers:
 

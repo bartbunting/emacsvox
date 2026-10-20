@@ -672,7 +672,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
       (emacsvox-magit-section-facts
        target section 'visibility-changed (if hidden 'folded 'expanded))
       (list :vcs-operation target))
-     'state-change (if hidden 'close-object 'open-object) 'after)))
+     'state-change (if hidden 'close-object 'open-object))))
 
 (defconst emacsvox-magit--show-targets
   '(magit-section-show-children
@@ -760,8 +760,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
          'magit-mouse-toggle-section
          section
          'visibility-changed
-         (if hidden-after 'folded 'expanded)
-         t))
+         (if hidden-after 'folded 'expanded)))
       result)))
 
 (cl-loop
@@ -777,7 +776,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
          (emacsvox-magit-present-line
           (if hidden 'close-object 'open-object)
           'state-change ',target section
-          'visibility-changed visibility t))))))
+          'visibility-changed visibility))))))
 
 ;;; blob mode:
 
@@ -949,7 +948,7 @@ Magit's remote input path can finish waiting as soon as a process exits."
 
 (defun emacsvox-magit-blame-speak (&optional movement-icon)
   "Summarize the current blame chunk.
-Present optional MOVEMENT-ICON after the chunk."
+Present optional MOVEMENT-ICON alongside the chunk."
   (let ((content (emacsvox-magit--blame-content))
         (facts (emacsvox-magit-blame-facts 'focus-entered)))
     (if (> (length content) 0)
@@ -964,7 +963,7 @@ Present optional MOVEMENT-ICON after the chunk."
           (when movement-icon
             (list
              (emacsvox-aural-compatibility-icon
-              movement-icon 'after)))))
+              movement-icon)))))
       (apply
        #'emacsvox-magit--submit-actions
        facts 'navigation

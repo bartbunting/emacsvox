@@ -201,7 +201,7 @@
          (:role learning-session :module org-srs
           :event learning-session-finished)
          :render
-         (:after
+         (:before
           ((:id org-srs-finished-cue-action
             :kind cue :cue task-done))))
         (:id org-srs-stopped-cue
@@ -209,7 +209,7 @@
          (:role learning-session :module org-srs
           :event learning-session-stopped)
          :render
-         (:after
+         (:before
           ((:id org-srs-stopped-cue-action
             :kind cue :cue close-object))))))
      :source "emacsvox-aural-provider-org-srs")))

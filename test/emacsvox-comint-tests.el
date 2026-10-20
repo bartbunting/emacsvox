@@ -156,10 +156,10 @@
     (should
      (equal
       (nreverse events)
-      '((line item after))))))
+      '((line item before))))))
 
 (ert-deftest emacsvox-comint-navigation-has-one-semantic-boundary ()
-  "Shell command navigation preserves speech-first order in one transaction."
+  "Shell command navigation queues its cue alongside speech in one transaction."
   (with-temp-buffer
     (shell-mode)
     (let ((ems--interactive-fn-name 'shell-forward-command)
@@ -203,14 +203,14 @@
       (should
        (equal
         (nreverse events)
-        '((line nil ((item after)))))))))
+        '((line nil ((item before)))))))))
 
 (ert-deftest emacsvox-comint-history-navigation-keeps-line-cue-phases ()
   "History line cues enter the same physical-line submission in order."
   (dolist
       (case
        '((comint-history-isearch-backward select-object before)
-         (comint-next-matching-input-from-input select-object after)
+         (comint-next-matching-input-from-input select-object before)
          (comint-get-next-from-history item before)))
     (pcase-let ((`(,target ,icon ,phase) case))
       (let ((ems--interactive-fn-name target)
@@ -293,7 +293,7 @@
             (cadddr events)))
         (should (eq occasion 'navigation))
         (should (eq icon 'item))
-        (should (eq phase 'after))
+        (should (eq phase 'before))
         (should (= argument 1))
         (should-not messages-inhibited)
         (should speak-messages)
@@ -341,8 +341,8 @@
   "Navigation cues enter the same physical-line submission in order."
   (dolist
       (case
-       '((comint-show-maximum-output scroll after nil output-navigation)
-         (comint-bol-or-process-mark select-object after nil input-boundary)
+       '((comint-show-maximum-output scroll before nil output-navigation)
+         (comint-bol-or-process-mark select-object before nil input-boundary)
          (comint-previous-prompt item before 1 prompt-navigation)
          (comint-next-prompt item before 1 prompt-navigation)))
     (pcase-let ((`(,target ,icon ,phase ,argument ,operation) case))

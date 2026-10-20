@@ -223,6 +223,26 @@
     (emacsvox-test--dired-feedback 'locate)
     '((icon open-object) speak-dired-line))))
 
+(ert-deftest emacsvox-dired-locate-cue-overlaps-results ()
+  "Both Locate entry points submit their result line with an overlapping cue."
+  (dolist (target '(locate locate-with-filter))
+    (with-temp-buffer
+      (insert "/tmp/result.txt")
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name target)
+            submission)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (content &rest arguments)
+                     (setq submission (cons content arguments)))))
+          (funcall (emacsvox-test--dired-advice-function target)))
+        (should (equal (car submission) "/tmp/result.txt"))
+        (let ((actions (plist-get (cdr submission) :compatibility-actions)))
+          (should (= (length actions) 1))
+          (should (eq (emacsvox-aural-compatibility-action-value (car actions))
+                      'open-object))
+          (should (eq (emacsvox-aural-compatibility-action-phase (car actions))
+                      'before)))))))
+
 (ert-deftest emacsvox-dired-listing-open-is-one-native-submission ()
   "Opening Dired submits its summary, listing facts, and cue together."
   (let ((ems--interactive-fn-name 'dired)

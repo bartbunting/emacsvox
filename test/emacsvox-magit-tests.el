@@ -1333,22 +1333,22 @@
         '(:role vcs-section :section-kind file
           :events (visibility-changed)
           :visibility expanded)
-        'state-change 'open-object 'after)))
+        'state-change 'open-object)))
     (let* ((plans (emacsvox-aural-submission-plans submission))
            (plan (car plans)))
       (should (= (length plans) 1))
-      (should-not (emacsvox-aural-concrete-plan-before plan))
+      (should-not (emacsvox-aural-concrete-plan-after plan))
       (should
        (equal
         (mapcar
          #'emacsvox-aural-concrete-action-id
-         (emacsvox-aural-concrete-plan-after plan))
+         (emacsvox-aural-concrete-plan-before plan))
         '(workflow-magit-section-expanded-cue)))
       (should
        (equal
         (mapcar
          #'emacsvox-aural-concrete-action-cue
-         (emacsvox-aural-concrete-plan-after plan))
+         (emacsvox-aural-concrete-plan-before plan))
         '(open-object))))))
 
 (ert-deftest emacsvox-magit-destination-command-presents-selected-buffer ()
@@ -1729,7 +1729,7 @@
           '(select-object)))))))
 
 (ert-deftest emacsvox-magit-blame-navigation-uses-one-native-submission ()
-  "Blame content and its before/after cues are submitted together."
+  "Blame content and its overlapping cues are submitted together."
   (with-temp-buffer
     (insert
      (propertize
@@ -1770,10 +1770,10 @@
          (equal
           (mapcar
            #'emacsvox-aural-compatibility-action-phase actions)
-          '(before after)))))))
+          '(before before)))))))
 
-(ert-deftest emacsvox-magit-blame-advice-adds-movement-after-content ()
-  "Interactive blame navigation requests one trailing movement cue."
+(ert-deftest emacsvox-magit-blame-advice-adds-movement-cue ()
+  "Interactive blame navigation requests one movement cue."
   (let ((ems--interactive-fn-name
          'magit-blame-next-chunk-same-commit)
         calls)
@@ -1858,7 +1858,7 @@
              (equal
               (nreverse events)
               (if icons-enabled
-                  '(cue (text "deadbeef") cue)
+                  '(cue cue (text "deadbeef"))
                 '((text "deadbeef")))))
             (should (= (length emacsvox-aural-presentation-history) 1))
             (should
@@ -1889,13 +1889,13 @@
                 (mapcar
                  #'emacsvox-aural-concrete-action-cue
                  (emacsvox-aural-concrete-plan-before plan))
-                (and icons-enabled '(left))))
+                (and icons-enabled '(left large-movement))))
               (should
                (equal
                 (mapcar
                  #'emacsvox-aural-concrete-action-cue
                  (emacsvox-aural-concrete-plan-after plan))
-                (and icons-enabled '(large-movement))))
+                nil))
               (should
                (eq
                 (emacsvox-aural-concrete-content-voice-request content)

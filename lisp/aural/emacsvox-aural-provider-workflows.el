@@ -1225,7 +1225,7 @@
        (:role code-construct :module python :event boundary-entered
         :occasion navigation)
        :render
-       (:after
+       (:before
         ((:id python-navigation-boundary-cue-action
           :kind cue :cue paragraph))))
       (:id python-dedent-line-cue
@@ -1233,7 +1233,7 @@
        (:role code-construct :module python :event object-changed
         :code-edit-kind dedent-line :occasion edit)
        :render
-       (:after
+       (:before
         ((:id python-dedent-line-cue-action :kind cue :cue left))))
       (:id python-shift-left-cue
        :match
@@ -1567,7 +1567,7 @@
       (:id workflow-mail-attachments
        :match (:role message :state has-attachments :occasion navigation)
        :render
-       (:after
+       (:before
         (:append
          ((:id workflow-mail-attachments-cue
            :kind cue :cue mail-has-attachment)))))))
@@ -1609,7 +1609,7 @@
        (:role vcs-section :module magit :event visibility-changed
         :visibility folded :occasion state-change)
        :render
-       (:after
+       (:before
         (:append
          ((:id workflow-magit-section-folded-cue
            :kind cue :cue close-object)))))
@@ -1618,7 +1618,7 @@
        (:role vcs-section :module magit :event visibility-changed
         :visibility expanded :occasion state-change)
        :render
-       (:after
+       (:before
         (:append
          ((:id workflow-magit-section-expanded-cue
            :kind cue :cue open-object)))))

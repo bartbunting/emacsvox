@@ -283,7 +283,7 @@
         (:id org-heading-edit-compatibility
          :match (:role heading :module org :occasion edit)
          :render
-         (:after
+         (:before
           ((:id org-heading-edit-open
             :kind cue
             :cue open-object))))))

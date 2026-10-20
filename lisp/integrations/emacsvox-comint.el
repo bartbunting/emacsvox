@@ -716,7 +716,7 @@ events.  Carriage-return chunks replace pending progress output."
             (emacsvox-comint-facts
              'command-input 'focus-entered 'history-navigation
              '(:command-input-origin history))
-            'navigation 'select-object 'after 1))))
+            'navigation 'select-object 'before 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -736,7 +736,7 @@ events.  Carriage-return chunks replace pending progress output."
             (emacsvox-comint-facts
              'command-input 'focus-entered 'command-navigation
              '(:command-input-origin current))
-            'navigation 'item 'after))))
+            'navigation 'item 'before))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -762,7 +762,7 @@ events.  Carriage-return chunks replace pending progress output."
       (emacsvox-comint--present-line-feedback
        (emacsvox-comint-facts
         'command-output 'focus-entered 'output-navigation)
-       'navigation 'scroll 'after))))
+       'navigation 'scroll 'before))))
 
 (advice-add
  'comint-show-maximum-output :after
@@ -777,7 +777,7 @@ events.  Carriage-return chunks replace pending progress output."
        (emacsvox-comint-facts
         'command-input 'focus-entered 'input-boundary
         '(:command-input-origin current))
-       'navigation 'select-object 'after))))
+       'navigation 'select-object 'before))))
 
 (advice-add
  'comint-bol-or-process-mark :after
@@ -924,7 +924,7 @@ Routine Comint history-position messages are silenced while ORIGINAL runs."
                (emacsvox-comint-facts
                 'command-input 'focus-entered 'history-navigation
                 '(:command-input-origin history))
-               'navigation 'item 'after 1)))
+               'navigation 'item 'before 1)))
            result)))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
