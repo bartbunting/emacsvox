@@ -179,12 +179,25 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
 
 (defun emacsvox-agent-shell--input-post-command ()
   "Return to browsing when editing navigation leaves the live input."
-  (when (and emacsvox-agent-shell--input-active
-             emacsvox-agent-shell--input-editing
-             (not (agent-shell--point-in-live-input-p)))
-    ;; Navigation already speaks the destination.  Do not replace it.
-    (setq emacsvox-agent-shell--input-editing nil))
-  (emacsvox-agent-shell--input-sync))
+  (let ((left-input
+         (and emacsvox-agent-shell--input-active
+              emacsvox-agent-shell--input-editing
+              (not (agent-shell--point-in-live-input-p)))))
+    (when left-input
+      (setq emacsvox-agent-shell--input-editing nil))
+    (emacsvox-agent-shell--input-sync)
+    (when (and left-input
+               (memq emacsvox-agent-shell-input-state-feedback '(earcon both)))
+      ;; Navigation already speaks the destination on the main lane.
+      ;; Signal the boundary separately without replacing or stopping it.
+      (emacsvox-aural-submit-actions
+       :facts (emacsvox-agent-shell--presentation-facts
+               'agent-prompt-editor 'agent-input-state-changed nil
+               '(:agent-input-state browsing))
+       :module 'agent-shell :occasion 'state-change
+       :lane 'notification :delivery-policy 'ordered :interruption-policy 'none
+       :compatibility-actions
+       (list (emacsvox-aural-compatibility-icon 'agent-input-off))))))
 
 (defun emacsvox-agent-shell--input-typing-p (typing)
   "Keep upstream character TYPING only while input is editable."

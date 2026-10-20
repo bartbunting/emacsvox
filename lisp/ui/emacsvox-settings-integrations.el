@@ -703,7 +703,7 @@ Numeric controls accept positive integers or none.")
          ('emacsvox-info-select-node-speak-chunk
           "This controls automatic speech after interactive Info node navigation. Screenful starts at point and uses the window height; it is not restricted to the visible text. Changing this default does not read the current node. Buffer-local settings take precedence.")
          ('emacsvox-agent-shell-input-state-feedback
-          "This controls feedback when activating inline editing or explicitly returning to browsing. Editing uses agent-input-on; browsing uses agent-input-off. The bundled sounds are 08-pop-and-collapse-on and 08-pop-and-collapse-off. Earcons require auditory icons to be enabled. Submission confirmations and prompt reading remain separate. The global default applies immediately; buffer-local overrides take precedence.")
+          "This controls feedback when activating inline editing or returning to browsing. Editing uses agent-input-on; browsing uses agent-input-off. The bundled sounds are 08-pop-and-collapse-on and 08-pop-and-collapse-off. With Earcon or Both selected, moving out of input plays the browsing sound without replacing destination speech. Movement within input keeps editing active. Earcons require auditory icons to be enabled. Submission confirmations and prompt reading remain separate. The global default applies immediately; buffer-local overrides take precedence.")
          ('emacsvox-agent-shell-input-activation
           "Automatic preserves ordinary inline prompt editing. Explicit keeps navigation letters active at the prompt: RET there or C-c i starts editing; C-c e returns to browsing and preserves your draft. Leaving input or submitting it also returns to browsing. The choice applies to existing and new shells; buffer-local overrides take precedence. Dedicated viewport editors keep normal editing. Browse mode protects the draft from typing and ordinary paste; incoming output and inserted source context can still arrive.")
          ('emacsvox-notmuch-search-completion-style
@@ -867,8 +867,10 @@ Viewport editors retain normal editing. Use w to save for future sessions."
 (defun emacsvox-settings-integrations--agent-input-feedback ()
   "Choose speech, an earcon, or both for inline Editing and Browsing feedback.
 Editing uses agent-input-on; browsing uses agent-input-off. Earcons require auditory
-icons to be enabled. Submission confirmations remain separate. The global
-default applies immediately; local overrides take precedence. Use w to save."
+icons to be enabled. With Earcon or Both, moving out of input plays the browsing
+sound while preserving destination speech. Submission confirmations remain
+separate. The global default applies immediately; local overrides take
+precedence. Use w to save."
   (interactive)
   (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-input-feedback))
 

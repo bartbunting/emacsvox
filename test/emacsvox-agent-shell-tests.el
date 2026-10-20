@@ -10405,6 +10405,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (setq-local comint-last-output-start (copy-marker (point)))
      (setq-local shell-maker--config
                  (agent-shell--make-shell-maker-config :prompt "Test> "))
+     (setq-local comint-prompt-regexp "^Test> ")
      (let ((start (point)))
        (insert (propertize "Test> " 'field 'prompt))
        (setq-local comint-last-prompt
@@ -10500,7 +10501,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not buffer-read-only)
           (should (equal draft (buffer-string)))
           (emacsvox-agent-shell-test--capture-events
-            (execute-kbd-macro (kbd "C-/")))
+            (execute-kbd-macro (kbd "C-x u")))
           (should (equal (buffer-string) (substring draft 0 -1))))))))
 
 (ert-deftest emacsvox-agent-shell-explicit-input-prompt-label ()
@@ -10790,6 +10791,43 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal draft (agent-shell--prompt-input)))
       (should buffer-read-only)
       (should-not emacsvox-agent-shell--input-editing))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-arrow-exit-cue ()
+  "Arrowing out cues browsing once without replacing destination speech."
+  (dolist (style '(speech earcon both))
+    (emacsvox-agent-shell-test--with-explicit-input
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (goto-char (point-min))
+          (insert-before-markers "Previous response\n\n")))
+      (setq-local emacsvox-agent-shell-input-state-feedback style)
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "RET")))
+      (let* ((draft (agent-shell--prompt-input))
+             submissions
+             (events
+              (emacsvox-agent-shell-test--capture-events
+                (let ((submit (symbol-function 'emacsvox-aural-submit-actions)))
+                  (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                             (lambda (&rest arguments)
+                               (push arguments submissions)
+                               (apply submit arguments))))
+                    (execute-kbd-macro (kbd "<up>"))
+                    (should emacsvox-agent-shell--input-editing)
+                    (should-not submissions)
+                    (execute-kbd-macro (kbd "<up>"))
+                    (should-not emacsvox-agent-shell--input-editing)
+                    ;; Further navigation must not repeat the exit cue.
+                    (execute-kbd-macro (kbd "<down>")))))))
+        (should buffer-read-only)
+        (should (equal draft (agent-shell--prompt-input)))
+        (should-not (member '(speak "Browsing") events))
+        (should (= (cl-count '(icon agent-input-off) events :test #'equal)
+                   (if (memq style '(earcon both)) 1 0)))
+        (dolist (submission submissions)
+          (should (eq (plist-get submission :lane) 'notification))
+          (should (eq (plist-get submission :interruption-policy) 'none))
+          (should (eq (plist-get submission :delivery-policy) 'ordered)))))))
 
 (ert-deftest emacsvox-agent-shell-explicit-input-compose-transfers-draft ()
   "Opening the dedicated editor transfers a protected draft without sending it."
