@@ -1102,8 +1102,9 @@ one lands on the next real character in DIRECTION."
 
 ORIGINAL-FUNCTION receives ARGUMENTS when motion does not cross a prompt
 boundary.  NOMINAL-DIRECTION is the positive-argument direction of the
-advised command.  Live input boundaries remain semantic, while display-only
-chat source is crossed as one unit before core character speech runs."
+advised command.  Input boundaries apply only while editing; browsing can
+cross them.  Display-only chat source is crossed as one unit before core
+character speech runs."
   (let* ((target ems--interactive-fn-name)
          (interactive-p
           (memq target '(left-char right-char backward-char forward-char)))
@@ -1115,6 +1116,7 @@ chat source is crossed as one unit before core character speech runs."
          (steps (abs count))
          (bounds (and interactive-p
                       (> steps 0)
+                      (not (emacsvox-agent-shell--input-browsing-p))
                       (emacsvox-agent-shell--live-input-bounds)))
          (start (car-safe bounds))
          (end (cdr-safe bounds))
@@ -1160,13 +1162,13 @@ chat source is crossed as one unit before core character speech runs."
 
 (defun emacsvox-agent-shell--backward-char-around
     (original-function &rest arguments)
-  "Keep interactive backward character motion inside live prompt input."
+  "Normalize backward character motion, protecting input edges while editing."
   (emacsvox-agent-shell--horizontal-motion-around
    original-function 'backward arguments))
 
 (defun emacsvox-agent-shell--forward-char-around
     (original-function &rest arguments)
-  "Keep interactive forward character motion inside live prompt input."
+  "Normalize forward character motion, protecting input edges while editing."
   (emacsvox-agent-shell--horizontal-motion-around
    original-function 'forward arguments))
 

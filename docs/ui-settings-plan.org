@@ -3027,6 +3027,23 @@ verification of subsequently changed code.
   pass. Help and the maintained guide describe the boundary cue. Listening
   acceptance remains pending. Committed in =b93c75246=.
 
+- 2026-10-20, Agent Shell horizontal browsing: the live-input character guard
+  also ran in browse mode, trapping Left and =C-b= at the prompt and replacing
+  buffer-end feedback with “End of input.” Browsing now bypasses that guard:
+  backward motion crosses into the transcript, skipping hidden prompt source,
+  and forward motion uses ordinary buffer-end behavior. Editing retains its
+  input boundaries; browsing still protects the draft from changes.
+
+  The keyboard regression reproduces the old trap. It covers Left, Right,
+  =C-b= and =C-f= with empty and nonempty drafts, both browsing and editing.
+  All 699 pinned Agent Shell 0.86.1 integration checks pass from source and
+  compiled code. All 24 graphical input/settings checks pass from source and
+  compiled code with the Agent Shell 0.87.10 checkout; loaded paths are
+  verified. The incremental build, byte-code preflight and documentation gate
+  pass. Listening acceptance remains pending. Restart the normal profile to
+  try the fix; no live session was reloaded.
+  Commit slice: =Let Agent Shell browsing cross input boundaries=.
+
 - 2026-10-20, follow-up on the 15 unit-test failures: Agent Shell 0.87 batches
   streamed text before rendering. Push completion now flushes that batch
   before collecting the completed answer and starting the next queued turn.

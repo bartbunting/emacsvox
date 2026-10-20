@@ -10534,6 +10534,61 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not (agent-shell--prompt-input-start))
           (should-not (eq (key-binding (kbd key)) 'emacsvox-agent-shell-edit-input)))))))
 
+(ert-deftest emacsvox-agent-shell-explicit-input-horizontal-boundaries ()
+  "Browsing crosses the input start and uses ordinary buffer-end feedback."
+  (require 'agent-shell-chat-mode)
+  (dolist (draft '("" "draft"))
+    (save-window-excursion
+      (with-temp-buffer
+        (let* ((bounds (emacsvox-agent-shell-test--insert-live-chat-input draft))
+               (start (car bounds))
+               (end (cdr bounds))
+               (original (buffer-string)))
+          (use-local-map agent-shell-mode-map)
+          (setq-local emacsvox-agent-shell--speech-control-active t
+                      emacsvox-agent-shell-input-activation 'explicit)
+          (emacsvox-agent-shell--input-setup)
+          (unwind-protect
+              (progn
+                (switch-to-buffer (current-buffer))
+                (when (display-graphic-p) (redisplay t))
+                (dolist (editing '(nil t))
+                  (when editing
+                    (emacsvox-agent-shell-test--capture-events
+                      (execute-kbd-macro (kbd "C-c i"))))
+                  (dolist (key '("<left>" "C-b"))
+                    (goto-char start)
+                    (let ((events (emacsvox-agent-shell-test--capture-events
+                                    (execute-kbd-macro (kbd key)))))
+                      (if editing
+                          (progn
+                            (should (= (point) start))
+                            (should (member '(speak "Beginning of input") events)))
+                        (should (< (point) (marker-position (car comint-last-prompt))))
+                        (should-not (member '(speak "Beginning of input") events)))))
+                  (dolist (key '("<right>" "C-f"))
+                    (when (and (not editing) (< start end))
+                      (goto-char (1- end))
+                      (let ((events (emacsvox-agent-shell-test--capture-events
+                                      (execute-kbd-macro (kbd key)))))
+                        (should (= (point) end))
+                        (should-not (member '(speak "End of input") events))))
+                    (goto-char end)
+                    (let ((events
+                           (emacsvox-agent-shell-test--capture-events
+                             (if editing
+                                 (execute-kbd-macro (kbd key))
+                               (should-error (execute-kbd-macro (kbd key))
+                                             :type 'end-of-buffer)))))
+                      (should (= (point) end))
+                      (if editing
+                          (should (member '(speak "End of input") events))
+                        (should-not (member '(speak "End of input") events)))))
+                  (should (eq emacsvox-agent-shell--input-editing editing))
+                  (should (eq buffer-read-only (not editing)))
+                  (should (equal (buffer-string) original))))
+            (emacsvox-agent-shell--input-cleanup)))))))
+
 (ert-deftest emacsvox-agent-shell-explicit-input-graphical-prompt-label ()
   "Return activates real chat label rows reached through vertical navigation."
   (skip-unless (display-graphic-p))
