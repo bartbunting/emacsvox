@@ -68,6 +68,7 @@
 (declare-function agent-shell-config-options "agent-shell" t)
 (declare-function agent-shell--config-options "agent-shell" (state))
 (declare-function shell-maker-busy "shell-maker" ())
+(declare-function agent-shell--flush-stream-render "agent-shell" (state))
 (declare-function emacsvox-agent-shell--begin-response-turn
                   "emacsvox-agent-shell-events" ())
 (declare-function emacsvox-agent-shell-lifecycle-facts
@@ -437,8 +438,9 @@ callbacks, arguments, return values, and transport behavior."
 
 (defun emacsvox-agent-shell--push-end-around (original &rest arguments)
   "Finish pushed speech at ORIGINAL's completion callback, before queue drain."
-  (let ((buffer (map-elt (plist-get arguments :state) :buffer))
-        (finished (plist-get arguments :on-finished)))
+  (let* ((state (plist-get arguments :state))
+         (buffer (map-elt state :buffer))
+         (finished (plist-get arguments :on-finished)))
     (setq arguments (copy-sequence arguments))
     (setq arguments
           (plist-put
@@ -449,6 +451,10 @@ callbacks, arguments, return values, and transport behavior."
                  (when emacsvox-agent-shell--push-active-p
                    (unwind-protect
                        (let ((emacsvox-aural-submission-lane 'notification))
+                         ;; Recent Agent Shell versions batch streamed text.
+                         ;; Collect the final batch before the next queued turn.
+                         (when (fboundp 'agent-shell--flush-stream-render)
+                           (agent-shell--flush-stream-render state))
                          (emacsvox-agent-shell--handle-lifecycle-event
                           '((:event . turn-complete)
                             (:data . ((:stop-reason . "end_turn"))))))
