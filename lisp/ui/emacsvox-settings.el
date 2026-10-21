@@ -54,6 +54,7 @@
     ("Emacs pronunciation dictionaries" emacsvox-settings-workflows emacsvox-settings-dictionaries "d")
     ("Pronunciation substitution in source buffer" emacsvox-settings-workflows emacsvox-settings-dictionaries "t")
     ("Voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
+    ("Library preview off before alongside or after announcement" emacsvox-aural-menu emacsvox-aural-menu-sounds "L")
     ("Omnivox average pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")
     ("Voice Lock in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "v")
     ("Global Voice Lock" emacsvox-settings-workflows emacsvox-settings-switches "V")

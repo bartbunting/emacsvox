@@ -12,11 +12,15 @@
   (declare (indent 0) (debug t))
   `(emacsvox-test--with-sound-workbench
      (let* ((emacsvox-sound-library-directory (make-temp-file "recording-library-" t))
+            (emacsvox-sound-library-preview-timing 'alongside)
             (emacsvox-sound-library--cache (make-hash-table :test #'equal))
             (candidate (expand-file-name "soft-click.ogg" emacsvox-sound-library-directory)))
        (unwind-protect
            (cl-letf (((symbol-function 'emacsvox-sound-library--duration) (lambda (_) 0.25))
-                     ((symbol-function 'emacsvox-aural-ui-speak) #'ignore))
+                     ((symbol-function 'emacsvox-aural-ui-speak)
+                      (lambda (text)
+                        (when emacsvox-aural-ui-speech-function
+                          (funcall emacsvox-aural-ui-speech-function text)))))
              (write-region "candidate audio bytes" nil candidate nil 'silent)
              ,@body)
          (dolist (buffer (buffer-list))
@@ -42,6 +46,150 @@
         (should (equal manifest (emacsvox-sound-library--manifest-id (emacsvox-aural-resource-pack 'overlay))))
         (should-not (emacsvox-aural-cue 'soft-click))
         (emacsvox-aural-quit)))))
+
+(ert-deftest emacsvox-sound-library-arrows-preview-only-successful-row-moves ()
+  "Row navigation previews candidates without cancelling labels or assigning."
+  (emacsvox-test--with-library
+   (write-region "another recording" nil
+                 (expand-file-name "another.ogg" emacsvox-sound-library-directory)
+                 nil 'silent)
+   (save-window-excursion
+     (emacsvox-sound-library 'overlay 'button)
+     (let* ((first (emacsvox-sound-library--recording))
+            (manifest (emacsvox-sound-library--manifest-id
+                       (emacsvox-aural-resource-pack 'overlay)))
+            (press (lambda (key)
+                     (if (display-graphic-p)
+                         (execute-kbd-macro (kbd key))
+                       (call-interactively (key-binding (kbd key))))))
+            events)
+       (let ((emacsvox-aural-ui-speech-function
+              (lambda (text) (push (list 'speech text) events))))
+         (cl-letf (((symbol-function 'emacsvox-aural-preview-structured-style-supported-p)
+                    (lambda () nil))
+                   ((symbol-function 'emacsvox-sounds-play-concrete-cue)
+                    (lambda (file &rest _) (push (list 'audio file) events)))
+                   ((symbol-function 'tts-stop)
+                    (lambda (&rest _) (push '(stop) events))))
+           (funcall press "<down>")
+           (should (equal (mapcar #'car (reverse events)) '(stop speech audio)))
+           (should (equal (cadar events) candidate))
+           ;; At a boundary or while reading columns, do not replay the row.
+           (setq events nil)
+           (funcall press "<down>")
+           (funcall press "<right>")
+           (should-not (assq 'audio events))
+           ;; Row movement also previews while browsing a metadata column.
+           (setq events nil)
+           (funcall press "<up>")
+           (should (= 1 (emacsvox-aural-ui-tabulated-column-index)))
+           (should (equal (mapcar #'car (reverse events)) '(stop speech audio)))
+           (should (equal (cadar events) (plist-get first :file)))
+           (setq events nil)
+           (funcall press "<up>")
+           (should-not (assq 'audio events))
+           (emacsvox-sound-library-search "no matching recording")
+           (setq events nil)
+           (funcall press "<down>")
+           (funcall press "<up>")
+           (should-not (assq 'audio events))))
+       (should-not (plist-get emacsvox-sound-library--target :drafts))
+       (should (equal manifest (emacsvox-sound-library--manifest-id
+                                (emacsvox-aural-resource-pack 'overlay))))))))
+
+(ert-deftest emacsvox-sound-library-timings-reach-one-cancellable-timeline ()
+  "Each row sends a stop then one timeline containing speech and its recording."
+  (require 'omnivox-voices)
+  (emacsvox-test--with-library
+   (write-region "another recording" nil
+                 (expand-file-name "another.ogg" emacsvox-sound-library-directory)
+                 nil 'silent)
+   (save-window-excursion
+     (emacsvox-sound-library)
+     (let* ((process (make-pipe-process :name "library-preview-test" :noquery t))
+            (tts-speaker-process process)
+            (tts-program "omnivox")
+            (emacsvox-aural-submission-delivery-policy nil)
+            writes)
+       (unwind-protect
+           (progn
+             (process-put process emacsvox-aural--structured-timeline-process-property 3)
+             (process-put process tts--tracked-playback-completion-property t)
+             (cl-letf (((symbol-function 'process-send-string)
+                        (lambda (_ command) (push command writes)))
+                       ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+               (dolist (timing '(before alongside after))
+                 (setq emacsvox-sound-library-preview-timing timing writes nil)
+                 (emacsvox-sound-library-next)
+                 (emacsvox-sound-library-previous)
+                 (let ((wire (apply #'concat (reverse writes))) (start 0) timelines)
+                   (while (string-match "emacsvox_timeline {\\([^}]+\\)}" wire start)
+                     (setq start (match-end 0))
+                     (push (json-parse-string
+                            (decode-coding-string (base64-decode-string (match-string 1 wire)) 'utf-8)
+                            :object-type 'plist :array-type 'list)
+                           timelines))
+                   (should (= 2 (length timelines)))
+                   ;; A second movement interrupts pending playback before replacement.
+                   (should (equal (delq nil (mapcar
+                                             (lambda (line)
+                                               (cond ((equal line "s") 'stop)
+                                                     ((string-prefix-p "emacsvox_timeline " line) 'timeline)))
+                                             (split-string wire "\n" t)))
+                                  '(stop timeline stop timeline)))
+                   (dolist (timeline timelines)
+                     (let* ((span (car (plist-get timeline :spans)))
+                            (audio (seq-filter (lambda (action) (equal (plist-get action :type) "audio"))
+                                               (plist-get timeline :actions)))
+                            (action (car audio)))
+                       (should (= 1 (length audio)))
+                       (should (string-match-p "another\\|soft-click" (plist-get span :text)))
+                       (should (file-in-directory-p (plist-get action :path)
+                                                    emacsvox-sound-library-directory))
+                       (should (equal (plist-get action :mode)
+                                      (if (eq timing 'before) "insert" "overlay")))
+                       (should (equal (plist-get (plist-get action :position) :affinity)
+                                      (if (eq timing 'after) "after" "before")))))))))
+         (delete-process process))))))
+
+(ert-deftest emacsvox-sound-library-off-retains-speech-and-explicit-replay ()
+  "Off cancels old playback and speaks; Space still plays the selected recording."
+  (emacsvox-test--with-library
+   (write-region "another recording" nil
+                 (expand-file-name "another.ogg" emacsvox-sound-library-directory)
+                 nil 'silent)
+   (save-window-excursion
+     (emacsvox-sound-library)
+     (let* ((emacsvox-sound-library-preview-timing 'off)
+            events
+            (emacsvox-aural-ui-speech-function
+             (lambda (text) (push (list 'speech text) events))))
+       (cl-letf (((symbol-function 'tts-stop) (lambda () (push '(stop) events)))
+                 ((symbol-function 'emacsvox-sounds-play-concrete-cue)
+                  (lambda (file &rest _) (push (list 'audio file) events))))
+         (emacsvox-sound-library-next)
+         (should (equal (mapcar #'car (reverse events)) '(stop speech)))
+         (should (string-match-p "soft-click" (cadar events)))
+         (call-interactively (key-binding (kbd "SPC")))
+         (should (equal (mapcar #'car (reverse events)) '(stop speech stop audio)))
+         (should (equal (cadar events) candidate)))))))
+
+(ert-deftest emacsvox-sound-library-ordered-preview-explains-unsupported-backend ()
+  "An unsupported backend still identifies the row and never fakes sequencing."
+  (emacsvox-test--with-library
+   (write-region "another recording" nil
+                 (expand-file-name "another.ogg" emacsvox-sound-library-directory)
+                 nil 'silent)
+   (save-window-excursion
+     (emacsvox-sound-library)
+     (let ((emacsvox-sound-library-preview-timing 'before) spoken)
+       (let ((emacsvox-aural-ui-speech-function (lambda (text) (setq spoken text))))
+         (cl-letf (((symbol-function 'emacsvox-aural-preview-structured-style-supported-p) (lambda () nil))
+                   ((symbol-function 'tts-stop) #'ignore)
+                   ((symbol-function 'emacsvox-sounds-play-concrete-cue)
+                    (lambda (&rest _) (ert-fail "Unsupported ordered preview played audio"))))
+           (should-error (emacsvox-sound-library-next) :type 'user-error)
+           (should (string-match-p "soft-click" spoken))))))))
 
 (ert-deftest emacsvox-sound-library-save-survives-rename-and-pack-relocation ()
   (emacsvox-test--with-library

@@ -61,6 +61,9 @@
 (autoload 'emacsvox-line-cues-edit "emacsvox-line-cues" nil t)
 (autoload 'emacsvox-interaction "emacsvox-interaction" nil t)
 (autoload 'emacsvox-sound-library "emacsvox-sound-library" nil t)
+(defvar emacsvox-sound-library-preview-timing)
+(declare-function emacsvox-sound-library-refresh "emacsvox-sound-library" ())
+(declare-function emacsvox-aural-preview-stop "emacsvox-aural-preview" ())
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
 (autoload 'emacsvox-aural-list-voice-palettes "emacsvox-aural-voice-palettes" nil t)
 (autoload 'emacsvox-aural-voice-workbench "emacsvox-aural-voice-workbench" nil t)
@@ -75,7 +78,8 @@
                  (memq (oref prefix command)
                        '(emacsvox-table-settings emacsvox-table-settings--choices
                          emacsvox-aural-menu emacsvox-aural-menu-speech
-                         emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
+                         emacsvox-aural-menu-sounds emacsvox-aural-menu-library-preview
+                         emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-capitalization--presentation
                          emacsvox-interaction--presentation
@@ -869,6 +873,105 @@ Engine preferences last for this session unless explicitly saved."
   (interactive)
   (transient-setup 'emacsvox-aural-menu-line-cues nil nil :scope (emacsvox-aural-menu--context)))
 
+(defun emacsvox-aural-menu--library-preview-label (&optional choice)
+  "Describe the current preview policy, or mark CHOICE when selected."
+  (require 'emacsvox-sound-library)
+  (let* ((value (or choice emacsvox-sound-library-preview-timing))
+         (label (pcase value
+                  ('off "Off") ('before "Before announcement")
+                  ('alongside "Alongside announcement") ('after "After announcement"))))
+    (if choice
+        (concat label (when (eq choice emacsvox-sound-library-preview-timing) ", selected"))
+      (concat "Library preview: " label))))
+
+(defun emacsvox-aural-menu--library-preview-say (text)
+  "Announce preview setting TEXT as interruptible menu feedback."
+  (emacsvox-transient--submit-text
+   text (emacsvox-transient--menu-facts 'library-preview 'command-menu-value-changed)
+   'state-change 'select-object))
+
+(defun emacsvox-aural-menu--library-preview-set (value)
+  "Apply library preview VALUE for this session without saving it."
+  (require 'emacsvox-sound-library)
+  (emacsvox-aural-preview-stop)
+  (customize-set-variable 'emacsvox-sound-library-preview-timing value)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-sound-library-mode)
+        (emacsvox-sound-library-refresh))))
+  (emacsvox-aural-menu--library-preview-say
+   (emacsvox-aural-menu--library-preview-label value)))
+
+(defun emacsvox-aural-menu--library-preview-off ()
+  "Announce library rows without automatically playing their recordings.
+Space and P still replay on request. Applies to every library for this session;
+Save retains the choice across restarts."
+  (interactive) (emacsvox-aural-menu--library-preview-set 'off))
+
+(defun emacsvox-aural-menu--library-preview-before ()
+  "Finish the recording before announcing its library row.
+Requires an Omnivox structured timeline. Moving again cancels the old sequence.
+Applies to every library for this session; Save retains the choice."
+  (interactive) (emacsvox-aural-menu--library-preview-set 'before))
+
+(defun emacsvox-aural-menu--library-preview-alongside ()
+  "Play each recording alongside its library row announcement.
+Omnivox keeps both in one cancellable timeline. External players control their
+own playback. Applies to every library for this session; Save retains it."
+  (interactive) (emacsvox-aural-menu--library-preview-set 'alongside))
+
+(defun emacsvox-aural-menu--library-preview-after ()
+  "Finish the library row announcement before playing its recording.
+Requires an Omnivox structured timeline. Moving again cancels the old sequence.
+Applies to every library for this session; Save retains the choice."
+  (interactive) (emacsvox-aural-menu--library-preview-set 'after))
+
+(defun emacsvox-aural-menu--library-preview-save ()
+  "Save the current library preview choice across restarts for all libraries."
+  (interactive)
+  (require 'emacsvox-sound-library)
+  (customize-save-variable 'emacsvox-sound-library-preview-timing
+                           emacsvox-sound-library-preview-timing)
+  (emacsvox-aural-menu--library-preview-say "Library preview saved"))
+
+(transient-define-prefix emacsvox-aural-menu-library-preview ()
+  "Choose automatic library playback and its timing relative to row speech.
+Arrows explain choices without applying them. Enter applies for this session;
+Save retains the current choice across restarts. Space in the library still
+replays explicitly when Off is selected."
+  :refresh-suffixes t
+  ["Library preview (all libraries)"
+   ("o" (lambda () (emacsvox-aural-menu--library-preview-label 'off))
+    emacsvox-aural-menu--library-preview-off :transient t)
+   ("b" (lambda () (emacsvox-aural-menu--library-preview-label 'before))
+    emacsvox-aural-menu--library-preview-before :transient t)
+   ("a" (lambda () (emacsvox-aural-menu--library-preview-label 'alongside))
+    emacsvox-aural-menu--library-preview-alongside :transient t)
+   ("f" (lambda () (emacsvox-aural-menu--library-preview-label 'after))
+    emacsvox-aural-menu--library-preview-after :transient t)]
+  ["Save and finish"
+   ("S" "Save library preview" emacsvox-aural-menu--library-preview-save :transient t)
+   ("q" "Back (keep changes)" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (require 'emacsvox-sound-library)
+  (let ((context (if (and transient--prefix
+                          (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+                     (emacsvox-aural-menu--context)
+                   (emacsvox-aural-menu--capture t))))
+    (emacsvox-aural-preview-stop)
+    (transient-setup 'emacsvox-aural-menu-library-preview nil nil :scope context)
+    (transient--show)
+    (with-selected-window transient--window
+      (transient--goto-button
+       (emacsvox-transient--menu-suffix
+        (pcase emacsvox-sound-library-preview-timing
+          ('off 'emacsvox-aural-menu--library-preview-off)
+          ('before 'emacsvox-aural-menu--library-preview-before)
+          ('alongside 'emacsvox-aural-menu--library-preview-alongside)
+          ('after 'emacsvox-aural-menu--library-preview-after)))))
+    (emacsvox-transient--speak-button)))
+
 (transient-define-prefix emacsvox-aural-menu-sounds ()
   "Adjust global output volumes or browse sound packs.
 Shift left and right adjust the selected volume by five percentage points.
@@ -891,7 +994,9 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
   ["Cues and sound packs"
    ("c" "Line and boundary cues" emacsvox-aural-menu-line-cues :transient transient--do-stack)
    ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)
-   ("l" "Browse recording library" emacsvox-aural-menu--sound-library :transient transient--do-suspend)]
+   ("l" "Browse recording library" emacsvox-aural-menu--sound-library :transient transient--do-suspend)
+   ("L" (lambda () (emacsvox-aural-menu--library-preview-label))
+    emacsvox-aural-menu-library-preview :transient transient--do-stack)]
   ["Save and finish"
    ("S" "Save output volumes" emacsvox-aural-menu--save-output :transient t)
    ("q" "Back (keep changes)" transient-quit-one)

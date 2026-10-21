@@ -8229,28 +8229,45 @@ persist settings.
      o		emacsvox-sound-library-open-directory
      u		emacsvox-sound-library-unassigned
 
-2.271.1.8 emacsvox-sound-library-open-directory
+     <remap> <emacsvox-aural-ui-next-row>	 emacsvox-sound-library-next
+     <remap> <emacsvox-aural-ui-previous-row> emacsvox-sound-library-previous
+
+2.271.1.8 emacsvox-sound-library-next
+.....................................
+
+ -- Command: emacsvox-sound-library-next
+
+     Move to the next recording and use the Library preview setting.
+
+2.271.1.9 emacsvox-sound-library-open-directory
 ...............................................
 
  -- Command: emacsvox-sound-library-open-directory
 
      Open the candidate library directory for adding or organising recordings.
 
-2.271.1.9 emacsvox-sound-library-preview
-........................................
+2.271.1.10 emacsvox-sound-library-preview
+.........................................
 
  -- Command: emacsvox-sound-library-preview
 
      Preview the selected recording without changing any cue or pack.
 
-2.271.1.10 emacsvox-sound-library-refresh
+2.271.1.11 emacsvox-sound-library-previous
+..........................................
+
+ -- Command: emacsvox-sound-library-previous
+
+     Move to the previous recording and use the Library preview setting.
+
+2.271.1.12 emacsvox-sound-library-refresh
 .........................................
 
  -- Command: emacsvox-sound-library-refresh
 
      Rescan candidates and assignments without applying or saving anything.
 
-2.271.1.11 emacsvox-sound-library-reset
+2.271.1.13 emacsvox-sound-library-reset
 .......................................
 
  -- Command: emacsvox-sound-library-reset
@@ -8258,7 +8275,7 @@ persist settings.
      Prepare removal of the local cue assignment, revealing its parent or fallback.
      Original audio stays intact. W saves all pending changes; q discards them.
 
-2.271.1.12 emacsvox-sound-library-save
+2.271.1.14 emacsvox-sound-library-save
 ......................................
 
  -- Command: emacsvox-sound-library-save
@@ -8267,7 +8284,7 @@ persist settings.
      An inactive pack stays inactive. Assigned audio is copied into the pack;
      removing or renaming the library source cannot break that saved sound.
 
-2.271.1.13 emacsvox-sound-library-search
+2.271.1.15 emacsvox-sound-library-search
 ........................................
 
  -- Command: emacsvox-sound-library-search (text)
@@ -8276,23 +8293,24 @@ persist settings.
 
      (fn TEXT)
 
-2.271.1.14 emacsvox-sound-library-select
+2.271.1.16 emacsvox-sound-library-select
 ........................................
 
  -- Command: emacsvox-sound-library-select
 
      Queue this recording for the current cue; W saves all pending assignments.
-     Browsing and selecting do not change playback. SPC previews the candidate;
-     C compares the saved cue. a chooses another cue; q discards all proposals.
+     Browsing and selecting do not change saved cue assignments.
+     SPC replays the candidate; C compares the saved cue.
+     a chooses another cue; q discards all proposals.
 
-2.271.1.15 emacsvox-sound-library-speak-current
+2.271.1.17 emacsvox-sound-library-speak-current
 ...............................................
 
  -- Command: emacsvox-sound-library-speak-current
 
      Speak the recording’s name, collection, duration and known assignments.
 
-2.271.1.16 emacsvox-sound-library-unassigned
+2.271.1.18 emacsvox-sound-library-unassigned
 ............................................
 
  -- Command: emacsvox-sound-library-unassigned
@@ -8311,6 +8329,19 @@ persist settings.
      Default Value:
 
      "~/.emacsvox/sounds/library/"
+
+
+ -- Variable: User Option emacsvox-sound-library-preview-timing
+     Automatic recording previews when moving between library rows.
+     Off announces the row without playing its recording. Before finishes the
+     recording before the announcement; alongside overlaps them; after plays the
+     recording when the announcement finishes. Before and after require an Omnivox
+     structured timeline. The choice applies to all library buffers. Space and P
+     still replay a recording explicitly when automatic preview is off.
+
+     Default Value:
+
+     alongside
 
 
 

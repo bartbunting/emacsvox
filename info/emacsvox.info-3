@@ -14,6 +14,59 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Finding Application Tasks,  Next: Finding Problem Tasks,  Prev: Finding Settings Tasks,  Up: Finding Tasks
+
+16.5 Work in an application
+===========================
+
+   • *note Open the right file: Opening A Document.: check the buffer
+     and full pathname before editing.
+   • *note Keep the original and work on a copy: Saving A Working Copy.:
+     distinguish current buffer text from the last saved file, and check
+     where later saves will go.
+   • *note Find a file and hear its details: Browsing Files With Dired.:
+     browse names, inspect size or date, and return without deleting or
+     moving files.
+   • *note Write a note I can reopen later: Writing An Org Document.:
+     create a real Org file rather than leaving the text in a disposable
+     buffer.
+   • *note Review a document and correct a word: Reviewing An Org
+     Document.: reveal headings and body text, inspect a small edit, and
+     save the intended version.
+   • *note Read a web page: Opening A Web Page.: enter an address and
+     identify the rendered browser buffer before using navigation keys.
+   • *note Find information within a page: Navigating A Web Page.: use
+     its HTML structure or search the loaded text, without submitting a
+     new web search.
+   • *note Follow a link and get back: Following Web Links.: distinguish
+     browser history, separate buffers and saved website bookmarks.
+   • *note Limit the mail details spoken automatically:
+     (emacsvox)Notmuch Speech And Privacy.: choose fields, bounds, and
+     completion feedback.  Explicit full-detail reading bypasses
+     automatic bounds.
+   • *note Hear a terminal's completion candidates: (emacsvox)EAT
+     Terminal Completion.: keep terminal-side completion separate from
+     Emacs completion and inspect retained candidates when needed.
+   • *note Review terminal output without sending input: (emacsvox)EAT
+     Screen Review.: use EAT's frozen review for a retained screen.
+     *note Term review: (emacsvox)Reviewing The Term Screen. follows a
+     different, live-buffer model.
+   • *note Enter a terminal password safely: (emacsvox)EAT Passwords And
+     Privacy.: use EAT's protected input operation and understand why
+     ordinary no-echo input is not the same boundary.
+   • *note Read the last completed agent response in full:
+     (emacsvox)Reading Agent Responses.: explicitly inspect the
+     successful response rather than changing the automatic speech
+     policy.
+   • *note Copy code from an agent response: (emacsvox)Agent Shell
+     Source Blocks.: navigate to its source block and use the logical
+     copy operation rather than selecting renderer padding.
+
+   For other applications, begin with *note Applications and
+Integrations: (emacsvox)Emacs Packages. and the active buffer's mode
+Help.
+
+
 File: emacsvox.info,  Node: Finding Problem Tasks,  Prev: Finding Application Tasks,  Up: Finding Tasks
 
 16.6 Something is wrong

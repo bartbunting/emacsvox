@@ -5743,13 +5743,29 @@ FLAC files there, optionally in collection subdirectories, then press
 its source intact.  Adding files does not create cues or assign them to
 events.
 
-   Arrows browse names, collections, durations and known assignments.
-‘<SPC>’ or ‘P’ previews the current row and ‘S’ stops.  ‘/’ filters
-names and collections; an empty search restores all rows.  ‘u’ filters
-recordings without saved assignments; it also keeps pending choices
-visible so you can review them.  Duration is shown when the optional
-‘ffprobe’ program is available.  Playback still depends on your audio
-backend.  Identical file bytes appear once, even under several names.
+   Up and Down move between recordings and, by default, play each
+recording alongside its row announcement.  Left and Right read names,
+collections, durations and known assignments without replaying the
+recording.  ‘<SPC>’ or ‘P’ replays the current recording and ‘S’ stops.
+
+   To change automatic playback, open _Library preview_ with ‘C-e H o
+L’, or choose it from the library's ‘C-c C-a’ Actions menu.  Choose
+_Off_, _Before announcement_, _Alongside announcement_ or _After
+announcement_.  Arrows explain choices without applying them; ‘<RET>’
+applies the selected choice to all library buffers.  ‘S’ saves it across
+restarts and ‘q’ returns.  Off still allows explicit replay with ‘<SPC>’
+or ‘P’.  Before and After require Omnivox timeline support: Before
+finishes the recording before speaking; After finishes speaking before
+playing the recording.  Moving again cancels the previous sequence.
+Alongside also supports external audio players, which control their own
+playback.
+
+   ‘/’ filters names and collections; an empty search restores all rows.
+‘u’ filters recordings without saved assignments; it also keeps pending
+choices visible so you can review them.  Duration is shown when the
+optional ‘ffprobe’ program is available.  Playback still depends on your
+audio backend.  Identical file bytes appear once, even under several
+names.
 
    To assign several sounds in a writable personal pack:
 
@@ -5761,7 +5777,7 @@ backend.  Identical file bytes appear once, even under several names.
   2. The row shows and speaks _Pending_ with the pack and cue.  ‘<SPC>’
      previews the row; ‘C’ plays the saved sound for the current cue.
      Browse and press ‘<RET>’ to replace that cue's pending choice.
-     Live playback stays unchanged.
+     Saved cue assignments stay unchanged.
   3. To assign another cue, select another recording and press ‘a’
      again.  Choose the cue; the pack stays the same.  You stay in the
      same buffer, and earlier choices remain pending.  Repeat for as

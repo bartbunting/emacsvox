@@ -251,6 +251,43 @@ describe multiple pending assignments. Org preview and documentation generation
 pass. Changes are uncommitted; listening and normal-profile restart acceptance
 remain open. No running Emacs session was modified.
 
+** Recording library preview timing, 2026-10-21
+
+Accepted for commit on 2026-10-21: Up/Down preview the recording reached by a
+successful row move, including from a metadata column. Boundaries, empty
+results and Left/Right do not replay a recording. Browsing creates no pending
+or saved assignment.
+
+Library preview sits beside Browse recording library in Sounds and output
+(=C-e H o L=), and is also available from the library's Actions menu. The
+browsable choices are Off, Before announcement, Alongside announcement and
+After announcement. Alongside is the default. Navigation explains choices;
+Enter applies one across library buffers; Save retains it across restarts.
+Space and P still replay explicitly when automatic preview is Off. Settings
+search includes the preference, and the library header shows its current value.
+
+Omnivox receives the recording and row announcement in one cancellable
+timeline. Before finishes the recording first; After finishes the announcement
+first. Moving again cancels the previous sequence. Before and After explain
+the missing capability on a backend without structured timelines. Alongside
+also supports the existing external-player route, where the player controls
+its own playback.
+
+Source checks pass 16 library tests with three graphical skips. A fresh
+graphical source Emacs passes all 19 library tests and the settings interaction
+test, including arrow navigation, Enter, explicit Save, persistence in a second
+Emacs, search and return to the library. The Transient and aural-menu batch
+suites pass 56 tests with 29 graphical skips. An attempted broader standalone
+settings-search check encountered a missing Notmuch preview registry fixture;
+the focused test covers the new search destination. Compilation and byte-code
+preflight pass. A fresh graphical Emacs verifies the affected files load from
+repository byte-code and passes all 20 focused tests without skips. Generated
+command references are updated, and the documentation release gate passes.
+The manual now describes automatic playback, its setting and explicit replay.
+Playback is intercepted in tests; listening acceptance for rapid movement,
+timing and overlap is not recorded. The listening route is a fresh normal
+Emacsvox profile. No live session was modified.
+
 ** Recording library Space preview, 2026-10-17
 
 Space now previews the recording at point in the library, overriding the

@@ -5402,10 +5402,25 @@ MP3 or FLAC files there@comma{} optionally in collection subdirectories@comma{} 
 @kbd{g} to rescan. @kbd{i} imports a copy into a named collection and leaves its source
 intact. Adding files does not create cues or assign them to events.
 
-Arrows browse names@comma{} collections@comma{} durations and known assignments. @kbd{@key{SPC}} or @kbd{P} previews
-the current row and @kbd{S} stops. @kbd{/} filters names and collections; an empty
-search restores all rows. @kbd{u} filters recordings without saved assignments;
-it also keeps pending choices visible so you can review them. Duration is shown
+Up and Down move between recordings and@comma{} by default@comma{} play each recording
+alongside its row announcement. Left and Right read names@comma{} collections@comma{}
+durations and known assignments without replaying the recording. @kbd{@key{SPC}} or @kbd{P}
+replays the current recording and @kbd{S} stops.
+
+To change automatic playback@comma{} open @emph{Library preview} with @kbd{C-e H o L}@comma{} or
+choose it from the library's @kbd{C-c C-a} Actions menu. Choose @emph{Off}@comma{} @emph{Before
+announcement}@comma{} @emph{Alongside announcement} or @emph{After announcement}. Arrows
+explain choices without applying them; @kbd{@key{RET}} applies the selected choice to
+all library buffers. @kbd{S} saves it across restarts and @kbd{q} returns. Off still
+allows explicit replay with @kbd{@key{SPC}} or @kbd{P}. Before and After require Omnivox
+timeline support: Before finishes the recording before speaking; After
+finishes speaking before playing the recording. Moving again cancels the
+previous sequence. Alongside also supports external audio players@comma{} which
+control their own playback.
+
+@kbd{/} filters names and collections; an empty search restores all rows.
+@kbd{u} filters recordings without saved assignments; it also keeps pending
+choices visible so you can review them. Duration is shown
 when the optional @code{ffprobe} program is available. Playback still depends on
 your audio backend. Identical file bytes appear once@comma{} even under several names.
 
@@ -5420,7 +5435,7 @@ and press @kbd{a} to open the library@comma{} then @kbd{@key{RET}} to queue a re
 @item
 The row shows and speaks @emph{Pending} with the pack and cue. @kbd{@key{SPC}} previews the
 row; @kbd{C} plays the saved sound for the current cue. Browse and press @kbd{@key{RET}}
-to replace that cue's pending choice. Live playback stays unchanged.
+to replace that cue's pending choice. Saved cue assignments stay unchanged.
 @item
 To assign another cue@comma{} select another recording and press @kbd{a} again. Choose
 the cue; the pack stays the same. You stay in the same buffer@comma{} and earlier

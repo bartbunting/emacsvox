@@ -1393,6 +1393,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
              (memq (oref transient--prefix command)
                    '(emacsvox-aural-menu emacsvox-aural-menu-speech
                      emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
+                     emacsvox-aural-menu-library-preview
                      emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
                      emacsvox-aural-voice-menu emacsvox-indentation
                      emacsvox-capitalization emacsvox-capitalization--presentation

@@ -30,6 +30,21 @@
 ;;; Code:
 (require 'emacsvox-aural-sound-packs)
 
+(autoload 'emacsvox-aural-menu-library-preview "emacsvox-aural-menu" nil t)
+
+(defcustom emacsvox-sound-library-preview-timing 'alongside
+  "Automatic recording previews when moving between library rows.
+Off announces the row without playing its recording. Before finishes the
+recording before the announcement; alongside overlaps them; after plays the
+recording when the announcement finishes. Before and after require an Omnivox
+structured timeline. The choice applies to all library buffers. Space and P
+still replay a recording explicitly when automatic preview is off."
+  :type '(choice (const :tag "Off" off)
+                 (const :tag "Before announcement" before)
+                 (const :tag "Alongside announcement" alongside)
+                 (const :tag "After announcement" after))
+  :group 'emacsvox-aural)
+
 (defcustom emacsvox-sound-library-directory
   (expand-file-name "~/.emacsvox/sounds/library/")
   "Directory of candidate recordings, separate from sound-pack cue assignments.
@@ -220,11 +235,12 @@ unreferenced immutable copies are harmless and reusable."
                                (emacsvox-sound-library--status (plist-get r :id))))))
   (setq header-line-format
         (concat (if emacsvox-sound-library--target
-                    (format "Assign %s / %s. %d pending. RET select, a another cue, SPC preview, C current, W save all, q discard."
+                    (format "Assign %s / %s. %d pending. Up/Down browse, RET select, a another cue, SPC replay, C current, W save all, q discard."
                             (plist-get emacsvox-sound-library--target :pack)
                             (plist-get emacsvox-sound-library--target :cue)
                             (length (plist-get emacsvox-sound-library--target :drafts)))
-                  "Recording library. SPC preview, a assign, i import, / search, u unassigned, ? help.")
+                  "Recording library. Up/Down browse, SPC replay, a assign, i import, / search, u unassigned, ? help.")
+                (format " Preview: %s." emacsvox-sound-library-preview-timing)
                 (unless (string-empty-p emacsvox-sound-library--filter)
                   (concat " Filter: " emacsvox-sound-library--filter)))))
 
@@ -250,6 +266,57 @@ unreferenced immutable copies are harmless and reusable."
   (let ((r (emacsvox-sound-library--recording)))
     (emacsvox-aural-preview-play-cue (plist-get r :file) (concat "recording-" (plist-get r :id)))))
 
+(defun emacsvox-sound-library--navigation-plan (text)
+  "Build one cancellable recording and announcement sequence for TEXT."
+  (let* ((r (emacsvox-sound-library--recording))
+         (timing emacsvox-sound-library-preview-timing)
+         (action (emacsvox-aural--make-concrete-action
+                  :id 'library-preview :kind 'cue
+                  :resource (plist-get r :file)
+                  :sample-id (concat "recording-" (plist-get r :id))
+                  :audio-mode (if (eq timing 'before) 'insert 'overlay))))
+    (emacsvox-aural-preview--prepare-plan
+     (emacsvox-aural--make-concrete-plan
+      :before (unless (eq timing 'after) (list action))
+      :content (emacsvox-aural--make-concrete-content :text text :speak t)
+      :after (when (eq timing 'after) (list action))
+      :context '(:icons-enabled t)))))
+
+(defun emacsvox-sound-library--move-row (direction)
+  "Move in DIRECTION and present the row with its configured recording preview."
+  ;; Capture the shared navigator's feedback so it can join the recording in
+  ;; one timeline. Boundaries retain their normal announcement without audio.
+  (let (text row)
+    (let ((emacsvox-aural-ui-speech-function (lambda (value) (setq text value))))
+      (setq row (emacsvox-aural-ui-move-row direction)))
+    (cond
+     ((or (not row) (eq emacsvox-sound-library-preview-timing 'off))
+      (emacsvox-aural-preview-stop)
+      (emacsvox-aural-ui-speak text))
+     ((emacsvox-aural-preview-structured-style-supported-p)
+      (emacsvox-aural-preview-play-plan
+       (emacsvox-sound-library--navigation-plan text)))
+     ((eq emacsvox-sound-library-preview-timing 'alongside)
+      (emacsvox-aural-preview-stop)
+      (emacsvox-aural-ui-speak text)
+      (let ((r (emacsvox-sound-library--recording)))
+        (emacsvox-sounds-play-concrete-cue
+         (plist-get r :file) (concat "recording-" (plist-get r :id)))))
+     (t
+      (emacsvox-aural-preview-stop)
+      (emacsvox-aural-ui-speak text)
+      (user-error "Before/after library previews require an Omnivox structured timeline; choose Alongside or Off")))))
+
+(defun emacsvox-sound-library-next ()
+  "Move to the next recording and use the Library preview setting."
+  (interactive)
+  (emacsvox-sound-library--move-row 1))
+
+(defun emacsvox-sound-library-previous ()
+  "Move to the previous recording and use the Library preview setting."
+  (interactive)
+  (emacsvox-sound-library--move-row -1))
+
 (defun emacsvox-sound-library-current ()
   "Preview the currently assigned cue in the captured target pack."
   (interactive)
@@ -259,8 +326,9 @@ unreferenced immutable copies are harmless and reusable."
 
 (defun emacsvox-sound-library-select ()
   "Queue this recording for the current cue; W saves all pending assignments.
-Browsing and selecting do not change playback. SPC previews the candidate;
-C compares the saved cue. a chooses another cue; q discards all proposals."
+Browsing and selecting do not change saved cue assignments.
+SPC replays the candidate; C compares the saved cue.
+a chooses another cue; q discards all proposals."
   (interactive)
   (unless emacsvox-sound-library--target (user-error "Press a to choose a pack and cue first"))
   (let ((r (copy-tree (emacsvox-sound-library--recording))))
@@ -362,8 +430,13 @@ Imported originals elsewhere and immutable pack copies remain untouched."
   (emacsvox-aural-ui-with-help-window
    (princ (concat "Recording library\n\n"
                   "Recordings are available sounds, not events. Importing creates no cue.\n"
-                  "Arrows browse; / searches names and collections; u toggles Unassigned.\n"
-                  "SPC or P previews the row; S stops. i imports a copy; o opens the library.\n"
+                  "Up/Down browse recordings without assigning them. Library preview\n"
+                  "chooses Off, Before, Alongside or After the row announcement.\n"
+                  "Open Library preview through C-c C-a Actions or Sounds and output.\n"
+                  "Before and After require an Omnivox structured timeline. Save the\n"
+                  "preference explicitly in that menu to keep it across restarts.\n"
+                  "Left/Right read columns; / searches names and collections; u toggles Unassigned.\n"
+                  "SPC or P replays the row; S stops. i imports a copy; o opens the library.\n"
                   "g rescans files; d deletes an unassigned library file after confirmation.\n"
                   "a chooses a personal pack and cue, then further cues in that same pack.\n"
                   "RET queues the row for the current cue; C previews its saved sound.\n"
@@ -388,7 +461,9 @@ Imported originals elsewhere and immutable pack copies remain untouched."
                                          #'emacsvox-sound-library-refresh)
   (setq tabulated-list-format [("Recording" 30 t) ("Collection" 26 t) ("Duration" 12 t) ("Assignments" 0 t)]
         tabulated-list-padding 2
-        emacsvox-aural-ui-dismiss-warning-function #'emacsvox-sound-library--discard-on-dismiss)
+        emacsvox-aural-ui-dismiss-warning-function #'emacsvox-sound-library--discard-on-dismiss
+        emacsvox-aural-ui-extra-actions
+        '(("Library preview: automatic playback and timing" . emacsvox-aural-menu-library-preview)))
   (tabulated-list-init-header))
 
 (dolist (binding '(("RET" . emacsvox-sound-library-select) ("SPC" . emacsvox-sound-library-preview)
@@ -399,6 +474,11 @@ Imported originals elsewhere and immutable pack copies remain untouched."
                    ("o" . emacsvox-sound-library-open-directory) ("d" . emacsvox-sound-library-delete)
                    ("a" . emacsvox-sound-library-assign) ("?" . emacsvox-sound-library-help)))
   (keymap-set emacsvox-sound-library-mode-map (car binding) (cdr binding)))
+
+(define-key emacsvox-sound-library-mode-map [remap emacsvox-aural-ui-next-row]
+            #'emacsvox-sound-library-next)
+(define-key emacsvox-sound-library-mode-map [remap emacsvox-aural-ui-previous-row]
+            #'emacsvox-sound-library-previous)
 
 ;;;###autoload
 (defun emacsvox-sound-library (&optional pack cue)

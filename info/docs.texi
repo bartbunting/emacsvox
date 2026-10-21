@@ -84,7 +84,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1712 commands and 258 options.
+This chapter documents a total of 1715 commands and 259 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -3995,6 +3995,18 @@ use Up and Down to browse and Enter to choose. Text prompts keep normal editing.
 Question mark followed by an item’s key explains its effect and scope.
 q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
 each editor explains its own draft, Apply and Save actions.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-library-preview
+@deffn {Command} emacsvox-aural-menu-library-preview
+@findex emacsvox-aural-menu-library-preview
+
+@format
+Choose automatic library playback and its timing relative to row speech.
+Arrows explain choices without applying them. Enter applies for this session;
+Save retains the current choice across restarts. Space in the library still
+replays explicitly when Off is selected.
 @end format
 @end deffn
 
@@ -19687,6 +19699,18 @@ i		emacsvox-sound-library-import
 o		emacsvox-sound-library-open-directory
 u		emacsvox-sound-library-unassigned
 
+<remap> <emacsvox-aural-ui-next-row>	 emacsvox-sound-library-next
+<remap> <emacsvox-aural-ui-previous-row> emacsvox-sound-library-previous
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-next
+@deffn {Command} emacsvox-sound-library-next
+@findex emacsvox-sound-library-next
+
+@format
+Move to the next recording and use the Library preview setting.
 @end format
 @end deffn
 
@@ -19705,6 +19729,15 @@ Open the candidate library directory for adding or organising recordings.
 
 @format
 Preview the selected recording without changing any cue or pack.
+@end format
+@end deffn
+
+@subsubsection emacsvox-sound-library-previous
+@deffn {Command} emacsvox-sound-library-previous
+@findex emacsvox-sound-library-previous
+
+@format
+Move to the previous recording and use the Library preview setting.
 @end format
 @end deffn
 
@@ -19755,8 +19788,9 @@ Filter recording names and collections by case-insensitive substring TEXT.
 
 @format
 Queue this recording for the current cue; W saves all pending assignments.
-Browsing and selecting do not change playback. SPC previews the candidate;
-C compares the saved cue. a chooses another cue; q discards all proposals.
+Browsing and selecting do not change saved cue assignments.
+SPC replays the candidate; C compares the saved cue.
+a chooses another cue; q discards all proposals.
 @end format
 @end deffn
 
@@ -19792,6 +19826,25 @@ Default Value:
 @verbatim
 
 "~/.emacsvox/sounds/library/"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-sound-library-preview-timing
+@verbatim
+Automatic recording previews when moving between library rows.
+Off announces the row without playing its recording. Before finishes the
+recording before the announcement; alongside overlaps them; after plays the
+recording when the announcement finishes. Before and after require an Omnivox
+structured timeline. The choice applies to all library buffers. Space and P
+still replay a recording explicitly when automatic preview is off.
+@end verbatim
+
+Default Value:
+@verbatim
+
+alongside
 
 @end verbatim
 

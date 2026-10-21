@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1712 commands and 258 options.
+   This chapter documents a total of 1715 commands and 259 options.
 
 * Menu:
 
@@ -3802,14 +3802,24 @@ submenus and delegate settings and feedback to their existing commands.
      q or C-g returns one menu; C-q closes the sequence. Applied changes remain;
      each editor explains its own draft, Apply and Save actions.
 
-2.43.1.2 emacsvox-aural-menu-line-cues
+2.43.1.2 emacsvox-aural-menu-library-preview
+............................................
+
+ -- Command: emacsvox-aural-menu-library-preview
+
+     Choose automatic library playback and its timing relative to row speech.
+     Arrows explain choices without applying them. Enter applies for this session;
+     Save retains the current choice across restarts. Space in the library still
+     replays explicitly when Off is selected.
+
+2.43.1.3 emacsvox-aural-menu-line-cues
 ......................................
 
  -- Command: emacsvox-aural-menu-line-cues
 
      Choose a global line tone or boundary earcon to preview and edit.
 
-2.43.1.3 emacsvox-aural-menu-navigation
+2.43.1.4 emacsvox-aural-menu-navigation
 .......................................
 
  -- Command: emacsvox-aural-menu-navigation
@@ -3820,7 +3830,7 @@ submenus and delegate settings and feedback to their existing commands.
      and select their first item. C-c l repeats that item without activating it.
      Changes take effect immediately; S saves these preferences through Customize.
 
-2.43.1.4 emacsvox-aural-menu-punctuation
+2.43.1.5 emacsvox-aural-menu-punctuation
 ........................................
 
  -- Command: emacsvox-aural-menu-punctuation (&optional arg1)
@@ -3829,7 +3839,7 @@ submenus and delegate settings and feedback to their existing commands.
      Global changes also apply to the source buffer.  S saves the displayed choice
      as the default across restarts; mode policies still take precedence.
 
-2.43.1.5 emacsvox-aural-menu-sounds
+2.43.1.6 emacsvox-aural-menu-sounds
 ...................................
 
  -- Command: emacsvox-aural-menu-sounds
@@ -3838,7 +3848,7 @@ submenus and delegate settings and feedback to their existing commands.
      Shift left and right adjust the selected volume by five percentage points.
      Enter sets an exact value.  Save explicitly to retain volumes across restarts.
 
-2.43.1.6 emacsvox-aural-menu-speech
+2.43.1.7 emacsvox-aural-menu-speech
 ...................................
 
  -- Command: emacsvox-aural-menu-speech (&optional arg1)
@@ -3847,7 +3857,7 @@ submenus and delegate settings and feedback to their existing commands.
      With prefix GLOBAL, start with global defaults when opening directly.
      When opened from the Emacsvox menu, share its selected scope.
 
-2.43.1.7 emacsvox-aural-menu-voices
+2.43.1.8 emacsvox-aural-menu-voices
 ...................................
 
  -- Command: emacsvox-aural-menu-voices

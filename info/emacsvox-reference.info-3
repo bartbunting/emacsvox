@@ -7941,30 +7941,34 @@ Function Index
                                                              (line   15)
 * emacsvox-aural-menu <1>:               emacsvox-aural-menu.
                                                              (line   18)
-* emacsvox-aural-menu-line-cues:         emacsvox-aural-menu.
+* emacsvox-aural-menu-library-preview:   emacsvox-aural-menu.
                                                              (line   32)
-* emacsvox-aural-menu-line-cues <1>:     emacsvox-aural-menu.
+* emacsvox-aural-menu-library-preview <1>: emacsvox-aural-menu.
                                                              (line   33)
+* emacsvox-aural-menu-line-cues:         emacsvox-aural-menu.
+                                                             (line   42)
+* emacsvox-aural-menu-line-cues <1>:     emacsvox-aural-menu.
+                                                             (line   43)
 * emacsvox-aural-menu-navigation:        emacsvox-aural-menu.
-                                                             (line   39)
+                                                             (line   49)
 * emacsvox-aural-menu-navigation <1>:    emacsvox-aural-menu.
-                                                             (line   40)
-* emacsvox-aural-menu-punctuation:       emacsvox-aural-menu.
                                                              (line   50)
-* emacsvox-aural-menu-punctuation <1>:   emacsvox-aural-menu.
-                                                             (line   51)
-* emacsvox-aural-menu-sounds:            emacsvox-aural-menu.
-                                                             (line   59)
-* emacsvox-aural-menu-sounds <1>:        emacsvox-aural-menu.
+* emacsvox-aural-menu-punctuation:       emacsvox-aural-menu.
                                                              (line   60)
-* emacsvox-aural-menu-speech:            emacsvox-aural-menu.
-                                                             (line   68)
-* emacsvox-aural-menu-speech <1>:        emacsvox-aural-menu.
+* emacsvox-aural-menu-punctuation <1>:   emacsvox-aural-menu.
+                                                             (line   61)
+* emacsvox-aural-menu-sounds:            emacsvox-aural-menu.
                                                              (line   69)
-* emacsvox-aural-menu-voices:            emacsvox-aural-menu.
-                                                             (line   77)
-* emacsvox-aural-menu-voices <1>:        emacsvox-aural-menu.
+* emacsvox-aural-menu-sounds <1>:        emacsvox-aural-menu.
+                                                             (line   70)
+* emacsvox-aural-menu-speech:            emacsvox-aural-menu.
                                                              (line   78)
+* emacsvox-aural-menu-speech <1>:        emacsvox-aural-menu.
+                                                             (line   79)
+* emacsvox-aural-menu-voices:            emacsvox-aural-menu.
+                                                             (line   87)
+* emacsvox-aural-menu-voices <1>:        emacsvox-aural-menu.
+                                                             (line   88)
 * emacsvox-aural-overrides-clear-filter: emacsvox-aural-overrides.
                                                              (line   26)
 * emacsvox-aural-overrides-clear-filter <1>: emacsvox-aural-overrides.
@@ -10721,42 +10725,50 @@ Function Index
                                                              (line   66)
 * emacsvox-sound-library-mode <1>:       emacsvox-sound-library.
                                                              (line   67)
+* emacsvox-sound-library-next:           emacsvox-sound-library.
+                                                             (line   97)
+* emacsvox-sound-library-next <1>:       emacsvox-sound-library.
+                                                             (line   98)
 * emacsvox-sound-library-open-directory: emacsvox-sound-library.
-                                                             (line   94)
+                                                             (line  104)
 * emacsvox-sound-library-open-directory <1>: emacsvox-sound-library.
-                                                             (line   95)
+                                                             (line  105)
 * emacsvox-sound-library-preview:        emacsvox-sound-library.
-                                                             (line  101)
+                                                             (line  111)
 * emacsvox-sound-library-preview <1>:    emacsvox-sound-library.
-                                                             (line  102)
+                                                             (line  112)
+* emacsvox-sound-library-previous:       emacsvox-sound-library.
+                                                             (line  118)
+* emacsvox-sound-library-previous <1>:   emacsvox-sound-library.
+                                                             (line  119)
 * emacsvox-sound-library-refresh:        emacsvox-sound-library.
-                                                             (line  108)
+                                                             (line  125)
 * emacsvox-sound-library-refresh <1>:    emacsvox-sound-library.
-                                                             (line  109)
+                                                             (line  126)
 * emacsvox-sound-library-reset:          emacsvox-sound-library.
-                                                             (line  115)
-* emacsvox-sound-library-reset <1>:      emacsvox-sound-library.
-                                                             (line  116)
-* emacsvox-sound-library-save:           emacsvox-sound-library.
-                                                             (line  123)
-* emacsvox-sound-library-save <1>:       emacsvox-sound-library.
-                                                             (line  124)
-* emacsvox-sound-library-search:         emacsvox-sound-library.
                                                              (line  132)
-* emacsvox-sound-library-search <1>:     emacsvox-sound-library.
+* emacsvox-sound-library-reset <1>:      emacsvox-sound-library.
                                                              (line  133)
-* emacsvox-sound-library-select:         emacsvox-sound-library.
+* emacsvox-sound-library-save:           emacsvox-sound-library.
+                                                             (line  140)
+* emacsvox-sound-library-save <1>:       emacsvox-sound-library.
                                                              (line  141)
-* emacsvox-sound-library-select <1>:     emacsvox-sound-library.
-                                                             (line  142)
-* emacsvox-sound-library-speak-current:  emacsvox-sound-library.
+* emacsvox-sound-library-search:         emacsvox-sound-library.
+                                                             (line  149)
+* emacsvox-sound-library-search <1>:     emacsvox-sound-library.
                                                              (line  150)
-* emacsvox-sound-library-speak-current <1>: emacsvox-sound-library.
-                                                             (line  151)
-* emacsvox-sound-library-unassigned:     emacsvox-sound-library.
-                                                             (line  157)
-* emacsvox-sound-library-unassigned <1>: emacsvox-sound-library.
+* emacsvox-sound-library-select:         emacsvox-sound-library.
                                                              (line  158)
+* emacsvox-sound-library-select <1>:     emacsvox-sound-library.
+                                                             (line  159)
+* emacsvox-sound-library-speak-current:  emacsvox-sound-library.
+                                                             (line  168)
+* emacsvox-sound-library-speak-current <1>: emacsvox-sound-library.
+                                                             (line  169)
+* emacsvox-sound-library-unassigned:     emacsvox-sound-library.
+                                                             (line  175)
+* emacsvox-sound-library-unassigned <1>: emacsvox-sound-library.
+                                                             (line  176)
 * emacsvox-sounds-select-theme:          emacsvox-sounds.    (line   73)
 * emacsvox-sounds-select-theme <1>:      emacsvox-sounds.    (line   76)
 * emacsvox-speak-brief-time:             emacsvox-speak-time.

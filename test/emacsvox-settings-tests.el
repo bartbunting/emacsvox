@@ -34,6 +34,56 @@
       (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
     (should-not (file-exists-p custom-file))))
 
+(ert-deftest emacsvox-settings-library-preview-browses-applies-saves-and-returns ()
+  "Preview choices stay passive until applied and are reachable from the library."
+  (require 'emacsvox-sound-library)
+  (emacsvox-test--with-settings
+    (let* ((emacsvox-sound-library-preview-timing 'alongside)
+           (properties (copy-tree (symbol-plist 'emacsvox-sound-library-preview-timing)))
+           (emacsvox-sound-library-directory (make-temp-file "library-settings-" t)))
+      (unwind-protect
+          (progn
+            (execute-kbd-macro (vconcat (kbd "/") "Library preview off before alongside or after announcement" (kbd "RET")))
+            (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+            (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-aural-menu-library-preview))
+            (execute-kbd-macro (kbd "RET"))
+            (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-library-preview))
+            (should (eq (emacsvox-test--menu-focused-command)
+                        'emacsvox-aural-menu--library-preview-alongside))
+            (execute-kbd-macro (kbd "<up>"))
+            (should (eq emacsvox-sound-library-preview-timing 'alongside))
+            (execute-kbd-macro (kbd "q"))
+            (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+            (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-aural-menu-library-preview))
+            (execute-kbd-macro (kbd "L <up> RET"))
+            (should (eq emacsvox-sound-library-preview-timing 'before))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "<down> <down> RET S"))
+            (should (eq emacsvox-sound-library-preview-timing 'after))
+            (with-temp-buffer
+              (should (zerop
+                       (call-process (expand-file-name invocation-name invocation-directory)
+                                     nil t nil "-Q" "--batch" "-l" custom-file
+                                     "-L" emacsvox-lisp-directory "-l" "emacsvox-preamble"
+                                     "--eval" "(setq load-prefer-newer t)" "-l" "emacsvox-sound-library"
+                                     "--eval" "(prin1 emacsvox-sound-library-preview-timing)")))
+              (should (string-suffix-p "after" (buffer-string))))
+            (execute-kbd-macro (kbd "q l"))
+            (should (derived-mode-p 'emacsvox-sound-library-mode))
+            (let ((library (current-buffer)))
+              (execute-kbd-macro
+               (vconcat (kbd "C-c C-a") "Library preview: automatic playback and timing" (kbd "RET")))
+              (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-library-preview))
+              (execute-kbd-macro (kbd "o q"))
+              (should (eq emacsvox-sound-library-preview-timing 'off))
+              (should (eq library (current-buffer)))
+              (should (string-match-p "Preview: off" header-line-format)))
+            (execute-kbd-macro (kbd "q"))
+            (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds)))
+        (setplist 'emacsvox-sound-library-preview-timing properties)
+        (when (get-buffer "*Sound Library*") (kill-buffer "*Sound Library*"))
+        (delete-directory emacsvox-sound-library-directory t)))))
+
 (ert-deftest emacsvox-settings-search-capitalization-insensitive ()
   "Lowercase prefixes match labels and typed casing preserves the destination."
   (let ((completion-ignore-case nil) opened)
