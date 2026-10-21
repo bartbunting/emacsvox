@@ -496,10 +496,12 @@
       (error "No compiled %S contracts were loaded" tag)))
   (let ((stats
          (ert-run-tests-batch
+          ;; These tests need a graphical frame; graphical-voice-test runs them.
           '(and (not (member emacsvox-emoji-graphical-explanation-is-visible
                              emacsvox-aural-voice-bulk-graphical-browser-review-cancel-and-save
                              emacsvox-aural-voice-editor-graphical-save-remains-visible
-                             emacsvox-aural-voice-editor-graphical-more-controls-below-button))
+                             emacsvox-aural-voice-editor-graphical-more-controls-below-button
+                             emacsvox-aural-voice-editor-help-retains-field-and-draft))
                 (or "^emacsvox-emoji-" "^emacsvox-aural-rules-"
                "^emacsvox-aural-voice-data-"
                "^emacsvox-aural-voice-runtime-"
