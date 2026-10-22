@@ -861,10 +861,17 @@ according to `emacsvox-aural-unsupported-volume-policy'."
                   facts))
          (identity (list :action (emacsvox-aural-action-id action)))
          (volume
-          (if (eq (emacsvox-aural-action-kind action) 'tone)
-              (emacsvox-aural--compile-tone-volume action facts)
-            (emacsvox-aural--compile-volume
-             (emacsvox-aural-action-volume action) identity))))
+          (cond
+           ((eq (emacsvox-aural-action-kind action) 'tone)
+            (emacsvox-aural--compile-tone-volume action facts))
+           ((and (eq (emacsvox-aural-action-kind action) 'cue)
+                 (fboundp 'emacsvox-aural-structured-timeline-available-p)
+                 (emacsvox-aural-structured-timeline-available-p))
+            ;; The negotiated timeline carries per-recording gain.  The legacy
+            ;; queue still uses its existing unsupported-volume policy below.
+            (list :requested (emacsvox-aural-action-volume action) :capability 'supported))
+           (t (emacsvox-aural--compile-volume
+               (emacsvox-aural-action-volume action) identity)))))
     (pcase (emacsvox-aural-action-kind action)
     ('cue
      (pcase-let*

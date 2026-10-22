@@ -73,6 +73,7 @@
           "core/emacsvox-speak-navigation.el"
           "core/emacsvox-speak-filters.el"
           "core/emacsvox-speak.el"
+          "ui/emacsvox-reading-settings.el"
           "aural/emacsvox-aural-description.el"
           "aural/emacsvox-aural-preview.el"
           "aural/emacsvox-aural-replay.el"

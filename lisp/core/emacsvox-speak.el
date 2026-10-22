@@ -722,6 +722,31 @@ no layout is cached, so edits and window changes take effect immediately."
             :source-start source-start :source-end source-end
             :start start :end end))))
 
+;;;###autoload
+(defun emacsvox-speak-row-position ()
+  "Report source line number and screen-row position without moving point.
+The source must be displayed.  Row counts use the current window's layout and
+are computed only on request, without adding counts to ordinary navigation."
+  (interactive)
+  (let ((window (get-buffer-window (current-buffer) t)) (origin (point)))
+    (unless window (user-error "Display the source buffer to inspect its screen rows"))
+    (with-selected-window window
+      (save-excursion
+        (goto-char origin)
+        (let ((line (line-number-at-pos)) (end (line-end-position))
+              (index 1) (count 0) row-start finished)
+          (beginning-of-visual-line) (setq row-start (point))
+          (goto-char (line-beginning-position))
+          (while (and (not finished) (<= (point) end))
+            (cl-incf count)
+            (when (= (point) row-start) (setq index count))
+            (let ((previous (point)))
+              (beginning-of-visual-line 2)
+              (when (<= (point) previous) (setq finished t))))
+          (emacsvox-aural-submit
+           (format "Source line %d, screen row %d of %d" line index count)
+           :occasion 'navigation))))))
+
 (defun emacsvox-speak-visual-line ()
   "Speak the current screen row with configured continuation feedback.
 Complete source lines keep their ordinary boundary feedback.  Wrapped rows
@@ -771,6 +796,7 @@ use independent first, middle and last cues in the same speech transaction."
     (unless (or condition (eq (plist-get row :type) 'complete))
       ;; A wrapped row has one meaning; do not also emit the generic boundary.
       (setq compatibility-actions nil))
+    (when condition (setq emacsvox-reading-lines--last-visit nil))
     (unless condition
       (pcase-let ((`(,new-context ,new-facts)
                    (emacsvox-reading-lines--presentation

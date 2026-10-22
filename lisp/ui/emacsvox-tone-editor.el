@@ -285,6 +285,7 @@ replacement; bundled names cannot be replaced."
 Spelling and capitalization change global defaults; indentation changes the
 captured buffer or global defaults. Line cues apply session presentation rules.
 Save uses Customize for ordinary defaults and personal rules for line cues.
+Wrapped-row editors stage values in the parent draft; apply or save there.
 Enablement, timing and shared volume stay intact."
   (interactive)
   (let* ((state (emacsvox-tone-editor--state))
@@ -296,6 +297,7 @@ Enablement, timing and shared volume stay intact."
 
 (defun emacsvox-tone-editor--save ()
   "Save and apply this cue through its destination's persistence mechanism.
+Wrapped-row editors stage values in the parent draft; save in that parent.
 Line cues save conditional personal rules. Spelling, capitalization and global
 indentation use Customize. Buffer-local indentation cannot be saved here. Capitalization migrates unchanged old
 menu-generated rules on Save; contextual presentation rules remain intact.

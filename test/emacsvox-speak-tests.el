@@ -10,6 +10,53 @@
 (require 'ert)
 (require 'emacsvox-speak)
 
+(ert-deftest emacsvox-reading-feedback-wire-retains-after-cue-and-gain ()
+  "Row cues retain gain and a cancellable after anchor in one replacement packet."
+  (require 'omnivox-voices)
+  (let* ((process (make-pipe-process :name "wrapped-row-wire" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (emacsvox-use-icons t)
+         (emacsvox-aural-submission-delivery-policy 'replaceable)
+         (emacsvox-aural-submission-replacement-key 'speaker))
+    (unwind-protect
+        (progn
+          (process-put process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process emacsvox-aural--presentation-tone-process-property 2)
+          (dolist (sound '(earcon tone))
+            (let* ((values (emacsvox-reading-lines--merge
+                            (list :last-sound sound :last-placement 'after :last-volume 0.35)))
+                   (facts '(:wrapped-row last))
+                   (context (plist-put (emacsvox-aural-capture-context nil 'navigation)
+                                       :buffer-rules (list (emacsvox-reading-lines--rule 'last values))))
+                   (plan (emacsvox-aural-compile-plan
+                          (emacsvox-aural-resolve-active facts context) facts context))
+                   (envelope (car (emacsvox-aural--build-structured-timeline
+                                   1 1 (list (list plan "A final row" nil)))))
+                   (actions (seq-filter (lambda (action) (member (plist-get action :type) '("audio" "tone")))
+                                        (append (plist-get envelope :actions) nil))))
+              (should (equal "replaceable" (plist-get envelope :delivery_policy)))
+              (should (equal "speaker" (plist-get envelope :replacement_key)))
+              (should (= 1 (length actions)))
+              (should (= 0.35 (plist-get (car actions) :volume)))
+              (should (equal (if (eq sound 'earcon) "audio" "tone") (plist-get (car actions) :type)))
+              (should (equal "after" (plist-get (plist-get (car actions) :position) :affinity)))
+              (should (equal "object" (plist-get (car actions) :lifecycle_anchor))))))
+      (delete-process process))))
+
+(ert-deftest emacsvox-reading-feedback-reports-unsupported-tone-gain ()
+  "A timeline worker without tone gain is reported rather than promising playback."
+  (let* ((process (make-pipe-process :name "wrapped-row-capabilities" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (values (emacsvox-reading-lines--merge '(:first-sound tone))))
+    (unwind-protect
+        (progn
+          (process-put process emacsvox-aural--structured-timeline-process-property 3)
+          (should (equal "Tone volume unavailable on this worker"
+                         (emacsvox-reading-lines--sound-unavailable values 'first)))
+          (process-put process emacsvox-aural--presentation-tone-process-property 2)
+          (should-not (emacsvox-reading-lines--sound-unavailable values 'first)))
+      (delete-process process))))
+
 (ert-deftest emacsvox-reading-feedback-independent-timing-and-identity ()
   "Each row retains its own concrete sound and timing in a complete plan."
   (cl-letf (((symbol-function 'emacsvox-reading-lines--sound-unavailable) (lambda (&rest _) nil)))

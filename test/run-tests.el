@@ -225,6 +225,7 @@
   (require 'emacsvox-spelling-tests)
   (require 'emacsvox-interaction-tests)
   (require 'emacsvox-line-cues-tests)
+  (require 'emacsvox-reading-settings-tests)
   (require 'emacsvox-output-settings-tests)
   (require 'emacsvox-punctuation-menu-tests)
   (require 'emacsvox-settings-tests)

@@ -13,7 +13,8 @@
 (require 'subr-x)
 
 (defvar emacsvox-speak-test-modules
-  '(("emacsvox-speak-navigation" emacsvox-goto-percent emacsvox-mark-backward-mark emacsvox-speak-next-field emacsvox-repeat-check-hook)
+  '(("emacsvox-reading-lines" emacsvox-reading-lines--values emacsvox-reading-lines--presentation)
+    ("emacsvox-speak-navigation" emacsvox-goto-percent emacsvox-mark-backward-mark emacsvox-speak-next-field emacsvox-repeat-check-hook)
     ("emacsvox-speak-status" emacsvox-speak-mode-line emacsvox-speak-header-line emacsvox-battery-alarm emacsvox-speak-net-id)
     ("emacsvox-speak-windows" emacsvox-speak-other-window emacsvox-describe-tapestry emacsvox-cycle-to-next-buffer)
     ("emacsvox-speak-time" emacsvox-speak-time emacsvox-speak-collect-date emacsvox-speak-message-at-time)
@@ -86,7 +87,7 @@
                    '(tts-speak tts-letter tts-dispatch tts-stop))))
   (setq-default emacsvox-speak-messages nil)
   (load (expand-file-name (concat "lisp/core/emacsvox-advice" extension) root) nil t t)
-  (dolist (suite '(speak speak-filters speak-command org completion input message navigation
+  (dolist (suite '(speak speak-filters reading-settings speak-command org completion input message navigation
                   position display timer core-migration indentation))
     (load (expand-file-name (format "test/emacsvox-%s-tests.el" suite) root) nil t t))
   (dolist (module (cons '("emacsvox-speak" emacsvox-speak-line)

@@ -1554,7 +1554,7 @@ when the recorded plans have no speech span and require legacy lowering."
                       :mode (symbol-name
                              (or (emacsvox-aural-concrete-action-audio-mode action)
                                  'overlay))
-                      :volume 1.0
+                      :volume (or (emacsvox-aural-concrete-action-requested-volume action) 1.0)
                       :pan (emacsvox-aural--timeline-action-pan action)
                       :effect_bus "dry")
                      semantic-value)

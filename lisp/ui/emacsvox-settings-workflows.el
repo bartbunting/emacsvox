@@ -27,6 +27,7 @@
 ;; Link focused menus to existing editors, retaining their persistence semantics.
 ;;; Code:
 (require 'emacsvox-aural-menu)
+(autoload 'emacsvox-reading-settings "emacsvox-reading-settings" nil t)
 (require 'emacsvox-aural-history)
 (require 'emacsvox-pronounce)
 (require 'emacsvox-speak-filters)
@@ -926,6 +927,7 @@ and the global default. These controls do not save startup settings."
    ("r" "Restore speech in source and global default" emacsvox-settings-workflows--restore-reading-speech :transient t)
    ("i" "Follow defaults for all four source reading controls" emacsvox-settings-workflows--reading-inherit :if emacsvox-aural-menu--local-scope-p :transient t)]
   ["Reading workflows"
+   ("w" "Line reading and wrapping" emacsvox-reading-settings :transient transient--do-stack)
    ("a" "Repeat cleanup (global session)" emacsvox-settings-reading-repeats :transient transient--do-stack)
    ("f" "Column filtering (source; remembered ranges)" emacsvox-settings-reading-columns :transient transient--do-stack)
    ("s" "Speech chunking (source session)" emacsvox-settings-reading-chunks :transient transient--do-stack)]

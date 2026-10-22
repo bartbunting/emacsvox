@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 372 loaded; 0 intentionally omitted.
+@c Modules: 373 loaded; 0 intentionally omitted.
 @c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
 @c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
 @c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
@@ -72,11 +72,11 @@
 @c Loaded: ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc
 @c Loaded: ui/emacsvox-aural-voice-workbench-apply.elc ui/emacsvox-aural-voice-workbench-library.elc ui/emacsvox-aural-voice-workbench-preview.elc ui/emacsvox-aural-voice-workbench-routing.elc ui/emacsvox-aural-voice-workbench-views.elc
 @c Loaded: ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc
-@c Loaded: ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc
-@c Loaded: ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc
-@c Loaded: ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc
-@c Loaded: ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc
-@c Loaded: voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
+@c Loaded: ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-reading-settings.elc ui/emacsvox-settings-changes.elc
+@c Loaded: ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc
+@c Loaded: ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc
+@c Loaded: ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc
+@c Loaded: voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -84,7 +84,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1715 commands and 261 options.
+This chapter documents a total of 1717 commands and 261 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -336,6 +336,7 @@ This chapter documents a total of 1715 commands and 261 options.
 * emacsvox-racket:: Speech-enable RACKET.
 * emacsvox-re-builder:: re-builder.
 * emacsvox-reading-lines:: Wrapped row reading preferences.
+* emacsvox-reading-settings:: Scoped line reading controls.
 * emacsvox-reftex:: speech enable reftex.
 * emacsvox-related:: Speech-enable RELATED.
 * emacsvox-rg:: Speech-enable RG.
@@ -19071,6 +19072,25 @@ nil
 
 @end defvar
 
+@node emacsvox-reading-settings
+@section emacsvox-reading-settings
+
+Browse explained choices, preview drafts and apply or save explicitly.
+
+@subsection Emacsvox-Reading-Settings Commands
+
+@subsubsection emacsvox-reading-settings
+@deffn {Command} emacsvox-reading-settings
+@findex emacsvox-reading-settings
+
+@format
+Configure source-line reading and independent wrapped-row feedback.
+Entry and browsing preserve current behaviour. Apply changes the selected
+scope for this session; Save and apply persists mode or global choices.
+Integration-owned navigation may take priority; Help shows effective values.
+@end format
+@end deffn
+
 @node emacsvox-reftex
 @section emacsvox-reftex
 
@@ -20412,6 +20432,17 @@ program, arguments specify the START and END of the rectangle.
 Speak region bounded by start and end.
 
 (fn START END)
+@end format
+@end deffn
+
+@subsubsection emacsvox-speak-row-position
+@deffn {Command} emacsvox-speak-row-position
+@findex emacsvox-speak-row-position
+
+@format
+Report source line number and screen-row position without moving point.
+The source must be displayed.  Row counts use the current window’s layout and
+are computed only on request, without adding counts to ordinary navigation.
 @end format
 @end deffn
 

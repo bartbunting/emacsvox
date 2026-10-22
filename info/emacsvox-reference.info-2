@@ -7583,7 +7583,7 @@ setting up outline regexp wizards
    required modules
 
 
-File: emacsvox-reference.info,  Node: emacsvox-reading-lines,  Next: emacsvox-reftex,  Prev: emacsvox-re-builder,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-reading-lines,  Next: emacsvox-reading-settings,  Prev: emacsvox-re-builder,  Up: Emacsvox Commands And Options
 
 2.249 emacsvox-reading-lines
 ============================
@@ -7618,9 +7618,30 @@ hooks.
 
 
 
-File: emacsvox-reference.info,  Node: emacsvox-reftex,  Next: emacsvox-related,  Prev: emacsvox-reading-lines,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-reading-settings,  Next: emacsvox-reftex,  Prev: emacsvox-reading-lines,  Up: Emacsvox Commands And Options
 
-2.250 emacsvox-reftex
+2.250 emacsvox-reading-settings
+===============================
+
+Browse explained choices, preview drafts and apply or save explicitly.
+
+2.250.1 Emacsvox-Reading-Settings Commands
+------------------------------------------
+
+2.250.1.1 emacsvox-reading-settings
+...................................
+
+ -- Command: emacsvox-reading-settings
+
+     Configure source-line reading and independent wrapped-row feedback.
+     Entry and browsing preserve current behaviour. Apply changes the selected
+     scope for this session; Save and apply persists mode or global choices.
+     Integration-owned navigation may take priority; Help shows effective values.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-reftex,  Next: emacsvox-related,  Prev: emacsvox-reading-settings,  Up: Emacsvox Commands And Options
+
+2.251 emacsvox-reftex
 =====================
 
 This module speech-enables refteex - reftex is a minor mode that makes
@@ -7629,7 +7650,7 @@ navigation of TeX documents possible via a table of contents buffer.
 
 File: emacsvox-reference.info,  Node: emacsvox-related,  Next: emacsvox-rg,  Prev: emacsvox-reftex,  Up: Emacsvox Commands And Options
 
-2.251 emacsvox-related
+2.252 emacsvox-related
 ======================
 
 RELATED == Switch among related buffers (melpa).  Speech-enable
@@ -7638,7 +7659,7 @@ interactive commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-rg,  Next: emacsvox-rmail,  Prev: emacsvox-related,  Up: Emacsvox Commands And Options
 
-2.252 emacsvox-rg
+2.253 emacsvox-rg
 =================
 
 RG == Emacs front-end to ripgrep (rg).
@@ -7646,22 +7667,22 @@ RG == Emacs front-end to ripgrep (rg).
 
 File: emacsvox-reference.info,  Node: emacsvox-rmail,  Next: emacsvox-rpm-spec,  Prev: emacsvox-rg,  Up: Emacsvox Commands And Options
 
-2.253 emacsvox-rmail
+2.254 emacsvox-rmail
 ====================
 
 emacsvox extensions to rmail
 
-2.253.1 Emacsvox-Rmail Commands
+2.254.1 Emacsvox-Rmail Commands
 -------------------------------
 
-2.253.1.1 emacsvox-rmail-speak-current-message-labels
+2.254.1.1 emacsvox-rmail-speak-current-message-labels
 .....................................................
 
  -- Command: emacsvox-rmail-speak-current-message-labels
 
      Speak labels of current message
 
-2.253.1.2 emacsvox-rmail-summarize-current-message
+2.254.1.2 emacsvox-rmail-summarize-current-message
 ..................................................
 
  -- Command: emacsvox-rmail-summarize-current-message
@@ -7671,7 +7692,7 @@ emacsvox extensions to rmail
 
 File: emacsvox-reference.info,  Node: emacsvox-rpm-spec,  Next: emacsvox-rst,  Prev: emacsvox-rmail,  Up: Emacsvox Commands And Options
 
-2.254 emacsvox-rpm-spec
+2.255 emacsvox-rpm-spec
 =======================
 
 speech-enable rpm-spec-mode -part of Emacs 21 on RH 7.3
@@ -7679,7 +7700,7 @@ speech-enable rpm-spec-mode -part of Emacs 21 on RH 7.3
 
 File: emacsvox-reference.info,  Node: emacsvox-rst,  Next: emacsvox-ruby,  Prev: emacsvox-rpm-spec,  Up: Emacsvox Commands And Options
 
-2.255 emacsvox-rst
+2.256 emacsvox-rst
 ==================
 
 RST == rst-mode for editing rst text files.  This module speech-enables
@@ -7688,7 +7709,7 @@ rst-mode.
 
 File: emacsvox-reference.info,  Node: emacsvox-ruby,  Next: emacsvox-rust-mode,  Prev: emacsvox-rst,  Up: Emacsvox Commands And Options
 
-2.256 emacsvox-ruby
+2.257 emacsvox-ruby
 ===================
 
 Provide additional advice to Ruby mode
@@ -7696,7 +7717,7 @@ Provide additional advice to Ruby mode
 
 File: emacsvox-reference.info,  Node: emacsvox-rust-mode,  Next: emacsvox-sage,  Prev: emacsvox-ruby,  Up: Emacsvox Commands And Options
 
-2.257 emacsvox-rust-mode
+2.258 emacsvox-rust-mode
 ========================
 
 Speech-enable rust-mode
@@ -7704,17 +7725,17 @@ Speech-enable rust-mode
 
 File: emacsvox-reference.info,  Node: emacsvox-sage,  Next: emacsvox-sdcv,  Prev: emacsvox-rust-mode,  Up: Emacsvox Commands And Options
 
-2.258 emacsvox-sage
+2.259 emacsvox-sage
 ===================
 
 Speech-enable ‘sage-shell-mode’.  This is a major mode for interacting
 with ‘sage’, <http://www.sagemath.org/> An Open-source Mathematical
 Software System.
 
-2.258.1 Emacsvox-Sage Commands
+2.259.1 Emacsvox-Sage Commands
 ------------------------------
 
-2.258.1.1 emacsvox-sage-describe-symbol
+2.259.1.1 emacsvox-sage-describe-symbol
 .......................................
 
  -- Command: emacsvox-sage-describe-symbol (s)
@@ -7723,21 +7744,21 @@ Software System.
 
      (fn S)
 
-2.258.1.2 emacsvox-sage-get-output
+2.259.1.2 emacsvox-sage-get-output
 ..................................
 
  -- Command: emacsvox-sage-get-output
 
      Return most recent Sage output
 
-2.258.1.3 emacsvox-sage-get-output-as-latex
+2.259.1.3 emacsvox-sage-get-output-as-latex
 ...........................................
 
  -- Command: emacsvox-sage-get-output-as-latex
 
      Return most recent Sage output as LaTeX markup.
 
-2.258.1.4 emacsvox-sage-speak-output
+2.259.1.4 emacsvox-sage-speak-output
 ....................................
 
  -- Command: emacsvox-sage-speak-output
@@ -7747,7 +7768,7 @@ Software System.
 
 File: emacsvox-reference.info,  Node: emacsvox-sdcv,  Next: emacsvox-ses,  Prev: emacsvox-sage,  Up: Emacsvox Commands And Options
 
-2.259 emacsvox-sdcv
+2.260 emacsvox-sdcv
 ===================
 
 SDCV == Stardict Dictionary Interface This module sets up Emacsvox for
@@ -7759,44 +7780,44 @@ module sdcv to use all the installed dictionaries found on the system.
 
 File: emacsvox-reference.info,  Node: emacsvox-ses,  Next: emacsvox-settings,  Prev: emacsvox-sdcv,  Up: Emacsvox Commands And Options
 
-2.260 emacsvox-ses
+2.261 emacsvox-ses
 ==================
 
 ses implements a simple spread sheet and is part of Emacs This module
 speech-enables ses
 
-2.260.1 Emacsvox-Ses Commands
+2.261.1 Emacsvox-Ses Commands
 -----------------------------
 
-2.260.1.1 emacsvox-ses-backward-column-and-summarize
+2.261.1.1 emacsvox-ses-backward-column-and-summarize
 ....................................................
 
  -- Command: emacsvox-ses-backward-column-and-summarize
 
      Move to previous column and summarize.
 
-2.260.1.2 emacsvox-ses-backward-row-and-summarize
+2.261.1.2 emacsvox-ses-backward-row-and-summarize
 .................................................
 
  -- Command: emacsvox-ses-backward-row-and-summarize
 
      Move to previous row  and summarize.
 
-2.260.1.3 emacsvox-ses-forward-column-and-summarize
+2.261.1.3 emacsvox-ses-forward-column-and-summarize
 ...................................................
 
  -- Command: emacsvox-ses-forward-column-and-summarize
 
      Move to next column and summarize.
 
-2.260.1.4 emacsvox-ses-forward-row-and-summarize
+2.261.1.4 emacsvox-ses-forward-row-and-summarize
 ................................................
 
  -- Command: emacsvox-ses-forward-row-and-summarize
 
      Move to next row and summarize.
 
-2.260.1.5 emacsvox-ses-summarize-cell
+2.261.1.5 emacsvox-ses-summarize-cell
 .....................................
 
  -- Command: emacsvox-ses-summarize-cell (cell-name)
@@ -7805,7 +7826,7 @@ speech-enables ses
 
      (fn CELL-NAME)
 
-2.260.1.6 emacsvox-ses-summarize-current-cell
+2.261.1.6 emacsvox-ses-summarize-current-cell
 .............................................
 
  -- Command: emacsvox-ses-summarize-current-cell (&rest ignore)
@@ -7817,29 +7838,29 @@ speech-enables ses
 
 File: emacsvox-reference.info,  Node: emacsvox-settings,  Next: emacsvox-settings-changes,  Prev: emacsvox-ses,  Up: Emacsvox Commands And Options
 
-2.261 emacsvox-settings
+2.262 emacsvox-settings
 =======================
 
 Search settings and action destinations with captured source context.
 
-2.261.1 Emacsvox-Settings Commands
+2.262.1 Emacsvox-Settings Commands
 ----------------------------------
 
-2.261.1.1 emacsvox-settings-buffer
+2.262.1.1 emacsvox-settings-buffer
 ..................................
 
  -- Command: emacsvox-settings-buffer
 
      Find settings relevant to the captured source buffer.
 
-2.261.1.2 emacsvox-settings-search
+2.262.1.2 emacsvox-settings-search
 ..................................
 
  -- Command: emacsvox-settings-search
 
      Find a focused setting and select its control without activating it.
 
-2.261.1.3 emacsvox-settings-search-actions
+2.262.1.3 emacsvox-settings-search-actions
 ..........................................
 
  -- Command: emacsvox-settings-search-actions
@@ -7851,23 +7872,23 @@ Search settings and action destinations with captured source context.
 
 File: emacsvox-reference.info,  Node: emacsvox-settings-changes,  Next: emacsvox-settings-integrations,  Prev: emacsvox-settings,  Up: Emacsvox Commands And Options
 
-2.262 emacsvox-settings-changes
+2.263 emacsvox-settings-changes
 ===============================
 
 A read-only snapshot of loaded Custom options and their separate draft
 stores.
 
-2.262.1 Emacsvox-Settings-Changes Commands
+2.263.1 Emacsvox-Settings-Changes Commands
 ------------------------------------------
 
-2.262.1.1 emacsvox-settings-changes
+2.263.1.1 emacsvox-settings-changes
 ...................................
 
  -- Command: emacsvox-settings-changes
 
      Review current values, saved defaults and drafts without changing them.
 
-2.262.1.2 emacsvox-settings-changes-mode
+2.263.1.2 emacsvox-settings-changes-mode
 ........................................
 
  -- Command: emacsvox-settings-changes-mode
@@ -7883,7 +7904,7 @@ stores.
      -----------------------------------------------------
      RET		emacsvox-settings-changes-speak
 
-2.262.1.3 emacsvox-settings-changes-refresh
+2.263.1.3 emacsvox-settings-changes-refresh
 ...........................................
 
  -- Command: emacsvox-settings-changes-refresh
@@ -7893,15 +7914,15 @@ stores.
 
 File: emacsvox-reference.info,  Node: emacsvox-settings-integrations,  Next: emacsvox-settings-workflows,  Prev: emacsvox-settings-changes,  Up: Emacsvox Commands And Options
 
-2.263 emacsvox-settings-integrations
+2.264 emacsvox-settings-integrations
 ====================================
 
 Discover actual integration options and invoke existing source controls.
 
-2.263.1 Emacsvox-Settings-Integrations Commands
+2.264.1 Emacsvox-Settings-Integrations Commands
 -----------------------------------------------
 
-2.263.1.1 emacsvox-settings-for-buffer
+2.264.1.1 emacsvox-settings-for-buffer
 ......................................
 
  -- Command: emacsvox-settings-for-buffer
@@ -7911,7 +7932,7 @@ Discover actual integration options and invoke existing source controls.
      Use its focused integration menu when available, otherwise general buffer
      settings.  Changes retain the scope shown by each control.
 
-2.263.1.2 emacsvox-settings-integrations
+2.264.1.2 emacsvox-settings-integrations
 ........................................
 
  -- Command: emacsvox-settings-integrations
@@ -7921,16 +7942,16 @@ Discover actual integration options and invoke existing source controls.
 
 File: emacsvox-reference.info,  Node: emacsvox-settings-workflows,  Next: emacsvox-setup,  Prev: emacsvox-settings-integrations,  Up: Emacsvox Commands And Options
 
-2.264 emacsvox-settings-workflows
+2.265 emacsvox-settings-workflows
 =================================
 
 Link focused menus to existing editors, retaining their persistence
 semantics.
 
-2.264.1 Emacsvox-Settings-Workflows Commands
+2.265.1 Emacsvox-Settings-Workflows Commands
 --------------------------------------------
 
-2.264.1.1 emacsvox-settings-diagnostics
+2.265.1.1 emacsvox-settings-diagnostics
 .......................................
 
  -- Command: emacsvox-settings-diagnostics
@@ -7938,7 +7959,7 @@ semantics.
      Inspect speech and presentation; only explicit actions change settings.
      Doctor offers individual repairs.  Logging includes complete spoken text.
 
-2.264.1.2 emacsvox-settings-dictionaries
+2.265.1.2 emacsvox-settings-dictionaries
 ........................................
 
  -- Command: emacsvox-settings-dictionaries
@@ -7947,14 +7968,14 @@ semantics.
      These dictionaries have their own Save file, separate from Customize and
      Omnivox punctuation.  Opening the menu changes nothing.
 
-2.264.1.3 emacsvox-settings-feedback
+2.265.1.3 emacsvox-settings-feedback
 ....................................
 
  -- Command: emacsvox-settings-feedback
 
      Explain and edit current or recent feedback, preserving source context.
 
-2.264.1.4 emacsvox-settings-history
+2.265.1.4 emacsvox-settings-history
 ...................................
 
  -- Command: emacsvox-settings-history
@@ -7962,14 +7983,14 @@ semantics.
      Manage retained feedback globally; lowering the limit deletes old records.
      Changes apply immediately.  Save defaults separately through Customize.
 
-2.264.1.5 emacsvox-settings-presentation
+2.265.1.5 emacsvox-settings-presentation
 ........................................
 
  -- Command: emacsvox-settings-presentation
 
      Manage presentation features and explicitly scoped rule drafts.
 
-2.264.1.6 emacsvox-settings-preview-labels
+2.265.1.6 emacsvox-settings-preview-labels
 ..........................................
 
  -- Command: emacsvox-settings-preview-labels
@@ -7977,7 +7998,7 @@ semantics.
      Choose physical voice comparison labels; navigation changes nothing.
      Enter applies the selected policy and returns.  Cancel retains the old policy.
 
-2.264.1.7 emacsvox-settings-reading
+2.265.1.7 emacsvox-settings-reading
 ...................................
 
  -- Command: emacsvox-settings-reading
@@ -7985,7 +8006,7 @@ semantics.
      Discover advanced reading defaults without changing them on entry.
      Each item opens Customize, where Apply and Save remain explicit.
 
-2.264.1.8 emacsvox-settings-reading-chunks
+2.265.1.8 emacsvox-settings-reading-chunks
 ..........................................
 
  -- Command: emacsvox-settings-reading-chunks
@@ -7993,7 +8014,7 @@ semantics.
      Choose source speech boundaries for this session, regardless of parent scope.
      Arrow navigation does not apply a choice. Use preview to compare phrasing.
 
-2.264.1.9 emacsvox-settings-reading-columns
+2.265.1.9 emacsvox-settings-reading-columns
 ...........................................
 
  -- Command: emacsvox-settings-reading-columns
@@ -8002,7 +8023,7 @@ semantics.
      Edited ranges are remembered by file or mode and saved on Emacs exit.
      Direction is session-only. Opening, preview and navigation do not edit the store.
 
-2.264.1.10 emacsvox-settings-reading-controls
+2.265.1.10 emacsvox-settings-reading-controls
 .............................................
 
  -- Command: emacsvox-settings-reading-controls
@@ -8011,7 +8032,7 @@ semantics.
      Menu feedback remains spoken while quiet is enabled. r restores source speech
      and the global default. These controls do not save startup settings.
 
-2.264.1.11 emacsvox-settings-reading-repeats
+2.265.1.11 emacsvox-settings-reading-repeats
 ............................................
 
  -- Command: emacsvox-settings-reading-repeats
@@ -8019,14 +8040,14 @@ semantics.
      Manage repeat cleanup globally for this session; no startup Save.
      Browsing leaves settings unchanged. Restore opening list reverses edits.
 
-2.264.1.12 emacsvox-settings-setups
+2.265.1.12 emacsvox-settings-setups
 ...................................
 
  -- Command: emacsvox-settings-setups
 
      Manage saved setups and retained drafts in their owning editors.
 
-2.264.1.13 emacsvox-settings-switches
+2.265.1.13 emacsvox-settings-switches
 .....................................
 
  -- Command: emacsvox-settings-switches
@@ -8035,7 +8056,7 @@ semantics.
      Only global Voice Lock has a Customize save here.  Other switches last for the
      session or buffer; Help explains which presentation each switch affects.
 
-2.264.1.14 emacsvox-settings-voice-presentation
+2.265.1.14 emacsvox-settings-voice-presentation
 ...............................................
 
  -- Command: emacsvox-settings-voice-presentation
@@ -8043,7 +8064,7 @@ semantics.
      Set comparison labels and overall Omnivox pitch contrast globally.
      Changes apply now; Save defaults explicitly to keep them across restarts.
 
-2.264.2 emacsvox-settings-workflows Options
+2.265.2 emacsvox-settings-workflows Options
 -------------------------------------------
 
  -- Variable: User Option
@@ -8060,7 +8081,7 @@ semantics.
 
 File: emacsvox-reference.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-settings-workflows,  Up: Emacsvox Commands And Options
 
-2.265 emacsvox-setup
+2.266 emacsvox-setup
 ====================
 
 Entry point for Emacsvox.  The simplest and most basic way to start
@@ -8076,7 +8097,7 @@ tvr/emacs-startup.el in the Emacsvox Git repository for my setup.
 
 File: emacsvox-reference.info,  Node: emacsvox-sgml-mode,  Next: emacsvox-sh-script,  Prev: emacsvox-setup,  Up: Emacsvox Commands And Options
 
-2.266 emacsvox-sgml-mode
+2.267 emacsvox-sgml-mode
 ========================
 
 emacsvox extensions to sgml mode
@@ -8084,7 +8105,7 @@ emacsvox extensions to sgml mode
 
 File: emacsvox-reference.info,  Node: emacsvox-sh-script,  Next: emacsvox-shr,  Prev: emacsvox-sgml-mode,  Up: Emacsvox Commands And Options
 
-2.267 emacsvox-sh-script
+2.268 emacsvox-sh-script
 ========================
 
 This module speech-enables sh-script.el
@@ -8092,7 +8113,7 @@ This module speech-enables sh-script.el
 
 File: emacsvox-reference.info,  Node: emacsvox-shr,  Next: emacsvox-slime,  Prev: emacsvox-sh-script,  Up: Emacsvox Commands And Options
 
-2.268 emacsvox-shr
+2.269 emacsvox-shr
 ==================
 
 Provide link navigation feedback for all SHR clients, including HTML
@@ -8102,7 +8123,7 @@ remains available when that integration is loaded.
 
 File: emacsvox-reference.info,  Node: emacsvox-slime,  Next: emacsvox-smartparens,  Prev: emacsvox-shr,  Up: Emacsvox Commands And Options
 
-2.269 emacsvox-slime
+2.270 emacsvox-slime
 ====================
 
 SLIME == Superior Lisp Interaction Mode For Emacs Slime is a powerful
@@ -8113,7 +8134,7 @@ developing AsTeR.
 
 File: emacsvox-reference.info,  Node: emacsvox-smartparens,  Next: emacsvox-solitaire,  Prev: emacsvox-slime,  Up: Emacsvox Commands And Options
 
-2.270 emacsvox-smartparens
+2.271 emacsvox-smartparens
 ==========================
 
 SMARTPARENS == Automatic insertion, wrapping and paredit-like navigation
@@ -8125,29 +8146,29 @@ aurally highlighted.
 
 File: emacsvox-reference.info,  Node: emacsvox-solitaire,  Next: emacsvox-sound-library,  Prev: emacsvox-smartparens,  Up: Emacsvox Commands And Options
 
-2.271 emacsvox-solitaire
+2.272 emacsvox-solitaire
 ========================
 
 Auditory interface to solitaire
 
-2.271.1 Emacsvox-Solitaire Commands
+2.272.1 Emacsvox-Solitaire Commands
 -----------------------------------
 
-2.271.1.1 emacsvox-solitaire-show-column
+2.272.1.1 emacsvox-solitaire-show-column
 ........................................
 
  -- Command: emacsvox-solitaire-show-column
 
      Present first-class tones for each cell in the current column.
 
-2.271.1.2 emacsvox-solitaire-show-row
+2.272.1.2 emacsvox-solitaire-show-row
 .....................................
 
  -- Command: emacsvox-solitaire-show-row
 
      Present first-class tones for each cell in the current row.
 
-2.271.1.3 emacsvox-solitaire-speak-coordinates
+2.272.1.3 emacsvox-solitaire-speak-coordinates
 ..............................................
 
  -- Command: emacsvox-solitaire-speak-coordinates (&optional icon
@@ -8159,14 +8180,14 @@ Auditory interface to solitaire
 
      (fn &optional ICON OCCASION EVENT)
 
-2.271.1.4 emacsvox-solitaire-speak-row
+2.272.1.4 emacsvox-solitaire-speak-row
 ......................................
 
  -- Command: emacsvox-solitaire-speak-row
 
      Speak current row.
 
-2.271.1.5 emacsvox-solitaire-speak-stones
+2.272.1.5 emacsvox-solitaire-speak-stones
 .........................................
 
  -- Command: emacsvox-solitaire-speak-stones
@@ -8176,7 +8197,7 @@ Auditory interface to solitaire
 
 File: emacsvox-reference.info,  Node: emacsvox-sound-library,  Next: emacsvox-sounds,  Prev: emacsvox-solitaire,  Up: Emacsvox Commands And Options
 
-2.272 emacsvox-sound-library
+2.273 emacsvox-sound-library
 ============================
 
 Audio files in the library are candidates, not semantic cues.  Explicit
@@ -8184,10 +8205,10 @@ assignment copies immutable audio into a pack before publishing its
 manifest.  Browsing and preview do not assign, activate a pack, or
 persist settings.
 
-2.272.1 Emacsvox-Sound-Library Commands
+2.273.1 Emacsvox-Sound-Library Commands
 ---------------------------------------
 
-2.272.1.1 emacsvox-sound-library
+2.273.1.1 emacsvox-sound-library
 ................................
 
  -- Command: emacsvox-sound-library (&optional pack cue)
@@ -8196,7 +8217,7 @@ persist settings.
 
      (fn &optional PACK CUE)
 
-2.272.1.2 emacsvox-sound-library-assign
+2.273.1.2 emacsvox-sound-library-assign
 .......................................
 
  -- Command: emacsvox-sound-library-assign
@@ -8205,14 +8226,14 @@ persist settings.
      Choose a pack on the first assignment; further assignments use that pack.
      W saves all pending cues together. q discards them; reopen to change packs.
 
-2.272.1.3 emacsvox-sound-library-current
+2.273.1.3 emacsvox-sound-library-current
 ........................................
 
  -- Command: emacsvox-sound-library-current
 
      Preview the currently assigned cue in the captured target pack.
 
-2.272.1.4 emacsvox-sound-library-delete
+2.273.1.4 emacsvox-sound-library-delete
 .......................................
 
  -- Command: emacsvox-sound-library-delete
@@ -8220,14 +8241,14 @@ persist settings.
      Delete this library file after confirmation, refusing known assignments.
      Imported originals elsewhere and immutable pack copies remain untouched.
 
-2.272.1.5 emacsvox-sound-library-help
+2.273.1.5 emacsvox-sound-library-help
 .....................................
 
  -- Command: emacsvox-sound-library-help
 
      Explain available recordings, assignments, preview and explicit saving.
 
-2.272.1.6 emacsvox-sound-library-import
+2.273.1.6 emacsvox-sound-library-import
 .......................................
 
  -- Command: emacsvox-sound-library-import (file collection)
@@ -8236,7 +8257,7 @@ persist settings.
 
      (fn FILE COLLECTION)
 
-2.272.1.7 emacsvox-sound-library-mode
+2.273.1.7 emacsvox-sound-library-mode
 .....................................
 
  -- Command: emacsvox-sound-library-mode
@@ -8267,42 +8288,42 @@ persist settings.
      <remap> <emacsvox-aural-ui-next-row>	 emacsvox-sound-library-next
      <remap> <emacsvox-aural-ui-previous-row> emacsvox-sound-library-previous
 
-2.272.1.8 emacsvox-sound-library-next
+2.273.1.8 emacsvox-sound-library-next
 .....................................
 
  -- Command: emacsvox-sound-library-next
 
      Move to the next recording and use the Library preview setting.
 
-2.272.1.9 emacsvox-sound-library-open-directory
+2.273.1.9 emacsvox-sound-library-open-directory
 ...............................................
 
  -- Command: emacsvox-sound-library-open-directory
 
      Open the candidate library directory for adding or organising recordings.
 
-2.272.1.10 emacsvox-sound-library-preview
+2.273.1.10 emacsvox-sound-library-preview
 .........................................
 
  -- Command: emacsvox-sound-library-preview
 
      Preview the selected recording without changing any cue or pack.
 
-2.272.1.11 emacsvox-sound-library-previous
+2.273.1.11 emacsvox-sound-library-previous
 ..........................................
 
  -- Command: emacsvox-sound-library-previous
 
      Move to the previous recording and use the Library preview setting.
 
-2.272.1.12 emacsvox-sound-library-refresh
+2.273.1.12 emacsvox-sound-library-refresh
 .........................................
 
  -- Command: emacsvox-sound-library-refresh
 
      Rescan candidates and assignments without applying or saving anything.
 
-2.272.1.13 emacsvox-sound-library-reset
+2.273.1.13 emacsvox-sound-library-reset
 .......................................
 
  -- Command: emacsvox-sound-library-reset
@@ -8310,7 +8331,7 @@ persist settings.
      Prepare removal of the local cue assignment, revealing its parent or fallback.
      Original audio stays intact. W saves all pending changes; q discards them.
 
-2.272.1.14 emacsvox-sound-library-save
+2.273.1.14 emacsvox-sound-library-save
 ......................................
 
  -- Command: emacsvox-sound-library-save
@@ -8319,7 +8340,7 @@ persist settings.
      An inactive pack stays inactive. Assigned audio is copied into the pack;
      removing or renaming the library source cannot break that saved sound.
 
-2.272.1.15 emacsvox-sound-library-search
+2.273.1.15 emacsvox-sound-library-search
 ........................................
 
  -- Command: emacsvox-sound-library-search (text)
@@ -8328,7 +8349,7 @@ persist settings.
 
      (fn TEXT)
 
-2.272.1.16 emacsvox-sound-library-select
+2.273.1.16 emacsvox-sound-library-select
 ........................................
 
  -- Command: emacsvox-sound-library-select
@@ -8338,21 +8359,21 @@ persist settings.
      SPC replays the candidate; C compares the saved cue.
      a chooses another cue; q discards all proposals.
 
-2.272.1.17 emacsvox-sound-library-speak-current
+2.273.1.17 emacsvox-sound-library-speak-current
 ...............................................
 
  -- Command: emacsvox-sound-library-speak-current
 
      Speak the recording’s name, collection, duration and known assignments.
 
-2.272.1.18 emacsvox-sound-library-unassigned
+2.273.1.18 emacsvox-sound-library-unassigned
 ............................................
 
  -- Command: emacsvox-sound-library-unassigned
 
      Toggle recordings without saved assignments, keeping pending rows visible.
 
-2.272.2 emacsvox-sound-library Options
+2.273.2 emacsvox-sound-library Options
 --------------------------------------
 
  -- Variable: User Option emacsvox-sound-library-directory
@@ -8382,13 +8403,13 @@ persist settings.
 
 File: emacsvox-reference.info,  Node: emacsvox-sounds,  Next: emacsvox-speak,  Prev: emacsvox-sound-library,  Up: Emacsvox Commands And Options
 
-2.273 emacsvox-sounds
+2.274 emacsvox-sounds
 =====================
 
 This module provides the interface for generating auditory icons.  It
 also defines sound themes for auditory icons.
 
-2.273.1 Design goal:
+2.274.1 Design goal:
 --------------------
 
    • Auditory icons should be used to provide additional feedback, not
@@ -8425,7 +8446,7 @@ also defines sound themes for auditory icons.
      ‘emacsvox-sound-pack.el’ manifest, are discovered dynamically.
    • Contrast this with ‘prompts’ -- they dont belong to any theme.
 
-2.273.2 Designing Auditory Icons
+2.274.2 Designing Auditory Icons
 --------------------------------
 
 Here are some notes on what I have learnt while designing and using
@@ -8446,10 +8467,10 @@ auditory icons over the years:
    If ‘emacsvox-play-program’ is set to ‘nil’, we serve icons, otherwise
 play them using a local player.
 
-2.273.3 Emacsvox-Sounds Commands
+2.274.3 Emacsvox-Sounds Commands
 --------------------------------
 
-2.273.3.1 emacsvox-sounds-select-theme
+2.274.3.1 emacsvox-sounds-select-theme
 ......................................
 
  -- Command: emacsvox-sounds-select-theme (&optional theme)
@@ -8459,7 +8480,7 @@ play them using a local player.
 
      (fn &optional THEME)
 
-2.273.3.2 emacsvox-toggle-icons
+2.274.3.2 emacsvox-toggle-icons
 ...............................
 
  -- Command: emacsvox-toggle-icons (&optional prefix)
@@ -8470,7 +8491,7 @@ play them using a local player.
 
      (fn &optional PREFIX)
 
-2.273.4 emacsvox-sounds Options
+2.274.4 emacsvox-sounds Options
 -------------------------------
 
  -- Variable: User Option emacsvox-play-program
@@ -8487,7 +8508,7 @@ play them using a local player.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak,  Next: emacsvox-speak-characters,  Prev: emacsvox-sounds,  Up: Emacsvox Commands And Options
 
-2.274 emacsvox-speak
+2.275 emacsvox-speak
 ====================
 
 This module defines the core speech services used by emacsvox.  It
@@ -8496,10 +8517,10 @@ of emacsvox from becoming dependent on the speech server modules Tracked
 buffer reading lives in 'emacsvox-tracked-reading'.  Column filtering
 and saved filters live in 'emacsvox-speak-filters'.
 
-2.274.1 Emacsvox-Speak Commands
+2.275.1 Emacsvox-Speak Commands
 -------------------------------
 
-2.274.1.1 emacsvox-open-info
+2.275.1.1 emacsvox-open-info
 ............................
 
  -- Command: emacsvox-open-info
@@ -8507,7 +8528,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Open Emacsvox Info Manual.
 
-2.274.1.2 emacsvox-read-next-line
+2.275.1.2 emacsvox-read-next-line
 .................................
 
  -- Command: emacsvox-read-next-line (&optional arg)
@@ -8518,7 +8539,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.3 emacsvox-read-previous-line
+2.275.1.3 emacsvox-read-previous-line
 .....................................
 
  -- Command: emacsvox-read-previous-line (&optional arg)
@@ -8529,7 +8550,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.4 emacsvox-shell-command
+2.275.1.4 emacsvox-shell-command
 ................................
 
  -- Command: emacsvox-shell-command (command)
@@ -8538,7 +8559,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn COMMAND)
 
-2.274.1.5 emacsvox-silence
+2.275.1.5 emacsvox-silence
 ..........................
 
  -- Command: emacsvox-silence
@@ -8549,7 +8570,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      streams. Runs ‘emacsvox-silence-hook’ which can be used to
      configure which media players get silenced or paused/resumed.
 
-2.274.1.6 emacsvox-speak-buffer
+2.275.1.6 emacsvox-speak-buffer
 ...............................
 
  -- Command: emacsvox-speak-buffer (&optional arg)
@@ -8561,7 +8582,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.7 emacsvox-speak-buffer-interactively
+2.275.1.7 emacsvox-speak-buffer-interactively
 .............................................
 
  -- Command: emacsvox-speak-buffer-interactively
@@ -8572,7 +8593,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire buffer.
 
-2.274.1.8 emacsvox-speak-current-kill
+2.275.1.8 emacsvox-speak-current-kill
 .....................................
 
  -- Command: emacsvox-speak-current-kill (&optional count)
@@ -8587,7 +8608,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional COUNT)
 
-2.274.1.9 emacsvox-speak-current-mark
+2.275.1.9 emacsvox-speak-current-mark
 .....................................
 
  -- Command: emacsvox-speak-current-mark (count)
@@ -8604,7 +8625,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn COUNT)
 
-2.274.1.10 emacsvox-speak-extent
+2.275.1.10 emacsvox-speak-extent
 ................................
 
  -- Command: emacsvox-speak-extent (beg end &optional no-case)
@@ -8617,7 +8638,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn BEG END &optional NO-CASE)
 
-2.274.1.11 emacsvox-speak-help
+2.275.1.11 emacsvox-speak-help
 ..............................
 
  -- Command: emacsvox-speak-help
@@ -8625,7 +8646,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak help buffer if one present.
 
-2.274.1.12 emacsvox-speak-line
+2.275.1.12 emacsvox-speak-line
 ..............................
 
  -- Command: emacsvox-speak-line (&optional arg)
@@ -8652,7 +8673,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.13 emacsvox-speak-line-interactively
+2.275.1.13 emacsvox-speak-line-interactively
 ............................................
 
  -- Command: emacsvox-speak-line-interactively
@@ -8663,7 +8684,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire line.
 
-2.274.1.14 emacsvox-speak-load-directory-settings
+2.275.1.14 emacsvox-speak-load-directory-settings
 .................................................
 
  -- Command: emacsvox-speak-load-directory-settings (&optional dir)
@@ -8676,7 +8697,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional DIR)
 
-2.274.1.15 emacsvox-speak-other-buffer
+2.275.1.15 emacsvox-speak-other-buffer
 ......................................
 
  -- Command: emacsvox-speak-other-buffer (buffer)
@@ -8687,7 +8708,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn BUFFER)
 
-2.274.1.16 emacsvox-speak-overlay-properties
+2.275.1.16 emacsvox-speak-overlay-properties
 ............................................
 
  -- Command: emacsvox-speak-overlay-properties
@@ -8695,7 +8716,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak display, before-string or after-string property if any.
 
-2.274.1.17 emacsvox-speak-page
+2.275.1.17 emacsvox-speak-page
 ..............................
 
  -- Command: emacsvox-speak-page (&optional arg)
@@ -8707,7 +8728,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.18 emacsvox-speak-page-interactively
+2.275.1.18 emacsvox-speak-page-interactively
 ............................................
 
  -- Command: emacsvox-speak-page-interactively
@@ -8717,7 +8738,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire page.
 
-2.274.1.19 emacsvox-speak-paragraph
+2.275.1.19 emacsvox-speak-paragraph
 ...................................
 
  -- Command: emacsvox-speak-paragraph (&optional arg)
@@ -8729,7 +8750,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.20 emacsvox-speak-paragraph-interactively
+2.275.1.20 emacsvox-speak-paragraph-interactively
 .................................................
 
  -- Command: emacsvox-speak-paragraph-interactively
@@ -8740,7 +8761,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire paragraph.
 
-2.274.1.21 emacsvox-speak-rectangle
+2.275.1.21 emacsvox-speak-rectangle
 ...................................
 
  -- Command: emacsvox-speak-rectangle (start end)
@@ -8752,7 +8773,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn START END)
 
-2.274.1.22 emacsvox-speak-region
+2.275.1.22 emacsvox-speak-region
 ................................
 
  -- Command: emacsvox-speak-region (start end)
@@ -8762,7 +8783,16 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn START END)
 
-2.274.1.23 emacsvox-speak-sentence
+2.275.1.23 emacsvox-speak-row-position
+......................................
+
+ -- Command: emacsvox-speak-row-position
+
+     Report source line number and screen-row position without moving point.
+     The source must be displayed.  Row counts use the current window’s layout and
+     are computed only on request, without adding counts to ordinary navigation.
+
+2.275.1.24 emacsvox-speak-sentence
 ..................................
 
  -- Command: emacsvox-speak-sentence (&optional arg)
@@ -8773,7 +8803,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.24 emacsvox-speak-sexp
+2.275.1.25 emacsvox-speak-sexp
 ..............................
 
  -- Command: emacsvox-speak-sexp (&optional arg)
@@ -8784,7 +8814,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.25 emacsvox-speak-sexp-interactively
+2.275.1.26 emacsvox-speak-sexp-interactively
 ............................................
 
  -- Command: emacsvox-speak-sexp-interactively
@@ -8794,7 +8824,7 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire sexp.
 
-2.274.1.26 emacsvox-speak-spaces
+2.275.1.27 emacsvox-speak-spaces
 ................................
 
  -- Command: emacsvox-speak-spaces
@@ -8802,7 +8832,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak number of spaces at point.
 
-2.274.1.27 emacsvox-speak-spaces-at-point
+2.275.1.28 emacsvox-speak-spaces-at-point
 .........................................
 
  -- Command: emacsvox-speak-spaces-at-point
@@ -8810,14 +8840,14 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Speak the white space at point.
 
-2.274.1.28 emacsvox-speak-spell-current-word
+2.275.1.29 emacsvox-speak-spell-current-word
 ............................................
 
  -- Command: emacsvox-speak-spell-current-word
 
      Spell word at  point.
 
-2.274.1.29 emacsvox-speak-version
+2.275.1.30 emacsvox-speak-version
 .................................
 
  -- Command: emacsvox-speak-version
@@ -8825,7 +8855,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Announce version information for running emacsvox.
 
-2.274.1.30 emacsvox-speak-visual-line
+2.275.1.31 emacsvox-speak-visual-line
 .....................................
 
  -- Command: emacsvox-speak-visual-line
@@ -8834,7 +8864,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Complete source lines keep their ordinary boundary feedback.  Wrapped rows
      use independent first, middle and last cues in the same speech transaction.
 
-2.274.1.31 emacsvox-speak-voice-annotate-paragraphs
+2.275.1.32 emacsvox-speak-voice-annotate-paragraphs
 ...................................................
 
  -- Command: emacsvox-speak-voice-annotate-paragraphs
@@ -8843,7 +8873,7 @@ and saved filters live in 'emacsvox-speak-filters'.
      Here, paragraph is taken to mean a chunk of text preceded by a blank line.
      Useful to do this before you listen to an entire buffer.
 
-2.274.1.32 emacsvox-speak-word
+2.275.1.33 emacsvox-speak-word
 ..............................
 
  -- Command: emacsvox-speak-word (&optional arg)
@@ -8857,7 +8887,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      (fn &optional ARG)
 
-2.274.1.33 emacsvox-speak-word-interactively
+2.275.1.34 emacsvox-speak-word-interactively
 ............................................
 
  -- Command: emacsvox-speak-word-interactively
@@ -8867,14 +8897,14 @@ and saved filters live in 'emacsvox-speak-filters'.
       ‘r’ to speak the rest.
      any other key to speak entire word.
 
-2.274.1.34 emacsvox-submit-bug
+2.275.1.35 emacsvox-submit-bug
 ..............................
 
  -- Command: emacsvox-submit-bug
 
      Function to submit a bug to the Emacsvox list
 
-2.274.1.35 emacsvox-zap-tts
+2.275.1.36 emacsvox-zap-tts
 ...........................
 
  -- Command: emacsvox-zap-tts
@@ -8882,7 +8912,7 @@ and saved filters live in 'emacsvox-speak-filters'.
 
      Send this command to the TTS directly.
 
-2.274.2 emacsvox-speak Options
+2.275.2 emacsvox-speak Options
 ------------------------------
 
  -- Variable: User Option emacsvox-silence-hook
@@ -8896,16 +8926,16 @@ and saved filters live in 'emacsvox-speak-filters'.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-characters,  Next: emacsvox-speak-completion,  Prev: emacsvox-speak,  Up: Emacsvox Commands And Options
 
-2.275 emacsvox-speak-characters
+2.276 emacsvox-speak-characters
 ===============================
 
 Character speech and typing feedback.  The core speech facade retains
 activation in its established order.
 
-2.275.1 Emacsvox-Speak-Characters Commands
+2.276.1 Emacsvox-Speak-Characters Commands
 ------------------------------------------
 
-2.275.1.1 emacsvox-delayed-phonetic-mode
+2.276.1.1 emacsvox-delayed-phonetic-mode
 ........................................
 
  -- Command: emacsvox-delayed-phonetic-mode (&optional arg)
@@ -8935,7 +8965,7 @@ activation in its established order.
 
      (fn &optional ARG)
 
-2.275.1.2 emacsvox-speak-char
+2.276.1.2 emacsvox-speak-char
 .............................
 
  -- Command: emacsvox-speak-char (&optional prefix)
@@ -8946,7 +8976,7 @@ activation in its established order.
 
      (fn &optional PREFIX)
 
-2.275.1.3 emacsvox-speak-char-name
+2.276.1.3 emacsvox-speak-char-name
 ..................................
 
  -- Command: emacsvox-speak-char-name (char)
@@ -8955,14 +8985,14 @@ activation in its established order.
 
      (fn CHAR)
 
-2.275.1.4 emacsvox-speak-preceding-char
+2.276.1.4 emacsvox-speak-preceding-char
 .......................................
 
  -- Command: emacsvox-speak-preceding-char
 
      Speak character before point.
 
-2.275.1.5 emacsvox-toggle-character-echo
+2.276.1.5 emacsvox-toggle-character-echo
 ........................................
 
  -- Command: emacsvox-toggle-character-echo (&optional prefix)
@@ -8972,7 +9002,7 @@ activation in its established order.
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.275.1.6 emacsvox-toggle-line-echo
+2.276.1.6 emacsvox-toggle-line-echo
 ...................................
 
  -- Command: emacsvox-toggle-line-echo (&optional prefix)
@@ -8982,7 +9012,7 @@ activation in its established order.
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.275.1.7 emacsvox-toggle-word-echo
+2.276.1.7 emacsvox-toggle-word-echo
 ...................................
 
  -- Command: emacsvox-toggle-word-echo (&optional prefix)
@@ -8992,7 +9022,7 @@ activation in its established order.
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.275.2 emacsvox-speak-characters Options
+2.276.2 emacsvox-speak-characters Options
 -----------------------------------------
 
  -- Variable: User Option emacsvox-delayed-phonetic-delay
@@ -9031,16 +9061,16 @@ activation in its established order.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-completion,  Next: emacsvox-speak-filters,  Prev: emacsvox-speak-characters,  Up: Emacsvox Commands And Options
 
-2.276 emacsvox-speak-completion
+2.277 emacsvox-speak-completion
 ===============================
 
 Completion reading and navigation.  The core speech facade retains
 activation in its established order.
 
-2.276.1 Emacsvox-Speak-Completion Commands
+2.277.1 Emacsvox-Speak-Completion Commands
 ------------------------------------------
 
-2.276.1.1 emacsvox-completions-move-to-completion-group
+2.277.1.1 emacsvox-completions-move-to-completion-group
 .......................................................
 
  -- Command: emacsvox-completions-move-to-completion-group
@@ -9049,7 +9079,7 @@ activation in its established order.
      typed. If no such group exists, then we try to search for that
      char, or dont move.
 
-2.276.1.2 emacsvox-speak-completions-if-available
+2.277.1.2 emacsvox-speak-completions-if-available
 .................................................
 
  -- Command: emacsvox-speak-completions-if-available
@@ -9057,7 +9087,7 @@ activation in its established order.
 
      Speak completions if available.
 
-2.276.1.3 emacsvox-switch-to-reference-buffer
+2.277.1.3 emacsvox-switch-to-reference-buffer
 .............................................
 
  -- Command: emacsvox-switch-to-reference-buffer
@@ -9067,7 +9097,7 @@ activation in its established order.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-filters,  Next: emacsvox-speak-messages,  Prev: emacsvox-speak-completion,  Up: Emacsvox Commands And Options
 
-2.277 emacsvox-speak-filters
+2.278 emacsvox-speak-filters
 ============================
 
 Own column selection, inversion and saved per-file or per-mode filters.
@@ -9075,10 +9105,10 @@ The core speech library loads these definitions at the original filter
 setup point.  Saved settings are loaded and the exit hook is installed
 only when requested by the existing filter commands.
 
-2.277.1 Emacsvox-Speak-Filters Commands
+2.278.1 Emacsvox-Speak-Filters Commands
 ---------------------------------------
 
-2.277.1.1 emacsvox-speak-line-set-column-filter
+2.278.1.1 emacsvox-speak-line-set-column-filter
 ...............................................
 
  -- Command: emacsvox-speak-line-set-column-filter (filter)
@@ -9097,21 +9127,21 @@ only when requested by the existing filter commands.
 
      (fn FILTER)
 
-2.277.1.2 emacsvox-speak-load-filter-settings
+2.278.1.2 emacsvox-speak-load-filter-settings
 .............................................
 
  -- Command: emacsvox-speak-load-filter-settings
 
      Load emacsvox filter settings.
 
-2.277.1.3 emacsvox-speak-persist-filter-settings
+2.278.1.3 emacsvox-speak-persist-filter-settings
 ................................................
 
  -- Command: emacsvox-speak-persist-filter-settings
 
      Persist emacsvox filter settings for future sessions.
 
-2.277.1.4 emacsvox-toggle-speak-line-invert-filter
+2.278.1.4 emacsvox-toggle-speak-line-invert-filter
 ..................................................
 
  -- Command: emacsvox-toggle-speak-line-invert-filter (&optional prefix)
@@ -9124,16 +9154,16 @@ only when requested by the existing filter commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-messages,  Next: emacsvox-speak-navigation,  Prev: emacsvox-speak-filters,  Up: Emacsvox Commands And Options
 
-2.278 emacsvox-speak-messages
+2.279 emacsvox-speak-messages
 =============================
 
 Message history and replay.  The core speech facade retains activation
 in its established order.
 
-2.278.1 Emacsvox-Speak-Messages Commands
+2.279.1 Emacsvox-Speak-Messages Commands
 ----------------------------------------
 
-2.278.1.1 emacsvox-speak-message-again
+2.279.1.1 emacsvox-speak-message-again
 ......................................
 
  -- Command: emacsvox-speak-message-again (&optional from-message-cache)
@@ -9147,7 +9177,7 @@ in its established order.
 
      (fn &optional FROM-MESSAGE-CACHE)
 
-2.278.1.2 emacsvox-toggle-speak-messages
+2.279.1.2 emacsvox-toggle-speak-messages
 ........................................
 
  -- Command: emacsvox-toggle-speak-messages (&optional prefix)
@@ -9155,7 +9185,7 @@ in its established order.
 
      Toggle  state of whether emacsvox echoes messages.
 
-2.278.1.3 emacsvox-view-notifications
+2.279.1.3 emacsvox-view-notifications
 .....................................
 
  -- Command: emacsvox-view-notifications
@@ -9168,23 +9198,23 @@ in its established order.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-navigation,  Next: emacsvox-speak-presentation,  Prev: emacsvox-speak-messages,  Up: Emacsvox Commands And Options
 
-2.279 emacsvox-speak-navigation
+2.280 emacsvox-speak-navigation
 ===============================
 
 Reading navigation and repeat feedback.  The core speech facade retains
 activation in its established order.
 
-2.279.1 Emacsvox-Speak-Navigation Commands
+2.280.1 Emacsvox-Speak-Navigation Commands
 ------------------------------------------
 
-2.279.1.1 emacsvox-beginning-or-end
+2.280.1.1 emacsvox-beginning-or-end
 ...................................
 
  -- Command: emacsvox-beginning-or-end
 
      Move to start or end of buffer.
 
-2.279.1.2 emacsvox-goto-percent
+2.280.1.2 emacsvox-goto-percent
 ...............................
 
  -- Command: emacsvox-goto-percent (percent)
@@ -9196,7 +9226,7 @@ activation in its established order.
 
      (fn PERCENT)
 
-2.279.1.3 emacsvox-mark-backward-mark
+2.280.1.3 emacsvox-mark-backward-mark
 .....................................
 
  -- Command: emacsvox-mark-backward-mark
@@ -9204,7 +9234,7 @@ activation in its established order.
      Cycle backward through the mark ring.
      To cycle forward, use pop-to-mark-command bound to M-x pop-to-mark-command
 
-2.279.1.4 emacsvox-selective-display
+2.280.1.4 emacsvox-selective-display
 ....................................
 
  -- Command: emacsvox-selective-display (&optional arg)
@@ -9216,7 +9246,7 @@ activation in its established order.
 
      (fn &optional ARG)
 
-2.279.1.5 emacsvox-speak-continuously
+2.280.1.5 emacsvox-speak-continuously
 .....................................
 
  -- Command: emacsvox-speak-continuously
@@ -9230,7 +9260,7 @@ activation in its established order.
      was spoken.  Pressing SPC  continues to speak the buffer; any other
        key quits.
 
-2.279.1.6 emacsvox-speak-current-column
+2.280.1.6 emacsvox-speak-current-column
 .......................................
 
  -- Command: emacsvox-speak-current-column
@@ -9238,7 +9268,7 @@ activation in its established order.
 
      Speak the current column.
 
-2.279.1.7 emacsvox-speak-current-percentage
+2.280.1.7 emacsvox-speak-current-percentage
 ...........................................
 
  -- Command: emacsvox-speak-current-percentage
@@ -9246,14 +9276,14 @@ activation in its established order.
 
      Announce the percentage into the current buffer.
 
-2.279.1.8 emacsvox-speak-face-backward
+2.280.1.8 emacsvox-speak-face-backward
 ......................................
 
  -- Command: emacsvox-speak-face-backward
 
      Property search for face at point see M-x text-property-search-backward
 
-2.279.1.9 emacsvox-speak-face-browse
+2.280.1.9 emacsvox-speak-face-browse
 ....................................
 
  -- Command: emacsvox-speak-face-browse
@@ -9261,14 +9291,14 @@ activation in its established order.
 
      Use C-f and C-b or left/right arrows to browse by current face.
 
-2.279.1.10 emacsvox-speak-face-forward
+2.280.1.10 emacsvox-speak-face-forward
 ......................................
 
  -- Command: emacsvox-speak-face-forward
 
      Property search for face -- see M-x text-property-search-forward
 
-2.279.1.11 emacsvox-speak-field
+2.280.1.11 emacsvox-speak-field
 ...............................
 
  -- Command: emacsvox-speak-field
@@ -9276,7 +9306,7 @@ activation in its established order.
      Speak the field at point, choosing the right-hand field at a boundary.
      At the accessible buffer end, speak the final field.
 
-2.279.1.12 emacsvox-speak-next-field
+2.280.1.12 emacsvox-speak-next-field
 ....................................
 
  -- Command: emacsvox-speak-next-field
@@ -9284,7 +9314,7 @@ activation in its established order.
      Move to and speak next field.
      Signal a user error without moving if there is no next field.
 
-2.279.1.13 emacsvox-speak-previous-field
+2.280.1.13 emacsvox-speak-previous-field
 ........................................
 
  -- Command: emacsvox-speak-previous-field
@@ -9292,7 +9322,7 @@ activation in its established order.
      Move to previous field boundary and speak the field starting there.
      Signal a user error without moving at the accessible buffer beginning.
 
-2.279.1.14 emacsvox-speak-range
+2.280.1.14 emacsvox-speak-range
 ...............................
 
  -- Command: emacsvox-speak-range (&optional prop)
@@ -9301,7 +9331,7 @@ activation in its established order.
 
      (fn &optional PROP)
 
-2.279.1.15 emacsvox-speak-skim-buffer
+2.280.1.15 emacsvox-speak-skim-buffer
 .....................................
 
  -- Command: emacsvox-speak-skim-buffer
@@ -9311,16 +9341,16 @@ activation in its established order.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-presentation,  Next: emacsvox-speak-status,  Prev: emacsvox-speak-navigation,  Up: Emacsvox Commands And Options
 
-2.280 emacsvox-speak-presentation
+2.281 emacsvox-speak-presentation
 =================================
 
 Point and indentation presentation.  The core speech facade retains
 activation in its established order.
 
-2.280.1 Emacsvox-Speak-Presentation Commands
+2.281.1 Emacsvox-Speak-Presentation Commands
 --------------------------------------------
 
-2.280.1.1 emacsvox-set-indentation-presentation
+2.281.1.1 emacsvox-set-indentation-presentation
 ...............................................
 
  -- Command: emacsvox-set-indentation-presentation (presentation
@@ -9333,7 +9363,7 @@ activation in its established order.
 
      (fn PRESENTATION &optional GLOBAL)
 
-2.280.1.2 emacsvox-set-indentation-tone-timing
+2.281.1.2 emacsvox-set-indentation-tone-timing
 ..............................................
 
  -- Command: emacsvox-set-indentation-tone-timing (timing &optional
@@ -9350,7 +9380,7 @@ activation in its established order.
 
      (fn TIMING &optional GLOBAL)
 
-2.280.1.3 emacsvox-set-show-point-presentation
+2.281.1.3 emacsvox-set-show-point-presentation
 ..............................................
 
  -- Command: emacsvox-set-show-point-presentation (presentation
@@ -9363,7 +9393,7 @@ activation in its established order.
 
      (fn PRESENTATION &optional GLOBAL)
 
-2.280.1.4 emacsvox-toggle-audio-indentation
+2.281.1.4 emacsvox-toggle-audio-indentation
 ...........................................
 
  -- Command: emacsvox-toggle-audio-indentation (&optional prefix)
@@ -9377,7 +9407,7 @@ activation in its established order.
      line’s indentation.  Specifying ‘speak’
      results in the number of initial spaces being spoken.
 
-2.280.1.5 emacsvox-toggle-show-point
+2.281.1.5 emacsvox-toggle-show-point
 ....................................
 
  -- Command: emacsvox-toggle-show-point (&optional prefix)
@@ -9387,7 +9417,7 @@ activation in its established order.
      Interactive PREFIX arg means toggle  the global default value, and then set the
      current local  value to the result.
 
-2.280.2 emacsvox-speak-presentation Options
+2.281.2 emacsvox-speak-presentation Options
 -------------------------------------------
 
  -- Variable: User Option emacsvox-audio-indentation
@@ -9500,16 +9530,16 @@ activation in its established order.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-status,  Next: emacsvox-speak-time,  Prev: emacsvox-speak-presentation,  Up: Emacsvox Commands And Options
 
-2.281 emacsvox-speak-status
+2.282 emacsvox-speak-status
 ===========================
 
 Buffer and system status speech.  The core speech facade retains
 activation in its established order.
 
-2.281.1 Emacsvox-Speak-Status Commands
+2.282.1 Emacsvox-Speak-Status Commands
 --------------------------------------
 
-2.281.1.1 emacsvox-speak-buffer-filename
+2.282.1.1 emacsvox-speak-buffer-filename
 ........................................
 
  -- Command: emacsvox-speak-buffer-filename (&optional filename)
@@ -9523,7 +9553,7 @@ activation in its established order.
 
      (fn &optional FILENAME)
 
-2.281.1.2 emacsvox-speak-header-line
+2.282.1.2 emacsvox-speak-header-line
 ....................................
 
  -- Command: emacsvox-speak-header-line
@@ -9531,7 +9561,7 @@ activation in its established order.
 
      Speak header line if set.
 
-2.281.1.3 emacsvox-speak-minor-mode-line
+2.282.1.3 emacsvox-speak-minor-mode-line
 ........................................
 
  -- Command: emacsvox-speak-minor-mode-line (&optional log-msg)
@@ -9543,7 +9573,7 @@ activation in its established order.
 
      (fn &optional LOG-MSG)
 
-2.281.1.4 emacsvox-speak-mode-line
+2.282.1.4 emacsvox-speak-mode-line
 ..................................
 
  -- Command: emacsvox-speak-mode-line (&optional buffer-info)
@@ -9555,7 +9585,7 @@ activation in its established order.
 
      (fn &optional BUFFER-INFO)
 
-2.281.1.5 emacsvox-speak-net-id
+2.282.1.5 emacsvox-speak-net-id
 ...............................
 
  -- Command: emacsvox-speak-net-id
@@ -9564,7 +9594,7 @@ activation in its established order.
      Shows active network interfaces in the echo area.
       The address is also copied to the kill ring for convenient yanking.
 
-2.281.1.6 emacsvox-speak-which-function
+2.282.1.6 emacsvox-speak-which-function
 .......................................
 
  -- Command: emacsvox-speak-which-function
@@ -9573,14 +9603,14 @@ activation in its established order.
      Speak which function we are on.  Uses which-function from
      which-func without turning that mode on.
 
-2.281.1.7 emacsvox-toggle-header-line
+2.282.1.7 emacsvox-toggle-header-line
 .....................................
 
  -- Command: emacsvox-toggle-header-line
 
      Toggle Emacsvox’s default header line.
 
-2.281.1.8 emacsvox-toggle-mail-alert
+2.282.1.8 emacsvox-toggle-mail-alert
 ....................................
 
  -- Command: emacsvox-toggle-mail-alert (&optional prefix)
@@ -9592,7 +9622,7 @@ activation in its established order.
      Turning on this option results in Emacsvox producing an auditory icon
      indicating the arrival  of new mail when displaying the mode line.
 
-2.281.2 emacsvox-speak-status Options
+2.282.2 emacsvox-speak-status Options
 -------------------------------------
 
  -- Variable: User Option emacsvox-mail-alert-interval
@@ -9616,30 +9646,30 @@ activation in its established order.
 
 File: emacsvox-reference.info,  Node: emacsvox-speak-time,  Next: emacsvox-speak-windows,  Prev: emacsvox-speak-status,  Up: Emacsvox Commands And Options
 
-2.282 emacsvox-speak-time
+2.283 emacsvox-speak-time
 =========================
 
 Time and date speech.  The core speech facade retains activation in its
 established order.
 
-2.282.1 Emacsvox-Speak-Time Commands
+2.283.1 Emacsvox-Speak-Time Commands
 ------------------------------------
 
-2.282.1.1 emacsvox-filter-after
+2.283.1.1 emacsvox-filter-after
 ...............................
 
  -- Command: emacsvox-filter-after
 
      Add after:today filter
 
-2.282.1.2 emacsvox-filter-before
+2.283.1.2 emacsvox-filter-before
 ................................
 
  -- Command: emacsvox-filter-before
 
      Add before:today filter
 
-2.282.1.3 emacsvox-speak-brief-time
+2.283.1.3 emacsvox-speak-brief-time
 ...................................
 
  -- Command: emacsvox-speak-brief-time
@@ -9648,7 +9678,7 @@ established order.
 
      Time in brief
 
-2.282.1.4 emacsvox-speak-date-as-seconds
+2.283.1.4 emacsvox-speak-date-as-seconds
 ........................................
 
  -- Command: emacsvox-speak-date-as-seconds (time)
@@ -9658,7 +9688,7 @@ established order.
 
      (fn TIME)
 
-2.282.1.5 emacsvox-speak-message-at-time
+2.283.1.5 emacsvox-speak-message-at-time
 ........................................
 
  -- Command: emacsvox-speak-message-at-time (time message)
@@ -9670,7 +9700,7 @@ established order.
 
      (fn TIME MESSAGE)
 
-2.282.1.6 emacsvox-speak-microseconds-since-epoch
+2.283.1.6 emacsvox-speak-microseconds-since-epoch
 .................................................
 
  -- Command: emacsvox-speak-microseconds-since-epoch (ms)
@@ -9679,7 +9709,7 @@ established order.
 
      (fn MS)
 
-2.282.1.7 emacsvox-speak-milliseconds-since-epoch
+2.283.1.7 emacsvox-speak-milliseconds-since-epoch
 .................................................
 
  -- Command: emacsvox-speak-milliseconds-since-epoch (ms)
@@ -9688,7 +9718,7 @@ established order.
 
      (fn MS)
 
-2.282.1.8 emacsvox-speak-seconds-since-epoch
+2.283.1.8 emacsvox-speak-seconds-since-epoch
 ............................................
 
  -- Command: emacsvox-speak-seconds-since-epoch (seconds)
@@ -9697,7 +9727,7 @@ established order.
 
      (fn SECONDS)
 
-2.282.1.9 emacsvox-speak-time
+2.283.1.9 emacsvox-speak-time
 .............................
 
  -- Command: emacsvox-speak-time (&optional world)
@@ -9711,7 +9741,7 @@ established order.
 
      (fn &optional WORLD)
 
-2.282.1.10 emacsvox-speak-world-clock
+2.283.1.10 emacsvox-speak-world-clock
 .....................................
 
  -- Command: emacsvox-speak-world-clock (zone &optional set)
@@ -9721,7 +9751,7 @@ established order.
 
      (fn ZONE &optional SET)
 
-2.282.2 emacsvox-speak-time Options
+2.283.2 emacsvox-speak-time Options
 -----------------------------------
 
  -- Variable: User Option emacsvox-speak-time-brief-format

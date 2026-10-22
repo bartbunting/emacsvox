@@ -76,7 +76,9 @@
   (let ((prefix (or transient--prefix transient-current-prefix)))
     (unless (and prefix
                  (memq (oref prefix command)
-                       '(emacsvox-table-settings emacsvox-table-settings--choices
+                       '(emacsvox-reading-settings emacsvox-reading-settings--row
+                         emacsvox-reading-settings--choices
+                         emacsvox-table-settings emacsvox-table-settings--choices
                          emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-library-preview
                          emacsvox-aural-menu-punctuation

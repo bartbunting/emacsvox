@@ -30,7 +30,8 @@
 (require 'cus-edit)
 
 (defconst emacsvox-settings--destinations
-  '(("Table reading and navigation" emacsvox-table-settings emacsvox-table-settings "m")
+  '(("Line reading, visual wrapping, continuation and screen rows" emacsvox-reading-settings emacsvox-reading-settings "m")
+    ("Table reading and navigation" emacsvox-table-settings emacsvox-table-settings "m")
     ("Predefined speech-rate base and step" emacsvox-settings-workflows emacsvox-settings-reading "r")
     ("Character speech rate multiplier" emacsvox-settings-workflows emacsvox-settings-reading-controls "c")
     ("Quiet speech" emacsvox-settings-workflows emacsvox-settings-reading-controls "Q")

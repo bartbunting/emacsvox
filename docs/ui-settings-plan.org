@@ -2795,10 +2795,10 @@ verified working tree.
 :CUSTOM_ID: visual-line-reading-plan
 :END:
 
-Status: implementation accepted on 2026-10-22, with focused commits.
-Automated verification, listening acceptance and commits are tracked below.
+Status: implemented with automated verification on 2026-10-22. Focused commits
+and checks are recorded below. Listening acceptance remains pending.
 Distinct cues and independent placement for first, middle and last wrapped
-rows are accepted requirements. Defaults below remain proposals for listening.
+rows are implemented. Defaults below are starting points for listening.
 
 **** Problem and existing controls
 
@@ -2952,7 +2952,7 @@ completion is not evidence that the cue is audible or understandable.
 
 **** Implementation checkpoints
 
-Slice 1: ordinary long prose no longer prompts or changes reading mode.
+Slice 1, committed as =f52c935fc=: ordinary long prose no longer prompts or changes reading mode.
 Oversized lines and long lines containing control bytes ask before speaking;
 declining leaves the reading mode unchanged. Visible-row classification uses
 current bounds and ignores hidden text and wrap whitespace.
@@ -2963,7 +2963,8 @@ bidirectional wrapped-row classification. The focused Python long-prose test,
 incremental byte-code build and documentation review gate passed. Row feedback
 and its settings are still pending. Listening acceptance remains pending.
 
-Slice 2: independent first/middle/last cue identities, tone values, volume,
+Slice 2, committed as =20968c513=: independent first/middle/last cue identities,
+tone values, volume,
 placement, spoken descriptions and entry frequency now feed the native main
 speech transaction. Unsupported sounds retain their preferences but are not
 retimed. Buffer, mode and global resolution and startup restoration are in
@@ -2974,6 +2975,37 @@ Verified: 281 source reading tests passed, with 11 graphical skips in batch;
 graphical reading tests passed. The startup inventory guard includes the new
 module. Byte-code was rebuilt, references regenerated, and the header and
 documentation gates passed. Settings interaction and listening remain pending.
+
+Slice 3: =C-e H s R w= and settings search open the reading editor. Buffer,
+exact major-mode and global scopes resolve per preference. Choices stage drafts;
+Apply changes the session and Save persists mode/global preferences through
+Customize. Each row has independent sound, tone/earcon identity, placement and
+volume. Common placement/volume actions preserve identities. Tone editing
+retains the sound choice. The recording library returns to the retained draft;
+its explicit pack-wide assignment saves remain separate from reading settings.
+
+Complete and individual draft previews, comparison with applied settings,
+Stop, inheritance, factory reset and source-row inspection are implemented.
+Help returns to the draft and reports effective values and unavailable worker
+capabilities. Recorded cues now use the existing timeline's per-action gain
+field, which previously always received full volume. Tone capability checks
+cover gain as well as shaping; no worker protocol extension was needed.
+
+Verified on the selected Emacs 31.0.90 toolchain: 287 compiled reading checks
+passed, with 16 batch skips (graphical cases and the source-only scrolling
+fixture). All 35 fresh graphical reading checks passed, including real menu
+navigation, search, Help, library return, resizing, font changes and hidden
+overlays. The core gate passed 1029 tests with 18 environmental skips; pinned
+integration checks passed all 700 batch and 14 graphical tests. Isolated
+compiled aural parity, byte-code preflight and header checks passed.
+
+The existing integration cache did not match the repository lock. Verification
+used an isolated cache prepared from the unchanged lock, digest prefix
+=1c039743f67e=; no dependency pins or personal configuration were changed.
+Read-only checks of both running Emacs sessions found timeline version 7 and
+tone version 3. Neither live session was reloaded or restarted. Listening must
+use a fresh normal profile with the compiled changes, then revisit the original
+README and the three sound types and placements. Audible acceptance is pending.
 
 **** Delivery and review checkpoints
 
@@ -3160,8 +3192,8 @@ verification of subsequently changed code.
   its scope; existing point-based boundary earcons do not identify wrapped-row
   continuation reliably. The [[#visual-line-reading-plan][visual-line reading plan]] records explicit reading
   choices and distinct first/middle/last tones or recordings, independently
-  placed before, alongside or after speech. Proposed; implementation and
-  listening acceptance have not started.
+  placed before, alongside or after speech. Implementation and automated
+  checks are complete; listening acceptance remains pending.
 
 - 2026-10-20, Agent Shell input recordings implemented: the =agent-input-on=
   and =agent-input-off= cues use unchanged copies of

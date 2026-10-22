@@ -127,14 +127,20 @@ reading settings menu to save choices without changing personal source files."
   (unless (eq 'off (plist-get values (emacsvox-reading-lines--key type 'sound)))
     (condition-case err
         (cond
+         ((and (eq 'earcon (plist-get values (emacsvox-reading-lines--key type 'sound)))
+               (not (bound-and-true-p emacsvox-use-icons)))
+          "Recorded earcons disabled by the auditory icon setting")
          ((not (and (process-live-p tts-speaker-process)
                     (emacsvox-aural-structured-timeline-available-p)))
           "Sound unavailable: start a worker with structured timeline support")
          ((and (eq 'tone (plist-get values (emacsvox-reading-lines--key type 'sound)))
-               (let ((shape (plist-get (plist-get values (emacsvox-reading-lines--key type 'tone)) :shape)))
-                 (and shape (not (equal shape '(:waveform sine)))))
-               (not (and (fboundp 'omnivox--rich-tones-supported-p)
-                         (omnivox--rich-tones-supported-p tts-speaker-process))))
+               (/= 1 (plist-get values (emacsvox-reading-lines--key type 'volume)))
+               (not (emacsvox-aural--tone-volume-supported-p)))
+          "Tone volume unavailable on this worker")
+         ((and (eq 'tone (plist-get values (emacsvox-reading-lines--key type 'sound)))
+               (not (emacsvox-aural--tone-shape-deliverable-p
+                     (plist-get (plist-get values (emacsvox-reading-lines--key type 'tone)) :shape)
+                     (process-get tts-speaker-process emacsvox-aural--structured-timeline-process-property))))
           "Tone shaping unavailable on this worker"))
       (error (error-message-string err)))))
 

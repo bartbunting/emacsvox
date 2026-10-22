@@ -128,6 +128,7 @@ ui/emacsvox-interaction.elc \
 ui/emacsvox-spelling.elc \
 ui/emacsvox-tone-editor.elc \
 ui/emacsvox-line-cues.elc \
+ui/emacsvox-reading-settings.elc \
 ui/emacsvox-output-settings.elc \
 ui/emacsvox-settings.elc \
 ui/emacsvox-settings-workflows.elc \
@@ -509,6 +510,7 @@ ui/emacsvox-settings-workflows.elc: ui/emacsvox-aural-menu.elc
 ui/emacsvox-table-settings.elc: core/emacsvox-table-reader.elc ui/emacsvox-aural-menu.elc aural/emacsvox-aural-preview.elc
 ui/emacsvox-settings.elc: ui/emacsvox-aural-menu.elc
 ui/emacsvox-output-settings.elc: ui/emacsvox-aural-menu.elc aural/emacsvox-aural-spatial.elc aural/emacsvox-aural-preview.elc
+ui/emacsvox-reading-settings.elc: core/emacsvox-reading-lines.elc ui/emacsvox-tone-editor.elc ui/emacsvox-aural-menu.elc
 ui/emacsvox-line-cues.elc: ui/emacsvox-tone-editor.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-editor.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-tools.elc
 ui/emacsvox-interaction.elc: ui/emacsvox-aural-menu.elc
 ui/emacsvox-tone-editor.elc: ui/emacsvox-aural-menu.elc
