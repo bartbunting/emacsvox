@@ -1828,7 +1828,7 @@ local check@comma{} a selected region for exact editing boundaries@comma{} or @k
 longer reading with a tracked position. Ordinary movement speaks what you
 reach; explicit inspection does not require that movement first.
 
-The default keys are collected here. The following two sections explain
+The default keys are collected here. The sections below explain
 which preserve point@comma{} how to stop and start again@comma{} and the limits of large
 requests. These distinctions matter before you begin selecting text.
 
@@ -1917,6 +1917,77 @@ that command's documentation.
 * Read from point@comma{} stop@comma{} and start again: Reading From Point.  Use tracked reading and understand where interruption leaves point.
 * Hear phonetic names after a pause: Delayed Phonetic Reading.  Inspect characters with delayed phonetic names and cancel stale feedback.
 @end menu
+
+@subsection Choose source lines or wrapped screen rows
+
+@cindex visual lines, reading
+@cindex wrapped lines, continuation feedback
+@findex emacsvox-reading-settings
+@findex emacsvox-speak-row-position
+@vindex emacsvox-reading-lines-defaults
+@vindex emacsvox-reading-lines-modes
+
+A source line ends at a newline. A long source line can occupy several screen
+rows@comma{} with the breaks changing when you resize the window. Open @kbd{C-e H s R w}@comma{}
+@emph{Line reading and wrapping}@comma{} or @kbd{M-x emacsvox-reading-settings @key{RET}} to choose
+which unit ordinary Up and Down move through and speak. @emph{Whole source lines}
+reads the entire source line. @emph{Wrapped screen rows} enables Visual Line mode
+and reads the displayed row. @emph{Native mode behaviour} preserves the major
+mode's own defaults. Tables@comma{} terminals and other integrations can own their
+navigation and keep their specialised behaviour.
+
+Ordinary long prose does not ask to change this choice. Unusually large lines
+and long lines containing control bytes ask before speaking; declining leaves
+the reading mode unchanged. @kbd{C-e l} remains a one-shot whole-source-line
+inspection in either reading mode. For an occasional position check@comma{} use @kbd{=}
+in the menu or @kbd{M-x emacsvox-speak-row-position @key{RET}}. It reports the source
+line number and the screen row's position within it without moving point.
+The source buffer must be displayed so Emacs can determine its row boundaries.
+
+Wrapped rows can identify their place in the source line. A first row has more
+text below@comma{} a middle row has text above and below@comma{} and a last row has text
+above. A complete source line has no continuation cue. The menu's @kbd{1}@comma{} @kbd{2}
+and @kbd{3} open independent editors for these three types. Each offers Off@comma{} Tone
+or Recorded earcon@comma{} its own sound identity and volume@comma{} and Before@comma{} Alongside
+or After speech. Before finishes the sound first; Alongside starts it with
+the spoken item; After waits for that item to finish. Navigation or Stop
+cancels remaining feedback@comma{} including an After sound.
+
+The initial wrapped-row choices are three distinct recorded cues alongside
+speech. @kbd{t} stages three distinct tones instead; each row's tone editor
+controls pitch@comma{} duration and shaping while retaining the chosen sound type.
+Apply or Save in that editor updates the parent draft. @kbd{P} and @kbd{V} stage a common placement
+or volume while keeping the three sound identities. Each row's recording
+selector chooses a cue from the active sound pack. Its library action lets
+you audition recordings and explicitly assign them to @code{wrapped-line-first}@comma{}
+@code{wrapped-line-middle} or @code{wrapped-line-last} in a personal sound pack. The
+library's @kbd{W} saves pack-wide assignments separately from reading preferences;
+it returns to the reading draft when you close the library.
+
+Spoken continuation is independent of sound. Choose Off@comma{} Brief labels@comma{} or
+Explicit descriptions of continuation above and below. Descriptions precede
+the row text@comma{} and sound timing applies to that complete spoken item. Frequency
+can be every wrapped-row visit or only entry into a different source line@comma{}
+including a jump into its middle. Changing reading buffers or windows resets
+entry tracking. Explicit screen-row rereading can repeat the feedback.
+
+Choices edit a draft. Browsing does not apply them. Start in temporary buffer
+scope@comma{} or use @kbd{g} to choose the current major mode or global defaults. Each
+preference follows buffer@comma{} mode@comma{} global and factory values in that order.
+Apply with @kbd{a} for this session; @kbd{S} saves and applies mode or global choices
+through Customize. Buffer scope is not saved per file. Applying wider settings
+preserves explicit buffer overrides. @kbd{i} stages inheritance@comma{} @kbd{r} stages factory
+values@comma{} and @kbd{d} discards unapplied edits. Leaving keeps applied changes and
+discards unapplied edits. Apply or discard before changing scope.
+
+Use @kbd{p} to preview a complete line followed by first@comma{} middle and last rows@comma{}
+or Space in an individual editor to preview one type. These previews use
+drafts without applying them; @kbd{c} compares the source's applied settings and
+@kbd{x} stops playback. Help at @kbd{h} shows applied values@comma{} inheritance and worker
+support. Sounds require structured timeline support@comma{} and recorded earcons
+follow the auditory-icon switch. Unsupported sounds@comma{} volume or shaping are
+identified without silently changing their placement. Listening to the previews
+helps you choose levels that leave the words clear.
 
 @node Reading Without Moving Point
 @subsection Read a short passage without moving point

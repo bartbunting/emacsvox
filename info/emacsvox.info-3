@@ -14,6 +14,64 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Finding Voice Tasks,  Next: Finding Settings Tasks,  Prev: Finding Editing Tasks,  Up: Finding Tasks
+
+16.3 Change voices and sounds
+=============================
+
+   • *note Choose which voice or feedback setting to change:
+     (emacsvox)Choosing A Presentation Change.: compare a shared voice
+     edit, a matching rule, a palette-wide change and an engine
+     preference.
+   • *note Change my ordinary reading voice: (emacsvox)Editing Named
+     Voices.: work with the palette's ‘default’ named voice.  Preview,
+     saving, live selection, and startup selection are distinct.
+   • *note Change the voice used for headings: (emacsvox)Heading Voice
+     Walkthrough.: practise with a temporary buffer rule before making a
+     wider change.
+   • *note Try an installed voice without saving anything:
+     (emacsvox)Previewing An Installed Voice.: follow the listening
+     exercise through the current settings menus and return to your
+     source.
+   • *note Choose a preferred speech engine: (emacsvox)Speech Engine
+     Preferences.: change engine preference rather than assuming that a
+     palette edit changes every engine-selection policy.
+   • *note Find and install another voice: (emacsvox)Installed Voices
+     And Engines.: distinguish availability, downloaded files,
+     enablement, and application to the running speech workers.
+   • *note Replace or silence one unwanted sound: (emacsvox)Changing One
+     Sound.: target the cue you want to change rather than disabling all
+     auditory icons.
+
+
+File: emacsvox.info,  Node: Finding Settings Tasks,  Next: Finding Application Tasks,  Prev: Finding Voice Tasks,  Up: Finding Tasks
+
+16.4 Keep, inspect, or reverse settings
+=======================================
+
+   • *note Make a setting survive restarting Emacs: (emacsvox)Saving And
+     Startup.: identify which resource owns the setting and use its own
+     saving or startup action.
+   • *note Understand why Save did not change what I hear:
+     (emacsvox)Saved Voice Change Not Audible.: inspect the saved voice,
+     its selected palette and the result of application before editing
+     again.
+   • *note Resume an unfinished edit: (emacsvox)Recovering Aural
+     Changes.: use the retained-draft route to return to the original
+     editor.  A retained draft is not a saved setup.
+   • *note Find out why an item sounded that way: (emacsvox)Explaining
+     Presentation.: inspect the chosen voices, cues, and rules;
+     distinguish recorded feedback from a simulation.
+   • *note Undo a temporary feedback change: (emacsvox)Heading Voice
+     Walkthrough.: the heading exercise includes checking its scope and
+     removing the practice rule.  For broader problems, use *note
+     presentation recovery: (emacsvox)Recovering Aural Changes.
+   • *note Adjust notifications without changing ordinary reading:
+     (emacsvox)Notification Routing.: choose where notifications play
+     and distinguish selecting a route from restarting it.  *note Output
+     volumes: (emacsvox)Output Volumes. controls loudness separately.
+
+
 File: emacsvox.info,  Node: Finding Application Tasks,  Next: Finding Problem Tasks,  Prev: Finding Settings Tasks,  Up: Finding Tasks
 
 16.5 Work in an application
@@ -3029,6 +3087,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * unwanted sound:                        Finding Voice Tasks. (line   6)
 * uppercase keys:                        Emacs Key Notation.  (line   6)
+* visual lines, reading:                 Reading.             (line  70)
 * voice adjustments:                     Editing Named Voices.
                                                               (line   6)
 * voice aliases:                         Voices And Routing.  (line   6)
@@ -3070,6 +3129,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * windows, working through speech:       Working With Windows.
                                                               (line   6)
 * word echo:                             Controlling Echo.    (line   6)
+* wrapped lines, continuation feedback:  Reading.             (line  70)
 * write a note:                          Finding Application Tasks.
                                                               (line   6)
 * wrong voice:                           Saved Voice Change Not Audible.

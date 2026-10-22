@@ -3007,13 +3007,19 @@ tone version 3. Neither live session was reloaded or restarted. Listening must
 use a fresh normal profile with the compiled changes, then revisit the original
 README and the three sound types and placements. Audible acceptance is pending.
 
-Slice 4: saved preferences also activate when Customize loads after Emacsvox
+Slice 4, committed as =c45d85280=: saved preferences also activate when Customize loads after Emacsvox
 startup, as in the normal profile's manual =-q= bootstrap. Both preference
 options reconcile existing buffers through their Customize setter. The fresh
 Emacs persistence test creates its buffer before loading the saved file and
 verifies activation without an extra apply call. All 287 compiled reading
 checks and 35 graphical reading checks passed again; the documentation review
 gate passed. The 16 batch skips remain the graphical/source-only cases above.
+
+Documentation slice: the reading chapter now explains reading units, the three
+row types, independent sound controls, scopes, draft previews, persistence and
+worker requirements. Generated reference and manual artifacts are current.
+Existing Info node names and navigation are preserved. The non-mutating
+documentation release check passed; no documentation was published.
 
 **** Delivery and review checkpoints
 

@@ -2028,10 +2028,10 @@ i’ for longer reading with a tracked position.  Ordinary movement speaks
 what you reach; explicit inspection does not require that movement
 first.
 
-   The default keys are collected here.  The following two sections
-explain which preserve point, how to stop and start again, and the
-limits of large requests.  These distinctions matter before you begin
-selecting text.
+   The default keys are collected here.  The sections below explain
+which preserve point, how to stop and start again, and the limits of
+large requests.  These distinctions matter before you begin selecting
+text.
 
 ‘C-e c’
 
@@ -2083,10 +2083,82 @@ belongs to that command's documentation.
 * Read from point, stop, and start again: Reading From Point.  Use tracked reading and understand where interruption leaves point.
 * Hear phonetic names after a pause: Delayed Phonetic Reading.  Inspect characters with delayed phonetic names and cancel stale feedback.
 
+5.5.1 Choose source lines or wrapped screen rows
+------------------------------------------------
+
+A source line ends at a newline.  A long source line can occupy several
+screen rows, with the breaks changing when you resize the window.  Open
+‘C-e H s R w’, _Line reading and wrapping_, or ‘M-x
+emacsvox-reading-settings <RET>’ to choose which unit ordinary Up and
+Down move through and speak.  _Whole source lines_ reads the entire
+source line.  _Wrapped screen rows_ enables Visual Line mode and reads
+the displayed row.  _Native mode behaviour_ preserves the major mode's
+own defaults.  Tables, terminals and other integrations can own their
+navigation and keep their specialised behaviour.
+
+   Ordinary long prose does not ask to change this choice.  Unusually
+large lines and long lines containing control bytes ask before speaking;
+declining leaves the reading mode unchanged.  ‘C-e l’ remains a one-shot
+whole-source-line inspection in either reading mode.  For an occasional
+position check, use ‘=’ in the menu or ‘M-x emacsvox-speak-row-position
+<RET>’.  It reports the source line number and the screen row's position
+within it without moving point.  The source buffer must be displayed so
+Emacs can determine its row boundaries.
+
+   Wrapped rows can identify their place in the source line.  A first
+row has more text below, a middle row has text above and below, and a
+last row has text above.  A complete source line has no continuation
+cue.  The menu's ‘1’, ‘2’ and ‘3’ open independent editors for these
+three types.  Each offers Off, Tone or Recorded earcon, its own sound
+identity and volume, and Before, Alongside or After speech.  Before
+finishes the sound first; Alongside starts it with the spoken item;
+After waits for that item to finish.  Navigation or Stop cancels
+remaining feedback, including an After sound.
+
+   The initial wrapped-row choices are three distinct recorded cues
+alongside speech.  ‘t’ stages three distinct tones instead; each row's
+tone editor controls pitch, duration and shaping while retaining the
+chosen sound type.  Apply or Save in that editor updates the parent
+draft.  ‘P’ and ‘V’ stage a common placement or volume while keeping the
+three sound identities.  Each row's recording selector chooses a cue
+from the active sound pack.  Its library action lets you audition
+recordings and explicitly assign them to ‘wrapped-line-first’,
+‘wrapped-line-middle’ or ‘wrapped-line-last’ in a personal sound pack.
+The library's ‘W’ saves pack-wide assignments separately from reading
+preferences; it returns to the reading draft when you close the library.
+
+   Spoken continuation is independent of sound.  Choose Off, Brief
+labels, or Explicit descriptions of continuation above and below.
+Descriptions precede the row text, and sound timing applies to that
+complete spoken item.  Frequency can be every wrapped-row visit or only
+entry into a different source line, including a jump into its middle.
+Changing reading buffers or windows resets entry tracking.  Explicit
+screen-row rereading can repeat the feedback.
+
+   Choices edit a draft.  Browsing does not apply them.  Start in
+temporary buffer scope, or use ‘g’ to choose the current major mode or
+global defaults.  Each preference follows buffer, mode, global and
+factory values in that order.  Apply with ‘a’ for this session; ‘S’
+saves and applies mode or global choices through Customize.  Buffer
+scope is not saved per file.  Applying wider settings preserves explicit
+buffer overrides.  ‘i’ stages inheritance, ‘r’ stages factory values,
+and ‘d’ discards unapplied edits.  Leaving keeps applied changes and
+discards unapplied edits.  Apply or discard before changing scope.
+
+   Use ‘p’ to preview a complete line followed by first, middle and last
+rows, or Space in an individual editor to preview one type.  These
+previews use drafts without applying them; ‘c’ compares the source's
+applied settings and ‘x’ stops playback.  Help at ‘h’ shows applied
+values, inheritance and worker support.  Sounds require structured
+timeline support, and recorded earcons follow the auditory-icon switch.
+Unsupported sounds, volume or shaping are identified without silently
+changing their placement.  Listening to the previews helps you choose
+levels that leave the words clear.
+
 
 File: emacsvox.info,  Node: Reading Without Moving Point,  Next: Reading From Point,  Up: Reading
 
-5.5.1 Read a short passage without moving point
+5.5.2 Read a short passage without moving point
 -----------------------------------------------
 
 Use ‘C-e l’ to check the line containing the next edit, ‘C-e w’ to hear
@@ -2136,7 +2208,7 @@ in the GNU Emacs Manual for restricted editing views.
 
 File: emacsvox.info,  Node: Reading From Point,  Next: Delayed Phonetic Reading,  Prev: Reading Without Moving Point,  Up: Reading
 
-5.5.2 Read from point, stop, and start again
+5.5.3 Read from point, stop, and start again
 --------------------------------------------
 
 ‘C-e i’ starts reading at point and continues towards the accessible end
@@ -2185,7 +2257,7 @@ core speech reference: (emacsvox-reference)emacsvox-speak.
 
 File: emacsvox.info,  Node: Delayed Phonetic Reading,  Prev: Reading From Point,  Up: Reading
 
-5.5.3 Hear Phonetic Names After A Pause
+5.5.4 Hear Phonetic Names After A Pause
 ---------------------------------------
 
 ‘M-x emacsvox-delayed-phonetic-mode’ toggles delayed phonetics.  With it
