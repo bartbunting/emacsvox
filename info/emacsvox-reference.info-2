@@ -5818,7 +5818,15 @@ Direct M-x entry remains available when managed bindings are disabled.
 
      (fn ID)
 
-2.214.1.3 emacsvox-muggles-org-nav/body
+2.214.1.3 emacsvox-muggles-navigate/body
+........................................
+
+ -- Command: emacsvox-muggles-navigate/body
+
+     Enter repeatable text navigation, moving down one line.
+     Hydra is required.  Managed entry keys are optional.
+
+2.214.1.4 emacsvox-muggles-org-nav/body
 .......................................
 
  -- Command: emacsvox-muggles-org-nav/body
@@ -5826,14 +5834,22 @@ Direct M-x entry remains available when managed bindings are disabled.
      Navigate and speak Org headings.  Managed entry keys are optional.
      Load the optional Org navigation library on first use.  Hydra is required.
 
-2.214.1.4 emacsvox-muggles-save
+2.214.1.5 emacsvox-muggles-org-table/body
+.........................................
+
+ -- Command: emacsvox-muggles-org-table/body
+
+     Edit and speak native Org table fields.  Hydra is required.
+     Native movement may realign or extend the table.
+
+2.214.1.6 emacsvox-muggles-save
 ...............................
 
  -- Command: emacsvox-muggles-save
 
      Save explicit session choices through Customize, preserving other entries.
 
-2.214.1.5 emacsvox-muggles-status
+2.214.1.7 emacsvox-muggles-status
 .................................
 
  -- Command: emacsvox-muggles-status (id)

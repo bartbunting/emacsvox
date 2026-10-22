@@ -84,7 +84,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1717 commands and 261 options.
+This chapter documents a total of 1719 commands and 261 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -16915,6 +16915,16 @@ Conflicting bindings are preserved.  Dependencies are never installed.
 @end format
 @end deffn
 
+@subsubsection emacsvox-muggles-navigate/body
+@deffn {Command} emacsvox-muggles-navigate/body
+@findex emacsvox-muggles-navigate/body
+
+@format
+Enter repeatable text navigation, moving down one line.
+Hydra is required.  Managed entry keys are optional.
+@end format
+@end deffn
+
 @subsubsection emacsvox-muggles-org-nav/body
 @deffn {Command} emacsvox-muggles-org-nav/body
 @findex emacsvox-muggles-org-nav/body
@@ -16922,6 +16932,16 @@ Conflicting bindings are preserved.  Dependencies are never installed.
 @format
 Navigate and speak Org headings.  Managed entry keys are optional.
 Load the optional Org navigation library on first use.  Hydra is required.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-org-table/body
+@deffn {Command} emacsvox-muggles-org-table/body
+@findex emacsvox-muggles-org-table/body
+
+@format
+Edit and speak native Org table fields.  Hydra is required.
+Native movement may realign or extend the table.
 @end format
 @end deffn
 

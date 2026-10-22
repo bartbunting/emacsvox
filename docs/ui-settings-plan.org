@@ -2123,8 +2123,47 @@ The non-mutating documentation gate and header check passed. Listening acceptanc
 no live session or personal configuration was changed. The pilot is committed
 as =183175da4=; listening acceptance remains separate.
 
-Only the pilot has working management commands. The other 18 entries and
-optional context rules remain future work.
+At this checkpoint only the pilot had working management commands. The next
+conversion batch is recorded below; optional context rules remain future work.
+
+***** Native navigation batch, 2026-10-22
+
+Implementation adds Org table editing and Text navigation to the managed list,
+alongside Org heading navigation. Each has independent Enable, Disable and
+Save choices and a lazy public entry command. Loading either optional library
+defines its commands without loading a collection or installing keys.
+
+Org table editing requests =C-c t= in Org, validates a table at the captured
+source position, and retains native field movement, realignment and possible
+row creation. Text navigation requests global =s-n= and retains its initial
+next-line action only on deliberate Run or direct entry. Global entry keys
+remain subject to local and minor-mode bindings. Enable never runs either
+menu; conflicting bindings remain untouched. Temporary hint changes are
+restored on exit or failed entry, and Disable closes only the selected menu.
+
+The main legacy collection delegates these two definitions to their optional
+libraries and requests activation through the manager. Explicit Disabled
+choices take precedence. Other collection entries retain their existing
+implementation. The browser now labels each entry's key scope and validates
+its own source requirements rather than assuming Org heading navigation.
+
+The final source and fresh compiled graphical runs each pass all 39 Muggles
+and Hydra checks without skips. Checks cover actual keys, independent choices,
+personal and local bindings, saved preferences in a second Emacs, both legacy
+load orders, captured source validation, Help return, active-menu exit and
+explicit hint choices. Tests use installed Hydra 20250316.1254 and verify the
+loaded implementation paths. The full rebuild, byte-code preflight, optional
+collection builds, header check and Org preview pass. After checking optional
+byte-code, the ordinary build set is restored for reference generation; a
+fresh normal-loading smoke check verifies the compiled manager/browser with
+the optional source libraries and direct entry while disabled.
+
+The manual describes both entries, native table-editing effects and their
+independent settings. Generated references and manuals are updated; the
+non-mutating documentation release gate passes. Listening remains open
+through a fresh normal profile; no live session or personal configuration has
+been changed. This checkpoint accompanies the implementation commit; listening
+acceptance remains separate. Sixteen legacy entries remain outside the manager.
 
 ***** Browsable Muggles settings, 2026-10-18
 

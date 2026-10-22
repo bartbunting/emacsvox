@@ -157,5 +157,56 @@
     (should (assoc "Muggles: enable, disable and save navigation menus"
                    emacsvox-settings--destinations))))
 
+
+(ert-deftest emacsvox-muggles-ui-org-table-validates-the-captured-cell ()
+  (emacsvox-muggles-ui-test--isolated
+    (switch-to-buffer source)
+    (erase-buffer) (insert "Prose\n| A | B |\n") (goto-char 9)
+    (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-table)
+    (with-current-buffer source (goto-char 1))
+    (should (eq (emacsvox-muggles-ui--source) source))
+    (should (= (with-current-buffer source (point)) 1))
+    (should (equal (aref (tabulated-list-get-entry) 3) "Org C-c t"))
+    (emacsvox-muggles-ui-enable)
+    (should (eq (tabulated-list-get-id) 'org-table))
+    (should (equal emacsvox-muggles--session '((org-table . t))))
+    ;; Reopen from prose: the same mode alone is not a valid table context.
+    (switch-to-buffer source)
+    (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-table)
+    (should-error (emacsvox-muggles-ui-run) :type 'user-error)
+    (should (derived-mode-p 'emacsvox-muggles-ui-mode))
+    (should-not hydra-curr-map)))
+
+(ert-deftest emacsvox-muggles-ui-graphical-text-run-help-and-selection ()
+  (skip-unless (display-graphic-p))
+  (emacsvox-muggles-ui-test--isolated
+    (switch-to-buffer source)
+    (fundamental-mode) (erase-buffer) (insert "first\nsecond\nthird\n") (goto-char 1)
+    (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'navigate)
+    (should (equal (aref (tabulated-list-get-entry) 3) "Global s-n"))
+    (execute-kbd-macro (kbd "e d"))
+    (should (eq (tabulated-list-get-id) 'navigate))
+    (should (equal emacsvox-muggles--session '((navigate))))
+    (let ((browser (current-buffer)))
+      (execute-kbd-macro (kbd "RET"))
+      (with-current-buffer "*Help*"
+        (should (string-match-p "Run moves down one line" (buffer-string)))
+        (should (string-match-p "Run available" (buffer-string))))
+      (select-window (get-buffer-window "*Help*"))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (current-buffer) browser))
+      (should (eq (tabulated-list-get-id) 'navigate)))
+    (with-current-buffer source (goto-char (point-max)))
+    (execute-kbd-macro (kbd "r"))
+    (should (eq (current-buffer) source))
+    (should (= (line-number-at-pos) 2))
+    (should (eq hydra-curr-body-fn 'emacsvox-muggles-navigate/body))
+    (should-not (car (emacsvox-muggles--choice 'navigate)))
+    (execute-kbd-macro (kbd "q"))
+    (should-not hydra-curr-map)))
+
 (provide 'emacsvox-muggles-ui-tests)
 ;;; emacsvox-muggles-ui-tests.el ends here

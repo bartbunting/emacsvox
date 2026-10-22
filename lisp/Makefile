@@ -658,6 +658,7 @@ emacsvox-version.elc emacsvox-preamble.elc core/emacsvox-keymap.elc $(AURAL_OBJE
 emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 
 muggles: ui/emacsvox-muggles.elc
+ui/emacsvox-muggles.elc: core/emacsvox-muggles-core.elc integrations/emacsvox-muggle-org-table.elc integrations/emacsvox-muggle-navigate.elc
 muggle-org-navigation: integrations/emacsvox-muggle-org-navigation.elc
 ui/extra-muggles.elc: core/emacsvox-muggles-core.elc integrations/emacsvox-muggle-org-navigation.elc
 extra-muggles: ui/extra-muggles.elc

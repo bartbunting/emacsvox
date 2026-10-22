@@ -14,6 +14,33 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Finding Editing Tasks,  Next: Finding Voice Tasks,  Prev: Finding Reading Tasks,  Up: Finding Tasks
+
+16.2 Edit and rearrange text
+============================
+
+   • *note Hear exactly what I selected: Selecting Text With Speech.:
+     establish point and mark and inspect the newline boundary before an
+     operation.
+   • *note Copy text into another document: Copying Text Between
+     Buffers.: keep the source intact and check the insertion and
+     kill-ring contents at the destination.
+   • *note Move a paragraph: Moving Text Safely.: cut a checked passage
+     and verify both its old and new positions, including blank lines.
+   • *note Paste something I copied earlier: Choosing Earlier Copied
+     Text.: distinguish the kill-ring chooser from replacing the last
+     yank with an earlier entry.
+   • *note Undo and listen between corrections: Recovering Text Edits.:
+     use the right buffer's undo history without accidentally redoing
+     earlier undos.
+   • *note Copy between Emacs and another application: Copying Through
+     The Clipboard.: test the clipboard boundary without assuming that
+     Windows, WSL and terminal sessions work identically.
+   • *note Replace only the occurrences I choose: Reviewing Text
+     Replacements.: limit the operation to a checked region and review
+     each proposed change before saving.
+
+
 File: emacsvox.info,  Node: Finding Voice Tasks,  Next: Finding Settings Tasks,  Prev: Finding Editing Tasks,  Up: Finding Tasks
 
 16.3 Change voices and sounds

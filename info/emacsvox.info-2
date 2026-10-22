@@ -1159,15 +1159,19 @@ Explicit word and partial-line reads at ‘some’ or ‘none’ use
 ‘tts-character-to-speech-table’, the Emacs table also used for character
 reading.
 
-9.4.2 Navigate Org headings with a Muggle
------------------------------------------
+9.4.2 Use managed navigation Muggles
+------------------------------------
 
 A Muggle is a temporary menu of related commands, implemented with
-Hydra.  The Org heading-navigation Muggle lets you repeat movement and
-section reading with single keys.  It requires the Hydra package and an
-Org buffer.  Start it directly with ‘M-x emacsvox-muggles-org-nav/body
-<RET>’.  Entry announces the menu without moving point or changing the
-document.
+Hydra.  The managed list offers Org heading navigation, Org table
+editing and Text navigation.  All three require the Hydra package.
+Enable installs a menu's entry key when available; Run enters it and can
+move point or perform editing.
+
+   Org heading navigation lets you repeat movement and section reading
+with single keys in an Org buffer.  Start it directly with ‘M-x
+emacsvox-muggles-org-nav/body <RET>’.  Entry announces the menu without
+moving point or changing the document.
 
    Use ‘n’ and ‘p’ to move between visible headings and speak their
 sections.  ‘<SPC>’ speaks the current section from point.  ‘f’ and ‘b’
@@ -1177,12 +1181,30 @@ available keys; ‘q’ or ‘C-g’ exits.  Automatic Hydra hints are quiet
 during this menu; exit restores their previous setting unless it was
 changed during the visit.
 
+   Org table editing starts with ‘M-x emacsvox-muggles-org-table/body
+<RET>’ at an Org table cell.  ‘j’ and ‘k’ move to the next or previous
+row; ‘h’ and ‘l’ move to the previous or next field.  These are native
+Org editing commands: they may realign the table, recalculate formulas
+or create a row.  ‘<SPC>’ reads the field, ‘.’ gives coordinates, and
+‘b’, ‘r’ or ‘c’ reads the value with both, row or column headers.  ‘?’
+explains the keys and ‘q’ exits.  For movement that preserves the table
+text, use *note the shared table reader: Reading Markdown And Org
+Tables.
+
+   Text navigation starts with ‘M-x emacsvox-muggles-navigate/body
+<RET>’ and immediately attempts to move down one line.  ‘n~/~p’ or
+‘j~/~k’ repeat line movement, ‘f~/~b’ move by character, and ‘a~/~e’
+reach the line's beginning or end.  ‘v~/~V’ scroll, ‘<~/~>’ reach the
+buffer's beginning or end, and ‘l’ recentres.  ‘?’ reads the keys and
+‘q’ exits.  Entry temporarily toggles Hydra hints and exit restores
+them; pressing ‘s’ makes an explicit hint choice that is retained after
+exit.  Movement uses the buffer's existing speech support.
+
    Press ‘C-e H m’ to browse managed Muggles, or run ‘M-x
 emacsvox-muggles-browse <RET>’.  Settings and action search also find
-the Muggles entry.  The list currently contains Org heading navigation;
-other Muggles retain their legacy configuration until they gain
-individual switches.  Opening or browsing the list does not load or
-activate the navigation menu.
+the Muggles entry.  Other Muggles retain their legacy configuration
+until they gain individual switches.  Opening or browsing the list does
+not load or activate the navigation menu.
 
    Up/down selects a row and reads its purpose, current choice,
 configured override and availability.  Left/right inspects columns;
@@ -1190,13 +1212,16 @@ configured override and availability.  Left/right inspects columns;
 and its actions.  Returning from Help with ‘q’ restores the row and
 column.  ‘g’ refreshes the displayed state.
 
-   On Org heading navigation, ‘e’ requests ‘C-c C-<SPC>’ in Org for this
-session.  If Org has not loaded, activation waits for it.  Existing
-personal or package bindings are preserved, and the availability column
-names any conflict or missing dependency.  ‘d’ removes only the managed
-entry key and closes this Muggle if active.  It preserves completed
-actions and independently configured bindings.  These choices apply
-throughout the session, rather than to one buffer.
+   On the selected row, ‘e’ requests its entry key for this session:
+‘C-c C-<SPC>’ in Org for heading navigation, ‘C-c t’ in Org for table
+editing, or global ‘s-n’ for text navigation.  ‘s-n’ means Super-n.  Org
+entries wait for Org to load.  Existing personal or package bindings are
+preserved, and the availability column names any conflict or missing
+dependency.  ‘d’ removes only the managed entry key and closes this
+Muggle if active.  It preserves completed actions and independently
+configured bindings.  Global keys remain subject to local and minor-mode
+bindings.  These choices apply throughout the session, rather than to
+one buffer.
 
    Enable and Disable retain the selected row and show the choice as not
 saved.  ‘W’ saves all explicit session Muggle choices through Customize;
@@ -1207,21 +1232,25 @@ request.  Session choices take precedence until saved or changed.  ‘q’
 closes the list and keeps session choices; when opened through settings,
 it returns to the same menu item.
 
-   To try the Muggle, open the list from an Org document and press ‘r’.
-This leaves the list and starts heading navigation at the captured
-source position, even when the managed key is disabled or blocked.  It
-does not enable keys or save settings.  A closed buffer, changed source
-item or different major mode requires reopening from the intended Org
-location.  Run is an explicit action; browsing and Help never perform
-it.  Once navigation starts, ‘q’ exits its menu in Org.
+   To try a Muggle, open the list from the intended source and press ‘r’
+on its row.  This leaves the list and enters that menu at the captured
+position, even when the managed key is disabled or blocked.  It does not
+enable keys or save settings.  Org heading navigation requires an Org
+buffer; Org table editing also requires a table at the captured
+position.  A closed buffer, changed source item or unsuitable context
+requires reopening from the intended location.  Run is an explicit
+action; browsing and Help never perform it.  Once the menu starts, ‘q’
+exits it in the source buffer.
 
    The named commands ‘emacsvox-muggles-enable’,
 ‘emacsvox-muggles-disable’, ‘emacsvox-muggles-status’ and
 ‘emacsvox-muggles-save’ offer the same management operations without the
-list.  Direct ‘M-x emacsvox-muggles-org-nav/body <RET>’ also remains
-available while disabled.  Loading ‘extra-muggles’ requests Org heading
-navigation through the manager, respecting explicit Disabled choices and
-protecting conflicting bindings.
+list.  Each menu's direct ‘M-x’ command also remains available while
+disabled.  Loading ‘extra-muggles’ requests Org heading navigation;
+loading ‘emacsvox-muggles’ requests Org table editing and Text
+navigation.  These managed requests respect explicit Disabled choices
+and protect conflicting bindings.  Unconverted collection members retain
+their legacy keys.
 
 
 File: emacsvox.info,  Node: Reading Markdown And Org Tables,  Up: Browsing Structure
@@ -5440,30 +5469,3 @@ File: emacsvox.info,  Node: Finding Reading Tasks,  Next: Finding Editing Tasks,
      Org Tables.: use the shared table reader for Markdown and Org.
      *note Agent Shell tables: (emacsvox)Agent Shell Tables. have their
      own contextual keys and spoken units.
-
-
-File: emacsvox.info,  Node: Finding Editing Tasks,  Next: Finding Voice Tasks,  Prev: Finding Reading Tasks,  Up: Finding Tasks
-
-16.2 Edit and rearrange text
-============================
-
-   • *note Hear exactly what I selected: Selecting Text With Speech.:
-     establish point and mark and inspect the newline boundary before an
-     operation.
-   • *note Copy text into another document: Copying Text Between
-     Buffers.: keep the source intact and check the insertion and
-     kill-ring contents at the destination.
-   • *note Move a paragraph: Moving Text Safely.: cut a checked passage
-     and verify both its old and new positions, including blank lines.
-   • *note Paste something I copied earlier: Choosing Earlier Copied
-     Text.: distinguish the kill-ring chooser from replacing the last
-     yank with an earlier entry.
-   • *note Undo and listen between corrections: Recovering Text Edits.:
-     use the right buffer's undo history without accidentally redoing
-     earlier undos.
-   • *note Copy between Emacs and another application: Copying Through
-     The Clipboard.: test the clipboard boundary without assuming that
-     Windows, WSL and terminal sessions work identically.
-   • *note Replace only the occurrences I choose: Reviewing Text
-     Replacements.: limit the operation to a checked region and review
-     each proposed change before saving.

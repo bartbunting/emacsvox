@@ -12,7 +12,9 @@
 (defconst emacsvox-muggles-test--suffix
   (if (equal (getenv "EMACSVOX_MUGGLES_TEST_LOAD") "compiled") ".elc" ".el"))
 (dolist (entry '(("core/emacsvox-muggles-core" . emacsvox-muggles-enable)
-                 ("integrations/emacsvox-muggle-org-navigation" . emacsvox-muggle-org-navigation--begin)))
+                 ("integrations/emacsvox-muggle-org-navigation" . emacsvox-muggle-org-navigation--begin)
+                 ("integrations/emacsvox-muggle-org-table" . emacsvox-muggle-org-table--begin)
+                 ("integrations/emacsvox-muggle-navigate" . emacsvox-muggle-navigate--begin)))
   (let ((file (expand-file-name (concat (car entry) emacsvox-muggles-test--suffix)
                                 emacsvox-lisp-directory)))
     (load file nil nil t)
@@ -28,6 +30,8 @@
          (emacsvox-muggles--session nil) (emacsvox-muggles--legacy nil)
          (emacsvox-muggles--owned nil) (emacsvox-muggles--errors nil)
          (emacsvox-muggle-org-navigation--hint-state nil)
+         (emacsvox-muggle-org-table--hint-state nil)
+         (emacsvox-muggle-navigate--hint-state nil)
          (hydra-is-helpful t)
          (hydra-hint-display-type #'message)
          (properties (copy-tree (symbol-plist 'emacsvox-muggles-preferences))))
@@ -36,16 +40,25 @@
            (use-global-map (copy-keymap original-global))
            (define-key org-mode-map (kbd "C-c C-SPC") nil)
            (global-unset-key (kbd "C-c C-SPC"))
+           (define-key org-mode-map (kbd "C-c t") nil)
+           (global-unset-key (kbd "C-c t"))
+           (global-unset-key (kbd "s-n"))
            (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
                      ((symbol-function 'tts-stop) #'ignore)
+                     ;; Org setup synchronizes voice state even without speech.
+                     ((symbol-function 'tts--protocol-sync) #'ignore)
                      ((symbol-function 'tts-speak) #'ignore))
              ,@body))
-       (when (and hydra-curr-map (eq hydra-curr-body-fn 'emacsvox-muggles-org-nav/body))
+       (when (and hydra-curr-map
+                  (memq hydra-curr-body-fn '(emacsvox-muggles-org-nav/body
+                                            emacsvox-muggles-org-table/body
+                                            emacsvox-muggles-navigate/body)))
          (cl-letf (((symbol-function 'emacsvox-hydra-post) #'ignore)
                    ((symbol-function 'emacsvox-icon) #'ignore)
                    ((symbol-function 'tts-stop) #'ignore))
            (hydra-keyboard-quit)))
-       (emacsvox-muggles--withdraw 'org-navigation)
+       (dolist (id '(org-navigation org-table navigate))
+         (emacsvox-muggles--withdraw id))
        (use-global-map original-global)
        (setplist 'emacsvox-muggles-preferences properties))))
 
@@ -322,6 +335,213 @@
         (emacsvox-muggles-disable 'org-navigation)
         (should (equal (lookup-key org-mode-map (kbd "C-c C-SPC"))
                        ',(when (eq case 'personal) 'my/org-navigation/body)))))))
+
+
+(ert-deftest emacsvox-muggles-new-entries-load-independently-and-passively ()
+  (dolist (case '(("emacsvox-muggle-org-table" org-table emacsvox-muggles-org-table/body)
+                  ("emacsvox-muggle-navigate" navigate emacsvox-muggles-navigate/body)))
+    (emacsvox-optional-module-test-load
+     (concat (car case) emacsvox-muggles-test--suffix)
+     '(progn (require 'ert) (require 'package) (package-initialize)
+             (require 'emacsvox-preamble) (require 'emacsvox-loaddefs)
+             (setq muggles-test-global (copy-keymap (current-global-map))))
+     `(progn
+        (should (commandp ',(nth 2 case)))
+        (should (equal muggles-test-global (current-global-map)))
+        (should-not (bound-and-true-p hydra-curr-map))
+        (dolist (feature '(emacsvox-muggles extra-muggles emacsvox-m-player))
+          (should-not (featurep feature)))))))
+
+(ert-deftest emacsvox-muggles-new-entries-toggle-independently ()
+  (emacsvox-muggles-test--isolated
+    (with-temp-buffer
+      (org-mode)
+      (insert "| First | Second |\n| A | B |\n")
+      (goto-char 3)
+      (let ((before (list (point) (buffer-string))))
+        (dolist (id '(org-navigation org-table navigate))
+          (emacsvox-muggles-enable id)
+          (emacsvox-muggles-enable id)
+          (should (eq (plist-get (emacsvox-muggles-status id) :state) 'active)))
+        (should (equal before (list (point) (buffer-string)))))
+      (emacsvox-muggles-disable 'org-table)
+      (should-not (lookup-key org-mode-map (kbd "C-c t")))
+      (should (eq (key-binding (kbd "s-n")) 'emacsvox-muggles-navigate/body))
+      (should (eq (key-binding (kbd "C-c C-SPC")) 'emacsvox-muggles-org-nav/body))
+      (emacsvox-muggles-disable 'navigate)
+      (should-not (lookup-key (current-global-map) (kbd "s-n"))))))
+
+(ert-deftest emacsvox-muggles-new-bindings-preserve-personal-and-local-overrides ()
+  (emacsvox-muggles-test--isolated
+    (global-set-key (kbd "s-n") #'ignore)
+    (emacsvox-muggles-enable 'navigate)
+    (should (eq (plist-get (emacsvox-muggles-status 'navigate) :state) 'conflict))
+    (emacsvox-muggles-disable 'navigate)
+    (should (eq (lookup-key (current-global-map) (kbd "s-n")) #'ignore))
+    (global-unset-key (kbd "s-n"))
+    (emacsvox-muggles-enable 'navigate)
+    (with-temp-buffer
+      (use-local-map (make-sparse-keymap))
+      (local-set-key (kbd "s-n") #'forward-char)
+      (should (eq (key-binding (kbd "s-n")) #'forward-char)))
+    (global-set-key (kbd "s-n") #'backward-char)
+    (emacsvox-muggles-disable 'navigate)
+    (should (eq (lookup-key (current-global-map) (kbd "s-n")) #'backward-char))
+    (define-key org-mode-map (kbd "C-c t") #'ignore)
+    (emacsvox-muggles-enable 'org-table)
+    (should (eq (plist-get (emacsvox-muggles-status 'org-table) :state) 'conflict))
+    (should (eq (lookup-key org-mode-map (kbd "C-c t")) #'ignore))))
+
+(ert-deftest emacsvox-muggles-new-disabled-choices-survive-collection-load ()
+  (dolist (order '(before after))
+    (emacsvox-optional-module-test-load
+     (concat "emacsvox-muggles" emacsvox-muggles-test--suffix)
+     `(progn
+        (require 'ert) (require 'package) (package-initialize)
+        (require 'emacsvox-preamble) (require 'emacsvox-loaddefs)
+        (require 'org) (require 'emacsvox-muggles-core)
+        (define-key org-mode-map (kbd "C-c t") nil)
+        (global-unset-key (kbd "s-n"))
+        ,@(when (eq order 'before)
+            '((emacsvox-muggles--set-preferences
+               'emacsvox-muggles-preferences '((org-table) (navigate))))))
+     `(progn
+        (should (eq (lookup-key org-mode-map (kbd "C-c t"))
+                    ',(unless (eq order 'before) 'emacsvox-muggles-org-table/body)))
+        (should (eq (lookup-key (current-global-map) (kbd "s-n"))
+                    ',(unless (eq order 'before) 'emacsvox-muggles-navigate/body)))
+        (emacsvox-muggles-disable 'org-table)
+        (emacsvox-muggles-disable 'navigate)
+        (should-not (lookup-key org-mode-map (kbd "C-c t")))
+        (should-not (lookup-key (current-global-map) (kbd "s-n")))
+        (emacsvox-muggles--legacy-enable 'org-table)
+        (emacsvox-muggles--legacy-enable 'navigate)
+        (should-not (lookup-key org-mode-map (kbd "C-c t")))
+        (should-not (lookup-key (current-global-map) (kbd "s-n")))
+        ;; Unconverted collection members remain present.
+        (should (eq (lookup-key (current-global-map) (kbd "M-y"))
+                    'emacsvox-muggles-yank-pop/yank-pop))))))
+
+(ert-deftest emacsvox-muggles-org-table-deferred-disable-and-direct-entry ()
+  (emacsvox-optional-module-test-load
+   (concat "emacsvox-muggles-core" emacsvox-muggles-test--suffix)
+   '(progn (require 'ert) (require 'cl-lib) (require 'package) (package-initialize)
+           (require 'emacsvox-preamble) (require 'emacsvox-loaddefs))
+   '(progn
+      (should (commandp 'emacsvox-muggles-org-table/body))
+      (should (commandp 'emacsvox-muggles-navigate/body))
+      (emacsvox-muggles-enable 'org-table)
+      (should (eq (plist-get (emacsvox-muggles-status 'org-table) :state) 'waiting))
+      (emacsvox-muggles-disable 'org-table)
+      (require 'org)
+      (should-not (lookup-key org-mode-map (kbd "C-c t")))
+      (should-not (featurep 'emacsvox-muggle-org-table))
+      (with-temp-buffer
+        (org-mode) (insert "| A | B |\n") (goto-char 3)
+        (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                  ((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'tts-speak) #'ignore))
+          (call-interactively #'emacsvox-muggles-org-table/body)
+          (should (eq hydra-curr-body-fn 'emacsvox-muggles-org-table/body))
+          (hydra-keyboard-quit)
+          (should-not emacsvox-muggles--owned))))))
+
+(ert-deftest emacsvox-muggles-org-table-invalid-context-preserves-active-menu ()
+  (emacsvox-muggles-test--isolated
+    (with-temp-buffer
+      (org-mode) (insert "Not a table\n")
+      (let ((hydra-curr-body-fn 'another-menu/body)
+            (hydra-curr-map (make-sparse-keymap)))
+        (should-error (emacsvox-muggles-org-table/body) :type 'user-error)
+        (should (eq hydra-curr-body-fn 'another-menu/body))
+        (emacsvox-muggles-disable 'org-table)
+        (should hydra-curr-map)))))
+
+(ert-deftest emacsvox-muggles-new-preferences-round-trip ()
+  (emacsvox-muggles-test--isolated
+    (let* ((directory (make-temp-file "muggles-new-save-" t))
+           (custom-file (expand-file-name "custom.el" directory))
+           (user-init-file custom-file))
+      (unwind-protect
+          (progn
+            (emacsvox-muggles-enable 'navigate)
+            (emacsvox-muggles-disable 'org-table)
+            (emacsvox-muggles-save)
+            (emacsvox-optional-module-test-load
+             (concat "emacsvox-muggles-core" emacsvox-muggles-test--suffix)
+             '(progn (require 'ert) (require 'package) (package-initialize)
+                     (require 'emacsvox-preamble) (require 'emacsvox-loaddefs))
+             `(progn
+                (global-unset-key (kbd "s-n"))
+                (load ,custom-file nil t)
+                (should (eq (lookup-key (current-global-map) (kbd "s-n"))
+                            'emacsvox-muggles-navigate/body))
+                (require 'org)
+                (emacsvox-muggles--legacy-enable 'org-table)
+                (should-not (lookup-key org-mode-map (kbd "C-c t")))
+                (should-not (featurep 'emacsvox-muggle-org-table)))))
+        (when (get-file-buffer custom-file) (kill-buffer (get-file-buffer custom-file)))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-muggles-graphical-new-navigation-and-owned-exit ()
+  (skip-unless (display-graphic-p))
+  (emacsvox-muggles-test--isolated
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (insert "one\ntwo\nthree\n") (goto-char 1)
+        (emacsvox-muggles-enable 'navigate)
+        (execute-kbd-macro (kbd "s-n n"))
+        (should (= (line-number-at-pos) 3))
+        (should-not hydra-is-helpful)
+        (emacsvox-muggles-disable 'org-table)
+        (should (eq hydra-curr-body-fn 'emacsvox-muggles-navigate/body))
+        (emacsvox-muggles-disable 'navigate)
+        (should-not hydra-curr-map)
+        (should hydra-is-helpful)
+        ;; Two deliberate toggles still constitute an explicit choice.
+        (call-interactively #'emacsvox-muggles-navigate/body)
+        (execute-kbd-macro (kbd "s s q"))
+        (should-not hydra-is-helpful)
+        (setq hydra-is-helpful t)
+        (org-mode) (erase-buffer)
+        (insert "| A | B |\n| C | D |\n") (goto-char 3)
+        (emacsvox-muggles-enable 'org-table)
+        (execute-kbd-macro (kbd "C-c t l"))
+        (should (= (org-table-current-column) 2))
+        (should-not hydra-is-helpful)
+        (emacsvox-muggles-disable 'org-table)
+        (should-not hydra-curr-map)
+        (should hydra-is-helpful)))))
+
+
+(ert-deftest emacsvox-muggles-navigate-direct-lazy-entry-and-failed-entry ()
+  (emacsvox-optional-module-test-load
+   (concat "emacsvox-muggles-core" emacsvox-muggles-test--suffix)
+   '(progn (require 'ert) (require 'cl-lib) (require 'package) (package-initialize)
+           (require 'emacsvox-preamble) (require 'emacsvox-loaddefs)
+           (defvar hydra-is-helpful t))
+   '(progn
+      (should-not (featurep 'emacsvox-muggle-navigate))
+      (save-window-excursion
+        (with-temp-buffer
+          (switch-to-buffer (current-buffer))
+          (insert "first\nsecond\nthird\n") (goto-char 1)
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'tts-stop) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore))
+            (let ((hydra-is-helpful t))
+              (call-interactively #'emacsvox-muggles-navigate/body)
+              (should (= (line-number-at-pos) 2))
+              (should-not hydra-is-helpful)
+              (hydra-keyboard-quit)
+              (should hydra-is-helpful)
+              (should-not emacsvox-muggles--owned)
+              (should-error
+               (emacsvox-muggle-navigate--enter
+                (lambda () (emacsvox-muggle-navigate--begin) (error "Failed entry"))))
+              (should hydra-is-helpful)
+              (should-not emacsvox-muggle-navigate--hint-state))))))))
 
 (provide 'emacsvox-muggles-tests)
 ;;; emacsvox-muggles-tests.el ends here

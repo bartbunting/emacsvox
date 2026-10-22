@@ -10406,18 +10406,26 @@ Function Index
                                                              (line   26)
 * emacsvox-muggles-enable <1>:           emacsvox-muggles-core.
                                                              (line   27)
-* emacsvox-muggles-org-nav/body:         emacsvox-muggles-core.
+* emacsvox-muggles-navigate/body:        emacsvox-muggles-core.
                                                              (line   36)
-* emacsvox-muggles-org-nav/body <1>:     emacsvox-muggles-core.
+* emacsvox-muggles-navigate/body <1>:    emacsvox-muggles-core.
                                                              (line   37)
-* emacsvox-muggles-save:                 emacsvox-muggles-core.
+* emacsvox-muggles-org-nav/body:         emacsvox-muggles-core.
                                                              (line   44)
-* emacsvox-muggles-save <1>:             emacsvox-muggles-core.
+* emacsvox-muggles-org-nav/body <1>:     emacsvox-muggles-core.
                                                              (line   45)
-* emacsvox-muggles-status:               emacsvox-muggles-core.
-                                                             (line   51)
-* emacsvox-muggles-status <1>:           emacsvox-muggles-core.
+* emacsvox-muggles-org-table/body:       emacsvox-muggles-core.
                                                              (line   52)
+* emacsvox-muggles-org-table/body <1>:   emacsvox-muggles-core.
+                                                             (line   53)
+* emacsvox-muggles-save:                 emacsvox-muggles-core.
+                                                             (line   60)
+* emacsvox-muggles-save <1>:             emacsvox-muggles-core.
+                                                             (line   61)
+* emacsvox-muggles-status:               emacsvox-muggles-core.
+                                                             (line   67)
+* emacsvox-muggles-status <1>:           emacsvox-muggles-core.
+                                                             (line   68)
 * emacsvox-muggles-ui-details:           emacsvox-muggles-ui.
                                                              (line   25)
 * emacsvox-muggles-ui-details <1>:       emacsvox-muggles-ui.

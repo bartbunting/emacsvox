@@ -7110,7 +7110,7 @@ changes take effect after restarting speech. Explicit word and partial-line
 reads at @code{some} or @code{none} use @code{tts-character-to-speech-table}@comma{} the Emacs table
 also used for character reading.
 
-@subsection Navigate Org headings with a Muggle
+@subsection Use managed navigation Muggles
 
 @cindex Muggles
 @cindex Org, heading navigation menu
@@ -7119,12 +7119,18 @@ also used for character reading.
 @findex emacsvox-muggles-save
 @findex emacsvox-muggles-status
 @findex emacsvox-muggles-org-nav/body
+@findex emacsvox-muggles-org-table/body
+@findex emacsvox-muggles-navigate/body
 @findex emacsvox-muggles-browse
 @vindex emacsvox-muggles-preferences
 
 A Muggle is a temporary menu of related commands@comma{} implemented with Hydra.
-The Org heading-navigation Muggle lets you repeat movement and section
-reading with single keys. It requires the Hydra package and an Org buffer.
+The managed list offers Org heading navigation@comma{} Org table editing and Text
+navigation. All three require the Hydra package. Enable installs a menu's
+entry key when available; Run enters it and can move point or perform editing.
+
+Org heading navigation lets you repeat movement and section reading with
+single keys in an Org buffer.
 Start it directly with @kbd{M-x emacsvox-muggles-org-nav/body @key{RET}}. Entry announces
 the menu without moving point or changing the document.
 
@@ -7135,10 +7141,26 @@ and leaves the menu. @kbd{?} reads the available keys; @kbd{q} or @kbd{C-g} exit
 Hydra hints are quiet during this menu; exit restores their previous setting
 unless it was changed during the visit.
 
+Org table editing starts with @kbd{M-x emacsvox-muggles-org-table/body @key{RET}} at an
+Org table cell. @kbd{j} and @kbd{k} move to the next or previous row; @kbd{h} and @kbd{l}
+move to the previous or next field. These are native Org editing commands:
+they may realign the table@comma{} recalculate formulas or create a row. @kbd{@key{SPC}} reads
+the field@comma{} @kbd{.} gives coordinates@comma{} and @kbd{b}@comma{} @kbd{r} or @kbd{c} reads the value with
+both@comma{} row or column headers. @kbd{?} explains the keys and @kbd{q} exits. For movement
+that preserves the table text@comma{} use @ref{Reading Markdown And Org Tables, , the shared table reader}.
+
+Text navigation starts with @kbd{M-x emacsvox-muggles-navigate/body @key{RET}} and
+immediately attempts to move down one line. @kbd{n~/~p} or @kbd{j~/~k} repeat line
+movement@comma{} @kbd{f~/~b} move by character@comma{} and @kbd{a~/~e} reach the line's beginning
+or end. @kbd{v~/~V} scroll@comma{} @kbd{<~/~>} reach the buffer's beginning or end@comma{} and @kbd{l}
+recentres. @kbd{?} reads the keys and @kbd{q} exits. Entry temporarily toggles Hydra
+hints and exit restores them; pressing @kbd{s} makes an explicit hint choice
+that is retained after exit. Movement uses the buffer's existing speech support.
+
 Press @kbd{C-e H m} to browse managed Muggles@comma{} or run
 @kbd{M-x emacsvox-muggles-browse @key{RET}}. Settings and action search also find the
-Muggles entry. The list currently contains Org heading navigation; other
-Muggles retain their legacy configuration until they gain individual switches.
+Muggles entry. Other Muggles retain their legacy configuration until they gain
+individual switches.
 Opening or browsing the list does not load or activate the navigation menu.
 
 Up/down selects a row and reads its purpose@comma{} current choice@comma{} configured override
@@ -7146,12 +7168,15 @@ and availability. Left/right inspects columns; @kbd{@key{SPC}} reads the full ro
 @kbd{@key{RET}} or @kbd{?} explains the selected Muggle and its actions. Returning from Help
 with @kbd{q} restores the row and column. @kbd{g} refreshes the displayed state.
 
-On Org heading navigation@comma{} @kbd{e} requests @kbd{C-c C-@key{SPC}} in Org for this session.
-If Org has not loaded@comma{} activation waits for it. Existing personal or package
+On the selected row@comma{} @kbd{e} requests its entry key for this session: @kbd{C-c C-@key{SPC}}
+in Org for heading navigation@comma{} @kbd{C-c t} in Org for table editing@comma{} or global
+@kbd{s-n} for text navigation. @kbd{s-n} means Super-n. Org entries wait for Org to
+load. Existing personal or package
 bindings are preserved@comma{} and the availability column names any conflict or
 missing dependency. @kbd{d} removes only the managed entry key and closes this
 Muggle if active. It preserves completed actions and independently configured
-bindings. These choices apply throughout the session@comma{} rather than to one buffer.
+bindings. Global keys remain subject to local and minor-mode bindings.
+These choices apply throughout the session@comma{} rather than to one buffer.
 
 Enable and Disable retain the selected row and show the choice as not saved.
 @kbd{W} saves all explicit session Muggle choices through Customize; the
@@ -7161,19 +7186,22 @@ explicit Disabled takes precedence over a legacy request. Session choices
 take precedence until saved or changed. @kbd{q} closes the list and keeps session
 choices; when opened through settings@comma{} it returns to the same menu item.
 
-To try the Muggle@comma{} open the list from an Org document and press @kbd{r}. This leaves
-the list and starts heading navigation at the captured source position@comma{} even
+To try a Muggle@comma{} open the list from the intended source and press @kbd{r} on its
+row. This leaves the list and enters that menu at the captured position@comma{} even
 when the managed key is disabled or blocked. It does not enable keys or save
-settings. A closed buffer@comma{} changed source item or different major mode requires
-reopening from the intended Org location. Run is an explicit action; browsing
-and Help never perform it. Once navigation starts@comma{} @kbd{q} exits its menu in Org.
+settings. Org heading navigation requires an Org buffer; Org table editing
+also requires a table at the captured position. A closed buffer@comma{} changed source
+item or unsuitable context requires reopening from the intended location.
+Run is an explicit action; browsing and Help never perform it. Once the menu
+starts@comma{} @kbd{q} exits it in the source buffer.
 
 The named commands @code{emacsvox-muggles-enable}@comma{} @code{emacsvox-muggles-disable}@comma{}
 @code{emacsvox-muggles-status} and @code{emacsvox-muggles-save} offer the same management
-operations without the list. Direct @kbd{M-x emacsvox-muggles-org-nav/body @key{RET}}
-also remains available while disabled. Loading @code{extra-muggles} requests Org
-heading navigation through the manager@comma{} respecting explicit Disabled choices
-and protecting conflicting bindings.
+operations without the list. Each menu's direct @kbd{M-x} command also remains
+available while disabled. Loading @code{extra-muggles} requests Org heading navigation;
+loading @code{emacsvox-muggles} requests Org table editing and Text navigation.
+These managed requests respect explicit Disabled choices and protect
+conflicting bindings. Unconverted collection members retain their legacy keys.
 
 @node Reading Markdown And Org Tables
 @subsection Reading Markdown and Org tables

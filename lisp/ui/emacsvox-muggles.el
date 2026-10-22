@@ -128,26 +128,9 @@
 (global-set-key (kbd "s-.") 'emacsvox-muggles-brightness/body)
 
 ;;;  Org-Mode Table Navigation:
-(with-eval-after-load "org"
-  (define-key
-   org-mode-map (kbd "C-c t")
-   (defhydra emacsvox-muggles-org-table
-             (:body-pre
-              (progn
-                (emacsvox-hydra-body-pre "Org Table UI")
-                (when hydra-is-helpful (emacsvox-hydra-toggle-talkative)))
-              :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
-             "Org Table UI"
-             ("?"(emacsvox-hydra-self-help "emacsvox-muggles-org-table"))
-             ("j" org-table-next-row)
-             ("k" org-table-previous-row)
-             ("h" org-table-previous-field)
-             ("l" org-table-next-field)
-             ("SPC"emacsvox-org-table-speak-current-element)
-             ("."emacsvox-org-table-speak-coordinates)
-             ("b"emacsvox-org-table-speak-both-headers-and-element)
-             ("r"emacsvox-org-table-speak-row-header-and-element)
-             ("c"emacsvox-org-table-speak-column-header-and-element))))
+(require 'emacsvox-muggles-core)
+(require 'emacsvox-muggle-org-table)
+(emacsvox-muggles--legacy-enable 'org-table)
 
 ;;;  HideShow:
 
@@ -216,37 +199,8 @@ _p_ emacsvox-muggles-lispy-or-sp:
   ("q" nil "quit")))
 
 ;;;  Navigate:
-
-;; Inspired by  Hydra wiki:
-;; But bound to s-n --- instead of C-n
-
-(global-set-key
- (kbd "s-n")
- (defhydra emacsvox-muggles-navigate
-           (:body-pre
-            (progn
-              (emacsvox-hydra-body-pre "Navigator")
-              (emacsvox-hydra-toggle-talkative)
-              (condition-case nil (call-interactively #'next-line) (error nil)))
-            :hint nil
-            :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
-           "Navigator"
-           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-navigate"))
-           ("s" emacsvox-hydra-toggle-talkative "quiet")
-           ("n" next-line "next ")
-           ("p" previous-line "previous ")
-           ("f" forward-char)
-           ("b" backward-char)
-           ("a" beginning-of-line)
-           ("e" move-end-of-line)
-           ("j" next-line)
-           ("k" previous-line)
-           ("v" scroll-up-command)
-           ;; Converting M-v to V here by analogy.
-           ("V" scroll-down-command)
-           ("l" recenter-top-bottom)
-           ("<" beginning-of-buffer)
-           (">" end-of-buffer)))
+(require 'emacsvox-muggle-navigate)
+(emacsvox-muggles--legacy-enable 'navigate)
 
 ;;;  Repeatable Yank
 

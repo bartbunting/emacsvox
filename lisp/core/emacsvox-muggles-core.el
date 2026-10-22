@@ -43,6 +43,24 @@ Load the optional Org navigation library on first use.  Hydra is required."
     (require 'emacsvox-muggle-org-navigation)
     (call-interactively #'emacsvox-muggles-org-nav/body)))
 
+;;;###autoload (autoload 'emacsvox-muggles-org-table/body "emacsvox-muggles-core" "Edit and speak native Org table fields." t)
+(unless (featurep 'emacsvox-muggle-org-table)
+  (defun emacsvox-muggles-org-table/body ()
+    "Edit and speak native Org table fields.  Hydra is required.
+Native movement may realign or extend the table."
+    (interactive)
+    (require 'emacsvox-muggle-org-table)
+    (call-interactively #'emacsvox-muggles-org-table/body)))
+
+;;;###autoload (autoload 'emacsvox-muggles-navigate/body "emacsvox-muggles-core" "Enter repeatable text navigation, moving down one line." t)
+(unless (featurep 'emacsvox-muggle-navigate)
+  (defun emacsvox-muggles-navigate/body ()
+    "Enter repeatable text navigation, moving down one line.
+Hydra is required.  Managed entry keys are optional."
+    (interactive)
+    (require 'emacsvox-muggle-navigate)
+    (call-interactively #'emacsvox-muggles-navigate/body)))
+
 (defgroup emacsvox-muggles nil
   "Independent convenience menus and their entry bindings."
   :group 'emacsvox)
@@ -54,7 +72,23 @@ Load the optional Org navigation library on first use.  Hydra is required."
      :library "emacsvox-muggle-org-navigation"
      :dependencies (org hydra emacsvox-outline)
      :feature org :map org-mode-map :key "C-c C-SPC"
-     :command emacsvox-muggles-org-nav/body))
+     :scope "Org" :mode org-mode
+     :command emacsvox-muggles-org-nav/body)
+    (org-table
+     :name "Org table editing"
+     :description "Move and speak native Org table fields; movement may realign or extend the table. Run requires a table at point."
+     :library "emacsvox-muggle-org-table"
+     :dependencies (org hydra emacsvox-org)
+     :feature org :map org-mode-map :key "C-c t"
+     :scope "Org" :mode org-mode :table t
+     :command emacsvox-muggles-org-table/body)
+    (navigate
+     :name "Text navigation"
+     :description "Repeat line, character and scrolling commands. Run moves down one line immediately; Enable only installs the entry key."
+     :library "emacsvox-muggle-navigate"
+     :dependencies (hydra emacsvox-hydra)
+     :map global-map :key "s-n" :scope "Global"
+     :command emacsvox-muggles-navigate/body))
   "Converted Muggles and their loading and binding requirements.")
 
 (defvar emacsvox-muggles--session nil "Explicit choices for this session.")
@@ -85,7 +119,8 @@ legacy collection requests, or remains disabled when none exists.
 Direct M-x entry stays callable.  Missing dependencies are never installed.
 Use `emacsvox-muggles-enable' or `emacsvox-muggles-disable' for a session
 choice, then `emacsvox-muggles-save' to persist those choices with Customize."
-  :type '(alist :key-type (choice (const org-navigation)) :value-type boolean)
+  :type '(alist :key-type (choice (const org-navigation) (const org-table)
+                                 (const navigate)) :value-type boolean)
   :initialize #'custom-initialize-default
   :set #'emacsvox-muggles--set-preferences
   :group 'emacsvox-muggles)
@@ -103,6 +138,24 @@ choice, then `emacsvox-muggles-save' to persist those choices with Customize."
          (cons (cdr (assq id emacsvox-muggles-preferences)) 'configured))
         ((memq id emacsvox-muggles--legacy) '(t . legacy))
         (t '(nil . default))))
+
+(defun emacsvox-muggles--map (entry)
+  "Return ENTRY's current keymap, or nil while it is unavailable."
+  (let ((name (plist-get entry :map)))
+    (if (eq name 'global-map) (current-global-map)
+      (and (boundp name) (keymapp (symbol-value name)) (symbol-value name)))))
+
+(declare-function org-at-table-p "org" (&optional table-type))
+
+(defun emacsvox-muggles--check-context (entry)
+  "Check ENTRY's Run requirements at point without changing the buffer."
+  (when-let* ((mode (plist-get entry :mode)))
+    (unless (derived-mode-p mode)
+      (user-error "%s requires an %s buffer" (plist-get entry :name)
+                  (plist-get entry :scope))))
+  (when (and (plist-get entry :table)
+             (not (and (fboundp 'org-at-table-p) (org-at-table-p))))
+    (user-error "Org table editing requires a table at the captured position")))
 
 (defun emacsvox-muggles--withdraw (id)
   "Withdraw ID's binding only while it is still owned by this manager."
@@ -131,12 +184,12 @@ choice, then `emacsvox-muggles-save' to persist those choices with Customize."
                    (plist-get entry :dependencies))))
     (cond
      (missing (cons 'missing (format "Missing libraries: %s" missing)))
-     ((not (featurep (plist-get entry :feature)))
+     ((and (plist-get entry :feature) (not (featurep (plist-get entry :feature))))
       (cons 'waiting (format "Waiting for %s to load" (plist-get entry :feature))))
-     ((not (and (boundp map-name) (keymapp (symbol-value map-name))))
+     ((not (emacsvox-muggles--map entry))
       (cons 'waiting (format "Waiting for %s" map-name)))
      (t
-      (let ((binding (lookup-key (symbol-value map-name) key))
+      (let ((binding (lookup-key (emacsvox-muggles--map entry) key))
             (global (lookup-key (current-global-map) key)))
         (cond
          ((and binding (not (eq binding command)))
@@ -169,7 +222,7 @@ choice, then `emacsvox-muggles-save' to persist those choices with Customize."
                 (require (intern (plist-get entry :library)))
                 ;; Loading dependencies can install their own bindings.
                 (when (eq (car (emacsvox-muggles--availability id)) 'available)
-                  (let* ((map (symbol-value (plist-get entry :map)))
+                  (let* ((map (emacsvox-muggles--map entry))
                          (key (kbd (plist-get entry :key)))
                          (previous (lookup-key map key))
                          (command (plist-get entry :command)))

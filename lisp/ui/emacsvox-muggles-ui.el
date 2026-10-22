@@ -52,9 +52,9 @@
     "No override; legacy request or disabled"))
 
 (defun emacsvox-muggles-ui--context-label ()
-  "Describe whether Run can use the captured Org source."
+  "Describe whether the selected Muggle can run at the captured source."
   (condition-case err
-      (progn (emacsvox-muggles-ui--source) "Run available in captured Org buffer")
+      (progn (emacsvox-muggles-ui--source) "Run available at captured source")
     (user-error (error-message-string err))))
 
 (defun emacsvox-muggles-ui--populate ()
@@ -67,7 +67,7 @@
                    (vector (plist-get entry :name)
                            (emacsvox-muggles-ui--choice-label id)
                            (emacsvox-muggles-ui--configured-label id)
-                           (concat "Org " (plist-get entry :key))
+                           (concat (plist-get entry :scope) " " (plist-get entry :key))
                            (cdr (emacsvox-muggles--availability id))))))
          emacsvox-muggles--registry)
         header-line-format
@@ -126,19 +126,21 @@ Retain the selected row.  Failed saves leave session choices pending."
            (emacsvox-muggles-ui--row-description))))
 
 (defun emacsvox-muggles-ui--source ()
-  "Validate and return the captured Org source without moving point."
+  "Validate the selected Muggle's captured source without moving point."
   (let ((source emacsvox-aural-ui-source-buffer)
         (position emacsvox-aural-ui-source-position))
     (unless (buffer-live-p source)
-      (user-error "The source buffer has been closed; reopen Muggles from an Org buffer"))
+      (user-error "The source buffer has been closed; reopen Muggles from its source"))
     (unless (and (markerp position) (eq (marker-buffer position) source))
       (user-error "The source location is unavailable; reopen Muggles"))
     (emacsvox-aural-inspection-check-source-guard emacsvox-aural-ui-source-guard)
-    (with-current-buffer source
-      (unless (derived-mode-p 'org-mode)
-        (user-error "Run requires an Org source buffer; reopen Muggles from Org"))
-      (unless (<= (point-min) position (point-max))
-        (user-error "The source location is outside the visible restriction; reopen Muggles")))
+    (let ((entry (emacsvox-muggles--entry (emacsvox-muggles-ui--id))))
+      (with-current-buffer source
+        (unless (<= (point-min) position (point-max))
+          (user-error "The source location is outside the visible restriction; reopen Muggles"))
+        (save-excursion
+          (goto-char position)
+          (emacsvox-muggles--check-context entry))))
     source))
 
 (defun emacsvox-muggles-ui-run ()
@@ -162,16 +164,16 @@ Help changes no settings; q returns to the exact list row and column."
   (let* ((id (emacsvox-muggles-ui--id)) (entry (emacsvox-muggles--entry id))
          (context (emacsvox-muggles-ui--context-label)))
     (emacsvox-aural-ui-with-help-window
-      (princ (format "%s\n\n%s\n\nCurrent: %s.\nConfigured override: %s.\nEntry key: Org %s.\n%s.\n%s.\n\n"
+      (princ (format "%s\n\n%s\n\nCurrent: %s.\nConfigured override: %s.\nEntry key: %s %s.\n%s.\n%s.\n\n"
                      (plist-get entry :name) (plist-get entry :description)
                      (emacsvox-muggles-ui--choice-label id)
                      (emacsvox-muggles-ui--configured-label id)
-                     (plist-get entry :key)
+                     (plist-get entry :scope) (plist-get entry :key)
                      (cdr (emacsvox-muggles--availability id)) context))
       (princ "Up and Down browse; Left and Right inspect columns. Space reads the row.\nRET or ? opens these details. g refreshes without loading a Muggle.\n\n")
       (princ "e enables managed keys for this session; d disables them and closes an active menu.\nThese are session-wide choices, not buffer-local settings. Existing keys are preserved.\nDirect M-x entry remains available when disabled or blocked. Dependencies are never installed.\n\n")
       (princ "W saves all session Muggle choices through Customize. Closing the list keeps unsaved session choices.\nConfigured overrides may come from Customize or your init; no override follows a legacy collection request, otherwise disabled.\n\n")
-      (princ (format "r enters M-x %s in the captured Org source, even when disabled.\nRun leaves the list and starts navigation; it does not enable keys or save. q then exits that navigation menu.\n\n" (plist-get entry :command)))
+      (princ (format "r enters M-x %s at the captured source, even when disabled.\nRun leaves the list and performs the entry action described above; it does not enable keys or save. q then exits that menu.\nGlobal entry keys remain subject to buffer and minor-mode bindings.\n\n" (plist-get entry :command)))
       (princ "Only converted Muggles appear here. Other legacy collection members do not yet have individual switches.\n")))
   (when (fboundp 'emacsvox-speak-help) (emacsvox-speak-help)))
 
