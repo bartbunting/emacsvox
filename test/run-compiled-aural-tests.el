@@ -64,6 +64,7 @@
           "core/emacsvox-tracked-reading.el"
           "core/emacsvox-speak-characters.el"
           "core/emacsvox-speak-presentation.el"
+          "core/emacsvox-reading-lines.el"
           "core/emacsvox-speak-completion.el"
           "core/emacsvox-speak-messages.el"
           "core/emacsvox-speak-time.el"

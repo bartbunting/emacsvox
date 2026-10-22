@@ -10,6 +10,82 @@
 (require 'ert)
 (require 'emacsvox-speak)
 
+(ert-deftest emacsvox-reading-feedback-independent-timing-and-identity ()
+  "Each row retains its own concrete sound and timing in a complete plan."
+  (cl-letf (((symbol-function 'emacsvox-reading-lines--sound-unavailable) (lambda (&rest _) nil)))
+    (dolist (type '(first middle last))
+      (dolist (placement '(before alongside after))
+        (let* ((values (emacsvox-reading-lines--merge
+                        (list (emacsvox-reading-lines--key type 'placement) placement
+                              :speech 'explicit)))
+               (facts (list :wrapped-row type))
+               (context (plist-put (emacsvox-aural-capture-context nil 'navigation)
+                                   :buffer-rules (list (emacsvox-reading-lines--rule type values))))
+               (plan (emacsvox-aural-compile-plan
+                      (emacsvox-aural-resolve-active facts context) facts context))
+               (actions (if (eq placement 'after) (emacsvox-aural-concrete-plan-after plan)
+                          (emacsvox-aural-concrete-plan-before plan)))
+               (sound (cl-find 'cue actions :key #'emacsvox-aural-concrete-action-kind)))
+          (should sound)
+          (should (eq (emacsvox-aural-concrete-action-audio-mode sound)
+                      (if (eq placement 'before) 'insert 'overlay)))
+          (should (= 0.6 (emacsvox-aural-concrete-action-requested-volume sound)))
+          (should (stringp (emacsvox-aural-concrete-action-resource sound)))
+          (should (cl-find 'speech (emacsvox-aural-concrete-plan-before plan)
+                           :key #'emacsvox-aural-concrete-action-kind)))))))
+
+(ert-deftest emacsvox-reading-feedback-entry-frequency-and-speech-only ()
+  "Entry frequency includes middle-row jumps, suppresses repeats and resets."
+  (with-temp-buffer
+    (let ((emacsvox-reading-lines-overrides '(:frequency entry :speech brief :middle-sound off))
+          (emacsvox-reading-lines--last-visit nil))
+      (let* ((context (emacsvox-aural-capture-context nil 'navigation))
+             (row '(:type middle :source-start 1))
+             (first (emacsvox-reading-lines--presentation row context nil))
+             (second (emacsvox-reading-lines--presentation row context nil)))
+        (should (plist-get (car first) :buffer-rules))
+        (should-not (plist-get (car second) :buffer-rules))
+        (should (plist-get (car (emacsvox-reading-lines--presentation row context nil t)) :buffer-rules))
+        (emacsvox-reading-lines--presentation '(:type complete :source-start 100) context nil)
+        (should (plist-get (car (emacsvox-reading-lines--presentation row context nil)) :buffer-rules))))))
+
+(ert-deftest emacsvox-reading-preferences-inherit-by-field ()
+  "Buffer, major-mode and global choices combine without replacing other fields."
+  (with-temp-buffer
+    (let ((emacsvox-reading-lines-defaults '(:speech explicit :first-volume 0.2))
+          (emacsvox-reading-lines-modes '((fundamental-mode :speech brief)))
+          (emacsvox-reading-lines-overrides '(:last-sound off)))
+      (let ((values (emacsvox-reading-lines--values)))
+        (should (eq 'brief (plist-get values :speech)))
+        (should (= 0.2 (plist-get values :first-volume)))
+        (should (eq 'off (plist-get values :last-sound)))
+        (should (eq 'earcon (plist-get values :middle-sound)))))))
+
+(ert-deftest emacsvox-reading-explicit-mode-and-inheritance-restoration ()
+  "Applying a mode controls motion and speech, and inheritance restores native state."
+  (with-temp-buffer
+    (let ((emacsvox-reading-lines-defaults nil) (emacsvox-reading-lines-modes nil))
+      (setq-local line-move-visual nil)
+      (setq emacsvox-reading-lines-overrides '(:mode visual))
+      (emacsvox-reading-lines--apply-mode)
+      (should visual-line-mode) (should line-move-visual)
+      (setq emacsvox-reading-lines-overrides '(:mode source))
+      (emacsvox-reading-lines--apply-mode)
+      (should-not visual-line-mode) (should-not line-move-visual)
+      (setq emacsvox-reading-lines-overrides nil)
+      (emacsvox-reading-lines--apply-mode)
+      (should-not visual-line-mode) (should-not line-move-visual))))
+
+(ert-deftest emacsvox-reading-unavailable-sound-preserves-spoken-feedback ()
+  "An unsupported sound is omitted, with its saved placement unchanged."
+  (let* ((tts-speaker-process nil)
+         (values (emacsvox-reading-lines--merge '(:first-placement after :speech brief)))
+         (rule (emacsvox-reading-lines--rule 'first values)))
+    (should (emacsvox-reading-lines--sound-unavailable values 'first))
+    (should-not (plist-get (plist-get rule :render) :after))
+    (should (plist-get (plist-get rule :render) :before))
+    (should (eq 'after (plist-get values :first-placement)))))
+
 (ert-deftest emacsvox-reading-long-prose-does-not-change-mode ()
   "Long prose speaks fully without prompting, modifying text, or enabling wrap."
   (with-temp-buffer

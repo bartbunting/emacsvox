@@ -47,6 +47,9 @@
 (require 'emacsvox-pronounce)
 (require 'emacsvox-sounds)
 (require 'emacsvox-aural-submission)
+(require 'emacsvox-reading-lines)
+(add-hook 'after-change-major-mode-hook #'emacsvox-reading-lines--apply-mode)
+(add-hook 'post-command-hook #'emacsvox-reading-lines--track-place)
 (require 'sox-gen)
 (require 'shr)
 (declare-function operate-on-rectangle "rect" (function start end coerce-tabs))
@@ -720,8 +723,9 @@ no layout is cached, so edits and window changes take effect immediately."
             :start start :end end))))
 
 (defun emacsvox-speak-visual-line ()
-  "Speaks current visual line.
-Cues the start of a physical line with auditory icon `left'."
+  "Speak the current screen row with configured continuation feedback.
+Complete source lines keep their ordinary boundary feedback.  Wrapped rows
+use independent first, middle and last cues in the same speech transaction."
   (interactive)
   (let* ((inhibit-field-text-motion t)
          (inhibit-read-only t)
@@ -752,7 +756,7 @@ Cues the start of a physical line with auditory icon `left'."
           (when
               (and icon (not (memq condition '(empty whitespace-only))))
             (list (emacsvox-aural-compatibility-icon icon))))
-         start end line point-facts)
+         start end line point-facts row)
     (save-excursion
       (beginning-of-visual-line)
       (setq start (point))
@@ -763,6 +767,15 @@ Cues the start of a physical line with auditory icon `left'."
             (emacsvox-speak--annotate-point
              (emacsvox-aural-source-substring start end)
              orig start end point-facts)))
+    (setq row (emacsvox-speak--visual-row start end))
+    (unless (or condition (eq (plist-get row :type) 'complete))
+      ;; A wrapped row has one meaning; do not also emit the generic boundary.
+      (setq compatibility-actions nil))
+    (unless condition
+      (pcase-let ((`(,new-context ,new-facts)
+                   (emacsvox-reading-lines--presentation
+                    row context facts (called-interactively-p 'interactive))))
+        (setq context new-context facts new-facts)))
     (let ((emacsvox-aural-submission-context context)
           (emacsvox-aural-submission-module module)
           (emacsvox-aural-submission-occasion occasion)

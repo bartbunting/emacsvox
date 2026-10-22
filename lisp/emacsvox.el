@@ -682,6 +682,7 @@ commands and options."
   (emacsvox--startup-thread 'package-preparation #'emacsvox-prepare-emacs)
   (setq line-number-mode nil column-number-mode nil)
   (global-visual-line-mode -1)
+  (emacsvox-reading-lines--refresh)
   (transient-mark-mode -1)
   (unless (fboundp 'Info-initialize)
     (require 'info)

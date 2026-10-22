@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1715 commands and 259 options.
+   This chapter documents a total of 1715 commands and 261 options.
 
 * Menu:
 
@@ -672,6 +672,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-python:: Speech enable Python.
 * emacsvox-racket:: Speech-enable RACKET.
 * emacsvox-re-builder:: re-builder.
+* emacsvox-reading-lines:: Wrapped row reading preferences.
 * emacsvox-reftex:: speech enable reftex.
 * emacsvox-related:: Speech-enable RELATED.
 * emacsvox-rg:: Speech-enable RG.

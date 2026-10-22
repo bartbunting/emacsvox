@@ -2963,6 +2963,18 @@ bidirectional wrapped-row classification. The focused Python long-prose test,
 incremental byte-code build and documentation review gate passed. Row feedback
 and its settings are still pending. Listening acceptance remains pending.
 
+Slice 2: independent first/middle/last cue identities, tone values, volume,
+placement, spoken descriptions and entry frequency now feed the native main
+speech transaction. Unsupported sounds retain their preferences but are not
+retimed. Buffer, mode and global resolution and startup restoration are in
+place. Wrapped rows suppress duplicate generic boundary cues.
+
+Verified: 281 source reading tests passed, with 11 graphical skips in batch;
+1027 core tests passed, with 18 documented environmental skips. All 30 fresh
+graphical reading tests passed. The startup inventory guard includes the new
+module. Byte-code was rebuilt, references regenerated, and the header and
+documentation gates passed. Settings interaction and listening remain pending.
+
 **** Delivery and review checkpoints
 
 1. Audit existing visual-line, boundary-cue, sound-editor and saved-setting

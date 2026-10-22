@@ -2003,6 +2003,12 @@ PERSISTENT requires durable references instead of generated handles."
        :summary (nth 1 definition)
        :fallback (nth 2 definition)
        :owner 'agent-shell)))
+  (dolist (definition '((wrapped-line-first "Source line continues below" left)
+                        (wrapped-line-middle "Source line continues above and below" item)
+                        (wrapped-line-last "Source line continues above" right)))
+    (unless (emacsvox-aural-cue (car definition))
+      (emacsvox-aural-register-cue
+       (car definition) :summary (nth 1 definition) :fallback (nth 2 definition))))
   (unless (emacsvox-aural-cue 'point-marker)
     (emacsvox-aural-register-cue
      'point-marker
