@@ -53,7 +53,7 @@
     (should-not visual-line-mode)))
 
 (ert-deftest emacsvox-reading-settings-save-reloads-in-fresh-emacs ()
-  "Mode and global choices survive restart without saving buffer overrides."
+  "Saved choices activate when Customize loads after startup, in existing buffers."
   (emacsvox-test--with-reading-settings
     (setf (plist-get (emacsvox-reading-settings--state) :scope) 'global)
     (emacsvox-reading-settings--discard)
@@ -68,10 +68,10 @@
       (with-temp-buffer
         (let* ((form `(progn
                         (require 'emacsvox-speak)
-                        (load ,custom-file nil t)
                         (with-temp-buffer
                           (fundamental-mode)
-                          (emacsvox-reading-lines--apply-mode)
+                          ;; The normal profile loads Customize after core startup.
+                          (load ,custom-file nil t)
                           (unless (and visual-line-mode line-move-visual
                                        (eq 'explicit (plist-get (emacsvox-reading-lines--values) :speech)))
                             (error "Saved preferences were not restored: %S" (emacsvox-reading-lines--values))))))

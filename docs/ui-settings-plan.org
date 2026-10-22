@@ -2976,7 +2976,7 @@ graphical reading tests passed. The startup inventory guard includes the new
 module. Byte-code was rebuilt, references regenerated, and the header and
 documentation gates passed. Settings interaction and listening remain pending.
 
-Slice 3: =C-e H s R w= and settings search open the reading editor. Buffer,
+Slice 3, committed as =917c9355a=: =C-e H s R w= and settings search open the reading editor. Buffer,
 exact major-mode and global scopes resolve per preference. Choices stage drafts;
 Apply changes the session and Save persists mode/global preferences through
 Customize. Each row has independent sound, tone/earcon identity, placement and
@@ -3006,6 +3006,14 @@ Read-only checks of both running Emacs sessions found timeline version 7 and
 tone version 3. Neither live session was reloaded or restarted. Listening must
 use a fresh normal profile with the compiled changes, then revisit the original
 README and the three sound types and placements. Audible acceptance is pending.
+
+Slice 4: saved preferences also activate when Customize loads after Emacsvox
+startup, as in the normal profile's manual =-q= bootstrap. Both preference
+options reconcile existing buffers through their Customize setter. The fresh
+Emacs persistence test creates its buffer before loading the saved file and
+verifies activation without an extra apply call. All 287 compiled reading
+checks and 35 graphical reading checks passed again; the documentation review
+gate passed. The 16 batch skips remain the graphical/source-only cases above.
 
 **** Delivery and review checkpoints
 

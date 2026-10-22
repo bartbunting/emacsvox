@@ -44,19 +44,31 @@
     :last-volume 0.6 :last-tone (:pitch 440 :duration 45 :shape (:waveform sine)))
   "Factory feedback values; reading mode preserves existing mode defaults.")
 
+(defun emacsvox-reading-lines--set-default (symbol value)
+  "Set preference SYMBOL to VALUE and reconcile initialized reading buffers.
+Customize may load saved values after Emacsvox startup.  During the first
+module load, defer reconciliation until definitions and both options exist."
+  (set-default symbol value)
+  (when (and (boundp 'emacsvox-reading-lines-defaults)
+             (boundp 'emacsvox-reading-lines-modes)
+             (fboundp 'emacsvox-reading-lines--refresh))
+    (emacsvox-reading-lines--refresh)))
+
 (defcustom emacsvox-reading-lines-defaults nil
   "Global reading preferences, overriding factory values by plist key.
 Use `emacsvox-reading-settings' for explained choices and explicit saving.
 An absent key follows the factory value.  :mode is inherit, source or visual;
 inherit preserves each major mode's existing navigation.  Sounds require a
 worker supporting structured timelines; unavailable sounds are not retimed."
-  :type 'plist :group 'emacsvox-reading-lines)
+  :type 'plist :set #'emacsvox-reading-lines--set-default
+  :group 'emacsvox-reading-lines)
 
 (defcustom emacsvox-reading-lines-modes nil
   "Reading preference plists keyed by exact major-mode symbol.
 Each absent preference follows `emacsvox-reading-lines-defaults'.  Use the
 reading settings menu to save choices without changing personal source files."
-  :type '(alist :key-type symbol :value-type plist) :group 'emacsvox-reading-lines)
+  :type '(alist :key-type symbol :value-type plist)
+  :set #'emacsvox-reading-lines--set-default :group 'emacsvox-reading-lines)
 
 (defvar-local emacsvox-reading-lines-overrides nil
   "Temporary buffer preferences; missing keys follow mode and global values.")
