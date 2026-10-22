@@ -3623,6 +3623,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                                  " FINAL")))
       (with-temp-buffer
         (switch-to-buffer (current-buffer))
+        (set-syntax-table (copy-syntax-table (syntax-table)))
+        (modify-syntax-entry ?\n ">")
         (setq major-mode 'agent-shell-mode
               buffer-invisibility-spec t
               truncate-lines nil line-move-visual t
@@ -3637,7 +3639,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                  (agent-shell-ui-make-fragment-model
                   :namespace-id "padding" :block-id "command"
                   :label-left "Command" :label-right label
-                  :body "HIDDEN COMMAND BODY\n\n\n")
+                  :body "```console\nHIDDEN COMMAND BODY\n```\n\n\n")
                  :expanded nil))
                (heading-start (map-nested-elt range '(:block :start))))
           ;; The renderer already supplies the two separating newlines.
@@ -3650,6 +3652,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (setq-local comint-last-prompt
                         (cons (copy-marker prompt) (copy-marker (point))))
             (let ((agent-shell-prompt-bar-mode nil)) (agent-shell-chat--relabel)))
+          (add-hook 'agent-shell-ui-post-expand-fragment-at-point-hook
+                    #'agent-shell--render-markdown nil t)
           (use-local-map agent-shell-mode-map)
           (setq-local emacsvox-agent-shell--speech-control-active t
                       emacsvox-agent-shell-input-activation 'explicit)
@@ -3681,6 +3685,23 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (should-not emacsvox-agent-shell--input-editing)
                 (should-not (map-elt (get-text-property heading-start 'agent-shell-ui-state)
                                      :collapsed))
+                ;; Rendered code leaves a blank visual row above the prompt.
+                ;; It must use blank-line feedback, never newline-only speech.
+                (goto-char (point-max))
+                (let* ((presentations
+                        (emacsvox-agent-shell-test--capture-presentations
+                          (let ((tts-quiet nil)
+                                (tts-speaker-process 'speaker))
+                            (cl-letf (((symbol-function 'process-live-p)
+                                       (lambda (process) (eq process 'speaker))))
+                              (funcall-interactively #'previous-line 1)))))
+                       (actions (seq-filter (lambda (p) (eq (car p) 'submit-actions))
+                                            presentations)))
+                  (should (= 1 (length actions)))
+                  (should (eq (plist-get (nth 2 (car actions)) :line-condition)
+                              'whitespace-only))
+                  (should-not (seq-some (lambda (p) (memq (car p) '(submit speak)))
+                                        presentations)))
                 ;; An expanded body and the real prompt keep their own actions.
                 (goto-char (1- (marker-position (car comint-last-prompt))))
                 (let ((origin (point)))

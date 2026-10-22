@@ -340,7 +340,10 @@ control bytes beyond this length, and lines over 100,000 characters, ask
 before speaking.  Confirmation applies only to the current reading.")
 
 (defconst emacsvox-speak-blank-line-regexp
-  "\\`[[:space:]]+\\'"
+  ;; `[:space:]' follows the mode's syntax table, where newline can instead
+  ;; end a comment.  Keep ordinary line endings and Unicode spacing literal,
+  ;; including the zero-width space recognized by the standard syntax table.
+  "\\`[ \t\n\r\f\v\u00a0\u2000-\u200b\u202f\u205f\u3000]+\\'"
   "Pattern that matches a string containing only white space.")
 
 (defun emacsvox-speak--line-condition (line)

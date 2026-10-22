@@ -3885,6 +3885,21 @@ write.  State synchronization lines in a combined write are ignored."
     (dolist (line '("---" "!@#" "☃"))
       (should-not (emacsvox-speak--line-condition line)))))
 
+(ert-deftest emacsvox-speak-blank-lines-ignore-mode-syntax ()
+  "Line endings and spacing stay blank even when a mode changes their syntax."
+  (with-temp-buffer
+    (set-syntax-table (copy-syntax-table (syntax-table)))
+    ;; Agent Shell and programming modes use comment-end syntax for newline.
+    (modify-syntax-entry ?\n ">")
+    (modify-syntax-entry ?\r "_")
+    (modify-syntax-entry ?\t "_")
+    (modify-syntax-entry ?x " ")
+    (let ((tts-punctuation-mode 'all))
+      (dolist (text '("\n\n\n" " \t\r\n" "\f" "\u00a0" "\u2003\u200b" "\u3000"))
+        (should (eq (emacsvox-speak--line-condition text) 'whitespace-only)))
+      (dolist (text '("x" " \nx\n" "content\n"))
+        (should-not (emacsvox-speak--line-condition text))))))
+
 (ert-deftest emacsvox-speak-line-uses-one-native-source-boundary ()
   "Physical line content and its source cue form one native submission."
   (with-temp-buffer
