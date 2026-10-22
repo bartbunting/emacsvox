@@ -805,14 +805,26 @@ has neither its fragment state nor its RET binding."
              (> (point) (point-min))
              (or (eobp) (eq (char-after) ?\n))
              (not (get-text-property (point) 'agent-shell-ui-state))
-             (not (invisible-p (point)))
-             (get-text-property (1- (point)) 'invisible)
-             (invisible-p (1- (point))))
-    (let* ((hidden-start
-            (previous-single-property-change
-             (point) 'invisible nil (point-min)))
-           (heading-position (1- hidden-start)))
-      (when (and (>= heading-position (point-min))
+             (not (invisible-p (point))))
+    (let ((heading-position
+           (save-excursion
+             ;; Two visible padding newlines can follow a hidden body.  Up
+             ;; from the prompt can land on the second while the display row
+             ;; still starts in the heading.  Cross padding only within that
+             ;; row, so a genuine blank row keeps its own navigation action.
+             (unless (invisible-p (1- (point)))
+               (let ((row-start (car (emacsvox-agent-shell--visual-line-source-bounds))))
+                 (while (and (> (point) row-start)
+                             (memq (char-before) '(?\s ?\t ?\n))
+                             (not (invisible-p (1- (point)))))
+                   (backward-char))))
+             (when (and (> (point) (point-min))
+                        (get-text-property (1- (point)) 'invisible)
+                        (invisible-p (1- (point))))
+               (1- (previous-single-property-change
+                    (point) 'invisible nil (point-min)))))))
+      (when (and heading-position
+                 (>= heading-position (point-min))
                  (not (invisible-p heading-position))
                  (map-elt (get-text-property
                            heading-position 'agent-shell-ui-state)

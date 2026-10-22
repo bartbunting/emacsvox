@@ -3613,6 +3613,85 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                                      (string-match-p "HIDDEN BODY" (cadr event))))
                               events)))))))
 
+(ert-deftest emacsvox-agent-shell-folded-prompt-padding-graphical-navigation ()
+  "Up from the prompt keeps a folded command's speech and Return together."
+  (skip-unless (display-graphic-p))
+  (require 'agent-shell-chat-mode)
+  (save-window-excursion
+    (dolist (label (list "check files FINAL"
+                         (concat "check files " (make-string (* 2 (window-body-width)) ?x)
+                                 " FINAL")))
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (setq major-mode 'agent-shell-mode
+              buffer-invisibility-spec t
+              truncate-lines nil line-move-visual t
+              visual-line-mode t word-wrap t line-move-ignore-invisible t)
+        (setq-local shell-maker--config
+                    (agent-shell--make-shell-maker-config :prompt "Codex> ")
+                    agent-shell--state
+                    '((:agent-config . ((:mode-line-name . "Codex"))))
+                    agent-shell-chat--labeled t)
+        (let* ((range
+                (agent-shell-ui-update-fragment
+                 (agent-shell-ui-make-fragment-model
+                  :namespace-id "padding" :block-id "command"
+                  :label-left "Command" :label-right label
+                  :body "HIDDEN COMMAND BODY\n\n\n")
+                 :expanded nil))
+               (heading-start (map-nested-elt range '(:block :start))))
+          ;; The renderer already supplies the two separating newlines.
+          (goto-char (point-max))
+          (let ((prompt (point)) (inhibit-read-only t))
+            (put-text-property (point-min) prompt 'field 'output)
+            (insert (propertize "Codex> " 'field 'output
+                                'font-lock-face '(comint-highlight-prompt comint-highlight-prompt)
+                                'rear-nonsticky '(field font-lock-face)))
+            (setq-local comint-last-prompt
+                        (cons (copy-marker prompt) (copy-marker (point))))
+            (let ((agent-shell-prompt-bar-mode nil)) (agent-shell-chat--relabel)))
+          (use-local-map agent-shell-mode-map)
+          (setq-local emacsvox-agent-shell--speech-control-active t
+                      emacsvox-agent-shell-input-activation 'explicit)
+          (emacsvox-agent-shell--input-setup)
+          (unwind-protect
+              (progn
+                (goto-char (point-max))
+                (redisplay t)
+                (let ((events (emacsvox-agent-shell-test--capture-events
+                               (funcall-interactively #'previous-line 1))))
+                  (should (eq (key-binding (kbd "RET"))
+                              'agent-shell-ui-toggle-fragment))
+                  (should (= 1 (cl-count 'speak events :key #'car)))
+                  (should (string-match-p "FINAL" (cadr (assq 'speak events))))
+                  (should-not (seq-some
+                               (lambda (event)
+                                 (and (eq (car event) 'speak)
+                                      (string-match-p "HIDDEN COMMAND BODY" (cadr event))))
+                               events)))
+                ;; Down must leave the heading; Up must recover its last row.
+                (emacsvox-agent-shell-test--capture-events
+                 (funcall-interactively #'next-line 1))
+                (should (eq (key-binding (kbd "RET")) 'emacsvox-agent-shell-edit-input))
+                (emacsvox-agent-shell-test--capture-events
+                 (funcall-interactively #'previous-line 1))
+                (should (eq (key-binding (kbd "RET")) 'agent-shell-ui-toggle-fragment))
+                (emacsvox-agent-shell-test--capture-events
+                 (execute-kbd-macro (kbd "RET")))
+                (should-not emacsvox-agent-shell--input-editing)
+                (should-not (map-elt (get-text-property heading-start 'agent-shell-ui-state)
+                                     :collapsed))
+                ;; An expanded body and the real prompt keep their own actions.
+                (goto-char (1- (marker-position (car comint-last-prompt))))
+                (let ((origin (point)))
+                  (emacsvox-agent-shell--normalize-folded-heading-position)
+                  (should (= origin (point))))
+                (goto-char (point-max))
+                (emacsvox-agent-shell-test--capture-events
+                 (execute-kbd-macro (kbd "RET")))
+                (should emacsvox-agent-shell--input-editing))
+            (emacsvox-agent-shell--input-cleanup)))))))
+
 (ert-deftest emacsvox-agent-shell-folded-visual-line-uses-visible-heading ()
   "Folded visual-line speech should not extract its invisible body."
   (with-temp-buffer

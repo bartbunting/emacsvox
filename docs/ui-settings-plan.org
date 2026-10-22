@@ -3201,6 +3201,39 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-22, Agent Shell folded-row and input boundary, reproduced live:
+  at 13:35:09 Sydney time in PID =501345=, Up landed at =342312=,
+  one character before the prompt at =342313=. The visual source span
+  began at the collapsed command heading, =341572=, but point occupied
+  the second of two visible padding newlines after its hidden body.
+  Before Enter ran, both Return bindings resolved to
+  =emacsvox-agent-shell-edit-input=. After Enter, point was =342320=
+  and input editing was active. Another capture at 13:35:19 repeats the
+  failure. PID =2046489= also shows Up reaching the same padding pattern
+  with its separately installed Agent Shell package.
+
+  The folded-heading normalizer requires the immediately preceding character
+  to be invisible. The extra visible newline defeats that check, leaving
+  point outside the fragment's contextual Return map. The input filter then
+  accepts the adjoining padding. The correction crosses visible whitespace
+  only within the current visual source row before recovering the actionable
+  heading. Genuine blank prompt rows and expanded bodies retain their actions.
+  Temporary buffer-local traces have been removed.
+
+  The graphical regression includes the rendered prompt label, two trailing
+  newlines, short and wrapped headings, Up and Down, single-row speech without
+  hidden body text, Return expansion, and subsequent input activation. It
+  fails against the previous implementation and passes with the correction.
+  All 700 batch integration tests and 15 graphical integration tests pass.
+  Incremental compilation and byte-code preflight pass. Fresh graphical Emacs
+  runs pass 13 focused compiled tests with each live Agent Shell installation:
+  source from =/home/bart/src/agent-shell= and the installed
+  =agent-shell-20261021.1251= package, both version 0.88.1. The source checkout
+  contains older byte-code; its check explicitly prefers newer source, matching
+  the main session's actual loaded files. Only the corrected Emacsvox motion
+  module was reloaded in both live sessions; buffer text, point and input state
+  were preserved. Listening acceptance remains pending.
+
 - 2026-10-22, visual-line mode transition and continuation feedback: the
   automatic long-line question changes arrow navigation without explaining
   its scope; existing point-based boundary earcons do not identify wrapped-row
