@@ -465,8 +465,8 @@
            'python 'navigation nil)))
         (should (= (length events) 1))))))
 
-(ert-deftest emacsvox-python-navigation-preserves-long-line-confirmation ()
-  "Long navigation retains confirmation, source marking, speech, and cue order."
+(ert-deftest emacsvox-python-navigation-preserves-reading-mode-on-long-prose ()
+  "Long prose speaks without a prompt, source edits, or a reading-mode change."
   (with-temp-buffer
     (insert "long")
     (goto-char (point-min))
@@ -499,9 +499,10 @@
       (should
        (equal
         (mapcar #'car (nreverse events))
-        '(confirm submission)))
-      (should (get-text-property (point-min) 'start-line))
-      (should (= ems--speak-max-length 8)))))
+        '(submission)))
+      (should-not (get-text-property (point-min) 'start-line))
+      (should-not visual-line-mode)
+      (should (= ems--speak-max-length 3)))))
 
 (ert-deftest emacsvox-python-navigation-native-submission-presents-once ()
   "Python line speech and its overlapping cue form one native transaction."

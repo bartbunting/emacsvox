@@ -10,6 +10,36 @@
 (require 'ert)
 (require 'emacsvox-speak)
 
+(ert-deftest emacsvox-reading-long-prose-does-not-change-mode ()
+  "Long prose speaks fully without prompting, modifying text, or enabling wrap."
+  (with-temp-buffer
+    (insert (make-string 600 ?a))
+    (let ((tts-punctuation-mode 'all) (emacsvox-audio-indentation nil)
+          spoken)
+      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) (ert-fail "Unexpected prompt"))))
+        (emacsvox-speak-line-with-speaker (lambda (text) (setq spoken text))))
+      (should (= 600 (length spoken)))
+      (should-not visual-line-mode))))
+
+(ert-deftest emacsvox-reading-nontext-confirmation-can-decline ()
+  "Declining a suspicious line prevents speech without changing the mode."
+  (with-temp-buffer
+    (insert "text" (make-string 600 1))
+    (let ((tts-punctuation-mode 'all) (emacsvox-audio-indentation nil)
+          prompted spoken)
+      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) (setq prompted t) nil)))
+        (emacsvox-speak-line-with-speaker (lambda (text) (setq spoken text))))
+      (should prompted)
+      (should-not spoken)
+      (should-not visual-line-mode))))
+
+(ert-deftest emacsvox-reading-hidden-text-is-not-continuation ()
+  "Hidden source text does not turn a complete visible line into a first row."
+  (with-temp-buffer
+    (insert "visible hidden")
+    (put-text-property 8 (point-max) 'invisible t)
+    (should (eq 'complete (plist-get (emacsvox-speak--visual-row 1 8) :type)))))
+
 (ert-deftest emacsvox-character-feedback-names-org-apostrophes ()
   "Typing and arrow navigation name apostrophes regardless of prose level."
   (require 'org)

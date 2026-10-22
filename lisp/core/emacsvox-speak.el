@@ -331,11 +331,10 @@ instead of speaking such lines when punctuation mode is set
 to some.")
 
 (defvar-local ems--speak-max-length 512
-  "Threshold for determining `long' lines.
-Emacsvox will ask for confirmation before speaking lines
-that are longer than this length.  This is to avoid accidentally
-opening a binary file and torturing the speech synthesizer
-with a long string of gibberish.")
+  "Length above which nontext lines require confirmation.
+Ordinary prose does not change reading mode or prompt.  Lines containing
+control bytes beyond this length, and lines over 100,000 characters, ask
+before speaking.  Confirmation applies only to the current reading.")
 
 (defconst emacsvox-speak-blank-line-regexp
   "\\`[[:space:]]+\\'"
@@ -552,22 +551,11 @@ interruption so native submissions can apply their complete delivery policy."
         (t 'more))))
     (if-let* ((condition (emacsvox-speak--line-condition line)))
         (emacsvox-speak--present-line-condition condition)
-      (let*
-          ((l (length line))
-           (speakable ;; should we speak this line?
-            (cond
-             ((or                       ;speakable
-               selective-display
-               (< l ems--speak-max-length)
-               (get-text-property start 'speak-line))
-              t)
-             (t
-              (when (y-or-n-p "use Visual Lines")
-                (call-interactively #'visual-line-mode))
-              (unless visual-line-mode
-                (put-text-property start end 'start-line t)
-                (setq ems--speak-max-length (* 2 l)))
-              t))))
+      (let ((speakable
+             (or (not (or (> (length line) 100000)
+                          (and (> (length line) ems--speak-max-length)
+                               (string-match-p "[\000-\010\013\014\016-\037\177]" line))))
+                 (y-or-n-p "Read this unusually large or nontext line? "))))
         (when speakable
           (when
               (and (null arg) indent (> indent 0))
@@ -702,6 +690,34 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
      (t
       (emacsvox-icon icon)
       (tts-speak result)))))
+
+(defun emacsvox-speak--visible-text-p (start end)
+  "Return non-nil if START to END contains visible, nonblank text."
+  (save-excursion
+    (goto-char start)
+    (catch 'visible
+      (while (re-search-forward "[^[:space:]]" end t)
+        (let ((position (match-beginning 0)))
+          (if (invisible-p position)
+              (goto-char (min end (next-char-property-change position end)))
+            (throw 'visible t))))
+      nil)))
+
+(defun emacsvox-speak--visual-row (start end)
+  "Describe visible row START to END within its source line.
+Ignore hidden text and wrap whitespace when deciding whether readable text
+continues above or below.  The caller supplies bounds from the current window;
+no layout is cached, so edits and window changes take effect immediately."
+  (save-excursion
+    (goto-char start)
+    (let* ((source-start (line-beginning-position))
+           (source-end (progn (goto-char end) (line-end-position)))
+           (above (emacsvox-speak--visible-text-p source-start start))
+           (below (emacsvox-speak--visible-text-p end source-end)))
+      (list :type (cond ((and above below) 'middle) (above 'last)
+                        (below 'first) (t 'complete))
+            :source-start source-start :source-end source-end
+            :start start :end end))))
 
 (defun emacsvox-speak-visual-line ()
   "Speaks current visual line.

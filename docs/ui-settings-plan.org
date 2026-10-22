@@ -2790,6 +2790,196 @@ checks passed for each implementation slice; all 27 focused graphical checks
 passed on the combined staged source. The final code matches the previously
 verified working tree.
 
+*** Visual-line reading and continuation feedback, 2026-10-22
+:PROPERTIES:
+:CUSTOM_ID: visual-line-reading-plan
+:END:
+
+Status: implementation accepted on 2026-10-22, with focused commits.
+Automated verification, listening acceptance and commits are tracked below.
+Distinct cues and independent placement for first, middle and last wrapped
+rows are accepted requirements. Defaults below remain proposals for listening.
+
+**** Problem and existing controls
+
+The URSYS IMS README investigation found a 554-character source line crossing
+the buffer's 512-character =ems--speak-max-length= threshold. The long-line
+prompt asked "use Visual Lines"; accepting it enabled Visual Line mode. The
+current call still spoke the whole source line, while subsequent navigation
+spoke screen rows. This change of behaviour was poorly explained.
+
+=visual-line-mode= and =C-x @ a v= already toggle screen-row navigation in the
+current buffer. Emacsvox currently disables =global-visual-line-mode= at
+startup and defaults =line-move-visual= to nil. =C-e l= reads the whole source
+line. The automatic threshold is an internal buffer-local variable, not a
+normal Customize option. No dedicated visual-line settings menu exists.
+
+Current visual-line speech supplies =left= at the source line's beginning and
+=right= at its end or trailing spaces, based on point. It does not explicitly
+identify continuation above or below the spoken row. A mode-line chime reports
+locally enabled Visual Line mode, but does not identify individual wrapped rows.
+
+**** Reading behaviour
+
+Offer an explicit choice between whole source lines and wrapped screen rows.
+Explain that it controls both Up/Down movement and the amount spoken. Preserve
+the current choice on entry to settings; browsing alternatives does not apply
+them. Remove the automatic reading-mode question during ordinary long-prose
+navigation. Audit the existing oversized/nontext-content protection separately
+so removing this question does not discard that protection by accident.
+
+Classify the spoken row using the actual displayed bounds and its source line,
+independently of cursor column and direction of approach:
+
+| Type | Meaning |
+| First wrapped row | More of the same source line follows below |
+| Middle wrapped row | More of the same source line exists above and below |
+| Last wrapped row | More of the same source line precedes above |
+| Complete source line | The entire source line fits in this row; no continuation cue |
+
+Use current window layout, including wrapping and display properties. Recompute
+after window resizing, font changes or edits. Preserve mode-specific reading,
+table navigation and hidden-content rules. Blank/decorative-line feedback keeps
+its existing meaning. Do not announce hidden text as readable continuation.
+
+Keep =C-e l= as a one-shot whole-source-line action. Add an on-demand inspection
+command describing source line and wrapped-row position, for example "Source
+line 15, screen row 2 of 3". Avoid row-count announcements on every arrow.
+
+**** Independent feedback for each wrapped-row type
+
+First, middle and last rows each have their own configuration:
+
+- Sound choice: Off, Tone or Recorded earcon.
+- Sound identity: independent tone parameters or selected recording.
+- Placement: Before, Alongside or After speech, independently for each type.
+- Volume: independent cue level, subject to the existing output volume controls.
+
+Ship three distinguishable defaults and a distinct three-tone preset. Do not
+use one shared sound whose timing alone conveys the type. Allow identical
+personal choices if deliberate, and allow any type to be disabled separately.
+Shared placement and volume actions may update all three types explicitly;
+they must preserve independent tone/recording identities.
+
+Reuse the common tone editor for pitch, duration and supported advanced shaping,
+and the recording library for selection and audition. Keep timing in the parent
+row-feedback editor. Changing a wrapped-row recording must not remap a generic
+=left= or =right= sound throughout unrelated interfaces.
+
+Spoken feedback is independent of the selected sound: Off, Brief or Explicit.
+Brief distinguishes start, continuation and end; Explicit describes whether
+the same source line continues above, below or both. This permits sound alone,
+speech alone, either together, or silence. Spoken descriptions precede the row
+text; the sound placement applies relative to the complete spoken item.
+
+Offer frequency choices: every wrapped-row visit, or only on entering a
+different source line. The latter identifies whichever row was entered,
+including a middle row reached by a jump. Apply frequency to both sound and
+spoken descriptions. Reset entry tracking when changing buffers or reading
+windows; ordinary explicit rereading remains available.
+
+**** Timing and interruption
+
+Before completes the cue before the spoken item begins. Alongside starts the
+cue with speech at the selected level. After starts only after that item's
+speech completes. Exact overlap is subject to supported playback timing.
+
+Keep the row text and cue in the same cancellable main-speech transaction.
+Moving away, Stop, cancellation or failed speech must not leave a trailing
+After cue. Do not schedule detached timers. Keep notification speech independent.
+Avoid duplicate generic boundary and continuation cues for the same arrow
+presentation; preserve existing boundary commands outside that presentation.
+
+Check the actual selected worker's timing and tone capabilities. Menus must
+distinguish a saved preference from an unavailable effective presentation.
+Explain unsupported choices; never silently substitute a different placement.
+Use the existing negotiated capability and timeline paths before considering
+any transport extension.
+
+**** Settings, scope and persistence
+
+Add a discoverable "Line reading and wrapping" entry in Reading settings, with
+settings-search terms including visual line, wrap, continuation and screen row.
+Audit keys before choosing its shortcut. Show the effective reading mode,
+feedback values, scope and inheritance source. Each choice explains its effect;
+Help supplies timing, mode-dependency and persistence details.
+
+Offer this-buffer session settings, remembered settings for the current major
+mode, and global defaults. Resolve each preference from an explicit buffer
+override, then an explicit mode preference, then the global default. Preserve
+existing mode-specific defaults when no new preference has been selected.
+Explain modes that own their navigation and cannot honour the generic choice.
+
+Use explicit Apply for current-session changes and Save and apply for remembered
+mode/global choices. Buffer scope is temporary; it does not create per-file
+persistence. Updating defaults preserves other buffers' explicit overrides.
+Provide Follow inherited settings, Restore factory defaults, and discard of
+unapplied edits. Reconcile startup initialization with saved preferences so it
+does not force a newly saved choice off. Do not change personal configuration
+or all open buffers merely by visiting the menu.
+
+Proposed starting defaults: retain whole-source-line reading, no automatic
+mode-change question, and three short, distinct earcons alongside speech when
+wrapped-row reading is selected. Spoken descriptions default off; sound
+feedback defaults to every wrapped row. Offer a three-tone preset and an Off
+preset. Final sound selection, pitch, duration and levels require listening.
+
+**** Preview and acceptance
+
+Provide a deterministic preview with a complete line and a source line wrapped
+into first, middle and last rows. Preview each type alone or the complete
+sequence, using draft sound, speech and placement settings without saving or
+changing the source buffer. Include Stop, compare with applied settings and
+restore defaults. Navigation must cancel obsolete preview speech and cues.
+
+Automated checks must cover row identity from both directions and different
+columns; complete/first/middle/last boundaries; wrap, resize and font changes;
+display properties and hidden text; and mode-specific integrations. Use real
+graphical Emacs for rendered bounds and effective arrow movement. Batch mocks
+alone do not establish those behaviours.
+
+Verify independent sound identities, all three placements, combinations with
+speech, per-type silence, frequency, gain, cancellation and capability handling.
+Exercise actual settings search and Help, draft-only previews, Apply versus
+Save, inheritance, save/reload and startup precedence. Check that removing the
+long-line mode prompt leaves reading preferences stable.
+
+Listening acceptance: revisit the original README; approach each wrapped row
+from both directions and different columns; distinguish all three cues; compare
+tones and recordings; try each placement; interrupt After cues; and confirm
+the whole-line shortcut and persistence after restart. Automated playback
+completion is not evidence that the cue is audible or understandable.
+
+**** Implementation checkpoints
+
+Slice 1: ordinary long prose no longer prompts or changes reading mode.
+Oversized lines and long lines containing control bytes ask before speaking;
+declining leaves the reading mode unchanged. Visible-row classification uses
+current bounds and ignores hidden text and wrap whitespace.
+
+Verified: 276 source reading tests passed, with 11 graphical cases skipped in
+batch; the fresh graphical reading gate passed all 30 selected tests, including
+bidirectional wrapped-row classification. The focused Python long-prose test,
+incremental byte-code build and documentation review gate passed. Row feedback
+and its settings are still pending. Listening acceptance remains pending.
+
+**** Delivery and review checkpoints
+
+1. Audit existing visual-line, boundary-cue, sound-editor and saved-setting
+   ownership. Read all accepted ADRs before architecture/workflow changes and
+   identify capability gaps before committing to any extension.
+2. Implement row classification and focused graphical regression coverage.
+3. Add independent cue choices, placement and cancellation using existing
+   presentation machinery; exercise source tests first.
+4. Add the explained settings entry, scopes, persistence, previews and search.
+5. Compile and verify in fresh Emacs, then hand back for listening. Changes to
+   macros/interfaces require the rebuild and fresh-profile route; ordinary
+   function changes use the incremental build and preflight.
+6. After behaviour settles, update maintained manual prose and generated
+   references as required, complete relevant integration and documentation
+   gates, review the diff, and commit in focused slices. Keep implementation,
+   automated checks, listening acceptance and commit status explicit.
+
 *** Markdown and Info reading settings, 2026-10-19
 
 Accepted scope: focused integration menus, contextual =C-e S= entry, settings
@@ -2952,6 +3142,14 @@ behaviour settles. Preserve earlier evidence without treating it as current
 verification of subsequently changed code.
 
 ** Findings queue
+
+- 2026-10-22, visual-line mode transition and continuation feedback: the
+  automatic long-line question changes arrow navigation without explaining
+  its scope; existing point-based boundary earcons do not identify wrapped-row
+  continuation reliably. The [[#visual-line-reading-plan][visual-line reading plan]] records explicit reading
+  choices and distinct first/middle/last tones or recordings, independently
+  placed before, alongside or after speech. Proposed; implementation and
+  listening acceptance have not started.
 
 - 2026-10-20, Agent Shell input recordings implemented: the =agent-input-on=
   and =agent-input-off= cues use unchanged copies of

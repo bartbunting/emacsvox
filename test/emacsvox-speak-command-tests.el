@@ -377,5 +377,44 @@
             (should (pos-visible-in-window-p (point))))
         (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-speak-navigation-graphical-wrapped-row-identity ()
+  "Rendered rows have the same identity from either direction and column."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (let ((buffer (generate-new-buffer " *wrapped row identity*")))
+      (unwind-protect
+          (progn
+            (switch-to-buffer buffer)
+            (insert (mapconcat #'identity (make-list 120 "readable words") " ") "\nshort\n")
+            (visual-line-mode 1)
+            (goto-char (point-min))
+            (redisplay t)
+            (let ((source-end (line-end-position)) rows)
+              (while (< (point) source-end)
+                (let ((start (point)))
+                  (end-of-visual-line)
+                  (push (list start (point)) rows))
+                (beginning-of-visual-line 2))
+              (setq rows (nreverse rows))
+              (should (> (length rows) 2))
+              (dolist (order (list rows (reverse rows)))
+                (dolist (row order)
+                  (dolist (position (list (car row) (max (car row) (1- (cadr row)))))
+                    (goto-char position)
+                    (let ((orig (point)) start end)
+                      (save-excursion
+                        (beginning-of-visual-line) (setq start (point))
+                        (end-of-visual-line) (setq end (point)))
+                      (should (= (point) orig))
+                      (should (eq (plist-get (emacsvox-speak--visual-row start end) :type)
+                                  (cond ((equal row (car rows)) 'first)
+                                        ((equal row (car (last rows))) 'last)
+                                        (t 'middle))))))))
+              (goto-char (point-max)) (forward-line -1)
+              (should (eq 'complete
+                          (plist-get (emacsvox-speak--visual-row
+                                      (line-beginning-position) (line-end-position)) :type)))))
+        (kill-buffer buffer)))))
+
 (provide 'emacsvox-speak-command-tests)
 ;;; emacsvox-speak-command-tests.el ends here
