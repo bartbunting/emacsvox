@@ -35,7 +35,7 @@
            (require 'emacsvox-preamble) (require 'emacsvox-loaddefs))
    '(cl-letf (((symbol-function 'emacsvox-aural-ui-speak) #'ignore))
       (emacsvox-muggles-browse)
-      (should (eq (tabulated-list-get-id) 'org-navigation))
+      (should (eq (tabulated-list-get-id) 'info))
       (should-not emacsvox-muggles--session)
       (should-not emacsvox-muggles--owned)
       (dolist (feature '(org hydra extra-muggles emacsvox-muggles
@@ -46,6 +46,7 @@
   (emacsvox-muggles-ui-test--isolated
     (switch-to-buffer source)
     (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-navigation)
     (emacsvox-aural-ui-goto-tabulated-column 2)
     (let ((old-point (point)))
       (emacsvox-muggles-ui-enable)
@@ -71,6 +72,7 @@
 (ert-deftest emacsvox-muggles-ui-failed-save-retains-visible-pending-choice ()
   (emacsvox-muggles-ui-test--isolated
     (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-navigation)
     (emacsvox-muggles-ui-disable)
     (let ((old-point (point)) (user-init-file "/unused-test-init"))
       (cl-letf (((symbol-function 'customize-save-variable)
@@ -84,6 +86,7 @@
   (emacsvox-muggles-ui-test--isolated
     (switch-to-buffer source)
     (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-navigation)
     (with-current-buffer source (fundamental-mode))
     (should-error (emacsvox-muggles-ui-run) :type 'user-error)
     (should (derived-mode-p 'emacsvox-muggles-ui-mode))
@@ -100,6 +103,7 @@
     (switch-to-buffer source)
     (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
     (execute-kbd-macro (kbd "<f8> m"))
+    (emacsvox-aural-ui-goto-row 'org-navigation)
     (should (derived-mode-p 'emacsvox-muggles-ui-mode))
     (should (eq emacsvox-aural-ui-source-buffer source))
     (should (= emacsvox-aural-ui-source-position 3))
@@ -123,6 +127,7 @@
     (should (= (point) 3))
     (should (assq 'org-navigation emacsvox-muggles--session))
     (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-navigation)
     (execute-kbd-macro (kbd "q"))
     (should-not transient--prefix)))
 
@@ -134,6 +139,7 @@
     (insert "* First\nBody\n* Second\nBody\n")
     (goto-char (point-min))
     (emacsvox-muggles-browse)
+    (emacsvox-aural-ui-goto-row 'org-navigation)
     (emacsvox-muggles-ui-disable)
     (with-current-buffer source (goto-char (point-max)))
     (execute-kbd-macro (kbd "r"))
@@ -207,6 +213,94 @@
     (should-not (car (emacsvox-muggles--choice 'navigate)))
     (execute-kbd-macro (kbd "q"))
     (should-not hydra-curr-map)))
+
+
+(ert-deftest emacsvox-muggles-ui-graphical-outline-view-help-and-run ()
+  (skip-unless (display-graphic-p))
+  (dolist (id '(outliner view))
+    (emacsvox-muggles-ui-test--isolated
+      (switch-to-buffer source)
+      (text-mode)
+      (setq-local outline-regexp "\\*+ ")
+      (erase-buffer) (insert "* First\nBody\n* Second\nBody\n") (goto-char 1)
+      (emacsvox-muggles-browse)
+      (emacsvox-aural-ui-goto-row id)
+      (execute-kbd-macro (kbd "<right> e d"))
+      (should (eq (tabulated-list-get-id) id))
+      (should (= 1 (emacsvox-aural-ui-tabulated-column-index)))
+      (with-current-buffer source
+        (should-not (bound-and-true-p outline-minor-mode))
+        (should-not view-mode))
+      (let ((browser (current-buffer)) (position (point)))
+        (execute-kbd-macro (kbd "RET"))
+        (with-current-buffer "*Help*"
+          (should (string-match-p
+                   (if (eq id 'outliner) "z then exits" "q then exits")
+                   (buffer-string)))
+          (should (string-match-p
+                   (if (eq id 'outliner) "preserve the mode and completed folds"
+                     "without enabling View mode")
+                   (buffer-string))))
+        (select-window (get-buffer-window "*Help*"))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (current-buffer) browser))
+        (should (= (point) position)))
+      (with-current-buffer source (goto-char (point-max)))
+      (execute-kbd-macro (kbd "r"))
+      (should (eq (current-buffer) source))
+      (should (= (point) 1))
+      (should-not (car (emacsvox-muggles--choice id)))
+      (if (eq id 'outliner)
+          (progn
+            (should outline-minor-mode)
+            (execute-kbd-macro (kbd "n z"))
+            (should (= (line-number-at-pos) 3)))
+        (should-not view-mode)
+        (should-not buffer-read-only)
+        (execute-kbd-macro (kbd "j q"))
+        (should (= (line-number-at-pos) 2)))
+      (should-not hydra-curr-map))))
+
+(ert-deftest emacsvox-muggles-ui-new-three-help-context-and-run ()
+  (skip-unless (display-graphic-p))
+  (dolist (id '(yank info smartparens))
+    (emacsvox-muggles-ui-test--isolated
+      (switch-to-buffer source)
+      (fundamental-mode) (erase-buffer) (insert "(one) two") (goto-char 2)
+      (emacsvox-muggles-browse)
+      (emacsvox-aural-ui-goto-row id)
+      (when (memq id '(info smartparens))
+        (should-error (emacsvox-muggles-ui-run) :type 'user-error)
+        (should (derived-mode-p 'emacsvox-muggles-ui-mode)))
+      (with-current-buffer source
+        (pcase id
+          ('info (Info-mode))
+          ('smartparens (emacs-lisp-mode) (smartparens-mode 1))))
+      (execute-kbd-macro (kbd "e d"))
+      (should (eq (tabulated-list-get-id) id))
+      (let ((browser (current-buffer)))
+        (execute-kbd-macro (kbd "RET"))
+        (with-current-buffer "*Help*"
+          (should (string-match-p "C-g then exits" (buffer-string)))
+          (should (string-match-p
+                   (pcase id ('yank "C-y, M-y") ('info "Info-summary")
+                          ('smartparens "smartparens-mode"))
+                   (buffer-string))))
+        (select-window (get-buffer-window "*Help*"))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (current-buffer) browser)))
+      (execute-kbd-macro (kbd "r"))
+      (should (eq (current-buffer) source))
+      (should (= (point) 2))
+      (should (equal (buffer-string) "(one) two"))
+      (should (eq hydra-curr-body-fn
+                  (plist-get (emacsvox-muggles--entry id) :command)))
+      (should-not (car (emacsvox-muggles--choice id)))
+      (when (eq id 'smartparens)
+        (execute-kbd-macro (kbd "<right>"))
+        (should (equal (buffer-string) "(one two)")))
+      (hydra-keyboard-quit)
+      (should hydra-is-helpful))))
 
 (provide 'emacsvox-muggles-ui-tests)
 ;;; emacsvox-muggles-ui-tests.el ends here

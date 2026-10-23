@@ -12,6 +12,135 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-speak-time,  Next: emacsvox-speak-windows,  Prev: emacsvox-speak-status,  Up: Emacsvox Commands And Options
+
+2.283 emacsvox-speak-time
+=========================
+
+Time and date speech.  The core speech facade retains activation in its
+established order.
+
+2.283.1 Emacsvox-Speak-Time Commands
+------------------------------------
+
+2.283.1.1 emacsvox-filter-after
+...............................
+
+ -- Command: emacsvox-filter-after
+
+     Add after:today filter
+
+2.283.1.2 emacsvox-filter-before
+................................
+
+ -- Command: emacsvox-filter-before
+
+     Add before:today filter
+
+2.283.1.3 emacsvox-speak-brief-time
+...................................
+
+ -- Command: emacsvox-speak-brief-time
+     ‘<fn>’
+     ‘C-e <fn>’
+
+     Time in brief
+
+2.283.1.4 emacsvox-speak-date-as-seconds
+........................................
+
+ -- Command: emacsvox-speak-date-as-seconds (time)
+
+     Read time value as a human-readable string, return seconds.
+     Seconds value is also placed in the kill-ring.
+
+     (fn TIME)
+
+2.283.1.5 emacsvox-speak-message-at-time
+........................................
+
+ -- Command: emacsvox-speak-message-at-time (time message)
+     ‘C-e @’
+
+     Speak message at specified time.
+     Provides simple stop watch functionality.
+     See documentation for command run-at-time for details on time-spec.
+
+     (fn TIME MESSAGE)
+
+2.283.1.6 emacsvox-speak-microseconds-since-epoch
+.................................................
+
+ -- Command: emacsvox-speak-microseconds-since-epoch (ms)
+
+     Speaks time value specified as microseconds  since epoch.
+
+     (fn MS)
+
+2.283.1.7 emacsvox-speak-milliseconds-since-epoch
+.................................................
+
+ -- Command: emacsvox-speak-milliseconds-since-epoch (ms)
+
+     Speaks time value specified as milliseconds  since epoch..
+
+     (fn MS)
+
+2.283.1.8 emacsvox-speak-seconds-since-epoch
+............................................
+
+ -- Command: emacsvox-speak-seconds-since-epoch (seconds)
+
+     Speaks time value specified as seconds  since epoch.
+
+     (fn SECONDS)
+
+2.283.1.9 emacsvox-speak-time
+.............................
+
+ -- Command: emacsvox-speak-time (&optional world)
+     ‘C-e t’
+
+     Speak the time.
+     Spoken time  is available via C-h N.
+     Optional interactive prefix arg ‘C-u’invokes world clock.
+     Timezone is specified using minibuffer completion.
+     Second interactive prefix sets clock to new timezone.
+
+     (fn &optional WORLD)
+
+2.283.1.10 emacsvox-speak-world-clock
+.....................................
+
+ -- Command: emacsvox-speak-world-clock (zone &optional set)
+
+     Display current date and time  for specified zone.
+     Optional second arg ‘set’ sets the TZ environment variable as well.
+
+     (fn ZONE &optional SET)
+
+2.283.2 emacsvox-speak-time Options
+-----------------------------------
+
+ -- Variable: User Option emacsvox-speak-time-brief-format
+     Format for time in brief.
+
+     Default Value:
+
+     "%l %M"
+
+
+ -- Variable: User Option emacsvox-speak-time-format
+     Format string that specifies how the time should be spoken.
+     See the documentation for function
+     ‘format-time-string’
+
+     Default Value:
+
+     "%l %M%p on %A %B %_e"
+
+
+
 File: emacsvox-reference.info,  Node: emacsvox-speak-windows,  Next: emacsvox-speedbar,  Prev: emacsvox-speak-time,  Up: Emacsvox Commands And Options
 
 2.284 emacsvox-speak-windows
@@ -10406,26 +10535,38 @@ Function Index
                                                              (line   26)
 * emacsvox-muggles-enable <1>:           emacsvox-muggles-core.
                                                              (line   27)
-* emacsvox-muggles-navigate/body:        emacsvox-muggles-core.
-                                                             (line   36)
-* emacsvox-muggles-navigate/body <1>:    emacsvox-muggles-core.
+* emacsvox-muggles-info-summary/body:    emacsvox-muggles-core.
                                                              (line   37)
-* emacsvox-muggles-org-nav/body:         emacsvox-muggles-core.
+* emacsvox-muggles-info-summary/body <1>: emacsvox-muggles-core.
+                                                             (line   38)
+* emacsvox-muggles-navigate/body:        emacsvox-muggles-core.
                                                              (line   44)
-* emacsvox-muggles-org-nav/body <1>:     emacsvox-muggles-core.
+* emacsvox-muggles-navigate/body <1>:    emacsvox-muggles-core.
                                                              (line   45)
-* emacsvox-muggles-org-table/body:       emacsvox-muggles-core.
+* emacsvox-muggles-org-nav/body:         emacsvox-muggles-core.
                                                              (line   52)
-* emacsvox-muggles-org-table/body <1>:   emacsvox-muggles-core.
+* emacsvox-muggles-org-nav/body <1>:     emacsvox-muggles-core.
                                                              (line   53)
-* emacsvox-muggles-save:                 emacsvox-muggles-core.
+* emacsvox-muggles-org-table/body:       emacsvox-muggles-core.
                                                              (line   60)
-* emacsvox-muggles-save <1>:             emacsvox-muggles-core.
+* emacsvox-muggles-org-table/body <1>:   emacsvox-muggles-core.
                                                              (line   61)
-* emacsvox-muggles-status:               emacsvox-muggles-core.
-                                                             (line   67)
-* emacsvox-muggles-status <1>:           emacsvox-muggles-core.
+* emacsvox-muggles-outliner/body:        emacsvox-muggles-core.
                                                              (line   68)
+* emacsvox-muggles-outliner/body <1>:    emacsvox-muggles-core.
+                                                             (line   69)
+* emacsvox-muggles-save:                 emacsvox-muggles-core.
+                                                             (line   76)
+* emacsvox-muggles-save <1>:             emacsvox-muggles-core.
+                                                             (line   77)
+* emacsvox-muggles-smartparens/body:     emacsvox-muggles-core.
+                                                             (line   83)
+* emacsvox-muggles-smartparens/body <1>: emacsvox-muggles-core.
+                                                             (line   84)
+* emacsvox-muggles-status:               emacsvox-muggles-core.
+                                                             (line   90)
+* emacsvox-muggles-status <1>:           emacsvox-muggles-core.
+                                                             (line   91)
 * emacsvox-muggles-ui-details:           emacsvox-muggles-ui.
                                                              (line   25)
 * emacsvox-muggles-ui-details <1>:       emacsvox-muggles-ui.
@@ -10439,25 +10580,33 @@ Function Index
 * emacsvox-muggles-ui-enable <1>:        emacsvox-muggles-ui.
                                                              (line   42)
 * emacsvox-muggles-ui-mode:              emacsvox-muggles-ui.
-                                                             (line   49)
-* emacsvox-muggles-ui-mode <1>:          emacsvox-muggles-ui.
                                                              (line   50)
+* emacsvox-muggles-ui-mode <1>:          emacsvox-muggles-ui.
+                                                             (line   51)
 * emacsvox-muggles-ui-refresh:           emacsvox-muggles-ui.
-                                                             (line   70)
-* emacsvox-muggles-ui-refresh <1>:       emacsvox-muggles-ui.
                                                              (line   71)
+* emacsvox-muggles-ui-refresh <1>:       emacsvox-muggles-ui.
+                                                             (line   72)
 * emacsvox-muggles-ui-run:               emacsvox-muggles-ui.
-                                                             (line   77)
-* emacsvox-muggles-ui-run <1>:           emacsvox-muggles-ui.
                                                              (line   78)
+* emacsvox-muggles-ui-run <1>:           emacsvox-muggles-ui.
+                                                             (line   79)
 * emacsvox-muggles-ui-save:              emacsvox-muggles-ui.
-                                                             (line   86)
-* emacsvox-muggles-ui-save <1>:          emacsvox-muggles-ui.
                                                              (line   87)
+* emacsvox-muggles-ui-save <1>:          emacsvox-muggles-ui.
+                                                             (line   88)
 * emacsvox-muggles-ui-speak-current:     emacsvox-muggles-ui.
-                                                             (line   94)
-* emacsvox-muggles-ui-speak-current <1>: emacsvox-muggles-ui.
                                                              (line   95)
+* emacsvox-muggles-ui-speak-current <1>: emacsvox-muggles-ui.
+                                                             (line   96)
+* emacsvox-muggles-view/body:            emacsvox-muggles-core.
+                                                             (line  100)
+* emacsvox-muggles-view/body <1>:        emacsvox-muggles-core.
+                                                             (line  101)
+* emacsvox-muggles-yank-pop/body:        emacsvox-muggles-core.
+                                                             (line  108)
+* emacsvox-muggles-yank-pop/body <1>:    emacsvox-muggles-core.
+                                                             (line  109)
 * emacsvox-multimedia:                   emacsvox-m-player.  (line  783)
 * emacsvox-multimedia <1>:               emacsvox-m-player.  (line  786)
 * emacsvox-next-frame-or-buffer:         emacsvox-wizards.   (line   92)

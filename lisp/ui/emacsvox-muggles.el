@@ -203,47 +203,10 @@ _p_ emacsvox-muggles-lispy-or-sp:
 (emacsvox-muggles--legacy-enable 'navigate)
 
 ;;;  Repeatable Yank
-
-;; Repeatable yank(-pop) command, with an option to switch to a list view using
-;; browse-kill-ring.
-
-;; Helper: IDo Search for kill ring
-
-(defun emacsvox-muggles-ido-yank ()
-  "Pick what to yank using ido completion."
-  (interactive)
-  (when (eq last-command 'yank)
-    (delete-region (region-beginning) (region-end)))
-  (let ((orig (point)))
-    (insert
-     (ido-completing-read
-      "Yank what? " (mapcar 'substring-no-properties kill-ring)))
-    (when (called-interactively-p 'interactive)
-      (emacsvox-icon 'yank-object)
-      (emacsvox-speak-region orig (point)))))
-
-(global-set-key (kbd "M-C-y") 'emacsvox-muggles-ido-yank)
-
-(defhydra
- emacsvox-muggles-yank-pop
- (:body-pre (emacsvox-hydra-body-pre "Yank")
-            :pre
-            (progn
-              (when hydra-is-helpful (emacsvox-hydra-toggle-talkative))
-              (emacsvox-hydra-pre))
-            :post emacsvox-hydra-post)
- "Yank"
- ("?" (emacsvox-hydra-self-help "emacsvox-muggles-yank-pop"))
- ("C-y" yank nil)
- ("M-y" yank-pop nil)
- ("y" (funcall-interactively #'yank-pop 1) "next")
- ("Y" (funcall-interactively #'yank-pop -1) "prev")
- ("i" emacsvox-muggles-ido-yank "IDo Yank" :color blue)
- ("s" emacsvox-muggles-ido-yank "IDo Yank" :color blue)
- ("l" browse-kill-ring "list" :color blue))
-
-(global-set-key (kbd "M-y") #'emacsvox-muggles-yank-pop/yank-pop)
-(global-set-key (kbd "C-y") #'emacsvox-muggles-yank-pop/yank)
+(require 'emacsvox-muggle-yank)
+(emacsvox-muggles--legacy-enable 'yank)
+;; The standalone Ido entry remains part of the legacy collection.
+(global-set-key (kbd "M-C-y") #'emacsvox-muggles-ido-yank)
 
 ;;;  Repeatable Undo
 

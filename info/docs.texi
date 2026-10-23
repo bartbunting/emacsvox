@@ -84,7 +84,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1719 commands and 261 options.
+This chapter documents a total of 1724 commands and 261 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -16909,9 +16909,19 @@ Direct M-x entry remains callable; completed actions are not undone.
 
 @format
 Enable ID’s managed entry keys for this session, without saving.
-Conflicting bindings are preserved.  Dependencies are never installed.
+Only documented standard bindings may be adopted; personal bindings are
+preserved.  Dependencies are never installed.
 
 (fn ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-info-summary/body
+@deffn {Command} emacsvox-muggles-info-summary/body
+@findex emacsvox-muggles-info-summary/body
+
+@format
+Open the Info navigation menu in an Info buffer.
 @end format
 @end deffn
 
@@ -16945,12 +16955,31 @@ Native movement may realign or extend the table.
 @end format
 @end deffn
 
+@subsubsection emacsvox-muggles-outliner/body
+@deffn {Command} emacsvox-muggles-outliner/body
+@findex emacsvox-muggles-outliner/body
+
+@format
+Navigate and fold outlines, enabling Outline minor mode.
+Hydra is required.  Exit preserves Outline mode and completed folds.
+@end format
+@end deffn
+
 @subsubsection emacsvox-muggles-save
 @deffn {Command} emacsvox-muggles-save
 @findex emacsvox-muggles-save
 
 @format
 Save explicit session choices through Customize, preserving other entries.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-smartparens/body
+@deffn {Command} emacsvox-muggles-smartparens/body
+@findex emacsvox-muggles-smartparens/body
+
+@format
+Edit balanced expressions with Smartparens mode already enabled.
 @end format
 @end deffn
 
@@ -16966,6 +16995,25 @@ This command does not load a Muggle, change settings or install bindings.
 @end format
 @end deffn
 
+@subsubsection emacsvox-muggles-view/body
+@deffn {Command} emacsvox-muggles-view/body
+@findex emacsvox-muggles-view/body
+
+@format
+Use View navigation and reading without enabling View mode.
+Hydra is required.  Managed entry keys are optional.
+@end format
+@end deffn
+
+@subsubsection emacsvox-muggles-yank-pop/body
+@deffn {Command} emacsvox-muggles-yank-pop/body
+@findex emacsvox-muggles-yank-pop/body
+
+@format
+Browse repeatable yank commands without inserting text.
+@end format
+@end deffn
+
 @subsection emacsvox-muggles-core Options
 
 @defvar {User Option} emacsvox-muggles-preferences
@@ -16974,6 +17022,8 @@ Configured enable/disable overrides for managed Muggles.
 Each entry is (ID . ENABLED).  An explicit nil disables managed entry keys,
 even when a legacy collection requests the Muggle.  An absent entry follows
 legacy collection requests, or remains disabled when none exists.
+For yank and Info, explicit Enabled also adopts their documented standard
+bindings; legacy requests alone do not.  Personal replacements stay protected.
 Direct M-x entry stays callable.  Missing dependencies are never installed.
 Use ‘emacsvox-muggles-enable’ or ‘emacsvox-muggles-disable’ for a session
 choice, then ‘emacsvox-muggles-save’ to persist those choices with Customize.
@@ -17034,7 +17084,8 @@ Keep personal bindings, completed actions and direct M-x use; do not save.
 
 @format
 Enable the selected Muggle’s managed keys for this session.
-Preserve existing bindings.  This does not run the Muggle or save settings.
+Adopt only documented standard bindings; preserve personal replacements.
+This does not run the Muggle or save settings.
 @end format
 @end deffn
 
@@ -27364,7 +27415,6 @@ nil
 
 Makes search GMail more convenient.
 IMap search operators, GMail search extensions.
-
 @subsection Gm-Nnir Commands
 
 @subsubsection gm-nnir-group-make-gmail-group

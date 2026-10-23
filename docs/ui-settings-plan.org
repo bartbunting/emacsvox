@@ -1802,15 +1802,18 @@ workflow introduced by an earlier slice.
 *** Individually managed Muggles proposal, 2026-10-17
 
 Status: source inventory and enable/disable contract accepted on 2026-10-18.
-The Org heading-navigation pilot and settings browser are implemented;
-verification is recorded below. Remaining conversions are future slices.
+The manager and settings browser cover Org heading navigation, Org table
+editing, Text navigation, Outline navigation, View navigation, Repeatable yank,
+Info summary and Smartparens. Verification is recorded below. Eleven legacy
+entries remain for future slices.
 Configurable context rules remain optional and undecided.
 
 Evidence: [[file:../lisp/ui/emacsvox-muggles.el][the main collection]] and
 [[file:../lisp/ui/extra-muggles.el][the extra collection]] combine Hydra definitions,
 dependency loading and immediate binding installation. The main collection
-loads unrelated packages including =xbacklight= and the media player, replaces
-=C-y= and =M-y=, and installs an Org binding through deferred loading. Both
+loads unrelated packages including =xbacklight= and the media player. Originally
+it replaced =C-y= and =M-y= and installed an Org binding through deferred loading;
+the converted entries now delegate to the manager. Both
 collections assign =s-m= to different actions: maths navigation and a generated
 media-player map command. Their current winner depends on load order.
 
@@ -2164,6 +2167,87 @@ non-mutating documentation release gate passes. Listening remains open
 through a fresh normal profile; no live session or personal configuration has
 been changed. This checkpoint accompanies the implementation commit; listening
 acceptance remains separate. Sixteen legacy entries remain outside the manager.
+
+***** Outline and View batch, 2026-10-23
+
+Scope: convert Outline navigation and View navigation using the existing
+manager, preserving public commands and head keys. Outline entry enables
+=outline-minor-mode=; exit and Disable retain that prerequisite and completed
+folds. View entry does not enable View mode or make the buffer read-only.
+Its temporary hint change is restored unless explicitly changed during the
+visit. Outline exits on =z=, so settings Help must not suggest =q= there.
+
+Both request keys below the global =C-.= prefix. The current manager requires
+that prefix to exist and preserves incompatible or absent prefixes. Explain
+the blocked prefix and retain direct Run and =M-x= entry. Other keys under an
+existing prefix and later personal rebindings must survive Disable.
+
+Implemented as independent optional libraries with legacy collection delegation.
+All original Hydra heads and hint text are retained. The manager exposes both
+entries through the existing settings browser and Customize choices. The list
+now covers five of the nineteen entries; fourteen remain legacy-managed.
+
+All 49 focused Muggles, browser and Hydra tests pass against source in graphical
+Emacs, and all 49 pass again with the affected files explicitly loaded from
+byte-code. Neither graphical run skips tests. Checks cover independent loading,
+passive Enable, prefix and personal-key conflicts, explicit Disabled across
+both collection load orders, saved choices in a second Emacs, real folding and
+movement, owned exit, hint restoration, and browser Help and Run at the captured
+source. The selected toolchain is Emacs 31.0.90 with installed Hydra
+20250316.1254. The full rebuild, optional collection builds, byte-code preflight,
+headers and Org preview pass. Optional builds report generated Hydra docstring
+warnings and existing optional-package symbol warnings; there are no build errors.
+
+Listening acceptance remains deferred through a fresh normal profile. No live
+session or personal configuration has been changed. The ordinary build set is
+restored after optional byte-code checks. A fresh normal-loading smoke check
+verifies the compiled manager and browser, lazy optional source loading and
+direct entry while disabled. References and manuals are regenerated; the final
+non-mutating documentation release gate passes with stable Info navigation.
+This checkpoint is included in the five-Muggle migration commit below.
+
+***** Repeatable yank, Info and Smartparens slice, 2026-10-23
+
+Implemented: these three menus now have independent optional libraries and
+managed settings. Explicit Enable or a saved Enabled choice may adopt only
+standard =C-y= / =M-y= and Info =?= bindings. The yank pair must be usable
+together before either is installed. Legacy collection requests alone retain
+these standard bindings. Disable restores an adopted binding only while the
+manager still owns it; personal replacements remain protected. Original
+commands remain available through =M-x=; Info =?= inside the menu opens its
+standard summary.
+
+Smartparens retains =C-c ,= and requires its package and an active
+=smartparens-mode= in the source buffer. Enable installs the entry key only;
+Disable preserves mode state and completed edits. All three menus use =C-g=
+to cancel; Info =q= closes the Info window. The standalone Ido-yank binding
+remains legacy-managed. Its shared helper collects the choice before replacing
+a yank, so cancelling completion leaves text intact. The previous helper was
+reproduced deleting the yank on cancellation. Run now quiets yank hints as
+its entry heads do, and restores them when leaving or switching menus.
+
+The list now covers eight of nineteen entries; eleven remain legacy-managed.
+The 60 focused source cases pass, including targeted graphical reruns after
+the hint correction. A fresh compiled graphical run passes all 60 with no
+skips. Checks cover paired-key conflicts and rollback, standard restoration,
+personal bindings, deferred Info loading, saved choices in a second Emacs,
+both legacy load orders, missing Smartparens, real expression editing, yank
+cycling and undo, cancelled completion, Help, captured-source Run and hints.
+The selected packages are Hydra 20250316.1254 and Smartparens 20260129.1214,
+using Emacs 31.0.90.
+
+Incremental and optional builds, byte-code preflight, headers, Org preview,
+reference generation and manual generation pass. Optional builds retain
+Hydra-generated docstring warnings and the existing Lispy variable warning.
+The ordinary build set is restored after optional byte-code tests. A fresh
+normal-loading check verifies the compiled manager and browser, passive keys
+and independent lazy source entry for all three menus.
+
+Listening acceptance remains deferred through a fresh normal-profile restart.
+No live session or personal configuration was changed. This slice and the
+preceding Outline/View slice form one commit: =Manage Outline, View, yank,
+Info and Smartparens Muggles independently=. The final non-mutating
+documentation review gate passes with compatible Info navigation.
 
 ***** Browsable Muggles settings, 2026-10-18
 

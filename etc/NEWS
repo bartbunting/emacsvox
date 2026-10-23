@@ -18,12 +18,14 @@ gain. Guided installers pin the matching core and optional engines; Debian
 packages recommend Omnivox 1.18.0 or newer. Updating Emacsvox does not upgrade
 an existing Omnivox installation.
 
-** Independently managed Org navigation Muggle
+** Independently managed Muggles
 
 C-e H m opens a browsable Muggles list with details, session Enable/Disable,
 explicit Run in the source buffer, and Customize Save. State changes retain
 the selected row; Help and menu return retain focus. The list currently offers
-Org heading navigation and is also available through settings/action search.
+Org heading navigation, Org table editing, Text navigation, Outline navigation
+and View navigation, Repeatable yank, Info summary and Smartparens. It is also
+available through settings/action search.
 
 Org heading navigation can now be enabled and disabled independently with
 =emacsvox-muggles-enable= and =emacsvox-muggles-disable=. These manage the Org
@@ -31,8 +33,25 @@ Org heading navigation can now be enabled and disabled independently with
 active menu while preserving direct =M-x emacsvox-muggles-org-nav/body= use.
 =emacsvox-muggles-status= explains availability, and =emacsvox-muggles-save=
 persists session choices through Customize. Explicit Disabled choices take
-precedence over loading =extra-muggles=. Other collection members retain their
+precedence over legacy collection requests. Unconverted entries retain their
 existing configuration.
+
+Outline and View navigation now have independent managed choices for global
+=C-. o= and =C-. v=. An absent or conflicting prefix stays untouched; Run
+and the direct commands remain available. Outline entry enables its minor mode;
+exit on =z= and Disable retain the mode and completed folds. View navigation
+does not enable View mode. Its temporary hint change is restored on exit unless
+explicitly changed with =s=. Both respect saved Disabled choices when the legacy
+collection loads.
+
+Repeatable yank manages =C-y= and =M-y= together. Explicit Enable may adopt
+only their standard bindings; Disable restores them. Info summary follows the
+same rule for =?= in Info buffers. Legacy collection loading alone no longer
+replaces these standard bindings; enable the entry explicitly to use them.
+Personal bindings remain protected. Smartparens manages =C-c ,= and requires
+=smartparens-mode= already enabled in the source buffer. All three menus can
+be run directly while disabled and exited with =C-g=. Cancelling the shared
+Ido yank chooser now preserves the previous yank.
 
 ** Shared table reading settings
 

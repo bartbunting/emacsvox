@@ -187,108 +187,13 @@ Argument `k-map' is a symbol  that names a keymap."
            ))
 
 ;;;  Outliner:
-
-;; Cloned from Hydra Wiki:
-(global-set-key
- (kbd "C-. o")
- (defhydra emacsvox-muggles-outliner
-           (:body-pre
-            (progn
-              (outline-minor-mode 1)
-              (emacsvox-hydra-body-pre "Outline Navigation"))
-            :pre emacsvox-hydra-pre :post emacsvox-hydra-post
-            :color pink :hint nil)
-           "
-^Hide^             ^Show^           ^Move
-^^^^^^------------------------------------------------------
-_q_: sublevels     _a_: all         _u_: up
-_t_: body          _e_: entry       _n_: next visible
-_o_: other         _i_: children    _p_: previous visible
-_c_: entry         _k_: branches    _f_: forward same level
-_l_: leaves        _s_: subtree     _b_: backward same level
-_d_: subtree
-
-"
-           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-outliner"))
-           ;; Hide
-           ("q" outline-hide-sublevels)
-           ("t" outline-hide-body)
-           ("o" outline-hide-other)             ; Hide other branches
-           ("c" outline-hide-entry)             ; Hide this entry's body
-           ("l" outline-hide-leaves)
-           ("d" outline-hide-subtree)
-           ;; Show
-           ("a" outline-show-all)               ; Show (expand) everything
-           ("e" outline-show-entry)             ; Show this heading's body
-           ("i" outline-show-children) 
-           ("k" outline-show-branches)
-           ("s" outline-show-subtree)
-           ;; Move
-           ("u" outline-up-heading)               ; Up
-           ("n" outline-next-visible-heading)     ; Next
-           ("p" outline-previous-visible-heading) ; Previous
-           ("f" outline-forward-same-level)       ; Forward - same level
-           ("b" outline-backward-same-level)      ; Backward - same level
-           ("z" nil "leave")))
+(require 'emacsvox-muggles-core)
+(require 'emacsvox-muggle-outliner)
+(emacsvox-muggles--legacy-enable 'outliner)
 
 ;;;  Info Summary:
-
-;; Taken from Hydra wiki and customized to taste:
-(define-key Info-mode-map (kbd "?")
-            (defhydra emacsvox-muggles-info-summary
-                      (
-                       :color blue :hint nil
-                       :body-pre (emacsvox-hydra-body-pre "Info Summary")
-                       :pre
-                       emacsvox-hydra-pre
-                       :post emacsvox-hydra-post)
-                      "info mode"
-                      ("]"   Info-forward-node)
-                      ("["   Info-backward-node)
-                      ("n"   Info-next)
-                      ("p"   Info-prev)
-                      ("s"   Info-search)
-                      ("S"   Info-search-case-sensitively)
-
-                      ("l"   Info-history-back)
-                      ("r"   Info-history-forward)
-                      ("H"   Info-history)
-                      ("t"   Info-top-node)
-                      ("<"   Info-top-node)
-                      (">"   Info-final-node)
-
-                      ("u"   Info-up)
-                      ("^"   Info-up)
-                      ("m"   Info-menu)
-                      ("g"   Info-goto-node)
-                      ("b"   beginning-of-buffer)
-                      ("e"   end-of-buffer)
-
-                      ("f"   Info-follow-reference)
-                      ("i"   Info-index)
-                      (","   Info-index-next)
-                      ("I"   Info-virtual-index)
-
-                      ("T"   Info-toc)
-                      ("d"   Info-directory)
-                      ("c"   Info-copy-current-node-name)
-                      ("C"   clone-buffer)
-                      ("a"   info-apropos)
-
-                      ("1"   Info-nth-menu-item)
-                      ("2"   Info-nth-menu-item)
-                      ("3"   Info-nth-menu-item)
-                      ("4"   Info-nth-menu-item)
-                      ("5"   Info-nth-menu-item)
-                      ("6"   Info-nth-menu-item)
-                      ("7"   Info-nth-menu-item)
-                      ("8"   Info-nth-menu-item)
-                      ("9"   Info-nth-menu-item)
-
-                      ("?"   Info-summary "Info summary")
-                      ("h"   Info-help "Info help")
-                      ("q"   quit-window "Info exit")
-                      ("C-g" nil "cancel" :color blue)))
+(require 'emacsvox-muggle-info)
+(emacsvox-muggles--legacy-enable 'info)
 
 ;;;  origami:
 
@@ -364,107 +269,13 @@ Also generates global keybindings if any."
       (save-buffer))
     (message "Generated autoloads for muggles.")))
 
-;;;  smartParens:
-
-(global-set-key
- (kbd "C-c ,")
- (defhydra emacsvox-muggles-smartparens
-           (:body-pre
-            (progn
-              (when hydra-is-helpful (emacsvox-hydra-toggle-talkative))
-              (emacsvox-hydra-body-pre "SmartParens"))
-            :pre emacsvox-hydra-pre
-            :post emacsvox-hydra-post)
-           "Smart Parens"
-           ("'" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "'")))  
-           ("(" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "(")))  
-           ("<down>" sp-splice-sexp-killing-forward)  
-           ("<left>" sp-forward-barf-sexp)  
-           ("<right>" sp-forward-slurp-sexp)  
-           ("<up>" sp-splice-sexp-killing-backward)  
-           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-smartparens"))
-           ("C-<left>" sp-backward-barf-sexp)  
-           ("C-<right>" sp-backward-slurp-sexp)
-           ("R" sp-splice-sexp)  
-           ("\"" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "\"")))  
-           ("a" beginning-of-defun)
-           ("b" sp-backward-sexp)  
-           ("c" sp-convolute-sexp)  
-           ("d" sp-down-sexp)  
-           ("e" end-of-defun)
-           ("f" sp-forward-sexp)  
-           ("i" sp-indent-defun)  
-           ("j" sp-join-sexp)  
-           ("k" sp-kill-sexp)  
-           ("n" sp-next-sexp)  
-           ("p" sp-previous-sexp)  
-           ("r" sp-splice-sexp-killing-around)  
-           ("s" sp-split-sexp)  
-           ("t" sp-transpose-sexp)  
-           ("u" sp-backward-up-sexp)  
-           ("w" sp-copy-sexp)  
-           ("{" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "{")))))
+;;;  Smartparens:
+(require 'emacsvox-muggle-smartparens)
+(emacsvox-muggles--legacy-enable 'smartparens)
 
 ;;;   View Mode:
-
-(global-set-key
- (kbd
-  "C-. v")
- (defhydra emacsvox-muggles-view
-           (:body-pre
-            (progn
-              (emacsvox-hydra-toggle-talkative)
-              (emacsvox-hydra-body-pre "View"))
-            :hint nil
-            :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
-           "View Mode"
-           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-view"))
-           ("$" set-selective-display)
-           ("%"  View-goto-percent)
-           ("'" register-to-point)
-           ("(" backward-sexp)
-           (")" forward-sexp)
-           ("." set-mark-command)
-           ("/" View-search-regexp-forward)
-           ("<" beginning-of-buffer)
-           ("<return>" nil "quit")
-           ("=" what-line)
-           (">" end-of-buffer)
-           ("@" View-back-to-mark)
-           ("A"beginning-of-defun)
-           ("DEL" View-scroll-page-backward)
-           ("E"end-of-defun)
-           ("J" (emacsvox-hide-or-expose-block 'all))
-           ("SPC" View-scroll-page-forward)
-           ("[" backward-page)
-           ("\\" View-search-regexp-backward)
-           ("]" forward-page)
-           ("a" move-beginning-of-line)
-           ("b" backward-word)
-           ("c" emacsvox-speak-char)
-           ("d" View-scroll-half-page-forward)
-           ("e" move-end-of-line)
-           ("f" forward-word)
-           ("g" goto-line)
-           ("h" backward-char)
-           ("i" emacsvox-speak-mode-line)
-           ("j" next-line)
-           ("k" previous-line)
-           ("l" forward-char)
-           ("m" point-to-register)
-           ("n" View-search-last-regexp-forward)
-           ("p" View-search-last-regexp-backward)
-           ("q" nil "quit")
-           ("r" copy-to-register)
-           ("s" emacsvox-hydra-toggle-talkative)
-           ("t" (recenter 0))
-           ("u" View-scroll-half-page-backward)
-           ("w"emacsvox-speak-word)
-           ("x" exchange-point-and-mark)
-           ("y" kill-ring-save)
-           ("{" backward-paragraph)
-           ("}" forward-paragraph)
-           ))
+(require 'emacsvox-muggle-view)
+(emacsvox-muggles--legacy-enable 'view)
 
 ;;; Vuiet:
 

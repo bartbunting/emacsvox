@@ -5814,11 +5814,19 @@ Direct M-x entry remains available when managed bindings are disabled.
  -- Command: emacsvox-muggles-enable (id)
 
      Enable ID’s managed entry keys for this session, without saving.
-     Conflicting bindings are preserved.  Dependencies are never installed.
+     Only documented standard bindings may be adopted; personal bindings are
+     preserved.  Dependencies are never installed.
 
      (fn ID)
 
-2.214.1.3 emacsvox-muggles-navigate/body
+2.214.1.3 emacsvox-muggles-info-summary/body
+............................................
+
+ -- Command: emacsvox-muggles-info-summary/body
+
+     Open the Info navigation menu in an Info buffer.
+
+2.214.1.4 emacsvox-muggles-navigate/body
 ........................................
 
  -- Command: emacsvox-muggles-navigate/body
@@ -5826,7 +5834,7 @@ Direct M-x entry remains available when managed bindings are disabled.
      Enter repeatable text navigation, moving down one line.
      Hydra is required.  Managed entry keys are optional.
 
-2.214.1.4 emacsvox-muggles-org-nav/body
+2.214.1.5 emacsvox-muggles-org-nav/body
 .......................................
 
  -- Command: emacsvox-muggles-org-nav/body
@@ -5834,7 +5842,7 @@ Direct M-x entry remains available when managed bindings are disabled.
      Navigate and speak Org headings.  Managed entry keys are optional.
      Load the optional Org navigation library on first use.  Hydra is required.
 
-2.214.1.5 emacsvox-muggles-org-table/body
+2.214.1.6 emacsvox-muggles-org-table/body
 .........................................
 
  -- Command: emacsvox-muggles-org-table/body
@@ -5842,15 +5850,30 @@ Direct M-x entry remains available when managed bindings are disabled.
      Edit and speak native Org table fields.  Hydra is required.
      Native movement may realign or extend the table.
 
-2.214.1.6 emacsvox-muggles-save
+2.214.1.7 emacsvox-muggles-outliner/body
+........................................
+
+ -- Command: emacsvox-muggles-outliner/body
+
+     Navigate and fold outlines, enabling Outline minor mode.
+     Hydra is required.  Exit preserves Outline mode and completed folds.
+
+2.214.1.8 emacsvox-muggles-save
 ...............................
 
  -- Command: emacsvox-muggles-save
 
      Save explicit session choices through Customize, preserving other entries.
 
-2.214.1.7 emacsvox-muggles-status
-.................................
+2.214.1.9 emacsvox-muggles-smartparens/body
+...........................................
+
+ -- Command: emacsvox-muggles-smartparens/body
+
+     Edit balanced expressions with Smartparens mode already enabled.
+
+2.214.1.10 emacsvox-muggles-status
+..................................
 
  -- Command: emacsvox-muggles-status (id)
 
@@ -5858,6 +5881,21 @@ Direct M-x entry remains available when managed bindings are disabled.
      This command does not load a Muggle, change settings or install bindings.
 
      (fn ID)
+
+2.214.1.11 emacsvox-muggles-view/body
+.....................................
+
+ -- Command: emacsvox-muggles-view/body
+
+     Use View navigation and reading without enabling View mode.
+     Hydra is required.  Managed entry keys are optional.
+
+2.214.1.12 emacsvox-muggles-yank-pop/body
+.........................................
+
+ -- Command: emacsvox-muggles-yank-pop/body
+
+     Browse repeatable yank commands without inserting text.
 
 2.214.2 emacsvox-muggles-core Options
 -------------------------------------
@@ -5867,6 +5905,8 @@ Direct M-x entry remains available when managed bindings are disabled.
      Each entry is (ID . ENABLED).  An explicit nil disables managed entry keys,
      even when a legacy collection requests the Muggle.  An absent entry follows
      legacy collection requests, or remains disabled when none exists.
+     For yank and Info, explicit Enabled also adopts their documented standard
+     bindings; legacy requests alone do not.  Personal replacements stay protected.
      Direct M-x entry stays callable.  Missing dependencies are never installed.
      Use ‘emacsvox-muggles-enable’ or ‘emacsvox-muggles-disable’ for a session
      choice, then ‘emacsvox-muggles-save’ to persist those choices with Customize.
@@ -5920,7 +5960,8 @@ Session actions and explicit Customize saving retain the selected row.
  -- Command: emacsvox-muggles-ui-enable
 
      Enable the selected Muggle’s managed keys for this session.
-     Preserve existing bindings.  This does not run the Muggle or save settings.
+     Adopt only documented standard bindings; preserve personal replacements.
+     This does not run the Muggle or save settings.
 
 2.215.1.5 emacsvox-muggles-ui-mode
 ..................................
@@ -9657,132 +9698,3 @@ activation in its established order.
      Default Value:
 
      "<system-mail-spool>/<login>"
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-speak-time,  Next: emacsvox-speak-windows,  Prev: emacsvox-speak-status,  Up: Emacsvox Commands And Options
-
-2.283 emacsvox-speak-time
-=========================
-
-Time and date speech.  The core speech facade retains activation in its
-established order.
-
-2.283.1 Emacsvox-Speak-Time Commands
-------------------------------------
-
-2.283.1.1 emacsvox-filter-after
-...............................
-
- -- Command: emacsvox-filter-after
-
-     Add after:today filter
-
-2.283.1.2 emacsvox-filter-before
-................................
-
- -- Command: emacsvox-filter-before
-
-     Add before:today filter
-
-2.283.1.3 emacsvox-speak-brief-time
-...................................
-
- -- Command: emacsvox-speak-brief-time
-     ‘<fn>’
-     ‘C-e <fn>’
-
-     Time in brief
-
-2.283.1.4 emacsvox-speak-date-as-seconds
-........................................
-
- -- Command: emacsvox-speak-date-as-seconds (time)
-
-     Read time value as a human-readable string, return seconds.
-     Seconds value is also placed in the kill-ring.
-
-     (fn TIME)
-
-2.283.1.5 emacsvox-speak-message-at-time
-........................................
-
- -- Command: emacsvox-speak-message-at-time (time message)
-     ‘C-e @’
-
-     Speak message at specified time.
-     Provides simple stop watch functionality.
-     See documentation for command run-at-time for details on time-spec.
-
-     (fn TIME MESSAGE)
-
-2.283.1.6 emacsvox-speak-microseconds-since-epoch
-.................................................
-
- -- Command: emacsvox-speak-microseconds-since-epoch (ms)
-
-     Speaks time value specified as microseconds  since epoch.
-
-     (fn MS)
-
-2.283.1.7 emacsvox-speak-milliseconds-since-epoch
-.................................................
-
- -- Command: emacsvox-speak-milliseconds-since-epoch (ms)
-
-     Speaks time value specified as milliseconds  since epoch..
-
-     (fn MS)
-
-2.283.1.8 emacsvox-speak-seconds-since-epoch
-............................................
-
- -- Command: emacsvox-speak-seconds-since-epoch (seconds)
-
-     Speaks time value specified as seconds  since epoch.
-
-     (fn SECONDS)
-
-2.283.1.9 emacsvox-speak-time
-.............................
-
- -- Command: emacsvox-speak-time (&optional world)
-     ‘C-e t’
-
-     Speak the time.
-     Spoken time  is available via C-h N.
-     Optional interactive prefix arg ‘C-u’invokes world clock.
-     Timezone is specified using minibuffer completion.
-     Second interactive prefix sets clock to new timezone.
-
-     (fn &optional WORLD)
-
-2.283.1.10 emacsvox-speak-world-clock
-.....................................
-
- -- Command: emacsvox-speak-world-clock (zone &optional set)
-
-     Display current date and time  for specified zone.
-     Optional second arg ‘set’ sets the TZ environment variable as well.
-
-     (fn ZONE &optional SET)
-
-2.283.2 emacsvox-speak-time Options
------------------------------------
-
- -- Variable: User Option emacsvox-speak-time-brief-format
-     Format for time in brief.
-
-     Default Value:
-
-     "%l %M"
-
-
- -- Variable: User Option emacsvox-speak-time-format
-     Format string that specifies how the time should be spoken.
-     See the documentation for function
-     ‘format-time-string’
-
-     Default Value:
-
-     "%l %M%p on %A %B %_e"

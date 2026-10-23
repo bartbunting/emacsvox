@@ -7110,7 +7110,7 @@ changes take effect after restarting speech. Explicit word and partial-line
 reads at @code{some} or @code{none} use @code{tts-character-to-speech-table}@comma{} the Emacs table
 also used for character reading.
 
-@subsection Use managed navigation Muggles
+@subsection Use managed Muggles
 
 @cindex Muggles
 @cindex Org, heading navigation menu
@@ -7121,13 +7121,20 @@ also used for character reading.
 @findex emacsvox-muggles-org-nav/body
 @findex emacsvox-muggles-org-table/body
 @findex emacsvox-muggles-navigate/body
+@findex emacsvox-muggles-outliner/body
+@findex emacsvox-muggles-view/body
+@findex emacsvox-muggles-yank-pop/body
+@findex emacsvox-muggles-info-summary/body
+@findex emacsvox-muggles-smartparens/body
 @findex emacsvox-muggles-browse
 @vindex emacsvox-muggles-preferences
 
 A Muggle is a temporary menu of related commands@comma{} implemented with Hydra.
-The managed list offers Org heading navigation@comma{} Org table editing and Text
-navigation. All three require the Hydra package. Enable installs a menu's
-entry key when available; Run enters it and can move point or perform editing.
+The managed list offers Org heading navigation@comma{} Org table editing@comma{} Text
+navigation@comma{} Outline navigation@comma{} View navigation@comma{} Repeatable yank@comma{} Info summary
+and Smartparens. All require the Hydra package. Enable installs a menu's entry
+keys when available; Run enters it
+and can move point or perform editing.
 
 Org heading navigation lets you repeat movement and section reading with
 single keys in an Org buffer.
@@ -7157,11 +7164,52 @@ recentres. @kbd{?} reads the keys and @kbd{q} exits. Entry temporarily toggles H
 hints and exit restores them; pressing @kbd{s} makes an explicit hint choice
 that is retained after exit. Movement uses the buffer's existing speech support.
 
+Outline navigation starts with @kbd{M-x emacsvox-muggles-outliner/body @key{RET}}
+in a document with headings recognised by Outline. Entry enables
+@code{outline-minor-mode} and announces the menu without moving point. @kbd{n~/~p}
+move between visible headings@comma{} @kbd{f~/~b} move at the same level@comma{} and @kbd{u} moves
+to the parent. @kbd{d} hides a subtree and @kbd{a} shows all text. Heading movement
+and folding use the Outline speech support described under
+@ref{Structured Editing, , Structured editing}. @kbd{?} explains the keys. Use @kbd{z} or @kbd{C-g} to leave;
+@kbd{q} hides sublevels. Exit and Disable retain Outline minor mode and completed
+folds. Use the ordinary Outline commands to change visibility afterwards.
+
+View navigation starts with @kbd{M-x emacsvox-muggles-view/body @key{RET}}. It offers
+View commands without enabling View mode or making the buffer read-only.
+@kbd{j~/~k} move by line@comma{} @kbd{h~/~l} by character@comma{} and @kbd{@key{SPC}~/~@key{DEL}} scroll by page.
+@kbd{/} searches forward and @kbd{n~/~p} repeat the last search forward or backward.
+@kbd{c} reads the character and @kbd{w} the word; movement retains existing speech
+support. @kbd{?} explains further actions@comma{} including copying and registers;
+@kbd{q} or @kbd{C-g} exits. Entry temporarily toggles Hydra hints. Exit restores
+the previous value unless you choose hints explicitly with @kbd{s}.
+
+Repeatable yank starts with @kbd{M-x emacsvox-muggles-yank-pop/body @key{RET}} without
+pasting. @kbd{C-y} pastes from the kill ring; @kbd{M-y} replaces the previous yank.
+@kbd{y~/~Y} cycle forward or backward. Native yank prefix arguments and undo
+remain available. @kbd{i} or @kbd{s} opens an Ido chooser and leaves the menu;
+cancelling that chooser preserves the previous yank. @kbd{l} opens the optional
+@code{browse-kill-ring} package@comma{} or explains when it is unavailable. @kbd{?} explains
+the keys; @kbd{C-g} leaves. Temporary quiet hints are restored on exit.
+
+Info summary starts with @kbd{M-x emacsvox-muggles-info-summary/body @key{RET}} in an
+Info buffer. Choose @kbd{n~/~p} for the next or previous node@comma{} @kbd{u} for the parent@comma{}
+@kbd{m} for a menu item or @kbd{i} for the index. Most actions leave the Muggle after
+running. @kbd{?} invokes the ordinary Info summary and @kbd{h} opens Info help.
+@kbd{C-g} cancels the menu; @kbd{q} closes the Info window.
+
+Smartparens starts with @kbd{M-x emacsvox-muggles-smartparens/body @key{RET}} after you
+enable @kbd{M-x smartparens-mode @key{RET}} in the source buffer. It requires the
+Smartparens package. @kbd{f~/~b} move by expression; @kbd{<right>~/~<left>} slurp or
+barf forward@comma{} and @kbd{C-<right>~/~C-<left>} do so backward. @kbd{(} wraps with
+parentheses@comma{} @kbd{R} splices an expression@comma{} and @kbd{k} kills it. @kbd{?} explains the
+remaining keys; @kbd{C-g} leaves. Exit and Disable retain Smartparens mode and
+completed edits. Temporary quiet hints are restored on exit.
+
 Press @kbd{C-e H m} to browse managed Muggles@comma{} or run
 @kbd{M-x emacsvox-muggles-browse @key{RET}}. Settings and action search also find the
 Muggles entry. Other Muggles retain their legacy configuration until they gain
 individual switches.
-Opening or browsing the list does not load or activate the navigation menu.
+Opening or browsing the list does not load or activate a Muggle.
 
 Up/down selects a row and reads its purpose@comma{} current choice@comma{} configured override
 and availability. Left/right inspects columns; @kbd{@key{SPC}} reads the full row.
@@ -7170,12 +7218,25 @@ with @kbd{q} restores the row and column. @kbd{g} refreshes the displayed state.
 
 On the selected row@comma{} @kbd{e} requests its entry key for this session: @kbd{C-c C-@key{SPC}}
 in Org for heading navigation@comma{} @kbd{C-c t} in Org for table editing@comma{} or global
-@kbd{s-n} for text navigation. @kbd{s-n} means Super-n. Org entries wait for Org to
-load. Existing personal or package
-bindings are preserved@comma{} and the availability column names any conflict or
-missing dependency. @kbd{d} removes only the managed entry key and closes this
-Muggle if active. It preserves completed actions and independently configured
-bindings. Global keys remain subject to local and minor-mode bindings.
+@kbd{s-n} for text navigation@comma{} @kbd{C-. o} for Outline@comma{} @kbd{C-. v} for View and
+@kbd{C-c @comma{}} for Smartparens. Repeatable yank manages global @kbd{C-y} and @kbd{M-y}
+together; Info summary manages @kbd{?} in Info buffers.
+@kbd{s-n} means Super-n. The two @kbd{C-.} sequences require an existing prefix map;
+the manager leaves an unbound or conflicting prefix untouched. Use Run or the
+direct @kbd{M-x} command when a key is blocked. Org and Info entries wait for
+their corresponding application to load. The availability column names
+conflicts and missing dependencies.
+
+Explicit Enable may replace the standard @kbd{C-y} @code{yank} and @kbd{M-y} @code{yank-pop}
+bindings@comma{} or Info's standard @kbd{?} @code{Info-summary}. A personal binding blocks
+replacement; either blocked yank key prevents activation of the pair. These
+ordinary commands remain available through @kbd{M-x}. Loading a legacy collection
+alone does not replace these standard bindings. Other personal or package
+bindings are preserved.
+
+@kbd{d} restores adopted standard bindings@comma{} removes other managed entry keys and
+closes this Muggle if active. It preserves completed actions@comma{} independently
+configured bindings and personal replacements made after Enable. Global keys remain subject to local and minor-mode bindings.
 These choices apply throughout the session@comma{} rather than to one buffer.
 
 Enable and Disable retain the selected row and show the choice as not saved.
@@ -7190,16 +7251,21 @@ To try a Muggle@comma{} open the list from the intended source and press @kbd{r}
 row. This leaves the list and enters that menu at the captured position@comma{} even
 when the managed key is disabled or blocked. It does not enable keys or save
 settings. Org heading navigation requires an Org buffer; Org table editing
-also requires a table at the captured position. A closed buffer@comma{} changed source
+also requires a table at the captured position. Info requires an Info buffer@comma{}
+and Smartparens requires its mode already enabled. A closed buffer@comma{} changed source
 item or unsuitable context requires reopening from the intended location.
 Run is an explicit action; browsing and Help never perform it. Once the menu
-starts@comma{} @kbd{q} exits it in the source buffer.
+starts@comma{} @kbd{C-g} leaves any managed menu. Outline also exits on @kbd{z}; Org and
+Text/View navigation exit on @kbd{q}. In Info summary@comma{} @kbd{q} closes the Info window.
 
 The named commands @code{emacsvox-muggles-enable}@comma{} @code{emacsvox-muggles-disable}@comma{}
 @code{emacsvox-muggles-status} and @code{emacsvox-muggles-save} offer the same management
 operations without the list. Each menu's direct @kbd{M-x} command also remains
-available while disabled. Loading @code{extra-muggles} requests Org heading navigation;
-loading @code{emacsvox-muggles} requests Org table editing and Text navigation.
+available while disabled. Loading @code{extra-muggles} requests Org heading@comma{}
+Outline and View navigation@comma{} Info summary and Smartparens; loading
+@code{emacsvox-muggles} requests Org table editing@comma{} Text navigation and Repeatable
+yank. The standard-binding adoption rule still requires an explicit Enabled
+choice for yank and Info on their usual keys.
 These managed requests respect explicit Disabled choices and protect
 conflicting bindings. Unconverted collection members retain their legacy keys.
 

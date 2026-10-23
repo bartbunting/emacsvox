@@ -67,7 +67,7 @@
                    (vector (plist-get entry :name)
                            (emacsvox-muggles-ui--choice-label id)
                            (emacsvox-muggles-ui--configured-label id)
-                           (concat (plist-get entry :scope) " " (plist-get entry :key))
+                           (concat (plist-get entry :scope) " " (emacsvox-muggles--key-label entry))
                            (cdr (emacsvox-muggles--availability id))))))
          emacsvox-muggles--registry)
         header-line-format
@@ -105,7 +105,8 @@
 
 (defun emacsvox-muggles-ui-enable ()
   "Enable the selected Muggle's managed keys for this session.
-Preserve existing bindings.  This does not run the Muggle or save settings."
+Adopt only documented standard bindings; preserve personal replacements.
+This does not run the Muggle or save settings."
   (interactive)
   (emacsvox-muggles-ui--change t))
 
@@ -168,12 +169,15 @@ Help changes no settings; q returns to the exact list row and column."
                      (plist-get entry :name) (plist-get entry :description)
                      (emacsvox-muggles-ui--choice-label id)
                      (emacsvox-muggles-ui--configured-label id)
-                     (plist-get entry :scope) (plist-get entry :key)
+                     (plist-get entry :scope) (emacsvox-muggles--key-label entry)
                      (cdr (emacsvox-muggles--availability id)) context))
+      (when-let* ((adoption (plist-get entry :adoption)))
+        (princ (concat adoption "\n\n")))
       (princ "Up and Down browse; Left and Right inspect columns. Space reads the row.\nRET or ? opens these details. g refreshes without loading a Muggle.\n\n")
-      (princ "e enables managed keys for this session; d disables them and closes an active menu.\nThese are session-wide choices, not buffer-local settings. Existing keys are preserved.\nDirect M-x entry remains available when disabled or blocked. Dependencies are never installed.\n\n")
+      (princ "e enables managed keys for this session; d disables them and closes an active menu.\nThese are session-wide choices, not buffer-local settings. Personal keys are preserved; documented standard bindings may be adopted.\nDirect M-x entry remains available when disabled or blocked. Dependencies are never installed.\n\n")
       (princ "W saves all session Muggle choices through Customize. Closing the list keeps unsaved session choices.\nConfigured overrides may come from Customize or your init; no override follows a legacy collection request, otherwise disabled.\n\n")
-      (princ (format "r enters M-x %s at the captured source, even when disabled.\nRun leaves the list and performs the entry action described above; it does not enable keys or save. q then exits that menu.\nGlobal entry keys remain subject to buffer and minor-mode bindings.\n\n" (plist-get entry :command)))
+      (princ (format "r enters M-x %s at the captured source, even when disabled.\nRun leaves the list and performs the entry action described above; it does not enable keys or save. %s then exits that menu.\nGlobal entry keys remain subject to buffer and minor-mode bindings.\n\n"
+                     (plist-get entry :command) (or (plist-get entry :exit-key) "q")))
       (princ "Only converted Muggles appear here. Other legacy collection members do not yet have individual switches.\n")))
   (when (fboundp 'emacsvox-speak-help) (emacsvox-speak-help)))
 
