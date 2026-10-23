@@ -3366,8 +3366,8 @@ verification of subsequently changed code.
   Omnivox requests =13027–13033= and =13059–13065= show overlapping streams
   and cancellation of transient focus announcements. Temporary-file Wrote
   messages appear in Messages but not in the inspected speech requests.
-  Implemented in the canonical personal Org configuration and its local
-  tangled copy: successful launch says "Opened in Windows" once on the main
+  Initially implemented in the canonical personal Org configuration and its
+  local tangled copy: successful launch says "Opened in Windows" once on the main
   speech stream, with ordered delivery and no interruption. Temporary-file
   messages are silent; launch errors retain their diagnostic. Focus changes
   are silent while the existing keyboard-map restoration remains active.
@@ -3375,7 +3375,21 @@ verification of subsequently changed code.
   launcher failure, extraction failure/cleanup and rapid focus transitions.
   Three of these checks fail against the previous definitions. Only the two
   changed functions were applied to PID =5261=; its buffer, point and focus
-  hook were preserved. The next real attachment open still needs confirmation.
+  hook were preserved. This initial version was superseded by the follow-up.
+
+  Follow-up on the same date: attachment activation must stop a filename that
+  is still being read. The Windows-opening handler now calls =tts-stop= for
+  both streams immediately, before extraction or launch. Success sends the
+  short confirmation on the notification stream with no further interruption,
+  so it leaves any newly started reading alone. Four isolated checks pass
+  against source and the compiled handler, covering stop/extract/launch order,
+  one success notification, failure cleanup and silent focus changes. Three
+  fail against the previous handler. The generated personal configuration was
+  refreshed and only this function was applied to PID =5261= after fresh-Emacs
+  verification; current buffer and point were preserved. Listening acceptance
+  was confirmed on 2026-10-23: activation stops the filename and the short
+  success notification uses the notification stream. The canonical Org profile
+  and focused tests are committed as =e9c6da2= in =~/emacs/site-lisp/=.
 
 - 2026-10-23, documentation audit: the main menu and settings search still
   describe Muggles as navigation menus. The managed list also includes
