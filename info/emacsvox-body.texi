@@ -450,16 +450,15 @@ and WSL2. Native Windows uses its own
 @ref{Trying Native Windows Emacsvox, , Windows installation procedure}. If speech will play on another workstation@comma{}
 use @ref{Installing Remote Emacsvox, , Installing Remote Emacsvox} instead of installing a local speech server.
 
-The settings-menu instructions in this development manual describe
-@code{ui-experiments}. Use a checkout of that branch to follow them; an older
-release package may not contain the same interface. Keep an existing working
-installation available while testing a development checkout.
+Use the manual supplied with your checkout or installed package. Older
+releases may provide different settings menus. Keep a working installation
+available while trying another version.
 
 Commands shown before Emacsvox starts are entered in a terminal. Keys written
 with @kbd{C-} or @kbd{M-} are entered inside Emacs. The published installation chapter
 is also available before installation at
 @uref{https://bartbunting.github.io/emacsvox/Installation.html}; its published version
-may differ from this development branch.
+may describe a different version from your installation.
 
 @menu
 * Before You Begin: Obtaining Emacsvox.  Prepare the required tools and Emacsvox checkout.
@@ -585,16 +584,15 @@ If a menu reports an unsupported version@comma{} inspect the version and loaded 
 in its error. Upgrade that installation and restart Emacs; restarting only
 speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
 
-@subsection Obtain the development checkout
+@subsection Obtain the source checkout
 
 Run the clone from a terminal on GNU/Linux@comma{} macOS@comma{} or WSL@. The following
-location works for an ordinary per-user installation and selects the branch
-described by this manual:
+location works for an ordinary per-user installation:
 
 @example
 mkdir -p ~/src
 cd ~/src
-git clone --branch ui-experiments https://github.com/bartbunting/emacsvox
+git clone https://github.com/bartbunting/emacsvox
 cd emacsvox
 @end example
 
@@ -2316,6 +2314,11 @@ more copies; it is not an accept or preview command.
 More detail: @ref{Earlier Kills,Yanking earlier kills,,emacs,} in the GNU Emacs Manual. Kill-ring
 history is useful recovery information@comma{} not a permanent backup of your work.
 
+If you enable Repeatable yank through @ref{managed-muggles, , managed Muggles}@comma{} @kbd{C-y} and @kbd{M-y}
+also enter its temporary repeat menu. Leave it with @kbd{C-g} before ordinary
+editing. Its additional cycling and chooser keys are described in that guide;
+Disable restores the standard bindings when the manager still owns them.
+
 @node Recovering Text Edits
 @subsection Recover a text edit before saving
 
@@ -2567,15 +2570,14 @@ unavailable for presentations without built-in tones.
 existing local choices intact. A prefix starts the menu in global scope;
 @kbd{e} toggles indentation feedback in the displayed scope.
 
-Up/down selects a control and left/right changes sections. Shift-left/right
-on @emph{Volume} changes by five@comma{} bounded to 0–100. Other items give guidance rather
-than changing volume. @kbd{@key{RET}} activates an item. These bindings apply inside
-the menu@comma{} not in prompts or the source buffer.
-
-@kbd{v} or @emph{Volume} accepts an exact value; @kbd{-~/~+} remain shortcuts. Volume affects
-all main-stream Omnivox tones even in buffer scope. Adjustments speak the
-percentage and interrupt obsolete main speech@comma{} so repeated keys announce the
-latest value rather than queueing old values.
+Up/down selects a control and left/right changes sections. In @emph{Tone levels}@comma{}
+@kbd{l} adjusts the pitch-tone volume in the displayed scope; @kbd{v} adjusts the
+shared volume of all main-stream Omnivox tones@comma{} even in buffer scope.
+Shift-left/right changes either selected volume by five percentage points@comma{}
+bounded to 0–100; @kbd{@key{RET}} enters an exact value. @kbd{-~/~+} adjust the shared
+volume directly. These menu controls interrupt obsolete main speech so
+repeated adjustments announce the latest value. Pitch-tone shaping and its
+shared tone editor are described under @ref{Adjust indentation feedback, , Adjust indentation feedback}.
 
 Changes apply immediately. @kbd{@key{SPC}} previews four-column indentation even when
 feedback is off. @kbd{q} leaves changes in effect. In global scope@comma{} @kbd{S} saves
@@ -7112,6 +7114,8 @@ also used for character reading.
 
 @subsection Use managed Muggles
 
+@anchor{managed-muggles}
+
 @cindex Muggles
 @cindex Org, heading navigation menu
 @findex emacsvox-muggles-enable
@@ -7135,6 +7139,14 @@ navigation@comma{} Outline navigation@comma{} View navigation@comma{} Repeatable
 and Smartparens. All require the Hydra package. Enable installs a menu's entry
 keys when available; Run enters it
 and can move point or perform editing.
+
+Press @kbd{C-e H m} to browse managed Muggles@comma{} or run
+@kbd{M-x emacsvox-muggles-browse @key{RET}}. Select a row@comma{} then use @kbd{e} to enable its
+entry keys or @kbd{d} to disable them for this session. @kbd{W} saves explicit session
+choices through Customize. Settings and action search also find the Muggles
+entry. Opening or browsing the list does not load or activate a Muggle.
+The individual menus are described below@comma{} followed by the manager's conflict@comma{}
+saving and restoration rules.
 
 Org heading navigation lets you repeat movement and section reading with
 single keys in an Org buffer.
@@ -7205,14 +7217,9 @@ parentheses@comma{} @kbd{R} splices an expression@comma{} and @kbd{k} kills it. 
 remaining keys; @kbd{C-g} leaves. Exit and Disable retain Smartparens mode and
 completed edits. Temporary quiet hints are restored on exit.
 
-Press @kbd{C-e H m} to browse managed Muggles@comma{} or run
-@kbd{M-x emacsvox-muggles-browse @key{RET}}. Settings and action search also find the
-Muggles entry. Other Muggles retain their legacy configuration until they gain
-individual switches.
-Opening or browsing the list does not load or activate a Muggle.
-
-Up/down selects a row and reads its purpose@comma{} current choice@comma{} configured override
-and availability. Left/right inspects columns; @kbd{@key{SPC}} reads the full row.
+In the Muggles manager@comma{} up/down selects a row and reads its purpose@comma{} current
+choice@comma{} configured override and availability. Left/right inspects columns;
+@kbd{@key{SPC}} reads the full row.
 @kbd{@key{RET}} or @kbd{?} explains the selected Muggle and its actions. Returning from Help
 with @kbd{q} restores the row and column. @kbd{g} refreshes the displayed state.
 
@@ -9670,9 +9677,8 @@ backend@comma{} and diagnosing problems. Omnivox's native build procedures@comma
 behaviour@comma{} and versioned protocols belong to
 @uref{https://github.com/bartbunting/omnivox, the Omnivox repository}.
 
-The menu routes here describe @code{ui-experiments}. Release packages can provide
-an earlier interface; use the matching manual and keep a working installation
-available while testing the development branch.
+Use the manual supplied with your checkout or installed package when following
+menu routes; older releases may provide a different interface.
 
 @menu
 * Supported Platform Routes::    Choose the maintained route for this machine.
@@ -9689,36 +9695,35 @@ available while testing the development branch.
 @node Supported Platform Routes
 @section Supported Platform Routes
 
-The following table describes Emacsvox support@comma{} not every platform that the
-Omnivox project can build. ``Host check required'' means that automated build
-and archive verification does not prove playback through your audio device;
-an audible @code{omnivox --check} on that machine remains the acceptance test.
+The following table describes Emacsvox's supported installation routes.
+After installing Omnivox@comma{} run @code{omnivox --check} on the machine that will play
+speech and confirm that you hear both its tone and spoken message.
 
 @multitable @columnfractions .18 .31 .51
 @headitem Emacs platform
 @tab Recommended route
-@tab Current support evidence
+@tab Requirements and limits
 @item GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime
 @tab Omnivox 1.18.0 release archive using eSpeak NG
-@tab The published archive is built and verified on Ubuntu 24.04. Compatible glibc@comma{} libstdc++@comma{} libgcc@comma{} and ALSA runtime libraries are required; the audible host check remains required.
+@tab Requires compatible glibc@comma{} libstdc++@comma{} libgcc@comma{} and ALSA runtime libraries.
 @item Other GNU/Linux systems
 @tab Source-built Omnivox using eSpeak NG
 @tab Use the source route for Linux ARM64@comma{} an older distribution ABI@comma{} or a host that cannot run the published x86-64 archive.
 @item macOS on Apple silicon
 @tab Omnivox through the official Homebrew tap@comma{} using AVSpeechSynthesizer
-@tab Native ARM64 tap checks cover installation@comma{} synthesis@comma{} reinstall@comma{} a packaging-revision upgrade@comma{} and removal; audible Emacs acceptance remains required.
+@tab Homebrew selects the ARM64 archive; install Emacs separately.
 @item macOS on Intel
 @tab Omnivox through the official Homebrew tap@comma{} using AVSpeechSynthesizer
-@tab Native Intel tap checks cover installation@comma{} synthesis@comma{} reinstall@comma{} a packaging-revision upgrade@comma{} and removal; audible Emacs acceptance remains required.
+@tab Homebrew selects the Intel archive; install Emacs separately.
 @item Emacs in WSL2 on x86-64 Windows
 @tab Omnivox 1.18.0 Windows x64 release archive using WinRT
-@tab The published archive is checksum-protected and release CI verifies its architecture@comma{} adjacent data@comma{} WinRT and eSpeak synthesis. The audible host check remains required.
+@tab Keep its eSpeak data and notices beside the executable; the guided installer preserves this layout.
 @item Emacs in WSL2 on Windows on ARM
 @tab Omnivox 1.18.0 Windows ARM64 release archive using WinRT
-@tab Release CI verifies the ARM64 archive@comma{} adjacent data@comma{} WinRT and eSpeak synthesis@comma{} and the guided installer selects it automatically. A complete WSL2 host and audible check remains required.
+@tab The guided installer selects ARM64 automatically. Speech plays through Windows.
 @item Native Windows x64 Emacs 30.2 or newer
 @tab Guided PowerShell installation with Omnivox 1.18.0 using WinRT
-@tab Supported. Native installer@comma{} complete byte-code compilation@comma{} fresh-process verification@comma{} and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported.
+@tab Install on a local Windows drive. Native Windows ARM64 is not supported.
 @end multitable
 
 Use Homebrew on macOS@comma{} the guided installer under WSL2@comma{} or the matching release
@@ -9826,9 +9831,7 @@ The WSL optional-engine installer is not a Homebrew package manager.
 
 The tap installs published binaries without adding Apple Developer ID signing
 or notarisation. If local policy refuses the verified binary@comma{} use
-@ref{Installing Omnivox From Source, , Installing Omnivox From Source}. Native tap checks cover WAV synthesis and
-package operations; they do not replace listening acceptance in Emacs or prove
-an upgrade between different upstream versions.
+@ref{Installing Omnivox From Source, , Installing Omnivox From Source}.
 
 @subsection Manual archive installation
 
@@ -10002,9 +10005,8 @@ Verify through the checkout's launcher:
 ./servers/omnivox --check
 @end example
 
-Confirm version 1.18.0 or newer@comma{} tone@comma{} and speech. Release CI verifies archive@comma{}
-x64 architecture@comma{} adjacent eSpeak data@comma{} discovery@comma{} and headless WinRT/eSpeak
-synthesis; only listening checks your audio path. The Windows archive is not
+Confirm version 1.18.0 or newer and listen for both tone and speech.
+The Windows archive is not
 code-signed. Do not weaken Windows security or local policy to install it.
 
 The generic 1.18.0 archive includes TGSpeechBox profiles/language data and a
@@ -10336,17 +10338,16 @@ Active voices@comma{} voices referenced by another profile@comma{} and files ret
 speech session stay with an explanation. Disable and Apply active downloads@comma{}
 then close the sessions using them before cleanup. Imported originals and
 system voices are never removed@comma{} and directory links are not followed.
-Development Setup builds are test artifacts; these instructions do not imply
-that a stable release installer includes this branch's interface.
+Use the manual accompanying the Setup version you install.
 
 @subsection Guided Windows x64 Installation
 
 You need PowerShell 5.1 or newer@comma{} Git@comma{} network access@comma{} and working Windows audio
 with a speech voice. Put the checkout on a local Windows drive@comma{} not a WSL or
-network path. To follow this development manual@comma{} select its branch:
+network path:
 
 @example
-git clone --branch ui-experiments https://github.com/bartbunting/emacsvox.git
+git clone https://github.com/bartbunting/emacsvox.git
 Set-Location emacsvox
 .\bin\emacsvox-install.ps1 -Role Desktop -Check
 .\bin\emacsvox-install.ps1 -Role Desktop
@@ -10407,7 +10408,7 @@ Lisp native compilation and include runtime DLLs@comma{} so launch needs no MSYS
 
 The final test opens a temporary native Emacs@comma{} verifies both streams@comma{} speaks
 two announcements@comma{} and closes that test. Confirm both by listening. After
-@code{-NoAudioCheck}@comma{} perform the explicit check before acceptance:
+@code{-NoAudioCheck}@comma{} run the explicit check before using the installation:
 
 @example
 .\bin\emacsvox.ps1 -Diagnose
@@ -10556,7 +10557,7 @@ but the server cannot be found in Emacs@comma{} confirm the same PowerShell's
 For a process that exits@comma{} retain PowerShell errors@comma{} @code{*Messages*}@comma{} Windows
 version/architecture@comma{} and full @code{emacs.exe --version} and @code{omnivox.exe --version}.
 
-After acceptance@comma{} put the same selection before setup in your init file:
+Once speech works@comma{} put the same selection before setup in your init file:
 
 @lisp
 (setenv "TTS_PROGRAM"
@@ -10744,8 +10745,8 @@ installation next@comma{} then a content-addressed source runtime@comma{} then @
 @end example
 
 The check initialises engine/output and plays tone then speech. Its success
-message is conditional on hearing both. Exit zero alone is not audible
-acceptance.
+message asks you to confirm that you hear both. If either is absent@comma{} follow
+@ref{Backend Diagnostics And Ownership, , Backend Diagnostics} before starting Emacsvox.
 
 Select before loading Emacsvox:
 
@@ -11441,6 +11442,9 @@ its scope and removing the practice rule. For broader problems@comma{} use
 @ref{Notification Routing,Adjust notifications without changing ordinary reading,,emacsvox,}: choose where
 notifications play and distinguish selecting a route from restarting it.
 @ref{Output Volumes,Output volumes,,emacsvox,} controls loudness separately.
+@item
+@ref{managed-muggles, , Enable or disable a Muggle}: use @kbd{C-e H m} to manage entry keys@comma{} inspect
+conflicts@comma{} try a menu@comma{} and save explicit choices for later sessions.
 @end itemize
 
 @node Finding Application Tasks
@@ -12491,7 +12495,7 @@ Browser coverage lives in @code{test/emacsvox-table-ui-tests.el}; use
 @code{EMACSVOX_TABLE_UI_TEST_LOAD=compiled} in a fresh Emacs after building to verify
 the compiled implementation. Its @code{emacsvox-table-ui-graphical-multiline-navigation}
 case requires a graphical display and checks actual wrapping and logical cell
-movement. Listening acceptance is separate from submission and graphical checks.
+movement.
 Tabulated-list coverage lives in @code{test/emacsvox-tabulated-list-tests.el}@comma{}
 including full values@comma{} blanks@comma{} buttons@comma{} native action keys@comma{} sorting@comma{} filtering@comma{}
 refresh and hidden rows. Its graphical navigation case must run on a real
@@ -12537,8 +12541,7 @@ process-wide speech stop. Already dispatched speech may finish; scoped Omnivox
 cancellation remains a separate backlog direction. The graphical gate covers
 real X11 focus loss@comma{} minibuffers@comma{} selection@comma{} line drafts and scrolling. Integration
 runners force the silent @code{log-null} backend before loading Emacsvox so a failed
-test cannot start the maintainer's configured speech engine. Submission checks
-are separate from the maintainer's final audible SSH acceptance.
+test cannot start your configured speech engine.
 
 When aural diagnostics are enabled@comma{} @code{eat-output-decision} records explain
 collection rejection@comma{} pending-work cancellation@comma{} retained output@comma{} and selection
@@ -12676,8 +12679,9 @@ snapshots@comma{} including Transient 0.13.3 and cond-let 1.0.0.  @code{make tes
 @code{test/integration-dependencies.json} and stages sources and autoloads under
 ignored @code{.test-deps/}; it never changes personal packages.  @code{make integration-test}
 verifies that prepared tree before loading it and runs the batch cases.
-@code{make graphical-integration-test} uses the same verified tree for the two Agent
-Shell display-row cases in a real graphical Emacs on a private Xvfb display.
+@code{make graphical-integration-test} uses the same verified tree for Agent Shell
+rendering@comma{} prompt editing@comma{} forms and table navigation@comma{} core vertical movement@comma{}
+and EAT output and focus checks in a real graphical Emacs on a private Xvfb display.
 Both gates fail on missing dependencies or skipped selected tests. The graphical
 runner requires @code{xvfb-run}@comma{} @code{Xvfb}@comma{} @code{xauth} and @code{timeout}@comma{} captures its log@comma{}
 disables speech output and stops its isolated session after 60 seconds.
@@ -12727,9 +12731,8 @@ installed Emacs.  The installation logs also include
 MSYS2 packages are signed rolling inputs; these records do not claim a frozen
 or bit-identical compiler environment.  Verify fresh graphical startup@comma{}
 acknowledged routing@comma{} and tracked completion on both speech lanes with a PATH
-that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
-acceptance step. Native Windows x64 is supported; remote workstation speech
-remains preview@comma{} as recorded in
+that contains neither WSL nor MSYS2 tools. Native Windows x64 is supported;
+remote workstation speech remains preview@comma{} as recorded in
 @uref{../adr/0014-native-windows-support.org, ADR 0014}.
 
 @enumerate
@@ -12870,9 +12873,8 @@ Only the main tested executable is uploaded. The failed-upgrade fixture and
 offline bundle remain build inputs. Run @code{make windows-sources-test} for the
 isolated source/publication boundary checks.
 
-The setup executable remains a development artifact. Stable release
-integration and remaining acceptance work are recorded in
-@uref{../adr/0024-native-windows-installer.org, ADR 0024}. Public preview promotion is described below and in
+The setup executable is distributed separately from stable release artifacts@comma{}
+as specified in @uref{../adr/0024-native-windows-installer.org, ADR 0024}. Public preview promotion is described below and in
 @uref{../adr/0025-windows-preview-publication.org, ADR 0025}.
 @end enumerate
 
@@ -13060,12 +13062,10 @@ choosing an @code{upstream} remote when releasing from a fork.  No release targe
 pushes @code{master} or the documentation branch.  Use @code{make release-check} alone
 when a non-mutating preflight is wanted without creating an artifact.
 
-@subsection Future Aural contract decisions
+@subsection Aural extension boundaries
 
-The completed Aural implementation diary is preserved under
-@code{archive/emacsvox/migrations/} rather than serving as current instructions.
-Three questions from that diary remain deliberately undecided and require an
-explicit architecture decision before implementation:
+The following extensions require an explicit architecture decision before
+implementation:
 
 @itemize
 @item
@@ -13079,7 +13079,7 @@ whether a new presentation occasion belongs to the core semantic contract
 or to a module-owned extension.
 @end itemize
 
-Do not infer answers from the archived proposals.  Current behavior is defined
+Do not infer contracts from archived proposals. Current behavior is defined
 by the Aural implementation@comma{} its generated reference@comma{} and accepted ADRs.
 
 @subsection Voice-style metadata ownership
@@ -13130,8 +13130,8 @@ is labelled neutral. Stored cutoffs and adapter-default nil retain their
 meaning. Invalid boundary steps must fail before history@comma{} dirty state@comma{} refresh
 or audition changes.
 
-Delivery preparation has the limited helper boundaries described below;
-asynchronous operation ownership remains a separate refactoring proposal.
+Delivery preparation has the helper boundaries described below; metadata
+validation does not transfer ownership of asynchronous operations.
 
 The rule tests state field inventories@comma{} bounds@comma{} error precedence@comma{} and
 composition expectations independently of the metadata.  Scheme tests cover

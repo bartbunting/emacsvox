@@ -15,9 +15,8 @@ backend, and diagnosing problems. Omnivox's native build procedures, engine
 behaviour, and versioned protocols belong to
 [[https://github.com/bartbunting/omnivox][the Omnivox repository]].
 
-The menu routes here describe =ui-experiments=. Release packages can provide
-an earlier interface; use the matching manual and keep a working installation
-available while testing the development branch.
+Use the manual supplied with your checkout or installed package when following
+menu routes; older releases may provide a different interface.
 
 ** Supported Platform Routes
 :PROPERTIES:
@@ -25,21 +24,20 @@ available while testing the development branch.
 :DESCRIPTION: Choose the maintained route for this machine.
 :END:
 
-The following table describes Emacsvox support, not every platform that the
-Omnivox project can build. ``Host check required'' means that automated build
-and archive verification does not prove playback through your audio device;
-an audible =omnivox --check= on that machine remains the acceptance test.
+The following table describes Emacsvox's supported installation routes.
+After installing Omnivox, run =omnivox --check= on the machine that will play
+speech and confirm that you hear both its tone and spoken message.
 
 #+attr_texinfo: :columns .18 .31 .51
-| Emacs platform | Recommended route | Current support evidence |
+| Emacs platform | Recommended route | Requirements and limits |
 |---+---+---|
-| GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime | Omnivox 1.18.0 release archive using eSpeak NG | The published archive is built and verified on Ubuntu 24.04. Compatible glibc, libstdc++, libgcc, and ALSA runtime libraries are required; the audible host check remains required. |
+| GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime | Omnivox 1.18.0 release archive using eSpeak NG | Requires compatible glibc, libstdc++, libgcc, and ALSA runtime libraries. |
 | Other GNU/Linux systems | Source-built Omnivox using eSpeak NG | Use the source route for Linux ARM64, an older distribution ABI, or a host that cannot run the published x86-64 archive. |
-| macOS on Apple silicon | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Native ARM64 tap checks cover installation, synthesis, reinstall, a packaging-revision upgrade, and removal; audible Emacs acceptance remains required. |
-| macOS on Intel | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Native Intel tap checks cover installation, synthesis, reinstall, a packaging-revision upgrade, and removal; audible Emacs acceptance remains required. |
-| Emacs in WSL2 on x86-64 Windows | Omnivox 1.18.0 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis. The audible host check remains required. |
-| Emacs in WSL2 on Windows on ARM | Omnivox 1.18.0 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically. A complete WSL2 host and audible check remains required. |
-| Native Windows x64 Emacs 30.2 or newer | Guided PowerShell installation with Omnivox 1.18.0 using WinRT | Supported. Native installer, complete byte-code compilation, fresh-process verification, and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported. |
+| macOS on Apple silicon | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Homebrew selects the ARM64 archive; install Emacs separately. |
+| macOS on Intel | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Homebrew selects the Intel archive; install Emacs separately. |
+| Emacs in WSL2 on x86-64 Windows | Omnivox 1.18.0 Windows x64 release archive using WinRT | Keep its eSpeak data and notices beside the executable; the guided installer preserves this layout. |
+| Emacs in WSL2 on Windows on ARM | Omnivox 1.18.0 Windows ARM64 release archive using WinRT | The guided installer selects ARM64 automatically. Speech plays through Windows. |
+| Native Windows x64 Emacs 30.2 or newer | Guided PowerShell installation with Omnivox 1.18.0 using WinRT | Install on a local Windows drive. Native Windows ARM64 is not supported. |
 
 Use Homebrew on macOS, the guided installer under WSL2, or the matching release
 archive on GNU/Linux. Manual Mac archive installation remains available.
@@ -155,9 +153,7 @@ The WSL optional-engine installer is not a Homebrew package manager.
 
 The tap installs published binaries without adding Apple Developer ID signing
 or notarisation. If local policy refuses the verified binary, use
-[[*Installing Omnivox From Source][Installing Omnivox From Source]]. Native tap checks cover WAV synthesis and
-package operations; they do not replace listening acceptance in Emacs or prove
-an upgrade between different upstream versions.
+[[*Installing Omnivox From Source][Installing Omnivox From Source]].
 
 *** Manual archive installation
 :PROPERTIES:
@@ -328,9 +324,8 @@ Verify through the checkout's launcher:
 ./servers/omnivox --check
 #+end_example
 
-Confirm version 1.18.0 or newer, tone, and speech. Release CI verifies archive,
-x64 architecture, adjacent eSpeak data, discovery, and headless WinRT/eSpeak
-synthesis; only listening checks your audio path. The Windows archive is not
+Confirm version 1.18.0 or newer and listen for both tone and speech.
+The Windows archive is not
 code-signed. Do not weaken Windows security or local policy to install it.
 
 The generic 1.18.0 archive includes TGSpeechBox profiles/language data and a
@@ -668,8 +663,7 @@ Active voices, voices referenced by another profile, and files retained by a
 speech session stay with an explanation. Disable and Apply active downloads,
 then close the sessions using them before cleanup. Imported originals and
 system voices are never removed, and directory links are not followed.
-Development Setup builds are test artifacts; these instructions do not imply
-that a stable release installer includes this branch's interface.
+Use the manual accompanying the Setup version you install.
 
 *** Guided Windows x64 Installation
 :PROPERTIES:
@@ -678,10 +672,10 @@ that a stable release installer includes this branch's interface.
 
 You need PowerShell 5.1 or newer, Git, network access, and working Windows audio
 with a speech voice. Put the checkout on a local Windows drive, not a WSL or
-network path. To follow this development manual, select its branch:
+network path:
 
 #+begin_src powershell
-git clone --branch ui-experiments https://github.com/bartbunting/emacsvox.git
+git clone https://github.com/bartbunting/emacsvox.git
 Set-Location emacsvox
 .\bin\emacsvox-install.ps1 -Role Desktop -Check
 .\bin\emacsvox-install.ps1 -Role Desktop
@@ -736,7 +730,7 @@ Lisp native compilation and include runtime DLLs, so launch needs no MSYS2 on PA
 
 The final test opens a temporary native Emacs, verifies both streams, speaks
 two announcements, and closes that test. Confirm both by listening. After
-=-NoAudioCheck=, perform the explicit check before acceptance:
+=-NoAudioCheck=, run the explicit check before using the installation:
 
 #+begin_src powershell
 .\bin\emacsvox.ps1 -Diagnose
@@ -893,7 +887,7 @@ but the server cannot be found in Emacs, confirm the same PowerShell's
 For a process that exits, retain PowerShell errors, =*Messages*=, Windows
 version/architecture, and full =emacs.exe --version= and =omnivox.exe --version=.
 
-After acceptance, put the same selection before setup in your init file:
+Once speech works, put the same selection before setup in your init file:
 
 #+begin_src emacs-lisp
 (setenv "TTS_PROGRAM"
@@ -1076,8 +1070,8 @@ installation next, then a content-addressed source runtime, then =omnivox= on
 #+end_example
 
 The check initialises engine/output and plays tone then speech. Its success
-message is conditional on hearing both. Exit zero alone is not audible
-acceptance.
+message asks you to confirm that you hear both. If either is absent, follow
+[[*Backend Diagnostics And Responsibilities][Backend Diagnostics]] before starting Emacsvox.
 
 Select before loading Emacsvox:
 

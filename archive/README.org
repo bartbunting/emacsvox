@@ -9,7 +9,7 @@ guidance.  Archived files remain tracked in Git and retain their original
 attribution.  They are excluded from release archives so users receive the
 maintained manuals and current release notes rather than obsolete procedures.
 
-Use ~Readme.org~, ~docs/manual/~, ~docs/developer/~, ~docs/adr/~, and
+Use ~README.org~, ~docs/manual/~, ~docs/developer/~, ~docs/adr/~, and
 ~etc/NEWS~ for current information.  Historical commands, paths, dependency
 claims, test counts, and implementation plans below may no longer describe the
 working tree.

@@ -72,36 +72,56 @@ existing defaults. Org editing and application action keys stay independent.
 
 =C-e H s f= opens global spelling feedback settings. Combine voice changes,
 tones and earcons independently; adjust tone pitch and duration, preview a
-tone or a sample sentence, and save through Customize. The volume control
-affects all main-stream tones.
+tone or a sample sentence, and save through Customize. Spelling tone volume
+affects that cue; shared tone volume scales all main-stream tones. The shared
+tone editor adds waveform, sweep, envelope and reusable preset controls.
 
 Reading words marked by Flyspell places selected cues at those words instead
 of after the line. Opening a mail reply retains spelling highlights without
 playing a burst of cues. Repeated automatic checks announce each error once
 per checking pass, while ordinary editing retains spelling feedback.
 
-** Experimental Emacsvox menu
+** Settings menus and discovery
 
-On the =ui-experiments= branch, =C-e H= opens a Transient. Press =s= for
+=C-e H= opens the settings menu. Press =s= for
 Speech settings, then =i= for the existing Indentation menu. The menus share
 the current-buffer or global-defaults selection; =C-u C-e H= starts with
 global defaults. =C-e d I= still opens Indentation directly.
 
 =x= opens Feedback for the captured source item; =q= there returns to the
 menu with its original item and settings scope. Help also returns to its
-menu with =q=. =h= opens the existing
-Aural Home with all its actions; it also remains available through
-=M-x emacsvox-aural=. Existing Home shortcuts follow =C-e H h= in this
-prototype. =q= returns one menu, and =C-q= closes the menu sequence.
+menu with =q=. The former Aural Home remains available through
+=M-x emacsvox-aural=; its =C-e H h= entry is retired. =q= returns one menu,
+and =C-q= closes the menu sequence.
 Transient feedback interrupts previous main-stream speech, including scope
 toggles and value changes. Item announcements speak the key without the
 word "shortcut" and do not repeat the section name.
 
-=C-e H s n= opens Menu navigation. Choose Continuous, Wrap within section,
+=C-e S= opens focused integration settings, or general buffer settings when
+no focused menu exists. =C-e H /= finds settings and =C-e H a= finds actions;
+accepting a result selects its control without changing it. Activate separately.
+=C-e H v= groups voices and engines, =o= sounds and output, =r= presentation
+and rules, and =p= saved setups and drafts. Each editor retains its own
+Apply and Save actions.
+
+=C-e H n= or =C-e H s n= opens Menu navigation. Choose Continuous, Wrap within section,
 or Stop at section edges. Left/right moves between sections in every style.
 The choice applies globally and immediately; =S= saves it through Customize.
 Enter activates the focused item in the Emacsvox settings menus; =M-RET=
 and =C-j= also work.
+
+** Source lines and wrapped screen rows
+
+=C-e H s R w= opens Line reading and wrapping. Choose whole source lines,
+wrapped screen rows or native mode behaviour, with buffer, major-mode and
+global scopes. Preview a draft before applying it; Save persists mode or
+global choices through Customize while preserving narrower overrides.
+
+First, middle and last wrapped rows have independent sound choices and
+optional spoken continuation labels. Configure sound timing and level without
+changing the document. =C-e l= still inspects a whole source line, and
+=M-x emacsvox-speak-row-position= reports the current screen row's place in
+that line without moving point.
 
 ** Clear permission choice speech in Agent Shell
 

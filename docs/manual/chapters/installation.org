@@ -17,16 +17,15 @@ and WSL2. Native Windows uses its own
 [[*Installing Native Windows Emacsvox][Windows installation procedure]]. If speech will play on another workstation,
 use [[*Installing On A Remote Linux Host][Installing Remote Emacsvox]] instead of installing a local speech server.
 
-The settings-menu instructions in this development manual describe
-=ui-experiments=. Use a checkout of that branch to follow them; an older
-release package may not contain the same interface. Keep an existing working
-installation available while testing a development checkout.
+Use the manual supplied with your checkout or installed package. Older
+releases may provide different settings menus. Keep a working installation
+available while trying another version.
 
 Commands shown before Emacsvox starts are entered in a terminal. Keys written
 with ~C-~ or ~M-~ are entered inside Emacs. The published installation chapter
 is also available before installation at
 [[https://bartbunting.github.io/emacsvox/Installation.html]]; its published version
-may differ from this development branch.
+may describe a different version from your installation.
 
 ** Debian and Ubuntu package
 :PROPERTIES:
@@ -145,19 +144,18 @@ If a menu reports an unsupported version, inspect the version and loaded path
 in its error. Upgrade that installation and restart Emacs; restarting only
 speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
 
-*** Obtain the development checkout
+*** Obtain the source checkout
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
 Run the clone from a terminal on GNU/Linux, macOS, or WSL. The following
-location works for an ordinary per-user installation and selects the branch
-described by this manual:
+location works for an ordinary per-user installation:
 
 #+begin_example
 mkdir -p ~/src
 cd ~/src
-git clone --branch ui-experiments https://github.com/bartbunting/emacsvox
+git clone https://github.com/bartbunting/emacsvox
 cd emacsvox
 #+end_example
 

@@ -580,17 +580,16 @@ Emacsvox.  If speech will play on another workstation, use *note
 Installing Remote Emacsvox: Installing Remote Emacsvox. instead of
 installing a local speech server.
 
-   The settings-menu instructions in this development manual describe
-‘ui-experiments’.  Use a checkout of that branch to follow them; an
-older release package may not contain the same interface.  Keep an
-existing working installation available while testing a development
-checkout.
+   Use the manual supplied with your checkout or installed package.
+Older releases may provide different settings menus.  Keep a working
+installation available while trying another version.
 
    Commands shown before Emacsvox starts are entered in a terminal.
 Keys written with ‘C-’ or ‘M-’ are entered inside Emacs.  The published
 installation chapter is also available before installation at
 <https://bartbunting.github.io/emacsvox/Installation.html>; its
-published version may differ from this development branch.
+published version may describe a different version from your
+installation.
 
 * Menu:
 
@@ -722,16 +721,15 @@ loaded path in its error.  Upgrade that installation and restart Emacs;
 restarting only speech does not replace loaded Lisp.  The Emacs minimum
 remains 30.2.
 
-3.2.2 Obtain the development checkout
--------------------------------------
+3.2.2 Obtain the source checkout
+--------------------------------
 
 Run the clone from a terminal on GNU/Linux, macOS, or WSL.  The
-following location works for an ordinary per-user installation and
-selects the branch described by this manual:
+following location works for an ordinary per-user installation:
 
      mkdir -p ~/src
      cd ~/src
-     git clone --branch ui-experiments https://github.com/bartbunting/emacsvox
+     git clone https://github.com/bartbunting/emacsvox
      cd emacsvox
 
    For an existing checkout, inspect ‘git status --short’ and ‘git
@@ -2483,6 +2481,12 @@ preview command.
 the GNU Emacs Manual.  Kill-ring history is useful recovery information,
 not a permanent backup of your work.
 
+   If you enable Repeatable yank through *note managed Muggles:
+managed-muggles., ‘C-y’ and ‘M-y’ also enter its temporary repeat menu.
+Leave it with ‘C-g’ before ordinary editing.  Its additional cycling and
+chooser keys are described in that guide; Disable restores the standard
+bindings when the manager still owns them.
+
 
 File: emacsvox.info,  Node: Recovering Text Edits,  Next: Copying Through The Clipboard,  Prev: Choosing Earlier Copied Text,  Up: Editing Text With Speech
 
@@ -2735,17 +2739,16 @@ the current buffer unless their Help specifies a global prefix form.
      menu in global scope; ‘e’ toggles indentation feedback in the
      displayed scope.
 
-     Up/down selects a control and left/right changes sections.
-     Shift-left/right on _Volume_ changes by five, bounded to 0–100.
-     Other items give guidance rather than changing volume.  ‘<RET>’
-     activates an item.  These bindings apply inside the menu, not in
-     prompts or the source buffer.
-
-     ‘v’ or _Volume_ accepts an exact value; ‘-~/~+’ remain shortcuts.
-     Volume affects all main-stream Omnivox tones even in buffer scope.
-     Adjustments speak the percentage and interrupt obsolete main
-     speech, so repeated keys announce the latest value rather than
-     queueing old values.
+     Up/down selects a control and left/right changes sections.  In
+     _Tone levels_, ‘l’ adjusts the pitch-tone volume in the displayed
+     scope; ‘v’ adjusts the shared volume of all main-stream Omnivox
+     tones, even in buffer scope.  Shift-left/right changes either
+     selected volume by five percentage points, bounded to 0–100;
+     ‘<RET>’ enters an exact value.  ‘-~/~+’ adjust the shared volume
+     directly.  These menu controls interrupt obsolete main speech so
+     repeated adjustments announce the latest value.  Pitch-tone shaping
+     and its shared tone editor are described under *note Adjust
+     indentation feedback: Adjust indentation feedback.
 
      Changes apply immediately.  ‘<SPC>’ previews four-column
      indentation even when feedback is off.  ‘q’ leaves changes in

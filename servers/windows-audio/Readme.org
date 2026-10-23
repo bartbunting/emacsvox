@@ -6,7 +6,8 @@ a WSL-loopback socket to share one persistent Windows process.  No Windows
 firewall rule or administrator access is required.
 
 Emacsvox's OGG files are converted lazily to 48 kHz, 16-bit stereo WAV files
-under =$XDG_CACHE_HOME/emacsvox/windows-play=, or =~/.cache= when
+under =$XDG_CACHE_HOME/emacsvox/windows-play=, or
+=~/.cache/emacsvox/windows-play= when
 =XDG_CACHE_HOME= is unset.  SoX is used only for the first conversion of each
 file.  Generated SoX effects such as Emacsvox's multi-window cues are also
 rendered once and cached.  Playback uses one ordered Windows =waveOut= queue.

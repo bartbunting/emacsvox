@@ -165,6 +165,9 @@ File: emacsvox.info,  Node: Finding Settings Tasks,  Next: Finding Application T
      (emacsvox)Notification Routing.: choose where notifications play
      and distinguish selecting a route from restarting it.  *note Output
      volumes: (emacsvox)Output Volumes. controls loudness separately.
+   • *note Enable or disable a Muggle: managed-muggles.: use ‘C-e H m’
+     to manage entry keys, inspect conflicts, try a menu, and save
+     explicit choices for later sessions.
 
 
 File: emacsvox.info,  Node: Finding Application Tasks,  Next: Finding Problem Tasks,  Prev: Finding Settings Tasks,  Up: Finding Tasks
@@ -1153,7 +1156,6 @@ preferences, and native Aural submissions.  Browser coverage lives in
 to verify the compiled implementation.  Its
 ‘emacsvox-table-ui-graphical-multiline-navigation’ case requires a
 graphical display and checks actual wrapping and logical cell movement.
-Listening acceptance is separate from submission and graphical checks.
 Tabulated-list coverage lives in
 ‘test/emacsvox-tabulated-list-tests.el’, including full values, blanks,
 buttons, native action keys, sorting, filtering, refresh and hidden
@@ -1206,8 +1208,7 @@ finish; scoped Omnivox cancellation remains a separate backlog
 direction.  The graphical gate covers real X11 focus loss, minibuffers,
 selection, line drafts and scrolling.  Integration runners force the
 silent ‘log-null’ backend before loading Emacsvox so a failed test
-cannot start the maintainer's configured speech engine.  Submission
-checks are separate from the maintainer's final audible SSH acceptance.
+cannot start your configured speech engine.
 
    When aural diagnostics are enabled, ‘eat-output-decision’ records
 explain collection rejection, pending-work cancellation, retained
@@ -1352,19 +1353,20 @@ checker runs.
      autoloads under ignored ‘.test-deps/’; it never changes personal
      packages.  ‘make integration-test’ verifies that prepared tree
      before loading it and runs the batch cases.  ‘make
-     graphical-integration-test’ uses the same verified tree for the two
-     Agent Shell display-row cases in a real graphical Emacs on a
-     private Xvfb display.  Both gates fail on missing dependencies or
-     skipped selected tests.  The graphical runner requires ‘xvfb-run’,
-     ‘Xvfb’, ‘xauth’ and ‘timeout’, captures its log, disables speech
-     output and stops its isolated session after 60 seconds.  CI runs
-     both gates on each supported Emacs version.  Pin updates require
-     upstream review, new archive hashes, and fresh preparation for both
-     Emacs versions.  These source tests capture speech events and
-     exercise disposable EAT subprocesses; they do not replace listening
-     tests or compiled integration checks.  See ‘test/README.org’ for
-     preparation checks, directory overrides, recovery, and coverage
-     boundaries.
+     graphical-integration-test’ uses the same verified tree for Agent
+     Shell rendering, prompt editing, forms and table navigation, core
+     vertical movement, and EAT output and focus checks in a real
+     graphical Emacs on a private Xvfb display.  Both gates fail on
+     missing dependencies or skipped selected tests.  The graphical
+     runner requires ‘xvfb-run’, ‘Xvfb’, ‘xauth’ and ‘timeout’, captures
+     its log, disables speech output and stops its isolated session
+     after 60 seconds.  CI runs both gates on each supported Emacs
+     version.  Pin updates require upstream review, new archive hashes,
+     and fresh preparation for both Emacs versions.  These source tests
+     capture speech events and exercise disposable EAT subprocesses;
+     they do not replace listening tests or compiled integration checks.
+     See ‘test/README.org’ for preparation checks, directory overrides,
+     recovery, and coverage boundaries.
 
      Keep each Emacs version's build in a separate checkout; never reuse
      ‘.elc’ files across versions.  All platforms, including native
@@ -1408,10 +1410,9 @@ checker runs.
      records do not claim a frozen or bit-identical compiler
      environment.  Verify fresh graphical startup, acknowledged routing,
      and tracked completion on both speech lanes with a PATH that
-     contains neither WSL nor MSYS2 tools.  Human listening remains a
-     separate acceptance step.  Native Windows x64 is supported; remote
-     workstation speech remains preview, as recorded in ADR 0014
-     (../adr/0014-native-windows-support.org).
+     contains neither WSL nor MSYS2 tools.  Native Windows x64 is
+     supported; remote workstation speech remains preview, as recorded
+     in ADR 0014 (../adr/0014-native-windows-support.org).
 
        1. Offline Windows development bundle
 
@@ -1564,10 +1565,10 @@ checker runs.
           Run ‘make windows-sources-test’ for the isolated
           source/publication boundary checks.
 
-          The setup executable remains a development artifact.  Stable
-          release integration and remaining acceptance work are recorded
-          in ADR 0024 (../adr/0024-native-windows-installer.org).
-          Public preview promotion is described below and in ADR 0025
+          The setup executable is distributed separately from stable
+          release artifacts, as specified in ADR 0024
+          (../adr/0024-native-windows-installer.org).  Public preview
+          promotion is described below and in ADR 0025
           (../adr/0025-windows-preview-publication.org).
 
   4. Public Windows installer previews
@@ -1758,14 +1759,11 @@ release target pushes ‘master’ or the documentation branch.  Use ‘make
 release-check’ alone when a non-mutating preflight is wanted without
 creating an artifact.
 
-20.3.7 Future Aural contract decisions
---------------------------------------
+20.3.7 Aural extension boundaries
+---------------------------------
 
-The completed Aural implementation diary is preserved under
-‘archive/emacsvox/migrations/’ rather than serving as current
-instructions.  Three questions from that diary remain deliberately
-undecided and require an explicit architecture decision before
-implementation:
+The following extensions require an explicit architecture decision
+before implementation:
 
    • whether a critical alert may be completely suppressed or must
      retain an alternative presentation;
@@ -1774,8 +1772,8 @@ implementation:
    • whether a new presentation occasion belongs to the core semantic
      contract or to a module-owned extension.
 
-   Do not infer answers from the archived proposals.  Current behavior
-is defined by the Aural implementation, its generated reference, and
+   Do not infer contracts from archived proposals.  Current behavior is
+defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
 20.3.8 Voice-style metadata ownership
@@ -1834,9 +1832,9 @@ cutoffs and adapter-default nil retain their meaning.  Invalid boundary
 steps must fail before history, dirty state, refresh or audition
 changes.
 
-   Delivery preparation has the limited helper boundaries described
-below; asynchronous operation ownership remains a separate refactoring
-proposal.
+   Delivery preparation has the helper boundaries described below;
+metadata validation does not transfer ownership of asynchronous
+operations.
 
    The rule tests state field inventories, bounds, error precedence, and
 composition expectations independently of the metadata.  Scheme tests

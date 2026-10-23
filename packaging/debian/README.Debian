@@ -34,8 +34,8 @@ Linux speech engine with:
 
 For remote speech, use emacsvox --remote --diagnose and then emacsvox --remote
 after preparing the workstation service, private token and SSH reverse tunnel.
-Omnivox 1.10.0 includes the remote service; Emacsvox remote access remains a
-preview feature. For WSL desktop speech, select the native
+Use Omnivox 1.18.0 or newer; Emacsvox remote access remains a preview
+feature. For WSL desktop speech, select the native
 Windows omnivox.exe with OMNIVOX_PROGRAM or your existing per-user setting.
 The guided WSL source installer remains the route for acquiring that runtime.
 
@@ -46,7 +46,7 @@ Emacsvox help). To enable speech in your personal Emacs, explicitly add:
   (load-file "/usr/share/emacsvox/lisp/emacsvox-setup.el")
 
 No site startup file is installed and no personal initialization is edited.
-This first package loads Lisp sources; no .elc files are shipped or generated
+The package loads Lisp sources; no .elc files are shipped or generated
 at installation time. Optional integrations need their corresponding tools
 or Emacs packages; Hydra convenience menus need the hydra Emacs package.
 Source-checkout build and guided installation commands do not apply to this

@@ -603,6 +603,11 @@ more copies; it is not an accept or preview command.
 More detail: [[info:emacs#Earlier Kills][Yanking earlier kills]] in the GNU Emacs Manual. Kill-ring
 history is useful recovery information, not a permanent backup of your work.
 
+If you enable Repeatable yank through [[managed-muggles][managed Muggles]], ~C-y~ and ~M-y~
+also enter its temporary repeat menu. Leave it with ~C-g~ before ordinary
+editing. Its additional cycling and chooser keys are described in that guide;
+Disable restores the standard bindings when the manager still owns them.
+
 *** Recover a text edit before saving
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Recovering Text Edits
@@ -870,15 +875,14 @@ unavailable for presentations without built-in tones.
 existing local choices intact. A prefix starts the menu in global scope;
 ~e~ toggles indentation feedback in the displayed scope.
 
-Up/down selects a control and left/right changes sections. Shift-left/right
-on /Volume/ changes by five, bounded to 0–100. Other items give guidance rather
-than changing volume. ~RET~ activates an item. These bindings apply inside
-the menu, not in prompts or the source buffer.
-
-~v~ or /Volume/ accepts an exact value; ~-~/~+~ remain shortcuts. Volume affects
-all main-stream Omnivox tones even in buffer scope. Adjustments speak the
-percentage and interrupt obsolete main speech, so repeated keys announce the
-latest value rather than queueing old values.
+Up/down selects a control and left/right changes sections. In /Tone levels/,
+~l~ adjusts the pitch-tone volume in the displayed scope; ~v~ adjusts the
+shared volume of all main-stream Omnivox tones, even in buffer scope.
+Shift-left/right changes either selected volume by five percentage points,
+bounded to 0–100; ~RET~ enters an exact value. ~-~/~+~ adjust the shared
+volume directly. These menu controls interrupt obsolete main speech so
+repeated adjustments announce the latest value. Pitch-tone shaping and its
+shared tone editor are described under [[*Adjust indentation feedback][Adjust indentation feedback]].
 
 Changes apply immediately. ~SPC~ previews four-column indentation even when
 feedback is off. ~q~ leaves changes in effect. In global scope, ~S~ saves

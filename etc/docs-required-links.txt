@@ -12,10 +12,10 @@ https://elpa.nongnu.org/nongnu/eat.html
 https://elpa.nongnu.org/nongnu/doc/eat.html
 https://github.com/bartbunting/omnivox
 https://github.com/bartbunting/omnivox/blob/main/README.md
-https://github.com/bartbunting/omnivox/blob/main/STATUS.md
-https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md
-https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md
-https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md
-https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md
+https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md
+https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md
+https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md
+https://github.com/bartbunting/omnivox/blob/main/docs/protocols/presentation-timeline.md
+https://github.com/bartbunting/omnivox/blob/main/docs/protocols/helper.md
 https://github.com/intelligrit/swiftmac
 https://github.com/dectalk/dectalk/releases/tag/2023-10-30

@@ -1,0 +1,186 @@
+#+title: Documentation audit, 23 October 2026
+#+startup: content
+
+* Scope and baseline
+
+This is an internal review record, outside the published manual. The audit
+started from a clean =master= worktree at =51cd10af2=, including the latest
+managed-Muggles changes. No application code, personal configuration or running
+Emacs session was changed. No commit, push, publication or release was made.
+
+Read =AGENTS.md=, the complete editorial guide and all 29 ADRs. Read all 19
+included user chapters and the four included developer files in full. Reviewed
+README, current NEWS, installation and setup routes, the test guide, Debian
+package instructions, server component guides and sound-pack notes. Archived
+release notes, announcements, design contracts and review reports were assessed
+for purpose, references and historical value; they were not all revalidated as
+current operating instructions.
+
+The implementation comparison covered command definitions, menu entries,
+keymaps, defaults, loading and dependencies for settings discovery, reading,
+indentation, capitalization, spelling, interaction, voice and sound workflows,
+tables, Agent Shell, EAT, Notmuch and managed Muggles. Focused tests exercise
+scope, explicit saving, cancellation and return paths. Isolated regeneration
+checks the complete generated public command, option and key reference against
+current Lisp. This does not claim a behavioural test of every public command
+or every optional integration.
+
+* Corrections
+
+- Removed the obsolete =ui-experiments= installation branch requirement.
+  The supplied manual now describes the checkout being installed.
+- Replaced retired README menu routes with the current Transient paths for
+  palettes, Workbench, feedback, history and combined rules. Corrected personal
+  sound-pack placement and character-voice fallback guidance, with links to
+  the owning guides.
+- Clarified indentation's scoped pitch-tone volume versus the global shared
+  tone level. Updated the matching Unreleased NEWS entry.
+- Made the eight managed Muggles easier to find from the task finder. Added a
+  short activation/save route and connected ordinary paste instructions to
+  Repeatable yank's entry bindings and restoration behaviour. The detailed
+  Muggles section remains the primary home for dependencies, conflicts,
+  activation, Run, saving and Disable.
+- Updated Unreleased NEWS for current settings discovery and source-line versus
+  wrapped-row reading. Published release notes remain historical records.
+- Removed listening-acceptance status and pending implementation narration
+  from the included manual. Kept instructions for audible startup checks,
+  listening to previews, troubleshooting and reusable developer verification.
+- Corrected test documentation to describe eight pinned dependencies and the
+  current graphical integration coverage.
+- Corrected the standalone DECtalk build command, Windows icon cache fallback
+  path, Debian remote-speech version guidance and archive README filename.
+  The Windows release guide now refers to the authoritative Piper lock instead
+  of repeating a stale 1.12.0 pin. The lock selects 1.18.0.
+- Marked the old Tcl remote-speech note as historical and pointed to the
+  current Omnivox procedure. Repaired two historical voice-experiment links
+  using the last Git revision containing the retired source, preserving their
+  historical meaning rather than substituting an unrelated current module.
+- Repaired five moved Omnivox paths in the required external-link inventory.
+  The maintained chapters already used their current destinations.
+- Regenerated the Texinfo body and Info artifacts through =make docs-update=.
+  No accepted Info node was renamed or removed; the Muggles task link uses an
+  explicit anchor within its existing node.
+
+* Verification and limits
+
+The selected toolchain is GNU Emacs 31.0.90 at
+=/home/bart/opt/emacs-31/bin/emacs=. =make check-emacs= and
+=make bytecode-check= pass. Lisp sources were unchanged, so no rebuild was
+needed. All graphical checks used fresh Emacs processes on private Xvfb
+displays; they did not use the running desktop session.
+
+- =make integration-test=: 700 passed, none skipped.
+- =make graphical-integration-test=: 15 passed, none skipped. Both gates use
+  a separately verified copy of the eight dependencies pinned by the repository.
+  The existing test cache had an old lock identity and was left untouched.
+- Focused manual/settings batch run: 74 passed, 76 graphical cases skipped,
+  no unexpected results. The subsequent graphical run covered 190 tests:
+  185 passed, including all 57 managed-Muggles checks. Four remaining cases
+  passed in an isolated rerun after separating unrelated hooks and stubbing
+  unconnected speech transport. One stale menu-order assertion still fails.
+- =make docs-org-preview= and =make docs-update= pass.
+- =make docs-release-check= passes: current generated manuals and reference,
+  accepted Info topology, internal links, HTML/Info rendering and version checks.
+- The 20 required external links pass after repairing the moved paths.
+  A broader scan also checked 44 literal HTTPS destinations from maintained
+  guides, plus the repaired historical source URL; all are reachable. Shell
+  variable fragments in download examples were excluded from literal URL
+  checks. Reachability does not validate every claim on an external page.
+
+A repository-wide local-file-link scan found no missing targets in maintained
+guides after the repairs. It also found 267 references to old source paths in
+six historical reports: the four root audits proposed for archival below, and
+=archive/emacsvox/migrations/eat_review_report.org= and
+=archive/emacsvox/migrations/eat_accessibility_plan.org=. These refer to
+pre-reorganisation snapshots. They need revision-specific links when those
+records are curated; pointing their old line numbers at today's files would
+misrepresent the evidence. Existing archived reports remain unchanged.
+
+The remaining graphical assertion is
+=emacsvox-aural-menu-graphical-speech-order-and-navigation-entry=. It expects
+Scope immediately after Typing, but the actual menu includes Advanced reading
+defaults and Reading controls and filters between them. This reproduces in an
+isolated graphical run. No menu reordering or test-expectation change was made
+as part of the documentation audit. The earlier combined-run history assertion
+passes in isolation; that result does not establish complete suite isolation.
+
+The main Muggles menu label and settings-search description still call all
+entries navigation menus, despite the editing entries. This discovery issue
+and the stale assertion are recorded in [[file:../ui-settings-plan.org][the settings plan]]. No separate
+runtime defect was established during this pass.
+
+No listening session, native Windows or macOS installation, live remote-speech
+connection, complete Emacs 30.2 run, or optional-engine installation was tested.
+Platform instructions were compared with the launchers, installer configuration,
+build contracts and existing tests. Passing Linux/Xvfb checks does not establish
+those platform or audio results.
+
+* File-cleanup proposal requiring approval
+
+No file was moved or deleted. The following records contain useful evidence;
+archival is preferable to deletion. Destinations preserve their filenames and
+attribution. Each move requires updating relative links within the moved record
+and its inbound references, then rerunning documentation/link checks.
+
+** Manual review snapshots
+
+Move these eight files from =docs/manual/= to
+=archive/emacsvox/reviews/2026-10-15/=:
+
+- =command-lookup-review-2026-10-15.org=
+- =consistency-review-2026-10-15.org=
+- =editorial-review-2026-10-15.org=
+- =everyday-work-review-2026-10-15.org=
+- =navigation-review-2026-10-15.org=
+- =polish-review-2026-10-15.org=
+- =reading-editing-review-2026-10-15.org=
+- =tutorial-review-2026-10-15.org=
+
+They record bounded revision batches, source commits and then-outstanding
+validation. They are not included by the manual master and are not current
+publication prerequisites. Their unique review evidence remains useful.
+=docs/manual/README.org= links to the editorial review; update that link.
+The editorial review's links to chapters, the editorial guide, authoring README
+and ADRs need rebasing to the repository paths. Add an archive-index entry.
+
+** Root-level audit snapshots
+
+Move these four root files to =archive/emacsvox/reviews/=:
+
+- =CODE-QUALITY-AUDIT-2026-09-07.org=
+- =CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org=
+- =VOICE-CUSTOMISATION-AUDIT-2026-09-08.org=
+- =code_review.org=
+
+They describe identified revisions and their follow-up repairs. Keep the first
+audit and its closeout together. AUD-19's remaining design work is not complete;
+retain its connection to =docs/developer/backlog.org=. Update that backlog's
+closeout link, the closeout's companion/source/test/manual links, and the
+filename reference in =docs/voice-editor-implementation-plan.org=. Rebase the
+other reports' repository and sibling-source references, preserving revision
+context for obsolete line numbers. Add an archive-index entry. Archiving these
+records must not silently close the remaining backlog or platform checks.
+
+** Release-preparation snapshots
+
+Move =docs/release-preparation-2026-09-18.org= and
+=docs/release-preparation-2026-10-09.org= to
+=archive/emacsvox/releases/=.
+
+Their old Omnivox pins and preparation status belong to those dated snapshots,
+not the current release procedure. No inbound filename references were found
+outside the files themselves before this report was added. Rebase their links
+to ADRs, the engine-parameter design and developer guide; add an archive-index
+entry. Preserve incomplete historical checks as recorded rather than presenting
+them as newly completed work.
+
+** Keep in place
+
+Keep accepted ADRs, their linked voice/protocol contracts, the active settings
+and refactoring plans, developer backlog, benchmark data and provenance,
+attribution notices, archived NEWS and heritage manuals. The UI experiments
+record already distinguishes its prototype history from the living settings
+plan. The table-reading contract mixes a durable contract with implementation
+evidence; splitting it needs a separate content review rather than an automatic
+move. The completed Lisp-layout inventory remains linked from ADR 0029 and
+the backlog. None of these files is redundant merely because it is older.

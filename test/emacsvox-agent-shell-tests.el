@@ -10741,6 +10741,82 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   (should (equal (buffer-string) original))))
             (emacsvox-agent-shell--input-cleanup)))))))
 
+(ert-deftest emacsvox-agent-shell-explicit-input-word-boundaries ()
+  "Word browsing crosses live input fields without changing the draft."
+  (require 'emacsvox-advice)
+  (require 'agent-shell-chat-mode)
+  (dolist (draft '("" "first second"))
+    (save-window-excursion
+      (with-temp-buffer
+        (let* ((bounds (emacsvox-agent-shell-test--insert-live-chat-input draft))
+               (start (car bounds))
+               (end (cdr bounds))
+               (current-prefix-arg nil)
+               (prefix-arg nil))
+          ;; Shell Maker marks the response and prompt as one output field.
+          (put-text-property (point-min) start 'field 'output)
+          (use-local-map agent-shell-mode-map)
+          (setq-local emacsvox-agent-shell--speech-control-active t
+                      emacsvox-agent-shell-input-activation 'explicit)
+          (emacsvox-agent-shell--input-setup)
+          (unwind-protect
+              (let ((original (buffer-string)))
+                (switch-to-buffer (current-buffer))
+                (when (display-graphic-p) (redisplay t))
+                (should (eq (key-binding (kbd "M-b")) 'backward-word))
+                (should (eq (key-binding (kbd "M-f")) 'forward-word))
+                (dolist (key '("M-b M-b" "C-u 2 M-b" "C-u -2 M-f"))
+                  (goto-char start)
+                  (let ((events (emacsvox-agent-shell-test--capture-events
+                                  (execute-kbd-macro (kbd key)))))
+                    (should (looking-at "response"))
+                    (should (member '(speak "response") events))))
+                (dolist (key '("C-u 4 M-f" "C-u -4 M-b"))
+                  (goto-char (point-min))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd key)))
+                  (should (> (point) (marker-position (car comint-last-prompt))))
+                  (should (<= start (point) end))
+                  (when (> end start) (should (> (point) start))))
+                ;; Native field protection still applies to programmatic calls.
+                (goto-char start)
+                (backward-word 2)
+                (should (= (point) start))
+                (should-not emacsvox-agent-shell--input-editing)
+                (should buffer-read-only)
+                (should (equal (buffer-string) original))
+                ;; Activating editing retains the same protection at the edge.
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "C-c i")))
+                (dolist (key '("M-b" "C-u 2 M-b" "C-u -2 M-f"))
+                  (goto-char start)
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd key)))
+                  (should (= (point) start))
+                  (should emacsvox-agent-shell--input-editing)
+                  (should-not buffer-read-only))
+                (should (equal (buffer-string) original)))
+            (emacsvox-agent-shell--input-cleanup)))))))
+
+(ert-deftest emacsvox-agent-shell-word-fields-outside-browsing ()
+  "Word commands preserve field protection outside explicit shell browsing."
+  (require 'emacsvox-advice)
+  (dolist (mode '(fundamental-mode agent-shell-mode))
+    (save-window-excursion
+      (with-temp-buffer
+        (insert (propertize "output " 'field 'output 'rear-nonsticky t))
+        (let ((start (point)))
+          (insert "draft")
+          (setq major-mode mode)
+          (use-local-map (make-sparse-keymap))
+          (setq-local emacsvox-agent-shell--speech-control-active t
+                      emacsvox-agent-shell-input-activation 'automatic)
+          (switch-to-buffer (current-buffer))
+          (goto-char start)
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "M-b")))
+          (should (= (point) start)))))))
+
 (ert-deftest emacsvox-agent-shell-explicit-input-graphical-prompt-label ()
   "Return activates real chat label rows reached through vertical navigation."
   (skip-unless (display-graphic-p))

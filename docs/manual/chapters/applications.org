@@ -373,6 +373,8 @@ also used for character reading.
 :TEXINFO_NODE: no
 :END:
 
+<<managed-muggles>>
+
 #+cindex: Muggles
 #+cindex: Org, heading navigation menu
 #+findex: emacsvox-muggles-enable
@@ -396,6 +398,14 @@ navigation, Outline navigation, View navigation, Repeatable yank, Info summary
 and Smartparens. All require the Hydra package. Enable installs a menu's entry
 keys when available; Run enters it
 and can move point or perform editing.
+
+Press ~C-e H m~ to browse managed Muggles, or run
+~M-x emacsvox-muggles-browse RET~. Select a row, then use ~e~ to enable its
+entry keys or ~d~ to disable them for this session. ~W~ saves explicit session
+choices through Customize. Settings and action search also find the Muggles
+entry. Opening or browsing the list does not load or activate a Muggle.
+The individual menus are described below, followed by the manager's conflict,
+saving and restoration rules.
 
 Org heading navigation lets you repeat movement and section reading with
 single keys in an Org buffer.
@@ -466,14 +476,9 @@ parentheses, ~R~ splices an expression, and ~k~ kills it. ~?~ explains the
 remaining keys; ~C-g~ leaves. Exit and Disable retain Smartparens mode and
 completed edits. Temporary quiet hints are restored on exit.
 
-Press ~C-e H m~ to browse managed Muggles, or run
-~M-x emacsvox-muggles-browse RET~. Settings and action search also find the
-Muggles entry. Other Muggles retain their legacy configuration until they gain
-individual switches.
-Opening or browsing the list does not load or activate a Muggle.
-
-Up/down selects a row and reads its purpose, current choice, configured override
-and availability. Left/right inspects columns; ~SPC~ reads the full row.
+In the Muggles manager, up/down selects a row and reads its purpose, current
+choice, configured override and availability. Left/right inspects columns;
+~SPC~ reads the full row.
 ~RET~ or ~?~ explains the selected Muggle and its actions. Returning from Help
 with ~q~ restores the row and column. ~g~ refreshes the displayed state.
 

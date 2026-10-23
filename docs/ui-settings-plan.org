@@ -3324,6 +3324,76 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-23, Agent Shell browse-mode word movement stops at live input.
+  In the =ursys-reporting-front-end= shell, main speech requests
+  =14358–14361= at 19:31:37 Sydney time each contain "Codex greater than".
+  These are separate requests, rather than one replayed utterance. The word
+  path does not log point, so the logs alone cannot establish failed movement.
+  A fresh graphical Emacs reproduces the trap with the same installed Agent
+  Shell =20261022.1257=, Shell Maker =20261022.236= and compiled Emacsvox
+  motion module. Five consecutive =M-b= commands leave point at the input
+  start with editing disabled. An empty draft speaks "Codex> " each time;
+  a nonempty draft repeats its first word instead.
+
+  Native =backward-word= respects the field boundary between transcript and
+  input. Before this correction, browse mode bypassed the character-motion
+  guard, but word-motion advice only handled tables. In the isolated reproduction,
+  binding =inhibit-field-text-motion= lets =M-b= cross the prompt and reach
+  the preceding response. Implemented: interactive word navigation crosses
+  fields only during explicit browsing. Editing, programmatic movement,
+  automatic input activation and ordinary buffers retain field protection;
+  logical table movement keeps its existing handling.
+
+  The keyboard regression fails against the previous implementation. It covers
+  repeated =M-b=, both directions, positive and negative prefix arguments,
+  empty/nonempty drafts, prompt speech, draft preservation and editing
+  boundaries. All 702 pinned integration tests pass. Five focused tests pass
+  in fresh graphical Emacs from source and compiled code, using the installed
+  packages above and verified loaded paths; these also cover character
+  boundaries and wrapped table words. Incremental compilation and byte-code
+  preflight pass. The compiled table module was reloaded in Emacs PID =5261=,
+  socket =emacsvox=, after those fresh-session checks. All four Agent Shell
+  and viewport buffers retained their text, point, protection and input/table
+  states. Live listening confirmation remains pending.
+
+- 2026-10-23, Windows attachment-opening chatter: read-only inspection of
+  Emacs PID =5261=, socket =emacsvox=, identifies the personal
+  =my/notmuch-open-attachment-in-windows= action and =bb-after-focus-change=
+  hook in =~/.emacsvox.d/emacsvox-config.org=. At 19:15 and 19:16 Sydney time,
+  each PDF launch sent Opening and Opened messages with the full filename to
+  Notify PID =9764=; punctuation was spoken in full. Speaker PID =9210= also
+  received five alternating focus/lost-focus submissions during each launch.
+  Omnivox requests =13027–13033= and =13059–13065= show overlapping streams
+  and cancellation of transient focus announcements. Temporary-file Wrote
+  messages appear in Messages but not in the inspected speech requests.
+  Implemented in the canonical personal Org configuration and its local
+  tangled copy: successful launch says "Opened in Windows" once on the main
+  speech stream, with ordered delivery and no interruption. Temporary-file
+  messages are silent; launch errors retain their diagnostic. Focus changes
+  are silent while the existing keyboard-map restoration remains active.
+  Four isolated checks pass from source and byte-code, covering success,
+  launcher failure, extraction failure/cleanup and rapid focus transitions.
+  Three of these checks fail against the previous definitions. Only the two
+  changed functions were applied to PID =5261=; its buffer, point and focus
+  hook were preserved. The next real attachment open still needs confirmation.
+
+- 2026-10-23, documentation audit: the main menu and settings search still
+  describe Muggles as navigation menus. The managed list also includes
+  Repeatable yank, Org table editing and Smartparens. The authoritative task
+  guide now covers all eight managed entries, including activation, entry-key
+  ownership, saving and restoration. Update the labels in
+  =emacsvox-aural-menu.el= and =emacsvox-settings.el= in a separate UI slice;
+  include editing terms in discovery and check the spoken descriptions.
+  No runtime label or search behaviour changed during this documentation pass.
+
+  The graphical test
+  =emacsvox-aural-menu-graphical-speech-order-and-navigation-entry= also has
+  a stale expected item sequence: it expects Scope immediately after Typing,
+  omitting Advanced reading defaults and Reading controls and filters. The
+  failure reproduces in a fresh graphical Emacs with pinned Transient.
+  Reconcile the assertion with those supported controls in the next UI test
+  slice; changing menu order is not part of this documentation correction.
+
 - 2026-10-22, silent padding after expanding an Agent Shell code block:
   in PID =501345= at 13:49:02 Sydney time, End followed by Up landed at
   =389206=. Submission =12021= contained only three newline characters,

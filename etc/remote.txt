@@ -1,5 +1,10 @@
 *Running Speech Server  remotely
 
+This file preserves the legacy Tcl remote-speech setup. For current Omnivox
+remote speech, use docs/manual/chapters/speech-backends.org, under Remote
+Workstation Speech (Preview). Its service, authentication and tunnel
+requirements differ from the historical procedures below.
+
 For  using ssh port forwarding, see remote-tts-setup.
 Code in remote-tts-setup is also available as a bash function in ../bash-utils/remote.
 Reverse port forwarding is the solution I have been using since approx

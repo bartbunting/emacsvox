@@ -49,6 +49,8 @@
                   "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function emacsvox-agent-shell--live-input-bounds
                   "emacsvox-agent-shell-motion" ())
+(declare-function emacsvox-agent-shell--input-browsing-p
+                  "emacsvox-agent-shell-motion" ())
 (defvar emacsvox-agent-shell-table-titles)
 (defvar emacsvox-agent-shell-table-data-position)
 (defvar emacsvox-agent-shell--speech-control-active)
@@ -299,22 +301,32 @@ characters.  Return non-nil only when this function owns the movement."
       t)))
 
 (defun emacsvox-agent-shell--forward-word-around (original &rest arguments)
-  "Follow logical table text during interactive forward word movement."
+  "Follow table text and cross input fields during forward word browsing."
   (if (and (memq ems--interactive-fn-name '(forward-word right-word))
            (emacsvox-agent-shell--table-text-motion
             ems--interactive-fn-name 'forward
             (prefix-numeric-value (car arguments)) t))
       nil
-    (apply original arguments)))
+    (let ((inhibit-field-text-motion
+           (or inhibit-field-text-motion
+               (and (memq ems--interactive-fn-name '(forward-word right-word))
+                    (emacsvox-agent-shell--input-browsing-p)))))
+      (apply original arguments))))
 
 (defun emacsvox-agent-shell--backward-word-around (original &rest arguments)
-  "Follow logical table text during interactive backward word movement."
+  "Follow table text and cross input fields during backward word browsing."
   (if (and (memq ems--interactive-fn-name '(backward-word left-word))
            (emacsvox-agent-shell--table-text-motion
             ems--interactive-fn-name 'backward
             (prefix-numeric-value (car arguments)) t))
       nil
-    (apply original arguments)))
+    ;; Comint's field boundary protects editing, but must not trap browsing
+    ;; at the live prompt.  Leave programmatic movement and other modes alone.
+    (let ((inhibit-field-text-motion
+           (or inhibit-field-text-motion
+               (and (memq ems--interactive-fn-name '(backward-word left-word))
+                    (emacsvox-agent-shell--input-browsing-p)))))
+      (apply original arguments))))
 
 (defun emacsvox-agent-shell--markdown-table-cell-at-point ()
   "Return semantic Markdown table cell data for point, or nil."

@@ -425,7 +425,7 @@ operations available in Workbench. Implementation order remains open; the
 recommended user model should guide it rather than be dictated by current stores.
 
 The current implementation is in [[file:../lisp/ui/emacsvox-aural-voice-palettes.el][palette browsing and tuning]],
-[[file:../lisp/ui/emacsvox-aural-voice-workbench.el][Workbench]], and [[file:../lisp/emacsvox-aural-voice-experiment.el][physical voice experiments]].
+[[file:../lisp/ui/emacsvox-aural-voice-workbench.el][Workbench]], and [[https://github.com/bartbunting/emacsvox/blob/1000f85d3b69038acdec83c3a49dd61e1a30ceb0/lisp/emacsvox-aural-voice-experiment.el][physical voice experiments]].
 The [[file:voice-style-coverage.org][completed voice-style consumer audit]] provides edit/save/preview/delivery
 regressions. The separate [[file:developer/backlog.org][backlog]] tracks remaining inspection, delivery and
 asynchronous apply work; these are not prerequisites to the first editor slice.

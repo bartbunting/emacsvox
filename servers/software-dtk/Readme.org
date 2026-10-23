@@ -1,7 +1,8 @@
 * Introduction
 
-This module implements  the Emacsvox speech server for software
-Dectalk.
+This module implements the standalone Emacsvox speech server for Software
+DECtalk. It is a compatibility backend. For the standard Omnivox setup,
+use the [[file:../../docs/manual/chapters/speech-backends.org][speech backend guide]].
 
 * Getting Software Dectalk:
 
@@ -23,8 +24,10 @@ Dectalk.
 
 * Build The Emacsvox Side
 
-#+begin_src 
-cd servers/software-dectalk && make
+From the Emacsvox repository root:
+
+#+begin_src sh
+make dtk
 #+end_src
 
 

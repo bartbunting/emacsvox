@@ -62,8 +62,8 @@ checked-in Info files provide the same manual inside Emacs.
    and verifies the matching Omnivox Windows release and records both paths without editing a shell
    startup file, compiles Emacsvox, and finishes with an audible check.
 
-   Once first speech works, =M-x emacsvox-omnivox-manage-components RET= (or
-   =C-e H= followed by =I=) opens the spoken optional-engine manager.  It can
+   Once first speech works, =M-x emacsvox-omnivox-manage-components RET=
+   opens the spoken optional-engine release manager. It can
    download, checksum-verify, and install matching Flite, RuTTS, Piper, and
    TGSpeechBox modules per user.  Proprietary Eloquence, DECtalk,
    and RHVoice runtimes and Piper voice models remain user supplied.
@@ -106,7 +106,7 @@ checked-in Info files provide the same manual inside Emacs.
    =M-x tts-speak-version RET= to hear the live adapter version.  Type
    =C-h v tts-program RET=; its current value should name =omnivox=.
 
-4. Only after that clean session works, add the following to the user's Emacs
+4. Only after that clean session works, add the following to your Emacs
    init file, replacing the example path with this checkout's absolute path:
    #+BEGIN_SRC elisp
    (setenv "TTS_PROGRAM" "omnivox")
@@ -292,7 +292,7 @@ machine; engine-default and property selectors can resolve against the voices
 available on another machine. Inheritance takes a complete entry from the
 nearest parent, ending at the read-only =acss-default= palette.
 
-Use =C-e H V= for Voice Palettes. Create a personal palette or edit a built-in
+Use =C-e H v p= for Voice Palettes. Create a personal palette or edit a built-in
 voice in a personal child, then use the common voice editor to preview and
 save changes. Copy Palette makes an independent copy of effective entries.
 Reset restores an inherited voice; Delete removes a direct custom voice with
@@ -307,7 +307,7 @@ conversion. The former shared per-voice route editor, migration and preset
 screens have been removed. Named-voice choices now belong in the palette's
 common editor.
 
-Use =M-x emacsvox-aural-voice-workbench=, or press =W= in Aural Home, to
+Use =M-x emacsvox-aural-voice-workbench=, or =C-e H v w=, to
 browse installed voices and shared engine preferences. Its named-voice,
 physical-voice, engine and style views use =l=, =v=, =e= and =s=. Use =F= to
 filter, =C= to clear filters, and =R= to refresh inventory. =P= previews one
@@ -388,9 +388,10 @@ or failed engine against the dispatched registry snapshot and retry the same
 text chunk on the selected fallback.  Retries are limited to four total
 attempts and check cancellation before and after each engine call.  Persistent
 health circuits keep repeatedly failing engines out of ordinary routing until
-a bounded cooldown and recovery probe succeeds.  Immediate =tts_say= and
-isolated-letter commands follow the current global engine policy and health
-snapshot; those commands do not carry a named logical-voice ID.
+a bounded cooldown and recovery probe succeeds. With negotiated palette-letter
+support, character speech uses the palette's =default= voice, including its
+fallback tuning. Older servers retain legacy character delivery. See
+[[file:docs/developer/speech-server-protocols.org][Speech Server Protocols]] for the structured and legacy command contracts.
 
 ** Aural Presentation
 
@@ -453,24 +454,19 @@ is not an unsaved-edit indicator: press =w= to write the current live values
 into the profile, or =a= to restore the saved profile values.  Restoring asks
 for confirmation before replacing live differences.
 
-Use =M-x emacsvox-aural=, or =C-e H=, to open the spoken aural home.  It
-reports current status and routes to saved profiles, presentation options,
-recent exact feedback, buffer-local rules, semantic vocabulary,
-sound packs, spatial controls, training, and the Aural Doctor.  Press =H= in
-Aural Home, or run =M-x emacsvox-aural-list-recent-feedback=, to browse,
-explain, replay, audition, or remap one of the retained presentations.  From
-an ordinary buffer, =C-e E= always runs
-=emacsvox-aural-explain-presentation= at point so presentation problems can
-be inspected directly.  In Aural Home, =r= prepares a voice remap and =R=
-auditions and remaps one exact before or after earcon.  The same keys work on
-a selected recent-feedback record.  Press =h= in any aural manager or editor
-to return home.  Aural-interface feedback is excluded from history by
-default; press =i= in the recent-feedback browser to include it temporarily
-for diagnosis.  Press =L= there to set any nonnegative history limit for the
-current session, or customize
-=emacsvox-aural-presentation-history-limit= to persist it.
+Use =C-e H= to open settings, or =C-e S= for settings relevant to the
+current buffer. The menus capture your source item for inspection and editing.
+Press =C-e H f h=, or run =M-x emacsvox-aural-list-recent-feedback=, to
+browse, explain, replay, audition, or remap retained presentations. From an
+ordinary buffer, =C-e E= explains the presentation at point. In the recent
+feedback browser, =r= prepares a voice remap and =R= auditions and remaps one
+exact before or after earcon. Interface feedback is excluded from history by
+default; =i= includes it temporarily for diagnosis. Use =C-e H f H= to
+change history limits and recording, with an explicit action to save defaults.
+The [[file:docs/manual/chapters/aural-presentation.org][Aural Presentation guide]] explains menu navigation, captured scope,
+editor return actions, and the distinction between applying and saving.
 
-Press =O= in Aural Home, or run
+Press =C-e H r o=, or run
 =M-x emacsvox-aural-list-overrides=, to manage persistent personal,
 temporary session, and current-buffer rules in one spoken table.  It reports
 what each rule targets, what it changes, whether it is enabled, and whether it
@@ -499,14 +495,11 @@ buffer scopes.  Layered faces compose their actions; the strongest face wins
 otherwise tied voice settings.  Prefer registered meaning when a semantic
 role is available.
 
-Personal sound packs are dynamic.  Put one immediate directory below
-=sounds/= with at least =button.ogg=, then use
-=M-x emacsvox-aural-list-sound-packs= to inspect, audition, validate, and
-activate it.  =RET= opens its cue browser, which reports each cue's intent and
-whether its file is native, inherited, resolved through fallback, or missing.
-Discovered personal packs can edit summary, parent, coverage, and spatial
-metadata with =e=.  Partial packs inherit through a safely written data-only
-=emacsvox-sound-pack.el= manifest.
+Personal sound packs normally live under =~/.emacsvox/sounds/packs/=.
+Use =C-e H o p= to inspect, audition, validate and activate them. =RET=
+opens a pack's cues, identifying native recordings, inherited sounds and
+missing resources. The [[file:docs/developer/integration-maintenance.org::*Authoring Sound Packs][sound-pack authoring guide]] explains directory layout and
+inheritance; the [[file:docs/manual/chapters/aural-presentation.org][Aural Presentation guide]] covers selection and recording assignments.
 
 Agent Shell and Markdown are complete reference integrations.  Agent
 transcripts expose session lifecycle, response, thought, plan, tool,

@@ -145,6 +145,8 @@ use [[*Terms used in this manual][Terms used in this manual]].
 - [[info:emacsvox#Notification Routing][Adjust notifications without changing ordinary reading]]: choose where
   notifications play and distinguish selecting a route from restarting it.
   [[info:emacsvox#Output Volumes][Output volumes]] controls loudness separately.
+- [[managed-muggles][Enable or disable a Muggle]]: use ~C-e H m~ to manage entry keys, inspect
+  conflicts, try a menu, and save explicit choices for later sessions.
 
 ** Work in an application
 :PROPERTIES:
