@@ -80,7 +80,7 @@ Max is reserved for a demonstrated problem that remains unresolved at XHI.
 
 Commits are authorized for completed slices. Publication, release tags, and
 changes to live personal settings are not part of that authorization. Preserve
-the existing untracked =CODE-QUALITY-AUDIT-2026-09-07.org=.
+the [[file:../archive/emacsvox/reviews/CODE-QUALITY-AUDIT-2026-09-07.org][original code quality audit]] as a historical record.
 
 * What the current code establishes
 

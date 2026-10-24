@@ -33,3 +33,46 @@ Emacs 31 advice conversion, the generic DTK-to-TTS namespace transition, and
 the Aural Presentation architecture.  Their durable results are reflected in
 current code, tests, documentation, and accepted ADRs.  The maintained
 developer guide records any still-open question that remains relevant.
+
+* Emacsvox review records
+
+These records were archived on 2026-10-24. They describe particular revisions,
+including then-outstanding checks and proposals. Their conclusions are not
+current product requirements or evidence that later code has been tested.
+Commands and plain source paths assume the repository root. Source evidence
+in the code audits links to recorded Git revisions, preserving old file paths
+and line numbers. Machine-local logs and runtime paths may no longer exist.
+Current unresolved work remains in the [[file:../docs/developer/backlog.org][developer backlog]] and
+[[file:../docs/ui-settings-plan.org][UI and settings plan]].
+
+** Manual reviews, 15 October 2026
+
+The maintained [[file:../docs/manual/README.org][manual authoring guide]] owns current instructions. These eight
+reviews retain the scope and verification limits of their individual passes:
+
+- [[file:emacsvox/reviews/2026-10-15/command-lookup-review-2026-10-15.org][Command lookup]]
+- [[file:emacsvox/reviews/2026-10-15/consistency-review-2026-10-15.org][Consistency]]
+- [[file:emacsvox/reviews/2026-10-15/editorial-review-2026-10-15.org][Editorial structure and settings-menu learning path]]
+- [[file:emacsvox/reviews/2026-10-15/everyday-work-review-2026-10-15.org][Everyday workflows]]
+- [[file:emacsvox/reviews/2026-10-15/navigation-review-2026-10-15.org][Navigation]]
+- [[file:emacsvox/reviews/2026-10-15/polish-review-2026-10-15.org][Clarity and recovery]]
+- [[file:emacsvox/reviews/2026-10-15/reading-editing-review-2026-10-15.org][Reading and editing]]
+- [[file:emacsvox/reviews/2026-10-15/tutorial-review-2026-10-15.org][Tutorial]]
+
+** Code and voice audits
+
+- [[file:emacsvox/reviews/CODE-QUALITY-AUDIT-2026-09-07.org][Code quality audit, 7 September 2026]] and its
+  [[file:emacsvox/reviews/CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][remediation and acceptance record]]. AUD-19's remaining design work stays
+  in the developer backlog; archival does not close it.
+- [[file:emacsvox/reviews/VOICE-CUSTOMISATION-AUDIT-2026-09-08.org][Voice customisation audit and resolution, 8 September 2026]].
+- [[file:emacsvox/reviews/code_review.org][Emacsvox and Omnivox speech review, 7 October 2026]], including the subsequent
+  corrections and isolated acceptance evidence.
+
+* Emacsvox release-preparation records
+
+The [[file:emacsvox/releases/release-preparation-2026-09-18.org][18 September 2026]] and
+[[file:emacsvox/releases/release-preparation-2026-10-09.org][9 October 2026]] reports preserve the pins, scope and checks for those
+preparation passes. They are not current release procedures or authorization
+to publish. Follow the maintained [[file:../docs/developer/integration-maintenance.org][integration and release guide]] and accepted
+ADRs for new releases. Archival does not complete any recorded platform or
+listening checks.

@@ -115,16 +115,24 @@ Platform instructions were compared with the launchers, installer configuration,
 build contracts and existing tests. Passing Linux/Xvfb checks does not establish
 those platform or audio results.
 
-* File-cleanup proposal requiring approval
+* File-cleanup proposal and completion
 
-No file was moved or deleted. The following records contain useful evidence;
-archival is preferable to deletion. Destinations preserve their filenames and
-attribution. Each move requires updating relative links within the moved record
-and its inbound references, then rerunning documentation/link checks.
+No file was moved during the audit. The following proposal was approved and
+completed on 2026-10-24. All 14 records retain their filenames, attribution,
+findings and historical verification limits. Relative links and inbound
+references were updated, and the [[file:../../archive/README.org][archive index]] now lists each record.
+
+The four code audits now use revision-specific links for 309 source, test and
+documentation evidence references. Their Git objects, paths and line/search
+targets were checked locally. Original uncommitted backlog additions cannot
+be recovered from the audit's source commit; those five links open the
+maintained backlog without obsolete line offsets. Machine-local logs and
+runtime paths retain their historical meaning and are not current operating
+instructions. Existing archived migration reports were not changed.
 
 ** Manual review snapshots
 
-Move these eight files from =docs/manual/= to
+Moved these eight files from =docs/manual/= to
 =archive/emacsvox/reviews/2026-10-15/=:
 
 - =command-lookup-review-2026-10-15.org=
@@ -139,13 +147,13 @@ Move these eight files from =docs/manual/= to
 They record bounded revision batches, source commits and then-outstanding
 validation. They are not included by the manual master and are not current
 publication prerequisites. Their unique review evidence remains useful.
-=docs/manual/README.org= links to the editorial review; update that link.
-The editorial review's links to chapters, the editorial guide, authoring README
-and ADRs need rebasing to the repository paths. Add an archive-index entry.
+=docs/manual/README.org= now links to the archived editorial review. That
+review's chapter, editorial-guide, authoring-README and ADR links were rebased
+to the maintained repository paths.
 
 ** Root-level audit snapshots
 
-Move these four root files to =archive/emacsvox/reviews/=:
+Moved these four root files to =archive/emacsvox/reviews/=:
 
 - =CODE-QUALITY-AUDIT-2026-09-07.org=
 - =CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org=
@@ -154,25 +162,23 @@ Move these four root files to =archive/emacsvox/reviews/=:
 
 They describe identified revisions and their follow-up repairs. Keep the first
 audit and its closeout together. AUD-19's remaining design work is not complete;
-retain its connection to =docs/developer/backlog.org=. Update that backlog's
-closeout link, the closeout's companion/source/test/manual links, and the
-filename reference in =docs/voice-editor-implementation-plan.org=. Rebase the
-other reports' repository and sibling-source references, preserving revision
-context for obsolete line numbers. Add an archive-index entry. Archiving these
-records must not silently close the remaining backlog or platform checks.
+its connection to =docs/developer/backlog.org= remains intact. The backlog's
+closeout link, the reports' companion and manual links, and the reference in
+=docs/voice-editor-implementation-plan.org= now resolve after relocation.
+Emacsvox and sibling Omnivox source evidence links preserve their reviewed
+revisions. The remaining backlog and platform checks stay open.
 
 ** Release-preparation snapshots
 
-Move =docs/release-preparation-2026-09-18.org= and
+Moved =docs/release-preparation-2026-09-18.org= and
 =docs/release-preparation-2026-10-09.org= to
 =archive/emacsvox/releases/=.
 
 Their old Omnivox pins and preparation status belong to those dated snapshots,
 not the current release procedure. No inbound filename references were found
-outside the files themselves before this report was added. Rebase their links
-to ADRs, the engine-parameter design and developer guide; add an archive-index
-entry. Preserve incomplete historical checks as recorded rather than presenting
-them as newly completed work.
+outside the files themselves before this report was added. Their ADR,
+engine-parameter-design and developer-guide links were rebased. Incomplete
+historical checks remain as recorded.
 
 ** Keep in place
 

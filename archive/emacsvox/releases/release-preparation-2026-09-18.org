@@ -8,7 +8,7 @@ This report is preparation evidence, not release approval or a completed gate.
 
 Choose the Emacsvox version when the release date and scope are settled.
 The accumulated palette and voice-management features are more than a
-corrective patch. Follow [[file:adr/0002-calendar-versioning.org][ADR 0002]]; do not automatically call this
+corrective patch. Follow [[file:../../../docs/adr/0002-calendar-versioning.org][ADR 0002]]; do not automatically call this
 =2026.9.5=. Preserve the archived =NEWS-2026.9.4=.
 
 * Documentation prepared
@@ -56,12 +56,12 @@ and migration screens are gone. Confirm that the published upgrade guidance
 is sufficient for existing personal setups, with originals retained and
 palette identity, choices and profile references preserved. Do not imply
 that opening a palette converts older data automatically. See
-[[file:adr/0018-unified-voice-palette-model.org][ADR 0018]].
+[[file:../../../docs/adr/0018-unified-voice-palette-model.org][ADR 0018]].
 
 Engine-described native parameters are still being implemented separately.
 Do not advertise a finished native-control editor based only on helper codec
 or runtime qualification work. Reconcile release scope with
-[[file:engine-voice-parameters-design.org][the implementation record]] and update NEWS when its public behavior is
+[[file:../../../docs/engine-voice-parameters-design.org][the implementation record]] and update NEWS when its public behavior is
 implemented and verified.
 
 Voice-library management currently uses the bundled WSL-to-Windows launcher.
@@ -79,10 +79,10 @@ finalize NEWS, and commit the source and generated documentation together.
 In a clean release worktree, run =make bytecode-rebuild= and
 =make release-artifact=. That guarded target owns the release tests, source
 archive, checksum and source-commit evidence. See
-[[file:developer/integration-maintenance.org][Integration Maintenance]].
+[[file:../../../docs/developer/integration-maintenance.org][Integration Maintenance]].
 
 Tagging and publishing remain separate actions requiring explicit permission
-naming the release under [[file:adr/0006-annotated-unsigned-release-tags.org][ADR 0006]]. Prepare browser documentation from the same
+naming the release under [[file:../../../docs/adr/0006-annotated-unsigned-release-tags.org][ADR 0006]]. Prepare browser documentation from the same
 committed source via the documented Pages worktree procedure.
 
 * Validation results

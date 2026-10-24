@@ -3,6 +3,12 @@
 #+startup: overview
 #+options: toc:3 num:nil
 
+Archived on 2026-10-24. Source and test links preserve the reviewed revisions;
+commands and plain source paths assume the repository root. The
+[[file:../../README.org][archive index]] distinguishes these records from current guidance.
+The original backlog additions were uncommitted. Backlog links now open the
+maintained backlog without the old line offsets.
+
 * Assessment
 
 The repository has substantial regression coverage and explicit architecture
@@ -103,10 +109,10 @@ refined by ADRs 0012 and 0014 is not counted as stale operating guidance.
 :CONFIDENCE: High
 :END:
 
-Evidence: [[file:lisp/emacsvox-eww.el::2359][URL command entry point, line 2359]] constructs
-=%s '%s'= at [[file:lisp/emacsvox-eww.el::2372][line 2372]]. A URL containing an apostrophe closes the
+Evidence: [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-eww.el#L2359][URL command entry point, line 2359]] constructs
+=%s '%s'= at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-eww.el#L2372][line 2372]]. A URL containing an apostrophe closes the
 quoted argument. The downloader repeats the pattern and also interpolates an
-unquoted directory at [[file:lisp/emacsvox-eww.el::2690][lines 2690–2693]]. The URL can come from the
+unquoted directory at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-eww.el#L2690][lines 2690–2693]]. The URL can come from the
 link under point, rather than solely from an explicitly typed shell command.
 
 The isolated probe replaced the chosen command with =:= and supplied a
@@ -117,7 +123,7 @@ are a separate ordinary failure case.
 
 Impact: invoking these helpers on a crafted link can execute shell commands
 with the user's permissions. The existing
-[[file:test/emacsvox-eww-tests.el::168][EWW advice and URL tests]] cover navigation and dispatch, but do not exercise
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-eww-tests.el#L168][EWW advice and URL tests]] cover navigation and dispatch, but do not exercise
 these argument boundaries.
 
 Recommendation: pass program arguments through a process API; where the
@@ -133,13 +139,13 @@ spaces. Verify the destination program receives exactly one literal URL.
 :CONFIDENCE: High
 :END:
 
-Evidence: [[file:lisp/emacsvox-epub.el::219][archive extraction]] and
-[[file:lisp/emacsvox-epub.el::245][TOC]], [[file:lisp/emacsvox-epub.el::302][OPF]], and
-[[file:lisp/emacsvox-epub.el::313][archive listing]] interpolate the book filename. Some callers quote it, such
-as [[file:lisp/emacsvox-epub.el::678][the caller at line 678]], while the Dired branch of
-[[file:lisp/emacsvox-epub.el::850][emacsvox-epub-eww]] supplies a raw filename. That function also constructs
+Evidence: [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L219][archive extraction]] and
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L245][TOC]], [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L302][OPF]], and
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L313][archive listing]] interpolate the book filename. Some callers quote it, such
+as [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L678][the caller at line 678]], while the Dired branch of
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L850][emacsvox-epub-eww]] supplies a raw filename. That function also constructs
 a shell =cd= command from the path at line 875. The representation is further
-complicated by [[file:lisp/emacsvox-epub.el::366][emacsvox-epub-shell-unquote]], which invokes a shell to
+complicated by [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-epub.el#L366][emacsvox-epub-shell-unquote]], which invokes a shell to
 recover a filename.
 
 An isolated call to the real listing helper with a nonexistent synthetic
@@ -155,8 +161,8 @@ not a quote added at one random layer. Preserve externally used interfaces
 until their compatibility requirements are understood. Add tiny local EPUB
 fixtures with spaces, apostrophes, metacharacters, and malformed metadata.
 
-The [[file:test/emacsvox-epub-tests.el::16][focused EPUB test]] checks Locate. The
-[[file:test/emacsvox-reading-dom-tests.el::90][DOM tests]] replace extraction helpers, so their passing results do not
+The [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-epub-tests.el#L16][focused EPUB test]] checks Locate. The
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-reading-dom-tests.el#L90][DOM tests]] replace extraction helpers, so their passing results do not
 validate archive execution or argument handling.
 
 ** AUD-03 — Scanner acquisition reverses the keep-original option and reports failures as success
@@ -166,13 +172,13 @@ validate archive execution or argument handling.
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/emacsvox-ocr.el::199][emacsvox-ocr-keep-uncompressed-image]] promises to retain the uncompressed
-image. [[file:lisp/emacsvox-ocr.el::425][emacsvox-ocr-scan-image]] instead appends =rm -f temp…= when this
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-ocr.el#L199][emacsvox-ocr-keep-uncompressed-image]] promises to retain the uncompressed
+image. [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-ocr.el#L425][emacsvox-ocr-scan-image]] instead appends =rm -f temp…= when this
 option is true. Its use of a fixed temporary filename also makes concurrent
 acquisition fragile. The neighbouring photo path at line 450 treats the keep
 option in the expected direction.
 
-The scanner command at [[file:lisp/emacsvox-ocr.el::410][line 410]] ignores the shell exit status, then announces
+The scanner command at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-ocr.el#L410][line 410]] ignores the shell exit status, then announces
 that it acquired the image. An intercepted-command probe confirmed both the
 deletion command with keep enabled and the success announcement when the
 stubbed shell returned failure.
@@ -184,7 +190,7 @@ acquisition path, not a demonstrated fault in PaddleOCR recognition.
 Recommendation: correct retention semantics, use an owned temporary file,
 and validate each acquisition/compression result before advancing page state
 or announcing success. Test keep enabled/disabled and scanner/compressor
-failure independently. Extend [[file:test/emacsvox-ocr-tests.el::118][the existing literal-argument OCR tests]] to
+failure independently. Extend [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-ocr-tests.el#L118][the existing literal-argument OCR tests]] to
 the acquisition path. Real scanner acceptance remains necessary.
 
 ** AUD-04 — A stop-hook or send error can interrupt process retirement
@@ -194,23 +200,23 @@ the acquisition path. Real scanner acceptance remains necessary.
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/tts-speak.el::563][tts--retire-process]] marks a process as retiring, calls interruption,
-then deletes it. [[file:lisp/tts-speak.el::546][tts--interrupt-process]] protects tracked callback cancellation,
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/tts-speak.el#L563][tts--retire-process]] marks a process as retiring, calls interruption,
+then deletes it. [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/tts-speak.el#L546][tts--interrupt-process]] protects tracked callback cancellation,
 but its send error or =tts-stopped-hook= error can escape before retirement
-reaches =delete-process=. The sentinel at [[file:lisp/tts-speak.el::499][line 499]] suppresses normal failure
+reaches =delete-process=. The sentinel at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/tts-speak.el#L499][line 499]] suppresses normal failure
 handling for a process already marked as retiring.
 
 A pipe-process probe with a failing stopped hook left the process live and
-marked as retiring. Callers include [[file:lisp/tts-speak.el::3000][server initialization]],
-[[file:lisp/omnivox-remote.el::270][explicit remote disconnect]], and
-[[file:lisp/emacsvox-omnivox-components.el::214][component removal]]. During replacement, an error can also interrupt
+marked as retiring. Callers include [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/tts-speak.el#L3000][server initialization]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-remote.el#L270][explicit remote disconnect]], and
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-omnivox-components.el#L214][component removal]]. During replacement, an error can also interrupt
 publication of the new main process.
 
 Recommendation: give retirement an unconditional final cleanup boundary,
 preserve useful error reporting, and ensure one failing observer cannot
 prevent the remaining essential cleanup. Test send failure, hook failure,
 reentrant stop, already-dead processes, and replacement identity. Existing
-[[file:test/emacsvox-tts-tests.el::2421][retirement tests]] cover normal ownership and terminal events but do not
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-tts-tests.el#L2421][retirement tests]] cover normal ownership and terminal events but do not
 exercise this failing-hook path.
 
 ** AUD-05 — Timed-out voice applies retain callbacks and can continue sending changes
@@ -220,9 +226,9 @@ exercise this failing-hook path.
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/omnivox-voices.el::1301][omnivox-apply-voice-configuration]] completes its aggregate on timeout at
-[[file:lisp/omnivox-voices.el::1451][line 1451]]. It does not retire the corresponding entries in the
-[[file:lisp/omnivox-voices.el::365][process control-request table]]. Its policy-response closure can still
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-voices.el#L1301][omnivox-apply-voice-configuration]] completes its aggregate on timeout at
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-voices.el#L1451][line 1451]]. It does not retire the corresponding entries in the
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-voices.el#L365][process control-request table]]. Its policy-response closure can still
 store a late acknowledgement and call =register= after the aggregate has
 already reported failure.
 
@@ -240,9 +246,9 @@ Recommendation: record request ownership, retire callbacks on terminal
 completion, and prevent terminal operations from initiating another phase.
 Decide and document how a late acknowledgement of an already-sent change is
 reported; client cancellation cannot undo server work already performed.
-Extend [[file:test/emacsvox-tts-tests.el::1857][overlapping-apply tests]] with timeout/late reply, process replacement,
+Extend [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-tts-tests.el#L1857][overlapping-apply tests]] with timeout/late reply, process replacement,
 and pending-table cleanup assertions. This is concrete additional evidence
-for the existing [[file:docs/developer/backlog.org::245][explicit-operation backlog item]], not a reason to silently
+for the existing [[file:../../../docs/developer/backlog.org][explicit-operation backlog item]], not a reason to silently
 serialize all applies or alter the accepted overlap contract.
 
 ** AUD-06 — Initial remote notification failure has no automatic recovery trigger
@@ -252,11 +258,11 @@ serialize all applies or alter the accepted overlap contract.
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/tts-speak.el::3013][tts-initialize]] catches notifier startup failure and keeps main speech
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/tts-speak.el#L3013][tts-initialize]] catches notifier startup failure and keeps main speech
 available. For a failed initial remote handshake, no managed notification
-process exists to trigger [[file:lisp/omnivox-remote.el::145][the reconnect sentinel]]. The ordinary
-[[file:lisp/emacsvox.el::492][startup path]] calls =tts-initialize= directly. Unlike
-[[file:lisp/omnivox-remote.el::251][omnivox-remote-connect]], it does not schedule a retry when only the main
+process exists to trigger [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-remote.el#L145][the reconnect sentinel]]. The ordinary
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox.el#L492][startup path]] calls =tts-initialize= directly. Unlike
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-remote.el#L251][omnivox-remote-connect]], it does not schedule a retry when only the main
 lane succeeds.
 
 The isolated startup probe left a live main process, no notification process,
@@ -268,11 +274,11 @@ missing recovery trigger is the defect.
 Recommendation: schedule remote recovery after partial initial startup,
 respecting suspension and the auto-reconnect setting. Test a failed first
 notifier handshake followed by success, disabled notifications, and explicit
-disconnect. The [[file:test/omnivox-remote-tests.el::12][five focused remote tests]] currently cover tokens, resources,
+disconnect. The [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/omnivox-remote-tests.el#L12][five focused remote tests]] currently cover tokens, resources,
 filter composition, intentional retirement, and inventory, not this path.
 
 User recovery documentation belongs in
-[[file:docs/manual/chapters/speech-backends.org::123][the remote backend guide]]; detailed lifecycle guarantees belong in
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/docs/manual/chapters/speech-backends.org#L123][the remote backend guide]]; detailed lifecycle guarantees belong in
 =docs/developer/integration-maintenance.org=.
 
 ** AUD-07 — Debian packages omit the default OCR launcher
@@ -282,9 +288,9 @@ User recovery documentation belongs in
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/emacsvox-ocr.el::100][The default OCR engine]] points to =bin/emacsvox-paddleocr=. The
-[[file:utils/emacsvox-package-deb.py::25][Debian runtime file inventory]] omits that script, and
-[[file:utils/emacsvox-package-deb.py::64][include()]] does not otherwise include arbitrary =bin/= entries.
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-ocr.el#L100][The default OCR engine]] points to =bin/emacsvox-paddleocr=. The
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/utils/emacsvox-package-deb.py#L25][Debian runtime file inventory]] omits that script, and
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/utils/emacsvox-package-deb.py#L64][include()]] does not otherwise include arbitrary =bin/= entries.
 The same filter includes =lisp/emacsvox-ocr.el= and
 =etc/emacsvox-paddleocr.py=.
 
@@ -296,8 +302,8 @@ project helper, independent of whether optional Paddle packages are installed.
 Recommendation: include the launcher and assert its executable presence in
 the extracted package. Use a stub Python executable to test argument and
 environment forwarding without downloading OCR models. Expand
-[[file:test/test_package_deb.py::39][payload checks]] to runtime helper paths referenced by maintained features.
-The maintained [[file:docs/manual/chapters/applications.org::283][OCR instructions]] also need an installed-package equivalent
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/test_package_deb.py#L39][payload checks]] to runtime helper paths referenced by maintained features.
+The maintained [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/docs/manual/chapters/applications.org#L283][OCR instructions]] also need an installed-package equivalent
 of the checkout-relative launcher command.
 
 ** AUD-08 — Some recursive Make paths lose the selected Emacs
@@ -308,14 +314,14 @@ of the checkout-relative launcher command.
 :END:
 
 The root reads =local.mk=, but the recursive invocations in
-[[file:Makefile::1263][config]] and [[file:Makefile::338][emacsvox]] do not pass =EMACS=.
-The child [[file:lisp/Makefile::39][Lisp Makefile]] sets =EMACS = emacs=. A Makefile variable is not
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L1263][config]] and [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L338][emacsvox]] do not pass =EMACS=.
+The child [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/Makefile#L39][Lisp Makefile]] sets =EMACS = emacs=. A Makefile variable is not
 automatically passed to a recursive make as a command-line override.
 
 A non-building probe included the actual root and child Makefiles and printed
 their selections: the parent selected =/home/bart/opt/emacs-31/bin/emacs=;
 the child selected =emacs=, which here resolves to system Emacs 30.2.
-The [[file:Makefile::125][bytecode recipe]] passes the selection for compilation, but its =config=
+The [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L125][bytecode recipe]] passes the selection for compilation, but its =config=
 prerequisite can regenerate autoloads using the wrong Emacs. The =emacsvox=
 target can compile with that wrong selection too.
 
@@ -326,7 +332,7 @@ it could mean an unsupported system Emacs. No wrong-compiler build was run.
 Recommendation: propagate the selected executable through every recursive
 configuration/build path. Test with =local.mk= alone and distinguishable stub
 executables, plus an explicit command-line override. Existing
-[[file:.github/workflows/ci.yml::101][compatibility CI]] supplies =EMACS= on the command line, which masks this
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/.github/workflows/ci.yml#L101][compatibility CI]] supplies =EMACS= on the command line, which masks this
 selection gap.
 
 ** AUD-09 — Native byte-code preflight ignores dependency freshness
@@ -336,8 +342,8 @@ selection gap.
 :CONFIDENCE: High
 :END:
 
-[[file:utils/emacsvox-native-bytecode.el::11][The native planner]] reads Make dependencies and uses them for build order.
-The check branch at [[file:utils/emacsvox-native-bytecode.el::69][line 69]] only compares each source with its own
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/utils/emacsvox-native-bytecode.el#L11][The native planner]] reads Make dependencies and uses them for build order.
+The check branch at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/utils/emacsvox-native-bytecode.el#L69][line 69]] only compares each source with its own
 compiled file, plus compiler identity and orphan checks. It does not compare
 the compiled dependencies with their dependents.
 
@@ -349,7 +355,7 @@ dependent after a macro/provider rebuild.
 Recommendation: retain the dependency graph for freshness checking and
 validate its edges. Compare native results with GNU Make on dependency,
 transitive dependency, compiler mismatch, and missing-output fixtures. The
-[[file:test/emacsvox-native-bytecode-tests.el::34][current freshness test]] has one module and cannot detect this case.
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-native-bytecode-tests.el#L34][current freshness test]] has one module and cannot detect this case.
 The probe used the existing tests' simulated =windows-nt= technique; native
 Windows acceptance remains outstanding.
 
@@ -360,9 +366,9 @@ Windows acceptance remains outstanding.
 :CONFIDENCE: High
 :END:
 
-The [[file:lisp/Makefile::491][emacsvox-loaddefs.el rule]] depends only on
+The [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/Makefile#L491][emacsvox-loaddefs.el rule]] depends only on
 =emacsvox-omnivox-components.el=. The generator scans the whole Lisp directory
-at [[file:lisp/emacsvox-autoload.el::41][lines 41–42]]. Changes to autoload cookies or definitions in other files do
+at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-autoload.el#L41][lines 41–42]]. Changes to autoload cookies or definitions in other files do
 not invalidate the target.
 
 With =make --question -W=, a simulated change to =emacsvox-wizards.el= left
@@ -378,7 +384,7 @@ Recommendation: make all relevant source/generator changes invalidate
 loaddefs, including additions/removals if supported by the chosen Make
 approach. Add a fixture that changes a second module, then verifies that the
 new command is available in a fresh process. Existing
-[[file:test/emacsvox-autoload-tests.el::25][generator tests]] prove invocation and initial generation, not incremental
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-autoload-tests.el#L25][generator tests]] prove invocation and initial generation, not incremental
 dependency completeness.
 
 ** AUD-11 — The setup stale-source safety net omits essential startup modules
@@ -388,14 +394,14 @@ dependency completeness.
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/emacsvox-setup.el::49][emacsvox-setup--startup-sources]] omits =omnivox-voices.el=,
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-setup.el#L49][emacsvox-setup--startup-sources]] omits =omnivox-voices.el=,
 =omnivox-remote.el=, and =emacsvox-advice.el=. These participate in voice,
 transport, and ordinary feedback startup. With the default
 =load-prefer-newer= value, the safety net cannot detect an isolated edit to
 one of these files and enable its newer-source fallback.
 
 Temporary fixtures made each omitted source newer than its compiled file;
-[[file:lisp/emacsvox-setup.el::109][the stale detector]] returned nil. This is a gap in the safety net, not
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-setup.el#L109][the stale detector]] returned nil. This is a gap in the safety net, not
 evidence that this checkout currently has stale byte-code: the complete Make
 preflight passed.
 
@@ -403,8 +409,8 @@ Recommendation: cover the actual startup closure and test it against the
 maintained build inventory. Preserve the documented requirement to rebuild
 macro dependents; a newer-source fallback cannot itself guarantee compiled
 dependent correctness. Related manually maintained inventories appear in
-[[file:test/run-compiled-aural-tests.el::22][compiled parity]] and
-[[file:test/verify-build-tree-aural.el::23][build-tree verification]], which also omit the Omnivox adapter/remote
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/run-compiled-aural-tests.el#L22][compiled parity]] and
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/verify-build-tree-aural.el#L23][build-tree verification]], which also omit the Omnivox adapter/remote
 features from their explicit lists. A consistency check would reduce drift.
 
 ** AUD-12 — The release tag command can inherit signing despite the unsigned policy
@@ -414,15 +420,15 @@ features from their explicit lists. A consistency check would reduce drift.
 :CONFIDENCE: High
 :END:
 
-[[file:Makefile::1374][release-tag]] uses =git tag -a=. With =tag.gpgSign=true= in Git
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L1374][release-tag]] uses =git tag -a=. With =tag.gpgSign=true= in Git
 configuration, this still requests a signature. The test at
-[[file:test/emacsvox-version-tests.el::152][line 152]] checks that the recipe contains =-a= and does not contain
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-version-tests.el#L152][line 152]] checks that the recipe contains =-a= and does not contain
 =git tag -s=; it does not test the resulting tag behaviour.
 
 A disposable clone, a synthetic tag name, and a deliberately failing signer
 reproduced an attempted signing operation and exit 128. No tag was created in
 the fixture or the project. This recreates the configuration-dependent release
-failure that [[file:docs/adr/0006-annotated-unsigned-release-tags.org][ADR 0006]] explicitly seeks to avoid.
+failure that [[file:../../../docs/adr/0006-annotated-unsigned-release-tags.org][ADR 0006]] explicitly seeks to avoid.
 
 Recommendation: explicitly disable signing in the approved recipe while
 retaining annotated tags and all release gates. Verify the resulting tag
@@ -437,8 +443,8 @@ release; no release permission is implied by this report.
 :CONFIDENCE: High
 :END:
 
-[[file:.github/workflows/ci.yml::84][The compatibility job]] builds all maintained modules but executes the
-focused [[file:test/run-compat-tests.el::20][compatibility selector]]. It does not require the TTS, remote transport,
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/.github/workflows/ci.yml#L84][The compatibility job]] builds all maintained modules but executes the
+focused [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/run-compat-tests.el#L20][compatibility selector]]. It does not require the TTS, remote transport,
 aural transport, Agent Shell, Notmuch, or EAT test suites. The other ordinary
 CI jobs cover metadata, packaging, and documentation. No job runs the broad
 unit suite or golden traces.
@@ -463,8 +469,8 @@ confirm that it fails for the intended reason.
 :CONFIDENCE: High
 :END:
 
-[[file:lisp/emacsvox-advice.el::2337][emacsvox-isearch-setup]] assigns =emacsvox-speak-messages= from
-=isearch-lazy-count=. [[file:lisp/emacsvox-advice.el::2343][The teardown]] unconditionally sets it to true,
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-advice.el#L2337][emacsvox-isearch-setup]] assigns =emacsvox-speak-messages= from
+=isearch-lazy-count=. [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-advice.el#L2343][The teardown]] unconditionally sets it to true,
 rather than restoring its preceding value and locality.
 
 A temporary-buffer probe began with message speech explicitly muted, ran the
@@ -473,7 +479,7 @@ Isearch therefore changes an unrelated persistent speech preference.
 
 Recommendation: save and restore the prior state with clear ownership through
 normal exit, quit, and recursive search. Add lifecycle tests for true/false
-and local/default state. [[file:test/emacsvox-search-tests.el::115][Existing search feedback tests]] verify hit/miss and
+and local/default state. [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/emacsvox-search-tests.el#L115][Existing search feedback tests]] verify hit/miss and
 advice behaviour but do not cover this preference round trip. Validate spoken
 search feedback after the fix in a live session.
 
@@ -484,8 +490,8 @@ search feedback after the fix in a live session.
 :CONFIDENCE: High
 :END:
 
-The =emacsvox= docstring at [[file:lisp/emacsvox.el::470][lines 470–477]] says =C-v=, =C-x=, and =C-y=
-open the personal v/x/y maps. [[file:lisp/emacsvox-keymap.el::462][The bindings]] place these maps under the
+The =emacsvox= docstring at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox.el#L470][lines 470–477]] says =C-v=, =C-x=, and =C-y=
+open the personal v/x/y maps. [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-keymap.el#L462][The bindings]] place these maps under the
 Emacsvox prefix: normally =C-e v=, =C-e x=, and =C-e y=. Following the help can
 scroll, enter the standard =C-x= prefix, or yank text instead.
 
@@ -495,7 +501,7 @@ Then follow the required byte-code/reference generation workflow in a later
 implementation task. Do not edit the generated reference directly. Verify
 live Help against the loaded default keymaps and a changed prefix.
 
-[[file:docs/manual/chapters/keyboard.org::15][The maintained keyboard chapter]] already describes the prefix correctly.
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/docs/manual/chapters/keyboard.org#L15][The maintained keyboard chapter]] already describes the prefix correctly.
 The passing documentation gate verifies generated consistency and structure,
 not the truth of handwritten prose embedded in a docstring.
 
@@ -506,8 +512,8 @@ not the truth of handwritten prose embedded in a docstring.
 :CONFIDENCE: High
 :END:
 
-[[file:test/README.org::3][The test guide]] says “Emacs 31 Test Suite” and instructs readers to select
-Emacs 31. The runner at [[file:test/run-tests.el::11][line 11]] accepts 30.2+, consistent with
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/README.org#L3][The test guide]] says “Emacs 31 Test Suite” and instructs readers to select
+Emacs 31. The runner at [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/test/run-tests.el#L11][line 11]] accepts 30.2+, consistent with
 ADR 0012. The guide also gives =make test= without explaining its optional package
 requirements or distinguishing it from the focused compatibility gate.
 
@@ -530,8 +536,8 @@ behaviour. That separate compatibility exercise was not run here.
 :CONFIDENCE: High for structure; medium for user-visible failure modes
 :END:
 
-[[file:lisp/emacsvox.el::498][Startup]] starts threads for core advice loading and package preparation
-and discards their handles. [[file:lisp/emacsvox.el::280][emacsvox-prepare-emacs]] walks package registration
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox.el#L498][Startup]] starts threads for core advice loading and package preparation
+and discards their handles. [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox.el#L280][emacsvox-prepare-emacs]] walks package registration
 without per-integration error isolation. A failure while immediately loading
 an already-present package's adapter can terminate the remaining preparation.
 The existing startup tests mainly exercise helper contracts, profile fallback,
@@ -560,13 +566,13 @@ in =docs/developer/integration-maintenance.org=.
 :END:
 
 =emacsvox-agent-shell.el= has 7,123 lines and its test file 9,153. The problem
-is the mixture of responsibilities: [[file:lisp/emacsvox-agent-shell.el::324][owned buffer state]],
-[[file:lisp/emacsvox-agent-shell.el::481][rendered-text interpretation]],
-[[file:lisp/emacsvox-agent-shell.el::1531][foreground/background presentation]],
-[[file:lisp/emacsvox-agent-shell.el::2273][streamed response accumulation]],
-[[file:lisp/emacsvox-agent-shell.el::5537][table navigation]],
-[[file:lisp/emacsvox-agent-shell.el::6673][permission details]], and
-[[file:lisp/emacsvox-agent-shell.el::6905][central lifecycle/advice installation]] are maintained together.
+is the mixture of responsibilities: [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L324][owned buffer state]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L481][rendered-text interpretation]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L1531][foreground/background presentation]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L2273][streamed response accumulation]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L5537][table navigation]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L6673][permission details]], and
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L6905][central lifecycle/advice installation]] are maintained together.
 
 These areas change for different reasons and depend on different upstream
 contracts. A renderer adjustment should be reviewable without reconstructing
@@ -594,22 +600,22 @@ moves or broad refactoring.
 :END:
 
 Portable dimensions and legal keys are represented at
-[[file:lisp/emacsvox-aural-rules.el::70][rules lines 70–108]], validated at
-[[file:lisp/emacsvox-aural-rules.el::265][line 265]], converted at
-[[file:lisp/emacsvox-aural-compiler.el::334][compiler line 334]], and mapped again by the
-[[file:lisp/omnivox-voices.el::627][Omnivox adapter]]. Workbench has separate editing and display concerns.
-The 1,991-line [[file:lisp/emacsvox-aural-transport.el::382][transport module]] combines output effects and pending
-delivery ownership with [[file:lisp/emacsvox-aural-transport.el::978][timeline construction]],
-[[file:lisp/emacsvox-aural-transport.el::1335][validation]], and [[file:lisp/emacsvox-aural-transport.el::1687][presentation recording]].
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-rules.el#L70][rules lines 70–108]], validated at
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-rules.el#L265][line 265]], converted at
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-compiler.el#L334][compiler line 334]], and mapped again by the
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-voices.el#L627][Omnivox adapter]]. Workbench has separate editing and display concerns.
+The 1,991-line [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-transport.el#L382][transport module]] combines output effects and pending
+delivery ownership with [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-transport.el#L978][timeline construction]],
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-transport.el#L1335][validation]], and [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-transport.el#L1687][presentation recording]].
 
 Impact: adding or modifying a dimension, timeline field, or delivery result
 requires coordinated changes and careful understanding of nil/absent values,
 frozen source state, provenance, and exactly-once process effects. This is
 maintenance risk; no additional schema defect is asserted here.
 
-The existing [[file:docs/developer/backlog.org::64][voice-schema]],
-[[file:docs/developer/backlog.org::122][inspection]], [[file:docs/developer/backlog.org::181][delivery preparation]], and
-[[file:docs/developer/backlog.org::245][asynchronous operation]] items already explain the proposed work and
+The existing [[file:../../../docs/developer/backlog.org][voice-schema]],
+[[file:../../../docs/developer/backlog.org][inspection]], [[file:../../../docs/developer/backlog.org][delivery preparation]], and
+[[file:../../../docs/developer/backlog.org][asynchronous operation]] items already explain the proposed work and
 tradeoffs. Preserve that plan and add AUD-05 as a concrete lifecycle regression.
 Prioritize a small shared metadata description and pure preparation helpers;
 keep backend capabilities and process effects in their current owners until
@@ -629,11 +635,11 @@ not derive all expected test results from the same new schema being tested.
 :END:
 
 The root Makefile has 1,421 lines. Much of
-[[file:Makefile::451][windows-omnivox]] through
-[[file:Makefile::1233][runtime verification]] is embedded shell managing toolchains, optional
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L451][windows-omnivox]] through
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L1233][runtime verification]] is embedded shell managing toolchains, optional
 engines, staged payloads, hashes, paths, and provenance. It shares the file
 with documentation and guarded release targets. Developer variants at
-[[file:Makefile::408][line 408]] and [[file:Makefile::444][line 444]] add important reuse and dirty-source rules.
+[[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L408][line 408]] and [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L444][line 444]] add important reuse and dirty-source rules.
 
 Impact: nested Make/shell quoting and long recipes make changes difficult to
 review and isolated failure-path tests harder to write. AUD-08 is a concrete
@@ -655,18 +661,18 @@ native toolchain/runtime acceptance. No staging or release build was run here.
 
 | Module or area | Lines | Reason to revisit | Proportionate next step |
 |----------------+-------+-------------------+-------------------------|
-| [[file:lisp/emacsvox-agent-shell.el::324][Agent Shell]] | 7,123 | Renderer, event, navigation, permission and lifecycle responsibilities coexist. | AUD-18 dependency map and one private boundary proposal. |
-| [[file:lisp/tts-speak.el::499][TTS core]] | 3,729 | Process lifecycle, protocol, preprocessing and speech state; AUD-04 and AUD-06 are concrete. | Fix retirement and partial startup first; then assess extracting lifecycle helpers. |
-| [[file:lisp/emacsvox-speak.el::262][Speech presentation]] | 3,587 | Broad navigation/presentation and notification utilities. | Further call-path sampling; do not split merely to match a line target. |
-| [[file:lisp/emacsvox-advice.el::2337][Core advice]] | 3,520 | Cross-cutting user-state changes and interaction contracts. | AUD-14 lifecycle test; expand state-restoration sampling by command family. |
-| [[file:lisp/emacsvox-aural-voice-workbench.el::469][Voice Workbench]] | 3,014 | Rows, routing edits, suggestions, application, preview and recovery in one UI module. | Extract stable data/model helpers only after AUD-05 and schema contracts are covered. |
-| [[file:lisp/emacsvox-notmuch.el::2555][Notmuch]] | 2,817 | Formatting, tag/archive semantics and asynchronous search ownership. | Retain current ownership tests; consider private search-lifecycle boundary if changes continue. |
-| [[file:lisp/emacsvox-eww.el::2359][EWW]] | 2,743 | Speech advice plus bookmarks, external tools and downloads. | AUD-01 first; later separate externally executed helpers from reading feedback. |
-| [[file:lisp/emacsvox-wizards.el::1683][Wizards]] | 2,693 | Miscellaneous helpers with different dependencies and shell conventions. | Target literal-path shell boundaries; avoid wholesale renaming or moving public commands. |
-| [[file:lisp/omnivox-voices.el::1301][Omnivox adapter]] | 2,219 | Voice definitions, negotiation, routing, callbacks and inventory. | AUD-05 operation ownership and request cleanup. |
-| [[file:lisp/emacsvox-aural-transport.el::978][Aural transport]] | 1,991 | Pure timeline preparation and process effects share dynamic context. | AUD-19 and the existing preparation backlog. |
-| [[file:Makefile::451][Root Makefile]] | 1,421 | Large platform staging program beside core build/docs/release orchestration. | AUD-08 immediately; AUD-20 only after design review. |
-| [[file:lisp/emacsvox-eat-core.el::1][EAT core]] | 2,269 | Already part of an intentional core/input/review split. | Obtain live acceptance evidence before proposing another split. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-agent-shell.el#L324][Agent Shell]] | 7,123 | Renderer, event, navigation, permission and lifecycle responsibilities coexist. | AUD-18 dependency map and one private boundary proposal. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/tts-speak.el#L499][TTS core]] | 3,729 | Process lifecycle, protocol, preprocessing and speech state; AUD-04 and AUD-06 are concrete. | Fix retirement and partial startup first; then assess extracting lifecycle helpers. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-speak.el#L262][Speech presentation]] | 3,587 | Broad navigation/presentation and notification utilities. | Further call-path sampling; do not split merely to match a line target. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-advice.el#L2337][Core advice]] | 3,520 | Cross-cutting user-state changes and interaction contracts. | AUD-14 lifecycle test; expand state-restoration sampling by command family. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-voice-workbench.el#L469][Voice Workbench]] | 3,014 | Rows, routing edits, suggestions, application, preview and recovery in one UI module. | Extract stable data/model helpers only after AUD-05 and schema contracts are covered. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-notmuch.el#L2555][Notmuch]] | 2,817 | Formatting, tag/archive semantics and asynchronous search ownership. | Retain current ownership tests; consider private search-lifecycle boundary if changes continue. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-eww.el#L2359][EWW]] | 2,743 | Speech advice plus bookmarks, external tools and downloads. | AUD-01 first; later separate externally executed helpers from reading feedback. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-wizards.el#L1683][Wizards]] | 2,693 | Miscellaneous helpers with different dependencies and shell conventions. | Target literal-path shell boundaries; avoid wholesale renaming or moving public commands. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/omnivox-voices.el#L1301][Omnivox adapter]] | 2,219 | Voice definitions, negotiation, routing, callbacks and inventory. | AUD-05 operation ownership and request cleanup. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-aural-transport.el#L978][Aural transport]] | 1,991 | Pure timeline preparation and process effects share dynamic context. | AUD-19 and the existing preparation backlog. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L451][Root Makefile]] | 1,421 | Large platform staging program beside core build/docs/release orchestration. | AUD-08 immediately; AUD-20 only after design review. |
+| [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/lisp/emacsvox-eat-core.el#L1][EAT core]] | 2,269 | Already part of an intentional core/input/review split. | Obtain live acceptance evidence before proposing another split. |
 
 Generated =emacsvox-loaddefs.el= is intentionally large and is not a refactor
 candidate. Large cohesive test/fixture files also need different treatment

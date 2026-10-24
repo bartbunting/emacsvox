@@ -362,7 +362,7 @@ It does not identify four additional confirmed bugs or schedule a release.
 
 Shared voice metadata, numeric tuner consumers and limited delivery helpers
 have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
-The [[file:../../CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][2026-09-07 audit closeout]] records those completed slices.  The entries below
+The [[file:../../archive/emacsvox/reviews/CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][2026-09-07 audit closeout]] records those completed slices.  The entries below
 describe the remaining work, with completed foundations retained as context.
 
 The [[file:../voice-style-coverage.org][voice-style consumer audit]] is complete: it added edit/save/preview/delivery

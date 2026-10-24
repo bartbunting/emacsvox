@@ -1,6 +1,12 @@
 #+title: Voice customisation audit and resolution
 #+date: 2026-09-08
 
+Archived on 2026-10-24. Source and test links preserve the reviewed revisions;
+commands and plain source paths assume the repository root. The
+[[file:../../README.org][archive index]] distinguishes these records from current guidance.
+Original-finding links use the committed pre-repair baseline =05828daa7=;
+the separately noted local search change is not part of that snapshot.
+
 * Resolution
 
 Implemented on 2026-09-08 in four commits:
@@ -85,7 +91,7 @@ voices at all would be too broad:
 
 * Root cause and evidence
 
-In [[file:lisp/voice-setup.el::(defmacro defvoice][defvoice]], a variable such as
+In [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/voice-setup.el#L386][defvoice]], a variable such as
 voice-bolden holds a generated ACSS symbol. Its custom setter replaces that
 value when the legacy settings change. The default bolden value is
 acss-a4-s6.
@@ -97,7 +103,7 @@ acss-a4-s6.
 (propertize "hit" 'personality 'voice-bolden)
 #+end_src
 
-[[file:lisp/emacsvox-aural-compiler.el::(defun emacsvox-aural--palette-voice-definition][Palette resolution]]
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-aural-compiler.el#L142][Palette resolution]]
 recognises voice-bolden as the legacy alias for the portable bolden entry.
 It does not reconstruct bolden from acss-a4-s6. That reverse inference would
 be unreliable: multiple named voices may share an identical generated style.
@@ -105,20 +111,20 @@ be unreliable: multiple named voices may share an identical generated style.
 This loss can also affect named routing preferences. The native transport
 uses the compiled request as its logical voice identity; an ACSS request and
 a named bolden request are different identities. See
-[[file:lisp/emacsvox-aural-transport.el::(defun emacsvox-aural--timeline-logical-voice][timeline logical voice selection]].
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-aural-transport.el#L815][timeline logical voice selection]].
 
 * Priority findings
 
 ** Search and completion feedback
 
-[[file:lisp/emacsvox-advice.el::(defun emacsvox--advice-isearch-search-after][Isearch]]
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L2382][Isearch]]
 still has five early evaluations: match speech, the shortened search string,
 the match following deletion, yanked text, and history-item speech.
 The isolated isearch probe confirms that its matched text still carries the
 generated ACSS symbol. Existing tests had asserted that same value, so they
 accepted the mismatch.
 
-[[file:lisp/emacsvox-corfu.el::(defun emacsvox-corfu--candidate-with-annotation][Corfu]]
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L128][Corfu]]
 has ten occurrences, including candidates, annotations, completion counts,
 expansion feedback, and completed text. Its --voice helper copies the
 supplied personality into text without preserving or recovering the name.
@@ -145,7 +151,7 @@ Any migration needs to preserve explicit user choices.
 
 ** Low-level speech bypass
 
-[[file:lisp/tts-speak.el::(defun tts-speak-using-voice][tts-speak-using-voice]]
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/tts-speak.el#L1546][tts-speak-using-voice]]
 resolves a bound symbol directly to its value and queues backend voice codes,
 without the native palette compiler. Therefore merely quoting its argument
 is insufficient. Direct application callers are Calendar marked-date speech,
@@ -156,13 +162,13 @@ prepared native text takes the concrete-plan branch instead.
 
 ** Additional sites outside the 107 direct references
 
-[[file:lisp/emacsvox-extras.el::(defun emacsvox-wizards-show-voices][The legacy named-voice sampler]]
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-extras.el#L203][The legacy named-voice sampler]]
 uses (symbol-value v) in two text properties. Thus it demonstrates legacy
 preset values rather than current named palette voices. Its desired role
 needs to be made explicit before changing it: its current text also displays
 the generated preset name.
 
-[[file:lisp/emacsvox-preamble.el::(defun emacsvox-get-revision][Revision speech]]
+[[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-preamble.el#L167][Revision speech]]
 uses the literal acss-s4-r6. It cannot follow a named role's palette override.
 This is a related hard-coded style, not an early-evaluated voice variable;
 the intended semantic role must be decided rather than guessed.
@@ -218,103 +224,103 @@ mean several evaluated voice references within that form.
 
 | File / source form | Voice | Count | Mechanism |
 |-
-| [[file:lisp/amixer.el::354][amixer.el:354 amixer-volume-adjust]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-advice.el::452][emacsvox-advice.el:452 emacsvox-advice--define-interactive-after-advice]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-advice.el::1038][emacsvox-advice.el:1038 emacsvox-fancy-error-handler]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-advice.el::2393][emacsvox-advice.el:2393 emacsvox--advice-isearch-search-after]] | voice-bolden | 1 | ems-set-personality-temporarily |
-| [[file:lisp/emacsvox-advice.el::2411][emacsvox-advice.el:2411 emacsvox--advice-isearch-delete-char-after]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-advice.el::2411][emacsvox-advice.el:2411 emacsvox--advice-isearch-delete-char-after]] | voice-bolden | 1 | ems-set-personality-temporarily |
-| [[file:lisp/emacsvox-advice.el::2429][emacsvox-advice.el:2429 emacsvox-advice--define-interactive-after-advice]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-advice.el::2435][emacsvox-advice.el:2435 emacsvox-advice--define-interactive-after-advice]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-bs.el::74][emacsvox-bs.el:74 emacsvox-bs--buffer-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-bs.el::74][emacsvox-bs.el:74 emacsvox-bs--buffer-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-bs.el::101][emacsvox-bs.el:101 emacsvox-bs-speak-buffer-line]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-calendar.el::59][emacsvox-calendar.el:59 emacsvox-calendar-mark-personality]] | voice-bolden | 1 | defvar |
-| [[file:lisp/emacsvox-chess.el::147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-bolden-extra | 1 | propertize |
-| [[file:lisp/emacsvox-chess.el::147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-monotone-extra | 1 | propertize |
-| [[file:lisp/emacsvox-chess.el::147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-lighten-extra | 1 | propertize |
-| [[file:lisp/emacsvox-chess.el::491][emacsvox-chess.el:491 emacsvox-chess-square-name]] | voice-monotone-extra | 1 | propertize |
-| [[file:lisp/emacsvox-chess.el::491][emacsvox-chess.el:491 emacsvox-chess-square-name]] | voice-lighten-extra | 1 | propertize |
-| [[file:lisp/emacsvox-corfu.el::128][emacsvox-corfu.el:128 emacsvox-corfu--candidate-with-annotation]] | voice-annotate | 3 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::128][emacsvox-corfu.el:128 emacsvox-corfu--candidate-with-annotation]] | voice-bolden | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::164][emacsvox-corfu.el:164 emacsvox-corfu--count-text]] | voice-annotate | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::269][emacsvox-corfu.el:269 emacsvox-corfu--expansion-text]] | voice-bolden | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::269][emacsvox-corfu.el:269 emacsvox-corfu--expansion-text]] | voice-annotate | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::342][emacsvox-corfu.el:342 emacsvox-corfu--complete-around]] | voice-bolden | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::419][emacsvox-corfu.el:419 emacsvox--advice-corfu--in-region-1-around]] | voice-bolden | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-corfu.el::443][emacsvox-corfu.el:443 emacsvox--advice-corfu--update-after]] | voice-annotate | 1 | emacsvox-corfu--voice |
-| [[file:lisp/emacsvox-cperl.el::59][emacsvox-cperl.el:59 emacsvox--advice-cperl-linefeed-around]] | voice-annotate | 1 | tts-speak-using-voice |
-| [[file:lisp/emacsvox-dired.el::189][emacsvox-dired.el:189 emacsvox-dired--buffer-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-dired.el::189][emacsvox-dired.el:189 emacsvox-dired--buffer-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-elfeed.el::147][emacsvox-elfeed.el:147 emacsvox-elfeed-speak-entry-at-point]] | voice-brighten | 1 | propertize |
-| [[file:lisp/emacsvox-etable.el::132][emacsvox-etable.el:132 emacsvox--advice-*table--cell-newline-and-indent-around]] | voice-annotate | 1 | tts-speak-using-voice |
-| [[file:lisp/emacsvox-eterm.el::174][emacsvox-eterm.el:174 emacsvox-eterm-highlight-personality]] | voice-bolden | 1 | defvar |
-| [[file:lisp/emacsvox-eterm.el::177][emacsvox-eterm.el:177 emacsvox-eterm-bold-personality]] | voice-bolden | 1 | defvar |
-| [[file:lisp/emacsvox-eudc.el::88][emacsvox-eudc.el:88 emacsvox--advice-eudc-query-form-after]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-eudc.el::131][emacsvox-eudc.el:131 emacsvox-eudc-attribute-value-personality]] | voice-animate | 1 | defvar |
-| [[file:lisp/emacsvox-forms.el::71][emacsvox-forms.el:71 emacsvox-forms-ro-voice]] | voice-annotate | 1 | defvar |
-| [[file:lisp/emacsvox-helm.el::64][emacsvox-helm.el:64 emacsvox-helm-cue-update]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-hide.el::44][emacsvox-hide.el:44 emacsvox-hidden-header-line-personality]] | voice-annotate | 1 | defvar |
-| [[file:lisp/emacsvox-ispell.el::84][emacsvox-ispell.el:84 emacsvox--advice-ispell-command-loop-before]] | voice-bolden | 1 | ems-set-personality-temporarily |
-| [[file:lisp/emacsvox-ispell.el::84][emacsvox-ispell.el:84 emacsvox--advice-ispell-command-loop-before]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-m-player.el::157][emacsvox-m-player.el:157 emacsvox-m-player-mode-line]] | voice-smoothen-extra | 2 | propertize |
-| [[file:lisp/emacsvox-magit.el::343][emacsvox-magit.el:343 emacsvox-magit--buffer-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::343][emacsvox-magit.el:343 emacsvox-magit--buffer-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::451][emacsvox-magit.el:451 emacsvox-magit--line-content]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::648][emacsvox-magit.el:648 emacsvox-magit--present-visibility]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::815][emacsvox-magit.el:815 emacsvox-magit--blob-summary]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::1232][emacsvox-magit.el:1232 emacsvox-magit--copied-content]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::1471][emacsvox-magit.el:1471 emacsvox-magit--present-view-setting]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::1497][emacsvox-magit.el:1497 emacsvox-magit--call-transient-refresh]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::1870][emacsvox-magit.el:1870 emacsvox-magit--present-opened-buffer]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::2105][emacsvox-magit.el:2105 emacsvox-magit--repolist-result-content]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::2399][emacsvox-magit.el:2399 emacsvox-magit--commit-labelled-content]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-magit.el::2727][emacsvox-magit.el:2727 emacsvox-magit--present-rebase-line]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-notmuch.el::573][emacsvox-notmuch.el:573 emacsvox-notmuch--view-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-notmuch.el::573][emacsvox-notmuch.el:573 emacsvox-notmuch--view-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-org.el::140][emacsvox-org.el:140 emacsvox-org--buffer-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-org.el::140][emacsvox-org.el:140 emacsvox-org--buffer-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-package.el::64][emacsvox-package.el:64 emacsvox-package-summarize-line]] | voice-bolden-medium | 1 | put-text-property |
-| [[file:lisp/emacsvox-pronounce.el::60][emacsvox-pronounce.el:60 ems--pronounce-string-template]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-py.el::106][emacsvox-py.el:106 emacsvox-py--buffer-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-py.el::106][emacsvox-py.el:106 emacsvox-py--buffer-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-py.el::371][emacsvox-py.el:371 emacsvox--advice-py-newline-and-indent-after]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-reftex.el::261][emacsvox-reftex.el:261 emacsvox--advice-reftex-highlight-after]] | voice-bolden | 1 | put-text-property |
-| [[file:lisp/emacsvox-speak.el::372][emacsvox-speak.el:372 emacsvox-speak-paragraph-personality]] | voice-animate | 1 | defvar |
-| [[file:lisp/emacsvox-speak.el::528][emacsvox-speak.el:528 emacsvox-get-current-percentage-verbosely]] | voice-monotone-extra | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::1115][emacsvox-speak.el:1115 emacsvox-speak-line-with-speaker]] | voice-lighten | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::1398][emacsvox-speak.el:1398 emacsvox-speak-spell-word]] | voice-animate | 1 | put-text-property |
-| [[file:lisp/emacsvox-speak.el::2031][emacsvox-speak.el:2031 emacsvox-get-voicefied-recursion-info]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::2039][emacsvox-speak.el:2039 emacsvox-get-voicefied-frame-info]] | voice-lighten-extra | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-lighten | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-bolden-medium | 1 | put-text-property |
-| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-smoothen | 2 | propertize |
-| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::2282][emacsvox-speak.el:2282 emacsvox-speak-header-line]] | voice-smoothen | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::2493][emacsvox-speak.el:2493 emacsvox-speak-current-kill]] | voice-annotate | 1 | put-text-property |
-| [[file:lisp/emacsvox-speak.el::2558][emacsvox-speak.el:2558 emacsvox-speak-current-mark]] | voice-annotate | 1 | put-text-property |
-| [[file:lisp/emacsvox-speak.el::2558][emacsvox-speak.el:2558 emacsvox-speak-current-mark]] | voice-animate | 1 | ems-set-personality-temporarily |
-| [[file:lisp/emacsvox-speak.el::3083][emacsvox-speak.el:3083 emacsvox-mark-speak-mark-line]] | voice-animate | 1 | ems-set-personality-temporarily |
-| [[file:lisp/emacsvox-speak.el::3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-speak.el::3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-bolden | 2 | put-text-property |
-| [[file:lisp/emacsvox-speak.el::3507][emacsvox-speak.el:3507 emacsvox-selective-display]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-speedbar.el::252][emacsvox-speedbar.el:252 emacsvox-speedbar-button-personality]] | voice-bolden | 1 | defvar |
-| [[file:lisp/emacsvox-speedbar.el::255][emacsvox-speedbar.el:255 emacsvox-speedbar-selected-personality]] | voice-animate | 1 | defvar |
-| [[file:lisp/emacsvox-speedbar.el::258][emacsvox-speedbar.el:258 emacsvox-speedbar-directory-personality]] | voice-bolden-medium | 1 | defvar |
-| [[file:lisp/emacsvox-speedbar.el::265][emacsvox-speedbar.el:265 emacsvox-speedbar-highlight-personality]] | voice-animate | 1 | defvar |
-| [[file:lisp/emacsvox-speedbar.el::268][emacsvox-speedbar.el:268 emacsvox-speedbar-tag-personality]] | voice-monotone-extra | 1 | defvar |
-| [[file:lisp/emacsvox-transient.el::471][emacsvox-transient.el:471 emacsvox-transient--buffer-summary]] | voice-lighten-medium | 1 | propertize |
-| [[file:lisp/emacsvox-transient.el::471][emacsvox-transient.el:471 emacsvox-transient--buffer-summary]] | voice-animate | 1 | propertize |
-| [[file:lisp/emacsvox-view.el::155][emacsvox-view.el:155 emacsvox--advice-View-goto-line-after]] | voice-annotate | 1 | put-text-property |
-| [[file:lisp/emacsvox-widget.el::73][emacsvox-widget.el:73 emacsvox-widget-help-echo]] | voice-animate | 1 | put-text-property |
-| [[file:lisp/emacsvox-widget.el::138][emacsvox-widget.el:138 emacsvox-widget-default-summarize]] | voice-bolden | 1 | put-text-property |
-| [[file:lisp/emacsvox-widget.el::354][emacsvox-widget.el:354 emacsvox-widget-help-checklist]] | voice-bolden | 1 | put-text-property |
-| [[file:lisp/emacsvox-widget.el::426][emacsvox-widget.el:426 emacsvox-widget-help-radio-button-choice]] | voice-bolden | 1 | put-text-property |
-| [[file:lisp/emacsvox-widget.el::449][emacsvox-widget.el:449 emacsvox-widget-help-editable-list]] | voice-bolden | 1 | put-text-property |
-| [[file:lisp/emacsvox-wizards.el::567][emacsvox-wizards.el:567 emacsvox-skip-blank-lines-forward]] | voice-annotate | 1 | put-text-property |
-| [[file:lisp/emacsvox-wizards.el::600][emacsvox-wizards.el:600 emacsvox-skip-blank-lines-backward]] | voice-annotate | 1 | put-text-property |
-| [[file:lisp/emacsvox-wizards.el::1894][emacsvox-wizards.el:1894 ems--color-name]] | voice-bolden | 1 | propertize |
-| [[file:lisp/emacsvox-wizards.el::1894][emacsvox-wizards.el:1894 ems--color-name]] | voice-annotate | 1 | propertize |
-| [[file:lisp/emacsvox-wizards.el::1987][emacsvox-wizards.el:1987 ems--color-wheel-describe]] | voice-bolden | 3 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/amixer.el#L354][amixer.el:354 amixer-volume-adjust]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L452][emacsvox-advice.el:452 emacsvox-advice--define-interactive-after-advice]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L1038][emacsvox-advice.el:1038 emacsvox-fancy-error-handler]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L2393][emacsvox-advice.el:2393 emacsvox--advice-isearch-search-after]] | voice-bolden | 1 | ems-set-personality-temporarily |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L2411][emacsvox-advice.el:2411 emacsvox--advice-isearch-delete-char-after]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L2411][emacsvox-advice.el:2411 emacsvox--advice-isearch-delete-char-after]] | voice-bolden | 1 | ems-set-personality-temporarily |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L2429][emacsvox-advice.el:2429 emacsvox-advice--define-interactive-after-advice]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-advice.el#L2435][emacsvox-advice.el:2435 emacsvox-advice--define-interactive-after-advice]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-bs.el#L74][emacsvox-bs.el:74 emacsvox-bs--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-bs.el#L74][emacsvox-bs.el:74 emacsvox-bs--buffer-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-bs.el#L101][emacsvox-bs.el:101 emacsvox-bs-speak-buffer-line]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-calendar.el#L59][emacsvox-calendar.el:59 emacsvox-calendar-mark-personality]] | voice-bolden | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-chess.el#L147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-bolden-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-chess.el#L147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-monotone-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-chess.el#L147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-lighten-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-chess.el#L491][emacsvox-chess.el:491 emacsvox-chess-square-name]] | voice-monotone-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-chess.el#L491][emacsvox-chess.el:491 emacsvox-chess-square-name]] | voice-lighten-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L128][emacsvox-corfu.el:128 emacsvox-corfu--candidate-with-annotation]] | voice-annotate | 3 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L128][emacsvox-corfu.el:128 emacsvox-corfu--candidate-with-annotation]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L164][emacsvox-corfu.el:164 emacsvox-corfu--count-text]] | voice-annotate | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L269][emacsvox-corfu.el:269 emacsvox-corfu--expansion-text]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L269][emacsvox-corfu.el:269 emacsvox-corfu--expansion-text]] | voice-annotate | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L342][emacsvox-corfu.el:342 emacsvox-corfu--complete-around]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L419][emacsvox-corfu.el:419 emacsvox--advice-corfu--in-region-1-around]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-corfu.el#L443][emacsvox-corfu.el:443 emacsvox--advice-corfu--update-after]] | voice-annotate | 1 | emacsvox-corfu--voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-cperl.el#L59][emacsvox-cperl.el:59 emacsvox--advice-cperl-linefeed-around]] | voice-annotate | 1 | tts-speak-using-voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-dired.el#L189][emacsvox-dired.el:189 emacsvox-dired--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-dired.el#L189][emacsvox-dired.el:189 emacsvox-dired--buffer-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-elfeed.el#L147][emacsvox-elfeed.el:147 emacsvox-elfeed-speak-entry-at-point]] | voice-brighten | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-etable.el#L132][emacsvox-etable.el:132 emacsvox--advice-*table--cell-newline-and-indent-around]] | voice-annotate | 1 | tts-speak-using-voice |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-eterm.el#L174][emacsvox-eterm.el:174 emacsvox-eterm-highlight-personality]] | voice-bolden | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-eterm.el#L177][emacsvox-eterm.el:177 emacsvox-eterm-bold-personality]] | voice-bolden | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-eudc.el#L88][emacsvox-eudc.el:88 emacsvox--advice-eudc-query-form-after]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-eudc.el#L131][emacsvox-eudc.el:131 emacsvox-eudc-attribute-value-personality]] | voice-animate | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-forms.el#L71][emacsvox-forms.el:71 emacsvox-forms-ro-voice]] | voice-annotate | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-helm.el#L64][emacsvox-helm.el:64 emacsvox-helm-cue-update]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-hide.el#L44][emacsvox-hide.el:44 emacsvox-hidden-header-line-personality]] | voice-annotate | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-ispell.el#L84][emacsvox-ispell.el:84 emacsvox--advice-ispell-command-loop-before]] | voice-bolden | 1 | ems-set-personality-temporarily |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-ispell.el#L84][emacsvox-ispell.el:84 emacsvox--advice-ispell-command-loop-before]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-m-player.el#L157][emacsvox-m-player.el:157 emacsvox-m-player-mode-line]] | voice-smoothen-extra | 2 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L343][emacsvox-magit.el:343 emacsvox-magit--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L343][emacsvox-magit.el:343 emacsvox-magit--buffer-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L451][emacsvox-magit.el:451 emacsvox-magit--line-content]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L648][emacsvox-magit.el:648 emacsvox-magit--present-visibility]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L815][emacsvox-magit.el:815 emacsvox-magit--blob-summary]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L1232][emacsvox-magit.el:1232 emacsvox-magit--copied-content]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L1471][emacsvox-magit.el:1471 emacsvox-magit--present-view-setting]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L1497][emacsvox-magit.el:1497 emacsvox-magit--call-transient-refresh]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L1870][emacsvox-magit.el:1870 emacsvox-magit--present-opened-buffer]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L2105][emacsvox-magit.el:2105 emacsvox-magit--repolist-result-content]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L2399][emacsvox-magit.el:2399 emacsvox-magit--commit-labelled-content]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-magit.el#L2727][emacsvox-magit.el:2727 emacsvox-magit--present-rebase-line]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-notmuch.el#L573][emacsvox-notmuch.el:573 emacsvox-notmuch--view-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-notmuch.el#L573][emacsvox-notmuch.el:573 emacsvox-notmuch--view-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-org.el#L140][emacsvox-org.el:140 emacsvox-org--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-org.el#L140][emacsvox-org.el:140 emacsvox-org--buffer-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-package.el#L64][emacsvox-package.el:64 emacsvox-package-summarize-line]] | voice-bolden-medium | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-pronounce.el#L60][emacsvox-pronounce.el:60 ems--pronounce-string-template]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-py.el#L106][emacsvox-py.el:106 emacsvox-py--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-py.el#L106][emacsvox-py.el:106 emacsvox-py--buffer-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-py.el#L371][emacsvox-py.el:371 emacsvox--advice-py-newline-and-indent-after]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-reftex.el#L261][emacsvox-reftex.el:261 emacsvox--advice-reftex-highlight-after]] | voice-bolden | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L372][emacsvox-speak.el:372 emacsvox-speak-paragraph-personality]] | voice-animate | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L528][emacsvox-speak.el:528 emacsvox-get-current-percentage-verbosely]] | voice-monotone-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L1115][emacsvox-speak.el:1115 emacsvox-speak-line-with-speaker]] | voice-lighten | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L1398][emacsvox-speak.el:1398 emacsvox-speak-spell-word]] | voice-animate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2031][emacsvox-speak.el:2031 emacsvox-get-voicefied-recursion-info]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2039][emacsvox-speak.el:2039 emacsvox-get-voicefied-frame-info]] | voice-lighten-extra | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-lighten | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-bolden-medium | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-smoothen | 2 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2282][emacsvox-speak.el:2282 emacsvox-speak-header-line]] | voice-smoothen | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2493][emacsvox-speak.el:2493 emacsvox-speak-current-kill]] | voice-annotate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2558][emacsvox-speak.el:2558 emacsvox-speak-current-mark]] | voice-annotate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L2558][emacsvox-speak.el:2558 emacsvox-speak-current-mark]] | voice-animate | 1 | ems-set-personality-temporarily |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L3083][emacsvox-speak.el:3083 emacsvox-mark-speak-mark-line]] | voice-animate | 1 | ems-set-personality-temporarily |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-bolden | 2 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speak.el#L3507][emacsvox-speak.el:3507 emacsvox-selective-display]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speedbar.el#L252][emacsvox-speedbar.el:252 emacsvox-speedbar-button-personality]] | voice-bolden | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speedbar.el#L255][emacsvox-speedbar.el:255 emacsvox-speedbar-selected-personality]] | voice-animate | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speedbar.el#L258][emacsvox-speedbar.el:258 emacsvox-speedbar-directory-personality]] | voice-bolden-medium | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speedbar.el#L265][emacsvox-speedbar.el:265 emacsvox-speedbar-highlight-personality]] | voice-animate | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-speedbar.el#L268][emacsvox-speedbar.el:268 emacsvox-speedbar-tag-personality]] | voice-monotone-extra | 1 | defvar |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-transient.el#L471][emacsvox-transient.el:471 emacsvox-transient--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-transient.el#L471][emacsvox-transient.el:471 emacsvox-transient--buffer-summary]] | voice-animate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-view.el#L155][emacsvox-view.el:155 emacsvox--advice-View-goto-line-after]] | voice-annotate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-widget.el#L73][emacsvox-widget.el:73 emacsvox-widget-help-echo]] | voice-animate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-widget.el#L138][emacsvox-widget.el:138 emacsvox-widget-default-summarize]] | voice-bolden | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-widget.el#L354][emacsvox-widget.el:354 emacsvox-widget-help-checklist]] | voice-bolden | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-widget.el#L426][emacsvox-widget.el:426 emacsvox-widget-help-radio-button-choice]] | voice-bolden | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-widget.el#L449][emacsvox-widget.el:449 emacsvox-widget-help-editable-list]] | voice-bolden | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-wizards.el#L567][emacsvox-wizards.el:567 emacsvox-skip-blank-lines-forward]] | voice-annotate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-wizards.el#L600][emacsvox-wizards.el:600 emacsvox-skip-blank-lines-backward]] | voice-annotate | 1 | put-text-property |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-wizards.el#L1894][emacsvox-wizards.el:1894 ems--color-name]] | voice-bolden | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-wizards.el#L1894][emacsvox-wizards.el:1894 ems--color-name]] | voice-annotate | 1 | propertize |
+| [[https://github.com/bartbunting/emacsvox/blob/05828daa7f6d9c19dc2c0c38e31a2fc04237f48b/lisp/emacsvox-wizards.el#L1987][emacsvox-wizards.el:1987 ems--color-wheel-describe]] | voice-bolden | 3 | put-text-property |

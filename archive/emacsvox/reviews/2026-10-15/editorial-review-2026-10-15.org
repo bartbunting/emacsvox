@@ -13,38 +13,38 @@ No Lisp, executable, build workflow, published website, or release was changed.
 Generated Texinfo and Info files were not regenerated during this pass. Earlier
 recorded gate results predate these prose changes and do not validate them.
 
-The standards remain [[file:EDITORIAL_STYLE.org][the editorial guide]], [[file:README.org][the authoring instructions]],
+The standards remain [[file:../../../../docs/manual/EDITORIAL_STYLE.org][the editorial guide]], [[file:../../../../docs/manual/README.org][the authoring instructions]],
 =AGENTS.md=, and the accepted ADRs. This review is not an additional set of
 product requirements or a replacement for those documents.
 
 * Chapters revised
 
-- [[file:chapters/introduction.org][Introduction]]: installation-to-reading progression; the settings menu as
+- [[file:../../../../docs/manual/chapters/introduction.org][Introduction]]: installation-to-reading progression; the settings menu as
   primary entry; Home distinguished from menu navigation.
-- [[file:chapters/online-help.org][Online Help]]: live command Help, focused settings, search, menu Help,
+- [[file:../../../../docs/manual/chapters/online-help.org][Online Help]]: live command Help, focused settings, search, menu Help,
   cancellation, return, and read-only diagnostic entry points.
-- [[file:chapters/installation.org][Installation]]: platform/role choices, explicit development branch,
+- [[file:../../../../docs/manual/chapters/installation.org][Installation]]: platform/role choices, explicit development branch,
   safe checkout updates, first-speech acceptance, and optional engines after
   basic speech. The remote procedure now links to its actual section.
-- [[file:chapters/basic-usage.org][Basic Usage]]: direct keys alongside discoverable menus; common scope and
+- [[file:../../../../docs/manual/chapters/basic-usage.org][Basic Usage]]: direct keys alongside discoverable menus; common scope and
   saving terminology; punctuation capability and format boundaries rather
   than an unqualified unreleased-feature claim.
-- [[file:chapters/keyboard.org][Keyboard Commands]]: prefix hierarchy and menu entry points; local keys,
+- [[file:../../../../docs/manual/chapters/keyboard.org][Keyboard Commands]]: prefix hierarchy and menu entry points; local keys,
   customised prefixes, and recovery-binding precedence.
-- [[file:chapters/aural-presentation.org][Aural Presentation]]: direct routes for the listening and configuration
+- [[file:../../../../docs/manual/chapters/aural-presentation.org][Aural Presentation]]: direct routes for the listening and configuration
   walkthroughs; related explanations consolidated; source return, previews,
   shared voices, rules, drafts, persistence, and worker application separated.
-- [[file:chapters/speech-backends.org][Speech Backends]]: menu-based engine discovery, branch-specific Windows
+- [[file:../../../../docs/manual/chapters/speech-backends.org][Speech Backends]]: menu-based engine discovery, branch-specific Windows
   checkout, release-file operations versus voice activation, and RHVoice
   package acquisition versus independently supplied runtimes.
-- [[file:chapters/applications.org][Applications and Integrations]]: common discovery model; explicit table
+- [[file:../../../../docs/manual/chapters/applications.org][Applications and Integrations]]: common discovery model; explicit table
   differences; Magit/Transient navigation distinctions; focused integration
   settings; structured OCR setup, use, and diagnosis.
-- [[file:chapters/notmuch.org][Notmuch]]: search versus refresh, fields and limits, focused settings and
+- [[file:../../../../docs/manual/chapters/notmuch.org][Notmuch]]: search versus refresh, fields and limits, focused settings and
   their saving boundaries, full inspection, limited Tree support, and privacy.
-- [[file:chapters/eat.org][EAT]]: input ownership, automatic output, completion, immutable review,
+- [[file:../../../../docs/manual/chapters/eat.org][EAT]]: input ownership, automatic output, completion, immutable review,
   focused preferences, secure input, clipboard trust, and Eshell boundaries.
-- [[file:chapters/term.org][Term]]: character/line mode escapes, displayed-window speech eligibility,
+- [[file:../../../../docs/manual/chapters/term.org][Term]]: character/line mode escapes, displayed-window speech eligibility,
   live review pointer, and recovery without treating its keys as EAT keys.
 
 Audio Desktop and Agent Shell were used as adjacent conceptual and interaction
@@ -123,13 +123,13 @@ of focused settings does not add unimplemented Tree navigation or formatting.
 The contradictory automatic-restart promise in installed-release management
 was removed. The explicit release view retains current speech and changes its
 reported target's files, as required by
-[[file:../adr/0021-current-engine-details-and-explicit-release-management.org][ADR 0021]]. Library Apply and /Restart local speech/ remain distinct,
+[[file:../../../../docs/adr/0021-current-engine-details-and-explicit-release-management.org][ADR 0021]]. Library Apply and /Restart local speech/ remain distinct,
 explicit operations. A locked engine helper can still prevent file removal.
 
 The blanket statement that RHVoice voices are never downloaded was narrowed.
 The compatible local catalogue supports reviewed voice/language packages,
 while the RHVoice runtime and external installations remain independently
-supplied, as described by [[file:../adr/0023-managed-rhvoice-voices.org][ADR 0023]]. This is not permission to acquire
+supplied, as described by [[file:../../../../docs/adr/0023-managed-rhvoice-voices.org][ADR 0023]]. This is not permission to acquire
 proprietary runtimes or arbitrary upstream models.
 
 The preference chooser =C-e d e= is no longer described as a read-only engine

@@ -16,7 +16,7 @@ Follow [[file:EDITORIAL_STYLE.org][the editorial standard]] for maintained prose
 and related material before changing it, integrate additions into its narrative,
 and review the finished chapter separately from technical verification.
 
-The [[file:editorial-review-2026-10-15.org][15 October 2026 editorial review]] records the settings-menu learning path,
+The [[file:../../archive/emacsvox/reviews/2026-10-15/editorial-review-2026-10-15.org][15 October 2026 editorial review]] records the settings-menu learning path,
 cross-chapter corrections, and outstanding validation for that revision batch.
 It is an internal review record, not part of the published user manual or a
 claim that later source changes have been tested. Base new instructions on the
