@@ -46,6 +46,8 @@
 (require 'emacsvox-eat-input)
 (require 'emacsvox-eat-review)
 
+(advice-add 'emacsvox-speak--line-condition :around #'emacsvox-eat--line-condition)
+
 (with-eval-after-load 'eat
   (emacsvox-eat--install-advice))
 

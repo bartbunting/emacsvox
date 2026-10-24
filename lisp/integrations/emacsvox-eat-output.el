@@ -539,13 +539,56 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
       (if (or (< character 32) (= character 127)) ?\s character))
     (string-to-list (substring-no-properties row)))))
 
+(defun emacsvox-eat--separator-row-p (row)
+  "Return non-nil for a horizontal Unicode rule or box edge in ROW.
+Require at least three horizontal strokes.  Table junctions and vertical
+borders retain their meaning and do not qualify."
+  (string-match-p
+   "\\`[ \t]*[┌┐└┘╭╮╰╯╔╗╚╝]?[─━═]\\{3,\\}[┌┐└┘╭╮╰╯╔╗╚╝]?[ \t]*\\'"
+   row))
+
+(defun emacsvox-eat--speech-row (row)
+  "Prepare ROW for speech without changing its source text.
+Horizontal rules carry one separator cue.  Omit runs of three or more
+horizontal box strokes bounded by whitespace in other rows, retaining
+progress figures, table junctions and individual characters."
+  (if (emacsvox-eat--separator-row-p row)
+      ;; A silent object keeps its cue when TTS skips leading whitespace.
+      (propertize "separator" 'personality 'inaudible
+                  'emacsvox-aural-facts '(:line-condition separator)
+                  'emacsvox-aural-object (make-symbol "eat-separator"))
+    (let ((start 0) pieces)
+      (while (string-match
+              "\\(?:\\`\\|[ \t]\\)\\([─━═]\\{3,\\}\\)\\(?:[ \t]\\|\\'\\)"
+              row start)
+        (push (substring row start (match-beginning 1)) pieces)
+        (setq start (match-end 1)))
+      (if pieces
+          (apply #'concat (nreverse (cons (substring row start) pieces)))
+        row))))
+
+(defun emacsvox-eat--speech-text (text)
+  "Prepare terminal TEXT for speech, preserving its row boundaries."
+  (mapconcat #'emacsvox-eat--speech-row (split-string text "\n" nil) "\n"))
+
+(defun emacsvox-eat--line-condition (original line)
+  "Recognize Eat separators in LINE before calling ORIGINAL.
+Explicit character inspection continues to name the original characters."
+  (if (and (eq emacsvox-aural-source-transform-function
+               #'emacsvox-eat--speech-text)
+           (emacsvox-eat--separator-row-p line))
+      'separator
+    (funcall original line)))
+
 (defun emacsvox-eat--bounded-output (rows)
   "Return a bounded spoken representation of terminal output ROWS."
   (let* ((total-lines (length rows))
          (shown-count (min total-lines emacsvox-eat--maximum-output-lines))
          (shown-rows
           (mapcar
-           #'emacsvox-eat--sanitize-output-row
+           (lambda (row)
+             (emacsvox-eat--speech-row
+              (emacsvox-eat--sanitize-output-row row)))
            (emacsvox-eat--list-slice rows 0 shown-count)))
          (text (string-join shown-rows "\n"))
          (characters-truncated

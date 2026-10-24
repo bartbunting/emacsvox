@@ -20,6 +20,48 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Eat progress bars and decorative rows, 2026-10-24
+
+Observed: moving through download output with =next-line= in =*eat*= submits
+rows containing 40 heavy horizontal box-drawing characters followed by sizes,
+speed and ETA. The aural log records these row-reading submissions, rather
+than automatic terminal output. In Emacs PID 5261, submission 24903 maps to
+main-stream dispatch 38654; its Omnivox log records repeated synthesis of
+"box drawings heavy horizontal" before navigation cancels playback. The
+notification stream is not responsible for this example.
+
+The shared emoji and symbol naming policy names each box-drawing character.
+A fresh Emacs reproduced all 40 expansions while preserving the numeric
+suffix. At diagnosis, Eat had no speech filter for these bars, and its output
+sanitizer removed control characters without reducing decorative runs. The
+observed punctuation setting was =all=, which also bypasses ordinary
+separator-line cues; the existing explicit horizontal-rule pattern covers
+ASCII rather than Unicode box drawings.
+
+Implemented: Eat speech omits runs of at least three horizontal box strokes
+bounded by whitespace, preserving adjacent progress figures and labels.
+Rows consisting only of a horizontal rule, optionally with box corners, use
+the existing separator tone even with punctuation =all=. Table junctions,
+vertical borders, isolated characters, short runs and unrelated symbols retain
+their original presentation. Terminal and frozen-review text remain intact.
+The source filter covers physical and visual line reading; bounded automatic
+output and explicit review prepare rows before adding labels or truncating
+speech. Inaudible objects carry separator cues through TTS without losing
+them when leading whitespace is skipped.
+
+Verification: the original code fails the new line-navigation regression.
+All 223 applicable Eat tests pass from source and compiled integrations using
+the same installed Eat 0.9.4 as the live session. Both graphical cases skipped
+in batch pass on a private display, alongside the six new regressions. A
+supplemental compiled graphical check verifies visual-line movement. Captured
+speech commands contain one 150 ms separator tone for a lone rule, correctly
+ordered tones around mixed output, and figures without a tone for a progress
+row. Incremental compilation and its byte-code preflight pass.
+
+Listening accepted on 2026-10-24. The manual describes progress-bar omission,
+separator cues and character inspection. Commit slice: reduce decorative bar
+speech in Eat terminals.
+
 ** Missing Codex command output, 2026-10-24
 
 Observed: expanding recent completed command blocks shows only the command.

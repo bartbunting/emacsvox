@@ -952,7 +952,8 @@ Ignore a stale or duplicate exit after another process has become active."
 
 (defun emacsvox-eat-mode-setup ()
   "Placed on eat-mode-hook to do Emacsvox setup."
-  (setq-local emacsvox-aural-module 'eat)
+  (setq-local emacsvox-aural-module 'eat
+              emacsvox-aural-source-transform-function #'emacsvox-eat--speech-text)
   (emacsvox-eat--setup-buffer-state))
 
 (add-hook 'eat-mode-hook 'emacsvox-eat-mode-setup)

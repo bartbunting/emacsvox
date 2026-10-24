@@ -6798,5 +6798,134 @@ Each chunk settles separately, exercising prompts split across quiet periods."
         (should (= (length record) 10)))
       (should-not (string-match-p "PRIVATE\\|visible" (format "%S" records))))))
 
+(defun emacsvox-eat-test--bar-tones (submission)
+  "Return tone names in the prepared SUBMISSION."
+  (let (tones)
+    (dolist (plan (emacsvox-aural-submission-plans submission))
+      (dolist (action (append (emacsvox-aural-concrete-plan-before plan)
+                             (emacsvox-aural-concrete-plan-after plan)))
+        (when (eq (emacsvox-aural-concrete-action-kind action) 'tone)
+          (push (emacsvox-aural-concrete-action-tone action) tones))))
+    (nreverse tones)))
+
+(ert-deftest emacsvox-eat-bars-line-reading-preserves-content ()
+  "Line reading omits progress bars while preserving source and styles."
+  (save-window-excursion
+    (with-temp-buffer
+      (eat-mode)
+      (switch-to-buffer (current-buffer))
+      (setq-local line-move-visual nil)
+      (let* ((buffer-read-only nil)
+             (suffix (propertize "390.8/390.8 kB 13.3 MB/s eta 0:00:00" 'face 'bold))
+             (source (concat "Download\n     " (make-string 40 ?━) " " suffix "\n"))
+             (original-submit (symbol-function 'emacsvox-aural-submit))
+             submissions)
+        (insert source)
+        (goto-char (point-min))
+        (cl-letf (((symbol-function 'emacsvox-aural--call-on-submission-lane) #'ignore)
+                  ((symbol-function 'emacsvox-icon) #'ignore)
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (&rest args)
+                     (let ((submission (apply original-submit args)))
+                       (push submission submissions)
+                       submission))))
+          (let ((ems--interactive-fn-name 'next-line))
+            (funcall-interactively #'next-line 1 t)))
+        (should (= (line-number-at-pos) 2))
+        (should (= (length submissions) 1))
+        (let ((content (emacsvox-aural-submission-content (car submissions))))
+          (should (equal (string-trim content) suffix))
+          (should (eq (get-text-property (string-match "390" content) 'face content) 'bold))
+          (should-not (string-match-p "box drawings" (emacsvox-aural--prepare-emoji-text
+                                                      (emacsvox-aural-submission-prepared-content
+                                                       (car submissions))))))
+        (should (equal (buffer-string) source))))))
+
+(ert-deftest emacsvox-eat-bars-output-keeps-one-cue-per-rule ()
+  "Automatic output retains figures and separator cues in one transaction."
+  (with-temp-buffer
+    (eat-mode)
+    (cl-letf (((symbol-function 'emacsvox-aural--call-on-submission-lane) #'ignore))
+      (let* ((emacsvox-aural-active-scheme 'default)
+             (emacsvox-aural-session-rules nil)
+             (emacsvox-aural-user-rules nil)
+             (emacsvox-aural-buffer-rules nil)
+             (submission (emacsvox-eat--present-output-rows
+                          '("╭────────╮" "━━━━━━ 50%" "╰────────╯"))))
+        (should (equal (emacsvox-aural-submission-content submission)
+                       "separator\n 50%\nseparator"))
+        (should (equal (emacsvox-eat-test--bar-tones submission)
+                       '(line-separator line-separator)))
+        (should (eq (emacsvox-aural-submission-lane submission) 'main))
+        (should (eq (emacsvox-aural-submission-delivery-policy submission) 'ordered)))
+      (let ((submission (emacsvox-eat--present-output-rows '("━━━━━━"))))
+        (should (equal (emacsvox-eat-test--bar-tones submission) '(line-separator)))))))
+
+(ert-deftest emacsvox-eat-bars-frozen-review-preserves-rows ()
+  "Frozen row navigation cues separators without changing the review text."
+  (with-temp-buffer
+    (emacsvox-eat-review-mode)
+    (setq-local emacsvox-eat-review--snapshot
+                '(:rows ("━━━━━━━━" "━━━━ 100%") :cursor-row 0 :styles nil))
+    (emacsvox-eat-review--render 'screen)
+    (let ((original (buffer-string))
+          (emacsvox-aural-active-scheme 'default))
+      (cl-letf (((symbol-function 'emacsvox-aural--call-on-submission-lane) #'ignore))
+        (let ((submission (emacsvox-eat-review-speak-current-line)))
+          (should (equal (emacsvox-eat-test--bar-tones submission) '(line-separator))))
+        (emacsvox-eat-review--goto-row 1)
+        (let ((submission (emacsvox-eat-review-speak-current-line)))
+          (should (string-suffix-p "100%" (emacsvox-aural-submission-content submission)))
+          (should-not (string-match-p "━" (emacsvox-aural-submission-content submission)))))
+      (should (equal (buffer-string) original)))))
+
+(ert-deftest emacsvox-eat-bars-separator-only-reaches-tts ()
+  "A separator-only output queues its tone with no spoken placeholder."
+  (with-temp-buffer
+    (eat-mode)
+    (let (submission runs)
+      (cl-letf (((symbol-function 'emacsvox-aural--call-on-submission-lane) #'ignore))
+        (setq submission (emacsvox-eat--present-output-rows '("━━━━━━"))))
+      (let ((tts-stop-immediately nil))
+        (cl-letf (((symbol-function 'tts--protocol-sync) #'ignore)
+                  ((symbol-function 'tts--protocol-dispatch) #'ignore)
+                  ((symbol-function 'emacsvox-aural-queue-concrete-runs)
+                   (lambda (queued) (setq runs (append runs queued)))))
+          (tts--speak-transaction (emacsvox-aural-submission-prepared-content submission))))
+      (should (= (length runs) 1))
+      (let ((plan (caar runs)))
+        (should-not (emacsvox-aural-concrete-content-speak
+                     (emacsvox-aural-concrete-plan-content plan)))
+        (should (equal (mapcar #'emacsvox-aural-concrete-action-tone
+                              (emacsvox-aural-concrete-plan-before plan))
+                       '(line-separator)))))))
+
+(ert-deftest emacsvox-eat-bars-separator-cue-respects-mode-scope ()
+  "Eat rules use separator feedback at every punctuation level."
+  (with-temp-buffer
+    (eat-mode)
+    (let ((buffer-read-only nil) conditions)
+      (insert "━━━━━━━━")
+      (dolist (tts-punctuation-mode '(all some none))
+        (cl-letf (((symbol-function 'emacsvox-speak--present-line-condition)
+                   (lambda (condition &rest _) (push condition conditions))))
+          (emacsvox-speak-line-with-speaker (lambda (_) (ert-fail "Unexpected speech")))))
+      (should (equal conditions '(separator separator separator)))
+      (should (equal (emacsvox-aural-transform-source-text "━") "━"))
+      (fundamental-mode)
+      (let ((tts-punctuation-mode 'all))
+        (should-not (emacsvox-speak--line-condition "━━━━━━━━"))
+        (should (equal (emacsvox-aural-transform-source-text "━━━━━━━━") "━━━━━━━━"))))))
+
+(ert-deftest emacsvox-eat-bars-preserve-tables-and-short-runs ()
+  "Speech keeps table junctions, isolated symbols, ASCII and adjacent text."
+  (dolist (row '("├─────┼─────┤" "│ data │" "━" "━━" "foo━━━bar"
+                 "---" "a = b" "← →" "value ━ label" "━━━́"))
+    (should (equal-including-properties (emacsvox-eat--speech-row row) row)))
+  (let* ((row (concat "A ━━━ B ═══ C " (propertize "tail" 'face 'italic)))
+         (text (emacsvox-eat--speech-row row)))
+    (should (equal text "A  B  C tail"))
+    (should (eq (get-text-property (string-match "tail" text) 'face text) 'italic))))
+
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here

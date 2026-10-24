@@ -9099,6 +9099,16 @@ omitted without hiding output or rereading earlier rows. Output remains
 eligible even if it scrolls beyond the screen@comma{} including repeated identical
 lines; increasing scrollback is unnecessary for this feedback.
 
+For progress rows@comma{} speech omits runs of three or more horizontal box-drawing
+strokes separated from surrounding text by spaces@comma{} while retaining figures
+and labels. A row containing only a horizontal rule@comma{} with optional box
+corners@comma{} uses the separator cue even at @code{all} punctuation. This applies to
+automatic output@comma{} explicit screen review@comma{} and line reading in EAT and frozen
+review buffers. Table junctions@comma{} vertical borders@comma{} and shorter runs keep their
+usual presentation. The buffer text remains intact@comma{} so you can inspect
+individual characters. Adjust the separator sound through
+@ref{Sounds And Space,Line and boundary cues,,emacsvox,}.
+
 Wrapped output is joined and oversized bursts announce how much was omitted.
 Fresh text without a newline also speaks@comma{} keeping password requests and
 confirmation questions accessible. Carriage-return progress and status

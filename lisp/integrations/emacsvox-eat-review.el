@@ -187,7 +187,9 @@ This explicit command works regardless of autospeak or prompt preference."
          (shown-count (min total-lines emacsvox-eat--maximum-review-lines))
          (shown-rows
           (mapcar
-           #'emacsvox-eat--sanitize-output-row
+           (lambda (row)
+             (emacsvox-eat--speech-row
+              (emacsvox-eat--sanitize-output-row row)))
            (emacsvox-eat--list-slice rows 0 shown-count)))
          (text (string-join shown-rows "\n"))
          (characters-truncated
@@ -234,7 +236,7 @@ This explicit command works regardless of autospeak or prompt preference."
              (format "Current terminal row %d of %d is blank"
                      (1+ row) (length rows))
            (format "Current terminal row %d of %d: %s"
-                   (1+ row) (length rows) text))
+                   (1+ row) (length rows) (emacsvox-eat--speech-row text)))
          'output-navigation))))))
 
 (defun emacsvox-eat--style-change-row-label (diff snapshot)
@@ -528,7 +530,7 @@ This explicit command works regardless of autospeak or prompt preference."
                          (or (plist-get focus :confidence) 'unknown)))))))
       (if (string-empty-p (string-trim text))
           (concat label " is blank")
-        (concat label ": " text)))))
+        (concat label ": " (emacsvox-eat--speech-row text))))))
 
 (defun emacsvox-eat-review-speak-current-line
     (&optional introduction replaceable-p)
@@ -804,7 +806,8 @@ regions without treating them as focus; c shows retained completion/help
 output; s returns to screen rows; a speaks the bounded current view; t and i
 speak frozen status and metadata; v and m control source-terminal feedback
 without sending terminal input; and q kills the content-bearing review buffer."
-  (setq-local emacsvox-aural-module 'eat)
+  (setq-local emacsvox-aural-module 'eat
+              emacsvox-aural-source-transform-function #'emacsvox-eat--speech-text)
   (setq-local truncate-lines t)
   (buffer-disable-undo)
   (add-hook 'kill-buffer-hook #'emacsvox-eat-review--forget-source nil t))
