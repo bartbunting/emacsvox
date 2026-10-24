@@ -6880,25 +6880,54 @@ Each chunk settles separately, exercising prompts split across quiet periods."
       (should (equal (buffer-string) original)))))
 
 (ert-deftest emacsvox-eat-bars-separator-only-reaches-tts ()
-  "A separator-only output queues its tone with no spoken placeholder."
+  "A separator queues only its tone regardless of Voice Lock."
+  (dolist (enabled '(nil t))
+    (with-temp-buffer
+      (eat-mode)
+      (setq-local voice-lock-mode enabled)
+      (let (submission runs)
+        (cl-letf (((symbol-function 'emacsvox-aural--call-on-submission-lane) #'ignore))
+          (setq submission (emacsvox-eat--present-output-rows '("━━━━━━"))))
+        (let ((tts-stop-immediately nil))
+          (cl-letf (((symbol-function 'tts--protocol-sync) #'ignore)
+                    ((symbol-function 'tts--protocol-dispatch) #'ignore)
+                    ((symbol-function 'emacsvox-aural-queue-concrete-runs)
+                     (lambda (queued) (setq runs (append runs queued)))))
+            (tts--speak-transaction (emacsvox-aural-submission-prepared-content submission))))
+        (should (= (length runs) 1))
+        (let ((plan (caar runs)))
+          (should-not (emacsvox-aural-concrete-content-speak
+                       (emacsvox-aural-concrete-plan-content plan)))
+          (should (equal (mapcar #'emacsvox-aural-concrete-action-tone
+                                (emacsvox-aural-concrete-plan-before plan))
+                         '(line-separator))))))))
+
+(ert-deftest emacsvox-eat-bars-mixed-output-keeps-spoken-content ()
+  "Silent separator objects preserve surrounding speech with Voice Lock off."
   (with-temp-buffer
     (eat-mode)
+    (setq-local voice-lock-mode nil)
     (let (submission runs)
       (cl-letf (((symbol-function 'emacsvox-aural--call-on-submission-lane) #'ignore))
-        (setq submission (emacsvox-eat--present-output-rows '("━━━━━━"))))
+        (setq submission (emacsvox-eat--present-output-rows
+                          '("━━━━━━" "━━━━━━ 50%" "separator" "━━━━━━"))))
       (let ((tts-stop-immediately nil))
         (cl-letf (((symbol-function 'tts--protocol-sync) #'ignore)
                   ((symbol-function 'tts--protocol-dispatch) #'ignore)
                   ((symbol-function 'emacsvox-aural-queue-concrete-runs)
                    (lambda (queued) (setq runs (append runs queued)))))
           (tts--speak-transaction (emacsvox-aural-submission-prepared-content submission))))
-      (should (= (length runs) 1))
-      (let ((plan (caar runs)))
-        (should-not (emacsvox-aural-concrete-content-speak
-                     (emacsvox-aural-concrete-plan-content plan)))
-        (should (equal (mapcar #'emacsvox-aural-concrete-action-tone
-                              (emacsvox-aural-concrete-plan-before plan))
-                       '(line-separator)))))))
+      (should (equal (emacsvox-eat-test--bar-tones submission)
+                     '(line-separator line-separator)))
+      (let ((spoken
+             (mapconcat
+              (lambda (run)
+                (if (emacsvox-aural-concrete-content-speak
+                     (emacsvox-aural-concrete-plan-content (car run)))
+                    (cadr run)
+                  ""))
+              runs "")))
+        (should (equal (split-string spoken) '("50%" "separator")))))))
 
 (ert-deftest emacsvox-eat-bars-separator-cue-respects-mode-scope ()
   "Eat rules use separator feedback at every punctuation level."

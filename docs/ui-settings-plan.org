@@ -62,6 +62,31 @@ Listening accepted on 2026-10-24. The manual describes progress-bar omission,
 separator cues and character inspection. Commit slice: reduce decorative bar
 speech in Eat terminals.
 
+CI follow-up, 2026-10-24: run =40079645253= at =2efd11d1b= fails
+=emacsvox-eat-bars-separator-only-reaches-tts= on Emacs 30.2. The other
+708 integration tests pass; the Emacs 31.1 integration job also passes.
+Fresh source checks in an isolated copy reproduce the failure on 30.2.
+Its test buffer has Voice Lock off, whereas the same setup on 31.0.90 has
+it on. Explicitly disabling Voice Lock on either version makes the internal
+"separator" placeholder speakable: its =inaudible= personality depends on
+the compatibility voice adapter. The separator tone itself remains present.
+
+Corrected: an Eat module presentation rule suppresses separator content
+independently of Voice Lock, retaining the existing tone. The placeholder no
+longer uses the =inaudible= personality. Regression coverage checks both
+adapter states and confirms that progress figures and literal "separator"
+output remain spoken between silent separator objects. Both checks fail on
+the previous implementation.
+
+Verification: all 710 pinned integration tests and all 15 graphical tests
+pass in isolated copies on Emacs 30.2 and 31.0.90. Incremental compilation and
+byte-code preflight pass with the selected 31.0.90 toolchain. A fresh Emacs
+loading the compiled Eat integration passes 224 batch tests; its two graphical
+cases are covered by the separate graphical runs. Documentation checks pass.
+Commit slice: silence Eat separator content independently of Voice Lock.
+Live sessions and configuration are unchanged; no additional listening
+acceptance is claimed.
+
 ** Missing Codex command output, 2026-10-24
 
 Observed: expanding recent completed command blocks shows only the command.

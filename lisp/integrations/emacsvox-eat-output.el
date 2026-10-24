@@ -539,6 +539,18 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
       (if (or (< character 32) (= character 127)) ?\s character))
     (string-to-list (substring-no-properties row)))))
 
+(unless (gethash 'eat-separator-content emacsvox-aural-module-fragment-registry)
+  (emacsvox-aural-register-module-fragment
+   'eat
+   '(:schema-version 1
+     :id eat-separator-content
+     :summary "Keep terminal separator placeholders silent"
+     :rules
+     ((:id eat-separator-silent-content
+       :match (:module eat :line-condition separator)
+       :render (:content (:speak nil)))))
+   :source "emacsvox-eat-output"))
+
 (defun emacsvox-eat--separator-row-p (row)
   "Return non-nil for a horizontal Unicode rule or box edge in ROW.
 Require at least three horizontal strokes.  Table junctions and vertical
@@ -553,8 +565,9 @@ Horizontal rules carry one separator cue.  Omit runs of three or more
 horizontal box strokes bounded by whitespace in other rows, retaining
 progress figures, table junctions and individual characters."
   (if (emacsvox-eat--separator-row-p row)
-      ;; A silent object keeps its cue when TTS skips leading whitespace.
-      (propertize "separator" 'personality 'inaudible
+      ;; A nonblank object keeps its cue when TTS skips leading whitespace.
+      ;; The module rule suppresses content independently of Voice Lock.
+      (propertize "separator"
                   'emacsvox-aural-facts '(:line-condition separator)
                   'emacsvox-aural-object (make-symbol "eat-separator"))
     (let ((start 0) pieces)
