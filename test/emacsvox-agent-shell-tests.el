@@ -5454,6 +5454,29 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (should (string-match-p ems--message-filter "Press RET to copy"))
     (emacsvox-agent-shell--restore-message-filter)))
 
+(ert-deftest emacsvox-agent-shell-link-actions-preserve-other-hint-details ()
+  "Older hints and descriptive colons remain audible; URLs stay inspectable."
+  (dolist (case '(("Open in browser" . "open in browser")
+                  ("Open in browser: https://example.com/path:part."
+                   . "open in browser")
+                  ("Open in browser: external documentation"
+                   . "open in browser: external documentation")))
+    (with-temp-buffer
+      (insert "[docs](https://example.com/path:part.)")
+      (agent-shell-markdown-replace-markup)
+      (goto-char (point-min))
+      (put-text-property (point-min) (point-max) 'help-echo (car case))
+      (should
+       (equal (emacsvox-agent-shell-test--capture-events
+                (emacsvox-agent-shell--semantic-item-feedback))
+              (list '(icon item)
+                    (list 'speak (format "docs, link. Press Return to %s."
+                                         (cdr case))))))
+      (should (equal (get-text-property (point) 'help-echo) (car case)))
+      (should (equal (get-text-property (point) 'agent-shell-markdown-url)
+                     "https://example.com/path:part."))
+      (emacsvox-agent-shell--restore-message-filter))))
+
 (ert-deftest emacsvox-agent-shell-actionable-items-speak-in-both-views ()
   "Shell and viewport item movement should share semantic link feedback."
   (dolist
@@ -7013,7 +7036,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                               ((symbol-function 'set-transient-map) #'ignore))
                       (execute-kbd-macro (kbd (car case)))
                       (should (equal echoed
-                                     (concat "Press RET to " (nth 2 case))))
+                                     (concat "Press RET to " (nth 2 case) ": "
+                                             (get-text-property
+                                              (point) 'agent-shell-markdown-url))))
                       (should (equal ems--message-filter "Decrypting"))
                       (message "Agent needs approval"))))
             (should (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
@@ -8315,7 +8340,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (insert
      (propertize
       "Claude> " 'font-lock-face
-      '(comint-highlight-prompt comint-highlight-prompt))
+      '(comint-highlight-prompt comint-highlight-prompt) 'field 'output)
      "hello\n"
      (propertize
       "<shell-maker-end-of-prompt>"
@@ -8361,7 +8386,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (insert
      (propertize
       "Claude> " 'font-lock-face
-      '(comint-highlight-prompt comint-highlight-prompt))
+      '(comint-highlight-prompt comint-highlight-prompt) 'field 'output)
      "\n\nhello\n"
      (propertize
       "<shell-maker-end-of-prompt>"
@@ -8369,7 +8394,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      "\nhi there\n\n"
      (propertize
       "Claude> " 'font-lock-face
-      '(comint-highlight-prompt comint-highlight-prompt)))
+      '(comint-highlight-prompt comint-highlight-prompt) 'field 'output))
     (agent-shell-chat--relabel)
     (cl-labels
         ((speak-line-at
@@ -8524,7 +8549,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (insert
          (propertize
           "Codex> " 'font-lock-face
-          '(comint-highlight-prompt comint-highlight-prompt))
+          '(comint-highlight-prompt comint-highlight-prompt) 'field 'output)
          (car case))
         (let ((agent-shell-prompt-bar-mode nil))
           (agent-shell-chat--relabel))
@@ -9041,7 +9066,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (insert
        (propertize
         "Codex> " 'font-lock-face
-        '(comint-highlight-prompt comint-highlight-prompt)))
+        '(comint-highlight-prompt comint-highlight-prompt) 'field 'output))
       (let ((input-start (point)))
         (insert "yes\n")
         (insert
@@ -9183,7 +9208,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (insert
        (propertize
         "Codex> " 'font-lock-face
-        '(comint-highlight-prompt comint-highlight-prompt)))
+        '(comint-highlight-prompt comint-highlight-prompt) 'field 'output))
       (setq question-start (point))
       (insert "where were we?")
       (setq question-end (point))
@@ -9533,7 +9558,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (insert
        (propertize
         "Codex> " 'font-lock-face
-        '(comint-highlight-prompt comint-highlight-prompt)))
+        '(comint-highlight-prompt comint-highlight-prompt) 'field 'output))
       (setq question-start (point))
       (insert "first visual row")
       (setq first-row-end (point))

@@ -179,6 +179,33 @@ newer source but may load current compiled dependencies; the fresh CI checkout
 contains no Emacsvox byte-code.  =make compiled-notmuch-test= remains a separate
 local check after bringing byte-code current.
 
+** Agent Shell command-output patch
+
+The supplemental =emacsvox-agent-shell-output-tests.el= suite checks Codex
+terminal-output chunks against the patched Agent Shell checkout. The pinned
+upstream archive does not yet contain that output patch, so the ordinary
+integration runner does not load this supplemental file. Keep the verified
+dependency tree unchanged.
+
+Use a fresh graphical =emacs -Q= with the prepared supporting dependencies,
+the patched Agent Shell checkout, and Emacsvox's =lisp/= and =test/= directories
+on =load-path=. Load =agent-shell= from the patched checkout first, then
+=emacsvox-preamble= and =emacsvox-agent-shell-output-tests=. Run =M-x ert= with
+=^emacsvox-agent-shell-streamed-output-=. Verify =symbol-file= for
+=agent-shell--on-notification= to establish which core was loaded; matching
+version strings alone do not identify the patch. The test captures speech
+submissions and checks expansion with Return, visible output, line reading
+and one completion announcement. It skips in batch, which does not establish
+graphical coverage. Set =TTS_PROGRAM= to the absolute path of =servers/log-null=
+before starting the test Emacs.
+
+The Emacsvox integration tests explicitly load source by default. For compiled
+coverage, finish =make bytecode= and =make bytecode-check=, then start another
+fresh test Emacs with =EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled=. Move the
+supplemental regression into the pinned graphical gate when its dependency
+includes the output fix. Until then, report the pinned gates and patched
+checkout check separately.
+
 * Pinned Emacspeak Reference
 
 The original reference is Emacspeak revision:

@@ -20,6 +20,102 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Missing Codex command output, 2026-10-24
+
+Observed: expanding recent completed command blocks shows only the command.
+Read-only inspection found this in the Emacsvox, URSYS front-end and Omnivox
+shells. Enter toggles the tool fragment; there is no separate output control.
+
+The live session loads Agent Shell from =agent-shell-20261023.1228= and uses
+=codex-acp= 2.2.2. A temporary probe of two completed command updates confirmed
+that output reaches Emacs in =_meta.terminal_output_delta.data=, with 2 and
+6,741 characters respectively. Both updates have no content blocks or raw
+output. Agent Shell's Codex renderer reads content blocks or
+=rawOutput.formatted_output=, so neither update supplies text it can render.
+This is a rendering compatibility issue, independent of speech verbosity.
+The probe collected field names and lengths only and was removed afterward.
+
+Implemented in the separate =/home/bart/src/agent-shell= checkout: accumulate
+command-output chunks in each tool call's existing state and render the result
+below the command. Status-only updates preserve output. Complete content or
+raw-output snapshots replace accumulated text, avoiding duplication. The
+existing turn-end cleanup releases accumulated output after completion or
+cancellation while leaving the rendered text available.
+
+Five new upstream regressions fail on the original code. The fixed upstream
+suite passes 938 batch tests; four graphical cases are skipped in batch and
+covered by the separate graphical run. Twelve graphical checks pass against
+compiled Agent Shell, including expansion with Enter, line navigation, restored
+history and the four batch exclusions. Eight focused graphical Emacsvox checks
+pass with compiled integrations, including completed-output speech and reading
+the expanded result. Compilation and documentation checks introduce no new
+diagnostics. The running Emacs and installed Agent Shell package are unchanged;
+the checkout fix is uncommitted, and listening verification remains open.
+
+** Current Agent Shell compatibility findings, 2026-10-24
+
+The broader Emacsvox integration run against Agent Shell checkout =78a2c94=
+has ten failures, unchanged with and without the command-output patch.
+Investigation separates two causes:
+
+- Six chat-label and prompt-navigation fixtures omit the =field= properties
+  produced by Shell Maker. Agent Shell now finds prompts at field boundaries
+  rather than scanning prompt faces alone. Adding the missing output field in
+  isolated copies of these tests clears all six failures without changing
+  production code. Fixtures that already model the fields continue to pass,
+  including graphical prompt labels, wrapping and bidirectional navigation.
+- Four link tests encounter upstream's new destination in both the hover and
+  echo-area hints. Emacsvox builds spoken actions from the hover hint, so it
+  now speaks the full URL after the link label and action. This is a speech
+  verbosity regression. The duplicate-message filter still matches the longer
+  hint; its test stops first at the outdated visual-hint expectation.
+
+Implemented: correct the six prompt fixtures, keep the destination visible in
+the upstream hint, and omit it from the spoken action. The visual-hint
+expectation now includes the URL; speech still expects one concise action and
+audible unrelated alerts. Only a suffix matching the link's actual destination
+is removed. Additional coverage preserves older hints and descriptive colons.
+The upstream binding-overlap check finds only the six already recorded
+overrides; no navigation keys changed.
+
+The command-output patch needs no additional Emacsvox output adapter: the
+existing rendered-output capture supplies completed speech and expanded-line
+reading. The new supplemental regression in
+=test/emacsvox-agent-shell-output-tests.el= verifies both, including no
+duplicate completion announcement. It runs separately against the patched
+checkout because the pinned published commit lacks the output fix. The test
+does not install a substitute renderer or alter the verified dependency tree;
+=test/README.org= records its testing route. Existing tests also cover queued
+and pushed replies, permissions and deferred rendering.
+
+The refreshed lock selects Agent Shell 0.89.1 at =78a2c94=, ACP 0.18.2 at
+=2959da5= and Shell Maker 0.98.2 at =f57ad5e=. The supporting updates satisfy
+Agent Shell's declared minimums and match the packages used in the initial
+review. Changes include ACP queue draining and shutdown, and Shell Maker
+history persistence and bulk-render scrolling; neither changes keybindings.
+Archive hashes are verified. Preparation uses a fresh directory and preserves
+the older caches. The ignored =local.mk= now selects
+=/home/bart/.cache/emacsvox/test-deps/agent-shell-0.89.1-emacs-31.0.90=;
+its manifest and prepared files match the tested temporary tree exactly.
+
+With Emacs 31.0.90, the supported pinned gate passes all 703 cases against both
+source and compiled integrations; its separate graphical gate passes all 15
+cases in each mode. Against the patched compiled Agent Shell core and checkout
+modules, all 33 selected graphical cases pass with both source and compiled
+Emacsvox, including expanded output, chat labels, link hints, effective
+bindings, idle and busy input, viewport editing and table navigation. Loaded
+paths are verified. The incremental build, byte-code preflight, header check
+and nine dependency-preparation checks pass. The developer guide's pin
+references and generated manual are updated.
+
+These checks establish automated behavior, not listening acceptance or every
+provider's live protocol behavior. The exact Emacs 30.2 and 31.1 CI matrix
+remains unchecked locally; only the selected Emacs 31.0.90 is available.
+Emacsvox commit slice: =Update Agent Shell compatibility and regression coverage=.
+Installed packages, personal Emacs configuration and
+the running session are unchanged; the output fix remains in the separate
+Agent Shell checkout.
+
 ** Commit checkpoint: HTML mail navigation, 2026-10-17
 
 Listening accepted on 2026-10-17. This commit includes accurate HTML link

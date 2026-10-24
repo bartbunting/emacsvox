@@ -13281,7 +13281,8 @@ Use @kbd{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
 The minimum supported Agent Shell is 0.85.3. The integration pins target
-Agent Shell 0.86.1 at @code{137b574} and Shell Maker 0.97.5 at @code{dcc05a8}. ACP retains its reviewed snapshot. A personal
+Agent Shell 0.89.1 at @code{78a2c94}@comma{} Shell Maker 0.98.2 at @code{f57ad5e}@comma{} and
+ACP 0.18.2 at @code{2959da5}. A personal
 package upgrade does not refresh @code{test/integration-dependencies.json} or its
 prepared tree. When the preparer rejects a changed lock@comma{} choose a fresh
 @code{TEST_DEPS_DIR} and pass the same directory to preparation and both integration
@@ -13290,7 +13291,7 @@ gates; preserve the old directory until it is no longer needed.
 For every pin refresh@comma{} compare all Emacsvox navigation@comma{} speech-control@comma{} table@comma{}
 and repeat keys against shell and viewport maps@comma{} inherited Shell Maker maps@comma{}
 list editing@comma{} inline actions@comma{} permission and question controls@comma{} and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.86.1 refresh keeps
+effective keys in real prompt and transcript contexts. The 0.89.1 refresh keeps
 the existing scoped overrides: viewport @kbd{t} discovers tables; table @kbd{r} reads
 rows instead of quoting or replying; viewport table @kbd{c} reads columns and @kbd{a}
 selects table speech instead of continuing or repeating a reply. The table @kbd{k}

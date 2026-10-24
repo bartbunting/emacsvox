@@ -816,6 +816,12 @@ the corresponding buffer boundary."
   (let* ((action
           (or (emacsvox-agent-shell--item-help-action-at position)
               fallback))
+         (url (get-text-property position 'agent-shell-markdown-url))
+         ;; Upstream includes the destination in link hints.  Keep it visible,
+         ;; but speak the action concisely when navigating between links.
+         (action (if (stringp url)
+                     (string-remove-suffix (concat ": " url) action)
+                   action))
          (verb
           (concat (downcase (substring action 0 1))
                   (substring action 1))))
