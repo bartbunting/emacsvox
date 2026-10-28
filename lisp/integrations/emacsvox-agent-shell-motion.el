@@ -1005,6 +1005,25 @@ a positive argument to the advised command."
           (setq-local ems--message-filter value)
         (kill-local-variable 'ems--message-filter)))))
 
+(defun emacsvox-agent-shell--link-sensor-around (original &optional window)
+  "Keep link hints visible without speaking their URL during ORIGINAL.
+Use WINDOW's buffer and point, including when called during redisplay.
+Explicit URL inspection and unrelated messages retain their speech."
+  (let ((window (or window (selected-window))))
+    (with-current-buffer (window-buffer window)
+      (if-let* (((derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode))
+                (emacsvox-agent-shell--speech-control-active)
+                (url (get-text-property (window-point window) 'agent-shell-markdown-url))
+                ((stringp url)))
+          (let* ((hint (concat "\\`Press .+ to open\\(?: in browser\\| file\\)?: "
+                               (regexp-quote url) "\\'"))
+                 (ems--message-filter
+                  (if (stringp ems--message-filter)
+                      (concat "\\(?:" ems--message-filter "\\|" hint "\\)")
+                    hint)))
+            (funcall original window))
+        (funcall original window)))))
+
 (defun emacsvox-agent-shell--filter-message-through-post-command (regexp)
   "Filter messages matching REGEXP until navigation sensors have run."
   (emacsvox-agent-shell--restore-message-filter)

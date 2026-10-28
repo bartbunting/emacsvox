@@ -8769,8 +8769,12 @@ Use @kbd{l} (@code{emacsvox-agent-shell-next-link}) or
 @kbd{L} (@code{emacsvox-agent-shell-previous-link}).
 Move to the next or previous visible rendered link and speak its label and
 Return action together. The cursor hint remains visible without a second
-voice repeating it.
+voice repeating it@comma{} including when you reach links with ordinary arrows or
+word movement.
 Press @kbd{@key{RET}} to follow the link.
+To inspect the full destination@comma{} press @kbd{C-h .} (@code{display-local-help}).
+@kbd{M-x agent-shell-copy-link-url-at-point} copies it to the kill ring.
+Both commands announce the URL when message speech is enabled.
 @item e / E
 Use @kbd{e} (@code{emacsvox-agent-shell-next-error}) or
 @kbd{E} (@code{emacsvox-agent-shell-previous-error}).

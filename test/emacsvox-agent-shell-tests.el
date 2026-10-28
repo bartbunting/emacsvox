@@ -7047,6 +7047,104 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                            (list (list 'speak (format "docs, link. Press Return to %s."
                                                       (nth 2 case))))))))))))
 
+(ert-deftest emacsvox-agent-shell-link-entry-silences-url-notifications ()
+  "Ordinary motion reads links without a second voice; copying stays audible."
+  (require 'emacsvox-advice)
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (dolist (key '("C-n" "C-p" "C-f" "M-f" "M-b" "redisplay"))
+      (save-window-excursion
+        (with-temp-buffer
+          (switch-to-buffer (current-buffer))
+          (let ((url "https://example.org/a/long/path?one=two&three=four")
+                (line-move-visual (display-graphic-p))
+                (kill-ring nil) (kill-ring-yank-pointer nil))
+            (insert (format "before\n[docs](%s)\nafter\n" url))
+            (agent-shell-markdown-replace-markup)
+            (setq major-mode mode)
+            (use-local-map (symbol-value (intern (format "%s-map" mode))))
+            (setq emacsvox-agent-shell--speech-control-active t)
+            (cursor-sensor-mode 1)
+            (emacsvox-agent-shell--vertical-toggle-hint-setup)
+            (setq-local ems--message-filter "Decrypting")
+            (goto-char (point-min))
+            (cond ((member key '("C-p" "M-b")) (forward-line 2))
+                  ((equal key "C-f") (end-of-line)))
+            (cursor-sensor--detect)
+            (let ((emacsvox-speak-messages t) (emacsvox-last-message "")
+                  (inhibit-message nil)
+                  (real-message (symbol-function 'message))
+                  (real-current-message (symbol-function 'current-message))
+                  echoed events letter)
+              (setq events
+                    (emacsvox-agent-shell-test--capture-events
+                      (cl-letf (((symbol-function 'tts-letter)
+                                 (lambda (text) (setq letter text)))
+                                ((symbol-function 'current-message)
+                                 (lambda () (if (display-graphic-p)
+                                                (funcall real-current-message) echoed)))
+                                ((symbol-function 'message)
+                                 (lambda (&rest arguments)
+                                   (if (display-graphic-p)
+                                       (let ((executing-kbd-macro nil))
+                                         (apply real-message arguments)
+                                         (setq echoed (funcall real-current-message)))
+                                     (emacsvox--message-around
+                                      (lambda (format-string &rest args)
+                                        (setq echoed (apply #'format-message format-string args)))
+                                      arguments)))))
+                        (if (equal key "redisplay")
+                            (let ((window (selected-window)))
+                              (forward-line 1)
+                              ;; Redisplay can invoke a sensor for another buffer.
+                              (with-temp-buffer (cursor-sensor--detect window)))
+                          (execute-kbd-macro (kbd key)))
+                        (should (equal (get-text-property (point) 'agent-shell-markdown-url) url))
+                        (should (string-suffix-p url echoed))
+                        (should (equal ems--message-filter "Decrypting"))
+                        (call-interactively #'display-local-help)
+                        (call-interactively #'agent-shell-copy-link-url-at-point)
+                        (message "Agent needs approval"))))
+              (should (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
+                             (list (list 'notify (help-at-pt-kbd-string))
+                                   (list 'notify (concat "Copied URL: " url))
+                                   '(notify "Agent needs approval"))))
+              (unless (equal key "redisplay")
+                (ert-info ((format "%s in %s" key mode))
+                  (if (equal key "C-f")
+                      (should (equal letter "d"))
+                    (should (assq 'speak events)))))
+              (should (equal (car kill-ring) url)))))))))
+
+(ert-deftest emacsvox-agent-shell-link-sensor-filter-scope ()
+  "Only active shell and view links suppress their automatic URL hint."
+  (require 'emacsvox-advice)
+  (dolist (case '((agent-shell-mode t nil)
+                  (agent-shell-viewport-view-mode t nil)
+                  (agent-shell-mode nil t)
+                  (agent-shell-viewport-edit-mode t t)
+                  (fundamental-mode t t)))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (insert (propertize "docs" 'agent-shell-markdown-url "https://example.org/"))
+        (goto-char (point-min))
+        (setq major-mode (car case)
+              emacsvox-agent-shell--speech-control-active (cadr case))
+        (let ((emacsvox-speak-messages t) (emacsvox-last-message "")
+              (ems--message-filter "Decrypting") echoed)
+          (let ((events
+                 (emacsvox-agent-shell-test--capture-events
+                   (cl-letf (((symbol-function 'current-message) (lambda () echoed)))
+                     (emacsvox-agent-shell--link-sensor-around
+                      (lambda (&optional _window)
+                        (emacsvox--message-around
+                         (lambda (format-string &rest args)
+                           (setq echoed (apply #'format-message format-string args)))
+                         '("%s" "Press RET to open: https://example.org/"))))))))
+            (should (equal echoed "Press RET to open: https://example.org/"))
+            (should (eq (not (null (assq 'notify events))) (nth 2 case)))
+            (should (equal ems--message-filter "Decrypting"))))))))
+
 (ert-deftest emacsvox-agent-shell-letter-navigation-skips-current-and-hidden ()
   "Inline styling and hidden content must not create extra destinations."
   (emacsvox-agent-shell-test--with-rendered-table

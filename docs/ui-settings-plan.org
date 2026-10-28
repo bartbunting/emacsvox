@@ -20,6 +20,53 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Agent Shell automatic link URL notifications, 2026-10-28
+
+Observed in Emacs PID 3380937, socket =/run/user/1000/emacs/emacsvox=:
+ordinary line navigation onto a rendered link speaks its text on the main
+stream while the cursor sensor announces the full URL on the notification
+stream. At 03:53:40 UTC, =previous-line= in
+=Codex Agent @ ursys-reporting-front-end= submitted main reading 23042,
+dispatch 29805, followed by notification dispatch 29806. Both reached the
+mixer within three milliseconds of each other. The notification launcher's
+log identifies the latter as the "Press RET to open" hint with the URL.
+Existing suppression covered link-jump commands but not ordinary navigation.
+
+Implemented: during cursor-sensor detection, filter speech only for the
+automatic open hint matching the link at the target window's point. The
+hint remains visible. Scope is active Agent Shell transcript and viewport
+view buffers; unrelated messages, other modes and disabled integration retain
+their feedback. The filter is dynamically scoped to sensor detection, including
+redisplay calls made while another buffer is current. No link metadata or
+bindings change.
+
+On-demand access uses existing commands: =C-h .= (=display-local-help=)
+reads the full target, and =agent-shell-copy-link-url-at-point= copies and
+announces it. Both follow message speech settings. No new command or shortcut
+is needed.
+
+Verification: the regression fails before the fix on the extra URL
+notification. All 716 pinned integration tests pass. Two focused graphical
+tests cover line, character and word navigation, redisplay, URL inspection
+and copying, retained alerts, and mode/activation scope. Incremental compilation,
+byte-code preflight, manual generation and the non-mutating documentation gate
+pass. The two graphical tests also pass with the compiled integration and
+the configured Agent Shell 0.89.4 checkout. Five of six related compiled checks
+pass; the older link-letter test expects "open in browser" where that checkout
+now emits "open". Removing the new advice reproduces that same wording failure;
+its expectation remains unchanged for the pinned dependency.
+
+Live application: loaded the compiled movement module and registered the new
+sensor advice through the integration's existing advice installer in PID
+3380937. Point, modification ticks, draft hashes and editing protection are
+unchanged in all six Agent Shell buffers. Main speech PID 3381444 and
+notification PID 3381654 are unchanged.
+
+Listening acceptance: accepted on 2026-10-28 after trying the loaded fix.
+The commit checkpoint covers link-hint suppression, regression tests, the
+manual and generated Info updates. Earlier buffer-end feedback changes and
+unrelated investigation notes remain separate.
+
 ** Agent Shell beginning of input, 2026-10-28
 
 Observed: in Explicit inline editing, =M-<= invokes =beginning-of-buffer=,

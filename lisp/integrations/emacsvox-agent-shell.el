@@ -1298,6 +1298,7 @@ Return non-nil when point represents one of those semantic items."
     (left-word :around emacsvox-agent-shell--backward-word-around)
     (next-line :around emacsvox-agent-shell--next-line-around)
     (previous-line :around emacsvox-agent-shell--previous-line-around)
+    (cursor-sensor--detect :around emacsvox-agent-shell--link-sensor-around)
     (tts-speak :around emacsvox-agent-shell--tts-speak-around)
     (emacsvox-speak-mode-line :around
      emacsvox-agent-shell--speak-mode-line-around)
