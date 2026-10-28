@@ -117,6 +117,8 @@
     ("Notmuch semantic status cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "p")
     ("EWW section navigation autospeak" emacsvox-settings-integrations emacsvox-settings-integrations--eww "s")
     ("EWW suppress images" emacsvox-settings-integrations emacsvox-settings-integrations--eww "i")
+    ("EWW page outlining: SHR-aware or native" emacsvox-settings-integrations emacsvox-settings-integrations--eww "o")
+    ("EWW browser identity default for Emacs HTTP requests" emacsvox-settings-integrations emacsvox-settings-integrations--eww "m")
     ("Org table movement feedback" emacsvox-settings-integrations emacsvox-settings-integrations--org "c")
     ("Markdown automatic reading mode" emacsvox-settings-integrations emacsvox-settings-integrations--markdown "r")
     ("Info node speech amount" emacsvox-settings-integrations emacsvox-settings-integrations--info "c")

@@ -6127,7 +6127,10 @@ in @ref{Browsing Structure, , Browsing Structure}.
 EWW's @kbd{s} controls section-navigation autospeak and @kbd{i} suppresses images on
 subsequent rendering. It also updates the shared SHR image default while
 preserving local overrides; it does not reload the page. @kbd{w} saves the two
-Emacsvox defaults and @kbd{A} opens advanced settings.
+Emacsvox defaults and @kbd{A} opens advanced settings. The @kbd{o} outlining choice
+applies to the captured page@comma{} while @kbd{m} selects the HTTP identity default for Emacs URL
+requests. Both are temporary and excluded from @kbd{w}; see
+@ref{Web Browsing,Reading web pages with EWW,,emacsvox,} for their scope and effects.
 
 @item
 @anchor{Notmuch and shared choice-list navigation}Notmuch and shared choice-list navigation
@@ -7567,6 +7570,12 @@ corresponding level; @kbd{M-1} through @kbd{M-4} go backwards. These are HTML he
 levels@comma{} not numbered paragraphs. A page without suitable heading markup
 cannot be navigated as though that structure existed.
 
+For Outline commands@comma{} @kbd{C-e S o} chooses SHR-aware outlining based on rendered
+HTML structure or native outlining based on text list markers. Arrows browse@comma{}
+@kbd{@key{RET}} applies to the captured EWW buffer@comma{} and @kbd{q} cancels. This temporary
+choice preserves your text and position; the page's existing @kbd{0} toggle remains
+available.
+
 Use @kbd{]} and @kbd{[} to move between paragraphs. @kbd{M-@key{SPC}} requests the contents of
 the current HTML element. Section-navigation autospeak can read more than a
 heading or a line@comma{} depending on your setting; use explicit line or element
@@ -7659,8 +7668,15 @@ toggles section-navigation autospeak and @kbd{i} changes image suppression for
 subsequent rendering. The latter also changes the shared SHR image default
 while preserving buffer-local overrides; it does not reload the current page.
 Lowercase @kbd{w} saves those two Emacsvox defaults@comma{} @kbd{A} opens advanced settings@comma{}
-and @kbd{q} returns. These are presentation choices@comma{} not EWW's site or account
-preferences. Returning does not undo changes you have already made.
+and @kbd{q} returns. Returning does not undo changes you have already made.
+
+In the same menu@comma{} @kbd{m} chooses the HTTP identity default for Emacs URL requests@comma{}
+including requests outside EWW@. @emph{Browser} sends the configured browser header;
+@emph{Emacs} identifies requests as @code{URL/Emacs}. EWW link following explicitly uses
+browser identity regardless of this default. Arrows browse@comma{} @kbd{@key{RET}} applies@comma{}
+and @kbd{q} cancels. Choosing an identity does not reload pages or change login
+state or browser capabilities. Both HTTP identity and the outlining choice
+are temporary and are excluded from @kbd{w}.
 
 The Emacs/W3 and w3m survey is historical. Do not install either on the strength
 of the Heritage manual; use EWW unless a separately maintained integration says

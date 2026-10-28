@@ -1683,6 +1683,72 @@
        (execute-kbd-macro (kbd "C-e S c q q"))
        (should (eq (default-value 'emacsvox-info-select-node-speak-chunk) 'line))))))
 
+(ert-deftest emacsvox-settings-integrations-eww-outline-session-choices ()
+  "Outline choices preserve drafts, source text, point, and other buffers."
+  (require 'emacsvox-eww)
+  (emacsvox-test--with-settings
+    (with-current-buffer source
+      (eww-mode)
+      (setq-local outline-search-function #'ignore))
+    (let ((before (with-current-buffer source (list (buffer-string) (point))))
+          (defaults (mapcar #'default-value '(outline-search-function outline-regexp outline-level))))
+      (cl-letf (((symbol-function 'eww-reload) (lambda (&rest _) (ert-fail "Unexpected page reload"))))
+        (execute-kbd-macro (kbd "C-q C-e S o <down>"))
+        (should (eq (buffer-local-value 'outline-search-function source) #'ignore))
+        (execute-kbd-macro (kbd "? 2"))
+        (should (derived-mode-p 'help-mode))
+        (should (string-search "captured EWW buffer" (buffer-string)))
+        (execute-kbd-macro (kbd "q q"))
+        (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-settings-integrations--eww-outline))
+        (should (eq (buffer-local-value 'outline-search-function source) #'ignore))
+        (execute-kbd-macro (kbd "o 2"))
+        (should-not (buffer-local-value 'outline-search-function source))
+        (should (equal (buffer-local-value 'outline-regexp source) "^ *[•0-9]+\\.? "))
+        (execute-kbd-macro (kbd "o 1"))
+        (should (eq (buffer-local-value 'outline-search-function source) #'shr-outline-search))
+        (should (eq (buffer-local-value 'outline-level source) #'shr-outline-level))
+        (should (equal before (with-current-buffer source (list (buffer-string) (point))))))
+      (should (equal defaults (mapcar #'default-value '(outline-search-function outline-regexp outline-level))))
+      (should-not (file-exists-p custom-file))
+      (with-current-buffer source (text-mode))
+      (should-error (emacsvox-settings-integrations--eww-outline) :type 'user-error))))
+
+(ert-deftest emacsvox-settings-integrations-eww-identity-global-session ()
+  "Identity choices affect URL headers globally only on selection and are not saved."
+  (require 'emacsvox-eww)
+  (require 'url-http)
+  (let ((original (default-value 'emacsvox-eww-masquerade))
+        (emacsvox-eww-masquerade-as "User-Agent: TestBrowser\r\n"))
+    (unwind-protect
+        (emacsvox-test--integration-defaults 'emacsvox-eww
+         (lambda ()
+           (emacsvox-test--with-settings
+             (set-default 'emacsvox-eww-masquerade t)
+             (execute-kbd-macro
+              (vconcat (kbd "/") "EWW browser identity default for Emacs HTTP requests" (kbd "RET")))
+             (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-settings-integrations--eww-identity))
+             (execute-kbd-macro (kbd "RET <down> ? 2"))
+             (should (string-search "outside EWW" (buffer-string)))
+             (should (default-value 'emacsvox-eww-masquerade))
+             (execute-kbd-macro (kbd "q q"))
+             (should (default-value 'emacsvox-eww-masquerade))
+             (execute-kbd-macro (kbd "m 2"))
+             (with-temp-buffer
+               (should (equal (url-http-user-agent-string) "User-Agent: URL/Emacs \r\n")))
+             (should (equal
+                      (emacsvox--advice-eww-follow-link-around #'url-http-user-agent-string)
+                      "User-Agent: TestBrowser\r\n"))
+             (should-not (default-value 'emacsvox-eww-masquerade))
+             (execute-kbd-macro (kbd "m 1"))
+             (with-temp-buffer
+               (should (equal (url-http-user-agent-string) "User-Agent: TestBrowser\r\n")))
+             (should-not (file-exists-p custom-file))
+             (execute-kbd-macro (kbd "w"))
+             (with-temp-buffer
+               (insert-file-contents custom-file)
+               (should-not (string-search "emacsvox-eww-masquerade" (buffer-string)))))))
+      (set-default 'emacsvox-eww-masquerade original))))
+
 (ert-deftest emacsvox-settings-integrations-eww-rendering-and-save ()
   "Image changes affect subsequent rendering without reloading or losing overrides."
   (require 'shr)

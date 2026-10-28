@@ -140,7 +140,11 @@ complete workflows.
      images on subsequent rendering.  It also updates the shared SHR
      image default while preserving local overrides; it does not reload
      the page.  ‘w’ saves the two Emacsvox defaults and ‘A’ opens
-     advanced settings.
+     advanced settings.  The ‘o’ outlining choice applies to the
+     captured page, while ‘m’ selects the HTTP identity default for
+     Emacs URL requests.  Both are temporary and excluded from ‘w’; see
+     *note Reading web pages with EWW: (emacsvox)Web Browsing. for their
+     scope and effects.
 
   3. Notmuch and shared choice-list navigation
 
@@ -1625,6 +1629,12 @@ These are HTML heading levels, not numbered paragraphs.  A page without
 suitable heading markup cannot be navigated as though that structure
 existed.
 
+   For Outline commands, ‘C-e S o’ chooses SHR-aware outlining based on
+rendered HTML structure or native outlining based on text list markers.
+Arrows browse, ‘<RET>’ applies to the captured EWW buffer, and ‘q’
+cancels.  This temporary choice preserves your text and position; the
+page's existing ‘0’ toggle remains available.
+
    Use ‘]’ and ‘[’ to move between paragraphs.  ‘M-<SPC>’ requests the
 contents of the current HTML element.  Section-navigation autospeak can
 read more than a heading or a line, depending on your setting; use
@@ -1726,9 +1736,17 @@ voices.
 suppression for subsequent rendering.  The latter also changes the
 shared SHR image default while preserving buffer-local overrides; it
 does not reload the current page.  Lowercase ‘w’ saves those two
-Emacsvox defaults, ‘A’ opens advanced settings, and ‘q’ returns.  These
-are presentation choices, not EWW's site or account preferences.
+Emacsvox defaults, ‘A’ opens advanced settings, and ‘q’ returns.
 Returning does not undo changes you have already made.
+
+   In the same menu, ‘m’ chooses the HTTP identity default for Emacs URL
+requests, including requests outside EWW.  _Browser_ sends the
+configured browser header; _Emacs_ identifies requests as ‘URL/Emacs’.
+EWW link following explicitly uses browser identity regardless of this
+default.  Arrows browse, ‘<RET>’ applies, and ‘q’ cancels.  Choosing an
+identity does not reload pages or change login state or browser
+capabilities.  Both HTTP identity and the outlining choice are temporary
+and are excluded from ‘w’.
 
    The Emacs/W3 and w3m survey is historical.  Do not install either on
 the strength of the Heritage manual; use EWW unless a separately
@@ -5407,82 +5425,3 @@ these reverses an already applied change.  Editors, tables and terminals
 have their own return commands; see *note Returning from settings:
 (emacsvox)Returning From Settings. and *note Recovering an unfinished
 edit: (emacsvox)Recovering Aural Changes.
-
-
-File: emacsvox.info,  Node: Emacsvox Key Prefixes,  Prev: Everyday Speech Commands,  Up: Emacsvox Keyboard Commands
-
-15.6 How prefixes and menus fit together
-========================================
-
-‘C-e’
-     The main Emacsvox keymap, including reading, status, and navigation
-     commands.
-‘C-e d’
-     The text-to-speech keymap, including direct rate, punctuation, and
-     echo controls.
-‘C-e H’
-     Open the general settings menu.  Its displayed keys and contextual
-     Help provide discoverable routes to speech, voices, sounds, rules,
-     and diagnostics.
-‘C-e S’
-     Open focused settings for the captured integration when available,
-     otherwise general buffer settings.  ‘C-e H .’ always opens general
-     buffer settings.
-
-   A prefix such as ‘C-e’ waits for another key; ‘C-e H’ is a complete
-command that opens a settings menu.  Release Control-e before typing
-capital H.  Once the menu is open, its own displayed letters choose
-actions.  They are not additional keys to hold with Control.
-
-   Inside an Emacsvox settings menu, arrows browse and ‘<RET>’ activates
-a choice.  ‘?’ followed by an item's key explains it; ‘q’ goes back and
-‘C-q’ closes the sequence.  Shift-left/right adjusts a selected numeric
-control where offered.  To inspect the selected item, use ‘C-c l’ to
-repeat it, ‘M-f~/~M-b’ for words or ‘C-f~/~C-b’ for characters.  In this
-menu context ‘C-a~/~C-e’ reaches the start/end of item review, so ‘C-e’
-is not the speech prefix.  Menu-specific bindings take precedence; *note
-menu review: settings-menu-review. explains the full set and its limits.
-
-   A voice editor, terminal, table reader or another Transient
-application retains its own keys.  The same letter can mean Save in an
-editor, Export in a palette manager or ordinary input in a terminal.
-Check which view has focus before applying a command from another view's
-instructions.
-
-   Integration-specific and convenience maps depend on major/minor
-modes, window system or terminal, and personal configuration.  Live Help
-resolves those contexts.  The manual uses the default speech prefix; a
-customised prefix changes its entry sequences without changing a menu's
-own displayed shortcuts.
-
-15.7 Choose a different speech prefix
-=====================================
-
-Set ‘emacsvox-prefix’ before loading Emacsvox.  For example:
-
-     (setq emacsvox-prefix (kbd "C-c e"))
-
-   Then ‘C-c e l’ reads the line and ‘C-c e e’ provides end-of-line
-recovery.  Evil, EXWM, widgets, and Term use the prefix followed by ‘e’
-for their corresponding recovery command when it contains multiple
-events.  Repeating such a prefix is also bound if unused or already
-assigned to that recovery.  Existing commands and submaps take
-precedence: ‘C-c e C-c’ retains selective display, so ‘C-c e C-c e’ is
-not installed as recovery.
-
-   Single-event prefixes keep their repeated-key behaviour, including
-default ‘C-e C-e’.  Mode-local bindings can still shadow the prefix;
-inspect them before assuming a key is unavailable or broken.
-
-15.8 Inspect the effective bindings
-===================================
-
-‘C-h m’ describes the current modes and their commands.  ‘C-h b’ lists
-effective bindings, and ‘C-h k’ followed by a key identifies its
-command.  After typing a prefix such as ‘C-e’, ‘C-h’ shows that prefix's
-current bindings.
-
-   When live Help differs from this manual, check personal configuration
-and installed package versions, then compare the generated defaults.
-For speech feedback problems rather than binding discovery, see *note
-Troubleshooting And Recovery: (emacsvox)Presentation Troubleshooting.

@@ -132,6 +132,25 @@ contact a live speech server. Incremental compilation, regenerated manuals,
 byte-code preflight and the documentation gate pass. Commit checkpoint covers
 these controls and eligibility. Listening acceptance remains pending.
 
+Items 5–6: EWW's focused menu and search now expose page outlining and the
+HTTP identity default. Both use browsable choices with the current value shown;
+selection applies, arrows browse, and cancellation preserves the value. Outline
+changes stay in the captured EWW buffer, preserve custom settings until selection,
+and do not move point or reload the page. HTTP identity changes the existing
+global session default. Neither choice is included in the parent menu's Save.
+
+Additional source finding: =emacsvox--advice-eww-follow-link-around= explicitly
+binds browser masquerading on. The identity default therefore has this existing
+link-following exception. Help, the manual, and a regression describe it; the
+underlying request policy is unchanged.
+
+All 31 integration-settings graphical source tests pass. A fresh compiled run
+passes 34 cases, adding loaded-package eligibility and every available search
+destination. Scope, Help return, cancellation, real URL header generation and
+Save exclusions are covered. Incremental compilation, byte-code preflight,
+regenerated manuals and the documentation gate pass. Commit checkpoint covers
+the EWW controls. Listening acceptance remains pending.
+
 ** Main-stream time reading, 2026-10-28
 
 Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the

@@ -33,6 +33,11 @@
 (declare-function emacsvox-agent-shell--cancel-background-pending-speech "emacsvox-agent-shell" ())
 (declare-function emacsvox-eat--control-buffer "emacsvox-eat-core" ())
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
+(declare-function emacsvox-eww-shr-outline-toggle "emacsvox-eww" ())
+(defvar emacsvox-eww-masquerade)
+(defvar outline-search-function)
+(defvar outline-regexp)
+(defvar outline-level)
 
 (defconst emacsvox-settings-integrations--menus
   '((notmuch . emacsvox-settings-integrations--notmuch)
@@ -564,10 +569,14 @@ Numeric controls accept positive integers or none.")
 (defun emacsvox-settings-integrations--choice-entry-for (command)
   "Return COMMAND's choice control with concise explanations of its values."
   (let* ((session (eq command 'emacsvox-settings-integrations--agent-session))
-         (entry (if session
-                    (list command 'emacsvox-agent-shell 'emacsvox-agent-shell-speech-level
-                          "Session speech" nil)
-                  (copy-tree (emacsvox-settings-integrations--option command))))
+         (entry (cond
+                 (session
+                  (list command 'emacsvox-agent-shell 'emacsvox-agent-shell-speech-level
+                        "Session speech" nil))
+                 ((memq command '(emacsvox-settings-integrations--eww-outline
+                                  emacsvox-settings-integrations--eww-identity))
+                  (emacsvox-settings-integrations--eww-choice-entry command))
+                 (t (copy-tree (emacsvox-settings-integrations--option command)))))
          (levels '((full . "Full: responses and configured thought, plan and tool feedback")
                    (response . "Responses: responses and completion feedback")
                    (notify . "Notifications: completion only")
@@ -615,9 +624,15 @@ Numeric controls accept positive integers or none.")
    (plist-get (emacsvox-aural-menu--context) :integration-choice)))
 (defun emacsvox-settings-integrations--choice-value (entry)
   "Return ENTRY's current value in its session or global scope."
-  (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
-      (buffer-local-value (nth 2 entry) (emacsvox-settings-integrations--agent-source))
-    (default-value (nth 2 entry))))
+  (pcase (car entry)
+    ('emacsvox-settings-integrations--agent-session
+     (buffer-local-value (nth 2 entry) (emacsvox-settings-integrations--agent-source)))
+    ('emacsvox-settings-integrations--eww-outline
+     (buffer-local-value 'outline-search-function
+                         (emacsvox-settings-integrations--eww-source)))
+    ('emacsvox-settings-integrations--eww-identity
+     (and (default-value 'emacsvox-eww-masquerade) t))
+    (_ (default-value (nth 2 entry)))))
 (defun emacsvox-settings-integrations--choice-label (index)
   "Describe choice INDEX and mark the current value."
   (let* ((entry (emacsvox-settings-integrations--choice-entry))
@@ -641,8 +656,11 @@ Numeric controls accept positive integers or none.")
   "Describe the current choice scope."
   (let ((entry (emacsvox-settings-integrations--choice-entry)))
     (concat (nth 3 entry)
-            (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
-                " (this session, temporary)" " (global default)"))))
+            (pcase (car entry)
+              ('emacsvox-settings-integrations--agent-session " (this session, temporary)")
+              ('emacsvox-settings-integrations--eww-outline " (this EWW buffer, temporary)")
+              ('emacsvox-settings-integrations--eww-identity " (Emacs URL default, temporary)")
+              (_ " (global default)")))))
 (defun emacsvox-settings-integrations--choose (command)
   "Open COMMAND's choices without applying or saving a value."
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
@@ -674,14 +692,18 @@ Numeric controls accept positive integers or none.")
   (let* ((entry (emacsvox-settings-integrations--choice-entry))
          (value (car (nth index (nth 4 entry)))))
     (emacsvox-settings-integrations--return (car entry))
-    (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
-        (let ((emacsvox-aural-submission-lane 'main)
+    (pcase (car entry)
+      ('emacsvox-settings-integrations--agent-session
+       (let ((emacsvox-aural-submission-lane 'main)
               (emacsvox-aural-submission-delivery-policy 'replaceable)
               (emacsvox-aural-submission-replacement-key 'speaker)
               (emacsvox-aural-submission-interruption-policy 'lane))
           (emacsvox-agent-shell--set-session-speech-level
-           (emacsvox-settings-integrations--agent-source) value))
-      (emacsvox-settings-integrations--set-option entry value))))
+           (emacsvox-settings-integrations--agent-source) value)))
+      ((or 'emacsvox-settings-integrations--eww-outline
+           'emacsvox-settings-integrations--eww-identity)
+       (emacsvox-settings-integrations--eww-apply (car entry) value))
+      (_ (emacsvox-settings-integrations--set-option entry value)))))
 (defun emacsvox-settings-integrations--choice-help (object)
   "Explain choice OBJECT and its scope without applying it."
   (let* ((entry (emacsvox-settings-integrations--choice-entry))
@@ -699,12 +721,21 @@ Numeric controls accept positive integers or none.")
       (princ "\n\n")
       (princ (cdr choice))
       (princ "\n\n")
-      (princ (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
-                 "Selecting this value changes only the captured session. Auto follows the foreground and background defaults."
-               "Selecting this value changes the global default. Use w in the parent menu to save it for future sessions."))
+      (princ (pcase (car entry)
+               ('emacsvox-settings-integrations--agent-session
+                "Selecting this value changes only the captured session. Auto follows the foreground and background defaults.")
+               ('emacsvox-settings-integrations--eww-outline
+                "Selecting this value changes outlining in the captured EWW buffer. It does not move point, reload the page, or change other buffers. The parent menu's w does not save this temporary choice.")
+               ('emacsvox-settings-integrations--eww-identity
+                "Selecting this value changes the HTTP identity default for Emacs URL requests, including requests outside EWW. EWW link following explicitly uses browser identity regardless of this default. It does not reload pages. The parent menu's w does not save this session choice.")
+               (_ "Selecting this value changes the global default. Use w in the parent menu to save it for future sessions.")))
       (princ "\n\n")
       (princ
        (pcase (nth 2 entry)
+         ('outline-search-function
+          "SHR-aware outlining uses the rendered HTML structure. Native outlining uses Emacsvox's text pattern for list markers. EWW's existing 0 command remains available.")
+         ('emacsvox-eww-masquerade
+          "Browser identity sends the existing emacsvox-eww-masquerade-as header. Emacs identity sends URL/Emacs. This changes identification, not browser capabilities or authentication.")
          ('emacsvox-org-table-after-movement-function
           "This controls speech after moving between Org table cells. Column headers come from the first row; row headers come from the first column. Buffer-local settings take precedence over this global default.")
          ('emacsvox-info-select-node-speak-chunk
@@ -1036,6 +1067,80 @@ Buffer-local overrides remain unchanged."
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--info nil nil :scope (emacsvox-aural-menu--context)))
 
+(defun emacsvox-settings-integrations--eww-source ()
+  "Return the captured EWW buffer or explain its absence."
+  (let ((source (emacsvox-aural-menu--source (emacsvox-aural-menu--context))))
+    (unless (and (featurep 'eww)
+                 (with-current-buffer source (derived-mode-p 'eww-mode)))
+      (user-error "Open outline settings from an EWW page"))
+    source))
+
+(defun emacsvox-settings-integrations--eww-p ()
+  "Whether the captured source is an EWW page."
+  (condition-case nil (emacsvox-settings-integrations--eww-source) (user-error nil)))
+
+(defun emacsvox-settings-integrations--eww-choice-entry (command)
+  "Describe EWW session control COMMAND without changing its state."
+  (unless (featurep 'eww) (user-error "Open EWW before changing its settings"))
+  (require 'emacsvox-eww)
+  (pcase command
+    ('emacsvox-settings-integrations--eww-outline
+     (list command 'emacsvox-eww 'outline-search-function "Page outlining"
+           '((shr-outline-search . "SHR-aware: follow rendered HTML structure")
+             (nil . "Native: follow text list markers"))))
+    ('emacsvox-settings-integrations--eww-identity
+     (list command 'emacsvox-eww 'emacsvox-eww-masquerade "HTTP identity default"
+           '((t . "Browser: use the configured browser header")
+             (nil . "Emacs: identify requests as URL/Emacs"))))))
+
+(defun emacsvox-settings-integrations--eww-label (command)
+  "Describe EWW session COMMAND, including unavailable or custom outlining."
+  (if (and (eq command 'emacsvox-settings-integrations--eww-outline)
+           (not (emacsvox-settings-integrations--eww-p)))
+      "Page outlining: open from an EWW page"
+    (let* ((entry (emacsvox-settings-integrations--eww-choice-entry command))
+           (value (emacsvox-settings-integrations--choice-value entry)))
+      (format "%s: %s" (nth 3 entry)
+              (if (eq command 'emacsvox-settings-integrations--eww-outline)
+                  (pcase value ('shr-outline-search "SHR-aware") ('nil "native") (_ "custom"))
+                (if value "browser" "Emacs"))))))
+
+(defun emacsvox-settings-integrations--eww-apply (command value)
+  "Apply the selected EWW session VALUE for COMMAND and announce it once."
+  (pcase command
+    ('emacsvox-settings-integrations--eww-outline
+     (with-current-buffer (emacsvox-settings-integrations--eww-source)
+       (unless (eq outline-search-function value)
+         (dolist (option '(outline-search-function outline-regexp outline-level))
+           (make-local-variable option))
+         (let ((emacsvox-use-icons nil))
+           (ems-with-messages-silenced
+            (when outline-search-function (emacsvox-eww-shr-outline-toggle))
+            (when value (emacsvox-eww-shr-outline-toggle)))))))
+    ('emacsvox-settings-integrations--eww-identity
+     (set-default 'emacsvox-eww-masquerade value)))
+  (emacsvox-settings-integrations--say
+   (emacsvox-settings-integrations--eww-label command)))
+
+(defun emacsvox-settings-integrations--eww-outline ()
+  "Choose outlining for the captured EWW page without moving or reloading it.
+SHR-aware outlining follows rendered HTML structure; native outlining follows
+text list markers. Arrows browse without applying, Enter applies, and q cancels.
+This buffer-only choice is temporary; the parent menu's w does not save it."
+  (interactive)
+  (emacsvox-settings-integrations--eww-source)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--eww-outline))
+
+(defun emacsvox-settings-integrations--eww-identity ()
+  "Choose the HTTP identity default for Emacs URL requests in this session.
+Browser uses the existing configured browser header; Emacs uses URL/Emacs.
+This applies beyond EWW and does not reload pages or change authentication.
+EWW link following explicitly uses browser identity regardless of this default.
+Arrows browse without applying, Enter applies, and q cancels. The parent menu's
+w saves only speech and image defaults, not this temporary identity choice."
+  (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--eww-identity))
+
 (defun emacsvox-settings-integrations--eww-autospeak ()
   "Toggle global automatic speech during EWW section navigation."
   (interactive)
@@ -1056,12 +1161,18 @@ Buffer-local overrides remain unchanged."
   (require 'emacsvox-eww)
   (emacsvox-settings--custom 'emacsvox-eww 'emacsvox-settings-integrations--eww-custom))
 (transient-define-prefix emacsvox-settings-integrations--eww ()
-  "Control EWW automatic speech and image handling."
+  "Control EWW speech, images, page outlining, and session HTTP identity."
   ["EWW defaults (global); w saves"
    ("s" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--eww-autospeak))
     emacsvox-settings-integrations--eww-autospeak :transient t)
    ("i" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--eww-images))
     emacsvox-settings-integrations--eww-images :transient t)]
+  ["Page outlining (captured buffer, temporary)"
+   ("o" (lambda () (emacsvox-settings-integrations--eww-label 'emacsvox-settings-integrations--eww-outline))
+    emacsvox-settings-integrations--eww-outline :inapt-if-not emacsvox-settings-integrations--eww-p :transient transient--do-suspend)]
+  ["HTTP identity default (Emacs URL requests, temporary)"
+   ("m" (lambda () (emacsvox-settings-integrations--eww-label 'emacsvox-settings-integrations--eww-identity))
+    emacsvox-settings-integrations--eww-identity :transient transient--do-suspend)]
   ["Defaults and advanced settings"
    ("w" "Save displayed EWW defaults" emacsvox-settings-integrations--eww-save :transient t)
    ("A" "Advanced EWW settings (Customize)" emacsvox-settings-integrations--eww-custom :transient transient--do-suspend)]

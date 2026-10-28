@@ -813,6 +813,12 @@ corresponding level; ~M-1~ through ~M-4~ go backwards. These are HTML heading
 levels, not numbered paragraphs. A page without suitable heading markup
 cannot be navigated as though that structure existed.
 
+For Outline commands, ~C-e S o~ chooses SHR-aware outlining based on rendered
+HTML structure or native outlining based on text list markers. Arrows browse,
+~RET~ applies to the captured EWW buffer, and ~q~ cancels. This temporary
+choice preserves your text and position; the page's existing ~0~ toggle remains
+available.
+
 Use ~]~ and ~[~ to move between paragraphs. ~M-SPC~ requests the contents of
 the current HTML element. Section-navigation autospeak can read more than a
 heading or a line, depending on your setting; use explicit line or element
@@ -911,8 +917,15 @@ toggles section-navigation autospeak and ~i~ changes image suppression for
 subsequent rendering. The latter also changes the shared SHR image default
 while preserving buffer-local overrides; it does not reload the current page.
 Lowercase ~w~ saves those two Emacsvox defaults, ~A~ opens advanced settings,
-and ~q~ returns. These are presentation choices, not EWW's site or account
-preferences. Returning does not undo changes you have already made.
+and ~q~ returns. Returning does not undo changes you have already made.
+
+In the same menu, ~m~ chooses the HTTP identity default for Emacs URL requests,
+including requests outside EWW. /Browser/ sends the configured browser header;
+/Emacs/ identifies requests as =URL/Emacs=. EWW link following explicitly uses
+browser identity regardless of this default. Arrows browse, ~RET~ applies,
+and ~q~ cancels. Choosing an identity does not reload pages or change login
+state or browser capabilities. Both HTTP identity and the outlining choice
+are temporary and are excluded from ~w~.
 
 The Emacs/W3 and w3m survey is historical. Do not install either on the strength
 of the Heritage manual; use EWW unless a separately maintained integration says

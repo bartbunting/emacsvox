@@ -2799,7 +2799,10 @@ in [[*Browsing Structure][Browsing Structure]].
 EWW's ~s~ controls section-navigation autospeak and ~i~ suppresses images on
 subsequent rendering. It also updates the shared SHR image default while
 preserving local overrides; it does not reload the page. ~w~ saves the two
-Emacsvox defaults and ~A~ opens advanced settings.
+Emacsvox defaults and ~A~ opens advanced settings. The ~o~ outlining choice
+applies to the captured page, while ~m~ selects the HTTP identity default for Emacs URL
+requests. Both are temporary and excluded from ~w~; see
+[[info:emacsvox#Web Browsing][Reading web pages with EWW]] for their scope and effects.
 
 **** Notmuch and shared choice-list navigation
 :PROPERTIES:
