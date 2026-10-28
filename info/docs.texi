@@ -21788,8 +21788,8 @@ Speaks time value specified as seconds  since epoch.
 @findex emacsvox-speak-time
 
 @format
-Speak the time.
-Spoken time  is available via C-h N.
+Speak the time on the main speech stream.
+The reading is also available via C-h N.
 Optional interactive prefix arg ‘C-u’invokes world clock.
 Timezone is specified using minibuffer completion.
 Second interactive prefix sets clock to new timezone.
@@ -27415,6 +27415,7 @@ nil
 
 Makes search GMail more convenient.
 IMap search operators, GMail search extensions.
+
 @subsection Gm-Nnir Commands
 
 @subsubsection gm-nnir-group-make-gmail-group

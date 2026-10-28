@@ -20,6 +20,30 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Main-stream time reading, 2026-10-28
+
+Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the
+main speech stream. The formatted reading remains in notification history
+and the last-message cache. The time cue, timezone and format settings, and
+world-clock prefix behaviour are preserved. Brief time and scheduled alarms
+retain their existing delivery.
+
+The regression reproduces notification-stream delivery before the change.
+Seven focused source tests pass, covering repeated time readings, retained
+history and replay data, world-clock prefixes, time conversion, brief-message
+routing and scheduled alarms. The same seven tests pass in a fresh Emacs
+loading the compiled time module. Incremental compilation, byte-code
+preflight, reference generation, the non-mutating documentation gate and
+whitespace review pass.
+
+Live application: loaded the compiled time module into Emacs PID 3380937,
+socket =/run/user/1000/emacs/emacsvox=. The selected buffer, point, time
+format settings, last-message cache and both speech processes are preserved.
+Listening acceptance: accepted on 2026-10-28 after trying the loaded change.
+The commit checkpoint covers time speech routing, regression tests and the
+generated reference. Earlier buffer-end changes and investigation notes
+remain separate.
+
 ** Agent Shell automatic link URL notifications, 2026-10-28
 
 Observed in Emacs PID 3380937, socket =/run/user/1000/emacs/emacsvox=:

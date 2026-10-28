@@ -40,6 +40,7 @@
 
 (defvar ido-case-fold)
 (defvar emacsvox-use-icons)
+(defvar emacsvox-last-message)
 (declare-function emacsvox-shell-command "emacsvox-speak" (command))
 (declare-function emacsvox-speak-line "emacsvox-speak" (&optional arg))
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
@@ -115,8 +116,8 @@ Optional second arg `set' sets the TZ environment variable as well."
   (emacsvox-pip (format-time-string emacsvox-speak-time-brief-format)))
 
 (defun emacsvox-speak-time (&optional world)
-  "Speak the time.
-Spoken time  is available via \\[emacsvox-view-notifications].
+  "Speak the time on the main speech stream.
+The reading is also available via \\[emacsvox-view-notifications].
 Optional interactive prefix arg `C-u'invokes world clock.
 Timezone is specified using minibuffer completion.
 Second interactive prefix sets clock to new timezone."
@@ -129,7 +130,9 @@ Second interactive prefix sets clock to new timezone."
     (let ((time-string
            (format-time-string emacsvox-speak-time-format
                                (current-time) (getenv "TZ"))))
-      (tts-notify time-string)))))
+      (emacsvox-log-notification time-string)
+      (setq emacsvox-last-message time-string)
+      (tts-speak time-string)))))
 
 (defsubst ems--seconds-to-duration (sec)
   "Return seconds formatted as time if valid, otherwise return as is."

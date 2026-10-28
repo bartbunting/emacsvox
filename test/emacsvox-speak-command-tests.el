@@ -110,6 +110,46 @@
       (should (equal (emacsvox-speak-date-month/date) "02/29"))
       (should (equal (emacsvox-speak-year-month-date) "2024-02-29")))))
 
+(ert-deftest emacsvox-speak-time-uses-main-stream-and-keeps-history ()
+  "The time key uses main speech while preserving history and replay."
+  (require 'emacsvox-keymap)
+  (let ((emacsvox-speak-time-format "%H:%M on %Y-%m-%d")
+        (process-environment (cons "TZ=UTC0" process-environment))
+        (emacsvox-notifications-buffer (generate-new-buffer " *time history test*"))
+        (emacsvox-last-message nil)
+        (current-prefix-arg nil)
+        events)
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'current-time)
+                     (lambda () (encode-time 0 34 12 28 10 2026 t)))
+                    ((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'tts-speak)
+                     (lambda (text) (push (list 'main text) events)))
+                    ((symbol-function 'tts-notify)
+                     (lambda (text &rest _) (push (list 'notification text) events))))
+            (dotimes (_ 2)
+              (call-interactively (lookup-key emacsvox-keymap (kbd "t")))))
+          (should (equal (nreverse events)
+                         '((main "12:34 on 2026-10-28")
+                           (main "12:34 on 2026-10-28"))))
+          (should (equal emacsvox-last-message "12:34 on 2026-10-28"))
+          (with-current-buffer emacsvox-notifications-buffer
+            (should (equal (buffer-string)
+                           "12:34 on 2026-10-28\n12:34 on 2026-10-28\n"))))
+      (kill-buffer emacsvox-notifications-buffer))))
+
+(ert-deftest emacsvox-speak-time-prefix-keeps-world-clock ()
+  "The time key still delegates prefix arguments to the world clock."
+  (require 'emacsvox-keymap)
+  (dolist (current-prefix-arg '((4) (16)))
+    (let (prefix)
+      (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'emacsvox-speak-world-clock)
+                 (lambda () (interactive) (setq prefix current-prefix-arg))))
+        (call-interactively (lookup-key emacsvox-keymap (kbd "t"))))
+      (should (equal prefix current-prefix-arg)))))
+
 (ert-deftest emacsvox-speak-scheduled-message-delivers-at-callback ()
   "Scheduling defers delivery and preserves the message and alarm cues."
   (let ((emacsvox-use-icons t) scheduled spoken cues tones)
