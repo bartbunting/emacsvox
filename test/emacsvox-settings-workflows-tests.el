@@ -2009,6 +2009,52 @@
       (should-not requests)
       (should-not callbacks))))
 
+(ert-deftest emacsvox-settings-training-voice-editor-apply-save-and-return ()
+  "Training voice discovery preserves state until Apply and saves separately."
+  (require 'emacsvox-aural-explanation)
+  (let ((original (default-value 'emacsvox-aural-training-voice))
+        (properties (copy-tree (symbol-plist 'emacsvox-aural-training-voice)))
+        (emacsvox-aural-training-mode nil))
+    (unwind-protect
+        (emacsvox-test--with-settings
+          (set-default 'emacsvox-aural-training-voice 'annotate)
+          (execute-kbd-macro
+           (vconcat (kbd "/") "Training explanation voice" (kbd "RET")))
+          (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-settings-workflows--training-voice))
+          (should (eq (default-value 'emacsvox-aural-training-voice) 'annotate))
+          (execute-kbd-macro (kbd "RET"))
+          (should (derived-mode-p 'Custom-mode))
+          (should (equal (mapcar #'widget-value custom-options) '(emacsvox-aural-training-voice)))
+          (let* ((widget (car custom-options))
+                 (child (car (widget-get widget :children))))
+            (widget-value-set child 'bolden)
+            (should (eq (default-value 'emacsvox-aural-training-voice) 'annotate))
+            (custom-variable-set widget)
+            (should (eq (default-value 'emacsvox-aural-training-voice) 'bolden))
+            (should-not (file-exists-p custom-file))
+            (should-not emacsvox-aural-training-mode)
+            (let (voice)
+              (cl-letf (((symbol-function 'emacsvox-aural-compile-voice)
+                         (lambda (name) (setq voice name) 'inaudible)))
+                (emacsvox-aural-explanation--queue-training-explanation "Example"))
+              (should (eq voice 'bolden)))
+            (custom-variable-save widget))
+          (should (file-exists-p custom-file))
+          (should (derived-mode-p 'Custom-mode))
+          ;; Inside the editable symbol field, q must remain ordinary text.
+          (execute-kbd-macro (kbd "M-<"))
+          (should (eq (key-binding (kbd "q")) #'emacsvox-settings--custom-quit))
+          (should (functionp emacsvox-aural-ui--return-function))
+          (execute-kbd-macro (kbd "q"))
+          (should (eq (oref transient--prefix command) 'emacsvox-settings-presentation))
+          (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-settings-workflows--training-voice))
+          (set-default 'emacsvox-aural-training-voice 'annotate)
+          (load custom-file nil t)
+          (should (eq (default-value 'emacsvox-aural-training-voice) 'bolden))
+          (should-not emacsvox-aural-training-mode))
+      (set-default 'emacsvox-aural-training-voice original)
+      (setplist 'emacsvox-aural-training-voice properties))))
+
 (ert-deftest emacsvox-settings-history-enter-and-return ()
   "Enter opens history policy from its parent and restores the invoking item."
   (emacsvox-test--with-settings

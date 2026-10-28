@@ -151,6 +151,19 @@ Save exclusions are covered. Incremental compilation, byte-code preflight,
 regenerated manuals and the documentation gate pass. Commit checkpoint covers
 the EWW controls. Listening acceptance remains pending.
 
+Item 7: presentation settings and search now open a focused Customize editor
+for the training explanation voice. Help explains the global assignment,
+palette resolution, separate Apply and Save, and independence from the
+training toggle and shared named-voice definitions. Returning restores the
+selected menu item.
+
+Two focused graphical source tests pass, including Apply, Save, reload and
+the existing training toggle. The final fresh compiled graphical run passes
+all 47 selected table, integration, discovery, search and training cases.
+Incremental compilation, byte-code preflight, regenerated manuals and the
+documentation gate pass. This final commit checkpoint completes items 1–7.
+Listening acceptance remains pending; the live session has not been reloaded.
+
 ** Main-stream time reading, 2026-10-28
 
 Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the

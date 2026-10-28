@@ -77,6 +77,7 @@
     ("Tune the named voice at point" emacsvox-settings-workflows emacsvox-settings-feedback "t")
     ("Combined feedback rules" emacsvox-settings-workflows emacsvox-settings-presentation "o")
     ("Training explanations" emacsvox-settings-workflows emacsvox-settings-presentation "t")
+    ("Training explanation voice" emacsvox-settings-workflows emacsvox-settings-presentation "V")
     ("Semantic vocabulary reference" emacsvox-settings-workflows emacsvox-settings-presentation "h")
     ("Edit current and recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
     ("Presentation features and scoped rules" emacsvox-settings-workflows emacsvox-settings-presentation "f")

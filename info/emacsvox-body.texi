@@ -3759,6 +3759,11 @@ precedence from the order in which you edited settings.
 @kbd{C-e H r h} opens the semantic vocabulary without changing settings.
 @kbd{C-e H r t} toggles training explanations across all buffers for this Emacs
 session; it does not save a startup default.
+Use @kbd{C-e H r V} or search for @emph{Training explanation voice} to edit the global
+voice assignment@comma{} initially @code{annotate}. The active palette resolves that name;
+changing the assignment does not edit the shared named voice or enable training.
+The focused Customize editor has separate Apply and Save actions. Outside an
+editable field@comma{} @kbd{q} returns to the selected menu item without saving.
 
 @menu
 * What you can hear: Presentation Modalities.  Recognize speech, voices, cues, tones, pauses, and spatial output.

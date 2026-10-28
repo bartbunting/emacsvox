@@ -291,6 +291,17 @@ uses the existing training lifecycle, and does not save a startup default."
    (emacsvox-transient--menu-facts 'training 'command-menu-value-changed)
    'state-change 'select-object))
 
+(defun emacsvox-settings-workflows--training-voice ()
+  "Edit the global named-voice assignment for semantic training explanations.
+The active palette resolves this name; the default is annotate. Changing the
+assignment does not edit the shared named voice or enable training. Customize
+has separate Apply and Save actions. Returning with q does not save it."
+  (interactive)
+  (require 'emacsvox-aural-explanation)
+  (emacsvox-settings-workflows--reading-options
+   '(emacsvox-aural-training-voice) "*Customize Training Explanation Voice*"
+   'emacsvox-settings-workflows--training-voice))
+
 (defun emacsvox-settings-workflows--source-toggle-label (option label)
   "Describe buffer-local OPTION with LABEL in the captured source."
   (format "%s: %s" label
@@ -672,7 +683,8 @@ Omnivox punctuation.  Opening the menu changes nothing."
    ("l" "Voice Lock, local silence, and earcons" emacsvox-settings-switches :transient transient--do-stack)]
   ["Learn about feedback"
    ("h" "Semantic vocabulary reference" emacsvox-settings-workflows--semantics :transient transient--do-suspend)
-   ("t" (lambda () (emacsvox-settings-workflows--training-label)) emacsvox-settings-workflows--training :transient t)]
+   ("t" (lambda () (emacsvox-settings-workflows--training-label)) emacsvox-settings-workflows--training :transient t)
+   ("V" "Training explanation voice (separate Save)" emacsvox-settings-workflows--training-voice :transient transient--do-suspend)]
   ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]

@@ -488,6 +488,11 @@ precedence from the order in which you edited settings.
 ~C-e H r h~ opens the semantic vocabulary without changing settings.
 ~C-e H r t~ toggles training explanations across all buffers for this Emacs
 session; it does not save a startup default.
+Use ~C-e H r V~ or search for /Training explanation voice/ to edit the global
+voice assignment, initially =annotate=. The active palette resolves that name;
+changing the assignment does not edit the shared named voice or enable training.
+The focused Customize editor has separate Apply and Save actions. Outside an
+editable field, ~q~ returns to the selected menu item without saving.
 
 *** What You Can Hear
 :PROPERTIES:
