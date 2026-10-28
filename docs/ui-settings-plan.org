@@ -91,6 +91,32 @@ The commit checkpoint covers link-hint suppression, regression tests, the
 manual and generated Info updates. Earlier buffer-end feedback changes and
 unrelated investigation notes remain separate.
 
+** Eat word movement at the input boundary, 2026-10-28
+
+Observed: in =*eat*=, Emacs PID 3380937, socket
+=/run/user/1000/emacs/emacsvox=, Eat 0.9.4 is loaded from
+=~/.emacs.d/elpa/eat-0.9.4/eat.elc=. Line mode binds =M-b= to
+=backward-word= and Control-Left to =left-word=. At the editable input
+boundary, position 587230, three successive calls to either command leave
+point unchanged. Temporarily ignoring field boundaries allows both commands
+to cross the prompt. At the parked position 587060, backward movement works
+normally; a barrier at an older scrollback prompt has not been reproduced.
+
+Cause: Eat marks terminal output with =field eat-terminal= and gives the
+editable input a separate field. Emacs word motion deliberately stops at
+that field boundary. A fresh Emacs loading only the installed Eat package
+reproduces the same stop at position 48 in a disposable terminal. Moving
+back one character before moving by word reaches position 40, as does a
+temporary =inhibit-field-text-motion= binding. This isolates the demonstrated
+case from Emacsvox's speech advice. The live probes restore point and send
+no terminal input; no hooks, advice or timers are installed.
+
+Investigation only: no implementation or live configuration changed.
+The exact failing key and whether the reported prompt is current or historical
+remain to be confirmed. A possible fix is to relax the field boundary only
+for explicit word navigation in Eat line mode, preserving editing and deletion
+protection. That behaviour is proposed, not implemented or accepted.
+
 ** Agent Shell beginning of input, 2026-10-28
 
 Observed: in Explicit inline editing, =M-<= invokes =beginning-of-buffer=,
@@ -134,6 +160,56 @@ Listening acceptance: accepted on 2026-10-28 after trying the loaded fix.
 The commit checkpoint covers the conditional binding, regression tests,
 manual and generated Info updates. Earlier buffer-end feedback changes and
 unrelated investigation notes remain separate.
+
+** SharePoint desktop applications from mail, 2026-10-26
+
+Observed: the personal WSL configuration routes external URLs to Windows
+Edge. Two open Notmuch messages contain direct SharePoint Word document
+links, including the =/:w:/r/= form; one explicitly requests the browser
+with =web=1=. Office's own desktop-link preference does not govern Notmuch.
+
+Implemented in =~/emacs/site-lisp/emacsvox-config.org=: recognised HTTPS
+SharePoint Word, Excel and PowerPoint file links use Windows Office URI
+handlers. Direct =r= wrappers are removed, sharing parameters are preserved,
+and the =web= parameter is omitted. Opaque sharing links, viewer pages and
+other web URLs retain browser opening. Launch failures fall back to the
+original URL; later Office sign-in and document errors cannot be detected.
+=my/browse-url-windows-browser= provides an explicit browser alternative.
+This is personal URL routing, not a new Emacsvox command or default.
+
+Verification: nine focused tests pass in a fresh Emacs 31.0.90, covering
+recognition, sharing data, browser fallback, native Windows dispatch and
+WSL command encoding. Fresh compiled conversion checks preserve the sharing
+parameters of both actual message links. Compilation reports the existing
+obsolete =shr-external-browser= setting and the Windows-only shell function
+as warnings on Linux. The profile was tangled and the Windows configuration
+snapshot synchronized, with backups retained before replacement. Only the
+browser block was loaded into Emacs PID 5261; other live configuration was
+not reloaded. Windows has registered handlers for all three Office schemes.
+The non-mutating documentation gate and whitespace check pass. Opening the
+document successfully in Word still needs an interactive check. No commit
+has been made.
+
+Follow-up: the interactive check opened an unexpected document and Word
+asked about becoming the default HTML editor. This suggests an HTML response,
+but the prompt alone does not establish which page was received. Word had
+already exited when inspected; its recent-file records did not identify the
+failed opening. Unauthenticated HTTP probes of both original links, the
+converted links and their bare file paths returned 401, so they do not
+establish what the authenticated Office client receives.
+
+Automatic Office routing is now disabled in the running session and the
+canonical, WSL and Windows configuration copies. Shared URLs reach the browser
+unchanged. The converter is retained for investigation and is not a default
+handler. Ten tests pass, including a regression that routes a shared link
+through =browse-url= without rewriting it or launching Office. The earlier
+conversion tests established string handling, not successful document access.
+The next interactive check is SharePoint's own =Open in Desktop App= action;
+its result will distinguish this conversion failure from a broader Office
+access problem. Direct opening remains unresolved and is not accepted.
+The follow-up documentation gate stops at the byte-code preflight because
+other in-progress Lisp edits have made byte-code stale. Personal configuration
+routing tests pass; no repository Lisp was changed for this follow-up.
 
 ** Eat progress bars and decorative rows, 2026-10-24
 
@@ -233,6 +309,29 @@ pass with compiled integrations, including completed-output speech and reading
 the expanded result. Compilation and documentation checks introduce no new
 diagnostics. The running Emacs and installed Agent Shell package are unchanged;
 the checkout fix is uncommitted, and listening verification remains open.
+
+Follow-up interaction, 2026-10-24: the fresh test session loads the patched
+Agent Shell source. Running =printf 'first line\n'; sleep 2; printf 'last line\n'=
+leaves only =last line= in the expanded command. A following =text= source
+block contains both lines because it belongs to Codex's separate answer, not
+the command fragment. The saved transcript confirms this distinction.
+
+Two bounded captures of the test buffer show one 10-character output delta
+containing =last line= and its newline, followed by a completion update with
+terminal-exit metadata. The second capture records the decoded incoming ACP
+events before Agent Shell handles them as well as the resulting tool state.
+No first-line delta reaches that handler, and the state correctly retains the
+last-line delta through completion. No final content or raw-output snapshot
+supplies the missing line. This identifies an unresolved delivery issue before
+Agent Shell's renderer; it does not yet distinguish Codex, codex-acp, and the
+earlier ACP receive path. Do not treat this interaction as complete output
+acceptance or change speech to hide the missing command output.
+
+The same 33 focused graphical cases also pass with the actual patched Agent
+Shell source, complementing the earlier compiled-core checks. Those fixtures
+deliver both chunks and cannot establish that a live provider sends both.
+All temporary buffer/client-specific probes and their timers are removed.
+No implementation or live configuration changed during this diagnosis.
 
 ** Current Agent Shell compatibility findings, 2026-10-24
 
