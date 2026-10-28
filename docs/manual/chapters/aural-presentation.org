@@ -2748,8 +2748,10 @@ other speech backends. Zero volume does not disable notification recording.
 ~C-e S~ opens focused settings directly where available. Alternatively use
 ~C-e H j~ or ~C-e H . j~. In that integration menu, ~s~ invokes a local Agent
 Shell speech-level chooser or EAT/comint autospeak control, ~c~ opens the
-source integration's settings, and ~a~ chooses among Shell/comint and installed
-Agent Shell, EAT, Org, Notmuch, and EWW. Cancelling returns to the same entry.
+source integration's settings, and ~a~ chooses among loaded integrations.
+Settings search uses the same rule: installed packages appear only after you
+load them, for example by opening their application. Discovery does not load
+packages to reveal their settings. Cancelling returns to the same entry.
 
 The selected integration determines where a change applies and what its
 Save action retains. For example, a terminal-local setting is not automatically

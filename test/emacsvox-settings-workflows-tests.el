@@ -1776,6 +1776,43 @@
          (insert-file-contents custom-file)
          (should-not (string-match-p "search-result-fields\\|show-message-fields\\|status-icons" (buffer-string))))))))
 
+(ert-deftest emacsvox-settings-integrations-discovery-custom-options ()
+  "Named searches focus the option, then open its editor and restore focus."
+  (require 'agent-shell)
+  (require 'emacsvox-agent-shell)
+  (require 'notmuch)
+  (require 'emacsvox-notmuch)
+  (emacsvox-test--with-settings
+    (dolist (case '(("Notmuch spoken search field separator"
+                     emacsvox-settings-integrations--notmuch-search-separator
+                     emacsvox-notmuch-search-field-separator)
+                    ("Notmuch spoken message field separator"
+                     emacsvox-settings-integrations--notmuch-show-separator
+                     emacsvox-notmuch-show-field-separator)
+                    ("Agent Shell status icon spoken labels"
+                     emacsvox-settings-integrations--agent-status-labels
+                     emacsvox-agent-shell-status-speech-labels)
+                    ("Agent Shell out-of-turn speech delay"
+                     emacsvox-settings-integrations--agent-speech-delay
+                     emacsvox-agent-shell-speech-delay)))
+      (let ((before (copy-tree (symbol-value (nth 2 case))))
+            (customize (symbol-function 'customize-option)) opened)
+        (cl-letf (((symbol-function 'customize-option)
+                   (lambda (option &rest args)
+                     (setq opened option)
+                     (apply customize option args))))
+          (execute-kbd-macro (vconcat (kbd "/") (car case) (kbd "RET")))
+          (should-not opened)
+          (should (eq (emacsvox-test--menu-focused-command) (nth 1 case)))
+          (execute-kbd-macro (kbd "RET"))
+          (should (eq opened (nth 2 case)))
+          (should (derived-mode-p 'Custom-mode))
+          (execute-kbd-macro (kbd "q"))
+          (should (eq (emacsvox-test--menu-focused-command) (nth 1 case)))
+          (should (equal (symbol-value (nth 2 case)) before))
+          (should-not (file-exists-p custom-file))
+          (execute-kbd-macro (kbd "q")))))))
+
 (ert-deftest emacsvox-settings-integrations-notmuch-structured-return ()
   "Structured editors preserve order, custom formatters and their own save boundary."
   (skip-unless (require 'notmuch nil t))

@@ -28,6 +28,8 @@
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'cus-edit)
+(defvar emacsvox-settings-integrations--menus)
+(declare-function emacsvox-settings-integrations--loaded-p "emacsvox-settings-integrations" (kind))
 
 (defconst emacsvox-settings--destinations
   '(("Line reading, visual wrapping, continuation and screen rows" emacsvox-reading-settings emacsvox-reading-settings "m")
@@ -99,6 +101,8 @@
     ("Agent automatic content limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "a")
     ("Agent line navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "n")
     ("Agent block navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "k")
+    ("Agent Shell status icon spoken labels" emacsvox-settings-integrations emacsvox-settings-integrations--agent "x")
+    ("Agent Shell out-of-turn speech delay" emacsvox-settings-integrations emacsvox-settings-integrations--agent "d")
     ("Notmuch search completion" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "c")
     ("Notmuch per-field characters" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "f")
     ("Notmuch per-field utf-8 bytes" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "b")
@@ -106,6 +110,8 @@
     ("Notmuch total utf-8 bytes" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "B")
     ("Notmuch spoken search fields (ordered list)" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "s")
     ("Notmuch spoken message fields (ordered list)" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "m")
+    ("Notmuch spoken search field separator" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "S")
+    ("Notmuch spoken message field separator" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "M")
     ("Notmuch search status tags and fallback cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "i")
     ("Notmuch message status tags and fallback cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "I")
     ("Notmuch semantic status cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "p")
@@ -190,10 +196,21 @@
     ("Recent feedback" "Recent aural feedback"))
   "Additional search terms for settings, displayed under their original labels.")
 
+(defun emacsvox-settings--entry-available-p (entry)
+  "Whether ENTRY belongs to core settings or an already loaded integration."
+  (if (eq (nth 1 entry) 'emacsvox-settings-integrations)
+      (progn
+        (require 'emacsvox-settings-integrations)
+        (let ((kind (car (rassq (nth 2 entry) emacsvox-settings-integrations--menus))))
+          (or (null kind) (emacsvox-settings-integrations--loaded-p kind))))
+    t))
+
 (defun emacsvox-settings--open (entry)
   "Open settings ENTRY with the current captured source and scope."
   (let* ((context (emacsvox-aural-menu--context))
          (command (nth 2 entry)))
+    (unless (emacsvox-settings--entry-available-p entry)
+      (user-error "Open this integration before changing its settings"))
     (emacsvox-aural-menu--source context)
     (require (nth 1 entry))
     ;; These entry functions capture an undo boundary without applying edits.
@@ -211,6 +228,7 @@
                 :key (lambda (suffix) (oref suffix key)) :test #'equal)))))
 (defun emacsvox-settings--find (prompt entries)
   "Read a destination from ENTRIES with PROMPT, then focus its control."
+  (setq entries (seq-filter #'emacsvox-settings--entry-available-p entries))
   (emacsvox-settings--open
    (assoc (emacsvox-transient--read #'emacsvox-aural-ui--read-choice
                                    prompt entries emacsvox-settings--search-aliases)

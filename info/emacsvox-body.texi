@@ -6077,8 +6077,10 @@ other speech backends. Zero volume does not disable notification recording.
 @kbd{C-e S} opens focused settings directly where available. Alternatively use
 @kbd{C-e H j} or @kbd{C-e H . j}. In that integration menu@comma{} @kbd{s} invokes a local Agent
 Shell speech-level chooser or EAT/comint autospeak control@comma{} @kbd{c} opens the
-source integration's settings@comma{} and @kbd{a} chooses among Shell/comint and installed
-Agent Shell@comma{} EAT@comma{} Org@comma{} Notmuch@comma{} and EWW@. Cancelling returns to the same entry.
+source integration's settings@comma{} and @kbd{a} chooses among loaded integrations.
+Settings search uses the same rule: installed packages appear only after you
+load them@comma{} for example by opening their application. Discovery does not load
+packages to reveal their settings. Cancelling returns to the same entry.
 
 The selected integration determines where a change applies and what its
 Save action retains. For example@comma{} a terminal-local setting is not automatically
@@ -8271,11 +8273,14 @@ opens spoken Help; @kbd{q} returns to that browsed choice. In the parent menu@co
 the others active. @kbd{w} saves these four limits and completion policy as the
 five displayed global defaults@comma{} not every Notmuch option.
 
-For ordered search/message fields@comma{} use @kbd{s} and @kbd{m}. @kbd{i} and @kbd{I} open the
+For ordered search/message fields@comma{} use @kbd{s} and @kbd{m}. Uppercase @kbd{S} and @kbd{M}
+edit the text separating spoken search and message fields respectively;
+punctuation policy affects how that text sounds. @kbd{i} and @kbd{I} open the
 status-tag and fallback-cue maps. These linked Customize editors retain custom
 formatter functions and use their own Apply@comma{} Save@comma{} and Reset actions. Returning
 with @kbd{q} does not save them. @kbd{p} opens Presentation Options and @kbd{A} advanced
-settings@comma{} including separators. The full group is also available through
+settings. Search at @kbd{C-e H /} finds both separators after Notmuch is loaded.
+The full group is also available through
 @kbd{M-x customize-group @key{RET} emacsvox-notmuch @key{RET}}. These speech settings do not
 alter Notmuch's database or its own display configuration.
 
@@ -8653,8 +8658,17 @@ block-navigation character limits. @kbd{@key{RET}} accepts an exact positive int
 @code{none}; Shift-left/right adjusts by 100. For line navigation@comma{} @code{none} restores
 the core long-line policy. For the other limits it allows complete content.
 @kbd{w} saves the displayed global defaults through Customize@comma{} excluding the
-session override. @kbd{A} opens advanced settings; @kbd{q} returns. From the direct
+session override. The @kbd{x} and @kbd{d} editors below have their own Save actions.
+@kbd{A} opens advanced settings; @kbd{q} returns. From the direct
 @kbd{C-e S} entry@comma{} @kbd{q} closes the menu and leaves you in the captured buffer.
+
+Use @kbd{x} to edit the words spoken for rendered status icons without changing
+their display. Use @kbd{d} to edit the delay@comma{} in seconds@comma{} for grouping unsolicited
+out-of-turn messages. Normal submitted responses still follow turn completion;
+this delay does not determine when they are spoken. These global options open
+Customize with separate Apply and Save actions; @kbd{q} returns to the same menu
+entry. Search at @kbd{C-e H /} finds status labels and out-of-turn speech delay
+after Agent Shell is loaded.
 
 Thought content defaults to an icon under
 @code{emacsvox-agent-shell-speak-thought-process}.  Tool feedback is separately

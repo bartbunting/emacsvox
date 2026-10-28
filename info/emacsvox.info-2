@@ -88,7 +88,9 @@ File: emacsvox.info,  Node: Integration Speech Settings,  Prev: Output Volumes, 
 use ‘C-e H j’ or ‘C-e H . j’.  In that integration menu, ‘s’ invokes a
 local Agent Shell speech-level chooser or EAT/comint autospeak control,
 ‘c’ opens the source integration's settings, and ‘a’ chooses among
-Shell/comint and installed Agent Shell, EAT, Org, Notmuch, and EWW.
+loaded integrations.  Settings search uses the same rule: installed
+packages appear only after you load them, for example by opening their
+application.  Discovery does not load packages to reveal their settings.
 Cancelling returns to the same entry.
 
    The selected integration determines where a change applies and what
@@ -2337,14 +2339,17 @@ integer or ‘none’.  Disabling one limit leaves the others active.  ‘w’
 saves these four limits and completion policy as the five displayed
 global defaults, not every Notmuch option.
 
-   For ordered search/message fields, use ‘s’ and ‘m’.  ‘i’ and ‘I’ open
-the status-tag and fallback-cue maps.  These linked Customize editors
-retain custom formatter functions and use their own Apply, Save, and
-Reset actions.  Returning with ‘q’ does not save them.  ‘p’ opens
-Presentation Options and ‘A’ advanced settings, including separators.
-The full group is also available through ‘M-x customize-group <RET>
-emacsvox-notmuch <RET>’.  These speech settings do not alter Notmuch's
-database or its own display configuration.
+   For ordered search/message fields, use ‘s’ and ‘m’.  Uppercase ‘S’
+and ‘M’ edit the text separating spoken search and message fields
+respectively; punctuation policy affects how that text sounds.  ‘i’ and
+‘I’ open the status-tag and fallback-cue maps.  These linked Customize
+editors retain custom formatter functions and use their own Apply, Save,
+and Reset actions.  Returning with ‘q’ does not save them.  ‘p’ opens
+Presentation Options and ‘A’ advanced settings.  Search at ‘C-e H /’
+finds both separators after Notmuch is loaded.  The full group is also
+available through ‘M-x customize-group <RET> emacsvox-notmuch <RET>’.
+These speech settings do not alter Notmuch's database or its own display
+configuration.
 
 10.6.1 Choose the information in a spoken summary
 -------------------------------------------------
@@ -2757,9 +2762,19 @@ and block-navigation character limits.  ‘<RET>’ accepts an exact
 positive integer or ‘none’; Shift-left/right adjusts by 100.  For line
 navigation, ‘none’ restores the core long-line policy.  For the other
 limits it allows complete content.  ‘w’ saves the displayed global
-defaults through Customize, excluding the session override.  ‘A’ opens
-advanced settings; ‘q’ returns.  From the direct ‘C-e S’ entry, ‘q’
-closes the menu and leaves you in the captured buffer.
+defaults through Customize, excluding the session override.  The ‘x’ and
+‘d’ editors below have their own Save actions.  ‘A’ opens advanced
+settings; ‘q’ returns.  From the direct ‘C-e S’ entry, ‘q’ closes the
+menu and leaves you in the captured buffer.
+
+   Use ‘x’ to edit the words spoken for rendered status icons without
+changing their display.  Use ‘d’ to edit the delay, in seconds, for
+grouping unsolicited out-of-turn messages.  Normal submitted responses
+still follow turn completion; this delay does not determine when they
+are spoken.  These global options open Customize with separate Apply and
+Save actions; ‘q’ returns to the same menu entry.  Search at ‘C-e H /’
+finds status labels and out-of-turn speech delay after Agent Shell is
+loaded.
 
    Thought content defaults to an icon under
 ‘emacsvox-agent-shell-speak-thought-process’.  Tool feedback is

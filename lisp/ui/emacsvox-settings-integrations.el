@@ -71,10 +71,15 @@ settings.  Changes retain the scope shown by each control."
     (eww "EWW browser" eww emacsvox-eww emacsvox-eww))
   "Integration ID, label, package library, speech feature, and Custom group.
 A nil group denotes a focused menu with buffer-only controls.")
+(defun emacsvox-settings-integrations--loaded-p (kind)
+  "Whether KIND's underlying package has already been loaded."
+  (when-let* ((entry (assq kind emacsvox-settings-integrations--catalogue)))
+    (featurep (nth 2 entry))))
 (defun emacsvox-settings-integrations--kind ()
   "Identify the integration belonging to the captured buffer."
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
-    (cond ((derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode
+    (let ((kind
+           (cond ((derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode
                            'agent-shell-viewport-edit-mode) 'agent)
           ((or (derived-mode-p 'eat-mode 'emacsvox-eat-review-mode)
                (and (bound-and-true-p eat-terminal)
@@ -86,12 +91,13 @@ A nil group denotes a focused menu with buffer-only controls.")
           ((derived-mode-p 'Info-mode) 'info)
           ((derived-mode-p 'notmuch-hello-mode 'notmuch-search-mode 'notmuch-show-mode 'notmuch-tree-mode) 'notmuch)
           ((derived-mode-p 'eww-mode) 'eww))))
+      (and (emacsvox-settings-integrations--loaded-p kind) kind))))
 (defun emacsvox-settings-integrations--open (kind suffix)
   "Open KIND's focused menu or Custom group, returning to SUFFIX."
   (let ((entry (assq kind emacsvox-settings-integrations--catalogue)))
     (unless entry (user-error "No integration settings group for this buffer"))
-    (unless (locate-library (symbol-name (nth 2 entry)))
-      (user-error "%s is not installed" (nth 1 entry)))
+    (unless (emacsvox-settings-integrations--loaded-p kind)
+      (user-error "Open %s before changing its settings" (nth 1 entry)))
     (require (nth 3 entry))
     (if-let* ((menu (alist-get kind emacsvox-settings-integrations--menus)))
         (transient-setup
@@ -105,13 +111,14 @@ A nil group denotes a focused menu with buffer-only controls.")
   (emacsvox-settings-integrations--open (emacsvox-settings-integrations--kind)
                                        'emacsvox-settings-integrations--current))
 (defun emacsvox-settings-integrations--all ()
-  "Choose an installed integration's speech settings."
+  "Choose a loaded integration's speech settings without loading other packages."
   (interactive)
   (condition-case nil
       (let* ((choices (mapcar (lambda (entry) (cons (nth 1 entry) (car entry)))
                              (cl-remove-if-not
-                              (lambda (entry) (locate-library (symbol-name (nth 2 entry))))
+                              (lambda (entry) (emacsvox-settings-integrations--loaded-p (car entry)))
                               emacsvox-settings-integrations--catalogue)))
+             (_ (unless choices (user-error "No supported integration is loaded")))
              (kind (cdr (assoc (completing-read "Integration settings: " choices nil t) choices))))
         (emacsvox-settings-integrations--open kind 'emacsvox-settings-integrations--all))
     (quit (emacsvox-settings-integrations--return 'emacsvox-settings-integrations--all))))
@@ -874,6 +881,27 @@ precedence. Use w to save."
   (interactive)
   (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-input-feedback))
 
+(defun emacsvox-settings-integrations--agent-status-labels ()
+  "Edit global words spoken for rendered Agent Shell status icons.
+Only speech copies change; visual icons remain unchanged. Removing an entry
+leaves its icon to the speech server. Customize has separate Apply and Save
+actions; q returns here. The menu's w does not save this option."
+  (interactive)
+  (require 'emacsvox-agent-shell)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-agent-shell-status-speech-labels 'emacsvox-settings-integrations--agent-status-labels))
+
+(defun emacsvox-settings-integrations--agent-speech-delay ()
+  "Edit the global delay for grouping out-of-turn Agent Shell messages.
+The delay is in seconds and applies to unsolicited streaming messages only.
+Normal submitted responses follow turn completion, not this timer.
+Customize has separate Apply and Save actions; q returns here.
+The menu's w does not save this option."
+  (interactive)
+  (require 'emacsvox-agent-shell)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-agent-shell-speech-delay 'emacsvox-settings-integrations--agent-speech-delay))
+
 (transient-define-prefix emacsvox-settings-integrations--agent ()
   "Control Agent Shell speech, separating session overrides and global defaults."
   ["Captured session (temporary)"
@@ -912,6 +940,8 @@ precedence. Use w to save."
     emacsvox-settings-integrations--agent-block-limit :transient t)
   ]
   ["Defaults and advanced settings"
+   ("x" "Status icon spoken labels (separate Save)" emacsvox-settings-integrations--agent-status-labels :transient transient--do-suspend)
+   ("d" "Out-of-turn speech delay (separate Save)" emacsvox-settings-integrations--agent-speech-delay :transient transient--do-suspend)
    ("w" "Save displayed global defaults" emacsvox-settings-integrations--agent-save :transient t)
    ("A" "Advanced Agent Shell settings (Customize)" emacsvox-settings-integrations--agent-custom :transient transient--do-suspend)]
   ["Finish"
@@ -1093,6 +1123,26 @@ The structured editor has its own Apply and Save actions."
   (require 'emacsvox-notmuch)
   (emacsvox-settings-integrations--custom-option
    'emacsvox-notmuch-show-message-fields 'emacsvox-settings-integrations--notmuch-show-fields))
+(defun emacsvox-settings-integrations--notmuch-search-separator ()
+  "Edit the global text separating spoken Notmuch search-result fields.
+This changes speech, not displayed columns. Punctuation policy affects how
+the separator sounds. Customize has separate Apply and Save actions;
+q returns here. The menu's w does not save this option."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-notmuch-search-field-separator 'emacsvox-settings-integrations--notmuch-search-separator))
+
+(defun emacsvox-settings-integrations--notmuch-show-separator ()
+  "Edit the global text separating spoken fields for a Notmuch message.
+This changes speech, not displayed headers. Punctuation policy affects how
+the separator sounds. Customize has separate Apply and Save actions;
+q returns here. The menu's w does not save this option."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-notmuch-show-field-separator 'emacsvox-settings-integrations--notmuch-show-separator))
+
 (defun emacsvox-settings-integrations--notmuch-search-icons ()
   "Map search status tags to fallback sounds or silence instead of spoken tags.
 Semantic status cues take precedence when enabled.
@@ -1130,7 +1180,9 @@ Structured field and status editors have their own Save actions."
   "Control mail feedback and open its structured field and cue editors."
   ["Spoken content: save inside each editor"
    ("s" "Spoken search fields (ordered list)" emacsvox-settings-integrations--notmuch-search-fields :transient transient--do-suspend)
-   ("m" "Spoken message fields (ordered list)" emacsvox-settings-integrations--notmuch-show-fields :transient transient--do-suspend)]
+   ("m" "Spoken message fields (ordered list)" emacsvox-settings-integrations--notmuch-show-fields :transient transient--do-suspend)
+   ("S" "Search field separator (separate Save)" emacsvox-settings-integrations--notmuch-search-separator :transient transient--do-suspend)
+   ("M" "Message field separator (separate Save)" emacsvox-settings-integrations--notmuch-show-separator :transient transient--do-suspend)]
   ["Status feedback (global)"
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-completion))
     emacsvox-settings-integrations--notmuch-completion :transient transient--do-suspend)
@@ -1160,11 +1212,11 @@ Structured field and status editors have their own Save actions."
   "Find integration settings and existing local speech controls."
   ["Captured buffer"
    ("s" (lambda () (emacsvox-settings-integrations--control-label))
-    emacsvox-settings-integrations--control :inapt-if-not emacsvox-settings-integrations--control-p :transient t)
+    emacsvox-settings-integrations--control :if emacsvox-settings-integrations--control-p :transient t)
    ("c" (lambda () (emacsvox-settings-integrations--current-label)) emacsvox-settings-integrations--current
-    :inapt-if-not emacsvox-settings-integrations--group-p :transient transient--do-suspend)]
-  ["All integrations"
-   ("a" "Choose integration settings" emacsvox-settings-integrations--all :transient transient--do-suspend)]
+    :if emacsvox-settings-integrations--group-p :transient transient--do-suspend)]
+  ["Loaded integrations"
+   ("a" "Choose loaded integration settings" emacsvox-settings-integrations--all :transient transient--do-suspend)]
   ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]

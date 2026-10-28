@@ -277,8 +277,17 @@ block-navigation character limits. ~RET~ accepts an exact positive integer or
 =none=; Shift-left/right adjusts by 100. For line navigation, =none= restores
 the core long-line policy. For the other limits it allows complete content.
 ~w~ saves the displayed global defaults through Customize, excluding the
-session override. ~A~ opens advanced settings; ~q~ returns. From the direct
+session override. The ~x~ and ~d~ editors below have their own Save actions.
+~A~ opens advanced settings; ~q~ returns. From the direct
 ~C-e S~ entry, ~q~ closes the menu and leaves you in the captured buffer.
+
+Use ~x~ to edit the words spoken for rendered status icons without changing
+their display. Use ~d~ to edit the delay, in seconds, for grouping unsolicited
+out-of-turn messages. Normal submitted responses still follow turn completion;
+this delay does not determine when they are spoken. These global options open
+Customize with separate Apply and Save actions; ~q~ returns to the same menu
+entry. Search at ~C-e H /~ finds status labels and out-of-turn speech delay
+after Agent Shell is loaded.
 
 Thought content defaults to an icon under
 =emacsvox-agent-shell-speak-thought-process=.  Tool feedback is separately

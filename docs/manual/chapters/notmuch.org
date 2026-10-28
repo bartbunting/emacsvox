@@ -363,11 +363,14 @@ opens spoken Help; ~q~ returns to that browsed choice. In the parent menu,
 the others active. ~w~ saves these four limits and completion policy as the
 five displayed global defaults, not every Notmuch option.
 
-For ordered search/message fields, use ~s~ and ~m~. ~i~ and ~I~ open the
+For ordered search/message fields, use ~s~ and ~m~. Uppercase ~S~ and ~M~
+edit the text separating spoken search and message fields respectively;
+punctuation policy affects how that text sounds. ~i~ and ~I~ open the
 status-tag and fallback-cue maps. These linked Customize editors retain custom
 formatter functions and use their own Apply, Save, and Reset actions. Returning
 with ~q~ does not save them. ~p~ opens Presentation Options and ~A~ advanced
-settings, including separators. The full group is also available through
+settings. Search at ~C-e H /~ finds both separators after Notmuch is loaded.
+The full group is also available through
 ~M-x customize-group RET emacsvox-notmuch RET~. These speech settings do not
 alter Notmuch's database or its own display configuration.
 

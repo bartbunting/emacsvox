@@ -116,6 +116,22 @@ Incremental compilation, byte-code preflight and the documentation gate pass.
 The commit includes the audit and this first correction. Listening acceptance
 remains pending.
 
+Items 2–4: named searches and focused menu entries open the existing Customize
+editors for Notmuch search/message separators and Agent Shell status labels
+and out-of-turn delay. Help explains global scope, normal-turn completion,
+punctuation effects, and each editor's separate Apply and Save. Returning
+restores the originating control without saving.
+
+Integration search and the chooser now check loaded package features, not
+installed files. Contextual entry follows the same rule and stale entries
+cannot load a package through the open action. Four focused source and compiled
+graphical checks pass, including search of every available destination and
+loaded/unloaded eligibility. Five compiled graphical search checks also pass.
+The runner uses silent pipe processes for completion feedback; it does not
+contact a live speech server. Incremental compilation, regenerated manuals,
+byte-code preflight and the documentation gate pass. Commit checkpoint covers
+these controls and eligibility. Listening acceptance remains pending.
+
 ** Main-stream time reading, 2026-10-28
 
 Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the
