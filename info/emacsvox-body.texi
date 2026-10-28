@@ -8463,6 +8463,10 @@ Press @kbd{C-c e} (@code{emacsvox-agent-shell-browse}) to return to browsing at 
 without sending or discarding the draft. Emacsvox says “Browsing.”
 Moving out of the live input also returns to browsing and keeps the destination's
 navigation speech; moving between its lines keeps editing active.
+While editing@comma{} @kbd{M-<} moves to the beginning of the draft and reads its first
+line without leaving editing. To reach the top of the transcript@comma{} press
+@kbd{C-c e} followed by @kbd{M-<}. Automatic input and viewport editors retain their
+ordinary @kbd{M-<} binding.
 A successful submission or queueing
 returns to browsing@comma{} while a rejected submission keeps its draft editable.
 The mode line shows @emph{Agent browse} or @emph{Agent edit}. Reading the first input

@@ -222,10 +222,28 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
                        (min prompt-start (point))))))
         command))))
 
+(defun emacsvox-agent-shell--input-beginning-filter (command)
+  "Offer COMMAND only while explicitly editing the live inline draft."
+  (when (and emacsvox-agent-shell--input-editing
+             (agent-shell--point-in-live-input-p))
+    command))
+
+(defun emacsvox-agent-shell--input-beginning ()
+  "Move to the start of the live draft and speak its first line."
+  (interactive)
+  (goto-char (or (agent-shell--prompt-input-start)
+                 (user-error "No live input")))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
+
 (defvar emacsvox-agent-shell--input-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c i") #'emacsvox-agent-shell-edit-input)
     (define-key map (kbd "C-c e") #'emacsvox-agent-shell-browse)
+    (define-key map (kbd "M-<")
+                '(menu-item "Beginning of input" emacsvox-agent-shell--input-beginning
+                            :filter emacsvox-agent-shell--input-beginning-filter))
     (dolist (key '("RET" "<return>"))
       (define-key map (kbd key)
                   '(menu-item "Edit input" emacsvox-agent-shell-edit-input

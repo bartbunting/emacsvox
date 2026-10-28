@@ -2545,11 +2545,15 @@ to restore the ordinary binding.
 at point without sending or discarding the draft.  Emacsvox says
 “Browsing.” Moving out of the live input also returns to browsing and
 keeps the destination's navigation speech; moving between its lines
-keeps editing active.  A successful submission or queueing returns to
-browsing, while a rejected submission keeps its draft editable.  The
-mode line shows _Agent browse_ or _Agent edit_.  Reading the first input
-line says “Input” along with the agent's busy or waiting status.
-Browsing protects the draft from ordinary typing, paste and deletion.
+keeps editing active.  While editing, ‘M-<’ moves to the beginning of
+the draft and reads its first line without leaving editing.  To reach
+the top of the transcript, press ‘C-c e’ followed by ‘M-<’.  Automatic
+input and viewport editors retain their ordinary ‘M-<’ binding.  A
+successful submission or queueing returns to browsing, while a rejected
+submission keeps its draft editable.  The mode line shows _Agent browse_
+or _Agent edit_.  Reading the first input line says “Input” along with
+the agent's busy or waiting status.  Browsing protects the draft from
+ordinary typing, paste and deletion.
 
    For sound-only feedback when activating editing or returning to
 browsing, open ‘C-e S e’ and choose _Earcon_.  _Speech_ is the default;

@@ -20,6 +20,50 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Agent Shell beginning of input, 2026-10-28
+
+Observed: in Explicit inline editing, =M-<= invokes =beginning-of-buffer=,
+leaves the live draft and returns to browsing. A regression reproduces the
+movement to buffer position 1 instead of the prompt input boundary.
+
+Implemented: =M-<= in active Explicit inline editing moves to the start of
+the draft and speaks the first line with the large-movement cue. Repeating
+it keeps editing active, including with an empty draft. Browsing, Automatic
+input and viewport modes retain their existing binding; =C-c e M-<= reaches
+the transcript top. This intentionally displaces the global buffer-start
+command only during Explicit inline editing.
+
+Binding inspection covers the pinned Agent Shell 0.89.1 dependency and the
+profile's =/home/bart/src/agent-shell/= checkout. The running Emacs reports
+0.89.3, while a fresh load of that path reports 0.89.4; these are distinct
+loaded versions. Its Shell Maker comes from =shell-maker-20261022.236=.
+Neither inspected set of shell, inherited, viewport or contextual maps binds
+=M-<=. Focused source tests pass for empty and multiline drafts while idle
+and busy, repeated movement, continued typing and the unaffected modes.
+Verification: all 714 pinned integration tests pass. Eight focused checks
+also pass in a fresh Emacs loading this integration's byte-code and the
+configured Agent Shell and Shell Maker paths, including binding overlap,
+literal navigation letters, table and permission actions, and draft resume.
+The existing leave-input regression now invokes =beginning-of-buffer= through
+=M-x=, preserving its coverage of movement outside the draft. Incremental
+compilation, byte-code preflight, manual generation, the non-mutating
+documentation gate and whitespace review pass. Graphical integration cases
+were excluded from the batch gate; this change uses the logical input boundary.
+The compiled change also supports a fresh profile restart.
+
+Live application, 2026-10-28: loaded the verified compiled movement module
+into Emacs PID 3380937 through =/run/user/1000/emacs/emacsvox= and installed
+the conditional binding in the existing input map. Effective bindings in
+all six Agent Shell buffers select the input-start command while editing and
+=beginning-of-buffer= while browsing. Draft hashes, modification ticks, point,
+read-only protection and editing state are unchanged across the reload.
+The main and notification speech processes remain untouched.
+
+Listening acceptance: accepted on 2026-10-28 after trying the loaded fix.
+The commit checkpoint covers the conditional binding, regression tests,
+manual and generated Info updates. Earlier buffer-end feedback changes and
+unrelated investigation notes remain separate.
+
 ** Eat progress bars and decorative rows, 2026-10-24
 
 Observed: moving through download output with =next-line= in =*eat*= submits

@@ -63,6 +63,10 @@ Press ~C-c e~ (=emacsvox-agent-shell-browse=) to return to browsing at point
 without sending or discarding the draft. Emacsvox says “Browsing.”
 Moving out of the live input also returns to browsing and keeps the destination's
 navigation speech; moving between its lines keeps editing active.
+While editing, ~M-<~ moves to the beginning of the draft and reads its first
+line without leaving editing. To reach the top of the transcript, press
+~C-c e~ followed by ~M-<~. Automatic input and viewport editors retain their
+ordinary ~M-<~ binding.
 A successful submission or queueing
 returns to browsing, while a rejected submission keeps its draft editable.
 The mode line shows /Agent browse/ or /Agent edit/. Reading the first input

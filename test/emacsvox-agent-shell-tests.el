@@ -10629,6 +10629,60 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (execute-kbd-macro (kbd "C-x u")))
           (should (equal (buffer-string) (substring draft 0 -1))))))))
 
+(ert-deftest emacsvox-agent-shell-explicit-input-beginning ()
+  "M-< reaches the draft start without leaving editing or changing text."
+  (dolist (busy '(nil t))
+    (dolist (draft '("" "first line\nsecond line"))
+      (emacsvox-agent-shell-test--with-explicit-input
+        (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy)))
+          (let ((inhibit-read-only t))
+            (delete-region (agent-shell--prompt-input-start) (point-max))
+            (insert draft))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-c i")))
+          (let ((original (buffer-string)))
+            (dotimes (_ 2)
+              (let ((events (emacsvox-agent-shell-test--capture-events
+                              (execute-kbd-macro (kbd "M-<")))))
+                (should (= (point) (agent-shell--prompt-input-start)))
+                (should emacsvox-agent-shell--input-editing)
+                (should-not buffer-read-only)
+                (should (member '(icon large-movement) events))
+                (should (= 1 (length (seq-filter
+                                     (lambda (event) (eq (car event) 'speak)) events))))
+                (should-not (assq 'notify events))))
+            (should (equal (buffer-string) original)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro "x"))
+          (should (equal (agent-shell--prompt-input) (concat "x" draft)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-c e M-<")))
+          (should (= (point) (point-min)))
+          (should-not emacsvox-agent-shell--input-editing))))))
+
+(ert-deftest emacsvox-agent-shell-explicit-input-beginning-scope ()
+  "Browsing, Automatic input and viewport editors retain upstream M-<."
+  (dolist (map '(agent-shell-mode-map shell-maker-mode-map
+                 agent-shell-viewport-view-mode-map agent-shell-viewport-edit-mode-map
+                 agent-shell-ui-fragment-map agent-shell-list-edit-mode-map
+                 agent-shell-elicitation-map agent-shell-elicitation-preview-map))
+    (should-not (commandp (lookup-key (symbol-value map) (kbd "M-<")))))
+  (emacsvox-agent-shell-test--with-explicit-input
+    (should (eq (key-binding (kbd "M-<")) 'beginning-of-buffer))
+    (dolist (map '(agent-shell-elicitation-map agent-shell-elicitation-preview-map
+                   agent-shell-ui-fragment-map))
+      (let ((overriding-local-map (symbol-value map)))
+        (should (eq (key-binding (kbd "M-<")) 'beginning-of-buffer))))
+    (setq-local emacsvox-agent-shell-input-activation 'automatic)
+    (emacsvox-agent-shell--input-sync)
+    (should (eq (key-binding (kbd "M-<")) 'beginning-of-buffer)))
+  (dolist (mode '(agent-shell-viewport-view-mode agent-shell-viewport-edit-mode))
+    (emacsvox-agent-shell-test--with-current-session
+      (let ((major-mode mode))
+        (use-local-map (symbol-value (intern (format "%s-map" mode))))
+        (emacsvox-agent-shell--input-setup)
+        (should (eq (key-binding (kbd "M-<")) 'beginning-of-buffer))))))
+
 (ert-deftest emacsvox-agent-shell-explicit-input-prompt-label ()
   "Return activates the whole live prompt label without submitting its draft."
   (dolist (busy '(nil t))
@@ -10909,7 +10963,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (execute-kbd-macro (kbd "C-c i C-p")))
     (should emacsvox-agent-shell--input-editing)
     (emacsvox-agent-shell-test--capture-events
-      (execute-kbd-macro (kbd "M-<")))
+      (execute-kbd-macro (kbd "M-x beginning-of-buffer RET")))
     (should-not emacsvox-agent-shell--input-editing)
     (should buffer-read-only)
     (emacsvox-agent-shell-test--capture-events
