@@ -406,12 +406,21 @@ When on a close delimiter, speak matching delimiter after a small delay. "
     (emacsvox-speak-word)))
 
 (emacsvox-advice--define-interactive-after-advice
-    (beginning-of-buffer end-of-buffer)
+    (beginning-of-buffer)
     "Speak the line."
   (let ((emacsvox-aural-submission-occasion 'navigation))
     (emacsvox-icon 'large-movement)
     (emacsvox-speak-line))
   (tts-notify (emacsvox-get-current-percentage-verbosely)))
+
+(emacsvox-advice--define-interactive-after-advice
+    (end-of-buffer)
+    "Speak the destination without a competing bottom notice in Agent Shell."
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line))
+  (unless (and (derived-mode-p 'agent-shell-mode) (= (point) (point-max)))
+    (tts-notify (emacsvox-get-current-percentage-verbosely))))
 
 (emacsvox-advice--define-interactive-after-advice
     (tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent

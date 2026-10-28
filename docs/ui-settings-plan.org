@@ -211,6 +211,57 @@ The follow-up documentation gate stops at the byte-code preflight because
 other in-progress Lisp edits have made byte-code stale. Personal configuration
 routing tests pass; no repository Lisp was changed for this follow-up.
 
+** Overlapping buffer-end feedback, 2026-10-26
+
+Observed in =Codex 2 Agent @ emacsvox=, Emacs PID 5261, server socket
+=/run/user/1000/emacs/emacsvox=. =M->= invokes =end-of-buffer=. At
+19:56:57 UTC on 25 October, it reached the editable prompt at point 797325.
+Submission 45862, main-stream dispatch 67876, spoke the input label and draft
+text. Notification dispatch 67877 independently spoke "bottom". The aural
+and Omnivox logs agree on these dispatch IDs and show approximately 150 ms
+of overlapping playback. Further presses repeat the same pair. Cancellation
+of the previous main reading on the next press is separate, expected behaviour.
+
+Cause: the loaded core navigation advice reads the destination line and then
+calls =tts-notify= with the buffer position. These streams play independently.
+The same advice handles =M-<=, so this interaction is not limited to Agent
+Shell. Its installed package path is =agent-shell-20261024.1110=; the core
+advice and TTS functions are loaded from this checkout's byte-code.
+
+Implemented: =end-of-buffer= omits the position notification when it reaches
+the end of an Agent Shell buffer. The destination reading and large-movement
+cue remain. =M-<=, numeric-prefix jumps to intermediate positions, and other
+buffer modes retain their position notifications. Notification routing and
+unrelated background announcements are unchanged.
+
+Regression coverage invokes =M->= with empty and populated live prompts,
+including repeated presses. It checks one destination reading, the movement
+cue, no position notification, and an unchanged draft. Separate scope checks
+cover the retained notifications. The new Agent Shell regression fails on
+the original advice. Live sessions and personal configuration are unchanged.
+
+Verification: 712 pinned integration tests and 1,073 core tests pass in an
+isolated checkout; the core batch skips 18 graphical or native-service cases.
+Incremental compilation and byte-code preflight pass in the working checkout.
+The two focused regressions also pass in a fresh Emacs loading compiled core
+advice and the installed =agent-shell-20261024.1110= package. Compilation
+reports warnings in unrelated =tts-lifecycle.el= and =emacsvox.el= code.
+The change was prepared for a fresh profile, with listening acceptance pending.
+
+The initial documentation gate reported a stale generated reference. An isolated
+regeneration identifies the unrelated, uncommitted =omnivox-session-tts=
+module added to the build inventory as the difference. This navigation change
+does not alter the reference. Generated documentation is left for that work's
+verification and generation pass.
+
+Listening accepted on 2026-10-28: reaching the Agent Shell input with =M->=
+reads the destination without the overlapping "bottom" announcement.
+Commit checkpoint on =master=: the implementation and regression coverage
+pass 716 integration tests, 1,030 core tests, and both focused regressions
+in a fresh Emacs loading the compiled core advice. The core batch skips
+18 unrelated graphical or native-service cases. Incremental compilation,
+byte-code preflight and the documentation gate pass.
+
 ** Eat progress bars and decorative rows, 2026-10-24
 
 Observed: moving through download output with =next-line= in =*eat*= submits

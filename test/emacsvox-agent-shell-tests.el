@@ -12649,5 +12649,47 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not emacsvox-table-reader--suspended))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
+(ert-deftest emacsvox-agent-shell-end-of-buffer-omits-bottom-notification ()
+  "M-> reads the live prompt once without a competing bottom notification."
+  (require 'emacsvox-advice)
+  (dolist (draft '("" "keep this draft"))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (emacsvox-agent-shell-test--insert-live-chat-input draft)
+        (let ((original (buffer-string)))
+          (goto-char (point-min))
+          (dotimes (_ 2)
+            (let ((events (emacsvox-agent-shell-test--capture-events
+                            (execute-kbd-macro (kbd "M->")))))
+              (should (= (point) (point-max)))
+              (should (member '(icon large-movement) events))
+              (should-not (assq 'notify events))
+              (should (equal (mapcar #'cadr
+                                    (seq-filter (lambda (event) (eq (car event) 'speak))
+                                                events))
+                             (list (concat "Codex> " draft))))))
+          (should (equal (buffer-string) original)))))))
+
+(ert-deftest emacsvox-agent-shell-buffer-boundary-notification-scope ()
+  "Top, intermediate positions and ordinary buffers keep position feedback."
+  (require 'emacsvox-advice)
+  (dolist (case '((fundamental-mode end-of-buffer nil "bottom")
+                  (agent-shell-mode beginning-of-buffer nil "top")
+                  (agent-shell-mode end-of-buffer 5 "%")))
+    (pcase-let ((`(,mode ,command ,argument ,expected) case))
+      (with-temp-buffer
+        (insert (apply #'concat (make-list 100 "row\n")))
+        (setq major-mode mode)
+        (let ((events
+               (cl-letf (((symbol-function 'emacsvox-speak-line) #'ignore))
+                 (emacsvox-agent-shell-test--capture-events
+                   (funcall-interactively command argument)))))
+          (should (= (length (seq-filter (lambda (event) (eq (car event) 'notify))
+                                        events))
+                     1))
+          (should (string-match-p (regexp-quote expected)
+                                  (cadr (assq 'notify events)))))))))
+
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here
