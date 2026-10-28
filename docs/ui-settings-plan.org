@@ -20,6 +20,102 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Settings discovery source audit, 2026-10-28
+
+Audited =master= at =acd0e9292=. Scanned 385 tracked Lisp files, including
+248 literal =defcustom= declarations and interactive commands/minor modes.
+Compared candidates with the settings and action catalogues, focused menus,
+advanced Customize routes, the table preference indirection, and this plan.
+These counts describe the source scan, not a count of missing controls.
+Generated switches and ordinary variables need separate ownership checks;
+absence of a literal variable name from UI code does not establish a gap.
+
+New findings beyond the earlier Which-key, Hydra, ERC and spelling proposals:
+
+1. Table search selects the wrong control for repeated headings.
+   =emacsvox-settings--destinations= labels one result "Table coordinates and
+   repeated headings" but targets =c=, the coordinates chooser. Repeated titles
+   has its own =r= chooser. Entry detail (=e=) and vertical-edge behaviour (=v=)
+   are implemented but lack named search destinations. Split the combined
+   result and add specific discovery terms for these existing controls.
+2. Notmuch field separators are missing from named search and focused controls.
+   =emacsvox-notmuch-search-field-separator= and
+   =emacsvox-notmuch-show-field-separator= join the spoken fields. Both are
+   already reachable through Advanced Notmuch settings; expose that route
+   under useful search terms before considering a dedicated editor.
+3. Agent Shell status wording is likewise advanced-only.
+   =emacsvox-agent-shell-status-speech-labels= changes speech copies of rendered
+   status icons without changing their display. It belongs to the existing
+   advanced Agent Shell group but has no named search entry.
+4. Agent Shell out-of-turn speech delay is advanced-only.
+   =emacsvox-agent-shell-speech-delay= coalesces unsolicited streamed messages.
+   It does not control when a normal submitted response is spoken. Any label
+   or Help must preserve this distinction.
+5. EWW outline selection is absent from settings discovery.
+   =emacsvox-eww-shr-outline-toggle= switches between SHR-aware and native
+   outline handling; EWW already binds it to =0=. This is an existing session
+   command, not a Custom option found through Advanced EWW settings.
+6. EWW browser identity has no settings route.
+   =emacsvox-eww-masquerade= and =emacsvox-eww-masquerade-as= control a global
+   filter on =url-http-user-agent-string=. Their scope extends beyond one
+   EWW buffer. These ordinary variables are not exposed by the EWW Custom group.
+   Discover the existing switch only with explicit scope and persistence Help.
+7. The training explanation voice is not named in settings discovery.
+   =emacsvox-aural-training-voice= selects the palette-aware voice used for
+   training speech. The training on/off control does not expose that choice.
+   A route must distinguish changing this assignment from editing the shared
+   named voice itself; generic advanced Customize remains available.
+8. PDF conversion settings have no named discovery route.
+   =emacsvox-wizards-pdf-to-text-options= defaults to =-layout= and affects
+   =emacsvox-wizards-pdf-open=. Link the existing Wizards Custom option as
+   specialist configuration; the executable path is a separate ordinary variable.
+9. Desktop-event subscriptions lack settings discovery.
+   =emacsvox-dbus-udisks-enable/disable= and
+   =emacsvox-dbus-upower-enable/disable= control storage/device announcements;
+   sleep/resume registration has its own enable/disable commands. These are
+   service-dependent runtime registrations, not saved Custom booleans. Inspect
+   actual services before proposing controls; do not activate them on discovery.
+10. Brightness alerts and automatic blanking lack settings discovery.
+    =emacsvox-brightness-alert-toggle= owns a timer, while
+    =emacsvox-brightness-autoblack= is a Custom default. The brightness Muggle
+    adjusts the display but does not expose these monitoring policies. A route
+    must distinguish monitoring from the automatic-blanking choice and require
+    the existing platform support.
+
+Additional advanced gaps: Notmuch MIME node/depth inspection limits have an
+Advanced Notmuch route but no named search terms. The Unicode advanced editor
+lists replacement and name-transformation options but omits
+=tts-unicode-untouched-charsets=. The Emacsvox header-line toggle is also
+absent from discovery; it changes the current buffer's header and needs clear
+scope. These are lower-priority candidates, not automatic new root-menu items.
+
+False positives removed: common table variables are reached indirectly through
+=emacsvox-table-reader--options=, and several voice/backend options have existing
+specialist editors. Generic Customize coverage is not the same as a named search
+result. Org SRS remains outside the previously accepted spelling scope.
+
+Proposed first slice: correct table search destinations and make the existing
+Agent Shell and Notmuch advanced options discoverable by name. No runtime code,
+bindings, defaults, or live sessions changed during this audit. Source inspection
+does not establish listening acceptance or native-service availability.
+
+** Settings discovery delivery, 2026-10-28
+
+Items 1–7 of the source audit are accepted for implementation in focused
+commits. Optional integration settings must appear only after their underlying
+package is loaded; installed files alone do not make an integration eligible.
+Search and menu discovery must not load packages just to display their controls.
+
+Item 1: table search now gives coordinates, repeated headings, entry detail,
+and vertical-edge behaviour separate destinations. The regression reproduces
+the previous wrong coordinates target for "repeated headings" through a real
+graphical menu. Seven table-settings cases pass against source and compiled
+code in fresh graphical Emacs sessions; they verify
+focus, choice entry, cancellation, source preservation, and explicit saving.
+Incremental compilation, byte-code preflight and the documentation gate pass.
+The commit includes the audit and this first correction. Listening acceptance
+remains pending.
+
 ** Main-stream time reading, 2026-10-28
 
 Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the

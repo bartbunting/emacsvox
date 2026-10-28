@@ -102,6 +102,22 @@
         (let ((transient--prefix (transient-prefix :command 'emacsvox-table-settings :scope context)))
           (should-error (emacsvox-table-settings--apply) :type 'user-error))))))
 
+(ert-deftest emacsvox-table-settings-graphical-search-specific-controls ()
+  "Searching a table preference focuses and opens that preference without edits."
+  (emacsvox-table-settings-test--isolated
+    (emacsvox-test--with-settings
+      (dolist (case '(("repeated headings" repeat-titles emacsvox-table-settings--repeat-titles)
+                      ("coordinates" coordinates emacsvox-table-settings--coordinates)
+                      ("entry detail" entry-detail emacsvox-table-settings--entry-detail)
+                      ("vertical edges" edge-action emacsvox-table-settings--edge-action)))
+        (execute-kbd-macro (vconcat (kbd "/") (car case) (kbd "RET")))
+        (should (eq (emacsvox-test--menu-focused-command) (nth 2 case)))
+        (should-not (plist-get (emacsvox-table-settings--draft) :changed))
+        (execute-kbd-macro (kbd "RET"))
+        (should (eq (plist-get (emacsvox-aural-menu--context) :table-choice) (nth 1 case)))
+        (execute-kbd-macro (kbd "q q")))
+      (should-not (file-exists-p custom-file)))))
+
 (ert-deftest emacsvox-table-settings-graphical-search-discards-closed-choices ()
   "Reopening through search must not revive unapplied choices from a closed page."
   (emacsvox-table-settings-test--isolated
