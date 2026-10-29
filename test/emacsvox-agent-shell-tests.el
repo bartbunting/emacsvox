@@ -6146,6 +6146,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          'agent-response 'forward))
       '((icon warn-user)
         (speak "No later agent response block."))))
+    (should (= (point) (point-max)))
     (should
      (equal
       (emacsvox-agent-shell-test--capture-events
@@ -6153,7 +6154,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          'agent-response 'backward))
       '((stop nil)
         (icon large-movement)
-        (speak "First answer with a second line"))))))
+        (speak "Second answer"))))))
 
 (ert-deftest emacsvox-agent-shell-block-navigation-is-directional ()
   "Navigation should not rebuild all semantic locations for each move."
@@ -6902,6 +6903,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (dolist (case '(("j" "First answer with a second line")
                             ("j" "Second answer")
                             ("j" "No later agent response block.")
+                            ("j" "No later agent response block.")
+                            ("J" "Second answer")
                             ("J" "First answer with a second line")
                             ("J" "No earlier agent response block.")))
               (let* ((origin (point))
@@ -6910,11 +6913,15 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                      (speech (seq-filter (lambda (event) (eq (car event) 'speak))
                                          events)))
                 (should (equal speech (list (list 'speak (cadr case)))))
-                (if (string-prefix-p "No " (cadr case))
-                    (should (= origin (point)))
+                (cond
+                 ((equal (cadr case) "No later agent response block.")
+                  (should (= (point) (point-max))))
+                 ((string-prefix-p "No " (cadr case))
+                  (should (= origin (point))))
+                 (t
                   (should (eq (plist-get
                                (emacsvox-agent-shell--block-location-at-point)
-                               :type) 'agent-response))))))
+                               :type) 'agent-response)))))))
           (should (equal-including-properties source (buffer-string))))))))
 
 (ert-deftest emacsvox-agent-shell-letter-response-navigation-skips-enclosing-answer ()
@@ -11041,6 +11048,44 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (execute-kbd-macro (kbd key))))
         (should selected)
         (should (equal draft (buffer-string)))))))
+
+(ert-deftest emacsvox-agent-shell-response-boundary-preserves-explicit-input ()
+  "A failed j reaches the draft end; J returns to the last answer in browse."
+  (require 'agent-shell-chat-mode)
+  (dolist (busy '(nil t))
+    (dolist (draft '("" "first line\nsecond line"))
+      (save-window-excursion
+        (emacsvox-agent-shell-test--with-semantic-blocks
+          (goto-char (point-max))
+          (let ((inhibit-read-only t))
+            (emacsvox-agent-shell-test--insert-live-chat-input draft))
+          (switch-to-buffer (current-buffer))
+          (use-local-map agent-shell-mode-map)
+          (setq-local emacsvox-agent-shell--speech-control-active t
+                      emacsvox-agent-shell-input-activation 'explicit)
+          (emacsvox-agent-shell--input-setup)
+          (unwind-protect
+              (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy))
+                        ((symbol-function 'set-transient-map) #'ignore))
+                (let ((source (buffer-string)))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd "J")))
+                  (let ((last-response (point)))
+                    (should (< last-response (agent-shell--prompt-input-start)))
+                    (dotimes (_ 2)
+                      (let ((events (emacsvox-agent-shell-test--capture-events
+                                      (execute-kbd-macro (kbd "j")))))
+                        (should (member '(speak "No later agent response block.") events))
+                        (should (= (point) (point-max)))
+                        (should-not emacsvox-agent-shell--input-editing)
+                        (should buffer-read-only)))
+                    (let ((events (emacsvox-agent-shell-test--capture-events
+                                    (execute-kbd-macro (kbd "J")))))
+                      (should (member '(speak "Second answer") events))
+                      (should (= (point) last-response))))
+                  (should (equal draft (or (agent-shell--prompt-input) "")))
+                  (should (equal-including-properties source (buffer-string)))))
+            (emacsvox-agent-shell--input-cleanup)))))))
 
 (ert-deftest emacsvox-agent-shell-explicit-input-protects-paste-and-deletion ()
   "Browsing rejects ordinary edits; input activation restores those operations."

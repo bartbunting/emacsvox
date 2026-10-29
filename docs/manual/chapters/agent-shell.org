@@ -417,6 +417,9 @@ visibility cue replaces this default cue. Reading the current line with
   Move to the next or previous agent response and speak its bounded body
   preview. These keys skip intervening thoughts, tools, and other block types.
   From code or a table inside an answer, they skip that enclosing answer.
+  When no later response exists, ~j~ moves to the end of the buffer and
+  announces the boundary. With Explicit input activation, browsing stays
+  active there, so ~J~ returns to the last response without changing your draft.
 - l / L ::
 
   Use ~l~ (=emacsvox-agent-shell-next-link=) or

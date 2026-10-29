@@ -8799,6 +8799,9 @@ Use @kbd{j} (@code{emacsvox-agent-shell-next-response}) or
 Move to the next or previous agent response and speak its bounded body
 preview. These keys skip intervening thoughts@comma{} tools@comma{} and other block types.
 From code or a table inside an answer@comma{} they skip that enclosing answer.
+When no later response exists@comma{} @kbd{j} moves to the end of the buffer and
+announces the boundary. With Explicit input activation@comma{} browsing stays
+active there@comma{} so @kbd{J} returns to the last response without changing your draft.
 @item l / L
 Use @kbd{l} (@code{emacsvox-agent-shell-next-link}) or
 @kbd{L} (@code{emacsvox-agent-shell-previous-link}).

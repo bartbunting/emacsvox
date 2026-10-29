@@ -20,6 +20,34 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Agent Shell forward response boundary, 2026-10-29
+
+Implemented on =master=: forward response navigation moves to the buffer end
+when no later response exists, retaining the boundary announcement. A following
+backward response move reaches the last answer. Explicit input stays in browsing
+and preserves the draft. Backward boundaries and other block types retain their
+existing behaviour; navigation bindings are unchanged.
+
+The regression fails against the previous code. All 717 pinned integration
+tests and 45 fresh compiled graphical checks pass. Coverage includes shell and
+viewport response movement, repeated boundary attempts, idle/busy prompts, empty
+and multiline drafts, literal editing keys, table prefixes and binding overlap.
+Incremental compilation, byte-code preflight and the documentation gate pass;
+manuals and the command reference describe the boundary behaviour.
+
+A separate graphical run loads the live session's Agent Shell 0.89.4 checkout
+from =/home/bart/src/agent-shell= instead of pinned 0.89.1. The response and
+input checks pass. Two link-wording checks fail identically with the unchanged
+navigation code: upstream says "open" where the pinned tests expect "open in
+browser". This compatibility finding remains separate from the response fix.
+
+Live application: loaded the tested navigation byte-code from the =master=
+worktree into Emacs PID 3380937, socket =/run/user/1000/emacs/emacsvox=.
+The loaded path and updated command documentation are verified. Buffer points,
+text modification ticks, editing states and both speech processes are preserved.
+Listening acceptance remains pending. The commit checkpoint covers the boundary
+fix, regression coverage and generated documentation.
+
 ** Settings discovery source audit, 2026-10-28
 
 Audited =master= at =acd0e9292=. Scanned 385 tracked Lisp files, including

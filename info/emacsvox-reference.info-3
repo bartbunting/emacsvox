@@ -7517,61 +7517,61 @@ Function Index
 * emacsvox-agent-shell-next-response <1>: emacsvox-agent-shell-navigation.
                                                              (line   66)
 * emacsvox-agent-shell-next-source-block: emacsvox-agent-shell-navigation.
-                                                             (line   73)
-* emacsvox-agent-shell-next-source-block <1>: emacsvox-agent-shell-navigation.
                                                              (line   74)
+* emacsvox-agent-shell-next-source-block <1>: emacsvox-agent-shell-navigation.
+                                                             (line   75)
 * emacsvox-agent-shell-next-table:       emacsvox-agent-shell-navigation.
-                                                             (line   81)
-* emacsvox-agent-shell-next-table <1>:   emacsvox-agent-shell-navigation.
                                                              (line   82)
+* emacsvox-agent-shell-next-table <1>:   emacsvox-agent-shell-navigation.
+                                                             (line   83)
 * emacsvox-agent-shell-next-user-prompt: emacsvox-agent-shell-navigation.
-                                                             (line   89)
-* emacsvox-agent-shell-next-user-prompt <1>: emacsvox-agent-shell-navigation.
                                                              (line   90)
+* emacsvox-agent-shell-next-user-prompt <1>: emacsvox-agent-shell-navigation.
+                                                             (line   91)
 * emacsvox-agent-shell-previous-block-at-point: emacsvox-agent-shell-navigation.
-                                                             (line   97)
-* emacsvox-agent-shell-previous-block-at-point <1>: emacsvox-agent-shell-navigation.
                                                              (line   98)
+* emacsvox-agent-shell-previous-block-at-point <1>: emacsvox-agent-shell-navigation.
+                                                             (line   99)
 * emacsvox-agent-shell-previous-block-of-type: emacsvox-agent-shell-navigation.
-                                                             (line  105)
-* emacsvox-agent-shell-previous-block-of-type <1>: emacsvox-agent-shell-navigation.
                                                              (line  106)
+* emacsvox-agent-shell-previous-block-of-type <1>: emacsvox-agent-shell-navigation.
+                                                             (line  107)
 * emacsvox-agent-shell-previous-error:   emacsvox-agent-shell-navigation.
-                                                             (line  112)
-* emacsvox-agent-shell-previous-error <1>: emacsvox-agent-shell-navigation.
                                                              (line  113)
+* emacsvox-agent-shell-previous-error <1>: emacsvox-agent-shell-navigation.
+                                                             (line  114)
 * emacsvox-agent-shell-previous-heading: emacsvox-agent-shell-navigation.
-                                                             (line  120)
-* emacsvox-agent-shell-previous-heading <1>: emacsvox-agent-shell-navigation.
                                                              (line  121)
+* emacsvox-agent-shell-previous-heading <1>: emacsvox-agent-shell-navigation.
+                                                             (line  122)
 * emacsvox-agent-shell-previous-link:    emacsvox-agent-shell-navigation.
-                                                             (line  128)
-* emacsvox-agent-shell-previous-link <1>: emacsvox-agent-shell-navigation.
                                                              (line  129)
+* emacsvox-agent-shell-previous-link <1>: emacsvox-agent-shell-navigation.
+                                                             (line  130)
 * emacsvox-agent-shell-previous-response: emacsvox-agent-shell-navigation.
-                                                             (line  136)
-* emacsvox-agent-shell-previous-response <1>: emacsvox-agent-shell-navigation.
                                                              (line  137)
+* emacsvox-agent-shell-previous-response <1>: emacsvox-agent-shell-navigation.
+                                                             (line  138)
 * emacsvox-agent-shell-previous-source-block: emacsvox-agent-shell-navigation.
-                                                             (line  144)
-* emacsvox-agent-shell-previous-source-block <1>: emacsvox-agent-shell-navigation.
                                                              (line  145)
+* emacsvox-agent-shell-previous-source-block <1>: emacsvox-agent-shell-navigation.
+                                                             (line  146)
 * emacsvox-agent-shell-previous-table:   emacsvox-agent-shell-navigation.
-                                                             (line  152)
-* emacsvox-agent-shell-previous-table <1>: emacsvox-agent-shell-navigation.
                                                              (line  153)
+* emacsvox-agent-shell-previous-table <1>: emacsvox-agent-shell-navigation.
+                                                             (line  154)
 * emacsvox-agent-shell-previous-user-prompt: emacsvox-agent-shell-navigation.
-                                                             (line  160)
-* emacsvox-agent-shell-previous-user-prompt <1>: emacsvox-agent-shell-navigation.
                                                              (line  161)
+* emacsvox-agent-shell-previous-user-prompt <1>: emacsvox-agent-shell-navigation.
+                                                             (line  162)
 * emacsvox-agent-shell-repeat-next-block: emacsvox-agent-shell-navigation.
-                                                             (line  168)
-* emacsvox-agent-shell-repeat-next-block <1>: emacsvox-agent-shell-navigation.
                                                              (line  169)
+* emacsvox-agent-shell-repeat-next-block <1>: emacsvox-agent-shell-navigation.
+                                                             (line  170)
 * emacsvox-agent-shell-repeat-previous-block: emacsvox-agent-shell-navigation.
-                                                             (line  175)
-* emacsvox-agent-shell-repeat-previous-block <1>: emacsvox-agent-shell-navigation.
                                                              (line  176)
+* emacsvox-agent-shell-repeat-previous-block <1>: emacsvox-agent-shell-navigation.
+                                                             (line  177)
 * emacsvox-agent-shell-select-background-speech-level: emacsvox-agent-shell-presentation.
                                                              (line   31)
 * emacsvox-agent-shell-select-background-speech-level <1>: emacsvox-agent-shell-presentation.
@@ -7585,17 +7585,17 @@ Function Index
 * emacsvox-agent-shell-speak-header <1>: emacsvox-agent-shell-presentation.
                                                              (line   46)
 * emacsvox-agent-shell-speak-last-response: emacsvox-agent-shell-navigation.
-                                                             (line  182)
-* emacsvox-agent-shell-speak-last-response <1>: emacsvox-agent-shell-navigation.
                                                              (line  183)
+* emacsvox-agent-shell-speak-last-response <1>: emacsvox-agent-shell-navigation.
+                                                             (line  184)
 * emacsvox-agent-shell-speak-response-overview: emacsvox-agent-shell-navigation.
-                                                             (line  189)
-* emacsvox-agent-shell-speak-response-overview <1>: emacsvox-agent-shell-navigation.
                                                              (line  190)
+* emacsvox-agent-shell-speak-response-overview <1>: emacsvox-agent-shell-navigation.
+                                                             (line  191)
 * emacsvox-agent-shell-speak-source-block: emacsvox-agent-shell-navigation.
-                                                             (line  196)
-* emacsvox-agent-shell-speak-source-block <1>: emacsvox-agent-shell-navigation.
                                                              (line  197)
+* emacsvox-agent-shell-speak-source-block <1>: emacsvox-agent-shell-navigation.
+                                                             (line  198)
 * emacsvox-agent-shell-table-copy-cell:  emacsvox-agent-shell-tables.
                                                              (line   16)
 * emacsvox-agent-shell-table-copy-cell <1>: emacsvox-agent-shell-tables.

@@ -1396,6 +1396,9 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
                target 'focus-entered)
               'navigation 'large-movement)))
           target)
+      ;; Leave the final answer behind so a backward response jump can find it.
+      (when (and (eq type 'agent-response) (eq direction 'forward))
+        (goto-char (point-max)))
       (emacsvox-agent-shell--submit-text-feedback
        (format "No %s %s%s."
                (if (eq direction 'forward) "later" "earlier")
@@ -1715,6 +1718,7 @@ At an editable prompt, a directly bound character key inserts itself instead."
 
 (defun emacsvox-agent-shell-next-response ()
   "Move to the next agent response and announce its body.
+If no later response exists, move to the buffer end and announce the boundary.
 At an editable prompt, a directly bound character key inserts itself instead."
   (interactive)
   (emacsvox-agent-shell--navigate-block-at-point 'forward 'agent-response))

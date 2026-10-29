@@ -1630,6 +1630,7 @@ order.  Load through 'emacsvox-agent-shell'.
  -- Command: emacsvox-agent-shell-next-response
 
      Move to the next agent response and announce its body.
+     If no later response exists, move to the buffer end and announce the boundary.
      At an editable prompt, a directly bound character key inserts itself instead.
 
 2.21.1.8 emacsvox-agent-shell-next-source-block
