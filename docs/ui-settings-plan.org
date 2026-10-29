@@ -273,9 +273,17 @@ Live application: loaded the verified compiled screen, output, focus and core
 modules into Emacs PID 3380937 at =/run/user/1000/emacs/emacsvox=. The selected
 window, buffer and point, both Eat buffers' contents and input modes, terminal
 processes and speech processes are preserved. No macro or existing function
-signature changed. The documentation review gate passes. Listening acceptance
-remains pending. The commit checkpoint covers blank-tail output collection,
-question and menu feedback, regression tests and this investigation record.
+signature changed. The documentation review gate passes. Listening acceptance:
+accepted on 2026-10-29 after testing the loaded authentication feedback.
+Commit =629ad6d74= covers blank-tail output collection, question and menu
+feedback, regression tests and this investigation record.
+
+The HTML table and Eat fixes were transferred to =master= on 2026-10-29.
+All 727 integration tests pass against source and compiled implementations;
+all 16 compiled graphical integration cases pass. The manual and reference
+were regenerated from master, excluding unpublished private-session modules.
+Byte-code, header and documentation checks pass. The implementation and test
+files match the versions accepted in the live session.
 
 ** Main-stream time reading, 2026-10-28
 
