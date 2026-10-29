@@ -14,6 +14,43 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Everyday Speech Commands,  Next: Emacsvox Key Prefixes,  Prev: Everyday Help Commands,  Up: Emacsvox Keyboard Commands
+
+15.5 Speech and settings
+========================
+
+These routes use the current settings interface.  A live adjustment, a
+saved default and a retained draft are distinct; follow the linked scope
+and saving instructions before making a persistent change.
+
+Open speech controls (‘C-e H s’)
+     Browse rate, punctuation and related controls for the captured
+     context.  Inspect the displayed scope; global defaults need not
+     override local values.  See *note Speech controls and scope:
+     (emacsvox)Speech System.
+Open settings for this task (‘C-e S’)
+     Use the integration's focused menu when available, otherwise
+     general buffer settings.  ‘C-e H .’ always opens the latter.  See
+     *note Finding the appropriate settings menu: (emacsvox)Using Online
+     Help.
+Find a setting (‘C-e H /’)
+     Choose a matching name; accepting the search selects its control
+     without changing the value.  Activate it separately.  See *note
+     Settings search and action search: (emacsvox)Finding Settings And
+     Actions.
+Explain this item's feedback (‘C-e E’)
+     Inspect the presentation chosen for the object at point.  The
+     report is not itself a repair.  See *note Understanding voices,
+     sounds and rules: (emacsvox)Explaining Presentation.
+
+   In an Emacsvox settings menu, ‘q’ goes back and ‘C-q’ closes the
+sequence.  In an ordinary unfinished prompt, ‘C-g’ cancels.  None of
+these reverses an already applied change.  Editors, tables and terminals
+have their own return commands; see *note Returning from settings:
+(emacsvox)Returning From Settings. and *note Recovering an unfinished
+edit: (emacsvox)Recovering Aural Changes.
+
+
 File: emacsvox.info,  Node: Emacsvox Key Prefixes,  Prev: Everyday Speech Commands,  Up: Emacsvox Keyboard Commands
 
 15.6 How prefixes and menus fit together
@@ -2811,7 +2848,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
 * Aural history, mail privacy:           Notmuch Speech And Privacy.
-                                                              (line  90)
+                                                              (line  91)
 * Aural Home:                            Aural Home.          (line   6)
 * Aural Presentation:                    Aural Presentation.  (line   6)
 * automatic speech limits, Notmuch:      Notmuch Speech And Privacy.

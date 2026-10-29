@@ -192,6 +192,42 @@ Incremental compilation, byte-code preflight, regenerated manuals and the
 documentation gate pass. This final commit checkpoint completes items 1–7.
 Listening acceptance remains pending; the live session has not been reloaded.
 
+** HTML email table reading, 2026-10-29
+
+Observed: Notmuch renders the two data tables in the open report-change email,
+but has no shared table-reader adapter. EWW's separate table view can extract
+the values; it does not provide reading in the message itself.
+
+Implemented: retain logical cell boundaries through SHR's
+actual table rendering, then supply the shared reader with complete cell
+values and fresh displayed positions. Recognizable rectangular data tables
+in Notmuch enter automatically, subject to the common activation preference
+and mode or buffer overrides. Preserve Tab, Shift-Tab and Enter for links and
+MIME actions. Leaving reading restores ordinary mail actions. Layout tables,
+merged cells and unsupported structures retain ordinary message navigation.
+
+Verification: all 726 integration tests pass. Fresh compiled graphical
+checks pass all 16 integration cases and seven related table-reader,
+settings and EWW cases. Coverage includes wrapped and blank cells, headers,
+native link actions, hidden content, leaving and re-entry, re-rendering,
+layout rejection and coexistence with EWW. A private copy of the open email
+passes graphical reading checks for all 27 cells across its two tables.
+Incremental compilation, byte-code preflight and header checks pass. The
+manual and generated reference describe the new default and native keys.
+The non-mutating documentation review gate passes.
+
+Live application: loaded the verified compiled reader, SHR, Notmuch show and
+table-settings modules into Emacs PID 3380937 at
+=/run/user/1000/emacs/emacsvox=. Refreshing the existing message supplies two
+recognized tables, with three columns and three and six rows respectively.
+The refresh changes wrapping and resets point; the saved numeric position
+was restored, now in row six, column two of the second table. The selected
+conversation window and speech processes are preserved. Automatic activation
+is effective; all 27 live cells resolve and Tab and Enter retain their native
+actions. Listening acceptance: accepted on 2026-10-29 after testing the loaded
+change. The commit checkpoint covers HTML table reading, regression tests and
+the updated manual and reference.
+
 ** Main-stream time reading, 2026-10-28
 
 Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the

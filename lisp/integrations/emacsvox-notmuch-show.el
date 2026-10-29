@@ -65,6 +65,27 @@
 (require 'subr-x)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
+(require 'emacsvox-shr)
+
+(defvar emacsvox-notmuch--table-reading-map
+  (let ((map (copy-keymap emacsvox-table-reader-mode-map)))
+    ;; Links and MIME controls keep the same actions inside and outside tables.
+    (dolist (key '("TAB" "<backtab>" "S-<tab>" "RET"))
+      (define-key map (kbd key) nil))
+    map)
+  "Shared reading keys with native Notmuch link and button actions preserved.")
+
+(defun emacsvox-notmuch--table-submit (text occasion _presentation icon)
+  "Read table TEXT as foreground mail content for OCCASION, with ICON."
+  (emacsvox-aural-submit
+   text :module 'notmuch :occasion occasion
+   :facts '(:role message-part :message-part-kind body
+            :events (focus-entered))
+   :compatibility-actions (list (emacsvox-aural-compatibility-icon icon))))
+
+(setf (alist-get 'notmuch-show-mode emacsvox-table-reader--adapters)
+      (list #'emacsvox-shr--table-snapshot #'emacsvox-notmuch--table-submit
+            emacsvox-notmuch--table-reading-map))
 
 (defun emacsvox-notmuch--attachment-scan (body)
   "Return a bounded attachment scan plist for MIME BODY.

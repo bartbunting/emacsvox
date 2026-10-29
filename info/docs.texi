@@ -355,7 +355,7 @@ This chapter documents a total of 1724 commands and 261 options.
 * emacsvox-setup:: Setup Emacsvox --.
 * emacsvox-sgml-mode:: Speech enable SGML.
 * emacsvox-sh-script:: Speech enable script.
-* emacsvox-shr:: Speech-enable shared HTML link navigation.
+* emacsvox-shr:: Speech-enable shared HTML reading.
 * emacsvox-slime:: Speech-enable SLIME.
 * emacsvox-smartparens:: SMARTPARENS.
 * emacsvox-solitaire:: Solitaire.
@@ -19662,6 +19662,7 @@ This module speech-enables sh-script.el
 Provide link navigation feedback for all SHR clients, including HTML mail,
 without loading EWW.  EWW's existing specialised link speaker remains
 available when that integration is loaded.
+Retain logical data-table cells for shared reading in HTML mail.
 
 @node emacsvox-slime
 @section emacsvox-slime
@@ -22698,8 +22699,9 @@ Speak the complete logical table row at point.
 @defvar {User Option} emacsvox-table-reader-activation
 @verbatim
 When table reading starts.
-Nil uses each adapter’s default: automatic in Agent Shell and on demand
-elsewhere.  An explicit choice applies to modes without an override.
+Nil uses each adapter’s default: automatic in Agent Shell and HTML mail in
+Notmuch, and on demand elsewhere.  An explicit choice applies to modes
+without an override.
 @end verbatim
 
 Default Value:

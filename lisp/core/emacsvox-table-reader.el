@@ -57,8 +57,9 @@ Control-Meta arrows always read the destination cell."
   :type '(choice (const row) (const cell)) :group 'emacsvox-table-reader)
 (defcustom emacsvox-table-reader-activation nil
   "When table reading starts.
-Nil uses each adapter's default: automatic in Agent Shell and on demand
-elsewhere.  An explicit choice applies to modes without an override."
+Nil uses each adapter's default: automatic in Agent Shell and HTML mail in
+Notmuch, and on demand elsewhere.  An explicit choice applies to modes
+without an override."
   :type '(choice (const :tag "Mode defaults" nil)
                  (const automatic) (const on-demand)) :group 'emacsvox-table-reader)
 (defcustom emacsvox-table-reader-coordinates nil
@@ -176,7 +177,8 @@ An explicit nil title list is a value, never an inheritance marker."
                        'legacy-ambiguous 'legacy-mode)))
      (t (setq value (default-value option) source 'common)))
     (when (and (eq key 'activation) (null value))
-      (setq value (if (eq (emacsvox-table-reader--mode) 'agent-shell-mode)
+      (setq value (if (memq (emacsvox-table-reader--mode)
+                            '(agent-shell-mode notmuch-show-mode))
                       'automatic 'on-demand)
             source 'built-in))
     (list :value value :source source)))

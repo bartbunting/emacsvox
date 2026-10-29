@@ -724,6 +724,7 @@ speech/omnivox-remote.elc speech/omnivox-voices.elc aural/emacsvox-aural-transpo
 
 # EWW shares HTML link feedback with mail and other SHR clients.
 integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc
+integrations/emacsvox-shr.elc: core/emacsvox-table-reader.elc
 
 speech/omnivox-library-runtime.elc: speech/tts-queue-state.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc
 ui/omnivox-library.elc speech/tts-speak.elc speech/omnivox-remote.elc: speech/omnivox-library-runtime.elc
@@ -746,7 +747,7 @@ ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-apply.e
 integrations/emacsvox-notmuch-search.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
 integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-search.elc
 
-integrations/emacsvox-notmuch-show.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
+integrations/emacsvox-notmuch-show.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc integrations/emacsvox-shr.elc
 integrations/emacsvox-notmuch.elc: integrations/emacsvox-notmuch-show.elc
 
 integrations/emacsvox-notmuch-operations.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc

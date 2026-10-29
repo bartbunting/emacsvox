@@ -65,6 +65,12 @@
           (error
            "Compiled Notmuch test module uses Emacs %s, running %s: %s"
            (or compiled-version "unknown") emacs-version module))))
+    (dolist (dependency '("core/emacsvox-table-reader.el" "integrations/emacsvox-shr.el"))
+      (load (expand-file-name
+             (concat "lisp/" dependency
+                     (if (eq emacsvox-notmuch-test--module-load-kind 'compiled) "c" ""))
+             emacsvox-notmuch-test--repository-directory)
+            nil t t))
     ;; Select every extracted definition module explicitly.  A source test
     ;; must not silently reuse newer byte-code after an incremental build.
     (dolist (definition-source
@@ -1663,6 +1669,194 @@ Return the beginning of the inserted row."
         '((icon item)
           (speak
            "Attachment report.pdf, application/pdf, 58 KiB")))))))
+
+(defconst emacsvox-notmuch-test--html-table
+  '(table nil
+          (tr nil (td nil (div nil (b nil "Number")))
+              (td nil (b nil "Issue")) (td nil (strong nil "Solution")))
+          (tr nil (td nil "1")
+              (td nil "A long description that wraps over several displayed lines in a narrow window.")
+              (td nil (a ((href . "https://example.invalid/details")) "Read details")))
+          (tr nil (td nil "2") (td nil "Another issue") (td nil "")))
+  "Synthetic mail table with Word-style headers, wrapping, a link and a blank.")
+
+(defun emacsvox-notmuch-test--render-table (&optional dom fonts)
+  "Render synthetic mail DOM, optionally using graphical FONTS."
+  (setq major-mode 'notmuch-show-mode)
+  (use-local-map notmuch-show-mode-map)
+  (let ((shr-width 42) (shr-use-fonts fonts) (shr-inhibit-images t))
+    (shr-insert-document
+     `(div nil (p nil "Before the table")
+           ,(copy-tree (or dom emacsvox-notmuch-test--html-table))
+           (p nil "After the table"))))
+  (goto-char (or (text-property-not-all (point-min) (point-max) 'emacsvox-shr-table nil)
+                 (point-min))))
+
+(ert-deftest emacsvox-notmuch-html-table-logical-navigation ()
+  "Wrapped mail cells share entry, complete reading, copying and native actions."
+  (save-window-excursion
+    (with-temp-buffer
+      (emacsvox-notmuch-test--render-table)
+      (let ((before (buffer-string))
+            (emacsvox-table-reader-activation nil)
+            (emacsvox-table-reader-mode-preferences nil)
+            (emacsvox-table-reader--command-tick nil)
+            (emacsvox-table-reader--suspended nil)
+            spoken)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text spoken))))
+          (emacsvox-table-reader--automatic-entry)
+          (should emacsvox-table-reader-mode)
+          (should (string-prefix-p "Table reading." (car spoken)))
+          (dolist (key '("TAB" "<backtab>" "RET"))
+            (should (eq (key-binding (kbd key))
+                        (let ((emacsvox-table-reader-mode nil)) (key-binding (kbd key))))))
+          (emacsvox-table-reader-next-row-cell 1)
+          (emacsvox-table-reader-next-column 1)
+          (should (string-match-p "narrow window" (car spoken)))
+          (should (string-match-p "Issue" (car spoken)))
+          (let* ((cell (emacsvox-shr--table-snapshot))
+                 (position (point))
+                 (next (next-single-property-change
+                        (point) 'emacsvox-shr-table-cell nil (cdr (plist-get cell :region)))))
+            ;; Point in a later wrapped fragment still identifies the same cell.
+            (goto-char next)
+            (while (and (< (point) (cdr (plist-get cell :region)))
+                        (not (equal (get-text-property (point) 'emacsvox-shr-table-cell) '(1 1))))
+              (goto-char (next-single-property-change
+                          (point) 'emacsvox-shr-table-cell nil (cdr (plist-get cell :region)))))
+            (should (> (point) position))
+            (should (equal (plist-get (emacsvox-shr--table-snapshot) :data)
+                           (plist-get cell :data))))
+          (emacsvox-table-reader-next-row-cell 1)
+          (emacsvox-table-reader-next-column 1)
+          (should (string-prefix-p "blank" (car spoken)))
+          (emacsvox-table-reader-mode -1)
+          (emacsvox-table-reader--automatic-entry)
+          (should-not emacsvox-table-reader-mode)
+          (goto-char (point-min))
+          (emacsvox-table-reader--automatic-entry)
+          (goto-char (text-property-not-all (point-min) (point-max) 'emacsvox-shr-table nil))
+          (emacsvox-table-reader--automatic-entry)
+          (should emacsvox-table-reader-mode)
+          (emacsvox-table-reader-exit-forward)
+          (should-not emacsvox-table-reader-mode)
+          (should (looking-at "After the table")))
+        (should (equal before (buffer-string)))))))
+
+(ert-deftest emacsvox-notmuch-html-table-rejects-layout-and-merged-cells ()
+  "Layout tables and ambiguous spans never acquire automatic reader keys."
+  ;; EWW installs its own SHR wrappers; both integrations must coexist.
+  (require 'emacsvox-eww)
+  (dolist (kind '(layout no-header rowspan colspan))
+    (with-temp-buffer
+      (let ((dom (copy-tree emacsvox-notmuch-test--html-table)))
+        (pcase kind
+          ('layout (dom-set-attribute dom 'role "presentation"))
+          ('no-header (setf (nth 2 dom) '(tr nil (td nil "One") (td nil "Two") (td nil "Three"))))
+          (_ (dom-set-attribute (car (dom-by-tag dom 'td)) kind "2")))
+        (emacsvox-notmuch-test--render-table dom)
+        (should-not (text-property-not-all (point-min) (point-max) 'emacsvox-shr-table nil))))))
+
+(ert-deftest emacsvox-notmuch-html-table-policy-hidden-and-rerender ()
+  "Explicit policies, hidden mail and replacement renders preserve reader ownership."
+  (with-temp-buffer
+    (emacsvox-notmuch-test--render-table)
+    (let ((emacsvox-table-reader-activation 'on-demand)
+          (emacsvox-table-reader--command-tick nil))
+      (emacsvox-table-reader--automatic-entry)
+      (should-not emacsvox-table-reader-mode))
+    (let ((cell (emacsvox-shr--table-snapshot)))
+      (put-text-property (point-min) (point-max) 'invisible t)
+      (should-not (emacsvox-shr--table-snapshot))
+      (remove-text-properties (point-min) (point-max) '(invisible nil))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit) #'ignore))
+        (emacsvox-table-reader-mode 1)
+        (erase-buffer)
+        (should-not emacsvox-table-reader-mode)
+        (emacsvox-notmuch-test--render-table)
+        (should (equal (plist-get cell :rows) (plist-get (emacsvox-shr--table-snapshot) :rows)))
+        (emacsvox-table-reader--automatic-entry)
+        (should-not emacsvox-table-reader-mode)))))
+
+(ert-deftest emacsvox-notmuch-html-table-submission-resolves ()
+  "Table movement resolves a native, audible foreground mail presentation."
+  (let (arguments)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (_text &rest args) (setq arguments args))))
+      (emacsvox-notmuch--table-submit "Example cell" 'navigation 'cell 'item))
+    (let* ((facts (plist-get arguments :facts))
+           (context (list :module (plist-get arguments :module)
+                          :mode 'notmuch-show-mode :occasion 'navigation))
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should (emacsvox-aural-content-style-speak
+               (emacsvox-aural-render-plan-content plan)))
+      (should (emacsvox-aural-compile-plan plan facts context)))))
+
+(ert-deftest emacsvox-notmuch-html-table-rulers-nesting-and-cache ()
+  "Rulers preserve cells; nested and cached layout tables stay outside reading."
+  (dolist (ruler '(nil ?-))
+    (with-temp-buffer
+      (let ((shr-table-horizontal-line ruler))
+        (emacsvox-notmuch-test--render-table)
+        (let ((cell (emacsvox-shr--table-snapshot)))
+          ;; Ruler lines themselves have no cell; reach the first actual cell.
+          (unless cell
+            (forward-line 1)
+            (setq cell (emacsvox-shr--table-snapshot)))
+          (should (= (length (plist-get cell :positions)) 9))
+          (should (= (plist-get cell :row-count) 3))))))
+  (with-temp-buffer
+    (emacsvox-notmuch-test--render-table
+     `(table ((role . "presentation"))
+             (tr nil (td nil ,(copy-tree emacsvox-notmuch-test--html-table)))))
+    (should-not (emacsvox-shr--table-snapshot)))
+  (with-temp-buffer
+    (let ((dom (copy-tree emacsvox-notmuch-test--html-table))
+          (shr-use-fonts nil))
+      (dom-set-attribute dom 'role "presentation")
+      (dotimes (_ 2)
+        (erase-buffer)
+        (shr-insert-document dom)
+        (should-not (text-property-not-all (point-min) (point-max) 'emacsvox-shr-table nil))))))
+
+(ert-deftest emacsvox-notmuch-html-table-graphical-wrapped-cells ()
+  "Real proportional-font mail tables retain cell geometry and reader keys."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-eww)
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (emacsvox-notmuch-test--render-table nil t)
+      (redisplay t)
+      (let* ((cell (emacsvox-shr--table-snapshot))
+             (positions (plist-get cell :positions))
+             (emacsvox-table-reader--command-tick nil)
+             (emacsvox-table-reader-activation 'automatic)
+             spoken)
+        (should (= (length positions) 9))
+        (dolist (position positions)
+          (should (pos-visible-in-window-p position (selected-window) t)))
+        (let ((left (posn-x-y (posn-at-point (nth 4 positions))))
+              (right (posn-x-y (posn-at-point (nth 5 positions)))))
+          (should (< (car left) (car right)))
+          (should (= (cdr left) (cdr right))))
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text spoken))))
+          (goto-char (nth 4 positions))
+          (run-hooks 'post-command-hook)
+          (should emacsvox-table-reader-mode)
+          (should (string-match-p "narrow window" (car spoken)))
+          (let ((move (key-binding (kbd "C-M-<right>"))))
+            (funcall-interactively move 1))
+          (should (string-match-p "Read details" (car spoken)))
+          (should (eq (key-binding (kbd "TAB")) #'notmuch-show-next-button))
+          (funcall-interactively (key-binding (kbd "C-M-<down>")) 1)
+          (should (string-prefix-p "blank" (car spoken)))
+          (call-interactively (key-binding "q"))
+          (run-hooks 'post-command-hook)
+          (should-not emacsvox-table-reader-mode)
+          (should (eq (key-binding "r") #'notmuch-show-reply-sender)))))))
 
 (ert-deftest emacsvox-notmuch-show-html-link-navigation-speaks-label ()
   "Both directions preserve link styling and reach adjacent MIME controls."

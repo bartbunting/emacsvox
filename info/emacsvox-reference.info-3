@@ -830,8 +830,9 @@ reading context.
 
  -- Variable: User Option emacsvox-table-reader-activation
      When table reading starts.
-     Nil uses each adapter’s default: automatic in Agent Shell and on demand
-     elsewhere.  An explicit choice applies to modes without an override.
+     Nil uses each adapter’s default: automatic in Agent Shell and HTML mail in
+     Notmuch, and on demand elsewhere.  An explicit choice applies to modes
+     without an override.
 
      Default Value:
 

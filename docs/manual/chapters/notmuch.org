@@ -293,9 +293,46 @@ other text or multiple controls require you to move onto the intended control.
 
   Run =notmuch-show-choose-mime-of-part=.
 
-Viewing, saving, overwriting, or launching a MIME part is an explicit Notmuch
-operation. Navigation and detail inspection never open an attachment or an
+These are the ordinary Show bindings. Table reading temporarily changes the
+reading keys described below. Viewing, saving, overwriting, or launching a
+MIME part is an explicit Notmuch operation. Navigation and detail inspection never open an attachment or an
 external viewer by themselves.
+
+*** Read a table in an HTML message
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+When you move into a supported data table, Emacsvox announces table reading,
+its dimensions and the current cell. The first row supplies column titles.
+Use Control-Meta-left/right to change columns and Control-Meta-up/down to
+change rows while retaining the column. These keys read the complete cell,
+even when its text wraps across several displayed lines. Blank cells say
+“blank.” Plain Up/down reads the complete destination row by default.
+
+Press ~SPC~ to repeat the cell, ~r~ for its row, or ~c~ for its column.
+~.~ gives coordinates and ~=~ gives dimensions. Tab, Shift-Tab and Enter keep
+their usual link and MIME actions. Press ~q~ to leave table reading in place
+and restore ordinary mail keys, including reply, archive, attachment saving
+and the MIME-part prefix. Another ~q~ then performs Notmuch's usual quit.
+Meta-up/down leaves for the content before or after the table. Reading never
+changes the message or its tags.
+
+Automatic entry is the initial HTML-mail policy. To change it, press ~a~
+inside the table or run ~M-x emacsvox-table-settings~ from the message.
+The common, mode and buffer choices work as described under
+[[info:emacsvox#Reading Markdown And Org Tables][table reading preferences]]. An explicit On demand choice starts reading only
+with Control-Meta arrows or ~C-e C-t C-r~. After quitting, automatic entry
+stays suspended until you leave the table and return or explicitly enter
+again. A message refresh ends reading; enter again after the refresh.
+
+Supported tables have at least two rows and columns, a header row marked
+as headings or bold text, and no merged cells. Layout tables, nested tables
+and tables without a recognisable header retain ordinary mail navigation.
+For these, you can use normal text reading; the separate
+~M-x emacsvox-eww-table-data~ view also remains available for simple tables
+when the EWW integration is loaded. A message already displayed before HTML
+table support was loaded needs a refresh before it has cell navigation.
 
 ** Change tags and archive state
 :PROPERTIES:
@@ -411,7 +448,7 @@ alter Notmuch's database or its own display configuration.
 :TEXINFO_NODE: no
 :END:
 
-Mail-controlled text is bounded before automatic speech and Aural history.
+Automatic Search and Show summaries are bounded before speech and Aural history.
 Defaults are 256 characters and 1,024 UTF-8 bytes per field, then 1,000
 characters and 4,096 bytes for the complete automatic presentation.
 
@@ -435,7 +472,9 @@ A shortened Search or Show announcement explains what was omitted and points
 to ~C-c C-p~ for full configured details. A shortened Hello item points to
 ~RET~. Explicit Search and Show inspection deliberately bypasses automatic
 content limits; use it only when speaking the full configured fields is
-appropriate. These limits are not a general privacy guarantee for every
+appropriate. Body-line and table reading speak the content you navigate to;
+summary limits do not shorten their cells or rows. These limits are not a
+general privacy guarantee for every
 explicit command or another application's output.
 
 *** Understand retained and notification content
@@ -477,8 +516,8 @@ notification-device and logging settings separately from mail field choices.
   detail inspection have Notmuch-specific feedback.
 - Show ::
 
-  Messages, MIME parts, pages, visibility, tags, archiving, and explicit
-  inspection have Notmuch-specific feedback.
+  Messages, HTML data tables, MIME parts, pages, visibility, tags, archiving,
+  and explicit inspection have Notmuch-specific feedback.
 - Tree ::
 
   Receives =emacsvox-aural-module= context only. Core speech can operate,

@@ -8175,7 +8175,8 @@ File: emacsvox-reference.info,  Node: emacsvox-shr,  Next: emacsvox-slime,  Prev
 
 Provide link navigation feedback for all SHR clients, including HTML
 mail, without loading EWW. EWW's existing specialised link speaker
-remains available when that integration is loaded.
+remains available when that integration is loaded.  Retain logical
+data-table cells for shared reading in HTML mail.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-slime,  Next: emacsvox-smartparens,  Prev: emacsvox-shr,  Up: Emacsvox Commands And Options

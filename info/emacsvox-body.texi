@@ -7441,6 +7441,7 @@ Suppressing repeated titles affects consecutive cell moves; explicit cell
 inspection remains complete. Application lists always stop at their edges.
 
 Activation's Mode defaults choice means automatic entry in Agent Shell and
+@ref{Notmuch Messages And Attachments,Notmuch HTML data tables,,emacsvox,}@comma{} and
 on-demand entry in Org@comma{} Markdown and application lists. A common Automatic or
 On demand choice applies wherever there is no narrower override. Quitting
 always provides a temporary escape from automatic reading. A redraw or
@@ -8236,9 +8237,43 @@ Run @code{notmuch-show-interactively-view-part} and choose an external action.
 Run @code{notmuch-show-choose-mime-of-part}.
 @end table
 
-Viewing@comma{} saving@comma{} overwriting@comma{} or launching a MIME part is an explicit Notmuch
-operation. Navigation and detail inspection never open an attachment or an
+These are the ordinary Show bindings. Table reading temporarily changes the
+reading keys described below. Viewing@comma{} saving@comma{} overwriting@comma{} or launching a
+MIME part is an explicit Notmuch operation. Navigation and detail inspection never open an attachment or an
 external viewer by themselves.
+
+@subsection Read a table in an HTML message
+
+When you move into a supported data table@comma{} Emacsvox announces table reading@comma{}
+its dimensions and the current cell. The first row supplies column titles.
+Use Control-Meta-left/right to change columns and Control-Meta-up/down to
+change rows while retaining the column. These keys read the complete cell@comma{}
+even when its text wraps across several displayed lines. Blank cells say
+“blank.” Plain Up/down reads the complete destination row by default.
+
+Press @kbd{@key{SPC}} to repeat the cell@comma{} @kbd{r} for its row@comma{} or @kbd{c} for its column.
+@kbd{.} gives coordinates and @kbd{=} gives dimensions. Tab@comma{} Shift-Tab and Enter keep
+their usual link and MIME actions. Press @kbd{q} to leave table reading in place
+and restore ordinary mail keys@comma{} including reply@comma{} archive@comma{} attachment saving
+and the MIME-part prefix. Another @kbd{q} then performs Notmuch's usual quit.
+Meta-up/down leaves for the content before or after the table. Reading never
+changes the message or its tags.
+
+Automatic entry is the initial HTML-mail policy. To change it@comma{} press @kbd{a}
+inside the table or run @kbd{M-x emacsvox-table-settings} from the message.
+The common@comma{} mode and buffer choices work as described under
+@ref{Reading Markdown And Org Tables,table reading preferences,,emacsvox,}. An explicit On demand choice starts reading only
+with Control-Meta arrows or @kbd{C-e C-t C-r}. After quitting@comma{} automatic entry
+stays suspended until you leave the table and return or explicitly enter
+again. A message refresh ends reading; enter again after the refresh.
+
+Supported tables have at least two rows and columns@comma{} a header row marked
+as headings or bold text@comma{} and no merged cells. Layout tables@comma{} nested tables
+and tables without a recognisable header retain ordinary mail navigation.
+For these@comma{} you can use normal text reading; the separate
+@kbd{M-x emacsvox-eww-table-data} view also remains available for simple tables
+when the EWW integration is loaded. A message already displayed before HTML
+table support was loaded needs a refresh before it has cell navigation.
 
 @node Notmuch Tags And Archiving
 @section Change tags and archive state
@@ -8332,7 +8367,7 @@ behaviour described earlier.
 
 @subsection Understand limits and full inspection
 
-Mail-controlled text is bounded before automatic speech and Aural history.
+Automatic Search and Show summaries are bounded before speech and Aural history.
 Defaults are 256 characters and 1@comma{}024 UTF-8 bytes per field@comma{} then 1@comma{}000
 characters and 4@comma{}096 bytes for the complete automatic presentation.
 
@@ -8354,7 +8389,9 @@ A shortened Search or Show announcement explains what was omitted and points
 to @kbd{C-c C-p} for full configured details. A shortened Hello item points to
 @kbd{@key{RET}}. Explicit Search and Show inspection deliberately bypasses automatic
 content limits; use it only when speaking the full configured fields is
-appropriate. These limits are not a general privacy guarantee for every
+appropriate. Body-line and table reading speak the content you navigate to;
+summary limits do not shorten their cells or rows. These limits are not a
+general privacy guarantee for every
 explicit command or another application's output.
 
 @subsection Understand retained and notification content
@@ -8386,8 +8423,8 @@ Widget navigation@comma{} view lifecycle@comma{} and searches have Notmuch-speci
 Results@comma{} asynchronous lifecycle@comma{} tags@comma{} archiving@comma{} opening@comma{} and configured
 detail inspection have Notmuch-specific feedback.
 @item Show
-Messages@comma{} MIME parts@comma{} pages@comma{} visibility@comma{} tags@comma{} archiving@comma{} and explicit
-inspection have Notmuch-specific feedback.
+Messages@comma{} HTML data tables@comma{} MIME parts@comma{} pages@comma{} visibility@comma{} tags@comma{} archiving@comma{}
+and explicit inspection have Notmuch-specific feedback.
 @item Tree
 Receives @code{emacsvox-aural-module} context only. Core speech can operate@comma{}
 but this module has no Tree-specific row formatter@comma{} navigation@comma{} mutation@comma{}

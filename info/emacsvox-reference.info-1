@@ -692,7 +692,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-setup:: Setup Emacsvox -.
 * emacsvox-sgml-mode:: Speech enable SGML.
 * emacsvox-sh-script:: Speech enable script.
-* emacsvox-shr:: Speech-enable shared HTML link navigation.
+* emacsvox-shr:: Speech-enable shared HTML reading.
 * emacsvox-slime:: Speech-enable SLIME.
 * emacsvox-smartparens:: SMARTPARENS.
 * emacsvox-solitaire:: Solitaire.

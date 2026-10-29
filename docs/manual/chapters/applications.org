@@ -686,6 +686,7 @@ Suppressing repeated titles affects consecutive cell moves; explicit cell
 inspection remains complete. Application lists always stop at their edges.
 
 Activation's Mode defaults choice means automatic entry in Agent Shell and
+[[info:emacsvox#Notmuch Messages And Attachments][Notmuch HTML data tables]], and
 on-demand entry in Org, Markdown and application lists. A common Automatic or
 On demand choice applies wherever there is no narrower override. Quitting
 always provides a temporary escape from automatic reading. A redraw or

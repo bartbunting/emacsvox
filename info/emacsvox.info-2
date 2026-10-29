@@ -1491,9 +1491,10 @@ affects consecutive cell moves; explicit cell inspection remains
 complete.  Application lists always stop at their edges.
 
    Activation's Mode defaults choice means automatic entry in Agent
-Shell and on-demand entry in Org, Markdown and application lists.  A
-common Automatic or On demand choice applies wherever there is no
-narrower override.  Quitting always provides a temporary escape from
+Shell and *note Notmuch HTML data tables: (emacsvox)Notmuch Messages And
+Attachments., and on-demand entry in Org, Markdown and application
+lists.  A common Automatic or On demand choice applies wherever there is
+no narrower override.  Quitting always provides a temporary escape from
 automatic reading.  A redraw or Agent Shell response update alone cannot
 undo that quit.
 
@@ -2303,9 +2304,49 @@ the intended control.
 ‘. m’
      Run ‘notmuch-show-choose-mime-of-part’.
 
-   Viewing, saving, overwriting, or launching a MIME part is an explicit
-Notmuch operation.  Navigation and detail inspection never open an
-attachment or an external viewer by themselves.
+   These are the ordinary Show bindings.  Table reading temporarily
+changes the reading keys described below.  Viewing, saving, overwriting,
+or launching a MIME part is an explicit Notmuch operation.  Navigation
+and detail inspection never open an attachment or an external viewer by
+themselves.
+
+10.4.1 Read a table in an HTML message
+--------------------------------------
+
+When you move into a supported data table, Emacsvox announces table
+reading, its dimensions and the current cell.  The first row supplies
+column titles.  Use Control-Meta-left/right to change columns and
+Control-Meta-up/down to change rows while retaining the column.  These
+keys read the complete cell, even when its text wraps across several
+displayed lines.  Blank cells say “blank.” Plain Up/down reads the
+complete destination row by default.
+
+   Press ‘<SPC>’ to repeat the cell, ‘r’ for its row, or ‘c’ for its
+column.  ‘.’ gives coordinates and ‘=’ gives dimensions.  Tab, Shift-Tab
+and Enter keep their usual link and MIME actions.  Press ‘q’ to leave
+table reading in place and restore ordinary mail keys, including reply,
+archive, attachment saving and the MIME-part prefix.  Another ‘q’ then
+performs Notmuch's usual quit.  Meta-up/down leaves for the content
+before or after the table.  Reading never changes the message or its
+tags.
+
+   Automatic entry is the initial HTML-mail policy.  To change it, press
+‘a’ inside the table or run ‘M-x emacsvox-table-settings’ from the
+message.  The common, mode and buffer choices work as described under
+*note table reading preferences: (emacsvox)Reading Markdown And Org
+Tables.  An explicit On demand choice starts reading only with
+Control-Meta arrows or ‘C-e C-t C-r’.  After quitting, automatic entry
+stays suspended until you leave the table and return or explicitly enter
+again.  A message refresh ends reading; enter again after the refresh.
+
+   Supported tables have at least two rows and columns, a header row
+marked as headings or bold text, and no merged cells.  Layout tables,
+nested tables and tables without a recognisable header retain ordinary
+mail navigation.  For these, you can use normal text reading; the
+separate ‘M-x emacsvox-eww-table-data’ view also remains available for
+simple tables when the EWW integration is loaded.  A message already
+displayed before HTML table support was loaded needs a refresh before it
+has cell navigation.
 
 
 File: emacsvox.info,  Node: Notmuch Tags And Archiving,  Next: Notmuch Speech And Privacy,  Prev: Notmuch Messages And Attachments,  Up: Notmuch Mail
@@ -2397,7 +2438,7 @@ configuration.
 10.6.2 Understand limits and full inspection
 --------------------------------------------
 
-Mail-controlled text is bounded before automatic speech and Aural
+Automatic Search and Show summaries are bounded before speech and Aural
 history.  Defaults are 256 characters and 1,024 UTF-8 bytes per field,
 then 1,000 characters and 4,096 bytes for the complete automatic
 presentation.
@@ -2419,9 +2460,10 @@ presentation.
 points to ‘C-c C-p’ for full configured details.  A shortened Hello item
 points to ‘<RET>’.  Explicit Search and Show inspection deliberately
 bypasses automatic content limits; use it only when speaking the full
-configured fields is appropriate.  These limits are not a general
-privacy guarantee for every explicit command or another application's
-output.
+configured fields is appropriate.  Body-line and table reading speak the
+content you navigate to; summary limits do not shorten their cells or
+rows.  These limits are not a general privacy guarantee for every
+explicit command or another application's output.
 
 10.6.3 Understand retained and notification content
 ---------------------------------------------------
@@ -2453,8 +2495,8 @@ Search
      Results, asynchronous lifecycle, tags, archiving, opening, and
      configured detail inspection have Notmuch-specific feedback.
 Show
-     Messages, MIME parts, pages, visibility, tags, archiving, and
-     explicit inspection have Notmuch-specific feedback.
+     Messages, HTML data tables, MIME parts, pages, visibility, tags,
+     archiving, and explicit inspection have Notmuch-specific feedback.
 Tree
      Receives ‘emacsvox-aural-module’ context only.  Core speech can
      operate, but this module has no Tree-specific row formatter,
@@ -5392,40 +5434,3 @@ Open the manual (‘C-e C-i’)
 message.  Both also put text in the kill ring and can affect the next
 paste.  See *note Status commands and their side effects:
 (emacsvox)Status Information.
-
-
-File: emacsvox.info,  Node: Everyday Speech Commands,  Next: Emacsvox Key Prefixes,  Prev: Everyday Help Commands,  Up: Emacsvox Keyboard Commands
-
-15.5 Speech and settings
-========================
-
-These routes use the current settings interface.  A live adjustment, a
-saved default and a retained draft are distinct; follow the linked scope
-and saving instructions before making a persistent change.
-
-Open speech controls (‘C-e H s’)
-     Browse rate, punctuation and related controls for the captured
-     context.  Inspect the displayed scope; global defaults need not
-     override local values.  See *note Speech controls and scope:
-     (emacsvox)Speech System.
-Open settings for this task (‘C-e S’)
-     Use the integration's focused menu when available, otherwise
-     general buffer settings.  ‘C-e H .’ always opens the latter.  See
-     *note Finding the appropriate settings menu: (emacsvox)Using Online
-     Help.
-Find a setting (‘C-e H /’)
-     Choose a matching name; accepting the search selects its control
-     without changing the value.  Activate it separately.  See *note
-     Settings search and action search: (emacsvox)Finding Settings And
-     Actions.
-Explain this item's feedback (‘C-e E’)
-     Inspect the presentation chosen for the object at point.  The
-     report is not itself a repair.  See *note Understanding voices,
-     sounds and rules: (emacsvox)Explaining Presentation.
-
-   In an Emacsvox settings menu, ‘q’ goes back and ‘C-q’ closes the
-sequence.  In an ordinary unfinished prompt, ‘C-g’ cancels.  None of
-these reverses an already applied change.  Editors, tables and terminals
-have their own return commands; see *note Returning from settings:
-(emacsvox)Returning From Settings. and *note Recovering an unfinished
-edit: (emacsvox)Recovering Aural Changes.
