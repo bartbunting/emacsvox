@@ -484,6 +484,7 @@ Snapshots from different terminal generations are intentionally not compared."
           (emacsvox-eat--sequence-change
            (plist-get old :text) (plist-get new :text)))
      :old-rows (and comparable-p (plist-get old :rows))
+     :old-cursor-row (and comparable-p (plist-get old :cursor-row))
      :new-rows (and comparable-p (plist-get new :rows))
      :row-change
      (and text-changed

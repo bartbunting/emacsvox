@@ -423,6 +423,17 @@ Do nothing when an input start is already known for the current prompt."
           (setq emacsvox-eat--last-completion-output completion)
           (emacsvox-eat--present-completion-output completion)
           t))
+       ((when-let* ((question (or (emacsvox-eat--question-menu-feedback diff snapshot)
+                                 (emacsvox-eat--question-input-feedback diff snapshot))))
+          (emacsvox-eat--retain-screen-change diff snapshot)
+          (when (and emacsvox-eat-autospeak
+                     emacsvox-eat--automatic-feedback-allowed-p)
+            (emacsvox-eat--submit
+             question (emacsvox-eat--facts
+                   'command-output 'focus-entered 'output-navigation)
+             'navigation nil 'replaceable
+             (emacsvox-eat--terminal-delivery-key 'focus)))
+          t))
        ((when-let* ((focus (plist-get diff :likely-focus)))
           (emacsvox-eat--retain-screen-change diff snapshot)
           (emacsvox-eat--present-likely-focus focus)

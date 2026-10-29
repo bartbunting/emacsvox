@@ -228,6 +228,55 @@ actions. Listening acceptance: accepted on 2026-10-29 after testing the loaded
 change. The commit checkpoint covers HTML table reading, regression tests and
 the updated manual and reference.
 
+** Eat output silence after an interactive menu, 2026-10-29
+
+Observed in =*eat*=, Emacs PID 3380937, socket
+=/run/user/1000/emacs/emacsvox=, with Eat 0.9.4 and the checkout's compiled
+Eat integration. During a =glab auth login= interaction, semi-character-mode
+updates at 23:03:53--23:04:01 UTC on 28 October were discarded as
+=collection-ineligible= and retained as =no-ordinary-output=. Later line-mode
+Enter presses produced "Text is read-only". Notification dispatches 56270
+and 56273 reached completed playback according to both aural and Omnivox
+logs; this does not establish that the feedback was heard. Main speech PID
+3381444 and notification PID 3381654 remained running.
+
+The authentication attempt had exited when inspected. Its terminal retained
+blank rows below the cursor, at position 1708 with terminal end 1830. A fresh
+source-loading Emacs reproduces missing output after creating the same kind
+of blank screen tail. An isolated graphical Emacs also reproduces it with
+real keyboard focus and live-cursor tracking: ordinary output submits speech
+when the cursor and terminal end coincide, but submits nothing when blank
+rows extend below the cursor. The collector requires the cursor's line end
+to reach the terminal end, so this layout fails collection eligibility.
+
+Implemented: ordinary output collection accepts unused blank rows below the
+cursor while preserving the rendered continuity marker, redraw rejection,
+scrollback eligibility and concealed-text protections. A separate disposable
+=glab= 1.53.0 configuration reproduced the Survey menu. Its explicit navigation
+hint, choice indentation, selection marker and cursor position now establish
+menu feedback: question and choice on entry, then the changed choice after an
+arrow. New unanswered question prompts also speak after menu redraws, including
+"Paste your authentication token:" after Enter. Entered answers are excluded.
+This recognizes the observed question format, not arbitrary terminal menus.
+
+Verification: the blank-tail and post-menu question regressions fail before
+their fixes. All 721 integration tests pass. A fresh Emacs loading the actual
+compiled integration with Eat 0.9.4 passes 229 batch tests; the two graphical
+cases skipped there pass separately in a fresh graphical Emacs. Real PTY tests
+cover blank padding, command submission in both semi-character and line modes,
+menu arrows, Enter on the first and second choices, cancellation without
+credentials, and subsequent output. Menu keys use semi-character mode; line
+mode remains an editor for shell input. Incremental compilation, byte-code
+preflight and whitespace review pass.
+
+Live application: loaded the verified compiled screen, output, focus and core
+modules into Emacs PID 3380937 at =/run/user/1000/emacs/emacsvox=. The selected
+window, buffer and point, both Eat buffers' contents and input modes, terminal
+processes and speech processes are preserved. No macro or existing function
+signature changed. The documentation review gate passes. Listening acceptance
+remains pending. The commit checkpoint covers blank-tail output collection,
+question and menu feedback, regression tests and this investigation record.
+
 ** Main-stream time reading, 2026-10-28
 
 Implemented: =C-e t= (=emacsvox-speak-time=) reads the current time on the

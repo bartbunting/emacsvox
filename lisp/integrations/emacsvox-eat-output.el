@@ -412,7 +412,10 @@ be mistaken for appended output, even when the replacement text is identical."
       (funcall original terminal output)
     (save-restriction
       (widen)
-      (let* ((cursor (+ 0 (eat-term-end terminal)))
+      (let* ((end (+ 0 (eat-term-end terminal)))
+             (cursor (save-excursion
+                       (goto-char (eat-term-display-cursor terminal))
+                       (min end (line-end-position))))
              (anchor (copy-marker cursor))
              (display (eat-term-display-beginning terminal))
              (size (eat-term-size terminal))
@@ -420,10 +423,12 @@ be mistaken for appended output, even when the replacement text is identical."
                             (emacsvox-eat--foreground-p)
                             (not (eat-term-in-alternative-display-p terminal))
                             (save-excursion
-                              (goto-char (eat-term-display-cursor terminal))
-                              ;; Line-mode draft text can follow the terminal
-                              ;; extent on this same physical buffer row.
-                              (>= (line-end-position) cursor))))
+                              (goto-char cursor)
+                              ;; Menus can leave allocated blank rows below
+                              ;; the live cursor.  Inspect raw rendered text:
+                              ;; concealed content is not unused padding.
+                              (skip-chars-forward " \t\n" end)
+                              (= (point) end))))
              (generation emacsvox-eat--generation))
         (unless emacsvox-eat--output-frontier
           (setq emacsvox-eat--output-frontier (copy-marker cursor)))

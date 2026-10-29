@@ -6221,6 +6221,114 @@ A nil element in CHUNKS finishes the current burst before later output."
            '("\r\nfir" "st\r\nvis" "ible \e[8mSECRET\e[0m\r\n$ "))
           '("first\nvisible       \n$ "))))
 
+(ert-deftest emacsvox-eat-rendered-output-after-blank-screen-tail ()
+  "Unused rows below the cursor do not suppress later ordinary output."
+  (dolist (chunks '(("\r\nspeech probe\r\n$ ")
+                    ("\r" "\nspeech " "probe\r\n$ ")))
+    (should (equal (emacsvox-eat-test--rendered-burst
+                    chunks nil "\e[5;40H \e[H$ printf")
+                   '("speech probe\n$ "))))
+  ;; Actual content below the cursor is not unused padding, even concealed.
+  (dolist (tail '("old content" "\e[8mSECRET\e[0m"))
+    (should-not
+     (emacsvox-eat-test--rendered-burst
+      '("\r\nspeech probe\r\n$ ") nil
+      (concat "\e[5;1H" tail "\e[H$ printf"))))
+  (dolist (output '("\e[2J\e[Hnew\r\nbody\r\n$ "
+                    "\ecnew\r\nbody\r\n$ "))
+    (dotimes (split (length output))
+      (should-not
+       (emacsvox-eat-test--rendered-burst
+        (list (substring output 0 split) (substring output split))
+        nil "\e[5;40H \e[H$ printf")))))
+
+(ert-deftest emacsvox-eat-question-menu-entry-and-arrows ()
+  "The glab 1.53 Survey menu speaks its question and changed selection."
+  ;; Captured from a disposable configuration, without starting authentication.
+  (dolist (width '(100 40))
+    (with-temp-buffer
+      (let ((eat-terminal (eat-term-make (current-buffer) (point-min))) spoken)
+        (unwind-protect
+            (cl-letf (((symbol-function 'emacsvox-eat--foreground-p) (lambda () t))
+                      ((symbol-function 'emacsvox-eat--following-live-p) (lambda () t))
+                      ((symbol-function 'emacsvox-eat--submit)
+                       (lambda (text &rest _) (push text spoken))))
+              (eat-term-resize eat-terminal width 24)
+              (eat-term-process-output eat-terminal "$ glab auth login")
+              (eat-term-redisplay eat-terminal)
+              (setq-local emacsvox-eat--generation 1
+                          emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
+              (emacsvox-eat--output-input-boundary)
+              (emacsvox-eat-test--deliver-screen
+               eat-terminal
+               (concat "\r\n- Logging into example.invalid\r\n"
+                       "\e7\e[?25l\e8\e[0G\e[2K"
+                       "? How would you like to sign in?  [Use arrows to move, type to filter]\r\n"
+                       "> Token\r\n  Web\r\n\e7\e[1A\e[0G\e[1A\e[0G"))
+              (should (equal spoken '("How would you like to sign in? Token")))
+              (setq spoken nil)
+              (emacsvox-eat-test--deliver-screen
+               eat-terminal
+               (concat "\e8\e[0G\e[2K\e[1A\e[0G\e[2K\e[1A\e[0G\e[2K"
+                       (if (= width 40) "\e[1A\e[0G\e[2K" "")
+                       "\e[1A\e[0G\e[2K"
+                       "? How would you like to sign in?  [Use arrows to move, type to filter]\r\n"
+                       "  Token\r\n> Web\r\n\e7\e[1A\e[0G")
+               'down)
+              (should (equal spoken '("Web"))))
+          (emacsvox-eat--cancel-quiescence)
+          (emacsvox-eat--clear-output-frontier)
+          (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal)))))))
+
+(ert-deftest emacsvox-eat-question-menu-requires-evidence ()
+  "Quoted rows, ambiguous markers and unrequested selection changes stay quiet."
+  (let* ((rows '("? Choose  [Use arrows to move, type to filter]" "> One" "  Two"))
+         (new '("? Choose  [Use arrows to move, type to filter]" "  One" "> Two"))
+         (snapshot (list :rows new :cursor-row 2))
+         (diff (list :old-rows rows :old-cursor-row 1)))
+    (should-not (emacsvox-eat--question-menu-feedback diff snapshot))
+    (should-not (emacsvox-eat--question-menu (cdr rows) 0))
+    (should-not (emacsvox-eat--question-menu rows 2))
+    (should-not (emacsvox-eat--question-menu (append rows '("> Three")) 3))
+    ;; A question left in the transcript is not an active previous menu.
+    (should (equal (emacsvox-eat--question-menu-feedback
+                    (list :old-rows rows :old-cursor-row 0) snapshot)
+                   "Choose Two"))
+    (setf (plist-get diff :navigation) '(:direction down :ambiguous t))
+    (should-not (emacsvox-eat--question-menu-feedback diff snapshot))
+    (setf (plist-get diff :navigation) '(:direction down)
+          (plist-get diff :size-changed) t)
+    (should-not (emacsvox-eat--question-menu-feedback diff snapshot))))
+
+(ert-deftest emacsvox-eat-question-input-after-menu-redraw ()
+  "Enter on Token announces the next prompt despite Survey clearing its menu."
+  (should
+   (equal
+    (emacsvox-eat-test--rendered-burst
+     (list (concat "\e8\e[?25h\e8\e[0G\e[2K"
+                   "\e[1A\e[0G\e[2K\e[1A\e[0G\e[2K\e[1A\e[0G\e[2K"
+                   "? How would you like to sign in? Token\r\n\r\n"
+                   "The minimum required scopes are 'api' and 'write_repository'.\r\n"
+                   "? Paste your authentication token: \e[?25l\e7\e[999;999f\e[6n\e8\e[?25h"))
+     nil
+     (concat "? Sign in?  [Use arrows to move, type to filter]\r\n"
+             "> Token\r\n  Web\r\n\e7\e[1A\e[0G\e[1A\e[0G"))
+    '("Paste your authentication token:"))))
+
+(ert-deftest emacsvox-eat-question-input-never-reads-an-answer ()
+  "Prompt feedback excludes entered text and respects automatic speech control."
+  (let* ((prompt "? Paste your authentication token: ")
+         (snapshot (list :rows (list prompt) :cursor-row 0)))
+    (should-not (emacsvox-eat--question-input-feedback
+                 (list :old-rows (list prompt)) snapshot))
+    (dolist (answer '("SECRET" "SECRET:"))
+      (should-not (emacsvox-eat--question-input-feedback
+                   nil (list :rows (list (concat prompt answer)) :cursor-row 0))))
+    (let ((emacsvox-eat-autospeak nil))
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest _) (ert-fail "Autospeak is disabled"))))
+        (emacsvox-eat--screen-quiesced '(:text-changed t) snapshot)))))
+
 (ert-deftest emacsvox-eat-rendered-output-rejects-screen-replacement ()
   "Clear, reset and an entire alternate-screen round trip cannot replay rows."
   (dolist (output '("\e[2J\e[Hnew\r\nbody\r\n$ "
@@ -6319,8 +6427,9 @@ A nil element in CHUNKS finishes the current burst before later output."
             (should (emacsvox-eat-test--wait-until
                      process (lambda () (null emacsvox-eat--quiescence-timer))))
             (dolist (mode '(eat-semi-char-mode eat-line-mode))
-              (funcall mode)
-              (dolist (command '("burst 40" "same 40" "split 20" "margin" "redraw"))
+              (dolist (command '("pad" "probe" "burst 40" "same 40" "split 20"
+                                  "margin" "redraw" "token" "menu"))
+                (funcall mode)
                 (setq spoken nil)
                 (let ((serial emacsvox-eat--update-serial))
                   (if (eq mode 'eat-line-mode)
@@ -6332,13 +6441,41 @@ A nil element in CHUNKS finishes the current burst before later output."
                            process
                            (lambda ()
                              (and (> emacsvox-eat--update-serial serial)
-                                  (string-suffix-p
-                                   "READY> " (emacsvox-eat-test--screen-text)))) 6))
+                                  (if (member command '("menu" "token"))
+                                      (string-match-p "> Token" (emacsvox-eat-test--screen-text))
+                                    (string-match-p
+                                     "READY> [\n ]*\\'" (emacsvox-eat-test--screen-text))))) 6))
                   (should (emacsvox-eat-test--wait-until
                            process (lambda () (null emacsvox-eat--quiescence-timer)))))
                 (let ((text (string-join (reverse spoken) "\n")))
                   (cond
-                   ((equal command "redraw") (should (string-empty-p text)))
+                   ((member command '("redraw" "pad")) (should (string-empty-p text)))
+                   ((equal command "probe") (should (string-match-p "speech probe" text)))
+                   ((member command '("menu" "token"))
+                    (should (equal text "How would you like to sign in? Token"))
+                    ;; Line mode edits shell input; interactive menus use raw keys.
+                    (eat-semi-char-mode)
+                    (setq spoken nil)
+                    (when (equal command "menu")
+                      (eat-self-input 1 'down)
+                      (should (emacsvox-eat-test--wait-until
+                               process (lambda () (member "Web" spoken)))))
+                    (setq spoken nil)
+                    (eat-self-input 1 13)
+                    (should (emacsvox-eat-test--wait-until
+                             process (lambda ()
+                                       (string-match-p
+                                        (if (equal command "menu") "Selected Web"
+                                          "Paste your authentication token:")
+                                        (string-join spoken "\n")))))
+                    (when (equal command "token")
+                      (eat-self-input 1 3)
+                      (should (emacsvox-eat-test--wait-until
+                               process (lambda () (string-match-p
+                                                   "READY> [\n ]*\\'"
+                                                   (emacsvox-eat-test--screen-text))))))
+                    (should (emacsvox-eat-test--wait-until
+                             process (lambda () (null emacsvox-eat--quiescence-timer)))))
                    ((equal command "margin") (should (string-match-p "next" text)))
                    ((equal command "split 20")
                     (should (string-match-p "row-01" text))

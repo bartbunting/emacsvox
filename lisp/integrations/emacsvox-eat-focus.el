@@ -317,6 +317,83 @@ DIFF and content-free NAVIGATION provide causal evidence."
   (or (emacsvox-eat--style-focus-change old new diff navigation)
       (emacsvox-eat--cursor-row-focus-change old new diff navigation)))
 
+(defun emacsvox-eat--question-menu (rows &optional cursor-row width)
+  "Recognize an arrow-choice question in ROWS near CURSOR-ROW at WIDTH.
+Require the explicit navigation hint, indented choices and one > marker.
+This avoids treating ordinary quoted output as a terminal menu."
+  (let ((row 0) found)
+    (while (and rows (not found))
+      (when (string-prefix-p "? " (car rows))
+        (let ((tail rows) (start row) (heading "") question choices selected
+              selected-row)
+          ;; The question and hint may wrap over several physical rows.
+          (while (and tail (< (- start row) 4) (not question))
+            (let ((line (pop tail)))
+              (setq heading (concat heading line) start (1+ start))
+              ;; Only a full-width row can continue the heading.  Otherwise
+              ;; an old input prompt could absorb the next question's text.
+              (unless (and width (= (string-width line) width))
+                (unless (string-match-p "\\[Use arrows to move, type to filter\\]" heading)
+                  (setq tail nil))))
+            (when (string-match
+                   "\\`? \\(.+?\\)  \\[Use arrows to move, type to filter\\]"
+                   heading)
+              (setq question (match-string 1 heading))))
+          (when question
+            (while (and tail (not (string-empty-p (string-trim (car tail))))
+                        (string-match "\\`\\([> ]\\) \\(.+\\)\\'" (car tail)))
+              (when (equal (match-string 1 (car tail)) ">")
+                (setq selected (cons (length choices) selected)
+                      selected-row start))
+              (push (string-trim (match-string 2 (car tail))) choices)
+              (setq tail (cdr tail) start (1+ start)))
+            (when (and (> (length choices) 1) (= (length selected) 1)
+                       (or (null cursor-row) (= cursor-row selected-row)))
+              (setq found (list :question question :choices (nreverse choices)
+                                :index (car selected) :row selected-row))))))
+      (setq rows (cdr rows) row (1+ row)))
+    found))
+
+(defun emacsvox-eat--question-menu-feedback (diff snapshot)
+  "Return entry or selection feedback for a proven question menu change."
+  (when (and (not (plist-get snapshot :alternate-screen))
+             (not (plist-get diff :size-changed))
+             (not (plist-get diff :alternate-screen-changed)))
+    (when-let* ((menu (emacsvox-eat--question-menu
+                      (plist-get snapshot :rows)
+                      (plist-get snapshot :cursor-row)
+                      (car (plist-get snapshot :size))))
+                (choice (emacsvox-eat--bounded-focus-text
+                         (nth (plist-get menu :index) (plist-get menu :choices)))))
+      (let ((old (emacsvox-eat--question-menu
+                  (plist-get diff :old-rows) (plist-get diff :old-cursor-row)
+                  (car (plist-get snapshot :size))))
+            (navigation (plist-get diff :navigation)))
+        (cond
+         ((not (equal (plist-get old :question) (plist-get menu :question)))
+          (concat (emacsvox-eat--bounded-focus-text (plist-get menu :question))
+                  " " choice))
+         ((and (equal (plist-get old :choices) (plist-get menu :choices))
+               (/= (plist-get old :index) (plist-get menu :index))
+               (not (plist-get navigation :ambiguous))
+               (memq (plist-get navigation :direction) '(up down)))
+          choice))))))
+
+(defun emacsvox-eat--question-input-feedback (diff snapshot)
+  "Return a new rendered question prompt at the cursor after a menu redraw.
+Read only an unanswered question ending in a colon, never input after it."
+  (when (and (not (plist-get snapshot :alternate-screen))
+             (not (plist-get diff :size-changed))
+             (not (plist-get diff :alternate-screen-changed)))
+    (when-let* ((row (plist-get snapshot :cursor-row))
+                (text (nth row (plist-get snapshot :rows)))
+                (prompt (string-trim-right text))
+                ((not (seq-some
+                       (lambda (old) (equal prompt (string-trim-right old)))
+                       (plist-get diff :old-rows))))
+                ((string-match "\\`? \\([^:]+:\\)\\'" prompt)))
+      (emacsvox-eat--bounded-focus-text (match-string 1 prompt)))))
+
 (defun emacsvox-eat--main-screen-navigation-text (diff snapshot)
   "Return conservative main-screen navigation feedback for DIFF and SNAPSHOT.
 Left and right movement name the rendered character reached.  Word movement
