@@ -37,7 +37,8 @@
     (let ((ems--interactive-fn-name 'delete-region)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'emacsvox-icon)
+      (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                ((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events)))
                 ((symbol-function 'message)
                  (lambda (format-string &rest arguments)
@@ -69,7 +70,8 @@
   (let ((ems--interactive-fn-name 'kill-region)
         (calls 0)
         observed-arguments)
-    (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+    (cl-letf (((symbol-function 'tts-speak) #'ignore)
+              ((symbol-function 'emacsvox-icon) #'ignore)
               ((symbol-function 'message) #'ignore)
               ((symbol-function 'count-lines)
                (lambda (beginning end)
@@ -94,6 +96,8 @@
         (calls 0)
         feedback)
     (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (&rest _) (setq feedback t)))
+              ((symbol-function 'tts-speak)
                (lambda (&rest _) (setq feedback t)))
               ((symbol-function 'message)
                (lambda (&rest _) (setq feedback t)))
@@ -131,6 +135,40 @@
       (should
        (equal events
               '("Downcased region containing 3 lines"))))))
+
+(ert-deftest emacsvox-region-kill-and-copy-use-main-speech ()
+  "Interactive kill and copy speak their count once without notifications."
+  (dolist (command '(kill-region kill-ring-save))
+    (with-temp-buffer
+      (insert "one\ntwo\nthree\n")
+      (goto-char (point-min))
+      (set-mark (point-max))
+      (let ((ems--interactive-fn-name command)
+            (emacsvox-speak-messages t)
+            (kill-ring nil)
+            (interprogram-cut-function nil)
+            (select-active-regions nil)
+            spoken notifications displayed)
+        (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                  ((symbol-function 'tts-speak)
+                   (lambda (text) (push text spoken)))
+                  ((symbol-function 'tts-notify)
+                   (lambda (&rest args) (push args notifications)))
+                  ((symbol-function 'message)
+                   (lambda (format-string &rest arguments)
+                     (setq displayed (apply #'format format-string arguments))
+                     (when emacsvox-speak-messages
+                       (tts-notify displayed)))))
+          (funcall-interactively command (point-min) (point-max)))
+        (should (equal spoken
+                       (list (if (eq command 'kill-region)
+                                 "Killed region containing 3 lines"
+                               "region containing 3 lines copied to kill ring "))))
+        (should (equal displayed (car spoken)))
+        (should-not notifications)
+        (should (equal (car kill-ring) "one\ntwo\nthree\n"))
+        (should (equal (buffer-string)
+                       (if (eq command 'kill-region) "" "one\ntwo\nthree\n")))))))
 
 (provide 'emacsvox-region-tests)
 ;;; emacsvox-region-tests.el ends here

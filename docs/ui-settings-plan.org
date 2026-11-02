@@ -5632,3 +5632,25 @@ generation and the documentation review gate pass.
 Listening acceptance remains open through a fresh normal-profile restart.
 The running session has not been reloaded. This change does not address the
 separately diagnosed startup-inventory and capital-tone CI failures.
+
+* Region kill and copy feedback, 2026-11-03
+
+Observed: =C-w= and =M-w= announce their line counts through =message=,
+which routes speech to the notification stream.  A command-level regression
+fails against the original editing advice because no main speech is submitted.
+
+Implemented locally: keep the visible result message, suppress its automatic
+notification speech, and submit the count once to main speech.  The shared
+region-deletion helper applies this to interactive deletion and completion
+region killing as well.  Existing wording, icons and editing results remain.
+
+All 242 source advice tests and 241 fresh compiled advice tests pass.  The
+compiled runner excludes its existing source-only scrolling fixture.  All 27
+semantic traces pass, with the copy trace updated for main speech.  Incremental
+compilation, byte-code preflight and the documentation review gate pass.
+
+The compiled editing module is loaded in the running Emacsvox session
+(PID 1090).  A temporary visible-buffer probe captured one main-stream
+line-count announcement and no notification speech for each command.  The
+probe restored the window and buffer and did not play speech.  Listening
+acceptance remains open.  Implementation and checks are committed together.

@@ -213,6 +213,12 @@ ARGUMENT is the optional prefix argument accepted by `comment-region'."
        "Commented")
      (count-lines beginning end))))
 
+(defun emacsvox--speak-region-result (text)
+  "Display region-editing result TEXT and speak it on the main stream."
+  (let ((emacsvox-speak-messages nil))
+    (message "%s" text))
+  (tts-speak text))
+
 (defun emacsvox--region-deletion-around
     (target original beginning end arguments)
   "Call ORIGINAL and announce an interactive region deletion.
@@ -222,7 +228,8 @@ range, and ARGUMENTS contains any remaining arguments for ORIGINAL."
       (let ((count (count-lines beginning end))
             (result (apply original beginning end arguments)))
         (emacsvox-icon 'delete-object)
-        (message "Killed region containing %s lines" count)
+        (emacsvox--speak-region-result
+         (format "Killed region containing %s lines" count))
         result)
     (apply original beginning end arguments)))
 
@@ -249,8 +256,9 @@ BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
   "Indicate that region has been copied to the kill ring.\nProduce an auditory icon if possible."
   (when (ems-interactive-p 'kill-ring-save)
     (emacsvox-icon 'mark-object)
-    (message "region containing %s lines copied to kill ring "
-             (count-lines (region-beginning) (region-end)))))
+    (emacsvox--speak-region-result
+     (format "region containing %s lines copied to kill ring "
+             (count-lines (region-beginning) (region-end))))))
 
 (defun emacsvox--case-region-after (target action beginning end)
   "Announce an interactive case conversion from BEGINNING to END.
