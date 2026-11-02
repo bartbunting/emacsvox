@@ -11,7 +11,9 @@
 (require 'emacsvox-advice)
 
 (defconst emacsvox-test--region-direct-advice
-  '((delete-region :around
+  '((kill-ring-save :around
+     emacsvox--advice-kill-ring-save-around)
+    (delete-region :around
      emacsvox--advice-delete-region-around)
     (kill-region :around
      emacsvox--advice-kill-region-around)
@@ -137,7 +139,7 @@
               '("Downcased region containing 3 lines"))))))
 
 (ert-deftest emacsvox-region-kill-and-copy-use-main-speech ()
-  "Interactive kill and copy speak their count once without notifications."
+  "Kill and copy replace main speech once without notification duplicates."
   (dolist (command '(kill-region kill-ring-save))
     (with-temp-buffer
       (insert "one\ntwo\nthree\n")
@@ -148,10 +150,18 @@
             (kill-ring nil)
             (interprogram-cut-function nil)
             (select-active-regions nil)
-            spoken notifications displayed)
+            spoken notifications displayed policies)
         (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
-                  ((symbol-function 'tts-speak)
-                   (lambda (text) (push text spoken)))
+                  ((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'tts--speak)
+                   (lambda (text)
+                     (should emacsvox-aural-submission-controls-interruption)
+                     (push text spoken)
+                     (push (list emacsvox-aural-submission-lane
+                                 emacsvox-aural-submission-delivery-policy
+                                 emacsvox-aural-submission-replacement-key
+                                 emacsvox-aural-submission-interruption-policy)
+                           policies)))
                   ((symbol-function 'tts-notify)
                    (lambda (&rest args) (push args notifications)))
                   ((symbol-function 'message)
@@ -166,9 +176,98 @@
                                "region containing 3 lines copied to kill ring "))))
         (should (equal displayed (car spoken)))
         (should-not notifications)
+        (should (equal policies '((main replaceable speaker lane))))
         (should (equal (car kill-ring) "one\ntwo\nthree\n"))
         (should (equal (buffer-string)
                        (if (eq command 'kill-region) "" "one\ntwo\nthree\n")))))))
+
+(ert-deftest emacsvox-copy-stops-before-visual-feedback ()
+  "Copy interrupts immediately, skips blinking and silences copy messages."
+  (let ((ems--interactive-fn-name 'kill-ring-save)
+        (emacsvox-speak-messages t)
+        (copy-region-blink-delay 1)
+        events)
+    (cl-letf (((symbol-function 'tts-stop)
+               (lambda (&optional all)
+                 (should-not all)
+                 (push 'stop events))))
+      (should
+       (eq (emacsvox--advice-kill-ring-save-around
+            (lambda (&rest args)
+              (should (equal args '(1 8 region)))
+              (should-not emacsvox-speak-messages)
+              (should (zerop copy-region-blink-delay))
+              (push 'copy-and-visual-feedback events)
+              'copied)
+            1 8 'region)
+           'copied)))
+    (should (equal (nreverse events) '(stop copy-and-visual-feedback)))
+    (should emacsvox-speak-messages)
+    (should (= copy-region-blink-delay 1))))
+
+(ert-deftest emacsvox-copy-programmatic-call-does-not-interrupt ()
+  "Programmatic copying preserves message speech and does not stop audio."
+  (let ((ems--interactive-fn-name nil)
+        (emacsvox-speak-messages t))
+    (cl-letf (((symbol-function 'tts-stop)
+               (lambda (&rest _) (ert-fail "Unexpected interruption"))))
+      (should
+       (eq (emacsvox--advice-kill-ring-save-around
+            (lambda (&rest _)
+              (should emacsvox-speak-messages)
+              'copied)
+            1 8)
+           'copied)))))
+
+(ert-deftest emacsvox-copy-graphical-feedback-stops-first ()
+  "Visible and off-screen copy feedback cannot delay or duplicate speech."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (dolist (offscreen '(nil t))
+      (with-temp-buffer
+        (dotimes (_ (if offscreen 200 3)) (insert "sample line\n"))
+        (goto-char (point-min))
+        (set-mark (point-max))
+        (set-window-buffer (selected-window) (current-buffer))
+        (set-window-start (selected-window) (point-min))
+        (redisplay t)
+        (should (eq (not (pos-visible-in-window-p (mark))) offscreen))
+        (let ((emacsvox-speak-messages t)
+              (emacsvox-last-message nil)
+              (kill-ring nil) (kill-ring-yank-pointer nil)
+              (interprogram-cut-function nil)
+              (select-active-regions nil)
+              (transient-mark-mode nil)
+              (copy-region-blink-predicate #'always)
+              (copy-region-blink-delay 1)
+              started count-time events notifications)
+          (let ((probe (lambda (original &rest args)
+                         (should-not emacsvox-speak-messages)
+                         (push 'visual-feedback events)
+                         (apply original args))))
+            (advice-add 'indicate-copied-region :around probe)
+            (unwind-protect
+                (cl-letf (((symbol-function 'tts-stop)
+                           (lambda (&rest _) (push 'stop events)))
+			  ((symbol-function 'emacsvox-icon) #'ignore)
+			  ((symbol-function 'tts-notify)
+			   (lambda (&rest args) (push args notifications)))
+			  ((symbol-function 'emacsvox-aural--submit-content)
+			   (lambda (_text _actions)
+                             (setq count-time (float-time))
+                             (push 'count events) nil)))
+		  (setq started (float-time))
+                  (call-interactively #'kill-ring-save))
+              (advice-remove 'indicate-copied-region probe)))
+          (should-not notifications)
+          (should (= copy-region-blink-delay 1))
+          (let ((emacsvox-speak-messages nil))
+            (message "Copy feedback (%s): %.1f ms"
+                     (if offscreen "off-screen" "visible")
+                     (* 1000 (- count-time started))))
+          (should (< (- count-time started) 0.5))
+          (should (equal (nreverse events)
+                         '(stop visual-feedback count))))))))
 
 (provide 'emacsvox-region-tests)
 ;;; emacsvox-region-tests.el ends here

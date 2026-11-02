@@ -214,10 +214,13 @@ ARGUMENT is the optional prefix argument accepted by `comment-region'."
      (count-lines beginning end))))
 
 (defun emacsvox--speak-region-result (text)
-  "Display region-editing result TEXT and speak it on the main stream."
+  "Display region-editing result TEXT and interrupt main speech with it."
   (let ((emacsvox-speak-messages nil))
     (message "%s" text))
-  (tts-speak text))
+  (emacsvox-aural-submit
+   text :occasion 'state-change :lane 'main
+   :delivery-policy 'replaceable :replacement-key 'speaker
+   :interruption-policy 'lane))
 
 (defun emacsvox--region-deletion-around
     (target original beginning end arguments)
@@ -251,6 +254,19 @@ range, and ARGUMENTS contains any remaining arguments for ORIGINAL."
 BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
   (emacsvox--region-deletion-around
    'completion-kill-region original beginning end arguments))
+
+(defun emacsvox--advice-kill-ring-save-around (original &rest arguments)
+  "Stop main speech before interactive copying or its visual feedback.
+Call ORIGINAL with ARGUMENTS unchanged.  Suppress automatic message speech
+while copying and skip the visual blink delay so the result is prompt.
+The after-advice owns the spoken result."
+  ;; Leave the interactive marker for the result after-advice.
+  (if (eq ems--interactive-fn-name 'kill-ring-save)
+      (let ((emacsvox-speak-messages nil)
+            (copy-region-blink-delay 0))
+        (tts-stop)
+        (apply #'funcall-interactively original arguments))
+    (apply original arguments)))
 
 (defun emacsvox--advice-kill-ring-save-after (&rest _)
   "Indicate that region has been copied to the kill ring.\nProduce an auditory icon if possible."

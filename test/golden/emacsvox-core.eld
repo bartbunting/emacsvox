@@ -41,8 +41,9 @@
 	(:text " beta" :point 1 :mark nil :mark-active nil :modified t
 	       :kill-ring ("alpha")))
  (:name kill-ring-save :events
-	((icon mark-object)
+	((stop nil) (icon mark-object)
 	 (message "region containing 1 lines copied to kill ring ")
+         (stop nil)
          (speak (:text "region containing 1 lines copied to kill ring ")))
 	:value nil :state
 	(:text "alpha beta" :point 1 :mark 6 :mark-active t :modified

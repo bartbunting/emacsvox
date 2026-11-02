@@ -5635,22 +5635,35 @@ separately diagnosed startup-inventory and capital-tone CI failures.
 
 * Region kill and copy feedback, 2026-11-03
 
-Observed: =C-w= and =M-w= announce their line counts through =message=,
-which routes speech to the notification stream.  A command-level regression
-fails against the original editing advice because no main speech is submitted.
+Accepted on 2026-11-03: =C-w= and =M-w= announce their line counts on main
+speech, interrupt older main speech and replace pending counts.  The visible
+result messages and editing results remain.  The shared region-deletion
+helper also applies this policy to interactive deletion and completion kills.
+Initial main-stream routing was committed as =b0aa63fac=.
 
-Implemented locally: keep the visible result message, suppress its automatic
-notification speech, and submit the count once to main speech.  The shared
-region-deletion helper applies this to interactive deletion and completion
-region killing as well.  Existing wording, icons and editing results remain.
+Interactive copying stops main speech at entry and suppresses automatic
+copy-message speech.  It skips the visual blink delay for that call, leaving
+the configured preference and programmatic calls unchanged.  The inner
+around-advice preserves the original command's interactive call; the outer
+after-advice retains the command marker and owns the spoken count.
 
-All 242 source advice tests and 241 fresh compiled advice tests pass.  The
-compiled runner excludes its existing source-only scrolling fixture.  All 27
-semantic traces pass, with the copy trace updated for main speech.  Incremental
-compilation, byte-code preflight and the documentation review gate pass.
+The investigation found two additional causes of inconsistent feedback.
+In session =20261101T185707Z-1090=, line dispatch =50068= was cancelled when
+copy result =50069= was submitted.  An off-screen copy sample, dispatch
+=50100= on Notify, overlapped count =50101= on Speaker.  Separately, a fresh
+graphical timing regression measured a 1,002 ms wait before count submission
+while Emacs blinked the copied region.
 
-The compiled editing module is loaded in the running Emacsvox session
-(PID 1090).  A temporary visible-buffer probe captured one main-stream
-line-count announcement and no notification speech for each command.  The
-probe restored the window and buffer and did not play speech.  Listening
-acceptance remains open.  Implementation and checks are committed together.
+All 244 source and 243 compiled advice checks pass.  The graphical case is
+skipped in batch and passes separately against source and compiled code,
+covering real visible and off-screen region bounds and native copy feedback.
+The compiled runner retains its existing source-only scrolling exclusion.
+All 27 semantic traces and the main-lane interruption transport check pass.
+Incremental compilation, byte-code preflight and the documentation review
+gate pass.  Compiled graphical checks reach count submission in 0.7 and 0.9 ms; the temporary live-buffer
+check measured 0.5 ms.  These measure submission, not acoustic latency.
+
+The compiled revision is loaded in Emacsvox PID 1090.  Listening acceptance
+passed on 2026-11-03 for interruption and prompt feedback.  The follow-up
+implementation, regression coverage and this acceptance record are committed
+together.  Unrelated settings and Org changes remain separate.

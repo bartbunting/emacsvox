@@ -1040,6 +1040,12 @@ to ORIGINAL unchanged."
  #'emacsvox--advice-completion-kill-region-around
  '((name . emacsvox)))
 
+;; Keep the result after-advice outside this wrapper so its interactive
+;; marker survives the original command's interactive visual feedback.
+(advice-add
+ 'kill-ring-save :around #'emacsvox--advice-kill-ring-save-around
+ '((name . emacsvox-copy-interruption) (depth . 10)))
+
 (advice-add
  'kill-ring-save :after #'emacsvox--advice-kill-ring-save-after
  '((name . emacsvox)))
