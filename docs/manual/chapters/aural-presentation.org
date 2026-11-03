@@ -344,6 +344,11 @@ matching and two-Enter selection as settings search: choose the destination,
 then activate its control. Child views return to their focused menu; another
 ~q~ returns to the menu where you searched.
 
+Search actions for =header line= to select the toggle for the buffer where
+you opened settings. Activating it hides that buffer's current header, or
+enables Emacsvox's buffer-name header. Enabling does not restore a previous
+custom header. Other buffers and startup defaults are unchanged.
+
 Press ~C-e H b~ to close menus and return to the captured source position,
 speaking its line. A changed or deleted source item must be captured again.
 
@@ -2275,6 +2280,25 @@ Rate uses the backend's startup option. Saving from buffer scope promotes those
 displayed choices to defaults. Mode punctuation policy and explicit buffer
 settings still override the saved punctuation default.
 
+**** Choose Unicode exceptions
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Search settings at ~C-e H /~ for =Unicode exceptions= or =untouched charsets=,
+then press ~RET~ again to open the advanced reading editor. The direct route
+is ~C-e H s A u~. The exceptions list contains Emacs character-set names,
+such as =ascii= and =latin-iso8859-1=, rather than individual characters.
+It controls which sets client-side Unicode conversion leaves unchanged and
+also affects individual-character naming.
+
+Customize's Apply updates the conversion filter immediately; Save also retains
+the list for later sessions. An empty list exempts no character sets. Speech
+adapter initialisation can replace this list with its supported sets. The
+replacement and spoken-name rules in the same editor apply when client-side
+conversion is enabled; modern Omnivox can handle the original text instead.
+Outside an editable field, ~q~ returns to the selected menu control.
+
 **** Use Emacs word and phrase dictionaries
 :PROPERTIES:
 :TEXINFO_NODE: no
@@ -2829,7 +2853,10 @@ Notmuch's ~s~/~m~ open ordered search/message fields and ~i~/~I~ their status
 maps. These Customize editors preserve custom formatters and use their own
 Apply/Save/Reset. ~p~ opens Presentation Options: enabled
 =mail-message-status-cues= owns standard cues, while maps still suppress spoken
-status tags. ~A~ exposes advanced options such as separators. ~q~ returns;
+status tags. ~A~ exposes advanced options such as separators and MIME inspection
+limits. Settings searches for =MIME depth limit= or =MIME node limit= select
+this control once Notmuch is loaded. These limits bound attachment-summary
+scanning, not the length of spoken text. ~q~ returns;
 opening or returning does not save. [[info:emacsvox#Notmuch Mail][Notmuch Mail]] explains privacy and full
 inspection. Integrations without focused entries remain accessible through
 major-mode settings and advanced Customize.

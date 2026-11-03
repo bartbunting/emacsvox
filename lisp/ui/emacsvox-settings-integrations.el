@@ -1283,7 +1283,10 @@ Structured field and status editors have their own Save actions."
   (interactive)
   (emacsvox-settings-integrations--save-options 'emacsvox-notmuch))
 (defun emacsvox-settings-integrations--notmuch-custom ()
-  "Edit additional mail speech options in Customize, with its own Save action."
+  "Edit additional mail speech options in Customize, with its own Apply and Save.
+MIME node and depth limits bound attachment-summary inspection across Notmuch
+buffers.  Lower limits can leave attachment counts incomplete; higher limits
+allow more scanning.  They do not limit spoken text or alter the mail itself."
   (interactive)
   (require 'emacsvox-notmuch)
   (emacsvox-settings--custom 'emacsvox-notmuch 'emacsvox-settings-integrations--notmuch-custom))

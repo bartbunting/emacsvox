@@ -6257,8 +6257,10 @@ This module defines the generic TTS interface.
 
 
  -- Variable: User Option tts-unicode-untouched-charsets
-     Characters of these charsets are  ignored by
-       tts-unicode-replace-chars.
+     Character sets left unchanged by client-side Unicode conversion.
+     Entries are Emacs charset names, such as ‘ascii’ and ‘latin-iso8859-1’.
+     Individual-character naming also respects this list.  Speech adapters may
+     replace it with their supported character sets when they initialize.
 
      Default Value:
 

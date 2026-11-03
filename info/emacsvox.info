@@ -16,8 +16,8 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 327095
-emacsvox.info-3: 602261
+emacsvox.info-2: 328417
+emacsvox.info-3: 602006
 
 Tag Table:
 (Indirect)
@@ -103,201 +103,202 @@ Ref: Review an item without changing the selection182837
 Ref: settings-menu-review182884
 Ref: Choose navigation and announcement preferences185347
 Node: Finding Settings And Actions187850
-Node: Presentation Model194454
-Node: Presentation Modalities198351
-Node: Explaining Presentation199861
-Node: Adjusting Presentation212147
-Node: Heading Voice Walkthrough214147
-Node: Guided Feedback Changes216925
-Node: Choosing A Voice For An Item222087
-Node: Managing Feedback Rules223922
-Node: Presentation Options225624
-Node: Voices And Routing226463
-Node: Personal Palette Walkthrough232135
-Node: Palette Inheritance Walkthrough235014
-Node: Renaming Voices And Palettes237298
-Node: Editing Named Voices238751
-Ref: voice-saving-procedure244402
-Node: Changing A Palette Physical Voice246208
-Node: Voice Adjustments248505
-Node: Voice Fallbacks252517
-Ref: Work with engine-specific parameters255691
-Node: Voices In Context257905
-Node: Emoji Speech Names260446
-Node: Installed Voices And Engines264518
-Node: Physical Voice Experiments271957
-Node: Keeping A Voice Experiment274138
-Node: Speech Engine Preferences276428
-Ref: Edit Saved Engine Configuration276925
-Ref: Choose The Shared Preferred Engine278281
-Node: Sounds And Space279527
-Node: Sound Pack Walkthrough284177
-Node: Changing One Sound285554
-Node: Changing Tones286930
-Node: Spatial Presentation Controls288435
-Node: Personal Sound Packs291205
-Node: Aural Speech Output297608
-Node: Reading Scope And Punctuation298768
-Ref: Use Emacs word and phrase dictionaries300718
-Ref: Adjust indentation feedback303235
-Ref: Set capitalisation feedback and its beeps305609
-Ref: Choose spelling feedback309980
-Ref: Use the shared tone editor312795
-Ref: spelling-tone-editor312823
-Ref: Try a tone without changing live feedback314764
-Ref: Shape the pitch and waveform316965
-Ref: Shape loudness with an envelope318842
-Ref: Reuse a tone through presets321817
-Ref: Apply save or discard the draft322949
-Ref: When a tone cannot be played324697
-Ref: Choose typing and point feedback325433
-Node: Notification Routing327095
-Node: Output Volumes329314
-Node: Integration Speech Settings330453
-Ref: Integration speech settings330656
-Ref: Shell/comint and EAT331520
-Ref: Agent Shell Org and EWW332843
-Ref: Notmuch and shared choice-list navigation334213
-Node: Presentation Profiles335674
-Node: Presentation Profile Walkthrough338187
-Node: Saving And Startup340137
-Ref: Try a change or leave it unfinished340934
-Ref: Store a voice without changing today's setup341369
-Ref: Use a saved voice or setup now341783
-Ref: Start the next session with it342340
-Ref: Share a palette or make a backup343503
-Node: Sharing Voice Palettes343959
-Node: Presentation Troubleshooting345153
-Node: Saved Voice Change Not Audible348813
-Node: Settings Lost After Restart350949
-Node: Feedback Differs Between Buffers353308
-Node: Aural Doctor Inspection355558
-Node: Inspecting Changed Settings356914
-Node: Reporting Speech Problems357951
-Node: Recovering Aural Changes359630
-Node: Unconfirmed Speech Changes361009
-Node: Voice Lock362630
-Node: Emacs Packages366142
-Node: Working With Files368657
-Node: Opening A Document369824
-Node: Saving A Working Copy371824
-Node: Browsing Files With Dired374368
-Node: Document Authoring377536
-Node: Writing An Org Document378710
-Node: Reviewing An Org Document380752
-Node: Structured Editing384142
-Node: Browsing Structure385160
-Ref: managed-muggles387676
-Node: Reading Markdown And Org Tables397405
-Node: Web Browsing410007
-Node: Opening A Web Page411711
-Node: Navigating A Web Page413256
-Node: Following Web Links415198
-Node: Recovering A Web Page417856
-Node: Messaging420646
-Node: Editing Code421161
-Node: Development Environment421680
-Node: Desktop Management425012
-Node: Personal Information Management425492
-Node: Desktop Applications426294
-Ref: Prepare the isolated OCR environment428904
-Ref: Recognise and read a document431206
-Ref: Configure recognition and diagnose the adapter432365
-Node: Notmuch Mail434574
-Node: Starting Notmuch436446
-Node: Notmuch Hello And Searches437095
-Ref: Refresh an existing result439502
-Ref: Choose less automatic feedback439877
-Node: Notmuch Search Results440672
-Node: Notmuch Messages And Attachments442446
-Node: Notmuch Tags And Archiving448670
-Node: Notmuch Speech And Privacy449749
-Ref: Notmuch fields and privacy449977
-Node: Notmuch Support Boundaries455344
-Node: Notmuch Troubleshooting456573
-Node: Agent Shell457527
-Node: Starting An Agent Shell Session459585
-Node: Answering Agent Questions468262
-Node: Agent Shell Speech And Privacy469991
-Node: Agent Shell Permissions475669
-Node: Reading Agent Responses477303
-Node: Agent Shell Transcript Navigation478306
-Node: Agent Shell Source Blocks482386
-Node: Agent Shell Tables484118
-Node: Agent Shell Recovery490274
-Node: EAT Terminal Access491289
-Node: EAT Input Modes493685
-Node: EAT Automatic Feedback496278
-Node: EAT Terminal Completion503228
-Node: EAT Screen Review504772
-Node: EAT Feedback Preferences507674
-Node: EAT Shell Integration510228
-Node: EAT Passwords And Privacy511538
-Node: EAT Clipboard Trust513037
-Node: EAT Full-screen Applications514709
-Node: EAT In Eshell516313
-Node: Running Terminal Based Applications517151
-Node: Starting Term518404
-Node: Term Input Modes519218
-Node: Term Speech Feedback520717
-Node: Reviewing The Term Screen521857
-Node: Term Help And Recovery523679
-Node: Speech Backends524735
-Node: Supported Platform Routes526634
-Node: Installing An Omnivox Release Binary530577
-Node: Installing An Omnivox Windows Release Under WSL2537221
-Node: Optional Omnivox Engine Modules542236
-Ref: Inspect running engines542690
-Ref: Browse voices and variants544651
-Ref: Install and activate voice packages547345
-Ref: Remove or import managed voices550849
-Ref: Configure and check an engine552030
-Ref: Manage the installed Omnivox release554150
-Node: Trying Native Windows Emacsvox559375
-Node: Installing Omnivox From Source572271
-Node: Building Omnivox For WSL2573700
-Node: Selecting And Checking Omnivox579370
-Ref: Remote workstation speech setup581164
-Node: Compatibility Speech Servers584864
-Node: Backend Diagnostics And Ownership586479
-Node: Emacsvox Keyboard Commands589930
-Node: Everyday Reading Commands591590
-Node: Everyday Editing Commands594326
-Node: Everyday Workspace Commands597486
-Node: Everyday Help Commands599891
-Node: Everyday Speech Commands602261
-Node: Emacsvox Key Prefixes604098
-Node: Finding Tasks607807
-Node: Finding Reading Tasks609277
-Node: Finding Editing Tasks611497
-Node: Finding Voice Tasks612890
-Node: Finding Settings Tasks614453
-Node: Finding Application Tasks616188
-Node: Finding Problem Tasks619035
-Node: Emacsvox Terminology622239
-Node: Working Context Terms623595
-Node: Editing Terms626483
-Node: Presentation Resource Terms629454
-Node: Speech And Settings Terms631497
-Node: Copyright633442
-Node: Acknowledgments634025
-Node: Developer Guide635051
-Node: Documentation Maintenance637550
-Node: Speech Server Protocols643219
-Ref: Testing A Direct Legacy Server651230
-Ref: Commands That Queue Output651789
-Ref: Commands That Set State655627
-Node: Integration Maintenance658203
-Ref: Background startup ownership and failure recovery668952
-Ref: Supported Emacs versions672105
-Ref: Native Windows builds675077
-Ref: Offline Windows development bundle677292
-Ref: Public Windows installer previews686313
-Ref: Remote preview validation689377
-Ref: Internal ownership and renderer tests711179
-Ref: Upstream contract layers714790
-Node: Authoring Sound Packs744957
-Node: Concept Index749130
+Node: Presentation Model194755
+Node: Presentation Modalities198652
+Node: Explaining Presentation200162
+Node: Adjusting Presentation212448
+Node: Heading Voice Walkthrough214448
+Node: Guided Feedback Changes217226
+Node: Choosing A Voice For An Item222388
+Node: Managing Feedback Rules224223
+Node: Presentation Options225925
+Node: Voices And Routing226764
+Node: Personal Palette Walkthrough232436
+Node: Palette Inheritance Walkthrough235315
+Node: Renaming Voices And Palettes237599
+Node: Editing Named Voices239052
+Ref: voice-saving-procedure244703
+Node: Changing A Palette Physical Voice246509
+Node: Voice Adjustments248806
+Node: Voice Fallbacks252818
+Ref: Work with engine-specific parameters255992
+Node: Voices In Context258206
+Node: Emoji Speech Names260747
+Node: Installed Voices And Engines264819
+Node: Physical Voice Experiments272258
+Node: Keeping A Voice Experiment274439
+Node: Speech Engine Preferences276729
+Ref: Edit Saved Engine Configuration277226
+Ref: Choose The Shared Preferred Engine278582
+Node: Sounds And Space279828
+Node: Sound Pack Walkthrough284478
+Node: Changing One Sound285855
+Node: Changing Tones287231
+Node: Spatial Presentation Controls288736
+Node: Personal Sound Packs291506
+Node: Aural Speech Output297909
+Node: Reading Scope And Punctuation299069
+Ref: Choose Unicode exceptions301019
+Ref: Use Emacs word and phrase dictionaries302040
+Ref: Adjust indentation feedback304557
+Ref: Set capitalisation feedback and its beeps306931
+Ref: Choose spelling feedback311302
+Ref: Use the shared tone editor314117
+Ref: spelling-tone-editor314145
+Ref: Try a tone without changing live feedback316086
+Ref: Shape the pitch and waveform318287
+Ref: Shape loudness with an envelope320164
+Ref: Reuse a tone through presets323139
+Ref: Apply save or discard the draft324271
+Ref: When a tone cannot be played326019
+Ref: Choose typing and point feedback326755
+Node: Notification Routing328417
+Node: Output Volumes330636
+Node: Integration Speech Settings331775
+Ref: Integration speech settings331978
+Ref: Shell/comint and EAT332842
+Ref: Agent Shell Org and EWW334165
+Ref: Notmuch and shared choice-list navigation335535
+Node: Presentation Profiles337231
+Node: Presentation Profile Walkthrough339744
+Node: Saving And Startup341694
+Ref: Try a change or leave it unfinished342491
+Ref: Store a voice without changing today's setup342926
+Ref: Use a saved voice or setup now343340
+Ref: Start the next session with it343897
+Ref: Share a palette or make a backup345060
+Node: Sharing Voice Palettes345516
+Node: Presentation Troubleshooting346710
+Node: Saved Voice Change Not Audible350370
+Node: Settings Lost After Restart352506
+Node: Feedback Differs Between Buffers354865
+Node: Aural Doctor Inspection357115
+Node: Inspecting Changed Settings358471
+Node: Reporting Speech Problems359508
+Node: Recovering Aural Changes361187
+Node: Unconfirmed Speech Changes362566
+Node: Voice Lock364187
+Node: Emacs Packages367699
+Node: Working With Files370214
+Node: Opening A Document371381
+Node: Saving A Working Copy373381
+Node: Browsing Files With Dired375925
+Node: Document Authoring379093
+Node: Writing An Org Document380267
+Node: Reviewing An Org Document382309
+Node: Structured Editing385699
+Node: Browsing Structure386717
+Ref: managed-muggles389233
+Node: Reading Markdown And Org Tables398962
+Node: Web Browsing411564
+Node: Opening A Web Page413268
+Node: Navigating A Web Page414813
+Node: Following Web Links416755
+Node: Recovering A Web Page419413
+Node: Messaging422203
+Node: Editing Code422718
+Node: Development Environment423237
+Node: Desktop Management426569
+Node: Personal Information Management427049
+Node: Desktop Applications427851
+Ref: Prepare the isolated OCR environment430461
+Ref: Recognise and read a document432763
+Ref: Configure recognition and diagnose the adapter433922
+Node: Notmuch Mail436131
+Node: Starting Notmuch438003
+Node: Notmuch Hello And Searches438652
+Ref: Refresh an existing result441059
+Ref: Choose less automatic feedback441434
+Node: Notmuch Search Results442229
+Node: Notmuch Messages And Attachments444003
+Node: Notmuch Tags And Archiving450227
+Node: Notmuch Speech And Privacy451306
+Ref: Notmuch fields and privacy451534
+Node: Notmuch Support Boundaries457075
+Node: Notmuch Troubleshooting458304
+Node: Agent Shell459258
+Node: Starting An Agent Shell Session461316
+Node: Answering Agent Questions469993
+Node: Agent Shell Speech And Privacy471722
+Node: Agent Shell Permissions477400
+Node: Reading Agent Responses479034
+Node: Agent Shell Transcript Navigation480037
+Node: Agent Shell Source Blocks484117
+Node: Agent Shell Tables485849
+Node: Agent Shell Recovery492005
+Node: EAT Terminal Access493020
+Node: EAT Input Modes495416
+Node: EAT Automatic Feedback498009
+Node: EAT Terminal Completion504959
+Node: EAT Screen Review506503
+Node: EAT Feedback Preferences509405
+Node: EAT Shell Integration511959
+Node: EAT Passwords And Privacy513269
+Node: EAT Clipboard Trust514768
+Node: EAT Full-screen Applications516440
+Node: EAT In Eshell518044
+Node: Running Terminal Based Applications518882
+Node: Starting Term520135
+Node: Term Input Modes520949
+Node: Term Speech Feedback522448
+Node: Reviewing The Term Screen523588
+Node: Term Help And Recovery525410
+Node: Speech Backends526466
+Node: Supported Platform Routes528365
+Node: Installing An Omnivox Release Binary532308
+Node: Installing An Omnivox Windows Release Under WSL2538952
+Node: Optional Omnivox Engine Modules543967
+Ref: Inspect running engines544421
+Ref: Browse voices and variants546382
+Ref: Install and activate voice packages549076
+Ref: Remove or import managed voices552580
+Ref: Configure and check an engine553761
+Ref: Manage the installed Omnivox release555881
+Node: Trying Native Windows Emacsvox561106
+Node: Installing Omnivox From Source574002
+Node: Building Omnivox For WSL2575431
+Node: Selecting And Checking Omnivox581101
+Ref: Remote workstation speech setup582895
+Node: Compatibility Speech Servers586595
+Node: Backend Diagnostics And Ownership588210
+Node: Emacsvox Keyboard Commands591661
+Node: Everyday Reading Commands593321
+Node: Everyday Editing Commands596057
+Node: Everyday Workspace Commands599217
+Node: Everyday Help Commands602006
+Node: Everyday Speech Commands603992
+Node: Emacsvox Key Prefixes605829
+Node: Finding Tasks609538
+Node: Finding Reading Tasks611008
+Node: Finding Editing Tasks613228
+Node: Finding Voice Tasks614621
+Node: Finding Settings Tasks616184
+Node: Finding Application Tasks617919
+Node: Finding Problem Tasks620766
+Node: Emacsvox Terminology623970
+Node: Working Context Terms625326
+Node: Editing Terms628214
+Node: Presentation Resource Terms631185
+Node: Speech And Settings Terms633228
+Node: Copyright635173
+Node: Acknowledgments635756
+Node: Developer Guide636782
+Node: Documentation Maintenance639281
+Node: Speech Server Protocols644950
+Ref: Testing A Direct Legacy Server652961
+Ref: Commands That Queue Output653520
+Ref: Commands That Set State657358
+Node: Integration Maintenance659934
+Ref: Background startup ownership and failure recovery670683
+Ref: Supported Emacs versions673836
+Ref: Native Windows builds676808
+Ref: Offline Windows development bundle679023
+Ref: Public Windows installer previews688044
+Ref: Remote preview validation691108
+Ref: Internal ownership and renderer tests712910
+Ref: Upstream contract layers716521
+Node: Authoring Sound Packs746688
+Node: Concept Index750861
 
 End Tag Table
 

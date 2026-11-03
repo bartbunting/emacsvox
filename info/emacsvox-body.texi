@@ -3583,6 +3583,11 @@ matching and two-Enter selection as settings search: choose the destination@comm
 then activate its control. Child views return to their focused menu; another
 @kbd{q} returns to the menu where you searched.
 
+Search actions for @code{header line} to select the toggle for the buffer where
+you opened settings. Activating it hides that buffer's current header@comma{} or
+enables Emacsvox's buffer-name header. Enabling does not restore a previous
+custom header. Other buffers and startup defaults are unchanged.
+
 Press @kbd{C-e H b} to close menus and return to the captured source position@comma{}
 speaking its line. A changed or deleted source item must be captured again.
 
@@ -5608,6 +5613,24 @@ settings still override the saved punctuation default.
 
 @enumerate
 @item
+@anchor{Choose Unicode exceptions}Choose Unicode exceptions
+
+
+Search settings at @kbd{C-e H /} for @code{Unicode exceptions} or @code{untouched charsets}@comma{}
+then press @kbd{@key{RET}} again to open the advanced reading editor. The direct route
+is @kbd{C-e H s A u}. The exceptions list contains Emacs character-set names@comma{}
+such as @code{ascii} and @code{latin-iso8859-1}@comma{} rather than individual characters.
+It controls which sets client-side Unicode conversion leaves unchanged and
+also affects individual-character naming.
+
+Customize's Apply updates the conversion filter immediately; Save also retains
+the list for later sessions. An empty list exempts no character sets. Speech
+adapter initialisation can replace this list with its supported sets. The
+replacement and spoken-name rules in the same editor apply when client-side
+conversion is enabled; modern Omnivox can handle the original text instead.
+Outside an editable field@comma{} @kbd{q} returns to the selected menu control.
+
+@item
 @anchor{Use Emacs word and phrase dictionaries}Use Emacs word and phrase dictionaries
 
 
@@ -6156,7 +6179,10 @@ Notmuch's @kbd{s~/~m} open ordered search/message fields and @kbd{i~/~I} their s
 maps. These Customize editors preserve custom formatters and use their own
 Apply/Save/Reset. @kbd{p} opens Presentation Options: enabled
 @code{mail-message-status-cues} owns standard cues@comma{} while maps still suppress spoken
-status tags. @kbd{A} exposes advanced options such as separators. @kbd{q} returns;
+status tags. @kbd{A} exposes advanced options such as separators and MIME inspection
+limits. Settings searches for @code{MIME depth limit} or @code{MIME node limit} select
+this control once Notmuch is loaded. These limits bound attachment-summary
+scanning@comma{} not the length of spoken text. @kbd{q} returns;
 opening or returning does not save. @ref{Notmuch Mail,Notmuch Mail,,emacsvox,} explains privacy and full
 inspection. Integrations without focused entries remain accessible through
 major-mode settings and advanced Customize.
@@ -8383,6 +8409,8 @@ Bound the final automatic Notmuch presentation.
 Default to 4@comma{}096 cons nodes and depth 64@comma{} limiting inspection of malformed@comma{}
 cyclic@comma{} broad@comma{} or deeply nested MIME metadata. An incomplete scan reports
 a conservative attachment lower bound@comma{} not a claim that no attachment exists.
+Search settings at @kbd{C-e H /} for @code{MIME depth limit} or @code{MIME node limit}@comma{}
+then activate Advanced Notmuch settings. Use Customize's own Apply or Save.
 @end table
 
 A shortened Search or Show announcement explains what was omitted and points

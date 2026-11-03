@@ -47,7 +47,7 @@
     ("Advanced speech chunk separator syntax" emacsvox-settings-workflows emacsvox-settings-reading-chunks "e")
     ("Automatic punctuation policy by major mode" emacsvox-settings-workflows emacsvox-settings-reading "p")
     ("Emoji names, approved sequences and limits" emacsvox-settings-workflows emacsvox-settings-reading "e")
-    ("Legacy Unicode replacements and names" emacsvox-settings-workflows emacsvox-settings-reading "u")
+    ("Unicode exceptions, replacements and names" emacsvox-settings-workflows emacsvox-settings-reading "u")
     ("Message exclusions and tooltip speech" emacsvox-settings-workflows emacsvox-settings-reading "m")
     ("Muggles: enable, disable and save navigation menus" emacsvox-aural-menu emacsvox-aural-menu "m")
     ("Table titles and data order" emacsvox-table-settings emacsvox-table-settings "t")
@@ -116,6 +116,7 @@
     ("Notmuch search status tags and fallback cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "i")
     ("Notmuch message status tags and fallback cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "I")
     ("Notmuch semantic status cues" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "p")
+    ("Notmuch MIME inspection limits" emacsvox-settings-integrations emacsvox-settings-integrations--notmuch "A")
     ("EWW section navigation autospeak" emacsvox-settings-integrations emacsvox-settings-integrations--eww "s")
     ("EWW suppress images" emacsvox-settings-integrations emacsvox-settings-integrations--eww "i")
     ("EWW page outlining: SHR-aware or native" emacsvox-settings-integrations emacsvox-settings-integrations--eww "o")
@@ -176,6 +177,7 @@
     ("Adjust overall pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")
     ("Silence or restore mapped voice here" emacsvox-settings-workflows emacsvox-settings-switches "s")
     ("Enable or disable earcons" emacsvox-settings-workflows emacsvox-settings-switches "e")
+    ("Toggle header line in current buffer" emacsvox-settings-workflows emacsvox-settings-switches "h")
     ("Set feedback history policy" emacsvox-settings-workflows emacsvox-settings-history "l")
     ("Recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "h")
     ("Presentation profiles" emacsvox-settings-workflows emacsvox-settings-setups "p")
@@ -196,7 +198,14 @@
   '(("Capital-letter beep" "caps beep" "capital beep")
     ("All-caps beep" "allcaps beep" "all caps beep" "caps beep")
     ("Explain this item" "Feedback for this item")
-    ("Recent feedback" "Recent aural feedback"))
+    ("Recent feedback" "Recent aural feedback")
+    ("Unicode exceptions, replacements and names"
+     "Legacy Unicode replacements and names" "untouched charsets"
+     "character sets left unchanged" "tts-unicode-untouched-charsets")
+    ("Toggle header line in current buffer" "header-line" "buffer header")
+    ("Notmuch MIME inspection limits" "Notmuch MIME depth limit" "Notmuch MIME node limit" "MIME nodes"
+     "attachment inspection" "emacsvox-notmuch-mime-depth-limit"
+     "emacsvox-notmuch-mime-node-limit"))
   "Additional search terms for settings, displayed under their original labels.")
 
 (defun emacsvox-settings--entry-available-p (entry)

@@ -8109,7 +8109,7 @@ semantics.
 
  -- Command: emacsvox-settings-switches
 
-     Control Voice Lock, local silence, and earcons with explicit scopes.
+     Control Voice Lock, local silence, earcons and headers with explicit scopes.
      Only global Voice Lock has a Customize save here.  Other switches last for the
      session or buffer; Help explains which presentation each switch affects.
 

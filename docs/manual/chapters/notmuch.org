@@ -467,6 +467,8 @@ characters and 4,096 bytes for the complete automatic presentation.
   Default to 4,096 cons nodes and depth 64, limiting inspection of malformed,
   cyclic, broad, or deeply nested MIME metadata. An incomplete scan reports
   a conservative attachment lower bound, not a claim that no attachment exists.
+  Search settings at ~C-e H /~ for =MIME depth limit= or =MIME node limit=,
+  then activate Advanced Notmuch settings. Use Customize's own Apply or Save.
 
 A shortened Search or Show announcement explains what was omitted and points
 to ~C-c C-p~ for full configured details. A shortened Hello item points to

@@ -48,6 +48,45 @@ text modification ticks, editing states and both speech processes are preserved.
 Listening acceptance remains pending. The commit checkpoint covers the boundary
 fix, regression coverage and generated documentation.
 
+** Unicode, header-line and MIME discovery, 2026-10-29
+
+Implemented: expose untouched Unicode character sets in the
+existing advanced reading editor, add a captured-buffer header-line action,
+and make MIME depth and node inspection limits findable through Notmuch's
+existing Advanced settings. Search only focuses controls; activation remains
+explicit. Notmuch discovery still requires its package to be loaded.
+
+Source inspection found that Customize changes to the Unicode exceptions list
+leave the conversion filter stale. A regression reproduces that failure; the
+option's setter now refreshes the filter on Apply and Save. Empty exceptions
+also produced an invalid filter; the filter now handles an empty list. These
+exceptions name character sets, not arbitrary individual characters. Adapter
+startup can replace them. Header-line activation retains the existing toggle's behaviour:
+hide the current header, or enable the Emacsvox buffer-name header locally.
+Graphical testing also found that Advanced reading was missing from the
+settings Enter-binding list. Adding it makes the second Enter open the selected
+Unicode editor after search, as in other settings menus.
+
+Verification refreshed on 2026-11-03: 207 speech-runtime tests pass against
+source and compiled code.
+Seven source and compiled graphical tests cover search, explicit activation,
+source-buffer scope, Customize Apply/Save/reload, return focus and loaded-package
+eligibility. Test saving uses isolated Customize files. Incremental compilation,
+byte-code preflight and the documentation review gate pass; the manual and
+reference are regenerated. All three search routes also resolve in the live session.
+
+Live application: loaded the compiled settings, workflow, integration-settings
+and Transient modules into Emacs PID 3380937 at
+=/run/user/1000/emacs/emacsvox=. Narrowly refreshed the compatible Unicode
+filter helper, setter and Help from the verified source instead of reloading
+the whole speech runtime. Selected window, buffer and point, all existing
+buffer headers, Unicode values, adapter voice functions and both speech
+processes are preserved.
+
+Listening acceptance: Unicode discovery accepted on 2026-10-30. Unicode
+editing, header-line and MIME listening checks remain pending. Implementation,
+regression coverage and the generated manuals are committed together.
+
 ** Settings discovery source audit, 2026-10-28
 
 Audited =master= at =acd0e9292=. Scanned 385 tracked Lisp files, including

@@ -166,11 +166,14 @@ complete workflows.
      formatters and use their own Apply/Save/Reset.  ‘p’ opens
      Presentation Options: enabled ‘mail-message-status-cues’ owns
      standard cues, while maps still suppress spoken status tags.  ‘A’
-     exposes advanced options such as separators.  ‘q’ returns; opening
-     or returning does not save.  *note Notmuch Mail: (emacsvox)Notmuch
-     Mail. explains privacy and full inspection.  Integrations without
-     focused entries remain accessible through major-mode settings and
-     advanced Customize.
+     exposes advanced options such as separators and MIME inspection
+     limits.  Settings searches for ‘MIME depth limit’ or ‘MIME node
+     limit’ select this control once Notmuch is loaded.  These limits
+     bound attachment-summary scanning, not the length of spoken text.
+     ‘q’ returns; opening or returning does not save.  *note Notmuch
+     Mail: (emacsvox)Notmuch Mail. explains privacy and full inspection.
+     Integrations without focused entries remain accessible through
+     major-mode settings and advanced Customize.
 
 
 File: emacsvox.info,  Node: Presentation Profiles,  Next: Presentation Troubleshooting,  Prev: Aural Speech Output,  Up: Aural Presentation
@@ -2454,7 +2457,9 @@ presentation.
      Default to 4,096 cons nodes and depth 64, limiting inspection of
      malformed, cyclic, broad, or deeply nested MIME metadata.  An
      incomplete scan reports a conservative attachment lower bound, not
-     a claim that no attachment exists.
+     a claim that no attachment exists.  Search settings at ‘C-e H /’
+     for ‘MIME depth limit’ or ‘MIME node limit’, then activate Advanced
+     Notmuch settings.  Use Customize's own Apply or Save.
 
    A shortened Search or Show announcement explains what was omitted and
 points to ‘C-c C-p’ for full configured details.  A shortened Hello item
@@ -5393,44 +5398,3 @@ Close a buffer (‘C-x k’)
      not the same as removing its window or deleting its file.  See
      *note Leaving document buffers safely: (emacsvox)Opening A
      Document.
-
-
-File: emacsvox.info,  Node: Everyday Help Commands,  Next: Everyday Speech Commands,  Prev: Everyday Workspace Commands,  Up: Emacsvox Keyboard Commands
-
-15.4 Help and orientation
-=========================
-
-Help can change the selected buffer and window arrangement.  Before your
-next editing command, check that you have returned to the intended
-document.
-
-Identify your context (‘C-e m’)
-     Speak the mode line, including the current buffer and major mode.
-     See *note Position and status commands: (emacsvox)Status
-     Information.
-Describe the windows (‘C-e C-w’)
-     Describe the current arrangement.  This does not select a different
-     view.  See *note Working with windows through speech:
-     (emacsvox)Working With Windows.
-Explain a key (‘C-h k’ followed by the key sequence)
-     Describe its effective binding without invoking it as the requested
-     action.  See *note Discovering a key, command or setting:
-     (emacsvox)Using Online Help.
-Discover local commands (‘C-h m’)
-     Describe the current modes.  ‘C-h b’ lists effective bindings;
-     invoke these from the application you are asking about.  See *note
-     Help for the current buffer: (emacsvox)Using Online Help.
-Read Help again (‘C-e h’)
-     Select and read Help using a windowful helper that removes other
-     windows without killing their buffers.  Lowercase h is different
-     from capital H for settings.  See *note Reading Help and returning
-     to work: (emacsvox)Using Online Help.
-Open the manual (‘C-e C-i’)
-     Open this manual directly in Info.  Use ‘i’ in Info to look up a
-     subject and ‘l’ to retrace a link.  See *note Manual lookup and
-     return navigation: (emacsvox)Finding Help In Info.
-
-   ‘C-e f’ speaks a filename or default directory, and ‘C-e a’ repeats a
-message.  Both also put text in the kill ring and can affect the next
-paste.  See *note Status commands and their side effects:
-(emacsvox)Status Information.

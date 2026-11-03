@@ -19596,7 +19596,7 @@ Manage saved setups and retained drafts in their owning editors.
 @findex emacsvox-settings-switches
 
 @format
-Control Voice Lock, local silence, and earcons with explicit scopes.
+Control Voice Lock, local silence, earcons and headers with explicit scopes.
 Only global Voice Lock has a Customize save here.  Other switches last for the
 session or buffer; Help explains which presentation each switch affects.
 @end format
@@ -29690,8 +29690,10 @@ Default Value:
 
 @defvar {User Option} tts-unicode-untouched-charsets
 @verbatim
-Characters of these charsets are  ignored by
-  tts-unicode-replace-chars.
+Character sets left unchanged by client-side Unicode conversion.
+Entries are Emacs charset names, such as ‘ascii’ and ‘latin-iso8859-1’.
+Individual-character naming also respects this list.  Speech adapters may
+replace it with their supported character sets when they initialize.
 @end verbatim
 
 Default Value:

@@ -329,6 +329,18 @@ rules.  Save this global default separately; local overrides are not saved."
   (emacsvox-settings-workflows--say
    (format "Global Voice Lock: %s" (if global-voice-lock-mode "on" "off"))))
 
+(defun emacsvox-settings-workflows--header-line ()
+  "Toggle the header line in the buffer where you opened settings.
+Any existing header is hidden; enabling uses Emacsvox's buffer-name header,
+not the previous custom header.  Other buffers and startup defaults stay
+unchanged.  This action applies immediately and has no Save operation."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (let ((emacsvox-speak-messages nil) (emacsvox-use-icons nil))
+      (emacsvox-toggle-header-line)))
+  (emacsvox-settings-workflows--say
+   (emacsvox-settings-workflows--source-toggle-label 'header-line-format "Header line in source")))
+
 (defun emacsvox-settings-workflows--save-voice-lock ()
   "Save only global Voice Lock through Customize.
 Local Voice Lock, local silence and earcon switches are not saved here."
@@ -500,7 +512,7 @@ Changes apply now; Save defaults explicitly to keep them across restarts."
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-switches ()
-  "Control Voice Lock, local silence, and earcons with explicit scopes.
+  "Control Voice Lock, local silence, earcons and headers with explicit scopes.
 Only global Voice Lock has a Customize save here.  Other switches last for the
 session or buffer; Help explains which presentation each switch affects."
   :refresh-suffixes t
@@ -510,7 +522,9 @@ session or buffer; Help explains which presentation each switch affects."
    ("s" "Silence or restore mapped voice at captured item" emacsvox-settings-workflows--silence :transient t)
    ("e" (lambda () (emacsvox-settings-workflows--source-toggle-label 'emacsvox-use-icons "Earcons"))
     emacsvox-settings-workflows--icons :transient t)
-   ("i" "Inherit earcon default" emacsvox-settings-workflows--inherit-icons :transient t)]
+   ("i" "Inherit earcon default" emacsvox-settings-workflows--inherit-icons :transient t)
+   ("h" (lambda () (emacsvox-settings-workflows--source-toggle-label 'header-line-format "Header line"))
+    emacsvox-settings-workflows--header-line :transient t)]
   ["Global policy"
    ("V" (lambda () (format "Voice Lock: %s" (if global-voice-lock-mode "on" "off")))
     emacsvox-settings-workflows--global-voice-lock :transient t)
@@ -1355,14 +1369,17 @@ unchanged. Use Customize's Apply or Save; q returns to this menu."
    "*Customize Emoji Speech*" 'emacsvox-settings-workflows--reading-emoji))
 
 (defun emacsvox-settings-workflows--reading-unicode ()
-  "Customize legacy Unicode replacements and spoken-name transformations.
-These global options apply only when the speech adapter enables client-side
-Unicode conversion. Modern Omnivox can handle the original text instead.
-Use Customize's Apply or Save; q returns to this menu."
+  "Customize Unicode charset exceptions, replacements and spoken names.
+The global exceptions list uses Emacs charset names, not individual characters.
+It affects client-side conversion and individual-character naming.  Replacement
+and name rules apply when the adapter enables client-side Unicode conversion;
+modern Omnivox can handle the original text instead.  Adapter initialization
+may replace charset exceptions.  Use Customize's Apply or Save; q returns here."
   (interactive)
   (emacsvox-settings-workflows--reading-options
-   '(tts-unicode-character-replacement-alist tts-unicode-name-transformation-rules-alist)
-   "*Customize Legacy Unicode Speech*" 'emacsvox-settings-workflows--reading-unicode))
+   '(tts-unicode-untouched-charsets tts-unicode-character-replacement-alist
+     tts-unicode-name-transformation-rules-alist)
+   "*Customize Unicode Speech*" 'emacsvox-settings-workflows--reading-unicode))
 
 (defun emacsvox-settings-workflows--reading-messages ()
   "Customize global spoken-message exclusions and tooltip speech.
@@ -1382,7 +1399,7 @@ Each item opens Customize, where Apply and Save remain explicit."
    ("r" "Predefined speech-rate base and step" emacsvox-settings-workflows--reading-rates :transient transient--do-suspend)
    ("p" "Automatic punctuation by major mode" emacsvox-settings-workflows--reading-punctuation :transient transient--do-suspend)
    ("e" "Emoji names, sequences and limits" emacsvox-settings-workflows--reading-emoji :transient transient--do-suspend)
-   ("u" "Legacy Unicode replacements and names" emacsvox-settings-workflows--reading-unicode :transient transient--do-suspend)
+   ("u" "Unicode exceptions, replacements and names" emacsvox-settings-workflows--reading-unicode :transient transient--do-suspend)
    ("m" "Message exclusions and tooltip speech" emacsvox-settings-workflows--reading-messages :transient transient--do-suspend)]
   ["Finish"
    ("q" "Back" transient-quit-one)

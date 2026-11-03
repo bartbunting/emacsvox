@@ -2879,10 +2879,18 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 
 (defcustom tts-unicode-untouched-charsets
   '(ascii latin-iso8859-1)
-  "Characters of these charsets are  ignored by
-  tts-unicode-replace-chars."
+  "Character sets left unchanged by client-side Unicode conversion.
+Entries are Emacs charset names, such as `ascii' and `latin-iso8859-1'.
+Individual-character naming also respects this list.  Speech adapters may
+replace it with their supported character sets when they initialize."
   :group 'dtk
-  :type '(repeat symbol))
+  :type '(repeat symbol)
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         ;; During initial loading the filter is built below, after its helper.
+         (when (boundp 'tts-unicode-charset-filter-regexp)
+           (setq tts-unicode-charset-filter-regexp
+                 (tts-unicode-build-skip-regexp value)))))
 
 (defvar tts-unicode-handlers
   '(tts-unicode-user-table-handler tts-unicode-full-table-handler)
@@ -2912,13 +2920,13 @@ the replacement was successful, nil otherwise.")
 (defun tts-unicode-build-skip-regexp (charsets)
   "Construct regexp to match all but the characters in
 tts-unicode-untouched-charsets."
-  (format "[^%s]"
-          (cl-loop for charset in charsets
-                   when (charsetp charset)
-                   concat
-                   (apply
-                    #'format
-                    "%c-%c" (tts-unicode-charset-limits charset)))))
+  (let ((ranges (cl-loop for charset in charsets
+                         when (charsetp charset)
+                         concat (apply #'format "%c-%c"
+                                       (tts-unicode-charset-limits charset)))))
+    (if (string-empty-p ranges)
+        "\\(?:.\\|\n\\)"
+      (format "[^%s]" ranges))))
 
 (defvar tts-unicode-charset-filter-regexp
   (tts-unicode-build-skip-regexp tts-unicode-untouched-charsets)

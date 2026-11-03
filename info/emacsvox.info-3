@@ -14,6 +14,47 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Everyday Help Commands,  Next: Everyday Speech Commands,  Prev: Everyday Workspace Commands,  Up: Emacsvox Keyboard Commands
+
+15.4 Help and orientation
+=========================
+
+Help can change the selected buffer and window arrangement.  Before your
+next editing command, check that you have returned to the intended
+document.
+
+Identify your context (‘C-e m’)
+     Speak the mode line, including the current buffer and major mode.
+     See *note Position and status commands: (emacsvox)Status
+     Information.
+Describe the windows (‘C-e C-w’)
+     Describe the current arrangement.  This does not select a different
+     view.  See *note Working with windows through speech:
+     (emacsvox)Working With Windows.
+Explain a key (‘C-h k’ followed by the key sequence)
+     Describe its effective binding without invoking it as the requested
+     action.  See *note Discovering a key, command or setting:
+     (emacsvox)Using Online Help.
+Discover local commands (‘C-h m’)
+     Describe the current modes.  ‘C-h b’ lists effective bindings;
+     invoke these from the application you are asking about.  See *note
+     Help for the current buffer: (emacsvox)Using Online Help.
+Read Help again (‘C-e h’)
+     Select and read Help using a windowful helper that removes other
+     windows without killing their buffers.  Lowercase h is different
+     from capital H for settings.  See *note Reading Help and returning
+     to work: (emacsvox)Using Online Help.
+Open the manual (‘C-e C-i’)
+     Open this manual directly in Info.  Use ‘i’ in Info to look up a
+     subject and ‘l’ to retrace a link.  See *note Manual lookup and
+     return navigation: (emacsvox)Finding Help In Info.
+
+   ‘C-e f’ speaks a filename or default directory, and ‘C-e a’ repeats a
+message.  Both also put text in the kill ring and can affect the next
+paste.  See *note Status commands and their side effects:
+(emacsvox)Status Information.
+
+
 File: emacsvox.info,  Node: Everyday Speech Commands,  Next: Emacsvox Key Prefixes,  Prev: Everyday Help Commands,  Up: Emacsvox Keyboard Commands
 
 15.5 Speech and settings
@@ -2839,7 +2880,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * attachments, Notmuch:                  Notmuch Messages And Attachments.
                                                               (line   6)
 * attack, decay, sustain and release:    Reading Scope And Punctuation.
-                                                              (line 344)
+                                                              (line 363)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  15)
@@ -2848,7 +2889,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
 * Aural history, mail privacy:           Notmuch Speech And Privacy.
-                                                              (line  91)
+                                                              (line  93)
 * Aural Home:                            Aural Home.          (line   6)
 * Aural Presentation:                    Aural Presentation.  (line   6)
 * automatic speech limits, Notmuch:      Notmuch Speech And Privacy.
@@ -3199,7 +3240,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * settings, survive restart:             Finding Settings Tasks.
                                                               (line   6)
 * shared tone editor:                    Reading Scope And Punctuation.
-                                                              (line 243)
+                                                              (line 262)
 * shell command status:                  EAT Shell Integration.
                                                               (line   6)
 * shell commands, where to run:          Filenames And Example Commands.
@@ -3223,7 +3264,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech worker, meaning:                Speech And Settings Terms.
                                                               (line   6)
 * spelling tone editor:                  Reading Scope And Punctuation.
-                                                              (line 243)
+                                                              (line 262)
 * starting Notmuch:                      Starting Notmuch.    (line   6)
 * startup palette:                       Saving And Startup.  (line   6)
 * startup selection:                     Speech And Settings Terms.
@@ -3266,9 +3307,9 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * timeout, did anything change:          Finding Problem Tasks.
                                                               (line   6)
 * tone envelope, ADSR:                   Reading Scope And Punctuation.
-                                                              (line 344)
+                                                              (line 363)
 * tone presets:                          Reading Scope And Punctuation.
-                                                              (line 243)
+                                                              (line 262)
 * too much talking:                      Feedback Differs Between Buffers.
                                                               (line   6)
 * too much talking <1>:                  Finding Problem Tasks.

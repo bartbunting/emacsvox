@@ -11,6 +11,98 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(ert-deftest emacsvox-settings-small-discovery-header-line ()
+  "Action search stays passive, then toggles only the captured buffer's header."
+  (emacsvox-test--with-settings
+    (let ((original-default (default-value 'header-line-format))
+          (other (generate-new-buffer " *header-other*")))
+      (unwind-protect
+          (progn
+            (with-current-buffer other (setq-local header-line-format "Other header"))
+            (with-current-buffer source (setq-local header-line-format "Original header"))
+            (execute-kbd-macro (vconcat (kbd "a") "header-line" (kbd "RET")))
+            (should (eq (emacsvox-test--menu-focused-command)
+                        'emacsvox-settings-workflows--header-line))
+            (should (equal (buffer-local-value 'header-line-format source) "Original header"))
+            (execute-kbd-macro (kbd "RET"))
+            (should-not (buffer-local-value 'header-line-format source))
+            (execute-kbd-macro (kbd "RET"))
+            (should (equal (buffer-local-value 'header-line-format source)
+                           emacsvox-header-line-format))
+            (should (equal (buffer-local-value 'header-line-format other) "Other header"))
+            (should (equal (default-value 'header-line-format) original-default))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "q"))
+            (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
+        (kill-buffer other)))))
+
+(ert-deftest emacsvox-settings-small-discovery-unicode ()
+  "Charset search opens a passive editor; Apply and Save update actual conversion."
+  (let ((original (default-value 'tts-unicode-untouched-charsets))
+        (properties (copy-tree (symbol-plist 'tts-unicode-untouched-charsets)))
+        (filter tts-unicode-charset-filter-regexp)
+        (tts-unicode-handlers (list (lambda (_) "replacement"))))
+    (unwind-protect
+        (emacsvox-test--with-settings
+          (tts-unicode-update-untouched-charsets '(ascii))
+          (execute-kbd-macro (vconcat (kbd "/") "untouched charsets" (kbd "RET")))
+          (should (eq (emacsvox-test--menu-focused-command)
+                      'emacsvox-settings-workflows--reading-unicode))
+          (execute-kbd-macro (kbd "RET"))
+          (should (derived-mode-p 'Custom-mode))
+          (should (equal (default-value 'tts-unicode-untouched-charsets) '(ascii)))
+          (let* ((widget (cl-find 'tts-unicode-untouched-charsets custom-options
+                                  :key #'widget-value)))
+            (should widget)
+            (when (eq (widget-get widget :custom-state) 'hidden)
+              (custom-toggle-hide widget))
+            (widget-value-set (car (widget-get widget :children)) '(ascii latin-iso8859-1))
+            (should (equal (default-value 'tts-unicode-untouched-charsets) '(ascii)))
+            (custom-variable-set widget)
+            (with-temp-buffer
+              (insert "é") (tts-unicode-replace-chars 'all)
+              (should (equal (buffer-string) "é")))
+            (should-not (file-exists-p custom-file))
+            (custom-variable-save widget))
+          (should (file-exists-p custom-file))
+          (execute-kbd-macro (kbd "M-< q"))
+          (should (eq (emacsvox-test--menu-focused-command)
+                      'emacsvox-settings-workflows--reading-unicode))
+          (tts-unicode-update-untouched-charsets '(ascii))
+          (load custom-file nil t)
+          (with-temp-buffer
+            (insert "é") (tts-unicode-replace-chars 'all)
+            (should (equal (buffer-string) "é"))))
+      (set-default 'tts-unicode-untouched-charsets original)
+      (setq tts-unicode-charset-filter-regexp filter)
+      (setplist 'tts-unicode-untouched-charsets properties))))
+
+(ert-deftest emacsvox-settings-small-discovery-notmuch-limits ()
+  "Depth and node aliases reach Advanced Notmuch without changing any limit."
+  (require 'notmuch)
+  (require 'emacsvox-notmuch)
+  (emacsvox-test--with-settings
+    (let ((before (list emacsvox-notmuch-mime-depth-limit emacsvox-notmuch-mime-node-limit))
+          (customize (symbol-function 'customize-group)) opened)
+      (cl-letf (((symbol-function 'customize-group)
+                 (lambda (group &rest arguments)
+                   (setq opened group) (apply customize group arguments))))
+        (dolist (query '("MIME depth limit" "MIME node limit" "attachment inspection"))
+          (setq opened nil)
+          (execute-kbd-macro (vconcat (kbd "/") query (kbd "RET")))
+          (should-not opened)
+          (should (eq (emacsvox-test--menu-focused-command)
+                      'emacsvox-settings-integrations--notmuch-custom))
+          (execute-kbd-macro (kbd "RET"))
+          (should (eq opened 'emacsvox-notmuch))
+          (should (derived-mode-p 'Custom-mode))
+          (execute-kbd-macro (kbd "M-< q"))
+          (should (eq (emacsvox-test--menu-focused-command)
+                      'emacsvox-settings-integrations--notmuch-custom))
+          (execute-kbd-macro (kbd "q"))))
+      (should (equal before (list emacsvox-notmuch-mime-depth-limit emacsvox-notmuch-mime-node-limit)))
+      (should-not (file-exists-p custom-file)))))
+
 (defun emacsvox-test--open-reading-workflow (command)
   "Capture COMMAND's real setup context without requiring a graphical popup."
   (cl-letf (((symbol-function 'transient-setup)
@@ -374,13 +466,14 @@
     (let* ((options '(tts-speech-rate-base tts-speech-rate-step
                       tts-punctuation-mode-policy-alist emacsvox-emoji-naming-enabled
                       emacsvox-emoji-approved-sequences emacsvox-emoji-maximum-count
-                      emacsvox-emoji-custom-names tts-unicode-character-replacement-alist
+                      emacsvox-emoji-custom-names tts-unicode-untouched-charsets
+                      tts-unicode-character-replacement-alist
                       tts-unicode-name-transformation-rules-alist
                       emacsvox-speak-messages-filter emacsvox-speak-tooltips))
            (before (mapcar (lambda (symbol) (copy-tree (default-value symbol))) options)))
       (execute-kbd-macro (kbd "s A"))
       (dolist (entry '(("r" . "Predefined Speech Rates") ("p" . "Punctuation Policy")
-                       ("e" . "Emoji Speech") ("u" . "Legacy Unicode Speech")
+                       ("e" . "Emoji Speech") ("u" . "Unicode Speech")
                        ("m" . "Message Speech")))
         (execute-kbd-macro (kbd (car entry)))
         (should (derived-mode-p 'Custom-mode))

@@ -3825,6 +3825,12 @@ partial-name matching and two-Enter selection as settings search: choose
 the destination, then activate its control.  Child views return to their
 focused menu; another ‘q’ returns to the menu where you searched.
 
+   Search actions for ‘header line’ to select the toggle for the buffer
+where you opened settings.  Activating it hides that buffer's current
+header, or enables Emacsvox's buffer-name header.  Enabling does not
+restore a previous custom header.  Other buffers and startup defaults
+are unchanged.
+
    Press ‘C-e H b’ to close menus and return to the captured source
 position, speaking its line.  A changed or deleted source item must be
 captured again.
@@ -5962,7 +5968,26 @@ buffer scope promotes those displayed choices to defaults.  Mode
 punctuation policy and explicit buffer settings still override the saved
 punctuation default.
 
-  1. Use Emacs word and phrase dictionaries
+  1. Choose Unicode exceptions
+
+     Search settings at ‘C-e H /’ for ‘Unicode exceptions’ or ‘untouched
+     charsets’, then press ‘<RET>’ again to open the advanced reading
+     editor.  The direct route is ‘C-e H s A u’.  The exceptions list
+     contains Emacs character-set names, such as ‘ascii’ and
+     ‘latin-iso8859-1’, rather than individual characters.  It controls
+     which sets client-side Unicode conversion leaves unchanged and also
+     affects individual-character naming.
+
+     Customize's Apply updates the conversion filter immediately; Save
+     also retains the list for later sessions.  An empty list exempts no
+     character sets.  Speech adapter initialisation can replace this
+     list with its supported sets.  The replacement and spoken-name
+     rules in the same editor apply when client-side conversion is
+     enabled; modern Omnivox can handle the original text instead.
+     Outside an editable field, ‘q’ returns to the selected menu
+     control.
+
+  2. Use Emacs word and phrase dictionaries
 
      For word or phrase substitutions managed by Emacs, open ‘C-e H s p
      d’.  This menu is separate from the Omnivox pronunciation editor on
@@ -6005,7 +6030,7 @@ punctuation default.
      ‘?’ followed by an item's key for its scope and effects before
      applying it.
 
-  2. Adjust indentation feedback
+  3. Adjust indentation feedback
 
      Open ‘C-e H s i’ or directly ‘C-e d I’.  In global-default scope,
      ‘S’ saves indentation defaults and tone volumes through Customize.
@@ -6045,7 +6070,7 @@ punctuation default.
      changes and returns.  See *note the shared controls:
      spelling-tone-editor. for presets and envelopes.
 
-  3. Set capitalisation feedback and its beeps
+  4. Set capitalisation feedback and its beeps
 
      ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication and ‘c’
      independently toggles camel-case splitting.  These and the
@@ -6116,7 +6141,7 @@ punctuation default.
      the menu reports that Customize was saved; correct the write
      problem and retry Save to finish migrating.
 
-  4. Choose spelling feedback
+  5. Choose spelling feedback
 
      ‘C-e H s f’ opens _Spelling feedback_.  These settings are global.
      Toggle ‘v’ for voice changes, ‘t’ for a tone, and ‘e’ for the help
@@ -6381,7 +6406,7 @@ punctuation default.
                worker, or restore volume 100, sine and Classic and turn
                off Pitch sweep to hear the tone on an older worker.
 
-  5. Choose typing and point feedback
+  6. Choose typing and point feedback
 
      ‘C-e H s t’ opens _Typing and interaction_.  Character, word,
      completed-line echo, point indication/presentation, and spoken

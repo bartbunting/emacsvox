@@ -20,6 +20,27 @@
 (require 'swiftmac-voices)
 (require 'voice-setup)
 
+(ert-deftest emacsvox-tts-unicode-customize-updates-conversion ()
+  "Applying charset exceptions changes conversion immediately in both directions."
+  (let ((value (default-value 'tts-unicode-untouched-charsets))
+        (properties (copy-tree (symbol-plist 'tts-unicode-untouched-charsets)))
+        (filter tts-unicode-charset-filter-regexp)
+        (tts-unicode-handlers (list (lambda (_) "replacement"))))
+    (unwind-protect
+        (progn
+          (tts-unicode-update-untouched-charsets '(ascii))
+          (dolist (case '(((ascii latin-iso8859-1) "é")
+                          ((ascii) "replacement")
+                          (nil "replacement")))
+            (customize-set-variable 'tts-unicode-untouched-charsets (car case))
+            (with-temp-buffer
+              (insert "é")
+              (tts-unicode-replace-chars 'all)
+              (should (equal (buffer-string) (cadr case))))))
+      (set-default 'tts-unicode-untouched-charsets value)
+      (setq tts-unicode-charset-filter-regexp filter)
+      (setplist 'tts-unicode-untouched-charsets properties))))
+
 (defconst emacsvox-test--legacy-protocol-functions
   '(dtk-interp-silence
     dtk-interp-tone
