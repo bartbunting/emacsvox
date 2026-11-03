@@ -240,7 +240,10 @@ Only source heading markers are changed; body punctuation stays intact."
 (defun emacsvox-org--line-content ()
   "Return the current Org line with speech-relevant properties intact."
   (concat
-   (emacsvox-org--reading-text
+   (funcall
+    (if (derived-mode-p 'org-agenda-mode)
+        #'emacsvox-org--agenda-reading-text
+      #'emacsvox-org--reading-text)
     (emacsvox-aural-source-substring
      (line-beginning-position) (line-end-position))
     (line-beginning-position) (line-end-position) 'line)
@@ -1009,13 +1012,79 @@ legacy Org completion feedback did."
 
 ;;;  Agenda:
 
+(defun emacsvox-org--agenda-reading-text (text _start _end unit)
+  "Present generated agenda time rows in TEXT when reading a whole UNIT.
+Keep source characters and partial reads intact for character inspection.
+Only rows styled by Org as grid or current-time rows, without an event
+marker, receive a spoken time in place of their decorative presentation."
+  (if (not (eq unit 'line)) text
+    (save-match-data
+      (let ((position 0) grid now event)
+        (while (< position (length text))
+          (let ((face (get-text-property position 'face text)))
+            (when (or (eq face 'org-time-grid)
+                      (and (listp face) (memq 'org-time-grid face)))
+              (setq grid t))
+            (when (or (eq face 'org-agenda-current-time)
+                      (and (listp face) (memq 'org-agenda-current-time face)))
+              (setq now t))
+            (when (or (get-text-property position 'org-marker text)
+                      (get-text-property position 'org-hd-marker text))
+              (setq event t)))
+          (setq position (1+ position)))
+        (if (and (or grid now) (not event)
+                 (string-match "\\`[ \t]*\\([0-9]\\{1,2\\}\\):\\([0-9]\\{2\\}\\)\\(?:[ \t]\\|\\'\\)" text)
+                 (< (string-to-number (match-string 1 text)) 24)
+                 (< (string-to-number (match-string 2 text)) 60))
+            (let* ((hour (string-to-number (match-string 1 text)))
+                   (minute (string-to-number (match-string 2 text)))
+                   (properties (text-properties-at (match-beginning 1) text))
+                   (spoken (format "%s%d%s %s"
+                                   (if now "Now, " "")
+                                   (let ((h (% hour 12))) (if (= h 0) 12 h))
+                                   (if (= minute 0) "" (format ":%02d" minute))
+                                   (if (< hour 12) "am" "pm"))))
+              (add-text-properties 0 (length spoken) properties spoken)
+              spoken)
+          text)))))
+
+(defun emacsvox-org--agenda-mode-setup ()
+  "Use agenda-aware presentation for ordinary line reading."
+  (setq-local emacsvox-aural-module 'org)
+  (setq-local emacsvox-speak--reading-transform-function
+              #'emacsvox-org--agenda-reading-text))
+
+(add-hook 'org-agenda-mode-hook #'emacsvox-org--agenda-mode-setup)
+
 ;; AGENDA NAVIGATION
+
+(cl-loop
+ for target in '(org-agenda-next-line org-agenda-previous-line)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Move through the agenda and announce the destination once."
+       (if (not (ems-interactive-p ',target))
+           (apply original arguments)
+         (prog1
+             ;; Org calls ordinary line movement interactively.  The outer
+             ;; agenda command owns its line feedback, including the cue.
+             (cl-letf (((symbol-function 'emacsvox-speak-line) #'ignore)
+                       ((symbol-function 'emacsvox-speak-visual-line) #'ignore))
+               (apply original arguments))
+           (emacsvox-org--submit-text
+            (emacsvox-org--line-content)
+            (emacsvox-org--feedback-facts
+             'org-agenda-entry 'focus-entered 'agenda-navigation)
+            'navigation 'select-object))))
+     (advice-add ',target :around #',function '((name . emacsvox))))))
 
 (cl-loop
  for target in
  '(
    org-agenda-next-date-line org-agenda-previous-date-line
-   org-agenda-next-line org-agenda-previous-line
    org-agenda-next-item org-agenda-previous-item
    org-agenda-end-of-line org-agenda-recenter
    org-agenda-show-and-scroll-up org-agenda-show-scroll-down

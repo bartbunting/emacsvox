@@ -13,9 +13,11 @@
 
 (let ((module
        (expand-file-name
-        "../lisp/integrations/emacsvox-org.el"
+        (if (equal (getenv "EMACSVOX_ORG_TEST_LOAD") "compiled")
+            "../lisp/integrations/emacsvox-org.elc"
+          "../lisp/integrations/emacsvox-org.el")
         (file-name-directory (or load-file-name buffer-file-name)))))
-  ;; Exercise source even when a compiled integration module exists.
+  ;; Prefer source unless the fresh-session compiled gate explicitly opts in.
   (load module nil nil))
 
 ;; Verify that direct advice survives definition of lazily loaded Org commands.
@@ -453,7 +455,6 @@
     org-timestamp-down org-timestamp-up
     org-eval-in-calendar
     org-agenda-next-date-line org-agenda-previous-date-line
-    org-agenda-next-line org-agenda-previous-line
     org-agenda-next-item org-agenda-previous-item
     org-agenda-end-of-line org-agenda-recenter
     org-agenda-show-and-scroll-up org-agenda-show-scroll-down
@@ -1675,14 +1676,16 @@
 
 (ert-deftest emacsvox-org-agenda-navigation-is-one-native-submission ()
   "Agenda navigation submits the destination and leading cue together."
+  (dolist (target '(org-agenda-next-line org-agenda-previous-line))
+    (should (advice-member-p (intern (format "emacsvox--advice-%s-around" target)) target)))
   (with-temp-buffer
     (insert "Agenda entry")
     (goto-char (point-min))
     (let* ((ems--interactive-fn-name 'org-agenda-next-line)
            (submissions
             (emacsvox-test--capture-org-submissions
-              (emacsvox--advice-org-agenda-previous-line-after)
-              (emacsvox--advice-org-agenda-next-line-after)))
+              (emacsvox--advice-org-agenda-previous-line-around #'ignore)
+              (emacsvox--advice-org-agenda-next-line-around #'ignore)))
            (arguments (cdar submissions))
            (action
             (car (plist-get arguments :compatibility-actions))))
@@ -1700,6 +1703,107 @@
        (eq
         (emacsvox-aural-compatibility-action-phase action)
         'before)))))
+
+(ert-deftest emacsvox-org-agenda-grid-speech-keeps-editing-detail ()
+  "Generated grid decorations disappear from speech, not source or editing."
+  (dolist (sample '(("  8:00 ┄┄┄ ┄┄┄┄" org-time-grid "8 am")
+                    ("  9:31 ┄┄ ← now ─────" org-agenda-current-time "Now, 9:31 am")
+                    ("  0:00 ----" org-time-grid "12 am")
+                    (" 12:00 ----" org-time-grid "12 pm")
+                    (" 20:05 ----" org-time-grid "8:05 pm")))
+    (pcase-let* ((`(,raw ,face ,expected) sample)
+                 (text (propertize raw 'face face 'personality 'voice-bolden)))
+      (should (equal (emacsvox-org--agenda-reading-text text 1 (1+ (length text)) 'line)
+                     expected))
+      (should (eq (get-text-property 0 'personality
+                                    (emacsvox-org--agenda-reading-text text 1 20 'line))
+                  'voice-bolden))
+      (dolist (unit '(word word-navigation partial-line))
+        (should (equal text (emacsvox-org--agenda-reading-text text 1 20 unit))))
+      (should (equal text raw)))))
+
+(ert-deftest emacsvox-org-agenda-retains-event-text-and-symbols ()
+  "Only generated time rows qualify; real entries and unstyled text survive."
+  (dolist (text (list "8:00 ┄┄┄"
+                      (propertize "8:00 Meeting ┄┄" 'face 'org-time-grid
+                                  'org-marker (point-marker))
+                      (propertize "8:00 Meeting ──" 'face 'org-agenda-current-time
+                                  'org-hd-marker (point-marker))
+                      (propertize "25:00 ┄┄" 'face 'org-time-grid)))
+    (should (equal text (emacsvox-org--agenda-reading-text text 1 20 'line)))))
+
+(defun emacsvox-test--with-real-agenda (function)
+  "Call FUNCTION in a real Org agenda with one synthetic meeting."
+  (let* ((file (make-temp-file "emacsvox-org-agenda-" nil ".org"))
+         (org-agenda-files (list file))
+         (org-agenda-buffer-name " *Emacsvox agenda test*")
+         (org-agenda-span 1)
+         (org-agenda-start-on-weekday nil)
+         (org-agenda-time-grid '((daily today require-timed) (800 2000) " ┄┄┄ " "┄┄┄┄"))
+         (org-agenda-show-current-time-in-grid t)
+         (org-agenda-current-time-string "← now ─────")
+         (org-agenda-follow-mode nil)
+         (org-mode-hook (remove #'emacsvox-org-mode-setup (copy-sequence org-mode-hook)))
+         (emacsvox-speak-messages nil))
+    (unwind-protect
+        (save-window-excursion
+          (with-temp-file file
+            (insert "* Fixture meeting ──\n<" (format-time-string "%Y-%m-%d %a") " 10:00-11:00>\n"))
+          (org-agenda-list nil (format-time-string "%Y-%m-%d") 1)
+          (funcall function))
+      (when (get-buffer org-agenda-buffer-name) (kill-buffer org-agenda-buffer-name))
+      (when (find-buffer-visiting file) (kill-buffer (find-buffer-visiting file)))
+      (delete-file file))))
+
+(ert-deftest emacsvox-org-agenda-real-navigation-submits-once ()
+  "Real nested interactive movement produces one semantic announcement."
+  (emacsvox-test--with-real-agenda
+   (lambda ()
+     (goto-char (point-min))
+     (search-forward "8:00")
+     (beginning-of-line)
+     (forward-line -1)
+     (let* ((submissions (emacsvox-test--capture-org-submissions
+                          (call-interactively #'org-agenda-next-line))))
+       (should (= (length submissions) 1))
+       (should (equal (caar submissions) "8 am"))
+       (should (eq (plist-get (plist-get (cdar submissions) :facts) :role) 'org-agenda-entry)))
+     (forward-line 1)
+     (let ((submissions (emacsvox-test--capture-org-submissions
+                         (call-interactively #'org-agenda-previous-line))))
+       (should (= (length submissions) 1))
+       (should (equal (caar submissions) "8 am"))))))
+
+(ert-deftest emacsvox-org-agenda-real-line-reading-and-source ()
+  "Line reading cleans time rows while preserving actual agenda rendering."
+  (emacsvox-test--with-real-agenda
+   (lambda ()
+     (goto-char (point-min))
+     (search-forward "8:00")
+     (beginning-of-line)
+     (let ((before (buffer-string)))
+       (should (equal (mapconcat #'cadr (emacsvox-test--org-line-runs) "") "8 am"))
+       (should (equal before (buffer-string))))
+     (goto-char (point-min))
+     (search-forward "← now")
+     (beginning-of-line)
+     (let ((speech (mapconcat #'cadr (emacsvox-test--org-line-runs) "")))
+       (should (string-prefix-p "Now, " speech))
+       (should-not (string-match-p "box drawings\\|─\\|┄\\|arrow" speech)))
+     (goto-char (point-min))
+     (search-forward "Fixture meeting")
+     (beginning-of-line)
+     (should (string-match-p "Fixture meeting ──" (emacsvox-org--line-content))))))
+
+(ert-deftest emacsvox-org-agenda-navigation-restores-reading-on-error ()
+  "Temporary suppression is unwound when Org movement fails."
+  (let ((ems--interactive-fn-name 'org-agenda-next-line)
+        (line-reader (symbol-function 'emacsvox-speak-line))
+        (visual-reader (symbol-function 'emacsvox-speak-visual-line)))
+    (should-error (emacsvox--advice-org-agenda-next-line-around
+                   (lambda () (error "Movement failed"))))
+    (should (eq line-reader (symbol-function 'emacsvox-speak-line)))
+    (should (eq visual-reader (symbol-function 'emacsvox-speak-visual-line)))))
 
 (ert-deftest emacsvox-org-agenda-state-advice-is-directly-registered ()
   "Agenda state, filter, and view commands have named quiet adapters."

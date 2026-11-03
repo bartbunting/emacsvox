@@ -5633,6 +5633,41 @@ Listening acceptance remains open through a fresh normal-profile restart.
 The running session has not been reloaded. This change does not address the
 separately diagnosed startup-inventory and capital-tone CI failures.
 
+* Org agenda time-grid speech, 2026-11-02
+
+Observed: the agenda's generated grid and current-time rows reach the emoji
+naming stage with their box-drawing decorations intact.  Live submission and
+Omnivox synthesis logs confirm repeated Unicode names.  Agenda next/previous
+line commands also submit twice: their nested interactive line movement speaks
+before the agenda after-advice submits the destination again.
+
+Implemented: the Org integration identifies generated time rows by
+their Org faces and absence of event markers.  Whole-line reading announces
+the time, with “Now” for the current-time row.  Event text, visual rendering,
+character inspection and partial reads retain their original content.  Agenda
+next/previous line around-advice suppresses nested line announcements and owns
+one semantic destination submission, including its navigation cue.
+
+All 99 Org source tests and 99 fresh compiled tests pass.  Regression coverage
+includes real agenda construction and nested interactive movement, ordinary
+line reading, event preservation, midnight/noon, retained voice properties,
+and restoring readers after errors.  Incremental compilation, byte-code
+preflight and the documentation review gate pass.  All 11 agenda checks also
+pass in a fresh graphical Emacs loading the compiled integration, with speech
+captured rather than played.  The graphical harness disables unrelated
+message speech because it has no live speaker process.
+
+The compiled Org integration is now loaded in the existing Emacsvox session
+(PID 1090).  The two superseded navigation after-advices were removed, and
+existing agenda buffers received the new reading transform.  A temporary
+buffer probe verified one “8 am” submission from real interactive movement;
+the current-time transform returned “Now, 9:31 am”.  The probe captured speech
+without playback and left the selected buffer and point intact.
+
+Listening acceptance passed on 2026-11-02 in this session: agenda navigation
+and time-row speech work well with the loaded fix.  Implementation and
+regression coverage are committed together.
+
 * Region kill and copy feedback, 2026-11-03
 
 Accepted on 2026-11-03: =C-w= and =M-w= announce their line counts on main
