@@ -20,6 +20,27 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Intermittent Agent Shell range error, 2026-10-30
+
+Investigation pending: =previous-line= in the original
+=Codex Agent @ ursys-reporting-front-end= buffer signalled
+=Args out of range: 22505913= at 12:20:41 AEDT. The aural log identifies
+point 22498028 and Emacs PID 3380937. Notification submission 75664,
+dispatch 101119, reached Omnivox and completed playback of the error.
+There is no backtrace for the original failure.
+
+Reading and moving through the recorded positions later did not reproduce it.
+On later inspection, the recorded point lay in a collapsed fragment; temporary
+narrowing during folded-heading speech remains a hypothesis, not an established
+cause.
+The buffer continued receiving output, so its later state cannot establish
+the original layout. No production code has changed for this finding.
+
+A temporary buffer-local signal diagnostic was configured to capture function
+names and numeric positions without conversation text, then remove itself after
+one matching error or 15 minutes. Isolated checks covered capture and removal. The failure
+is rare, and reproduction or a captured stack remains necessary before a fix.
+
 ** Agent Shell forward response boundary, 2026-10-29
 
 Implemented on =master=: forward response navigation moves to the buffer end
@@ -45,8 +66,9 @@ Live application: loaded the tested navigation byte-code from the =master=
 worktree into Emacs PID 3380937, socket =/run/user/1000/emacs/emacsvox=.
 The loaded path and updated command documentation are verified. Buffer points,
 text modification ticks, editing states and both speech processes are preserved.
-Listening acceptance remains pending. The commit checkpoint covers the boundary
-fix, regression coverage and generated documentation.
+Listening acceptance: accepted on 2026-10-29 for movement past the last response.
+Commit =323024b1e= covers the boundary fix, regression coverage and generated
+documentation.
 
 ** Unicode, header-line and MIME discovery, 2026-10-29
 
