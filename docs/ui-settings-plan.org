@@ -251,6 +251,22 @@ The existing calendar buffer now has the speech transform. Assertions verify
 unchanged buffer text, modified state, point, profile and running timer, and
 “Wednesday 11 November” for the spoken date. Listening acceptance remains open.
 
+Calendar duration speech, 2026-11-05: duration cells and labelled duration
+summaries use hours and minutes, with singular units and no zero-valued hours.
+Start and end times keep their clock format. Cell metadata distinguishes the
+values during native Org and table-reader speech, even when voices and column
+titles are disabled. Whole-line reading identifies the duration column.
+Presentation happens on speech copies; displayed and copied values remain
+unchanged. Source checks cover units, plural forms, long/zero durations,
+clock-time separation, voices and graphical reading/copying. Twelve adapter
+checks and seven graphical checks pass against source and fresh compiled
+copies. Compilation has no warnings; byte-code and documentation gates pass.
+
+Committed in kimai.el as =bfc25d6= and loaded from source into PID 855 through
+socket =emacsvox=. Assertions verify the spoken duration examples and unchanged
+clock times, calendar buffer text, modified state, point, profile and timer.
+Listening acceptance remains open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
