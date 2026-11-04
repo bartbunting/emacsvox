@@ -308,6 +308,32 @@ in =~/.emacsvox.d/custom.el=. Live assertions preserve existing buffer text,
 point, drafts, profile, timer and column order. The column order remains
 unchanged; listening acceptance is open.
 
+Kimai gap presentation, 2026-11-05: =emacsvox-kimai-gap-voice= selects a
+separate palette voice for gaps, defaulting to =monotone=. It overrides column
+voices for gap cells and rows, preserves entry voices in mixed columns, and
+covers ordinary line/region reading and gap navigation announcements. Nil
+restores ordinary column/line speech; changes apply on the next reading with
+Voice Lock enabled. Row metadata identifies gaps independently of column
+order and text labels. Spoken copies preserve displayed and copied values.
+
+The client face =kimai-report-gap= gives gaps a muted italic appearance,
+independent of Emacsvox. Gap overlays take precedence over Org's table face
+and disappear when the report is replaced. Customize changes apply to existing
+reports; entries retain normal Org table styling. The visible Gap label remains.
+
+Verification passes against compiled copies: 15 adapter tests, 74 client tests
+and eight graphical checks. Coverage includes the effective gap face above
+Org fontification, native/table/line speech, mixed columns, reordered columns,
+copying and report refresh. Compilation has no warnings. Byte-code preflight
+and documentation checks pass. A fresh Emacs checks repeated narrow reloads,
+including a narrowed report and an unsaved draft.
+
+Committed in kimai.el as =22ead6f= and loaded from source into PID 855 through
+socket =emacsvox=. Live assertions preserve report text, point, modified state,
+drafts, profile, timer, column order and Add preference. Existing gap rows can
+receive the new face without a network refresh; the final live reload found
+no remaining gap rows. Listening and visual acceptance remain open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
