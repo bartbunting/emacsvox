@@ -280,6 +280,34 @@ through socket =emacsvox=. An intercepted Shift-F10 invocation selects the
 chronological renderer without contacting Kimai; existing buffers, point,
 profile and timer are preserved. Listening acceptance remains open.
 
+Kimai Add interface preference, 2026-11-05: =kimai-report-add-interface=
+chooses a form or the F10-style prompt sequence for =a= and =C-c C-a= in
+reports. The package default remains =form=; a prefix temporarily selects
+the other interface. Prompt entry retains the report's profile and local
+date, prefills selected gaps, checks current overlaps and refreshes after
+confirmed creation. Refresh failure states that the entry was saved and
+must not be submitted again. Existing split recovery remains available.
+
+The existing =kimai-report-column-order= already supports all eight columns
+in either day view and multi-day reports; =g= applies a changed order.
+No new column-order implementation is needed. The report uses its rendered
+order for field actions until refreshed.
+
+Verification passes: 169 compiled client checks and seven graphical checks.
+Coverage includes prompt gap defaults, short times, profile isolation, prefix
+choices, saved-but-refresh-failed feedback, =a= with table reading active,
+cancelled prompts and =C-u a= opening the form. Compilation has no warnings;
+byte-code and documentation gates pass. A fresh Emacs reloads the compiled
+modules without changing an existing draft, profile or timer, and verifies
+that the saved preference survives reloading the Customize file.
+
+Committed in kimai.el as =4406ef8=. Loading waited for an active Kimai prompt
+to finish, then applied the compatible modules from source in PID 855 through
+socket =emacsvox=. Customize saved =kimai-report-add-interface= as =prompts=
+in =~/.emacsvox.d/custom.el=. Live assertions preserve existing buffer text,
+point, drafts, profile, timer and column order. The column order remains
+unchanged; listening acceptance is open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
