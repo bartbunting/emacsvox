@@ -236,6 +236,21 @@ keys with table reading enabled, the unchanged F10 binding, and 600 currently
 synced events. Automatic processing is off and no worker timer is scheduled.
 Listening acceptance remains open. Commits are local; no push was performed.
 
+Calendar date speech, 2026-11-05: the external Kimai adapter presents dates
+as weekday, day and month, without the year. Table cells, rows, columns and
+line reading use a buffer-local aural source transform; week and detail
+announcements use the same spoken format. Screen text, copied values, source
+data and non-calendar buffers retain their original dates. Existing speech
+transforms and date voice properties are preserved. Ten adapter checks and
+six graphical checks pass against source and fresh compiled copies, including
+the actual native submission path and clipboard preservation. Compilation
+has no warnings; byte-code and documentation preflights pass.
+
+Loaded the adapter from source into PID 855 through socket =emacsvox=.
+The existing calendar buffer now has the speech transform. Assertions verify
+unchanged buffer text, modified state, point, profile and running timer, and
+“Wednesday 11 November” for the spoken date. Listening acceptance remains open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
