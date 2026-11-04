@@ -267,6 +267,19 @@ socket =emacsvox=. Assertions verify the spoken duration examples and unchanged
 clock times, calendar buffer text, modified state, point, profile and timer.
 Listening acceptance remains open.
 
+Kimai day-report default, 2026-11-05: =kimai-day-report=, bound locally to
+=Shift-F10=, now opens the chronological view across all projects. =v= switches
+to project grouping and back. Date selection still defaults to today and
+keeps the selected profile. The initial view uses local-day boundaries,
+includes overnight entries and clips completed durations to the day, matching
+the existing timeline command. Month reports remain grouped by project.
+Existing profile and report checks pass against source and compiled client
+copies: 71 cases. Compilation, byte-code preflight and documentation checks
+pass. Committed in kimai.el as =689d93a= and loaded from source into PID 855
+through socket =emacsvox=. An intercepted Shift-F10 invocation selects the
+chronological renderer without contacting Kimai; existing buffers, point,
+profile and timer are preserved. Listening acceptance remains open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
