@@ -334,6 +334,34 @@ drafts, profile, timer, column order and Add preference. Existing gap rows can
 receive the new face without a network refresh; the final live reload found
 no remaining gap rows. Listening and visual acceptance remain open.
 
+Kimai Edit interface preference, 2026-11-05: =kimai-report-add-interface=
+now also governs =e=. Prompt edits default to saved classification, description
+and times; short time input keeps each field's existing date. =C-u e= uses
+the other interface once. The existing personal value =prompts= therefore
+applies to Add and Edit without a new setting or migration.
+
+Changing classification clears dependent defaults. Unchanged historical
+roles and Jira references are retained; references remain editable in the
+form. Prompt edits confirm changes, use the existing conflict and uncertain
+save checks, and refresh the originating report after success. No changes,
+declining confirmation and C-g during prompts return without writing. Once
+saving starts, interruption retains the recovery form. Other failures also
+retain a form for review. The report stays visible during normal prompts.
+
+Verification passes against compiled copies: 177 client checks and eight
+graphical checks. Coverage includes defaults, short times, profile isolation,
+dependency changes, cancellation before and after saving starts, conflict and
+timeout recovery, successful refresh and both prefix directions. Graphical
+checks exercise =e= with table reading active, retained report focus,
+cancellation and =C-u e= opening the form. Compilation has no warnings;
+byte-code preflight and documentation checks pass. A fresh Emacs checks
+compatible reloads and both dispatch paths without contacting Kimai.
+
+Committed in kimai.el as =27e9505= and loaded from source into PID 855 through
+socket =emacsvox=. The existing =prompts= preference now applies to Edit too.
+Live assertions preserve four existing Kimai buffers, point, drafts, profile,
+timer, column order and preference. Listening acceptance remains open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
