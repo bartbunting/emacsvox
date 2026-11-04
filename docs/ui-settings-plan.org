@@ -362,6 +362,23 @@ socket =emacsvox=. The existing =prompts= preference now applies to Edit too.
 Live assertions preserve four existing Kimai buffers, point, drafts, profile,
 timer, column order and preference. Listening acceptance remains open.
 
+Kimai day-report starting point, 2026-11-05: opening a day report places point
+in the first header cell of its first table, following the displayed column
+order. This applies to chronological and project views and day navigation.
+An empty timeline still has a header; an empty project view stays at the
+buffer start. Refresh or save with an entry ID retains entry focus. Multi-day
+reports keep their existing starting point.
+
+Verification passes: 83 affected client checks against source and compiled
+copies, and eight graphical checks. These cover default and reordered columns,
+visible point in both day views, empty timelines and refresh focus. Compilation
+has no warnings; byte-code and documentation checks pass. A fresh Emacs verifies
+the narrow reload while preserving a report and draft. Committed in kimai.el
+as =3a9eddf= and loaded from source into PID 855 through socket =emacsvox=.
+Four existing Kimai buffers, their points and drafts, profile, timer and
+preferences were preserved. The new position applies when opening the day
+view; listening acceptance remains open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
