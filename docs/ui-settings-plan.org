@@ -379,6 +379,16 @@ Four existing Kimai buffers, their points and drafts, profile, timer and
 preferences were preserved. The new position applies when opening the day
 view; listening acceptance remains open.
 
+Kimai publication checkpoint, 2026-11-05: the 12 calendar and report commits
+through =3a9eddf= were pushed on =feature/calendar-and-report-workflow=.
+[[https://gitlab.in.urnet.com.au/ursys/kimai-el/-/merge_requests/3][Merge request 3]] merged into protected =main= as =a1e96a5=, preserving the
+implementation commits. The complete compiled client suite passes 178 tests;
+15 speech adapter tests and eight graphical checks also pass. GitLab reported
+no conflicts and created no branch pipeline. The merged tree exactly matches
+the tested source, and local Kimai =main= was fast-forwarded to the remote.
+The loaded session remains current. The editor backup and unrelated Emacsvox
+work were preserved; listening acceptance remains open.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
