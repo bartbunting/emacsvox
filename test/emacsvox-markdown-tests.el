@@ -136,6 +136,48 @@
       '(:role heading :events (focus-entered) :level 2
         :visibility expanded :markdown-navigation-kind line)))))
 
+(ert-deftest emacsvox-markdown-setext-underlines-survive-arrow-navigation ()
+  "Arrow reading identifies underlines without repeating their heading title."
+  (require 'emacsvox-advice)
+  (dolist (underline '("==================" "------------------"))
+    (dolist (reading-mode '(nil t))
+      (with-temp-buffer
+        (insert "SYNC IMPACT REPORT\n" underline "\nFollowing line\n")
+        (markdown-mode)
+        (font-lock-ensure)
+        (let ((emacsvox-markdown-reading-mode reading-mode)
+              (line-move-visual nil) (visual-line-mode nil)
+              (tts-quiet nil) (tts-speaker-process 'speaker)
+              (emacsvox-aural-presentation-history nil)
+              (expected-level (if (string-prefix-p "=" underline) 1 2))
+              speech facts)
+          (cl-letf
+              (((symbol-function 'process-live-p)
+                (lambda (process) (eq process 'speaker)))
+               ((symbol-function 'tts-initialize)
+                (lambda () (ert-fail "Reinitialized a live speaker")))
+               ((symbol-function 'tts-speak)
+                (lambda (text)
+                  (push (substring-no-properties text) speech)
+                  (setq facts (copy-tree emacsvox-aural-submission-facts)))))
+            (dolist (command '(next-line previous-line))
+              (setq speech nil facts nil)
+              (goto-char (point-min))
+              (when (eq command 'previous-line) (forward-line 2))
+              (call-interactively command)
+              (should (looking-at (regexp-quote underline)))
+              (should (eq t (markdown-heading-at-point)))
+              (should (equal speech '("heading underline")))
+              (should (eq 'heading (plist-get facts :role)))
+              (should (= expected-level (plist-get facts :level)))
+              ;; Explicit heading inspection still names the whole heading.
+              (should (equal (emacsvox-markdown--get-heading-info)
+                             (format "heading level %d: SYNC IMPACT REPORT" expected-level)))
+              (setq speech nil)
+              (call-interactively #'previous-line)
+              (should (equal speech
+                             (list (format "heading level %d: SYNC IMPACT REPORT" expected-level)))))))))))
+
 (ert-deftest emacsvox-markdown-structure-facts-are-specific ()
   "Tasks, code, tables, links, footnotes, and lists expose distinct intent."
   (dolist

@@ -430,6 +430,40 @@ Remaining proposals: update elapsed waiting statuses without manual refresh,
 and optionally queue one-off approvals for creation after the meeting ends.
 The queue preference is pending; existing automation settings remain unchanged.
 
+** Markdown heading underline navigation, 2026-11-05
+
+Fixed locally: arrow navigation over a parsed Setext heading underline could
+raise =Wrong type argument: stringp, t=. The heading helper treated
+=markdown-heading-at-point='s boolean result as heading text. It now reads
+the text from the match data supplied by that predicate, preserving the
+heading level and title. Line reading says the title and level on the text
+line and "heading underline" on its equals or dash underline. This applies
+in normal and markup-stripping reading modes. Explicit heading inspection
+continues to announce the full heading from either line.
+
+The live aural log records four failures in =constitution.md= at point 25,
+line 3, between 16:37:06 and 16:37:12 AEDT. Emacs session
+=20261103T215630Z-855= submitted the error notification as submission 41477,
+dispatch 59239, through Notify PID 8772. The matching Omnivox log confirms
+synthesis and completed playback of that error. The failure occurs during
+heading extraction, before the intended line speech is submitted.
+
+A regression reproduced the exact exception before the fix. All 24 Markdown
+tests now pass, including both arrow directions over equals and dash
+underlines with the actual Markdown package. The incremental build passes.
+A fresh graphical Emacs loads the compiled integration and passes four arrow
+checks with visible point and the expected heading submission. Tests capture
+speech. Listening confirmed that the original exception is gone; acceptance
+of the shorter underline announcement remains open.
+
+The corrected heading helpers and line-reading callers are loaded narrowly
+in Emacs PID 855, socket =emacsvox=, without reloading voice mappings or other
+integration state. The original buffer passes both arrow directions onto
+line 3, capturing "heading underline" without playing test speech. Its text,
+properties, modified state and point, and the selected window and point are
+preserved. Byte-code and documentation preflights pass. The implementation,
+regression coverage and this verification record form one commit.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original

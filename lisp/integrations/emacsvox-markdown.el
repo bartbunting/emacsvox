@@ -141,17 +141,27 @@
            :text text))))
      ((and (fboundp 'markdown-heading-at-point)
            (fboundp 'markdown-outline-level))
-      (when-let* ((heading (markdown-heading-at-point)))
-        (list
-         :level (markdown-outline-level)
-         :text (string-trim heading)))))))
+      (when (markdown-heading-at-point)
+        ;; The predicate sets header match data; its return value is boolean.
+        ;; Group 1 is Setext text, including when point is on its underline.
+        (let ((heading (or (match-string-no-properties 1)
+                           (match-string-no-properties 5)))
+              (underline (and (match-beginning 1)
+                              (> (line-beginning-position) (match-beginning 1)))))
+          (list
+           :level (markdown-outline-level)
+           :text (string-trim heading)
+           :underline underline)))))))
 
-(defun emacsvox-markdown--get-heading-info ()
-  "Return heading information at point as \"heading level N: text\"."
+(defun emacsvox-markdown--get-heading-info (&optional line)
+  "Return spoken heading information at point.
+For LINE reading, identify a Setext underline without repeating its title."
   (when-let* ((heading (emacsvox-markdown--heading-data)))
-    (format "heading level %d: %s"
-            (plist-get heading :level)
-            (plist-get heading :text))))
+    (if (and line (plist-get heading :underline))
+        "heading underline"
+      (format "heading level %d: %s"
+              (plist-get heading :level)
+              (plist-get heading :text)))))
 
 (defun emacsvox-markdown--merge-facts (facts additions)
   "Return a copy of FACTS with plist ADDITIONS applied."
@@ -483,7 +493,7 @@ but you won't hear the literal markup characters."
           (emacsvox-aural-source-substring
            (line-beginning-position) (line-end-position)))
          (clean (emacsvox-markdown--strip-markup text))
-         (heading (emacsvox-markdown--get-heading-info))
+         (heading (emacsvox-markdown--get-heading-info t))
          (task (emacsvox-markdown--at-task-list-p))
          (fence (emacsvox-markdown--at-code-fence-p))
          (footnote (emacsvox-markdown--at-footnote-def-p))
@@ -494,6 +504,7 @@ but you won't hear the literal markup characters."
           (emacsvox-markdown-facts-at-point 'focus-entered 'line))
          (content
           (cond
+           (heading heading)
            ((emacsvox-markdown--at-horizontal-rule-p)
             "section separator")
            (table-separator nil)
@@ -501,7 +512,6 @@ but you won't hear the literal markup characters."
            (fence (format "code block: %s" fence))
            (footnote (format "footnote %s: %s" footnote clean))
            ((emacsvox-markdown--at-table-row-p) clean)
-           (heading heading)
            (task clean)
            ((emacsvox-markdown--at-list-item-p)
             (concat "item " clean))
@@ -553,9 +563,9 @@ When reading mode is active, strip markup from speech."
     (cond
      (emacsvox-markdown-reading-mode
       (emacsvox-markdown--speak-line-clean))
-     ((emacsvox-markdown--get-heading-info)
+     ((emacsvox-markdown--get-heading-info t)
       (emacsvox-markdown--submit-text
-       (emacsvox-markdown--get-heading-info)
+       (emacsvox-markdown--get-heading-info t)
        (emacsvox-markdown-facts-at-point 'focus-entered 'line)
        'navigation))
      (t
