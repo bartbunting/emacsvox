@@ -389,6 +389,19 @@ the tested source, and local Kimai =main= was fast-forwarded to the remote.
 The loaded session remains current. The editor backup and unrelated Emacsvox
 work were preserved; listening acceptance remains open.
 
+Calendar approval feedback finding, 2026-11-05: Include once saves an approval;
+creating the time entry still requires =C-c C-c= after the meeting ends.
+The approval uses the entry-saved event even though no Kimai entry was created,
+which can make approval sound like completed import. A waiting row also retains
+its old status until refreshed after the end time. Saving refreshes the calendar
+review, while an already open day report requires =g= to show the new entry.
+
+Proposed follow-up: distinguish approval from creation in cues and wording,
+make elapsed waiting statuses current, and refresh matching day reports after
+confirmed imports. Diagnosis confirmed a stored inclusion decision with no
+import record and automatic processing disabled. No time entries, preferences
+or live buffer state were changed; these interaction improvements are pending.
+
 ** Intermittent Agent Shell range error, 2026-10-30
 
 Investigation pending: =previous-line= in the original
