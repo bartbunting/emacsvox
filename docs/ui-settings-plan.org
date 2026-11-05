@@ -396,11 +396,39 @@ which can make approval sound like completed import. A waiting row also retains
 its old status until refreshed after the end time. Saving refreshes the calendar
 review, while an already open day report requires =g= to show the new entry.
 
-Proposed follow-up: distinguish approval from creation in cues and wording,
-make elapsed waiting statuses current, and refresh matching day reports after
-confirmed imports. Diagnosis confirmed a stored inclusion decision with no
-import record and automatic processing disabled. No time entries, preferences
-or live buffer state were changed; these interaction improvements are pending.
+Diagnosis confirmed a stored inclusion decision with no import record and
+automatic processing disabled. No production time was written during diagnosis.
+
+Implemented on 2026-11-05 in the external Kimai client: Include once for an
+ended meeting proceeds directly from classification prompts to the existing
+overlap choices and save confirmation. Approval and save progress are recorded
+together after confirmation. Declining or quitting preserves the previous
+decision. Future meetings retain manual approval, with explicit feedback that
+no time was created and an entry-changed cue instead of entry-saved.
+
+Successful saves and reconciliation refresh open reports on the originating
+connection without selecting them. Existing entry and column selection are
+retained where possible. Report refresh failure is reported separately from
+the confirmed save. A separate automatic worker has no report buffers to
+refresh; its parent-session refresh remains proposed work.
+
+Verification passes: 184 client tests from source and compiled copies, 15
+speech adapter tests and nine real graphical checks. Coverage includes one
+confirmation, cancellation, future approval feedback, uncertain-save recovery,
+report refresh failures, account isolation, focus and one spoken save result.
+A fresh Emacs verifies the narrow reload against existing report and draft
+buffers. Compilation is warning-free; byte-code preflight and documentation
+checks pass. Listening acceptance remains open.
+
+Committed locally in kimai.el as =fb7fd6d=. Loaded the three affected modules
+from source into PID 855 through socket =emacsvox=. Assertions preserve all
+four existing Kimai buffers, their point and drafts, profile, running timer,
+preferences, automatic-processing timer and ledger contents. No production
+time entries were created during this work. This slice has not been pushed.
+
+Remaining proposals: update elapsed waiting statuses without manual refresh,
+and optionally queue one-off approvals for creation after the meeting ends.
+The queue preference is pending; existing automation settings remain unchanged.
 
 ** Intermittent Agent Shell range error, 2026-10-30
 
