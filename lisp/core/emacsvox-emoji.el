@@ -70,7 +70,9 @@ Arrows prefer emoji names, then use their exact Unicode symbol names.
 Failures are data, never speech errors.  No network or display is involved."
   (condition-case nil
       (if (and (stringp sequence)
-               (require 'emoji-labels nil t)
+               ;; `require' walks load history even for a loaded feature.
+               ;; Avoid that work for every character in a spoken item.
+               (or (featurep 'emoji-labels) (require 'emoji-labels nil t))
                (boundp 'emoji--names)
                (hash-table-p emoji--names)
                (eq (hash-table-test emoji--names) 'equal))

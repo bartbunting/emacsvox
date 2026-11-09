@@ -257,11 +257,11 @@ A nil group denotes a focused menu with buffer-only controls.")
           (emacsvox-aural-submission-interruption-policy 'lane))
       (call-interactively command))))
 (defun emacsvox-settings-integrations--eat-autospeak ()
-  "Toggle captured-terminal foreground speech through its existing lifecycle."
+  "Turn automatic speech on or off for this terminal while it is selected."
   (interactive)
   (emacsvox-settings-integrations--eat-call 'emacsvox-eat-toggle-autospeak))
 (defun emacsvox-settings-integrations--eat-monitor ()
-  "Toggle captured-terminal background cues through their existing lifecycle."
+  "Turn background output cues and unread counts on or off for this terminal."
   (interactive)
   (emacsvox-settings-integrations--eat-call 'emacsvox-eat-toggle-background-monitoring))
 (defconst emacsvox-settings-integrations--eat-choices
@@ -457,7 +457,7 @@ A nil group denotes a focused menu with buffer-only controls.")
     (emacsvox-settings-integrations--agent-calls emacsvox-agent-shell
      emacsvox-agent-shell-speak-tool-calls "Announce tool calls" ((t . "on") (nil . "off")))
     (emacsvox-settings-integrations--agent-processing emacsvox-agent-shell
-     emacsvox-agent-shell-signal-processing "Processing lifecycle cues" ((t . "on") (nil . "off")))
+     emacsvox-agent-shell-signal-processing "Processing start and finish cues" ((t . "on") (nil . "off")))
     (emacsvox-settings-integrations--agent-automatic-limit emacsvox-agent-shell
      emacsvox-agent-shell-automatic-content-max-characters "Automatic content characters" nil 100 "complete content")
     (emacsvox-settings-integrations--agent-line-limit emacsvox-agent-shell
@@ -487,15 +487,8 @@ Numeric controls accept positive integers or none.")
    (emacsvox-transient--menu-facts 'integration-setting 'command-menu-value-changed)
    'state-change 'select-object))
 (defun emacsvox-settings-integrations--read-limit (prompt initial)
-  "Read a limit with PROMPT and INITIAL, retaining the selected control."
-  (let ((prefix transient--prefix)
-        (focus (when (window-live-p transient--window)
-                 (with-selected-window transient--window
-                   (get-text-property (point) 'button-data)))))
-    (unwind-protect (read-string prompt initial)
-      (when (and focus prefix (eq prefix transient--prefix))
-        (transient--show)
-        (with-selected-window transient--window (transient--goto-button focus))))))
+  "Read a limit with PROMPT and INITIAL, retaining the invoking control."
+  (emacsvox-transient--read #'read-string prompt initial))
 (defun emacsvox-settings-integrations--edit (command &optional delta)
   "Change COMMAND's global option, optionally adjusting its number by DELTA."
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))

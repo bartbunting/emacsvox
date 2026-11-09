@@ -52,6 +52,20 @@
     (emacsvox-reading-settings--apply)
     (should-not visual-line-mode)))
 
+(ert-deftest emacsvox-reading-settings-labels-use-choice-names-and-units ()
+  "Draft labels distinguish native behaviour, inheritance and percentage volume."
+  (emacsvox-test--with-reading-settings
+    (should (equal "Reading unit: Native mode behaviour, inherited"
+                   (emacsvox-reading-settings--label :mode "Reading unit")))
+    (should (equal "Volume: 60 percent, inherited"
+                   (emacsvox-reading-settings--label :middle-volume "Volume")))
+    (emacsvox-reading-settings--stage :middle-volume 0.35)
+    (should (equal "Volume: 35 percent"
+                   (emacsvox-reading-settings--label :middle-volume "Volume")))
+    (emacsvox-reading-settings--stage :frequency 'entry)
+    (should (equal "Frequency: Only on entering a source line"
+                   (emacsvox-reading-settings--label :frequency "Frequency")))))
+
 (ert-deftest emacsvox-reading-settings-save-reloads-in-fresh-emacs ()
   "Saved choices activate when Customize loads after startup, in existing buffers."
   (emacsvox-test--with-reading-settings

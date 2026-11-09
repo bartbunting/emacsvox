@@ -8102,7 +8102,7 @@ semantics.
 
  -- Command: emacsvox-settings-setups
 
-     Manage saved setups and retained drafts in their owning editors.
+     Open saved setups or resume unfinished edits; each editor has its own Save.
 
 2.265.1.13 emacsvox-settings-switches
 .....................................

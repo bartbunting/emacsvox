@@ -344,7 +344,12 @@
                   (dolist (key keys)
                     (let* ((object (seq-find (lambda (obj) (equal (oref obj key) key))
                                              transient--suffixes))
-                           (documentation (and object (documentation (oref object command) t)))
+                           (documentation
+                            (and object
+                                 (pcase (oref object command)
+                                   ('transient-quit-one "Leave this menu; applied and saved changes remain.")
+                                   ('transient-quit-all "Close all settings menus; applied and saved changes remain.")
+                                   (command (documentation command t)))))
                            (summary (and documentation (car (split-string documentation "\n")))))
                       (ert-info ((format "%s item %s" (oref transient--prefix command) key))
                         (should (and summary (not (string-empty-p summary))))

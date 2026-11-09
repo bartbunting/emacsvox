@@ -54,13 +54,13 @@
   (emacsvox-output-settings--set symbol (not (default-value symbol))
                                  (format "%s %s" label (if (default-value symbol) "off" "on"))))
 (defun emacsvox-output-settings--enabled ()
-  "Toggle spatial presentation." (interactive)
+  "Turn spatial placement on or off globally; speech and cue switches remain separate." (interactive)
   (emacsvox-output-settings--toggle 'emacsvox-aural-spatial-enabled "Spatial presentation"))
 (defun emacsvox-output-settings--speech ()
-  "Toggle spatial speech." (interactive)
+  "Allow speech to use left and right positions when spatial presentation is on." (interactive)
   (emacsvox-output-settings--toggle 'emacsvox-aural-spatial-speech-enabled "Spatial speech"))
 (defun emacsvox-output-settings--cues ()
-  "Toggle spatial cues." (interactive)
+  "Allow cues to use left and right positions when spatial presentation is on." (interactive)
   (emacsvox-output-settings--toggle 'emacsvox-aural-spatial-cue-enabled "Spatial cues"))
 (defun emacsvox-output-settings--route-value ()
   "Return the notification choice, normalizing main output and named devices."
@@ -178,7 +178,7 @@ Apply globally for this session; Save is separate."
   (emacsvox-output-settings--choose 'emacsvox-aural-spatial-output 'auto "Automatic"))
 
 (defun emacsvox-output-settings--output-mono ()
-  "Center all spatial speech and cues, including on stereo backends.
+  "Centre all spatial speech and cues, including on stereo backends.
 Keep speech and cues audible while removing their direction.
 Apply globally for this session; Save is separate."
   (interactive)
@@ -219,28 +219,28 @@ Apply globally for this session; Save is separate."
   (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'reverse "Reverse left and right"))
 
 (defun emacsvox-output-settings--remapping-collapse-left ()
-  "Center left-side requests and preserve right-side requests.
+  "Centre left-side requests and preserve right-side requests.
 Maximum separation still limits the remaining right-side positions.
 Direction requires enabled spatial presentation and a capable stereo backend.
 Apply globally for this session; Save is separate."
   (interactive)
-  (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'collapse-left "Center left-side requests"))
+  (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'collapse-left "Centre left-side requests"))
 
 (defun emacsvox-output-settings--remapping-collapse-right ()
-  "Center right-side requests and preserve left-side requests.
+  "Centre right-side requests and preserve left-side requests.
 Maximum separation still limits the remaining left-side positions.
 Direction requires enabled spatial presentation and a capable stereo backend.
 Apply globally for this session; Save is separate."
   (interactive)
-  (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'collapse-right "Center right-side requests"))
+  (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'collapse-right "Centre right-side requests"))
 
 (defun emacsvox-output-settings--remapping-center ()
-  "Center every spatial request while keeping speech and cues audible.
+  "Centre every spatial request while keeping speech and cues audible.
 Keep the configured output capability and maximum separation unchanged.
 Direction requires enabled spatial presentation and a capable stereo backend.
 Apply globally for this session; Save is separate."
   (interactive)
-  (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'center "Center all requests"))
+  (emacsvox-output-settings--choose 'emacsvox-aural-spatial-remapping 'center "Centre all requests"))
 
 (defun emacsvox-output-settings--remapping-custom-p ()
   "Return non-nil when direction mapping uses a custom function."
@@ -266,11 +266,11 @@ A custom function remains active until you choose a built-in mapping."
     emacsvox-output-settings--remapping-normal :transient transient--do-replace)
    ("r" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'reverse "Reverse left and right"))
     emacsvox-output-settings--remapping-reverse :transient transient--do-replace)
-   ("l" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'collapse-left "Center left-side requests"))
+   ("l" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'collapse-left "Centre left-side requests"))
     emacsvox-output-settings--remapping-collapse-left :transient transient--do-replace)
-   ("h" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'collapse-right "Center right-side requests"))
+   ("h" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'collapse-right "Centre right-side requests"))
     emacsvox-output-settings--remapping-collapse-right :transient transient--do-replace)
-   ("c" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'center "Center all requests"))
+   ("c" (lambda () (emacsvox-output-settings--choice-label 'emacsvox-aural-spatial-remapping 'center "Centre all requests"))
     emacsvox-output-settings--remapping-center :transient transient--do-replace)
    ("k" "Custom function, selected" emacsvox-output-settings--remapping-custom
     :if emacsvox-output-settings--remapping-custom-p :transient transient--do-replace)]
@@ -287,7 +287,8 @@ A custom function remains active until you choose a built-in mapping."
        'emacsvox-output-settings--remapping-custom)))
 
 (defun emacsvox-output-settings--separation (&optional delta)
-  "Set maximum separation; Shift arrows change it by 0.1."
+  "Set left-to-right separation from 0 (centre) to 1 (full width).
+Shift arrows change it by 0.1; spatial presentation must be enabled."
   (interactive)
   (when (and (not delta) (window-live-p transient--window))
     (with-selected-window transient--window

@@ -21,6 +21,73 @@
                (progn (execute-kbd-macro (kbd "<f8>")) ,@body)
              (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
 
+(defun emacsvox-settings-test--select-key (key)
+  "Browse to KEY with real Down events, failing if it cannot be reached."
+  (let ((emacsvox-transient-navigation-style 'continuous) (remaining 100))
+    (while (and (> remaining 0)
+                (not (with-selected-window transient--window
+                       (when-let* ((button (button-at (point))))
+                         (equal key (oref (button-get button 'button-data) key))))))
+      (execute-kbd-macro (kbd "<down>"))
+      (setq remaining (1- remaining)))
+    (should (> remaining 0))))
+
+(ert-deftest emacsvox-settings-reading-enter-activation ()
+  "Every reading menu activates its selected item with either Enter event."
+  (dolist (enter '("RET" "<return>"))
+    (dolist (route '("s R" "s R a" "s R f" "s R s" "s R w" "s R w 1" "s R w m"))
+      (emacsvox-test--with-settings
+        (execute-kbd-macro (kbd route))
+        (let ((prefix (oref transient--prefix command)))
+          (emacsvox-settings-test--select-key "q")
+          (execute-kbd-macro (kbd enter))
+          (should-not (eq prefix (oref transient--prefix command)))))))
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "s R w m"))
+    (emacsvox-settings-test--select-key "2")
+    (execute-kbd-macro (kbd "RET"))
+    (should (eq 'visual (plist-get (emacsvox-reading-settings--values) :mode)))
+    (should-not (buffer-local-value 'visual-line-mode source))
+    (execute-kbd-macro (kbd "d g"))
+    ;; Scope itself cannot inherit; only preferences have this choice.
+    ;; Transient retains inactive suffixes in its keymap, but does not offer
+    ;; or dispatch them. Check availability as well as the rendered menu.
+    (should (oref (emacsvox-transient--menu-suffix 'emacsvox-reading-settings--choice-inherit) inactive))
+    (with-current-buffer (window-buffer transient--window)
+      (should-not (string-search "Follow wider settings" (buffer-string))))
+    (execute-kbd-macro (kbd "q"))))
+
+(ert-deftest emacsvox-settings-focused-reading-enter ()
+  "Markdown and Info honour Enter after focused settings entry."
+  (dolist (mode '(markdown-mode Info-mode))
+    (emacsvox-test--with-settings
+      (execute-kbd-macro (kbd "C-q"))
+      (funcall mode)
+      (local-set-key (kbd "C-e S") #'emacsvox-settings-for-buffer)
+      (execute-kbd-macro (kbd "C-e S"))
+      (let ((prefix (oref transient--prefix command)))
+        (emacsvox-settings-test--select-key "q")
+        (execute-kbd-macro (kbd "RET"))
+        (should-not (and transient--prefix (eq prefix (oref transient--prefix command))))))))
+
+(ert-deftest emacsvox-settings-tone-search-keeps-parent-context ()
+  "Tone aliases focus the correct parent without applying or saving a draft."
+  (dolist (entry '(("tree tone" emacsvox-tree-settings "l")
+                   ("wrapped row volume" emacsvox-reading-settings "m")
+                   ("indentation tone editor" emacsvox-indentation-tone "b")
+                   ("capital tone presets" emacsvox-capitalization "l")))
+    (emacsvox-test--with-settings
+      (let ((before (copy-tree emacsvox-aural-user-rules)))
+        (execute-kbd-macro (vconcat (kbd "/") (car entry) (kbd "TAB RET")))
+        (should (eq (nth 1 entry) (oref transient--prefix command)))
+        (with-selected-window transient--window
+          (should (equal (nth 2 entry) (oref (button-get (button-at (point)) 'button-data) key))))
+        (should (eq source (if (eq (nth 1 entry) 'emacsvox-indentation-tone)
+                               (emacsvox-indentation--source)
+                             (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))))
+        (should (equal before emacsvox-aural-user-rules))
+        (should-not (file-exists-p custom-file))))))
+
 (ert-deftest emacsvox-settings-menu-search-every-destination ()
   "Every searchable destination opens and selects its actual control."
   (emacsvox-test--with-settings
@@ -150,7 +217,7 @@
                (lambda (_prompt collection &rest _)
                  (let ((matches (all-completions "cap" collection)))
                    (should (member "Capital-letter beep" matches))
-                   (should (member "Capitalization indication and camel case" matches)))
+                   (should (member "Capitalisation indication and camel case" matches)))
                  "capital-letter beep"))
               ((symbol-function 'emacsvox-settings--open)
                (lambda (entry) (setq opened entry))))
@@ -167,7 +234,7 @@
         opened)
     (cl-letf (((symbol-function 'completing-read)
                (lambda (_prompt table &rest _)
-                 (dolist (case '(("cap" "Capitalization indication and camel case"
+                 (dolist (case '(("cap" "Capitalisation indication and camel case"
                                   "Capital-letter beep" "All-caps beep" "Spatial capabilities"
                                   "Silence mapped voice at captured item")
                                  ("CAPS BEEP" "Capital-letter beep" "All-caps beep")

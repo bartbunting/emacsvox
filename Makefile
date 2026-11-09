@@ -359,6 +359,18 @@ compiled-aural-test:
 graphical-voice-test: check-emacs bytecode-check
 	sh test/run-graphical-voice-tests.sh "$(EMACS)"
 
+# Local package compatibility check; the pinned integration gates remain separate.
+MENU_TEST_LOAD ?= compiled
+MENU_TEST_PACKAGE_DIR ?=
+MENU_TEST_MAGIT_SOURCE ?= 0
+.PHONY: graphical-menu-test
+graphical-menu-test: check-emacs bytecode-check
+	EMACSVOX_TEST_DEPS_DIR="$(TEST_DEPS_DIR)" \
+	EMACSVOX_MENU_TEST_LOAD="$(MENU_TEST_LOAD)" \
+	EMACSVOX_MENU_TEST_PACKAGE_DIR="$(MENU_TEST_PACKAGE_DIR)" \
+	EMACSVOX_MENU_TEST_MAGIT_SOURCE="$(MENU_TEST_MAGIT_SOURCE)" \
+	sh test/run-graphical-menu-tests.sh "$(EMACS)"
+
 .PHONY: graphical-speak-test
 graphical-speak-test: check-emacs bytecode-check
 	sh test/run-graphical-speak-tests.sh "$(EMACS)"

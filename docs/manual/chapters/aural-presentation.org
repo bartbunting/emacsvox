@@ -323,7 +323,7 @@ preference through Customize.
 :END:
 
 Press ~C-e H /~ to find an Emacsvox setting by any part of its name, ignoring
-capitalisation. Type =cap= to find /Capitalization indication and camel case/,
+capitalisation. Type =cap= to find /Capitalisation indication and camel case/,
 /Capital-letter beep/, /All-caps beep/, and /Spatial capabilities/. The aliases
 =caps beep= and =allcaps= find both beep controls and only /All-caps beep/, respectively.
 Each result appears once under its normal name. Use completion to choose a
@@ -2468,7 +2468,7 @@ changes and returns. See [[spelling-tone-editor][the shared controls]] for prese
 :TEXINFO_NODE: no
 :END:
 
-~C-e H s c~ opens /Capitalization/. ~i~ toggles indication and ~c~ independently
+~C-e H s c~ opens /Capitalisation/. ~i~ toggles indication and ~c~ independently
 toggles camel-case splitting. These and the presentation choice share
 buffer/global scope on ~g~. ~SPC~ previews reading; ~S~ saves these three
 startup defaults. Buffer overrides still apply. The reading sample contains
@@ -2484,7 +2484,7 @@ Press ~RET~ again to try another choice, or ~SPC~ to preview reading. ~q~ or
 ~C-g~ cancels and returns to the same control. Choosing a presentation neither
 enables indication nor saves startup defaults.
 
-Within Capitalization, ~l~ edits the capital-letter beep and ~a~ the all-caps
+Within Capitalisation, ~l~ edits the capital-letter beep and ~a~ the all-caps
 beep. Each has separate global defaults saved through Customize. You can
 preview edits before applying or saving them; these unsaved edits are what
 the editor calls a /draft/.
@@ -2568,7 +2568,7 @@ alone, even when tone feedback is off. ~SPC~ reads a sample containing one
 flagged word with the selected combination. Capitalisation follows the captured
 source buffer's active reading settings and presentation rules. A local Spoken
 choice can therefore say “cap” even when global defaults use Tone. Open
-Capitalization for that buffer to inspect or change its reading settings.
+Capitalisation for that buffer to inspect or change its reading settings.
 ~S~ saves the spelling settings,
 including tone timing and shape, and the shared tone volume through Customize.
 ~q~ returns and ~C-q~ closes the menus without saving.

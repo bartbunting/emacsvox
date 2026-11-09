@@ -847,7 +847,7 @@ their Help specifies a global prefix form.
 
   Toggle capitalisation indication with the lowercase key. The uppercase
   key chooses and previews spoken, tone, combined, personal-rule, or no
-  indication. ~C-e H s c~ opens the Capitalization menu.
+  indication. ~C-e H s c~ opens the Capitalisation menu.
 - C-e d i / C-e d I ::
 
   Toggle indentation feedback with the lowercase key, or open its menu with

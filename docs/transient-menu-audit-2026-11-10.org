@@ -1,0 +1,523 @@
+#+title: Transient menu audit for 2026.11.0
+#+date: 2026-11-10
+
+* Release assessment
+
+All confirmed Emacsvox defects from this audit have corrections and regression
+coverage. These include Enter activation, return focus, two unusable choice
+actions, misleading linked-tone Help and repeated Agent Shell questions.
+The compiled menu suite passes with both tested Transient versions. This is
+ready for review and the short listening check below, not a release approval.
+
+The installed Magit Git module still fails from byte-code before its menu
+opens. Its matching source passes. Rebuilding that package and deciding which
+optional packages to pin for a repeatable menu gate are the two deferred
+decisions. Neither has been silently folded into the Emacsvox fixes.
+
+Tree listening remains accepted on 2026-11-10. This audit does not reopen that
+acceptance. Changes to menu wording need a short listening check of their own.
+
+* Baseline and evidence
+
+The source baseline is =fb916e4f3=. The pre-existing edit to the tree listening
+record in =ui-settings-plan.org= is preserved. All 29 ADRs, the editorial guide,
+the settings plan, relevant manual sections and existing menu tests were read.
+
+Verification uses Emacs 31.0.90 selected by =local.mk=. Initial
+=make check-emacs= and =make bytecode-check= passed. Fresh graphical sessions
+run under Xvfb with private settings files and silent speech processes.
+Captured submissions establish requested speech, not audible playback.
+
+The source run explicitly loads the 17 menu and adapter modules from =.el=;
+other dependencies can use current byte-code. The compiled run explicitly
+loads those modules from =.elc=. Source tests therefore do not establish that
+the personal session has loaded the same definitions.
+
+The test Transient is the bundled =0.13.3-10-g87d0ca08-builtin=. The installed
+Transient is =0.13.9=, loaded from
+=/home/bart/.emacs.d/elpa/transient-20261101.1108/transient.elc=.
+Pinned integration tests use Agent Shell 0.94.1 under
+=/home/bart/.cache/emacsvox/test-deps/agent-shell-0.94.1-emacs-31.0.90/=.
+The personal session uses Agent Shell 0.94.2 from
+=/home/bart/.emacs.d/elpa/agent-shell-20261109.1018/agent-shell.elc=.
+Installed Magit is =20261107.2107= and Markdown is =20261022.55=.
+
+Read-only inspection identifies the personal Emacs as PID 1546, socket
+=/run/user/1000/emacs/emacsvox=. Main and notification speech use PIDs 9661
+and 10478 through =servers/omnivox=, with the staged Windows runtime 1.18.0.
+No personal settings were changed. After fresh compiled verification, the
+question interaction module alone was reloaded in PID 1546. Its existing
+advice uses the new definition; the affected buffer's point, text modification
+count and modified status stayed unchanged. The other menu changes require a
+fresh normal profile; a partial reload does not verify those changes live.
+
+Temporary runners, rendered menu inventories and reproduction logs are in
+=/tmp/emacsvox-transient-audit-20261110.L8tifq/=. The steps below also describe
+the failures without depending on those temporary files.
+
+* Findings and corrections, in priority order
+
+The reproduction steps and quoted failures below describe the original
+behaviour. The corrections are recorded in the same commit as this report.
+The verification table records the tests separately from listening acceptance.
+
+** T1. High: Enter fails in nine Emacsvox menus
+
+The explicit Enter-binding list in
+[[file:../lisp/integrations/emacsvox-transient.el::(defun emacsvox-transient--settings-enter-binding][the Transient adapter]]
+omits the four reading workflow menus, the three wrapped-line menus, Markdown
+and Info. Real graphical key events reproduce this with both tested Transient
+versions, from source and compiled code.
+
+From =C-e H=, open =s R=, =s R a=, =s R f=, =s R s=, =s R w=,
+=s R w 1= or =s R w m=. Browse to an action and press Enter. The selection
+does not activate. Speech says, “Enter is not available here. Control G closes
+this menu.” =C-j= activates it. Focused =C-e S= entry in Markdown and Info has
+the same failure. The underlying Enter bindings remain =newline=,
+=markdown-enter-key= or =Info-follow-nearest-node=.
+
+Add the missing owned menus to Enter registration. Verify actual activation
+through the keyboard, including choices and focused entry. Keep third-party
+action bindings intact. The manual's Enter contract is correct; weakening it
+would conceal the failure. Listening is needed only for concise confirmation.
+
+** T2. Medium: numeric shortcuts restore the wrong control
+
+In settings search, choose “Agent line navigation limit”. Highlight =f=, then
+press =a=, enter 500 and accept. Focus returns to =f= instead of =a=. The
+setting itself changes correctly, but the next Enter activates a different
+control. Named voice tuning has the same problem: highlight Shared settings,
+press =p= and enter a pitch; focus returns to Shared settings.
+
+Returning from numeric entry also exposed a shared Transient issue: a refreshed
+suffix can have an equal but separately allocated key string. Transient's
+button lookup compares their identity and can leave point before the first
+button. The shared reader now matches the displayed command and key contents.
+
+The integration limit reader and voice editor bridge remember the highlighted
+item instead of the action that opened the prompt. Reuse the shared prompt
+wrapper, which also restores focus after cancellation and keeps settings
+prompts readable while speech is quiet. Cover direct shortcuts, Enter,
+invalid input, cancellation and source preservation in graphical tests.
+
+** T3. Medium: the voice inheritance action cannot be browsed and activated
+
+Open a named voice's fallback tuning menu, browse to “Use shared value for
+selected adjustment”, then press Enter. It raises “Choose a numeric adjustment
+first”. The action works only as a shortcut while a number remains highlighted.
+The existing test exercises only that shortcut.
+
+When no numeric control is selected, ask which adjustment should inherit, as
+the default-reset action already does. Keep direct shortcut use on a selected
+number. Proposed label: “Use shared value for an adjustment”. Help must explain
+that this removes the fallback's override without changing shared tuning.
+
+** T4. Medium: scope selection offers an impossible inheritance action
+
+Open =C-e H s R w g=. The displayed “Follow wider settings for this preference”
+action is available, but =i= or =C-j= always raises “Scope cannot inherit”. A
+scope is a destination, not an inheritable preference. Hide this action when
+choosing scope; retain it for actual preferences. Verify the remaining choices
+and cancellation through real keys.
+
+** T5. Medium: tone Help contradicts the parent draft contract
+
+At =C-e H s Y l T=, repeated item reading produces:
+
+- “Use tone in Trees draft. Apply this draft using the destination’s scope;
+  SAVE also persists it. capital A.”
+- “Use tone in Trees draft. Save and apply this cue through its destination’s
+  persistence mechanism. capital W.”
+- “Play pending root tone. Play the currently applied tone alone for comparison
+  with Space’s draft. capital C.”
+
+The provider keeps A and W in the Trees draft; neither applies rules nor saves
+them. C compares with the parent draft. Wrapped-row tones have the same linked
+draft distinction. The menu overview also describes W as persistent without
+explaining these exceptions. Existing tests verify parent drafts and separate
+saving; this is a confirmed wording error, not an unintended write.
+
+Provide destination-specific summaries and Help. For Trees A and W, use
+“Enable the draft's depth tone; apply or save it later in Trees.” For C, explain
+that Space plays the private editor draft for comparison and neither action
+applies settings. Give wrapped-row controls equivalent saving guidance.
+Preserve the distinction between saving a
+named tone preset and saving the cue's configuration.
+
+** A1. Medium: Agent Shell repeats a question when selecting its answer
+
+Live reproduction was confirmed by listening. In buffer
+=Codex 3 Agent @ emacsvox=, the diagnostic session =20261108T235721Z-1546=
+records =agent-shell-elicitation-act= at point 6424483, UTC
+=2026-11-09T18:21:55.116Z=. Submission 20295, dispatch 29243, contains 185 characters and includes the entire
+question before “Yes, the question repeats, selected”. The preceding movement
+submission contains only the choice. Omnivox request 29243, protocol generation
+33722, admits that request and starts Eloquence synthesis of the repeated
+heading; Emacs observes its mixer source. This is submitted repetition, not an
+inference from a running audio process.
+
+The action advice omits the question-origin binding already used by navigation.
+Bind the original control during the action, suppressing the heading only when
+the result remains in the same question. Preserve headings when entering a
+different question and explicit rereading. Test actual Enter in shell and
+viewport buffers, selection, toggles and preview actions. Confirm the original
+interaction through listening after the fix.
+
+** T6. Low: numbers and explanations need clearer spoken wording
+
+Wrapped-row volume displays its raw fraction, while exact entry and adjustment
+use percent. Display percent consistently. Reading choices expose internal
+values such as “inherit”; show the corresponding choice label and retain a
+separate indication that the value is inherited.
+
+Tone adjustments clamp at bounds without the “Minimum” or “Maximum” feedback
+used by other numeric controls. Add that feedback without repeating the menu.
+Several descriptions expose function arguments or implementation details,
+including “DIRECTION”, “SAVE”, “change lifecycle” and “qualified engine
+controls”. Replace these with the effect, scope and relevant dependency.
+
+** T7. Low: exit explanations describe Transient internals
+
+In Emacsvox menus, detailed descriptions and Help use the upstream quit
+docstrings. “Without saving the transient stack” sounds like a statement about
+settings, but it describes Transient's implementation. Closing a menu does not
+save settings, and individual editors have different pending-draft policies.
+
+Emacsvox-owned menus now explain Back and Close in terms of leaving menus,
+retaining applied and saved changes, and each editor's stated draft policy.
+The adapter changes neither application quit bindings nor third-party Help.
+Search also retains old names as aliases and adds routes to tone editors and
+wrapped-row volume through their proper parents. Browsing search results does
+not apply settings.
+
+* Test failures that are not confirmed menu defects
+
+- The graphical voice runner selects editor tests and omits the broad menu
+  suites. A release check needs an explicit graphical menu suite; a passing
+  editor runner does not establish full menu coverage.
+- The integration section test expects three sections even when Transient
+  0.13.9 removes the empty first section. The actual two-section menu navigates
+  correctly. Test visible sections and selected controls instead of assuming
+  an empty section occupies a navigation step.
+- The history test stubs text submissions but leaves minibuffer earcons active.
+  Exact entry adds cue-only history records. Isolate that side effect before
+  treating its expected count as a product failure.
+- Installed Magit byte-code raises =void-variable $= while building status,
+  before menu navigation. Loading the matching =magit-git.el= lets the graphical
+  Magit navigation test pass. Keep this dependency verification separate from
+  Emacsvox fixes; do not silently change the personal package installation.
+- Two tree Help failures occurred with the inventory capture advice. They pass
+  without it. The clean compiled suite also passes those tests. They are not
+  evidence for withdrawing tree acceptance.
+- One Notmuch test expects an old manual phrase, “no tree-specific row
+  formatter”. The maintained text already says “no specialised row summaries”.
+  Its expectation now matches that text; no Notmuch behaviour changed.
+
+* Implementation and verification
+
+The implementation followed these small steps:
+
+1. Register the nine missing owned menus for Enter; test real key events.
+2. Share numeric prompt handling and restore the invoking displayed control;
+   add the fallback-adjustment chooser and hide scope inheritance.
+3. Give linked tone actions destination-specific Help, clarify units and
+   effects, and add concise numeric boundary feedback.
+4. Preserve the question origin during Agent Shell actions, using the existing
+   navigation rule to suppress repeated headings within a field.
+5. Add a graphical menu runner, repair stale test assumptions, and align the
+   manual and NEWS with the displayed controls.
+
+No changes have been pushed, tagged or published. Personal settings stores
+were not used by tests. Tree listening acceptance remains complete.
+
+| Finding | Correction and regression evidence | Listening |
+|---------+------------------------------------+-----------|
+| T1 | =emacsvox-settings-reading-enter-activation= and focused Markdown/Info tests use arrows, RET and the graphical Return event; choice values change only on activation | Brief Enter check remains |
+| T2 | Integration numeric shortcut/cancel and voice shortcut tests check the selected control and subsequent Shift-arrow adjustment; shared tests cover prompt recovery | Brief return-focus check remains |
+| T3 | Fallback test browses to the inheritance item and presses RET, chooses an adjustment and verifies shared tuning is unchanged | No new sound; wording review included below |
+| T4 | Scope choice test checks that Inherit is inactive and absent from the displayed menu, then selects and cancels normally | No separate listening check |
+| T5 | Linked tone Help test captures full item speech, verifies parent draft changes and no saved file or live rules; existing provider tests cover scope | New Help wording remains |
+| A1 | Seven question checks cover action feedback and real keys in shell/viewport; field changes still announce headings | Original failure confirmed; question-button interaction accepted on 2026-11-10 |
+| T6 | Existing numeric/choice tests plus exact “Minimum. 50 Hz” submission, percent display and spoken-label assertions | Included in the short menu check |
+| T7 | Emacsvox quit Help test preserves upstream documentation; search tests verify aliases select the correct parent control without applying | No separate sound change |
+
+Verification completed in fresh sessions:
+
+| Check | Code and dependencies | Result |
+|-------+-----------------------+--------|
+| Source menu checks | Explicit source for 17 affected menu/adapter modules; other dependencies may use byte-code | 283 passed in the full run; three checks passed separately after correcting their setup or expected labels |
+| Graphical menu suite | 17 compiled modules; installed Transient 0.13.9, Agent Shell 0.94.2; Magit Git module explicitly from source | 286 passed; none skipped |
+| Graphical menu suite with older Transient | 17 compiled modules; bundled Transient 0.13.3-10-g87d0ca08; pinned Agent Shell 0.94.1; Magit Git module explicitly from source | 286 passed; none skipped |
+| Integration suite | Source; pinned Agent Shell 0.94.1 and prepared dependencies | 738 passed |
+| Graphical integration suite | Source; pinned integration dependencies | 17 passed |
+| Graphical voice suite | Compiled editor, catalogue and browser modules | 40 passed |
+| Graphical question checks | Compiled question module; installed Agent Shell 0.94.2 | 7 passed; none skipped |
+| Final linked-tone wording | Five affected checks, including complete spoken submissions and parent-draft behaviour | 5 passed from source and 5 from freshly compiled code |
+| Incremental build and preflight | Emacs 31.0.90 from =local.mk= | =make bytecode= and =make bytecode-check= passed |
+| Header check | Maintained attribution and licence policy | =make headers-check= passed |
+| Documentation | Preview, generated reference and manuals, then non-mutating review | =make docs-org-preview=, =make docs-reference=, =make docs-update= and =make docs-release-check= passed; Info nodes unchanged |
+
+The full menu suites preceded the last shortening of linked-tone explanations.
+The five affected checks then verified those final sentences and their unchanged
+draft behaviour from source and compiled code. Unaffected checks were reused.
+
+The graphical menu runner is available as =make graphical-menu-test=.
+For this installation, the successful compatibility check used:
+
+#+begin_src sh
+make graphical-menu-test MENU_TEST_PACKAGE_DIR=/home/bart/.emacs.d/elpa MENU_TEST_MAGIT_SOURCE=1
+#+end_src
+
+The package directory supplies installed packages without loading a personal
+init or changing their files. The source override is explicit and only affects
+Magit's Git module in the isolated test session. Omit it when checking a
+repaired compiled Magit installation. =MENU_TEST_LOAD=source= instead loads
+the 17 Emacsvox menu modules from source. The runner reports actual loaded
+paths, rejects skipped selected tests and stops an unresponsive test session.
+It does not replace the existing pinned integration gates.
+
+* Coverage inventory
+
+All 62 Emacsvox prefix definitions were found by searching Lisp definitions,
+then following choices, conditions and linked destinations. This includes
+menus absent from the search registry. Dynamic choices are part of their
+parent menu, not additional statically defined prefixes. No extra prefix
+constructor was found outside these modules.
+
+The table records at least one graphical instance and source review per menu;
+it does not claim every combination of values, engine and scope was exercised.
+Routes without =C-e H= start at that menu. Child choice menus require their
+parent's captured context; they are not independent M-x entry points. =C-e S=
+chooses a focused integration when applicable, or the general buffer menu.
+
+The narrow-window sweep covered 50 distinct prefixes at 48 columns by 18 rows,
+with an in-place resize to 70 columns by 25 rows. Down reached the offered
+controls and kept the selected button visible. One attempted dictionary route
+used the wrong case (=D=); it remained in Punctuation and is not counted as a
+narrow dictionary check. The normal graphical suite exercises Dictionaries.
+
+| Menu definition | Entry routes | Conditions and linked views reviewed | Evidence |
+|-----------------+--------------+--------------------------------------+----------|
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu][emacsvox-aural-menu]] | C-e H; M-x; C-u C-e H for global scope | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-library-preview][emacsvox-aural-menu-library-preview]] | o L; settings search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-line-cues][emacsvox-aural-menu-line-cues]] | o c; settings search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-navigation][emacsvox-aural-menu-navigation]] | n; s n; settings search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-punctuation][emacsvox-aural-menu-punctuation]] | s p; settings and action search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-sounds][emacsvox-aural-menu-sounds]] | o; settings and action search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-speech][emacsvox-aural-menu-speech]] | s; focused buffer menu; settings search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-menu.el::(transient-define-prefix emacsvox-aural-menu-voices][emacsvox-aural-menu-voices]] | v; settings and action search | Buffer/global scope; linked browser and editor return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-aural-voice-menu.el::(transient-define-prefix emacsvox-aural-voice-menu][emacsvox-aural-voice-menu]] | Named voice editor m; shared and fallback drafts | Shared/fallback; inherited values; engine controls; dirty/clean drafts | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-capitalization.el::(transient-define-prefix emacsvox-capitalization][emacsvox-capitalization]] | s c; focused buffer menu; settings search | Buffer/global reading; separate letter/all-caps drafts; legacy rules | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-capitalization.el::(transient-define-prefix emacsvox-capitalization--presentation][emacsvox-capitalization--presentation]] | s c p | Buffer/global reading; separate letter/all-caps drafts; legacy rules | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-capitalization.el::(transient-define-prefix emacsvox-capitalization-cue][emacsvox-capitalization-cue]] | s c l or s c a | Buffer/global reading; separate letter/all-caps drafts; legacy rules | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-indentation.el::(transient-define-prefix emacsvox-indentation][emacsvox-indentation]] | s i; focused buffer menu; settings search | Buffer/global; spoken/tone/personal/off; volume; maximum pitch | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-indentation.el::(transient-define-prefix emacsvox-indentation-tone][emacsvox-indentation-tone]] | s i t; settings search | Buffer/global; spoken/tone/personal/off; volume; maximum pitch | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-interaction.el::(transient-define-prefix emacsvox-interaction][emacsvox-interaction]] | s t; focused buffer menu; settings search | Buffer/global; point style; delayed phonetics on/off and delay | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-interaction.el::(transient-define-prefix emacsvox-interaction--presentation][emacsvox-interaction--presentation]] | s t p | Buffer/global; point style; delayed phonetics on/off and delay | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-line-cues.el::(transient-define-prefix emacsvox-line-cues-edit][emacsvox-line-cues-edit]] | o c b/w/s/d/u/e/m | Five line-tone identities; two boundary earcons; personal/session rules | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-output-settings.el::(transient-define-prefix emacsvox-output-settings][emacsvox-output-settings]] | o n; settings and action search; M-x | Notification route and restart; custom mapping; mono/spatial capability | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-output-settings.el::(transient-define-prefix emacsvox-output-settings--output][emacsvox-output-settings--output]] | o n o | Notification route and restart; custom mapping; mono/spatial capability | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-output-settings.el::(transient-define-prefix emacsvox-output-settings--remapping][emacsvox-output-settings--remapping]] | o n m | Notification route and restart; custom mapping; mono/spatial capability | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-output-settings.el::(transient-define-prefix emacsvox-output-settings--route][emacsvox-output-settings--route]] | o n r | Notification route and restart; custom mapping; mono/spatial capability | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-reading-settings.el::(transient-define-prefix emacsvox-reading-settings][emacsvox-reading-settings]] | s R w; settings search; M-x | Buffer/mode/global; source/visual/native; three rows; sound support and drafts | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-reading-settings.el::(transient-define-prefix emacsvox-reading-settings--choices][emacsvox-reading-settings--choices]] | Line reading m/s/f/g/P; row s/p | Buffer/mode/global; source/visual/native; three rows; sound support and drafts | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-reading-settings.el::(transient-define-prefix emacsvox-reading-settings--row][emacsvox-reading-settings--row]] | Line reading 1, 2 or 3 | Buffer/mode/global; source/visual/native; three rows; sound support and drafts | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings.el::(transient-define-prefix emacsvox-settings-buffer][emacsvox-settings-buffer]] | .; focused C-e S outside an integration | Known/unknown major-mode group; source alive/closed | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-diagnostics][emacsvox-settings-diagnostics]] | D; settings and action search | Reports; main/notification processes; logging; Customize return | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-dictionaries][emacsvox-settings-dictionaries]] | s p d; settings and action search | File/mode/buffer scope; linked editors and independent Save | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-feedback][emacsvox-settings-feedback]] | f; settings and action search | Live source and recent record; linked draft/editor/history | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-history][emacsvox-settings-history]] | f H; settings and action search | Zero/nonzero limit; trim; interface recording; separate Save | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations][emacsvox-settings-integrations]] | j; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--agent][emacsvox-settings-integrations--agent]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--choice][emacsvox-settings-integrations--choice]] | Agent choices; Info amount; EWW outlining; Notmuch completion | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--comint][emacsvox-settings-integrations--comint]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--eat][emacsvox-settings-integrations--eat]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--eat-choice][emacsvox-settings-integrations--eat-choice]] | EAT p or d | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--eww][emacsvox-settings-integrations--eww]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--info][emacsvox-settings-integrations--info]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--markdown][emacsvox-settings-integrations--markdown]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--notmuch][emacsvox-settings-integrations--notmuch]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-integrations.el::(transient-define-prefix emacsvox-settings-integrations--org][emacsvox-settings-integrations--org]] | Matching C-e S; j a then choose its name when loaded; settings search | Loaded/unloaded package; matching/nonmatching source; pending choices | Source + graphical render and family tests |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-presentation][emacsvox-settings-presentation]] | r; settings and action search | Visual faces; rule scopes; training; linked editors and separate Save | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-preview-labels][emacsvox-settings-preview-labels]] | v o l | Names/brief/off; current choice; cancellation | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-reading][emacsvox-settings-reading]] | s A; settings search | Five Customize destinations; parent return; saving in Customize | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-reading-chunks][emacsvox-settings-reading-chunks]] | s R s; settings search | Whitespace included/excluded; syntax classes; local/inherited; undo | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-reading-columns][emacsvox-settings-reading-columns]] | s R f; settings search | File/mode remembered ranges; local enablement; inclusive positions; undo | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-reading-controls][emacsvox-settings-reading-controls]] | s R; settings search | Quiet recovery; local/global; rate; legacy control bytes | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-reading-repeats][emacsvox-settings-reading-repeats]] | s R a; settings search | Empty/nonempty list; add/remove/disable; restore opening list | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-setups][emacsvox-settings-setups]] | p; settings and action search | Saved profiles/palettes; retained drafts; changes report | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-switches][emacsvox-settings-switches]] | r l; settings and action search | Source overrides; global defaults; Voice Lock; earcons; header line | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-settings-workflows.el::(transient-define-prefix emacsvox-settings-voice-presentation][emacsvox-settings-voice-presentation]] | v o; settings and action search | Labels; Omnivox pitch contrast; separate global Save | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-spelling.el::(transient-define-prefix emacsvox-spelling][emacsvox-spelling]] | s f; settings search; M-x | Independent voice/tone/earcon; before/alongside; private tone preview | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-spelling.el::(transient-define-prefix emacsvox-spelling-timing][emacsvox-spelling-timing]] | s f m | Independent voice/tone/earcon; before/alongside; private tone preview | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-table-settings.el::(transient-define-prefix emacsvox-table-settings][emacsvox-table-settings]] | s T; Agent Shell/Org T; settings search; M-x | Pending choices; buffer/mode/common; inheritance and legacy values | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-table-settings.el::(transient-define-prefix emacsvox-table-settings--choices][emacsvox-table-settings--choices]] | Tables t/o/m/a/c/e/r/v | Pending choices; buffer/mode/common; inheritance and legacy values | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tone-editor.el::(transient-define-prefix emacsvox-tone-editor][emacsvox-tone-editor]] | Spelling E; capital beep E; indentation pitch settings E; line cue E; Trees l T; row t | Linked cue providers; dynamic depth fields; presets and shaping dependencies | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tone-editor.el::(transient-define-prefix emacsvox-tone-editor-curve][emacsvox-tone-editor-curve]] | Tone editor k | Linked cue providers; dynamic depth fields; presets and shaping dependencies | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tone-editor.el::(transient-define-prefix emacsvox-tone-editor-envelope][emacsvox-tone-editor-envelope]] | Tone editor e | Linked cue providers; dynamic depth fields; presets and shaping dependencies | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tone-editor.el::(transient-define-prefix emacsvox-tone-editor-presets][emacsvox-tone-editor-presets]] | Tone editor L | Linked cue providers; dynamic depth fields; presets and shaping dependencies | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tone-editor.el::(transient-define-prefix emacsvox-tone-editor-waveform][emacsvox-tone-editor-waveform]] | Tone editor w | Linked cue providers; dynamic depth fields; presets and shaping dependencies | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tree-settings.el::(transient-define-prefix emacsvox-tree-settings][emacsvox-tree-settings]] | s Y; Agent Shell Y; settings search; M-x | Entry/exit presets; spoken level, voice, fixed/depth tone and earcon; linked preview | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tree-settings.el::(transient-define-prefix emacsvox-tree-settings--choice-menu][emacsvox-tree-settings--choice-menu]] | Trees e or x | Entry/exit presets; spoken level, voice, fixed/depth tone and earcon; linked preview | Source + graphical render and family tests; 48-column movement and resize |
+| [[file:../lisp/ui/emacsvox-tree-settings.el::(transient-define-prefix emacsvox-tree-settings--level-menu][emacsvox-tree-settings--level-menu]] | Trees l | Entry/exit presets; spoken level, voice, fixed/depth tone and earcon; linked preview | Source + graphical render and family tests; 48-column movement and resize |
+
+** Linked views and third-party ownership
+
+The menus lead to Customize, the manual and Help, feedback details and rules,
+recent feedback, presentation profiles, voice palettes, the named voice editor,
+Voice Workbench, native engine controls, voice and recording libraries, sound
+packs, dictionaries, notification history and diagnostics. Existing tests
+exercise captured source/point, editor return, dirty drafts, explicit Save,
+stale sources and asynchronous view identity. The separate graphical voice
+runner covers native editor, catalogue and browser focus/return cases.
+
+Magit's real Dispatch menu was exercised in all three navigation styles, with
+section-only and item-only announcements, word/character review, repeat and
+unchanged application bindings. Its installed Git module's byte-code fails
+before opening status; loading the matching source permits this check. This
+is not a claim that the installed compiled Magit package passed. Other
+third-party menus are covered by shared keymap and ownership tests, not an
+exhaustive audit of every third-party application action.
+
+** Effects and persistence checked
+
+| Family | Immediate effect | Saving and return |
+|--------+------------------+-------------------|
+| Speech rate and punctuation | Buffer or global values; explicit source override preserved | Save displayed values as defaults; Back retains live changes |
+| Capitalisation reading and interaction | Selected buffer/global scope; some phonetics controls global | Save displayed defaults; narrower overrides can remain |
+| Capital beeps | Private retained cue draft | Apply global defaults; Save persists and handles old menu rules; Back keeps draft |
+| Indentation | Buffer/global feedback and pitch mapping; shared volume global | Buffer tone Save is rejected; global defaults use Customize |
+| Spelling | Global live switches and basic tone controls | Parent Save includes switches; tone editor Save saves tone fields only |
+| Line and boundary cues | Private draft, then explicit session rules | Save personal rules; contextual rules can override; boundary identities affect all uses |
+| Tone editor | Private draft; explicit preview | Provider-specific Apply/Save; presets are a separate saved collection |
+| Wrapped rows | Private buffer/mode/global draft | Apply session scope; Save mode/global only; Back discards unapplied changes |
+| Tables | Pending changed choices | Apply buffer; save changed mode/common choices; narrower values remain |
+| Trees | Pending tree rules and component choices | Apply buffer/session or save personal rules; narrower rules remain |
+| Output | Spatial changes live; route chosen for next restart | Save does not restart speech; explicit restart asks separately |
+| Named voice tuning | Shared/fallback draft, private sample | Save/apply and save-to-collection remain distinct; Back retains the draft |
+| Integration settings | Local session/terminal controls or stated global defaults | Parent Save excludes separate structured editors and temporary EWW outlining |
+| Reading workflows | Session controls; ranges remembered by file or mode | Column ranges persist on ordinary Emacs exit; Undo restores this visit's state |
+| History and switches | Changes live; lowering history limit deletes old records | Save history policy only; Voice Lock Save excludes earcon/local switches |
+
+Intentional differences remain: section-only speech can select an unspoken item
+that =C-c l= reviews; review leaves Enter's action unchanged. Wrapped-row library
+return goes to Line reading, as its current test and manual specify. Turning
+off inherited earcons also removes menu earcons. Save keys differ between
+established parents and the common tone editor; labels and Help must explain
+those differences rather than silently reassigning keys.
+
+* Wording corrections
+
+The table gives changed labels or excerpts from explanations, with the exact
+replacement text. These replacements describe verified effects. Full Help retains scope,
+persistence, dependencies and recovery detail; the first sentence is the brief
+navigation explanation. Source identifiers and public command names remain
+unchanged.
+
+| Menu | Before | Replacement |
+|------+--------+-------------|
+| Trees tone, A/W | SAVE also persists it; persistence mechanism | Enable the draft's depth tone; apply or save it later in Trees |
+| Trees tone, C | Currently applied tone | Space plays the editor's draft for comparison; neither action applies settings |
+| Wrapped-row tone, A | Apply this draft using the destination's scope | Apply or save the row later in line reading settings |
+| Wrapped-row tone, W | Save and apply this cue | Save the row's preferences later in line reading settings |
+| Voice tuning | Qualified engine controls (full editor) | Engine-specific controls |
+| Voice tuning | Adapter default for selected adjustment | Reset an adjustment to its default |
+| Voice tuning | Use shared value for selected adjustment | Use shared value for an adjustment |
+| Reading unit | inherit, inherited | Native mode behaviour, inherited |
+| Wrapped-row volume | 0.6, inherited | 60 percent, inherited |
+| Reading Help | worker support | sound support |
+| Reading drafts | Stage three distinct tones | Use three tones in the draft |
+| Reading drafts | Stage following wider settings | Use inherited settings in the draft |
+| Capital beep | DIRECTION steps by five percentage points | Shift arrows change it by five percentage points |
+| Delayed phonetics | cancellation lifecycle | turning off cancels pending names |
+| EAT speech | captured-terminal foreground speech through its existing lifecycle | Turn automatic speech on or off for this terminal while it is selected |
+| Agent Shell | Processing lifecycle cues | Processing start and finish cues |
+| Presentation | Toggle global face presentation through its change lifecycle | Turn voice changes from text faces on or off globally |
+| Global Voice Lock | minor-mode lifecycle | Turn Voice Lock on or off across existing and new buffers |
+| Saved setups | retained drafts in their owning editors | Open saved setups or resume unfinished edits; each editor has its own Save |
+| Line cues | Edit the blank line cue | Choose the tone used when reading an empty line |
+| Output speech | Toggle spatial speech | Allow speech to use left and right positions when spatial presentation is on |
+| Output separation | Set maximum separation | Set left-to-right separation from 0 (centre) to 1 (full width) |
+| Emacsvox Back | Exit the current transients, returning to outer transient | Leave this menu; applied and saved changes remain |
+| Emacsvox Close | Without saving the transient stack | Close all settings menus; applied and saved changes remain |
+| Labels | Capitalization; Center | Capitalisation; Centre |
+
+Search keeps the earlier capitalisation and processing-cue names as aliases.
+Additional aliases make tree tones, wrapped-row volume and the other tone
+editors discoverable without opening an unrelated cue's editor. Search still
+selects a control without applying anything.
+
+The final graphical check captured complete repeated-item submissions, including
+labels, explanations and keys. Examples:
+
+- Trees W: “Use tone in Trees draft. Enable the draft’s depth tone; apply or
+  save it later in Trees. capital W.”
+- Trees C: “Play pending root tone. Space plays the editor’s draft for
+  comparison; neither action applies settings. capital C.”
+- Wrapped-row W: “Use in row draft (save in parent). Save the row’s preferences
+  later in line reading settings. capital W.”
+- Middle-row volume: “Volume: 60 percent, inherited. Set this row’s sound gain
+  from 0 to 100 percent, subject to output controls. v.”
+- Line reading q: “Back; discard unapplied edits. Leave this menu; applied and
+  saved changes remain. q.”
+
+These are submission captures, not listening acceptance. The final wording
+avoids restating the draft label before explaining the next action.
+
+* Remaining verification and decisions
+
+The new menu code needs a fresh normal profile for listening. Only the narrow
+Agent Shell question module has been loaded into the personal session.
+The manual and NEWS describe the changed behaviour. Generated references and
+manuals have been updated; final checks are recorded in the verification table.
+
+** Deferred decisions
+
+1. Repair the installed Magit package. Its compiled Git module fails with
+   =void-variable $= even in a clean Emacs without Emacsvox. Recommendation:
+   recompile that package using the selected Emacs and its matching
+   dependencies, then rerun the menu suite without the source override. The
+   existing installation has been left intact; this is a dependency repair,
+   not an Emacsvox source fix. Recompiling a disposable copy of =magit-git.el=
+   with Emacs 31.0.90 fixes the failing configuration lookup. This proves the
+   narrow repair, not a complete compiled-Magit interaction check.
+2. Choose packages for a repeatable graphical menu gate. The new local runner
+   covers the full menu selection and reports package paths, but Magit and
+   Markdown currently come from the explicitly chosen package installation.
+   Recommendation: pin reviewed versions and required dependencies in a
+   separate change, then add this suite to the release checks. Until then,
+   use the local compatibility check alongside the existing pinned gates.
+
+[[file:../AGENTS.md][AGENTS.md]] says: “Ask before broad refactors, dependency changes, destructive
+actions, public API changes, file moves, or compatibility-layer removals when
+that scope has not already been authorized.” Its repository invariants also
+cover workflow changes. These proposals extend beyond the confirmed Emacsvox
+source fixes, so the personal package installation and existing release gates
+remain unchanged pending a decision.
+
+** Coverage limits
+
+All 62 menu prefixes have source review and graphical examples. This does not
+cover every combination of engine, draft, scope and dynamically generated
+choice. The 48-column resize sweep covers 50 prefixes, not all 62. Existing
+failure-path tests cover unavailable engines and late results; no live device
+failure or every native engine was exercised. Large personal preset collections
+and all third-party application actions were not exhaustively exercised.
+Verification used Emacs 31.0.90, not a separate Emacs 30.2 installation.
+
+No wrong-target write or unintended save was confirmed. That statement is
+limited to the inspected paths and tests, not a guarantee about untested
+combinations. Speech captures verify what Emacs submitted. Only listening can
+confirm clarity, audible overlap and cancellation on the actual device.
+
+The outstanding listening checklist is limited to changed behaviour:
+
+The Agent Shell question-button check was confirmed working on 2026-11-10.
+
+1. Browse and activate a reading control with Enter; edit an integration number
+   by its shortcut, then adjust that same control with Shift-arrow.
+2. Read Trees and wrapped-row tone A/W/C descriptions and Help. Confirm that
+   they distinguish a kept parent draft, a saved preset and applied settings.
+
+The previously accepted tree sounds, depth mapping and sample navigation do
+not require a new general listening session.

@@ -2543,7 +2543,7 @@ Toggle splitting of mixed-capital identifiers into words.
 @item C-e d c / C-e d C
 Toggle capitalisation indication with the lowercase key. The uppercase
 key chooses and previews spoken@comma{} tone@comma{} combined@comma{} personal-rule@comma{} or no
-indication. @kbd{C-e H s c} opens the Capitalization menu.
+indication. @kbd{C-e H s c} opens the Capitalisation menu.
 @item C-e d i / C-e d I
 Toggle indentation feedback with the lowercase key@comma{} or open its menu with
 the uppercase key. @kbd{C-e H s i} reaches the same menu through settings.
@@ -3539,7 +3539,7 @@ preference through Customize.
 @subsection Find a setting or an action
 
 Press @kbd{C-e H /} to find an Emacsvox setting by any part of its name@comma{} ignoring
-capitalisation. Type @code{cap} to find @emph{Capitalization indication and camel case}@comma{}
+capitalisation. Type @code{cap} to find @emph{Capitalisation indication and camel case}@comma{}
 @emph{Capital-letter beep}@comma{} @emph{All-caps beep}@comma{} and @emph{Spatial capabilities}. The aliases
 @code{caps beep} and @code{allcaps} find both beep controls and only @emph{All-caps beep}@comma{} respectively.
 Each result appears once under its normal name. Use completion to choose a
@@ -5776,7 +5776,7 @@ changes and returns. See @ref{spelling-tone-editor, , the shared controls} for p
 @anchor{Set capitalisation feedback and its beeps}Set capitalisation feedback and its beeps
 
 
-@kbd{C-e H s c} opens @emph{Capitalization}. @kbd{i} toggles indication and @kbd{c} independently
+@kbd{C-e H s c} opens @emph{Capitalisation}. @kbd{i} toggles indication and @kbd{c} independently
 toggles camel-case splitting. These and the presentation choice share
 buffer/global scope on @kbd{g}. @kbd{@key{SPC}} previews reading; @kbd{S} saves these three
 startup defaults. Buffer overrides still apply. The reading sample contains
@@ -5792,7 +5792,7 @@ Press @kbd{@key{RET}} again to try another choice@comma{} or @kbd{@key{SPC}} to 
 @kbd{C-g} cancels and returns to the same control. Choosing a presentation neither
 enables indication nor saves startup defaults.
 
-Within Capitalization@comma{} @kbd{l} edits the capital-letter beep and @kbd{a} the all-caps
+Within Capitalisation@comma{} @kbd{l} edits the capital-letter beep and @kbd{a} the all-caps
 beep. Each has separate global defaults saved through Customize. You can
 preview edits before applying or saving them; these unsaved edits are what
 the editor calls a @emph{draft}.
@@ -5875,7 +5875,7 @@ alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a sample con
 flagged word with the selected combination. Capitalisation follows the captured
 source buffer's active reading settings and presentation rules. A local Spoken
 choice can therefore say “cap” even when global defaults use Tone. Open
-Capitalization for that buffer to inspect or change its reading settings.
+Capitalisation for that buffer to inspect or change its reading settings.
 @kbd{S} saves the spelling settings@comma{}
 including tone timing and shape@comma{} and the shared tone volume through Customize.
 @kbd{q} returns and @kbd{C-q} closes the menus without saving.
@@ -8744,8 +8744,9 @@ Emacsvox reads the field name and whether it is required when entering a field.
 Moving between choices in that field reads the choice and its state without
 repeating the question. Returning from outside the field announces its heading
 again. Press @kbd{@key{RET}} to select an option@comma{} toggle a checkbox@comma{} or edit a
-text or number field. Changes are confirmed after they take effect. When an
-option has a preview@comma{} @kbd{?} opens or closes it; opening it reads its contents.
+text or number field. Changes are confirmed after they take effect@comma{} without
+repeating the heading when you stay in the same question. When an option has
+a preview@comma{} @kbd{?} opens or closes it; opening it reads its contents.
 The preview key applies only to controls that offer a preview.
 
 Choose @emph{Submit} to send the answers or @emph{Decline} to decline the question.

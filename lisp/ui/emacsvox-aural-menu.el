@@ -561,7 +561,7 @@ When opened from the Emacsvox menu, share its selected scope."
     emacsvox-aural-menu--rate :transient t)
    ("p" (lambda () (emacsvox-aural-menu--punctuation-label))
     emacsvox-aural-menu-punctuation :transient transient--do-stack)
-   ("c" "Capitalization" emacsvox-capitalization :transient transient--do-stack)
+   ("c" "Capitalisation" emacsvox-capitalization :transient transient--do-stack)
    ("f" "Spelling feedback (global)" emacsvox-spelling :transient transient--do-stack)
    ("i" (lambda () (emacsvox-aural-menu--indentation-label))
     emacsvox-aural-menu--indentation :transient transient--do-stack)
@@ -819,7 +819,7 @@ q returns to this menu item. Saving an assignment does not activate its pack."
    #'emacsvox-aural-voice-workbench 'emacsvox-aural-menu--voice-workbench))
 
 (defun emacsvox-aural-menu--prefer-engine (&optional save)
-  "Choose a global engine preference, persisting it only with SAVE."
+  "Choose the preferred speech engine for this session; save it separately."
   (interactive)
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
     (let ((current-prefix-arg (and save '(4))))
@@ -865,14 +865,14 @@ Engine preferences last for this session unless explicitly saved."
 (transient-define-prefix emacsvox-aural-menu-line-cues ()
   "Choose a global line tone or boundary earcon to preview and edit."
   ["Line tones"
-   ("b" "Blank line" (lambda () "Edit the blank line cue." (interactive) (emacsvox-line-cues-edit 'empty)) :transient transient--do-stack)
-   ("w" "Whitespace-only line" (lambda () "Edit the whitespace-only line cue." (interactive) (emacsvox-line-cues-edit 'whitespace-only)) :transient transient--do-stack)
-   ("s" "Separator line" (lambda () "Edit the separator line cue." (interactive) (emacsvox-line-cues-edit 'separator)) :transient transient--do-stack)
-   ("d" "Decorated line" (lambda () "Edit the decorated line cue." (interactive) (emacsvox-line-cues-edit 'decorative)) :transient transient--do-stack)
-   ("u" "Unspeakable line" (lambda () "Edit the unspeakable line cue." (interactive) (emacsvox-line-cues-edit 'unspeakable)) :transient transient--do-stack)]
+   ("b" "Blank line" (lambda () "Choose the tone used when reading an empty line." (interactive) (emacsvox-line-cues-edit 'empty)) :transient transient--do-stack)
+   ("w" "Whitespace-only line" (lambda () "Choose the tone used for a line containing only spaces or tabs." (interactive) (emacsvox-line-cues-edit 'whitespace-only)) :transient transient--do-stack)
+   ("s" "Separator line" (lambda () "Choose the tone used for a repeated-character separator line." (interactive) (emacsvox-line-cues-edit 'separator)) :transient transient--do-stack)
+   ("d" "Decorated line" (lambda () "Choose the tone used when a line contains decorative separators." (interactive) (emacsvox-line-cues-edit 'decorative)) :transient transient--do-stack)
+   ("u" "Unspeakable line" (lambda () "Choose the tone used when a line has no speakable text." (interactive) (emacsvox-line-cues-edit 'unspeakable)) :transient transient--do-stack)]
   ["Boundary earcons (all uses of these cues)"
-   ("e" "Boundary and warning" (lambda () "Edit the warning cue." (interactive) (emacsvox-line-cues-edit 'warn-user)) :transient transient--do-stack)
-   ("m" "Large movement" (lambda () "Edit the large movement cue." (interactive) (emacsvox-line-cues-edit 'large-movement)) :transient transient--do-stack)]
+   ("e" "Boundary and warning" (lambda () "Choose the earcon used for boundaries and warnings throughout Emacsvox." (interactive) (emacsvox-line-cues-edit 'warn-user)) :transient transient--do-stack)
+   ("m" "Large movement" (lambda () "Choose the earcon used for large navigation movements throughout Emacsvox." (interactive) (emacsvox-line-cues-edit 'large-movement)) :transient transient--do-stack)]
   ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
@@ -1067,7 +1067,7 @@ each editor explains its own draft, Apply and Save actions."
    ("i" "Read the manual" emacsvox-aural-menu--manual :transient transient--do-suspend)
    ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)]
   ["Finish"
-   ("b" "Return to captured source item" emacsvox-aural-menu--return-source :transient transient--do-exit)
+   ("b" "Return to your source item" emacsvox-aural-menu--return-source :transient transient--do-exit)
    ("q" "Close" transient-quit-one)]
   (interactive "P")
   (transient-setup 'emacsvox-aural-menu nil nil

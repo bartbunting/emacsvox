@@ -31,7 +31,8 @@
 (defcustom emacsvox-tone-presets nil
   "Named personal tone drafts, saved independently of any cue's defaults.
 Each entry contains a name and a tone-editor draft. Loading changes only the
-private draft; Apply or Save and apply changes the destination cue."
+private draft. Keep the tone with the editor's apply or save action; linked
+Trees and wrapped-row drafts must then be applied or saved in their parent."
   :type '(alist :key-type string :value-type plist)
   :group 'emacsvox-aural)
 
@@ -158,7 +159,10 @@ private draft; Apply or Save and apply changes the destination cue."
          (candidate (plist-put (copy-tree (plist-get (emacsvox-tone-editor--state) :draft)) key value)))
     (emacsvox-tone-editor--validate candidate)
     (emacsvox-tone-editor--put key value)
-    (emacsvox-tone-editor--say (format "%s %s%s" value (nth 2 spec)
+    (emacsvox-tone-editor--say (format "%s%s %s%s"
+                                     (if (and direction (= old value))
+                                         (if (> direction 0) "Maximum. " "Minimum. ") "")
+                                     value (nth 2 spec)
                                      (cond ((and (memq key '(:attack :decay :sustain :release))
                                                  (eq (emacsvox-tone-editor--get :envelope) 'classic)) "; used with ADSR")
                                            ((and (eq key :width) (not (eq (emacsvox-tone-editor--get :waveform) 'pulse))) "; used with Pulse")
@@ -303,7 +307,7 @@ replacement; bundled names cannot be replaced."
   (interactive) (tts-stop))
 
 (defun emacsvox-tone-editor--apply (&optional save)
-  "Apply this draft using the destination's scope; SAVE also persists it.
+  "Apply this tone at the scope shown by the parent menu.
 Spelling and capitalization change global defaults; indentation changes the
 captured buffer or global defaults. Line cues apply session presentation rules.
 Save uses Customize for ordinary defaults and personal rules for line cues.
@@ -319,7 +323,7 @@ timing and shared volume stay intact."
        (emacsvox-tone-editor--label :apply-message "Tone applied for this session")))))
 
 (defun emacsvox-tone-editor--save ()
-  "Save and apply this cue through its destination's persistence mechanism.
+  "Save and apply this tone as described by the parent menu.
 Wrapped-row and tree editors stage values in the parent draft; save in that parent.
 Line cues save conditional personal rules. Spelling, capitalization and global
 indentation use Customize. Buffer-local indentation cannot be saved here. Capitalization migrates unchanged old
@@ -329,6 +333,21 @@ and envelope controls.
 Trees stages an enabled depth tone. Other providers preserve cue enablement.
 Timing, voices, earcons and shared tone volume stay unchanged."
   (interactive) (emacsvox-tone-editor--apply t))
+
+(defun emacsvox-tone-editor--action-help (command key)
+  "Describe COMMAND using the destination's help at KEY when available."
+  (or (condition-case nil
+          (plist-get (plist-get (emacsvox-tone-editor--state) :provider) key)
+        (user-error nil))
+      ;; Read the function's docstring without this dynamic documentation.
+      (let ((function (symbol-function command)))
+        (documentation function t))))
+
+(dolist (entry '((emacsvox-tone-editor--apply . :apply-help)
+                 (emacsvox-tone-editor--save . :save-help)
+                 (emacsvox-tone-editor--current . :current-help)))
+  (put (car entry) 'function-documentation
+       `(emacsvox-tone-editor--action-help ',(car entry) ,(cdr entry))))
 
 (defun emacsvox-tone-editor--reset ()
   "Reset the private draft to factory defaults.
@@ -552,12 +571,18 @@ q cancels. Only ADSR uses this curve. Preview with Space back in the editor."
 Up and Down select items; Left and Right change sections. Shift-Left and
 Shift-Right adjust numbers. Enter sets an exact number, toggles Pitch sweep,
 or opens a choice list. Browsing a choice list changes nothing until Enter.
-Space or b interrupts main speech and plays the draft tone alone. C plays the
-applied tone; P reads a sample with the draft. S stops, without saving.
+Space interrupts main speech and plays the draft tone alone. C compares with
+the destination's current tone; in Trees this is the pending root tone.
+P reads a sample with the draft, or opens the browsable tree sample.
+S stops, without saving.
 Preview comes before Presets in the section order. L loads a preset into the
-draft; N saves a named preset without changing the cue. A applies the draft
-in the destination's scope. Line cues use session presentation rules. W saves through Customize or the destination's personal rules;
-buffer-local indentation must use global scope before saving.
+draft; N saves a named preset without changing the cue.
+For Trees and wrapped rows, A and W keep the tone in the parent draft; apply
+or save in that parent to make it effective. Keeping a Trees tone also enables
+its depth tone in the parent draft.
+For other cues, A applies the tone in the destination's scope. W also saves
+it through Customize or, for line cues, personal rules. Buffer-local
+indentation must use global scope before saving.
 q or C-g returns and discards unapplied edits; C-q closes all menus. Applied
 and saved changes remain. Timing, cue enablement, voice and earcon choices
 belong to the parent menu; shared main-tone volume belongs in Output settings."
@@ -604,7 +629,9 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
   "Open a draft editor for cue PROVIDER using source CONTEXT.
 PROVIDER supplies :label, :read, :apply and :preview callbacks. Optional
 :current reads comparison values; label/message overrides describe the
-provider's scope and persistence. :read with non-nil requests factory values.
+provider's scope and persistence. :apply-help, :save-help and :current-help
+provide destination-specific summaries and full Help for those actions.
+:read with non-nil requests factory values.
 Optional :numbers and :extra-controls add provider fields; :keep-preset-fields
 retains those fields when loading sound presets. :sample-suspends opens an
 interactive sample that returns to this draft."

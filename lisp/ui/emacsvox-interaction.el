@@ -189,7 +189,7 @@ The current choice is marked selected. Use q to cancel."
                 (none . emacsvox-interaction--none))))))
 
 (defun emacsvox-interaction--phonetics ()
-  "Toggle global delayed phonetics through the mode's cancellation lifecycle."
+  "Turn delayed phonetic names on or off globally; turning off cancels pending names."
   (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
   (emacsvox-delayed-phonetic-mode (if emacsvox-delayed-phonetic-mode -1 1))

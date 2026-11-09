@@ -136,10 +136,10 @@ labels. No new preferences were applied or saved during loading, and no
 temporary hooks, advice or timers remain.
 
 Listening acceptance of tree entry and depth announcements was confirmed on
-2026-11-09. The final tone editor, browsable preview and exit/navigation changes
-still need explicit listening acceptance. Commit preparation includes the
-Agent Shell guide, with existing Info nodes retained, and updated generated
-manuals. No release or publication is part of this checkpoint.
+2026-11-09. Listening acceptance of the final tone editor, browsable preview,
+exit cues and tree navigation was confirmed on 2026-11-10. Tree listening is
+complete. The implementation, Agent Shell guide and generated manuals are
+committed in =fe4b32755=, with existing Info nodes retained.
 
 ** Agent Shell question navigation, 2026-11-09
 
@@ -4275,6 +4275,69 @@ behaviour settles. Preserve earlier evidence without treating it as current
 verification of subsequently changed code.
 
 ** Findings queue
+
+- 2026-11-10, pauses before Agent Shell response speech: uppercase =J= in
+  =Codex Agent @ ursys-reporting-front-end<2>= took 2.83 to 3.04 seconds to
+  prepare the 6,315-character response beginning “The quota review is saved”.
+  In diagnostic session =20261108T235721Z-1546=, submissions 21363, 21367 and
+  21527 correspond to main-speech dispatches 30747, 30750 and 31024. Omnivox
+  admitted these without a long queue wait and reported mixer sources 76 to
+  82 milliseconds after dispatch. The delay was before sending speech.
+
+  A temporary probe on nearby =J= commands showed sub-millisecond response
+  lookup and most preparation time in emoji scanning. Silent preparation of
+  the exact block in the affected session took 1.61 seconds to count eligible
+  emoji and 1.46 seconds to prepare their names; it replaced no text. Every
+  character called =require= twice across those passes. Emacs walks
+  =current-load-list= before checking whether the feature is already loaded;
+  that session had 14,687 entries. The emoji source is identical to the file
+  shipped in 2026.10.0, so this predates the current menu and question fixes.
+
+  The correction checks whether the emoji library is loaded before calling
+  =require=. Naming, custom names, limits and error handling retain their
+  existing behaviour. A long-text regression counts library requests and
+  checks output over two readings; the old code calls the loader 24,012 times.
+  Source and fresh compiled verification each pass 37 checks; their one
+  graphical skip passes in the 40-test graphical voice suite. The incremental
+  build and byte-code preflight pass. The narrow compiled module is loaded in
+  PID 1546; source point, text, preferences and both speech processes were
+  preserved. Repeating the silent exact-block benchmark reduces the two emoji
+  passes from 3.08 seconds to 71 milliseconds, with identical output hashes.
+  This is preparation timing, not measured key-to-audio latency. The original
+  =J= interaction was then repeated at the same point with the same 6,315
+  characters: submission 21757, dispatch 31389, at UTC 23:06:35. Speech
+  submission took 134 milliseconds, followed by 64 milliseconds to the observed
+  mixer source. Listening confirmed that the long pause had gone on 2026-11-10.
+  The documentation gate passes. The timing probe removed its advice and timer.
+  The fix and verification record are included in the same commit as this entry.
+
+- 2026-11-10, pre-release Transient audit: the
+  [[file:transient-menu-audit-2026-11-10.org][audit report]] inventories all 62 menus and records corrections for
+  Enter in nine menus, numeric shortcut return focus, voice inheritance,
+  invalid scope inheritance, linked-tone Help, units and spoken wording.
+  Search aliases retain old names and expose linked editors through their
+  proper parents. A new graphical menu runner reports loaded package paths.
+  All 286 menu tests pass from compiled code with Transient 0.13.9 and the
+  older 0.13.3 build; the Magit Git module uses an explicit source override.
+  Integration tests pass (738 source and 17 graphical), as do 40 graphical
+  voice checks and seven compiled question checks with Agent Shell 0.94.2.
+  Final linked-tone wording passes five affected checks from source and five
+  from freshly compiled code. The build, byte-code preflight, header check
+  and documentation review gate pass; generated manuals are current.
+
+  Agent Shell Enter repeated the question heading in both the live submission
+  and synthesis text. The action now retains its question origin, suppressing
+  the heading while staying in that field. This narrow compiled fix is loaded
+  in the affected personal Emacs; buffer text and point were preserved.
+  The question-button check was confirmed working on 2026-11-10. The other
+  menu changes need a fresh profile and the report's short listening check.
+  Existing tree listening acceptance remains complete.
+
+  All confirmed source corrections are included in the same commit as this
+  entry. Repairing
+  installed Magit byte-code and pinning optional packages for a repeatable menu
+  gate are deferred decisions, with recommendations in the report. No push,
+  tag or publication has been performed.
 
 - 2026-10-23, Agent Shell browse-mode word movement stops at live input.
   In the =ursys-reporting-front-end= shell, main speech requests

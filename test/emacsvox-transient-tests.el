@@ -84,6 +84,18 @@
     (let ((transient-version version))
       (emacsvox-transient--require-supported))))
 
+(ert-deftest emacsvox-transient-exit-help-keeps-third-party-documentation ()
+  "Exit summaries describe settings without replacing third-party Help."
+  (let* ((suffix (transient-suffix :key "q" :command 'transient-quit-one))
+         (original (documentation 'transient-quit-one t))
+         (reader (lambda (_object) (documentation 'transient-quit-one t))))
+    (let ((transient--prefix (transient-prefix :command 'emacsvox-aural-menu)))
+      (should (string-search "applied and saved changes remain"
+                             (emacsvox-transient--with-exit-help reader suffix))))
+    (let ((transient--prefix (transient-prefix :command 'magit-dispatch)))
+      (should (equal original (emacsvox-transient--with-exit-help reader suffix))))
+    (should (equal original (documentation 'transient-quit-one t)))))
+
 (ert-deftest emacsvox-transient-isolated-session-activates-only-dependencies ()
   "A session without package initialization can use an installed Transient."
   (let* ((directory (make-temp-file "emacsvox-transient-packages-" t))

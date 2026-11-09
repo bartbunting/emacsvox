@@ -210,8 +210,9 @@ Emacsvox reads the field name and whether it is required when entering a field.
 Moving between choices in that field reads the choice and its state without
 repeating the question. Returning from outside the field announces its heading
 again. Press ~RET~ to select an option, toggle a checkbox, or edit a
-text or number field. Changes are confirmed after they take effect. When an
-option has a preview, ~?~ opens or closes it; opening it reads its contents.
+text or number field. Changes are confirmed after they take effect, without
+repeating the heading when you stay in the same question. When an option has
+a preview, ~?~ opens or closes it; opening it reads its contents.
 The preview key applies only to controls that offer a preview.
 
 Choose /Submit/ to send the answers or /Decline/ to decline the question.

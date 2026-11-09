@@ -39,8 +39,9 @@ Use arrows to browse settings and Enter to activate the selected item.
 Choices explain their effect before you select them. You can review an
 item word by word or character by character, and choose whether movement
 wraps within a section, stops at its edges or continues across sections.
-Returning from Help or a submenu restores your place. Adjustments interrupt
-older announcements so you hear the current value.
+Returning from Help, a submenu or exact number entry restores the control
+you used. Adjustments interrupt older announcements so you hear the current
+value and when you reach a limit.
 
 ** Speech and voice controls
 
@@ -53,6 +54,8 @@ Settings also expose typing feedback, Voice Lock, local silence, earcons,
 notification routing and output volumes. Menu and input feedback remain
 audible when ordinary reading is quiet. Pronunciation dictionaries now load
 correctly on Emacs 31.
+
+Long passages start speaking sooner in sessions with many loaded packages.
 
 ** Reading filters
 
@@ -160,8 +163,9 @@ Choose spoken or sound cues for entering and leaving editing.
 ** Less repetition in Agent Shell questions
 
 In active question forms, Tab reads the question when you enter a field,
-then reads each choice and its state without repeating the question.
-Returning to the field reads its heading again. Automatic hints for
+then reads each choice and its state without repeating the question. Enter
+confirms the choice without repeating its heading. Returning to the field
+reads its heading again. Automatic hints for
 questions, permission choices, links and folded headings no longer speak
 over navigation feedback. Question forms remain an optional experimental
 Agent Shell feature.

@@ -205,7 +205,7 @@ Changes apply immediately.  Save defaults separately through Customize."
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-feedback ()
   "Explain and edit current or recent feedback, preserving source context."
-  ["Captured item"
+  ["Item where you opened settings"
    ("x" "Explain effective feedback" emacsvox-settings-workflows--explain :transient transient--do-suspend)
    ("c" "Change voice, cue, or tone (preview draft)" emacsvox-settings-workflows--change :transient transient--do-suspend)
    ("t" "Tune this item's named voice (shared)" emacsvox-settings-workflows--tune :transient transient--do-suspend)
@@ -244,7 +244,7 @@ Changes apply immediately.  Save defaults separately through Customize."
   (format "Visual-face presentation: %s"
           (if emacsvox-aural-face-presentation-enabled "on" "off")))
 (defun emacsvox-settings-workflows--face ()
-  "Toggle global face presentation through its change lifecycle." (interactive)
+  "Turn voice changes from text faces on or off globally." (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
   (emacsvox-aural-toggle-face-presentation)
   (emacsvox-transient--submit-text
@@ -320,7 +320,7 @@ Voice Lock's change hooks and does not save a startup default."
    (emacsvox-settings-workflows--source-toggle-label 'voice-lock-mode "Voice Lock in source")))
 
 (defun emacsvox-settings-workflows--global-voice-lock ()
-  "Toggle global Voice Lock through its minor-mode lifecycle.
+  "Turn Voice Lock on or off across existing and new buffers.
 This updates existing buffers and the policy for new buffers.  Modes may opt
 out on startup.  It does not disable semantic presentation or explicit face
 rules.  Save this global default separately; local overrides are not saved."
@@ -725,7 +725,7 @@ the editor keeps its existing save, discard, and finish choices."
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-setups ()
-  "Manage saved setups and retained drafts in their owning editors."
+  "Open saved setups or resume unfinished edits; each editor has its own Save."
   ["Saved setups: activation and startup are separate"
    ("p" "Presentation profiles: inspect, create, activate" emacsvox-settings-workflows--profiles :transient transient--do-suspend)
    ("v" "Palettes: inheritance, reset, import and export" emacsvox-settings-workflows--palettes :transient transient--do-suspend)]

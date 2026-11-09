@@ -19,6 +19,25 @@
   (should (eq (plist-get (emacsvox-emoji--lookup "🔮‍🚀") :diagnostic)
               'missing-name)))
 
+(ert-deftest emacsvox-emoji-long-text-loads-names-once ()
+  "Long speech loads emoji names once and retains naming on later readings."
+  (cl-progv '(features current-load-list)
+      (list (remq 'emoji-labels features) (make-list 15000 '(require cl-lib)))
+    (let ((loader (symbol-function 'require))
+          (loads 0)
+          (text (concat (make-string 6000 ?a) " ✅")))
+      (cl-letf (((symbol-function 'require)
+                 (lambda (feature &rest arguments)
+                   (when (eq feature 'emoji-labels) (cl-incf loads))
+                   (apply loader feature arguments))))
+        (dotimes (_ 2)
+          (let* ((policy (emacsvox-emoji--item-policy text (emacsvox-emoji--snapshot)))
+                 (result (emacsvox-emoji--prepare text policy)))
+            (should (equal (plist-get result :text)
+                           (concat (make-string 6000 ?a) " check mark button")))
+            (should-not (plist-get result :diagnostics))))
+        (should (= loads 1))))))
+
 (ert-deftest emacsvox-emoji-box-drawings-have-complete-unicode-names ()
   "Every box-drawing character has bounded naming and source evidence."
   (cl-loop for character from #x2500 to #x257F do
@@ -78,9 +97,10 @@
   (let ((emoji--names (make-hash-table :test 'equal)))
     (puthash "🔮" 42 emoji--names)
     (should (equal (emacsvox-emoji--lookup "🔮") '(:diagnostic missing-name))))
-  (cl-letf (((symbol-function 'require) (lambda (&rest _) (error "missing"))))
-    (should (equal (emacsvox-emoji--lookup "🔮")
-                   '(:diagnostic unavailable-data)))))
+  (cl-progv '(features) (list (remq 'emoji-labels features))
+    (cl-letf (((symbol-function 'require) (lambda (&rest _) (error "missing"))))
+      (should (equal (emacsvox-emoji--lookup "🔮")
+                     '(:diagnostic unavailable-data))))))
 
 (defun emacsvox-emoji-test--policy (&rest overrides)
   "Return a policy with a small explicit limit for boundary tests."

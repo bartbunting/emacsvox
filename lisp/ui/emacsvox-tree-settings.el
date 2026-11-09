@@ -558,6 +558,15 @@ and earcon."
          :apply #'emacsvox-tree-settings--tone-keep
          :preview #'emacsvox-tree-settings--tone-preview
          :apply-label "Use tone in Trees draft" :save-label "Use tone in Trees draft"
+         :apply-help "Enable the draft's depth tone; apply or save it later in Trees.
+Spoken level, voice and earcon stay unchanged. No live rules or saved
+preferences change here."
+         :save-help "Enable the draft's depth tone; apply or save it later in Trees.
+This action does not write saved preferences. It keeps the tone's shape and
+depth mapping. Saving a named preset is separate."
+         :current-help "Space plays the editor's draft for comparison; neither action applies settings.
+This action plays the root tone kept in the parent Trees draft. Neither
+comparison changes live rules, the parent draft or saved preferences."
          :apply-message "Depth tone enabled in Trees draft; apply or save in Trees"
          :save-message "Depth tone enabled in Trees draft; apply or save in Trees"
          :current-label "Play pending root tone" :sample-label "Browse sample tree"

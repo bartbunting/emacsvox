@@ -146,6 +146,30 @@ infix controls keep their usual descriptions."
   :type 'boolean
   :group 'emacsvox)
 
+(defun emacsvox-transient--with-exit-help (function object)
+  "Call FUNCTION on OBJECT with plain exit Help for Emacsvox menus only."
+  (let* ((prefix (or transient--prefix transient-current-prefix))
+         (owned (and prefix
+                     (string-prefix-p "emacsvox-" (symbol-name (oref prefix command)))))
+         (command (and owned (object-of-class-p object 'transient-suffix)
+                       (oref object command)))
+         (help (pcase command
+                 ('transient-quit-one
+                  "Leave this menu; applied and saved changes remain.
+Return to its parent, or close it if opened directly. The item's label says
+whether this menu keeps or discards pending edits. Leaving does not save.")
+                 ('transient-quit-all
+                  "Close all settings menus; applied and saved changes remain.
+Each editor keeps or discards its pending draft as described in its menu.
+Closing menus does not save settings."))))
+    (if (not help) (funcall function object)
+      (let ((original-documentation (symbol-function 'documentation)))
+        (cl-letf (((symbol-function 'documentation)
+                   (lambda (function &optional raw)
+                     (if (eq function command) help
+                       (funcall original-documentation function raw)))))
+          (funcall function object))))))
+
 (defun emacsvox--advice-transient-format-description-around (original object)
   "Format OBJECT with ORIGINAL, optionally adding command summaries."
   (let ((transient--docsp (or emacsvox-transient-verbose-descriptions
@@ -153,7 +177,7 @@ infix controls keep their usual descriptions."
         (transient-show-docstring-format
          (if emacsvox-transient-verbose-descriptions "%c. %s"
            transient-show-docstring-format)))
-    (funcall original object)))
+    (emacsvox-transient--with-exit-help original object)))
 
 (advice-add 'transient-format-description :around
             #'emacsvox--advice-transient-format-description-around)
@@ -653,6 +677,21 @@ Unlike `transient-suffix-object', this does not prefer an invoking or pending
 suffix from the parent menu when Enter opens a child menu."
   (cl-find command transient--suffixes :key (lambda (item) (oref item command))))
 
+(defun emacsvox-transient--goto-rendered-suffix (suffix)
+  "Select the displayed button matching SUFFIX's command and key.
+A refreshed menu can retain rendered buttons from an earlier suffix list.
+Match key contents, rather than relying on the key strings being identical
+objects. Leave point unchanged if the action is no longer displayed."
+  (let ((button (next-button (point-min) t)) position)
+    (while (and button (not position))
+      (let ((object (button-get button 'button-data)))
+        (when (and (object-of-class-p object 'transient-suffix)
+                   (eq (oref object command) (oref suffix command))
+                   (equal (oref object key) (oref suffix key)))
+          (setq position (button-start button))))
+      (setq button (next-button (button-end button) t)))
+    (when position (goto-char position))))
+
 (defun emacsvox-transient--read (reader &rest arguments)
   "Call minibuffer READER with ARGUMENTS, retaining the invoking menu item.
 Restore focus after acceptance, cancellation or an error, only while the same
@@ -686,7 +725,7 @@ prefix remains active. Outside a displayed menu, call READER normally."
         (transient--show)
         (when (window-live-p transient--window)
           (with-selected-window transient--window
-            (transient--goto-button focus)))))))
+            (emacsvox-transient--goto-rendered-suffix focus)))))))
 
 (defun emacsvox-transient--menu-facts (action &optional event)
   "Return semantic command-menu facts for ACTION and optional EVENT."
@@ -948,7 +987,7 @@ Check effective bindings so a menu's own commands are never described as review.
            (emacsvox-transient--buffer-summary)
            (emacsvox-transient--menu-facts 'help 'command-menu-suspended)
            'state-change 'open-object)))
-    (funcall original object)))
+    (emacsvox-transient--with-exit-help original object)))
 
 (advice-add 'transient-show-help :around
             #'emacsvox--advice-transient-show-help-around)
@@ -1410,6 +1449,12 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-settings-dictionaries emacsvox-settings-diagnostics emacsvox-settings-history emacsvox-settings-switches
                      emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
                      emacsvox-settings-reading
+                     emacsvox-settings-reading-controls
+                     emacsvox-settings-reading-repeats
+                     emacsvox-settings-reading-columns
+                     emacsvox-settings-reading-chunks
+                     emacsvox-reading-settings emacsvox-reading-settings--row
+                     emacsvox-reading-settings--choices
                      emacsvox-table-settings emacsvox-table-settings--choices
                      emacsvox-tree-settings emacsvox-tree-settings--choice-menu
                      emacsvox-tree-settings--level-menu
@@ -1419,6 +1464,8 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                          emacsvox-settings-integrations--agent
                          emacsvox-settings-integrations--choice
                          emacsvox-settings-integrations--org
+                         emacsvox-settings-integrations--markdown
+                         emacsvox-settings-integrations--info
                          emacsvox-settings-integrations--eww
                          emacsvox-settings-integrations--notmuch)))
     (keymap-set map "RET" #'transient-push-button)

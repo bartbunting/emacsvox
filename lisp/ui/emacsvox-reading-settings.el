@@ -81,7 +81,22 @@
   "Describe KEY's draft value and inheritance using LABEL."
   (let* ((state (emacsvox-reading-settings--state))
          (value (plist-get (emacsvox-reading-settings--values) key)))
-    (format "%s: %s%s" label value
+    (format "%s: %s%s" label
+            (cond
+             ((string-suffix-p "-volume" (symbol-name key))
+              (format "%g percent" (* 100 value)))
+             ((eq key :mode)
+              (pcase value ('source "Whole source lines") ('visual "Wrapped screen rows")
+                     ('inherit "Native mode behaviour") (_ value)))
+             ((eq key :speech)
+              (pcase value ('off "Off") ('brief "Brief labels")
+                     ('explicit "Full continuation descriptions") (_ value)))
+             ((eq key :frequency)
+              (pcase value ('every "Every wrapped row") ('entry "Only on entering a source line") (_ value)))
+             ((symbolp value)
+              (pcase value ('overlay "Alongside speech") ('insert "Before speech")
+                     ('after "After speech") (_ value)))
+             (t value))
             (if (plist-member (plist-get state :values) key) "" ", inherited"))))
 (defun emacsvox-reading-settings--title ()
   "Describe scope and unapplied edits concisely."
@@ -223,7 +238,9 @@
    ("3" (lambda () (emacsvox-reading-settings--choice-label 2)) emacsvox-reading-settings--select-third
     :if (lambda () (nth 2 (nth 2 (plist-get (emacsvox-reading-settings--context) :reading-choice)))) :transient transient--do-replace)]
   ["Inheritance and return"
-   ("i" "Follow wider settings for this preference" emacsvox-reading-settings--choice-inherit :transient transient--do-replace)
+   ("i" "Follow wider settings for this preference" emacsvox-reading-settings--choice-inherit
+    :if (lambda () (not (eq :scope (car (plist-get (emacsvox-reading-settings--context) :reading-choice)))))
+    :transient transient--do-replace)
    ("q" "Back without selecting" transient-quit-one)])
 
 (defun emacsvox-reading-settings--mode ()
@@ -295,7 +312,7 @@ Integration-owned navigation may take priority."
      (alongside "Alongside speech" "Start sound with the spoken item, using supported playback timing.")
      (after "After speech" "Play only after this item finishes; navigation and Stop cancel it."))))
 (defun emacsvox-reading-settings--all-placement ()
-  "Stage one placement for all three sounds, preserving their identities."
+  "Set draft placement for all three sounds, preserving their identities."
   (interactive)
   (emacsvox-reading-settings--choose
    :all-placement "Placement for all three row sounds"
@@ -440,6 +457,12 @@ Apply and Save here update the parent draft; the parent applies or saves it."
                               (emacsvox-aural-preview-play-plan
                                (emacsvox-aural-compile-plan render nil (emacsvox-aural-context-at-point) 'local-cue)))))))
            :apply-label "Use in row draft" :save-label "Use in row draft (save in parent)"
+           :apply-help "Apply or save the row later in line reading settings.
+The row's sound choice and placement stay unchanged. No live or saved reading
+preferences change here."
+           :save-help "Save the row's preferences later in line reading settings.
+This action does not write saved preferences. Saving a named tone preset is
+separate from saving the row's reading and sound preferences."
            :apply-message "Tone in row draft; Apply or Save in line reading settings"
            :save-message "Tone in row draft; Save in line reading settings"))))
 (defun emacsvox-reading-settings--tones ()
@@ -523,21 +546,21 @@ Integration-owned navigation may take priority; Help shows effective values."
    ("1" "First row: source line continues below" emacsvox-reading-settings--first :transient transient--do-stack)
    ("2" "Middle row: continues above and below" emacsvox-reading-settings--middle :transient transient--do-stack)
    ("3" "Last row: source line continues above" emacsvox-reading-settings--last :transient transient--do-stack)
-   ("t" "Stage three distinct tones" emacsvox-reading-settings--tones :transient t)
-   ("o" "Stage all continuation feedback off" emacsvox-reading-settings--off :transient t)
-   ("P" "Stage one placement for all three sounds" emacsvox-reading-settings--all-placement :transient transient--do-stack)
-   ("V" "Stage one volume for all three sounds" emacsvox-reading-settings--all-volume :transient t)]
+   ("t" "Use three tones in the draft" emacsvox-reading-settings--tones :transient t)
+   ("o" "Turn off continuation feedback in the draft" emacsvox-reading-settings--off :transient t)
+   ("P" "Set draft placement for all three sounds" emacsvox-reading-settings--all-placement :transient transient--do-stack)
+   ("V" "Set draft volume for all three sounds" emacsvox-reading-settings--all-volume :transient t)]
   ["Preview and inspect"
    ("p" "Preview draft sequence" emacsvox-reading-settings--preview :transient t)
    ("c" "Compare applied sequence" emacsvox-reading-settings--compare :transient t)
    ("x" "Stop preview and speech" emacsvox-reading-settings--stop :transient t)
    ("=" "Inspect source line and screen row" emacsvox-reading-settings--inspect :transient t)
-   ("h" "Help, applied values and worker support" emacsvox-reading-settings--status :transient transient--do-suspend)]
+   ("h" "Help, applied values and sound support" emacsvox-reading-settings--status :transient transient--do-suspend)]
   ["Apply, save and restore"
    ("a" "Apply at selected scope for this session" emacsvox-reading-settings--apply :transient t)
    ("S" "Save and apply mode or global choices" emacsvox-reading-settings--save :transient t)
-   ("i" "Stage following wider settings" emacsvox-reading-settings--inherit :transient t)
-   ("r" "Stage factory defaults" emacsvox-reading-settings--factory :transient t)
+   ("i" "Use inherited settings in the draft" emacsvox-reading-settings--inherit :transient t)
+   ("r" "Use factory defaults in the draft" emacsvox-reading-settings--factory :transient t)
    ("d" "Discard unapplied edits" emacsvox-reading-settings--discard :transient t)
    ("q" "Back; discard unapplied edits" transient-quit-one)
    ("C-q" "Close menus; discard unapplied edits" transient-quit-all)]

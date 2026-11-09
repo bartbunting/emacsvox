@@ -12783,12 +12783,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                    (emacsvox-agent-shell-test--capture-events
                      (execute-kbd-macro (kbd "RET"))))))
       (should (= 1 (length speech)))
-      (should (string-match-p "Destination, required.*Local, selected" (car speech)))
+      (should (string-prefix-p "Local, selected" (car speech)))
+      (should-not (string-match-p "Destination" (car speech)))
       (should (string-match-p "Preview collapsed" (car speech))))
     (let ((speech (emacsvox-agent-shell-test--question-speech
                    (emacsvox-agent-shell-test--capture-events
                      (execute-kbd-macro (kbd "?"))))))
       (should (= 2 (length speech)))
+      (should-not (string-match-p "Destination" (car speech)))
       (should (string-match-p "Preview expanded" (car speech)))
       (should (equal (cadr speech) "Keep files on this machine.")))
     (emacsvox-agent-shell-test--question-goto 'toggle "backup")
@@ -12806,7 +12808,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                      (emacsvox-agent-shell-test--capture-events
                        (execute-kbd-macro (kbd "RET"))))))
         (should (= 1 (length speech)))
-        (should (string-match-p "Note, optional.*Use the archive" (car speech)))))
+        (should (string-prefix-p "Use the archive" (car speech)))
+        (should-not (string-match-p "Note, optional" (car speech)))))
     (emacsvox-agent-shell-test--question-goto 'submit)
     (let ((speech (emacsvox-agent-shell-test--question-speech
                    (emacsvox-agent-shell-test--capture-events
@@ -12849,7 +12852,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (should (= 1 (length speech)))
               (should (string-match-p "Local, unselected" (car speech)))
               (should-not (string-match-p "Destination" (car speech))))
-            (execute-kbd-macro (kbd "TAB"))
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd "TAB")))
             (let ((speech (emacsvox-agent-shell-test--question-speech
                            (emacsvox-agent-shell-test--capture-events
                              (execute-kbd-macro (kbd "TAB"))))))
@@ -12979,6 +12983,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (redisplay t)
       (should (pos-visible-in-window-p (point)))
       (should (seq-some (lambda (text) (string-match-p "Local, selected" text)) speech))
+      (should (= 1 (seq-count (lambda (text) (string-match-p "Destination" text)) speech)))
       (should (member "Keep files on this machine." speech)))))
 
 (ert-deftest emacsvox-agent-shell-question-facts-compile ()

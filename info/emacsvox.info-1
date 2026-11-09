@@ -2713,7 +2713,7 @@ the current buffer unless their Help specifies a global prefix form.
      Toggle capitalisation indication with the lowercase key.  The
      uppercase key chooses and previews spoken, tone, combined,
      personal-rule, or no indication.  ‘C-e H s c’ opens the
-     Capitalization menu.
+     Capitalisation menu.
 ‘C-e d i / C-e d I’
      Toggle indentation feedback with the lowercase key, or open its
      menu with the uppercase key.  ‘C-e H s i’ reaches the same menu
@@ -3779,7 +3779,7 @@ File: emacsvox.info,  Node: Finding Settings And Actions,  Prev: Returning From 
 ---------------------------------
 
 Press ‘C-e H /’ to find an Emacsvox setting by any part of its name,
-ignoring capitalisation.  Type ‘cap’ to find _Capitalization indication
+ignoring capitalisation.  Type ‘cap’ to find _Capitalisation indication
 and camel case_, _Capital-letter beep_, _All-caps beep_, and _Spatial
 capabilities_.  The aliases ‘caps beep’ and ‘allcaps’ find both beep
 controls and only _All-caps beep_, respectively.  Each result appears
@@ -6131,7 +6131,7 @@ punctuation default.
 
   6. Set capitalisation feedback and its beeps
 
-     ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication and ‘c’
+     ‘C-e H s c’ opens _Capitalisation_.  ‘i’ toggles indication and ‘c’
      independently toggles camel-case splitting.  These and the
      presentation choice share buffer/global scope on ‘g’.  ‘<SPC>’
      previews reading; ‘S’ saves these three startup defaults.  Buffer
@@ -6149,7 +6149,7 @@ punctuation default.
      ‘C-g’ cancels and returns to the same control.  Choosing a
      presentation neither enables indication nor saves startup defaults.
 
-     Within Capitalization, ‘l’ edits the capital-letter beep and ‘a’
+     Within Capitalisation, ‘l’ edits the capital-letter beep and ‘a’
      the all-caps beep.  Each has separate global defaults saved through
      Customize.  You can preview edits before applying or saving them;
      these unsaved edits are what the editor calls a _draft_.
@@ -6243,7 +6243,7 @@ punctuation default.
      combination.  Capitalisation follows the captured source buffer's
      active reading settings and presentation rules.  A local Spoken
      choice can therefore say “cap” even when global defaults use Tone.
-     Open Capitalization for that buffer to inspect or change its
+     Open Capitalisation for that buffer to inspect or change its
      reading settings.  ‘S’ saves the spelling settings, including tone
      timing and shape, and the shared tone volume through Customize.
      ‘q’ returns and ‘C-q’ closes the menus without saving.

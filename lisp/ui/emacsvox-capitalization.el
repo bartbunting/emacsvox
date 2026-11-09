@@ -299,7 +299,7 @@ Rules with other matches or action structures remain personal rules."
 (defun emacsvox-capitalization--duration ()
   "Set draft duration; Shift arrows change it by 5 ms." (interactive) (emacsvox-capitalization--cue-edit 'duration))
 (defun emacsvox-capitalization--volume (&optional direction)
-  "Set this beep's preview volume; DIRECTION steps by five percentage points.
+  "Set this beep's draft volume; Shift arrows change it by five percentage points.
 Only this capital-letter or all-caps beep changes. Shared main-tone volume
 still scales it. Apply changes the session; Save persists through Customize."
   (interactive)
@@ -515,7 +515,7 @@ session defaults; S saves them through Customize for future sessions."
    ("S" "Save this cue in Customize" emacsvox-capitalization--cue-save :transient t)
    ("q" "Back (keep preview edits)" transient-quit-one)
    ("C-q" "Close menus (keep preview edits)" transient-quit-all)]
-  (interactive (list (intern (completing-read "Capitalization kind: " '(capital all-caps) nil t))))
+  (interactive (list (intern (completing-read "Capitalisation kind: " '(capital all-caps) nil t))))
   (unless (memq kind '(capital all-caps)) (user-error "Unknown capitalization kind"))
   (let* ((prefix (or transient--prefix transient-current-prefix))
          (context (if (and prefix (eq (oref prefix command) 'emacsvox-capitalization))
@@ -537,7 +537,7 @@ session defaults; S saves them through Customize for future sessions."
 (transient-define-prefix emacsvox-capitalization (&optional global)
   "Choose capitalization indication, presentation, splitting, and global beep defaults."
   :refresh-suffixes t
-  ["Capitalization"
+  ["Capitalisation"
    ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label))) emacsvox-aural-menu--toggle-scope :transient t)
    ("i" (lambda () (format "Indication: %s" (if (emacsvox-capitalization--value 'tts-caps) "on" "off"))) emacsvox-capitalization--indication :transient t)
    ("p" (lambda () (format "Presentation: %s" (emacsvox-capitalization--value 'emacsvox-capitalization-presentation))) emacsvox-capitalization--presentation :transient transient--do-stack)

@@ -501,9 +501,14 @@
           (dolist (case '(("s p" 2 "Pronunciation editing" "e" emacsvox-aural-menu--pronunciations)
                           ("o" 2 "Output routing" "n" emacsvox-output-settings)
                           ("r" 1 "Feedback rules: save inside each editor" "o" emacsvox-settings-workflows--overrides)
-                          ("j" 2 "Finish" "q" transient-quit-one)))
+                          ("j" nil "Finish" "q" transient-quit-one)))
             (execute-kbd-macro (kbd (car case)))
-            (dotimes (_ (nth 1 case)) (execute-kbd-macro (kbd "<right>")))
+            ;; Transient can omit an empty conditional section. Navigate the
+            ;; sections actually displayed, rather than counting that empty group.
+            (dotimes (_ (or (nth 1 case)
+                            (with-selected-window transient--window
+                              (1- (length (emacsvox-transient--sections))))))
+              (execute-kbd-macro (kbd "<right>")))
             (should (string-prefix-p (concat (nth 2 case) ".") (car speech)))
             (with-selected-window transient--window
               (let ((suffix (button-get (button-at (point)) 'button-data)))
@@ -512,6 +517,63 @@
             (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
             (should-not (file-exists-p custom-file))
             (execute-kbd-macro (kbd "C-q <f8>"))))))))
+
+(ert-deftest emacsvox-settings-integrations-limit-shortcut-focus ()
+  "Integration limits retain their invoking control after entry or cancellation."
+  (dolist (case '((agent-shell "Agent automatic content limit" "a")
+                  (notmuch "Notmuch per-field characters" "f")))
+    (skip-unless (require (car case) nil t))
+    (emacsvox-test--with-settings
+      (execute-kbd-macro (vconcat (kbd "/") (nth 1 case) (kbd "RET")))
+      (let* ((command (emacsvox-test--menu-focused-command))
+             (option (nth 2 (emacsvox-settings-integrations--option command)))
+             (old (default-value option))
+             (properties (copy-tree (symbol-plist option))))
+        (unwind-protect
+            (progn
+              (emacsvox-settings-test--select-key "q")
+              (execute-kbd-macro (kbd (concat (nth 2 case) " C-a C-k 5 0 0 RET")))
+              (should (= 500 (default-value option)))
+              (should (eq command (emacsvox-test--menu-focused-command)))
+              (emacsvox-settings-test--select-key "q")
+              (let ((this-command command))
+                (cl-letf (((symbol-function 'read-string)
+                           (lambda (&rest _) (signal 'quit nil))))
+                  (should (eq 'cancelled
+                              (condition-case nil (call-interactively command)
+                                (quit 'cancelled))))))
+              (should (eq command (emacsvox-test--menu-focused-command)))
+              (should (= 500 (default-value option)))
+              (should-not (file-exists-p custom-file)))
+          (set-default option old)
+          (setplist option properties))))))
+
+(ert-deftest emacsvox-tone-editor-linked-draft-help-and-bounds ()
+  "Linked tone actions explain the parent draft and bounds without saving it."
+  (dolist (route '("s Y l T" "s R w 1 t"))
+    (emacsvox-test--with-settings
+      (execute-kbd-macro (kbd route))
+      (let ((before (copy-tree emacsvox-aural-user-rules)) speech)
+        (emacsvox-settings-test--select-key "W")
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text speech))))
+          (execute-kbd-macro (kbd "C-c l")))
+        (should (string-search "draft" (car speech)))
+        (should-not (string-search "persistence mechanism" (car speech)))
+        (should (string-search "does not write saved preferences"
+                               (documentation 'emacsvox-tone-editor--save t)))
+        (execute-kbd-macro (kbd "p 5 0 RET"))
+        (setq speech nil)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text speech))))
+          (execute-kbd-macro (kbd "S-<left>")))
+        (should (equal '("Minimum. 50 Hz") speech))
+        (execute-kbd-macro (kbd "W"))
+        (should (equal before emacsvox-aural-user-rules))
+        (should-not (file-exists-p custom-file))
+        (if (string-prefix-p "s Y" route)
+            (should (= 50 (plist-get (emacsvox-tree-settings--tone-read) :pitch)))
+          (should (= 50 (plist-get (plist-get (emacsvox-reading-settings--values) :first-tone) :pitch))))))))
 
 (ert-deftest emacsvox-settings-editors-open-settings-with-source ()
   "Editor h opens Transient with the captured item, never the old Home buffer."
@@ -2172,7 +2234,10 @@
           (emacsvox-aural-presentation-history (list 'new 'middle 'old))
           speech)
       (cl-letf (((symbol-function 'emacsvox-aural-submit)
-                 (lambda (text &rest args) (push (cons text args) speech))))
+                 (lambda (text &rest args) (push (cons text args) speech)))
+                ;; Numeric entry can play minibuffer cues. This test controls
+                ;; the history records so it can check trimming and saving.
+                ((symbol-function 'emacsvox-icon) #'ignore))
         (execute-kbd-macro (kbd "f H <down> <down> <up>"))
         (should (= emacsvox-aural-presentation-history-limit 3))
         (should (equal emacsvox-aural-presentation-history '(new middle old)))

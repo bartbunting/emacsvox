@@ -101,7 +101,7 @@
     ("Agent tool output verbosity" emacsvox-settings-integrations emacsvox-settings-integrations--agent "o")
     ("Agent permission feedback" emacsvox-settings-integrations emacsvox-settings-integrations--agent "p")
     ("Agent tool call announcements" emacsvox-settings-integrations emacsvox-settings-integrations--agent "c")
-    ("Agent processing lifecycle cues" emacsvox-settings-integrations emacsvox-settings-integrations--agent "l")
+    ("Agent processing start and finish cues" emacsvox-settings-integrations emacsvox-settings-integrations--agent "l")
     ("Agent automatic content limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "a")
     ("Agent line navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "n")
     ("Agent block navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "k")
@@ -133,7 +133,7 @@
     ("Punctuation pronunciations" emacsvox-aural-menu emacsvox-aural-menu-punctuation "e")
     ("Indentation presentation" emacsvox-indentation emacsvox-indentation "p")
     ("Indentation pitch and duration" emacsvox-indentation emacsvox-indentation-tone "b")
-    ("Capitalization indication and camel case" emacsvox-capitalization emacsvox-capitalization "i")
+    ("Capitalisation indication and camel case" emacsvox-capitalization emacsvox-capitalization "i")
     ("Capital-letter beep" emacsvox-capitalization emacsvox-capitalization "l")
     ("All-caps beep" emacsvox-capitalization emacsvox-capitalization "a")
     ("Spelling voice tone and earcon feedback" emacsvox-spelling emacsvox-spelling "v")
@@ -198,7 +198,16 @@
   "Canonical action labels and focused destinations.")
 
 (defconst emacsvox-settings--search-aliases
-  '(("Capital-letter beep" "caps beep" "capital beep")
+  '(("Capitalisation indication and camel case" "Capitalization indication and camel case")
+    ("Agent processing start and finish cues" "Agent processing lifecycle cues")
+    ("Tree level change feedback" "tree tone" "tree tone editor" "tree pitch"
+     "tree depth tone" "tree tone presets" "tree level voice")
+    ("Line reading, visual wrapping, continuation and screen rows"
+     "wrapped line sounds" "wrapped row volume" "wrapped row tone editor")
+    ("Indentation pitch and duration" "indentation tone editor" "indentation tone presets")
+    ("Spelling tone editor waveform pulse width sawtooth pitch sweep envelope curve attack decay sustain release presets"
+     "spelling tone presets")
+    ("Capital-letter beep" "caps beep" "capital beep" "capital tone editor" "capital tone presets")
     ("All-caps beep" "allcaps beep" "all caps beep" "caps beep")
     ("Explain this item" "Feedback for this item")
     ("Recent feedback" "Recent aural feedback")
@@ -273,7 +282,7 @@ another RET activates its control.  q returns to the menu where you searched."
   (emacsvox-settings--open (assoc "Character echo" emacsvox-settings--destinations)))
 (defun emacsvox-settings--capitalization ()
   "Open capitalization for this buffer." (interactive)
-  (emacsvox-settings--open (assoc "Capitalization indication and camel case" emacsvox-settings--destinations)))
+  (emacsvox-settings--open (assoc "Capitalisation indication and camel case" emacsvox-settings--destinations)))
 (defun emacsvox-settings--mode-group ()
   "Return the captured source mode's actual Customize group, if known."
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
@@ -316,7 +325,7 @@ another RET activates its control.  q returns to the menu where you searched."
    ("s" "Speech rate and punctuation" emacsvox-settings--speech :transient transient--do-stack)
    ("i" "Indentation" emacsvox-settings--indentation :transient transient--do-stack)
    ("t" "Typing, point, and interaction" emacsvox-settings--interaction :transient transient--do-stack)
-   ("c" "Capitalization" emacsvox-settings--capitalization :transient transient--do-stack)
+   ("c" "Capitalisation" emacsvox-settings--capitalization :transient transient--do-stack)
    ("d" "Changed settings and drafts" emacsvox-settings-changes :transient transient--do-suspend)
    ("j" "Integration speech settings" emacsvox-settings-integrations :transient transient--do-stack)
    ("m" "Major-mode settings (Customize)" emacsvox-settings--mode :inapt-if-not emacsvox-settings--mode-group :transient transient--do-suspend)]

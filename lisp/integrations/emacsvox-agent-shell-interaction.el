@@ -194,6 +194,7 @@ Omit the field heading when moving between controls in the same question."
     (let* ((emacsvox-agent-shell--question-command-active t)
            (before (emacsvox-agent-shell--question-at-point))
            (control (car before))
+           (emacsvox-agent-shell--question-navigation-origin control)
            (action (map-elt control :action))
            (preview-command (eq this-command 'agent-shell-elicitation-toggle-preview))
            (ems--message-filter

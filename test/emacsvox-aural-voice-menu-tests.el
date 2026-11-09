@@ -8,6 +8,17 @@
 (require 'emacsvox-aural-voice-menu)
 (require 'emacsvox-aural-voice-engine-controls-tests)
 
+(defun emacsvox-voice-menu-test--select (command)
+  "Browse to COMMAND using real Down events."
+  (let ((emacsvox-transient-navigation-style 'continuous) (remaining 100))
+    (while (and (> remaining 0)
+                (not (with-selected-window transient--window
+                       (when-let* ((button (button-at (point))))
+                         (eq command (oref (button-get button 'button-data) command))))))
+      (execute-kbd-macro (kbd "<down>"))
+      (setq remaining (1- remaining)))
+    (should (> remaining 0))))
+
 (defmacro emacsvox-test--with-voice-menu (&rest body)
   "Run BODY with a real graphical menu and an isolated named-voice draft."
   (declare (indent 0) (debug t))
@@ -55,8 +66,7 @@
     (should-not (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition) :average-pitch))
     (execute-kbd-macro (kbd "u"))
     (should (= (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition) :average-pitch) 9))
-    (with-selected-window transient--window
-      (transient--goto-button (transient-suffix-object 'emacsvox-aural-voice-menu--default)))
+    (emacsvox-voice-menu-test--select 'emacsvox-aural-voice-menu--default)
     (execute-kbd-macro (kbd "RET A TAB RET"))
     (should-not (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition) :average-pitch))
     (execute-kbd-macro (kbd "u"))
@@ -74,6 +84,18 @@
     (emacsvox-aural-voice-editor-open 'reading-owned 'bolden source)
     (should (eq context emacsvox-aural-voice-editor--context))
     (should (= (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition) :average-pitch) 9))))
+
+(ert-deftest emacsvox-aural-voice-menu-shortcut-restores-edited-control ()
+  "Exact entry by shortcut returns to that number, preserving the editor field."
+  (emacsvox-test--with-voice-menu
+    (execute-kbd-macro (kbd "<down>"))
+    (let ((field (with-current-buffer editor (get-text-property (point) 'voice-field))))
+      (execute-kbd-macro (kbd "p 8 RET"))
+      (should (eq 'average-pitch (emacsvox-aural-voice-menu--selected-dimension)))
+      (execute-kbd-macro (kbd "S-<left>"))
+      (should (= 7 (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition) :average-pitch)))
+      (should (equal field (with-current-buffer editor (get-text-property (point) 'voice-field))))
+      (should (equal before (emacsvox-aural-read-user-data))))))
 
 (ert-deftest emacsvox-aural-voice-menu-graphical-compare-save-and-stop ()
   "Preview is private; comparison shares text, and only explicit save publishes."
@@ -149,6 +171,11 @@
               (execute-kbd-macro (kbd "S-<right> S-<left>"))
               (should (eql 0 (plist-get (plist-get (emacsvox-aural-voice-editor--tuning-row) :adjustments) :average-pitch)))
               (execute-kbd-macro (kbd "i"))
+              (should-not (plist-member (plist-get (emacsvox-aural-voice-editor--tuning-row) :adjustments) :average-pitch))
+              ;; Browsing to Inherit must also work: its own button is not a number.
+              (emacsvox-aural-voice-menu--edit 'average-pitch nil t)
+              (emacsvox-voice-menu-test--select 'emacsvox-aural-voice-menu--inherit)
+              (execute-kbd-macro (kbd "RET A TAB RET"))
               (should-not (plist-member (plist-get (emacsvox-aural-voice-editor--tuning-row) :adjustments) :average-pitch))
               (should-not (cl-some (lambda (write) (string-match-p "preview" write)) writes))
               (execute-kbd-macro (kbd "P"))
