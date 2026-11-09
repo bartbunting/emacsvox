@@ -2701,7 +2701,21 @@ completed-response speech policy.
 11.1.3 Work with queued prompts
 -------------------------------
 
-Queued prompts announce when they start and how many remain.  Recent
+With Agent Shell 0.94.1 or newer, you can redirect the most recently
+queued prompt into the running turn.  Leave the live prompt empty and
+press ‘M-<RET>’ (‘agent-shell-submit-override’).  With the default queue
+and steering routes, Agent Shell asks before steering that prompt;
+earlier prompts stay queued.  Declining leaves the queue unchanged, and
+a failed send restores the prompt.  The agent must still be busy and
+support steering.  Custom busy-send routes can change or disable this
+action through ‘agent-shell-busy-submit-reroute-function’.
+
+   This works while browsing with Explicit input activation and keeps
+you in browse mode.  An unsent draft still requires entering edit mode
+before sending; ‘M-<RET>’ does not redirect queued input when the live
+prompt contains a draft.
+
+   Queued prompts announce when they start and how many remain.  Recent
 Agent Shell versions merge queued prompts into one turn by default;
 Emacsvox announces how many prompts started together.  Set
 ‘agent-shell-prompt-queue-merge’ to nil to send them one turn at a time.
@@ -2945,6 +2959,14 @@ such as Capabilities, Models, or Notices.  Wrapped continuation rows do
 not repeat the cue; leaving and returning to the heading plays it again.
 The optional block visibility cue replaces this default cue.  Reading
 the current line with ‘C-e l’ continues to indicate hidden content.
+
+   Press ‘<RET>’ on a foldable heading to toggle that fragment.  With
+Agent Shell 0.94.1 or newer, ‘C-u <RET>’ toggles its entire group and
+sets every child to the same state.  From an ungrouped fragment it
+toggles that fragment alone.  Emacsvox presents one visibility change
+for the affected group: expansion reads the group's name and state,
+while collapse uses the configured visibility cue.  Collapsing a group
+from a child moves point to the group heading.
 
 ‘h / H’
      Use ‘h’ (‘emacsvox-agent-shell-next-heading’) or ‘H’

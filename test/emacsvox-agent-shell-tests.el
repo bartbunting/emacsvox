@@ -5398,6 +5398,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (eq (nth 3 (car presentations)) 'agent-shell))
       (should (eq (nth 4 (car presentations)) 'navigation)))))
 
+(defun emacsvox-agent-shell-test--link-action (legacy-action)
+  "Return the upstream link verb, retaining LEGACY-ACTION before simplification."
+  (if (fboundp 'agent-shell-markdown--link-verb) legacy-action "open"))
+
 (ert-deftest emacsvox-agent-shell-actionable-items-are-semantic ()
   "Links, images, and source controls should announce labels, not chrome."
   (with-temp-buffer
@@ -5408,8 +5412,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (equal
       (emacsvox-agent-shell-test--capture-events
         (emacsvox-agent-shell--semantic-item-feedback))
-      '((icon item)
-        (speak "docs, link. Press Return to open in browser."))))
+      `((icon item)
+        (speak ,(format "docs, link. Press Return to %s."
+                        (emacsvox-agent-shell-test--link-action "open in browser"))))))
     (should (string-match-p ems--message-filter
                             "Press RET to open in browser"))
     (emacsvox-agent-shell--restore-message-filter))
@@ -5421,8 +5426,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (equal
       (emacsvox-agent-shell-test--capture-events
         (emacsvox-agent-shell--semantic-item-feedback))
-      '((icon item)
-        (speak "diagram, image. Press Return to open image in browser."))))
+      `((icon item)
+        (speak ,(format "diagram, image. Press Return to %s."
+                        (emacsvox-agent-shell-test--link-action "open image in browser"))))))
     (emacsvox-agent-shell--restore-message-filter))
   (with-temp-buffer
     (insert "architecture diagram")
@@ -5509,8 +5515,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                        (lambda (function) (eq function (nth 1 case)))))
               (funcall (nth 0 case)
                        (lambda (&rest _) (goto-char destination)))))
-          '((icon item)
-            (speak "docs, link. Press Return to open in browser."))))))))
+          `((icon item)
+            (speak ,(format "docs, link. Press Return to %s."
+                            (emacsvox-agent-shell-test--link-action "open in browser"))))))))))
 
 (ert-deftest emacsvox-agent-shell-permission-button-advice-observes-boundary ()
   "Interactive choice navigation should speak moves but not failed moves."
@@ -5877,6 +5884,43 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-aural-action-cue
          (car (emacsvox-aural-render-plan-before plan)))
         'open-object)))))
+
+(ert-deftest emacsvox-agent-shell-recursive-fold-announces-actual-target ()
+  "Recursive folding emits one cue for the group, even from a folded child."
+  (skip-unless (memq '&optional (help-function-arglist #'agent-shell-ui-toggle-fragment t)))
+  (dolist (target '(group folded-child expanded-child ungrouped))
+    (ert-info ((format "Recursive toggle from %s" target))
+      (emacsvox-agent-shell-test--with-semantic-blocks
+        (let ((group (seq-find (lambda (x) (eq (plist-get x :type) 'activity-group))
+                              (emacsvox-agent-shell--block-locations))))
+          (goto-char (plist-get group :position))
+          (agent-shell-ui--toggle-fragment-at-point)
+          (when (memq target '(folded-child expanded-child ungrouped))
+            (let ((child (seq-find (lambda (x)
+                                    (eq (plist-get x :type)
+                                        (if (eq target 'ungrouped) 'plan 'thought)))
+                                  (emacsvox-agent-shell--block-locations))))
+              (goto-char (plist-get child :position))
+              (when (eq target 'expanded-child)
+                (agent-shell-ui--toggle-fragment-at-point))))
+          (dolist (visibility '(folded expanded))
+            (let* ((current-prefix-arg '(4))
+                   (presentations (emacsvox-agent-shell-test--capture-presentations
+                                    (call-interactively #'agent-shell-ui-toggle-fragment)))
+                   (facts (nth 2 (car presentations))))
+              (should (= 1 (length presentations)))
+              (should (eq (plist-get facts :agent-block-kind)
+                          (if (eq target 'ungrouped) 'plan 'activity-group)))
+              (should (eq (plist-get facts :visibility) visibility))
+              (if (eq visibility 'folded)
+                  (should (eq (caar presentations) 'submit-actions))
+                (should (string-suffix-p ", expanded." (nth 1 (car presentations)))))
+            (unless (eq target 'ungrouped)
+              (dolist (child (agent-shell-ui--group-children
+                             :group-qualified-id (map-elt (plist-get group :state) :qualified-id)))
+                (should (eq (not (null (map-elt (get-text-property (map-elt child :start)
+                                                                 'agent-shell-ui-state) :collapsed)))
+                            (eq visibility 'folded))))))))))))
 
 (ert-deftest emacsvox-agent-shell-fold-toggle-emits-state-change-facts ()
   "An interactive fragment toggle should announce its new visibility."
@@ -6974,9 +7018,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (dolist (case '(("h" "First bold heading" "First bold heading")
                             ("h" "Second heading" "Second heading")
                             ("H" "First bold heading" "First bold heading")
-                            ("l" "first link" "first link, link. Press Return to open in browser.")
-                            ("l" "second link" "second link, link. Press Return to open in browser.")
-                            ("L" "first link" "first link, link. Press Return to open in browser.")
+                            ("l" "first link")
+                            ("l" "second link")
+                            ("L" "first link")
                             ("k" "(+ 1 2)" "elisp source block, 1 line.")
                             ("k" "print(1)" "python source block, 1 line.")
                             ("K" "(+ 1 2)" "elisp source block, 1 line.")))
@@ -6985,7 +7029,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                      (speech (seq-filter (lambda (event) (eq (car event) 'speak))
                                          events)))
                 (should (looking-at (regexp-quote (nth 1 case))))
-                (should (equal speech (list (list 'speak (nth 2 case)))))))
+                (should (equal speech
+                               (list (list 'speak
+                                           (if (member (car case) '("l" "L"))
+                                               (format "%s, link. Press Return to %s."
+                                                       (nth 1 case)
+                                                       (emacsvox-agent-shell-test--link-action
+                                                        "open in browser"))
+                                             (nth 2 case))))))))
           (should (equal-including-properties source (buffer-string)))))))))
 
 (ert-deftest emacsvox-agent-shell-letter-links-silence-duplicate-sensor-hints ()
@@ -7043,7 +7094,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                               ((symbol-function 'set-transient-map) #'ignore))
                       (execute-kbd-macro (kbd (car case)))
                       (should (equal echoed
-                                     (concat "Press RET to " (nth 2 case) ": "
+                                     (concat "Press RET to "
+                                             (emacsvox-agent-shell-test--link-action (nth 2 case)) ": "
                                              (get-text-property
                                               (point) 'agent-shell-markdown-url))))
                       (should (equal ems--message-filter "Decrypting"))
@@ -7052,7 +7104,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                            '((notify "Agent needs approval"))))
             (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
                            (list (list 'speak (format "docs, link. Press Return to %s."
-                                                      (nth 2 case))))))))))))
+                                                      (emacsvox-agent-shell-test--link-action
+                                                       (nth 2 case)))))))))))))
 
 (ert-deftest emacsvox-agent-shell-link-entry-silences-url-notifications ()
   "Ordinary motion reads links without a second voice; copying stays audible."
@@ -10915,6 +10968,78 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (emacsvox-agent-shell--table-navigation-setup)
        (emacsvox-agent-shell--input-setup)
        ,@body)))
+
+(ert-deftest emacsvox-agent-shell-empty-prompt-reroute-preserves-input ()
+  "Reroute queued input without opening a draft or bypassing upstream checks."
+  (skip-unless (boundp 'agent-shell-busy-submit-reroute-function))
+  (dolist (editing '(nil t))
+    (dolist (outcome '(accepted cancelled failed changed-queue finished unsupported empty-queue))
+      (ert-info ((format "editing %S, outcome %S" editing outcome))
+        (emacsvox-agent-shell-test--with-explicit-input
+          (let ((inhibit-read-only t))
+            (delete-region (agent-shell--prompt-input-start) (point-max)))
+          (when editing
+            (emacsvox-agent-shell-test--capture-events (emacsvox-agent-shell-edit-input)))
+          (setf (map-elt agent-shell--state :pending-prompts)
+                (unless (eq outcome 'empty-queue) '("Earlier" "Latest")))
+          (let ((agent-shell-busy-submit-default-function #'agent-shell-busy-submit-queue)
+                (agent-shell-busy-submit-override-function #'agent-shell-busy-submit-steer)
+                (agent-shell-busy-submit-reroute-function #'agent-shell-busy-submit-reroute-queue-to-steer)
+                (contents (buffer-string)) (origin (point))
+                (busy t) steered confirmation)
+            (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy))
+                      ((symbol-function 'agent-shell-steering-supported-p)
+                       (lambda () (not (eq outcome 'unsupported))))
+                      ((symbol-function 'y-or-n-p)
+                       (lambda (question)
+                         (setq confirmation question)
+                         (pcase outcome
+                           ('changed-queue (setf (map-elt agent-shell--state :pending-prompts)
+                                                '("Replacement")))
+                           ('finished (setq busy nil)))
+                         (not (eq outcome 'cancelled))))
+                      ((symbol-function 'agent-shell-experimental--send-steering)
+                       (lambda (&rest args)
+                         (when (eq outcome 'failed) (user-error "Steering failed"))
+                         (setq steered (plist-get args :prompt)))))
+              (should (eq (key-binding (kbd "M-RET")) 'agent-shell-submit-override))
+              (emacsvox-agent-shell-test--capture-events
+                (if (eq outcome 'accepted)
+                    (call-interactively (key-binding (kbd "M-RET")))
+                  (should-error (call-interactively (key-binding (kbd "M-RET")))
+                                :type 'user-error))))
+            (should (eq (not (null confirmation))
+                        (not (memq outcome '(unsupported empty-queue)))))
+            (should (equal steered (and (eq outcome 'accepted) "Latest")))
+            (should (equal (map-elt agent-shell--state :pending-prompts)
+                           (pcase outcome
+                             ('accepted '("Earlier"))
+                             ('changed-queue '("Replacement"))
+                             ('empty-queue nil)
+                             (_ '("Earlier" "Latest")))))
+            (should (eq emacsvox-agent-shell--input-editing editing))
+            (should (= origin (point)))
+            (should (equal-including-properties contents (buffer-string)))))))))
+
+(ert-deftest emacsvox-agent-shell-reroute-exception-keeps-drafts-protected ()
+  "A draft, idle turn, disabled reroute or ordinary submit retains browse protection."
+  (dolist (case '(draft idle disabled ordinary))
+    (emacsvox-agent-shell-test--with-explicit-input
+      (unless (eq case 'draft)
+        (let ((inhibit-read-only t))
+          (delete-region (agent-shell--prompt-input-start) (point-max))))
+      (let ((contents (buffer-string))
+            (agent-shell-busy-submit-reroute-function (unless (eq case 'disabled) #'ignore)))
+        (cl-letf (((symbol-function 'shell-maker-busy) (lambda () (not (eq case 'idle))))
+                  ((symbol-function 'y-or-n-p) (lambda (&rest _) (ert-fail "Unexpected confirmation")))
+                  ((symbol-function 'agent-shell--busy-submit) (lambda (&rest _) (ert-fail "Draft submitted"))))
+          (emacsvox-agent-shell-test--capture-events
+            (should-error (call-interactively (if (eq case 'ordinary)
+                                                 #'agent-shell-submit
+                                               #'agent-shell-submit-override))
+                          :type 'user-error)))
+        (should-not emacsvox-agent-shell--input-editing)
+        (should (equal-including-properties contents (buffer-string)))))))
 
 (ert-deftest emacsvox-agent-shell-explicit-input-edit-and-browse ()
   "Activation preserves the draft; all navigation letters become literal in edit."

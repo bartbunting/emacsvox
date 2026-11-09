@@ -1548,15 +1548,22 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
     (format "%s, expanded." heading)))
 
 (defun emacsvox-agent-shell--call-toggle-fragment
-    (original-function arguments interactive-p)
+    (original-function arguments interactive-p &optional recursive)
   "Call fragment toggle ORIGINAL-FUNCTION with ARGUMENTS.
 
-When INTERACTIVE-P is non-nil, announce a resulting visibility change."
+When INTERACTIVE-P is non-nil, announce a resulting visibility change.
+RECURSIVE selects the enclosing group when the command toggles its children."
   (let ((before
          (and
           interactive-p
           (emacsvox-agent-shell--fragment-toggle-target)))
         result)
+    (when-let* ((recursive)
+                (group-id (map-elt (plist-get before :state) :group-id))
+                (group (emacsvox-agent-shell--fragment-location-by-id
+                        group-id (plist-get before :position))))
+      (setq before (emacsvox-agent-shell--fragment-location-at-position
+                    (plist-get group :position))))
     (setq result (apply original-function arguments))
     (when (and interactive-p before)
       (when-let* ((after
@@ -1586,7 +1593,8 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
   "Announce a public interactive fragment visibility change."
   (emacsvox-agent-shell--call-toggle-fragment
    original-function arguments
-   (ems-interactive-p 'agent-shell-ui-toggle-fragment)))
+   (ems-interactive-p 'agent-shell-ui-toggle-fragment)
+   (car arguments)))
 
 (defun emacsvox-agent-shell--toggle-fragment-action-around
     (original-function &rest arguments)

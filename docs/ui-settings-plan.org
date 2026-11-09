@@ -20,6 +20,49 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Agent Shell compatibility refresh, 2026-11-09
+
+Implemented against upstream 0.94.1 at
+=14e8e2a2f2b495f83c9d7b18be7838e45d75bf56=. The integration lock now pins
+that source and its verified archive hash. Shell Maker 0.98.2 at =f57ad5e=
+and ACP 0.18.2 at =2959da5= remain unchanged and meet upstream's minimums.
+The ignored =local.mk= selects a new 0.94.1 dependency directory; the previous
+0.89.1 directory is preserved.
+
+- Empty-prompt =M-RET= can reroute the last queued prompt in Explicit browse
+  mode while the agent is busy. Upstream retains confirmation, queue ownership
+  and failure recovery. Nonempty drafts, ordinary submission, idle turns and
+  disabled rerouting retain browse protection. Regression cases cover accepted,
+  declined and failed sends, unsupported steering, an empty or changed queue,
+  and a turn ending during confirmation, in both browse and edit modes.
+- Recursive =C-u RET= feedback compares the affected group's visibility, even
+  from an already folded child. One presentation describes the actual target:
+  expansion speech or a collapse cue. Checks cover the group heading, folded
+  and expanded children, and ungrouped fragments, including every child's state.
+- Link and image speech tests accept upstream's shorter "open" wording and the
+  older supported renderer's verbs. URL inspection, preserved hint details and
+  suppression of duplicate cursor notifications remain covered.
+
+The audit reproduced both interaction failures and four stale link-wording
+expectations before these changes. The complete existing key-overlap check
+passes; inspection also covers contextual permission/link maps and upstream
+help transients. New header menus add mouse actions without new keyboard
+overlaps. No navigation bindings were reassigned.
+
+Verification: all 738 integration tests pass with source and fresh compiled
+code. The 17 graphical integration checks, 33 focused compiled graphical checks,
+eight compiled compatibility checks against the old 0.89.1 pin, and nine
+dependency-preparation checks pass. The full byte-code rebuild and preflight
+pass; compiler warnings are in unchanged modules. The user guide now explains
+rerouting and recursive folding; the developer guide records the refreshed pin
+and contracts. Generated manuals are refreshed, and the documentation gate
+passes. Listening acceptance remains pending.
+
+The checkout at =~/src/agent-shell= already matches the new pin, while Emacs
+PID 1546 reports loaded version 0.93.3. No live reload or restart was performed.
+Use a fresh Emacs profile for the upstream interface changes; partial reloading
+would not verify the complete loaded integration.
+
 ** Text tree speech and settings, 2026-11-09
 
 Implemented: the shared =emacsvox-text-tree= core recognises complete ASCII and

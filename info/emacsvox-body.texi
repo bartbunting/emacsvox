@@ -8634,6 +8634,18 @@ supported by the provider@comma{} follow the same completed-response speech poli
 
 @subsection Work with queued prompts
 
+With Agent Shell 0.94.1 or newer@comma{} you can redirect the most recently queued
+prompt into the running turn. Leave the live prompt empty and press @kbd{M-@key{RET}}
+(@code{agent-shell-submit-override}). With the default queue and steering routes@comma{}
+Agent Shell asks before steering that prompt; earlier prompts stay queued.
+Declining leaves the queue unchanged@comma{} and a failed send restores the prompt.
+The agent must still be busy and support steering. Custom busy-send routes can
+change or disable this action through @code{agent-shell-busy-submit-reroute-function}.
+
+This works while browsing with Explicit input activation and keeps you in
+browse mode. An unsent draft still requires entering edit mode before sending;
+@kbd{M-@key{RET}} does not redirect queued input when the live prompt contains a draft.
+
 Queued prompts announce when they start and how many remain. Recent Agent Shell
 versions merge queued prompts into one turn by default; Emacsvox announces how
 many prompts started together. Set @code{agent-shell-prompt-queue-merge} to nil to
@@ -8844,6 +8856,13 @@ Capabilities@comma{} Models@comma{} or Notices. Wrapped continuation rows do not
 cue; leaving and returning to the heading plays it again. The optional block
 visibility cue replaces this default cue. Reading the current line with
 @kbd{C-e l} continues to indicate hidden content.
+
+Press @kbd{@key{RET}} on a foldable heading to toggle that fragment. With Agent Shell
+0.94.1 or newer@comma{} @kbd{C-u @key{RET}} toggles its entire group and sets every child to the
+same state. From an ungrouped fragment it toggles that fragment alone. Emacsvox
+presents one visibility change for the affected group: expansion reads the
+group's name and state@comma{} while collapse uses the configured visibility cue.
+Collapsing a group from a child moves point to the group heading.
 
 @table @kbd
 @item h / H
@@ -13473,7 +13492,7 @@ Use @kbd{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
 The minimum supported Agent Shell is 0.85.3. The integration pins target
-Agent Shell 0.89.1 at @code{78a2c94}@comma{} Shell Maker 0.98.2 at @code{f57ad5e}@comma{} and
+Agent Shell 0.94.1 at @code{14e8e2a}@comma{} Shell Maker 0.98.2 at @code{f57ad5e}@comma{} and
 ACP 0.18.2 at @code{2959da5}. A personal
 package upgrade does not refresh @code{test/integration-dependencies.json} or its
 prepared tree. When the preparer rejects a changed lock@comma{} choose a fresh
@@ -13483,7 +13502,7 @@ gates; preserve the old directory until it is no longer needed.
 For every pin refresh@comma{} compare all Emacsvox navigation@comma{} speech-control@comma{} table@comma{}
 and repeat keys against shell and viewport maps@comma{} inherited Shell Maker maps@comma{}
 list editing@comma{} inline actions@comma{} permission and question controls@comma{} and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.89.1 refresh keeps
+effective keys in real prompt and transcript contexts. The 0.94.1 refresh keeps
 the existing scoped overrides: viewport @kbd{t} discovers tables; table @kbd{r} reads
 rows instead of quoting or replying; viewport table @kbd{c} reads columns and @kbd{a}
 selects table speech instead of continuing or repeating a reply. The table @kbd{k}
@@ -13491,6 +13510,14 @@ copy prefix takes precedence over Emacsvox's source-block jump. These preserve
 consistent reading keys; the displaced commands remain available through
 @kbd{M-x} as documented in the Agent Shell user chapter. Prompt letters remain
 literal input@comma{} and repeat navigation must release unrelated keys.
+
+Empty-input override submission may reroute queued input while explicit input
+activation is browsing; nonempty drafts retain the edit requirement. Upstream
+owns reroute confirmation and recovery. Recursive fragment feedback resolves
+the group before comparing visibility@comma{} so a folded child cannot hide a group
+change. Link feedback follows upstream's shorter action wording while retaining
+explicit URL inspection and filtering only redundant cursor hints. Tests cover
+both the current wording and older supported renderers.
 
 @enumerate
 @item

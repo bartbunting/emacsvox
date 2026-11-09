@@ -45,6 +45,7 @@
 (require 'emacsvox-agent-shell-navigation)
 
 (defvar comint-last-prompt)
+(defvar agent-shell-busy-submit-reroute-function)
 (defvar emacsvox-show-point)
 (defvar ems--speak-max-length)
 (defvar emacsvox-agent-shell-status-speech-labels)
@@ -265,10 +266,15 @@ From the transcript, move to the end of the live draft.  In Explicit mode,
 (defun emacsvox-agent-shell--input-submit-around (original &rest args)
   "Run ORIGINAL with ARGS, returning to browsing after a consumed draft.
 Rejected submissions retain their edit state.  Explicit interactive submission
-requires editing first; programmatic context submission retains upstream policy."
+requires editing first, except rerouting a queued prompt from empty input.
+Programmatic context submission retains upstream policy."
   (when (and (emacsvox-agent-shell--input-browsing-p)
              (or (called-interactively-p 'any)
-                 emacsvox-agent-shell--input-interactive-submit))
+                 emacsvox-agent-shell--input-interactive-submit)
+             (not (and (car args)
+                       (bound-and-true-p agent-shell-busy-submit-reroute-function)
+                       (shell-maker-busy)
+                       (not (agent-shell--prompt-input)))))
     (user-error "Browse mode; press RET at the prompt or C-c i to edit input"))
   (let* ((buffer (current-buffer))
          (draft (and emacsvox-agent-shell--input-active
