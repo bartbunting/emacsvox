@@ -2241,7 +2241,14 @@ launch context. Missing or damaged history and unproven owner loss remain blocke
 worker, and recovery waits boundedly for that worker's speech registration.
 Notification fallback preserves the real foreground binding. Source and compiled
 native checks are tracked in the paired Omnivox retained-recovery report;
-acoustic acceptance and the separate emergency-start decision remain outstanding.
+acoustic acceptance remains outstanding. The approved Omnivox ADR 0018 now
+permits explicit =tts-emergency-start=: minimal bundled eSpeak ignores damaged
+host preferences and management storage, preserves notification speech and old
+asset claims, and requires native retirement proof. A live owner can supply
+that proof despite a failed receipt write. Source and compiled native checks
+remain separate from listening acceptance; lost authority and blocked owner
+transport still need further qualification. This command is available through
+=M-x=; no existing restart key silently changes to emergency mode.
 
 * Coverage audit, 2026-10-15
 

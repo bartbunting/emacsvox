@@ -1009,6 +1009,7 @@ missing integration.
 - C-e d q :: Toggle current-buffer quiet mode; ~C-u~ toggles it globally.
 - C-e C-s :: Restart the selected speech server using newly saved settings.
 - M-x tts-recover :: Recover main speech from its retained startup; keep notification speech running with locally owned Omnivox.
+- M-x tts-emergency-start :: Start minimal local eSpeak speech after confirmed native retirement, ignoring saved Omnivox preferences and management records.
 - C-e d V :: Speak adapter and version information.
 
 For locally owned Omnivox, recovery confirms native retirement before replacing
@@ -1019,6 +1020,16 @@ With host support, recovery can verify an existing native retirement record if
 the owner's final reply was lost. It uses the original host connection settings;
 missing or damaged evidence remains an error rather than permission to start
 over a possibly surviving worker.
+
+If damaged records or failed storage writes prevent ordinary recovery, use
+~M-x tts-emergency-start RET~ with a supporting local Omnivox build. It uses
+bundled eSpeak, built-in host settings and the default output device, while
+keeping notification speech running. It leaves saved settings and asset claims
+intact. With ~C-u~, choose another output backend; ~pulse~ is Linux-only and
+~null~ is a silent diagnostic backend. Subsequent ~tts-recover~ calls keep
+minimal mode. After repairing saved settings, use ~tts-restart~ to return to
+ordinary speech. Emergency startup still requires verified cleanup of old
+speech; it cannot bypass lost native ownership or repair an unusable output.
 
 For repeat cleanup and text splitting, use the [[reading-filters][reading filter menus]]. Server
 and language selection are covered in [[info:emacsvox#Speech Backends][Speech Backends]] and live Help. For

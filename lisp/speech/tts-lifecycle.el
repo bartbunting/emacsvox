@@ -1058,8 +1058,9 @@ cannot deliver a second terminal result."
         (tts--cancel-process-tracked-dispatches process 'failed)
         ;; Keep an unconfirmed native owner reachable.  Clearing the handle
         ;; would let later recovery mistake lost cleanup evidence for first start.
-        (unless (and (member "--voice-library-owner" (process-command process))
-                     (not (process-get process 'omnivox-library-retired)))
+        (unless (or (member "--emergency-owner" (process-command process))
+                    (and (member "--voice-library-owner" (process-command process))
+                         (not (process-get process 'omnivox-library-retired))))
           (when (eq process tts-speaker-process)
             (setq tts-speaker-process nil))
           (when (eq process tts-notify-process)

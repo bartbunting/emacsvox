@@ -85,7 +85,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1729 commands and 261 options.
+This chapter documents a total of 1730 commands and 261 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -28923,6 +28923,22 @@ This function accepts any number of arguments in ARGUMENTS.
 Also see ‘always’.
 
 (fn &rest ARGUMENTS)
+@end format
+@end deffn
+
+@subsubsection tts-emergency-start
+@deffn {Command} tts-emergency-start  (&optional output)
+@findex tts-emergency-start
+
+@format
+Restore main speech with bundled eSpeak and built-in host settings.
+Ignore saved Omnivox preferences and management state.  Preserve notification
+speech and all asset claims.  Require verified native retirement of old main
+speech; lost ownership still blocks replacement.  OUTPUT defaults to device;
+with a prefix, choose device, pulse (Linux) or null (diagnostics only).
+Use ‘tts-restart’ after repairing saved settings to return to ordinary startup.
+
+(fn &optional OUTPUT)
 @end format
 @end deffn
 

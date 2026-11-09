@@ -62,6 +62,8 @@
 (declare-function omnivox--process-logical-registry-content "omnivox-voices" (process))
 (defvar omnivox--library-startup nil "Dynamically bound native startup record.")
 (defvar omnivox--engine-startup nil "Prepared configuration shared by speech lanes.")
+(defvar omnivox--emergency-output nil "Explicit minimal startup output backend.")
+(defvar omnivox--emergency-context nil "Original launcher context for emergency startup.")
 (defvar omnivox-library--current-engines nil "Published local activation and launcher.")
 (defvar omnivox-library--birth-collector nil "Provider callback retaining every attempted process.")
 (defvar omnivox-library--support-cache nil)
@@ -203,8 +205,37 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
 
 (defun omnivox-library--command (program)
   "Build PROGRAM's local startup command, retaining older-server compatibility."
-  (if (or omnivox--library-startup (omnivox-library--supported-p program))
-      (list program "--voice-library-owner") (list program)))
+  (cond (omnivox--emergency-output
+         (list program "--emergency-owner" "--audio-output" omnivox--emergency-output))
+        ((or omnivox--library-startup (omnivox-library--supported-p program))
+         (list program "--voice-library-owner"))
+        (t (list program))))
+
+(defun omnivox-library--owned-p (process)
+  "Whether PROCESS was launched with a native speech owner."
+  (and (processp process)
+       (or (member "--voice-library-owner" (process-command process))
+           (member "--emergency-owner" (process-command process)))))
+
+(defun omnivox-library--emergency-supported (program)
+  "Require PROGRAM's minimal-start capability before retiring working speech."
+  (let ((buffer (generate-new-buffer " *Omnivox emergency capability*")) process)
+    (unwind-protect
+        (progn
+          (setq process (make-process :name "Omnivox emergency capability"
+                                      :command (list program "--emergency-version")
+                                      :buffer buffer :connection-type 'pipe :noquery t
+                                      :coding 'utf-8-unix :sentinel #'ignore
+                                      :stderr (get-buffer-create "*Omnivox voice library diagnostics*")))
+          (let ((deadline (+ (float-time) 3)))
+            (while (and (process-live-p process) (< (float-time) deadline))
+              (accept-process-output process .01)))
+          (unless (and (eq (process-status process) 'exit)
+                       (zerop (process-exit-status process))
+                       (with-current-buffer buffer (equal (buffer-string) "OMNIVOX-EMERGENCY 1\n")))
+            (user-error "Selected Omnivox does not support emergency startup")))
+      (when (process-live-p process) (delete-process process))
+      (kill-buffer buffer))))
 
 (defun omnivox-library--startup-environment (environment)
   "Extend ENVIRONMENT with the retained native startup for this activation."
@@ -302,7 +333,7 @@ This check does not publish capability or routing readiness hooks."
         (error "Native owner acknowledged a different engine configuration"))
       ;; External initialization has a 120-second batch budget.  Keep this
       ;; distinct from the routing deadline, which starts after capabilities.
-      (let* ((omnivox-library--timeout 180)
+      (let* ((omnivox-library--timeout (if omnivox--emergency-output 6 180))
              (capabilities (omnivox-library--control process '(:type "capabilities"))))
         (unless (and (equal (plist-get capabilities :type) "capabilities")
                      (seq-contains-p (plist-get capabilities :features) "engine_configuration_v1" #'equal))
@@ -322,10 +353,12 @@ This check does not publish capability or routing readiness hooks."
                                       :null-object :null :false-object :false))
            (pending (process-get process 'omnivox-library-pending))
            (callback (and pending (gethash (plist-get response :request_id) pending))))
-      (when (and (equal (plist-get response :type) "retired")
+      (when (and (member (plist-get response :type) '("retired" "native_retired"))
                  (equal (plist-get response :worker)
                         (plist-get (process-get process 'omnivox-library-owner) :worker)))
-        (process-put process 'omnivox-library-retired t))
+        (process-put process 'omnivox-library-retired t)
+        (when (equal (plist-get response :type) "native_retired")
+          (process-put process 'omnivox-library-native-receipt response)))
       (when callback
         (remhash (plist-get response :request_id) pending)
         (funcall callback response)))
@@ -416,7 +449,7 @@ OWNER sends the private prefix through the speech queue."
 (defun omnivox-library--owner (process)
   "Obtain the native owner and frozen startup of live speech PROCESS."
   (unless (and (process-live-p process)
-               (member "--voice-library-owner" (process-command process)))
+               (omnivox-library--owned-p process))
     (user-error "This speech session predates native ownership; restart speech with the updated build first"))
   (omnivox--install-control-filter process)
   (let ((owner (omnivox-library--request process '(:command "describe") t)))
@@ -447,6 +480,8 @@ OWNER sends the private prefix through the speech queue."
 
 (defun omnivox-library--snapshot (process role)
   "Freeze ROLE's actual native and acknowledged Emacs settings on PROCESS."
+  (when (process-get process 'omnivox-emergency-output)
+    (user-error "Emergency speech cannot participate in managed Apply; restart ordinary speech first"))
   (let* ((proof (omnivox-library--proof process role))
          (owner (process-get process 'omnivox-library-owner))
          (registration (process-get process 'omnivox-library-accepted-registration))
@@ -544,6 +579,39 @@ Old clients without a retained launch context and old hosts remain unsupported."
       (error "Native retirement was not confirmed"))
       (process-put process 'omnivox-library-retired t)))
   (tts--retire-process process))
+
+(defun omnivox-library--retire-for-emergency (process)
+  "Confirm native retirement of PROCESS without requiring a management write.
+The live owner's observation never releases persisted asset claims."
+  (when (processp process)
+    (unless (omnivox-library--owned-p process)
+      (user-error "Emergency replacement requires a native owned speech process"))
+    (tts--assert-owned-recovery-possible process)
+    (unless (process-get process 'omnivox-library-retired)
+      (let* ((omnivox-library--timeout 6)
+             (owner (or (process-get process 'omnivox-library-owner)
+                        (omnivox-library--owner process)))
+             (worker (plist-get owner :worker)))
+        (if (not (equal (plist-get owner :native_retirement_version) 1))
+            (tts--confirm-owned-retirement process)
+          (let (receipt)
+            (condition-case err
+                (setq receipt (omnivox-library--request
+                               process (list :command "retire-native" :worker worker) t))
+              (error
+               ;; A second correlated query asks the surviving original authority.
+               ;; It never turns owner exit into cleanup evidence.
+               (cond ((process-get process 'omnivox-library-native-receipt)
+                      (setq receipt (process-get process 'omnivox-library-native-receipt)))
+                     ((process-live-p process)
+                   (setq receipt (omnivox-library--request
+                                  process (list :command "retire-native" :worker worker) t)))
+                     (t (signal (car err) (cdr err))))))
+            (unless (and (equal (plist-get receipt :type) "native_retired")
+                         (equal (plist-get receipt :worker) worker))
+              (error "Native emergency retirement remains unconfirmed"))
+            (process-put process 'omnivox-library-retired t)))))
+    (tts--retire-process process)))
 
 (defun omnivox-library--json-data (value)
   "Convert frozen coordinator VALUE into plain JSON data for native storage."

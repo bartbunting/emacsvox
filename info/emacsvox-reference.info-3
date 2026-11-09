@@ -5749,7 +5749,21 @@ This module defines the generic TTS interface.
 
      (fn &rest ARGUMENTS)
 
-2.372.1.5 tts-local-server
+2.372.1.5 tts-emergency-start
+.............................
+
+ -- Command: tts-emergency-start (&optional output)
+
+     Restore main speech with bundled eSpeak and built-in host settings.
+     Ignore saved Omnivox preferences and management state.  Preserve notification
+     speech and all asset claims.  Require verified native retirement of old main
+     speech; lost ownership still blocks replacement.  OUTPUT defaults to device;
+     with a prefix, choose device, pulse (Linux) or null (diagnostics only).
+     Use ‘tts-restart’ after repairing saved settings to return to ordinary startup.
+
+     (fn &optional OUTPUT)
+
+2.372.1.6 tts-local-server
 ..........................
 
  -- Command: tts-local-server (program &optional prompt-port)
@@ -5762,7 +5776,7 @@ This module defines the generic TTS interface.
 
      (fn PROGRAM &optional PROMPT-PORT)
 
-2.372.1.6 tts-notify-initialize
+2.372.1.7 tts-notify-initialize
 ...............................
 
  -- Command: tts-notify-initialize
@@ -5770,7 +5784,7 @@ This module defines the generic TTS interface.
 
      Initialize a separate notification TTS process when configured.
 
-2.372.1.7 tts-notify-stop
+2.372.1.8 tts-notify-stop
 .........................
 
  -- Command: tts-notify-stop
@@ -5778,7 +5792,7 @@ This module defines the generic TTS interface.
 
      Stop  speech on notification stream.
 
-2.372.1.8 tts-rate-adjust
+2.372.1.9 tts-rate-adjust
 .........................
 
  -- Command: tts-rate-adjust
@@ -5791,8 +5805,8 @@ This module defines the generic TTS interface.
      C-impel-d -. Pressing =,+, or - immediately continues to adjust
      the speech rate.  Call when on a non-blank line to preview the effectt
 
-2.372.1.9 tts-recover
-.....................
+2.372.1.10 tts-recover
+......................
 
  -- Command: tts-recover
 
@@ -5803,14 +5817,14 @@ This module defines the generic TTS interface.
      or damaged retained records remain errors.  Other adapters use their ordinary
      recovery path.  Use ‘tts-restart’ to capture newly saved settings.
 
-2.372.1.10 tts-reset-punctuation-mode
+2.372.1.11 tts-reset-punctuation-mode
 .....................................
 
  -- Command: tts-reset-punctuation-mode
 
      Clear the buffer override and restore automatic punctuation policy.
 
-2.372.1.11 tts-reset-state
+2.372.1.12 tts-reset-state
 ..........................
 
  -- Command: tts-reset-state
@@ -5818,7 +5832,7 @@ This module defines the generic TTS interface.
 
      Reset TTS engine.
 
-2.372.1.12 tts-restart
+2.372.1.13 tts-restart
 ......................
 
  -- Command: tts-restart
@@ -5826,7 +5840,7 @@ This module defines the generic TTS interface.
 
      Restart TTS server.
 
-2.372.1.13 tts-select-server
+2.372.1.14 tts-select-server
 ............................
 
  -- Command: tts-select-server (program)
@@ -5838,7 +5852,7 @@ This module defines the generic TTS interface.
 
      (fn PROGRAM)
 
-2.372.1.14 tts-set-character-scale
+2.372.1.15 tts-set-character-scale
 ..................................
 
  -- Command: tts-set-character-scale (factor &optional prefix)
@@ -5852,7 +5866,7 @@ This module defines the generic TTS interface.
 
      (fn FACTOR &optional PREFIX)
 
-2.372.1.15 tts-set-chunk-separator-syntax
+2.372.1.16 tts-set-chunk-separator-syntax
 .........................................
 
  -- Command: tts-set-chunk-separator-syntax (s)
@@ -5863,7 +5877,7 @@ This module defines the generic TTS interface.
 
      (fn S)
 
-2.372.1.16 tts-set-language
+2.372.1.17 tts-set-language
 ...........................
 
  -- Command: tts-set-language (lang)
@@ -5876,7 +5890,7 @@ This module defines the generic TTS interface.
 
      (fn LANG)
 
-2.372.1.17 tts-set-next-language
+2.372.1.18 tts-set-next-language
 ................................
 
  -- Command: tts-set-next-language
@@ -5885,7 +5899,7 @@ This module defines the generic TTS interface.
      Switch to next legacy language.
      Signal a user error when logical voices own language routing.
 
-2.372.1.18 tts-set-predefined-rate
+2.372.1.19 tts-set-predefined-rate
 ..................................
 
  -- Command: tts-set-predefined-rate (&optional prefix)
@@ -5907,7 +5921,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.19 tts-set-preferred-language
+2.372.1.20 tts-set-preferred-language
 .....................................
 
  -- Command: tts-set-preferred-language (alias lang)
@@ -5917,7 +5931,7 @@ This module defines the generic TTS interface.
 
      (fn ALIAS LANG)
 
-2.372.1.20 tts-set-previous-language
+2.372.1.21 tts-set-previous-language
 ....................................
 
  -- Command: tts-set-previous-language
@@ -5926,7 +5940,7 @@ This module defines the generic TTS interface.
      Switch to previous legacy language.
      Signal a user error when logical voices own language routing.
 
-2.372.1.21 tts-set-punctuations
+2.372.1.22 tts-set-punctuations
 ...............................
 
  -- Command: tts-set-punctuations (mode &optional prefix)
@@ -5940,7 +5954,7 @@ This module defines the generic TTS interface.
 
      (fn MODE &optional PREFIX)
 
-2.372.1.22 tts-set-punctuations-to-all
+2.372.1.23 tts-set-punctuations-to-all
 ......................................
 
  -- Command: tts-set-punctuations-to-all (&optional prefix)
@@ -5950,7 +5964,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.23 tts-set-punctuations-to-some
+2.372.1.24 tts-set-punctuations-to-some
 .......................................
 
  -- Command: tts-set-punctuations-to-some (&optional prefix)
@@ -5960,7 +5974,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.24 tts-set-rate
+2.372.1.25 tts-set-rate
 .......................
 
  -- Command: tts-set-rate (rate &optional prefix)
@@ -5972,7 +5986,7 @@ This module defines the generic TTS interface.
 
      (fn RATE &optional PREFIX)
 
-2.372.1.25 tts-show-diagnostics
+2.372.1.26 tts-show-diagnostics
 ...............................
 
  -- Command: tts-show-diagnostics (name)
@@ -5983,7 +5997,7 @@ This module defines the generic TTS interface.
 
      (fn NAME)
 
-2.372.1.26 tts-speak-version
+2.372.1.27 tts-speak-version
 ............................
 
  -- Command: tts-speak-version
@@ -5991,7 +6005,7 @@ This module defines the generic TTS interface.
 
      Speak version.
 
-2.372.1.27 tts-stop
+2.372.1.28 tts-stop
 ...................
 
  -- Command: tts-stop (&optional all)
@@ -6005,7 +6019,7 @@ This module defines the generic TTS interface.
 
      (fn &optional ALL)
 
-2.372.1.28 tts-toggle-caps
+2.372.1.29 tts-toggle-caps
 ..........................
 
  -- Command: tts-toggle-caps (&optional prefix)
@@ -6015,7 +6029,7 @@ This module defines the generic TTS interface.
      Interactive PREFIX arg means toggle the global default
      value, and then set the current local value to the result.
 
-2.372.1.29 tts-toggle-punctuation-mode
+2.372.1.30 tts-toggle-punctuation-mode
 ......................................
 
  -- Command: tts-toggle-punctuation-mode (&optional prefix)
@@ -6026,7 +6040,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.30 tts-toggle-quiet
+2.372.1.31 tts-toggle-quiet
 ...........................
 
  -- Command: tts-toggle-quiet (&optional prefix)
@@ -6036,7 +6050,7 @@ This module defines the generic TTS interface.
      Turning on this switch silences speech.  Optional interactive
      prefix arg causes this setting to become global.
 
-2.372.1.31 tts-toggle-speak-nonprinting-chars
+2.372.1.32 tts-toggle-speak-nonprinting-chars
 .............................................
 
  -- Command: tts-toggle-speak-nonprinting-chars (&optional prefix)
@@ -6046,7 +6060,7 @@ This module defines the generic TTS interface.
      Interactive PREFIX arg means toggle the global default
      value, and then set the current local value to the result.
 
-2.372.1.32 tts-toggle-split-caps
+2.372.1.33 tts-toggle-split-caps
 ................................
 
  -- Command: tts-toggle-split-caps (&optional prefix)
@@ -6058,7 +6072,7 @@ This module defines the generic TTS interface.
      global default value, and then set the current local value to the
      result.
 
-2.372.1.33 tts-toggle-splitting-on-white-space
+2.372.1.34 tts-toggle-splitting-on-white-space
 ..............................................
 
  -- Command: tts-toggle-splitting-on-white-space
@@ -6066,7 +6080,7 @@ This module defines the generic TTS interface.
 
      Toggle splitting of speech on white space.
 
-2.372.1.34 tts-toggle-strip-octals
+2.372.1.35 tts-toggle-strip-octals
 ..................................
 
  -- Command: tts-toggle-strip-octals (&optional prefix)
@@ -6077,7 +6091,7 @@ This module defines the generic TTS interface.
       toggle the global default value, and then set the current local
      value to the result.
 
-2.372.1.35 tts-unicode-customize-char
+2.372.1.36 tts-unicode-customize-char
 .....................................
 
  -- Command: tts-unicode-customize-char (char replacement)
@@ -6088,7 +6102,7 @@ This module defines the generic TTS interface.
 
      (fn CHAR REPLACEMENT)
 
-2.372.1.36 tts-unicode-uncustomize-char
+2.372.1.37 tts-unicode-uncustomize-char
 .......................................
 
  -- Command: tts-unicode-uncustomize-char (char)
@@ -7169,7 +7183,7 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e C-M-y:                             emacsvox-extras.    (line   42)
 * C-e C-o:                               emacsvox-ocr.       (line   18)
 * C-e C-q:                               emacsvox-comint.    (line   37)
-* C-e C-s:                               tts-speak.          (line  130)
+* C-e C-s:                               tts-speak.          (line  144)
 * C-e C-SPC:                             emacsvox-speak.     (line  108)
 * C-e C-t ,:                             emacsvox-table-ui.  (line   43)
 * C-e C-t .:                             emacsvox-table-ui.  (line  341)
@@ -7225,37 +7239,37 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
                                                              (line  162)
 * C-e C-x:                               emacsvox-speak-status.
                                                              (line   31)
-* C-e d -:                               tts-speak.          (line   90)
-* C-e d ,:                               tts-speak.          (line  327)
-* C-e d .:                               tts-speak.          (line   82)
-* C-e d +:                               tts-speak.          (line   91)
-* C-e d =:                               tts-speak.          (line   92)
-* C-e d 0:                               tts-speak.          (line  206)
-* C-e d 1:                               tts-speak.          (line  205)
-* C-e d 2:                               tts-speak.          (line  204)
-* C-e d 3:                               tts-speak.          (line  203)
-* C-e d 4:                               tts-speak.          (line  202)
-* C-e d 5:                               tts-speak.          (line  201)
-* C-e d 6:                               tts-speak.          (line  200)
-* C-e d 7:                               tts-speak.          (line  199)
-* C-e d 8:                               tts-speak.          (line  198)
-* C-e d 9:                               tts-speak.          (line  197)
+* C-e d -:                               tts-speak.          (line  104)
+* C-e d ,:                               tts-speak.          (line  341)
+* C-e d .:                               tts-speak.          (line   96)
+* C-e d +:                               tts-speak.          (line  105)
+* C-e d =:                               tts-speak.          (line  106)
+* C-e d 0:                               tts-speak.          (line  220)
+* C-e d 1:                               tts-speak.          (line  219)
+* C-e d 2:                               tts-speak.          (line  218)
+* C-e d 3:                               tts-speak.          (line  217)
+* C-e d 4:                               tts-speak.          (line  216)
+* C-e d 5:                               tts-speak.          (line  215)
+* C-e d 6:                               tts-speak.          (line  214)
+* C-e d 7:                               tts-speak.          (line  213)
+* C-e d 8:                               tts-speak.          (line  212)
+* C-e d 9:                               tts-speak.          (line  211)
 * C-e d a:                               tts-speak.          (line   30)
 * C-e d C:                               tts-speak.          (line   17)
-* C-e d c:                               tts-speak.          (line  317)
+* C-e d c:                               tts-speak.          (line  331)
 * C-e d C-c:                             tts-speak.          (line   42)
 * C-e d C-d:                             dectalk-voices.     (line   17)
 * C-e d C-e:                             espeak-voices.      (line   17)
-* C-e d C-j:                             tts-speak.          (line  164)
-* C-e d C-n:                             tts-speak.          (line   74)
+* C-e d C-j:                             tts-speak.          (line  178)
+* C-e d C-n:                             tts-speak.          (line   88)
 * C-e d C-o:                             outloud-voices.     (line   17)
 * C-e d C-s:                             dectalk-voices.     (line   25)
 * C-e d D:                               emacsvox-aural-submission.
                                                              (line   19)
-* C-e d d:                               tts-speak.          (line  138)
+* C-e d d:                               tts-speak.          (line  152)
 * C-e d e:                               emacsvox-aural-voice-workbench-routing.
                                                              (line   17)
-* C-e d f:                               tts-speak.          (line  150)
+* C-e d f:                               tts-speak.          (line  164)
 * C-e d I:                               emacsvox-indentation.
                                                              (line   17)
 * C-e d i:                               emacsvox-speak-presentation.
@@ -7264,23 +7278,23 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
                                                              (line   74)
 * C-e d l:                               emacsvox-speak-characters.
                                                              (line   84)
-* C-e d L:                               tts-speak.          (line   61)
-* C-e d N:                               tts-speak.          (line  188)
-* C-e d n:                               tts-speak.          (line  348)
-* C-e d o:                               tts-speak.          (line  378)
-* C-e d P:                               tts-speak.          (line  229)
-* C-e d p:                               tts-speak.          (line  238)
-* C-e d q:                               tts-speak.          (line  338)
-* C-e d R:                               tts-speak.          (line  122)
-* C-e d r:                               tts-speak.          (line  272)
-* C-e d S:                               tts-speak.          (line  175)
-* C-e d s:                               tts-speak.          (line  358)
-* C-e d SPC:                             tts-speak.          (line  370)
+* C-e d L:                               tts-speak.          (line   75)
+* C-e d N:                               tts-speak.          (line  202)
+* C-e d n:                               tts-speak.          (line  362)
+* C-e d o:                               tts-speak.          (line  392)
+* C-e d P:                               tts-speak.          (line  243)
+* C-e d p:                               tts-speak.          (line  252)
+* C-e d q:                               tts-speak.          (line  352)
+* C-e d R:                               tts-speak.          (line  136)
+* C-e d r:                               tts-speak.          (line  286)
+* C-e d S:                               tts-speak.          (line  189)
+* C-e d s:                               tts-speak.          (line  372)
+* C-e d SPC:                             tts-speak.          (line  384)
 * C-e d T:                               emacsvox-speak-presentation.
                                                              (line   31)
 * C-e d v:                               emacsvox-aural-compatibility-voice.
                                                              (line   32)
-* C-e d V:                               tts-speak.          (line  295)
+* C-e d V:                               tts-speak.          (line  309)
 * C-e d w:                               emacsvox-speak-characters.
                                                              (line   94)
 * C-e d z:                               emacsvox-speak.     (line  404)
@@ -7357,7 +7371,7 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e RET:                               emacsvox-websearch. (line   47)
 * C-e S:                                 emacsvox-settings-integrations.
                                                              (line   16)
-* C-e s:                                 tts-speak.          (line  303)
+* C-e s:                                 tts-speak.          (line  317)
 * C-e SPC:                               emacsvox-speak-windows.
                                                              (line  170)
 * C-e t:                                 emacsvox-speak-time.
@@ -12440,70 +12454,72 @@ Function Index
 * tts-cloud <1>:                         tts-speak.          (line   43)
 * tts-define-voice-from-acss:            tts-speak.          (line   48)
 * tts-define-voice-from-acss <1>:        tts-speak.          (line   49)
-* tts-local-server:                      tts-speak.          (line   59)
-* tts-local-server <1>:                  tts-speak.          (line   62)
-* tts-notify-initialize:                 tts-speak.          (line   72)
-* tts-notify-initialize <1>:             tts-speak.          (line   75)
-* tts-notify-stop:                       tts-speak.          (line   80)
-* tts-notify-stop <1>:                   tts-speak.          (line   83)
-* tts-rate-adjust:                       tts-speak.          (line   88)
-* tts-rate-adjust <1>:                   tts-speak.          (line   93)
-* tts-recover:                           tts-speak.          (line  101)
-* tts-recover <1>:                       tts-speak.          (line  102)
-* tts-reset-punctuation-mode:            tts-speak.          (line  113)
-* tts-reset-punctuation-mode <1>:        tts-speak.          (line  114)
-* tts-reset-state:                       tts-speak.          (line  120)
-* tts-reset-state <1>:                   tts-speak.          (line  123)
-* tts-restart:                           tts-speak.          (line  128)
-* tts-restart <1>:                       tts-speak.          (line  131)
-* tts-select-server:                     tts-speak.          (line  136)
-* tts-select-server <1>:                 tts-speak.          (line  139)
-* tts-set-character-scale:               tts-speak.          (line  148)
-* tts-set-character-scale <1>:           tts-speak.          (line  151)
-* tts-set-chunk-separator-syntax:        tts-speak.          (line  162)
-* tts-set-chunk-separator-syntax <1>:    tts-speak.          (line  165)
-* tts-set-language:                      tts-speak.          (line  173)
-* tts-set-language <1>:                  tts-speak.          (line  176)
-* tts-set-next-language:                 tts-speak.          (line  186)
-* tts-set-next-language <1>:             tts-speak.          (line  189)
-* tts-set-predefined-rate:               tts-speak.          (line  195)
-* tts-set-predefined-rate <1>:           tts-speak.          (line  207)
-* tts-set-preferred-language:            tts-speak.          (line  217)
-* tts-set-preferred-language <1>:        tts-speak.          (line  218)
-* tts-set-previous-language:             tts-speak.          (line  227)
-* tts-set-previous-language <1>:         tts-speak.          (line  230)
-* tts-set-punctuations:                  tts-speak.          (line  236)
-* tts-set-punctuations <1>:              tts-speak.          (line  239)
-* tts-set-punctuations-to-all:           tts-speak.          (line  250)
-* tts-set-punctuations-to-all <1>:       tts-speak.          (line  251)
-* tts-set-punctuations-to-some:          tts-speak.          (line  260)
-* tts-set-punctuations-to-some <1>:      tts-speak.          (line  261)
-* tts-set-rate:                          tts-speak.          (line  270)
-* tts-set-rate <1>:                      tts-speak.          (line  273)
-* tts-show-diagnostics:                  tts-speak.          (line  282)
-* tts-show-diagnostics <1>:              tts-speak.          (line  283)
-* tts-speak-version:                     tts-speak.          (line  293)
-* tts-speak-version <1>:                 tts-speak.          (line  296)
-* tts-stop:                              tts-speak.          (line  301)
-* tts-stop <1>:                          tts-speak.          (line  304)
-* tts-toggle-caps:                       tts-speak.          (line  315)
-* tts-toggle-caps <1>:                   tts-speak.          (line  318)
-* tts-toggle-punctuation-mode:           tts-speak.          (line  325)
-* tts-toggle-punctuation-mode <1>:       tts-speak.          (line  328)
-* tts-toggle-quiet:                      tts-speak.          (line  336)
-* tts-toggle-quiet <1>:                  tts-speak.          (line  339)
-* tts-toggle-speak-nonprinting-chars:    tts-speak.          (line  346)
-* tts-toggle-speak-nonprinting-chars <1>: tts-speak.         (line  349)
-* tts-toggle-split-caps:                 tts-speak.          (line  356)
-* tts-toggle-split-caps <1>:             tts-speak.          (line  359)
-* tts-toggle-splitting-on-white-space:   tts-speak.          (line  368)
-* tts-toggle-splitting-on-white-space <1>: tts-speak.        (line  371)
-* tts-toggle-strip-octals:               tts-speak.          (line  376)
-* tts-toggle-strip-octals <1>:           tts-speak.          (line  379)
-* tts-unicode-customize-char:            tts-speak.          (line  387)
-* tts-unicode-customize-char <1>:        tts-speak.          (line  388)
-* tts-unicode-uncustomize-char:          tts-speak.          (line  398)
-* tts-unicode-uncustomize-char <1>:      tts-speak.          (line  399)
+* tts-emergency-start:                   tts-speak.          (line   59)
+* tts-emergency-start <1>:               tts-speak.          (line   60)
+* tts-local-server:                      tts-speak.          (line   73)
+* tts-local-server <1>:                  tts-speak.          (line   76)
+* tts-notify-initialize:                 tts-speak.          (line   86)
+* tts-notify-initialize <1>:             tts-speak.          (line   89)
+* tts-notify-stop:                       tts-speak.          (line   94)
+* tts-notify-stop <1>:                   tts-speak.          (line   97)
+* tts-rate-adjust:                       tts-speak.          (line  102)
+* tts-rate-adjust <1>:                   tts-speak.          (line  107)
+* tts-recover:                           tts-speak.          (line  115)
+* tts-recover <1>:                       tts-speak.          (line  116)
+* tts-reset-punctuation-mode:            tts-speak.          (line  127)
+* tts-reset-punctuation-mode <1>:        tts-speak.          (line  128)
+* tts-reset-state:                       tts-speak.          (line  134)
+* tts-reset-state <1>:                   tts-speak.          (line  137)
+* tts-restart:                           tts-speak.          (line  142)
+* tts-restart <1>:                       tts-speak.          (line  145)
+* tts-select-server:                     tts-speak.          (line  150)
+* tts-select-server <1>:                 tts-speak.          (line  153)
+* tts-set-character-scale:               tts-speak.          (line  162)
+* tts-set-character-scale <1>:           tts-speak.          (line  165)
+* tts-set-chunk-separator-syntax:        tts-speak.          (line  176)
+* tts-set-chunk-separator-syntax <1>:    tts-speak.          (line  179)
+* tts-set-language:                      tts-speak.          (line  187)
+* tts-set-language <1>:                  tts-speak.          (line  190)
+* tts-set-next-language:                 tts-speak.          (line  200)
+* tts-set-next-language <1>:             tts-speak.          (line  203)
+* tts-set-predefined-rate:               tts-speak.          (line  209)
+* tts-set-predefined-rate <1>:           tts-speak.          (line  221)
+* tts-set-preferred-language:            tts-speak.          (line  231)
+* tts-set-preferred-language <1>:        tts-speak.          (line  232)
+* tts-set-previous-language:             tts-speak.          (line  241)
+* tts-set-previous-language <1>:         tts-speak.          (line  244)
+* tts-set-punctuations:                  tts-speak.          (line  250)
+* tts-set-punctuations <1>:              tts-speak.          (line  253)
+* tts-set-punctuations-to-all:           tts-speak.          (line  264)
+* tts-set-punctuations-to-all <1>:       tts-speak.          (line  265)
+* tts-set-punctuations-to-some:          tts-speak.          (line  274)
+* tts-set-punctuations-to-some <1>:      tts-speak.          (line  275)
+* tts-set-rate:                          tts-speak.          (line  284)
+* tts-set-rate <1>:                      tts-speak.          (line  287)
+* tts-show-diagnostics:                  tts-speak.          (line  296)
+* tts-show-diagnostics <1>:              tts-speak.          (line  297)
+* tts-speak-version:                     tts-speak.          (line  307)
+* tts-speak-version <1>:                 tts-speak.          (line  310)
+* tts-stop:                              tts-speak.          (line  315)
+* tts-stop <1>:                          tts-speak.          (line  318)
+* tts-toggle-caps:                       tts-speak.          (line  329)
+* tts-toggle-caps <1>:                   tts-speak.          (line  332)
+* tts-toggle-punctuation-mode:           tts-speak.          (line  339)
+* tts-toggle-punctuation-mode <1>:       tts-speak.          (line  342)
+* tts-toggle-quiet:                      tts-speak.          (line  350)
+* tts-toggle-quiet <1>:                  tts-speak.          (line  353)
+* tts-toggle-speak-nonprinting-chars:    tts-speak.          (line  360)
+* tts-toggle-speak-nonprinting-chars <1>: tts-speak.         (line  363)
+* tts-toggle-split-caps:                 tts-speak.          (line  370)
+* tts-toggle-split-caps <1>:             tts-speak.          (line  373)
+* tts-toggle-splitting-on-white-space:   tts-speak.          (line  382)
+* tts-toggle-splitting-on-white-space <1>: tts-speak.        (line  385)
+* tts-toggle-strip-octals:               tts-speak.          (line  390)
+* tts-toggle-strip-octals <1>:           tts-speak.          (line  393)
+* tts-unicode-customize-char:            tts-speak.          (line  401)
+* tts-unicode-customize-char <1>:        tts-speak.          (line  402)
+* tts-unicode-uncustomize-char:          tts-speak.          (line  412)
+* tts-unicode-uncustomize-char <1>:      tts-speak.          (line  413)
 * voice-lock-mode:                       emacsvox-aural-compatibility-voice.
                                                              (line   30)
 * voice-lock-mode <1>:                   emacsvox-aural-compatibility-voice.

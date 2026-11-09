@@ -14,6 +14,26 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Aural Speech Output,  Next: Presentation Profiles,  Prev: Sounds And Space,  Up: Aural Presentation
+
+8.11 Speech Output And Notifications
+====================================
+
+These settings control reading detail and delivery.  They do not replace
+the rules choosing content or the palette shaping its voice.  Start with
+rate and punctuation for reading, routing for where notifications play,
+or volumes for how loud the components are.  Each control has its own
+scope and saving action; a capital ‘S’ in one menu does not save
+everything described in this section.
+
+* Menu:
+
+* Set the reading scope, rate, and punctuation: Reading Scope And Punctuation.  Set rate or punctuation for the current buffer and understand saving.
+* Understand the main and notification streams: Notification Routing.  Choose where notifications play and distinguish selection from restart.
+* Adjust output volumes: Output Volumes.  Adjust speech and cue levels without confusing volume with routing.
+* Adjust an integration's speech settings: Integration Speech Settings.  Find focused controls and their integration-specific saving boundaries.
+
+
 File: emacsvox.info,  Node: Reading Scope And Punctuation,  Next: Notification Routing,  Up: Aural Speech Output
 
 8.11.1 Set the reading scope, rate, and punctuation

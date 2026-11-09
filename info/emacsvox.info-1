@@ -1191,11 +1191,14 @@ The ready message is heard, but speech later stops
      reuses retained startup settings and keeps notification speech
      running.  It can recover despite a broken saved configuration,
      provided native retirement is confirmed and retained records remain
-     usable.  Use ‘M-x tts-restart <RET>’ to capture corrected settings.
-     See *note Stop or restart speech: (emacsvox)Miscellaneous. for
-     their scope.  Logs are below ‘$XDG_STATE_HOME/emacsvox/omnivox’,
-     defaulting to ‘~/.local/state/emacsvox/omnivox’.  Spoken text is
-     omitted unless explicit text logging is enabled.
+     usable.  If management storage itself is damaged or unwritable, a
+     supporting local build offers ‘M-x tts-emergency-start <RET>’ for
+     minimal eSpeak speech after verified native cleanup.  Use ‘M-x
+     tts-restart <RET>’ to capture corrected settings.  See *note Stop
+     or restart speech: (emacsvox)Miscellaneous. for their scope.  Logs
+     are below ‘$XDG_STATE_HOME/emacsvox/omnivox’, defaulting to
+     ‘~/.local/state/emacsvox/omnivox’.  Spoken text is omitted unless
+     explicit text logging is enabled.
 The isolated launcher works, but a customised Emacs start does not
      Remove or comment out the Emacsvox environment and ‘load-file’
      forms from your init file.  This rollback leaves the checkout and
@@ -2911,6 +2914,10 @@ missing integration.
 ‘M-x tts-recover’
      Recover main speech from its retained startup; keep notification
      speech running with locally owned Omnivox.
+‘M-x tts-emergency-start’
+     Start minimal local eSpeak speech after confirmed native
+     retirement, ignoring saved Omnivox preferences and management
+     records.
 ‘C-e d V’
      Speak adapter and version information.
 
@@ -2923,6 +2930,18 @@ an existing native retirement record if the owner's final reply was
 lost.  It uses the original host connection settings; missing or damaged
 evidence remains an error rather than permission to start over a
 possibly surviving worker.
+
+   If damaged records or failed storage writes prevent ordinary
+recovery, use ‘M-x tts-emergency-start <RET>’ with a supporting local
+Omnivox build.  It uses bundled eSpeak, built-in host settings and the
+default output device, while keeping notification speech running.  It
+leaves saved settings and asset claims intact.  With ‘C-u’, choose
+another output backend; ‘pulse’ is Linux-only and ‘null’ is a silent
+diagnostic backend.  Subsequent ‘tts-recover’ calls keep minimal mode.
+After repairing saved settings, use ‘tts-restart’ to return to ordinary
+speech.  Emergency startup still requires verified cleanup of old
+speech; it cannot bypass lost native ownership or repair an unusable
+output.
 
    For repeat cleanup and text splitting, use the *note reading filter
 menus: reading-filters.  Server and language selection are covered in
@@ -5940,23 +5959,3 @@ the library and audio copied into packs remain intact.
 library paths outside the configured workstation sound root cannot be
 previewed through the remote resource route.  Use local playback for
 those recordings; remote resource installation remains a separate task.
-
-
-File: emacsvox.info,  Node: Aural Speech Output,  Next: Presentation Profiles,  Prev: Sounds And Space,  Up: Aural Presentation
-
-8.11 Speech Output And Notifications
-====================================
-
-These settings control reading detail and delivery.  They do not replace
-the rules choosing content or the palette shaping its voice.  Start with
-rate and punctuation for reading, routing for where notifications play,
-or volumes for how loud the components are.  Each control has its own
-scope and saving action; a capital ‘S’ in one menu does not save
-everything described in this section.
-
-* Menu:
-
-* Set the reading scope, rate, and punctuation: Reading Scope And Punctuation.  Set rate or punctuation for the current buffer and understand saving.
-* Understand the main and notification streams: Notification Routing.  Choose where notifications play and distinguish selection from restart.
-* Adjust output volumes: Output Volumes.  Adjust speech and cue levels without confusing volume with routing.
-* Adjust an integration's speech settings: Integration Speech Settings.  Find focused controls and their integration-specific saving boundaries.

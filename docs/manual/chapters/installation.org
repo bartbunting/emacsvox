@@ -636,7 +636,9 @@ that failed rather than adding configuration at several layers at once.
   log. With locally owned Omnivox, ~M-x tts-recover RET~ reuses retained
   startup settings and keeps notification speech running. It can recover
   despite a broken saved configuration, provided native retirement is confirmed
-  and retained records remain usable. Use ~M-x tts-restart RET~ to capture
+  and retained records remain usable. If management storage itself is damaged
+  or unwritable, a supporting local build offers ~M-x tts-emergency-start RET~
+  for minimal eSpeak speech after verified native cleanup. Use ~M-x tts-restart RET~ to capture
   corrected settings. See [[info:emacsvox#Miscellaneous][Stop or restart speech]] for their scope.
   Logs are below =$XDG_STATE_HOME/emacsvox/omnivox=, defaulting to
   =~/.local/state/emacsvox/omnivox=. Spoken text is omitted unless explicit

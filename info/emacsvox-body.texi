@@ -1054,7 +1054,9 @@ If Emacs reports that a speech server exited@comma{} inspect the Omnivox session
 log. With locally owned Omnivox@comma{} @kbd{M-x tts-recover @key{RET}} reuses retained
 startup settings and keeps notification speech running. It can recover
 despite a broken saved configuration@comma{} provided native retirement is confirmed
-and retained records remain usable. Use @kbd{M-x tts-restart @key{RET}} to capture
+and retained records remain usable. If management storage itself is damaged
+or unwritable@comma{} a supporting local build offers @kbd{M-x tts-emergency-start @key{RET}}
+for minimal eSpeak speech after verified native cleanup. Use @kbd{M-x tts-restart @key{RET}} to capture
 corrected settings. See @ref{Miscellaneous,Stop or restart speech,,emacsvox,} for their scope.
 Logs are below @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
 @code{~/.local/state/emacsvox/omnivox}. Spoken text is omitted unless explicit
@@ -2719,6 +2721,8 @@ Toggle current-buffer quiet mode; @kbd{C-u} toggles it globally.
 Restart the selected speech server using newly saved settings.
 @item M-x tts-recover
 Recover main speech from its retained startup; keep notification speech running with locally owned Omnivox.
+@item M-x tts-emergency-start
+Start minimal local eSpeak speech after confirmed native retirement@comma{} ignoring saved Omnivox preferences and management records.
 @item C-e d V
 Speak adapter and version information.
 @end table
@@ -2731,6 +2735,16 @@ With host support@comma{} recovery can verify an existing native retirement reco
 the owner's final reply was lost. It uses the original host connection settings;
 missing or damaged evidence remains an error rather than permission to start
 over a possibly surviving worker.
+
+If damaged records or failed storage writes prevent ordinary recovery@comma{} use
+@kbd{M-x tts-emergency-start @key{RET}} with a supporting local Omnivox build. It uses
+bundled eSpeak@comma{} built-in host settings and the default output device@comma{} while
+keeping notification speech running. It leaves saved settings and asset claims
+intact. With @kbd{C-u}@comma{} choose another output backend; @kbd{pulse} is Linux-only and
+@kbd{null} is a silent diagnostic backend. Subsequent @kbd{tts-recover} calls keep
+minimal mode. After repairing saved settings@comma{} use @kbd{tts-restart} to return to
+ordinary speech. Emergency startup still requires verified cleanup of old
+speech; it cannot bypass lost native ownership or repair an unusable output.
 
 For repeat cleanup and text splitting@comma{} use the @ref{reading-filters, , reading filter menus}. Server
 and language selection are covered in @ref{Speech Backends,Speech Backends,,emacsvox,} and live Help. For
