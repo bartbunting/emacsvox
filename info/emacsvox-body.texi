@@ -8672,8 +8672,10 @@ question. Automatic question feedback follows the session's speech level;
 @code{quiet} suppresses it. Explicit reading and actions still speak.
 
 Use @kbd{@key{TAB}} and @kbd{S-@key{TAB}} to move between controls in the shell or viewport.
-Emacsvox reads the field name@comma{} whether it is required@comma{} and its current value or
-selection state. Press @kbd{@key{RET}} to select an option@comma{} toggle a checkbox@comma{} or edit a
+Emacsvox reads the field name and whether it is required when entering a field.
+Moving between choices in that field reads the choice and its state without
+repeating the question. Returning from outside the field announces its heading
+again. Press @kbd{@key{RET}} to select an option@comma{} toggle a checkbox@comma{} or edit a
 text or number field. Changes are confirmed after they take effect. When an
 option has a preview@comma{} @kbd{?} opens or closes it; opening it reads its contents.
 The preview key applies only to controls that offer a preview.
@@ -8737,7 +8739,8 @@ speech level.
 
 @kbd{T} opens the shared Tables settings page described in
 @ref{Reading Markdown And Org Tables, , Reading Markdown and Org tables}. It has separate buffer Apply@comma{} common Save
-and mode Save actions.
+and mode Save actions. @kbd{Y} opens Trees for entry@comma{} exit and level feedback@comma{}
+described under @ref{agent-shell-text-trees, , Read and customise text trees}.
 
 The @kbd{a}@comma{} @kbd{n} and @kbd{k} controls set automatic-content@comma{} line-navigation and
 block-navigation character limits. @kbd{@key{RET}} accepts an exact positive integer or
@@ -8833,7 +8836,7 @@ presenting a streaming partial or failed answer.
 @section Navigate transcript blocks
 
 Agent Shell responses contain semantic prompt@comma{} response@comma{} thought@comma{} activity@comma{}
-tool@comma{} plan@comma{} permission@comma{} error@comma{} source-block@comma{} and table locations.  Emacsvox
+tool@comma{} plan@comma{} permission@comma{} error@comma{} source-block@comma{} table and recognised tree locations.  Emacsvox
 navigation reports the block type@comma{} visibility@comma{} and a bounded body preview.
 
 Up and Down play the ellipses cue when you enter a collapsed heading@comma{} such as
@@ -8921,6 +8924,74 @@ through Agent Shell's public copy operation.
 The source commands are explicit operations and do not use the automatic
 content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
+
+@subsection Read and customise text trees
+
+@anchor{agent-shell-text-trees}
+
+@cindex text trees, Agent Shell
+@cindex tree feedback
+
+Navigation diagrams can use drawing characters to show parents and children.
+Emacsvox recognises complete trees in unlabelled@comma{} @code{text} and @code{plaintext}
+fenced blocks. Each tree needs a root and at least two branch lines with
+consistent indentation. Separate prose paragraphs do not prevent recognition;
+unfinished fences@comma{} programming-language blocks and ambiguous layouts remain
+literal. Recognition happens when the block is rendered@comma{} and navigation uses
+its stored structure.
+
+Ordinary line reading omits recognised drawing prefixes and retains item
+labels and annotations. By default@comma{} entering says “Tree”@comma{} changing depth says
+“Level” and the new number@comma{} and returning to the root says “Root”. Siblings
+do not repeat the level. Leaving says “End of tree”@comma{} including when the next
+line is blank. Independent reading begins with entry feedback again. Copying
+and character inspection retain the original drawing characters.
+
+Use @kbd{C-c ]} or @kbd{C-c [} and choose @emph{Tree} to move between trees and hear the
+destination root. @kbd{]} and @kbd{[} repeat these jumps and infer tree movement when
+point is within a recognised tree. You can also invoke
+@kbd{M-x emacsvox-agent-shell-next-tree} and
+@kbd{M-x emacsvox-agent-shell-previous-tree}. Ordinary arrows read nodes within a
+tree; there are no separate parent or sibling movement commands.
+
+Open @kbd{C-e S Y} from Agent Shell@comma{} or @kbd{C-e H s Y} from Speech settings@comma{} for the
+shared Trees page. @kbd{e} chooses entry feedback and @kbd{x} chooses exit feedback:
+speech@comma{} an earcon@comma{} both@comma{} a fixed tone@comma{} no indication@comma{} or existing rules.
+@kbd{l} opens level feedback@comma{} where @kbd{s} toggles spoken levels@comma{} @kbd{v} chooses their
+voice@comma{} @kbd{t} toggles a tone whose pitch follows depth@comma{} and @kbd{e} chooses an earcon.
+You can combine these level components. They affect the indication rather
+than the item label. Earcons require auditory icons to be enabled. These
+settings currently apply to recognised Agent Shell text trees@comma{} not ordinary
+outlines or file-tree packages.
+
+Choices remain pending until applied or saved. Press @kbd{@key{SPC}} in Trees or Level
+changes to open a sample tree with the pending feedback. Up and Down read
+entry@comma{} deeper levels@comma{} siblings@comma{} shallower levels and exit. @kbd{@key{SPC}} or @kbd{@key{RET}}
+repeats the current line; @kbd{s} stops speech; @kbd{q} returns to the menu and keeps
+the draft. The sample leaves the source buffer and live preferences intact.
+
+For the depth tone@comma{} press capital @kbd{T} in Level changes. The
+@ref{spelling-tone-editor, , shared tone editor} offers root pitch@comma{} duration@comma{} volume@comma{} waveform@comma{} sweep and
+envelope controls. @kbd{j} sets the rise in semitones per level; zero keeps the
+pitch fixed. @kbd{m} sets the maximum pitch@comma{} which must be at least the root
+pitch. The initial mapping starts at 220 Hz@comma{} rises three semitones per level
+and stops at 1760 Hz; the initial duration is 50 milliseconds. @kbd{@key{RET}} enters an
+exact value and Shift-left/right adjusts the selected number. Sound presets
+retain the rise and maximum pitch.
+
+Inside the tone editor@comma{} @kbd{@key{SPC}} plays the root tone alone; capital @kbd{P} opens the
+browsable sample with this draft tone privately enabled. @kbd{q} returns from the
+sample. Use @kbd{A} or @kbd{W} in the editor to keep the tone and enable it in the
+pending Trees draft@comma{} then return to Trees to apply or save. Leaving the editor
+without keeping discards its edits.
+
+In Trees@comma{} @kbd{A} applies pending choices only to the captured buffer; @kbd{E} applies
+them across this Emacs session; @kbd{W} saves personal rules for future sessions.
+Only changed indications are written. Buffer and session overrides can still
+override saved settings@comma{} including a buffer trial followed by Save. @emph{Use
+existing rules} removes this page's override at the chosen scope and leaves
+other rules intact. @kbd{D} discards pending choices; closing the page also discards
+unapplied choices. Already applied or saved preferences remain in effect.
 
 @subsection Review proposed changes
 

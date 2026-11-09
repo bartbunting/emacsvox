@@ -1411,6 +1411,8 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
                      emacsvox-settings-reading
                      emacsvox-table-settings emacsvox-table-settings--choices
+                     emacsvox-tree-settings emacsvox-tree-settings--choice-menu
+                     emacsvox-tree-settings--level-menu
                      emacsvox-settings-integrations--comint
                      emacsvox-settings-integrations--eat
                          emacsvox-settings-integrations--eat-choice
@@ -1420,7 +1422,12 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                          emacsvox-settings-integrations--eww
                          emacsvox-settings-integrations--notmuch)))
     (keymap-set map "RET" #'transient-push-button)
-    (keymap-set map "<return>" #'transient-push-button))
+    (keymap-set map "<return>" #'transient-push-button)
+    (when (memq (oref transient--prefix command)
+                '(emacsvox-tree-settings emacsvox-tree-settings--choice-menu
+                     emacsvox-tree-settings--level-menu))
+      (keymap-set map "M-RET" #'transient-push-button)
+      (keymap-set map "M-<return>" #'transient-push-button)))
   map)
 
 (advice-add 'transient--make-transient-map :filter-return

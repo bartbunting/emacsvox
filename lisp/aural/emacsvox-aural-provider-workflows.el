@@ -37,7 +37,32 @@
 (require 'emacsvox-aural-schemes)
 
 (defconst emacsvox-aural-workflow-semantics
-  '((message
+  '((tree
+     :kind role :summary "A recognized text tree" :owner core
+     :occasions (navigation continuous inspection) :phases (before content after))
+    (tree-indicator
+     :kind role :summary "A tree boundary or depth indication, separate from its item label"
+     :owner core :occasions (navigation continuous inspection)
+     :phases (before content after))
+    (tree-entered
+     :kind event :summary "Reading entered a recognized text tree"
+     :owner core :occasions (navigation continuous inspection)
+     :phases (before content after))
+    (tree-exited
+     :kind event :summary "Reading left a recognized text tree"
+     :owner core :occasions (navigation continuous inspection)
+     :phases (before content after))
+    (tree-level-changed
+     :kind event :summary "Reading moved to a different tree depth"
+     :owner core :occasions (navigation continuous inspection)
+     :phases (before content after))
+    (tree-depth
+     :kind attribute :summary "Tree depth, with zero for the root"
+     :owner core :value-type integer)
+    (tree-tone-pitch
+     :kind attribute :summary "Depth tone pitch in Hz, rising with tree depth"
+     :owner core :value-type number :roles (tree-indicator))
+    (message
      :kind role
      :summary "A mail or communication message"
      :owner core
@@ -881,7 +906,7 @@
      :value-type symbol
      :allowed-values
      (agent-response user-prompt thought tool-call activity-group plan
-                     permission error table source-block heading link other))
+                     permission error table tree source-block heading link other))
     (agent-tool-status
      :kind attribute
      :summary "The current lifecycle status of an Agent Shell tool call"

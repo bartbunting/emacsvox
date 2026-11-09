@@ -925,6 +925,8 @@ Return non-nil when point represents one of those semantic items."
   "Discover, enter, traverse, and leave rendered tables semantically."
   (let ((interactive-p (ems-interactive-p 'agent-shell-next-item))
         (origin (point))
+        (emacsvox-agent-shell--question-navigation-origin
+         (get-text-property (point) 'agent-shell-elicitation-control))
         (modification-tick (buffer-chars-modified-tick))
         (started-in-table-p
          (get-text-property (point) 'agent-shell-markdown-table-source))
@@ -960,6 +962,8 @@ Return non-nil when point represents one of those semantic items."
   "Discover, enter, traverse, and leave rendered tables semantically."
   (let ((interactive-p (ems-interactive-p 'agent-shell-previous-item))
         (origin (point))
+        (emacsvox-agent-shell--question-navigation-origin
+         (get-text-property (point) 'agent-shell-elicitation-control))
         (modification-tick (buffer-chars-modified-tick))
         (started-in-table-p
          (get-text-property (point) 'agent-shell-markdown-table-source))
@@ -1109,6 +1113,8 @@ Return non-nil when point represents one of those semantic items."
   (let ((interactive-p
          (ems-interactive-p 'agent-shell-viewport-next-item))
         (origin (point))
+        (emacsvox-agent-shell--question-navigation-origin
+         (get-text-property (point) 'agent-shell-elicitation-control))
         (started-in-table-p
          (get-text-property (point) 'agent-shell-markdown-table-source))
         handled-p)
@@ -1133,6 +1139,8 @@ Return non-nil when point represents one of those semantic items."
   (let ((interactive-p
          (ems-interactive-p 'agent-shell-viewport-previous-item))
         (origin (point))
+        (emacsvox-agent-shell--question-navigation-origin
+         (get-text-property (point) 'agent-shell-elicitation-control))
         (started-in-table-p
          (get-text-property (point) 'agent-shell-markdown-table-source))
         handled-p)
@@ -1205,6 +1213,7 @@ Return non-nil when point represents one of those semantic items."
 (defun emacsvox-agent-shell--buffer-setup ()
   "Activate speech, event support, and centralized cleanup in this shell."
   (emacsvox-agent-shell--mark-existing-diff-headings)
+  (emacsvox-agent-shell--mark-text-trees)
   (emacsvox-agent-shell--activate-buffer-values)
   (unless emacsvox-agent-shell--config-option-cache
     (emacsvox-agent-shell--observe-config-options
@@ -1224,7 +1233,11 @@ Return non-nil when point represents one of those semantic items."
   "Cancel speech work and remove all support state from this shell buffer."
   (with-silent-modifications
     (remove-text-properties (point-min) (point-max)
-                            '(emacsvox-agent-shell-diff-heading nil)))
+                            '(emacsvox-agent-shell-diff-heading nil
+                              emacsvox-text-tree-prefix nil
+                              emacsvox-text-tree-depth nil
+                              emacsvox-text-tree-id nil)))
+  (setq emacsvox-agent-shell--tree-speech-context nil)
   (emacsvox-agent-shell--interaction-cleanup)
   (emacsvox-agent-shell--response-section-cleanup)
   (emacsvox-agent-shell--cancel-pending-speech)
@@ -1243,16 +1256,17 @@ Return non-nil when point represents one of those semantic items."
 ;;;  Enable/Disable support:
 
 (defconst emacsvox-agent-shell--advice-list
-  '((agent-shell--diff-box :filter-return emacsvox-agent-shell--mark-diff-heading)
+  '((agent-shell-markdown--style-source-blocks :after emacsvox-agent-shell--mark-text-trees)
+    (agent-shell--diff-box :filter-return emacsvox-agent-shell--mark-diff-heading)
     (agent-shell--typing-at-prompt-p :filter-return emacsvox-agent-shell--input-typing-p)
     (agent-shell-submit :around emacsvox-agent-shell--input-submit-around)
     (agent-shell-submit-override :around emacsvox-agent-shell--input-submit-override-around)
     (agent-shell-elicitation-act :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-toggle-preview :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-interrupt :around emacsvox-agent-shell--question-action-around)
-    (agent-shell-elicitation-next-field :filter-return emacsvox-agent-shell--question-navigation-after)
-    (agent-shell-elicitation-previous-field :filter-return emacsvox-agent-shell--question-navigation-after)
-    (agent-shell-elicitation-jump-to-latest-form :filter-return emacsvox-agent-shell--question-navigation-after)
+    (agent-shell-elicitation-next-field :around emacsvox-agent-shell--question-navigation-around)
+    (agent-shell-elicitation-previous-field :around emacsvox-agent-shell--question-navigation-around)
+    (agent-shell-elicitation-jump-to-latest-form :around emacsvox-agent-shell--question-navigation-around)
     (agent-shell-yank-dwim :around emacsvox-agent-shell--yank-dwim-around)
     (agent-shell--on-notification :around
      emacsvox-agent-shell--on-notification-around)

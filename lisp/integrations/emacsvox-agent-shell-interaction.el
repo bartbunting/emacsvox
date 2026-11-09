@@ -85,6 +85,9 @@
 (defvar emacsvox-agent-shell--question-command-active nil
   "Non-nil while an interactive question action owns its feedback.")
 
+(defvar emacsvox-agent-shell--question-navigation-origin nil
+  "Question control where the current explicit navigation began.")
+
 (defun emacsvox-agent-shell--question-at-point ()
   "Return the question control, form and field at point, or nil.
 Resolve form values in the owning shell, including from a viewport."
@@ -106,6 +109,12 @@ Resolve form values in the owning shell, including from a viewport."
          (option (seq-find (lambda (option) (equal value (map-elt option :value)))
                            (map-elt field :options)))
          (label (or (map-elt field :title) key "Question"))
+         (same-field (and key
+                          (equal key (map-elt
+                                      emacsvox-agent-shell--question-navigation-origin :key))
+                          (equal (map-elt control :id)
+                                 (map-elt
+                                  emacsvox-agent-shell--question-navigation-origin :id))))
          (requirement (if (map-elt field :required) 'required 'optional))
          (preview (map-elt option :preview))
          (opened (and preview (agent-shell-elicitation--preview-open-p form key value)))
@@ -124,8 +133,8 @@ Resolve form values in the owning shell, including from a viewport."
                               (or (map-elt option :title) value label)
                               (if opened "expanded" "collapsed")
                               (if opened "close" "open")))
-            (_ (format "%s, %s. %s. %s%s"
-                       label requirement
+            (_ (format "%s%s. %s%s"
+                       (if same-field "" (format "%s, %s. " label requirement))
                        (pcase action
                          ((or 'select 'toggle)
                           (format "%s, %s" (or (map-elt option :title) value label) selection))
@@ -159,16 +168,22 @@ Resolve form values in the owning shell, including from a viewport."
        (car presentation) facts (or occasion 'navigation) 'item))
     t))
 
-(defun emacsvox-agent-shell--question-navigation-after (result &rest _)
-  "Speak successful explicit question navigation RESULT once."
-  (when (and result
-             (or (ems-interactive-p 'agent-shell-elicitation-next-field)
-                 (ems-interactive-p 'agent-shell-elicitation-previous-field)
-                 (ems-interactive-p 'agent-shell-elicitation-jump-to-latest-form)))
-    (unless (emacsvox-agent-shell--question-feedback)
-      (emacsvox-agent-shell--submit-text-feedback
-       (ems--this-line) '(:role agent-question) 'navigation 'item)))
-  result)
+(defun emacsvox-agent-shell--question-navigation-around (original &rest arguments)
+  "Run ORIGINAL with ARGUMENTS and speak the destination control once.
+Omit the field heading when moving between controls in the same question."
+  (let* ((interactive-p
+          (or (ems-interactive-p 'agent-shell-elicitation-next-field)
+              (ems-interactive-p 'agent-shell-elicitation-previous-field)
+              (ems-interactive-p 'agent-shell-elicitation-jump-to-latest-form)))
+         (emacsvox-agent-shell--question-navigation-origin
+          (unless (ems-interactive-p 'agent-shell-elicitation-jump-to-latest-form)
+            (get-text-property (point) 'agent-shell-elicitation-control)))
+         (result (apply original arguments)))
+    (when (and result interactive-p)
+      (unless (emacsvox-agent-shell--question-feedback)
+        (emacsvox-agent-shell--submit-text-feedback
+         (ems--this-line) '(:role agent-question) 'navigation 'item)))
+    result))
 
 (defun emacsvox-agent-shell--question-action-around (original &rest arguments)
   "Run ORIGINAL with ARGUMENTS and speak its confirmed question change."

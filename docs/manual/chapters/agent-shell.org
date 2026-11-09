@@ -194,8 +194,10 @@ question. Automatic question feedback follows the session's speech level;
 =quiet= suppresses it. Explicit reading and actions still speak.
 
 Use ~TAB~ and ~S-TAB~ to move between controls in the shell or viewport.
-Emacsvox reads the field name, whether it is required, and its current value or
-selection state. Press ~RET~ to select an option, toggle a checkbox, or edit a
+Emacsvox reads the field name and whether it is required when entering a field.
+Moving between choices in that field reads the choice and its state without
+repeating the question. Returning from outside the field announces its heading
+again. Press ~RET~ to select an option, toggle a checkbox, or edit a
 text or number field. Changes are confirmed after they take effect. When an
 option has a preview, ~?~ opens or closes it; opening it reads its contents.
 The preview key applies only to controls that offer a preview.
@@ -270,7 +272,8 @@ speech level.
 
 ~T~ opens the shared Tables settings page described in
 [[*Reading Markdown and Org tables][Reading Markdown and Org tables]]. It has separate buffer Apply, common Save
-and mode Save actions.
+and mode Save actions. ~Y~ opens Trees for entry, exit and level feedback,
+described under [[agent-shell-text-trees][Read and customise text trees]].
 
 The ~a~, ~n~ and ~k~ controls set automatic-content, line-navigation and
 block-navigation character limits. ~RET~ accepts an exact positive integer or
@@ -382,7 +385,7 @@ presenting a streaming partial or failed answer.
 :END:
 
 Agent Shell responses contain semantic prompt, response, thought, activity,
-tool, plan, permission, error, source-block, and table locations.  Emacsvox
+tool, plan, permission, error, source-block, table and recognised tree locations.  Emacsvox
 navigation reports the block type, visibility, and a bounded body preview.
 
 Up and Down play the ellipses cue when you enter a collapsed heading, such as
@@ -484,6 +487,77 @@ reach a source block, then:
 The source commands are explicit operations and do not use the automatic
 content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
+
+*** Read and customise text trees
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<agent-shell-text-trees>>
+
+#+cindex: text trees, Agent Shell
+#+cindex: tree feedback
+
+Navigation diagrams can use drawing characters to show parents and children.
+Emacsvox recognises complete trees in unlabelled, =text= and =plaintext=
+fenced blocks. Each tree needs a root and at least two branch lines with
+consistent indentation. Separate prose paragraphs do not prevent recognition;
+unfinished fences, programming-language blocks and ambiguous layouts remain
+literal. Recognition happens when the block is rendered, and navigation uses
+its stored structure.
+
+Ordinary line reading omits recognised drawing prefixes and retains item
+labels and annotations. By default, entering says “Tree”, changing depth says
+“Level” and the new number, and returning to the root says “Root”. Siblings
+do not repeat the level. Leaving says “End of tree”, including when the next
+line is blank. Independent reading begins with entry feedback again. Copying
+and character inspection retain the original drawing characters.
+
+Use ~C-c ]~ or ~C-c [~ and choose /Tree/ to move between trees and hear the
+destination root. ~]~ and ~[~ repeat these jumps and infer tree movement when
+point is within a recognised tree. You can also invoke
+~M-x emacsvox-agent-shell-next-tree~ and
+~M-x emacsvox-agent-shell-previous-tree~. Ordinary arrows read nodes within a
+tree; there are no separate parent or sibling movement commands.
+
+Open ~C-e S Y~ from Agent Shell, or ~C-e H s Y~ from Speech settings, for the
+shared Trees page. ~e~ chooses entry feedback and ~x~ chooses exit feedback:
+speech, an earcon, both, a fixed tone, no indication, or existing rules.
+~l~ opens level feedback, where ~s~ toggles spoken levels, ~v~ chooses their
+voice, ~t~ toggles a tone whose pitch follows depth, and ~e~ chooses an earcon.
+You can combine these level components. They affect the indication rather
+than the item label. Earcons require auditory icons to be enabled. These
+settings currently apply to recognised Agent Shell text trees, not ordinary
+outlines or file-tree packages.
+
+Choices remain pending until applied or saved. Press ~SPC~ in Trees or Level
+changes to open a sample tree with the pending feedback. Up and Down read
+entry, deeper levels, siblings, shallower levels and exit. ~SPC~ or ~RET~
+repeats the current line; ~s~ stops speech; ~q~ returns to the menu and keeps
+the draft. The sample leaves the source buffer and live preferences intact.
+
+For the depth tone, press capital ~T~ in Level changes. The
+[[spelling-tone-editor][shared tone editor]] offers root pitch, duration, volume, waveform, sweep and
+envelope controls. ~j~ sets the rise in semitones per level; zero keeps the
+pitch fixed. ~m~ sets the maximum pitch, which must be at least the root
+pitch. The initial mapping starts at 220 Hz, rises three semitones per level
+and stops at 1760 Hz; the initial duration is 50 milliseconds. ~RET~ enters an
+exact value and Shift-left/right adjusts the selected number. Sound presets
+retain the rise and maximum pitch.
+
+Inside the tone editor, ~SPC~ plays the root tone alone; capital ~P~ opens the
+browsable sample with this draft tone privately enabled. ~q~ returns from the
+sample. Use ~A~ or ~W~ in the editor to keep the tone and enable it in the
+pending Trees draft, then return to Trees to apply or save. Leaving the editor
+without keeping discards its edits.
+
+In Trees, ~A~ applies pending choices only to the captured buffer; ~E~ applies
+them across this Emacs session; ~W~ saves personal rules for future sessions.
+Only changed indications are written. Buffer and session overrides can still
+override saved settings, including a buffer trial followed by Save. /Use
+existing rules/ removes this page's override at the chosen scope and leaves
+other rules intact. ~D~ discards pending choices; closing the page also discards
+unapplied choices. Already applied or saved preferences remain in effect.
 
 *** Review proposed changes
 :PROPERTIES:

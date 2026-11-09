@@ -644,14 +644,23 @@ icon's text properties so its status voice remains available to Emacsvox."
                  (- (length text) limit)))
       text)))
 
+(defvar-local emacsvox-agent-shell--tree-speech-context nil
+  "Last tree identity and depth spoken during line navigation.")
+
 (defun emacsvox-agent-shell--prepare-speech-text (text)
   "Prepare TEXT for speech in agent-shell, leaving other modes unchanged."
   (if (and (stringp text)
            (derived-mode-p 'agent-shell-mode
                            'agent-shell-viewport-view-mode
                            'agent-shell-viewport-edit-mode))
-      (let ((text
-             (emacsvox-agent-shell--limit-line-navigation-speech text)))
+      (let* ((text (emacsvox-agent-shell--limit-line-navigation-speech text))
+             (navigation (or emacsvox-agent-shell--line-navigation-speech-p
+                             emacsvox-agent-shell--tree-navigation-speech-p))
+             (tree (emacsvox-text-tree--describe
+                    text (and navigation emacsvox-agent-shell--tree-speech-context))))
+        (when navigation
+          (setq emacsvox-agent-shell--tree-speech-context (cdr tree)))
+        (setq text (car tree))
         (emacsvox-agent-shell--add-chat-label-for-speech
          (emacsvox-agent-shell--replace-status-icons-for-speech
           (emacsvox-agent-shell--remove-visual-chrome-for-speech
@@ -980,18 +989,41 @@ a positive argument to the advised command."
 
 (defun emacsvox-agent-shell--call-with-vertical-block-entry
     (original-function arguments)
-  "Call ORIGINAL-FUNCTION with ARGUMENTS and authoritative entry facts."
-  (if-let* ((facts (emacsvox-agent-shell--vertical-block-entry-facts))
-            (module 'agent-shell)
-            (occasion 'navigation)
-            (context
-             (emacsvox-aural-capture-context module occasion)))
-      (let ((emacsvox-aural-submission-facts facts)
-            (emacsvox-aural-submission-context context)
-            (emacsvox-aural-submission-module module)
-            (emacsvox-aural-submission-occasion occasion))
-        (apply original-function arguments))
-    (apply original-function arguments)))
+  "Call ORIGINAL-FUNCTION with ARGUMENTS and authoritative entry facts.
+Include a tree exit in blank-line transactions, which have no source text
+and therefore do not pass through the text transformation hook."
+  (let ((submit-actions (symbol-function 'emacsvox-aural-submit-actions)))
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest options)
+                 (if (and emacsvox-agent-shell--tree-speech-context
+                          (not (get-text-property (point) 'emacsvox-text-tree-id)))
+                     (progn
+                       (setq emacsvox-agent-shell--tree-speech-context nil)
+                       (apply #'emacsvox-aural-submit
+                              (emacsvox-text-tree--indicator
+                               'tree-exited "End of tree. ")
+                              options))
+                   (apply submit-actions options)))))
+      (prog1
+          (if-let* ((facts (emacsvox-agent-shell--vertical-block-entry-facts))
+                    (module 'agent-shell)
+                    (occasion 'navigation)
+                    (context (emacsvox-aural-capture-context module occasion)))
+              (let ((emacsvox-aural-submission-facts facts)
+                    (emacsvox-aural-submission-context context)
+                    (emacsvox-aural-submission-module module)
+                    (emacsvox-aural-submission-occasion occasion))
+                (apply original-function arguments))
+            (apply original-function arguments))
+        ;; Blank feedback can be disabled altogether.  A boundary still
+        ;; needs its own transaction when no blank-line action was submitted.
+        (when (and (not tts-quiet)
+                   emacsvox-agent-shell--tree-speech-context
+                   (not (get-text-property (point) 'emacsvox-text-tree-id)))
+          (setq emacsvox-agent-shell--tree-speech-context nil)
+          (emacsvox-aural-submit
+           (emacsvox-text-tree--indicator 'tree-exited "End of tree. ")
+           :module 'agent-shell :occasion 'navigation))))))
 
 (defun emacsvox-agent-shell--restore-message-filter ()
   "Restore the message filter saved before navigation feedback."

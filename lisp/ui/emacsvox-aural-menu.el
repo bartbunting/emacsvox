@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
 (autoload 'emacsvox-table-settings "emacsvox-table-settings" nil t)
+(autoload 'emacsvox-tree-settings "emacsvox-tree-settings" nil t)
 (autoload 'emacsvox-muggles-browse "emacsvox-muggles-ui" nil t)
 (autoload 'emacsvox-spelling "emacsvox-spelling" nil t)
 (autoload 'emacsvox-settings-changes "emacsvox-settings-changes" nil t)
@@ -79,6 +80,8 @@
                        '(emacsvox-reading-settings emacsvox-reading-settings--row
                          emacsvox-reading-settings--choices
                          emacsvox-table-settings emacsvox-table-settings--choices
+                         emacsvox-tree-settings emacsvox-tree-settings--choice-menu
+                     emacsvox-tree-settings--level-menu
                          emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-library-preview
                          emacsvox-aural-menu-punctuation
@@ -563,6 +566,7 @@ When opened from the Emacsvox menu, share its selected scope."
    ("i" (lambda () (emacsvox-aural-menu--indentation-label))
     emacsvox-aural-menu--indentation :transient transient--do-stack)
    ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)
+   ("Y" "Trees: entry, exit and level feedback" emacsvox-tree-settings :transient transient--do-stack)
    ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)
    ("A" "Advanced reading defaults" emacsvox-settings-reading :transient transient--do-stack)
    ("R" "Reading controls and filters" emacsvox-settings-reading-controls :transient transient--do-stack)

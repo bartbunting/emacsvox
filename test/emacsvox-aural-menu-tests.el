@@ -573,7 +573,7 @@
           (unwind-protect
               (progn
                 (execute-kbd-macro (kbd "C-u <f8> s <down>"))
-                (dolist (key '("r" "p" "c" "f" "i" "T" "t" "g"))
+                (dolist (key '("r" "p" "c" "f" "i" "T" "Y" "t" "A" "R" "g"))
                   (with-selected-window transient--window
                     (should (equal (oref (button-get (button-at (point)) 'button-data) key)
                                    key)))

@@ -20,6 +20,97 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Text tree speech and settings, 2026-11-09
+
+Implemented: the shared =emacsvox-text-tree= core recognises complete ASCII and
+Unicode tree paragraphs, retains node identity and depth, and removes drawing
+prefixes only from speech copies. It installs no hooks or speech services.
+Agent Shell supplies completed unlabelled, =text= and =plaintext= source blocks.
+Open fences, programming-language blocks and ambiguous paragraphs remain
+literal. Labels, annotations, source copying and character review keep their
+contents. Viewport copies retain the metadata; navigation does not reparse.
+
+Reading announces entry, changed depth, root return and exit. Siblings omit
+repeated level announcements. Exit includes blank lines and direct movement
+between trees. Blank-line feedback shares the original presentation
+transaction. Entry, exit and depth indicators carry independent semantic events;
+item labels retain their own presentation. The existing block chooser includes
+Tree, with bracket repetition and explicit next-tree and previous-tree commands.
+Parent and sibling movement remain proposed work.
+
+Binding review covers pinned Agent Shell 0.89.1 and the live 0.93.3 checkout,
+including shell, viewport view/edit, inherited Shell Maker, inline permissions
+and elicitation maps. Existing navigation overrides remain unchanged. Return
+and Meta-Return activate choices within Trees settings popups; closing them
+restores the underlying input commands.
+
+The shared Trees page is available beside Tables at ~C-e H s Y~, through Agent
+Shell settings at ~C-e S Y~, and in settings search. Entry and exit have separate
+speech, earcon, combined, fixed-tone and silent choices. Level feedback combines
+spoken depth, its named voice, a depth tone and an optional earcon. Choices are
+staged; buffer Apply, session Apply and personal Save use ordinary aural rules.
+No second preference store is introduced. More specific feedback rules remain
+available through Change this feedback.
+
+Capital ~T~ in Level changes opens the shared tone editor with root pitch,
+rise per level, maximum pitch, duration, volume, waveform, sweep and envelope.
+Keeping an edited tone enables it in the pending Trees draft; apply or save in
+Trees to make it effective. Sound presets retain the depth mapping. A bounded
+depth-to-pitch expression keeps the complete tone in the selected rule scope.
+Legacy fact-based tree tones remain valid without migration.
+
+Space in Trees opens a read-only sample. Up and Down demonstrate entry, depth
+changes, siblings, reverse movement and exit. Space or Return repeats; s stops;
+q restores the settings menu. In the tone editor, Space plays the root tone
+alone and P opens the sample with the private draft. Source text, point and
+preferences remain intact.
+
+Resolved interaction findings: a non-interactive Stop helper prevented the
+first menu from opening; an interactive wrapper fixes it. Trees was absent
+from the settings Enter-activation list; the main page and both submenus now
+participate. The original preview paired plans with nil text instead of their
+prepared source spans, so only sounds reached playback. Regression coverage
+now checks actual spoken labels and real graphical navigation, not speech
+flags alone. Recognition also accepts separate prose after a complete tree.
+
+Verification before commit: 165 shared menu, tone-editor, preview and rule
+checks pass from source and in a fresh graphical Emacs using compiled modules.
+These include twelve Trees checks for actual text, menu return, sound presets,
+saved depth mapping and draft isolation. The core gate passes 1038 tests, with
+eighteen unrelated graphical/native checks skipped in batch. All 734 batch
+integration tests and twenty compiled tree/binding checks using the actual
+Agent Shell and Shell Maker paths pass. The seventeen-case graphical integration
+gate also passed during navigation implementation. Clean byte-code build,
+freshness, header, generated-reference and documentation review gates pass.
+
+Live checkpoint: compatible compiled modules are loaded in Emacs PID 1546 on
+=/run/user/1000/emacs/emacsvox=. The target uses Agent Shell 0.93.3 from
+=/home/bart/src/agent-shell/= and Shell Maker from
+=~/.emacs.d/elpa/shell-maker-20261022.236/=. Reloads preserve buffer contents,
+points, modified states, selected window, personal/session rules and speech
+processes Speaker 9661 and Notify 10478. Live sample resolution retains all
+labels. No new preferences were applied or saved during loading, and no
+temporary hooks, advice or timers remain.
+
+Listening acceptance of tree entry and depth announcements was confirmed on
+2026-11-09. The final tone editor, browsable preview and exit/navigation changes
+still need explicit listening acceptance. Commit preparation includes the
+Agent Shell guide, with existing Info nodes retained, and updated generated
+manuals. No release or publication is part of this checkpoint.
+
+** Agent Shell question navigation, 2026-11-09
+
+Implemented: Tab and Shift-Tab between choices in the same form field omit the
+repeated question heading and requirement. Entering another field or returning
+from outside its controls announces the heading again. Choice state, actions
+and previews remain available in shell and viewport forms; no bindings change.
+
+The repetition regression failed before the fix. Question entry, traversal and
+field-transition checks pass in the integration gate. Five focused checks also
+passed in a fresh Emacs loading the compiled integration. The Agent Shell guide
+now describes the concise feedback. Listening acceptance remains separate from
+the automated checks.
+
 ** Kimai interruption insertion, 2026-11-04
 
 Implemented locally in =~/emacs/src/kimai.el=: =C-c C-i= uses F10-style

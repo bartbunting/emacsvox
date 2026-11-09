@@ -55,6 +55,8 @@
 (declare-function emacsvox-agent-shell--semantic-item-feedback
                   "emacsvox-agent-shell" ())
 (defvar emacsvox-agent-shell-block-navigation-max-characters)
+(defvar emacsvox-agent-shell--tree-navigation-speech-p nil
+  "Non-nil while a block jump updates tree speech context.")
 (defvar emacsvox-agent-shell--response-turn-active-p)
 (defvar emacsvox-agent-shell--last-completed-answer)
 (defvar emacsvox-agent-shell--latest-turn-outcome)
@@ -83,6 +85,7 @@
     ("Permission" . permission)
     ("Error" . error)
     ("Table" . table)
+    ("Tree" . tree)
     ("Source block" . source-block)
     ("Heading" . heading)
     ("Link" . link)
@@ -120,6 +123,7 @@
     ('error 'agent-error)
     ('source-block 'agent-source-block)
     ('table 'agent-table)
+    ('tree 'tree)
     (_ 'agent-block)))
 
 (defun emacsvox-agent-shell--block-facts
@@ -384,11 +388,24 @@ PREDICATE receives TEXT and the start position of each property run."
     (let ((plain
            (string-trim
             (replace-regexp-in-string
-             "[[:space:]]+" " " (substring-no-properties text)))))
+             "[[:space:]]+" " " (emacsvox-agent-shell--plain-text-with-facts text)))))
       (unless (string-empty-p plain)
         (if (> (length plain) 80)
             (concat (substring plain 0 77) "...")
           plain)))))
+
+(defun emacsvox-agent-shell--plain-text-with-facts (text)
+  "Copy TEXT retaining only explicit presentation facts.
+Discard renderer metadata so prepared tree speech is not described twice."
+  (let ((plain (substring-no-properties text)) (offset 0))
+    (while (< offset (length text))
+      (let ((next (next-single-property-change
+                   offset 'emacsvox-aural-facts text (length text)))
+            (facts (get-text-property offset 'emacsvox-aural-facts text)))
+        (when facts
+          (put-text-property offset next 'emacsvox-aural-facts facts plain))
+        (setq offset next)))
+    plain))
 
 (defun emacsvox-agent-shell--block-navigation-body-text (text)
   "Return normalized block body TEXT for semantic navigation speech."
@@ -396,7 +413,7 @@ PREDICATE receives TEXT and the start position of each property run."
     (let ((plain
            (string-trim
             (replace-regexp-in-string
-             "[[:space:]]+" " " (substring-no-properties text)))))
+             "[[:space:]]+" " " (emacsvox-agent-shell--plain-text-with-facts text)))))
       (unless (string-empty-p plain)
         (let ((limit
                emacsvox-agent-shell-block-navigation-max-characters))
@@ -454,7 +471,7 @@ PREDICATE receives TEXT and the start position of each property run."
   "Return complete visible block text between START and END."
   (when (and start end (< start end))
     (let ((position start)
-          parts)
+          parts tree-context)
       (while (< position end)
         (let ((next
                (or
@@ -464,11 +481,15 @@ PREDICATE receives TEXT and the start position of each property run."
           (unless (invisible-p position)
             ;; Keep renderer provenance until decorative table borders have
             ;; been removed; plain copies cannot distinguish them from data.
-            (push (substring-no-properties
-                   (emacsvox-agent-shell--diff-headings-for-speech
-                    (emacsvox-agent-shell--without-table-borders-for-speech
-                     (buffer-substring position next))))
-                  parts))
+            (let ((description
+                   (emacsvox-text-tree--describe
+                    (emacsvox-agent-shell--diff-headings-for-speech
+                     (emacsvox-agent-shell--without-table-borders-for-speech
+                      (buffer-substring position next)))
+                    tree-context)))
+              (setq tree-context (cdr description))
+              (push (emacsvox-agent-shell--plain-text-with-facts (car description))
+                    parts)))
           (setq position next)))
       (let ((text (string-trim (string-join (nreverse parts)))))
         (unless (string-empty-p text) text)))))
@@ -814,6 +835,23 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
           (push location result))))
     (nreverse result)))
 
+(defun emacsvox-agent-shell--tree-location-at-position (position)
+  "Return the recognized tree containing POSITION, including its root."
+  (when-let* ((range (emacsvox-agent-shell--property-range-at-position
+                      'emacsvox-text-tree-id position)))
+    (list :position (car range) :end (cdr range) :type 'tree
+          :state (get-text-property (car range) 'agent-shell-ui-state))))
+
+(defun emacsvox-agent-shell--tree-locations ()
+  "Return recognized tree roots in buffer order using cached metadata."
+  (let ((position (point-min)) locations)
+    (while (< position (point-max))
+      (when-let* ((location (emacsvox-agent-shell--tree-location-at-position position)))
+        (push location locations))
+      (setq position (next-single-property-change
+                      position 'emacsvox-text-tree-id nil (point-max))))
+    (nreverse locations)))
+
 (defun emacsvox-agent-shell--block-locations ()
   "Return all semantic transcript block locations in buffer order."
   (let* ((fragments (emacsvox-agent-shell--fragment-locations))
@@ -821,7 +859,8 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
          (tables (emacsvox-agent-shell--table-locations))
          (source-blocks
           (emacsvox-agent-shell--source-block-locations))
-         (locations (append fragments prompts tables source-blocks)))
+         (locations (append fragments prompts tables source-blocks
+                            (emacsvox-agent-shell--tree-locations))))
     ;; A restored viewport normally retains response fragment state.  Keep a
     ;; whole-response fallback for older or plain viewport content.
     (when (and (derived-mode-p 'agent-shell-viewport-view-mode)
@@ -1127,6 +1166,10 @@ END-BOUNDARY is non-nil."
      (emacsvox-agent-shell--property-location-in-direction
       'agent-shell-markdown-url
       #'emacsvox-agent-shell--link-location-at-position direction origin t))
+    ('tree
+     (emacsvox-agent-shell--property-location-in-direction
+      'emacsvox-text-tree-id
+      #'emacsvox-agent-shell--tree-location-at-position direction origin t))
     ('table
      (emacsvox-agent-shell--property-location-in-direction
       'agent-shell-markdown-table-source
@@ -1261,10 +1304,10 @@ the legacy fallback when its local boundary metadata is incomplete."
                     (plist-get right :position)))))
         (or (< left-size right-size)
             (and (= left-size right-size)
-                 (memq (plist-get left :type) '(table source-block))
+                 (memq (plist-get left :type) '(tree table source-block))
                  (not
                   (memq (plist-get right :type)
-                        '(table source-block))))))))))
+                        '(tree table source-block))))))))))
 
 (defun emacsvox-agent-shell--fragment-location-by-id
     (qualified-id origin)
@@ -1378,23 +1421,29 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (emacsvox-agent-shell--expand-block-parent target)
           (goto-char (plist-get target :position))
           (tts-stop)
-          (pcase type
-            ('table
-             (emacsvox-agent-shell--table-entry-feedback direction))
-            ('link
-             (emacsvox-agent-shell--semantic-item-feedback))
-            ('source-block
-             (emacsvox-agent-shell--submit-text-feedback
-              (emacsvox-agent-shell--source-block-summary target)
-              (emacsvox-agent-shell--block-location-facts
-               target 'focus-entered)
-              'navigation 'open-object))
-            (_
-             (emacsvox-agent-shell--submit-text-feedback
-              (emacsvox-agent-shell--block-location-speech target)
-              (emacsvox-agent-shell--block-location-facts
-               target 'focus-entered)
-              'navigation 'large-movement)))
+          (let ((emacsvox-agent-shell--tree-navigation-speech-p t))
+            (pcase type
+              ('tree
+               (emacsvox-agent-shell--submit-text-feedback
+                (buffer-substring (line-beginning-position) (line-end-position))
+                (emacsvox-agent-shell--block-location-facts target 'focus-entered)
+                'navigation))
+              ('table
+               (emacsvox-agent-shell--table-entry-feedback direction))
+              ('link
+               (emacsvox-agent-shell--semantic-item-feedback))
+              ('source-block
+               (emacsvox-agent-shell--submit-text-feedback
+                (emacsvox-agent-shell--source-block-summary target)
+                (emacsvox-agent-shell--block-location-facts
+                 target 'focus-entered)
+                'navigation 'open-object))
+              (_
+               (emacsvox-agent-shell--submit-text-feedback
+                (emacsvox-agent-shell--block-location-speech target)
+                (emacsvox-agent-shell--block-location-facts
+                 target 'focus-entered)
+                'navigation 'large-movement))))
           target)
       ;; Leave the final answer behind so a backward response jump can find it.
       (when (and (eq type 'agent-response) (eq direction 'forward))
@@ -1403,7 +1452,7 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
        (format "No %s %s%s."
                (if (eq direction 'forward) "later" "earlier")
                (downcase (emacsvox-agent-shell--block-type-label type))
-               (if (memq type '(source-block heading link)) "" " block"))
+               (if (memq type '(source-block heading link tree)) "" " block"))
        (emacsvox-agent-shell--block-facts type 'operation-failed)
        'navigation 'warn-user)
       nil)))
@@ -1412,7 +1461,8 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
   "Return the innermost semantic block containing POSITION or point.
 Rendered tables and source blocks win ties with enclosing transcript blocks."
   (setq position (or position (point)))
-  (let* ((table
+  (let* ((tree (emacsvox-agent-shell--tree-location-at-position position))
+         (table
           (emacsvox-agent-shell--table-location-at-position position))
          (source-block
           (emacsvox-agent-shell--source-block-location-at-position position))
@@ -1429,9 +1479,9 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
                ;; responses with authoritative fragment metadata.  Avoid a
                ;; transcript-wide search through legacy prompt face runs once
                ;; that local metadata has identified the enclosing block.
-               (list table source-block fragment)
+               (list tree table source-block fragment)
              (list
-              table source-block
+              tree table source-block
               (or
                local-prompt
                (unless
@@ -1639,6 +1689,8 @@ Use semantic TYPE when supplied, otherwise infer it from the block at point."
                             (<= (plist-get response :position) (point))
                             (< (point) (plist-get response :end)))
                    response)))
+              ('tree
+               (emacsvox-agent-shell--tree-location-at-position (point)))
               ('table
                (emacsvox-agent-shell--table-location-at-position (point)))
               ('heading
@@ -1703,6 +1755,18 @@ When invoked by `]' at an editable prompt, insert that character instead."
 When invoked by `[' at an editable prompt, insert that character instead."
   (interactive)
   (emacsvox-agent-shell--navigate-block-at-point 'backward))
+
+(defun emacsvox-agent-shell-next-tree ()
+  "Move to the next recognized text tree and speak its root.
+Use the existing bracket repeat map for further tree movement."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'tree))
+
+(defun emacsvox-agent-shell-previous-tree ()
+  "Move to the previous recognized text tree and speak its root.
+Use the existing bracket repeat map for further tree movement."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'tree))
 
 (defun emacsvox-agent-shell-next-table ()
   "Move to the next rendered Markdown table and announce it.

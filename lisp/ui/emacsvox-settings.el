@@ -33,6 +33,9 @@
 
 (defconst emacsvox-settings--destinations
   '(("Line reading, visual wrapping, continuation and screen rows" emacsvox-reading-settings emacsvox-reading-settings "m")
+    ("Tree entry feedback speech earcon or tone" emacsvox-tree-settings emacsvox-tree-settings "e")
+    ("Tree exit feedback" emacsvox-tree-settings emacsvox-tree-settings "x")
+    ("Tree level change feedback" emacsvox-tree-settings emacsvox-tree-settings "l")
     ("Table reading and navigation" emacsvox-table-settings emacsvox-table-settings "m")
     ("Predefined speech-rate base and step" emacsvox-settings-workflows emacsvox-settings-reading "r")
     ("Character speech rate multiplier" emacsvox-settings-workflows emacsvox-settings-reading-controls "c")

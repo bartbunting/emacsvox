@@ -213,6 +213,7 @@ emacsvox.elc \
 emacsvox-setup.elc
 
 CORE_OBJECTS =  \
+core/emacsvox-text-tree.elc \
 integrations/amixer.elc \
 integrations/emacsvox-2048.elc \
 integrations/emacsvox-abc-mode.elc \
@@ -406,6 +407,7 @@ integrations/emacsvox-syslog.elc \
 integrations/emacsvox-tab-bar.elc \
 core/emacsvox-table-reader.elc \
 ui/emacsvox-table-settings.elc \
+ui/emacsvox-tree-settings.elc \
 core/emacsvox-table-ui.elc \
 core/emacsvox-table.elc \
 core/emacsvox-tabulate.elc \
@@ -468,6 +470,8 @@ integrations/emacsvox-bookshare.elc integrations/emacsvox-epub.elc integrations/
 
 emacsvox-preamble.elc: emacsvox-version.elc emacsvox-paths.elc
 
+integrations/emacsvox-agent-shell-render.elc: core/emacsvox-text-tree.elc
+
 integrations/emacsvox-agent-shell-tables.elc: integrations/emacsvox-agent-shell-render.elc core/emacsvox-table-reader.elc
 integrations/emacsvox-agent-shell-navigation.elc: integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-render.elc
 integrations/emacsvox-agent-shell-events.elc: integrations/emacsvox-agent-shell-navigation.elc
@@ -507,6 +511,8 @@ ui/emacsvox-capitalization.elc: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-edi
 ui/emacsvox-settings-changes.elc: ui/emacsvox-aural-menu.elc ui/emacsvox-aural-home.elc
 ui/emacsvox-settings-integrations.elc: ui/emacsvox-settings.elc
 ui/emacsvox-settings-workflows.elc: ui/emacsvox-aural-menu.elc
+ui/emacsvox-tree-settings.elc: ui/emacsvox-tone-editor.elc core/emacsvox-text-tree.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-editor.elc aural/emacsvox-aural-preview.elc
+
 ui/emacsvox-table-settings.elc: core/emacsvox-table-reader.elc ui/emacsvox-aural-menu.elc aural/emacsvox-aural-preview.elc
 ui/emacsvox-settings.elc: ui/emacsvox-aural-menu.elc
 ui/emacsvox-output-settings.elc: ui/emacsvox-aural-menu.elc aural/emacsvox-aural-spatial.elc aural/emacsvox-aural-preview.elc

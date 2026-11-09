@@ -14,6 +14,114 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Everyday Editing Commands,  Next: Everyday Workspace Commands,  Prev: Everyday Reading Commands,  Up: Emacsvox Keyboard Commands
+
+15.2 Editing reminders
+======================
+
+Use these in ordinary text, after leaving any prompt or special reader.
+Check the buffer and the affected text first.  *note Selection and
+editing terms: (emacsvox)Editing Terms. defines Emacs's names for
+copying, cutting and pasting.
+
+Start a selection (‘C-<SPC>’)
+     Set the mark, then move point to its other end.  Extend it by
+     moving rather than repeatedly setting the mark.  See *note
+     Selection boundaries and newline checks: (emacsvox)Selecting Text
+     With Speech.
+Inspect the other end (‘C-x C-x’)
+     Exchange point and mark.  The selected text is unchanged until you
+     move an endpoint.  See *note Adjusting a checked selection:
+     (emacsvox)Selecting Text With Speech.
+Copy (‘M-w’)
+     Copy the checked region to the kill ring without removing the
+     source text.  See *note Copying into another buffer:
+     (emacsvox)Copying Text Between Buffers.
+Cut (‘C-w’)
+     Remove the checked region and retain it in the kill ring.  This
+     edits the buffer, not the saved file.  See *note Moving text and
+     verifying both locations: (emacsvox)Moving Text Safely.
+Paste (‘C-y’)
+     Insert the current kill-ring entry at point; clipboard integration
+     can supply a more recent external copy instead.  Point ends after
+     the inserted text.  See *note Checking the destination and pasted
+     text: (emacsvox)Copying Text Between Buffers.
+Use an earlier copy (‘M-y’)
+     Immediately after a yank, replace that insertion with an earlier
+     entry.  After a separate command, including a reading command,
+     choose an entry for another insertion instead.  See *note Earlier
+     copies and yank sequencing: (emacsvox)Choosing Earlier Copied Text.
+Undo while listening (‘M-x undo-only <RET>’)
+     Undo a change in the selected buffer, inspect it, and repeat only
+     as needed.  Deactivate an unrelated selection first.  Unlike
+     ordinary ‘C-/’, this avoids undoing an earlier undo after an
+     intervening reading command.  See *note Undo, inspection and
+     recovery limits: (emacsvox)Recovering Text Edits.
+Find text (‘C-s’ or ‘C-r’)
+     Search forwards or backwards.  Finish with ‘<RET>’ before typing an
+     edit; text entered during search changes the query.  See *note
+     Search direction and failure recovery: (emacsvox)Searching And
+     Replacing Text.
+Review replacements (‘M-%’)
+     Query-replace in the checked active region, or ordinarily from
+     point onwards when no region is active.  The replacement questions
+     have their own keys; stopping does not undo accepted changes.  See
+     *note Scoped replacement and match-by-match decisions:
+     (emacsvox)Reviewing Text Replacements.
+
+   Copying is not a permanent backup.  Message repetition and filename
+speech can also change the kill ring; *note the transfer guide:
+(emacsvox)Copying Text Between Buffers. explains how to inspect it
+without accidentally replacing the next paste.
+
+
+File: emacsvox.info,  Node: Everyday Workspace Commands,  Next: Everyday Help Commands,  Prev: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
+
+15.3 Files, buffers and windows
+===============================
+
+A buffer contains work; a window displays it.  Identify the selected
+buffer with ‘C-e m’ before editing, saving or closing anything.  For
+definitions, see *note Buffers, windows and frames: (emacsvox)Working
+Context Terms.
+
+Open a file (‘C-x C-f’)
+     Visit a pathname, creating a new unsaved buffer if the file does
+     not exist.  ‘C-x C-r’ visits read-only instead.  See *note Checking
+     the document and its destination: (emacsvox)Opening A Document.
+Save the current file (‘C-x C-s’)
+     Write this buffer to its file; a new buffer may need a filename.
+     An error is not a completed save.  See *note Saving destinations
+     and failure recovery: (emacsvox)Saving A Working Copy.
+Save under another filename (‘C-x C-w’)
+     Write the current text, including unsaved edits, and change where
+     this buffer's later saves go.  Cancel an unexpected overwrite
+     prompt.  See *note Working copies versus copies of saved files:
+     (emacsvox)Saving A Working Copy.
+Switch to another buffer (‘C-x b’)
+     Select content by buffer name in the current window.  The buffer
+     you leave stays available.  See *note Buffer selection:
+     (emacsvox)Desktop Objects.
+Display a reference (‘C-x 4 b’)
+     Display and select an existing buffer in another window, creating
+     or reusing a view.  See *note Keeping a reference beside a draft:
+     (emacsvox)Reference And Draft Windows.
+Select another window (‘C-x o’)
+     Select the next view; lowercase o is not zero.  With more than two
+     windows, the next one need not be the draft.  See *note Identifying
+     the selected view: (emacsvox)Working With Windows.
+Remove a window (‘C-x 0’)
+     Remove this view, not its buffer.  The last ordinary window cannot
+     be removed this way.  ‘C-x 1’ instead keeps only the selected view.
+     See *note Closing windows without losing documents:
+     (emacsvox)Closing Windows Safely.
+Close a buffer (‘C-x k’)
+     Kill the named buffer, checking any unsaved-work prompt.  This is
+     not the same as removing its window or deleting its file.  See
+     *note Leaving document buffers safely: (emacsvox)Opening A
+     Document.
+
+
 File: emacsvox.info,  Node: Everyday Help Commands,  Next: Everyday Speech Commands,  Prev: Everyday Workspace Commands,  Up: Emacsvox Keyboard Commands
 
 15.4 Help and orientation
@@ -3302,6 +3410,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * terminal screen review:                EAT Screen Review.   (line   6)
 * terminology:                           Emacsvox Terminology.
                                                               (line   6)
+* text trees, Agent Shell:               Agent Shell Source Blocks.
+                                                              (line  23)
 * timeout, applying speech settings:     Unconfirmed Speech Changes.
                                                               (line   6)
 * timeout, did anything change:          Finding Problem Tasks.
@@ -3319,6 +3429,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  90)
 * Transient menus:                       Development Environment.
                                                               (line  36)
+* tree feedback:                         Agent Shell Source Blocks.
+                                                              (line  23)
 * troubleshooting, Notmuch:              Notmuch Troubleshooting.
                                                               (line   6)
 * TTS:                                   Speech System.       (line   6)

@@ -2747,8 +2747,10 @@ speech level; ‘quiet’ suppresses it.  Explicit reading and actions still
 speak.
 
    Use ‘<TAB>’ and ‘S-<TAB>’ to move between controls in the shell or
-viewport.  Emacsvox reads the field name, whether it is required, and
-its current value or selection state.  Press ‘<RET>’ to select an
+viewport.  Emacsvox reads the field name and whether it is required when
+entering a field.  Moving between choices in that field reads the choice
+and its state without repeating the question.  Returning from outside
+the field announces its heading again.  Press ‘<RET>’ to select an
 option, toggle a checkbox, or edit a text or number field.  Changes are
 confirmed after they take effect.  When an option has a preview, ‘?’
 opens or closes it; opening it reads its contents.  The preview key
@@ -2820,7 +2822,9 @@ depend on the effective speech level.
 
    ‘T’ opens the shared Tables settings page described in *note Reading
 Markdown and Org tables: Reading Markdown And Org Tables.  It has
-separate buffer Apply, common Save and mode Save actions.
+separate buffer Apply, common Save and mode Save actions.  ‘Y’ opens
+Trees for entry, exit and level feedback, described under *note Read and
+customise text trees: agent-shell-text-trees.
 
    The ‘a’, ‘n’ and ‘k’ controls set automatic-content, line-navigation
 and block-navigation character limits.  ‘<RET>’ accepts an exact
@@ -2932,9 +2936,9 @@ File: emacsvox.info,  Node: Agent Shell Transcript Navigation,  Next: Agent Shel
 ===============================
 
 Agent Shell responses contain semantic prompt, response, thought,
-activity, tool, plan, permission, error, source-block, and table
-locations.  Emacsvox navigation reports the block type, visibility, and
-a bounded body preview.
+activity, tool, plan, permission, error, source-block, table and
+recognised tree locations.  Emacsvox navigation reports the block type,
+visibility, and a bounded body preview.
 
    Up and Down play the ellipses cue when you enter a collapsed heading,
 such as Capabilities, Models, or Notices.  Wrapped continuation rows do
@@ -3023,7 +3027,76 @@ then:
 automatic content limit.  Ordinary line navigation retains its separate
 bounded speech policy.
 
-11.7.1 Review proposed changes
+11.7.1 Read and customise text trees
+------------------------------------
+
+Navigation diagrams can use drawing characters to show parents and
+children.  Emacsvox recognises complete trees in unlabelled, ‘text’ and
+‘plaintext’ fenced blocks.  Each tree needs a root and at least two
+branch lines with consistent indentation.  Separate prose paragraphs do
+not prevent recognition; unfinished fences, programming-language blocks
+and ambiguous layouts remain literal.  Recognition happens when the
+block is rendered, and navigation uses its stored structure.
+
+   Ordinary line reading omits recognised drawing prefixes and retains
+item labels and annotations.  By default, entering says “Tree”, changing
+depth says “Level” and the new number, and returning to the root says
+“Root”.  Siblings do not repeat the level.  Leaving says “End of tree”,
+including when the next line is blank.  Independent reading begins with
+entry feedback again.  Copying and character inspection retain the
+original drawing characters.
+
+   Use ‘C-c ]’ or ‘C-c [’ and choose _Tree_ to move between trees and
+hear the destination root.  ‘]’  and ‘[’ repeat these jumps and infer
+tree movement when point is within a recognised tree.  You can also
+invoke ‘M-x emacsvox-agent-shell-next-tree’ and ‘M-x
+emacsvox-agent-shell-previous-tree’.  Ordinary arrows read nodes within
+a tree; there are no separate parent or sibling movement commands.
+
+   Open ‘C-e S Y’ from Agent Shell, or ‘C-e H s Y’ from Speech settings,
+for the shared Trees page.  ‘e’ chooses entry feedback and ‘x’ chooses
+exit feedback: speech, an earcon, both, a fixed tone, no indication, or
+existing rules.  ‘l’ opens level feedback, where ‘s’ toggles spoken
+levels, ‘v’ chooses their voice, ‘t’ toggles a tone whose pitch follows
+depth, and ‘e’ chooses an earcon.  You can combine these level
+components.  They affect the indication rather than the item label.
+Earcons require auditory icons to be enabled.  These settings currently
+apply to recognised Agent Shell text trees, not ordinary outlines or
+file-tree packages.
+
+   Choices remain pending until applied or saved.  Press ‘<SPC>’ in
+Trees or Level changes to open a sample tree with the pending feedback.
+Up and Down read entry, deeper levels, siblings, shallower levels and
+exit.  ‘<SPC>’ or ‘<RET>’ repeats the current line; ‘s’ stops speech;
+‘q’ returns to the menu and keeps the draft.  The sample leaves the
+source buffer and live preferences intact.
+
+   For the depth tone, press capital ‘T’ in Level changes.  The *note
+shared tone editor: spelling-tone-editor. offers root pitch, duration,
+volume, waveform, sweep and envelope controls.  ‘j’ sets the rise in
+semitones per level; zero keeps the pitch fixed.  ‘m’ sets the maximum
+pitch, which must be at least the root pitch.  The initial mapping
+starts at 220 Hz, rises three semitones per level and stops at 1760 Hz;
+the initial duration is 50 milliseconds.  ‘<RET>’ enters an exact value
+and Shift-left/right adjusts the selected number.  Sound presets retain
+the rise and maximum pitch.
+
+   Inside the tone editor, ‘<SPC>’ plays the root tone alone; capital
+‘P’ opens the browsable sample with this draft tone privately enabled.
+‘q’ returns from the sample.  Use ‘A’ or ‘W’ in the editor to keep the
+tone and enable it in the pending Trees draft, then return to Trees to
+apply or save.  Leaving the editor without keeping discards its edits.
+
+   In Trees, ‘A’ applies pending choices only to the captured buffer;
+‘E’ applies them across this Emacs session; ‘W’ saves personal rules for
+future sessions.  Only changed indications are written.  Buffer and
+session overrides can still override saved settings, including a buffer
+trial followed by Save.  _Use existing rules_ removes this page's
+override at the chosen scope and leaves other rules intact.  ‘D’
+discards pending choices; closing the page also discards unapplied
+choices.  Already applied or saved preferences remain in effect.
+
+11.7.2 Review proposed changes
 ------------------------------
 
 In an expanded editing tool, file headings speak as “File:” followed by
@@ -5290,111 +5363,3 @@ Read the buffer (‘C-e b’)
    Page reading and the complete reading-key list remain under *note
 Reading and navigating: (emacsvox)Reading.  Page reading changes the
 mark; it is not a substitute for inspecting an existing selection.
-
-
-File: emacsvox.info,  Node: Everyday Editing Commands,  Next: Everyday Workspace Commands,  Prev: Everyday Reading Commands,  Up: Emacsvox Keyboard Commands
-
-15.2 Editing reminders
-======================
-
-Use these in ordinary text, after leaving any prompt or special reader.
-Check the buffer and the affected text first.  *note Selection and
-editing terms: (emacsvox)Editing Terms. defines Emacs's names for
-copying, cutting and pasting.
-
-Start a selection (‘C-<SPC>’)
-     Set the mark, then move point to its other end.  Extend it by
-     moving rather than repeatedly setting the mark.  See *note
-     Selection boundaries and newline checks: (emacsvox)Selecting Text
-     With Speech.
-Inspect the other end (‘C-x C-x’)
-     Exchange point and mark.  The selected text is unchanged until you
-     move an endpoint.  See *note Adjusting a checked selection:
-     (emacsvox)Selecting Text With Speech.
-Copy (‘M-w’)
-     Copy the checked region to the kill ring without removing the
-     source text.  See *note Copying into another buffer:
-     (emacsvox)Copying Text Between Buffers.
-Cut (‘C-w’)
-     Remove the checked region and retain it in the kill ring.  This
-     edits the buffer, not the saved file.  See *note Moving text and
-     verifying both locations: (emacsvox)Moving Text Safely.
-Paste (‘C-y’)
-     Insert the current kill-ring entry at point; clipboard integration
-     can supply a more recent external copy instead.  Point ends after
-     the inserted text.  See *note Checking the destination and pasted
-     text: (emacsvox)Copying Text Between Buffers.
-Use an earlier copy (‘M-y’)
-     Immediately after a yank, replace that insertion with an earlier
-     entry.  After a separate command, including a reading command,
-     choose an entry for another insertion instead.  See *note Earlier
-     copies and yank sequencing: (emacsvox)Choosing Earlier Copied Text.
-Undo while listening (‘M-x undo-only <RET>’)
-     Undo a change in the selected buffer, inspect it, and repeat only
-     as needed.  Deactivate an unrelated selection first.  Unlike
-     ordinary ‘C-/’, this avoids undoing an earlier undo after an
-     intervening reading command.  See *note Undo, inspection and
-     recovery limits: (emacsvox)Recovering Text Edits.
-Find text (‘C-s’ or ‘C-r’)
-     Search forwards or backwards.  Finish with ‘<RET>’ before typing an
-     edit; text entered during search changes the query.  See *note
-     Search direction and failure recovery: (emacsvox)Searching And
-     Replacing Text.
-Review replacements (‘M-%’)
-     Query-replace in the checked active region, or ordinarily from
-     point onwards when no region is active.  The replacement questions
-     have their own keys; stopping does not undo accepted changes.  See
-     *note Scoped replacement and match-by-match decisions:
-     (emacsvox)Reviewing Text Replacements.
-
-   Copying is not a permanent backup.  Message repetition and filename
-speech can also change the kill ring; *note the transfer guide:
-(emacsvox)Copying Text Between Buffers. explains how to inspect it
-without accidentally replacing the next paste.
-
-
-File: emacsvox.info,  Node: Everyday Workspace Commands,  Next: Everyday Help Commands,  Prev: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
-
-15.3 Files, buffers and windows
-===============================
-
-A buffer contains work; a window displays it.  Identify the selected
-buffer with ‘C-e m’ before editing, saving or closing anything.  For
-definitions, see *note Buffers, windows and frames: (emacsvox)Working
-Context Terms.
-
-Open a file (‘C-x C-f’)
-     Visit a pathname, creating a new unsaved buffer if the file does
-     not exist.  ‘C-x C-r’ visits read-only instead.  See *note Checking
-     the document and its destination: (emacsvox)Opening A Document.
-Save the current file (‘C-x C-s’)
-     Write this buffer to its file; a new buffer may need a filename.
-     An error is not a completed save.  See *note Saving destinations
-     and failure recovery: (emacsvox)Saving A Working Copy.
-Save under another filename (‘C-x C-w’)
-     Write the current text, including unsaved edits, and change where
-     this buffer's later saves go.  Cancel an unexpected overwrite
-     prompt.  See *note Working copies versus copies of saved files:
-     (emacsvox)Saving A Working Copy.
-Switch to another buffer (‘C-x b’)
-     Select content by buffer name in the current window.  The buffer
-     you leave stays available.  See *note Buffer selection:
-     (emacsvox)Desktop Objects.
-Display a reference (‘C-x 4 b’)
-     Display and select an existing buffer in another window, creating
-     or reusing a view.  See *note Keeping a reference beside a draft:
-     (emacsvox)Reference And Draft Windows.
-Select another window (‘C-x o’)
-     Select the next view; lowercase o is not zero.  With more than two
-     windows, the next one need not be the draft.  See *note Identifying
-     the selected view: (emacsvox)Working With Windows.
-Remove a window (‘C-x 0’)
-     Remove this view, not its buffer.  The last ordinary window cannot
-     be removed this way.  ‘C-x 1’ instead keeps only the selected view.
-     See *note Closing windows without losing documents:
-     (emacsvox)Closing Windows Safely.
-Close a buffer (‘C-x k’)
-     Kill the named buffer, checking any unsaved-work prompt.  This is
-     not the same as removing its window or deleting its file.  See
-     *note Leaving document buffers safely: (emacsvox)Opening A
-     Document.

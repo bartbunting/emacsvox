@@ -778,8 +778,8 @@ greater-than-zero check instead of the default nonnegative check."
   (let* ((field
           (and
            (proper-list-p expression)
-           (= (length expression) 2)
-           (eq (car expression) :fact)
+           (or (and (= (length expression) 2) (eq (car expression) :fact))
+               (and (= (length expression) 5) (eq (car expression) :pitch-from-depth)))
            (cadr expression)))
          (key (and field (intern (format ":%s" field))))
          (value
@@ -790,6 +790,18 @@ greater-than-zero check instead of the default nonnegative check."
                  "Action %S %s fact %S is missing"
                  (emacsvox-aural-action-id action) property field))
             expression)))
+    (when (eq (car-safe expression) :pitch-from-depth)
+      (unless (natnump value)
+        (emacsvox-aural--transport-error "Depth pitch requires a nonnegative integer: %S" value))
+      (let* ((base (nth 2 expression))
+             (step (nth 3 expression))
+             (ceiling (nth 4 expression))
+             (limit (unless (zerop step)
+                      (/ (* 12.0 (log (/ ceiling (float base)))) (* step (log 2.0))))))
+        ;; Bound before exponentiation, including for arbitrarily deep input.
+        (setq value (if (zerop step) base
+                      (if (>= value limit) ceiling
+                        (* base (expt 2.0 (/ (* step value) 12.0))))))))
     (unless
         (and
          (numberp value)

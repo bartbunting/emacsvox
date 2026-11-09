@@ -123,19 +123,33 @@ private draft; Apply or Save and apply changes the destination cue."
     (unless (plist-member data (car entry)) (setq data (plist-put data (car entry) (cdr entry)))))
   (unless (and (memq (plist-get data :sweep) '(nil t)) (memq (plist-get data :curve) '(linear exponential)))
     (user-error "Invalid sweep or envelope curve"))
-  (dolist (spec emacsvox-tone-editor--numbers)
+  (dolist (spec (emacsvox-tone-editor--number-specs))
     (let ((value (plist-get data (car spec))))
       (unless (and (numberp value) (<= (nth 3 spec) value (nth 4 spec))
-                   (or (memq (car spec) '(:pitch :end-pitch :width :sustain)) (integerp value)))
+                   (or (memq (car spec) '(:pitch :end-pitch :width :sustain))
+                       (not (assq (car spec) emacsvox-tone-editor--numbers)) (integerp value)))
         (user-error "Invalid %s: %s" (nth 1 spec) value))))
   (unless (memq (plist-get data :envelope) '(classic adsr))
     (user-error "Invalid tone envelope"))
   (emacsvox-tone-editor--shape data)
   data)
 
+(defun emacsvox-tone-editor--number-specs ()
+  "Return ordinary controls and any additional provider controls."
+  (append emacsvox-tone-editor--numbers
+          (condition-case nil
+              (plist-get (plist-get (emacsvox-tone-editor--state) :provider) :numbers)
+            (user-error nil))))
+
+(defun emacsvox-tone-editor--extra-children (_children)
+  "Build the provider's additional draft controls."
+  (transient-parse-suffixes
+   'emacsvox-tone-editor
+   (plist-get (plist-get (emacsvox-tone-editor--state) :provider) :extra-controls)))
+
 (defun emacsvox-tone-editor--number (key &optional direction)
   "Set draft KEY exactly, or adjust it by DIRECTION steps."
-  (let* ((spec (assq key emacsvox-tone-editor--numbers))
+  (let* ((spec (assq key (emacsvox-tone-editor--number-specs)))
          (old (emacsvox-tone-editor--get key))
          (value (if direction
                     (min (nth 4 spec) (max (nth 3 spec) (+ old (* direction (nth 5 spec)))))
@@ -153,7 +167,7 @@ private draft; Apply or Save and apply changes the destination cue."
 
 (defun emacsvox-tone-editor--number-label (key)
   "Describe numeric draft KEY and its units."
-  (let ((spec (assq key emacsvox-tone-editor--numbers)))
+  (let ((spec (assq key (emacsvox-tone-editor--number-specs))))
     (format "%s: %s %s" (nth 1 spec) (emacsvox-tone-editor--get key) (nth 2 spec))))
 
 (defun emacsvox-tone-editor--name (value)
@@ -197,8 +211,14 @@ shapes or volume instead of playing an inaccurate substitute."
 (defun emacsvox-tone-editor--sample ()
   "Read a sample using the draft tone to compare timing and speech masking.
 The preview enables this tone privately without changing live settings.
+Some providers open a browsable sample; q returns to this editor.
 Timing and other feedback follow the source's current settings."
   (interactive) (emacsvox-tone-editor--preview t))
+
+(defun emacsvox-tone-editor--sample-behavior ()
+  "Suspend for a browsable provider sample; otherwise keep editing."
+  (if (plist-get (plist-get (emacsvox-tone-editor--state) :provider) :sample-suspends)
+      (transient--do-suspend) (transient--do-stay)))
 
 (defun emacsvox-tone-editor--current ()
   "Play the currently applied tone alone for comparison with Space's draft.
@@ -213,9 +233,11 @@ unchanged and interrupts the previous preview."
 
 (defun emacsvox-tone-editor--load-preset (name data)
   "Copy preset DATA named NAME into the draft and return to its control."
-  (let ((draft (emacsvox-tone-editor--validate (copy-tree data)))
-        (state (emacsvox-tone-editor--state)))
-    (setf (plist-get state :draft) draft))
+  (let* ((state (emacsvox-tone-editor--state))
+         (draft (copy-tree data)))
+    (dolist (key (plist-get (plist-get state :provider) :keep-preset-fields))
+      (setq draft (plist-put draft key (plist-get (plist-get state :draft) key))))
+    (setf (plist-get state :draft) (emacsvox-tone-editor--validate draft)))
   (transient--stack-pop)
   (transient--show)
   (emacsvox-tone-editor--say (concat name "; draft only")))
@@ -285,8 +307,9 @@ replacement; bundled names cannot be replaced."
 Spelling and capitalization change global defaults; indentation changes the
 captured buffer or global defaults. Line cues apply session presentation rules.
 Save uses Customize for ordinary defaults and personal rules for line cues.
-Wrapped-row editors stage values in the parent draft; apply or save there.
-Enablement, timing and shared volume stay intact."
+Wrapped-row and tree editors stage values in the parent draft; apply or save
+there. Trees stages an enabled depth tone. Other providers preserve enablement;
+timing and shared volume stay intact."
   (interactive)
   (let* ((state (emacsvox-tone-editor--state))
          (data (emacsvox-tone-editor--validate (copy-tree (plist-get state :draft)))))
@@ -297,13 +320,14 @@ Enablement, timing and shared volume stay intact."
 
 (defun emacsvox-tone-editor--save ()
   "Save and apply this cue through its destination's persistence mechanism.
-Wrapped-row editors stage values in the parent draft; save in that parent.
+Wrapped-row and tree editors stage values in the parent draft; save in that parent.
 Line cues save conditional personal rules. Spelling, capitalization and global
 indentation use Customize. Buffer-local indentation cannot be saved here. Capitalization migrates unchanged old
 menu-generated rules on Save; contextual presentation rules remain intact.
 This saves pitch, duration, individual volume, waveform, Pulse width, sweep
 and envelope controls.
-Timing, cue enablement, voices, earcons and shared tone volume stay unchanged."
+Trees stages an enabled depth tone. Other providers preserve cue enablement.
+Timing, voices, earcons and shared tone volume stay unchanged."
   (interactive) (emacsvox-tone-editor--apply t))
 
 (defun emacsvox-tone-editor--reset ()
@@ -544,6 +568,8 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
    ("v" (lambda () (emacsvox-tone-editor--number-label :volume)) emacsvox-tone-editor--volume :transient t)
    ("w" (lambda () (concat "Waveform: " (emacsvox-tone-editor--name (emacsvox-tone-editor--get :waveform)))) emacsvox-tone-editor-waveform :transient transient--do-stack)
    ("u" (lambda () (concat (emacsvox-tone-editor--number-label :width) (unless (eq (emacsvox-tone-editor--get :waveform) 'pulse) "; used with Pulse"))) emacsvox-tone-editor--width :transient t)]
+  ["Depth mapping" :class transient-column :if (lambda () (plist-get (plist-get (emacsvox-tone-editor--state) :provider) :extra-controls))
+   :setup-children emacsvox-tone-editor--extra-children]
   ["Pitch movement"
    ("t" (lambda () (concat "Pitch sweep: " (if (emacsvox-tone-editor--get :sweep) "on" "off"))) emacsvox-tone-editor--sweep :transient t)
    ("f" (lambda () (emacsvox-tone-editor--number-label :end-pitch)) emacsvox-tone-editor--end-pitch :transient t)]
@@ -557,7 +583,8 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
   ["Preview"
    ("SPC" "Play tone alone" emacsvox-tone-editor--tone :transient t)
    ("C" (lambda () (emacsvox-tone-editor--label :current-label "Play current tone")) emacsvox-tone-editor--current :transient t)
-   ("P" "Read sample" emacsvox-tone-editor--sample :transient t)
+   ("P" (lambda () (emacsvox-tone-editor--label :sample-label "Read sample")) emacsvox-tone-editor--sample
+    :transient emacsvox-tone-editor--sample-behavior)
    ("S" "Stop preview" emacsvox-tone-editor--stop :transient t)]
   ["Presets"
    ("L" "Load preset into draft" emacsvox-tone-editor-presets :transient transient--do-stack)
@@ -577,7 +604,10 @@ belong to the parent menu; shared main-tone volume belongs in Output settings."
   "Open a draft editor for cue PROVIDER using source CONTEXT.
 PROVIDER supplies :label, :read, :apply and :preview callbacks. Optional
 :current reads comparison values; label/message overrides describe the
-provider's scope and persistence. :read with non-nil requests factory values."
+provider's scope and persistence. :read with non-nil requests factory values.
+Optional :numbers and :extra-controls add provider fields; :keep-preset-fields
+retains those fields when loading sound presets. :sample-suspends opens an
+interactive sample that returns to this draft."
   (emacsvox-aural-menu--source context)
   (let ((scope (append (list :tone-editor
                             (list :provider provider :draft (funcall (plist-get provider :read))))

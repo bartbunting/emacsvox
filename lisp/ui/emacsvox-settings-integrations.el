@@ -955,8 +955,9 @@ The menu's w does not save this option."
    ("l" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-processing))
     emacsvox-settings-integrations--agent-processing :transient t)
   ]
-  ["Shared table reading"
-   ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)]
+  ["Shared structured reading"
+   ("T" "Tables: reading, navigation and scoped defaults" emacsvox-table-settings :transient transient--do-stack)
+   ("Y" "Trees: entry, exit and level feedback" emacsvox-tree-settings :transient transient--do-stack)]
   ["Global input preferences; w saves"
    ("i" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-input))
     emacsvox-settings-integrations--agent-input :transient transient--do-suspend)

@@ -892,7 +892,9 @@ Semantic, contextual, and legacy-cue selectors describe complete objects."
 
 PROPERTY and ACTION-ID identify diagnostics.  When POSITIVE is non-nil, a
 literal number must be greater than zero; otherwise it may be zero.  VALUE may
-instead be `(:fact ATTRIBUTE)', which is resolved after rule matching."
+instead be `(:fact ATTRIBUTE)', resolved after rule matching.  Pitch also
+accepts `(:pitch-from-depth ATTRIBUTE BASE SEMITONES MAXIMUM)': a nonnegative
+integer depth maps to BASE Hz, rising by SEMITONES per level up to MAXIMUM."
   (cond
    ((numberp value)
     (unless (if positive (> value 0) (>= value 0))
@@ -907,9 +909,16 @@ instead be `(:fact ATTRIBUTE)', which is resolved after rule matching."
      (eq (car value) :fact)
      (symbolp (cadr value)))
     (cadr value))
+   ((and (eq property :pitch) (proper-list-p value)
+         (= (length value) 5) (eq (car value) :pitch-from-depth)
+         (symbolp (nth 1 value)) (nth 1 value)
+         (numberp (nth 2 value)) (<= 50 (nth 2 value) 10000)
+         (numberp (nth 3 value)) (<= 0 (nth 3 value) 12)
+         (numberp (nth 4 value)) (<= (nth 2 value) (nth 4 value) 20000))
+    (nth 1 value))
    (t
     (emacsvox-aural--rule-error
-     "Action %S %s must be a number or (:fact ATTRIBUTE): %S"
+     "Action %S %s requires a number, (:fact ATTRIBUTE), or valid depth pitch: %S"
      action-id property value))))
 
 (defun emacsvox-aural--validate-tone-shape (shape)

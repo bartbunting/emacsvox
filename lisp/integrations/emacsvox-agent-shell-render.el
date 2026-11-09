@@ -40,6 +40,7 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
+(require 'emacsvox-text-tree)
 
 ;;; Speech copies
 
@@ -284,6 +285,24 @@ to a semantic thought fragment so ordinary faced text is never suppressed."
                 end))))
         (and (< position end) position)))))
 
+(defun emacsvox-agent-shell--mark-text-trees (&rest _)
+  "Mark complete plain-text tree panels in the accessible rendered region.
+The renderer supplies complete source-block bodies and their original fences.
+Open fences, programming-language blocks and ambiguous bodies remain literal."
+  (save-match-data
+    (let ((position (point-min)))
+      (while (< position (point-max))
+        (let* ((end (next-single-property-change
+                     position 'agent-shell-markdown-source-block-body nil (point-max)))
+               (source (get-text-property position 'agent-shell-markdown-source)))
+          (when (and (get-text-property position 'agent-shell-markdown-source-block-body)
+                     (stringp source)
+                     (string-match-p
+                      "\\`[ \t]*\\(?:`\\{3,\\}\\|~\\{3,\\}\\)[ \t]*\\(?:text\\|plaintext\\)?[ \t]*\n"
+                      source))
+            (emacsvox-text-tree--mark-region position end))
+          (setq position end))))))
+
 (defun emacsvox-agent-shell--without-table-borders-for-speech (text)
   "Return TEXT with rendered table borders replaced by spacing.
 Require table provenance and the border face, preserving literal characters
@@ -392,8 +411,9 @@ Rendered source-block copy controls are likewise omitted from continuous
 speech; item navigation announces their action semantically.
 Only the returned speech copy changes; pointwise character review still names
 the original characters in the buffer."
-  (setq text (emacsvox-agent-shell--diff-headings-for-speech
-              (emacsvox-agent-shell--without-table-borders-for-speech text)))
+  (setq text (emacsvox-text-tree--speech-text
+              (emacsvox-agent-shell--diff-headings-for-speech
+               (emacsvox-agent-shell--without-table-borders-for-speech text))))
   (let ((position 0)
         (length (length text))
         removals)

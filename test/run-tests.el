@@ -32,6 +32,7 @@
   ;; Load source explicitly so tests never exercise a stale .elc file.
   (load (expand-file-name "emacsvox-preamble.el" lisp-directory)
         nil nil)
+  (require 'emacsvox-text-tree-tests)
   (require 'emacsvox-emoji-tests)
   (require 'emacsvox-emoji-integration-tests)
   (require 'emacsvox-version-tests)
@@ -230,6 +231,7 @@
   (require 'emacsvox-punctuation-menu-tests)
   (require 'emacsvox-settings-tests)
   (require 'emacsvox-table-settings-tests)
+  (require 'emacsvox-tree-settings-tests)
   (require 'emacsvox-settings-workflows-tests)
   (require 'emacsvox-arc-tests)
   (require 'emacsvox-tar-tests)

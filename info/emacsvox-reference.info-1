@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1724 commands and 261 options.
+   This chapter documents a total of 1728 commands and 261 options.
 
 * Menu:
 
@@ -726,10 +726,12 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-tempo:: Speech enable tempo.
 * emacsvox-tetris:: Tetris.
 * emacsvox-texinfo:: Speech enable texinfo.
+* emacsvox-text-tree:: Recognize text trees for speech.
 * emacsvox-todo-mode:: speech-enable todo.
 * emacsvox-tone-editor:: Draft tone adjustments.
 * emacsvox-tracked-reading:: Interruptible buffer reading.
 * emacsvox-transient:: TRANSIENT.
+* emacsvox-tree-settings:: Tree feedback settings.
 * emacsvox-treesit:: Speech-enable TREESIT.
 * emacsvox-typo:: Speech-enable TYPO.
 * emacsvox-url-template:: URI templates.
@@ -1649,7 +1651,15 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the next rendered Markdown table and announce it.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.10 emacsvox-agent-shell-next-user-prompt
+2.21.1.10 emacsvox-agent-shell-next-tree
+........................................
+
+ -- Command: emacsvox-agent-shell-next-tree
+
+     Move to the next recognized text tree and speak its root.
+     Use the existing bracket repeat map for further tree movement.
+
+2.21.1.11 emacsvox-agent-shell-next-user-prompt
 ...............................................
 
  -- Command: emacsvox-agent-shell-next-user-prompt
@@ -1657,7 +1667,7 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the next submitted user prompt.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.11 emacsvox-agent-shell-previous-block-at-point
+2.21.1.12 emacsvox-agent-shell-previous-block-at-point
 ......................................................
 
  -- Command: emacsvox-agent-shell-previous-block-at-point
@@ -1665,14 +1675,14 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous block matching the semantic block at point.
      When invoked by ‘[’ at an editable prompt, insert that character instead.
 
-2.21.1.12 emacsvox-agent-shell-previous-block-of-type
+2.21.1.13 emacsvox-agent-shell-previous-block-of-type
 .....................................................
 
  -- Command: emacsvox-agent-shell-previous-block-of-type
 
      Select a semantic block type and move to its previous occurrence.
 
-2.21.1.13 emacsvox-agent-shell-previous-error
+2.21.1.14 emacsvox-agent-shell-previous-error
 .............................................
 
  -- Command: emacsvox-agent-shell-previous-error
@@ -1680,7 +1690,7 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous error or failed tool call.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.14 emacsvox-agent-shell-previous-heading
+2.21.1.15 emacsvox-agent-shell-previous-heading
 ...............................................
 
  -- Command: emacsvox-agent-shell-previous-heading
@@ -1688,7 +1698,7 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous visible Markdown heading.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.15 emacsvox-agent-shell-previous-link
+2.21.1.16 emacsvox-agent-shell-previous-link
 ............................................
 
  -- Command: emacsvox-agent-shell-previous-link
@@ -1696,7 +1706,7 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous visible rendered link.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.16 emacsvox-agent-shell-previous-response
+2.21.1.17 emacsvox-agent-shell-previous-response
 ................................................
 
  -- Command: emacsvox-agent-shell-previous-response
@@ -1704,7 +1714,7 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous agent response and announce its body.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.17 emacsvox-agent-shell-previous-source-block
+2.21.1.18 emacsvox-agent-shell-previous-source-block
 ....................................................
 
  -- Command: emacsvox-agent-shell-previous-source-block
@@ -1712,7 +1722,7 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous source block and announce its language and line count.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.18 emacsvox-agent-shell-previous-table
+2.21.1.19 emacsvox-agent-shell-previous-table
 .............................................
 
  -- Command: emacsvox-agent-shell-previous-table
@@ -1720,7 +1730,15 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous rendered Markdown table and announce it.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.19 emacsvox-agent-shell-previous-user-prompt
+2.21.1.20 emacsvox-agent-shell-previous-tree
+............................................
+
+ -- Command: emacsvox-agent-shell-previous-tree
+
+     Move to the previous recognized text tree and speak its root.
+     Use the existing bracket repeat map for further tree movement.
+
+2.21.1.21 emacsvox-agent-shell-previous-user-prompt
 ...................................................
 
  -- Command: emacsvox-agent-shell-previous-user-prompt
@@ -1728,35 +1746,35 @@ order.  Load through 'emacsvox-agent-shell'.
      Move to the previous submitted user prompt.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.21.1.20 emacsvox-agent-shell-repeat-next-block
+2.21.1.22 emacsvox-agent-shell-repeat-next-block
 ................................................
 
  -- Command: emacsvox-agent-shell-repeat-next-block
 
      Move to the next occurrence of the selected semantic block type.
 
-2.21.1.21 emacsvox-agent-shell-repeat-previous-block
+2.21.1.23 emacsvox-agent-shell-repeat-previous-block
 ....................................................
 
  -- Command: emacsvox-agent-shell-repeat-previous-block
 
      Move to the previous occurrence of the selected semantic block type.
 
-2.21.1.22 emacsvox-agent-shell-speak-last-response
+2.21.1.24 emacsvox-agent-shell-speak-last-response
 ..................................................
 
  -- Command: emacsvox-agent-shell-speak-last-response
 
      Speak the latest completed agent answer in full without moving point.
 
-2.21.1.23 emacsvox-agent-shell-speak-response-overview
+2.21.1.25 emacsvox-agent-shell-speak-response-overview
 ......................................................
 
  -- Command: emacsvox-agent-shell-speak-response-overview
 
      Speak a concise overview of the latest completed agent answer.
 
-2.21.1.24 emacsvox-agent-shell-speak-source-block
+2.21.1.26 emacsvox-agent-shell-speak-source-block
 .................................................
 
  -- Command: emacsvox-agent-shell-speak-source-block

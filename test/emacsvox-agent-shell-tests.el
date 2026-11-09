@@ -10057,6 +10057,217 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal (string-trim (substring-no-properties spoken))
                      "elisp")))))
 
+(ert-deftest emacsvox-agent-shell-tree-speech-keeps-source-and-depth ()
+  "Completed text trees speak labels, including when copied into a viewport."
+  (dolist (language '("text" "plaintext" ""))
+    (let* ((body "Finance\n├─ Cash forecast\n│  ├─ Overview\n│  └─ Payments\n└─ Checks [permission-dependent]\n\nUtilities\n├─ Settings\n└─ Search\n")
+           (markdown (concat "```" language "\n" body "```\n"))
+           (rendered (agent-shell-markdown-convert markdown)))
+      (with-temp-buffer
+        (setq major-mode 'agent-shell-viewport-view-mode)
+        (insert rendered)
+        (goto-char (point-min))
+        (search-forward "│  └─ ")
+        (should (= 2 (get-text-property (point) 'emacsvox-text-tree-depth)))
+        (let ((line (buffer-substring (line-beginning-position) (line-end-position))))
+          (should (equal "Tree. Level 2. Payments" (substring-no-properties
+                                     (emacsvox-agent-shell--prepare-speech-text line)))))
+        (let ((spoken (emacsvox-agent-shell--prepare-speech-text (buffer-string))))
+          (should-not (string-match-p "[├└│─]" spoken))
+          (should-not (string-match-p
+                       "[├└│─]"
+                       (emacsvox-agent-shell--visible-block-text (point-min) (point-max))))
+          (should (string-match-p
+                   "Tree\\. Finance\nLevel 1\\. Cash forecast\nLevel 2\\. Overview"
+                   (emacsvox-agent-shell--visible-block-text (point-min) (point-max))))
+          (should (string-match-p "Checks \\[permission-dependent\\]" spoken)))
+        (let ((body (emacsvox-agent-shell--block-navigation-body-text
+                     (emacsvox-agent-shell--visible-block-text (point-min) (point-max)))))
+          (should (text-property-not-all 0 (length body) 'emacsvox-aural-facts nil body))
+          (should-not (text-property-not-all 0 (length body) 'emacsvox-text-tree-id nil body)))
+        (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                       (substring-no-properties rendered)))
+        (should (string-match-p (regexp-quote body)
+                               (agent-shell-markdown-reconstruct (point-min) (point-max))))))))
+
+(ert-deftest emacsvox-agent-shell-tree-line-level-feedback ()
+  "Line preparation tracks depth while independent reading starts at entry."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let* ((rendered (agent-shell-markdown-convert
+                      "```text\nFinance\n├─ Cash\n│  ├─ Receipts\n│  └─ Payments\n└─ Planning\n\nUtilities: unchanged\n```\n"))
+           (emacsvox-agent-shell--line-navigation-speech-p t))
+      (insert rendered)
+      (goto-char (point-min))
+      (search-forward "Finance")
+      (beginning-of-line)
+      (dolist (expected '("Tree. Finance" "Level 1. Cash" "Level 2. Receipts"
+                          "Payments" "Level 1. Planning"))
+        (should (equal expected
+                       (substring-no-properties
+                        (emacsvox-agent-shell--prepare-speech-text
+                         (buffer-substring (line-beginning-position) (line-end-position))))))
+        (forward-line 1))
+      (emacsvox-agent-shell--prepare-speech-text "Outside")
+      (forward-line -2)
+      (should (equal "Tree. Level 2. Payments"
+                     (substring-no-properties
+                      (emacsvox-agent-shell--prepare-speech-text
+                       (buffer-substring (line-beginning-position) (line-end-position)))))))))
+
+(ert-deftest emacsvox-agent-shell-tree-graphical-level-feedback ()
+  "Real arrow navigation announces tree entry and depth in both directions."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local agent-shell--state
+                  '((:agent-config . ((:mode-line-name . "Codex")))))
+      (setq-local emacsvox-aural-source-transform-function
+                  #'emacsvox-agent-shell--prepare-speech-text)
+      (insert (agent-shell-markdown-convert
+               "```text\nFinance\n├─ Cash\n│  ├─ Receipts\n│  └─ Payments\n└─ Planning\n\nUtilities: unchanged\n```\n"))
+      (visual-line-mode 1)
+      (switch-to-buffer (current-buffer))
+      (goto-char (point-min))
+      (search-forward "Finance")
+      (beginning-of-line)
+      (forward-line -1)
+      (redisplay t)
+      (dolist (step '(("<down>" . "Tree. Finance")
+                      ("<down>" . "Level 1. Cash")
+                      ("<down>" . "Level 2. Receipts")
+                      ("<down>" . "Payments")
+                      ("<down>" . "Level 1. Planning")
+                      ("<down>" . "End of tree.")
+                      ("<down>" . "Utilities: unchanged")
+                      ("<up>" . nil)
+                      ("<up>" . "Tree. Level 1. Planning")
+                      ("<up>" . "Level 2. Payments")))
+        (let (speech)
+          (cl-letf (((symbol-function 'tts-speak)
+                     (lambda (text) (push (string-trim (substring-no-properties text)) speech)))
+                    ((symbol-function 'emacsvox-icon) #'ignore))
+            (execute-kbd-macro (kbd (car step))))
+          (should (equal speech (and (cdr step) (list (cdr step))))))))))
+
+(ert-deftest emacsvox-agent-shell-tree-navigation-and-repeat ()
+  "Tree selection, inferred brackets and explicit commands share cached roots."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (with-temp-buffer
+      (setq major-mode mode)
+      (setq-local emacsvox-aural-source-transform-function
+                  #'emacsvox-agent-shell--prepare-speech-text)
+      (insert (agent-shell-markdown-convert
+               "Before\n```text\nFirst\n├─ One\n└─ Two\n\nSecond\n├─ Three\n└─ Four\n```\n\n# After"))
+      (let* ((locations (emacsvox-agent-shell--tree-locations))
+             (first (plist-get (car locations) :position))
+             (second (plist-get (cadr locations) :position))
+             speech)
+        (should (= 2 (length locations)))
+        (should (equal '(tree tree)
+                       (mapcar (lambda (item) (plist-get item :type)) locations)))
+        (goto-char (point-min))
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (push (string-trim (substring-no-properties text)) speech)))
+                  ((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'set-transient-map) #'ignore)
+                  ((symbol-function 'completing-read) (lambda (&rest _) "Tree")))
+          (call-interactively #'emacsvox-agent-shell-next-block-of-type)
+          (should (= (point) first))
+          (should (eq emacsvox-agent-shell--block-navigation-type 'tree))
+          (should (equal (car speech) "Tree. First"))
+          (forward-line 1)
+          (should (eq 'tree (plist-get
+                            (emacsvox-agent-shell--block-location-at-point) :type)))
+          (emacsvox-agent-shell-next-block-at-point)
+          (should (= (point) second))
+          (should (equal (car speech) "End of tree. Tree. Second"))
+          (emacsvox-agent-shell-repeat-previous-block)
+          (should (= (point) first))
+          (emacsvox-agent-shell-next-tree)
+          (should (= (point) second))
+          (emacsvox-agent-shell-previous-tree)
+          (should (= (point) first))
+          (emacsvox-agent-shell-next-heading)
+          (should (string-match-p "End of tree\\. After" (car speech)))
+          (should-not emacsvox-agent-shell--tree-speech-context))))))
+
+(ert-deftest emacsvox-agent-shell-tree-blank-exit-shares-transaction ()
+  "Leaving onto a blank line preserves its actions in a single exit submission."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "\n")
+    (goto-char (point-min))
+    (setq emacsvox-agent-shell--tree-speech-context '(tree-id . 1))
+    (let (submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest options) (push (cons text options) submissions))))
+        (emacsvox-agent-shell--call-with-vertical-block-entry
+         (lambda ()
+           (emacsvox-aural-submit-actions
+            :facts '(:line-condition blank)
+            :compatibility-actions '(blank-action))) nil))
+      (should (= 1 (length submissions)))
+      (should (equal "End of tree. " (caar submissions)))
+      (should (equal '(blank-action)
+                     (plist-get (cdar submissions) :compatibility-actions)))
+      (should-not emacsvox-agent-shell--tree-speech-context))))
+
+(ert-deftest emacsvox-agent-shell-tree-customized-indicators ()
+  "Each tree event can replace its speech with a cue without silencing labels."
+  (dolist (event '(tree-entered tree-exited tree-level-changed))
+    (dolist (action '((:id sound :kind cue :cue open-object)
+                      (:id sound :kind tone :pitch 440 :duration 60)))
+      (let* ((emacsvox-aural-user-rules nil)
+             (emacsvox-aural-buffer-rules nil)
+             (emacsvox-aural-session-rules
+              `((:id tree-test :match (:event ,event)
+                     :render (:content (:speak nil)
+                                       :before (:append (,action))))))
+             (text (concat (emacsvox-text-tree--indicator event "Indicator. " 2) "Item"))
+             (prepared (emacsvox-aural-prepare-text
+                        text nil (emacsvox-aural-capture-context 'agent-shell 'navigation)))
+             (plans (emacsvox-aural--submission-plans-in prepared)))
+        (should (= 2 (length plans)))
+        (let ((indicator (car plans)) (item (cadr plans)))
+          (should-not (emacsvox-aural-concrete-content-speak
+                       (emacsvox-aural-concrete-plan-content indicator)))
+          (should (eq (plist-get action :kind)
+                      (emacsvox-aural-concrete-action-kind
+                       (car (emacsvox-aural-concrete-plan-before indicator)))))
+          (should (emacsvox-aural-concrete-content-speak
+                   (emacsvox-aural-concrete-plan-content item)))
+          (should-not (emacsvox-aural-concrete-plan-before item)))))))
+
+(ert-deftest emacsvox-agent-shell-tree-language-and-ambiguity-boundary ()
+  "Programming languages, ordinary prose and ambiguous panels stay literal."
+  (dolist (markdown '("```python\nRoot\n├─ One\n└─ Two\n```\n"
+                      "Root\n├─ One\n└─ Two\n"
+                      "```text\nRoot\n└─ One\n```\n"
+                      "```text\nRoot\n├─ One\n│  └─ \n```\n"))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (let* ((rendered (agent-shell-markdown-convert markdown))
+             (spoken (emacsvox-agent-shell--prepare-speech-text rendered)))
+        (should (string-match-p "[├└]─" spoken))
+        (should-not (text-property-not-all
+                     0 (length rendered) 'emacsvox-text-tree-prefix nil rendered))))))
+
+(ert-deftest emacsvox-agent-shell-tree-streaming-waits-for-closed-block ()
+  "An open fence remains literal until the completed tree is rendered."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "```text\nRoot\n|-- First\n`-- Second\n")
+    (agent-shell-markdown-replace-markup)
+    (should (string-match-p "|-- First" (emacsvox-agent-shell--prepare-speech-text (buffer-string))))
+    (goto-char (point-max))
+    (insert "```\n")
+    (agent-shell-markdown-replace-markup)
+    (let ((spoken (emacsvox-agent-shell--prepare-speech-text (buffer-string))))
+      (should (string-match-p "Tree. Root\nLevel 1. First\nSecond" spoken))
+      (should-not (string-match-p "|--" spoken)))))
+
 (ert-deftest emacsvox-agent-shell-response-navigation-omits-table-borders ()
   "Real response navigation and continuous speech omit rendered table chrome."
   (dolist (unicode '(nil t))
@@ -12495,16 +12706,30 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                     ((symbol-function 'agent-shell-viewport--prompt-start) (lambda () nil))
                     ((symbol-function 'agent-shell-viewport--response-start) (lambda () nil)))
             (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+            (backward-char)
             (let ((speech (emacsvox-agent-shell-test--question-speech
                            (emacsvox-agent-shell-test--capture-events
                              (execute-kbd-macro (kbd "TAB"))))))
               (should (= 1 (length speech)))
-              (should (string-match-p "Destination, required.*Remote, unselected" (car speech))))
+              (should (string-match-p "Destination, required.*Local, unselected" (car speech))))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "TAB"))))))
+              (should (= 1 (length speech)))
+              (should (string-match-p "Remote, unselected" (car speech)))
+              (should-not (string-match-p "Destination" (car speech))))
             (let ((speech (emacsvox-agent-shell-test--question-speech
                            (emacsvox-agent-shell-test--capture-events
                              (execute-kbd-macro (kbd "<backtab>"))))))
               (should (= 1 (length speech)))
-              (should (string-match-p "Local, unselected" (car speech))))))))))
+              (should (string-match-p "Local, unselected" (car speech)))
+              (should-not (string-match-p "Destination" (car speech))))
+            (execute-kbd-macro (kbd "TAB"))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "TAB"))))))
+              (should (= 1 (length speech)))
+              (should (string-match-p "Backup, optional" (car speech))))))))))
 
 (ert-deftest emacsvox-agent-shell-question-failure-and-cancellation ()
   "Missing required values and cancelled edits do not announce success."

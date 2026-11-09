@@ -32,7 +32,10 @@
     (let ((status
            (call-process
             (expand-file-name invocation-name invocation-directory) nil t nil
-            "-Q" "--batch" "--eval"
+            "-Q" "--batch"
+            "-L" (expand-file-name "../core"
+                                   (file-name-directory emacsvox-agent-shell-render-test--file))
+            "--eval"
             (prin1-to-string
              `(progn
                 ;; Rebinding primitives must not generate native trampolines

@@ -25,7 +25,8 @@
   (add-to-list 'load-path lisp)
   (add-to-list 'load-path (expand-file-name "test/" root))
   (load (expand-file-name "emacsvox-preamble.el" lisp) nil nil)
-  (dolist (module '(emacsvox-tts-tests
+  (dolist (module '(emacsvox-text-tree-tests
+                    emacsvox-tts-tests
                     tts-dispatch-handoff-tests
                     omnivox-remote-tests
                     omnivox-parameters-tests
