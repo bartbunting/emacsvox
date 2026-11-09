@@ -32,7 +32,7 @@
 (require 'omnivox-punctuation-profiles)
 
 (defvar omnivox-preferences-last-result nil
-  "Latest independent punctuation reload results, with role, outcome and state.")
+  "Latest independent host reload results, with role, outcome and state.")
 
 (defun omnivox-preferences--state-p (state)
   "Whether STATE contains the required live policy and operation identities."
@@ -48,10 +48,13 @@
                   (member (plist-get operation :outcome)
                           '("preparing" "pending" "applied" "unchanged" "rejected")))))))
 
-(defun omnivox-preferences--reload-worker (process role expected-file callback)
+(defun omnivox-preferences--reload-worker (process role expected-file callback &optional scope)
   "Reload PROCESS for ROLE, checking EXPECTED-FILE when non-nil.
-Call CALLBACK once with an independent result.  Never wait for another worker."
+Call CALLBACK once with an independent result.  Never wait for another worker.
+SCOPE is `host' for all host preferences, or nil for punctuation only."
   (let ((identity (list 'reload)) (deadline (+ (float-time) 3))
+        (request-type (if (eq scope 'host) "reload_host_preferences_v1" "reload_punctuation_v1"))
+        (feature (if (eq scope 'host) "host_preferences_reload_v1" "host_preferences_v1"))
         done timer incarnation sequence)
     (cl-labels
         ((finish (outcome &optional state reason)
@@ -84,7 +87,7 @@ Call CALLBACK once with an independent result.  Never wait for another worker."
                  (t (send '(:type "host_preferences_status_v1") #'observe))))
          (observe (_owner response)
            (unless done
-             (let* ((state (if (equal (plist-get response :type) "reload_punctuation_v1")
+             (let* ((state (if (equal (plist-get response :type) request-type)
                                (plist-get response :state) response))
                     (operation (plist-get state :last_operation)))
                (cond
@@ -92,7 +95,10 @@ Call CALLBACK once with an independent result.  Never wait for another worker."
                  (if (>= (float-time) deadline) (finish "unknown")
                    (setq timer (run-at-time 0.025 nil #'poll))))
                 ((or (not (equal incarnation (plist-get state :incarnation)))
-                     (not (eql sequence (plist-get operation :sequence))))
+                     (not (eql sequence (plist-get operation :sequence)))
+                     (and (or scope (plist-get operation :scope))
+                          (not (equal (plist-get operation :scope)
+                                      (if (eq scope 'host) "host" "punctuation")))))
                  (finish "stale" state "Worker or operation changed; nothing replayed"))
                 ((member (plist-get operation :outcome) '("preparing" "pending"))
                  (setq timer (run-at-time 0.025 nil #'poll)))
@@ -112,12 +118,12 @@ Call CALLBACK once with an independent result.  Never wait for another worker."
                (setq incarnation (plist-get state :incarnation)
                      sequence (1+ (or (plist-get (plist-get state :last_operation) :sequence) 0)))
                (if (> sequence #xffffffffffffffff) (finish "rejected" state "Operation IDs exhausted")
-                 (send (list :type "reload_punctuation_v1" :incarnation incarnation
+                 (send (list :type request-type :incarnation incarnation
                              :sequence sequence :expected_revision (plist-get state :revision))
                        #'observe)))))))
       (cond
        ((not (and (processp process) (process-live-p process))) (finish "unavailable"))
-       ((not (omnivox--process-supports-p process "host_preferences_v1"))
+       ((not (omnivox--process-supports-p process feature))
         (finish "unsupported" nil "This worker needs explicit restart"))
        ((process-get process 'omnivox-preference-operation) (finish "busy"))
        (t
@@ -140,12 +146,28 @@ Call CALLBACK once with an independent result.  Never wait for another worker."
 (defun omnivox-reload-punctuation (&optional callback expected-file)
   "Reload saved punctuation on each current local owned speech worker.
 Keep speaking during preparation.  A failed worker cannot delay installation
-on another.  Other effective settings changes require an explicit restart.
+on another.  Other host preferences need `omnivox-reload-preferences'.
 Temporary voice/rate/profile selections survive; Reset uses the new tables.
 Recovery from retained startup may restore older preferences.
 CALLBACK receives per-worker results.  EXPECTED-FILE optionally restricts the
 operation to workers using the editor's saved file; it is never sent as a path."
   (interactive)
+  (omnivox-preferences--reload nil callback expected-file))
+
+;;;###autoload
+(defun omnivox-reload-preferences (&optional callback)
+  "Reload saved punctuation, capital cues, chunking and Reset defaults.
+Each local worker installs independently while speech continues.  Current
+client voice, rate, volume and profile choices remain; Reset uses the newly
+loaded defaults.  Engine, model, routing and output changes require restart.
+Recovery from retained startup may restore older preferences.
+CALLBACK receives independent results for the current workers."
+  (interactive)
+  (omnivox-preferences--reload 'host callback nil))
+
+(defun omnivox-preferences--reload (scope callback expected-file)
+  "Reload SCOPE independently, passing results to CALLBACK.
+EXPECTED-FILE restricts punctuation editor reload to its saved target."
   (let* ((workers (delete-dups (omnivox-punctuation-profiles--workers)))
          (remaining (length workers)) results)
     (dolist (process workers)
@@ -157,7 +179,8 @@ operation to workers using the editor's saved file; it is never sent as a path."
          (when (= remaining 0)
            (setq omnivox-preferences-last-result (nreverse results))
            (if callback (funcall callback omnivox-preferences-last-result)
-             (message "%s" (omnivox-preferences--summary omnivox-preferences-last-result)))))))))
+             (message "%s" (omnivox-preferences--summary omnivox-preferences-last-result)))))
+       scope))))
 
 ;;;###autoload
 (defun omnivox-preferences-status ()
@@ -172,12 +195,15 @@ operation to workers using the editor's saved file; it is never sent as a path."
            (when (omnivox-preferences--state-p state)
              (process-put owner 'omnivox-preference-state state))
            (if (omnivox-preferences--state-p state)
-               (message "%s: punctuation revision %s, %s; %s"
+               (message "%s: preference revision %s, %s; %s"
                         (if (eq owner tts-notify-process) "Notifications" "Main")
                         (plist-get state :revision)
                         (or (plist-get (plist-get state :last_operation) :outcome) "no reload")
-                        (if (equal (plist-get state :punctuation_sha256)
-                                   (plist-get state :startup_punctuation_sha256))
+                        (if (if (plist-get state :host_preferences_sha256)
+                                (equal (plist-get state :host_preferences_sha256)
+                                       (plist-get state :startup_host_preferences_sha256))
+                              (equal (plist-get state :punctuation_sha256)
+                                     (plist-get state :startup_punctuation_sha256)))
                             "matches startup" "changed since startup"))
              (message "Could not read live preferences for %s" (process-name owner)))) 1)
       (message "Preference status unavailable for %s" process))))

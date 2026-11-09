@@ -100,5 +100,44 @@
     (process-put tts-speaker-process 'omnivox-punctuation-profiles nil)
     (should-not (omnivox-punctuation-profiles--command '(profile "prose" some) tts-speaker-process))))
 
+(ert-deftest omnivox-preferences-host-reload-negotiates-scope-independently ()
+  (omnivox-profiles-tests--workers
+    (process-put tts-speaker-process 'omnivox--control-capabilities
+                 '(:features ("host_preferences_v1" "host_preferences_reload_v1")))
+    (process-put tts-notify-process 'omnivox--control-capabilities
+                 '(:features ("host_preferences_v1")))
+    (let (results requests)
+      (cl-letf (((symbol-function 'omnivox--send-control-request)
+                 (lambda (process request callback &optional _)
+                   (push request requests)
+                   (pcase (plist-get request :type)
+                     ("host_preferences_status_v1"
+                      (funcall callback process (omnivox-preferences-tests--state)))
+                     ("reload_host_preferences_v1"
+                      (funcall callback process
+                               (list :type "reload_host_preferences_v1" :state
+                                     (omnivox-preferences-tests--state
+                                      '(:scope "host" :sequence 1 :outcome "applied")))))))))
+        (omnivox-reload-preferences (lambda (value) (setq results value))))
+      (should (equal (mapcar (lambda (r) (plist-get r :outcome)) results)
+                     '("applied" "unsupported")))
+      (should (= 1 (cl-count "reload_host_preferences_v1" requests :key (lambda (r) (plist-get r :type)) :test #'equal)))
+      (should-not (member "reload_punctuation_v1" (mapcar (lambda (r) (plist-get r :type)) requests))))))
+
+(ert-deftest omnivox-preferences-host-does-not-mistake-another-scope-for-success ()
+  (omnivox-profiles-tests--workers
+    (process-put tts-speaker-process 'omnivox--control-capabilities
+                 '(:features ("host_preferences_v1" "host_preferences_reload_v1")))
+    (let (result)
+      (cl-letf (((symbol-function 'omnivox--send-control-request)
+                 (lambda (process request callback &optional _)
+                   (funcall callback process
+                            (omnivox-preferences-tests--state
+                             (when (equal (plist-get request :type) "reload_host_preferences_v1")
+                               '(:scope "punctuation" :sequence 1 :outcome "applied")))))))
+        (omnivox-preferences--reload-worker tts-speaker-process "Main" nil
+                                            (lambda (r) (setq result r)) 'host))
+      (should (equal "stale" (plist-get result :outcome))))))
+
 (provide 'omnivox-preferences-tests)
 ;;; omnivox-preferences-tests.el ends here

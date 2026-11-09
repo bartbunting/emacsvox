@@ -2832,11 +2832,14 @@ the current buffer unless their Help specifies a global prefix form.
           independent-reload support, ‘R’ applies saved punctuation
           while speech continues, reporting main and notification
           results separately.  Failed reload leaves the working policy
-          in place; changes to other host settings require an explicit
-          restart with ‘r’.  Omnivox 1.18.0 needs that restart; version
-          numbers alone do not establish reload support.  By contrast,
-          ‘S’ in the parent Punctuation menu saves the selected
-          level/profile through Customize, not the host editor's draft.
+          in place.  Use ‘M-x omnivox-reload-preferences’ on a
+          supporting host to reload capital pitch, chunk size and saved
+          speech defaults together with punctuation.  Engine, model,
+          routing and audio-output changes need an explicit restart with
+          ‘r’.  Omnivox 1.18.0 needs that restart; version numbers alone
+          do not establish reload support.  By contrast, ‘S’ in the
+          parent Punctuation menu saves the selected level/profile
+          through Customize, not the host editor's draft.
 
           Reload keeps your current voice, rate and selected profile.
           Removing a profile that a worker is using rejects that
@@ -2848,6 +2851,14 @@ the current buffer unless their Help specifies a global prefix form.
           startup settings can restore older punctuation; reload again
           after recovery if needed.  Reset retains the currently
           installed tables.
+
+          Full preference reload applies capital pitch and chunking to
+          subsequent requests.  It updates the saved defaults used by
+          Reset while preserving your current voice, rate, pitch,
+          volumes and other temporary choices.  Use the ordinary speech
+          controls to change a current setting immediately.  Each worker
+          reports its own result; preferences may differ temporarily
+          between main and notification speech.
 
        2. Work With Named Profiles
 

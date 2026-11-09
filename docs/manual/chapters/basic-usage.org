@@ -948,7 +948,9 @@ uses a newer supported release.
 The editor's ~s~ saves pronunciation data. With independent-reload support,
 ~R~ applies saved punctuation while speech continues, reporting main and
 notification results separately. Failed reload leaves the working policy in
-place; changes to other host settings require an explicit restart with ~r~.
+place. Use ~M-x omnivox-reload-preferences~ on a supporting host to reload
+capital pitch, chunk size and saved speech defaults together with punctuation.
+Engine, model, routing and audio-output changes need an explicit restart with ~r~.
 Omnivox 1.18.0 needs that restart; version numbers alone do not establish reload
 support. By contrast, ~S~ in the parent Punctuation menu saves the selected
 level/profile through Customize, not the host editor's draft.
@@ -960,6 +962,12 @@ outcome may still finish: ~M-x omnivox-preferences-status~ checks live status.
 ~M-x omnivox-reload-punctuation~ reloads each running worker's own saved file.
 Recovery using retained startup settings can restore older punctuation; reload
 again after recovery if needed. Reset retains the currently installed tables.
+
+Full preference reload applies capital pitch and chunking to subsequent requests.
+It updates the saved defaults used by Reset while preserving your current voice,
+rate, pitch, volumes and other temporary choices. Use the ordinary speech controls
+to change a current setting immediately. Each worker reports its own result;
+preferences may differ temporarily between main and notification speech.
 
 ***** Work With Named Profiles
 :PROPERTIES:
