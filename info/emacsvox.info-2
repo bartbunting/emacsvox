@@ -5289,31 +5289,3 @@ manual.  For Omnivox builds, engine behaviour, command-line options and
 protocols, use the linked Omnivox guides.  The README beside each
 compatibility server documents that adapter and any separately licensed
 runtime it needs.
-
-
-File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  Prev: Speech Backends,  Up: Top
-
-15 Emacsvox Keyboard Commands.
-******************************
-
-Use this chapter to recall an everyday command and check its important
-conditions before acting.  *note Read the key instructions: Emacs Key
-Notation. explains modifiers, capital letters and successive keypresses.
-*note Basic Usage: (emacsvox)Basic Usage. teaches the reading and
-editing workflows; the links beside each reminder lead to their details.
-
-   These are default keys, used without a prefix argument unless one is
-shown.  Application keymaps and personal bindings can change their
-meaning.  A short reference cannot replace a terminal's or editor's own
-instructions.  Use *note live Help: Using Online Help. in the affected
-buffer when a binding differs, and *note the generated keymap reference:
-(emacsvox-reference)Emacsvox Keymaps. for the full default inventory.
-
-* Menu:
-
-* Reading reminders: Everyday Reading Commands.  Choose a reading unit and check its effect on point and windows.
-* Editing reminders: Everyday Editing Commands.  Select, copy, cut, paste and recover with the right scope.
-* Files, buffers and windows: Everyday Workspace Commands.  Open and save documents without confusing buffers and views.
-* Help and orientation: Everyday Help Commands.  Find commands and return to the intended working buffer.
-* Speech and settings: Everyday Speech Commands.  Find controls and distinguish navigation from undo and saving.
-* How prefixes and menus fit together: Emacsvox Key Prefixes.  Understand the speech prefix, menu entry and application overrides.

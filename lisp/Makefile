@@ -86,6 +86,7 @@ speech/omnivox-engine-settings.elc \
 ui/omnivox-engine-configuration.elc \
 ui/omnivox-punctuation.elc \
 speech/omnivox-punctuation-profiles.elc \
+speech/omnivox-preferences.elc \
 ui/omnivox-espeak-variants.elc \
 speech/tts-lifecycle.elc \
 speech/tts-voice-api.elc \

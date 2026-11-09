@@ -100,6 +100,7 @@
     "speech/omnivox-engine-settings.el"
     "ui/omnivox-punctuation.el"
     "speech/omnivox-punctuation-profiles.el"
+    "speech/omnivox-preferences.el"
     "ui/omnivox-engine-configuration.el"
     "core/emacsvox-pronounce.el"
     "core/emacsvox-tracked-reading.el"

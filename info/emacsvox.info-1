@@ -2794,6 +2794,9 @@ the current buffer unless their Help specifies a global prefix form.
      ‘s’
           Save drafts on the host without restarting speech or altering
           unrelated configuration.
+     ‘R’
+          Reload saved punctuation independently on supporting local
+          workers; save or discard drafts first.
      ‘r’
           Restart this session's main and notification workers with
           saved settings after confirmation; save or discard drafts
@@ -2825,10 +2828,26 @@ the current buffer unless their Help specifies a global prefix form.
           configuration-format checks matter even when the main
           installation uses a newer supported release.
 
-          The editor's ‘s’ saves pronunciation data; its ‘r’ activates
-          through worker restart.  By contrast, ‘S’ in the parent
-          Punctuation menu saves the selected level/profile through
-          Customize, not the host editor's draft.
+          The editor's ‘s’ saves pronunciation data.  With
+          independent-reload support, ‘R’ applies saved punctuation
+          while speech continues, reporting main and notification
+          results separately.  Failed reload leaves the working policy
+          in place; changes to other host settings require an explicit
+          restart with ‘r’.  Omnivox 1.18.0 needs that restart; version
+          numbers alone do not establish reload support.  By contrast,
+          ‘S’ in the parent Punctuation menu saves the selected
+          level/profile through Customize, not the host editor's draft.
+
+          Reload keeps your current voice, rate and selected profile.
+          Removing a profile that a worker is using rejects that
+          worker's update.  A delayed or unavailable notification worker
+          does not prevent main speech from updating.  An unknown
+          outcome may still finish: ‘M-x omnivox-preferences-status’
+          checks live status.  ‘M-x omnivox-reload-punctuation’ reloads
+          each running worker's own saved file.  Recovery using retained
+          startup settings can restore older punctuation; reload again
+          after recovery if needed.  Reset retains the currently
+          installed tables.
 
        2. Work With Named Profiles
 
@@ -2837,15 +2856,19 @@ the current buffer unless their Help specifies a global prefix form.
           ‘proofreading’.  ‘l’ switches levels and profiles; ‘X’ removes
           the selected profile from the draft.  Profiles inherit
           base-level edits and override individual characters.  ‘s’
-          saves all drafts without changing speech; ‘r’ loads the same
-          definitions into both workers.
+          saves all drafts without changing speech; ‘R’ reloads
+          supporting workers and ‘r’ restarts them.
 
-          ‘tts-set-punctuations’ offers profiles whose definitions agree
-          in current workers.  Explicit selection applies to the buffer.
-          A preference in ‘tts-punctuation-mode-policy-alist’ can use
-          ‘(text-mode profile "prose" some)’, retaining ‘some’ as
-          fallback for older hosts, missing profiles, or inconsistent
-          worker definitions.  Status identifies fallback use.
+          ‘tts-set-punctuations’ offers the foreground worker's profiles
+          when independent reload is supported.  Each worker uses its
+          own definition; an unavailable notification profile does not
+          disable the foreground profile.  Older workers require
+          matching definitions in both streams.  Explicit selection
+          applies to the buffer.  A preference in
+          ‘tts-punctuation-mode-policy-alist’ can use ‘(text-mode
+          profile "prose" some)’, retaining ‘some’ as fallback for
+          missing profiles and for inconsistent worker definitions on
+          older hosts.  Status identifies fallback use.
           ‘tts-reset-punctuation-mode’ restores mode policy.  Explicitly
           choosing a built-in level overrides a profile.  Character
           inspection is independent, and there is no built-in ‘most’

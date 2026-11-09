@@ -779,6 +779,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omnivox-native-codec:: Native voice wire values.
 * omnivox-parameters:: Asynchronous engine controls.
 * omnivox-parameters-codec:: Engine parameter metadata.
+* omnivox-preferences:: Independent host preference reload.
 * omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-punctuation:: Review and edit host punctuation.
 * omnivox-punctuation-profiles:: Negotiated punctuation profiles.

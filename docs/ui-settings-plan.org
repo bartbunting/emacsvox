@@ -2220,7 +2220,15 @@ Comparing those stores with disk or live host state remains deferred.
 The punctuation connection opens the existing character/pronunciation table
 from level/profile selection and preserves drafts on return. Saving and the
 explicit speech-worker restart remain separate. The table remains the editor
-for individual characters.
+for individual characters. The lightweight branch adds =R= for independent
+punctuation reload over each owned worker's current connection, with separate
+outcomes and a saved-file identity check. Other effective changes require restart;
+unsaved drafts remain protected. =M-x omnivox-preferences-status= observes live
+policy separately from startup. Source regressions cover an unavailable secondary,
+lost replies, a changed editor target and stale worker identity. Native execution,
+latency and fresh byte-code verification are tracked in the paired Omnivox resident
+reload report; listening acceptance remains pending. This is implementation in
+progress, not a published release or a new listening checkpoint.
 
 * Coverage audit, 2026-10-15
 

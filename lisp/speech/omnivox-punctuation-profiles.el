@@ -25,7 +25,7 @@
 
 ;;; Commentary:
 ;; Named mode values retain a built-in fallback.  Each live worker supplies its
-;; immutable catalogue; IDs alone never establish cross-worker agreement.
+;; catalogue; independent-reload workers may use different local policies.
 ;;; Code:
 (require 'cl-lib)
 (require 'seq)
@@ -73,6 +73,18 @@
                    (cdr workers)))
        (process-get (car workers) 'omnivox-punctuation-profiles)))))
 
+(defun omnivox-punctuation-profiles--independent-p (process)
+  "Whether PROCESS supports independent live policy installation."
+  (and (processp process) (process-live-p process)
+       (member "host_preferences_v1"
+               (plist-get (process-get process 'omnivox--control-capabilities) :features))))
+
+(defun omnivox-punctuation-profiles--catalogue (process)
+  "Return PROCESS's usable catalogue under its negotiated consistency contract."
+  (if (omnivox-punctuation-profiles--independent-p process)
+      (process-get process 'omnivox-punctuation-profiles)
+    (omnivox-punctuation-profiles--agreed)))
+
 (defun omnivox-punctuation-profiles--receive (process response)
   "Validate and retain PROCESS's frozen profile catalogue RESPONSE."
   (let ((profiles (plist-get response :profiles)) ids)
@@ -100,12 +112,13 @@
   "Return an optional negotiated profile command for MODE on PROCESS."
   (when (omnivox-punctuation-profiles--mode-p mode)
     (let* ((entry (seq-find (lambda (entry) (equal (cadr mode) (plist-get entry :id)))
-                            (omnivox-punctuation-profiles--agreed)))
+                            (omnivox-punctuation-profiles--catalogue process)))
            (local (and (processp process)
                        (seq-find (lambda (entry) (equal (cadr mode) (plist-get entry :id)))
                                  (process-get process 'omnivox-punctuation-profiles)))))
       (when (and entry (equal entry local)
-                 (equal (symbol-name (nth 2 mode)) (plist-get entry :fallback)))
+                 (or (omnivox-punctuation-profiles--independent-p process)
+                     (equal (symbol-name (nth 2 mode)) (plist-get entry :fallback))))
         (format "tts_set_punctuation_profile %s\n" (cadr mode))))))
 
 (defun omnivox-punctuation-profiles--describe (mode)
@@ -117,8 +130,8 @@
     (symbol-name (omnivox-punctuation-profiles--fallback mode))))
 
 (defun omnivox-punctuation-profiles--read ()
-  "Read a built-in level or an agreed named profile with its saved fallback."
-  (let* ((profiles (omnivox-punctuation-profiles--agreed))
+  "Read a built-in level or available named profile with its saved fallback."
+  (let* ((profiles (omnivox-punctuation-profiles--catalogue tts-speaker-process))
          (choice (completing-read "Punctuation: "
                                   (append '("none" "some" "all")
                                           (mapcar (lambda (entry) (plist-get entry :id)) profiles)) nil t))
