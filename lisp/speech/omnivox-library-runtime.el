@@ -486,6 +486,53 @@ OWNER sends the private prefix through the speech queue."
       (unless (omnivox--accept-registration-response process response generation registration)
         (error "Logical registration was not accepted")))))
 
+(defun omnivox-library--reconcile-retirement (process)
+  "Verify PROCESS's existing native retirement receipt through its original host.
+This never infers cleanup from exit status, missing locks or prepared records.
+Old clients without a retained launch context and old hosts remain unsupported."
+  (let* ((context (process-get process 'omnivox-library-launch-context))
+         (owner (process-get process 'omnivox-library-owner))
+         (program (plist-get context :program))
+         (environment (plist-get context :environment))
+         (directory (plist-get context :directory))
+         (worker (plist-get owner :worker))
+         (startup (plist-get owner :startup))
+         (digest (plist-get owner :startup_sha256))
+         (omnivox-library--timeout 2))
+    (unless (and (stringp program) (file-name-absolute-p program)
+                 (listp environment) environment (cl-every #'stringp environment)
+                 (stringp directory) (file-name-absolute-p directory)
+                 (stringp startup) (stringp digest) (stringp worker))
+      (error "Original native launch identity is unavailable"))
+    (omnivox-library-apply--uuid worker)
+    (unless (string-match-p "\\`[[:xdigit:]]\\{64\\}\\'" digest)
+      (error "Original startup digest is invalid"))
+    (let* ((process-environment (copy-sequence environment))
+           (default-directory directory)
+           (service
+            (make-process
+             :name "Omnivox retirement inspection"
+             :command (list program "--voice-library-service")
+             :connection-type 'pipe :coding 'utf-8-unix :noquery t
+             :filter #'omnivox-library--service-filter
+             :stderr (get-buffer-create "*Omnivox voice library diagnostics*"))))
+      (unwind-protect
+          (let ((host (omnivox-library--request service '(:command "host"))))
+            (unless (and (equal (plist-get host :type) "host")
+                         (equal (plist-get host :retirement_receipts_version) 1))
+              (error "Host cannot verify recorded retirement"))
+            (let ((receipt
+                   (omnivox-library--request
+                    service (list :command "retirement-status" :worker worker
+                                  :startup startup :startup_sha256 digest))))
+              (unless (and (equal (plist-get receipt :type) "retirement_status")
+                           (equal (plist-get receipt :worker) worker)
+                           (equal (plist-get receipt :startup_sha256) digest)
+                           (eq (plist-get receipt :retired) t))
+                (error "Exact native retirement receipt is unavailable"))
+              (process-put process 'omnivox-library-retired t)))
+        (when (process-live-p service) (delete-process service))))))
+
 (defun omnivox-library--retire (process)
   "Retire PROCESS only after obtaining native tree and pipe cleanup evidence."
   (unless (process-get process 'omnivox-library-retired)

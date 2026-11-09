@@ -2235,8 +2235,9 @@ progress, not a published release or a new listening checkpoint.
 Ordinary recovery now recognises a live local owner whose native worker has
 retired, including character feedback. =tts-recover= exposes retained-startup
 recovery without replacing notification speech. Both explicit and automatic
-recovery require native retirement evidence for a local owner; damaged history
-and owner loss remain outside this route. Startup registration targets its own
+recovery require native retirement evidence for a local owner. A supporting host
+can verify the existing durable receipt after reply loss using the original
+launch context. Missing or damaged history and unproven owner loss remain blocked. Startup registration targets its own
 worker, and recovery waits boundedly for that worker's speech registration.
 Notification fallback preserves the real foreground binding. Source and compiled
 native checks are tracked in the paired Omnivox retained-recovery report;

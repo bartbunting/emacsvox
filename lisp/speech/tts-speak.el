@@ -2125,6 +2125,7 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
 (defvar omnivox-library--birth-collector)
 (defvar omnivox-library--timeout)
 (declare-function omnivox-library--retire "omnivox-library-runtime" (process))
+(declare-function omnivox-library--reconcile-retirement "omnivox-library-runtime" (process))
 (declare-function omnivox-library--wait-for-recovered-speech "omnivox-library-runtime" (process))
 (defvar omnivox--library-startup)
 (defvar omnivox--engine-startup nil)
@@ -2201,10 +2202,17 @@ Signal a user error if no diagnostic buffer is available."
                (let ((process-environment (omnivox-engine-settings--environment program)))
                  (setq process-environment
                        (omnivox-library--startup-environment process-environment))
-                 (make-process
-                  :name name :command (omnivox-library--command program) :connection-type 'pipe
-                  :coding 'utf-8-unix
-                  :stderr (tts--diagnostic-buffer name t)))) nil)))
+                 (let* ((command (omnivox-library--command program))
+                        (worker
+                         (make-process
+                          :name name :command command :connection-type 'pipe
+                          :coding 'utf-8-unix
+                          :stderr (tts--diagnostic-buffer name t))))
+                   (when (member "--voice-library-owner" command)
+                     (process-put worker 'omnivox-library-launch-context
+                                  (list :program program :directory default-directory
+                                        :environment (copy-sequence process-environment))))
+                   worker))) nil)))
     (when (and (boundp 'omnivox-library--birth-collector) omnivox-library--birth-collector)
       (funcall omnivox-library--birth-collector process))
     (unless (process-live-p process) (error "Fail: Speech Server"))
@@ -2314,7 +2322,10 @@ Do not create a replacement inside a temporary speaker binding.")
              (member "--voice-library-owner" (process-command process))
              (not (process-live-p process))
              (not (process-get process 'omnivox-library-retired)))
-    (user-error "Native retirement is unconfirmed; retained recovery cannot bypass it")))
+    (require 'omnivox-library-runtime)
+    (condition-case err
+        (omnivox-library--reconcile-retirement process)
+      (error (user-error "Native retirement is unconfirmed: %s" (error-message-string err))))))
 
 (defun tts--confirm-owned-retirement (process)
   "Require actual native retirement for a locally owned PROCESS before recovery."
@@ -2325,7 +2336,14 @@ Do not create a replacement inside a temporary speaker binding.")
     ;; Native retirement already has a five-second cleanup deadline.  Leave
     ;; room for its reply without inheriting the long asset-management wait.
     (let ((omnivox-library--timeout 6))
-      (omnivox-library--retire process))))
+      (condition-case err
+          (omnivox-library--retire process)
+        (error
+         (if (process-live-p process)
+             (signal (car err) (cdr err))
+           ;; The owner persists its receipt before its final reply and exit.
+           ;; Reconcile that exact proof if the reply was lost.
+           (tts--assert-owned-recovery-possible process)))))))
 
 (defun tts--recover-speaker ()
   "Recover main speech from its retained activation without restarting its peer."

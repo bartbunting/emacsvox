@@ -100,14 +100,41 @@
             (unless (and failed (eq working tts-speaker-process))
               (error "Broken saved settings did not preserve working speech"))
             (recovery-test--speech)
-            (let ((start (float-time)))
-              (tts-recover)
-              (recovery-test--speech)
-              (princ (format "Retained recovery to completed speech %.3f ms\n" (* 1000 (- (float-time) start)))))
+            (let* ((start (float-time)) submitted completed status notice-error recovered
+                   (timer
+                    (run-at-time
+                     .01 nil
+                     (lambda ()
+                       (setq submitted (float-time))
+                       (condition-case err
+                           (tts-notify-apply
+                            (lambda (_)
+                              (tts-speak-marked
+                               "Notification during recovery." #'ignore
+                               (lambda (_id outcome)
+                                 (setq status outcome completed (float-time))))) nil)
+                         (error (setq status 'failed notice-error (error-message-string err))))))))
+              (unwind-protect
+                  (progn
+                    (tts-recover)
+                    (setq recovered (float-time))
+                    (recovery-test--wait (lambda () status))
+                    (unless (and (eq status 'completed) submitted completed
+                                 (< start submitted) (< completed recovered))
+                      (error "Notification did not complete during recovery: %S %S" status notice-error))
+                    (princ (format "Notification submitted/completed %.3f/%.3f ms inside %.3f ms recovery\n"
+                                   (* 1000 (- submitted start)) (* 1000 (- completed start))
+                                   (* 1000 (- recovered start))))
+                    (recovery-test--speech)
+                    (princ (format "Retained recovery to completed speech %.3f ms\n"
+                                   (* 1000 (- (float-time) start)))))
+                (cancel-timer timer)))
             (when (eq working tts-speaker-process) (error "Recovery did not replace foreground"))))
         (when (getenv "OMNIVOX_TEST_LOSE_RETIREMENT_REPLY")
           (let ((working tts-speaker-process)
                 (handler (symbol-function 'omnivox-library--handle-line))
+                (damage (getenv "OMNIVOX_TEST_DAMAGE_RETIREMENT_RECEIPT"))
+                (recovery-start (float-time))
                 dropped failed)
             (cl-letf (((symbol-function 'omnivox-library--handle-line)
                        (lambda (process line)
@@ -118,18 +145,46 @@
                                           (json-parse-string
                                            (substring line (length omnivox-library--prefix))
                                            :object-type 'plist) :type)))
-                             (setq dropped t)
+                             (progn
+                               (when damage
+                                 (let* ((worker (plist-get (process-get working 'omnivox-library-owner) :worker))
+                                        (receipt (expand-file-name
+                                                  (concat "voices/sessions/" worker ".retired")
+                                                  (getenv "OMNIVOX_TEST_CONFIG_DIR"))))
+                                   (copy-file receipt
+                                              (expand-file-name "original-retirement-receipt.json"
+                                                                (getenv "OMNIVOX_TEST_CONFIG_DIR")))
+                                   (with-temp-file receipt (insert "{"))))
+                               (setq dropped t))
                            (funcall handler process line)))))
               (condition-case nil (tts-recover) (error (setq failed t))))
-            (unless (and dropped failed (eq working tts-speaker-process)
-                         (not (process-get working 'omnivox-library-retired)))
-              (error "Lost retirement reply did not preserve uncertain ownership"))
-            (tts-notify-apply #'recovery-test--speech nil)
-            (setq failed nil)
-            (condition-case nil (tts-recover) (error (setq failed t)))
-            (unless (and failed (eq working tts-speaker-process))
-              (error "Retry invented missing retirement evidence"))
-            (princ "PASS: missing retirement reply blocks replacement; peer speaks; durable receipt reconciliation still needed\n")))
+            (unless dropped (error "Native retirement reply was not intercepted"))
+            (if damage
+                (progn
+                  (unless (and failed (eq working tts-speaker-process)
+                               (not (process-get working 'omnivox-library-retired)))
+                    (error "Damaged retirement evidence did not block replacement"))
+                  (setq failed nil)
+                  (condition-case nil (tts-recover) (error (setq failed t)))
+                  (unless (and failed (eq working tts-speaker-process))
+                    (error "Retry invented missing retirement evidence"))
+                  (let ((receipt (expand-file-name
+                                  (concat "voices/sessions/"
+                                          (plist-get (process-get working 'omnivox-library-owner) :worker)
+                                          ".retired")
+                                  (getenv "OMNIVOX_TEST_CONFIG_DIR"))))
+                    (unless (equal (with-temp-buffer (insert-file-contents receipt) (buffer-string)) "{")
+                      (error "Damaged receipt was rewritten")))
+                  (princ "PASS: damaged native receipt blocks replacement and stays damaged\n"))
+              (unless (and (not failed) (not (eq working tts-speaker-process))
+                           (process-get working 'omnivox-library-retired)
+                           (process-live-p tts-speaker-process))
+                (error "Lost reply was not reconciled through exact native evidence"))
+              (recovery-test--speech)
+              (princ (format "Lost reply recovery to completed speech %.3f ms\n"
+                             (* 1000 (- (float-time) recovery-start))))
+              (princ "PASS: lost retirement reply reconciled from existing native receipt\n"))
+            (tts-notify-apply #'recovery-test--speech nil)))
         (unless (and (eq notify tts-notify-process) (process-live-p notify)
                      (equal activation (process-get tts-speaker-process 'omnivox-engine-activation)))
           (error "Recovery changed peer or retained native startup"))

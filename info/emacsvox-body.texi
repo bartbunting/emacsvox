@@ -2727,7 +2727,9 @@ For locally owned Omnivox@comma{} recovery confirms native retirement before rep
 main speech. It can bypass a broken saved configuration@comma{} but still needs valid
 retained startup records and writable owner storage. Live host preferences may
 revert to startup values; reload them again when the saved file is usable.
-Unconfirmed native cleanup remains an error@comma{} rather than permission to start
+With host support@comma{} recovery can verify an existing native retirement record if
+the owner's final reply was lost. It uses the original host connection settings;
+missing or damaged evidence remains an error rather than permission to start
 over a possibly surviving worker.
 
 For repeat cleanup and text splitting@comma{} use the @ref{reading-filters, , reading filter menus}. Server
