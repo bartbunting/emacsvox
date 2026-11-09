@@ -2123,6 +2123,9 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
 
 ;; Helper: tts-make-process:
 (defvar omnivox-library--birth-collector)
+(defvar omnivox-library--timeout)
+(declare-function omnivox-library--retire "omnivox-library-runtime" (process))
+(declare-function omnivox-library--wait-for-recovered-speech "omnivox-library-runtime" (process))
 (defvar omnivox--library-startup)
 (defvar omnivox--engine-startup nil)
 (declare-function omnivox-library--owner "omnivox-library-runtime" (process))
@@ -2244,6 +2247,8 @@ Signal a user error if no diagnostic buffer is available."
 (defun tts-initialize ()
   "Initialize speech system."
   
+  (tts--assert-owned-recovery-possible tts-speaker-process)
+  (tts--assert-owned-recovery-possible tts-notify-process)
   ;; fallback of fallbacks
   (unless tts-program (setq tts-program "espeak"))
   (when (omnivox-remote-enabled-p) (omnivox-remote--begin-activation))
@@ -2299,26 +2304,61 @@ Signal a user error if no diagnostic buffer is available."
     (voice-setup)
     (when quit-data (signal (car quit-data) (cdr quit-data)))))
 
+(defvar tts--notification-recovery-target nil
+  "Foreground fallback in a one-element list during separate notification delivery.
+Do not create a replacement inside a temporary speaker binding.")
+
+(defun tts--assert-owned-recovery-possible (process)
+  "Reject replacement of a dead local owner PROCESS without cleanup evidence."
+  (when (and (processp process)
+             (member "--voice-library-owner" (process-command process))
+             (not (process-live-p process))
+             (not (process-get process 'omnivox-library-retired)))
+    (user-error "Native retirement is unconfirmed; retained recovery cannot bypass it")))
+
+(defun tts--confirm-owned-retirement (process)
+  "Require actual native retirement for a locally owned PROCESS before recovery."
+  (tts--assert-owned-recovery-possible process)
+  (when (and (processp process)
+             (member "--voice-library-owner" (process-command process))
+             (not (process-get process 'omnivox-library-retired)))
+    ;; Native retirement already has a five-second cleanup deadline.  Leave
+    ;; room for its reply without inheriting the long asset-management wait.
+    (let ((omnivox-library--timeout 6))
+      (omnivox-library--retire process))))
+
 (defun tts--recover-speaker ()
   "Recover main speech from its retained activation without restarting its peer."
-  (require 'omnivox-library-runtime)
-  (if (omnivox-remote-enabled-p)
-      (omnivox-remote--retry)
-    (let ((omnivox--engine-startup
-           (or (omnivox-library--engine-reference tts-speaker-process)
-               (omnivox-library--engine-reference tts-notify-process)
-               (omnivox-library--current-engine-reference))))
-      (if (not omnivox--engine-startup)
-          (tts-initialize)
-        (let ((new (tts-make-process "Speaker")) (old tts-speaker-process))
-          (unwind-protect
-              (progn
-                (when (processp old) (tts--retire-process old))
-                (setq tts-speaker-process new)
-                (omnivox-library--remember-engines new))
-            (unless (eq tts-speaker-process new) (tts--retire-process new))))
-        (require 'voice-setup)
-        (voice-setup)))))
+  (if tts--notification-recovery-target
+      (setq tts-speaker-process (car tts--notification-recovery-target))
+    (require 'omnivox-library-runtime)
+    (if (omnivox-remote-enabled-p)
+        (omnivox-remote--retry)
+      (tts--confirm-owned-retirement tts-speaker-process)
+      (let ((omnivox--engine-startup
+             (or (omnivox-library--engine-reference tts-speaker-process)
+                 (omnivox-library--engine-reference tts-notify-process)
+                 (omnivox-library--current-engine-reference))))
+        (if (not omnivox--engine-startup)
+            (tts-initialize)
+          (let ((new (tts-make-process "Speaker")) (old tts-speaker-process))
+            (unwind-protect
+                (progn
+                  (when (processp old) (tts--retire-process old))
+                  (setq tts-speaker-process new)
+                  (omnivox-library--remember-engines new))
+              (unless (eq tts-speaker-process new) (tts--retire-process new))))
+          (require 'voice-setup)
+          (voice-setup)
+          (when (and (processp tts-speaker-process)
+                     (process-get tts-speaker-process 'omnivox-library-owner))
+            (omnivox-library--wait-for-recovered-speech tts-speaker-process)))))))
+
+(defun tts--speech-process-usable-p (process)
+  "Whether PROCESS is live and has not reported native worker retirement."
+  (and (process-live-p process)
+       (not (and (processp process)
+                 (process-get process 'omnivox-library-retired)))))
 
 (defun tts-restart ()
   "Restart TTS server."
@@ -2326,6 +2366,21 @@ Signal a user error if no diagnostic buffer is available."
   
   (tts-initialize)
   (when (process-live-p tts-speaker-process)
+    (tts--protocol-sync)))
+
+;;;###autoload
+(defun tts-recover ()
+  "Recover main speech using its retained startup when available.
+For locally owned Omnivox, confirm native retirement before replacement and
+keep notification speech running.  This can recover from invalid saved settings;
+preferences may revert to those retained at startup.  Unconfirmed native cleanup
+or damaged retained records remain errors.  Other adapters use their ordinary
+recovery path.  Use `tts-restart' to capture newly saved settings."
+  (interactive)
+  (require 'omnivox-library-runtime)
+  (tts--confirm-owned-retirement tts-speaker-process)
+  (tts--recover-speaker)
+  (when (tts--speech-process-usable-p tts-speaker-process)
     (tts--protocol-sync)))
 
 ;;;   interactively select how text is split:
@@ -2449,12 +2504,12 @@ by the audio device's buffering latency."
   ;; ensure text is a  string
   (unless (stringp text) (when text (setq text (format "%s" text))))
   ;; ensure  the process  is live
-  (unless (process-live-p tts-speaker-process) (tts--recover-speaker))
+  (unless (tts--speech-process-usable-p tts-speaker-process) (tts--recover-speaker))
   ;; If you dont want me to talk,or my server is not running,
   ;; I will remain silent.
   ;; I also do nothing if text is nil or ""
   (unless
-      (or tts-quiet (not (process-live-p tts-speaker-process))
+      (or tts-quiet (not (tts--speech-process-usable-p tts-speaker-process))
           (null text) (zerop (length text)))
     (emacsvox-aural-call-with-delivery-transaction
      tts-speaker-process #'tts--speak-transaction text)))
@@ -2660,7 +2715,8 @@ Keep character pronunciation, rate and pitch handling in the speech server."
 (defun tts-letter (letter)
   "Speak a LETTER."
   (unless tts-quiet
-    (when (process-live-p tts-speaker-process)
+    (unless (tts--speech-process-usable-p tts-speaker-process) (tts--recover-speaker))
+    (when (tts--speech-process-usable-p tts-speaker-process)
       (if (and (stringp letter) (= (length letter) 1)
                (not (string-match-p "[[:space:][:cntrl:]]" letter))
                (not emacsvox-aural--delivery-transaction-active-p)
@@ -2679,7 +2735,8 @@ Keep character pronunciation, rate and pitch handling in the speech server."
   (cond
    ((null tts-notify-process) tts-speaker-process)
    ((and (processp tts-notify-process)
-         (memq (process-status tts-notify-process) '(open run)))
+         (memq (process-status tts-notify-process) '(open run))
+         (not (process-get tts-notify-process 'omnivox-library-retired)))
     tts-notify-process)
    (t tts-speaker-process)))
 
@@ -2691,8 +2748,13 @@ Keep character pronunciation, rate and pitch handling in the speech server."
 
 (defun tts-notify-apply (func text)
   " Applies func to text with tts-speaker-process set to notification stream."
-  (let ((tts-speaker-process (tts-notify-process)))
-    (funcall func text)))
+  (let ((target (tts-notify-process)))
+    (if (eq target tts-speaker-process)
+        ;; Recovery must update the real foreground binding on fallback.
+        (funcall func text)
+      (let ((tts--notification-recovery-target (list tts-speaker-process))
+            (tts-speaker-process target))
+        (funcall func text)))))
 (declare-function emacsvox-log-notification "emacsvox-speak" (text))
 
 (defun tts-notify (text &optional dont-log)
@@ -2755,7 +2817,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 (defun tts-notify-initialize ()
   "Initialize a separate notification TTS process when configured."
   (interactive)
-  
+  (tts--assert-owned-recovery-possible tts-notify-process)
   (require 'omnivox-library-runtime)
   (let ((omnivox--engine-startup
          (or omnivox--engine-startup

@@ -1573,7 +1573,7 @@ JSON map hash tables are copied independently and cannot be compared by `equal'.
       (progn
         (omnivox--store-routing-policy-response process response)
         (if (omnivox--process-routing-policy-current-p process)
-            (omnivox-register-logical-voices)
+            (omnivox--register-logical-voices (list process))
           (omnivox--set-process-routing-policy process)))
     (omnivox--record-control-error process response)
     (when (and
@@ -1709,12 +1709,10 @@ may supply complete frozen registrations, which need no current palette data."
         (emacsvox-aural-voice-runtime--call-with-resolution-snapshot prepare)
       (funcall prepare))))
 
-(defun omnivox-register-logical-voices ()
-  "Register all Emacsvox logical voices with live Omnivox processes.
-Return the number of processes sent the atomic registry replacement."
-  (interactive)
-  (let* ((processes (omnivox--registration-processes))
-         (registrations (omnivox--prepare-voice-registrations processes)))
+(defun omnivox--register-logical-voices (processes)
+  "Register logical voices on PROCESSES and return the number sent.
+Startup responses target their own worker; explicit client edits can target all."
+  (let ((registrations (omnivox--prepare-voice-registrations processes)))
     (omnivox--update-logical-registry-generation
      (mapcar #'cdr registrations))
     (dolist (registration registrations)
@@ -1725,13 +1723,20 @@ Return the number of processes sent the atomic registry replacement."
          (lambda (process response)
            (unless (omnivox--accept-registration-response process response generation content)
              (omnivox--record-control-error process response))))))
-    (when (and (called-interactively-p 'interactive) (null processes))
+    (length processes)))
+
+(defun omnivox-register-logical-voices ()
+  "Register all Emacsvox logical voices with live Omnivox processes.
+Return the number of processes sent the atomic registry replacement."
+  (interactive)
+  (let ((count (omnivox--register-logical-voices (omnivox--registration-processes))))
+    (when (and (called-interactively-p 'interactive) (= count 0))
       (user-error "No live Omnivox process supports logical voice registration"))
     (when (called-interactively-p 'interactive)
       (message "Sent logical voice generation %d to %d Omnivox process%s"
                omnivox--logical-registry-generation
-               (length processes) (if (= (length processes) 1) "" "es")))
-    (length processes)))
+               count (if (= count 1) "" "es")))
+    count))
 
 (defun omnivox--voice-configuration-processes ()
   "Return every distinct live process targeted by voice configuration."
@@ -2004,10 +2009,10 @@ taken effect on the server.  Reapply to confirm the desired configuration."
         (if (omnivox--process-supports-p process "runtime_routing_policy")
             (if (omnivox--set-process-routing-policy process)
                 nil
-              (omnivox-register-logical-voices))
+              (omnivox--register-logical-voices (list process)))
           (when (omnivox--process-supports-p
                  process "logical_voice_registration")
-            (omnivox-register-logical-voices))))
+            (omnivox--register-logical-voices (list process)))))
     (omnivox--record-control-error process response)))
 
 (defun omnivox--update-unicode-preprocessing ()
@@ -2103,7 +2108,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
         (omnivox--request-inventory process)
       (when (member "logical_voice_registration"
                     (plist-get response :features))
-        (omnivox-register-logical-voices)))))
+        (omnivox--register-logical-voices (list process))))))
 
 (defun omnivox--negotiate-process (process)
   "Start capability negotiation for one live Omnivox PROCESS."

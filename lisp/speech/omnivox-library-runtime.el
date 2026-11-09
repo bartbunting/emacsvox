@@ -245,6 +245,30 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
              (not (omnivox-remote-enabled-p)))
     (cdr omnivox-library--current-engines)))
 
+(defun omnivox-library--wait-for-recovered-speech (process)
+  "Wait for PROCESS's initial voice registration, independently of other lanes.
+Only recovery calls this bounded wait; healthy speech and preference reload do
+not wait on management.  Ignore unrelated parameter queries and previews."
+  (omnivox-library--wait
+   (lambda ()
+     (let ((pending (process-get process omnivox--control-pending-property)) busy)
+       (when pending
+         (maphash
+          (lambda (_id entry)
+            (when (and (omnivox--control-request-p entry)
+                       (member (omnivox--control-request-type entry)
+                               '("capabilities" "inventory" "set_routing_policy"
+                                 "register_logical_voices" "register_logical_voices_v2"
+                                 "register_logical_voices_v3")))
+              (setq busy t)))
+          pending))
+       (and (not busy)
+            (process-get process omnivox--control-capabilities-property)
+            (or (not (omnivox--choice-tuning-supported-p process))
+                (condition-case nil (omnivox--choice-current-registration process)
+                  (error nil))))))
+   process "Recovered speech initialization" 2))
+
 (defun omnivox-library--prepare-engines ()
   "Prepare one local activation; retain compatibility with older launchers."
   (when (and (tts--omnivox-program-p tts-program) (not (omnivox-remote-enabled-p)))

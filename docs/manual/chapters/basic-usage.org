@@ -1007,8 +1007,16 @@ missing integration.
 #+attr_texinfo: :indic kbd :compact t
 - C-e s :: Stop current main and notification speech with =tts-stop=.
 - C-e d q :: Toggle current-buffer quiet mode; ~C-u~ toggles it globally.
-- C-e C-s :: Stop and restart the selected speech server.
+- C-e C-s :: Restart the selected speech server using newly saved settings.
+- M-x tts-recover :: Recover main speech from its retained startup; keep notification speech running with locally owned Omnivox.
 - C-e d V :: Speak adapter and version information.
+
+For locally owned Omnivox, recovery confirms native retirement before replacing
+main speech. It can bypass a broken saved configuration, but still needs valid
+retained startup records and writable owner storage. Live host preferences may
+revert to startup values; reload them again when the saved file is usable.
+Unconfirmed native cleanup remains an error, rather than permission to start
+over a possibly surviving worker.
 
 For repeat cleanup and text splitting, use the [[reading-filters][reading filter menus]]. Server
 and language selection are covered in [[info:emacsvox#Speech Backends][Speech Backends]] and live Help. For

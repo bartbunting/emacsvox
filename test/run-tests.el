@@ -81,6 +81,7 @@
   (require 'omnivox-punctuation-tests)
 (require 'omnivox-punctuation-profiles-tests)
 (require 'omnivox-preferences-tests)
+(require 'omnivox-recovery-tests)
   (require 'omnivox-engine-configuration-tests)
   (require 'omnivox-catalogue-tests)
   (require 'emacsvox-aural-voice-editor-tests)

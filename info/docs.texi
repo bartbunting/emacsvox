@@ -85,7 +85,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1728 commands and 261 options.
+This chapter documents a total of 1729 commands and 261 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -28991,6 +28991,20 @@ Adjust speech rate in current buffer, inspired by
   text-scale-adjust.   Invoke this command via C-e d =/+ or
 C-impel-d -. Pressing =,+, or - immediately continues to adjust
 the speech rate.  Call when on a non-blank line to preview the effectt
+@end format
+@end deffn
+
+@subsubsection tts-recover
+@deffn {Command} tts-recover
+@findex tts-recover
+
+@format
+Recover main speech using its retained startup when available.
+For locally owned Omnivox, confirm native retirement before replacement and
+keep notification speech running.  This can recover from invalid saved settings;
+preferences may revert to those retained at startup.  Unconfirmed native cleanup
+or damaged retained records remain errors.  Other adapters use their ordinary
+recovery path.  Use ‘tts-restart’ to capture newly saved settings.
 @end format
 @end deffn
 

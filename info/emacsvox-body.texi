@@ -1051,7 +1051,11 @@ integrations: an interrupted load can leave some hooks or advice installed.
 Keep the original error when requesting help.
 @item The ready message is heard@comma{} but speech later stops
 If Emacs reports that a speech server exited@comma{} inspect the Omnivox session
-log and run @kbd{M-x tts-restart @key{RET}} after correcting the server problem.
+log. With locally owned Omnivox@comma{} @kbd{M-x tts-recover @key{RET}} reuses retained
+startup settings and keeps notification speech running. It can recover
+despite a broken saved configuration@comma{} provided native retirement is confirmed
+and retained records remain usable. Use @kbd{M-x tts-restart @key{RET}} to capture
+corrected settings. See @ref{Miscellaneous,Stop or restart speech,,emacsvox,} for their scope.
 Logs are below @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
 @code{~/.local/state/emacsvox/omnivox}. Spoken text is omitted unless explicit
 text logging is enabled.
@@ -2712,10 +2716,19 @@ Stop current main and notification speech with @code{tts-stop}.
 @item C-e d q
 Toggle current-buffer quiet mode; @kbd{C-u} toggles it globally.
 @item C-e C-s
-Stop and restart the selected speech server.
+Restart the selected speech server using newly saved settings.
+@item M-x tts-recover
+Recover main speech from its retained startup; keep notification speech running with locally owned Omnivox.
 @item C-e d V
 Speak adapter and version information.
 @end table
+
+For locally owned Omnivox@comma{} recovery confirms native retirement before replacing
+main speech. It can bypass a broken saved configuration@comma{} but still needs valid
+retained startup records and writable owner storage. Live host preferences may
+revert to startup values; reload them again when the saved file is usable.
+Unconfirmed native cleanup remains an error@comma{} rather than permission to start
+over a possibly surviving worker.
 
 For repeat cleanup and text splitting@comma{} use the @ref{reading-filters, , reading filter menus}. Server
 and language selection are covered in @ref{Speech Backends,Speech Backends,,emacsvox,} and live Help. For

@@ -3409,7 +3409,8 @@
         (tts-program "test-server")
         events)
     (cl-letf
-        (((symbol-function 'tts-make-process)
+        (((symbol-function 'process-command) (lambda (_) nil))
+         ((symbol-function 'tts-make-process)
           (lambda (_name)
             (push 'started events)
             'new))
@@ -3436,7 +3437,8 @@
         (tts-program "single-stream-server")
         events)
     (cl-letf
-        (((symbol-function 'tts-make-process)
+        (((symbol-function 'process-command) (lambda (_) nil))
+         ((symbol-function 'tts-make-process)
           (lambda (_name)
             (push 'started events)
             'new-speaker))
@@ -3501,7 +3503,8 @@
         (tts-notification-device "test-device")
         events)
     (cl-letf
-        (((symbol-function 'tts-make-process)
+        (((symbol-function 'process-command) (lambda (_) nil))
+         ((symbol-function 'tts-make-process)
           (lambda (_name)
             (push 'started events)
             'new))
@@ -3599,7 +3602,8 @@
         (tts-notification-device "")
         observed)
     (cl-letf
-        (((symbol-function 'processp) (lambda (process) (eq process 'old)))
+        (((symbol-function 'process-command) (lambda (_) nil))
+         ((symbol-function 'processp) (lambda (process) (eq process 'old)))
          ((symbol-function 'tts--retire-process)
           (lambda (process)
             (setq observed (list process tts-notify-process)))))
@@ -4218,15 +4222,17 @@
 
 (ert-deftest emacsvox-tts-notification-apply-selects-notification-process ()
   "Notification calls dynamically use the live notification process."
-  (let ((tts-speaker-process 'primary)
-        (tts-notify-process 'notification)
+  (let ((primary (make-pipe-process :name "notification primary" :noquery t))
+        (notification (make-pipe-process :name "notification secondary" :noquery t))
         selected)
-    (cl-letf (((symbol-function 'processp) (lambda (_) t))
-              ((symbol-function 'process-status) (lambda (_) 'run)))
-      (tts-notify-apply
-       (lambda (_text) (setq selected tts-speaker-process))
-       "notice"))
-    (should (eq selected 'notification))))
+    (unwind-protect
+        (let ((tts-speaker-process primary) (tts-notify-process notification))
+          (tts-notify-apply
+           (lambda (_text) (setq selected tts-speaker-process)) "notice")
+          (should (eq selected notification))
+          (should (eq tts-speaker-process primary)))
+      (delete-process primary)
+      (delete-process notification))))
 
 (ert-deftest emacsvox-tts-notification-preserves-semantic-occasion ()
   "Notification transport does not replace an established semantic occasion."
