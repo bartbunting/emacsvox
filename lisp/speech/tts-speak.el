@@ -2184,6 +2184,8 @@ Signal a user error if no diagnostic buffer is available."
 
 (defvar omnivox--emergency-output nil)
 (defvar omnivox--emergency-context nil)
+(defvar omnivox--emergency-prepared-process nil)
+(defvar omnivox-library--busy)
 
 (defun tts-make-process (name)
   "Make a  TTS process called name."
@@ -2198,31 +2200,32 @@ Signal a user error if no diagnostic buffer is available."
     (unless (or program (omnivox-remote-enabled-p))
       (error "Could not find speech server executable `%s'" tts-program))
     (setq process
-          (if (omnivox-remote-enabled-p)
-              (omnivox-remote-make-process name)
-            (tts-queue--create
-             (lambda ()
-               (require 'omnivox-engine-settings)
-               (require 'omnivox-library-runtime)
-               (let ((process-environment
-                      (if omnivox--emergency-output
-                          (copy-sequence (or (plist-get omnivox--emergency-context :environment)
-                                             process-environment))
-                        (omnivox-library--startup-environment
-                         (omnivox-engine-settings--environment program)))))
-                 (let* ((command (omnivox-library--command program))
-                        (worker
-                         (make-process
-                          :name name :command command :connection-type 'pipe
-                          :coding 'utf-8-unix
-                          :stderr (tts--diagnostic-buffer name t))))
-                   (when (omnivox-library--owned-p worker)
-                     (process-put worker 'omnivox-library-launch-context
-                                  (list :program program :directory default-directory
-                                        :environment (copy-sequence process-environment))))
-                   (when omnivox--emergency-output
-                     (process-put worker 'omnivox-emergency-output omnivox--emergency-output))
-                   worker))) nil)))
+          (or omnivox--emergency-prepared-process
+              (if (omnivox-remote-enabled-p)
+                  (omnivox-remote-make-process name)
+                (tts-queue--create
+                 (lambda ()
+                   (require 'omnivox-engine-settings)
+                   (require 'omnivox-library-runtime)
+                   (let ((process-environment
+                          (if omnivox--emergency-output
+                              (copy-sequence (or (plist-get omnivox--emergency-context :environment)
+                                                 process-environment))
+                            (omnivox-library--startup-environment
+                             (omnivox-engine-settings--environment program)))))
+                     (let* ((command (omnivox-library--command program))
+                            (worker
+                             (make-process
+                              :name name :command command :connection-type 'pipe
+                              :coding 'utf-8-unix
+                              :stderr (tts--diagnostic-buffer name t))))
+                       (when (omnivox-library--owned-p worker)
+                         (process-put worker 'omnivox-library-launch-context
+                                      (list :program program :directory default-directory
+                                            :environment (copy-sequence process-environment))))
+                       (when omnivox--emergency-output
+                         (process-put worker 'omnivox-emergency-output omnivox--emergency-output))
+                       worker))) nil))))
     (when (and (boundp 'omnivox-library--birth-collector) omnivox-library--birth-collector)
       (funcall omnivox-library--birth-collector process))
     (unless (process-live-p process) (error "Fail: Speech Server"))
@@ -2448,33 +2451,36 @@ Use `tts-restart' after repairing saved settings to return to ordinary startup."
          (process-environment (copy-sequence (or (plist-get omnivox--emergency-context :environment)
                                                  process-environment)))
          (default-directory (or (plist-get omnivox--emergency-context :directory) default-directory))
-         (omnivox--library-startup nil) (omnivox--engine-startup nil))
+         (omnivox--library-startup nil) (omnivox--engine-startup nil)
+         (omnivox-library--busy t))
     (unless (and program (member omnivox--emergency-output '("device" "pulse" "null")))
       (user-error "Emergency startup needs a local executable and valid output"))
-    (omnivox-library--emergency-supported program)
-    (omnivox-library--retire-for-emergency old)
-    (let (attempt)
-      (let ((omnivox-library--birth-collector (lambda (process) (setq attempt process))))
+    (let ((attempt (omnivox-library--prepare-emergency program omnivox--emergency-output))
+          old-retired)
+      (let ((omnivox-library--birth-collector #'ignore))
         (condition-case err
-            (let ((new (tts-make-process "Speaker")))
-              (setq tts-speaker-process new)
-              (require 'voice-setup)
-              (voice-setup)
-              (omnivox-library--wait-for-recovered-speech new)
-              (when (called-interactively-p 'interactive)
-                (tts-speak "Emergency speech is ready.")))
+            (progn
+              (omnivox-library--retire-for-emergency old)
+              (setq old-retired t tts-speaker-process attempt)
+              (omnivox-library--release-emergency attempt)
+              (let* ((omnivox--emergency-prepared-process attempt)
+                     (new (tts-make-process "Speaker")))
+                (require 'voice-setup)
+                (voice-setup)
+                (omnivox-library--wait-for-recovered-speech new)
+                (setq omnivox-library--emergency-pending nil)
+                (when (called-interactively-p 'interactive)
+                  (tts-speak "Emergency speech is ready."))))
           ((error quit)
-           ;; Initialization can fail after native creation.  Keep that exact
-           ;; attempt reachable until its original owner proves retirement.
-           ;; A later explicit retry must not mistake it for a fresh first start.
-           (when (and (processp attempt) (not (eq tts-speaker-process attempt)))
-             (setq tts-speaker-process attempt)
-             (condition-case cleanup
-                 (omnivox-library--retire-for-emergency attempt)
-               ((error quit)
-                (let ((emacsvox-speak-messages nil))
-                  (message "Emergency startup cleanup remains unconfirmed: %s"
-                           (error-message-string cleanup))))))
+           ;; Keep working main speech on preparation/old-retirement failure.
+           ;; Once released, retain the exact attempt until native cleanup is proven.
+           (unless old-retired (setq tts-speaker-process old))
+           (condition-case cleanup
+               (omnivox-library--discard-emergency attempt)
+             ((error quit)
+              (let ((emacsvox-speak-messages nil))
+                (message "Emergency startup cleanup remains unconfirmed: %s"
+                         (error-message-string cleanup)))))
            (signal (car err) (cdr err))))))))
 
 ;;;   interactively select how text is split:

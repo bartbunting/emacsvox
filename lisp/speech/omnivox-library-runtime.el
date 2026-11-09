@@ -64,6 +64,8 @@
 (defvar omnivox--engine-startup nil "Prepared configuration shared by speech lanes.")
 (defvar omnivox--emergency-output nil "Explicit minimal startup output backend.")
 (defvar omnivox--emergency-context nil "Original launcher context for emergency startup.")
+(defvar omnivox--emergency-prepared-process nil "Prepared owner reused by speech initialization.")
+(defvar omnivox-library--emergency-pending nil "Single unpublished emergency owner still requiring cleanup.")
 (defvar omnivox-library--current-engines nil "Published local activation and launcher.")
 (defvar omnivox-library--birth-collector nil "Provider callback retaining every attempted process.")
 (defvar omnivox-library--support-cache nil)
@@ -217,25 +219,63 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
        (or (member "--voice-library-owner" (process-command process))
            (member "--emergency-owner" (process-command process)))))
 
-(defun omnivox-library--emergency-supported (program)
-  "Require PROGRAM's minimal-start capability before retiring working speech."
-  (let ((buffer (generate-new-buffer " *Omnivox emergency capability*")) process)
-    (unwind-protect
-        (progn
-          (setq process (make-process :name "Omnivox emergency capability"
-                                      :command (list program "--emergency-version")
-                                      :buffer buffer :connection-type 'pipe :noquery t
-                                      :coding 'utf-8-unix :sentinel #'ignore
-                                      :stderr (get-buffer-create "*Omnivox voice library diagnostics*")))
-          (let ((deadline (+ (float-time) 3)))
-            (while (and (process-live-p process) (< (float-time) deadline))
-              (accept-process-output process .01)))
-          (unless (and (eq (process-status process) 'exit)
-                       (zerop (process-exit-status process))
-                       (with-current-buffer buffer (equal (buffer-string) "OMNIVOX-EMERGENCY 1\n")))
-            (user-error "Selected Omnivox does not support emergency startup")))
-      (when (process-live-p process) (delete-process process))
-      (kill-buffer buffer))))
+(defun omnivox-library--discard-emergency (process)
+  "Retire unpublished emergency PROCESS, retaining it if native cleanup fails."
+  (when (processp process)
+    (if (process-get process 'omnivox-emergency-release-sent)
+        (omnivox-library--retire-for-emergency process)
+      ;; The --prepare contract forbids any worker before start-emergency.
+      ;; Old runtimes reject the unknown option before native initialization.
+      (tts--retire-process process))
+    (when (eq process omnivox-library--emergency-pending)
+      (setq omnivox-library--emergency-pending nil))))
+
+(defun omnivox-library--prepare-emergency (program output)
+  "Prepare PROGRAM's actual minimal owner for OUTPUT while old speech continues.
+No worker or output device exists until an explicit, identity-bound release."
+  (omnivox-library--discard-emergency omnivox-library--emergency-pending)
+  (let* ((omnivox-library--timeout 6)
+         (process
+          (tts-queue--create
+           (lambda ()
+             (make-process :name "Emergency preparation"
+                           :command (list program "--emergency-owner" "--prepare" "--audio-output" output)
+                           :connection-type 'pipe :coding 'utf-8-unix :noquery t
+                           :sentinel #'ignore :stderr (tts--diagnostic-buffer "Speaker" t))) nil)))
+    (setq omnivox-library--emergency-pending process)
+    (process-put process 'omnivox-emergency-output output)
+    (process-put process 'omnivox-library-launch-context
+                 (list :program program :directory default-directory
+                       :environment (copy-sequence process-environment)))
+    (condition-case err
+        (let ((owner (omnivox-library--owner process)))
+          (unless (and (equal (plist-get owner :deferred_start_version) 1)
+                       (eq (plist-get owner :emergency) t)
+                       (eq (plist-get owner :prepared) t)
+                       (eq (plist-get owner :retired) :false)
+                       (not (stringp (plist-get owner :startup_error))))
+            (error "Selected Omnivox could not prepare emergency speech; old speech is preserved"))
+          process)
+      ((error quit)
+       (omnivox-library--discard-emergency process)
+       (signal (car err) (cdr err))))))
+
+(defun omnivox-library--release-emergency (process)
+  "Release the single prepared PROCESS after old native speech has retired."
+  (let* ((omnivox-library--timeout 6)
+         (worker (plist-get (process-get process 'omnivox-library-owner) :worker))
+         (command (list :command "start-emergency" :worker worker)) reply)
+    ;; A lost reply still means the native attempt may have started.
+    (process-put process 'omnivox-emergency-release-sent t)
+    (condition-case err
+        (setq reply (omnivox-library--request process command t))
+      (error
+       (if (process-live-p process)
+           (setq reply (omnivox-library--request process command t))
+         (signal (car err) (cdr err)))))
+    (unless (and (equal (plist-get reply :type) "started")
+                 (equal (plist-get reply :worker) worker))
+      (error "Emergency native start remains unconfirmed"))))
 
 (defun omnivox-library--startup-environment (environment)
   "Extend ENVIRONMENT with the retained native startup for this activation."
