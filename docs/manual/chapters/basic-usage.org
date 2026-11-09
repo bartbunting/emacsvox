@@ -893,8 +893,8 @@ remains a direct alternative.
 The following punctuation sections are reference material for changing individual
 pronunciations. They are not prerequisites for ordinary reading. Reusable
 palettes/profiles, engine-specific tuning, and the wider output model belong to
-[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]]. Specialist character-rate and chunking controls are
-also available through live Help and the generated reference.
+[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]]. For isolated-letter rate, quiet speech and text
+filters, follow [[reading-controls-and-filters][Adjust reading controls]].
 
 **** Edit Punctuation Pronunciations
 :PROPERTIES:
@@ -975,7 +975,8 @@ Character inspection is independent, and there is no built-in =most= level.
 :END:
 
 Stopping ends current output without disabling future feedback. Quiet mode
-lets you work temporarily without speech. Restart after correcting a backend
+suppresses ordinary source reading; explicit settings-menu feedback remains
+available. Restart after correcting a backend
 problem or changing the selected synthesiser, not as an assumed cure for every
 missing integration.
 
@@ -985,8 +986,8 @@ missing integration.
 - C-e C-s :: Stop and restart the selected speech server.
 - C-e d V :: Speak adapter and version information.
 
-Server selection, repeated-pattern cleanup, text splitting, language selection,
-and direct engine controls have specialist Help and reference entries. For
+For repeat cleanup and text splitting, use the [[reading-filters][reading filter menus]]. Server
+and language selection are covered in [[info:emacsvox#Speech Backends][Speech Backends]] and live Help. For
 missing speech, follow [[info:emacsvox#Recovering From No Speech][Recovering From No Speech]].
 
 ** Hear Structure With Voice Lock

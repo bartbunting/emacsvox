@@ -6,7 +6,7 @@
 
 This chapter collects source-level contracts that are deliberately omitted
 from the user task guides.  Optional package APIs and renderers evolve, so
-recheck the upstream interfaces and keep compatibility behavior bounded when
+recheck the upstream interfaces and keep compatibility behaviour bounded when
 changing an integration.
 
 ** Logical table readers
@@ -43,8 +43,8 @@ Standalone list bounds include the buffer, so vertical edges stay put.
 
 The read-only table browser caches logical string rows when rendering. Text
 properties map every character, including embedded line breaks and delimiters,
-to a model cell. Pre/post-command hooks synchronize the model after ordinary
-character movement; snapshot extraction also synchronizes it. Browser movement
+to a model cell. Pre/post-command hooks synchronise the model after ordinary
+character movement; snapshot extraction also synchronises it. Browser movement
 uses the model and its rendered position index. New reader actions submit under
 module =table-ui=, with role =field= for cells and explicit main-lane delivery.
 The local browser map is independent of the legacy speech-prefix map. CSV
@@ -109,7 +109,7 @@ EAT output is collected around =eat-term-process-output= before redisplay can
 trim it, including a bounded unfinished row. Never retain raw process bytes or
 unredacted concealed text. Read fresh public terminal bounds, preserve soft-wrap
 continuity, and reject uncertain clear/reset/alternate-screen replacements.
-Check selected-window following after EAT synchronizes windows, not between
+Check selected-window following after EAT synchronises windows, not between
 chunks inside its renderer. Editable line-mode text lies after =eat-term-end=;
 it can share the final physical row with the terminal cursor.
 
@@ -205,7 +205,7 @@ feedback and =package-preparation= registers optional package adapters.  The
 private task registry retains each thread, state, start/end times, and original
 error for the Emacs session.  Repeated startup reuses these records, including
 completed and failed tasks, instead of starting duplicate background work.
-Other startup effects, including speech-server initialization, still run when
+Other startup effects, including speech-server initialisation, still run when
 =emacsvox= is called again; this is not a general-purpose retry command.
 
 Registration completion is separate from adapter loading.  An already-loaded
@@ -307,7 +307,7 @@ Run the native installer checks from that Windows checkout:
 #+end_src
 
 The PowerShell tests use temporary fixtures and an existing native Emacs.
-They check doctor behavior, explicit selections, prebuilt/offline preflight,
+They check doctor behaviour, explicit selections, prebuilt/offline preflight,
 incomplete installations, platform rejection, checksums, archive paths, argument handling, and atomic
 configuration replacement.  =test/emacsvox-native-bytecode-tests.el= compares
 the native inventory with GNU Make and checks dependency order and byte-code
@@ -642,7 +642,7 @@ Stop after artifact inspection unless fresh explicit permission names the
 release to be tagged and published.  Preparing an artifact, committing or
 pushing a branch, publishing documentation, or receiving a general instruction
 to continue is not permission to create or push a release tag.  Once that
-separate authorization has been given, the guarded commands are:
+separate authorisation has been given, the guarded commands are:
 
 #+begin_example
 make release-tag
@@ -675,7 +675,7 @@ implementation:
 - whether a new presentation occasion belongs to the core semantic contract
   or to a module-owned extension.
 
-Do not infer contracts from archived proposals. Current behavior is defined
+Do not infer contracts from archived proposals. Current behaviour is defined
 by the Aural implementation, its generated reference, and accepted ADRs.
 
 ** Voice-style metadata ownership
@@ -702,16 +702,16 @@ Legacy =:rate= is accepted for loading saved data but is not applied as a new
 rate; nonzero legacy values produce the existing retuning degradation.
 The table supplies no implicit defaults and does not declare engine support.
 
-An explicit =nil= over a preset is a compatibility behavior to characterize,
+An explicit =nil= over a preset is a compatibility behaviour to characterise,
 not an authoring decision settled by the metadata table.  For example, the
 current compiler clears the reported average-pitch value for
 =(:preset base :average-pitch nil)= while retaining the base voice command and
 emitting no pitch-reset command.  The tests preserve this distinction.  A
 future inheritance, omission, or reset policy needs a separate decision.
 
-Compiler conversion, backend wire names, capability discovery, normalization,
+Compiler conversion, backend wire names, capability discovery, normalisation,
 and delivery stay in their existing owners.  When adding a field, update those
-consumers explicitly and test final serialized output or an explicit
+consumers explicitly and test final serialised output or an explicit
 degradation. The common voice editor uses the shared field metadata for bounds
 and neutral values. It covers portable ACSS and optional rate and post-synthesis
 adjustments in the same retained draft.
@@ -720,7 +720,7 @@ Input grammar remains UI policy. In the common voice editor, blank numeric
 entry requests the adapter default; zero is explicit. Individual choice fields
 distinguish shared inheritance, custom values and explicit adapter defaults.
 Rule-editor input has its own scoped inheritance semantics; do not substitute
-one editor's blank-input behavior for the other's.
+one editor's blank-input behaviour for the other's.
 
 The common editor displays low-pass and high-pass as amounts from zero through
 nine, increasing with stronger filtering. Low-pass converts between amount and
@@ -735,7 +735,7 @@ validation does not transfer ownership of asynchronous operations.
 The rule tests state field inventories, bounds, error precedence, and
 composition expectations independently of the metadata.  Scheme tests cover
 saved rich palettes and explicit-nil rules; transport tests check distinct
-ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
+ACSS mappings, zero and omitted wire fields, effects, and preset behaviour.
 =make compiled-aural-test= also runs these style contracts with the isolated
 compiled subsystem loaded, checking that the implementations stay in that
 build. The =voice-style-ui= tests exercise common-editor entry, inherited
@@ -752,12 +752,12 @@ The graphical redisplay test is reported as skipped in ordinary batch runs.
 The connected saved-style regression edits a custom =bolden=, reads its saved
 data back, and compares common-editor and Workbench previews with the final
 normal-speech wire for =voice-bolden=.  Workbench uses the compiler's palette
-resolution and the shared effect normalizer: gain and pan level five must
+resolution and the shared effect normaliser: gain and pan level five must
 remain exactly neutral at 0.5.  Preserve both this path and the independently
 specified Workbench scale cases when changing preview or palette lookup.
 Preserve final-write, timeout, reentrancy, and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
-process lifecycle or audible behavior.
+process lifecycle or audible behaviour.
 
 ** Timeline preparation boundaries
 :PROPERTIES:
@@ -766,17 +766,17 @@ process lifecycle or audible behavior.
 
 Two private helpers in =lisp/aural/emacsvox-aural-transport.el= make preparation
 inputs explicit.  =emacsvox-aural--timeline-effect-transition= takes previous
-effects, normalized next effects, and a span ID, returning a directive and the
+effects, normalised next effects, and a span ID, returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;
 retention preserves the previous state.  The builder still owns the state
-accumulator, span numbering, and when normalization runs.  Suppressed or empty
+accumulator, span numbering, and when normalisation runs.  Suppressed or empty
 content does not advance effects, while spoken boundary actions do.
 
 =emacsvox-aural--encode-timeline-delivery-fields= takes a policy and replacement
 key.  The existing =emacsvox-aural--timeline-delivery-fields= wrapper reads the
 dynamic submission variables at the end of timeline construction.  Preserve
 that capture point: resource resolution earlier in construction can re-enter
-Lisp and change the submission state.  The serializer preserves ordered
+Lisp and change the submission state.  The serialiser preserves ordered
 defaults, key conversion, circular printing, diagnostics, and byte bounds.
 
 The complete builder is not pure.  Cue resolution through
@@ -784,15 +784,15 @@ The complete builder is not pure.  Cue resolution through
 live speech process.  Those operations, action placement, dispatch
 registration, framing, fallback, and process writes retain their existing
 owners and sequence.  Separating a complete delivery candidate from those
-effects requires further design and failure-path characterization.
+effects requires further design and failure-path characterisation.
 
 The =delivery-preparation= tests in =test/emacsvox-aural-transport-tests.el=
-check complete serialized timelines and final writes, semantic bindings,
+check complete serialised timelines and final writes, semantic bindings,
 state ownership, policy inputs, and capture timing.  The compiled Aural gate
 also runs these contracts and existing stop and send-failure regressions with
 the compiled implementation resident.  Keep the full failure, reentrancy,
 and golden-trace suites as regression checks; captured writes establish
-protocol behavior, not audible playback.
+protocol behaviour, not audible playback.
 
 ** Aural interface source ownership
 :PROPERTIES:
@@ -874,7 +874,7 @@ or programmatic upstream call does not claim the outer user's feedback.
 The Show landing and visibility paths also read renderer metadata such as
 =:headers-overlay=, =:message-visible=, message extents, =:notmuch-part=,
 part-hidden state, and Notmuch part-button types.  Missing optional metadata
-should reduce presentation detail rather than authorize an operation.  Review
+should reduce presentation detail rather than authorise an operation.  Review
 these adapters whenever the Notmuch renderer changes.
 
 Each user-owned asynchronous Search process carries its own completion state
@@ -940,11 +940,11 @@ main module.
 | Owner | Responsibilities |
 |---+---|
 | Renderer module | Interpret prompt faces and chat label strings, current and legacy status glyphs, semantic fragment provenance, decorative controls, answer body ranges, and legacy clipboard properties. Most helpers inspect supplied strings; fragment classification can also read the current buffer without changing it. |
-| Main integration | Capture buffer and overlay context; apply user customization, speech limits, and delivery; own response accumulation, event subscriptions, timers, callback generations, navigation, permission handling, activation, and cleanup. |
+| Main integration | Capture buffer and overlay context; apply user customisation, speech limits, and delivery; own response accumulation, event subscriptions, timers, callback generations, navigation, permission handling, activation, and cleanup. |
 
 Renderer metadata supplies presentation and navigation facts; it does not
-authorize permission responses or establish lifecycle completion.  Status
-label customization stays with the main integration.  Keep compatibility
+authorise permission responses or establish lifecycle completion.  Status
+label customisation stays with the main integration.  Keep compatibility
 interpretation together in the renderer module, and keep registration and
 speech side effects in the main owner.
 
@@ -1003,7 +1003,7 @@ The lifecycle subscription currently consumes =init-started=,
 =turn-complete=, =error=, =elicitation-request=, and =elicitation-response=.
 Dedicated subscriptions consume
 =permission-request=, =permission-response=, and =tool-call-update=.  Add new
-semantic behavior at the public event layer when Agent Shell exposes it; keep
+semantic behaviour at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 
 Question feedback resolves control identity from renderer properties and values
@@ -1013,8 +1013,8 @@ request and response announcements; action advice confirms edits and previews.
 No new key overrides are installed. The upstream feature stays opt-in.
 
 Configuration access uses =agent-shell-config-options= and
-=agent-shell-initialized-p= when available. The 0.85.3 fallback reads normalized
-private options and checks the initialization pipeline flags. Startup defaults
+=agent-shell-initialized-p= when available. The 0.85.3 fallback reads normalised
+private options and checks the initialisation pipeline flags. Startup defaults
 must not be announced as user changes. Verify the minimum at =f44c96b= as well
 as the pinned version, including source and compiled speech and graphical form
 controls. Use separate prepared dependency directories for each version.
@@ -1034,7 +1034,7 @@ public event to the body rendered during the same call, matching both the
 owning buffer and qualified fragment ID.  Full tool speech is submitted after
 rendering returns.  Output digests and lifecycle statuses are tracked separately
 so late output is spoken without repeating identical updates.  Renderer IDs
-without a matching public event do not authorize tool feedback.
+without a matching public event do not authorise tool feedback.
 
 Until upstream exposes public steering and push lifecycle events, small
 adapters wrap the structured steering request's callbacks and the accepted
@@ -1052,7 +1052,7 @@ native command feedback.  New asynchronous tool, queue, steering, setting, and
 permission-detail submissions explicitly select the notification lane; list
 editing and diff entry remain foreground interactions.  All new events and
 their outcome, count, or setting attributes are registered by the workflow
-semantic provider so Aural rules can customize their presentation.
+semantic provider so Aural rules can customise their presentation.
 
 ** Magit contracts
 :PROPERTIES:
@@ -1077,7 +1077,7 @@ staging and unstaging, including removal of the last file in a section.
 Magit's positional highlight overlays must not become source personalities.
 The integration suppresses legacy overlay voice mirroring for those highlights
 and excludes their faces from source capture.  It preserves text faces,
-deliberate personalities, and customized hash voices.  Navigation still emits
+deliberate personalities, and customised hash voices.  Navigation still emits
 section facts; empty lines supply the core line-condition facts without a
 competing selection icon.
 
@@ -1105,7 +1105,7 @@ replacing it.
 The installed Omnivox executable is recorded as an absolute WSL path in the
 data-only =$XDG_CONFIG_HOME/emacsvox/omnivox-program= file.  Launcher selection
 is explicit =OMNIVOX_PROGRAM=, that per-user file, developer staging, then
-=PATH=.  Keep the selection tests synchronized with this order.  A configured
+=PATH=.  Keep the selection tests synchronised with this order.  A configured
 but invalid path is a visible configuration error; silently falling through
 would hide a stale or damaged user installation.
 
@@ -1126,7 +1126,7 @@ split across three boundaries:
 builds the Docker image, and validates this boundary before compilation.  The
 full target then builds Omnivox's two 32-bit helper sources deterministically,
 builds native Windows Omnivox plus its RHVoice, Flite, and RuTTS helpers in the
-container, and stages their licenses, provenance, and checksums.  The clean
+container, and stages their licences, provenance, and checksums.  The clean
 target also builds Piper support and verifies that the pinned companion and
 main executable identify the same Omnivox source commit.  A host Rust
 installation, MinGW installation, Visual Studio, .NET SDK, or system eSpeak
@@ -1267,8 +1267,8 @@ Preserve the current activation sequence during maintenance.  The script
 selects the staged runtime before Make's final runtime and live checks; a
 failure in those final checks does not restore the previous selection.
 Interruption before activation can leave temporary files in a new version
-directory while preserving the current link.  The fixture tests characterize
-these existing behaviors and successful retry.  Changing cleanup or rollback
+directory while preserving the current link.  The fixture tests characterise
+these existing behaviours and successful retry.  Changing cleanup or rollback
 requires a separate fix and acceptance decision.  Fixture success does not
 establish native compiler reproducibility, real Windows path conversion,
 engine startup, or audible playback; run the existing native gates for that
@@ -1349,7 +1349,7 @@ python3 utils/voice_benchmark.py init .benchmarks/voices.json \
   --runtime-input voices=/path/to/voice-data
 #+end_example
 
-Initialization captures supported runtime overrides from the environment,
+Initialisation captures supported runtime overrides from the environment,
 including =OMNIVOX_DECTALK_DLL=, =OMNIVOX_ECI_DLL= and =ESPEAK_NG_DATA=.
 Inspect the resulting JSON plan. Its initial routes are Eloquence =v1=,
 DECtalk =paul= and eSpeak's British English voice (=espeak:gmw/en=, with a
@@ -1367,7 +1367,7 @@ correctness; do not treat a completed timing run as clearing that failure.
 The plan pins the executable path. When staging a new development build,
 update =targets[].program= before measuring it. Retain the earlier executable
 and complete helper payload if an old-build comparison is wanted.
-=--baseline-program= at initialization adds a second target for ordinary
+=--baseline-program= at initialisation adds a second target for ordinary
 speech, with native controls and editor tests disabled for that older worker.
 An editor comparison against older Lisp needs a target with its own
 =emacsvox_root= and current byte-code for that checkout. Keep runtime inputs,
@@ -1466,7 +1466,7 @@ Lisp data form in =my-cues/emacsvox-sound-pack.el=:
  :default-spatialization neutral)
 #+end_src
 
-The file contains data, not executable initialization: do not wrap the form in
+The file contains data, not executable initialisation: do not wrap the form in
 =setq=, quote it, or add a second form. Put a replacement recording such as
 =button.ogg= in the same directory. Its basename names the registered cue.
 Unknown cue names fail the resource audit; introducing a new semantic cue

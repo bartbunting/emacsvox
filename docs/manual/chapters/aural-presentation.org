@@ -1292,9 +1292,10 @@ changes text. These previews are private and exclude contextual rules.
 Adjustments speak values without automatic samples here; the full editor's
 automatic-sample preference is retained. ~u~ undoes the last draft change.
 
-~e~ opens engine-specific settings, waiting for a qualified runtime catalogue
-before permitting edits. Its ~q~ returns to the common editor; ~m~ reopens
-focused tuning on the same draft and scope. Physical experiments, individual
+~e~ opens engine-specific settings. Editing becomes available when the engine
+supplies its current list of supported parameters. Its ~q~ returns to the
+common editor; ~m~ reopens focused tuning on the same draft and scope.
+Physical experiments, individual
 fallbacks, and engine controls remain available in the full editor.
 
 ~w~ saves and applies; ~c~ saves to the collection without selecting. Existing
@@ -1320,12 +1321,12 @@ that reply does not save the later edits. They remain unsaved. If a file or
 destination has changed, review the proposal again rather than expecting the
 editor to merge those changes automatically.
 
-Complete-choice previews require Omnivox's complete-voice-preview capability.
-They do not select the draft or change live settings. Older hosts report this
-unsupported; individual physical auditions remain available. Playback evidence
-identifies accepted audio when reported, including unsupported adjustments,
-without inferring a successful fallback from inventory or claiming exact native
-parameter measurements.
+Previewing a complete voice choice, including its fallbacks, requires support
+from Omnivox. Older hosts report when this is unavailable; you can still
+audition individual physical voices. Neither preview changes live settings.
+Playback details show what the server reports playing and which adjustments
+it could not apply. They do not measure the engine's exact parameter values
+or assume that an available fallback was used.
 
 ~q~ returns to the originating row and column. Keep, discard, or continue with
 unsaved work. Retained drafts can be resumed through ~C-e H p d~ during
@@ -1452,7 +1453,7 @@ labels through Customize; it does not save a voice or palette.
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Voice Fallbacks
 :ALT_TITLE: Choose And Tune Fallback Voices
-:DESCRIPTION: Order physical choices and customize their individual adjustments.
+:DESCRIPTION: Order physical choices and customise their individual adjustments.
 :END:
 
 Shared settings provide a base for the whole voice. Physical choices are tried
@@ -1939,7 +1940,7 @@ For unconfirmed application, see
 #+cindex: sound packs
 #+cindex: spatial presentation
 
-Rules request cues by semantic name. Sound packs map names to audio assets
+Rules request cues by name. Sound packs supply recordings for those names
 and can inherit missing cues. This lets you change the sound of a family of
 cues without rewriting rules. A recording library holds available sounds;
 assigning one to a cue changes its sound in that pack. To change when the cue
@@ -1972,10 +1973,12 @@ audible content at the centre. Named tones are separate compact resources,
 independent of sampled files and the active pack.
 
 For waveform, pitch sweep and envelope adjustments, use the
-[[spelling-tone-editor][shared tone editor]]. Spelling, capitalisation beeps and rising-pitch
-indentation each open it from their own menu, as do the five line-condition
-cues. The waveform and envelope controls are shared; scope and saving belong
-to the destination. General personal-rule editing retains its own controls.
+[[spelling-tone-editor][shared tone editor]]. Spelling, capitalisation, indentation, wrapped rows,
+line conditions and tree levels open it from their respective settings.
+Its controls are shared, while each destination has its own scope and saving
+rules. For tree entry, exit and depth feedback, follow
+[[agent-shell-text-trees][Read and customise text trees]]. General personal-rule editing retains its
+own controls.
 
 *** Tune line and boundary cues from the menu
 :PROPERTIES:
@@ -2280,6 +2283,91 @@ Rate uses the backend's startup option. Saving from buffer scope promotes those
 displayed choices to defaults. Mode punctuation policy and explicit buffer
 settings still override the saved punctuation default.
 
+**** Adjust reading controls
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<reading-controls-and-filters>>
+
+#+cindex: character speech rate
+#+cindex: quiet speech, settings menu
+#+cindex: nonprinting characters
+
+From the buffer you want to change, open ~C-e H s R~ for /Reading controls/.
+Adjusting a control takes effect immediately; browsing leaves it unchanged.
+~g~ switches between buffer scope
+and global defaults; global changes also update the captured buffer while
+preserving other buffers' explicit overrides. This menu has no startup Save.
+
+- ~c~ changes the rate of isolated letters. A multiplier below one slows
+  letters; above one speeds them up. Shift-left/right adjusts by 0.1, and
+  ~RET~ accepts a value from 0.1 to 4. Phonetic names and punctuation names
+  retain the ordinary rate. Omnivox supports this control; some older servers
+  ignore it. ~p~ previews the letter a, even while quiet speech is enabled.
+- Capital ~Q~ suppresses subsequent source speech without stopping current
+  playback. Menu feedback remains spoken. ~r~ restores speech in the source
+  and the global default, leaving other buffers' quiet overrides intact.
+- ~n~ names selected nonprinting control characters and raw eight-bit bytes.
+  ~o~, /Strip octals/, instead removes bytes 127–255 from speech and suppresses
+  nonprinting naming altogether. It does not remove decoded Unicode accents
+  or change the source text.
+
+In buffer scope, ~i~ removes the source's overrides for all four controls so
+they follow global defaults. ~q~ returns, keeping adjustments. For logical
+line reading, visual wrapping and continuation cues, use ~w~ and follow
+[[info:emacsvox#Reading][Reading and navigating]].
+
+**** Filter text and adjust speech boundaries
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<reading-filters>>
+
+#+cindex: repeated characters, cleanup
+#+cindex: column filtering
+#+cindex: speech chunking
+
+Three submenus of Reading controls change how text is spoken without editing
+it. Each has a fixed scope, independent of the parent's buffer/global choice.
+Adjustments apply immediately; ~p~ previews the captured line, including while
+quiet is enabled. ~u~ reverses changes made during the current submenu visit.
+Leaving and reopening starts a new undo point.
+
+Use ~a~ for /Repeat cleanup/, which applies globally for this session. Runs
+of three or more copies of a configured pattern become a count and the pattern
+at All punctuation, or are omitted at other punctuation levels. ~b~ browses
+active patterns and previews four repetitions of the chosen one. ~a~ adds a
+literal pattern, ~d~ removes one, and ~x~ disables cleanup by clearing the
+list. Spaces are literal; empty patterns and line breaks are rejected. ~u~
+restores the opening list. This menu has no startup Save.
+
+Use ~f~ for /Column filtering/ in the captured buffer. Press ~e~ and enter
+inclusive character ranges such as =1-10, 21-25=. Positions start at one;
+a tab counts as one character regardless of its displayed width. A range
+extending beyond a short line is ignored entirely. ~v~ switches between
+skipping those ranges and speaking only them. The filter affects whole-line
+speech, leaving partial-line and table reading unchanged.
+
+Edited ranges are remembered for the file, or for the major mode of a non-file
+buffer, and saved on normal Emacs exit. They do not activate automatically
+when you revisit a file: use ~r~ to restore them explicitly. The skip/speak-only
+direction is temporary and is not saved with the ranges. ~x~ disables the
+active filter while keeping remembered ranges; an empty answer to ~e~ also
+clears the remembered ranges. ~u~ restores both the opening buffer settings
+and any remembered ranges changed during this visit.
+
+Use ~s~ for /Speech chunking/ in the captured buffer for this session. ~c~
+excludes whitespace as a speech boundary, generally grouping text around
+punctuation or clauses. ~w~ includes whitespace for smaller, often word-sized
+pieces. Both retain the other boundary types defined by the mode. ~e~ edits
+the syntax-class codes directly; its Help explains them. ~i~ follows the
+global default, replacing any mode-specific choice, and ~u~ restores the
+opening setting. Compare with ~p~, since audible phrasing depends on the
+speech engine. These settings have no startup Save and do not alter the
+size limits used by [[info:emacsvox#Reading From Point][tracked reading]].
+
 **** Choose Unicode exceptions
 :PROPERTIES:
 :TEXINFO_NODE: no
@@ -2485,7 +2573,7 @@ Capitalization for that buffer to inspect or change its reading settings.
 including tone timing and shape, and the shared tone volume through Customize.
 ~q~ returns and ~C-q~ closes the menus without saving.
 
-***** Use the shared tone editor
+**** Use the shared tone editor
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2497,10 +2585,14 @@ including tone timing and shape, and the shared tone volume through Customize.
 #+cindex: tone presets
 
 Spelling feedback, each capitalisation beep menu, indentation's pitch-tone
-settings and the five line-condition menus open this editor with capital ~E~. The title identifies the cue and
-scope. Waveform, pitch sweep and envelope controls accompany pitch, duration
-and individual volume. Adjustments affect only a private draft until you
-apply or save it using the destination's labelled actions.
+settings and the five line-condition menus open this editor with capital ~E~.
+Wrapped-row feedback and [[agent-shell-text-trees][tree level feedback]] also use it; the tree's Level
+changes menu opens it with capital ~T~. The title identifies the cue and scope.
+Waveform, pitch sweep and envelope controls accompany pitch, duration and
+individual volume. Adjustments affect only a private draft until you apply
+or save it using the destination's labelled actions. For trees, those actions
+keep the tone in the pending Trees draft; return to Trees to apply or save
+that draft.
 
 The exercise below uses global spelling at ~C-e H s f E~. Its timing stays
 in Spelling feedback at ~C-e H s f m~; voice, earcon and tone enablement also
@@ -2520,7 +2612,7 @@ are choices, so shifted arrows do not adjust them. ~?~ followed by an item's
 key explains its effect, units and dependencies. Use ~C-c l~ or the other
 [[settings-menu-review][menu review keys]] to inspect an announcement without activating it.
 
-****** Try a tone without changing live feedback
+***** Try a tone without changing live feedback
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2548,7 +2640,7 @@ use capital ~P~ for that comparison. Shared tone volume still scales playback,
 so a shared volume of zero silences these previews too. After Apply, ~C~
 compares against the newly applied tone, not the editor's opening value.
 
-****** Shape the pitch and waveform
+***** Shape the pitch and waveform
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2577,7 +2669,7 @@ Pitch and End pitch range from 50 to 10000 Hz. Duration ranges from 5 to
 percent and steps by 5 percentage points. Zero volume silences this tone.
 Waveform changes can alter perceived loudness even at the same volume.
 
-****** Shape loudness with an envelope
+***** Shape loudness with an envelope
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2623,7 +2715,7 @@ stops immediately without waiting for the Release stage. Compare a short tone
 with the spelling sample too: a shape that is clear alone can be masked by
 speech or make the word harder to hear.
 
-****** Reuse a tone through presets
+***** Reuse a tone through presets
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2641,7 +2733,7 @@ through Customize. This does not apply the tone or save the spelling cue
 defaults. Reusing a personal name asks before replacing it; bundled names
 cannot be replaced. Saved presets appear alongside the bundled choices at ~L~.
 
-****** Apply, save or discard the draft
+***** Apply, save or discard the draft
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2666,7 +2758,7 @@ voice off and tone on, return with ~q~ and save with ~S~ in Spelling feedback.
 That parent Save also includes timing, earcon selection and shared tone volume.
 Saving a preset with ~N~ stores neither those choices nor the live cue defaults.
 
-****** When a tone cannot be played
+***** When a tone cannot be played
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -2792,22 +2884,18 @@ boundaries; the application chapters give the complete workflows.
 :TEXINFO_NODE: no
 :END:
 
-Shell/comint's focused menu toggles automatic speech with ~s~ and background
-monitoring with ~b~. Background reading needs autospeak enabled. Both values
-belong to the captured buffer for its lifetime; there is no Save action. Arrows
-announce values and ~RET~ activates. ~q~ returns to the entry, or closes a
-direct focused menu. Search at ~C-e H /~ finds =comint= and =monitoring=.
+Shell/comint's settings belong to the captured buffer for its lifetime and
+have no Save action. Background reading needs automatic speech enabled; see
+[[info:emacsvox#Desktop Applications][Terminal applications]] for the controls. Search at ~C-e H /~ finds =comint=
+and =monitoring=.
 Choosing Shell/comint from another buffer explains the required context and
 leaves its controls unavailable.
 
-EAT's ~s~ toggles foreground speech, ~b~ content-free background cues/counts,
-~p~ prompt feedback, and ~d~ automatic detail. Background monitoring is
-independent of foreground autospeak and never reads background content.
-Changes are local to the terminal, including from frozen review. ~w~ saves all
-four displayed defaults; terminals with overrides keep them. ~A~ opens advanced
-Customize and ~q~ returns. All controls are searchable. Choice lists start on
-the current value; arrows browse, ~RET~ applies, and ~q~ cancels. See
-[[info:emacsvox#EAT Terminal Access][EAT Terminal Access]] for prompt integration and safety boundaries.
+EAT changes also belong to the captured terminal, including when opened from
+frozen review. Its ~w~ saves the four displayed values as defaults; terminals
+with local overrides keep them. Background monitoring is independent of
+foreground speech and never reads background content. Follow
+[[info:emacsvox#EAT Feedback Preferences][Adjust and save terminal feedback]] for the controls and their conditions.
 
 **** Agent Shell, Org, and EWW
 :PROPERTIES:
@@ -2825,41 +2913,28 @@ options and ~A~ advanced Emacsvox Org settings in Customize, returning with
 ~q~. This editing feedback is separate from the shared table reader described
 in [[*Browsing Structure][Browsing Structure]].
 
-EWW's ~s~ controls section-navigation autospeak and ~i~ suppresses images on
-subsequent rendering. It also updates the shared SHR image default while
-preserving local overrides; it does not reload the page. ~w~ saves the two
-Emacsvox defaults and ~A~ opens advanced settings. The ~o~ outlining choice
-applies to the captured page, while ~m~ selects the HTTP identity default for Emacs URL
-requests. Both are temporary and excluded from ~w~; see
-[[info:emacsvox#Web Browsing][Reading web pages with EWW]] for their scope and effects.
+EWW's ~w~ saves its section-navigation speech and image-suppression defaults.
+Outlining and HTTP identity have separate temporary scopes and are excluded
+from Save. Follow [[info:emacsvox#Recovering A Web Page][Recover a cluttered or incomplete page]] for these controls;
+[[info:emacsvox#Navigating A Web Page][Read by heading, paragraph or search]] explains the outlining choice.
 
 **** Notmuch and shared choice-list navigation
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Notmuch has the same focused menu in Hello, Search, Show, and Tree. ~c~ chooses
-adaptive, count-only, cue-only, or silent successful completion; failures remain
-audible. ~f~/~b~ set field character/UTF-8 byte limits and ~t~/~B~ total limits.
-Shift-left/right steps by 100, ~RET~ accepts a positive integer or =none= for
-that limit only. ~w~ saves those four limits and completion policy: five
-values, not every mail setting.
+Notmuch has the same focused menu in Hello, Search, Show and Tree. Its ~w~
+saves four automatic speech limits and the completion policy. Field lists,
+status maps and advanced settings use separate Customize editors with their
+own Apply and Save actions. [[info:emacsvox#Notmuch Speech And Privacy][Choose speech detail and protect mail privacy]] explains
+these controls, their scope and the limits on attachment inspection.
 
 Org and Notmuch choice lists start on the current global value. Arrows browse
 without applying, ~RET~ applies/returns, and ~q~ cancels. ~?~ plus a choice key
 explains effect/scope; ~q~ returns to that browsed choice.
 
-Notmuch's ~s~/~m~ open ordered search/message fields and ~i~/~I~ their status
-maps. These Customize editors preserve custom formatters and use their own
-Apply/Save/Reset. ~p~ opens Presentation Options: enabled
-=mail-message-status-cues= owns standard cues, while maps still suppress spoken
-status tags. ~A~ exposes advanced options such as separators and MIME inspection
-limits. Settings searches for =MIME depth limit= or =MIME node limit= select
-this control once Notmuch is loaded. These limits bound attachment-summary
-scanning, not the length of spoken text. ~q~ returns;
-opening or returning does not save. [[info:emacsvox#Notmuch Mail][Notmuch Mail]] explains privacy and full
-inspection. Integrations without focused entries remain accessible through
-major-mode settings and advanced Customize.
+Integrations without focused entries remain accessible through major-mode
+settings and advanced Customize.
 
 ** Save, Switch, And Share Your Setup
 :PROPERTIES:

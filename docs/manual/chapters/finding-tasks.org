@@ -60,6 +60,10 @@ use [[*Terms used in this manual][Terms used in this manual]].
 - [[info:emacsvox#Reading Markdown And Org Tables][Read a table by row or column]]: use the shared table reader for
   Markdown and Org. [[info:emacsvox#Agent Shell Tables][Agent Shell tables]] have their own contextual keys and
   spoken units.
+- [[agent-shell-text-trees][Read a text tree in an agent response]]: move between recognised trees,
+  hear their labels and choose entry, exit and depth indications.
+- [[reading-filters][Skip repeated patterns or unwanted columns in speech]]: filter reading
+  without changing the source text, and restore the original settings.
 
 ** Edit and rearrange text
 :PROPERTIES:
@@ -117,6 +121,8 @@ use [[*Terms used in this manual][Terms used in this manual]].
   files, enablement, and application to the running speech workers.
 - [[info:emacsvox#Changing One Sound][Replace or silence one unwanted sound]]: target the cue you want to change
   rather than disabling all auditory icons.
+- [[spelling-tone-editor][Shape a feedback tone]]: compare pitch, waveform and envelope in a private
+  draft, then apply or save it for the intended cue.
 
 ** Keep, inspect, or reverse settings
 :PROPERTIES:

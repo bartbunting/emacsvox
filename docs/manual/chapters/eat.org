@@ -15,10 +15,10 @@ from NonGNU ELPA. Run ~M-x eat~ to start it; a prefix argument creates or
 selects another terminal. Follow the [[info:eat#Top][Eat User Manual]] for installation,
 terminal setup, and EAT's complete command reference.
 
-Three parts cooperate here. EAT emulates the terminal; the shell, router, or
-other program handles terminal input and completion; Emacsvox presents the
-rendered result. Emacsvox observes a bounded screen, not the program's private
-state. It does not generate shell or router completion candidates.
+EAT emulates the terminal, while the shell, router or other running program
+handles input and completion. Emacsvox speaks changes visible in the rendered
+screen. It cannot inspect the program's internal state or generate its
+completion candidates.
 
 First choose an input mode appropriate to the program. Then use automatic
 feedback for current work and explicit review for content you need to examine
@@ -118,9 +118,10 @@ interrupting you. Another selected terminal or an active minibuffer also
 suppresses foreground feedback. In terminal-only Emacs, or when keyboard
 focus cannot be reported, selection within Emacs is the available boundary.
 
-Turning autospeak off or losing eligibility discards locally pending automatic
-feedback. Speech already sent to Omnivox may finish. Returning or re-enabling
-speech starts with fresh output; it does not replay missed content. Use explicit
+Turning autospeak off, leaving the live cursor or changing focus discards
+automatic feedback still waiting in Emacs. Speech already sent to Omnivox may
+finish. Returning or re-enabling speech starts with fresh output; it does not
+replay missed content. Use explicit
 review instead. This policy also applies to an embedded Eshell terminal,
 without changing ordinary Eshell output.
 
@@ -129,7 +130,7 @@ without changing ordinary Eshell output.
 :TEXINFO_NODE: no
 :END:
 
-On the main screen, Emacsvox collects a burst before classifying it. Complete
+On the main screen, Emacsvox collects a burst of output before speaking. Complete
 new output lines are spoken once, with automatic limits of eight lines and
 1,000 characters. Continued input rows and empty terminal placeholders are
 omitted without hiding output or rereading earlier rows. Output remains
@@ -150,9 +151,9 @@ Wrapped output is joined and oversized bursts announce how much was omitted.
 Fresh text without a newline also speaks, keeping password requests and
 confirmation questions accessible. Carriage-return progress and status
 rewrites use rate-limited, replaceable speech. Unchanged repaints and
-resize-only updates remain silent. Bells, pastes, input-mode changes,
-application-screen boundaries, and process exit are content-free semantic
-events rather than arbitrary screen readings.
+resize-only updates remain silent. Bells, pastes, input-mode changes, entry
+to or exit from an application screen, and process exit have their own cues
+or announcements without reading screen content.
 
 *** Recognise and inspect prompts
 :PROPERTIES:
@@ -204,14 +205,15 @@ history-item counter and input-restored message remain visible in the echo
 area without speaking over the command on the notification stream.
 
 An echoed Space is named without rereading the prompt or line. For Backspace,
-Delete, ~M-d~, and ~C-k~, Emacsvox compares bounded public snapshots before
+Delete, ~M-d~, and ~C-k~, Emacsvox compares the visible screen before
 and after the key. One unambiguous same-row removal is read as the actual
 character or text removed. Otherwise only a deletion tone is given; adjacent
 prompt or screen text is not guessed as deleted content. Padding and trailing
 input blanks do not prevent an otherwise unambiguous word deletion.
 
-A no-echo peer provides no visible deletion to announce. This input feedback
-requires the selected window to follow the live cursor, and is silent during
+When a program does not echo input, there is no visible deletion to announce.
+This input feedback requires the selected window to follow the live cursor,
+and is silent during
 protected password entry, in an unselected terminal, and on an alternate
 screen where the application owns the keys.
 
@@ -227,11 +229,11 @@ An aural rule can add a label by matching module =eat=, role
 remain rate-limited and obey selected-buffer, live-cursor, and secure-input
 restrictions.
 
-On full-screen or alternate-screen applications, Emacsvox does not read every
-refresh. A cursor row reached by correlated arrow-style navigation, or a compact
-high-confidence transfer of selection-like styling, may be announced.
-Ambiguous repaints remain available to explicit review. Inverse video or a
-coloured row alone is not proof of an active item.
+In full-screen or alternate-screen applications, Emacsvox can announce the row
+reached by an arrow key or a small, clearly identified change in selection
+highlighting. It does not speak every refresh. Use explicit review when a
+screen change is ambiguous: a coloured or inverse-video row alone does not
+establish which item is active.
 
 ** Terminal-side Completion
 :PROPERTIES:
@@ -244,18 +246,18 @@ coloured row alone is not proof of an active item.
 #+cindex: router completion
 #+kindex: TAB (EAT terminal completion)
 
-Before a terminal-side ~TAB~ on the main screen, Emacsvox captures the public
-screen and waits briefly for output to settle. An inline completion speaks the
-newly displayed field; for example, =~/sr<TAB>= can speak =src slash= after the
+When you press ~TAB~ on the main screen in semi-character or character mode,
+Emacsvox compares the screen before and after completion, waiting briefly for
+output to settle. An inline completion speaks the newly displayed field;
+for example, =~/sr<TAB>= can speak =src slash= after the
 shell displays =~/src/=.
 
-An ambiguous completion printed as columns or help rows is presented as one
-transaction after the input line is redrawn. Small inferred lists speak up to
-eight candidates. Router-style descriptions keep their layout rather than
-being forced into a shell-token model. Large lists are counted and shortened
-for automatic speech. If candidates have already scrolled beyond the bounded
-screen, the count is a lower bound, such as ``at least N visible'', not an
-invented total.
+When completion prints columns of alternatives or help rows, Emacsvox reads
+them together after the input line is redrawn. Small lists speak up to eight
+candidates. Router-style help retains its layout and descriptions. Large
+lists are counted and shortened for automatic speech. If candidates have
+already scrolled beyond the captured screen, the count gives only the number
+known to be visible, such as ``at least N visible''.
 
 Identical repeated lists, split output, bells, wrapping, and resizing are
 coalesced without repeating the candidate text. This works from rendered
@@ -317,9 +319,9 @@ not match a changing live screen.
 
 #+cindex: frozen EAT review
 
-~C-e q r~ opens an immutable copy of the latest visible screen. It does not
-refresh, move the live cursor, or send input. It preserves normalised styling,
-cursor and likely-focus anchors, and retained completion rows. Opening and
+~C-e q r~ opens a fixed copy of the latest visible screen. It does not
+refresh, move the live cursor or send input. The copy retains styling,
+positions for the cursor and likely focus, and completion rows. Opening and
 closing play distinct object cues and announce the transition.
 
 #+attr_texinfo: :indic kbd :compact t
@@ -344,9 +346,9 @@ closing play distinct object cues and announce the transition.
 - ? :: Describe frozen review mode.
 - q :: Kill the content-bearing review buffer and restore its window.
 
-Secure input, terminal reset or restart, killing the source, or leaving EAT
-mode also destroys its frozen review. These events bound the lifetime of
-copied terminal content.
+Entering a password through protected input, resetting or restarting the
+terminal, killing its buffer or leaving EAT mode also closes and removes
+its frozen review.
 
 ** Verbosity And Background Monitoring
 :PROPERTIES:

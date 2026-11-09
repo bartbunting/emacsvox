@@ -32,9 +32,9 @@ may describe a different version from your installation.
 :TEXINFO_NODE: no
 :END:
 
-Emacsvox 2026.9.2 predates Debian packaging. Use a package from a release that
-includes one, or a locally built development package. Omnivox 1.18.0 includes
-an amd64 deb for supported Ubuntu systems.
+Download the Emacsvox deb from a release that supplies one, or use a locally
+built development package. Omnivox 1.18.0 also supplies an amd64 deb for
+supported Ubuntu systems.
 
 With a downloaded Emacsvox deb, install it using apt:
 
@@ -506,19 +506,19 @@ to Emacs.
 :DESCRIPTION: Verify the live adapter and basic feedback.
 :END:
 
-The stable first-speech checkpoint is:
+During startup, listen for:
 
 #+begin_quote
 Emacsvox is ready.
 #+end_quote
 
-It normally follows Omnivox's acknowledgement of initial engine inventory,
-routing policy, and logical voices, and therefore uses the restored engine
-policy. If routing does not finish within five seconds, Emacsvox speaks it
-through the capability-ready fallback. Hearing the checkpoint does not by
-itself prove that routing completed or every package integration loaded.
-An earlier introduction, overview key, version number, and startup auditory
-icon may also be heard; those can change.
+Emacsvox normally waits until Omnivox confirms your initial voice and engine
+settings before speaking this message. If that confirmation takes more than
+five seconds after the connection is ready, it announces readiness using the
+speech configuration available at that point. The message therefore confirms
+that speech is available, but not necessarily that your saved voice choices
+have taken effect or every package integration has loaded. You may also hear
+an earlier introduction, overview key, version number and startup sound.
 
 Run ~M-x emacsvox-startup-status RET~ to check background preparation of
 Emacsvox and its package integrations. The command speaks a summary and opens

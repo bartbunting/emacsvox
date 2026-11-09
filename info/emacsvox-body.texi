@@ -473,9 +473,9 @@ may describe a different version from your installation.
 
 @section Debian and Ubuntu package
 
-Emacsvox 2026.9.2 predates Debian packaging. Use a package from a release that
-includes one@comma{} or a locally built development package. Omnivox 1.18.0 includes
-an amd64 deb for supported Ubuntu systems.
+Download the Emacsvox deb from a release that supplies one@comma{} or use a locally
+built development package. Omnivox 1.18.0 also supplies an amd64 deb for
+supported Ubuntu systems.
 
 With a downloaded Emacsvox deb@comma{} install it using apt:
 
@@ -929,20 +929,20 @@ to Emacs.
 @node Confirming First Speech
 @section Confirming First Speech
 
-The stable first-speech checkpoint is:
+During startup@comma{} listen for:
 
 @quotation
 Emacsvox is ready.
 
 @end quotation
 
-It normally follows Omnivox's acknowledgement of initial engine inventory@comma{}
-routing policy@comma{} and logical voices@comma{} and therefore uses the restored engine
-policy. If routing does not finish within five seconds@comma{} Emacsvox speaks it
-through the capability-ready fallback. Hearing the checkpoint does not by
-itself prove that routing completed or every package integration loaded.
-An earlier introduction@comma{} overview key@comma{} version number@comma{} and startup auditory
-icon may also be heard; those can change.
+Emacsvox normally waits until Omnivox confirms your initial voice and engine
+settings before speaking this message. If that confirmation takes more than
+five seconds after the connection is ready@comma{} it announces readiness using the
+speech configuration available at that point. The message therefore confirms
+that speech is available@comma{} but not necessarily that your saved voice choices
+have taken effect or every package integration has loaded. You may also hear
+an earlier introduction@comma{} overview key@comma{} version number and startup sound.
 
 Run @kbd{M-x emacsvox-startup-status @key{RET}} to check background preparation of
 Emacsvox and its package integrations. The command speaks a summary and opens
@@ -2588,8 +2588,8 @@ remains a direct alternative.
 The following punctuation sections are reference material for changing individual
 pronunciations. They are not prerequisites for ordinary reading. Reusable
 palettes/profiles@comma{} engine-specific tuning@comma{} and the wider output model belong to
-@ref{Aural Presentation, , Aural Presentation}. Specialist character-rate and chunking controls are
-also available through live Help and the generated reference.
+@ref{Aural Presentation, , Aural Presentation}. For isolated-letter rate@comma{} quiet speech and text
+filters@comma{} follow @ref{reading-controls-and-filters, , Adjust reading controls}.
 
 @item
 @anchor{Edit Punctuation Pronunciations}Edit Punctuation Pronunciations
@@ -2676,7 +2676,8 @@ Character inspection is independent@comma{} and there is no built-in @code{most}
 @subsection Stop Or Restart Speech
 
 Stopping ends current output without disabling future feedback. Quiet mode
-lets you work temporarily without speech. Restart after correcting a backend
+suppresses ordinary source reading; explicit settings-menu feedback remains
+available. Restart after correcting a backend
 problem or changing the selected synthesiser@comma{} not as an assumed cure for every
 missing integration.
 
@@ -2691,8 +2692,8 @@ Stop and restart the selected speech server.
 Speak adapter and version information.
 @end table
 
-Server selection@comma{} repeated-pattern cleanup@comma{} text splitting@comma{} language selection@comma{}
-and direct engine controls have specialist Help and reference entries. For
+For repeat cleanup and text splitting@comma{} use the @ref{reading-filters, , reading filter menus}. Server
+and language selection are covered in @ref{Speech Backends,Speech Backends,,emacsvox,} and live Help. For
 missing speech@comma{} follow @ref{Recovering From No Speech,Recovering From No Speech,,emacsvox,}.
 
 @node Voice-lock
@@ -2835,49 +2836,25 @@ opens the appropriate menu and selects the control without changing its
 value. Press @kbd{@key{RET}} again to activate or edit it. Cancelling completion
 leaves the originating menu open.
 
-The main menu groups its entries in this order: @emph{Everyday settings}@comma{}
-@emph{This buffer and item}@comma{} @emph{Rules and saved work}@comma{} @emph{Find and get help}@comma{} and
-@emph{Finish}. Use left/right to reach a group@comma{} then up/down to select an item.
-Changing sections selects the first available item. Plain arrows navigate;
-Shift-left/right adjusts a selected numeric control where offered.
-Press @kbd{C-e H n} to choose navigation and announcement preferences; the
-same controls remain available through @kbd{C-e H s n}.
-@kbd{@key{RET}}@comma{} @kbd{M-@key{RET}}@comma{} or @kbd{C-j} activates the selected item; its displayed shortcut
-also works directly.
+In the resulting menu@comma{} press @kbd{C-c l} to repeat the selected item. Press @kbd{?}
+followed by its displayed key to read its effect and scope@comma{} or @kbd{? ?} for the
+menu overview. Help is read-only: return with @kbd{q} before activating a menu
+action. Your selection is retained. For word and character inspection@comma{} use
+the @ref{settings-menu-review, , menu review keys}.
 
-To hear the selected item again@comma{} press @kbd{C-c l}. This is especially useful
-after a section-only announcement: the first item is selected even though
-only the heading was spoken. @kbd{M-f~/~M-b} reviews its words and @kbd{C-f~/~C-b}
-its characters@comma{} leaving the selection and Enter's target unchanged. These
-menu keys differ from ordinary buffer reading; see
-@ref{settings-menu-review, , Review an item without changing the selection} for endpoints@comma{} repeats and
-menu-specific overrides.
-
-Press @kbd{?} followed by an item's key to hear its effect and scope@comma{} or @kbd{? ?}
-for the menu overview and available review keys. The overview is a read-only
-snapshot with ordinary text navigation. Its displayed actions run after you
-return to the menu. @kbd{q} in Help returns with the selection retained.
-
-Within the menu itself@comma{} @kbd{q} or @kbd{C-g} goes back one level@comma{} while @kbd{C-q} closes
-the sequence. Returning from an Emacsvox submenu selects the entry that opened
-it@comma{} including when you used its shortcut. The return announcement identifies
-that item; @kbd{@key{RET}} opens it again. These navigation commands do not undo changes
-already applied.
-Choice lists and minibuffer prompts have different roles: arrows browse a
-choice list without applying it@comma{} while a prompt uses your normal text editing
-and completion. See @ref{settings-menu-navigation, , Navigate menus and read Help} for the complete interaction.
-A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. See
+Use arrows to browse other controls and @kbd{@key{RET}} to activate one. In Emacsvox
+menus@comma{} @kbd{q} or @kbd{C-g} goes back one level and @kbd{C-q} closes the sequence.
+Returning selects the entry that opened the submenu. These commands do not
+undo applied changes. @ref{settings-menu-navigation, , Navigate menus and read Help} explains section movement@comma{}
+numeric adjustment and navigation preferences in full. A linked editor keeps
+its own preview@comma{} saving and discard rules. See
 @ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
 or a retained draft as the same thing.
 
 Use @kbd{C-e H a} to find an action such as browsing voices@comma{} inspecting
-diagnostics@comma{} or reading the manual. It uses the same partial-name matching and
-two-Enter selection as settings search@comma{} including literal spaces and @kbd{@key{TAB}}
-completion. Alternative names lead to one displayed
-result for each action: for example@comma{} @code{Feedback for this item} finds
-@emph{Explain this item}@comma{} and @code{Recent aural feedback} finds @emph{Recent feedback}.
-Editors opened from these menus retain their own Help@comma{}
-preview@comma{} save@comma{} and return commands.
+diagnostics or reading the manual. It uses the same search and two-Enter
+selection. @ref{Finding Settings And Actions,Finding settings and actions,,emacsvox,} explains aliases and the available
+search routes.
 
 @section Read And Leave A Help Window
 
@@ -4549,7 +4526,7 @@ their own settings; editing @code{default} is not a whole-palette voice change.
 @menu
 * Use one physical voice across a palette: Changing A Palette Physical Voice.  Review a preferred physical voice across named entries before saving.
 * Understand Voice Adjustments: Voice Adjustments.  Understand the voice controls and their defaults.
-* Choose And Tune Fallback Voices: Voice Fallbacks.  Order physical choices and customize their individual adjustments.
+* Choose And Tune Fallback Voices: Voice Fallbacks.  Order physical choices and customise their individual adjustments.
 * Inspect Or Adjust A Voice In Context: Voices In Context.  Compare a voice with contextual rules and edit a rule rather than its base entry.
 @end menu
 
@@ -4608,9 +4585,10 @@ changes text. These previews are private and exclude contextual rules.
 Adjustments speak values without automatic samples here; the full editor's
 automatic-sample preference is retained. @kbd{u} undoes the last draft change.
 
-@kbd{e} opens engine-specific settings@comma{} waiting for a qualified runtime catalogue
-before permitting edits. Its @kbd{q} returns to the common editor; @kbd{m} reopens
-focused tuning on the same draft and scope. Physical experiments@comma{} individual
+@kbd{e} opens engine-specific settings. Editing becomes available when the engine
+supplies its current list of supported parameters. Its @kbd{q} returns to the
+common editor; @kbd{m} reopens focused tuning on the same draft and scope.
+Physical experiments@comma{} individual
 fallbacks@comma{} and engine controls remain available in the full editor.
 
 @kbd{w} saves and applies; @kbd{c} saves to the collection without selecting. Existing
@@ -4633,12 +4611,12 @@ that reply does not save the later edits. They remain unsaved. If a file or
 destination has changed@comma{} review the proposal again rather than expecting the
 editor to merge those changes automatically.
 
-Complete-choice previews require Omnivox's complete-voice-preview capability.
-They do not select the draft or change live settings. Older hosts report this
-unsupported; individual physical auditions remain available. Playback evidence
-identifies accepted audio when reported@comma{} including unsupported adjustments@comma{}
-without inferring a successful fallback from inventory or claiming exact native
-parameter measurements.
+Previewing a complete voice choice@comma{} including its fallbacks@comma{} requires support
+from Omnivox. Older hosts report when this is unavailable; you can still
+audition individual physical voices. Neither preview changes live settings.
+Playback details show what the server reports playing and which adjustments
+it could not apply. They do not measure the engine's exact parameter values
+or assume that an available fallback was used.
 
 @kbd{q} returns to the originating row and column. Keep@comma{} discard@comma{} or continue with
 unsaved work. Retained drafts can be resumed through @kbd{C-e H p d} during
@@ -5253,7 +5231,7 @@ For unconfirmed application@comma{} see
 @cindex sound packs
 @cindex spatial presentation
 
-Rules request cues by semantic name. Sound packs map names to audio assets
+Rules request cues by name. Sound packs supply recordings for those names
 and can inherit missing cues. This lets you change the sound of a family of
 cues without rewriting rules. A recording library holds available sounds;
 assigning one to a cue changes its sound in that pack. To change when the cue
@@ -5293,10 +5271,12 @@ audible content at the centre. Named tones are separate compact resources@comma{
 independent of sampled files and the active pack.
 
 For waveform@comma{} pitch sweep and envelope adjustments@comma{} use the
-@ref{spelling-tone-editor, , shared tone editor}. Spelling@comma{} capitalisation beeps and rising-pitch
-indentation each open it from their own menu@comma{} as do the five line-condition
-cues. The waveform and envelope controls are shared; scope and saving belong
-to the destination. General personal-rule editing retains its own controls.
+@ref{spelling-tone-editor, , shared tone editor}. Spelling@comma{} capitalisation@comma{} indentation@comma{} wrapped rows@comma{}
+line conditions and tree levels open it from their respective settings.
+Its controls are shared@comma{} while each destination has its own scope and saving
+rules. For tree entry@comma{} exit and depth feedback@comma{} follow
+@ref{agent-shell-text-trees, , Read and customise text trees}. General personal-rule editing retains its
+own controls.
 
 @menu
 * Walkthrough Try A Sound Pack: Sound Pack Walkthrough.  Preview, activate, retain, and restore a sound pack.
@@ -5613,6 +5593,94 @@ settings still override the saved punctuation default.
 
 @enumerate
 @item
+@anchor{Adjust reading controls}Adjust reading controls
+
+
+@anchor{reading-controls-and-filters}
+
+@cindex character speech rate
+@cindex quiet speech, settings menu
+@cindex nonprinting characters
+
+From the buffer you want to change@comma{} open @kbd{C-e H s R} for @emph{Reading controls}.
+Adjusting a control takes effect immediately; browsing leaves it unchanged.
+@kbd{g} switches between buffer scope
+and global defaults; global changes also update the captured buffer while
+preserving other buffers' explicit overrides. This menu has no startup Save.
+
+@itemize
+@item
+@kbd{c} changes the rate of isolated letters. A multiplier below one slows
+letters; above one speeds them up. Shift-left/right adjusts by 0.1@comma{} and
+@kbd{@key{RET}} accepts a value from 0.1 to 4. Phonetic names and punctuation names
+retain the ordinary rate. Omnivox supports this control; some older servers
+ignore it. @kbd{p} previews the letter a@comma{} even while quiet speech is enabled.
+@item
+Capital @kbd{Q} suppresses subsequent source speech without stopping current
+playback. Menu feedback remains spoken. @kbd{r} restores speech in the source
+and the global default@comma{} leaving other buffers' quiet overrides intact.
+@item
+@kbd{n} names selected nonprinting control characters and raw eight-bit bytes.
+@kbd{o}@comma{} @emph{Strip octals}@comma{} instead removes bytes 127–255 from speech and suppresses
+nonprinting naming altogether. It does not remove decoded Unicode accents
+or change the source text.
+@end itemize
+
+In buffer scope@comma{} @kbd{i} removes the source's overrides for all four controls so
+they follow global defaults. @kbd{q} returns@comma{} keeping adjustments. For logical
+line reading@comma{} visual wrapping and continuation cues@comma{} use @kbd{w} and follow
+@ref{Reading,Reading and navigating,,emacsvox,}.
+
+@item
+@anchor{Filter text and adjust speech boundaries}Filter text and adjust speech boundaries
+
+
+@anchor{reading-filters}
+
+@cindex repeated characters, cleanup
+@cindex column filtering
+@cindex speech chunking
+
+Three submenus of Reading controls change how text is spoken without editing
+it. Each has a fixed scope@comma{} independent of the parent's buffer/global choice.
+Adjustments apply immediately; @kbd{p} previews the captured line@comma{} including while
+quiet is enabled. @kbd{u} reverses changes made during the current submenu visit.
+Leaving and reopening starts a new undo point.
+
+Use @kbd{a} for @emph{Repeat cleanup}@comma{} which applies globally for this session. Runs
+of three or more copies of a configured pattern become a count and the pattern
+at All punctuation@comma{} or are omitted at other punctuation levels. @kbd{b} browses
+active patterns and previews four repetitions of the chosen one. @kbd{a} adds a
+literal pattern@comma{} @kbd{d} removes one@comma{} and @kbd{x} disables cleanup by clearing the
+list. Spaces are literal; empty patterns and line breaks are rejected. @kbd{u}
+restores the opening list. This menu has no startup Save.
+
+Use @kbd{f} for @emph{Column filtering} in the captured buffer. Press @kbd{e} and enter
+inclusive character ranges such as @code{1-10@comma{} 21-25}. Positions start at one;
+a tab counts as one character regardless of its displayed width. A range
+extending beyond a short line is ignored entirely. @kbd{v} switches between
+skipping those ranges and speaking only them. The filter affects whole-line
+speech@comma{} leaving partial-line and table reading unchanged.
+
+Edited ranges are remembered for the file@comma{} or for the major mode of a non-file
+buffer@comma{} and saved on normal Emacs exit. They do not activate automatically
+when you revisit a file: use @kbd{r} to restore them explicitly. The skip/speak-only
+direction is temporary and is not saved with the ranges. @kbd{x} disables the
+active filter while keeping remembered ranges; an empty answer to @kbd{e} also
+clears the remembered ranges. @kbd{u} restores both the opening buffer settings
+and any remembered ranges changed during this visit.
+
+Use @kbd{s} for @emph{Speech chunking} in the captured buffer for this session. @kbd{c}
+excludes whitespace as a speech boundary@comma{} generally grouping text around
+punctuation or clauses. @kbd{w} includes whitespace for smaller@comma{} often word-sized
+pieces. Both retain the other boundary types defined by the mode. @kbd{e} edits
+the syntax-class codes directly; its Help explains them. @kbd{i} follows the
+global default@comma{} replacing any mode-specific choice@comma{} and @kbd{u} restores the
+opening setting. Compare with @kbd{p}@comma{} since audible phrasing depends on the
+speech engine. These settings have no startup Save and do not alter the
+size limits used by @ref{Reading From Point,tracked reading,,emacsvox,}.
+
+@item
 @anchor{Choose Unicode exceptions}Choose Unicode exceptions
 
 
@@ -5812,7 +5880,6 @@ Capitalization for that buffer to inspect or change its reading settings.
 including tone timing and shape@comma{} and the shared tone volume through Customize.
 @kbd{q} returns and @kbd{C-q} closes the menus without saving.
 
-@enumerate
 @item
 @anchor{Use the shared tone editor}Use the shared tone editor
 
@@ -5824,10 +5891,14 @@ including tone timing and shape@comma{} and the shared tone volume through Custo
 @cindex tone presets
 
 Spelling feedback@comma{} each capitalisation beep menu@comma{} indentation's pitch-tone
-settings and the five line-condition menus open this editor with capital @kbd{E}. The title identifies the cue and
-scope. Waveform@comma{} pitch sweep and envelope controls accompany pitch@comma{} duration
-and individual volume. Adjustments affect only a private draft until you
-apply or save it using the destination's labelled actions.
+settings and the five line-condition menus open this editor with capital @kbd{E}.
+Wrapped-row feedback and @ref{agent-shell-text-trees, , tree level feedback} also use it; the tree's Level
+changes menu opens it with capital @kbd{T}. The title identifies the cue and scope.
+Waveform@comma{} pitch sweep and envelope controls accompany pitch@comma{} duration and
+individual volume. Adjustments affect only a private draft until you apply
+or save it using the destination's labelled actions. For trees@comma{} those actions
+keep the tone in the pending Trees draft; return to Trees to apply or save
+that draft.
 
 The exercise below uses global spelling at @kbd{C-e H s f E}. Its timing stays
 in Spelling feedback at @kbd{C-e H s f m}; voice@comma{} earcon and tone enablement also
@@ -6014,7 +6085,6 @@ A preview reports missing support instead of playing an inaccurate substitute.
 Your settings remain intact. Use an updated worker@comma{} or restore volume 100@comma{}
 sine and Classic and turn off Pitch sweep to hear the tone on an older worker.
 @end enumerate
-@end enumerate
 
 @item
 @anchor{Choose typing and point feedback}Choose typing and point feedback
@@ -6120,22 +6190,18 @@ boundaries; the application chapters give the complete workflows.
 @anchor{Shell/comint and EAT}Shell/comint and EAT
 
 
-Shell/comint's focused menu toggles automatic speech with @kbd{s} and background
-monitoring with @kbd{b}. Background reading needs autospeak enabled. Both values
-belong to the captured buffer for its lifetime; there is no Save action. Arrows
-announce values and @kbd{@key{RET}} activates. @kbd{q} returns to the entry@comma{} or closes a
-direct focused menu. Search at @kbd{C-e H /} finds @code{comint} and @code{monitoring}.
+Shell/comint's settings belong to the captured buffer for its lifetime and
+have no Save action. Background reading needs automatic speech enabled; see
+@ref{Desktop Applications,Terminal applications,,emacsvox,} for the controls. Search at @kbd{C-e H /} finds @code{comint}
+and @code{monitoring}.
 Choosing Shell/comint from another buffer explains the required context and
 leaves its controls unavailable.
 
-EAT's @kbd{s} toggles foreground speech@comma{} @kbd{b} content-free background cues/counts@comma{}
-@kbd{p} prompt feedback@comma{} and @kbd{d} automatic detail. Background monitoring is
-independent of foreground autospeak and never reads background content.
-Changes are local to the terminal@comma{} including from frozen review. @kbd{w} saves all
-four displayed defaults; terminals with overrides keep them. @kbd{A} opens advanced
-Customize and @kbd{q} returns. All controls are searchable. Choice lists start on
-the current value; arrows browse@comma{} @kbd{@key{RET}} applies@comma{} and @kbd{q} cancels. See
-@ref{EAT Terminal Access,EAT Terminal Access,,emacsvox,} for prompt integration and safety boundaries.
+EAT changes also belong to the captured terminal@comma{} including when opened from
+frozen review. Its @kbd{w} saves the four displayed values as defaults; terminals
+with local overrides keep them. Background monitoring is independent of
+foreground speech and never reads background content. Follow
+@ref{EAT Feedback Preferences,Adjust and save terminal feedback,,emacsvox,} for the controls and their conditions.
 
 @item
 @anchor{Agent Shell Org and EWW}Agent Shell@comma{} Org@comma{} and EWW
@@ -6152,40 +6218,27 @@ options and @kbd{A} advanced Emacsvox Org settings in Customize@comma{} returnin
 @kbd{q}. This editing feedback is separate from the shared table reader described
 in @ref{Browsing Structure, , Browsing Structure}.
 
-EWW's @kbd{s} controls section-navigation autospeak and @kbd{i} suppresses images on
-subsequent rendering. It also updates the shared SHR image default while
-preserving local overrides; it does not reload the page. @kbd{w} saves the two
-Emacsvox defaults and @kbd{A} opens advanced settings. The @kbd{o} outlining choice
-applies to the captured page@comma{} while @kbd{m} selects the HTTP identity default for Emacs URL
-requests. Both are temporary and excluded from @kbd{w}; see
-@ref{Web Browsing,Reading web pages with EWW,,emacsvox,} for their scope and effects.
+EWW's @kbd{w} saves its section-navigation speech and image-suppression defaults.
+Outlining and HTTP identity have separate temporary scopes and are excluded
+from Save. Follow @ref{Recovering A Web Page,Recover a cluttered or incomplete page,,emacsvox,} for these controls;
+@ref{Navigating A Web Page,Read by heading@comma{} paragraph or search,,emacsvox,} explains the outlining choice.
 
 @item
 @anchor{Notmuch and shared choice-list navigation}Notmuch and shared choice-list navigation
 
 
-Notmuch has the same focused menu in Hello@comma{} Search@comma{} Show@comma{} and Tree. @kbd{c} chooses
-adaptive@comma{} count-only@comma{} cue-only@comma{} or silent successful completion; failures remain
-audible. @kbd{f~/~b} set field character/UTF-8 byte limits and @kbd{t~/~B} total limits.
-Shift-left/right steps by 100@comma{} @kbd{@key{RET}} accepts a positive integer or @code{none} for
-that limit only. @kbd{w} saves those four limits and completion policy: five
-values@comma{} not every mail setting.
+Notmuch has the same focused menu in Hello@comma{} Search@comma{} Show and Tree. Its @kbd{w}
+saves four automatic speech limits and the completion policy. Field lists@comma{}
+status maps and advanced settings use separate Customize editors with their
+own Apply and Save actions. @ref{Notmuch Speech And Privacy,Choose speech detail and protect mail privacy,,emacsvox,} explains
+these controls@comma{} their scope and the limits on attachment inspection.
 
 Org and Notmuch choice lists start on the current global value. Arrows browse
 without applying@comma{} @kbd{@key{RET}} applies/returns@comma{} and @kbd{q} cancels. @kbd{?} plus a choice key
 explains effect/scope; @kbd{q} returns to that browsed choice.
 
-Notmuch's @kbd{s~/~m} open ordered search/message fields and @kbd{i~/~I} their status
-maps. These Customize editors preserve custom formatters and use their own
-Apply/Save/Reset. @kbd{p} opens Presentation Options: enabled
-@code{mail-message-status-cues} owns standard cues@comma{} while maps still suppress spoken
-status tags. @kbd{A} exposes advanced options such as separators and MIME inspection
-limits. Settings searches for @code{MIME depth limit} or @code{MIME node limit} select
-this control once Notmuch is loaded. These limits bound attachment-summary
-scanning@comma{} not the length of spoken text. @kbd{q} returns;
-opening or returning does not save. @ref{Notmuch Mail,Notmuch Mail,,emacsvox,} explains privacy and full
-inspection. Integrations without focused entries remain accessible through
-major-mode settings and advanced Customize.
+Integrations without focused entries remain accessible through major-mode
+settings and advanced Customize.
 @end enumerate
 
 @node Presentation Profiles
@@ -8049,8 +8102,9 @@ complete command and option reference.
 
 Run @kbd{M-x notmuch} to open Hello. With the standard Emacsvox global maps
 loaded@comma{} @kbd{C-' m} runs @code{notmuch-search} directly and asks for a query.
-Emacsvox loads its integration when Notmuch loads and marks new Hello@comma{} Search@comma{}
-Show@comma{} and Tree buffers with Notmuch semantic context.
+Emacsvox loads its integration with Notmuch. The feedback described here is
+then available in Hello@comma{} Search and Show; Tree has the limited support
+described under @ref{Notmuch Support Boundaries,Know the support boundaries,,emacsvox,}.
 
 Loading speech support does not alter mail@comma{} tags@comma{} files@comma{} or Notmuch
 configuration. Notmuch owns database@comma{} tag@comma{} archive@comma{} attachment@comma{} and composition
@@ -8406,9 +8460,10 @@ Bound each automatic field before formatting and submission.
 Bound the final automatic Notmuch presentation.
 @item emacsvox-notmuch-mime-node-limit
 @itemx emacsvox-notmuch-mime-depth-limit
-Default to 4@comma{}096 cons nodes and depth 64@comma{} limiting inspection of malformed@comma{}
-cyclic@comma{} broad@comma{} or deeply nested MIME metadata. An incomplete scan reports
-a conservative attachment lower bound@comma{} not a claim that no attachment exists.
+Limit inspection to 4@comma{}096 metadata list nodes and 64 levels by default.
+This bounds work on malformed@comma{} cyclic or deeply nested MIME descriptions.
+If inspection stops early@comma{} the attachment count reports a minimum rather
+than assuming that no further attachments exist.
 Search settings at @kbd{C-e H /} for @code{MIME depth limit} or @code{MIME node limit}@comma{}
 then activate Advanced Notmuch settings. Use Customize's own Apply or Save.
 @end table
@@ -8428,9 +8483,9 @@ explicit command or another application's output.
 
 Main-stream Notmuch presentations can enter bounded Aural history. By default@comma{}
 Emacsvox retains at most 20 presentations and 4@comma{}096 UTF-8 bytes of speech
-preview per record. Records contain frozen data@comma{} source names@comma{} and positions@comma{}
-but never retain source buffers. Inspect them through @kbd{C-e H f h} or
-@kbd{M-x emacsvox-aural-list-recent-feedback}. Set
+preview per record. Records contain copies of speech data@comma{} source names and
+positions@comma{} without keeping the source buffers alive. Inspect them through
+@kbd{C-e H f h} or @kbd{M-x emacsvox-aural-list-recent-feedback}. Set
 @code{emacsvox-aural-presentation-history-limit} to zero to disable this history.
 
 Generic asynchronous completion contains no query or message metadata@comma{} but a
@@ -8446,26 +8501,27 @@ notification-device and logging settings separately from mail field choices.
 
 @table @asis
 @item Hello
-Widget navigation@comma{} view lifecycle@comma{} and searches have Notmuch-specific feedback.
+Widget navigation@comma{} opening or closing the view@comma{} and searches have
+Notmuch-specific feedback.
 @item Search
-Results@comma{} asynchronous lifecycle@comma{} tags@comma{} archiving@comma{} opening@comma{} and configured
+Results@comma{} background search completion@comma{} tags@comma{} archiving@comma{} opening@comma{} and configured
 detail inspection have Notmuch-specific feedback.
 @item Show
 Messages@comma{} HTML data tables@comma{} MIME parts@comma{} pages@comma{} visibility@comma{} tags@comma{} archiving@comma{}
 and explicit inspection have Notmuch-specific feedback.
 @item Tree
-Receives @code{emacsvox-aural-module} context only. Core speech can operate@comma{}
-but this module has no Tree-specific row formatter@comma{} navigation@comma{} mutation@comma{}
-visibility@comma{} or asynchronous lifecycle.
+Ordinary reading works@comma{} and presentation rules can identify the Notmuch
+context. There are no specialised row summaries or feedback for Tree
+navigation@comma{} tag changes@comma{} folding or background updates.
 @item Composition
 Standard Message mode owns composition. Speech after new-mail@comma{} reply@comma{}
 forward@comma{} or resume transitions belongs to @code{emacsvox-message}@comma{} not the
 Notmuch integration.
 @end table
 
-There is no independent Notmuch speech-disable or unload command. Its advice@comma{}
-hooks@comma{} and Search arrow bindings remain installed for the Emacs session after
-loading. Repeated loading is idempotent and does not duplicate them.
+Once loaded@comma{} Notmuch speech support and its Search arrow bindings stay active
+for the Emacs session. There is no separate unload or speech-disable command;
+loading the integration again does not add duplicate feedback.
 
 @node Notmuch Troubleshooting
 @section Troubleshoot the live integration
@@ -9180,10 +9236,10 @@ from NonGNU ELPA@. Run @kbd{M-x eat} to start it; a prefix argument creates or
 selects another terminal. Follow the @ref{Top,Eat User Manual,,eat,} for installation@comma{}
 terminal setup@comma{} and EAT's complete command reference.
 
-Three parts cooperate here. EAT emulates the terminal; the shell@comma{} router@comma{} or
-other program handles terminal input and completion; Emacsvox presents the
-rendered result. Emacsvox observes a bounded screen@comma{} not the program's private
-state. It does not generate shell or router completion candidates.
+EAT emulates the terminal@comma{} while the shell@comma{} router or other running program
+handles input and completion. Emacsvox speaks changes visible in the rendered
+screen. It cannot inspect the program's internal state or generate its
+completion candidates.
 
 First choose an input mode appropriate to the program. Then use automatic
 feedback for current work and explicit review for content you need to examine
@@ -9285,15 +9341,16 @@ interrupting you. Another selected terminal or an active minibuffer also
 suppresses foreground feedback. In terminal-only Emacs@comma{} or when keyboard
 focus cannot be reported@comma{} selection within Emacs is the available boundary.
 
-Turning autospeak off or losing eligibility discards locally pending automatic
-feedback. Speech already sent to Omnivox may finish. Returning or re-enabling
-speech starts with fresh output; it does not replay missed content. Use explicit
+Turning autospeak off@comma{} leaving the live cursor or changing focus discards
+automatic feedback still waiting in Emacs. Speech already sent to Omnivox may
+finish. Returning or re-enabling speech starts with fresh output; it does not
+replay missed content. Use explicit
 review instead. This policy also applies to an embedded Eshell terminal@comma{}
 without changing ordinary Eshell output.
 
 @subsection Read output and follow progress
 
-On the main screen@comma{} Emacsvox collects a burst before classifying it. Complete
+On the main screen@comma{} Emacsvox collects a burst of output before speaking. Complete
 new output lines are spoken once@comma{} with automatic limits of eight lines and
 1@comma{}000 characters. Continued input rows and empty terminal placeholders are
 omitted without hiding output or rereading earlier rows. Output remains
@@ -9314,9 +9371,9 @@ Wrapped output is joined and oversized bursts announce how much was omitted.
 Fresh text without a newline also speaks@comma{} keeping password requests and
 confirmation questions accessible. Carriage-return progress and status
 rewrites use rate-limited@comma{} replaceable speech. Unchanged repaints and
-resize-only updates remain silent. Bells@comma{} pastes@comma{} input-mode changes@comma{}
-application-screen boundaries@comma{} and process exit are content-free semantic
-events rather than arbitrary screen readings.
+resize-only updates remain silent. Bells@comma{} pastes@comma{} input-mode changes@comma{} entry
+to or exit from an application screen@comma{} and process exit have their own cues
+or announcements without reading screen content.
 
 @subsection Recognise and inspect prompts
 
@@ -9362,14 +9419,15 @@ history-item counter and input-restored message remain visible in the echo
 area without speaking over the command on the notification stream.
 
 An echoed Space is named without rereading the prompt or line. For Backspace@comma{}
-Delete@comma{} @kbd{M-d}@comma{} and @kbd{C-k}@comma{} Emacsvox compares bounded public snapshots before
+Delete@comma{} @kbd{M-d}@comma{} and @kbd{C-k}@comma{} Emacsvox compares the visible screen before
 and after the key. One unambiguous same-row removal is read as the actual
 character or text removed. Otherwise only a deletion tone is given; adjacent
 prompt or screen text is not guessed as deleted content. Padding and trailing
 input blanks do not prevent an otherwise unambiguous word deletion.
 
-A no-echo peer provides no visible deletion to announce. This input feedback
-requires the selected window to follow the live cursor@comma{} and is silent during
+When a program does not echo input@comma{} there is no visible deletion to announce.
+This input feedback requires the selected window to follow the live cursor@comma{}
+and is silent during
 protected password entry@comma{} in an unselected terminal@comma{} and on an alternate
 screen where the application owns the keys.
 
@@ -9382,11 +9440,11 @@ An aural rule can add a label by matching module @code{eat}@comma{} role
 remain rate-limited and obey selected-buffer@comma{} live-cursor@comma{} and secure-input
 restrictions.
 
-On full-screen or alternate-screen applications@comma{} Emacsvox does not read every
-refresh. A cursor row reached by correlated arrow-style navigation@comma{} or a compact
-high-confidence transfer of selection-like styling@comma{} may be announced.
-Ambiguous repaints remain available to explicit review. Inverse video or a
-coloured row alone is not proof of an active item.
+In full-screen or alternate-screen applications@comma{} Emacsvox can announce the row
+reached by an arrow key or a small@comma{} clearly identified change in selection
+highlighting. It does not speak every refresh. Use explicit review when a
+screen change is ambiguous: a coloured or inverse-video row alone does not
+establish which item is active.
 
 @node EAT Terminal Completion
 @section Terminal-side Completion
@@ -9395,18 +9453,18 @@ coloured row alone is not proof of an active item.
 @cindex router completion
 @kindex TAB (EAT terminal completion)
 
-Before a terminal-side @kbd{@key{TAB}} on the main screen@comma{} Emacsvox captures the public
-screen and waits briefly for output to settle. An inline completion speaks the
-newly displayed field; for example@comma{} @code{~/sr<TAB>} can speak @code{src slash} after the
+When you press @kbd{@key{TAB}} on the main screen in semi-character or character mode@comma{}
+Emacsvox compares the screen before and after completion@comma{} waiting briefly for
+output to settle. An inline completion speaks the newly displayed field;
+for example@comma{} @code{~/sr<TAB>} can speak @code{src slash} after the
 shell displays @code{~/src/}.
 
-An ambiguous completion printed as columns or help rows is presented as one
-transaction after the input line is redrawn. Small inferred lists speak up to
-eight candidates. Router-style descriptions keep their layout rather than
-being forced into a shell-token model. Large lists are counted and shortened
-for automatic speech. If candidates have already scrolled beyond the bounded
-screen@comma{} the count is a lower bound@comma{} such as ``at least N visible''@comma{} not an
-invented total.
+When completion prints columns of alternatives or help rows@comma{} Emacsvox reads
+them together after the input line is redrawn. Small lists speak up to eight
+candidates. Router-style help retains its layout and descriptions. Large
+lists are counted and shortened for automatic speech. If candidates have
+already scrolled beyond the captured screen@comma{} the count gives only the number
+known to be visible@comma{} such as ``at least N visible''.
 
 Identical repeated lists@comma{} split output@comma{} bells@comma{} wrapping@comma{} and resizing are
 coalesced without repeating the candidate text. This works from rendered
@@ -9473,9 +9531,9 @@ not match a changing live screen.
 
 @cindex frozen EAT review
 
-@kbd{C-e q r} opens an immutable copy of the latest visible screen. It does not
-refresh@comma{} move the live cursor@comma{} or send input. It preserves normalised styling@comma{}
-cursor and likely-focus anchors@comma{} and retained completion rows. Opening and
+@kbd{C-e q r} opens a fixed copy of the latest visible screen. It does not
+refresh@comma{} move the live cursor or send input. The copy retains styling@comma{}
+positions for the cursor and likely focus@comma{} and completion rows. Opening and
 closing play distinct object cues and announce the transition.
 
 @table @kbd
@@ -9506,9 +9564,9 @@ Describe frozen review mode.
 Kill the content-bearing review buffer and restore its window.
 @end table
 
-Secure input@comma{} terminal reset or restart@comma{} killing the source@comma{} or leaving EAT
-mode also destroys its frozen review. These events bound the lifetime of
-copied terminal content.
+Entering a password through protected input@comma{} resetting or restarting the
+terminal@comma{} killing its buffer or leaving EAT mode also closes and removes
+its frozen review.
 
 @node EAT Feedback Preferences
 @section Verbosity And Background Monitoring
@@ -10236,10 +10294,9 @@ licensed and supplied.
 @node Optional Omnivox Engine Modules
 @subsection Optional Omnivox Engines
 
-The ordinary WSL2 archive is the core@comma{} not a claim that every supported engine
-is installed. Companion archives provide larger@comma{} experimental@comma{} or
-architecture-specific engines. Some require a separately supplied runtime or
-chosen voice data before they can speak.
+The ordinary WSL2 archive supplies the core speech engines. Companion archives
+add larger@comma{} experimental or architecture-specific engines. Some also need a
+separately installed runtime or downloaded voice data before they can speak.
 
 @enumerate
 @item
@@ -10258,19 +10315,23 @@ engines missing from that inventory stay visible as @emph{not reported} so manag
 controls remain reachable. @kbd{v} browses voices; @kbd{@key{RET}} opens details.
 
 Details begin with a short status and voice actions@comma{} with @emph{Browse voices}
-selected. Matching main/notification evidence is combined and problems remain
-near the top. @emph{Startup settings} and @emph{Diagnostics} start folded; @kbd{@key{RET}} toggles
-sections. Selection and folding are remembered per engine.
+selected. When main and notification speech report the same result@comma{} it is
+shown once; differences and problems appear near the top. @emph{Startup settings}
+and @emph{Diagnostics} start folded. Press @kbd{@key{RET}} to open or close a section.
+The browser remembers your selection and folds for each engine.
 
-@emph{Available} describes discovery from the current worker. An older check does
-not alone make it unavailable. @emph{Previously available} belongs to a stopped or
-replaced worker. Details announce the engine before requesting newer inventory
-in the background when its check is over five minutes old or belongs to another
-worker. File checks likewise run in the background where requested.
-@emph{Streams differ} identifies different availability@comma{} policy@comma{} health@comma{} or voice
-identities. A bridge's presence does not establish its runtime; @emph{Not checked}
-does not mean missing. Diagnostics shows each worker's paths@comma{} inventory time@comma{}
-runtime discovery@comma{} and health.
+@emph{Available} means the current speech worker found the engine; the result does
+not expire merely because the check is old. @emph{Previously available} refers to
+a worker that has stopped or been replaced. Opening details announces the
+engine first@comma{} then requests a background refresh if the result is over five
+minutes old or came from another worker. Requested file checks also run in
+the background@comma{} leaving navigation available.
+
+@emph{Streams differ} means main and notification speech disagree about engine
+availability@comma{} policy@comma{} health or voice identity. @emph{Not checked} means no check
+result is available@comma{} rather than that files are missing. An installed bridge
+may still need a separate runtime. Diagnostics shows each worker's paths@comma{}
+check time@comma{} runtime discovery and health.
 
 @emph{Required runtime} appears near the top when native libraries are needed.
 Successful DECtalk discovery@comma{} for example@comma{} confirms DLL and dictionary loading.
@@ -10291,12 +10352,13 @@ A one-language list starts expanded and selection/folding are remembered.
 opens an unsaved experiment. Saving asks for a palette destination; browsing
 or previewing changes no palette. @kbd{q} returns to selected engine details.
 
-Library data loads asynchronously with quiet refresh. @emph{Installed} identifies
-library entries versus supplied voices. @emph{Enabled} is the desired selection
-for the next Apply. @emph{Active} describes eligibility on both streams@comma{} main only@comma{}
-notification only@comma{} or neither. @emph{Unknown} means missing/inconsistent evidence;
-@kbd{R} refreshes. Active does not measure model residency or prove listening.
-Samples use main speech; inactive downloads need enablement and Apply first.
+The library loads in the background without repeated speech. @emph{Installed}
+distinguishes managed library entries from supplied voices. @emph{Enabled} shows
+the choice to use at the next Apply. @emph{Active} shows where a voice can currently
+be used: both streams@comma{} main only@comma{} notification only or neither. It does not
+measure memory use or confirm that you can hear the voice. @emph{Unknown} means
+the reported information is missing or inconsistent; press @kbd{R} to refresh.
+Samples use main speech. Enable inactive downloads and Apply before sampling.
 
 @emph{Voice variants} in eSpeak details lists the running worker's bundled variants.
 Choose a base with @kbd{b}@comma{} browse with arrows or @kbd{C-n~/~C-p}@comma{} and audition with
@@ -10639,9 +10701,7 @@ before moving or choosing another directory; unknown partial trees are not
 overwritten.
 
 Muting JAWS speech does not disable its shortcuts. If @kbd{M-<} or @kbd{M->} is
-intercepted@comma{} try @code{JAWSKey+3} before the key. Bart's @code{workstation-config}
-repository supplies the separate Emacs-specific JAWS override used on the
-test workstation.
+intercepted@comma{} try @code{JAWSKey+3} before the key.
 
 @subsection Manual Native Installation
 
@@ -10649,7 +10709,10 @@ This route requires native Emacs 30.2 or newer already installed. It does not
 acquire Emacs or replace the guided x64 checks. Set @code{$Emacsvox} to the absolute
 checkout path and continue in one PowerShell window.
 
-@subsection Download And Verify Omnivox
+@enumerate
+@item
+@anchor{Download And Verify Omnivox}Download And Verify Omnivox
+
 
 Set @code{$Platform} for the host. The normal Intel/AMD x64 example is:
 
@@ -10682,7 +10745,9 @@ Windows release may be rejected by policy; stop rather than weakening security.
 The existence of an ARM64 Omnivox archive does not extend Emacsvox's supported
 native desktop beyond x64.
 
-@subsection Install And Check The Native Server
+@item
+@anchor{Install And Check The Native Server}Install And Check The Native Server
+
 
 In the same PowerShell@comma{} extract everything beneath per-user @code{LocalAppData}:
 
@@ -10715,7 +10780,9 @@ speech. Keep executable@comma{} @code{espeak-ng-data}@comma{} and @code{third-pa
 Do not copy/load @code{omnivox-voices.el} from the archive; that is the upstream
 Emacspeak adapter@comma{} not Emacsvox's bundled one.
 
-@subsection Start Native Emacsvox
+@item
+@anchor{Start Native Emacsvox}Start Native Emacsvox
+
 
 Keep the window so @code{$Omnivox} still identifies the verified binary. Set @code{$Emacs}
 to native @code{emacs.exe} and @code{$Emacsvox} if the checkout was not set above:
@@ -10735,7 +10802,9 @@ Require Emacs 30.2 or newer. Use @code{emacs.exe} instead of @code{runemacs.exe}
 launch so startup errors remain in PowerShell. Direct setup loading is intentional:
 @code{bin/emacsvox} is POSIX; @code{bin/emacsvox.ps1} is the guided native entry.
 
-@subsection Verify Speech And Report Problems
+@item
+@anchor{Verify Speech And Report Problems}Verify Speech And Report Problems
+
 
 Check the isolated native session:
 
@@ -10780,6 +10849,7 @@ Replace both paths. This deliberately starts with an absolute executable.
 Adding its directory to @code{exec-path} is optional until selecting @code{omnivox} by
 short name. Native desktop support remains x64; remote speech is a separate
 preview.
+@end enumerate
 
 @node Installing Omnivox From Source
 @section Installing Omnivox From Source
@@ -11144,11 +11214,10 @@ device/hardware buffering can add delay. The diagnostics menu's @kbd{l} also
 exposes the explicit session logging control with its privacy warning.
 @end table
 
-Emacsvox owns selection@comma{} launcher@comma{} Windows staging@comma{} and its bundled Lisp adapter.
-Omnivox owns native builds@comma{} engines@comma{} CLI@comma{} runtime layout@comma{} and protocols.
-Backend-local READMEs document compatibility adapters and licensed runtimes.
-Use those owning references for versioned details instead of duplicating their
-contracts in first-installation instructions.
+For server selection@comma{} the launcher and Windows staging@comma{} use this manual.
+For Omnivox builds@comma{} engine behaviour@comma{} command-line options and protocols@comma{} use
+the linked Omnivox guides. The README beside each compatibility server
+documents that adapter and any separately licensed runtime it needs.
 
 @node Emacsvox Keyboard Commands
 @chapter Emacsvox Keyboard Commands.
@@ -11551,6 +11620,12 @@ than assuming a manual's default overrides your configuration.
 @ref{Reading Markdown And Org Tables,Read a table by row or column,,emacsvox,}: use the shared table reader for
 Markdown and Org. @ref{Agent Shell Tables,Agent Shell tables,,emacsvox,} have their own contextual keys and
 spoken units.
+@item
+@ref{agent-shell-text-trees, , Read a text tree in an agent response}: move between recognised trees@comma{}
+hear their labels and choose entry@comma{} exit and depth indications.
+@item
+@ref{reading-filters, , Skip repeated patterns or unwanted columns in speech}: filter reading
+without changing the source text@comma{} and restore the original settings.
 @end itemize
 
 @node Finding Editing Tasks
@@ -11620,6 +11695,9 @@ files@comma{} enablement@comma{} and application to the running speech workers.
 @item
 @ref{Changing One Sound,Replace or silence one unwanted sound,,emacsvox,}: target the cue you want to change
 rather than disabling all auditory icons.
+@item
+@ref{spelling-tone-editor, , Shape a feedback tone}: compare pitch@comma{} waveform and envelope in a private
+draft@comma{} then apply or save it for the intended cue.
 @end itemize
 
 @node Finding Settings Tasks
@@ -12064,12 +12142,12 @@ is the exact inventory of Lisp commands@comma{} options@comma{} and keymaps; the
 that follow explain contracts and procedures that cannot be generated from
 those interfaces.
 
-The stable entry and bootstrap files remain directly under @code{lisp/}. Load
-@code{emacsvox-setup.el} there as before. Related modules occupy six directories:
+The entry and bootstrap files live directly under @code{lisp/}. Load
+@code{emacsvox-setup.el} from that directory. Related modules occupy six directories:
 @code{core/} for shared reading and navigation@comma{} @code{aural/} for presentation services@comma{}
 @code{speech/} for engine and transport code@comma{} @code{voices/} for logical voice data@comma{}
 @code{ui/} for settings and editors@comma{} and @code{integrations/} for package adapters.
-Filenames@comma{} provided features and commands are unchanged.
+Use the existing filenames@comma{} features and commands when loading a module.
 
 When adding a module@comma{} use its owning directory and update @code{lisp/Makefile}.
 That file remains the compilation and dependency inventory. The data-only
@@ -12082,7 +12160,7 @@ After changing source locations@comma{} rebuild with @code{make bytecode-rebuild
 @code{make bytecode-check} before starting a fresh Emacs. The rebuild removes owned
 obsolete byte-code; copying new sources over old compiled files is insufficient.
 A directory does not establish an independent dependency layer: preserve
-feature names@comma{} initialization order and deferred integration loading.
+feature names@comma{} initialisation order and deferred integration loading.
 
 @menu
 * Documentation Maintenance::    Author, validate, and publish Emacsvox documentation.
@@ -12103,7 +12181,7 @@ the source being changed.
 The maintained Org master is @code{docs/manual/emacsvox.org}.  Current-user chapters
 live under @code{docs/manual/chapters/}@comma{} while developer and maintainer chapters
 live under @code{docs/developer/}.  The source layout and fast authoring loop are
-summarized in @code{docs/manual/README.org}.
+summarised in @code{docs/manual/README.org}.
 
 The current project overview lives in @code{README.org}@comma{} and the complete user
 installation path lives in @code{docs/manual/chapters/installation.org}.  Source
@@ -12222,7 +12300,7 @@ presentation protocols carry bounded JSON records beside that legacy stream.
 
 This chapter is primarily for speech-server and client developers.  The
 detailed Omnivox contracts are owned by the Omnivox repository; this manual
-summarizes their relationship to Emacsvox and then documents the legacy line
+summarises their relationship to Emacsvox and then documents the legacy line
 protocol.
 
 For additional notes on how to log and view TTS server
@@ -12282,7 +12360,7 @@ their dispatch records.
 @code{ordered} and @code{urgent} timelines are admitted immediately.  Only
 matching @code{replaceable} work uses the short server-side coalescing window.
 Receipt of a newer valid replaceable generation immediately cancels queued@comma{}
-synthesizing@comma{} and buffered work in the same replacement domain.  It does not
+synthesising@comma{} and buffered work in the same replacement domain.  It does not
 globally stop ordered@comma{} urgent@comma{} legacy@comma{} or differently keyed output.
 
 Marker events report playback start and positioned playback boundaries;
@@ -12305,7 +12383,7 @@ speech text remains subject to the existing 4096-byte history limit. Exhausted
 or incomplete evidence disables original replay without blocking delivery.
 Completed snapshots drive exact private voice previews with fallback disabled.
 They never rewrite the named-voice registry or borrow another lane's latest
-logical-voice realization. Ordinary history navigation retains the requested
+logical-voice realisation. Ordinary history navigation retains the requested
 annotations; explicit original playback uses this observed snapshot.
 
 The canonical protocol documents are:
@@ -12358,11 +12436,8 @@ acknowledge that the request has been completely processed. This is a
 non-blocking operation@comma{} i.e.@comma{} if the client application generates
 additional requests@comma{} these are processed @strong{immediately}.
 
-This design allows a legacy Emacsvox TTS server to be
-@strong{highly} responsive; Client applications can queue large
-amounts of text (typically queued a clause at a time to achieve the
-best prosody)@comma{} ask the TTS server to start speaking@comma{} and
-interrupt the spoken output at any time.
+Clients can queue text a clause at a time@comma{} start playback and interrupt it
+while the server continues accepting commands.
 
 @enumerate
 @item
@@ -12408,19 +12483,13 @@ output immediately.
 tts_say text
 @end example
 
-Speaks the specified @strong{text} immediately. The text is not
-pre-processed in any way@comma{} contrast this with the primary way of
-speaking text which is to queue text before asking the server to
-process the queue.
+Speaks the specified text immediately@comma{} without the preprocessing used for
+queued text. Most speech uses @code{q} followed by @code{d} instead.
 
-Note that this command needs to handle the special syntax for morpheme
-boundaries @code{[*]}.  The @code{[*]} syntax is specific to the
-Dectalk family of synthesizers; servers for other TTS
-engines need to map this pattern to the engine-specific code for each
-engine. As an example@comma{} see @code{servers/outloud} A morpheme boundary
-results in synthesizing compound words such as @strong{left bracket}
-with the right intonation; using a space would result in that phrase
-being synthesized as two separate words.
+The server must handle DECtalk's @code{[*]} syntax for morpheme boundaries.
+Other engines need an equivalent mapping; see @code{servers/outloud} for an
+example. A morpheme boundary joins compound terms such as @emph{left bracket};
+an ordinary space treats them as separate words.
 
 @example
 l c
@@ -12448,12 +12517,7 @@ normal palette speech path.
 d
 @end example
 
-This command is used to @strong{dispatch} all queued requests.  It was
-renamed to a single character command (like many of the commonly used
-TTS server commands) to work more effectively over slow
-(9600) dialup lines.  The effect of calling this command is for the
-TTS server to start processing items that have been queued
-via earlier requests.
+Dispatches all queued requests@comma{} starting playback in queue order.
 
 @example
 s
@@ -12567,9 +12631,8 @@ tts_sync_state punct splitcaps caps rate
 
 @strong{Immediately} apply the passed settings.
 
-This ensures @strong{atomicity} i.e.@comma{} all state settings in the TTS
-engine happen at one shot. Note that failure to do this might result
-in some utterances being spoken with a partially set state.
+The settings take effect together@comma{} preventing speech from using a partially
+updated state.
 
 @itemize
 @item
@@ -12635,7 +12698,7 @@ example "en" to "en@math{_GB}". This can later be used by set@math{_lang}.
 
 This chapter collects source-level contracts that are deliberately omitted
 from the user task guides.  Optional package APIs and renderers evolve@comma{} so
-recheck the upstream interfaces and keep compatibility behavior bounded when
+recheck the upstream interfaces and keep compatibility behaviour bounded when
 changing an integration.
 
 @menu
@@ -12673,8 +12736,8 @@ Standalone list bounds include the buffer@comma{} so vertical edges stay put.
 
 The read-only table browser caches logical string rows when rendering. Text
 properties map every character@comma{} including embedded line breaks and delimiters@comma{}
-to a model cell. Pre/post-command hooks synchronize the model after ordinary
-character movement; snapshot extraction also synchronizes it. Browser movement
+to a model cell. Pre/post-command hooks synchronise the model after ordinary
+character movement; snapshot extraction also synchronises it. Browser movement
 uses the model and its rendered position index. New reader actions submit under
 module @code{table-ui}@comma{} with role @code{field} for cells and explicit main-lane delivery.
 The local browser map is independent of the legacy speech-prefix map. CSV
@@ -12733,7 +12796,7 @@ EAT output is collected around @code{eat-term-process-output} before redisplay c
 trim it@comma{} including a bounded unfinished row. Never retain raw process bytes or
 unredacted concealed text. Read fresh public terminal bounds@comma{} preserve soft-wrap
 continuity@comma{} and reject uncertain clear/reset/alternate-screen replacements.
-Check selected-window following after EAT synchronizes windows@comma{} not between
+Check selected-window following after EAT synchronises windows@comma{} not between
 chunks inside its renderer. Editable line-mode text lies after @code{eat-term-end};
 it can share the final physical row with the terminal cursor.
 
@@ -12826,7 +12889,7 @@ feedback and @code{package-preparation} registers optional package adapters.  Th
 private task registry retains each thread@comma{} state@comma{} start/end times@comma{} and original
 error for the Emacs session.  Repeated startup reuses these records@comma{} including
 completed and failed tasks@comma{} instead of starting duplicate background work.
-Other startup effects@comma{} including speech-server initialization@comma{} still run when
+Other startup effects@comma{} including speech-server initialisation@comma{} still run when
 @code{emacsvox} is called again; this is not a general-purpose retry command.
 
 Registration completion is separate from adapter loading.  An already-loaded
@@ -12926,7 +12989,7 @@ Run the native installer checks from that Windows checkout:
 @end example
 
 The PowerShell tests use temporary fixtures and an existing native Emacs.
-They check doctor behavior@comma{} explicit selections@comma{} prebuilt/offline preflight@comma{}
+They check doctor behaviour@comma{} explicit selections@comma{} prebuilt/offline preflight@comma{}
 incomplete installations@comma{} platform rejection@comma{} checksums@comma{} archive paths@comma{} argument handling@comma{} and atomic
 configuration replacement.  @code{test/emacsvox-native-bytecode-tests.el} compares
 the native inventory with GNU Make and checks dependency order and byte-code
@@ -13255,7 +13318,7 @@ Stop after artifact inspection unless fresh explicit permission names the
 release to be tagged and published.  Preparing an artifact@comma{} committing or
 pushing a branch@comma{} publishing documentation@comma{} or receiving a general instruction
 to continue is not permission to create or push a release tag.  Once that
-separate authorization has been given@comma{} the guarded commands are:
+separate authorisation has been given@comma{} the guarded commands are:
 
 @example
 make release-tag
@@ -13290,7 +13353,7 @@ whether a new presentation occasion belongs to the core semantic contract
 or to a module-owned extension.
 @end itemize
 
-Do not infer contracts from archived proposals. Current behavior is defined
+Do not infer contracts from archived proposals. Current behaviour is defined
 by the Aural implementation@comma{} its generated reference@comma{} and accepted ADRs.
 
 @subsection Voice-style metadata ownership
@@ -13314,16 +13377,16 @@ Legacy @code{:rate} is accepted for loading saved data but is not applied as a n
 rate; nonzero legacy values produce the existing retuning degradation.
 The table supplies no implicit defaults and does not declare engine support.
 
-An explicit @code{nil} over a preset is a compatibility behavior to characterize@comma{}
+An explicit @code{nil} over a preset is a compatibility behaviour to characterise@comma{}
 not an authoring decision settled by the metadata table.  For example@comma{} the
 current compiler clears the reported average-pitch value for
 @code{(:preset base :average-pitch nil)} while retaining the base voice command and
 emitting no pitch-reset command.  The tests preserve this distinction.  A
 future inheritance@comma{} omission@comma{} or reset policy needs a separate decision.
 
-Compiler conversion@comma{} backend wire names@comma{} capability discovery@comma{} normalization@comma{}
+Compiler conversion@comma{} backend wire names@comma{} capability discovery@comma{} normalisation@comma{}
 and delivery stay in their existing owners.  When adding a field@comma{} update those
-consumers explicitly and test final serialized output or an explicit
+consumers explicitly and test final serialised output or an explicit
 degradation. The common voice editor uses the shared field metadata for bounds
 and neutral values. It covers portable ACSS and optional rate and post-synthesis
 adjustments in the same retained draft.
@@ -13332,7 +13395,7 @@ Input grammar remains UI policy. In the common voice editor@comma{} blank numeri
 entry requests the adapter default; zero is explicit. Individual choice fields
 distinguish shared inheritance@comma{} custom values and explicit adapter defaults.
 Rule-editor input has its own scoped inheritance semantics; do not substitute
-one editor's blank-input behavior for the other's.
+one editor's blank-input behaviour for the other's.
 
 The common editor displays low-pass and high-pass as amounts from zero through
 nine@comma{} increasing with stronger filtering. Low-pass converts between amount and
@@ -13347,7 +13410,7 @@ validation does not transfer ownership of asynchronous operations.
 The rule tests state field inventories@comma{} bounds@comma{} error precedence@comma{} and
 composition expectations independently of the metadata.  Scheme tests cover
 saved rich palettes and explicit-nil rules; transport tests check distinct
-ACSS mappings@comma{} zero and omitted wire fields@comma{} effects@comma{} and preset behavior.
+ACSS mappings@comma{} zero and omitted wire fields@comma{} effects@comma{} and preset behaviour.
 @code{make compiled-aural-test} also runs these style contracts with the isolated
 compiled subsystem loaded@comma{} checking that the implementations stay in that
 build. The @code{voice-style-ui} tests exercise common-editor entry@comma{} inherited
@@ -13364,28 +13427,28 @@ The graphical redisplay test is reported as skipped in ordinary batch runs.
 The connected saved-style regression edits a custom @code{bolden}@comma{} reads its saved
 data back@comma{} and compares common-editor and Workbench previews with the final
 normal-speech wire for @code{voice-bolden}.  Workbench uses the compiler's palette
-resolution and the shared effect normalizer: gain and pan level five must
+resolution and the shared effect normaliser: gain and pan level five must
 remain exactly neutral at 0.5.  Preserve both this path and the independently
 specified Workbench scale cases when changing preview or palette lookup.
 Preserve final-write@comma{} timeout@comma{} reentrancy@comma{} and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
-process lifecycle or audible behavior.
+process lifecycle or audible behaviour.
 
 @subsection Timeline preparation boundaries
 
 Two private helpers in @code{lisp/aural/emacsvox-aural-transport.el} make preparation
 inputs explicit.  @code{emacsvox-aural--timeline-effect-transition} takes previous
-effects@comma{} normalized next effects@comma{} and a span ID@comma{} returning a directive and the
+effects@comma{} normalised next effects@comma{} and a span ID@comma{} returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;
 retention preserves the previous state.  The builder still owns the state
-accumulator@comma{} span numbering@comma{} and when normalization runs.  Suppressed or empty
+accumulator@comma{} span numbering@comma{} and when normalisation runs.  Suppressed or empty
 content does not advance effects@comma{} while spoken boundary actions do.
 
 @code{emacsvox-aural--encode-timeline-delivery-fields} takes a policy and replacement
 key.  The existing @code{emacsvox-aural--timeline-delivery-fields} wrapper reads the
 dynamic submission variables at the end of timeline construction.  Preserve
 that capture point: resource resolution earlier in construction can re-enter
-Lisp and change the submission state.  The serializer preserves ordered
+Lisp and change the submission state.  The serialiser preserves ordered
 defaults@comma{} key conversion@comma{} circular printing@comma{} diagnostics@comma{} and byte bounds.
 
 The complete builder is not pure.  Cue resolution through
@@ -13393,15 +13456,15 @@ The complete builder is not pure.  Cue resolution through
 live speech process.  Those operations@comma{} action placement@comma{} dispatch
 registration@comma{} framing@comma{} fallback@comma{} and process writes retain their existing
 owners and sequence.  Separating a complete delivery candidate from those
-effects requires further design and failure-path characterization.
+effects requires further design and failure-path characterisation.
 
 The @code{delivery-preparation} tests in @code{test/emacsvox-aural-transport-tests.el}
-check complete serialized timelines and final writes@comma{} semantic bindings@comma{}
+check complete serialised timelines and final writes@comma{} semantic bindings@comma{}
 state ownership@comma{} policy inputs@comma{} and capture timing.  The compiled Aural gate
 also runs these contracts and existing stop and send-failure regressions with
 the compiled implementation resident.  Keep the full failure@comma{} reentrancy@comma{}
 and golden-trace suites as regression checks; captured writes establish
-protocol behavior@comma{} not audible playback.
+protocol behaviour@comma{} not audible playback.
 
 @subsection Aural interface source ownership
 
@@ -13471,7 +13534,7 @@ or programmatic upstream call does not claim the outer user's feedback.
 The Show landing and visibility paths also read renderer metadata such as
 @code{:headers-overlay}@comma{} @code{:message-visible}@comma{} message extents@comma{} @code{:notmuch-part}@comma{}
 part-hidden state@comma{} and Notmuch part-button types.  Missing optional metadata
-should reduce presentation detail rather than authorize an operation.  Review
+should reduce presentation detail rather than authorise an operation.  Review
 these adapters whenever the Notmuch renderer changes.
 
 Each user-owned asynchronous Search process carries its own completion state
@@ -13536,12 +13599,12 @@ main module.
 @item Renderer module
 @tab Interpret prompt faces and chat label strings@comma{} current and legacy status glyphs@comma{} semantic fragment provenance@comma{} decorative controls@comma{} answer body ranges@comma{} and legacy clipboard properties. Most helpers inspect supplied strings; fragment classification can also read the current buffer without changing it.
 @item Main integration
-@tab Capture buffer and overlay context; apply user customization@comma{} speech limits@comma{} and delivery; own response accumulation@comma{} event subscriptions@comma{} timers@comma{} callback generations@comma{} navigation@comma{} permission handling@comma{} activation@comma{} and cleanup.
+@tab Capture buffer and overlay context; apply user customisation@comma{} speech limits@comma{} and delivery; own response accumulation@comma{} event subscriptions@comma{} timers@comma{} callback generations@comma{} navigation@comma{} permission handling@comma{} activation@comma{} and cleanup.
 @end multitable
 
 Renderer metadata supplies presentation and navigation facts; it does not
-authorize permission responses or establish lifecycle completion.  Status
-label customization stays with the main integration.  Keep compatibility
+authorise permission responses or establish lifecycle completion.  Status
+label customisation stays with the main integration.  Keep compatibility
 interpretation together in the renderer module@comma{} and keep registration and
 speech side effects in the main owner.
 
@@ -13607,7 +13670,7 @@ The lifecycle subscription currently consumes @code{init-started}@comma{}
 @code{turn-complete}@comma{} @code{error}@comma{} @code{elicitation-request}@comma{} and @code{elicitation-response}.
 Dedicated subscriptions consume
 @code{permission-request}@comma{} @code{permission-response}@comma{} and @code{tool-call-update}.  Add new
-semantic behavior at the public event layer when Agent Shell exposes it; keep
+semantic behaviour at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 
 Question feedback resolves control identity from renderer properties and values
@@ -13617,8 +13680,8 @@ request and response announcements; action advice confirms edits and previews.
 No new key overrides are installed. The upstream feature stays opt-in.
 
 Configuration access uses @code{agent-shell-config-options} and
-@code{agent-shell-initialized-p} when available. The 0.85.3 fallback reads normalized
-private options and checks the initialization pipeline flags. Startup defaults
+@code{agent-shell-initialized-p} when available. The 0.85.3 fallback reads normalised
+private options and checks the initialisation pipeline flags. Startup defaults
 must not be announced as user changes. Verify the minimum at @code{f44c96b} as well
 as the pinned version@comma{} including source and compiled speech and graphical form
 controls. Use separate prepared dependency directories for each version.
@@ -13638,7 +13701,7 @@ public event to the body rendered during the same call@comma{} matching both the
 owning buffer and qualified fragment ID@.  Full tool speech is submitted after
 rendering returns.  Output digests and lifecycle statuses are tracked separately
 so late output is spoken without repeating identical updates.  Renderer IDs
-without a matching public event do not authorize tool feedback.
+without a matching public event do not authorise tool feedback.
 
 Until upstream exposes public steering and push lifecycle events@comma{} small
 adapters wrap the structured steering request's callbacks and the accepted
@@ -13656,7 +13719,7 @@ native command feedback.  New asynchronous tool@comma{} queue@comma{} steering@c
 permission-detail submissions explicitly select the notification lane; list
 editing and diff entry remain foreground interactions.  All new events and
 their outcome@comma{} count@comma{} or setting attributes are registered by the workflow
-semantic provider so Aural rules can customize their presentation.
+semantic provider so Aural rules can customise their presentation.
 @end enumerate
 
 @subsection Magit contracts
@@ -13679,7 +13742,7 @@ staging and unstaging@comma{} including removal of the last file in a section.
 Magit's positional highlight overlays must not become source personalities.
 The integration suppresses legacy overlay voice mirroring for those highlights
 and excludes their faces from source capture.  It preserves text faces@comma{}
-deliberate personalities@comma{} and customized hash voices.  Navigation still emits
+deliberate personalities@comma{} and customised hash voices.  Navigation still emits
 section facts; empty lines supply the core line-condition facts without a
 competing selection icon.
 
@@ -13704,7 +13767,7 @@ replacing it.
 The installed Omnivox executable is recorded as an absolute WSL path in the
 data-only @code{$XDG_CONFIG_HOME/emacsvox/omnivox-program} file.  Launcher selection
 is explicit @code{OMNIVOX_PROGRAM}@comma{} that per-user file@comma{} developer staging@comma{} then
-@code{PATH}.  Keep the selection tests synchronized with this order.  A configured
+@code{PATH}.  Keep the selection tests synchronised with this order.  A configured
 but invalid path is a visible configuration error; silently falling through
 would hide a stale or damaged user installation.
 
@@ -13733,7 +13796,7 @@ split across three boundaries:
 builds the Docker image@comma{} and validates this boundary before compilation.  The
 full target then builds Omnivox's two 32-bit helper sources deterministically@comma{}
 builds native Windows Omnivox plus its RHVoice@comma{} Flite@comma{} and RuTTS helpers in the
-container@comma{} and stages their licenses@comma{} provenance@comma{} and checksums.  The clean
+container@comma{} and stages their licences@comma{} provenance@comma{} and checksums.  The clean
 target also builds Piper support and verifies that the pinned companion and
 main executable identify the same Omnivox source commit.  A host Rust
 installation@comma{} MinGW installation@comma{} Visual Studio@comma{} .NET SDK@comma{} or system eSpeak
@@ -13871,8 +13934,8 @@ Preserve the current activation sequence during maintenance.  The script
 selects the staged runtime before Make's final runtime and live checks; a
 failure in those final checks does not restore the previous selection.
 Interruption before activation can leave temporary files in a new version
-directory while preserving the current link.  The fixture tests characterize
-these existing behaviors and successful retry.  Changing cleanup or rollback
+directory while preserving the current link.  The fixture tests characterise
+these existing behaviours and successful retry.  Changing cleanup or rollback
 requires a separate fix and acceptance decision.  Fixture success does not
 establish native compiler reproducibility@comma{} real Windows path conversion@comma{}
 engine startup@comma{} or audible playback; run the existing native gates for that
@@ -13947,7 +14010,7 @@ python3 utils/voice_benchmark.py init .benchmarks/voices.json \
   --runtime-input voices=/path/to/voice-data
 @end example
 
-Initialization captures supported runtime overrides from the environment@comma{}
+Initialisation captures supported runtime overrides from the environment@comma{}
 including @code{OMNIVOX_DECTALK_DLL}@comma{} @code{OMNIVOX_ECI_DLL} and @code{ESPEAK_NG_DATA}.
 Inspect the resulting JSON plan. Its initial routes are Eloquence @code{v1}@comma{}
 DECtalk @code{paul} and eSpeak's British English voice (@code{espeak:gmw/en}@comma{} with a
@@ -13965,7 +14028,7 @@ correctness; do not treat a completed timing run as clearing that failure.
 The plan pins the executable path. When staging a new development build@comma{}
 update @code{targets[].program} before measuring it. Retain the earlier executable
 and complete helper payload if an old-build comparison is wanted.
-@code{--baseline-program} at initialization adds a second target for ordinary
+@code{--baseline-program} at initialisation adds a second target for ordinary
 speech@comma{} with native controls and editor tests disabled for that older worker.
 An editor comparison against older Lisp needs a target with its own
 @code{emacsvox_root} and current byte-code for that checkout. Keep runtime inputs@comma{}
@@ -14060,7 +14123,7 @@ Lisp data form in @code{my-cues/emacsvox-sound-pack.el}:
  :default-spatialization neutral)
 @end lisp
 
-The file contains data@comma{} not executable initialization: do not wrap the form in
+The file contains data@comma{} not executable initialisation: do not wrap the form in
 @code{setq}@comma{} quote it@comma{} or add a second form. Put a replacement recording such as
 @code{button.ogg} in the same directory. Its basename names the registered cue.
 Unknown cue names fail the resource audit; introducing a new semantic cue

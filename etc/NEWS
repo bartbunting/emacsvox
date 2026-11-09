@@ -10,142 +10,196 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.10.0][NEWS for Emacsvox 2026.10.0]].
 
-** Omnivox 1.18.0
+** Before you upgrade
 
-The supported Omnivox baseline is now 1.18.0. This release supplies richer
-tones, including waveforms, pulse width, pitch sweeps, envelopes and individual
-gain. Guided installers pin the matching core and optional engines; Debian
-packages recommend Omnivox 1.18.0 or newer. Updating Emacsvox does not upgrade
-an existing Omnivox installation.
+Emacsvox requires Emacs 30.2 or newer and Transient 0.13.3 or newer. Emacs
+30.2's bundled Transient is too old for the settings menus.
 
-** Independently managed Muggles
+The supported Omnivox baseline is now 1.18.0, which supplies the expanded
+tone controls. Update Omnivox separately; updating Emacsvox does not replace
+an existing speech server. Guided installers use matching core and engine
+versions.
 
-C-e H m opens a browsable Muggles list with details, session Enable/Disable,
-explicit Run in the source buffer, and Customize Save. State changes retain
-the selected row; Help and menu return retain focus. The list currently offers
-Org heading navigation, Org table editing, Text navigation, Outline navigation
-and View navigation, Repeatable yank, Info summary and Smartparens. It is also
-available through settings/action search.
+** Settings menus and search
 
-Org heading navigation can now be enabled and disabled independently with
-=emacsvox-muggles-enable= and =emacsvox-muggles-disable=. These manage the Org
-=C-c C-SPC= entry key without replacing personal bindings. Disable closes an
-active menu while preserving direct =M-x emacsvox-muggles-org-nav/body= use.
-=emacsvox-muggles-status= explains availability, and =emacsvox-muggles-save=
-persists session choices through Customize. Explicit Disabled choices take
-precedence over legacy collection requests. Unconverted entries retain their
-existing configuration.
+=C-e H= brings together speech, voices, sounds, pronunciation, feedback
+rules and diagnostics. Find a setting with =C-e H /= or an action with
+=C-e H a=, using any part of its name. =C-e S= opens settings for the current
+application, including Agent Shell, EAT, EWW, Notmuch and Org, or general
+buffer settings when no application menu exists.
 
-Outline and View navigation now have independent managed choices for global
-=C-. o= and =C-. v=. An absent or conflicting prefix stays untouched; Run
-and the direct commands remain available. Outline entry enables its minor mode;
-exit on =z= and Disable retain the mode and completed folds. View navigation
-does not enable View mode. Its temporary hint change is restored on exit unless
-explicitly changed with =s=. Both respect saved Disabled choices when the legacy
-collection loads.
+Menus show whether a change affects this buffer or saved defaults. You can
+also review changed settings, manage saved setups and resume unfinished
+drafts. Aural Home remains available with =M-x emacsvox-aural=; its old
+settings-menu entry has been removed.
 
-Repeatable yank manages =C-y= and =M-y= together. Explicit Enable may adopt
-only their standard bindings; Disable restores them. Info summary follows the
-same rule for =?= in Info buffers. Legacy collection loading alone no longer
-replaces these standard bindings; enable the entry explicitly to use them.
-Personal bindings remain protected. Smartparens manages =C-c ,= and requires
-=smartparens-mode= already enabled in the source buffer. All three menus can
-be run directly while disabled and exited with =C-g=. Cancelling the shared
-Ido yank chooser now preserves the previous yank.
+** Menu navigation and review
 
-** Shared table reading settings
+Use arrows to browse settings and Enter to activate the selected item.
+Choices explain their effect before you select them. You can review an
+item word by word or character by character, and choose whether movement
+wraps within a section, stops at its edges or continues across sections.
+Returning from Help or a submenu restores your place. Adjustments interrupt
+older announcements so you hear the current value.
 
-=C-e H s T= or =M-x emacsvox-table-settings= opens Tables for Markdown,
-Org, Agent Shell and supported application lists. Browse pending choices,
-preview with Space, then Apply to the buffer or Save common/mode defaults
-through Customize. Existing Agent Shell choices retain their scope.
+** Speech and voice controls
 
-Plain Up/Down reads rows by default, with an optional cell setting.
-Control-Meta arrows enter reading and read cells across these integrations.
-Choose automatic or on-demand activation; defaults remain automatic for Agent
-Shell and on demand elsewhere. =q= leaves reading in place until explicit
-re-entry or leaving and returning. Render updates do not undo that quit.
-Optional coordinates, brief entry, title repetition and edge behaviour retain
-existing defaults. Org editing and application action keys stay independent.
+Speech rate and punctuation menus let you try buffer settings or save
+global defaults. Focused voice tuning offers previews, comparisons and undo
+for a voice's shared adjustments or one of its fallbacks. You can shorten
+comparison labels and adjust the overall pitch contrast between voices.
+
+Settings also expose typing feedback, Voice Lock, local silence, earcons,
+notification routing and output volumes. Menu and input feedback remain
+audible when ordinary reading is quiet. Pronunciation dictionaries now load
+correctly on Emacs 31.
+
+** Reading filters
+
+Speech settings now let you edit repeated punctuation, ignored columns and
+where text is split for speech, with previews and session undo. Column
+filters can be saved for later visits to a file. Character speed and
+nonprinting-character controls are also available, along with an editor
+for character sets to leave unchanged during Unicode conversion. These
+settings affect speech without changing the document.
+
+** Wrapped-line reading
+
+=C-e H s R w= lets you choose whether ordinary Up and Down read a whole
+source line or one wrapped screen row. Preview a choice, apply it to the
+buffer, or save mode-specific or global defaults. Optional sounds and
+spoken labels distinguish the first, middle and last rows of a wrapped
+line. =C-e l= still reads the whole source line; terminal and table
+navigation retain their own behaviour.
+
+** Tone editing
+
+Capitalisation, indentation, spelling and tree feedback share a tone editor.
+Adjust pitch, duration, volume, waveform, pitch sweeps and how a tone starts
+and fades. Preview the sound before keeping it, and save combinations as
+presets. Spelling and indentation tones can play before or alongside speech;
+recorded feedback cues also offer after-speech timing.
+
+** Recording library and sound packs
+
+=C-e H o l= opens a library for browsing, importing and previewing recordings.
+Assign recordings to cues in a personal sound pack; saving copies the audio
+into the pack so moving the original does not break the assignment. The
+bundled Accent pack adds another set of feedback sounds.
+
+Library browsing can play recordings before, alongside or after their names,
+or leave previewing to you. Alongside is the default; before and after
+require Omnivox.
+
+** Indentation feedback
+
+Indentation tones now play alongside speech by default on supporting speech
+servers. Thanks to Arkadiusz Świętnicki for contributing this behaviour.
+=C-e d I= opens settings for spoken or tonal indentation, pitch changes with
+depth, timing and volume. Preview changes in the current buffer or save
+global defaults. Spoken-only indentation feedback is unchanged.
 
 ** Spelling feedback
 
-=C-e H s f= opens global spelling feedback settings. Combine voice changes,
-tones and earcons independently; adjust tone pitch and duration, preview a
-tone or a sample sentence, and save through Customize. Spelling tone volume
-affects that cue; shared tone volume scales all main-stream tones. The shared
-tone editor adds waveform, sweep, envelope and reusable preset controls.
+Flyspell cues now occur at the misspelt word during reading. Moving into a
+flagged word gives its cue; moving within it does not repeat the cue.
+Opening a mail reply no longer triggers a burst of spelling sounds.
 
-Reading words marked by Flyspell places selected cues at those words instead
-of after the line. Opening a mail reply retains spelling highlights without
-playing a burst of cues. Repeated automatic checks announce each error once
-per checking pass, while ordinary editing retains spelling feedback.
+=C-e H s f= lets you combine voice changes, tones and earcons, preview a
+sample sentence and save your preferences. Turning off these cues leaves
+spell checking enabled.
 
-** Settings menus and discovery
+** Table settings and HTML mail tables
 
-=C-e H= opens the settings menu. Press =s= for
-Speech settings, then =i= for the existing Indentation menu. The menus share
-the current-buffer or global-defaults selection; =C-u C-e H= starts with
-global defaults. =C-e d I= still opens Indentation directly.
+=C-e H s T= opens shared table settings for Markdown, Org, Agent Shell,
+Notmuch HTML mail and supported application lists. Choose row or cell
+speech, titles, coordinates and automatic or on-demand entry. Preview
+choices before applying them, and save common or mode-specific defaults.
 
-=x= opens Feedback for the captured source item; =q= there returns to the
-menu with its original item and settings scope. Help also returns to its
-menu with =q=. The former Aural Home remains available through
-=M-x emacsvox-aural=; its =C-e H h= entry is retired. =q= returns one menu,
-and =C-q= closes the menu sequence.
-Transient feedback interrupts previous main-stream speech, including scope
-toggles and value changes. Item announcements speak the key without the
-word "shortcut" and do not repeat the section name.
+Notmuch can now read recognised HTML data tables in place, including
+wrapped cells, while retaining link and attachment actions. Automatic entry
+is the default there and in Agent Shell; other readers start on demand.
+Control-Meta arrows enter reading explicitly. Pressing =q= leaves reading
+in place, and redraws respect that choice. Layout tables and merged cells
+in mail retain ordinary navigation.
 
-=C-e S= opens focused integration settings, or general buffer settings when
-no focused menu exists. =C-e H /= finds settings and =C-e H a= finds actions;
-accepting a result selects its control without changing it. Activate separately.
-=C-e H v= groups voices and engines, =o= sounds and output, =r= presentation
-and rules, and =p= saved setups and drafts. Each editor retains its own
-Apply and Save actions.
+** Text trees in Agent Shell
 
-=C-e H n= or =C-e H s n= opens Menu navigation. Choose Continuous, Wrap within section,
-or Stop at section edges. Left/right moves between sections in every style.
-The choice applies globally and immediately; =S= saves it through Customize.
-Enter activates the focused item in the Emacsvox settings menus; =M-RET=
-and =C-j= also work.
+Recognised trees in plain-text code blocks read as item labels without the
+drawing characters. Entry, exit and changes of level have separate cues;
+moving between siblings does not repeat the level. You can jump between
+trees through =C-c ]= and =C-c [= by choosing Tree. Copying retains the
+original characters; ambiguous diagrams keep ordinary reading.
 
-** Source lines and wrapped screen rows
+=C-e S Y= opens Trees settings. Combine spoken levels in a chosen voice,
+earcons and tones whose pitch follows depth. Entry and exit have their own
+choices. Edit the depth tone and try your changes by moving through
+a sample tree with arrow keys, then apply them to the buffer or session,
+or save them for later sessions.
 
-=C-e H s R w= opens Line reading and wrapping. Choose whole source lines,
-wrapped screen rows or native mode behaviour, with buffer, major-mode and
-global scopes. Preview a draft before applying it; Save persists mode or
-global choices through Customize while preserving narrower overrides.
+** Choose your Muggles menus
 
-First, middle and last wrapped rows have independent sound choices and
-optional spoken continuation labels. Configure sound timing and level without
-changing the document. =C-e l= still inspects a whole source line, and
-=M-x emacsvox-speak-row-position= reports the current screen row's place in
-that line without moving point.
+Muggles are small navigation and editing menus with single-key commands.
+=C-e H m= lets you inspect, enable, disable and run them individually, then
+save your choices. The list covers Org headings and tables, text, Outline
+and View navigation, Repeatable yank, Info summary and Smartparens. Hydra
+is required; the Smartparens menu also needs Smartparens mode.
 
-** Clear permission choice speech in Agent Shell
+Personal bindings are preserved. Enable Repeatable yank and Info summary
+explicitly to use =C-y=, =M-y= and Info's =?=; loading the older Muggles
+collection no longer takes over those standard keys by itself.
 
-Tab and Shift-Tab speak each permission choice once. The cursor hint remains
-visible in the echo area without speaking over the choice on the notification
-stream. Other notifications remain audible.
+** Browse at the Agent Shell prompt
 
-** Indentation presentation and timing
+Emacsvox's Explicit input activation setting keeps navigation letters
+available when you reach the live prompt. Press Enter there to start
+editing; leaving input returns to browsing and keeps your draft. Choose
+this through =C-e S i=. Automatic input activation remains the default.
+Choose spoken or sound cues for entering and leaving editing.
 
-Arkadiusz Świętnicki proposed and implemented playing indentation tones
-alongside speech in [[https://github.com/bartbunting/emacsvox/pull/9][pull request #9]]. His idea and implementation form the
-basis of this change. Alongside-speech timing is now the default on supporting
-backends, with before-speech timing available as an option.
+** Less repetition in Agent Shell questions
 
-=C-e d I= opens a Transient to choose spoken or tonal indentation, tone timing,
-and main-stream tone volume. Use =g= to switch between current-buffer settings
-and global defaults, or open with =C-u C-e d I= to start with global defaults.
-=SPC= previews the settings, and =S= saves global defaults across sessions.
-Tone volume is global in either scope. Volume adjustments speak just the
-percentage and interrupt previous main-stream speech. Existing direct selector commands
-remain available, and spoken-only indentation feedback is unchanged.
+In active question forms, Tab reads the question when you enter a field,
+then reads each choice and its state without repeating the question.
+Returning to the field reads its heading again. Automatic hints for
+questions, permission choices, links and folded headings no longer speak
+over navigation feedback. Question forms remain an optional experimental
+Agent Shell feature.
 
-** Announce the destination after closing an Agent Shell buffer
+** Agent Shell queue and group controls
 
-Closing a buffer now waits for related buffer cleanup before announcing the
-newly selected buffer. This prevents Agent Shell cleanup from speaking the
-name of the buffer being closed. Cancelled kills do not announce a close.
+With Agent Shell 0.94.1 or newer, =M-RET= at an empty prompt can redirect the
+last queued prompt into a running turn, including while browsing. With the
+default routes, Agent Shell asks before sending it; the agent must support
+steering. An unsent draft remains protected.
+
+=C-u RET= on a foldable fragment toggles its whole group and children.
+Emacsvox gives one visibility indication for the affected group. These
+controls need 0.94.1; the integration's minimum remains 0.85.3.
+
+** Interactive terminal questions
+
+EAT recognises supported arrow-choice menus and announces the selected
+option, along with unanswered questions that follow. Output reading resumes
+after menu redraws and blank terminal padding. Horizontal drawing characters
+in separators are omitted from speech, and submitting input interrupts earlier
+terminal output.
+
+** Editing and navigation feedback
+
+Cutting and copying announce the region count promptly and interrupt older
+speech. Copying no longer waits for the visual blink. Magit reads the
+destination after staging or unstaging, and closing a buffer announces the
+buffer you return to, even when related buffers close together.
+
+Org agenda time rows omit decorative characters, and Markdown heading
+underlines no longer interrupt navigation with a speech error. Notmuch
+HTML links speak correctly, and attachment buttons also work from nearby
+whitespace.
+
+** Tutorial and practice document
+
+The manual adds a guided audio-desktop tutorial with a practice document.
+Exercises cover reading, editing, settings and returning to your work.
+Task lookup and command reminders help you find the relevant instructions,
+and the settings menu links directly to the manual.

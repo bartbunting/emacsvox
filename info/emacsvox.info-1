@@ -605,9 +605,9 @@ installation.
 3.1 Debian and Ubuntu package
 =============================
 
-Emacsvox 2026.9.2 predates Debian packaging.  Use a package from a
-release that includes one, or a locally built development package.
-Omnivox 1.18.0 includes an amd64 deb for supported Ubuntu systems.
+Download the Emacsvox deb from a release that supplies one, or use a
+locally built development package.  Omnivox 1.18.0 also supplies an
+amd64 deb for supported Ubuntu systems.
 
    With a downloaded Emacsvox deb, install it using apt:
 
@@ -1060,18 +1060,18 @@ File: emacsvox.info,  Node: Confirming First Speech,  Next: Recovering From No S
 3.7 Confirming First Speech
 ===========================
 
-The stable first-speech checkpoint is:
+During startup, listen for:
 
      Emacsvox is ready.
 
-   It normally follows Omnivox's acknowledgement of initial engine
-inventory, routing policy, and logical voices, and therefore uses the
-restored engine policy.  If routing does not finish within five seconds,
-Emacsvox speaks it through the capability-ready fallback.  Hearing the
-checkpoint does not by itself prove that routing completed or every
-package integration loaded.  An earlier introduction, overview key,
-version number, and startup auditory icon may also be heard; those can
-change.
+   Emacsvox normally waits until Omnivox confirms your initial voice and
+engine settings before speaking this message.  If that confirmation
+takes more than five seconds after the connection is ready, it announces
+readiness using the speech configuration available at that point.  The
+message therefore confirms that speech is available, but not necessarily
+that your saved voice choices have taken effect or every package
+integration has loaded.  You may also hear an earlier introduction,
+overview key, version number and startup sound.
 
    Run ‘M-x emacsvox-startup-status <RET>’ to check background
 preparation of Emacsvox and its package integrations.  The command
@@ -2761,9 +2761,9 @@ the current buffer unless their Help specifies a global prefix form.
      changing individual pronunciations.  They are not prerequisites for
      ordinary reading.  Reusable palettes/profiles, engine-specific
      tuning, and the wider output model belong to *note Aural
-     Presentation: Aural Presentation.  Specialist character-rate and
-     chunking controls are also available through live Help and the
-     generated reference.
+     Presentation: Aural Presentation.  For isolated-letter rate, quiet
+     speech and text filters, follow *note Adjust reading controls:
+     reading-controls-and-filters.
 
   2. Edit Punctuation Pronunciations
 
@@ -2858,9 +2858,10 @@ File: emacsvox.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Sp
 ----------------------------
 
 Stopping ends current output without disabling future feedback.  Quiet
-mode lets you work temporarily without speech.  Restart after correcting
-a backend problem or changing the selected synthesiser, not as an
-assumed cure for every missing integration.
+mode suppresses ordinary source reading; explicit settings-menu feedback
+remains available.  Restart after correcting a backend problem or
+changing the selected synthesiser, not as an assumed cure for every
+missing integration.
 
 ‘C-e s’
      Stop current main and notification speech with ‘tts-stop’.
@@ -2871,9 +2872,10 @@ assumed cure for every missing integration.
 ‘C-e d V’
      Speak adapter and version information.
 
-   Server selection, repeated-pattern cleanup, text splitting, language
-selection, and direct engine controls have specialist Help and reference
-entries.  For missing speech, follow *note Recovering From No Speech:
+   For repeat cleanup and text splitting, use the *note reading filter
+menus: reading-filters.  Server and language selection are covered in
+*note Speech Backends: (emacsvox)Speech Backends. and live Help.  For
+missing speech, follow *note Recovering From No Speech:
 (emacsvox)Recovering From No Speech.
 
 
@@ -3004,52 +3006,28 @@ appropriate menu and selects the control without changing its value.
 Press ‘<RET>’ again to activate or edit it.  Cancelling completion
 leaves the originating menu open.
 
-   The main menu groups its entries in this order: _Everyday settings_,
-_This buffer and item_, _Rules and saved work_, _Find and get help_, and
-_Finish_.  Use left/right to reach a group, then up/down to select an
-item.  Changing sections selects the first available item.  Plain arrows
-navigate; Shift-left/right adjusts a selected numeric control where
-offered.  Press ‘C-e H n’ to choose navigation and announcement
-preferences; the same controls remain available through ‘C-e H s n’.
-‘<RET>’, ‘M-<RET>’, or ‘C-j’ activates the selected item; its displayed
-shortcut also works directly.
+   In the resulting menu, press ‘C-c l’ to repeat the selected item.
+Press ‘?’ followed by its displayed key to read its effect and scope, or
+‘? ?’ for the menu overview.  Help is read-only: return with ‘q’ before
+activating a menu action.  Your selection is retained.  For word and
+character inspection, use the *note menu review keys:
+settings-menu-review.
 
-   To hear the selected item again, press ‘C-c l’.  This is especially
-useful after a section-only announcement: the first item is selected
-even though only the heading was spoken.  ‘M-f~/~M-b’ reviews its words
-and ‘C-f~/~C-b’ its characters, leaving the selection and Enter's target
-unchanged.  These menu keys differ from ordinary buffer reading; see
-*note Review an item without changing the selection:
-settings-menu-review. for endpoints, repeats and menu-specific
-overrides.
-
-   Press ‘?’ followed by an item's key to hear its effect and scope, or
-‘? ?’ for the menu overview and available review keys.  The overview is
-a read-only snapshot with ordinary text navigation.  Its displayed
-actions run after you return to the menu.  ‘q’ in Help returns with the
-selection retained.
-
-   Within the menu itself, ‘q’ or ‘C-g’ goes back one level, while ‘C-q’
-closes the sequence.  Returning from an Emacsvox submenu selects the
-entry that opened it, including when you used its shortcut.  The return
-announcement identifies that item; ‘<RET>’ opens it again.  These
-navigation commands do not undo changes already applied.  Choice lists
-and minibuffer prompts have different roles: arrows browse a choice list
-without applying it, while a prompt uses your normal text editing and
-completion.  See *note Navigate menus and read Help:
-settings-menu-navigation. for the complete interaction.  A linked editor
-keeps its own preview, saving, and discard rules.  See *note Choose What
+   Use arrows to browse other controls and ‘<RET>’ to activate one.  In
+Emacsvox menus, ‘q’ or ‘C-g’ goes back one level and ‘C-q’ closes the
+sequence.  Returning selects the entry that opened the submenu.  These
+commands do not undo applied changes.  *note Navigate menus and read
+Help: settings-menu-navigation. explains section movement, numeric
+adjustment and navigation preferences in full.  A linked editor keeps
+its own preview, saving and discard rules.  See *note Choose What
 Persists: (emacsvox)Saving And Startup. before treating a saved default,
 a live adjustment, or a retained draft as the same thing.
 
    Use ‘C-e H a’ to find an action such as browsing voices, inspecting
-diagnostics, or reading the manual.  It uses the same partial-name
-matching and two-Enter selection as settings search, including literal
-spaces and ‘<TAB>’ completion.  Alternative names lead to one displayed
-result for each action: for example, ‘Feedback for this item’ finds
-_Explain this item_, and ‘Recent aural feedback’ finds _Recent
-feedback_.  Editors opened from these menus retain their own Help,
-preview, save, and return commands.
+diagnostics or reading the manual.  It uses the same search and
+two-Enter selection.  *note Finding settings and actions:
+(emacsvox)Finding Settings And Actions. explains aliases and the
+available search routes.
 
 6.3 Read And Leave A Help Window
 ================================
@@ -4822,7 +4800,7 @@ not a whole-palette voice change.
 
 * Use one physical voice across a palette: Changing A Palette Physical Voice.  Review a preferred physical voice across named entries before saving.
 * Understand Voice Adjustments: Voice Adjustments.  Understand the voice controls and their defaults.
-* Choose And Tune Fallback Voices: Voice Fallbacks.  Order physical choices and customize their individual adjustments.
+* Choose And Tune Fallback Voices: Voice Fallbacks.  Order physical choices and customise their individual adjustments.
 * Inspect Or Adjust A Voice In Context: Voices In Context.  Compare a voice with contextual rules and edit a rule rather than its base entry.
 
 8.7.1 Adjust and compare one voice
@@ -4888,11 +4866,11 @@ contextual rules.  Adjustments speak values without automatic samples
 here; the full editor's automatic-sample preference is retained.  ‘u’
 undoes the last draft change.
 
-   ‘e’ opens engine-specific settings, waiting for a qualified runtime
-catalogue before permitting edits.  Its ‘q’ returns to the common
-editor; ‘m’ reopens focused tuning on the same draft and scope.
-Physical experiments, individual fallbacks, and engine controls remain
-available in the full editor.
+   ‘e’ opens engine-specific settings.  Editing becomes available when
+the engine supplies its current list of supported parameters.  Its ‘q’
+returns to the common editor; ‘m’ reopens focused tuning on the same
+draft and scope.  Physical experiments, individual fallbacks, and engine
+controls remain available in the full editor.
 
    ‘w’ saves and applies; ‘c’ saves to the collection without selecting.
 Existing destination prompts, inheritance, and recovery remain.  ‘q’
@@ -4915,13 +4893,13 @@ remain unsaved.  If a file or destination has changed, review the
 proposal again rather than expecting the editor to merge those changes
 automatically.
 
-   Complete-choice previews require Omnivox's complete-voice-preview
-capability.  They do not select the draft or change live settings.
-Older hosts report this unsupported; individual physical auditions
-remain available.  Playback evidence identifies accepted audio when
-reported, including unsupported adjustments, without inferring a
-successful fallback from inventory or claiming exact native parameter
-measurements.
+   Previewing a complete voice choice, including its fallbacks, requires
+support from Omnivox.  Older hosts report when this is unavailable; you
+can still audition individual physical voices.  Neither preview changes
+live settings.  Playback details show what the server reports playing
+and which adjustments it could not apply.  They do not measure the
+engine's exact parameter values or assume that an available fallback was
+used.
 
    ‘q’ returns to the originating row and column.  Keep, discard, or
 continue with unsaved work.  Retained drafts can be resumed through ‘C-e
@@ -5578,9 +5556,9 @@ File: emacsvox.info,  Node: Sounds And Space,  Next: Aural Speech Output,  Prev:
 8.10 Sounds, Tones, And Spatial Cues
 ====================================
 
-Rules request cues by semantic name.  Sound packs map names to audio
-assets and can inherit missing cues.  This lets you change the sound of
-a family of cues without rewriting rules.  A recording library holds
+Rules request cues by name.  Sound packs supply recordings for those
+names and can inherit missing cues.  This lets you change the sound of a
+family of cues without rewriting rules.  A recording library holds
 available sounds; assigning one to a cue changes its sound in that pack.
 To change when the cue plays, use its feedback rule.
 
@@ -5617,11 +5595,13 @@ separate compact resources, independent of sampled files and the active
 pack.
 
    For waveform, pitch sweep and envelope adjustments, use the *note
-shared tone editor: spelling-tone-editor.  Spelling, capitalisation
-beeps and rising-pitch indentation each open it from their own menu, as
-do the five line-condition cues.  The waveform and envelope controls are
-shared; scope and saving belong to the destination.  General
-personal-rule editing retains its own controls.
+shared tone editor: spelling-tone-editor.  Spelling, capitalisation,
+indentation, wrapped rows, line conditions and tree levels open it from
+their respective settings.  Its controls are shared, while each
+destination has its own scope and saving rules.  For tree entry, exit
+and depth feedback, follow *note Read and customise text trees:
+agent-shell-text-trees.  General personal-rule editing retains its own
+controls.
 
 * Menu:
 
@@ -5968,7 +5948,86 @@ buffer scope promotes those displayed choices to defaults.  Mode
 punctuation policy and explicit buffer settings still override the saved
 punctuation default.
 
-  1. Choose Unicode exceptions
+  1. Adjust reading controls
+
+     From the buffer you want to change, open ‘C-e H s R’ for _Reading
+     controls_.  Adjusting a control takes effect immediately; browsing
+     leaves it unchanged.  ‘g’ switches between buffer scope and global
+     defaults; global changes also update the captured buffer while
+     preserving other buffers' explicit overrides.  This menu has no
+     startup Save.
+
+        • ‘c’ changes the rate of isolated letters.  A multiplier below
+          one slows letters; above one speeds them up.  Shift-left/right
+          adjusts by 0.1, and ‘<RET>’ accepts a value from 0.1 to 4.
+          Phonetic names and punctuation names retain the ordinary rate.
+          Omnivox supports this control; some older servers ignore it.
+          ‘p’ previews the letter a, even while quiet speech is enabled.
+        • Capital ‘Q’ suppresses subsequent source speech without
+          stopping current playback.  Menu feedback remains spoken.  ‘r’
+          restores speech in the source and the global default, leaving
+          other buffers' quiet overrides intact.
+        • ‘n’ names selected nonprinting control characters and raw
+          eight-bit bytes.  ‘o’, _Strip octals_, instead removes bytes
+          127–255 from speech and suppresses nonprinting naming
+          altogether.  It does not remove decoded Unicode accents or
+          change the source text.
+
+     In buffer scope, ‘i’ removes the source's overrides for all four
+     controls so they follow global defaults.  ‘q’ returns, keeping
+     adjustments.  For logical line reading, visual wrapping and
+     continuation cues, use ‘w’ and follow *note Reading and navigating:
+     (emacsvox)Reading.
+
+  2. Filter text and adjust speech boundaries
+
+     Three submenus of Reading controls change how text is spoken
+     without editing it.  Each has a fixed scope, independent of the
+     parent's buffer/global choice.  Adjustments apply immediately; ‘p’
+     previews the captured line, including while quiet is enabled.  ‘u’
+     reverses changes made during the current submenu visit.  Leaving
+     and reopening starts a new undo point.
+
+     Use ‘a’ for _Repeat cleanup_, which applies globally for this
+     session.  Runs of three or more copies of a configured pattern
+     become a count and the pattern at All punctuation, or are omitted
+     at other punctuation levels.  ‘b’ browses active patterns and
+     previews four repetitions of the chosen one.  ‘a’ adds a literal
+     pattern, ‘d’ removes one, and ‘x’ disables cleanup by clearing the
+     list.  Spaces are literal; empty patterns and line breaks are
+     rejected.  ‘u’ restores the opening list.  This menu has no startup
+     Save.
+
+     Use ‘f’ for _Column filtering_ in the captured buffer.  Press ‘e’
+     and enter inclusive character ranges such as ‘1-10, 21-25’.
+     Positions start at one; a tab counts as one character regardless of
+     its displayed width.  A range extending beyond a short line is
+     ignored entirely.  ‘v’ switches between skipping those ranges and
+     speaking only them.  The filter affects whole-line speech, leaving
+     partial-line and table reading unchanged.
+
+     Edited ranges are remembered for the file, or for the major mode of
+     a non-file buffer, and saved on normal Emacs exit.  They do not
+     activate automatically when you revisit a file: use ‘r’ to restore
+     them explicitly.  The skip/speak-only direction is temporary and is
+     not saved with the ranges.  ‘x’ disables the active filter while
+     keeping remembered ranges; an empty answer to ‘e’ also clears the
+     remembered ranges.  ‘u’ restores both the opening buffer settings
+     and any remembered ranges changed during this visit.
+
+     Use ‘s’ for _Speech chunking_ in the captured buffer for this
+     session.  ‘c’ excludes whitespace as a speech boundary, generally
+     grouping text around punctuation or clauses.  ‘w’ includes
+     whitespace for smaller, often word-sized pieces.  Both retain the
+     other boundary types defined by the mode.  ‘e’ edits the
+     syntax-class codes directly; its Help explains them.  ‘i’ follows
+     the global default, replacing any mode-specific choice, and ‘u’
+     restores the opening setting.  Compare with ‘p’, since audible
+     phrasing depends on the speech engine.  These settings have no
+     startup Save and do not alter the size limits used by *note tracked
+     reading: (emacsvox)Reading From Point.
+
+  3. Choose Unicode exceptions
 
      Search settings at ‘C-e H /’ for ‘Unicode exceptions’ or ‘untouched
      charsets’, then press ‘<RET>’ again to open the advanced reading
@@ -5987,7 +6046,7 @@ punctuation default.
      Outside an editable field, ‘q’ returns to the selected menu
      control.
 
-  2. Use Emacs word and phrase dictionaries
+  4. Use Emacs word and phrase dictionaries
 
      For word or phrase substitutions managed by Emacs, open ‘C-e H s p
      d’.  This menu is separate from the Omnivox pronunciation editor on
@@ -6030,7 +6089,7 @@ punctuation default.
      ‘?’ followed by an item's key for its scope and effects before
      applying it.
 
-  3. Adjust indentation feedback
+  5. Adjust indentation feedback
 
      Open ‘C-e H s i’ or directly ‘C-e d I’.  In global-default scope,
      ‘S’ saves indentation defaults and tone volumes through Customize.
@@ -6070,7 +6129,7 @@ punctuation default.
      changes and returns.  See *note the shared controls:
      spelling-tone-editor. for presets and envelopes.
 
-  4. Set capitalisation feedback and its beeps
+  6. Set capitalisation feedback and its beeps
 
      ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication and ‘c’
      independently toggles camel-case splitting.  These and the
@@ -6141,7 +6200,7 @@ punctuation default.
      the menu reports that Customize was saved; correct the write
      problem and retry Save to finish migrating.
 
-  5. Choose spelling feedback
+  7. Choose spelling feedback
 
      ‘C-e H s f’ opens _Spelling feedback_.  These settings are global.
      Toggle ‘v’ for voice changes, ‘t’ for a tone, and ‘e’ for the help
@@ -6189,224 +6248,214 @@ punctuation default.
      timing and shape, and the shared tone volume through Customize.
      ‘q’ returns and ‘C-q’ closes the menus without saving.
 
-       1. Use the shared tone editor
+  8. Use the shared tone editor
 
-          Spelling feedback, each capitalisation beep menu,
-          indentation's pitch-tone settings and the five line-condition
-          menus open this editor with capital ‘E’.  The title identifies
-          the cue and scope.  Waveform, pitch sweep and envelope
-          controls accompany pitch, duration and individual volume.
-          Adjustments affect only a private draft until you apply or
-          save it using the destination's labelled actions.
+     Spelling feedback, each capitalisation beep menu, indentation's
+     pitch-tone settings and the five line-condition menus open this
+     editor with capital ‘E’.  Wrapped-row feedback and *note tree level
+     feedback: agent-shell-text-trees. also use it; the tree's Level
+     changes menu opens it with capital ‘T’.  The title identifies the
+     cue and scope.  Waveform, pitch sweep and envelope controls
+     accompany pitch, duration and individual volume.  Adjustments
+     affect only a private draft until you apply or save it using the
+     destination's labelled actions.  For trees, those actions keep the
+     tone in the pending Trees draft; return to Trees to apply or save
+     that draft.
 
-          The exercise below uses global spelling at ‘C-e H s f E’.  Its
-          timing stays in Spelling feedback at ‘C-e H s f m’; voice,
-          earcon and tone enablement also remain there.  Shared
-          main-tone volume controls all main tones from Sounds and
-          output.  Indentation's buffer/global scope follows its saving
-          instructions above; capitalisation and spelling tones use
-          global defaults.  Line tones use conditional session or
-          personal rules as described in *note Sounds, Tones, and
-          Spatial Cues: (emacsvox)Sounds And Space.
+     The exercise below uses global spelling at ‘C-e H s f E’.  Its
+     timing stays in Spelling feedback at ‘C-e H s f m’; voice, earcon
+     and tone enablement also remain there.  Shared main-tone volume
+     controls all main tones from Sounds and output.  Indentation's
+     buffer/global scope follows its saving instructions above;
+     capitalisation and spelling tones use global defaults.  Line tones
+     use conditional session or personal rules as described in *note
+     Sounds, Tones, and Spatial Cues: (emacsvox)Sounds And Space.
 
-          The sections follow the editing task: the cue's basic
-          controls, Pitch movement, Envelope, Preview, Presets, Apply
-          and save, then Finish.  Left/right changes sections; up/down
-          selects an item.  Shift-left/right adjusts only a selected
-          number.  ‘<RET>’ enters an exact number, toggles Pitch sweep,
-          or opens the selected choice list.  In a list, up/down browses
-          without changing the draft; ‘<RET>’ chooses and returns, while
-          ‘q’ cancels.  Waveform and Envelope are choices, so shifted
-          arrows do not adjust them.  ‘?’ followed by an item's key
-          explains its effect, units and dependencies.  Use ‘C-c l’ or
-          the other *note menu review keys: settings-menu-review. to
-          inspect an announcement without activating it.
+     The sections follow the editing task: the cue's basic controls,
+     Pitch movement, Envelope, Preview, Presets, Apply and save, then
+     Finish.  Left/right changes sections; up/down selects an item.
+     Shift-left/right adjusts only a selected number.  ‘<RET>’ enters an
+     exact number, toggles Pitch sweep, or opens the selected choice
+     list.  In a list, up/down browses without changing the draft;
+     ‘<RET>’ chooses and returns, while ‘q’ cancels.  Waveform and
+     Envelope are choices, so shifted arrows do not adjust them.  ‘?’
+     followed by an item's key explains its effect, units and
+     dependencies.  Use ‘C-c l’ or the other *note menu review keys:
+     settings-menu-review. to inspect an announcement without activating
+     it.
 
-            1. Try a tone without changing live feedback
+       1. Try a tone without changing live feedback
 
-                 1. Open ‘C-e H s f E’ and press capital ‘C’ to hear the
-                    currently applied tone.  Press ‘<SPC>’ to hear the
-                    draft, initially the same sound.  Both play the tone
-                    alone, interrupting previous main speech.
-                 2. Move to _Volume_ and lower this draft's individual
-                    level with Shift-left if wanted.  This leaves other
-                    tones and the live spelling cue unchanged.
-                 3. Press ‘w’ to open Waveform.  Browse a choice, read
-                    its Help, then press ‘<RET>’ to return with that
-                    waveform in the draft.  Press ‘<SPC>’ to hear it.
-                    For Pulse, adjust _Pulse width_ back in the editor,
-                    then preview again.
-                 4. Alternate ‘C’ for the applied tone and ‘<SPC>’ for
-                    the draft.  Capital ‘P’ reads a spelling sample with
-                    the draft tone, using the parent's current timing,
-                    voice and earcon settings.  Use this to judge
-                    whether the tone obscures the word.  Capital ‘S’
-                    stops; navigation also interrupts playback.
-                 5. Press ‘q’ to return and discard unapplied edits.
-                    Reopening starts from the currently applied tone.
-                    To keep the experiment instead, use the Apply, Save
-                    or preset actions described below before leaving.
+            1. Open ‘C-e H s f E’ and press capital ‘C’ to hear the
+               currently applied tone.  Press ‘<SPC>’ to hear the draft,
+               initially the same sound.  Both play the tone alone,
+               interrupting previous main speech.
+            2. Move to _Volume_ and lower this draft's individual level
+               with Shift-left if wanted.  This leaves other tones and
+               the live spelling cue unchanged.
+            3. Press ‘w’ to open Waveform.  Browse a choice, read its
+               Help, then press ‘<RET>’ to return with that waveform in
+               the draft.  Press ‘<SPC>’ to hear it.  For Pulse, adjust
+               _Pulse width_ back in the editor, then preview again.
+            4. Alternate ‘C’ for the applied tone and ‘<SPC>’ for the
+               draft.  Capital ‘P’ reads a spelling sample with the
+               draft tone, using the parent's current timing, voice and
+               earcon settings.  Use this to judge whether the tone
+               obscures the word.  Capital ‘S’ stops; navigation also
+               interrupts playback.
+            5. Press ‘q’ to return and discard unapplied edits.
+               Reopening starts from the currently applied tone.  To
+               keep the experiment instead, use the Apply, Save or
+               preset actions described below before leaving.
 
-               These previews privately enable the tone even if live
-               spelling tones are off.  They do not turn the live cue
-               on, apply adjustments or save defaults.  A tone alone
-               cannot demonstrate _Before speech_ versus _Alongside
-               speech_; use capital ‘P’ for that comparison.  Shared
-               tone volume still scales playback, so a shared volume of
-               zero silences these previews too.  After Apply, ‘C’
-               compares against the newly applied tone, not the editor's
-               opening value.
+          These previews privately enable the tone even if live spelling
+          tones are off.  They do not turn the live cue on, apply
+          adjustments or save defaults.  A tone alone cannot demonstrate
+          _Before speech_ versus _Alongside speech_; use capital ‘P’ for
+          that comparison.  Shared tone volume still scales playback, so
+          a shared volume of zero silences these previews too.  After
+          Apply, ‘C’ compares against the newly applied tone, not the
+          editor's opening value.
 
-            2. Shape the pitch and waveform
+       2. Shape the pitch and waveform
 
-               ‘p’ sets pitch; Shift-left/right changes it by 25 Hz.
-               Choose ‘w’ for waveform: sine is a smooth pure tone,
-               triangle adds a softer harmonic character, and square
-               sounds brighter.  Pulse offers adjustable width; Sawtooth
-               has a bright, buzzy character.  Their perceived loudness
-               can differ; compare at a comfortable individual volume.
+          ‘p’ sets pitch; Shift-left/right changes it by 25 Hz.  Choose
+          ‘w’ for waveform: sine is a smooth pure tone, triangle adds a
+          softer harmonic character, and square sounds brighter.  Pulse
+          offers adjustable width; Sawtooth has a bright, buzzy
+          character.  Their perceived loudness can differ; compare at a
+          comfortable individual volume.
 
-               For Pulse, select ‘u’ for _Pulse width_.  This is the
-               percentage of each cycle spent high: 50 percent sounds
-               like Square.  Shift-left/right changes it by five
-               percentage points within 5–95 percent, and ‘<RET>’ enters
-               an exact value.  Only Pulse uses width.  Trying another
-               waveform keeps the width in this draft, so you can return
-               to Pulse and continue comparing.
+          For Pulse, select ‘u’ for _Pulse width_.  This is the
+          percentage of each cycle spent high: 50 percent sounds like
+          Square.  Shift-left/right changes it by five percentage points
+          within 5–95 percent, and ‘<RET>’ enters an exact value.  Only
+          Pulse uses width.  Trying another waveform keeps the width in
+          this draft, so you can return to Pulse and continue comparing.
 
-               Toggle ‘t’ for _Pitch sweep_ to make pitch rise or fall
-               during the tone.  The ordinary Pitch control sets the
-               start; ‘f’ sets End pitch.  Shift-left/right changes the
-               end by 25 Hz and ‘<RET>’ enters it exactly.  Equal start
-               and end values keep constant pitch.  Turning the sweep
-               off retains End pitch in the draft.  The sweep occupies
-               the existing duration and does not change timing relative
-               to speech.
+          Toggle ‘t’ for _Pitch sweep_ to make pitch rise or fall during
+          the tone.  The ordinary Pitch control sets the start; ‘f’ sets
+          End pitch.  Shift-left/right changes the end by 25 Hz and
+          ‘<RET>’ enters it exactly.  Equal start and end values keep
+          constant pitch.  Turning the sweep off retains End pitch in
+          the draft.  The sweep occupies the existing duration and does
+          not change timing relative to speech.
 
-               Pitch and End pitch range from 50 to 10000 Hz.  Duration
-               ranges from 5 to 1000 milliseconds and steps by 5;
-               individual Volume ranges from 0 to 100 percent and steps
-               by 5 percentage points.  Zero volume silences this tone.
-               Waveform changes can alter perceived loudness even at the
-               same volume.
+          Pitch and End pitch range from 50 to 10000 Hz.  Duration
+          ranges from 5 to 1000 milliseconds and steps by 5; individual
+          Volume ranges from 0 to 100 percent and steps by 5 percentage
+          points.  Zero volume silences this tone.  Waveform changes can
+          alter perceived loudness even at the same volume.
 
-            3. Shape loudness with an envelope
+       3. Shape loudness with an envelope
 
-               Choose ‘e’ for the envelope, which describes how loudness
-               changes over the life of the tone.  _Classic_ uses the
-               original short fades.  _ADSR_ uses four controls, with
-               times in milliseconds and sustain in percent of peak
-               level:
+          Choose ‘e’ for the envelope, which describes how loudness
+          changes over the life of the tone.  _Classic_ uses the
+          original short fades.  _ADSR_ uses four controls, with times
+          in milliseconds and sustain in percent of peak level:
 
-                  • ‘a’, Attack: time to rise from silence to peak
-                    level.
-                  • ‘c’, Decay: time to fall from peak to the sustain
-                    level.
-                  • ‘s’, Sustain: the level held for the remaining time,
-                    rather than a duration.
-                  • ‘r’, Release: time to fade from sustain to silence.
+             • ‘a’, Attack: time to rise from silence to peak level.
+             • ‘c’, Decay: time to fall from peak to the sustain level.
+             • ‘s’, Sustain: the level held for the remaining time,
+               rather than a duration.
+             • ‘r’, Release: time to fade from sustain to silence.
 
-               For example, with Duration 100 milliseconds, Attack 10,
-               Decay 20 and Release 30, the tone holds its Sustain level
-               for the remaining 40 milliseconds.  A Sustain value of 40
-               means 40 percent of peak loudness during that hold, not a
-               40-millisecond duration.  A longer Attack softens the
-               onset; a short Attack followed by a longer Decay can make
-               a plucked sound.
+          For example, with Duration 100 milliseconds, Attack 10, Decay
+          20 and Release 30, the tone holds its Sustain level for the
+          remaining 40 milliseconds.  A Sustain value of 40 means 40
+          percent of peak loudness during that hold, not a
+          40-millisecond duration.  A longer Attack softens the onset; a
+          short Attack followed by a longer Decay can make a plucked
+          sound.
 
-               Shift-left/right changes each timed stage by 5
-               milliseconds and Sustain by 5 percentage points.  ‘<RET>’
-               accepts stage times from 0 to 60000 milliseconds and a
-               Sustain level from 0 to 100 percent.  The duration of the
-               whole tone remains the limit, even when a stage requests
-               a much longer time.
+          Shift-left/right changes each timed stage by 5 milliseconds
+          and Sustain by 5 percentage points.  ‘<RET>’ accepts stage
+          times from 0 to 60000 milliseconds and a Sustain level from 0
+          to 100 percent.  The duration of the whole tone remains the
+          limit, even when a stage requests a much longer time.
 
-               Total duration includes the whole envelope.  If attack,
-               decay and release would exceed it, they shorten
-               proportionally and leave no sustain hold.  Zero skips a
-               timed stage; endpoint smoothing still limits clicks.
-               Classic ignores these four controls, retaining their
-               values while this draft remains open.  The initial
-               waveform is sine with Classic fades.
+          Total duration includes the whole envelope.  If attack, decay
+          and release would exceed it, they shorten proportionally and
+          leave no sustain hold.  Zero skips a timed stage; endpoint
+          smoothing still limits clicks.  Classic ignores these four
+          controls, retaining their values while this draft remains
+          open.  The initial waveform is sine with Classic fades.
 
-               With ADSR, ‘k’ chooses the envelope curve.  _Linear_ uses
-               straight ramps and preserves the original ADSR behaviour.
-               _Exponential_ starts the attack more slowly and starts
-               decay and release more quickly, while retaining the same
-               stage durations and endpoint levels.  Arrows browse the
-               choices; ‘<RET>’ selects and returns, and ‘q’ cancels.
-               Classic ignores the curve but retains its choice in the
-               draft.
+          With ADSR, ‘k’ chooses the envelope curve.  _Linear_ uses
+          straight ramps and preserves the original ADSR behaviour.
+          _Exponential_ starts the attack more slowly and starts decay
+          and release more quickly, while retaining the same stage
+          durations and endpoint levels.  Arrows browse the choices;
+          ‘<RET>’ selects and returns, and ‘q’ cancels.  Classic ignores
+          the curve but retains its choice in the draft.
 
-               Preview after each small change with ‘<SPC>’ or its
-               equivalent, ‘b’.  Capital ‘S’ stops immediately without
-               waiting for the Release stage.  Compare a short tone with
-               the spelling sample too: a shape that is clear alone can
-               be masked by speech or make the word harder to hear.
+          Preview after each small change with ‘<SPC>’ or its
+          equivalent, ‘b’.  Capital ‘S’ stops immediately without
+          waiting for the Release stage.  Compare a short tone with the
+          spelling sample too: a shape that is clear alone can be masked
+          by speech or make the word harder to hear.
 
-            4. Reuse a tone through presets
+       4. Reuse a tone through presets
 
-               Capital ‘L’ opens presets.  Arrows browse without
-               changing the draft; ‘<RET>’ loads a copy and returns,
-               while ‘q’ cancels.  Soft tick, Rounded beep and Short
-               pluck are starting points with different pitches and
-               envelopes, each at 35 percent individual volume.  Use ‘?’
-               followed by a preset's displayed key for its character.
-               After loading it and returning to the editor, press
-               ‘<SPC>’ to hear the draft.  The preset list does not
-               preview while you browse.  Further adjustments leave the
-               preset itself unchanged.
+          Capital ‘L’ opens presets.  Arrows browse without changing the
+          draft; ‘<RET>’ loads a copy and returns, while ‘q’ cancels.
+          Soft tick, Rounded beep and Short pluck are starting points
+          with different pitches and envelopes, each at 35 percent
+          individual volume.  Use ‘?’ followed by a preset's displayed
+          key for its character.  After loading it and returning to the
+          editor, press ‘<SPC>’ to hear the draft.  The preset list does
+          not preview while you browse.  Further adjustments leave the
+          preset itself unchanged.
 
-               Capital ‘N’ saves the draft under a name in your personal
-               preset collection through Customize.  This does not apply
-               the tone or save the spelling cue defaults.  Reusing a
-               personal name asks before replacing it; bundled names
-               cannot be replaced.  Saved presets appear alongside the
-               bundled choices at ‘L’.
+          Capital ‘N’ saves the draft under a name in your personal
+          preset collection through Customize.  This does not apply the
+          tone or save the spelling cue defaults.  Reusing a personal
+          name asks before replacing it; bundled names cannot be
+          replaced.  Saved presets appear alongside the bundled choices
+          at ‘L’.
 
-            5. Apply, save or discard the draft
+       5. Apply, save or discard the draft
 
-               For spelling, use ‘A’ to apply the draft for this
-               session.  Capital ‘W’ saves and applies its tone defaults
-               through Customize.  These actions leave timing, voice,
-               earcon, tone enablement and shared volume unchanged.  ‘R’
-               resets only the draft to factory defaults for preview and
-               deliberate application.  ‘q’ returns to Spelling feedback
-               and discards unapplied edits; applied and saved changes
-               remain.  Reopening starts from the current tone.  To
-               reverse an applied adjustment, edit it back and apply
-               again, saving too if you changed the saved defaults.
+          For spelling, use ‘A’ to apply the draft for this session.
+          Capital ‘W’ saves and applies its tone defaults through
+          Customize.  These actions leave timing, voice, earcon, tone
+          enablement and shared volume unchanged.  ‘R’ resets only the
+          draft to factory defaults for preview and deliberate
+          application.  ‘q’ returns to Spelling feedback and discards
+          unapplied edits; applied and saved changes remain.  Reopening
+          starts from the current tone.  To reverse an applied
+          adjustment, edit it back and apply again, saving too if you
+          changed the saved defaults.
 
-               Apply and Save store the active tone shape.  Unused Pulse
-               width, End pitch and ADSR values remain available while
-               editing this draft, but reopening reads the applied
-               shape; it need not recover those inactive values.  A
-               named preset stores the complete draft for later reuse.
+          Apply and Save store the active tone shape.  Unused Pulse
+          width, End pitch and ADSR values remain available while
+          editing this draft, but reopening reads the applied shape; it
+          need not recover those inactive values.  A named preset stores
+          the complete draft for later reuse.
 
-               The keys have different jobs in the two menus: capital
-               ‘S’ stops playback in the tone editor, but saves settings
-               in the parent Spelling feedback menu.  Capital ‘W’ in the
-               editor saves only tone defaults.  To keep a choice such
-               as voice off and tone on, return with ‘q’ and save with
-               ‘S’ in Spelling feedback.  That parent Save also includes
-               timing, earcon selection and shared tone volume.  Saving
-               a preset with ‘N’ stores neither those choices nor the
-               live cue defaults.
+          The keys have different jobs in the two menus: capital ‘S’
+          stops playback in the tone editor, but saves settings in the
+          parent Spelling feedback menu.  Capital ‘W’ in the editor
+          saves only tone defaults.  To keep a choice such as voice off
+          and tone on, return with ‘q’ and save with ‘S’ in Spelling
+          feedback.  That parent Save also includes timing, earcon
+          selection and shared tone volume.  Saving a preset with ‘N’
+          stores neither those choices nor the live cue defaults.
 
-            6. When a tone cannot be played
+       6. When a tone cannot be played
 
-               Individual volume below 100, harmonic waveforms and ADSR
-               require an Omnivox worker with richer-tone support.
-               Pulse, Sawtooth, sweeps and exponential curves require
-               extended-tone support.  Older workers omit an unsupported
-               tone while retaining speech and earcons, and the feedback
-               explanation records the omission.  A preview reports
-               missing support instead of playing an inaccurate
-               substitute.  Your settings remain intact.  Use an updated
-               worker, or restore volume 100, sine and Classic and turn
-               off Pitch sweep to hear the tone on an older worker.
+          Individual volume below 100, harmonic waveforms and ADSR
+          require an Omnivox worker with richer-tone support.  Pulse,
+          Sawtooth, sweeps and exponential curves require extended-tone
+          support.  Older workers omit an unsupported tone while
+          retaining speech and earcons, and the feedback explanation
+          records the omission.  A preview reports missing support
+          instead of playing an inaccurate substitute.  Your settings
+          remain intact.  Use an updated worker, or restore volume 100,
+          sine and Classic and turn off Pitch sweep to hear the tone on
+          an older worker.
 
-  6. Choose typing and point feedback
+  9. Choose typing and point feedback
 
      ‘C-e H s t’ opens _Typing and interaction_.  Character, word,
      completed-line echo, point indication/presentation, and spoken

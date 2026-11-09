@@ -14,6 +14,61 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Everyday Reading Commands,  Next: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
+
+15.1 Reading reminders
+======================
+
+These commands apply to the selected buffer's accessible text.  In Info
+that means the current node, not the whole manual.  Use the
+application's own reader for a table, terminal or other specialised
+view.
+
+Read from here (‘C-e i’)
+     Read towards the accessible buffer end with tracked position.
+     Requires a supporting speech server; point advances by chunks, and
+     another command stops reading before performing its action.  See
+     *note Stopping and restarting tracked reading: (emacsvox)Reading
+     From Point.
+Stop current speech (‘C-e s’)
+     Stop main and notification speech without disabling future
+     feedback.  During tracked reading this retains a chunk boundary,
+     not an exact spoken word.  See *note Where stopping leaves point:
+     (emacsvox)Reading From Point.
+Repeat the current line (‘C-e l’)
+     Inspect the line without moving point.  ‘C-u C-e l’ reads from
+     point to the line's end.  See *note Short reading and prefix
+     variants: (emacsvox)Reading Without Moving Point.
+Read or spell the word (‘C-e w’)
+     Read the word at point; repeat at the same position to spell it.
+     See *note Inspecting short passages: (emacsvox)Reading Without
+     Moving Point.
+Inspect the character (‘C-e c’)
+     Read the character at point, using its phonetic name where
+     available.  Point does not move.  See *note Character and word
+     reading: (emacsvox)Reading.
+Read the paragraph (‘C-e [’)
+     Read the paragraph around point without moving it.  The mode
+     determines its boundaries.  Sentence reading is also available by
+     name.  See *note Sentence and paragraph inspection:
+     (emacsvox)Reading Without Moving Point.
+Read a checked selection (‘C-e r’)
+     Read between point and mark.  A short region read preserves its
+     endpoints and activation; it does not establish a new selection for
+     you.  See *note Selecting and checking text: (emacsvox)Selecting
+     Text With Speech.
+Read the buffer (‘C-e b’)
+     Read its accessible contents without tracked interruption position.
+     Requests of 40,000 characters or more fall back to windowful
+     reading at the current default limit, removing other windows.  The
+     same limit applies to region reading.  See *note Buffer-reading
+     limits and alternatives: (emacsvox)Reading Without Moving Point.
+
+   Page reading and the complete reading-key list remain under *note
+Reading and navigating: (emacsvox)Reading.  Page reading changes the
+mark; it is not a substitute for inspecting an existing selection.
+
+
 File: emacsvox.info,  Node: Everyday Editing Commands,  Next: Everyday Workspace Commands,  Prev: Everyday Reading Commands,  Up: Emacsvox Keyboard Commands
 
 15.2 Editing reminders
@@ -345,6 +400,12 @@ File: emacsvox.info,  Node: Finding Reading Tasks,  Next: Finding Editing Tasks,
      Org Tables.: use the shared table reader for Markdown and Org.
      *note Agent Shell tables: (emacsvox)Agent Shell Tables. have their
      own contextual keys and spoken units.
+   • *note Read a text tree in an agent response:
+     agent-shell-text-trees.: move between recognised trees, hear their
+     labels and choose entry, exit and depth indications.
+   • *note Skip repeated patterns or unwanted columns in speech:
+     reading-filters.: filter reading without changing the source text,
+     and restore the original settings.
 
 
 File: emacsvox.info,  Node: Finding Editing Tasks,  Next: Finding Voice Tasks,  Prev: Finding Reading Tasks,  Up: Finding Tasks
@@ -402,6 +463,9 @@ File: emacsvox.info,  Node: Finding Voice Tasks,  Next: Finding Settings Tasks, 
    • *note Replace or silence one unwanted sound: (emacsvox)Changing One
      Sound.: target the cue you want to change rather than disabling all
      auditory icons.
+   • *note Shape a feedback tone: spelling-tone-editor.: compare pitch,
+     waveform and envelope in a private draft, then apply or save it for
+     the intended cue.
 
 
 File: emacsvox.info,  Node: Finding Settings Tasks,  Next: Finding Application Tasks,  Prev: Finding Voice Tasks,  Up: Finding Tasks
@@ -825,13 +889,13 @@ repository checks.  The generated *note Emacsvox Reference Manual:
 options, and keymaps; the chapters that follow explain contracts and
 procedures that cannot be generated from those interfaces.
 
-   The stable entry and bootstrap files remain directly under ‘lisp/’.
-Load ‘emacsvox-setup.el’ there as before.  Related modules occupy six
+   The entry and bootstrap files live directly under ‘lisp/’.  Load
+‘emacsvox-setup.el’ from that directory.  Related modules occupy six
 directories: ‘core/’ for shared reading and navigation, ‘aural/’ for
 presentation services, ‘speech/’ for engine and transport code,
 ‘voices/’ for logical voice data, ‘ui/’ for settings and editors, and
-‘integrations/’ for package adapters.  Filenames, provided features and
-commands are unchanged.
+‘integrations/’ for package adapters.  Use the existing filenames,
+features and commands when loading a module.
 
    When adding a module, use its owning directory and update
 ‘lisp/Makefile’.  That file remains the compilation and dependency
@@ -845,7 +909,7 @@ inventory.  The source template remains ‘lisp/.skeleton.el’.
 and run ‘make bytecode-check’ before starting a fresh Emacs.  The
 rebuild removes owned obsolete byte-code; copying new sources over old
 compiled files is insufficient.  A directory does not establish an
-independent dependency layer: preserve feature names, initialization
+independent dependency layer: preserve feature names, initialisation
 order and deferred integration loading.
 
 * Menu:
@@ -871,7 +935,7 @@ documentation target that covers the source being changed.
 The maintained Org master is ‘docs/manual/emacsvox.org’.  Current-user
 chapters live under ‘docs/manual/chapters/’, while developer and
 maintainer chapters live under ‘docs/developer/’.  The source layout and
-fast authoring loop are summarized in ‘docs/manual/README.org’.
+fast authoring loop are summarised in ‘docs/manual/README.org’.
 
    The current project overview lives in ‘README.org’, and the complete
 user installation path lives in ‘docs/manual/chapters/installation.org’.
@@ -989,7 +1053,7 @@ speech servers.  Two protocol families coexist:
 
    This chapter is primarily for speech-server and client developers.
 The detailed Omnivox contracts are owned by the Omnivox repository; this
-manual summarizes their relationship to Emacsvox and then documents the
+manual summarises their relationship to Emacsvox and then documents the
 legacy line protocol.
 
    For additional notes on how to log and view TTS server commands when
@@ -1052,7 +1116,7 @@ retire their dispatch records.
    ‘ordered’ and ‘urgent’ timelines are admitted immediately.  Only
 matching ‘replaceable’ work uses the short server-side coalescing
 window.  Receipt of a newer valid replaceable generation immediately
-cancels queued, synthesizing, and buffered work in the same replacement
+cancels queued, synthesising, and buffered work in the same replacement
 domain.  It does not globally stop ordered, urgent, legacy, or
 differently keyed output.
 
@@ -1078,7 +1142,7 @@ the existing 4096-byte history limit.  Exhausted or incomplete evidence
 disables original replay without blocking delivery.  Completed snapshots
 drive exact private voice previews with fallback disabled.  They never
 rewrite the named-voice registry or borrow another lane's latest
-logical-voice realization.  Ordinary history navigation retains the
+logical-voice realisation.  Ordinary history navigation retains the
 requested annotations; explicit original playback uses this observed
 snapshot.
 
@@ -1126,11 +1190,8 @@ request has been completely processed.  This is a non-blocking
 operation, i.e., if the client application generates additional
 requests, these are processed *immediately*.
 
-   This design allows a legacy Emacsvox TTS server to be *highly*
-responsive; Client applications can queue large amounts of text
-(typically queued a clause at a time to achieve the best prosody), ask
-the TTS server to start speaking, and interrupt the spoken output at any
-time.
+   Clients can queue text a clause at a time, start playback and
+interrupt it while the server continues accepting commands.
 
   1. Testing A Direct Legacy Server
 
@@ -1164,19 +1225,15 @@ time.
 
           tts_say text
 
-     Speaks the specified *text* immediately.  The text is not
-     pre-processed in any way, contrast this with the primary way of
-     speaking text which is to queue text before asking the server to
-     process the queue.
+     Speaks the specified text immediately, without the preprocessing
+     used for queued text.  Most speech uses ‘q’ followed by ‘d’
+     instead.
 
-     Note that this command needs to handle the special syntax for
-     morpheme boundaries ‘[*]’.  The ‘[*]’ syntax is specific to the
-     Dectalk family of synthesizers; servers for other TTS engines need
-     to map this pattern to the engine-specific code for each engine.
-     As an example, see ‘servers/outloud’ A morpheme boundary results in
-     synthesizing compound words such as *left bracket* with the right
-     intonation; using a space would result in that phrase being
-     synthesized as two separate words.
+     The server must handle DECtalk's ‘[*]’ syntax for morpheme
+     boundaries.  Other engines need an equivalent mapping; see
+     ‘servers/outloud’ for an example.  A morpheme boundary joins
+     compound terms such as _left bracket_; an ordinary space treats
+     them as separate words.
 
           l c
 
@@ -1202,12 +1259,7 @@ time.
 
           d
 
-     This command is used to *dispatch* all queued requests.  It was
-     renamed to a single character command (like many of the commonly
-     used TTS server commands) to work more effectively over slow (9600)
-     dialup lines.  The effect of calling this command is for the TTS
-     server to start processing items that have been queued via earlier
-     requests.
+     Dispatches all queued requests, starting playback in queue order.
 
           s
 
@@ -1288,9 +1340,8 @@ time.
 
      *Immediately* apply the passed settings.
 
-     This ensures *atomicity* i.e., all state settings in the TTS engine
-     happen at one shot.  Note that failure to do this might result in
-     some utterances being spoken with a partially set state.
+     The settings take effect together, preventing speech from using a
+     partially updated state.
 
         • punct: see tts_set_punctuations
 
@@ -1341,7 +1392,7 @@ File: emacsvox.info,  Node: Integration Maintenance,  Prev: Speech Server Protoc
 This chapter collects source-level contracts that are deliberately
 omitted from the user task guides.  Optional package APIs and renderers
 evolve, so recheck the upstream interfaces and keep compatibility
-behavior bounded when changing an integration.
+behaviour bounded when changing an integration.
 
 * Menu:
 
@@ -1383,8 +1434,8 @@ bounds include the buffer, so vertical edges stay put.
    The read-only table browser caches logical string rows when
 rendering.  Text properties map every character, including embedded line
 breaks and delimiters, to a model cell.  Pre/post-command hooks
-synchronize the model after ordinary character movement; snapshot
-extraction also synchronizes it.  Browser movement uses the model and
+synchronise the model after ordinary character movement; snapshot
+extraction also synchronises it.  Browser movement uses the model and
 its rendered position index.  New reader actions submit under module
 ‘table-ui’, with role ‘field’ for cells and explicit main-lane delivery.
 The local browser map is independent of the legacy speech-prefix map.
@@ -1452,7 +1503,7 @@ redisplay can trim it, including a bounded unfinished row.  Never retain
 raw process bytes or unredacted concealed text.  Read fresh public
 terminal bounds, preserve soft-wrap continuity, and reject uncertain
 clear/reset/alternate-screen replacements.  Check selected-window
-following after EAT synchronizes windows, not between chunks inside its
+following after EAT synchronises windows, not between chunks inside its
 renderer.  Editable line-mode text lies after ‘eat-term-end’; it can
 share the final physical row with the terminal cursor.
 
@@ -1543,7 +1594,7 @@ checker runs.
      state, start/end times, and original error for the Emacs session.
      Repeated startup reuses these records, including completed and
      failed tasks, instead of starting duplicate background work.  Other
-     startup effects, including speech-server initialization, still run
+     startup effects, including speech-server initialisation, still run
      when ‘emacsvox’ is called again; this is not a general-purpose
      retry command.
 
@@ -1654,7 +1705,7 @@ checker runs.
           .\bin\emacsvox.ps1 -Check
 
      The PowerShell tests use temporary fixtures and an existing native
-     Emacs.  They check doctor behavior, explicit selections,
+     Emacs.  They check doctor behaviour, explicit selections,
      prebuilt/offline preflight, incomplete installations, platform
      rejection, checksums, archive paths, argument handling, and atomic
      configuration replacement.
@@ -2006,7 +2057,7 @@ and fresh byte-code validation in a temporary Windows directory.
 the release to be tagged and published.  Preparing an artifact,
 committing or pushing a branch, publishing documentation, or receiving a
 general instruction to continue is not permission to create or push a
-release tag.  Once that separate authorization has been given, the
+release tag.  Once that separate authorisation has been given, the
 guarded commands are:
 
      make release-tag
@@ -2037,7 +2088,7 @@ before implementation:
    • whether a new presentation occasion belongs to the core semantic
      contract or to a module-owned extension.
 
-   Do not infer contracts from archived proposals.  Current behavior is
+   Do not infer contracts from archived proposals.  Current behaviour is
 defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
@@ -2066,8 +2117,8 @@ saved data but is not applied as a new rate; nonzero legacy values
 produce the existing retuning degradation.  The table supplies no
 implicit defaults and does not declare engine support.
 
-   An explicit ‘nil’ over a preset is a compatibility behavior to
-characterize, not an authoring decision settled by the metadata table.
+   An explicit ‘nil’ over a preset is a compatibility behaviour to
+characterise, not an authoring decision settled by the metadata table.
 For example, the current compiler clears the reported average-pitch
 value for ‘(:preset base :average-pitch nil)’ while retaining the base
 voice command and emitting no pitch-reset command.  The tests preserve
@@ -2075,8 +2126,8 @@ this distinction.  A future inheritance, omission, or reset policy needs
 a separate decision.
 
    Compiler conversion, backend wire names, capability discovery,
-normalization, and delivery stay in their existing owners.  When adding
-a field, update those consumers explicitly and test final serialized
+normalisation, and delivery stay in their existing owners.  When adding
+a field, update those consumers explicitly and test final serialised
 output or an explicit degradation.  The common voice editor uses the
 shared field metadata for bounds and neutral values.  It covers portable
 ACSS and optional rate and post-synthesis adjustments in the same
@@ -2087,7 +2138,7 @@ numeric entry requests the adapter default; zero is explicit.
 Individual choice fields distinguish shared inheritance, custom values
 and explicit adapter defaults.  Rule-editor input has its own scoped
 inheritance semantics; do not substitute one editor's blank-input
-behavior for the other's.
+behaviour for the other's.
 
    The common editor displays low-pass and high-pass as amounts from
 zero through nine, increasing with stronger filtering.  Low-pass
@@ -2105,7 +2156,7 @@ operations.
 composition expectations independently of the metadata.  Scheme tests
 cover saved rich palettes and explicit-nil rules; transport tests check
 distinct ACSS mappings, zero and omitted wire fields, effects, and
-preset behavior.  ‘make compiled-aural-test’ also runs these style
+preset behaviour.  ‘make compiled-aural-test’ also runs these style
 contracts with the isolated compiled subsystem loaded, checking that the
 implementations stay in that build.  The ‘voice-style-ui’ tests exercise
 common-editor entry, inherited reset and draft retention in source and
@@ -2122,12 +2173,13 @@ redisplay test is reported as skipped in ordinary batch runs.  The
 connected saved-style regression edits a custom ‘bolden’, reads its
 saved data back, and compares common-editor and Workbench previews with
 the final normal-speech wire for ‘voice-bolden’.  Workbench uses the
-compiler's palette resolution and the shared effect normalizer: gain and
+compiler's palette resolution and the shared effect normaliser: gain and
 pan level five must remain exactly neutral at 0.5.  Preserve both this
 path and the independently specified Workbench scale cases when changing
 preview or palette lookup.  Preserve final-write, timeout, reentrancy,
 and trace regressions when working on later delivery slices; metadata
-validation alone cannot establish process lifecycle or audible behavior.
+validation alone cannot establish process lifecycle or audible
+behaviour.
 
 20.3.9 Timeline preparation boundaries
 --------------------------------------
@@ -2135,10 +2187,10 @@ validation alone cannot establish process lifecycle or audible behavior.
 Two private helpers in ‘lisp/aural/emacsvox-aural-transport.el’ make
 preparation inputs explicit.
 ‘emacsvox-aural--timeline-effect-transition’ takes previous effects,
-normalized next effects, and a span ID, returning a directive and the
+normalised next effects, and a span ID, returning a directive and the
 next state.  Replacement copies the saved state separately from the
 directive; retention preserves the previous state.  The builder still
-owns the state accumulator, span numbering, and when normalization runs.
+owns the state accumulator, span numbering, and when normalisation runs.
 Suppressed or empty content does not advance effects, while spoken
 boundary actions do.
 
@@ -2147,7 +2199,7 @@ replacement key.  The existing
 ‘emacsvox-aural--timeline-delivery-fields’ wrapper reads the dynamic
 submission variables at the end of timeline construction.  Preserve that
 capture point: resource resolution earlier in construction can re-enter
-Lisp and change the submission state.  The serializer preserves ordered
+Lisp and change the submission state.  The serialiser preserves ordered
 defaults, key conversion, circular printing, diagnostics, and byte
 bounds.
 
@@ -2157,16 +2209,16 @@ from the live speech process.  Those operations, action placement,
 dispatch registration, framing, fallback, and process writes retain
 their existing owners and sequence.  Separating a complete delivery
 candidate from those effects requires further design and failure-path
-characterization.
+characterisation.
 
    The ‘delivery-preparation’ tests in
-‘test/emacsvox-aural-transport-tests.el’ check complete serialized
+‘test/emacsvox-aural-transport-tests.el’ check complete serialised
 timelines and final writes, semantic bindings, state ownership, policy
 inputs, and capture timing.  The compiled Aural gate also runs these
 contracts and existing stop and send-failure regressions with the
 compiled implementation resident.  Keep the full failure, reentrancy,
 and golden-trace suites as regression checks; captured writes establish
-protocol behavior, not audible playback.
+protocol behaviour, not audible playback.
 
 20.3.10 Aural interface source ownership
 ----------------------------------------
@@ -2250,7 +2302,7 @@ does not claim the outer user's feedback.
 such as ‘:headers-overlay’, ‘:message-visible’, message extents,
 ‘:notmuch-part’, part-hidden state, and Notmuch part-button types.
 Missing optional metadata should reduce presentation detail rather than
-authorize an operation.  Review these adapters whenever the Notmuch
+authorise an operation.  Review these adapters whenever the Notmuch
 renderer changes.
 
    Each user-owned asynchronous Search process carries its own
@@ -2323,14 +2375,14 @@ the current wording and older supported renderers.
                             classification can also read the current buffer
                             without changing it.
      Main integration       Capture buffer and overlay context; apply user
-                            customization, speech limits, and delivery; own
+                            customisation, speech limits, and delivery; own
                             response accumulation, event subscriptions,
                             timers, callback generations, navigation,
                             permission handling, activation, and cleanup.
 
      Renderer metadata supplies presentation and navigation facts; it
-     does not authorize permission responses or establish lifecycle
-     completion.  Status label customization stays with the main
+     does not authorise permission responses or establish lifecycle
+     completion.  Status label customisation stays with the main
      integration.  Keep compatibility interpretation together in the
      renderer module, and keep registration and speech side effects in
      the main owner.
@@ -2409,7 +2461,7 @@ the current wording and older supported renderers.
      ‘input-submitted’, ‘turn-complete’, ‘error’, ‘elicitation-request’,
      and ‘elicitation-response’.  Dedicated subscriptions consume
      ‘permission-request’, ‘permission-response’, and
-     ‘tool-call-update’.  Add new semantic behavior at the public event
+     ‘tool-call-update’.  Add new semantic behaviour at the public event
      layer when Agent Shell exposes it; keep renderer and private
      fallbacks isolated and covered by compatibility tests.
 
@@ -2423,7 +2475,7 @@ the current wording and older supported renderers.
 
      Configuration access uses ‘agent-shell-config-options’ and
      ‘agent-shell-initialized-p’ when available.  The 0.85.3 fallback
-     reads normalized private options and checks the initialization
+     reads normalised private options and checks the initialisation
      pipeline flags.  Startup defaults must not be announced as user
      changes.  Verify the minimum at ‘f44c96b’ as well as the pinned
      version, including source and compiled speech and graphical form
@@ -2449,7 +2501,7 @@ the current wording and older supported renderers.
      after rendering returns.  Output digests and lifecycle statuses are
      tracked separately so late output is spoken without repeating
      identical updates.  Renderer IDs without a matching public event do
-     not authorize tool feedback.
+     not authorise tool feedback.
 
      Until upstream exposes public steering and push lifecycle events,
      small adapters wrap the structured steering request's callbacks and
@@ -2469,7 +2521,7 @@ the current wording and older supported renderers.
      select the notification lane; list editing and diff entry remain
      foreground interactions.  All new events and their outcome, count,
      or setting attributes are registered by the workflow semantic
-     provider so Aural rules can customize their presentation.
+     provider so Aural rules can customise their presentation.
 
 20.3.15 Magit contracts
 -----------------------
@@ -2495,7 +2547,7 @@ including removal of the last file in a section.
 personalities.  The integration suppresses legacy overlay voice
 mirroring for those highlights and excludes their faces from source
 capture.  It preserves text faces, deliberate personalities, and
-customized hash voices.  Navigation still emits section facts; empty
+customised hash voices.  Navigation still emits section facts; empty
 lines supply the core line-condition facts without a competing selection
 icon.
 
@@ -2522,7 +2574,7 @@ edit shell startup files, and must preserve an explicit ‘EMACS’ or
    The installed Omnivox executable is recorded as an absolute WSL path
 in the data-only ‘$XDG_CONFIG_HOME/emacsvox/omnivox-program’ file.
 Launcher selection is explicit ‘OMNIVOX_PROGRAM’, that per-user file,
-developer staging, then ‘PATH’.  Keep the selection tests synchronized
+developer staging, then ‘PATH’.  Keep the selection tests synchronised
 with this order.  A configured but invalid path is a visible
 configuration error; silently falling through would hide a stale or
 damaged user installation.
@@ -2565,7 +2617,7 @@ inputs, builds the Docker image, and validates this boundary before
 compilation.  The full target then builds Omnivox's two 32-bit helper
 sources deterministically, builds native Windows Omnivox plus its
 RHVoice, Flite, and RuTTS helpers in the container, and stages their
-licenses, provenance, and checksums.  The clean target also builds Piper
+licences, provenance, and checksums.  The clean target also builds Piper
 support and verifies that the pinned companion and main executable
 identify the same Omnivox source commit.  A host Rust installation,
 MinGW installation, Visual Studio, .NET SDK, or system eSpeak
@@ -2712,7 +2764,7 @@ script selects the staged runtime before Make's final runtime and live
 checks; a failure in those final checks does not restore the previous
 selection.  Interruption before activation can leave temporary files in
 a new version directory while preserving the current link.  The fixture
-tests characterize these existing behaviors and successful retry.
+tests characterise these existing behaviours and successful retry.
 Changing cleanup or rollback requires a separate fix and acceptance
 decision.  Fixture success does not establish native compiler
 reproducibility, real Windows path conversion, engine startup, or
@@ -2795,7 +2847,7 @@ and voice data that affect the selected engines.  For example:
        --omnivox-root /path/to/omnivox-checkout \
        --runtime-input voices=/path/to/voice-data
 
-   Initialization captures supported runtime overrides from the
+   Initialisation captures supported runtime overrides from the
 environment, including ‘OMNIVOX_DECTALK_DLL’, ‘OMNIVOX_ECI_DLL’ and
 ‘ESPEAK_NG_DATA’.  Inspect the resulting JSON plan.  Its initial routes
 are Eloquence ‘v1’, DECtalk ‘paul’ and eSpeak's British English voice
@@ -2815,7 +2867,7 @@ timing run as clearing that failure.
    The plan pins the executable path.  When staging a new development
 build, update ‘targets[].program’ before measuring it.  Retain the
 earlier executable and complete helper payload if an old-build
-comparison is wanted.  ‘--baseline-program’ at initialization adds a
+comparison is wanted.  ‘--baseline-program’ at initialisation adds a
 second target for ordinary speech, with native controls and editor tests
 disabled for that older worker.  An editor comparison against older Lisp
 needs a target with its own ‘emacsvox_root’ and current byte-code for
@@ -2916,7 +2968,7 @@ single Lisp data form in ‘my-cues/emacsvox-sound-pack.el’:
       :parent chimes
       :default-spatialization neutral)
 
-   The file contains data, not executable initialization: do not wrap
+   The file contains data, not executable initialisation: do not wrap
 the form in ‘setq’, quote it, or add a second form.  Put a replacement
 recording such as ‘button.ogg’ in the same directory.  Its basename
 names the registered cue.  Unknown cue names fail the resource audit;
@@ -2997,7 +3049,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * attachments, Notmuch:                  Notmuch Messages And Attachments.
                                                               (line   6)
 * attack, decay, sustain and release:    Reading Scope And Punctuation.
-                                                              (line 363)
+                                                              (line 440)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  15)
@@ -3006,7 +3058,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
 * Aural history, mail privacy:           Notmuch Speech And Privacy.
-                                                              (line  93)
+                                                              (line  94)
 * Aural Home:                            Aural Home.          (line   6)
 * Aural Presentation:                    Aural Presentation.  (line   6)
 * automatic speech limits, Notmuch:      Notmuch Speech And Privacy.
@@ -3029,6 +3081,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
+* character speech rate:                 Reading Scope And Punctuation.
+                                                              (line  41)
 * clipboard security, EAT:               EAT Clipboard Trust. (line   6)
 * clipboard, exchanging text:            Copying Through The Clipboard.
                                                               (line   6)
@@ -3041,6 +3095,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * code, copy from an agent response:     Finding Application Tasks.
                                                               (line   6)
+* column filtering:                      Reading Scope And Punctuation.
+                                                              (line  72)
 * command reference:                     Emacsvox Keyboard Commands.
                                                               (line   6)
 * completion candidates, terminal:       EAT Terminal Completion.
@@ -3200,6 +3256,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * newline, including in a selection:     Selecting Text With Speech.
                                                               (line   6)
+* nonprinting characters:                Reading Scope And Punctuation.
+                                                              (line  41)
 * normal reading voice, choosing an operation: Choosing A Presentation Change.
                                                               (line   6)
 * notes, writing:                        Writing An Org Document.
@@ -3286,6 +3344,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * proofreading, spoken text:             Reading Without Moving Point.
                                                               (line   6)
+* quiet speech, settings menu:           Reading Scope And Punctuation.
+                                                              (line  41)
 * read a web page:                       Finding Application Tasks.
                                                               (line   6)
 * read all from here:                    Reading From Point.  (line   6)
@@ -3308,6 +3368,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * region, selecting and hearing:         Selecting Text With Speech.
                                                               (line   6)
 * remote terminal trust:                 EAT Clipboard Trust. (line   6)
+* repeated characters, cleanup:          Reading Scope And Punctuation.
+                                                              (line  72)
 * replacement, controlling scope:        Reviewing Text Replacements.
                                                               (line   6)
 * reporting a problem:                   Finding Problem Tasks.
@@ -3357,7 +3419,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * settings, survive restart:             Finding Settings Tasks.
                                                               (line   6)
 * shared tone editor:                    Reading Scope And Punctuation.
-                                                              (line 262)
+                                                              (line 341)
 * shell command status:                  EAT Shell Integration.
                                                               (line   6)
 * shell commands, where to run:          Filenames And Example Commands.
@@ -3367,6 +3429,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * sound packs:                           Sounds And Space.    (line   6)
 * spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
+* speech chunking:                       Reading Scope And Punctuation.
+                                                              (line  72)
 * speech engine preference:              Installed Voices And Engines.
                                                               (line   6)
 * speech engine, choosing:               Finding Voice Tasks. (line   6)
@@ -3381,7 +3445,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech worker, meaning:                Speech And Settings Terms.
                                                               (line   6)
 * spelling tone editor:                  Reading Scope And Punctuation.
-                                                              (line 262)
+                                                              (line 341)
 * starting Notmuch:                      Starting Notmuch.    (line   6)
 * startup palette:                       Saving And Startup.  (line   6)
 * startup selection:                     Speech And Settings Terms.
@@ -3426,9 +3490,9 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * timeout, did anything change:          Finding Problem Tasks.
                                                               (line   6)
 * tone envelope, ADSR:                   Reading Scope And Punctuation.
-                                                              (line 363)
+                                                              (line 440)
 * tone presets:                          Reading Scope And Punctuation.
-                                                              (line 262)
+                                                              (line 341)
 * too much talking:                      Feedback Differs Between Buffers.
                                                               (line   6)
 * too much talking <1>:                  Finding Problem Tasks.

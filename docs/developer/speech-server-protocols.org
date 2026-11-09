@@ -15,7 +15,7 @@ servers.  Two protocol families coexist:
 
 This chapter is primarily for speech-server and client developers.  The
 detailed Omnivox contracts are owned by the Omnivox repository; this manual
-summarizes their relationship to Emacsvox and then documents the legacy line
+summarises their relationship to Emacsvox and then documents the legacy line
 protocol.
 
 For additional notes on how to log and view TTS server
@@ -78,7 +78,7 @@ their dispatch records.
 =ordered= and =urgent= timelines are admitted immediately.  Only
 matching =replaceable= work uses the short server-side coalescing window.
 Receipt of a newer valid replaceable generation immediately cancels queued,
-synthesizing, and buffered work in the same replacement domain.  It does not
+synthesising, and buffered work in the same replacement domain.  It does not
 globally stop ordered, urgent, legacy, or differently keyed output.
 
 Marker events report playback start and positioned playback boundaries;
@@ -101,7 +101,7 @@ speech text remains subject to the existing 4096-byte history limit. Exhausted
 or incomplete evidence disables original replay without blocking delivery.
 Completed snapshots drive exact private voice previews with fallback disabled.
 They never rewrite the named-voice registry or borrow another lane's latest
-logical-voice realization. Ordinary history navigation retains the requested
+logical-voice realisation. Ordinary history navigation retains the requested
 annotations; explicit original playback uses this observed snapshot.
 
 The canonical protocol documents are:
@@ -148,11 +148,8 @@ acknowledge that the request has been completely processed. This is a
 non-blocking operation, i.e., if the client application generates
 additional requests, these are processed *immediately*.
 
-This design allows a legacy Emacsvox TTS server to be
-*highly* responsive; Client applications can queue large
-amounts of text (typically queued a clause at a time to achieve the
-best prosody), ask the TTS server to start speaking, and
-interrupt the spoken output at any time.
+Clients can queue text a clause at a time, start playback and interrupt it
+while the server continues accepting commands.
 
 *** Testing A Direct Legacy Server
 :PROPERTIES:
@@ -199,19 +196,13 @@ output immediately.
 tts_say text
 #+end_example
 
-Speaks the specified *text* immediately. The text is not
-pre-processed in any way, contrast this with the primary way of
-speaking text which is to queue text before asking the server to
-process the queue.
+Speaks the specified text immediately, without the preprocessing used for
+queued text. Most speech uses =q= followed by =d= instead.
 
-Note that this command needs to handle the special syntax for morpheme
-boundaries =[*]=.  The =[*]= syntax is specific to the
-Dectalk family of synthesizers; servers for other TTS
-engines need to map this pattern to the engine-specific code for each
-engine. As an example, see =servers/outloud= A morpheme boundary
-results in synthesizing compound words such as *left bracket*
-with the right intonation; using a space would result in that phrase
-being synthesized as two separate words.
+The server must handle DECtalk's =[*]= syntax for morpheme boundaries.
+Other engines need an equivalent mapping; see =servers/outloud= for an
+example. A morpheme boundary joins compound terms such as /left bracket/;
+an ordinary space treats them as separate words.
 
 #+begin_example
 l c
@@ -239,12 +230,7 @@ normal palette speech path.
 d
 #+end_example
 
-This command is used to *dispatch* all queued requests.  It was
-renamed to a single character command (like many of the commonly used
-TTS server commands) to work more effectively over slow
-(9600) dialup lines.  The effect of calling this command is for the
-TTS server to start processing items that have been queued
-via earlier requests.
+Dispatches all queued requests, starting playback in queue order.
 
 #+begin_example
 s
@@ -354,9 +340,8 @@ tts_sync_state punct splitcaps caps rate
 
 *Immediately* apply the passed settings.
 
-This ensures *atomicity* i.e., all state settings in the TTS
-engine happen at one shot. Note that failure to do this might result
-in some utterances being spoken with a partially set state.
+The settings take effect together, preventing speech from using a partially
+updated state.
 
 - punct: see tts_set_punctuations
 

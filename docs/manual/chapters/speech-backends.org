@@ -347,10 +347,9 @@ licensed and supplied.
 :DESCRIPTION: Install, check, remove, and reinstall optional engines from Emacs.
 :END:
 
-The ordinary WSL2 archive is the core, not a claim that every supported engine
-is installed. Companion archives provide larger, experimental, or
-architecture-specific engines. Some require a separately supplied runtime or
-chosen voice data before they can speak.
+The ordinary WSL2 archive supplies the core speech engines. Companion archives
+add larger, experimental or architecture-specific engines. Some also need a
+separately installed runtime or downloaded voice data before they can speak.
 
 **** Inspect running engines
 :PROPERTIES:
@@ -369,19 +368,23 @@ engines missing from that inventory stay visible as /not reported/ so management
 controls remain reachable. ~v~ browses voices; ~RET~ opens details.
 
 Details begin with a short status and voice actions, with /Browse voices/
-selected. Matching main/notification evidence is combined and problems remain
-near the top. /Startup settings/ and /Diagnostics/ start folded; ~RET~ toggles
-sections. Selection and folding are remembered per engine.
+selected. When main and notification speech report the same result, it is
+shown once; differences and problems appear near the top. /Startup settings/
+and /Diagnostics/ start folded. Press ~RET~ to open or close a section.
+The browser remembers your selection and folds for each engine.
 
-/Available/ describes discovery from the current worker. An older check does
-not alone make it unavailable. /Previously available/ belongs to a stopped or
-replaced worker. Details announce the engine before requesting newer inventory
-in the background when its check is over five minutes old or belongs to another
-worker. File checks likewise run in the background where requested.
-/Streams differ/ identifies different availability, policy, health, or voice
-identities. A bridge's presence does not establish its runtime; /Not checked/
-does not mean missing. Diagnostics shows each worker's paths, inventory time,
-runtime discovery, and health.
+/Available/ means the current speech worker found the engine; the result does
+not expire merely because the check is old. /Previously available/ refers to
+a worker that has stopped or been replaced. Opening details announces the
+engine first, then requests a background refresh if the result is over five
+minutes old or came from another worker. Requested file checks also run in
+the background, leaving navigation available.
+
+/Streams differ/ means main and notification speech disagree about engine
+availability, policy, health or voice identity. /Not checked/ means no check
+result is available, rather than that files are missing. An installed bridge
+may still need a separate runtime. Diagnostics shows each worker's paths,
+check time, runtime discovery and health.
 
 /Required runtime/ appears near the top when native libraries are needed.
 Successful DECtalk discovery, for example, confirms DLL and dictionary loading.
@@ -403,12 +406,13 @@ A one-language list starts expanded and selection/folding are remembered.
 opens an unsaved experiment. Saving asks for a palette destination; browsing
 or previewing changes no palette. ~q~ returns to selected engine details.
 
-Library data loads asynchronously with quiet refresh. /Installed/ identifies
-library entries versus supplied voices. /Enabled/ is the desired selection
-for the next Apply. /Active/ describes eligibility on both streams, main only,
-notification only, or neither. /Unknown/ means missing/inconsistent evidence;
-~R~ refreshes. Active does not measure model residency or prove listening.
-Samples use main speech; inactive downloads need enablement and Apply first.
+The library loads in the background without repeated speech. /Installed/
+distinguishes managed library entries from supplied voices. /Enabled/ shows
+the choice to use at the next Apply. /Active/ shows where a voice can currently
+be used: both streams, main only, notification only or neither. It does not
+measure memory use or confirm that you can hear the voice. /Unknown/ means
+the reported information is missing or inconsistent; press ~R~ to refresh.
+Samples use main speech. Enable inactive downloads and Apply before sampling.
 
 /Voice variants/ in eSpeak details lists the running worker's bundled variants.
 Choose a base with ~b~, browse with arrows or ~C-n~/~C-p~, and audition with
@@ -750,9 +754,7 @@ before moving or choosing another directory; unknown partial trees are not
 overwritten.
 
 Muting JAWS speech does not disable its shortcuts. If ~M-<~ or ~M->~ is
-intercepted, try =JAWSKey+3= before the key. Bart's =workstation-config=
-repository supplies the separate Emacs-specific JAWS override used on the
-test workstation.
+intercepted, try =JAWSKey+3= before the key.
 
 *** Manual Native Installation
 :PROPERTIES:
@@ -763,7 +765,7 @@ This route requires native Emacs 30.2 or newer already installed. It does not
 acquire Emacs or replace the guided x64 checks. Set =$Emacsvox= to the absolute
 checkout path and continue in one PowerShell window.
 
-*** Download And Verify Omnivox
+**** Download And Verify Omnivox
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -799,7 +801,7 @@ Windows release may be rejected by policy; stop rather than weakening security.
 The existence of an ARM64 Omnivox archive does not extend Emacsvox's supported
 native desktop beyond x64.
 
-*** Install And Check The Native Server
+**** Install And Check The Native Server
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -835,7 +837,7 @@ speech. Keep executable, =espeak-ng-data=, and =third-party-licenses= together.
 Do not copy/load =omnivox-voices.el= from the archive; that is the upstream
 Emacspeak adapter, not Emacsvox's bundled one.
 
-*** Start Native Emacsvox
+**** Start Native Emacsvox
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -858,7 +860,7 @@ Require Emacs 30.2 or newer. Use =emacs.exe= instead of =runemacs.exe= for first
 launch so startup errors remain in PowerShell. Direct setup loading is intentional:
 =bin/emacsvox= is POSIX; =bin/emacsvox.ps1= is the guided native entry.
 
-*** Verify Speech And Report Problems
+**** Verify Speech And Report Problems
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -1275,8 +1277,7 @@ Choose the diagnostic at the failed layer:
   device/hardware buffering can add delay. The diagnostics menu's ~l~ also
   exposes the explicit session logging control with its privacy warning.
 
-Emacsvox owns selection, launcher, Windows staging, and its bundled Lisp adapter.
-Omnivox owns native builds, engines, CLI, runtime layout, and protocols.
-Backend-local READMEs document compatibility adapters and licensed runtimes.
-Use those owning references for versioned details instead of duplicating their
-contracts in first-installation instructions.
+For server selection, the launcher and Windows staging, use this manual.
+For Omnivox builds, engine behaviour, command-line options and protocols, use
+the linked Omnivox guides. The README beside each compatibility server
+documents that adapter and any separately licensed runtime it needs.

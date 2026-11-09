@@ -101,25 +101,21 @@ complete workflows.
 
   1. Shell/comint and EAT
 
-     Shell/comint's focused menu toggles automatic speech with ‘s’ and
-     background monitoring with ‘b’.  Background reading needs autospeak
-     enabled.  Both values belong to the captured buffer for its
-     lifetime; there is no Save action.  Arrows announce values and
-     ‘<RET>’ activates.  ‘q’ returns to the entry, or closes a direct
-     focused menu.  Search at ‘C-e H /’ finds ‘comint’ and ‘monitoring’.
-     Choosing Shell/comint from another buffer explains the required
-     context and leaves its controls unavailable.
+     Shell/comint's settings belong to the captured buffer for its
+     lifetime and have no Save action.  Background reading needs
+     automatic speech enabled; see *note Terminal applications:
+     (emacsvox)Desktop Applications. for the controls.  Search at ‘C-e H
+     /’ finds ‘comint’ and ‘monitoring’.  Choosing Shell/comint from
+     another buffer explains the required context and leaves its
+     controls unavailable.
 
-     EAT's ‘s’ toggles foreground speech, ‘b’ content-free background
-     cues/counts, ‘p’ prompt feedback, and ‘d’ automatic detail.
-     Background monitoring is independent of foreground autospeak and
-     never reads background content.  Changes are local to the terminal,
-     including from frozen review.  ‘w’ saves all four displayed
-     defaults; terminals with overrides keep them.  ‘A’ opens advanced
-     Customize and ‘q’ returns.  All controls are searchable.  Choice
-     lists start on the current value; arrows browse, ‘<RET>’ applies,
-     and ‘q’ cancels.  See *note EAT Terminal Access: (emacsvox)EAT
-     Terminal Access. for prompt integration and safety boundaries.
+     EAT changes also belong to the captured terminal, including when
+     opened from frozen review.  Its ‘w’ saves the four displayed values
+     as defaults; terminals with local overrides keep them.  Background
+     monitoring is independent of foreground speech and never reads
+     background content.  Follow *note Adjust and save terminal
+     feedback: (emacsvox)EAT Feedback Preferences. for the controls and
+     their conditions.
 
   2. Agent Shell, Org, and EWW
 
@@ -136,42 +132,28 @@ complete workflows.
      editing feedback is separate from the shared table reader described
      in *note Browsing Structure: Browsing Structure.
 
-     EWW's ‘s’ controls section-navigation autospeak and ‘i’ suppresses
-     images on subsequent rendering.  It also updates the shared SHR
-     image default while preserving local overrides; it does not reload
-     the page.  ‘w’ saves the two Emacsvox defaults and ‘A’ opens
-     advanced settings.  The ‘o’ outlining choice applies to the
-     captured page, while ‘m’ selects the HTTP identity default for
-     Emacs URL requests.  Both are temporary and excluded from ‘w’; see
-     *note Reading web pages with EWW: (emacsvox)Web Browsing. for their
-     scope and effects.
+     EWW's ‘w’ saves its section-navigation speech and image-suppression
+     defaults.  Outlining and HTTP identity have separate temporary
+     scopes and are excluded from Save.  Follow *note Recover a
+     cluttered or incomplete page: (emacsvox)Recovering A Web Page. for
+     these controls; *note Read by heading, paragraph or search:
+     (emacsvox)Navigating A Web Page. explains the outlining choice.
 
   3. Notmuch and shared choice-list navigation
 
-     Notmuch has the same focused menu in Hello, Search, Show, and Tree.
-     ‘c’ chooses adaptive, count-only, cue-only, or silent successful
-     completion; failures remain audible.  ‘f~/~b’ set field
-     character/UTF-8 byte limits and ‘t~/~B’ total limits.
-     Shift-left/right steps by 100, ‘<RET>’ accepts a positive integer
-     or ‘none’ for that limit only.  ‘w’ saves those four limits and
-     completion policy: five values, not every mail setting.
+     Notmuch has the same focused menu in Hello, Search, Show and Tree.
+     Its ‘w’ saves four automatic speech limits and the completion
+     policy.  Field lists, status maps and advanced settings use
+     separate Customize editors with their own Apply and Save actions.
+     *note Choose speech detail and protect mail privacy:
+     (emacsvox)Notmuch Speech And Privacy. explains these controls,
+     their scope and the limits on attachment inspection.
 
      Org and Notmuch choice lists start on the current global value.
      Arrows browse without applying, ‘<RET>’ applies/returns, and ‘q’
      cancels.  ‘?’ plus a choice key explains effect/scope; ‘q’ returns
      to that browsed choice.
 
-     Notmuch's ‘s~/~m’ open ordered search/message fields and ‘i~/~I’
-     their status maps.  These Customize editors preserve custom
-     formatters and use their own Apply/Save/Reset.  ‘p’ opens
-     Presentation Options: enabled ‘mail-message-status-cues’ owns
-     standard cues, while maps still suppress spoken status tags.  ‘A’
-     exposes advanced options such as separators and MIME inspection
-     limits.  Settings searches for ‘MIME depth limit’ or ‘MIME node
-     limit’ select this control once Notmuch is loaded.  These limits
-     bound attachment-summary scanning, not the length of spoken text.
-     ‘q’ returns; opening or returning does not save.  *note Notmuch
-     Mail: (emacsvox)Notmuch Mail. explains privacy and full inspection.
      Integrations without focused entries remain accessible through
      major-mode settings and advanced Customize.
 
@@ -2092,8 +2074,10 @@ File: emacsvox.info,  Node: Starting Notmuch,  Next: Notmuch Hello And Searches,
 
 Run ‘M-x notmuch’ to open Hello.  With the standard Emacsvox global maps
 loaded, ‘C-' m’ runs ‘notmuch-search’ directly and asks for a query.
-Emacsvox loads its integration when Notmuch loads and marks new Hello,
-Search, Show, and Tree buffers with Notmuch semantic context.
+Emacsvox loads its integration with Notmuch.  The feedback described
+here is then available in Hello, Search and Show; Tree has the limited
+support described under *note Know the support boundaries:
+(emacsvox)Notmuch Support Boundaries.
 
    Loading speech support does not alter mail, tags, files, or Notmuch
 configuration.  Notmuch owns database, tag, archive, attachment, and
@@ -2454,12 +2438,13 @@ presentation.
      Bound the final automatic Notmuch presentation.
 ‘emacsvox-notmuch-mime-node-limit’
 ‘emacsvox-notmuch-mime-depth-limit’
-     Default to 4,096 cons nodes and depth 64, limiting inspection of
-     malformed, cyclic, broad, or deeply nested MIME metadata.  An
-     incomplete scan reports a conservative attachment lower bound, not
-     a claim that no attachment exists.  Search settings at ‘C-e H /’
-     for ‘MIME depth limit’ or ‘MIME node limit’, then activate Advanced
-     Notmuch settings.  Use Customize's own Apply or Save.
+     Limit inspection to 4,096 metadata list nodes and 64 levels by
+     default.  This bounds work on malformed, cyclic or deeply nested
+     MIME descriptions.  If inspection stops early, the attachment count
+     reports a minimum rather than assuming that no further attachments
+     exist.  Search settings at ‘C-e H /’ for ‘MIME depth limit’ or
+     ‘MIME node limit’, then activate Advanced Notmuch settings.  Use
+     Customize's own Apply or Save.
 
    A shortened Search or Show announcement explains what was omitted and
 points to ‘C-c C-p’ for full configured details.  A shortened Hello item
@@ -2475,9 +2460,10 @@ explicit command or another application's output.
 
 Main-stream Notmuch presentations can enter bounded Aural history.  By
 default, Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes
-of speech preview per record.  Records contain frozen data, source
-names, and positions, but never retain source buffers.  Inspect them
-through ‘C-e H f h’ or ‘M-x emacsvox-aural-list-recent-feedback’.  Set
+of speech preview per record.  Records contain copies of speech data,
+source names and positions, without keeping the source buffers alive.
+Inspect them through ‘C-e H f h’ or ‘M-x
+emacsvox-aural-list-recent-feedback’.  Set
 ‘emacsvox-aural-presentation-history-limit’ to zero to disable this
 history.
 
@@ -2494,27 +2480,28 @@ File: emacsvox.info,  Node: Notmuch Support Boundaries,  Next: Notmuch Troublesh
 ================================
 
 Hello
-     Widget navigation, view lifecycle, and searches have
+     Widget navigation, opening or closing the view, and searches have
      Notmuch-specific feedback.
 Search
-     Results, asynchronous lifecycle, tags, archiving, opening, and
-     configured detail inspection have Notmuch-specific feedback.
+     Results, background search completion, tags, archiving, opening,
+     and configured detail inspection have Notmuch-specific feedback.
 Show
      Messages, HTML data tables, MIME parts, pages, visibility, tags,
      archiving, and explicit inspection have Notmuch-specific feedback.
 Tree
-     Receives ‘emacsvox-aural-module’ context only.  Core speech can
-     operate, but this module has no Tree-specific row formatter,
-     navigation, mutation, visibility, or asynchronous lifecycle.
+     Ordinary reading works, and presentation rules can identify the
+     Notmuch context.  There are no specialised row summaries or
+     feedback for Tree navigation, tag changes, folding or background
+     updates.
 Composition
      Standard Message mode owns composition.  Speech after new-mail,
      reply, forward, or resume transitions belongs to
      ‘emacsvox-message’, not the Notmuch integration.
 
-   There is no independent Notmuch speech-disable or unload command.
-Its advice, hooks, and Search arrow bindings remain installed for the
-Emacs session after loading.  Repeated loading is idempotent and does
-not duplicate them.
+   Once loaded, Notmuch speech support and its Search arrow bindings
+stay active for the Emacs session.  There is no separate unload or
+speech-disable command; loading the integration again does not add
+duplicate feedback.
 
 
 File: emacsvox.info,  Node: Notmuch Troubleshooting,  Prev: Notmuch Support Boundaries,  Up: Notmuch Mail
@@ -3302,11 +3289,10 @@ argument creates or selects another terminal.  Follow the *note Eat User
 Manual: (eat)Top. for installation, terminal setup, and EAT's complete
 command reference.
 
-   Three parts cooperate here.  EAT emulates the terminal; the shell,
-router, or other program handles terminal input and completion; Emacsvox
-presents the rendered result.  Emacsvox observes a bounded screen, not
-the program's private state.  It does not generate shell or router
-completion candidates.
+   EAT emulates the terminal, while the shell, router or other running
+program handles input and completion.  Emacsvox speaks changes visible
+in the rendered screen.  It cannot inspect the program's internal state
+or generate its completion candidates.
 
    First choose an input mode appropriate to the program.  Then use
 automatic feedback for current work and explicit review for content you
@@ -3400,17 +3386,17 @@ active minibuffer also suppresses foreground feedback.  In terminal-only
 Emacs, or when keyboard focus cannot be reported, selection within Emacs
 is the available boundary.
 
-   Turning autospeak off or losing eligibility discards locally pending
-automatic feedback.  Speech already sent to Omnivox may finish.
-Returning or re-enabling speech starts with fresh output; it does not
-replay missed content.  Use explicit review instead.  This policy also
-applies to an embedded Eshell terminal, without changing ordinary Eshell
-output.
+   Turning autospeak off, leaving the live cursor or changing focus
+discards automatic feedback still waiting in Emacs.  Speech already sent
+to Omnivox may finish.  Returning or re-enabling speech starts with
+fresh output; it does not replay missed content.  Use explicit review
+instead.  This policy also applies to an embedded Eshell terminal,
+without changing ordinary Eshell output.
 
 12.2.1 Read output and follow progress
 --------------------------------------
 
-On the main screen, Emacsvox collects a burst before classifying it.
+On the main screen, Emacsvox collects a burst of output before speaking.
 Complete new output lines are spoken once, with automatic limits of
 eight lines and 1,000 characters.  Continued input rows and empty
 terminal placeholders are omitted without hiding output or rereading
@@ -3434,9 +3420,9 @@ omitted.  Fresh text without a newline also speaks, keeping password
 requests and confirmation questions accessible.  Carriage-return
 progress and status rewrites use rate-limited, replaceable speech.
 Unchanged repaints and resize-only updates remain silent.  Bells,
-pastes, input-mode changes, application-screen boundaries, and process
-exit are content-free semantic events rather than arbitrary screen
-readings.
+pastes, input-mode changes, entry to or exit from an application screen,
+and process exit have their own cues or announcements without reading
+screen content.
 
 12.2.2 Recognise and inspect prompts
 ------------------------------------
@@ -3483,17 +3469,18 @@ history-item counter and input-restored message remain visible in the
 echo area without speaking over the command on the notification stream.
 
    An echoed Space is named without rereading the prompt or line.  For
-Backspace, Delete, ‘M-d’, and ‘C-k’, Emacsvox compares bounded public
-snapshots before and after the key.  One unambiguous same-row removal is
+Backspace, Delete, ‘M-d’, and ‘C-k’, Emacsvox compares the visible
+screen before and after the key.  One unambiguous same-row removal is
 read as the actual character or text removed.  Otherwise only a deletion
 tone is given; adjacent prompt or screen text is not guessed as deleted
 content.  Padding and trailing input blanks do not prevent an otherwise
 unambiguous word deletion.
 
-   A no-echo peer provides no visible deletion to announce.  This input
-feedback requires the selected window to follow the live cursor, and is
-silent during protected password entry, in an unselected terminal, and
-on an alternate screen where the application owns the keys.
+   When a program does not echo input, there is no visible deletion to
+announce.  This input feedback requires the selected window to follow
+the live cursor, and is silent during protected password entry, in an
+unselected terminal, and on an alternate screen where the application
+owns the keys.
 
 12.2.4 Bells and application-screen changes
 -------------------------------------------
@@ -3505,12 +3492,11 @@ default.  An aural rule can add a label by matching module ‘eat’, role
 notifications remain rate-limited and obey selected-buffer, live-cursor,
 and secure-input restrictions.
 
-   On full-screen or alternate-screen applications, Emacsvox does not
-read every refresh.  A cursor row reached by correlated arrow-style
-navigation, or a compact high-confidence transfer of selection-like
-styling, may be announced.  Ambiguous repaints remain available to
-explicit review.  Inverse video or a coloured row alone is not proof of
-an active item.
+   In full-screen or alternate-screen applications, Emacsvox can
+announce the row reached by an arrow key or a small, clearly identified
+change in selection highlighting.  It does not speak every refresh.  Use
+explicit review when a screen change is ambiguous: a coloured or
+inverse-video row alone does not establish which item is active.
 
 
 File: emacsvox.info,  Node: EAT Terminal Completion,  Next: EAT Screen Review,  Prev: EAT Automatic Feedback,  Up: EAT Terminal Access
@@ -3518,18 +3504,19 @@ File: emacsvox.info,  Node: EAT Terminal Completion,  Next: EAT Screen Review,  
 12.3 Terminal-side Completion
 =============================
 
-Before a terminal-side ‘<TAB>’ on the main screen, Emacsvox captures the
-public screen and waits briefly for output to settle.  An inline
-completion speaks the newly displayed field; for example, ‘~/sr<TAB>’
-can speak ‘src slash’ after the shell displays ‘~/src/’.
+When you press ‘<TAB>’ on the main screen in semi-character or character
+mode, Emacsvox compares the screen before and after completion, waiting
+briefly for output to settle.  An inline completion speaks the newly
+displayed field; for example, ‘~/sr<TAB>’ can speak ‘src slash’ after
+the shell displays ‘~/src/’.
 
-   An ambiguous completion printed as columns or help rows is presented
-as one transaction after the input line is redrawn.  Small inferred
-lists speak up to eight candidates.  Router-style descriptions keep
-their layout rather than being forced into a shell-token model.  Large
-lists are counted and shortened for automatic speech.  If candidates
-have already scrolled beyond the bounded screen, the count is a lower
-bound, such as "at least N visible", not an invented total.
+   When completion prints columns of alternatives or help rows, Emacsvox
+reads them together after the input line is redrawn.  Small lists speak
+up to eight candidates.  Router-style help retains its layout and
+descriptions.  Large lists are counted and shortened for automatic
+speech.  If candidates have already scrolled beyond the captured screen,
+the count gives only the number known to be visible, such as "at least N
+visible".
 
    Identical repeated lists, split output, bells, wrapping, and resizing
 are coalesced without repeating the candidate text.  This works from
@@ -3583,11 +3570,10 @@ scrollback and need not match a changing live screen.
 12.4.1 Frozen Screen Review
 ---------------------------
 
-‘C-e q r’ opens an immutable copy of the latest visible screen.  It does
-not refresh, move the live cursor, or send input.  It preserves
-normalised styling, cursor and likely-focus anchors, and retained
-completion rows.  Opening and closing play distinct object cues and
-announce the transition.
+‘C-e q r’ opens a fixed copy of the latest visible screen.  It does not
+refresh, move the live cursor or send input.  The copy retains styling,
+positions for the cursor and likely focus, and completion rows.  Opening
+and closing play distinct object cues and announce the transition.
 
 ‘n, p; C-n, C-p; down, up’
      Move by captured terminal row and speak the destination,
@@ -3615,9 +3601,9 @@ announce the transition.
 ‘q’
      Kill the content-bearing review buffer and restore its window.
 
-   Secure input, terminal reset or restart, killing the source, or
-leaving EAT mode also destroys its frozen review.  These events bound
-the lifetime of copied terminal content.
+   Entering a password through protected input, resetting or restarting
+the terminal, killing its buffer or leaving EAT mode also closes and
+removes its frozen review.
 
 
 File: emacsvox.info,  Node: EAT Feedback Preferences,  Next: EAT Shell Integration,  Prev: EAT Screen Review,  Up: EAT Terminal Access
@@ -4364,10 +4350,10 @@ File: emacsvox.info,  Node: Optional Omnivox Engine Modules,  Up: Installing An 
 14.3.2 Optional Omnivox Engines
 -------------------------------
 
-The ordinary WSL2 archive is the core, not a claim that every supported
-engine is installed.  Companion archives provide larger, experimental,
-or architecture-specific engines.  Some require a separately supplied
-runtime or chosen voice data before they can speak.
+The ordinary WSL2 archive supplies the core speech engines.  Companion
+archives add larger, experimental or architecture-specific engines.
+Some also need a separately installed runtime or downloaded voice data
+before they can speak.
 
   1. Inspect running engines
 
@@ -4381,21 +4367,26 @@ runtime or chosen voice data before they can speak.
      remain reachable.  ‘v’ browses voices; ‘<RET>’ opens details.
 
      Details begin with a short status and voice actions, with _Browse
-     voices_ selected.  Matching main/notification evidence is combined
-     and problems remain near the top.  _Startup settings_ and
-     _Diagnostics_ start folded; ‘<RET>’ toggles sections.  Selection
-     and folding are remembered per engine.
+     voices_ selected.  When main and notification speech report the
+     same result, it is shown once; differences and problems appear near
+     the top.  _Startup settings_ and _Diagnostics_ start folded.  Press
+     ‘<RET>’ to open or close a section.  The browser remembers your
+     selection and folds for each engine.
 
-     _Available_ describes discovery from the current worker.  An older
-     check does not alone make it unavailable.  _Previously available_
-     belongs to a stopped or replaced worker.  Details announce the
-     engine before requesting newer inventory in the background when its
-     check is over five minutes old or belongs to another worker.  File
-     checks likewise run in the background where requested.  _Streams
-     differ_ identifies different availability, policy, health, or voice
-     identities.  A bridge's presence does not establish its runtime;
-     _Not checked_ does not mean missing.  Diagnostics shows each
-     worker's paths, inventory time, runtime discovery, and health.
+     _Available_ means the current speech worker found the engine; the
+     result does not expire merely because the check is old.
+     _Previously available_ refers to a worker that has stopped or been
+     replaced.  Opening details announces the engine first, then
+     requests a background refresh if the result is over five minutes
+     old or came from another worker.  Requested file checks also run in
+     the background, leaving navigation available.
+
+     _Streams differ_ means main and notification speech disagree about
+     engine availability, policy, health or voice identity.  _Not
+     checked_ means no check result is available, rather than that files
+     are missing.  An installed bridge may still need a separate
+     runtime.  Diagnostics shows each worker's paths, check time,
+     runtime discovery and health.
 
      _Required runtime_ appears near the top when native libraries are
      needed.  Successful DECtalk discovery, for example, confirms DLL
@@ -4417,14 +4408,15 @@ runtime or chosen voice data before they can speak.
      browsing or previewing changes no palette.  ‘q’ returns to selected
      engine details.
 
-     Library data loads asynchronously with quiet refresh.  _Installed_
-     identifies library entries versus supplied voices.  _Enabled_ is
-     the desired selection for the next Apply.  _Active_ describes
-     eligibility on both streams, main only, notification only, or
-     neither.  _Unknown_ means missing/inconsistent evidence; ‘R’
-     refreshes.  Active does not measure model residency or prove
-     listening.  Samples use main speech; inactive downloads need
-     enablement and Apply first.
+     The library loads in the background without repeated speech.
+     _Installed_ distinguishes managed library entries from supplied
+     voices.  _Enabled_ shows the choice to use at the next Apply.
+     _Active_ shows where a voice can currently be used: both streams,
+     main only, notification only or neither.  It does not measure
+     memory use or confirm that you can hear the voice.  _Unknown_ means
+     the reported information is missing or inconsistent; press ‘R’ to
+     refresh.  Samples use main speech.  Enable inactive downloads and
+     Apply before sampling.
 
      _Voice variants_ in eSpeak details lists the running worker's
      bundled variants.  Choose a base with ‘b’, browse with arrows or
@@ -4791,9 +4783,7 @@ Inspect incomplete installations before moving or choosing another
 directory; unknown partial trees are not overwritten.
 
    Muting JAWS speech does not disable its shortcuts.  If ‘M-<’ or ‘M->’
-is intercepted, try ‘JAWSKey+3’ before the key.  Bart's
-‘workstation-config’ repository supplies the separate Emacs-specific
-JAWS override used on the test workstation.
+is intercepted, try ‘JAWSKey+3’ before the key.
 
 14.4.3 Manual Native Installation
 ---------------------------------
@@ -4803,135 +4793,133 @@ does not acquire Emacs or replace the guided x64 checks.  Set
 ‘$Emacsvox’ to the absolute checkout path and continue in one PowerShell
 window.
 
-14.4.4 Download And Verify Omnivox
-----------------------------------
+  1. Download And Verify Omnivox
 
-Set ‘$Platform’ for the host.  The normal Intel/AMD x64 example is:
+     Set ‘$Platform’ for the host.  The normal Intel/AMD x64 example is:
 
-     $Version = "1.18.0"
-     $Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
-     $DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
-     $Archive = "omnivox-$Version-$Platform.zip"
-     $ReleaseUrl = "https://github.com/bartbunting/omnivox/releases/download/v$Version"
+          $Version = "1.18.0"
+          $Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
+          $DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
+          $Archive = "omnivox-$Version-$Platform.zip"
+          $ReleaseUrl = "https://github.com/bartbunting/omnivox/releases/download/v$Version"
 
-     New-Item -ItemType Directory -Force $DownloadDir | Out-Null
-     $ArchivePath = Join-Path $DownloadDir $Archive
-     $ChecksumPath = Join-Path $DownloadDir "sha256sums.txt"
-     Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/$Archive" -OutFile $ArchivePath
-     Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/sha256sums.txt" -OutFile $ChecksumPath
+          New-Item -ItemType Directory -Force $DownloadDir | Out-Null
+          $ArchivePath = Join-Path $DownloadDir $Archive
+          $ChecksumPath = Join-Path $DownloadDir "sha256sums.txt"
+          Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/$Archive" -OutFile $ArchivePath
+          Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/sha256sums.txt" -OutFile $ChecksumPath
 
-     $Pattern = '\s+\*?' + [regex]::Escape($Archive) + '$'
-     $ChecksumLine = Get-Content $ChecksumPath |
-       Where-Object { $_ -match $Pattern } |
-       Select-Object -First 1
-     if (-not $ChecksumLine) { throw "No published checksum for $Archive" }
-     $Expected = ($ChecksumLine -split '\s+')[0].ToLowerInvariant()
-     $Actual = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
-     if ($Actual -ne $Expected) { throw "Checksum mismatch for $Archive" }
-     Write-Host "Checksum OK: $Archive"
+          $Pattern = '\s+\*?' + [regex]::Escape($Archive) + '$'
+          $ChecksumLine = Get-Content $ChecksumPath |
+            Where-Object { $_ -match $Pattern } |
+            Select-Object -First 1
+          if (-not $ChecksumLine) { throw "No published checksum for $Archive" }
+          $Expected = ($ChecksumLine -split '\s+')[0].ToLowerInvariant()
+          $Actual = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
+          if ($Actual -ne $Expected) { throw "Checksum mismatch for $Archive" }
+          Write-Host "Checksum OK: $Archive"
 
-   Do not extract/run unless the final line reports ‘Checksum OK’.  This
-unsigned Windows release may be rejected by policy; stop rather than
-weakening security.  The existence of an ARM64 Omnivox archive does not
-extend Emacsvox's supported native desktop beyond x64.
+     Do not extract/run unless the final line reports ‘Checksum OK’.
+     This unsigned Windows release may be rejected by policy; stop
+     rather than weakening security.  The existence of an ARM64 Omnivox
+     archive does not extend Emacsvox's supported native desktop beyond
+     x64.
 
-14.4.5 Install And Check The Native Server
-------------------------------------------
+  2. Install And Check The Native Server
 
-In the same PowerShell, extract everything beneath per-user
-‘LocalAppData’:
+     In the same PowerShell, extract everything beneath per-user
+     ‘LocalAppData’:
 
-     $InstallDir = Join-Path $env:LOCALAPPDATA "Emacsvox\Omnivox\releases\$Version-$Platform"
-     New-Item -ItemType Directory -Force $InstallDir | Out-Null
-     Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDir -Force
-     $Omnivox = Join-Path $InstallDir "omnivox.exe"
+          $InstallDir = Join-Path $env:LOCALAPPDATA "Emacsvox\Omnivox\releases\$Version-$Platform"
+          New-Item -ItemType Directory -Force $InstallDir | Out-Null
+          Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDir -Force
+          $Omnivox = Join-Path $InstallDir "omnivox.exe"
 
-     foreach ($Required in @(
-       $Omnivox,
-       (Join-Path $InstallDir "espeak-ng-data\phontab"),
-       (Join-Path $InstallDir "third-party-licenses\THIRD-PARTY-NOTICES.md")
-     )) {
-       if (-not (Test-Path -LiteralPath $Required -PathType Leaf)) {
-         throw "Incomplete Omnivox installation: $Required"
-       }
-     }
+          foreach ($Required in @(
+            $Omnivox,
+            (Join-Path $InstallDir "espeak-ng-data\phontab"),
+            (Join-Path $InstallDir "third-party-licenses\THIRD-PARTY-NOTICES.md")
+          )) {
+            if (-not (Test-Path -LiteralPath $Required -PathType Leaf)) {
+              throw "Incomplete Omnivox installation: $Required"
+            }
+          }
 
-     & $Omnivox --version
-     if ($LASTEXITCODE -ne 0) { throw "Omnivox version check failed" }
-     & $Omnivox --list-voices
-     if ($LASTEXITCODE -ne 0) { throw "Omnivox voice discovery failed" }
-     & $Omnivox --check
-     if ($LASTEXITCODE -ne 0) { throw "Omnivox audio check failed" }
+          & $Omnivox --version
+          if ($LASTEXITCODE -ne 0) { throw "Omnivox version check failed" }
+          & $Omnivox --list-voices
+          if ($LASTEXITCODE -ne 0) { throw "Omnivox voice discovery failed" }
+          & $Omnivox --check
+          if ($LASTEXITCODE -ne 0) { throw "Omnivox audio check failed" }
 
-   Require version 1.18.0 or newer, at least one Windows voice, and both
-tone and speech.  Keep executable, ‘espeak-ng-data’, and
-‘third-party-licenses’ together.  Do not copy/load ‘omnivox-voices.el’
-from the archive; that is the upstream Emacspeak adapter, not Emacsvox's
-bundled one.
+     Require version 1.18.0 or newer, at least one Windows voice, and
+     both tone and speech.  Keep executable, ‘espeak-ng-data’, and
+     ‘third-party-licenses’ together.  Do not copy/load
+     ‘omnivox-voices.el’ from the archive; that is the upstream
+     Emacspeak adapter, not Emacsvox's bundled one.
 
-14.4.6 Start Native Emacsvox
-----------------------------
+  3. Start Native Emacsvox
 
-Keep the window so ‘$Omnivox’ still identifies the verified binary.  Set
-‘$Emacs’ to native ‘emacs.exe’ and ‘$Emacsvox’ if the checkout was not
-set above:
+     Keep the window so ‘$Omnivox’ still identifies the verified binary.
+     Set ‘$Emacs’ to native ‘emacs.exe’ and ‘$Emacsvox’ if the checkout
+     was not set above:
 
-     $Emacs = "C:\path\to\emacs\bin\emacs.exe"
-     # If not set above, uncomment and edit the next line:
-     # $Emacsvox = "C:\path\to\emacsvox"
+          $Emacs = "C:\path\to\emacs\bin\emacs.exe"
+          # If not set above, uncomment and edit the next line:
+          # $Emacsvox = "C:\path\to\emacsvox"
 
-     & $Emacs --version
-     if ($LASTEXITCODE -ne 0) { throw "Could not run native Emacs" }
-     $env:TTS_PROGRAM = $Omnivox
-     & $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
+          & $Emacs --version
+          if ($LASTEXITCODE -ne 0) { throw "Could not run native Emacs" }
+          $env:TTS_PROGRAM = $Omnivox
+          & $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
 
-   Require Emacs 30.2 or newer.  Use ‘emacs.exe’ instead of
-‘runemacs.exe’ for first launch so startup errors remain in PowerShell.
-Direct setup loading is intentional: ‘bin/emacsvox’ is POSIX;
-‘bin/emacsvox.ps1’ is the guided native entry.
+     Require Emacs 30.2 or newer.  Use ‘emacs.exe’ instead of
+     ‘runemacs.exe’ for first launch so startup errors remain in
+     PowerShell.  Direct setup loading is intentional: ‘bin/emacsvox’ is
+     POSIX; ‘bin/emacsvox.ps1’ is the guided native entry.
 
-14.4.7 Verify Speech And Report Problems
-----------------------------------------
+  4. Verify Speech And Report Problems
 
-Check the isolated native session:
+     Check the isolated native session:
 
-  1. Confirm the startup introduction/ready checkpoint is audible.  Note
-     the working buffer's name with ‘C-e m’.
-  2. ‘C-h v tts-program <RET>’ should identify the verified executable's
-     absolute path.  Leave Help and return to the working buffer by name
-     with ‘C-x b’.
-  3. ‘M-x tts-speak-version <RET>’ speaks the version; ‘M-x
-     omnivox-list-voices <RET>’ displays Windows voices.  Finish
-     inspecting that list, then return to the working buffer and confirm
-     its name and mode.
-  4. ‘C-n’ and ‘C-p’ should speak the lines reached.  Press ‘C-e s’ to
-     stop, then ‘C-e l’ to read again: stopping does not disable later
-     speech.  To test restarting separately, run ‘M-x tts-restart <RET>’
-     and confirm that speech returns without process errors.  Restarting
-     is not needed after every Stop.
-  5. Toggle icons twice with ‘M-x emacsvox-toggle-icons <RET>’.  In a
-     session starting with icons enabled, the second toggle restores
-     them and plays an icon in addition to speech.  Preserve the initial
-     preference when testing a customised session.
+       1. Confirm the startup introduction/ready checkpoint is audible.
+          Note the working buffer's name with ‘C-e m’.
+       2. ‘C-h v tts-program <RET>’ should identify the verified
+          executable's absolute path.  Leave Help and return to the
+          working buffer by name with ‘C-x b’.
+       3. ‘M-x tts-speak-version <RET>’ speaks the version; ‘M-x
+          omnivox-list-voices <RET>’ displays Windows voices.  Finish
+          inspecting that list, then return to the working buffer and
+          confirm its name and mode.
+       4. ‘C-n’ and ‘C-p’ should speak the lines reached.  Press ‘C-e s’
+          to stop, then ‘C-e l’ to read again: stopping does not disable
+          later speech.  To test restarting separately, run ‘M-x
+          tts-restart <RET>’ and confirm that speech returns without
+          process errors.  Restarting is not needed after every Stop.
+       5. Toggle icons twice with ‘M-x emacsvox-toggle-icons <RET>’.  In
+          a session starting with icons enabled, the second toggle
+          restores them and plays an icon in addition to speech.
+          Preserve the initial preference when testing a customised
+          session.
 
-   If direct ‘--check’ fails, diagnose Omnivox/Windows audio first.  If
-it passes but the server cannot be found in Emacs, confirm the same
-PowerShell's ‘$env:TTS_PROGRAM’ is absolute and ‘Test-Path
-$env:TTS_PROGRAM’ returns ‘True’.  For a process that exits, retain
-PowerShell errors, ‘*Messages*’, Windows version/architecture, and full
-‘emacs.exe --version’ and ‘omnivox.exe --version’.
+     If direct ‘--check’ fails, diagnose Omnivox/Windows audio first.
+     If it passes but the server cannot be found in Emacs, confirm the
+     same PowerShell's ‘$env:TTS_PROGRAM’ is absolute and ‘Test-Path
+     $env:TTS_PROGRAM’ returns ‘True’.  For a process that exits, retain
+     PowerShell errors, ‘*Messages*’, Windows version/architecture, and
+     full ‘emacs.exe --version’ and ‘omnivox.exe --version’.
 
-   Once speech works, put the same selection before setup in your init
-file:
+     Once speech works, put the same selection before setup in your init
+     file:
 
-     (setenv "TTS_PROGRAM"
-             "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe")
-     (load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
+          (setenv "TTS_PROGRAM"
+                  "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe")
+          (load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
 
-   Replace both paths.  This deliberately starts with an absolute
-executable.  Adding its directory to ‘exec-path’ is optional until
-selecting ‘omnivox’ by short name.  Native desktop support remains x64;
-remote speech is a separate preview.
+     Replace both paths.  This deliberately starts with an absolute
+     executable.  Adding its directory to ‘exec-path’ is optional until
+     selecting ‘omnivox’ by short name.  Native desktop support remains
+     x64; remote speech is a separate preview.
 
 
 File: emacsvox.info,  Node: Installing Omnivox From Source,  Next: Building Omnivox For WSL2,  Prev: Trying Native Windows Emacsvox,  Up: Speech Backends
@@ -5296,12 +5284,11 @@ Speech works but is delayed
      add delay.  The diagnostics menu's ‘l’ also exposes the explicit
      session logging control with its privacy warning.
 
-   Emacsvox owns selection, launcher, Windows staging, and its bundled
-Lisp adapter.  Omnivox owns native builds, engines, CLI, runtime layout,
-and protocols.  Backend-local READMEs document compatibility adapters
-and licensed runtimes.  Use those owning references for versioned
-details instead of duplicating their contracts in first-installation
-instructions.
+   For server selection, the launcher and Windows staging, use this
+manual.  For Omnivox builds, engine behaviour, command-line options and
+protocols, use the linked Omnivox guides.  The README beside each
+compatibility server documents that adapter and any separately licensed
+runtime it needs.
 
 
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  Prev: Speech Backends,  Up: Top
@@ -5330,58 +5317,3 @@ buffer when a binding differs, and *note the generated keymap reference:
 * Help and orientation: Everyday Help Commands.  Find commands and return to the intended working buffer.
 * Speech and settings: Everyday Speech Commands.  Find controls and distinguish navigation from undo and saving.
 * How prefixes and menus fit together: Emacsvox Key Prefixes.  Understand the speech prefix, menu entry and application overrides.
-
-
-File: emacsvox.info,  Node: Everyday Reading Commands,  Next: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
-
-15.1 Reading reminders
-======================
-
-These commands apply to the selected buffer's accessible text.  In Info
-that means the current node, not the whole manual.  Use the
-application's own reader for a table, terminal or other specialised
-view.
-
-Read from here (‘C-e i’)
-     Read towards the accessible buffer end with tracked position.
-     Requires a supporting speech server; point advances by chunks, and
-     another command stops reading before performing its action.  See
-     *note Stopping and restarting tracked reading: (emacsvox)Reading
-     From Point.
-Stop current speech (‘C-e s’)
-     Stop main and notification speech without disabling future
-     feedback.  During tracked reading this retains a chunk boundary,
-     not an exact spoken word.  See *note Where stopping leaves point:
-     (emacsvox)Reading From Point.
-Repeat the current line (‘C-e l’)
-     Inspect the line without moving point.  ‘C-u C-e l’ reads from
-     point to the line's end.  See *note Short reading and prefix
-     variants: (emacsvox)Reading Without Moving Point.
-Read or spell the word (‘C-e w’)
-     Read the word at point; repeat at the same position to spell it.
-     See *note Inspecting short passages: (emacsvox)Reading Without
-     Moving Point.
-Inspect the character (‘C-e c’)
-     Read the character at point, using its phonetic name where
-     available.  Point does not move.  See *note Character and word
-     reading: (emacsvox)Reading.
-Read the paragraph (‘C-e [’)
-     Read the paragraph around point without moving it.  The mode
-     determines its boundaries.  Sentence reading is also available by
-     name.  See *note Sentence and paragraph inspection:
-     (emacsvox)Reading Without Moving Point.
-Read a checked selection (‘C-e r’)
-     Read between point and mark.  A short region read preserves its
-     endpoints and activation; it does not establish a new selection for
-     you.  See *note Selecting and checking text: (emacsvox)Selecting
-     Text With Speech.
-Read the buffer (‘C-e b’)
-     Read its accessible contents without tracked interruption position.
-     Requests of 40,000 characters or more fall back to windowful
-     reading at the current default limit, removing other windows.  The
-     same limit applies to region reading.  See *note Buffer-reading
-     limits and alternatives: (emacsvox)Reading Without Moving Point.
-
-   Page reading and the complete reading-key list remain under *note
-Reading and navigating: (emacsvox)Reading.  Page reading changes the
-mark; it is not a substitute for inspecting an existing selection.

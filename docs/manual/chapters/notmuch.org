@@ -33,8 +33,9 @@ complete command and option reference.
 
 Run ~M-x notmuch~ to open Hello. With the standard Emacsvox global maps
 loaded, ~C-' m~ runs =notmuch-search= directly and asks for a query.
-Emacsvox loads its integration when Notmuch loads and marks new Hello, Search,
-Show, and Tree buffers with Notmuch semantic context.
+Emacsvox loads its integration with Notmuch. The feedback described here is
+then available in Hello, Search and Show; Tree has the limited support
+described under [[info:emacsvox#Notmuch Support Boundaries][Know the support boundaries]].
 
 Loading speech support does not alter mail, tags, files, or Notmuch
 configuration. Notmuch owns database, tag, archive, attachment, and composition
@@ -464,9 +465,10 @@ characters and 4,096 bytes for the complete automatic presentation.
 - emacsvox-notmuch-mime-node-limit ::
 - emacsvox-notmuch-mime-depth-limit ::
 
-  Default to 4,096 cons nodes and depth 64, limiting inspection of malformed,
-  cyclic, broad, or deeply nested MIME metadata. An incomplete scan reports
-  a conservative attachment lower bound, not a claim that no attachment exists.
+  Limit inspection to 4,096 metadata list nodes and 64 levels by default.
+  This bounds work on malformed, cyclic or deeply nested MIME descriptions.
+  If inspection stops early, the attachment count reports a minimum rather
+  than assuming that no further attachments exist.
   Search settings at ~C-e H /~ for =MIME depth limit= or =MIME node limit=,
   then activate Advanced Notmuch settings. Use Customize's own Apply or Save.
 
@@ -488,9 +490,9 @@ explicit command or another application's output.
 
 Main-stream Notmuch presentations can enter bounded Aural history. By default,
 Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes of speech
-preview per record. Records contain frozen data, source names, and positions,
-but never retain source buffers. Inspect them through ~C-e H f h~ or
-~M-x emacsvox-aural-list-recent-feedback~. Set
+preview per record. Records contain copies of speech data, source names and
+positions, without keeping the source buffers alive. Inspect them through
+~C-e H f h~ or ~M-x emacsvox-aural-list-recent-feedback~. Set
 =emacsvox-aural-presentation-history-limit= to zero to disable this history.
 
 Generic asynchronous completion contains no query or message metadata, but a
@@ -511,10 +513,11 @@ notification-device and logging settings separately from mail field choices.
 #+attr_texinfo: :indic asis :compact t
 - Hello ::
 
-  Widget navigation, view lifecycle, and searches have Notmuch-specific feedback.
+  Widget navigation, opening or closing the view, and searches have
+  Notmuch-specific feedback.
 - Search ::
 
-  Results, asynchronous lifecycle, tags, archiving, opening, and configured
+  Results, background search completion, tags, archiving, opening, and configured
   detail inspection have Notmuch-specific feedback.
 - Show ::
 
@@ -522,18 +525,18 @@ notification-device and logging settings separately from mail field choices.
   and explicit inspection have Notmuch-specific feedback.
 - Tree ::
 
-  Receives =emacsvox-aural-module= context only. Core speech can operate,
-  but this module has no Tree-specific row formatter, navigation, mutation,
-  visibility, or asynchronous lifecycle.
+  Ordinary reading works, and presentation rules can identify the Notmuch
+  context. There are no specialised row summaries or feedback for Tree
+  navigation, tag changes, folding or background updates.
 - Composition ::
 
   Standard Message mode owns composition. Speech after new-mail, reply,
   forward, or resume transitions belongs to =emacsvox-message=, not the
   Notmuch integration.
 
-There is no independent Notmuch speech-disable or unload command. Its advice,
-hooks, and Search arrow bindings remain installed for the Emacs session after
-loading. Repeated loading is idempotent and does not duplicate them.
+Once loaded, Notmuch speech support and its Search arrow bindings stay active
+for the Emacs session. There is no separate unload or speech-disable command;
+loading the integration again does not add duplicate feedback.
 
 ** Troubleshoot the live integration
 :PROPERTIES:
