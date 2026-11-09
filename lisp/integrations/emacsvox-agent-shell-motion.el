@@ -1037,19 +1037,41 @@ and therefore do not pass through the text transformation hook."
           (setq-local ems--message-filter value)
         (kill-local-variable 'ems--message-filter)))))
 
+(defun emacsvox-agent-shell--cursor-hint-regexp (position)
+  "Return the redundant automatic hint pattern at POSITION, or nil."
+  (let ((url (get-text-property position 'agent-shell-markdown-url))
+        (control (get-text-property position 'agent-shell-elicitation-control))
+        (map (get-text-property position 'keymap)))
+    (cond
+     ((stringp url)
+      (concat "\\`Press .+ to open\\(?: in browser\\| file\\)?: "
+              (regexp-quote url) "\\'"))
+     (control
+      (when-let* ((verbs
+                   (pcase (map-elt control :action)
+                     ('select '("pick this option"))
+                     ('toggle '("toggle" "toggle this option" "toggle this checkbox"))
+                     ('read '("edit this field"))
+                     ('custom '("type your own answer"))
+                     ('preview '("show this preview" "hide this preview"))
+                     ('submit '("submit this form"))
+                     ('decline '("decline this form")))))
+        (concat "\\`Press .+ to " (regexp-opt verbs) "\\'")))
+     ((and (keymapp map)
+           (eq (lookup-key map (kbd "RET")) 'agent-shell-ui-toggle-fragment))
+      "\\`Press .+ to toggle\\'"))))
+
 (defun emacsvox-agent-shell--link-sensor-around (original &optional window)
-  "Keep link hints visible without speaking their URL during ORIGINAL.
+  "Keep redundant cursor hints visible without speaking them during ORIGINAL.
 Use WINDOW's buffer and point, including when called during redisplay.
-Explicit URL inspection and unrelated messages retain their speech."
+Question controls, foldable headings and links already have main speech.
+Explicit help, URL inspection and unrelated messages retain their speech."
   (let ((window (or window (selected-window))))
     (with-current-buffer (window-buffer window)
       (if-let* (((derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode))
                 (emacsvox-agent-shell--speech-control-active)
-                (url (get-text-property (window-point window) 'agent-shell-markdown-url))
-                ((stringp url)))
-          (let* ((hint (concat "\\`Press .+ to open\\(?: in browser\\| file\\)?: "
-                               (regexp-quote url) "\\'"))
-                 (ems--message-filter
+                (hint (emacsvox-agent-shell--cursor-hint-regexp (window-point window))))
+          (let ((ems--message-filter
                   (if (stringp ems--message-filter)
                       (concat "\\(?:" ems--message-filter "\\|" hint "\\)")
                     hint)))
@@ -1084,7 +1106,7 @@ speech until the cursor sensor has run from `post-command-hook'."
   (add-hook 'pre-command-hook
             #'emacsvox-agent-shell--filter-vertical-toggle-hint nil t)
   ;; Cursor sensors run from `post-command-hook'.  Restore afterward so
-  ;; non-arrow entry still speaks the action hint.
+  ;; unrelated messages retain their usual speech policy.
   (add-hook 'post-command-hook
             #'emacsvox-agent-shell--restore-message-filter t t)
   (add-hook 'post-command-hook

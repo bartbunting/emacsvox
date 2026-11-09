@@ -111,6 +111,36 @@ passed in a fresh Emacs loading the compiled integration. The Agent Shell guide
 now describes the concise feedback. Listening acceptance remains separate from
 the automated checks.
 
+Follow-up diagnosis: Emacs PID 1546 still had the old question-navigation
+advice after the narrow tree reloads. The committed repetition fix had not
+reached that session. Omnivox requests 10193 and 10194 also confirm overlapping
+main question speech and a notification cursor hint; requests 10708 and 10709
+show the same overlap on a foldable heading.
+
+Implemented: automatic question and fold hints use the existing cursor-sensor
+speech filter alongside link hints. Their echo-area text remains visible;
+explicit help and unrelated notifications retain speech. The regression
+reproduced an extra notification before the fix and passes with the real
+question and fold renderers in shell and viewport buffers. All 735 integration
+tests pass. Eleven focused graphical checks pass with source and compiled code
+against the session's Agent Shell 0.93.3 installation, including a rehearsal of
+replacing the old advice. Incremental byte-code and documentation checks pass.
+
+The compiled interaction, motion and facade modules are now loaded in PID 1546.
+The old question advice was removed before reinstalling support. All four Agent
+Shell buffers retained their content and point; speech processes and aural rules
+were preserved. Listening acceptance of
+concise option speech and suppression of overlapping hints was confirmed on
+2026-11-09. A second check, kept active until answered, confirmed that Tab reads
+the question once on entry.
+
+Finding: expired forms can remain visible after Agent Shell clears their state
+at turn completion. Tab then falls back to reading the displayed option, without
+its question heading; arrows can still read the heading. The initial listening
+form expired before navigation, and Return reported that it no longer awaited
+an answer. Retaining semantic heading context for expired forms remains in the
+findings queue; the active-question path does not need another change.
+
 ** Kimai interruption insertion, 2026-11-04
 
 Implemented locally in =~/emacs/src/kimai.el=: =C-c C-i= uses F10-style

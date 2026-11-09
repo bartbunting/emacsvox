@@ -12758,6 +12758,58 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                (emacsvox-agent-shell-test--capture-events
                  (execute-kbd-macro (kbd "RET")))))))))
 
+(ert-deftest emacsvox-agent-shell-control-sensors-avoid-overlapping-notifications ()
+  "Question and fold hints stay visible without a second voice on entry."
+  (require 'emacsvox-advice)
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                               :acp-request (emacsvox-agent-shell-test--question-request)))
+    (let ((inhibit-read-only t))
+      (goto-char (point-max))
+      (insert "\n" (agent-shell-ui-make-foldable-text :text "Fold" :hint "toggle")))
+    (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+      (let ((major-mode mode))
+        (setq emacsvox-agent-shell--speech-control-active t)
+        (cursor-sensor-mode 1)
+        (dolist (action '(select toggle read submit decline fold))
+          (goto-char (point-min))
+          (cursor-sensor--detect)
+          (if (eq action 'fold)
+              (goto-char (- (point-max) 4))
+            (emacsvox-agent-shell-test--question-goto action))
+          (let ((emacsvox-speak-messages t) (emacsvox-last-message "")
+                (ems--message-filter "Decrypting") (inhibit-message nil)
+                (real-message (symbol-function 'message))
+                (real-current-message (symbol-function 'current-message))
+                echoed events)
+            (setq events
+                  (emacsvox-agent-shell-test--capture-events
+                    (cl-letf (((symbol-function 'current-message)
+                               (lambda () (if (display-graphic-p)
+                                              (funcall real-current-message) echoed)))
+                              ((symbol-function 'message)
+                               (lambda (&rest arguments)
+                                 (if (display-graphic-p)
+                                     (let ((executing-kbd-macro nil))
+                                       (apply real-message arguments)
+                                       (setq echoed (funcall real-current-message)))
+                                   (emacsvox--message-around
+                                    (lambda (format-string &rest args)
+                                      (setq echoed (apply #'format-message format-string args)))
+                                    arguments)))))
+                      ;; Redisplay can detect a sensor outside the current buffer.
+                      (let ((window (selected-window)))
+                        (with-temp-buffer (cursor-sensor--detect window)))
+                      (should (string-match-p "\\`Press .+ to " echoed))
+                      (should (equal ems--message-filter "Decrypting"))
+                      ;; The same words outside automatic cursor feedback remain audible.
+                      (setq emacsvox-last-message "")
+                      (message "%s" echoed)
+                      (message "Agent needs approval"))))
+            (should (= 2 (length (seq-filter (lambda (event) (eq (car event) 'notify))
+                                             events))))))))))
+
 (ert-deftest emacsvox-agent-shell-initialization-gates-setting-announcements ()
   "Handshake completion does not announce startup defaults as user changes."
   (emacsvox-agent-shell-test--with-current-session
