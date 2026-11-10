@@ -488,5 +488,24 @@
       (should-not (process-get main 'omnivox-native-guard-connecting))
       (should-not (process-get main 'omnivox-native-guard-proof)))))
 
+(ert-deftest omnivox-recovery-guard-descriptors-require-exact-local-transports ()
+  (omnivox-recovery-tests--workers
+    (let ((omnivox-native-guard--owners nil)
+          (id "01234567-89ab-cdef-0123-456789abcdef") connected)
+      (cl-letf (((symbol-function 'omnivox-native-guard--connect)
+                 (lambda (process) (push process connected))))
+        (dolist (transport '("linux-abstract" "windows-pipe"))
+          (let ((endpoint (list :version 1 :worker "worker" :guard id
+                                :token (make-string 64 ?a) :transport transport
+                                :address (concat (if (equal transport "windows-pipe")
+                                                     "\\\\.\\pipe\\omnivox-guard-"
+                                                   "omnivox-guard-") id))))
+            (omnivox-native-guard--attach main (list :worker "worker" :guard endpoint))
+            (should (equal (process-get main 'omnivox-native-guard-endpoint) endpoint))
+            (setf (plist-get endpoint :address) (concat "remote-" (plist-get endpoint :address)))
+            (should-error (omnivox-native-guard--attach main (list :worker "worker" :guard endpoint)))))
+        (should (= 2 (length connected)))
+        (should (equal omnivox-native-guard--owners (list main)))))))
+
 (provide 'omnivox-recovery-tests)
 ;;; omnivox-recovery-tests.el ends here
