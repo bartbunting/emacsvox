@@ -2246,8 +2246,16 @@ permits explicit =tts-emergency-start=: minimal bundled eSpeak ignores damaged
 host preferences and management storage, preserves notification speech and old
 asset claims, and requires native retirement proof. A live owner can supply
 that proof despite a failed receipt write. Source and compiled native checks
-remain separate from listening acceptance; lost authority and blocked owner
-transport still need further qualification. This command is available through
+remain separate from listening acceptance. The opt-in Linux native guard now
+keeps lifecycle control independent of blocked or failed speech forwarding.
+The compiled client confirms both native-tree and I/O retirement before minimal
+replacement, preserves notification speech and retains old claims. Its local
+Unix socket and stdio control bridge carry no speech and introduce no TCP port.
+The internal =omnivox-native-guard--enabled= flag defaults to nil; Windows/WSL,
+macOS, integrated partial-transfer/status-backpressure and listening acceptance
+remain pending. Losing the guard still blocks replacement. The paired Omnivox
+=docs/benchmarks/2026-11-10-guard-integration.md= retains source/compiled checks,
+matched speech timing and the added startup cost. This command is available through
 =M-x=; no existing restart key silently changes to emergency mode.
 
 * Coverage audit, 2026-10-15

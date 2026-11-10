@@ -348,5 +348,91 @@
     (should (eq omnivox-library--emergency-pending replacement))
     (should (process-live-p main))))
 
+
+(ert-deftest omnivox-recovery-guard-outlives-owner-without-inventing-durable-proof ()
+  (omnivox-recovery-tests--workers
+    (process-put main 'omnivox-native-guard-endpoint '(:worker "worker"))
+    (delete-process main)
+    (let (events)
+      (cl-letf (((symbol-function 'omnivox-library--owned-p) (lambda (_) t))
+                ((symbol-function 'omnivox-native-guard--request)
+                 (lambda (p command)
+                   (should (eq p main)) (push command events)
+                   (list :tree_retired t :io_retired (if (equal command "status") t :false))))
+                ((symbol-function 'omnivox-library--reconcile-retirement)
+                 (lambda (&rest _) (ert-fail "Emergency proof read damaged management state"))))
+        (omnivox-library--retire-for-emergency main))
+      (should (equal (reverse events) '("retire" "retire-owner" "status")))
+      (should (process-get main 'omnivox-native-guard-proof))
+      (should-not (process-get main 'omnivox-library-native-receipt))
+      (should (process-live-p notify)))))
+
+(ert-deftest omnivox-recovery-guard-does-not-retire-owner-before-native-tree ()
+  (omnivox-recovery-tests--workers
+    (let (events)
+      (cl-letf (((symbol-function 'omnivox-native-guard--request)
+                 (lambda (_ command)
+                   (push command events)
+                   (if (equal command "retire") '(:tree_retired :false :io_retired :false)
+                     (error "Guard disappeared before tree proof")))))
+        (should-error (omnivox-native-guard--retire main)))
+      (should (equal (reverse events) '("retire" "status")))
+      (should-not (process-get main 'omnivox-library-retired))
+      (should (process-live-p main)))))
+
+(ert-deftest omnivox-recovery-guard-tree-proof-does-not-substitute-for-io-proof ()
+  (omnivox-recovery-tests--workers
+    (cl-letf (((symbol-function 'omnivox-native-guard--request)
+               (lambda (_ command)
+                 (if (equal command "status") (error "I/O completion reply lost")
+                   '(:tree_retired t :io_retired :false)))))
+      (should-error (omnivox-native-guard--retire main)))
+    (should-not (process-get main 'omnivox-library-retired))
+    (should-not (process-get main 'omnivox-native-guard-proof))))
+
+(ert-deftest omnivox-recovery-guard-filters-stale-and-foreign-replies ()
+  (omnivox-recovery-tests--workers
+    (process-put main 'guard-endpoint '(:guard "guard" :worker "worker"))
+    (process-put main 'guard-pending 2)
+    (omnivox-native-guard--filter
+     main "{\"type\":\"guard_status\",\"guard\":\"guard\",\"worker\":\"worker\",\"request_id\":1}\n")
+    (should-not (process-get main 'guard-reply))
+    (omnivox-native-guard--filter
+     main "{\"type\":\"guard_status\",\"guard\":\"guard\",\"worker\":\"foreign\",\"request_id\":2}\n")
+    (should (process-get main 'guard-failure))
+    (should-not (process-get main 'guard-reply))))
+
+(ert-deftest omnivox-recovery-guard-bounds-incomplete-responses ()
+  (omnivox-recovery-tests--workers
+    (omnivox-native-guard--filter main (make-string 8193 ?x))
+    (should (process-get main 'guard-failure))
+    (should-not (process-get main 'guard-reply))))
+
+(ert-deftest omnivox-recovery-guard-capacity-does-not-infer-proof-from-owner-exit ()
+  (omnivox-recovery-tests--workers
+    (delete-process main)
+    (let ((omnivox-native-guard--owners (make-list 4 main)))
+      (should-error (omnivox-native-guard--capacity))
+      (should (= 4 (length omnivox-native-guard--owners))))))
+
+
+(ert-deftest omnivox-recovery-guard-capacity-preserves-received-emergency-proof ()
+  (omnivox-recovery-tests--workers
+    (process-put main 'omnivox-native-guard replacement)
+    (process-put main 'omnivox-native-guard-endpoint '(:guard "guard" :worker "worker"))
+    (delete-process main)
+    (let ((omnivox-native-guard--owners (list main)))
+      (cl-letf (((symbol-function 'omnivox-native-guard--request)
+                 (lambda (_ command)
+                   (should (equal command "status")) '(:tree_retired t :io_retired t))))
+        (omnivox-native-guard--capacity))
+      (should-not omnivox-native-guard--owners)
+      (should-not (process-get main 'omnivox-library-retired))
+      (should (process-get main 'omnivox-native-guard-proof))
+      (cl-letf (((symbol-function 'omnivox-native-guard--request)
+                 (lambda (&rest _) (ert-fail "Already received proof required its closed link"))))
+        (omnivox-native-guard--retire main))
+      (should (process-get main 'omnivox-library-retired)))))
+
 (provide 'omnivox-recovery-tests)
 ;;; omnivox-recovery-tests.el ends here

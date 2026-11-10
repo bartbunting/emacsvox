@@ -13,7 +13,7 @@ server_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 program="$server_directory/omnivox-bin/current/omnivox.exe"
 windows_runtime=false
 emergency_mode=false
-case ${1-} in --emergency-owner|--emergency-version) emergency_mode=true; unset ESPEAK_NG_DATA ;; esac
+case ${1-} in --emergency-owner|--emergency-version|--native-guard-control) emergency_mode=true; unset ESPEAK_NG_DATA ;; esac
 explicit_piper_model=${OMNIVOX_PIPER_MODEL-}
 omnivox_config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 omnivox_config_file=${EMACSVOX_OMNIVOX_CONFIG_FILE:-"$omnivox_config_home/emacsvox/omnivox-program"}
@@ -132,8 +132,8 @@ else
     fi
 fi
 
-# The capability probe needs no data or management state.
-if [ "${1-}" = --emergency-version ]; then exec "$resolved_program" "$@"; fi
+# Capability and lifecycle control entries need no speech data or management state.
+case ${1-} in --emergency-version|--native-guard-control) exec "$resolved_program" "$@" ;; esac
 
 # An explicitly selected development bundle can keep its executable on Windows
 # and its matching eSpeak data in shared storage.  Resolve only metadata for

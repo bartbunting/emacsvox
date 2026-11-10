@@ -69,6 +69,7 @@ speech/omnivox-parameters.elc \
 speech/omnivox-native-codec.elc \
 speech/omnivox-library-apply.elc \
 speech/omnivox-library-runtime.elc \
+speech/omnivox-native-guard.elc \
 ui/omnivox-library.elc \
 ui/omnivox-catalogue.elc \
 speech/omnivox-preview.elc \
@@ -733,7 +734,7 @@ speech/omnivox-remote.elc speech/omnivox-voices.elc aural/emacsvox-aural-transpo
 integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc
 integrations/emacsvox-shr.elc: core/emacsvox-table-reader.elc
 
-speech/omnivox-library-runtime.elc: speech/tts-queue-state.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc
+speech/omnivox-library-runtime.elc: speech/tts-queue-state.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc speech/omnivox-native-guard.elc
 ui/omnivox-library.elc speech/tts-speak.elc speech/omnivox-remote.elc: speech/omnivox-library-runtime.elc
 
 ui/emacsvox-aural-voice-workbench-views.elc: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-ui.elc aural/emacsvox-aural-routing-profiles.elc
