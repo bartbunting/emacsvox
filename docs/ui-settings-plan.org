@@ -20,6 +20,30 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Experimental early speech inventory, 2026-11-11
+
+On =feat/omnivox-lightweight-reload=, the private early-speech launcher now
+observes optional engine discovery independently on each live lane. Existing
+engine views retain the unavailable/in-progress reason until actual discovery
+publishes voices. Saved selectors and native adjustments survive this interval;
+fallback speech remains usable, and later registration reads current choices.
+
+The observer is enabled only by =OMNIVOX_EXPERIMENTAL_EARLY_SPEECH=1= for the
+paired experimental runtime. It recognizes that runtime's existing reason
+strings, polls no faster than once a second after a reply, allows one outstanding
+inventory request, and stops on final availability/failure or after 180 seconds.
+Unchanged observations do not redraw views or replace registrations. Dead,
+retiring and replaced owners cannot continue polling; prepared foreground
+workers begin observation after publication. Notification process bindings retain
+the actual foreground owner. Manual refresh remains available after expiry.
+
+Eight focused regressions pass, including saved native projections, lost replies,
+independent lanes and notification bindings. Compiled isolated Windows-through-WSL
+checks cover a delayed saved exact choice, a newer selection, optional failure,
+prepared restart and real engines. Listening acceptance of this startup change
+remains separate. This is a private implementation increment, not a public
+pending-discovery protocol or a change to routing-ready acknowledgement.
+
 ** Agent Shell compatibility refresh, 2026-11-09
 
 Implemented against upstream 0.94.1 at
