@@ -227,6 +227,7 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
 (defun omnivox-library--discard-emergency (process)
   "Retire unpublished emergency PROCESS, retaining it if native cleanup fails."
   (when (processp process)
+    (omnivox-native-guard--discard-prepared-bridge process)
     (if (or (process-get process 'omnivox-emergency-release-sent)
             (process-get process 'omnivox-native-guard))
         (omnivox-library--retire-for-emergency process)
@@ -256,15 +257,19 @@ No worker or output device exists until an explicit, identity-bound release."
                  (list :program program :directory default-directory
                        :environment (copy-sequence process-environment)))
     (condition-case err
-        (let ((owner (omnivox-library--owner process)))
-          (unless (and (equal (plist-get owner :deferred_start_version) 1)
-                       (eq (plist-get owner :emergency) t)
-                       (eq (plist-get owner :prepared) t)
-                       (eq (plist-get owner :retired) :false)
-                       (not (stringp (plist-get owner :startup_error))))
-            (error "Selected Omnivox could not prepare emergency speech; old speech is preserved"))
-          (omnivox-native-guard--attach process owner)
-          process)
+        (progn
+          (when omnivox-native-guard--enabled
+            (omnivox-native-guard--prepare-bridge process))
+          (let ((owner (omnivox-library--owner process)))
+            (unless (and (equal (plist-get owner :deferred_start_version) 1)
+                         (eq (plist-get owner :emergency) t)
+                         (eq (plist-get owner :prepared) t)
+                         (eq (plist-get owner :retired) :false)
+                         (not (stringp (plist-get owner :startup_error))))
+              (error "Selected Omnivox could not prepare emergency speech; old speech is preserved"))
+            (omnivox-native-guard--attach process owner)
+            (omnivox-native-guard--discard-prepared-bridge process)
+            process))
       ((error quit)
        (omnivox-library--discard-emergency process)
        (signal (car err) (cdr err))))))

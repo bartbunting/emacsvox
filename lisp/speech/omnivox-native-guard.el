@@ -140,6 +140,32 @@
       (cl-pushnew process omnivox-native-guard--owners)
       (omnivox-native-guard--connect process))))
 
+(defun omnivox-native-guard--start-bridge (process)
+  "Start a control bridge in PROCESS's retained launch environment.
+It waits for a descriptor on stdin and has no native authority yet."
+  (let* ((context (process-get process 'omnivox-library-launch-context))
+         (process-environment (copy-sequence (plist-get context :environment)))
+         (default-directory (plist-get context :directory)))
+    (make-process :name "Omnivox native guard" :noquery t
+                  :command (list (plist-get context :program) "--native-guard-control")
+                  :connection-type 'pipe :coding 'utf-8-unix
+                  :filter #'omnivox-native-guard--filter :sentinel #'ignore
+                  :stderr (tts--diagnostic-buffer "Native guard" t))))
+
+(defun omnivox-native-guard--prepare-bridge (process)
+  "Overlap the single unpublished PROCESS's preparation with bridge startup."
+  (when (or (process-get process 'omnivox-native-guard-prepared-bridge)
+            (process-get process 'omnivox-native-guard))
+    (error "Native guard bridge already exists"))
+  (process-put process 'omnivox-native-guard-prepared-bridge
+               (omnivox-native-guard--start-bridge process)))
+
+(defun omnivox-native-guard--discard-prepared-bridge (process)
+  "Close PROCESS's unused bridge, which has received no guard descriptor."
+  (when-let* ((bridge (process-get process 'omnivox-native-guard-prepared-bridge)))
+    (when (process-live-p bridge) (delete-process bridge))
+    (process-put process 'omnivox-native-guard-prepared-bridge nil)))
+
 (defun omnivox-native-guard--connect (process)
   "Connect only to PROCESS's retained guard identity, without creating workers.
 A failed bridge attempt is closed; the unresolved native authority is retained."
@@ -152,14 +178,11 @@ A failed bridge attempt is closed; the unresolved native authority is retained."
       (error "Existing native guard connection is still live"))
     (process-put process 'omnivox-native-guard-connecting t)
     (unwind-protect
-        (let* ((context (process-get process 'omnivox-library-launch-context))
-               (process-environment (copy-sequence (plist-get context :environment)))
-               (default-directory (plist-get context :directory)))
-          (setq bridge (make-process :name "Omnivox native guard" :noquery t
-                                     :command (list (plist-get context :program) "--native-guard-control")
-                                     :connection-type 'pipe :coding 'utf-8-unix
-                                     :filter #'omnivox-native-guard--filter :sentinel #'ignore
-                                     :stderr (tts--diagnostic-buffer "Native guard" t)))
+        (progn
+          (setq bridge (process-get process 'omnivox-native-guard-prepared-bridge))
+          (process-put process 'omnivox-native-guard-prepared-bridge nil)
+          (unless (and (processp bridge) (process-live-p bridge))
+            (setq bridge (omnivox-native-guard--start-bridge process)))
           (process-put process 'omnivox-native-guard bridge)
           (process-put bridge 'guard-endpoint endpoint)
           (process-send-string bridge (concat (json-serialize endpoint) "\n"))

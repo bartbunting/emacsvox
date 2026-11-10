@@ -2251,9 +2251,14 @@ keeps lifecycle control independent of blocked or failed speech forwarding.
 The compiled client confirms both native-tree and I/O retirement before minimal
 replacement, preserves notification speech and retains old claims. Its local
 Unix socket and stdio control bridge carry no speech and introduce no TCP port.
-The internal =omnivox-native-guard--enabled= flag defaults to nil; Windows/WSL,
-macOS, integrated partial-transfer/status-backpressure and listening acceptance
-remain pending. Losing the guard still blocks replacement. The paired Omnivox
+Emergency preparation starts its disposable control bridge while the owner
+prepares, then attaches to the validated descriptor before releasing native
+speech. Failed preparation closes the unused bridge; a failed attach retains
+the unresolved native authority. This overlaps startup without a speech hop.
+The internal =omnivox-native-guard--enabled= flag defaults to nil. Linux
+partial-transfer/status-backpressure checks pass; Windows guarded startup is
+blocked by the descendant-completion counterexample. macOS and listening
+acceptance remain pending. Losing the guard still blocks replacement. The paired Omnivox
 =docs/benchmarks/2026-11-10-guard-integration.md= retains source/compiled checks,
 matched speech timing and the added startup cost. This command is available through
 =M-x=; no existing restart key silently changes to emergency mode.
