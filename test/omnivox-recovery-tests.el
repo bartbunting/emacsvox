@@ -434,5 +434,59 @@
         (omnivox-native-guard--retire main))
       (should (process-get main 'omnivox-library-retired)))))
 
+(ert-deftest omnivox-recovery-guard-reconnects-only-the-retained-authority ()
+  (omnivox-recovery-tests--workers
+    (let ((endpoint '(:guard "same-guard" :worker "same-worker" :token "secret"))
+          sent commands)
+      (delete-process replacement)
+      (process-put main 'omnivox-native-guard replacement)
+      (process-put main 'omnivox-native-guard-endpoint endpoint)
+      (process-put main 'omnivox-library-launch-context
+                   (list :program "/private/omnivox" :directory default-directory
+                         :environment process-environment))
+      (cl-letf (((symbol-function 'make-process)
+                 (lambda (&rest args) (push (plist-get args :command) commands) notify))
+                ((symbol-function 'tts--diagnostic-buffer) (lambda (&rest _) nil))
+                ((symbol-function 'process-send-string)
+                 (lambda (bridge text)
+                   (should (eq bridge notify))
+                   (let ((value (json-parse-string text :object-type 'plist)))
+                     (push value sent)
+                     (when (plist-get value :command)
+                       (omnivox-native-guard--filter
+                        bridge (concat (json-serialize
+                                        (list :type "guard_status" :guard "same-guard"
+                                              :worker "same-worker"
+                                              :request_id (plist-get value :request_id))) "\n")))))))
+        (omnivox-native-guard--request main "status"))
+      (should (equal commands '(("/private/omnivox" "--native-guard-control"))))
+      (should (equal (mapcar (lambda (v) (plist-get v :command)) (reverse sent))
+                     '(nil "attach" "status")))
+      (should (equal (car (last sent)) endpoint))
+      (should (process-live-p main))
+      (should-not (process-get main 'omnivox-library-retired)))))
+
+(ert-deftest omnivox-recovery-guard-failed-reattach-closes-only-new-bridge ()
+  (omnivox-recovery-tests--workers
+    (let ((omnivox-native-guard--owners (list main))
+          (endpoint '(:guard "retained" :worker "worker")))
+      (process-put main 'omnivox-native-guard-endpoint endpoint)
+      (process-put main 'omnivox-library-launch-context
+                   (list :program "/private/omnivox" :directory default-directory
+                         :environment process-environment))
+      (cl-letf (((symbol-function 'make-process) (lambda (&rest _) replacement))
+                ((symbol-function 'tts--diagnostic-buffer) (lambda (&rest _) nil))
+                ((symbol-function 'process-send-string) #'ignore)
+                ((symbol-function 'omnivox-native-guard--request)
+                 (lambda (_ command) (should (equal command "attach")) (error "Lost reply"))))
+        (should-error (omnivox-native-guard--connect main)))
+      (should-not (process-live-p replacement))
+      (should (process-live-p main))
+      (should (process-live-p notify))
+      (should (equal omnivox-native-guard--owners (list main)))
+      (should (equal (process-get main 'omnivox-native-guard-endpoint) endpoint))
+      (should-not (process-get main 'omnivox-native-guard-connecting))
+      (should-not (process-get main 'omnivox-native-guard-proof)))))
+
 (provide 'omnivox-recovery-tests)
 ;;; omnivox-recovery-tests.el ends here

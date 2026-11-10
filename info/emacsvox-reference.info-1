@@ -777,6 +777,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omnivox-library-apply:: Coordinate voice-library activation.
 * omnivox-library-runtime:: Native voice library runtime.
 * omnivox-native-codec:: Native voice wire values.
+* omnivox-native-guard:: Independent native cleanup control.
 * omnivox-parameters:: Asynchronous engine controls.
 * omnivox-parameters-codec:: Engine parameter metadata.
 * omnivox-preferences:: Independent host preference reload.

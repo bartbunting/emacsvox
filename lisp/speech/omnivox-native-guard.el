@@ -83,6 +83,10 @@
 
 (defun omnivox-native-guard--request (process command)
   "Ask PROCESS's original native guard for COMMAND and validate its reply."
+  (unless (or (equal command "attach")
+              (when-let* ((bridge (process-get process 'omnivox-native-guard)))
+                (process-live-p bridge)))
+    (omnivox-native-guard--connect process))
   (let* ((bridge (process-get process 'omnivox-native-guard))
          (endpoint (process-get process 'omnivox-native-guard-endpoint))
          (id (1+ (or (and bridge (process-get bridge 'guard-sequence)) 0)))
@@ -131,18 +135,36 @@
       ;; Retain identity before any fallible connection, including bridge spawn.
       (process-put process 'omnivox-native-guard-endpoint endpoint)
       (cl-pushnew process omnivox-native-guard--owners)
-      (let* ((context (process-get process 'omnivox-library-launch-context))
-             (process-environment (copy-sequence (plist-get context :environment)))
-             (default-directory (plist-get context :directory))
-             (bridge (make-process :name "Omnivox native guard" :noquery t
-                                   :command (list (plist-get context :program) "--native-guard-control")
-                                   :connection-type 'pipe :coding 'utf-8-unix
-                                   :filter #'omnivox-native-guard--filter :sentinel #'ignore
-                                   :stderr (tts--diagnostic-buffer "Native guard" t))))
-        (process-put process 'omnivox-native-guard bridge)
-        (process-put bridge 'guard-endpoint endpoint)
-        (process-send-string bridge (concat (json-serialize endpoint) "\n"))
-        (omnivox-native-guard--request process "attach")))))
+      (omnivox-native-guard--connect process))))
+
+(defun omnivox-native-guard--connect (process)
+  "Connect only to PROCESS's retained guard identity, without creating workers.
+A failed bridge attempt is closed; the unresolved native authority is retained."
+  (when (process-get process 'omnivox-native-guard-connecting)
+    (error "Native guard reconnection already in progress"))
+  (let ((endpoint (process-get process 'omnivox-native-guard-endpoint))
+        (old (process-get process 'omnivox-native-guard)) bridge attached)
+    (unless endpoint (error "Native cleanup identity is unavailable; replacement is blocked"))
+    (when (and (processp old) (process-live-p old))
+      (error "Existing native guard connection is still live"))
+    (process-put process 'omnivox-native-guard-connecting t)
+    (unwind-protect
+        (let* ((context (process-get process 'omnivox-library-launch-context))
+               (process-environment (copy-sequence (plist-get context :environment)))
+               (default-directory (plist-get context :directory)))
+          (setq bridge (make-process :name "Omnivox native guard" :noquery t
+                                     :command (list (plist-get context :program) "--native-guard-control")
+                                     :connection-type 'pipe :coding 'utf-8-unix
+                                     :filter #'omnivox-native-guard--filter :sentinel #'ignore
+                                     :stderr (tts--diagnostic-buffer "Native guard" t)))
+          (process-put process 'omnivox-native-guard bridge)
+          (process-put bridge 'guard-endpoint endpoint)
+          (process-send-string bridge (concat (json-serialize endpoint) "\n"))
+          (omnivox-native-guard--request process "attach")
+          (setq attached t))
+      (unless attached
+        (when (and (processp bridge) (process-live-p bridge)) (delete-process bridge)))
+      (process-put process 'omnivox-native-guard-connecting nil))))
 
 (defun omnivox-native-guard--forget-confirmed (process)
   "Close PROCESS's control link only after its native retirement proof."

@@ -4958,7 +4958,7 @@ Apply state machine owns transitions, and this module executes them
 against the captured processes.
 
 
-File: emacsvox-reference.info,  Node: omnivox-native-codec,  Next: omnivox-parameters,  Prev: omnivox-library-runtime,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: omnivox-native-codec,  Next: omnivox-native-guard,  Prev: omnivox-library-runtime,  Up: Emacsvox Commands And Options
 
 2.353 omnivox-native-codec
 ==========================
@@ -4969,9 +4969,20 @@ never null.  Private previews require native execution for the actual
 selected choice.
 
 
-File: emacsvox-reference.info,  Node: omnivox-parameters,  Next: omnivox-parameters-codec,  Prev: omnivox-native-codec,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: omnivox-native-guard,  Next: omnivox-parameters,  Prev: omnivox-native-codec,  Up: Emacsvox Commands And Options
 
-2.354 omnivox-parameters
+2.354 omnivox-native-guard
+==========================
+
+Experimental, opt-in local control for a native cleanup authority.
+Speech remains on the owner's existing pipe.  Retain uncertain
+authorities and require exact tree AND I/O proof before explicit minimal
+replacement.
+
+
+File: emacsvox-reference.info,  Node: omnivox-parameters,  Next: omnivox-parameters-codec,  Prev: omnivox-native-guard,  Up: Emacsvox Commands And Options
+
+2.355 omnivox-parameters
 ========================
 
 Read-only discovery on the actual speech connection.  No waits,
@@ -4982,7 +4993,7 @@ callbacks run later.
 
 File: emacsvox-reference.info,  Node: omnivox-parameters-codec,  Next: omnivox-preferences,  Prev: omnivox-parameters,  Up: Emacsvox Commands And Options
 
-2.355 omnivox-parameters-codec
+2.356 omnivox-parameters-codec
 ==============================
 
 Validate inert current-worker catalogues.  IDs remain strings, JSON
@@ -4992,7 +5003,7 @@ editable.
 
 File: emacsvox-reference.info,  Node: omnivox-preferences,  Next: omnivox-preview,  Prev: omnivox-parameters-codec,  Up: Emacsvox Commands And Options
 
-2.356 omnivox-preferences
+2.357 omnivox-preferences
 =========================
 
 Reload each local owned worker independently over its existing
@@ -5002,7 +5013,7 @@ or replays work.
 
 File: emacsvox-reference.info,  Node: omnivox-preview,  Next: omnivox-punctuation,  Prev: omnivox-preferences,  Up: Emacsvox Commands And Options
 
-2.357 omnivox-preview
+2.358 omnivox-preview
 =====================
 
 Complete and individual samples share process ownership, guarded
@@ -5013,7 +5024,7 @@ playback evidence.
 
 File: emacsvox-reference.info,  Node: omnivox-punctuation,  Next: omnivox-punctuation-profiles,  Prev: omnivox-preview,  Up: Emacsvox Commands And Options
 
-2.358 omnivox-punctuation
+2.359 omnivox-punctuation
 =========================
 
 Omnivox supplies defaults and validates edits on the selected local
@@ -5024,7 +5035,7 @@ effect of saving.
 
 File: emacsvox-reference.info,  Node: omnivox-punctuation-profiles,  Next: omnivox-remote,  Prev: omnivox-punctuation,  Up: Emacsvox Commands And Options
 
-2.359 omnivox-punctuation-profiles
+2.360 omnivox-punctuation-profiles
 ==================================
 
 Named mode values retain a built-in fallback.  Each live worker supplies
@@ -5034,7 +5045,7 @@ policies.
 
 File: emacsvox-reference.info,  Node: omnivox-remote,  Next: omnivox-voices,  Prev: omnivox-punctuation-profiles,  Up: Emacsvox Commands And Options
 
-2.360 omnivox-remote
+2.361 omnivox-remote
 ====================
 
 Authenticated loopback connections through a user-managed SSH reverse
@@ -5045,7 +5056,7 @@ identifiers.
 
 File: emacsvox-reference.info,  Node: omnivox-voices,  Next: outloud-voices,  Prev: omnivox-remote,  Up: Emacsvox Commands And Options
 
-2.361 omnivox-voices
+2.362 omnivox-voices
 ====================
 
 Voice and rate support for the Omnivox speech server.  Omnivox accepts
@@ -5057,16 +5068,16 @@ live in 'omnivox-discovery'.
 
 File: emacsvox-reference.info,  Node: outloud-voices,  Next: pip,  Prev: omnivox-voices,  Up: Emacsvox Commands And Options
 
-2.362 outloud-voices
+2.363 outloud-voices
 ====================
 
 Interface to outloud server.  This module is IBM ViaVoice Outloud
 specific.
 
-2.362.1 Outloud-Voices Commands
+2.363.1 Outloud-Voices Commands
 -------------------------------
 
-2.362.1.1 outloud
+2.363.1.1 outloud
 .................
 
  -- Command: outloud
@@ -5074,7 +5085,7 @@ specific.
 
      Start Outloud.
 
-2.362.2 outloud-voices Options
+2.363.2 outloud-voices Options
 ------------------------------
 
  -- Variable: User Option outloud-default-speech-rate
@@ -5088,7 +5099,7 @@ specific.
 
 File: emacsvox-reference.info,  Node: pip,  Next: plain-voices,  Prev: outloud-voices,  Up: Emacsvox Commands And Options
 
-2.363 pip
+2.364 pip
 =========
 
 Piper TTS is an Open Source neural-net TTS engine.  This module exposes
@@ -5109,10 +5120,10 @@ Piper TTS to Emacs.
   7. However it might be interesting to use it for lower-priority speech
      where quality trumps latency.
 
-2.363.1 Pip Commands
+2.364.1 Pip Commands
 --------------------
 
-2.363.1.1 pip-device-select
+2.364.1.1 pip-device-select
 ...........................
 
  -- Command: pip-device-select (device)
@@ -5122,7 +5133,7 @@ Piper TTS to Emacs.
 
      (fn DEVICE)
 
-2.363.1.2 pip-model-select
+2.364.1.2 pip-model-select
 ..........................
 
  -- Command: pip-model-select (voice)
@@ -5132,7 +5143,7 @@ Piper TTS to Emacs.
 
      (fn VOICE)
 
-2.363.1.3 pip-speak
+2.364.1.3 pip-speak
 ...................
 
  -- Command: pip-speak (text)
@@ -5141,14 +5152,14 @@ Piper TTS to Emacs.
 
      (fn TEXT)
 
-2.363.1.4 pip-start
+2.364.1.4 pip-start
 ...................
 
  -- Command: pip-start
 
      Start the Piper process
 
-2.363.1.5 pip-stop
+2.364.1.5 pip-stop
 ..................
 
  -- Command: pip-stop
@@ -5158,7 +5169,7 @@ Piper TTS to Emacs.
 
 File: emacsvox-reference.info,  Node: plain-voices,  Next: soundscape,  Prev: pip,  Up: Emacsvox Commands And Options
 
-2.364 plain-voices
+2.365 plain-voices
 ==================
 
 This module defines the various voices used in voice-lock mode.  Module
@@ -5170,7 +5181,7 @@ appropriate voice-locking controls
 
 File: emacsvox-reference.info,  Node: soundscape,  Next: sox,  Prev: plain-voices,  Up: Emacsvox Commands And Options
 
-2.365 soundscape
+2.366 soundscape
 ================
 
 Soundscapes <https://en.wikipedia.org/wiki/Soundscape> define an
@@ -5207,10 +5218,10 @@ that is loaded using ‘(soundscape-load soundscape-default-theme)’.
 Emacs modes that provide similar functionality e.g., communication ==
 email, IM, ...  map to the same *mood*.
 
-2.365.1 Soundscape Commands
+2.366.1 Soundscape Commands
 ---------------------------
 
-2.365.1.1 soundscape
+2.366.1.1 soundscape
 ....................
 
  -- Command: soundscape (scape)
@@ -5221,14 +5232,14 @@ email, IM, ...  map to the same *mood*.
 
      (fn SCAPE)
 
-2.365.1.2 soundscape-kill
+2.366.1.2 soundscape-kill
 .........................
 
  -- Command: soundscape-kill
 
      Stop all running soundscapes.
 
-2.365.1.3 soundscape-listener
+2.366.1.3 soundscape-listener
 .............................
 
  -- Command: soundscape-listener (&optional restart)
@@ -5239,14 +5250,14 @@ email, IM, ...  map to the same *mood*.
 
      (fn &optional RESTART)
 
-2.365.1.4 soundscape-listener-shutdown
+2.366.1.4 soundscape-listener-shutdown
 ......................................
 
  -- Command: soundscape-listener-shutdown
 
      Shutdown listener.
 
-2.365.1.5 soundscape-remote
+2.366.1.5 soundscape-remote
 ...........................
 
  -- Command: soundscape-remote (names)
@@ -5255,7 +5266,7 @@ email, IM, ...  map to the same *mood*.
 
      (fn NAMES)
 
-2.365.1.6 soundscape-restart
+2.366.1.6 soundscape-restart
 ............................
 
  -- Command: soundscape-restart (&optional prompt)
@@ -5268,7 +5279,7 @@ email, IM, ...  map to the same *mood*.
 
      (fn &optional PROMPT)
 
-2.365.1.7 soundscape-stop
+2.366.1.7 soundscape-stop
 .........................
 
  -- Command: soundscape-stop (scape)
@@ -5277,14 +5288,14 @@ email, IM, ...  map to the same *mood*.
 
      (fn SCAPE)
 
-2.365.1.8 soundscape-theme
+2.366.1.8 soundscape-theme
 ..........................
 
  -- Command: soundscape-theme
 
      Shows default theme in a special buffer.
 
-2.365.1.9 soundscape-toggle
+2.366.1.9 soundscape-toggle
 ...........................
 
  -- Command: soundscape-toggle
@@ -5294,7 +5305,7 @@ email, IM, ...  map to the same *mood*.
      Toggle automatic SoundScapes.
      Run command M-x soundscape-theme to see the default mode->mood mapping.
 
-2.365.1.10 soundscape-update-mood
+2.366.1.10 soundscape-update-mood
 .................................
 
  -- Command: soundscape-update-mood (&optional prompt-mode)
@@ -5307,7 +5318,7 @@ email, IM, ...  map to the same *mood*.
 
      (fn &optional PROMPT-MODE)
 
-2.365.2 soundscape Options
+2.366.2 soundscape Options
 --------------------------
 
  -- Variable: User Option soundscape-data
@@ -5338,7 +5349,7 @@ email, IM, ...  map to the same *mood*.
 
 File: emacsvox-reference.info,  Node: sox,  Next: sox-gen,  Prev: soundscape,  Up: Emacsvox Commands And Options
 
-2.366 sox
+2.367 sox
 =========
 
 This module defines a convenient speech-enabled interface for editing
@@ -5355,10 +5366,10 @@ ladspa.el.  To use ladspa effects with SoX, you need a relatively new
 build of Sox; The stock SoX that is package for Debian/Ubuntu does not
 always work.  This module can be used independent of Emacsvox.
 
-2.366.1 Sox Commands
+2.367.1 Sox Commands
 --------------------
 
-2.366.1.1 sox-add-effect
+2.367.1.1 sox-add-effect
 ........................
 
  -- Command: sox-add-effect (name)
@@ -5367,7 +5378,7 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn NAME)
 
-2.366.1.2 sox-delete-effect-at-point
+2.367.1.2 sox-delete-effect-at-point
 ....................................
 
  -- Command: sox-delete-effect-at-point
@@ -5378,14 +5389,14 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn)
 
-2.366.1.3 sox-edit-effect-at-point
+2.367.1.3 sox-edit-effect-at-point
 ..................................
 
  -- Command: sox-edit-effect-at-point
 
      Edit effect at point.
 
-2.366.1.4 sox-mode
+2.367.1.4 sox-mode
 ..................
 
  -- Command: sox-mode
@@ -5396,7 +5407,7 @@ always work.  This module can be used independent of Emacsvox.
      run, this mode runs the hook ‘sox-mode-hook’, as the final or
      penultimate step during initialization.
 
-2.366.1.5 sox-open-file
+2.367.1.5 sox-open-file
 .......................
 
  -- Command: sox-open-file (snd-file)
@@ -5407,14 +5418,14 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn SND-FILE)
 
-2.366.1.6 sox-play
+2.367.1.6 sox-play
 ..................
 
  -- Command: sox-play
 
      Play sound .
 
-2.366.1.7 sox-refresh
+2.367.1.7 sox-refresh
 .....................
 
  -- Command: sox-refresh
@@ -5425,7 +5436,7 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn)
 
-2.366.1.8 sox-save
+2.367.1.8 sox-save
 ..................
 
  -- Command: sox-save (save-file)
@@ -5434,7 +5445,7 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn SAVE-FILE)
 
-2.366.1.9 sox-set-effect
+2.367.1.9 sox-set-effect
 ........................
 
  -- Command: sox-set-effect (name)
@@ -5443,14 +5454,14 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn NAME)
 
-2.366.1.10 sox-show-timestamp
+2.367.1.10 sox-show-timestamp
 .............................
 
  -- Command: sox-show-timestamp
 
      Show timestamp   in stream.
 
-2.366.1.11 sox-stop
+2.367.1.11 sox-stop
 ...................
 
  -- Command: sox-stop
@@ -5460,13 +5471,13 @@ always work.  This module can be used independent of Emacsvox.
 
 File: emacsvox-reference.info,  Node: sox-gen,  Next: swiftmac-voices,  Prev: sox,  Up: Emacsvox Commands And Options
 
-2.367 sox-gen
+2.368 sox-gen
 =============
 
 Provides binaural audio along with pre-defined themes.  This module can
 be used independent of Emacsvox.
 
-2.367.1 Binaural Beats Using SoX
+2.368.1 Binaural Beats Using SoX
 --------------------------------
 
 A binaural beat is an auditory illusion perceived when two different
@@ -5494,7 +5505,7 @@ binaural beat sequences by customizing
  -- Variable: User Option sox-binaural-gain-offset to a positive value
    -- default is 0.
 
-2.367.1.1 High-Level Commands For Pre-Defined Binaural Beats
+2.368.1.1 High-Level Commands For Pre-Defined Binaural Beats
 ............................................................
 
 These commands can be called directly to play one of the predefined
@@ -5529,10 +5540,10 @@ binaural beats.
    • ‘sox-tone-slide-binaural’: Generate a tone that slides from one
      binaural beat to another.
 
-2.367.2 Sox-Gen Commands
+2.368.2 Sox-Gen Commands
 ------------------------
 
-2.367.2.1 sox-beats-binaural
+2.368.2.1 sox-beats-binaural
 ............................
 
  -- Command: sox-beats-binaural (length beat-spec-list gain)
@@ -5542,7 +5553,7 @@ binaural beats.
 
      (fn LENGTH BEAT-SPEC-LIST GAIN)
 
-2.367.2.2 sox-binaural
+2.368.2.2 sox-binaural
 ......................
 
  -- Command: sox-binaural (name duration)
@@ -5553,7 +5564,7 @@ binaural beats.
 
      (fn NAME DURATION)
 
-2.367.2.3 sox-chakras
+2.368.2.3 sox-chakras
 .....................
 
  -- Command: sox-chakras (theme duration)
@@ -5563,7 +5574,7 @@ binaural beats.
 
      (fn THEME DURATION)
 
-2.367.2.4 sox-relax
+2.368.2.4 sox-relax
 ...................
 
  -- Command: sox-relax (length)
@@ -5572,7 +5583,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.367.2.5 sox-rev-up
+2.368.2.5 sox-rev-up
 ....................
 
  -- Command: sox-rev-up (length)
@@ -5581,7 +5592,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.367.2.6 sox-slide-binaural
+2.368.2.6 sox-slide-binaural
 ............................
 
  -- Command: sox-slide-binaural (name-1 name-2 duration)
@@ -5590,7 +5601,7 @@ binaural beats.
 
      (fn NAME-1 NAME-2 DURATION)
 
-2.367.2.7 sox-tone-binaural
+2.368.2.7 sox-tone-binaural
 ...........................
 
  -- Command: sox-tone-binaural (length freq beat gain)
@@ -5600,7 +5611,7 @@ binaural beats.
 
      (fn LENGTH FREQ BEAT GAIN)
 
-2.367.2.8 sox-tone-slide-binaural
+2.368.2.8 sox-tone-slide-binaural
 .................................
 
  -- Command: sox-tone-slide-binaural (length freq beat-start beat-end
@@ -5611,7 +5622,7 @@ binaural beats.
 
      (fn LENGTH FREQ BEAT-START BEAT-END GAIN)
 
-2.367.2.9 sox-turn-down
+2.368.2.9 sox-turn-down
 .......................
 
  -- Command: sox-turn-down (length)
@@ -5620,7 +5631,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.367.2.10 sox-wind-down
+2.368.2.10 sox-wind-down
 ........................
 
  -- Command: sox-wind-down (length)
@@ -5629,7 +5640,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.367.3 sox-gen Options
+2.368.3 sox-gen Options
 -----------------------
 
  -- Variable: User Option sox-binaural-gain-offset
@@ -5653,7 +5664,7 @@ binaural beats.
 
 File: emacsvox-reference.info,  Node: swiftmac-voices,  Next: tetris,  Prev: sox-gen,  Up: Emacsvox Commands And Options
 
-2.368 swiftmac-voices
+2.369 swiftmac-voices
 =====================
 
 This module defines the various voices used in voice-lock mode by
@@ -5662,13 +5673,13 @@ SwiftMac.
 
 File: emacsvox-reference.info,  Node: tetris,  Next: tts-lifecycle,  Prev: swiftmac-voices,  Up: Emacsvox Commands And Options
 
-2.369 tetris
+2.370 tetris
 ============
 
 
 File: emacsvox-reference.info,  Node: tts-lifecycle,  Next: tts-queue-state,  Prev: tetris,  Up: Emacsvox Commands And Options
 
-2.370 tts-lifecycle
+2.371 tts-lifecycle
 ===================
 
 Keep speech preparation, dispatch tracking, output observation,
@@ -5686,7 +5697,7 @@ entry points do that.
 
 File: emacsvox-reference.info,  Node: tts-queue-state,  Next: tts-speak,  Prev: tts-lifecycle,  Up: Emacsvox Commands And Options
 
-2.371 tts-queue-state
+2.372 tts-queue-state
 =====================
 
 Private stream knowledge for complete captured queue promotion.  This
@@ -5696,15 +5707,15 @@ delivery.
 
 File: emacsvox-reference.info,  Node: tts-speak,  Next: tts-voice-api,  Prev: tts-queue-state,  Up: Emacsvox Commands And Options
 
-2.372 tts-speak
+2.373 tts-speak
 ===============
 
 This module defines the generic TTS interface.
 
-2.372.1 Tts-Speak Commands
+2.373.1 Tts-Speak Commands
 --------------------------
 
-2.372.1.1 emacsvox-set-capitalization-presentation
+2.373.1.1 emacsvox-set-capitalization-presentation
 ..................................................
 
  -- Command: emacsvox-set-capitalization-presentation (presentation
@@ -5718,7 +5729,7 @@ This module defines the generic TTS interface.
 
      (fn PRESENTATION &optional GLOBAL)
 
-2.372.1.2 tts-add-cleanup-pattern
+2.373.1.2 tts-add-cleanup-pattern
 .................................
 
  -- Command: tts-add-cleanup-pattern (&optional delete)
@@ -5730,7 +5741,7 @@ This module defines the generic TTS interface.
 
      (fn &optional DELETE)
 
-2.372.1.3 tts-cloud
+2.373.1.3 tts-cloud
 ...................
 
  -- Command: tts-cloud
@@ -5738,7 +5749,7 @@ This module defines the generic TTS interface.
 
      Select  Cloud TTS server.
 
-2.372.1.4 tts-define-voice-from-acss
+2.373.1.4 tts-define-voice-from-acss
 ....................................
 
  -- Command: tts-define-voice-from-acss (&rest arguments)
@@ -5749,7 +5760,7 @@ This module defines the generic TTS interface.
 
      (fn &rest ARGUMENTS)
 
-2.372.1.5 tts-emergency-start
+2.373.1.5 tts-emergency-start
 .............................
 
  -- Command: tts-emergency-start (&optional output)
@@ -5763,7 +5774,7 @@ This module defines the generic TTS interface.
 
      (fn &optional OUTPUT)
 
-2.372.1.6 tts-local-server
+2.373.1.6 tts-local-server
 ..........................
 
  -- Command: tts-local-server (program &optional prompt-port)
@@ -5776,7 +5787,7 @@ This module defines the generic TTS interface.
 
      (fn PROGRAM &optional PROMPT-PORT)
 
-2.372.1.7 tts-notify-initialize
+2.373.1.7 tts-notify-initialize
 ...............................
 
  -- Command: tts-notify-initialize
@@ -5784,7 +5795,7 @@ This module defines the generic TTS interface.
 
      Initialize a separate notification TTS process when configured.
 
-2.372.1.8 tts-notify-stop
+2.373.1.8 tts-notify-stop
 .........................
 
  -- Command: tts-notify-stop
@@ -5792,7 +5803,7 @@ This module defines the generic TTS interface.
 
      Stop  speech on notification stream.
 
-2.372.1.9 tts-rate-adjust
+2.373.1.9 tts-rate-adjust
 .........................
 
  -- Command: tts-rate-adjust
@@ -5805,7 +5816,7 @@ This module defines the generic TTS interface.
      C-impel-d -. Pressing =,+, or - immediately continues to adjust
      the speech rate.  Call when on a non-blank line to preview the effectt
 
-2.372.1.10 tts-recover
+2.373.1.10 tts-recover
 ......................
 
  -- Command: tts-recover
@@ -5817,14 +5828,14 @@ This module defines the generic TTS interface.
      or damaged retained records remain errors.  Other adapters use their ordinary
      recovery path.  Use ‘tts-restart’ to capture newly saved settings.
 
-2.372.1.11 tts-reset-punctuation-mode
+2.373.1.11 tts-reset-punctuation-mode
 .....................................
 
  -- Command: tts-reset-punctuation-mode
 
      Clear the buffer override and restore automatic punctuation policy.
 
-2.372.1.12 tts-reset-state
+2.373.1.12 tts-reset-state
 ..........................
 
  -- Command: tts-reset-state
@@ -5832,7 +5843,7 @@ This module defines the generic TTS interface.
 
      Reset TTS engine.
 
-2.372.1.13 tts-restart
+2.373.1.13 tts-restart
 ......................
 
  -- Command: tts-restart
@@ -5840,7 +5851,7 @@ This module defines the generic TTS interface.
 
      Restart TTS server.
 
-2.372.1.14 tts-select-server
+2.373.1.14 tts-select-server
 ............................
 
  -- Command: tts-select-server (program)
@@ -5852,7 +5863,7 @@ This module defines the generic TTS interface.
 
      (fn PROGRAM)
 
-2.372.1.15 tts-set-character-scale
+2.373.1.15 tts-set-character-scale
 ..................................
 
  -- Command: tts-set-character-scale (factor &optional prefix)
@@ -5866,7 +5877,7 @@ This module defines the generic TTS interface.
 
      (fn FACTOR &optional PREFIX)
 
-2.372.1.16 tts-set-chunk-separator-syntax
+2.373.1.16 tts-set-chunk-separator-syntax
 .........................................
 
  -- Command: tts-set-chunk-separator-syntax (s)
@@ -5877,7 +5888,7 @@ This module defines the generic TTS interface.
 
      (fn S)
 
-2.372.1.17 tts-set-language
+2.373.1.17 tts-set-language
 ...........................
 
  -- Command: tts-set-language (lang)
@@ -5890,7 +5901,7 @@ This module defines the generic TTS interface.
 
      (fn LANG)
 
-2.372.1.18 tts-set-next-language
+2.373.1.18 tts-set-next-language
 ................................
 
  -- Command: tts-set-next-language
@@ -5899,7 +5910,7 @@ This module defines the generic TTS interface.
      Switch to next legacy language.
      Signal a user error when logical voices own language routing.
 
-2.372.1.19 tts-set-predefined-rate
+2.373.1.19 tts-set-predefined-rate
 ..................................
 
  -- Command: tts-set-predefined-rate (&optional prefix)
@@ -5921,7 +5932,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.20 tts-set-preferred-language
+2.373.1.20 tts-set-preferred-language
 .....................................
 
  -- Command: tts-set-preferred-language (alias lang)
@@ -5931,7 +5942,7 @@ This module defines the generic TTS interface.
 
      (fn ALIAS LANG)
 
-2.372.1.21 tts-set-previous-language
+2.373.1.21 tts-set-previous-language
 ....................................
 
  -- Command: tts-set-previous-language
@@ -5940,7 +5951,7 @@ This module defines the generic TTS interface.
      Switch to previous legacy language.
      Signal a user error when logical voices own language routing.
 
-2.372.1.22 tts-set-punctuations
+2.373.1.22 tts-set-punctuations
 ...............................
 
  -- Command: tts-set-punctuations (mode &optional prefix)
@@ -5954,7 +5965,7 @@ This module defines the generic TTS interface.
 
      (fn MODE &optional PREFIX)
 
-2.372.1.23 tts-set-punctuations-to-all
+2.373.1.23 tts-set-punctuations-to-all
 ......................................
 
  -- Command: tts-set-punctuations-to-all (&optional prefix)
@@ -5964,7 +5975,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.24 tts-set-punctuations-to-some
+2.373.1.24 tts-set-punctuations-to-some
 .......................................
 
  -- Command: tts-set-punctuations-to-some (&optional prefix)
@@ -5974,7 +5985,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.25 tts-set-rate
+2.373.1.25 tts-set-rate
 .......................
 
  -- Command: tts-set-rate (rate &optional prefix)
@@ -5986,7 +5997,7 @@ This module defines the generic TTS interface.
 
      (fn RATE &optional PREFIX)
 
-2.372.1.26 tts-show-diagnostics
+2.373.1.26 tts-show-diagnostics
 ...............................
 
  -- Command: tts-show-diagnostics (name)
@@ -5997,7 +6008,7 @@ This module defines the generic TTS interface.
 
      (fn NAME)
 
-2.372.1.27 tts-speak-version
+2.373.1.27 tts-speak-version
 ............................
 
  -- Command: tts-speak-version
@@ -6005,7 +6016,7 @@ This module defines the generic TTS interface.
 
      Speak version.
 
-2.372.1.28 tts-stop
+2.373.1.28 tts-stop
 ...................
 
  -- Command: tts-stop (&optional all)
@@ -6019,7 +6030,7 @@ This module defines the generic TTS interface.
 
      (fn &optional ALL)
 
-2.372.1.29 tts-toggle-caps
+2.373.1.29 tts-toggle-caps
 ..........................
 
  -- Command: tts-toggle-caps (&optional prefix)
@@ -6029,7 +6040,7 @@ This module defines the generic TTS interface.
      Interactive PREFIX arg means toggle the global default
      value, and then set the current local value to the result.
 
-2.372.1.30 tts-toggle-punctuation-mode
+2.373.1.30 tts-toggle-punctuation-mode
 ......................................
 
  -- Command: tts-toggle-punctuation-mode (&optional prefix)
@@ -6040,7 +6051,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.372.1.31 tts-toggle-quiet
+2.373.1.31 tts-toggle-quiet
 ...........................
 
  -- Command: tts-toggle-quiet (&optional prefix)
@@ -6050,7 +6061,7 @@ This module defines the generic TTS interface.
      Turning on this switch silences speech.  Optional interactive
      prefix arg causes this setting to become global.
 
-2.372.1.32 tts-toggle-speak-nonprinting-chars
+2.373.1.32 tts-toggle-speak-nonprinting-chars
 .............................................
 
  -- Command: tts-toggle-speak-nonprinting-chars (&optional prefix)
@@ -6060,7 +6071,7 @@ This module defines the generic TTS interface.
      Interactive PREFIX arg means toggle the global default
      value, and then set the current local value to the result.
 
-2.372.1.33 tts-toggle-split-caps
+2.373.1.33 tts-toggle-split-caps
 ................................
 
  -- Command: tts-toggle-split-caps (&optional prefix)
@@ -6072,7 +6083,7 @@ This module defines the generic TTS interface.
      global default value, and then set the current local value to the
      result.
 
-2.372.1.34 tts-toggle-splitting-on-white-space
+2.373.1.34 tts-toggle-splitting-on-white-space
 ..............................................
 
  -- Command: tts-toggle-splitting-on-white-space
@@ -6080,7 +6091,7 @@ This module defines the generic TTS interface.
 
      Toggle splitting of speech on white space.
 
-2.372.1.35 tts-toggle-strip-octals
+2.373.1.35 tts-toggle-strip-octals
 ..................................
 
  -- Command: tts-toggle-strip-octals (&optional prefix)
@@ -6091,7 +6102,7 @@ This module defines the generic TTS interface.
       toggle the global default value, and then set the current local
      value to the result.
 
-2.372.1.36 tts-unicode-customize-char
+2.373.1.36 tts-unicode-customize-char
 .....................................
 
  -- Command: tts-unicode-customize-char (char replacement)
@@ -6102,7 +6113,7 @@ This module defines the generic TTS interface.
 
      (fn CHAR REPLACEMENT)
 
-2.372.1.37 tts-unicode-uncustomize-char
+2.373.1.37 tts-unicode-uncustomize-char
 .......................................
 
  -- Command: tts-unicode-uncustomize-char (char)
@@ -6113,7 +6124,7 @@ This module defines the generic TTS interface.
 
      (fn CHAR)
 
-2.372.2 tts-speak Options
+2.373.2 tts-speak Options
 -------------------------
 
  -- Variable: User Option emacsvox-capitalization-all-caps-tone
@@ -6374,7 +6385,7 @@ This module defines the generic TTS interface.
 
 File: emacsvox-reference.info,  Node: tts-voice-api,  Next: voice-defs,  Prev: tts-speak,  Up: Emacsvox Commands And Options
 
-2.373 tts-voice-api
+2.374 tts-voice-api
 ===================
 
 Define generic voice capabilities, inventory, configuration, selection
@@ -6388,13 +6399,13 @@ start speech processes.
 
 File: emacsvox-reference.info,  Node: voice-defs,  Next: voice-setup,  Prev: tts-voice-api,  Up: Emacsvox Commands And Options
 
-2.374 voice-defs
+2.375 voice-defs
 ================
 
 Contains just the voice definitions.  Voices are defined using the macro
 ‘defvoice’ from module voice-setup.
 
-2.374.1 An Overview Of Voice Design
+2.375.1 An Overview Of Voice Design
 -----------------------------------
 
 Aural CSS defines 4 primary device-independent dimensions.
@@ -6406,7 +6417,7 @@ possible settings.
 these dimensions to device-specific parameters and are responsible for
 generating the final device-specific codes.
 
-2.374.2 Creating Distinct Voices Via Aural CSS
+2.375.2 Creating Distinct Voices Via Aural CSS
 ----------------------------------------------
 
 Along each dimension, a setting of 5 is mapped to the default setting
@@ -6423,7 +6434,7 @@ there are 4 *overlay* voices, corresponding to the 4 dimensions; these
 each set one of the dimensions to ‘8’.  Thus, we have a total of 25
 unique voices defined in this module.
 
-2.374.3 Things to note
+2.375.3 Things to note
 ----------------------
 
    • These voices are designed to be distinctive when used in a given
@@ -6434,7 +6445,7 @@ unique voices defined in this module.
      content so that when used in context, one can easily pick-out
      distinct parts of the utterance.
 
-2.374.4 voice-defs Options
+2.375.4 voice-defs Options
 --------------------------
 
  -- Variable: User Option voice-animate-extra-settings
@@ -6640,7 +6651,7 @@ unique voices defined in this module.
 
 File: emacsvox-reference.info,  Node: voice-setup,  Next: xbacklight,  Prev: voice-defs,  Up: Emacsvox Commands And Options
 
-2.375 voice-setup
+2.376 voice-setup
 =================
 
 A voice is to audio as a font is to a visual display.  A personality is
@@ -6661,7 +6672,7 @@ mapping, and local compatibility-provider machinery.  When this minor
 mode is on, the voices of the current line are updated with every
 insertion or deletion.
 
-2.375.1 Voice-Lock And Aural CSS
+2.376.1 Voice-Lock And Aural CSS
 --------------------------------
 
 The CSS Speech Style Sheet specification defines a number of abstract
@@ -6693,10 +6704,10 @@ dectalk-voices.el and outloud-voices.el map ACSS dimensions to
 engine-specific codes.  Emacsvox modules use voice-setup-add-map when
 defining face->personality mappings.  For use from other modules.
 
-2.375.2 Voice-Setup Commands
+2.376.2 Voice-Setup Commands
 ----------------------------
 
-2.375.2.1 voice-setup-toggle-silence-personality
+2.376.2.1 voice-setup-toggle-silence-personality
 ................................................
 
  -- Command: voice-setup-toggle-silence-personality
@@ -6706,7 +6717,7 @@ defining face->personality mappings.  For use from other modules.
 
 File: emacsvox-reference.info,  Node: xbacklight,  Next: URL Templates,  Prev: voice-setup,  Up: Emacsvox Commands And Options
 
-2.376 xbacklight
+2.377 xbacklight
 ================
 
 Provide an emacs front-end to xbacklight.  This is a tool that controls
@@ -6716,38 +6727,38 @@ xbacklight
    This module is most easily used in conjunction with hydra: M-x
 package-install hydra
 
-2.376.1 Xbacklight Commands
+2.377.1 Xbacklight Commands
 ---------------------------
 
-2.376.1.1 xbacklight-black
+2.377.1.1 xbacklight-black
 ..........................
 
  -- Command: xbacklight-black
 
      Black screen.
 
-2.376.1.2 xbacklight-decrement
+2.377.1.2 xbacklight-decrement
 ..............................
 
  -- Command: xbacklight-decrement
 
      Decrease brightness.
 
-2.376.1.3 xbacklight-get
+2.377.1.3 xbacklight-get
 ........................
 
  -- Command: xbacklight-get
 
      Get  brightness level.
 
-2.376.1.4 xbacklight-increment
+2.377.1.4 xbacklight-increment
 ..............................
 
  -- Command: xbacklight-increment
 
      Increase brightness.
 
-2.376.1.5 xbacklight-set
+2.377.1.5 xbacklight-set
 ........................
 
  -- Command: xbacklight-set (brightness)
@@ -6756,7 +6767,7 @@ package-install hydra
 
      (fn BRIGHTNESS)
 
-2.376.1.6 xbacklight-white
+2.377.1.6 xbacklight-white
 ..........................
 
  -- Command: xbacklight-white
@@ -6766,7 +6777,7 @@ package-install hydra
 
 File: emacsvox-reference.info,  Node: URL Templates,  Prev: xbacklight,  Up: Emacsvox Commands And Options
 
-2.377 URL Templates
+2.378 URL Templates
 ===================
 
 This section documents a total of 66 URL Templates.
