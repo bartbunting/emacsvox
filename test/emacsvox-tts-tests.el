@@ -3490,11 +3490,11 @@
           (lambda () (push (list 'configured tts-speaker-process) events))))
       (tts-initialize))
     (should (eq tts-speaker-process 'new-speaker))
-    (should (equal (car events) '(configured new-speaker)))
+    (should (equal (cadr events) '(configured new-speaker)))
     (should
      (string-match-p
       "Notification speech server unavailable"
-      (cadr events)))))
+      (car events)))))
 
 (ert-deftest emacsvox-tts-notify-initialize-publishes-before-retirement ()
   "Notifier replacement uses common retirement after publishing its successor."

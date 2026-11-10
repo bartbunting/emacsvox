@@ -2289,6 +2289,8 @@ Signal a user error if no diagnostic buffer is available."
     process))
 
 (declare-function voice-setup "voice-setup" ())
+(declare-function omnivox--publish-prepared-main "omnivox-voices" (process))
+(defvar omnivox--control-capabilities-property)
 (defvar tts--initializing nil
   "Non-nil while full speech startup will configure both processes together.")
 
@@ -2304,18 +2306,37 @@ Signal a user error if no diagnostic buffer is available."
   (let* ((tts--initializing t)
          (omnivox--engine-startup (omnivox-library--prepare-engines))
          (new (tts-make-process "Speaker"))
-         (old-speaker tts-speaker-process) quit-data)
+         (old-speaker tts-speaker-process) prepared quit-data)
     ;; Retire the old server only after its replacement starts successfully.
     ;; If retirement is quit, the unpublished replacement still needs an owner
     ;; responsible for deleting it.
     (unwind-protect
         (progn
+          (when (and (tts--omnivox-program-p)
+                     (not (omnivox-remote-enabled-p))
+                     (not omnivox-library--birth-collector)
+                     (processp old-speaker)
+                     (tts--speech-process-usable-p old-speaker))
+            (require 'omnivox-voices)
+            ;; Only an already negotiated Omnivox adapter can prepare voices
+            ;; without changing the adapter used by current speech.  Managed
+            ;; activation retains its separate frozen two-lane preparation.
+            (when (process-get old-speaker omnivox--control-capabilities-property)
+              (omnivox--negotiate-process new)
+              (omnivox-library--wait-for-recovered-speech new)
+              (setq prepared t)))
           (when (processp old-speaker)
             (tts--retire-process old-speaker))
           (setq tts-speaker-process new)
           (omnivox-library--remember-engines new))
       (unless (eq tts-speaker-process new)
         (tts--retire-process new)))
+    (when (tts--omnivox-program-p)
+      ;; Foreground configuration must not wait for notification startup.
+      (require 'voice-setup)
+      (voice-setup)
+      (when prepared (omnivox--publish-prepared-main new))
+      (setq tts--initializing nil))
     (cond
      ((tts-multistream-p tts-program)
       (condition-case error-data
@@ -2348,8 +2369,9 @@ Signal a user error if no diagnostic buffer is available."
     (when (string-match "cloud" tts-program) ; we'll serve icons.
       (setq emacsvox-play-program nil))
     ;; `voice-setup' requires us, so we can't require it at top-level.
-    (require 'voice-setup)
-    (voice-setup)
+    (unless (tts--omnivox-program-p)
+      (require 'voice-setup)
+      (voice-setup))
     (when quit-data (signal (car quit-data) (cdr quit-data)))))
 
 (defvar tts--notification-recovery-target nil

@@ -2136,6 +2136,27 @@ taken effect on the server.  Reapply to confirm the desired configuration."
        (message "Could not negotiate Omnivox control protocol: %s"
                 (error-message-string error-data))))))
 
+(defun omnivox--publish-prepared-main (process)
+  "Publish PROCESS's already acknowledged state after foreground handover.
+Preparation keeps the old foreground current.  Promote cached observations and
+readiness hooks without repeating inventory, policy or registration requests."
+  (unless (eq process tts-speaker-process)
+    (error "Prepared speech is not the current foreground"))
+  (setq omnivox-control-capabilities
+        (process-get process omnivox--control-capabilities-property)
+        omnivox-engine-inventory
+        (process-get process omnivox--control-inventory-property)
+        omnivox-engine-inventory-time
+        (process-get process 'omnivox-inventory-received-at)
+        omnivox-routing-policy-registration
+        (copy-tree (omnivox--process-routing-registration process)))
+  (omnivox--update-unicode-preprocessing)
+  (omnivox--finish-capability-negotiation process 'ready)
+  (when-let* ((registration
+              (process-get process omnivox--control-registration-property)))
+    (omnivox--handle-registration-response process registration))
+  (run-hooks 'tts-voice-inventory-changed-hook))
+
 (defun omnivox--negotiate-processes ()
   "Negotiate capabilities on all distinct live Omnivox processes."
   (dolist (process (delete-dups (list tts-speaker-process tts-notify-process)))

@@ -332,8 +332,8 @@ No worker or output device exists until an explicit, identity-bound release."
 
 (defun omnivox-library--wait-for-recovered-speech (process)
   "Wait for PROCESS's initial voice registration, independently of other lanes.
-Only recovery calls this bounded wait; healthy speech and preference reload do
-not wait on management.  Ignore unrelated parameter queries and previews."
+Recovery and foreground handover use this bounded wait; healthy speech and
+preference reload do not wait on management.  Ignore unrelated queries and previews."
   (omnivox-library--wait
    (lambda ()
      (let ((pending (process-get process omnivox--control-pending-property)) busy)
