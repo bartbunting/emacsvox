@@ -2132,6 +2132,8 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
 (declare-function omnivox-library--owner "omnivox-library-runtime" (process))
 (declare-function omnivox-library--request "omnivox-library-runtime" (process command &optional owner))
 (declare-function omnivox-native-guard--attach "omnivox-native-guard" (process owner))
+(declare-function omnivox-native-guard--prepare-bridge "omnivox-native-guard" (process))
+(declare-function omnivox-native-guard--discard-prepared-bridge "omnivox-native-guard" (process))
 (declare-function omnivox-library--prepare-engines "omnivox-library-runtime" ())
 (declare-function omnivox-library--engine-reference "omnivox-library-runtime" (process))
 (declare-function omnivox-library--current-engine-reference "omnivox-library-runtime" ())
@@ -2248,6 +2250,13 @@ Signal a user error if no diagnostic buffer is available."
           (progn
             (when (omnivox-library--owned-p process)
               (require 'omnivox-voices)
+              ;; The waiting bridge has no descriptor or native authority.
+              ;; Start it while the owner prepares; an emergency replacement
+              ;; may already have attached its independently prepared bridge.
+              (when (and (member "--guarded" (process-command process))
+                         (not (process-get process 'omnivox-native-guard))
+                         (not (process-get process 'omnivox-native-guard-prepared-bridge)))
+                (omnivox-native-guard--prepare-bridge process))
               (let ((owner (omnivox-library--owner process)))
                 (when (or (stringp (plist-get owner :startup_error))
                           (process-get process 'omnivox-library-retired))
@@ -2272,6 +2281,8 @@ Signal a user error if no diagnostic buffer is available."
                                                        :disabled_engine_ids [])))
               (tts--initialize-output-volumes process))
             (setq configured t))
+        (when (process-get process 'omnivox-native-guard-prepared-bridge)
+          (omnivox-native-guard--discard-prepared-bridge process))
         (unless (or configured
                     (and (boundp 'omnivox-library--birth-collector) omnivox-library--birth-collector))
           (tts--retire-process process))))
