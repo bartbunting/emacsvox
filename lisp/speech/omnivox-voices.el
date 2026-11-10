@@ -1784,9 +1784,10 @@ Return the number of processes sent the atomic registry replacement."
 CALLBACK receives one terminal aggregate with a result for each distinct live
 speaker or notification process.  A process policy is acknowledged before its
 logical registry is replaced, so partial failure is explicit and retryable.
-Timeout closes the apply and discards its pending callbacks.  Late replies
-cannot advance it or confirm its outcome; changes already sent may still have
-taken effect on the server.  Reapply to confirm the desired configuration."
+Timeout closes the apply without confirming its outcome.  An already sent
+layered registration retains a bounded reply observer: a valid late acknowledgement
+updates that connection's speech snapshot, but cannot reopen the apply.
+Reapply to confirm the desired configuration after an unconfirmed change."
   (let* ((processes (omnivox--voice-configuration-processes))
          (registrations (omnivox--prepare-voice-registrations processes))
          ;; Definitions and generation belong to this apply, including callbacks
@@ -1837,19 +1838,33 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                 (remhash process pending)
                 (dolist (request requests)
                   (when (eq process (car request))
-                    (omnivox--take-control-request process (cdr request))))
+                    (let* ((identifier (cdr request))
+                           (entry (gethash identifier (omnivox--pending-requests process))))
+                      (if (and (eq (plist-get result :phase) 'timeout)
+                               (omnivox--control-request-p entry)
+                               (member (omnivox--control-request-type entry)
+                                       '("register_logical_voices_v2" "register_logical_voices_v3")))
+                          ;; The worker may already have installed this registry.
+                          ;; Dropping its reply would strand speech on an older
+                          ;; generation. Retain observation, never the apply result,
+                          ;; within the ordinary request deadline and table bound.
+                          (setf (omnivox--control-request-timer entry)
+                                (run-at-time omnivox--control-request-timeout nil
+                                             #'omnivox--control-request-expired
+                                             process identifier entry))
+                        (omnivox--take-control-request process identifier)))))
                 (setq requests (cl-delete process requests :key #'car :test #'eq))
                 (push result results)
                 (when (zerop (hash-table-count pending)) (complete))))
              (send-request
-              (process request response-function)
+              (process request response-function &optional observe-registration)
               (when (gethash process pending)
                 (condition-case error-data
                     (let ((identifier
                            (omnivox--send-control-request
                             process request
                             (lambda (owner response)
-                              (when (gethash owner pending)
+                              (when (or observe-registration (gethash owner pending))
                                 (if (and (process-live-p owner)
                                          (memq owner (list tts-speaker-process
                                                            tts-notify-process)))
@@ -1864,7 +1879,15 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                       ;; before the request identifier is returned to us.
                       (if (gethash process pending)
                           (push (cons process identifier) requests)
-                        (omnivox--take-control-request process identifier)))
+                        (let ((entry (gethash identifier (omnivox--pending-requests process))))
+                          ;; A timeout can run inside the write, before REQUESTS
+                          ;; contains this ID. Give that observer the same bound.
+                          (if (and observe-registration (omnivox--control-request-p entry))
+                              (setf (omnivox--control-request-timer entry)
+                                    (run-at-time omnivox--control-request-timeout nil
+                                                 #'omnivox--control-request-expired
+                                                 process identifier entry))
+                            (omnivox--take-control-request process identifier)))))
                   (error
                    (finish
                     process
@@ -1887,18 +1910,21 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                       :registration
                       (copy-tree (if (member (plist-get response :type) '("logical_voices_registered_v2" "logical_voices_registered_v3"))
                                      response (plist-get response :registration))))))
-                (omnivox--record-control-error process response)
-                (finish
-                 process
-                 (omnivox--voice-configuration-result
-                  process 'failed :phase 'logical-registration
-                  :response (copy-tree response)))))
+                (when (gethash process pending)
+                  (omnivox--record-control-error process response)
+                  (finish
+                   process
+                   (omnivox--voice-configuration-result
+                    process 'failed :phase 'logical-registration
+                    :response (copy-tree response))))))
              (register
               (process)
               (send-request
                process
                (omnivox--registration-request generation (cdr (assq process registrations)))
-               #'registration-response))
+               #'registration-response
+               (member (plist-get (cdr (assq process registrations)) :type)
+                       '("register_logical_voices_v2" "register_logical_voices_v3"))))
              (policy-response
               (process response)
               (if (equal (plist-get response :type)

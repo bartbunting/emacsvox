@@ -195,6 +195,16 @@ an editor operation applied until its policy and definition acknowledgements
 belong to the same current operation on every required lane. After reconnect,
 register current content anew; never replay previously admitted speech.
 
+A configuration timeout is terminal for that editor operation. If its version-2
+or version-3 registry request was already sent, retain the acknowledgement observer for
+the ordinary control-request deadline (currently 30 additional seconds), within
+the existing per-process request limit. A valid late reply can update that
+live connection's frozen speech snapshot without changing the failed operation
+result. Validate the original process, generation and content; never replace a
+newer snapshot. A late policy reply cannot start a registration. Expiry or
+process exit releases the observer. A reply lost beyond this bound still
+requires explicit reapply or speech recovery.
+
 * Timeline version 4
 
 The envelope requires =protocol_version=, =generation=, =dispatch_id=,

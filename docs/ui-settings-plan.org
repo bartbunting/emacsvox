@@ -4317,6 +4317,19 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-11-10, experimental desktop startup could strand foreground speech after
+  a voice configuration timeout. The worker installed a newer registry while
+  Emacs discarded its delayed acknowledgement; subsequent speech retained the
+  old generation and was rejected. Switching engines registered the voices
+  again and restored speech. Implemented: retain bounded registration-reply
+  observation after the editor operation times out, without reopening its
+  result. Native startup and malformed, obsolete and replaced-lane evidence
+  have regression coverage. The private launcher also needed a private HOME:
+  its compiled settings defaults otherwise read the normal saved palette and
+  routing files. Listening acceptance remains pending; the running working
+  session was left intact. Evidence is in the paired Omnivox report
+  =docs/benchmarks/2026-11-10-foreground-registration.md=.
+
 - 2026-10-23, Agent Shell browse-mode word movement stops at live input.
   In the =ursys-reporting-front-end= shell, main speech requests
   =14358–14361= at 19:31:37 Sydney time each contain "Codex greater than".
