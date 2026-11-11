@@ -20,7 +20,7 @@ and changes to when integrations load are separate work.
 
 The original investigation baseline was =master= at =b8ccb8d6c=. The
 implementation baseline is =98b3263ea=. The existing changes to
-[[file:ui-settings-plan.org][the UI settings plan]] are independent work and must be preserved.
+[[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org][the UI settings plan at the retained revision]] were independent work and were preserved.
 Recheck the inventory and active development branches before implementation;
 the counts and examples below describe this investigation, not a permanent
 module manifest.

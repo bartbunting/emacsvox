@@ -5,8 +5,8 @@
 * Status and scope
 
 The design audit and adapter work are committed as =caba80207=. Slices 3–6
-of the [[file:../ui-settings-plan.org::table-reading-consolidation][table reading plan]] are implemented and automatically verified on
-2026-10-18. Listening acceptance remains open. The initial
+of the [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L2384][table reading plan in Git]] are implemented and automatically verified on
+2026-10-18. The [[file:../ui-settings-plan.org::table-reading-consolidation][active UI plan]] tracks outstanding settings acceptance. The initial
 behaviour and inspected live-session identities below are historical audit
 evidence; implementation checks use isolated fresh Emacs processes.
 
@@ -327,14 +327,14 @@ keys. CSV and spreadsheet interfaces remain outside this contract.
 
 The maintained common table guide owns preferences, scopes and activation;
 the Agent Shell guide explains native-key and rendered-cell exceptions.
-Info node names remain stable. Automated verification and listening acceptance
-are recorded separately in the living plan.
+Info node names remain stable. The [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L2656][implementation checkpoint in Git]] records automated
+verification and the listening acceptance outstanding at that revision.
 
 Final checks pass 74 compiled batch and 80 compiled graphical table cases,
 673 batch and 11 graphical pinned integration cases, and the 72-case settings
 menu run. The final context-copy correction also passes its three graphical
 menu regressions. A clean selected-Emacs rebuild, byte-code preflight, headers
 and documentation release gate pass. The broad batch suite retains exactly
-the same 15 failure names as =caba80207=; see the living plan for counts and
+the same 15 failure names as =caba80207=; see that checkpoint for counts and
 evidence. Graphical/native-service skips and listening acceptance are separate
 from these passing automated checks.

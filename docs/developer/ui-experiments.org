@@ -12,7 +12,7 @@ Dedicated editors and =M-x emacsvox-aural= remain available.
 
 The sections below preserve the prototype's research and implementation history.
 Earlier Home routes and open listening checks describe those checkpoints; the
-[[file:../ui-settings-plan.org][living settings plan]] owns current status and remaining work.
+[[file:../ui-settings-plan.org][active UI plan]] owns current priorities and outstanding acceptance tasks.
 
 The original proposal for the =ui-experiments= branch was to replace
 the =C-e H= Aural Home menu with a Transient. The first implementation adds
@@ -22,7 +22,7 @@ indentation tone volume. Sounds and output adds the five existing global
 volume controls and the sound-pack browser. Speech settings now includes
 rate, punctuation, and explicit default saving. The remaining action coverage
 and broader settings work are tracked in the
-[[file:../ui-settings-plan.org][living settings and voice interface plan]].
+[[file:../ui-settings-plan.org][active UI plan]].
 
 The aim is to make settings and actions easier to discover through familiar
 Emacs interactions, with concise speech and direct shortcuts. Feedback from
@@ -412,5 +412,6 @@ Emacs 31.0.90 with bundled and installed Transient. They cover return paths,
 retained filters and drafts, explicit saving, adjustment bounds, cancelled
 input, changed-scope rejection, comparison, and preview stopping. Browser
 interaction was accepted on 2026-10-14. The automated tuner checks capture
-speech and preview requests; a complete listening and restart task remains
-open in the [[file:../ui-settings-plan.org][living plan]].
+speech and preview requests. The later [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L1638][voice-workflow checkpoint in Git]] records
+listening acceptance on 2026-10-15. The [[file:../ui-settings-plan.org][active UI plan]] tracks the separate
+follow-up to the later menu organisation.

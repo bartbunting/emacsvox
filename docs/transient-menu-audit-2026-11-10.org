@@ -20,7 +20,7 @@ acceptance. Changes to menu wording need a short listening check of their own.
 * Baseline and evidence
 
 The source baseline is =fb916e4f3=. The pre-existing edit to the tree listening
-record in =ui-settings-plan.org= is preserved. All 29 ADRs, the editorial guide,
+record is retained in the [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L66][settings-plan history in Git]]. All 29 ADRs, the editorial guide,
 the settings plan, relevant manual sections and existing menu tests were read.
 
 Verification uses Emacs 31.0.90 selected by =local.mk=. Initial

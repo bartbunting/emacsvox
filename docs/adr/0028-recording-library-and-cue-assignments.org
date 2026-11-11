@@ -4,8 +4,9 @@
 
 * Status
 
-Accepted on 2026-10-17. Implementation and listening checkpoints are tracked
-separately in [[file:../ui-settings-plan.org][the settings plan]].
+Accepted on 2026-10-17. The [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L1109][recording-library checkpoint in Git]] retains implementation
+and listening evidence. Outstanding acceptance belongs in the
+[[file:../ui-settings-plan.org][active UI plan]].
 
 * Decision
 

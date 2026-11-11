@@ -106,7 +106,7 @@ passes in isolation; that result does not establish complete suite isolation.
 
 The main Muggles menu label and settings-search description still call all
 entries navigation menus, despite the editing entries. This discovery issue
-and the stale assertion are recorded in [[file:../ui-settings-plan.org][the settings plan]]. No separate
+and the stale assertion are recorded in [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org][the settings-plan history in Git]]. No separate
 runtime defect was established during this pass.
 
 No listening session, native Windows or macOS installation, live remote-speech

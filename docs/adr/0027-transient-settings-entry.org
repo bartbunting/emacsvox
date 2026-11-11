@@ -86,4 +86,4 @@ diagnostics Enter action. Automated checks cover all former action destinations,
 captured context, editor return, retained drafts, and menu Help without a Home
 entry. Compile and test in separate Emacs 30.2 and normal-toolchain checkouts;
 record exact loaded Transient versions. Automated speech capture does not
-establish acoustic results. The living settings plan records the final checks.
+establish acoustic results. The [[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L3438][retirement checkpoint in Git]] records the final checks.

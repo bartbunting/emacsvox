@@ -25,11 +25,12 @@
 - Use `rg` and bounded reads. Parallelize independent inspections; serialize
   edits, compilation, generated-file updates, and checks that consume their
   results. Do not silently fix unrelated findings.
-- For UI and settings work, maintain the living plan in
-  [docs/ui-settings-plan.org](docs/ui-settings-plan.org). Add newly discovered
-  settings, cues, missing actions, and interaction issues to its inventory or
-  findings queue. Keep proposed work, implementation, listening acceptance,
-  and commits distinct; update it at meaningful findings and checkpoints.
+- Update [docs/ui-settings-plan.org](docs/ui-settings-plan.org) only when work
+  changes an active UI milestone, unresolved design decision, settings coverage
+  gap, or outstanding acceptance task. Keep entries concise and link to existing
+  issues or design documents. Do not duplicate routine bug-fix history, test
+  logs, commits, or live-session reload details. Remove completed items once
+  their durable outcome is recorded elsewhere; Git retains the history.
 
 ## Writing style
 
