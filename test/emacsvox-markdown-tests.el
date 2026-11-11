@@ -81,8 +81,7 @@
         '(original
           (submission
            "x"
-           (:role markdown-content :events (object-changed)
-            :edit-operation deletion)
+           (:role markdown-content :edit-operation deletion)
            edit)))))))
 
 (ert-deftest emacsvox-markdown-delete-no-op-stays-silent ()
@@ -100,6 +99,110 @@
           (emacsvox--advice-markdown-outdent-or-delete-around
            (lambda () 'unchanged)))))
       (should-not submissions))))
+
+(defun emacsvox-markdown-test--backspace (count)
+  "Press Markdown backspace COUNT times and capture native presentations."
+  (let (presentations)
+    (cl-letf
+        (((symbol-function 'tts-speak)
+          (lambda (text)
+            (push
+             (list :text (substring-no-properties text)
+                   :cues (emacsvox-markdown-test--compatibility-cues
+                          emacsvox-aural-submission-facts 'edit)
+                   :operation (plist-get emacsvox-aural-submission-facts
+                                         :edit-operation)
+                   :delivery emacsvox-aural-submission-delivery-policy
+                   :interruption emacsvox-aural-submission-interruption-policy
+                   :lane emacsvox-aural-submission-lane
+                   :key emacsvox-aural-submission-replacement-key)
+             presentations))))
+      (dotimes (_ count)
+        (call-interactively (key-binding (kbd "DEL")))))
+    (nreverse presentations)))
+
+(ert-deftest emacsvox-markdown-backspace-ordinary-spaces ()
+  "Internal and trailing spaces are deletions, not structural movement."
+  (dolist (text '("Test test" "Test "))
+    (with-temp-buffer
+      (markdown-mode)
+      (insert text)
+      (goto-char 6)
+      (let ((presentations (emacsvox-markdown-test--backspace 1)))
+        (should (equal (buffer-string) (concat "Test" (substring text 5))))
+        (should (= (length presentations) 1))
+        (should (equal (plist-get (car presentations) :text) "space"))
+        (should-not (memq 'large-movement (plist-get (car presentations) :cues)))
+        (should (eq (plist-get (car presentations) :operation) 'deletion))))))
+
+(ert-deftest emacsvox-markdown-backspace-real-outdent ()
+  "Deleting a whole indentation level keeps structural outdent feedback."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "    Test")
+    (goto-char 5)
+    (let ((presentations (emacsvox-markdown-test--backspace 1)))
+      (should (equal (buffer-string) "Test"))
+      (should (= (length presentations) 1))
+      (should (equal (plist-get (car presentations) :text) "Outdented"))
+      (should (memq 'large-movement (plist-get (car presentations) :cues))))))
+
+(ert-deftest emacsvox-markdown-backspace-inside-indentation ()
+  "Deleting within leading whitespace does not claim a whole outdent."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "    Test")
+    (goto-char 3)
+    (let ((presentations (emacsvox-markdown-test--backspace 1)))
+      (should (equal (buffer-string) "   Test"))
+      (should (equal (plist-get (car presentations) :text) "space"))
+      (should-not (memq 'large-movement (plist-get (car presentations) :cues))))))
+
+(ert-deftest emacsvox-markdown-backspace-replaces-stale-feedback ()
+  "Repeated backspaces interrupt old main speech and replace pending feedback."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "Test test")
+    (let ((presentations (emacsvox-markdown-test--backspace 5)))
+      (should (equal (buffer-string) "Test"))
+      (should (equal (mapcar (lambda (p) (plist-get p :text)) presentations)
+                     '("t" "s" "e" "t" "space")))
+      (dolist (presentation presentations)
+        (should (eq (plist-get presentation :delivery) 'replaceable))
+        (should (eq (plist-get presentation :interruption) 'lane))
+        (should (eq (plist-get presentation :lane) 'main))
+        (should (plist-get presentation :key))
+        (should (equal (plist-get presentation :key)
+                       (plist-get (car presentations) :key)))))))
+
+(ert-deftest emacsvox-markdown-backspace-preserves-selection-deletion ()
+  "An active selection is deleted once and described as a selection."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "Test test")
+    (goto-char 6)
+    (push-mark (point-max) t t)
+    (let* ((transient-mark-mode t)
+           (delete-active-region t)
+           (presentations (emacsvox-markdown-test--backspace 1)))
+      (should (equal (buffer-string) "Test "))
+      (should (= (length presentations) 1))
+      (should (equal (plist-get (car presentations) :text) "Deleted selection")))))
+
+(ert-deftest emacsvox-markdown-backspace-policy-does-not-leak ()
+  "Backspace replacement does not change subsequent structural edits."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "Test test")
+    (emacsvox-markdown-test--backspace 1)
+    (let (presentation)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (_text)
+                   (setq presentation
+                         (list emacsvox-aural-submission-delivery-policy
+                               emacsvox-aural-submission-interruption-policy)))))
+        (call-interactively #'markdown-insert-bold))
+      (should (equal presentation '(ordered none))))))
 
 (ert-deftest emacsvox-markdown-aural-vocabulary-is-registered ()
   "Markdown roles, attributes, states, and events are available at startup."

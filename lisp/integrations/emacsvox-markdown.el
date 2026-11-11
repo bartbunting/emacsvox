@@ -638,6 +638,10 @@ When reading mode is active, strip markup from speech."
      (if (not (ems-interactive-p ',target))
          (apply original arguments)
        (let* ((region (use-region-p))
+              (indentation (current-indentation))
+              (at-indentation
+               (and (not region) (> indentation 0)
+                    (= (current-column) indentation)))
               (character
                (and
                 (not region)
@@ -646,16 +650,24 @@ When reading mode is active, strip markup from speech."
               (modified-tick (buffer-chars-modified-tick))
               (result (apply original arguments)))
          (when (/= modified-tick (buffer-chars-modified-tick))
-           (emacsvox-markdown--submit-text
-            (cond
-             (region "Deleted selection")
-             ((memq character '(?\s ?\t)) "Outdented")
-             (character (char-to-string character))
-             (t "Deleted text"))
-            (emacsvox-markdown--merge-facts
-             (emacsvox-markdown-facts-at-point 'object-changed)
-             '(:edit-operation deletion))
-            'edit))
+           (let ((outdented
+                  (and at-indentation (< (current-indentation) indentation)))
+                 (emacsvox-aural-submission-lane 'main)
+                 (emacsvox-aural-submission-delivery-policy 'replaceable)
+                 (emacsvox-aural-submission-replacement-key 'markdown-backspace)
+                 (emacsvox-aural-submission-interruption-policy 'lane))
+             (emacsvox-markdown--submit-text
+              (cond
+               (region "Deleted selection")
+               (outdented "Outdented")
+               ((memq character '(?\s ?\t)) (tts-char-to-speech character))
+               (character (char-to-string character))
+               (t "Deleted text"))
+              (emacsvox-markdown--merge-facts
+               (emacsvox-markdown-facts-at-point
+                (and outdented 'object-changed))
+               '(:edit-operation deletion))
+              'edit)))
          result))))
  (push (list target :around advice-function) emacsvox-markdown--advice))
 
