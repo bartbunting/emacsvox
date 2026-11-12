@@ -122,5 +122,104 @@
      (should (= (length (plist-get (car new) :spans)) 2))
      (should (equal (plist-get (gethash 2 (nth 2 new)) :voice-provenance) '((richness . second)))))))
 
+(defun omnivox-choice-timeline-test--assembly-fixture (version)
+  "Return complete wire, bindings and span index for a fixed VERSION fixture.
+This covers Unicode positions, coalescing, suppressed content, boundary speech,
+effects, omitted cues and interleaved resource resolution."
+  (omnivox-test--with-choice-registration
+   (let* ((snapshot (when (> version 3)
+                      (plist-put (omnivox-choice-timeline-test--registration speaker)
+                                 :timeline-version version)))
+          (runs (list (omnivox-choice-timeline-test--run 'bolden nil nil "café ")
+                      (omnivox-choice-timeline-test--run 'bolden nil nil "日本")
+                      (omnivox-choice-timeline-test--run 'unrelated '(:gain 0) nil "hidden")
+                      (omnivox-choice-timeline-test--run 'unrelated '(:gain 0) nil "élast")))
+          (silent (car (nth 2 runs)))
+          (last (car (nth 3 runs)))
+          (emacsvox-aural-submission-delivery-policy 'ordered)
+          (emacsvox-aural-submission-replacement-key nil))
+     (setf (emacsvox-aural-concrete-content-speak (emacsvox-aural-concrete-plan-content silent)) nil
+           (emacsvox-aural-concrete-plan-before silent)
+           (list (emacsvox-aural--make-concrete-action :kind 'pause :duration 9 :id 'quiet))
+           (emacsvox-aural-concrete-plan-context last) '(:icons-enabled t)
+           (emacsvox-aural-concrete-plan-before last)
+           (list (emacsvox-aural--make-concrete-action :kind 'cue :resource "/fixture/cue.ogg" :id 'cue))
+           (emacsvox-aural-concrete-plan-after last)
+           (list (emacsvox-aural--make-concrete-action :kind 'speech :text "after" :voice-request 'bolden :id 'after)))
+     (setcdr (nthcdr 2 (nth 3 runs))
+             (list (list (list :utf8-offset 2 :actions
+                               (list (emacsvox-aural--make-concrete-positioned-action
+                                      :action (emacsvox-aural--make-concrete-action
+                                               :kind 'pause :duration 4 :id 'positioned)
+                                      :context '(:icons-enabled nil)))))))
+     (cl-letf (((symbol-function 'omnivox-remote-resource)
+                (lambda (_path)
+                  (setq emacsvox-aural-submission-delivery-policy 'replaceable
+                        emacsvox-aural-submission-replacement-key 'resolved)
+                  "resource:fixture/cue.ogg")))
+       (let ((built (emacsvox-aural--build-structured-timeline 12 987 runs snapshot)))
+         (list (emacsvox-aural--frame-structured-timeline (car built))
+               (cadr built) (nth 2 built)))))))
+
+(defun omnivox-choice-timeline-test--data (value)
+  "Express VALUE's hash tables as comparable data, preserving vector types."
+  (cond ((hash-table-p value)
+         (let (pairs)
+           (maphash (lambda (key item)
+                      (push (cons key (omnivox-choice-timeline-test--data item)) pairs)) value)
+           (list 'hash-table (hash-table-test value)
+                 (sort pairs (lambda (a b) (string< (prin1-to-string (car a)) (prin1-to-string (car b))))))))
+        ((consp value) (cons (omnivox-choice-timeline-test--data (car value))
+                            (omnivox-choice-timeline-test--data (cdr value))))
+        ((vectorp value) (vconcat (mapcar #'omnivox-choice-timeline-test--data value)))
+        (t value)))
+
+(ert-deftest omnivox-choice-timeline-assembly-preserves-complete-baseline ()
+  :tags '(delivery-preparation)
+  (let ((read-eval nil)
+        (file (expand-file-name "fixtures/delivery-assembly.eld"
+                                (file-name-directory (symbol-file 'omnivox-choice-timeline-test--assembly-fixture)))))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (let ((fixtures (read (current-buffer))))
+        (dolist (fixture fixtures)
+          (should (equal (omnivox-choice-timeline-test--data (cdr fixture))
+                         (omnivox-choice-timeline-test--data
+                          (omnivox-choice-timeline-test--assembly-fixture (car fixture))))))))))
+
+(ert-deftest omnivox-choice-timeline-assembly-replays-explicit-inputs-without-live-reads ()
+  :tags '(delivery-preparation)
+  (dolist (version '(3 4 5 6 7))
+    (let (operations expected)
+      (let ((span (symbol-function 'emacsvox-aural--assembly-span))
+            (action (symbol-function 'emacsvox-aural--assembly-action))
+            (id (symbol-function 'emacsvox-aural--assembly-id))
+            (finish (symbol-function 'emacsvox-aural--assembly-finish)))
+        (cl-labels ((record (name original assembly args)
+                      (push (cons name (tts--dispatch-copy-data args)) operations)
+                      (apply original assembly args)))
+          (cl-letf (((symbol-function 'emacsvox-aural--assembly-span)
+                     (lambda (state &rest args) (record 'emacsvox-aural--assembly-span span state args)))
+                    ((symbol-function 'emacsvox-aural--assembly-action)
+                     (lambda (state &rest args) (record 'emacsvox-aural--assembly-action action state args)))
+                    ((symbol-function 'emacsvox-aural--assembly-id)
+                     (lambda (state &rest args) (record 'emacsvox-aural--assembly-id id state args)))
+                    ((symbol-function 'emacsvox-aural--assembly-finish)
+                     (lambda (state &rest args) (record 'emacsvox-aural--assembly-finish finish state args))))
+            (setq expected (omnivox-choice-timeline-test--assembly-fixture version)))))
+      (let ((state (emacsvox-aural--make-assembly
+                    :span-contexts (and (> version 3) (make-hash-table :test #'eql)))) built)
+        (cl-letf (((symbol-function 'process-get) (lambda (&rest _) (error "Live process read")))
+                  ((symbol-function 'omnivox-remote-resource) (lambda (&rest _) (error "Resource read")))
+                  ((symbol-function 'emacsvox-aural-icons-enabled-p) (lambda (&rest _) (error "Buffer read")))
+                  ((symbol-function 'emacsvox-aural--timeline-rate-offset) (lambda (&rest _) (error "Capability read")))
+                  ((symbol-function 'emacsvox-aural--timeline-delivery-fields) (lambda (&rest _) (error "Policy read"))))
+          (dolist (operation (nreverse operations))
+            (setq built (apply (car operation) state (cdr operation)))))
+        (should (equal (omnivox-choice-timeline-test--data expected)
+                       (omnivox-choice-timeline-test--data
+                        (list (emacsvox-aural--frame-structured-timeline (car built))
+                              (cadr built) (nth 2 built)))))))))
+
 (provide 'omnivox-choice-timeline-tests)
 ;;; omnivox-choice-timeline-tests.el ends here

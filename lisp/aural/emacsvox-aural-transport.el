@@ -95,9 +95,6 @@
 (declare-function omnivox--choice-string "omnivox-choice-codec" (value maximum &optional nullable empty))
 (declare-function omnivox--choice-unsigned "omnivox-choice-codec" (value &optional maximum positive))
 
-(defvar emacsvox-aural--layered-projection-p nil
-  "Non-nil while coalescing spans that retain contextual provenance.")
-
 (defvar emacsvox-aural--queued-run-leading-pause nil
   "Leading pause retained while queueing one concrete formatting run.")
 
@@ -1503,12 +1500,12 @@ Nil POLICY means ordered delivery.  Only replaceable delivery uses the key."
    (emacsvox-aural-concrete-content-voice-command content)
    (emacsvox-aural-concrete-content-balance content)))
 
-(defun emacsvox-aural--structured-content-transport-key (content)
-  "Return the structured speech settings that distinguish CONTENT."
+(defun emacsvox-aural--structured-content-transport-key (content layered)
+  "Return settings distinguishing CONTENT, including provenance when LAYERED."
   (list
    (emacsvox-aural-concrete-content-speak content)
    (emacsvox-aural-concrete-content-voice-request content)
-   (and emacsvox-aural--layered-projection-p
+   (and layered
         (emacsvox-aural-concrete-content-voice-provenance content))
    (emacsvox-aural-concrete-content-voice-style content)
    (emacsvox-aural-concrete-content-voice-command content)
@@ -1542,20 +1539,21 @@ Nil POLICY means ordered delivery.  Only replaceable delivery uses the key."
        (null (emacsvox-aural-concrete-plan-after left-plan))
        (null (emacsvox-aural-concrete-plan-before right-plan))))))
 
-(defun emacsvox-aural--coalescible-structured-runs-p (left right)
-  "Return non-nil when structured runs LEFT and RIGHT can share one span."
+(defun emacsvox-aural--coalescible-structured-runs-p (left right layered)
+  "Whether LEFT and RIGHT share a span under explicit LAYERED projection."
   (and
    (emacsvox-aural--coalescible-concrete-run-boundary-p left right)
    (pcase-let ((`(,left-plan . ,_) left)
                (`(,right-plan . ,_) right))
      (equal
       (emacsvox-aural--structured-content-transport-key
-       (emacsvox-aural-concrete-plan-content left-plan))
+       (emacsvox-aural-concrete-plan-content left-plan) layered)
       (emacsvox-aural--structured-content-transport-key
-       (emacsvox-aural-concrete-plan-content right-plan))))))
+       (emacsvox-aural-concrete-plan-content right-plan) layered)))))
 
-(defun emacsvox-aural--coalesce-structured-runs (runs)
-  "Join wire-equivalent RUNS while retaining their outer plan boundaries.
+(defun emacsvox-aural--coalesce-structured-runs (runs layered)
+  "Join wire-equivalent RUNS for explicit LAYERED projection.
+Retain outer plan boundaries.
 
 A joined run carries its last plan as a private fifth element so timeline
 construction can retain that plan's trailing actions and context."
@@ -1583,12 +1581,64 @@ construction can retain that plan's trailing actions and context."
         (unless
             (and
              previous
-             (emacsvox-aural--coalescible-structured-runs-p previous run))
+             (emacsvox-aural--coalescible-structured-runs-p previous run layered))
           (flush))
         (push run group)
         (setq previous run))
       (flush))
     (nreverse coalesced)))
+
+(cl-defstruct (emacsvox-aural--assembly (:constructor emacsvox-aural--make-assembly))
+  "Owned timeline data accumulated without live reads or effects."
+  (span-sequence 0) (action-sequence 0) active-effects spans actions bindings span-contexts)
+
+(defun emacsvox-aural--assembly-id (assembly prefix)
+  "Allocate the next action identifier in ASSEMBLY using PREFIX."
+  (format "%s.%d" prefix (cl-incf (emacsvox-aural--assembly-action-sequence assembly))))
+
+(defun emacsvox-aural--assembly-action (assembly id position lifecycle fields semantic)
+  "Place resolved action FIELDS and SEMANTIC in ASSEMBLY at POSITION.
+ID and LIFECYCLE are explicit; this function never resolves resources."
+  (push (append (list :id id :position position :lifecycle_anchor lifecycle) fields)
+        (emacsvox-aural--assembly-actions assembly))
+  (when semantic
+    (push (cons id (copy-tree semantic)) (emacsvox-aural--assembly-bindings assembly))))
+
+(defun emacsvox-aural--assembly-span
+    (assembly text logical layered acss effects rate-offset provenance)
+  "Append resolved span data to ASSEMBLY and return its identifier.
+TEXT, LOGICAL, LAYERED, ACSS, EFFECTS, RATE-OFFSET and PROVENANCE are values
+captured by the coordinator.  No adapter or process state is consulted."
+  (let ((id (cl-incf (emacsvox-aural--assembly-span-sequence assembly)))
+        (contexts (emacsvox-aural--assembly-span-contexts assembly)))
+    (if layered
+        (progn
+          (setf (emacsvox-aural--assembly-active-effects assembly) nil)
+          (push (list :mode (if (eq (plist-get (cadr layered) :mode) 'engine-layered)
+                               "engine_layered" "layered")
+                      :span (append (list :id id :text text) (car layered)))
+                (emacsvox-aural--assembly-spans assembly))
+          (puthash id (append (cadr layered) (list :voice-provenance (copy-tree provenance))) contexts))
+      (let* ((transition (emacsvox-aural--timeline-effect-transition
+                          (emacsvox-aural--assembly-active-effects assembly) effects id))
+             (span (append (list :id id :text text :logical_voice_id (or logical :null)
+                                 :acss acss :effects (car transition))
+                           (when rate-offset (list :rate_offset rate-offset)))))
+        (setf (emacsvox-aural--assembly-active-effects assembly) (cdr transition))
+        (push (if contexts (list :mode "legacy" :span span) span)
+              (emacsvox-aural--assembly-spans assembly))
+        (when contexts (puthash id (list :mode 'legacy :logical-id logical) contexts))))
+    id))
+
+(defun emacsvox-aural--assembly-finish (assembly header delivery)
+  "Consume ASSEMBLY, returning its document, bindings and span index.
+HEADER and DELIVERY contain explicit protocol identity and policy fields."
+  (when (emacsvox-aural--assembly-spans assembly)
+    (list (append header delivery
+                  (list :spans (vconcat (nreverse (emacsvox-aural--assembly-spans assembly)))
+                        :actions (vconcat (nreverse (emacsvox-aural--assembly-actions assembly)))))
+          (nreverse (emacsvox-aural--assembly-bindings assembly))
+          (emacsvox-aural--assembly-span-contexts assembly))))
 
 (defun emacsvox-aural--build-structured-timeline
     (generation dispatch-id runs &optional registration)
@@ -1597,36 +1647,13 @@ REGISTRATION selects versions 4 through 7 using its frozen acknowledged
 definitions.
 Return envelope, opaque semantic bindings and a compact span index, or nil
 when the recorded plans have no speech span and require legacy lowering."
-  (let ((span-sequence 0)
-        (emacsvox-aural--layered-projection-p (and registration t))
-        (action-sequence 0)
-        active-effects spans actions bindings deferred-actions unsupported
-        (span-contexts (and registration (make-hash-table :test #'eql))))
+  (let ((assembly (emacsvox-aural--make-assembly
+                   :span-contexts (and registration (make-hash-table :test #'eql))))
+        deferred-actions)
     (cl-labels
-        ((wire-id
-           (prefix)
-           (format "%s.%d" prefix (cl-incf action-sequence)))
-         (effect-directive
-           (style balance)
-           (let* ((effects
-                   (emacsvox-aural--timeline-style-effects style balance))
-                  (transition
-                   (emacsvox-aural--timeline-effect-transition
-                    active-effects effects span-sequence)))
-             (setq active-effects (cdr transition))
-             (car transition)))
-         (add-wire-action
-           (wire-id position lifecycle fields semantic-value)
-           (push
-            (append
-             (list
-              :id wire-id
-              :position position
-              :lifecycle_anchor lifecycle)
-             fields)
-            actions)
-           (when semantic-value
-             (push (cons wire-id (copy-tree semantic-value)) bindings)))
+        ((wire-id (prefix) (emacsvox-aural--assembly-id assembly prefix))
+         (add-wire-action (id position lifecycle fields semantic)
+           (emacsvox-aural--assembly-action assembly id position lifecycle fields semantic))
          (add-action
            (action span-id affinity context &optional explicit-position)
            (let* ((position
@@ -1720,25 +1747,15 @@ when the recorded plans have no speech span and require legacy lowering."
                (add-action (car entry) span-id affinity (cdr entry)))))
          (add-span
            (text request style command balance lifecycle pending provenance)
-           (let* ((span-id (cl-incf span-sequence))
-                  (logical (emacsvox-aural--timeline-logical-voice command request))
+           (let* ((logical (emacsvox-aural--timeline-logical-voice command request))
                   (layered (and registration
                                 (omnivox--choice-span-projection registration logical request balance)))
-                  (rate-offset (emacsvox-aural--timeline-rate-offset style)))
-             (if layered
-                 (progn
-                   (setq active-effects nil)
-                   (push (list :mode (if (eq (plist-get (cadr layered) :mode) 'engine-layered) "engine_layered" "layered")
-                               :span (append (list :id span-id :text text) (car layered))) spans)
-                   (puthash span-id (append (cadr layered) (list :voice-provenance (copy-tree provenance))) span-contexts))
-               (let ((span (append
-                            (list :id span-id :text text :logical_voice_id (or logical :null)
-                                  :acss (emacsvox-aural--timeline-style-acss style)
-                                  :effects (effect-directive style balance))
-                            (when rate-offset (list :rate_offset rate-offset)))))
-                 (push (if registration (list :mode "legacy" :span span) span) spans)
-                 (when registration
-                   (puthash span-id (list :mode 'legacy :logical-id logical) span-contexts))))
+                  (rate-offset (emacsvox-aural--timeline-rate-offset style))
+                  (span-id (emacsvox-aural--assembly-span
+                            assembly text logical layered
+                            (unless layered (emacsvox-aural--timeline-style-acss style))
+                            (unless layered (emacsvox-aural--timeline-style-effects style balance))
+                            rate-offset provenance)))
              (add-pending (append deferred-actions pending) span-id 'before)
              (setq deferred-actions nil)
              (when lifecycle
@@ -1758,7 +1775,7 @@ when the recorded plans have no speech span and require legacy lowering."
             (not
              (string-empty-p
               (emacsvox-aural-concrete-action-text action))))))
-      (dolist (run (emacsvox-aural--coalesce-structured-runs runs))
+      (dolist (run (emacsvox-aural--coalesce-structured-runs runs (and registration t)))
         (pcase-let* ((`(,plan ,text ,pause . ,extra) run)
                      (positioned-actions (car extra))
                      (after-plan (or (cadr extra) plan))
@@ -1834,25 +1851,17 @@ when the recorded plans have no speech span and require legacy lowering."
               ;; last span instead.  Output-free runs need no representation.
               (setq deferred-actions (append deferred-actions pending))
             (add-pending pending last-span 'after))))
-      (if spans
-          (add-pending deferred-actions span-sequence 'after)
-        (setq unsupported t)))
-    (unless unsupported
-      (list
-       (append
-        (list
-         :protocol_version (if registration (omnivox--choice-registration-version registration)
-                             emacsvox-aural--structured-timeline-version)
-         :generation generation
-         :dispatch_id dispatch-id)
-        (when registration
-          (list :registry_generation (plist-get registration :registry-generation)))
-        (emacsvox-aural--timeline-delivery-fields)
-        (list
-         :spans (vconcat (nreverse spans))
-         :actions (vconcat (nreverse actions))))
-       (nreverse bindings)
-       span-contexts))))
+      (when (emacsvox-aural--assembly-spans assembly)
+        (add-pending deferred-actions (emacsvox-aural--assembly-span-sequence assembly) 'after)))
+    ;; Policy is deliberately captured after the final resource resolution.
+    (when (emacsvox-aural--assembly-spans assembly)
+      (emacsvox-aural--assembly-finish
+       assembly
+       (append (list :protocol_version (if registration (omnivox--choice-registration-version registration)
+                                         emacsvox-aural--structured-timeline-version)
+                     :generation generation :dispatch_id dispatch-id)
+               (when registration (list :registry_generation (plist-get registration :registry-generation))))
+       (emacsvox-aural--timeline-delivery-fields)))))
 
 (defun emacsvox-aural--named-queue-proof-reason (owner)
   "Return OWNER's compatibility reason, or nil when queue proof holds."

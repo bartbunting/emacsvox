@@ -52,6 +52,18 @@
   (tts--speaker-process-filter process (format "__EMACSVOX_TRACKED__ %d %s\n" id (or status "completed")))
   (tts--dispatch-drain process))
 
+(ert-deftest emacsvox-aural-replay-keeps-distinct-provenance-spans ()
+  :tags '(delivery-preparation)
+  (emacsvox-replay-test--with-runtime
+   (let* ((runs (list (omnivox-choice-timeline-test--run 'bolden nil '((richness . first)) "first")
+                      (omnivox-choice-timeline-test--run 'bolden nil '((richness . second)) "second")))
+          (submitted (emacsvox-replay-test--submit speaker runs))
+          (id (car submitted)) (record (cadr submitted)))
+     (emacsvox-replay-test--observe speaker id nil "first" 1 1 1)
+     (emacsvox-replay-test--observe speaker id nil "second" 2 3 2)
+     (emacsvox-replay-test--complete speaker id)
+     (should (= 2 (length (emacsvox-aural-replay--steps record)))))))
+
 (ert-deftest emacsvox-aural-replay-keeps-notification-voice-after-main-and-palette-change ()
   "Original playback uses that notification's actual fallback and captured tuning."
   (emacsvox-replay-test--with-runtime

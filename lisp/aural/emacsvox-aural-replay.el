@@ -51,14 +51,15 @@
        (stringp (emacsvox-aural-concrete-action-text action))
        (not (string-empty-p (emacsvox-aural-concrete-action-text action)))))
 
-(defun emacsvox-aural-replay--span-map (runs associations)
+(defun emacsvox-aural-replay--span-map (runs associations layered)
   "Map wire spans in RUNS to retained run IDs in ASSOCIATIONS.
-Use the same coalescing predicate as transport, preserving byte-independent
+Use the same explicit LAYERED coalescing input as transport, preserving
+byte-independent
 character ranges for fields sharing one wire span."
   (let (groups group previous mapped)
     (dolist (run runs)
       (unless (and previous
-                   (emacsvox-aural--coalescible-structured-runs-p previous run))
+                   (emacsvox-aural--coalescible-structured-runs-p previous run layered))
         (when group (push (nreverse group) groups))
         (setq group nil))
       (let ((association (assq (car run) associations)))
@@ -223,7 +224,7 @@ ASSOCIATIONS links source plan occurrences to retained history run IDs."
   (when (emacsvox-aural--playback-unavailable capture)
     (cl-return-from emacsvox-aural-replay--attach nil))
   (let* ((envelope (car built))
-         (mapping (emacsvox-aural-replay--span-map runs associations))
+         (mapping (emacsvox-aural-replay--span-map runs associations (and snapshot t)))
          (wire (append (plist-get envelope :spans) nil))
          (process (tts--dispatch-owner-process owner))
          (dispatch (list :id (tts--dispatch-owner-id owner)
