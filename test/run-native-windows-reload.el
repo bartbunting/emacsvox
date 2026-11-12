@@ -112,6 +112,30 @@
                 (error "Missing native Windows owner/guard"))
               (native-reload--speech process expected))
             (native-reload--record "two guarded lanes" :engine expected)
+            (let* ((main tts-speaker-process)
+                   (before (omnivox--choice-current-registration main))
+                   (omnivox--logical-registry-signature nil)
+                   replies
+                   (hold (lambda (original process response)
+                           (if (and (eq process main)
+                                    (equal (plist-get response :type) "logical_voices_registered_v3"))
+                               (push response replies)
+                             (funcall original process response)))))
+              ;; The server installs before acknowledging. Delay only this
+              ;; test client's registry observation, while real speech continues.
+              (advice-add 'omnivox--dispatch-control-response :around hold)
+              (unwind-protect
+                  (progn
+                    (omnivox--register-logical-voices (list main))
+                    (native-reload--wait (lambda () replies) "delayed registry acknowledgement")
+                    (native-reload--speech main expected)
+                    (unless (= (plist-get before :registry-generation)
+                               (plist-get (car replies) :registry_generation))
+                      (error "Discovery changed unchanged registry identity")))
+                (advice-remove 'omnivox--dispatch-control-response hold)
+                (dolist (reply (nreverse replies))
+                  (omnivox--dispatch-control-response main reply)))
+              (native-reload--record "speech during delayed registry acknowledgement"))
             (unless (stringp (plist-get (omnivox-punctuation--request '(:command "punctuation-review")) :path))
               (error "Native settings service did not return its selected configuration"))
             (let* ((main tts-speaker-process) (notify tts-notify-process)

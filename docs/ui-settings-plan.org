@@ -20,6 +20,32 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Early-start registration correction, 2026-11-13
+
+Background discovery can replace a logical registry before its acknowledgement
+reaches Emacs. The previous client sometimes advanced the generation even when
+the lane's definitions were unchanged, causing current speech to be rejected.
+Unchanged native definitions now reuse that lane's acknowledged generation while
+availability is refreshed. A changed definition or a newer unconfirmed write
+prevents reuse. Expired replies and delayed older submissions do not erase the
+highest generation sent. Existing server generation checks and explicit configuration apply remain
+unchanged.
+
+A delayed-acknowledgement regression fails on the previous source and native
+Windows client, then passes with the correction. The focused suite passes 709
+tests with nine fixture-dependent skips; 53 targeted control and transport checks pass.
+Four final fresh compiled native runs cover WinRT, Flite, Eloquence and DECtalk,
+including speech before registry acknowledgement, reload and guarded recovery.
+The full graphical personal profile passes with Eloquence, DECtalk and WinRT.
+Its check waits for acknowledgement of the actual saved startup definitions;
+the delayed-discovery regression deliberately speaks before its reply arrives.
+The paired Omnivox =docs/benchmarks/2026-11-13-native-early-start.md= records
+the WSL checks and deployment separately from listening acceptance.
+
+The three shared personal startup files already match between WSL and Windows.
+The native launcher had independently selected WinRT; it now defaults to
+Eloquence, matching Development. Explicit engine overrides remain available.
+
 ** Native Windows preference reload, 2026-11-13
 
 Native Windows Emacs now negotiates local ownership with its selected absolute
@@ -39,10 +65,9 @@ preference reload with WinRT, Eloquence and DECtalk. These are source-playback
 checks. After deployment, Bart confirmed on 2026-11-13 that speech is working;
 individual engine and recovery listening scenarios were not itemised.
 
-The native shortcut retains eager startup. An additional early-speech experiment
+The initial native shortcut deployment retained eager startup. An additional early-speech experiment
 exposed intermittent timeline rejection when discovery replaces the registry
-during speech. Keep that opt-in disabled for this native deployment; resolving
-registration admission during discovery remains a separate follow-up. The paired
+during speech. The early-start correction above addresses that follow-up. The paired
 Omnivox =docs/benchmarks/2026-11-13-native-windows-client-reload.md= retains the
 successful and failed runs, unchanged runtime identity and deployment evidence.
 

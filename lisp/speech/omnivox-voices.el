@@ -416,6 +416,15 @@ response on timeout or process exit.  TIMEOUT overrides the ordinary deadline;
                   (setf (omnivox--control-request-timer entry) timer)
                 (cancel-timer timer))))
           (when (eq entry (gethash identifier pending))
+            ;; A write can install a registry even if its reply is delayed or
+            ;; lost. Never reuse an older acknowledged generation afterward.
+            (when (member (plist-get request :type)
+                          '("register_logical_voices" "register_logical_voices_v2"
+                            "register_logical_voices_v3"))
+              (when-let* ((generation (plist-get request :registry_generation))
+                          ((integerp generation)))
+                (process-put process 'omnivox--highest-sent-registry-generation
+                             (max generation (or (process-get process 'omnivox--highest-sent-registry-generation) 0)))))
             (tts-queue--send-typed
              process
              (format "omnivox_control {%s}\n"
@@ -1711,6 +1720,20 @@ may supply complete frozen registrations, which need no current palette data."
         (emacsvox-aural-voice-runtime--call-with-resolution-snapshot prepare)
       (funcall prepare))))
 
+(defun omnivox--unchanged-native-registry-generation (process content)
+  "Reuse PROCESS's acknowledged generation for unchanged native CONTENT.
+Discovery can refresh availability without changing the definitions used by
+speech awaiting that reply. A newer unconfirmed write prevents this reuse."
+  (let* ((old (process-get process omnivox--choice-registration-property))
+         (generation (plist-get old :registry-generation)))
+    (when (and (equal (plist-get content :type) "register_logical_voices_v3")
+               (integerp generation) (> generation 0)
+               (eql generation (process-get process 'omnivox--highest-sent-registry-generation))
+               (equal (plist-get old :process-generation)
+                      (process-get process 'tts--speech-process-generation))
+               (omnivox--native-registration-content-equal-p content (plist-get old :content)))
+      generation)))
+
 (defun omnivox--register-logical-voices (processes)
   "Register logical voices on PROCESSES and return the number sent.
 Startup responses target their own worker; explicit client edits can target all."
@@ -1718,8 +1741,10 @@ Startup responses target their own worker; explicit client edits can target all.
     (omnivox--update-logical-registry-generation
      (mapcar #'cdr registrations))
     (dolist (registration registrations)
-      (let ((generation omnivox--logical-registry-generation)
-            (content (tts--dispatch-copy-data (cdr registration))))
+      (let* ((content (tts--dispatch-copy-data (cdr registration)))
+             (generation (or (omnivox--unchanged-native-registry-generation
+                              (car registration) content)
+                             omnivox--logical-registry-generation)))
         (omnivox--send-control-request
          (car registration) (omnivox--registration-request generation content)
          (lambda (process response)

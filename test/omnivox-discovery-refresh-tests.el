@@ -143,5 +143,70 @@
       (should-not (omnivox--discovery-pending-p omnivox-engine-inventory))
       (should-not (process-get main 'omnivox--discovery-timer)))))
 
+(ert-deftest omnivox-discovery-refresh-keeps-speech-generation-until-availability-reply ()
+  "Discovery must not invalidate speech while its registry reply is in transit."
+  (omnivox-native-runtime-test--with-speech
+    (let* ((before (omnivox--choice-current-registration speaker))
+           (peer (omnivox--choice-current-registration notification))
+           (tts-voice-inventory-changed-hook nil)
+           ;; A different lane or a previous two-lane apply changed the global
+           ;; signature; the main lane's acknowledged definitions still match.
+           (omnivox--logical-registry-signature nil)
+           requests)
+      (process-put speaker omnivox--control-inventory-property
+                   (omnivox-discovery-test--inventory 'pending))
+      (cl-letf (((symbol-function 'omnivox--set-process-routing-policy) #'ignore)
+                ((symbol-function 'process-send-string)
+                 (lambda (process text)
+                   (push (cons process (omnivox--decode-control-response
+                                        (substring text (length "omnivox_control {") -2) t)) requests))))
+        (omnivox--handle-discovery-response speaker (omnivox-discovery-test--inventory 'ready)))
+      (should (= 1 (length requests)))
+      (let ((request (cdar requests)))
+        (should (eq speaker (caar requests)))
+        (should (eq before (omnivox--choice-current-registration speaker)))
+        (tts-speak (propertize "Speaking before discovery acknowledgement." 'personality 'bolden))
+        (should (= (plist-get (omnivox-choice-consumer-test--timeline (car writes)) :registry_generation)
+                   (plist-get request :registry_generation)))
+        (let ((reply (omnivox-native-runtime-test--ack request)))
+          (setf (plist-get reply :inventory_generation) 13)
+          (omnivox-preview-test--control-line speaker reply))
+        (let ((after (omnivox--choice-current-registration speaker)))
+          (should (= 13 (plist-get (plist-get after :response) :inventory_generation)))
+          (should (= (plist-get before :registry-generation) (plist-get after :registry-generation)))))
+      (should (eq peer (omnivox--choice-current-registration notification))))))
+
+(ert-deftest omnivox-discovery-refresh-does-not-reuse-an-unconfirmed-older-generation ()
+  "An unanswered newer registration can already be installed on the server."
+  (dolist (expire '(nil t))
+    (omnivox-native-runtime-test--with-speech
+      (let ((omnivox--logical-registry-signature nil) requests)
+        (cl-letf (((symbol-function 'process-send-string)
+                   (lambda (process text)
+                     (push (cons process (omnivox--decode-control-response
+                                          (substring text (length "omnivox_control {") -2) t)) requests))))
+          ;; A real explicit apply takes a new generation. Delay its replies.
+          (omnivox-apply-voice-configuration #'ignore)
+          (let* ((request (cdr (assq speaker requests)))
+                 (generation (plist-get request :registry_generation))
+                 (id (plist-get request :request_id)))
+            ;; A delayed older apply may submit after the newer one. It must
+            ;; not erase the record that the newer generation was sent.
+            (let ((old (omnivox--choice-current-registration speaker)))
+              (omnivox--send-control-request
+               speaker (omnivox--registration-request
+                        (plist-get old :registry-generation) (plist-get old :content))
+               #'ignore))
+            (when expire
+              (omnivox--control-request-expired
+               speaker id (gethash id (omnivox--pending-requests speaker))))
+            (omnivox--register-logical-voices (list speaker))
+            (should (> (plist-get (cdar requests) :registry_generation) generation))
+            ;; Settle the newest result first; late older replies cannot roll it back.
+            (dolist (write requests)
+              (omnivox-preview-test--control-line
+               (car write) (omnivox-native-runtime-test--ack (cdr write))))))
+        (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))))
+
 (provide 'omnivox-discovery-refresh-tests)
 ;;; omnivox-discovery-refresh-tests.el ends here
