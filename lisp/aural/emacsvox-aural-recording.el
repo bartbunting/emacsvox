@@ -34,7 +34,7 @@
 (require 'subr-x)
 (require 'emacsvox-aural-transport)
 
-(defconst emacsvox-aural-recording--limit 65536)
+(defconst emacsvox-aural-recording--limit 262144)
 (defconst emacsvox-aural-recording--operation-limit 4096)
 (defconst emacsvox-aural-recording--depth-limit 128)
 (defconst emacsvox-aural-recording--construction-version 1
@@ -290,7 +290,7 @@ Unknown objects and cycles are rejected by the type and traversal bounds."
   "Record the next outer delivery on LANE, main or notification.
 Arming expires after 60 seconds.  One delivery disarms recording.  Captured
 speech text and resource paths stay in memory until explicit export or cancel;
-input above 64 KiB is discarded with an incomplete summary.  This records
+input above 256 KiB is discarded with an incomplete summary.  This records
 client construction, not audio or server success.  Existing logs are unchanged."
   (interactive (list (intern (completing-read "Record next delivery on lane: " '("main" "notification") nil t nil nil "main"))))
   (unless (memq lane '(main notification)) (user-error "Choose main or notification"))
@@ -368,7 +368,8 @@ it.  No data is uploaded and no speech is replayed."
 
 (defun emacsvox-aural-recording--parse (bytes)
   "Read bounded JSON BYTES, rejecting deep arrays and duplicate object keys."
-  (when (> (string-bytes bytes) emacsvox-aural-recording--limit) (error "Recording exceeds 64 KiB"))
+  (when (> (string-bytes bytes) emacsvox-aural-recording--limit)
+    (error "Recording exceeds %d KiB" (/ emacsvox-aural-recording--limit 1024)))
   (let* ((text (decode-coding-string bytes 'utf-8 t))
          (index 0) (depth 0) keys)
     (unless (equal bytes (encode-coding-string text 'utf-8 t)) (error "Invalid UTF-8"))

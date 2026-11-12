@@ -37,12 +37,20 @@ registry generation and dispatch ID in distinct fields. Record capability
 facts at the point they were used. Never label a successful client write as
 server admission, synthesis success or acoustic output.
 
-Limit one recording to 64 KiB of encoded data and 4096 operations. Count text,
+Limit one recording to 256 KiB of encoded data and 4096 operations. Count text,
 resource identities and metadata in that shared limit. On exhaustion, discard
 the detailed inputs and retain only a bounded incomplete-recording summary;
 speech continues normally. Do not raise existing history, dispatch or wire
 limits to accommodate recording. Report omitted data explicitly. These limits
 will exclude some long presentations; expand them only after measured need.
+
+The byte allowance was increased from 64 KiB on 2026-11-13 after a 40-row
+styled table required 76003 bytes and a 62-line fontified code excerpt required
+141805 bytes. Both reproduce correctly within 256 KiB; 128 KiB still excludes
+the code example. Capture and import share the allowance. The operation,
+traversal and nesting limits remain unchanged, as do explicit arming and export.
+The JSON format and construction version stay compatible; older importers
+continue to reject recordings above their 64 KiB limit.
 
 Export only after a separate explicit command. Show the recorded lane,
 completion state and size, and explain that text and resource paths may be

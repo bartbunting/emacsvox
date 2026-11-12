@@ -8,6 +8,9 @@
 (require 'omnivox-rich-tone-tests)
 (require 'emacsvox-aural-recording)
 
+(defconst emacsvox-recording-test--directory
+  (file-name-directory (or load-file-name buffer-file-name)))
+
 (defmacro emacsvox-recording-test--isolated (&rest body)
   (declare (indent 0) (debug t))
   `(let ((emacsvox-aural-recording--state nil) (emacsvox-aural-recording--timer nil)
@@ -111,15 +114,79 @@
   (emacsvox-recording-test--isolated
     (omnivox-choice-consumer-test--with-speech
       (emacsvox-aural-record-next-delivery 'main)
-      (tts-speak (make-string 70000 ?x))
+      (tts-speak (make-string (1+ emacsvox-aural-recording--limit) ?x))
       (should writes)
       (let* ((bundle (emacsvox-aural-recording--bundle))
              (json (emacsvox-aural-recording--json bundle)))
-        (should (< (length json) 65536))
+        (should (< (length json) 4096))
         (should (eq (gethash "complete" bundle) :false))
         (should (= (length (gethash "operations" bundle)) 0))
         (should-not (string-match-p "xxxxxxxx" json))
         (should (eq (plist-get (emacsvox-recording-test--roundtrip) :status) 'incomplete))))))
+
+(ert-deftest emacsvox-aural-recording-large-styled-captures-export-and-reconstruct ()
+  "Ordinary styled selections exceeding the old cap remain reproducible."
+  (let ((table (mapconcat (lambda (index)
+                           (concat (propertize (format "Item %d " index) 'personality 'voice-bolden)
+                                   "status ready; modified today; owner local.\n"))
+                         (number-sequence 1 40) ""))
+        (code (with-temp-buffer
+                (insert-file-contents (expand-file-name "fixtures/delivery-code.el.txt"
+                                                       emacsvox-recording-test--directory))
+                (emacs-lisp-mode)
+                (font-lock-ensure)
+                (let ((position (point-min)))
+                  (while (< position (point-max))
+                    (let ((end (next-single-property-change position 'face nil (point-max))))
+                      (when (get-text-property position 'face)
+                        (put-text-property position end 'personality 'voice-bolden))
+                      (setq position end))))
+                (buffer-string))))
+    (dolist (case (list (cons 65536 table) (cons 131072 code)))
+      (emacsvox-recording-test--isolated
+        (omnivox-choice-consumer-test--with-speech
+          (emacsvox-aural-record-next-delivery 'main)
+          (emacsvox-aural-submit (cdr case) :delivery-policy 'ordered :interruption-policy 'none)
+          (let* ((bundle (emacsvox-aural-recording--bundle))
+                 (bytes (emacsvox-aural-recording--json bundle))
+                 (wire (apply #'concat (mapcar #'cdr (reverse writes))))
+                 (directory (make-temp-file "emacsvox-large-recording-" t))
+                 (file (expand-file-name "capture.json" directory)))
+            (unwind-protect
+                (progn
+                  (should (eq (gethash "complete" bundle) t))
+                  (should (> (length bytes) (car case)))
+                  (should (<= (length bytes) 262144))
+                  (emacsvox-aural-export-recording file)
+                  (should-not emacsvox-aural-recording--state)
+                  (cl-letf (((symbol-function 'process-get) (lambda (&rest _) (error "Live process read")))
+                            ((symbol-function 'process-send-string) (lambda (&rest _) (error "Speech write")))
+                            ((symbol-function 'make-network-process) (lambda (&rest _) (error "Network access"))))
+                    (let ((result (emacsvox-aural-reproduce-delivery file)))
+                      (should (eq (plist-get result :status) 'matching))
+                      (should (equal wire (apply #'concat (plist-get result :wire)))))))
+              (delete-directory directory t))))))))
+
+(ert-deftest emacsvox-aural-recording-import-byte-boundary ()
+  "Accept valid 256 KiB JSON and reject one extra byte before construction."
+  (emacsvox-recording-test--isolated
+    (omnivox-choice-consumer-test--with-speech
+      (let* ((json (emacsvox-aural-recording--json (emacsvox-recording-test--capture)))
+             (directory (make-temp-file "emacsvox-recording-boundary-" t))
+             (file (expand-file-name "capture.json" directory)))
+        (unwind-protect
+            (progn
+              (with-temp-file file
+                (set-buffer-multibyte nil)
+                (insert json (make-string (- 262144 (length json)) ?\s)))
+              (should (eq (plist-get (emacsvox-aural-reproduce-delivery file) :status) 'matching))
+              (write-region " " nil file t 'silent)
+              (let (constructed)
+                (cl-letf (((symbol-function 'emacsvox-aural-recording--reconstruct)
+                           (lambda (&rest _) (setq constructed t))))
+                  (should-error (emacsvox-aural-reproduce-delivery file)))
+                (should-not constructed)))
+          (delete-directory directory t))))))
 
 (ert-deftest emacsvox-aural-recording-operation-limit-and-recorder-fault-preserve-delivery ()
   (dolist (fault '(limit observer construction))
@@ -244,7 +311,7 @@
               (should-error (emacsvox-aural-recording--reconstruct object)))))))))
 
 (ert-deftest emacsvox-aural-recording-parser-rejects-oversize-deep-duplicate-and-invalid-utf8 ()
-  (dolist (bytes (list (make-string 65537 ?\s)
+  (dolist (bytes (list (make-string (1+ emacsvox-aural-recording--limit) ?\s)
                       (concat (make-string 300 ?\[) "0" (make-string 300 ?\]))
                       "{\"format\":1,\"format\":1}" "{\"format\":1,\"for\\u006dat\":1}"
                       (unibyte-string 255)))
