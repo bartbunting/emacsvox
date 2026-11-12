@@ -1028,6 +1028,52 @@ write.  State synchronization lines in a combined write are ignored."
         (should (equal (plist-get envelope :delivery_policy) "replaceable"))
         (should (equal (plist-get envelope :replacement_key) "resolved"))))))
 
+(ert-deftest emacsvox-aural-preparation-capabilities-and-policy-have-distinct-capture-points ()
+  "Resource work separates per-span capability reads from final policy capture."
+  :tags '(delivery-preparation)
+  (let* ((process (make-pipe-process :name "aural-capture-order" :noquery t))
+         (tts-speaker-process process)
+         (emacsvox-aural-submission-delivery-policy 'ordered)
+         (emacsvox-aural-submission-replacement-key nil)
+         (rate-function (symbol-function 'emacsvox-aural--timeline-rate-offset))
+         (policy-function (symbol-function 'emacsvox-aural--timeline-delivery-fields))
+         (runs (mapcar
+                (lambda (text)
+                  (list (emacsvox-aural--make-concrete-plan
+                         :content (emacsvox-aural--make-concrete-content
+                                   :text text :speak t :voice-style '(:rate-offset 2))
+                         :context '(:icons-enabled t)) text nil))
+                '("first" "second")))
+         events)
+    (unwind-protect
+        (progn
+          (process-put process emacsvox-aural--relative-rate-process-property t)
+          (setf (emacsvox-aural-concrete-plan-before (caar runs))
+                (list (emacsvox-aural--make-concrete-action
+                       :kind 'cue :resource "/tmp/capture-order.ogg")))
+          (cl-letf (((symbol-function 'emacsvox-aural--timeline-rate-offset)
+                     (lambda (style)
+                       (let ((result (funcall rate-function style)))
+                         (push (list 'rate result) events)
+                         result)))
+                    ((symbol-function 'omnivox-remote-resource)
+                     (lambda (path)
+                       (push 'resource events)
+                       (process-put process emacsvox-aural--relative-rate-process-property nil)
+                       (setq emacsvox-aural-submission-delivery-policy 'replaceable
+                             emacsvox-aural-submission-replacement-key 'resolved)
+                       path))
+                    ((symbol-function 'emacsvox-aural--timeline-delivery-fields)
+                     (lambda () (push 'policy events) (funcall policy-function))))
+            (let* ((document (car (emacsvox-aural--build-structured-timeline 1 1 runs)))
+                   (spans (plist-get document :spans)))
+              (should (equal (nreverse events) '((rate 2) resource (rate nil) policy)))
+              (should (= 2 (plist-get (aref spans 0) :rate_offset)))
+              (should-not (plist-member (aref spans 1) :rate_offset))
+              (should (equal (plist-get document :delivery_policy) "replaceable"))
+              (should (equal (plist-get document :replacement_key) "resolved")))))
+      (delete-process process))))
+
 (ert-deftest emacsvox-aural-preparation-effect-transition-state-ownership ()
   "Transitions preserve inputs and isolate saved state from replacement output."
   :tags '(delivery-preparation)

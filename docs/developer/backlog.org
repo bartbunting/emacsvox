@@ -203,7 +203,9 @@ These are proposed maintenance improvements following the 2026-09-06 aural
 presentation review.  Its eight confirmed defects, =EVX-2026-018= through
 =EVX-2026-025=, were fixed through commit =96b8e634b=.  The work below reduces
 the chance of similar defects and makes future changes easier to assess.
-It does not identify four additional confirmed bugs or schedule a release.
+These proposals did not identify four additional bugs or schedule a release.
+The later [[file:speech-delivery-investigation.org][delivery investigation]] separately reproduces a presentation-observer
+failure after sending; its implementation entry below includes that repair.
 
 Shared voice metadata, numeric tuner consumers and limited delivery helpers
 have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
@@ -305,74 +307,23 @@ stale edits.  Run the focused inspection and guided-change suites as well.
 
 ** TODO Separate delivery preparation from process effects
 
-*** Why this is needed
+The [[file:speech-delivery-investigation.org][13 November delivery investigation]] is complete. It records ownership and
+capture timing, reproducible source/compiled checks, failure probes and the
+staged implementation proposal. Production delivery is unchanged.
 
-[[file:../../lisp/aural/emacsvox-aural-transport.el][Transport]] combines span construction, suppression, effect transitions,
-action positioning, wire encoding and dispatch preparation.  Its structured
-and compatibility paths also interpret overlapping presentation policy.
-=EVX-2026-020= showed that adding a silent run could change delivery for the
-whole transaction and lose effects on surviving speech.  That bug is fixed,
-but the interactions remain difficult to inspect in one large builder.
+Start with the confirmed presentation-observer weakness: an observer error
+after a successful write prevents callback publication. Keep explicit Stop
+and cancellation effective, report observer errors and never resend the packet.
+Then make selection/disposition explicit and extract deterministic assembly
+without moving resource access, capability reads or late policy capture.
+Retain existing preparation owners, deferred callback IDs, queue proof,
+compatibility output, byte-offset conventions and bounded replay evidence.
 
-Commit =eb1e5cf3b= extracted the pure effect-state transition and explicit
-delivery-field encoder, with source and compiled parity coverage.  The wrapper
-still captures policy at its established point after resource resolution.
-The complete builder, resource resolution, registration and process effects
-remain coupled; the full delivery-candidate boundary is still future work.
-
-*** Proposed plan
-
-1. Preserve the extracted effect-state and delivery-field helpers.  Map the
-   remaining builder inputs and effects, including run normalization and
-   boundary-action placement, before proposing a complete candidate boundary.
-   Capture current final-output behavior for any additional extraction and
-   pass context/capabilities explicitly without moving their capture time.
-2. Separate preparation of a complete delivery candidate from callback
-   registration and process writes.  Model resource resolution explicitly as
-   well: it may perform I/O, so it must not be hidden inside a helper described
-   as pure.  Retain the existing all-or-nothing conversion and failure cleanup.
-3. Make structured eligibility and compatibility fallback return an explicit
-   internal result rather than requiring consumers to infer the chosen path
-   from entries.  Preserve character positions internally and the deliberate
-   conversion to UTF-8 byte offsets at the wire boundary.
-4. Consider a later delivery-provenance extension recording requested style,
-   compiled support, selected wire path and omitted dimensions for history
-   and explanation.  Decide its owner, capture time, size bound and failure
-   meaning in an ADR; implement that extension separately from extraction.
-
-*** Benefits
-
-Preparation could be exercised without sending speech or installing completion
-callbacks.  Smaller steps would make suppression, coalescing and action
-placement easier to reason about, including differences between structured
-and compatibility output.  The optional provenance extension could help users
-understand what a particular transaction actually submitted.
-
-*** Disadvantages and decisions
-
-This has the highest delivery-regression risk of the four proposals.  Moving
-work across registration or send boundaries can change interruption timing,
-duplicate callbacks or leave pending state after failure.  Intermediate data
-structures can add allocations and copying on frequent navigation paths.
-Measure representative long presentations before claiming a performance gain.
-
-Keep lane ownership, stop/replacement policy and compatibility support intact.
-The leading-whitespace/before-cue observation from remediation remains an
-unconfirmed lead; establish its contract and reproduction separately so an
-output change is not concealed as refactoring.  Delivery provenance must
-distinguish submitted commands from confirmed completion and actual sound.
-
-*** Acceptance checks
-
-Compare captured final protocol output before and after each extraction using
-[[file:../../test/emacsvox-aural-transport-tests.el][native submission tests]].  Combine styled text, silent/empty runs, boundary
-and positioned actions, harmless run splitting, Unicode, punctuation cleanup,
-coalescing and chunking.  Cover preparation/registration/send failure,
-cancellation, late callbacks, replacement and independent notification output.
-Normalize only opaque generated identifiers in comparisons, retaining action
-ordering, positions and interruption semantics as assertions.  Require fresh
-compiled Aural parity and all semantic golden traces to pass.  Automated
-protocol comparisons do not replace human listening if behavior is changed.
+Implementation remains open. Compare final wire and semantic bindings through
+source and compiled tests, exercise lifecycle faults and measure allocations
+before accepting each extraction. Intentional audible changes still need
+listening acceptance. Bounded delivery provenance and offline reproduction
+require a separate reviewed design; they are not prerequisites for extraction.
 
 ** TODO Represent asynchronous voice applies as explicit operations
 

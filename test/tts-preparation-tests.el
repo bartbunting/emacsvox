@@ -51,6 +51,66 @@
          (should-not emacsvox-aural-last-delivery-failure)
          (tts-preparation-test--empty speaker))))))
 
+(ert-deftest tts-preparation-resource-faults-discard-unsent-work-and-preserve-other-lane ()
+  "Cue resolution may fail or re-enter after capture without leaking owners."
+  :tags '(delivery-preparation)
+  (dolist (version '(3 4))
+    (dolist (fault '(error stop death registry-change))
+      (unless (and (= version 3) (eq fault 'registry-change))
+        (omnivox-choice-playback-test--with-runtime
+         (process-put speaker emacsvox-aural--structured-timeline-process-property version)
+         (let* ((run (omnivox-choice-timeline-test--run 'bolden nil))
+                writes effects resolved callbacks
+                (tts--tracked-completion-function (lambda (&rest result) (push result callbacks)))
+                (emacsvox-aural-last-delivery-failure nil))
+           (setf (emacsvox-aural-concrete-plan-context (car run)) '(:icons-enabled t)
+                 (emacsvox-aural-concrete-plan-before (car run))
+                 (list (emacsvox-aural--make-concrete-action
+                        :kind 'cue :audio-mode 'insert :resource "/tmp/resource-fault.ogg")))
+           (cl-letf (((symbol-function 'tts-voice-reset-code) (lambda () ""))
+                     ((symbol-function 'process-send-string)
+                      (lambda (process command) (push (cons process command) writes)))
+                     ((symbol-function 'omnivox-remote-resource)
+                      (lambda (path)
+                        (setq resolved t)
+                        (pcase fault
+                          ('error (error "Injected resource failure"))
+                          ('stop (tts-stop))
+                          ('death (delete-process speaker))
+                          ('registry-change
+                           (process-put speaker omnivox--choice-registration-property
+                                        (copy-tree (process-get speaker omnivox--choice-registration-property)))))
+                        path)))
+             (cl-labels ((submit ()
+                           (emacsvox-aural-call-with-delivery-transaction
+                            speaker
+                            (lambda ()
+                              (emacsvox-aural--defer-delivery-effect (lambda () (push t effects)))
+                              (emacsvox-aural-queue-concrete-plan (car run) (cadr run))
+                              (tts--protocol-dispatch)))))
+               ;; A dead process currently fails the completion-capability
+               ;; check before the next cancellation check.  Both exits must
+               ;; discard the unsent work and release its reservations.
+               (if (memq fault '(error death))
+                   (should-error (submit) :type 'error)
+                 (should-not (submit))))
+             (should resolved)
+             (should (cl-every (lambda (write) (equal (cdr write) "s\n")) writes))
+             (should-not effects)
+             (tts--dispatch-drain speaker)
+             (should-not callbacks)
+             (tts-preparation-test--empty speaker)
+             (should (= 0 (hash-table-count
+                           (or (process-get speaker 'omnivox--choice-snapshot-references)
+                               (make-hash-table)))))
+             ;; The unrelated lane remains usable after each failure.
+             (setq writes nil)
+             (let ((tts-speaker-process notification)
+                   (tts--tracked-completion-function nil))
+               (should (integerp (omnivox-choice-playback-test--submit))))
+             (should (= 1 (length writes)))
+             (should (eq notification (caar writes))))))))))
+
 (ert-deftest tts-preparation-own-stop-and-nested-stop-hook-contract ()
   (dolist (version '(3 4))
     (dolist (action '(none write-stop hook-stop ordered urgent))

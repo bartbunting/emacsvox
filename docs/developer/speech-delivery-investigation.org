@@ -1,0 +1,389 @@
+#+title: Speech delivery boundaries and investigation
+#+date: 2026-11-13
+#+startup: content
+
+* Result and scope
+
+The investigation supports a staged separation of delivery construction from
+process effects. Preserve the existing preparation, queue-proof and dispatch
+owners. First isolate presentation-observer failures and describe delivery
+outcomes accurately; then extract deterministic assembly while keeping the
+current order of resource access and state capture.
+
+This report is a proposed implementation contract, not an accepted change to
+speech policy. Production Lisp is unchanged. Two new characterization tests
+and a repeatable diagnostic retain the evidence. No listening test, live
+session change, Omnivox build or server deployment was performed.
+
+The reviewed Emacsvox baseline is =89acd0601=. All 29 Emacsvox ADRs were read.
+The relevant constraints are routing readiness (0007), independent lanes
+(0009), remote reconnect without replay (0010), Emacs 30.2 (0012), palette and
+preview ownership (0015–0018, 0022, 0026), resource ownership (0028), and stable
+library/API identity (0029). Attribution and documentation retain ADRs 0001,
+0003 and 0004. The three open Aural policy questions in the
+[[file:backlog.org::*Aural contract decisions][backlog]] need no resolution for the proposed private extraction.
+
+Read-only comparison with Omnivox =78794197f718bc0dabfc7e43d0cfab9ac2ac04f8=
+used its timeline protocol and progressive-audio ADR. Its working tree has
+unrelated changes to plans and benchmark reports, which were preserved. No
+running server is identified or qualified by this source comparison.
+
+* Current ownership and timing
+
+| Stage | Owner and capture point | Effects and constraints |
+|-------+-------------------------+-------------------------|
+| Source and policy | =emacsvox-aural-call-with-submission= and =emacsvox-aural--submit-content= | Capture semantic context, lane, interruption and delivery policy; transform source text and prepare plans. This can complete without sending anything. |
+| Text preparation | Source/planner/compiler, then =tts-speak= | Preserve source properties, pronunciation, capitalization, visibility and chunking. Concrete run text is the final payload, not necessarily the original source. |
+| Transaction capture | =emacsvox-aural-call-with-delivery-transaction= | Nested producers join one owner. Retain commands, concrete runs, dispatch intent and their ordered journal; seal capture before finalization. |
+| Cancellation scope | =tts--call-with-preparation= | Capture process generation, track inactive reservations and invalidate on Stop, retirement, death or lost queue proof. Unwind releases unpublished owners. |
+| Representation selection | =emacsvox-aural--finalize-structured-delivery= | Inspect complete capture shape and, for named queue promotion, queue proof. Compatibility preserves explicit flushes, state transitions and unsealed tails. |
+| Voice snapshot | =emacsvox-aural--finalize-timeline-delivery= | Capture acknowledged registration before building. It must still be the current registration at admission. A valid old registration remains attached after a successful send. |
+| Timeline assembly | =emacsvox-aural--build-structured-timeline= | Coalesce compatible runs, project spans, place boundary/positioned actions and resolve cues in traversal order. Some capability reads occur per span or action. |
+| Delivery fields | =emacsvox-aural--timeline-delivery-fields= | Read policy and replacement key at the end of assembly, after resource resolution. This timing is observable. |
+| Reservation and framing | Finalizer, =tts-lifecycle=, choice adapter and timeline codec | Reuse a reserved ID or reserve one; attach semantic/voice/history evidence within budgets; validate and encode the complete document. |
+| Admission and interruption | =emacsvox-aural--submit-delivery-entries= | Reject foreign process entries; recheck fingerprints, preparation and registration before the intentional policy Stop. Guarded queue promotion also verifies the exact own-Stop receipt. |
+| Write | =tts--dispatch-write-packet= and =tts-queue--send= | Arm observation just before writing. Check generation, queue proof and actual write receipts. Partial or ambiguous writes never trigger compatibility retry. |
+| After write | Delivery effects, owner publication, asynchronous drain | Commit history and invoke presentation observers, then publish successful owners. Marker/terminal callbacks drain outside submission and filter stacks. |
+
+Primary code: [[file:../../lisp/aural/emacsvox-aural-submission.el][submission]], [[file:../../lisp/aural/emacsvox-aural-transport.el][transport]],
+[[file:../../lisp/speech/tts-lifecycle.el][lifecycle]], [[file:../../lisp/speech/tts-queue-state.el][queue proof]],
+[[file:../../lisp/speech/omnivox-voices.el][voice registration]], and [[file:../../lisp/aural/emacsvox-aural-timeline-codec.el][timeline codec]].
+
+There is no single commit point spanning the client and server. A successful
+write, published callback owner, server admission, consumed source marker and
+terminal playback record are different facts. The
+[[https://github.com/bartbunting/omnivox/blob/78794197f718bc0dabfc7e43d0cfab9ac2ac04f8/docs/protocols/presentation-timeline.md][reviewed Omnivox timeline protocol]] validates the complete document before queue
+admission, then loads file resources before new speech. A resource failure
+can follow successful replacement admission and cancellation of the previous
+owner. Later rendering failure may follow partial playback. None permits
+client replay. Source consumption and terminal completion do not prove
+physical acoustic output.
+
+Keep identifier domains separate: submission ID identifies native source
+submission; delivery sequence becomes timeline generation; dispatch ID owns
+callbacks; process generation identifies one worker lifetime; registry
+generation identifies acknowledged voice definitions. Cancellation epoch and
+queue serial are additional internal guards. A generic field called
+“generation” is insufficient for diagnostic correlation.
+
+The remaining implicit construction inputs found by reading the builder and
+its callees are below. This inventory distinguishes static inspection from
+the executed capture-order probe in the next section.
+
+| Input | Current read point | Required extraction treatment |
+|-------+--------------------+-------------------------------|
+| Layered projection flag | Set from registration presence before coalescing | Pass explicitly to grouping; retain provenance in equality comparisons. |
+| Acknowledged definitions, choices and timeline version | Snapshot before assembly; consumed by per-span projection | Keep the same snapshot identity outside pure data and recheck it at admission. |
+| Relative-rate capability | Each legacy span projection | Supply the value read at that point, including legacy spans inside layered documents. |
+| Omnivox program selection and average-pitch contrast | ACSS projection of each applicable legacy span | Pass the projected value or explicit captured adapter/contrast inputs; do not read these globals in pure assembly. |
+| Cue enablement | Per action, from explicit context or current buffer when absent | Preserve that fallback read point; pass a boolean into assembly, not a buffer. |
+| Resource path, sound root and remote mode | Cue resolution, potentially during both capture and assembly | Keep filesystem work and its failure/reentrancy outside assembly. |
+| Tone gain/shape capability and exact-preview flag | Per tone during compatibility construction and timeline action projection | Preserve omission for ordinary speech and rejection for an inaccurate exact preview. |
+| Policy, replacement key and key serialization | End of timeline construction | Preserve the late read and existing key bounds/printing behavior. |
+| Isolated-letter mode and wire limits | Final framing/validation | Preserve the special letter command and fixed protocol bounds. |
+
+The effect-state transition and explicit delivery-field encoder extracted in
+=eb1e5cf3b= remain useful pure helpers. Keep their ownership and existing parity
+tests; a new accumulator should use them rather than replace their contracts.
+
+* Findings
+
+** State cannot be frozen indiscriminately at entry
+
+The new =emacsvox-aural-preparation-capabilities-and-policy-have-distinct-capture-points=
+test resolves a before-cue between two spans. The first span reads relative-rate
+support, the cue resolver changes that capability and the delivery policy, the
+second span reads the new capability, and final delivery fields use the new
+policy. The observed order is:
+
+#+begin_example
+first span: rate offset 2
+resolve cue: capability disabled; policy becomes replaceable
+second span: no rate offset
+capture policy: replaceable, key resolved
+#+end_example
+
+This is an injected reentrancy characterization, not a claim that a normal
+server routinely toggles capabilities mid-presentation. It establishes why
+moving all resource work before projection, or taking one initial snapshot,
+would change current behavior. The existing policy-capture regression already
+protects the late policy read; the new test adds the per-span distinction.
+
+=omnivox-remote-resource= maps bundled files to workstation resource IDs. Its
+path canonicalization may invoke filesystem handlers; it is not a network
+upload or a pure string formatter. Resolver errors must remain failures,
+not reasons to send an approximate compatibility replacement.
+
+The resource probe also records two calls for an overlay cue: one while
+capturing its compatibility command and one during structured assembly.
+An inserted cue resolves only during assembly. Deduplicating those calls
+would change their timing and error boundary; it is a separate optimization,
+not an incidental consequence of helper extraction.
+
+** A failing presentation observer can lose completion after a successful write
+
+The diagnostic calls the real transaction/finalizer with a controlled pipe
+writer, then feeds a terminal record through the actual filter and drain.
+It compares a normal =emacsvox-aural-plan-presented-hook= with a hook that
+raises =error= and one that intentionally calls Stop.
+
+| Observer | Timeline writes | Stop writes | Call result | Terminal callbacks after the probe reply | Owners left |
+|----------+-----------------+-------------+-------------+-----------------------------------------+-------------|
+| Normal | 1 | 0 | Dispatch ID 1 | completed | 0 |
+| Raises error | 1 | 0 | Error; no returned ID | None | 0 |
+| Calls Stop | 1 | 1 | nil | None | 0 |
+
+The error case is a confirmed client weakness. =--commit-delivery-effects=
+runs the observer before the enclosing transaction publishes its owners.
+The observer exception unwinds and abandons an already written owner. It also
+leaves =emacsvox-aural-last-delivery-failure= unset. Cleanup succeeds, but
+the caller cannot distinguish this from an operation that never submitted
+speech, and the later completion callback is lost. Actual audio was not tested.
+
+Fix this separately before structural extraction: contain ordinary errors
+from each presentation observer, report the observer failure and continue
+the existing publication sequence. Preserve explicit Stop and cancellation
+checks. Do not broadly catch every delivery effect or convert =quit=/=throw=
+into success. Test multiple observers, early terminal replies, observer Stop,
+Stop followed by observer error, and metadata cleanup. Never retry the packet.
+
+** Submission diagnostics do not describe delivery disposition
+
+With capability readiness set to =pending=, a native submission returns its
+submission object and logs =submission-complete :status completed=, while the
+captured wire has zero bytes. This is consistent with the event's current
+call-completion meaning. It is insufficient evidence of dispatch or playback.
+
+Similarly, cancellation before publication can return nil without being a
+delivery failure. Named queue compatibility has bounded reason codes, but
+ordinary structured selection is still inferred from entry kinds. Add an
+explicit internal disposition; retain existing public return types and event
+meaning. Any new diagnostics should add precise stage/outcome fields, not
+silently redefine =completed= or infer admission from a completed write.
+
+** Resource failure cleanup is sound in the exercised cases
+
+The new =tts-preparation-resource-faults-discard-unsent-work-and-preserve-other-lane=
+test injects an error, Stop and process death during inserted-cue resolution
+on timeline versions 3 and 4, plus registration replacement on version 4.
+All seven cases send no new timeline, run no deferred success effect, retain
+no dispatch reservation or voice-snapshot charge, and leave notification
+delivery usable. The process-death case currently raises the completion-
+capability error before reaching the next cancellation check. Preserve cleanup;
+a later diagnostic change can identify the dead process more accurately.
+
+This supplements existing projection/framing/admission fault tests. It does
+not establish real device recovery or remote resource availability.
+
+** Callback reservations and byte offsets already cross the proposed boundary
+
+Nested tracked producers can return a reserved callback ID while the outer
+capture is still open. Finalization must reuse that owner for either timeline
+or compatibility delivery. “Allocate all callbacks after building” would break
+this contract. Reservation is distinct from arming, publication and delivery.
+
+=tts--concrete-positioned-actions= already converts final payload character
+positions into UTF-8 offsets before handing runs to transport. The timeline
+codec validates offsets and maps them back to character boundaries when
+needed. Moving conversion solely into the final serializer would be another
+change. Preserve this existing boundary during extraction and describe its
+units explicitly. Continue testing Unicode after pronunciation, capitalization
+and chunking; never reinterpret byte offsets as character positions.
+
+** Existing replay and queue proof must remain the owners
+
+[[file:../../lisp/aural/emacsvox-aural-replay.el][Replay]] already retains bounded actual-voice evidence and associates coalesced
+wire spans with source runs. It is not an offline delivery simulator and does
+not retain all omitted actions or path-selection reasons. Extracting coalescing
+must keep its mapping aligned; do not build an independent second grouping rule.
+
+The [[file:../voice-editor-queue-proof-review.org][queue-proof review]] and [[file:../voice-editor-legacy-queue-review.org][legacy queue review]] establish why opaque output,
+cross-call queues, explicit dispatches and uncertain framing remain compatible
+output. Preserve the observer around actual writes, fingerprints, bounded
+state, sticky remote proof loss and one-use Stop receipts. Do not add Stop,
+newline, reset or reconnect solely to make a candidate eligible.
+
+* Proposed construction boundary
+
+Keep the orchestration in the existing transport module initially. Directory
+splits are not a prerequisite. Use a small private assembly accumulator, with
+helpers for coalescing, span/effect transitions and action placement that accept
+explicit data. Let the existing traversal invoke them at the same points it
+currently projects spans and resolves actions. The helpers must not access
+processes, buffers, files, timers or ambient policy.
+
+The orchestration retains live reads and resource resolution. Feed the resolved
+span fields, resolved resource identity, action policy and semantic data into
+assembly at their established points. Capture delivery fields last. Do not
+pre-resolve all resources, duplicate the traversal, introduce a general effect
+interpreter or copy the whole accumulator for each span. Tests can feed a
+recorded sequence of assembly inputs directly without speech processes.
+
+The final proposed delivery is data-only: representation, bounded reason,
+document or preserved compatibility commands, semantic bindings, span index,
+and required wire version. Keep process identity, queue guard, owner objects,
+timers and callbacks in the existing live preparation wrapper. Treat the
+candidate as owned data once finalized; it must not borrow mutable editor
+state. Reuse existing copies and budgets rather than adding a second full
+source/command history.
+
+Representation selection should distinguish these outcomes explicitly:
+
+- Structured: complete eligible document, with its negotiated version.
+- Compatibility: original ordered commands plus an existing shape/proof reason.
+- No output: no enabled content/actions, or readiness gating, recorded distinctly.
+- Rejected or cancelled: failed validation, unavailable resource, stale owner,
+  changed registration or lost admission guard. These do not authorize fallback.
+
+Preserve the current reason precedence for named queues: opaque definition or
+command, queue-only, unsealed tail, multiple owners/flushes, state transition,
+old server, cross-call queue, unknown queue, unproven boundary and unusable
+remote proof. Expand reasons for ordinary captures without changing decisions.
+Unsupported timeline versions 1 and 2 remain installation errors.
+
+Selection and execution need separate fields. A structured candidate can later
+be rejected at admission, cancelled, written successfully or have an ambiguous
+write. A compatibility candidate can be scheduled until idle. Keep server
+terminal status separate from all of these. The wrapper preserves existing
+public return values and signalled conditions; the private result provides
+evidence without changing those APIs.
+
+Binding an actual dispatch ID, attaching accounting and generating final frames
+stay in the commit coordinator. It may reuse an earlier inactive owner. Final
+validation still runs with the actual ID before interruption or writing; its
+digit length affects encoded size and frame boundaries. Preserve pre-write
+admission and immediately-before-write checks even if a candidate was valid
+earlier. Never reuse a candidate after an ambiguous send or process replacement.
+
+* Diagnostics and offline reproduction
+
+A full provenance extension should follow a separate reviewed ADR. It needs
+ownership, capture timing, limits and failure semantics; extraction does not
+depend on approving it. The proposed owner is Aural submission/delivery, with
+lifecycle observations joined by the existing process and dispatch IDs.
+
+Start with bounded reason codes and counts: selected representation/version,
+submission and process IDs, requested versus retained dimensions, omitted
+actions, readiness/queue reason, write status and observed terminal status.
+Keep pre-write rejection separate from ambiguous write and observer failure.
+Do not claim backend degradation before the actual server receipt.
+
+Reuse opt-in diagnostic logging and existing history limits. Do not enable
+full-text capture automatically. An offline reproduction bundle would require
+an explicit export of the necessary synthetic or reviewed text, ordered
+assembly inputs, versions, bounded capability facts and fault schedule. It
+must contain no live objects, callbacks, credentials or executable Lisp; read
+as validated data with evaluation disabled. Redaction can invalidate offsets,
+digests and rule matches, so a redacted bundle must declare those limitations.
+
+Such replay reconstructs client decisions and final wire only. It never sends
+the saved speech to a new worker. Existing audible Replay keeps its current
+meaning and independent availability limits. Server admission/synthesis/device
+evidence still needs correlated Omnivox logs or receipts; add protocol fields
+only after a demonstrated gap and a separate paired design.
+
+* Implementation sequence and acceptance
+
+1. Fix the confirmed observer-error boundary in a small behavioral commit.
+   Add regression assertions for the callback and publication result rather
+   than treating the diagnostic's current error output as an accepted contract.
+2. Introduce explicit private selection/disposition results. Preserve public
+   returns, policy, reason precedence and existing compatibility bytes. Cover
+   no output, readiness suppression, fallback, rejection and cancellation.
+3. Extract assembly incrementally, beginning with explicit coalescing inputs
+   and action placement. Keep resource and capability calls in order. Compare
+   complete wire, semantic bindings and replay mapping after every extraction.
+4. Finish the candidate/live-wrapper separation. Retain deferred reservations,
+   admission checks, one-use Stop, accounting and callback publication. Run
+   deterministic combinations of timing faults through real finalization.
+5. Design bounded provenance and optional offline reproduction separately.
+   Update maintained developer guidance when each implemented boundary settles.
+
+The first four stages can remain entirely within Emacsvox. None requires a
+new Omnivox protocol, engine dependency or live-session change. Review a new
+architectural decision before changing accepted ownership or audible policy.
+
+| Area | Existing evidence to preserve | Additional acceptance during implementation |
+|------+-------------------------------+---------------------------------------------|
+| Payload and placement | Transport final-wire, interoperability, silence/effect, Unicode and multipart tests | Full candidate-to-wire comparisons; harmless run splitting; before/after speech around suppressed spans; coalesced replay mapping |
+| Voice versions | Choice timeline/playback and native/rich-tone suites | Versions 3–7, legacy/layered/native spans, omitted versus nil versus zero, actual ID at frame-size boundary |
+| Queue semantics | Queue-state and queue-handoff fixtures, actual write observer | Every explicit selection reason, both lanes, cross-call tails and registry change between selection and write |
+| Lifecycle | Preparation and dispatch-handoff faults | Cross each extraction boundary with Stop, death, replacement, reentrant callbacks and resource error; verify owner/timer/accounting cleanup |
+| After write | Early/late/duplicate replies and bounded callback drains | Observer error, observer Stop, history effect failure, ambiguous partial send; no replay and truthful disposition |
+| Diagnostics | Submission timing, send/marker/terminal logs and bounded history | No-output versus submitted versus unknown; no implied playback; bounded export and no live references |
+
+The leading-whitespace/before-cue lead in the earlier backlog remains
+unconfirmed and is not a reason to change output during this extraction.
+If it is pursued, establish the expected behavior and reproduce it separately.
+
+Do not claim a performance improvement from smaller functions. Measure short
+navigation, many distinct spans, coalescing and multipart documents. Preserve
+the current 256-KiB direct frame, 16-MiB aggregate, 64-part, 4096-action and
+512-actions-per-window wire bounds, 128-owner/32-MiB dispatch metadata limits,
+and bounded callback queues. Check allocation changes as well as time. The
+existing history preview is 4096 bytes and playback evidence is capped at
+64 KiB per presentation; diagnostic capture must not bypass those limits.
+
+* Reproduction and verification
+
+[[file:../../test/diagnose-delivery.el][The diagnostic]] loads either source or current compiled code in a fresh Emacs,
+checks the actual loaded paths before and after the tests, runs the focused
+baseline, reports the observer/readiness probes, and measures construction
+plus wire framing. It uses private pipes and the log-null fallback. No server
+or audio device is involved. Run with the Emacs selected by =local.mk=:
+
+#+begin_src sh
+make check-emacs
+EMACSVOX_DELIVERY_LOAD=source "$EMACS" -Q --batch -l test/diagnose-delivery.el
+make bytecode
+make bytecode-check
+EMACSVOX_DELIVERY_LOAD=compiled "$EMACS" -Q --batch -l test/diagnose-delivery.el
+make compiled-aural-test
+make trace-test
+make headers-check
+make docs-release-check
+#+end_src
+
+Set =EMACS= to that executable in your shell; =local.mk= does not export it.
+Use =make bytecode-rebuild= for a branch switch or changed macros/interfaces.
+Set =EMACSVOX_DELIVERY_TESTS=none= only when repeating measurements after the
+same code has passed the tests. Timing samples are three runs after warmup,
+with garbage collection before each, and include allocation-count deltas.
+They exclude source preparation, live registration, I/O, synthesis and sound.
+
+Both fresh source and compiled runs pass all 446 selected tests with no skips.
+The two added tests cover capture order and seven resource-fault combinations;
+the existing suites include native and extended-tone delivery through versions
+5–7. All six diagnostic observations agree between source and compiled runs.
+Actual loaded paths are checked for the builder, submission, codec, dispatch
+writer, queue writer and voice-dispatch attachment.
+
+The [[file:../benchmarks/data/2026-11-13-speech-delivery.eld][retained data]] records source identity, test/script hashes, loaded paths, full
+probe results, all timing samples and allocation counts. Emacs 31.0.90 on
+x86-64 Linux was selected by the copied, ignored =local.mk=. The production
+source is identical to the baseline; these timings are a reference for future
+changes, not a before/after performance result.
+
+| Construction and framing case | Source median ms | Compiled median ms | Wire bytes | Frames |
+|-------------------------------+------------------+--------------------+------------+--------|
+| One short navigation span | 0.398 | 0.137 | 357 | 1 |
+| 240 distinct Unicode spans | 6.774 | 2.123 | 50113 | 1 |
+| 240 coalescible Unicode runs | 2.206 | 0.370 | 6029 | 1 |
+| 4096 distinct Unicode spans | 133.031 | 27.294 | 865663 | 3 |
+| One 300000-character span | 7.302 | 6.143 | 400402 | 2 |
+
+These synthetic version-3 documents exclude resource I/O and live dispatch.
+The three samples per case are too few for tail-latency claims. No collection
+occurred inside the measured regions; allocation counters are cumulative
+objects or lengths, not retained heap size or peak memory. A future candidate
+comparison needs matched runs under the same toolchain and workload before
+claiming a gain or setting a performance threshold.
+
+The full worktree byte-code rebuild and its preflight pass. The isolated
+=make compiled-aural-test= gate passes, and all 27 semantic golden traces
+match. Header, version and documentation release checks pass. Local file-link
+targets and retained evidence hashes are checked separately. The build emits
+warnings in unchanged modules; this investigation does not repair them.
+Emacs 30.2, native Windows/macOS, real server and listening acceptance were
+not rerun for this investigation. Those remain implementation/release gates
+where the eventual change requires them.
