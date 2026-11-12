@@ -244,15 +244,19 @@ a `cancelled' record when pending input interrupts that wait.")
 (defvar emacsvox-aural--submission-depth 0)
 (defvar emacsvox-aural--delivery-dispatch-owners nil)
 
-(defun tts--dispatch-copy-data (value)
-  "Copy bounded dispatch VALUE, including strings and vector contents."
+(defun tts--dispatch-copy-data (value &optional copy-leaf)
+  "Copy bounded dispatch VALUE, including strings and vector contents.
+Optional COPY-LEAF copies or validates strings and non-container values during
+the same traversal.  With nil, retain the existing dispatch-copy contract."
   (let ((copies (make-hash-table :test #'eq)) pending)
     (cl-labels
         ((allocate (source)
            (if (not (or (stringp source) (consp source) (vectorp source)
-                        (hash-table-p source))) source
+                        (hash-table-p source)))
+               (if copy-leaf (funcall copy-leaf source) source)
              (or (gethash source copies)
-                 (let ((copy (cond ((consp source) (cons nil nil))
+                 (let ((copy (cond ((and copy-leaf (stringp source)) (funcall copy-leaf source))
+                                   ((consp source) (cons nil nil))
                                    ((hash-table-p source) (copy-hash-table source))
                                    (t (copy-sequence source)))))
                    (puthash source copy copies)

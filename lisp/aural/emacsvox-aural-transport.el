@@ -70,6 +70,7 @@
 
 (declare-function tts--preparation-output-guard "tts-lifecycle" (process))
 
+(defvar emacsvox-speak-messages)
 (defvar tts-speaker-process)
 (defvar tts--marker-event-function)
 (defvar tts--tracked-completion-function)
@@ -804,8 +805,10 @@ meaning.  Keep publication after observers so an explicit Stop can cancel it."
         (emacsvox-aural-diagnostic-log-event
          'presentation-observer-error
          :condition (car error-data) :error-message (error-message-string error-data))
-        (message "Emacsvox presentation observer failed: %s"
-                 (error-message-string error-data))))
+        ;; Speaking this report would invoke the same faulty observers again.
+        (let ((emacsvox-speak-messages nil))
+          (message "Emacsvox presentation observer failed: %s"
+                   (error-message-string error-data)))))
      ;; A non-nil observer return must not stop the rest of this abnormal hook.
      nil)))
 
@@ -1982,22 +1985,11 @@ The live coordinator consumes this once; it is not a retry or replay ticket."
   "Copy DATA using existing dispatch copying, rejecting live references.
 Strip string properties so editor objects cannot hide in otherwise plain text.
 Capture and wire bounds remain owned by their existing validators."
-  (let* ((owned (tts--dispatch-copy-data data))
-         (pending (list owned)) (seen (make-hash-table :test #'eq)))
-    (while pending
-      (let ((value (pop pending)))
-        (unless (gethash value seen)
-          (cond
-           ((stringp value) (set-text-properties 0 (length value) nil value))
-           ((consp value) (push (car value) pending) (push (cdr value) pending))
-           ((hash-table-p value)
-            (maphash (lambda (key item) (push key pending) (push item pending)) value))
-           ((and (vectorp value) (not (recordp value)))
-            (dotimes (index (length value)) (push (aref value index) pending)))
-           ((or (symbolp value) (numberp value)))
-           (t (error "Live or unsupported value in delivery candidate")))
-          (puthash value t seen))))
-    owned))
+  (tts--dispatch-copy-data
+   data (lambda (value)
+          (cond ((stringp value) (substring-no-properties value))
+                ((or (symbolp value) (numberp value)) value)
+                (t (error "Live or unsupported value in delivery candidate"))))))
 
 (defun emacsvox-aural--timeline-candidate (built)
   "Take an owned data snapshot of assembled BUILT output."
