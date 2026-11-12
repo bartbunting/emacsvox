@@ -26,6 +26,86 @@
   (maphash (lambda (_ owner) (should-not (eq process (tts--dispatch-owner-process owner)))) tts--prepared-owners)
   (maphash (lambda (_ entry) (should-not (eq process (tts--marker-dispatch-process entry)))) tts--marker-dispatches))
 
+(ert-deftest tts-preparation-observer-errors-preserve-publication-and-stop ()
+  :tags '(delivery-preparation)
+  (dolist (early '(nil t))
+    (dolist (outcome '(error stop stop-error))
+      (omnivox-choice-playback-test--with-runtime
+       (let* ((run (omnivox-choice-timeline-test--run 'bolden nil))
+              writes callbacks observed diagnostics result
+              (tts--tracked-completion-function
+               (lambda (id status) (push (list id status) callbacks)))
+              (emacsvox-aural-plan-presented-hook
+               (list (lambda (_plan)
+                       (push 'first observed)
+                       (when (memq outcome '(stop stop-error)) (tts-stop))
+                       (unless (eq outcome 'stop) (error "Observer failed")))
+                     (lambda (_plan) (push 'second observed)))))
+         (setf (emacsvox-aural-concrete-plan-object-end-p (car run)) t)
+         (cl-letf (((symbol-function 'tts-voice-reset-code) (lambda () ""))
+                   ((symbol-function 'emacsvox-aural-diagnostic-log-event)
+                    (lambda (event &rest fields) (push (cons event fields) diagnostics)))
+                   ((symbol-function 'process-send-string)
+                    (lambda (process command)
+                      (push command writes)
+                      (when (and early (string-prefix-p "emacsvox_timeline " command))
+                        (tts--speaker-process-filter process "__EMACSVOX_TRACKED__ 1 completed\n")
+                        (tts--dispatch-drain process)))))
+           (setq result
+                 (emacsvox-aural-call-with-delivery-transaction
+                  speaker (lambda ()
+                            (emacsvox-aural-queue-concrete-plan (car run) (cadr run))
+                            (tts--protocol-dispatch))))
+           (should-not callbacks)
+           (unless early
+             (tts--speaker-process-filter speaker "__EMACSVOX_TRACKED__ 1 completed\n"))
+           (tts--dispatch-drain speaker))
+         (should (equal '(second first) observed))
+         (should (eql (if (eq outcome 'error) 1 nil) result))
+         (should (equal (and (eq outcome 'error) '((1 completed))) callbacks))
+         (should (= 1 (cl-count-if (lambda (wire) (string-prefix-p "emacsvox_timeline " wire)) writes)))
+         (should (= (if (eq outcome 'error) 0 1) (cl-count "s\n" writes :test #'equal)))
+         (should (= (if (eq outcome 'stop) 0 1)
+                    (cl-count 'presentation-observer-error diagnostics :key #'car)))
+         (tts-preparation-test--empty speaker)
+         (should (= 0 (hash-table-count (process-get speaker 'omnivox--choice-snapshot-references)))))))))
+
+(ert-deftest tts-preparation-observer-nonlocal-exits-release-written-owners ()
+  :tags '(delivery-preparation)
+  (dolist (exit '(quit throw effect-error))
+    (omnivox-choice-playback-test--with-runtime
+     (let* ((run (omnivox-choice-timeline-test--run 'bolden nil))
+            writes callbacks
+            (tts--tracked-completion-function (lambda (&rest args) (push args callbacks)))
+            (emacsvox-aural-plan-presented-hook
+             (list (lambda (_plan)
+                     (pcase exit
+                       ('quit (signal 'quit nil))
+                       ('throw (throw 'observer-exit 'throw)))))))
+       (setf (emacsvox-aural-concrete-plan-object-end-p (car run)) t)
+       (cl-letf (((symbol-function 'tts-voice-reset-code) (lambda () ""))
+                 ((symbol-function 'process-send-string)
+                  (lambda (_process command) (push command writes))))
+         (should
+          (eq exit
+              (catch 'observer-exit
+                (condition-case nil
+                    (emacsvox-aural-call-with-delivery-transaction
+                     speaker
+                     (lambda ()
+                       (when (eq exit 'effect-error)
+                         (emacsvox-aural--defer-delivery-effect
+                          (lambda () (error "Non-observer effect failed"))))
+                       (emacsvox-aural-queue-concrete-plan (car run) (cadr run))
+                       (tts--protocol-dispatch)))
+                  (quit 'quit)
+                  (error 'effect-error))))))
+       (should (= 1 (length writes)))
+       (tts--speaker-process-filter speaker "__EMACSVOX_TRACKED__ 1 completed\n")
+       (tts--dispatch-drain speaker)
+       (should-not callbacks)
+       (tts-preparation-test--empty speaker)))))
+
 (ert-deftest tts-preparation-stop-at-projection-framing-and-admission ()
   (dolist (version '(3 4))
     (dolist (stage '(emacsvox-aural--build-structured-timeline

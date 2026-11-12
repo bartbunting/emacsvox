@@ -758,6 +758,26 @@ Return non-nil when every entry was sent to a live process."
     (tts--preparation-check)
     (funcall effect)))
 
+(defun emacsvox-aural--notify-plan-presented (plan)
+  "Notify presentation observers of PLAN without losing a written owner.
+Contain each observer's ordinary errors; Stop and nonlocal exits retain their
+meaning.  Keep publication after observers so an explicit Stop can cancel it."
+  (run-hook-wrapped
+   'emacsvox-aural-plan-presented-hook
+   (lambda (observer)
+     (condition-case error-data
+         (funcall observer plan)
+       (tts--preparation-cancelled
+        (signal (car error-data) (cdr error-data)))
+       (error
+        (emacsvox-aural-diagnostic-log-event
+         'presentation-observer-error
+         :condition (car error-data) :error-message (error-message-string error-data))
+        (message "Emacsvox presentation observer failed: %s"
+                 (error-message-string error-data))))
+     ;; A non-nil observer return must not stop the rest of this abnormal hook.
+     nil)))
+
 (defun emacsvox-aural--defer-delivery-effect (effect)
   "Commit EFFECT after the current packet is sent, or immediately outside one."
   (if emacsvox-aural--delivery-transaction-active-p
@@ -2070,7 +2090,7 @@ run's leading transport pause."
            (when emacsvox-aural-plan-presented-hook
              (let ((emacsvox-aural--history-respect-icon-policy t))
                (emacsvox-aural--call-independent-callback
-                #'run-hook-with-args 'emacsvox-aural-plan-presented-hook
+                #'emacsvox-aural--notify-plan-presented
                 (if queued-plan
                     (emacsvox-aural--history-value queued-plan)
                   (if text-supplied-p
