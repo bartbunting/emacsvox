@@ -715,6 +715,22 @@ one was signalled."
      (or (plist-get failure :error-message) reason))
     nil))
 
+(defun emacsvox-aural--write-delivery-packet (process packet owners)
+  "Write PACKET for PROCESS and OWNERS while observing the exact attempt."
+  (let ((tts-queue--write-observation (list 'not-attempted process (car packet)))
+        completed)
+    (emacsvox-aural--delivery-note :stage 'write)
+    (unwind-protect
+        (progn
+          (if owners
+              (tts--dispatch-write-packet process (car packet) owners (cdr packet))
+            (tts-queue--send process (car packet) (cdr packet) nil
+                             (tts--preparation-output-guard process)))
+          (setq completed t)
+          (emacsvox-aural--delivery-note :write-status 'succeeded))
+      (when (and (not completed) (eq (car tts-queue--write-observation) 'attempted))
+        (emacsvox-aural--delivery-note :write-status 'uncertain)))))
+
 (defun emacsvox-aural--send-delivery-entries
     (entries &optional owner generation transaction-id)
   "Send ordered delivery ENTRIES, combining adjacent writes per process.
@@ -743,14 +759,8 @@ Return non-nil when every entry was sent to a live process."
                     transaction-id))
                (condition-case error-data
                    (let ((packet (tts-queue--packet (nreverse commands) (nreverse descriptions))))
-                     (emacsvox-aural--delivery-note :stage 'write :write-status 'uncertain)
-                     (if dispatch-owners
-                         (tts--dispatch-write-packet
-                          current-process (car packet)
-                          (delete-dups (nreverse dispatch-owners)) (cdr packet))
-                       (tts-queue--send current-process (car packet) (cdr packet) nil
-                                        (tts--preparation-output-guard current-process)))
-                     (emacsvox-aural--delivery-note :write-status 'succeeded))
+                     (emacsvox-aural--write-delivery-packet
+                      current-process packet (delete-dups (nreverse dispatch-owners))))
                  (tts--preparation-cancelled
                   (signal (car error-data) (cdr error-data)))
                  (error
@@ -1963,9 +1973,42 @@ when the recorded plans have no speech span and require legacy lowering."
                     (list (emacsvox-aural--queue-limitation-effect owner generation named reason)))))
     selected))
 
+(cl-defstruct (emacsvox-aural--candidate (:constructor emacsvox-aural--make-candidate))
+  "Owned delivery data, independent of processes, callbacks and queue guards.
+The live coordinator consumes this once; it is not a retry or replay ticket."
+  representation reason version document bindings span-index commands)
+
+(defun emacsvox-aural--own-candidate-data (data)
+  "Copy DATA using existing dispatch copying, rejecting live references.
+Strip string properties so editor objects cannot hide in otherwise plain text.
+Capture and wire bounds remain owned by their existing validators."
+  (let* ((owned (tts--dispatch-copy-data data))
+         (pending (list owned)) (seen (make-hash-table :test #'eq)))
+    (while pending
+      (let ((value (pop pending)))
+        (unless (gethash value seen)
+          (cond
+           ((stringp value) (set-text-properties 0 (length value) nil value))
+           ((consp value) (push (car value) pending) (push (cdr value) pending))
+           ((hash-table-p value)
+            (maphash (lambda (key item) (push key pending) (push item pending)) value))
+           ((and (vectorp value) (not (recordp value)))
+            (dotimes (index (length value)) (push (aref value index) pending)))
+           ((or (symbolp value) (numberp value)))
+           (t (error "Live or unsupported value in delivery candidate")))
+          (puthash value t seen))))
+    owned))
+
+(defun emacsvox-aural--timeline-candidate (built)
+  "Take an owned data snapshot of assembled BUILT output."
+  (let ((data (emacsvox-aural--own-candidate-data built)))
+    (emacsvox-aural--make-candidate
+     :representation 'structured :version (plist-get (car data) :protocol_version)
+     :document (car data) :bindings (cadr data) :span-index (nth 2 data))))
+
 (defun emacsvox-aural--finalize-timeline-delivery
     (owner generation entries effects runs)
-  "Replace eligible legacy ENTRIES with one structured timeline for OWNER."
+  "Select and assemble data, then bind it to live OWNER's captured ENTRIES."
   (let ((reason (cond ((null runs) 'no-runs)
                       ((not (eq owner tts-speaker-process)) 'speaker-changed)
                       ((not (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)) 'no-speech)
@@ -1975,71 +2018,88 @@ when the recorded plans have no speech span and require legacy lowering."
         (progn
           (emacsvox-aural--delivery-note :selection 'compatibility :reason reason)
           (emacsvox-aural--finalize-legacy-delivery entries effects))
-    (let* ((snapshot (when (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(4 5 6 7))
-                       (omnivox--choice-current-registration owner)))
-           (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
-      (if (not built)
-          (progn
-            (emacsvox-aural--delivery-note :selection 'compatibility :reason 'no-speech)
-            (emacsvox-aural--finalize-legacy-delivery entries effects))
-        (emacsvox-aural--delivery-note :selection 'structured :reason nil
-                                       :version (plist-get (car built) :protocol_version)
-                                       :stage 'framing)
-        (let* ((envelope (car built))
-               (bindings (cadr built))
-               (reserved
-                (car (delete-dups
-                      (apply #'append
-                             (mapcar #'emacsvox-aural--delivery-entry-owners entries)))))
-               (registration
-                (if reserved
-                    (progn
-                      (tts--dispatch-bind-semantics reserved bindings)
-                      (list (tts--dispatch-owner-id reserved) nil reserved))
-                  (tts--prepare-structured-dispatch
-                   tts--marker-event-function
-                   tts--tracked-completion-function
-                   bindings)))
-               (actual-id (car registration)))
-          (when snapshot
-            (omnivox--prepare-choice-dispatch (nth 2 registration) snapshot (nth 2 built)))
-          (when emacsvox-aural--history-captured-plans
-            (require 'emacsvox-aural-replay)
-            (emacsvox-aural-replay--attach
-             (nth 2 registration) snapshot built runs
-             emacsvox-aural--history-playback
-             (reverse emacsvox-aural--history-captured-plans)))
-          (unless (= actual-id 1)
-            (setq envelope (plist-put envelope :dispatch_id actual-id)))
-          (list
-           (append
-            (cl-remove-if
-             (lambda (entry)
-               (memq (emacsvox-aural--delivery-entry-kind entry)
-                     '(structured-fallback named-fallback ordinary-dispatch explicit-dispatch)))
-             entries)
-            (mapcar
-             (lambda (command)
-               (emacsvox-aural--make-delivery-entry
-                :process owner :kind 'structured :command command
-                :queue-description
-                (tts-queue--describe
-                 command (if emacsvox-aural--isolated-letter 'interrupt 'neutral))
-                :owners (list (nth 2 registration))))
-             (emacsvox-aural--frame-structured-timeline envelope)))
-           effects
-           actual-id)))))))
+      (let* ((snapshot (when (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(4 5 6 7))
+                         (omnivox--choice-current-registration owner)))
+             (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
+        (if (not built)
+            (progn
+              (emacsvox-aural--delivery-note :selection 'compatibility :reason 'no-speech)
+              (emacsvox-aural--finalize-legacy-delivery entries effects))
+          (emacsvox-aural--delivery-note :selection 'structured :reason nil
+                                        :version (plist-get (car built) :protocol_version)
+                                        :stage 'binding)
+          (emacsvox-aural--bind-timeline-candidate
+           owner (emacsvox-aural--timeline-candidate built) snapshot runs entries effects))))))
+
+(defun emacsvox-aural--bind-timeline-candidate (owner candidate snapshot runs entries effects)
+  "Bind CANDIDATE to live OWNER and return entries, EFFECTS and dispatch ID.
+SNAPSHOT and RUNS stay in the coordinator for registration and replay guards.
+Reuse any deferred reservation.  Validate frames with the actual ID before
+interruption; a prior candidate or placeholder ID never authorises a write."
+  (let* ((envelope (copy-sequence (emacsvox-aural--candidate-document candidate)))
+         (bindings (emacsvox-aural--candidate-bindings candidate))
+         (span-index (emacsvox-aural--candidate-span-index candidate))
+         (reserved (car (delete-dups (apply #'append (mapcar #'emacsvox-aural--delivery-entry-owners entries)))))
+         (registration
+          (if reserved
+              (progn
+                (tts--dispatch-bind-semantics reserved bindings)
+                (list (tts--dispatch-owner-id reserved) nil reserved))
+            (tts--prepare-structured-dispatch
+             tts--marker-event-function tts--tracked-completion-function bindings)))
+         (actual-id (car registration)))
+    (when snapshot
+      (omnivox--prepare-choice-dispatch (nth 2 registration) snapshot span-index))
+    (when emacsvox-aural--history-captured-plans
+      (require 'emacsvox-aural-replay)
+      (emacsvox-aural-replay--attach
+       (nth 2 registration) snapshot (list envelope bindings span-index) runs
+       emacsvox-aural--history-playback (reverse emacsvox-aural--history-captured-plans)))
+    (setf (plist-get envelope :dispatch_id) actual-id)
+    (emacsvox-aural--delivery-note :stage 'framing)
+    (list
+     (append
+      (cl-remove-if (lambda (entry)
+                      (memq (emacsvox-aural--delivery-entry-kind entry)
+                            '(structured-fallback named-fallback ordinary-dispatch explicit-dispatch)))
+                    entries)
+      (mapcar
+       (lambda (command)
+         (emacsvox-aural--make-delivery-entry
+          :process owner :kind 'structured :command command
+          :queue-description (tts-queue--describe command (if emacsvox-aural--isolated-letter 'interrupt 'neutral))
+          :owners (list (nth 2 registration))))
+       (emacsvox-aural--frame-structured-timeline envelope)))
+     effects actual-id)))
 
 (defun emacsvox-aural--finalize-legacy-delivery (entries effects)
-  "Bind pending callback owners to unchanged compatibility ENTRIES and EFFECTS."
-  (unless entries
-    (emacsvox-aural--delivery-note :selection 'no-output :reason 'empty-capture
-                                   :disposition 'suppressed))
-  (dolist (entry entries)
-    (dolist (owner (emacsvox-aural--delivery-entry-owners entry))
-      (unless (tts--dispatch-owner-semantics-bound owner)
-        (tts--dispatch-bind-semantics owner nil))))
-  (list entries effects))
+  "Own compatibility bytes before binding live ENTRIES and EFFECTS."
+  (let ((candidate
+         (emacsvox-aural--make-candidate
+          :representation (if entries 'compatibility 'no-output)
+          :reason (if entries (plist-get emacsvox-aural--delivery-result :reason) 'empty-capture)
+          :commands (mapcar (lambda (entry)
+                              (substring-no-properties (emacsvox-aural--delivery-entry-command entry)))
+                            entries))))
+    (unless entries
+      (emacsvox-aural--delivery-note :selection 'no-output :reason 'empty-capture
+                                    :disposition 'suppressed))
+    (emacsvox-aural--bind-compatibility-candidate candidate entries effects)))
+
+(defun emacsvox-aural--bind-compatibility-candidate (candidate entries effects)
+  "Join CANDIDATE's owned commands to live entry guards, owners and EFFECTS."
+  (let ((commands (emacsvox-aural--candidate-commands candidate)) bound)
+    (dolist (entry entries)
+      (unless (and commands (equal (car commands) (emacsvox-aural--delivery-entry-command entry)))
+        (error "Compatibility command changed before candidate binding"))
+      (let ((live (copy-emacsvox-aural--delivery-entry entry)))
+        (setf (emacsvox-aural--delivery-entry-command live) (pop commands))
+        (dolist (owner (emacsvox-aural--delivery-entry-owners live))
+          (unless (tts--dispatch-owner-semantics-bound owner)
+            (tts--dispatch-bind-semantics owner nil)))
+        (push live bound)))
+    (when commands (error "Compatibility candidate has unmatched commands"))
+    (list (nreverse bound) effects)))
 
 (defun emacsvox-aural-queue-concrete-action (action &optional context)
   "Queue concrete ACTION under frozen CONTEXT without resolving again."

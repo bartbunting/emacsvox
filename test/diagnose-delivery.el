@@ -47,6 +47,10 @@
 (defun delivery-investigation--paths ()
   "Reject another checkout or loading mode for the investigated functions."
   (dolist (function '(emacsvox-aural--build-structured-timeline
+                      emacsvox-aural--assembly-span
+                      emacsvox-aural--timeline-candidate
+                      emacsvox-aural--bind-timeline-candidate
+                      emacsvox-aural-replay--span-map
                       emacsvox-aural--submit-content
                       emacsvox-aural--frame-structured-timeline
                       tts--dispatch-write-packet tts-queue--send
@@ -106,7 +110,8 @@
          (list :readiness 'pending
                :wire-bytes (string-bytes (plist-get result :wire))
                :submission-returned (emacsvox-aural-submission-p (plist-get result :submission))
-               :submission-complete-status (plist-get (cdr (assq 'submission-complete events)) :status)))))))
+               :submission-complete-status (plist-get (cdr (assq 'submission-complete events)) :status)
+               :delivery-outcome (cdr (assq 'delivery-outcome events))))))))
 
 (defun delivery-investigation--resource-probe (mode)
   "Record resource mapping during compatibility capture and MODE assembly."
@@ -132,8 +137,8 @@
                   (tts--protocol-dispatch))))
      (list :cue-mode mode :resource-phases (nreverse calls)))))
 
-(defun delivery-investigation--measure (name count text coalesce)
-  "Measure construction and framing of COUNT runs of TEXT named NAME."
+(defun delivery-investigation--measure (name count text coalesce &optional own)
+  "Measure COUNT runs of TEXT named NAME with COALESCE and optional OWN copying."
   (let* ((emacsvox-aural-submission-delivery-policy 'ordered)
          (runs (cl-loop for index below count collect
                        (list (emacsvox-aural--make-concrete-plan
@@ -151,8 +156,12 @@
       (let ((before (memory-use-counts)))
         (let ((timing (benchmark-run
                       1
-                      (setq document (car (emacsvox-aural--build-structured-timeline 1 1 runs))
-                            frames (emacsvox-aural--frame-structured-timeline document)))))
+                      (let ((built (emacsvox-aural--build-structured-timeline 1 1 runs)))
+                        (setq document (if own
+                                           (emacsvox-aural--candidate-document
+                                            (emacsvox-aural--timeline-candidate built))
+                                         (car built))
+                              frames (emacsvox-aural--frame-structured-timeline document))))))
           (push (list :seconds (car timing) :collections (nth 1 timing)
                       :gc-seconds (nth 2 timing)
                       :allocation-count-deltas (cl-mapcar #'- (memory-use-counts) before)) samples))))
@@ -188,6 +197,8 @@
                 (coalesced-runs 240 "café 日本 next " t)
                 (large-timeline 4096 "café 日本 next " nil)
                 (long-span 1 ,(make-string 300000 ?x) nil)))
-  (princ (format "Measurement: %S\n" (apply #'delivery-investigation--measure case))))
+  (princ (format "Measurement: %S\n" (apply #'delivery-investigation--measure case)))
+  (princ (format "Owned candidate measurement: %S\n"
+                 (apply #'delivery-investigation--measure (append case '(t))))))
 
 ;;; diagnose-delivery.el ends here

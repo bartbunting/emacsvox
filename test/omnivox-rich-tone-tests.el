@@ -490,5 +490,42 @@
         (should (emacsvox-aural-replay--operation-finished operation)))
       (omnivox-preview-test--clean speaker))))
 
+(ert-deftest omnivox-native-runtime-candidates-keep-version-and-admission-guards ()
+  :tags '(delivery-preparation)
+  (dolist (version '(5 6 7))
+    (dolist (fault '(none stop registry))
+      (omnivox-native-runtime-test--with-speech
+       (dolist (lane (list speaker notification))
+         (pcase version
+           (6 (omnivox-rich-tone-test--enable lane))
+           (7 (omnivox-extended-tone-test--enable lane)))
+         (process-put lane omnivox--choice-registration-property nil))
+       (omnivox-native-runtime-test--register)
+       (let ((original (symbol-function 'emacsvox-aural--bind-timeline-candidate))
+             captured result)
+         (cl-letf (((symbol-function 'emacsvox-aural--bind-timeline-candidate)
+                    (lambda (owner candidate &rest args)
+                      (should (= version (emacsvox-aural--candidate-version candidate)))
+                      (when (eq owner speaker)
+                        (pcase fault
+                          ('stop (tts-stop))
+                          ('registry (process-put speaker omnivox--choice-registration-property
+                                                  (copy-tree (process-get speaker omnivox--choice-registration-property))))))
+                      (apply original owner candidate args)))
+                   ((symbol-function 'process-send-string)
+                    (lambda (process wire) (push (cons process wire) captured))))
+           (setq result (omnivox-choice-playback-test--submit))
+           (should (eq (integerp result) (eq fault 'none)))
+           (should (= (if (eq fault 'none) 1 0)
+                      (cl-count-if (lambda (write) (string-prefix-p "emacsvox_timeline " (cdr write))) captured)))
+           (tts--cancel-process-tracked-dispatches speaker 'cancelled)
+           (should (= 0 (or (process-get speaker 'tts--dispatch-owner-count) 0)))
+           (should (= 0 (or (process-get speaker 'tts--dispatch-metadata-bytes) 0)))
+           (setq captured nil)
+           (let ((tts-speaker-process notification))
+             (should (integerp (omnivox-choice-playback-test--submit))))
+           (should (= 1 (length captured)))
+           (should (eq notification (caar captured)))))))))
+
 (provide 'omnivox-rich-tone-tests)
 ;;; omnivox-rich-tone-tests.el ends here

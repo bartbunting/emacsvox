@@ -221,5 +221,21 @@ effects, omitted cues and interleaved resource resolution."
                         (list (emacsvox-aural--frame-structured-timeline (car built))
                               (cadr built) (nth 2 built)))))))))
 
+(ert-deftest omnivox-choice-timeline-candidate-owns-data-without-editor-properties ()
+  :tags '(delivery-preparation)
+  (with-temp-buffer
+    (let* ((text (propertize "café" 'source-buffer (current-buffer)))
+           (runs (list (omnivox-choice-timeline-test--run 'bolden nil nil text)))
+           (built (emacsvox-aural--build-structured-timeline 1 1 runs))
+           (candidate (emacsvox-aural--timeline-candidate built))
+           (owned (plist-get (aref (plist-get (emacsvox-aural--candidate-document candidate) :spans) 0) :text)))
+      (should (equal owned "café"))
+      (should-not (text-properties-at 0 owned))
+      (aset text 0 ?X)
+      (should (equal owned "café"))
+      (should (equal (plist-get (aref (plist-get (car built) :spans) 0) :text) "Xafé"))
+      (setf (cadr built) (list (cons "bad" (current-buffer))))
+      (should-error (emacsvox-aural--timeline-candidate built)))))
+
 (provide 'omnivox-choice-timeline-tests)
 ;;; omnivox-choice-timeline-tests.el ends here

@@ -37,6 +37,10 @@
 (defconst tts-queue--metadata-bytes 128)
 (defvar tts-queue--birth nil "Shared one-cell taint flag during owned creation.")
 (defvar tts-queue--token nil "Exact, single-use output token.")
+(defvar tts-queue--write-observation nil
+  "Optional (STATE PROCESS COMMAND) cell observing one exact send attempt.
+STATE changes to `attempted' immediately before entering the low-level write.
+This diagnostic observation confers no queue proof or permission to retry.")
 
 (cl-defstruct (tts-queue--state (:constructor tts-queue--make-state))
 	      generation remote (queue 2) (framing 1) unusable (serial 0) flight overlap
@@ -462,7 +466,11 @@ This grant permits only that clear, never a preview or ordinary promotion."
 
 (defun tts-queue--send (process command description &optional auth guard own-stop)
   "Send COMMAND once with DESCRIPTION, returning a proof receipt when available."
-  (let* ((resolved (tts-queue--resolve process)) (state (tts-queue--state resolved))
+  (let* ((observation (and (eq process (nth 1 tts-queue--write-observation))
+                           (eq command (nth 2 tts-queue--write-observation))
+                           tts-queue--write-observation))
+         (tts-queue--write-observation nil)
+         (resolved (tts-queue--resolve process)) (state (tts-queue--state resolved))
          (tts-queue--token (tts-queue--make-write
                             :process resolved :string command :description description :auth auth
                             :guard guard :own-stop (and own-stop (equal command "s\n"))))
@@ -480,6 +488,7 @@ This grant permits only that clear, never a preview or ordinary promotion."
                                (or (not (tts-queue--state-remote state))
                                    (tts-queue--remote-packet-p command)))))
             (signal 'tts-queue--proof-lost nil))
+          (when observation (setcar observation 'attempted))
           (process-send-string process command)
           (unless (tts-queue--write-receipt tts-queue--token)
             (when state (tts-queue--invalidate state)))
