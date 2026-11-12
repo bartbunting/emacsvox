@@ -81,6 +81,57 @@ class DependencyTests(unittest.TestCase):
         self.assertEqual(result.stdout, "42")
         self.assertFalse(list(self.destination.rglob("*.elc")))
 
+    def menu_fixture(self):
+        names = ["compat", "cond-let", "llama", "transient", "with-editor",
+                 "magit", "markdown-mode"]
+        for name in names:
+            directory = self.root / "menu-source" / name
+            directory.mkdir(parents=True)
+            (directory / f"{name}-autoloads.el").write_text(";; No autoloads.\n")
+            (directory / ".dir-locals.el").write_text("((nil . ((fill-column . 80))))\n")
+        (self.root / "menu-source/manifest.json").write_text(json.dumps({"packages": names}))
+        (self.root / "menu-source/cond-let/menu-fixture-provider.el").write_text(
+            ";;; -*- lexical-binding: t; -*-\n"
+            "(defmacro menu-fixture-value () 42)\n(provide 'menu-fixture-provider)\n")
+        (self.root / "menu-source/magit/menu-fixture-consumer.el").write_text(
+            ";;; -*- lexical-binding: t; -*-\n(require 'menu-fixture-provider)\n"
+            "(defun menu-fixture-answer () (short-value))\n"
+            ";; Local Variables:\n"
+            ';; read-symbol-shorthands: (("short-" . "menu-fixture-"))\n;; End:\n')
+        profile = self.root / "menu-profile"
+        profile.mkdir()
+        environment = dict(os.environ, EMACSVOX_TEST_DEPS_DIR=str(self.root / "menu-source"),
+                           EMACSVOX_MENU_TEST_PROFILE=str(profile))
+        return profile, environment
+
+    def test_menu_compilation_preserves_sources_and_expands_shorthands(self):
+        profile, environment = self.menu_fixture()
+        before = PREP.inventory(self.root / "menu-source")
+        result = subprocess.run(
+            [self.emacs, "-Q", "--batch", "-l", str(PREP.HERE / "prepare-menu-dependencies.el")],
+            env=environment, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(PREP.inventory(self.root / "menu-source"), before)
+        compiled = profile / "dependencies/magit/menu-fixture-consumer.elc"
+        result = subprocess.run(
+            [self.emacs, "-Q", "--batch", "-L", str(profile / "dependencies/cond-let"),
+             "-l", str(compiled), "--eval", "(princ (menu-fixture-answer))"],
+            capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "42")
+
+    def test_menu_compilation_failure_is_fatal(self):
+        _, environment = self.menu_fixture()
+        source = self.root / "menu-source/magit/menu-fixture-consumer.el"
+        source.write_text("(require 'emacsvox-menu-fixture-missing-dependency)\n")
+        before = PREP.inventory(self.root / "menu-source")
+        result = subprocess.run(
+            [self.emacs, "-Q", "--batch", "-l", str(PREP.HERE / "prepare-menu-dependencies.el")],
+            env=environment, capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Menu dependency compilation failed", result.stdout + result.stderr)
+        self.assertEqual(PREP.inventory(self.root / "menu-source"), before)
+
     def test_changed_files_lock_toolchain_and_recipe_are_rejected(self):
         self.prepare()
         with self.assertRaisesRegex(PREP.DependencyError, "lock changed"):

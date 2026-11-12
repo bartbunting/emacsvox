@@ -23,6 +23,7 @@ when a check reports a missing prerequisite or stale build.
 | =unit-test= | The broad ERT suite, including installed optional integrations. | Requires generated autoloads; temporary fixtures, with no automatic in-tree rebuild or dependency installation. |
 | =integration-test= | Agent Shell, Notmuch, and EAT against the reviewed lock. | Requires =test-deps= first; verifies the prepared tree, without downloading or rebuilding it. |
 | =graphical-integration-test= | Agent Shell rendering, prompts, forms and tables, core vertical movement, and EAT output and focus in a real graphical Emacs. | Uses the same verified dependencies on a private Xvfb display, with a hard deadline and no speech output. |
+| =pinned-graphical-menu-test= | Settings and Magit menu interactions with verified, compiled dependencies. | Requires current Emacsvox byte-code and =test-deps=; compiles disposable dependency copies and uses a private Xvfb display. Also required by =release-check=. |
 | =compiled-notmuch-test= | Notmuch behaviour with the explicitly verified compiled adapter. | Requires current in-tree byte-code and the Notmuch package; does not rebuild it. |
 | =compiled-aural-test= | Compiled Aural parity in a fresh child Emacs. | Compiles into a temporary directory; leaves in-tree byte-code untouched. |
 | =build-aural-test= | Aural behaviour from the ordinary build tree. | Builds Aural byte-code under =lisp/=, then verifies it in a fresh Emacs. |
@@ -46,7 +47,7 @@ Vertico, and the other adapters selected by [[file:run-tests.el][the full runner
 =require= forms identify the package features needed by each integration;
 install the corresponding packages and their dependencies in the test profile.
 Emacs 30 also needs the external =lua-mode= package; Emacs 31 includes it.
-The eight-package lock below prepares only its focused integration job, not this
+The dependency lock below prepares only its focused integration and menu jobs, not this
 entire package set.  No test target installs packages into your personal profile.
 
 The full runner also loads =lisp/emacsvox-loaddefs.el= for documentation tests.
@@ -130,9 +131,10 @@ make graphical-integration-test
 #+end_src
 
 These targets use the selected Emacs (30.2 or newer), Python 3, GNU Make, Git,
-=sh=, Bash, and =cat=. Preparation downloads the eight archives recorded in
+=sh=, Bash, and =cat=. Preparation downloads the twelve archives recorded in
 =test/integration-dependencies.json=: Agent Shell, ACP, shell-maker, EAT,
-compat, Notmuch, Transient, and cond-let. Each has an exact upstream commit and archive SHA-256.
+compat, Notmuch, Transient, cond-let, llama, with-editor, Magit and Markdown Mode.
+Each has an exact upstream commit and archive SHA-256.
 It does not consult the current package archive index or your personal packages.
 The offline =test-deps-test= checks preparation, reuse, autoloads, corruption,
 unsafe archives, and failure cleanup with disposable fixtures.
@@ -176,8 +178,40 @@ terminal subprocesses.  They require no
 live agent, mailbox, speech server, or audio device.  They do not establish
 audible timing or complete compiled integration parity.  Local runs prefer
 newer source but may load current compiled dependencies; the fresh CI checkout
-contains no Emacsvox byte-code.  =make compiled-notmuch-test= remains a separate
+contains no Emacsvox byte-code when these integration checks run.
+=make compiled-notmuch-test= remains a separate
 local check after bringing byte-code current.
+
+** Pinned graphical menus
+
+After preparing dependencies and bringing Emacsvox byte-code current, run:
+
+#+begin_src sh
+make pinned-graphical-menu-test
+#+end_src
+
+This gate verifies the prepared sources before loading them, then compiles
+private copies of Magit, Markdown and their dependencies with the selected
+Emacs. Source shorthands remain enabled during dependency compilation. The
+verified source tree and personal packages stay unchanged. Loaded package paths
+are reported; Magit, Markdown and Transient must come from the private compiled
+tree. The gate uses the same speech-free Xvfb isolation as the other graphical
+checks, with separate 120-second compilation and 180-second test deadlines.
+Missing dependencies, compilation errors, unexpected results and skips fail it.
+
+The integration CI job builds Emacsvox after its source integration checks and
+runs this menu gate on both Emacs versions. =release-check= also requires it;
+prepare the dependency tree explicitly before release validation. Neither gate
+downloads packages implicitly. Compilation and graphical tests establish
+interaction and speech submissions, not listening acceptance.
+
+=make graphical-menu-test= uses this pinned setup by default. For a separate
+local compatibility check, supply =MENU_TEST_PACKAGE_DIR=/path/to/elpa=.
+=MENU_TEST_LOAD=source= selects source menu modules, and
+=MENU_TEST_MAGIT_SOURCE=1= permits a diagnostic Magit source override only with
+an explicit local package directory. These local overrides cannot replace the
+pinned CI or release gate. A successful private compiled check does not repair
+an existing personal package installation.
 
 ** Agent Shell command-output patch
 

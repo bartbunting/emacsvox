@@ -3,21 +3,21 @@
 ;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Commentary:
-;; Use make graphical-menu-test. Optional packages come from the explicitly
-;; selected package directory and prepared integration dependencies. Report
-;; their loaded paths; this local check does not replace the pinned gates.
+;; Use make graphical-menu-test for verified dependencies compiled in a private
+;; profile. An explicit package directory selects the local compatibility check.
 
 ;;; Code:
 
 (require 'ert)
 (require 'package)
+(require 'lisp-mnt)
 (let* ((root (expand-file-name "../" (file-name-directory load-file-name)))
        (profile (getenv "EMACSVOX_MENU_TEST_PROFILE"))
        (log (getenv "EMACSVOX_GRAPHICAL_TEST_LOG"))
        (kind (or (getenv "EMACSVOX_MENU_TEST_LOAD") "compiled"))
        (packages (getenv "EMACSVOX_MENU_TEST_PACKAGE_DIR"))
        (dependencies (getenv "EMACSVOX_TEST_DEPS_DIR"))
-       (modules '(emacsvox-transient emacsvox-aural-menu emacsvox-settings-changes
+       (modules '(emacsvox-aural-ui emacsvox-transient emacsvox-aural-menu emacsvox-settings-changes
                   emacsvox-settings emacsvox-settings-integrations emacsvox-settings-workflows
                   emacsvox-reading-settings emacsvox-output-settings emacsvox-table-settings
                   emacsvox-tree-settings emacsvox-tone-editor emacsvox-indentation
@@ -59,7 +59,17 @@
         (package-initialize)
         (when (and dependencies (file-directory-p dependencies))
           (dolist (path (directory-files dependencies t "^[^.]"))
-            (when (file-directory-p path) (add-to-list 'load-path path t))))
+            (when (file-directory-p path)
+              (add-to-list 'load-path path (not (getenv "EMACSVOX_MENU_TEST_PINNED")))))
+          ;; Restart checks launch another -Q Emacs. Give it the same private
+          ;; dependencies instead of falling back to bundled Transient.
+          (when (getenv "EMACSVOX_MENU_TEST_PINNED")
+            (setenv "EMACSLOADPATH"
+                    (concat (mapconcat #'identity
+                                       (seq-filter #'file-directory-p
+                                                   (directory-files dependencies t "^[^.]"))
+                                       path-separator)
+                            path-separator))))
         (dolist (directory '("lisp/" "test/" "utils/"))
           (add-to-list 'load-path (expand-file-name directory root)))
         (require 'emacsvox-preamble)
@@ -87,13 +97,28 @@
             (load path nil t)
             (message "Menu module: %s" path)))
         (when (equal (getenv "EMACSVOX_MENU_TEST_MAGIT_SOURCE") "1")
+          (when (getenv "EMACSVOX_MENU_TEST_PINNED")
+            (error "Pinned menu checks require compiled Magit"))
           (load (concat (file-name-sans-extension (locate-library "magit-git")) ".el") nil t)
           (message "Magit Git module explicitly loaded from source"))
         (message "Emacs %s; Transient %s; Magit %s; Agent Shell %s"
-                 emacs-version transient-version (magit-version) agent-shell--version)
+                 emacs-version transient-version
+                 (if (getenv "EMACSVOX_MENU_TEST_PINNED")
+                     (with-temp-buffer
+                       (insert-file-contents (expand-file-name "magit/magit.el" dependencies))
+                       (lm-header "package-version"))
+                   (magit-version))
+                 agent-shell--version)
         (dolist (function '(transient-setup magit-status-mode magit-config-get-from-cached-list
                            agent-shell-mode eat-mode notmuch-search-mode markdown-mode))
           (message "Dependency: %s %s" function (symbol-file function)))
+        (when (getenv "EMACSVOX_MENU_TEST_PINNED")
+          (dolist (function '(transient-setup magit-status-mode magit-config-get-from-cached-list
+                             markdown-mode))
+            (let ((file (symbol-file function)))
+              (unless (and file (string-suffix-p ".elc" file)
+                           (file-in-directory-p file dependencies))
+                (error "Pinned menu dependency loaded from wrong path: %s %s" function file)))))
         (let* ((selector
                 '(or "^emacsvox-transient-" "^emacsvox-indentation-" "^emacsvox-aural-menu-"
                      "^emacsvox-capitalization-" "^emacsvox-spelling-" "^emacsvox-interaction-"

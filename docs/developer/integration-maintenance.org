@@ -265,8 +265,8 @@ isolated compiled Aural check.  Optional integration suites remain outside
 this job.
 
 The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
-both versions with a private home directory and eight reviewed dependency
-snapshots, including Transient 0.13.3 and cond-let 1.0.0.  =make test-deps= verifies the archive hashes in
+both versions with a private home directory and twelve reviewed dependency
+snapshots, including Transient 0.13.3 and cond-let 1.1.0.  =make test-deps= verifies the archive hashes in
 =test/integration-dependencies.json= and stages sources and autoloads under
 ignored =.test-deps/=; it never changes personal packages.  =make integration-test=
 verifies that prepared tree before loading it and runs the batch cases.
@@ -276,7 +276,10 @@ and EAT output and focus checks in a real graphical Emacs on a private Xvfb disp
 Both gates fail on missing dependencies or skipped selected tests. The graphical
 runner requires =xvfb-run=, =Xvfb=, =xauth= and =timeout=, captures its log,
 disables speech output and stops its isolated session after 60 seconds.
-CI runs both gates on each supported Emacs version.
+CI runs both gates on each supported Emacs version, then builds Emacsvox and
+runs =make pinned-graphical-menu-test= with private compiled Magit, Markdown
+and their dependencies. This menu gate is also required by =release-check=;
+it preserves the prepared sources and personal packages.
 Pin updates require upstream review, new archive hashes,
 and fresh preparation for both Emacs versions.  These source tests capture
 speech events and exercise disposable EAT subprocesses; they do not replace

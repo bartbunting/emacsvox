@@ -302,6 +302,28 @@ A non-nil result means the continuation announced the destination.")
        (emacsvox-aural-ui--destination-description) 'close-object
        'aural-interface-closed))))
 
+(defun emacsvox-aural-ui--release-help-origin ()
+  "Release Aural ownership when new contents replace this Help buffer.
+Emacs 30 can reuse Help without resetting its buffer-local variables."
+  (emacsvox-aural-ui-help-return-mode -1)
+  (remove-hook 'temp-buffer-window-setup-hook #'emacsvox-aural-ui--release-help-origin t)
+  (remove-hook 'pre-command-hook #'emacsvox-aural-ui--remember-control t)
+  (remove-hook 'post-command-hook #'emacsvox-aural-ui--forget-control t)
+  (remove-hook 'emacsvox-aural-source-annotation-functions
+               #'emacsvox-aural-ui--annotate-control-navigation t)
+  (dolist (symbol '(emacsvox-aural-ui-help-origin-buffer
+                    emacsvox-aural-ui-help-origin-window
+                    emacsvox-aural-ui-help-origin-position
+                    emacsvox-aural-ui--help-return-function
+                    emacsvox-aural-ui-interface-buffer
+                    emacsvox-aural-ui-source-buffer
+                    emacsvox-aural-ui-source-position
+                    emacsvox-aural-ui-source-guard
+                    emacsvox-aural-ui--command-control))
+    (when (markerp (symbol-value symbol))
+      (set-marker (symbol-value symbol) nil))
+    (kill-local-variable symbol)))
+
 (defun emacsvox-aural-ui-display-help (producer)
   "Display Help from PRODUCER and remember the exact aural origin.
 
@@ -336,7 +358,9 @@ metadata."
                     (and (markerp source-position)
                          (copy-marker source-position t)))
         (setq-local emacsvox-aural-ui-source-guard source-guard)
-        (emacsvox-aural-ui-help-return-mode 1)))
+        (emacsvox-aural-ui-help-return-mode 1)
+        (add-hook 'temp-buffer-window-setup-hook
+                  #'emacsvox-aural-ui--release-help-origin nil t)))
     (get-buffer (help-buffer))))
 
 (defmacro emacsvox-aural-ui-with-help-window (&rest body)

@@ -3,10 +3,10 @@
   "packages": [
     {
       "name": "compat",
-      "commit": "df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
-      "url": "https://codeload.github.com/emacs-compat/compat/tar.gz/df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
-      "sha256": "0e635fc29132dfd82d306b36a2e619afd3fd8b3689a98f9ef2c92961d3174b2f",
-      "archive_root": "compat-df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
+      "commit": "90880f81419577e1d3f68424d2a3adf31e6d663e",
+      "url": "https://codeload.github.com/emacs-compat/compat/tar.gz/90880f81419577e1d3f68424d2a3adf31e6d663e",
+      "sha256": "91f010564b497328f1cf093de7b6f253d5f348c22a17e97e6cc1186b80a0de77",
+      "archive_root": "compat-90880f81419577e1d3f68424d2a3adf31e6d663e",
       "subdirectory": "."
     },
     {
@@ -55,10 +55,10 @@
     },
     {
       "name": "cond-let",
-      "commit": "28d3b039a9c1f27ecfea36a7df4c37a3b90e4687",
-      "url": "https://codeload.github.com/tarsius/cond-let/tar.gz/28d3b039a9c1f27ecfea36a7df4c37a3b90e4687",
-      "sha256": "b0f7bcfe3ed995db703b49fc4b7134ddb01cbacb6f45c0d8332ac3d69c26998a",
-      "archive_root": "cond-let-28d3b039a9c1f27ecfea36a7df4c37a3b90e4687",
+      "commit": "09292a77001434f59ab55c775dec2b98cb18d028",
+      "url": "https://codeload.github.com/tarsius/cond-let/tar.gz/09292a77001434f59ab55c775dec2b98cb18d028",
+      "sha256": "71a11ad3ca1400e7eab918605a48f7b052dfa52bf50dba96fcbb6db8f8e053f8",
+      "archive_root": "cond-let-09292a77001434f59ab55c775dec2b98cb18d028",
       "subdirectory": "."
     },
     {
@@ -68,6 +68,38 @@
       "sha256": "a164ead14bffd4e926d6f4ac9f2672c13d2d45c2e8e3b9f41c174d89008e9c99",
       "archive_root": "transient-9e78954343613786cdb0659183b766099f051149",
       "subdirectory": "lisp"
+    },
+    {
+      "name": "llama",
+      "commit": "6850d0c91b629da14fdff2300c222289d1a0029a",
+      "url": "https://codeload.github.com/tarsius/llama/tar.gz/6850d0c91b629da14fdff2300c222289d1a0029a",
+      "sha256": "0cc5ee41d97e49b19dfef351e28d05036b7cf676515a00c146013ee7b1f299d9",
+      "archive_root": "llama-6850d0c91b629da14fdff2300c222289d1a0029a",
+      "subdirectory": "."
+    },
+    {
+      "name": "with-editor",
+      "commit": "3218d480d2c2258835c57f1200afead7f143f3ad",
+      "url": "https://codeload.github.com/magit/with-editor/tar.gz/3218d480d2c2258835c57f1200afead7f143f3ad",
+      "sha256": "fee6061293ff405bac3efb1d09d8722a2bb57faf44e6a7dfa9d550da0aac9eb7",
+      "archive_root": "with-editor-3218d480d2c2258835c57f1200afead7f143f3ad",
+      "subdirectory": "lisp"
+    },
+    {
+      "name": "magit",
+      "commit": "602760478f6d4a67e7064f5bcd2e294aa3f38f8e",
+      "url": "https://codeload.github.com/magit/magit/tar.gz/602760478f6d4a67e7064f5bcd2e294aa3f38f8e",
+      "sha256": "f6a20abd1520f0a1b3a8cbd3be21a303bb51cbb963519a81a7b77595626327d7",
+      "archive_root": "magit-602760478f6d4a67e7064f5bcd2e294aa3f38f8e",
+      "subdirectory": "lisp"
+    },
+    {
+      "name": "markdown-mode",
+      "commit": "e2e2bc753b4330f85b6ea7e62cd0552e8ea47b76",
+      "url": "https://codeload.github.com/jrblevin/markdown-mode/tar.gz/e2e2bc753b4330f85b6ea7e62cd0552e8ea47b76",
+      "sha256": "54aef0d26e7d5d4daf86e75bd2669396304bfb5a7f62111bb21a6f025b22e4d9",
+      "archive_root": "markdown-mode-e2e2bc753b4330f85b6ea7e62cd0552e8ea47b76",
+      "subdirectory": "."
     }
   ]
 }

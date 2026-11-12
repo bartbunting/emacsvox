@@ -306,6 +306,19 @@ jobs:
           emacs_binary=$(command -v emacs)
           integration_home="$RUNNER_TEMP/emacsvox-integration-home"
           env HOME="$integration_home" make graphical-integration-test EMACS="$emacs_binary"
+      - name: Build and run pinned graphical menu checks
+        run: |
+          emacs_binary=$(command -v emacs)
+          integration_home="$RUNNER_TEMP/emacsvox-integration-home"
+          # Compile Transient before the Emacsvox config check disables shorthands.
+          mkdir -p "$integration_home/compiled"
+          cp .test-deps/transient/transient.el "$integration_home/compiled/"
+          env HOME="$integration_home" "$emacs_binary" -Q --batch \
+            -L .test-deps/compat -L .test-deps/cond-let \
+            -f batch-byte-compile "$integration_home/compiled/transient.el"
+          export EMACSLOADPATH="$integration_home/compiled:$PWD/.test-deps/compat:$PWD/.test-deps/cond-let:"
+          env HOME="$integration_home" make bytecode-rebuild EMACS="$emacs_binary"
+          env HOME="$integration_home" make pinned-graphical-menu-test EMACS="$emacs_binary"
 
   compatibility:
     name: Build and compatibility (Emacs ${{ matrix.emacs }})

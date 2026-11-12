@@ -359,7 +359,7 @@ compiled-aural-test:
 graphical-voice-test: check-emacs bytecode-check
 	sh test/run-graphical-voice-tests.sh "$(EMACS)"
 
-# Local package compatibility check; the pinned integration gates remain separate.
+# Default to verified dependencies; an explicit package directory tests a local installation.
 MENU_TEST_LOAD ?= compiled
 MENU_TEST_PACKAGE_DIR ?=
 MENU_TEST_MAGIT_SOURCE ?= 0
@@ -370,6 +370,10 @@ graphical-menu-test: check-emacs bytecode-check
 	EMACSVOX_MENU_TEST_PACKAGE_DIR="$(MENU_TEST_PACKAGE_DIR)" \
 	EMACSVOX_MENU_TEST_MAGIT_SOURCE="$(MENU_TEST_MAGIT_SOURCE)" \
 	sh test/run-graphical-menu-tests.sh "$(EMACS)"
+
+.PHONY: pinned-graphical-menu-test
+pinned-graphical-menu-test:
+	$(MAKE) graphical-menu-test MENU_TEST_PACKAGE_DIR= MENU_TEST_MAGIT_SOURCE=0 MENU_TEST_LOAD=compiled
 
 .PHONY: graphical-speak-test
 graphical-speak-test: check-emacs bytecode-check
@@ -767,7 +771,7 @@ clean:
 release-source-check: version-check headers-check
 	@utils/emacsvox-version-check --release
 
-release-check: release-source-check test docs-release-check
+release-check: release-source-check test docs-release-check pinned-graphical-menu-test
 	@echo "Emacsvox $(VERSION) passed the release gate."
 
 release-artifact: release-check

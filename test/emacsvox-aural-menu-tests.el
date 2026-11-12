@@ -692,6 +692,31 @@
                 (should-not transient--prefix)))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
 
+(ert-deftest emacsvox-aural-menu-graphical-help-replaces-aural-origin ()
+  "Reusing Aural Help for a menu releases its old return binding and source."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (let ((transient--prefix nil) (transient--stack nil) (transient-show-menu t))
+        (unwind-protect
+            (progn
+              (emacsvox-aural-ui-with-help-window (princ "Earlier Aural Help"))
+              (with-current-buffer (help-buffer)
+                (should emacsvox-aural-ui-help-return-mode))
+              (switch-to-buffer source)
+              (execute-kbd-macro (kbd "<f8> ? s"))
+              (should (derived-mode-p 'help-mode))
+              (should (eq (key-binding "q") #'transient-resume))
+              (should-not emacsvox-aural-ui-interface-buffer)
+              (should-not emacsvox-aural-ui-help-origin-buffer)
+              (should-not emacsvox-aural-ui-source-buffer)
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (current-buffer) source))
+              (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
+
 (ert-deftest emacsvox-aural-menu-graphical-help-selection-is-spoken ()
   "Entering help selection speaks once without opening or activating an item."
   (skip-unless (display-graphic-p))

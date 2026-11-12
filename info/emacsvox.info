@@ -300,14 +300,14 @@ Ref: Commands That Set State664596
 Node: Integration Maintenance667067
 Ref: Background startup ownership and failure recovery677817
 Ref: Supported Emacs versions680970
-Ref: Native Windows builds683942
-Ref: Offline Windows development bundle686158
-Ref: Public Windows installer previews695179
-Ref: Remote preview validation698243
-Ref: Internal ownership and renderer tests720583
-Ref: Upstream contract layers724194
-Node: Authoring Sound Packs754363
-Node: Concept Index758536
+Ref: Native Windows builds684207
+Ref: Offline Windows development bundle686423
+Ref: Public Windows installer previews695444
+Ref: Remote preview validation698508
+Ref: Internal ownership and renderer tests720848
+Ref: Upstream contract layers724459
+Node: Authoring Sound Packs754628
+Node: Concept Index758801
 
 End Tag Table
 
