@@ -77,6 +77,21 @@
 (defconst omnivox-library--prefix "OMNIVOX-LOCAL ")
 (defconst omnivox-library--timeout 45)
 
+(defun omnivox-library--local-target-p (program)
+  "Whether PROGRAM can negotiate local ownership and management.
+The bundled POSIX launcher translates client engine-file settings.  Native
+Windows uses its selected local Omnivox executable and native environment;
+it does not acquire that separate launcher settings provider."
+  (and (stringp program)
+       (not (omnivox-remote-enabled-p))
+       (or (omnivox-engine-settings--supported-p)
+           (and (eq system-type 'windows-nt)
+                (string-match-p "\\`[[:alpha:]]:[/\\\\]" program)
+                (not (string-match-p "[\0\r\n]" program))
+                (equal (downcase (file-name-nondirectory
+                                  (subst-char-in-string ?\\ ?/ program)))
+                       "omnivox.exe")))))
+
 (defun omnivox-library--source-key ()
   "Identify the selected launcher and native library location."
   (let ((program (tts--resolve-program tts-program)))
@@ -141,8 +156,8 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
                                (lambda () (finish nil "Voice library inspection timed out"))))
       (condition-case err
           (cond
-           ((not (and program (omnivox-engine-settings--supported-p)))
-            (finish nil "Voice management requires the bundled local Omnivox launcher"))
+           ((not (omnivox-library--local-target-p program))
+            (finish nil "Voice management requires a supported local Omnivox executable or launcher"))
            ((assoc key omnivox-library--support-cache)
             (if (cdr (assoc key omnivox-library--support-cache)) (inspect)
               (finish nil "This launcher does not support voice management")))
@@ -180,7 +195,7 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
 
 (defun omnivox-library--supported-p (program)
   "Check PROGRAM's ordinary help before using its local owner extension."
-  (and (omnivox-engine-settings--supported-p)
+  (and (omnivox-library--local-target-p program)
        (let* ((key (list program (getenv "OMNIVOX_PROGRAM")
                          (file-attribute-modification-time (file-attributes program))))
               (cached (assoc key omnivox-library--support-cache)))
@@ -435,7 +450,7 @@ This check does not publish capability or routing readiness hooks."
   (require 'omnivox-voices)
   (let ((program (tts--resolve-program tts-program)))
     (unless (and program (omnivox-library--supported-p program))
-      (user-error "Installed voices require the updated bundled local Omnivox launcher"))
+      (user-error "Local management requires an updated local Omnivox executable or launcher"))
     (let ((process-environment (omnivox-engine-settings--environment program)))
       (when (eq role 'notification)
         (dolist (variable '("ALSA_DEFAULT" "SWIFTMAC_AUDIO_TARGET" "SHARPWIN_AUDIO_TARGET" "PULSE_SINK"))

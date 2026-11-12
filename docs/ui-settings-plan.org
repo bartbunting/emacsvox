@@ -20,6 +20,32 @@ requires Transient 0.13.3 or newer while keeping the Emacs 30.2 minimum.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
+** Native Windows preference reload, 2026-11-13
+
+Native Windows Emacs now negotiates local ownership with its selected absolute
+=omnivox.exe= path. Saved host preferences can use
+=M-x omnivox-reload-preferences= independently on main and notification speech;
+native settings-service requests use the same selected executable. The bundled
+POSIX engine-file settings provider remains separate. Older executables without
+the owner extension retain ordinary startup, and remote targets remain excluded.
+
+The personal Windows candidate uses the existing qualified native runtime with
+the guard enabled and matching eSpeak data beside the executable. Fresh compiled
+native Emacs 31.1 checks pass with WinRT, Flite, Eloquence and DECtalk: in-place reload, malformed
+settings rejection, retained recovery, same-guard reconnection, owner-loss
+emergency eSpeak, return to saved startup and reload with unavailable notifications.
+The full graphical personal profile passes both speech lanes and unchanged
+preference reload with WinRT, Eloquence and DECtalk. These are source-playback
+checks. After deployment, Bart confirmed on 2026-11-13 that speech is working;
+individual engine and recovery listening scenarios were not itemised.
+
+The native shortcut retains eager startup. An additional early-speech experiment
+exposed intermittent timeline rejection when discovery replaces the registry
+during speech. Keep that opt-in disabled for this native deployment; resolving
+registration admission during discovery remains a separate follow-up. The paired
+Omnivox =docs/benchmarks/2026-11-13-native-windows-client-reload.md= retains the
+successful and failed runs, unchanged runtime identity and deployment evidence.
+
 ** Experimental early speech inventory, 2026-11-11
 
 On =feat/omnivox-lightweight-reload=, the private early-speech launcher now
@@ -2280,9 +2306,11 @@ prepares, then attaches to the validated descriptor before releasing native
 speech. Failed preparation closes the unused bridge; a failed attach retains
 the unresolved native authority. This overlaps startup without a speech hop.
 The internal =omnivox-native-guard--enabled= flag defaults to nil. Linux
-partial-transfer/status-backpressure checks pass; Windows guarded startup is
-blocked by the descendant-completion counterexample. macOS and listening
-acceptance remain pending. Losing the guard still blocks replacement. The paired Omnivox
+partial-transfer/status-backpressure checks pass. The initial Windows
+descendant-completion blocker was subsequently resolved through retained native
+creation ownership; the paired Omnivox Windows creation and multi-engine reports
+record that qualification. Native Windows client acceptance is recorded above.
+macOS and listening acceptance remain pending. Losing the guard still blocks replacement. The paired Omnivox
 =docs/benchmarks/2026-11-10-guard-integration.md= retains source/compiled checks,
 matched speech timing and the added startup cost. This command is available through
 =M-x=; no existing restart key silently changes to emergency mode.
