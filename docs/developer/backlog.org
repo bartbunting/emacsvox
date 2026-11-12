@@ -239,6 +239,10 @@ silently resolve an open behavior question or remove a compatibility path.
 
 ** TODO Share a complete presentation inspection model
 
+The [[file:inspection-consistency-review.org][13 November consistency review]] fixes guided selection of a later part's
+surviving source and records the verified inspection boundaries. The broader
+model below remains a maintenance proposal, not an outstanding confirmed bug.
+
 *** Why this is needed
 
 [[file:../../lisp/aural/emacsvox-aural-explanation.el][Explanation]] now retains additional plans alongside its first-plan fields.

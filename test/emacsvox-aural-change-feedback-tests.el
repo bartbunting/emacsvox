@@ -399,6 +399,51 @@
         (emacsvox-aural-change-feedback-original))
       (should (eq played second-plan)))))
 
+(ert-deftest emacsvox-aural-guided-history-selects-source-per-part ()
+  "A later part can retain its source even when the first part has no source."
+  (dolist (state '(original renamed edited replaced killed))
+    (emacsvox-test--with-home-context
+      (let* ((context (with-current-buffer source
+                        (emacsvox-aural-capture-context nil 'navigation)))
+             (facts '(:role heading :content "Source item"))
+             (plan (emacsvox-aural-compile-plan
+                    (emacsvox-aural-resolve-active facts context) facts context))
+             (first (copy-emacsvox-aural-concrete-plan plan))
+             (record (emacsvox-aural--make-presentation-record
+                      :id 125 :plan first :plans (list first plan)))
+             (expected (memq state '(original renamed edited))))
+        (setf (emacsvox-aural-concrete-plan-context first)
+              (plist-put (copy-tree context) :source-buffer-id nil))
+        (pcase state
+          ('renamed (with-current-buffer source (rename-buffer " *guided-renamed*" t)))
+          ('edited (with-current-buffer source (goto-char (point-max)) (insert "Changed")))
+          ('killed (kill-buffer source))
+          ('replaced
+           (let ((name (buffer-name source)))
+             (kill-buffer source)
+             (setq source (get-buffer-create name))
+             (with-current-buffer source (emacsvox-aural-capture-context))
+             (emacsvox-aural source))))
+        ;; The direct remapper already associates the chosen part independently.
+        (let ((input (cl-letf (((symbol-function 'completing-read)
+                                (lambda (_prompt choices &rest _) (car (car (last choices))))))
+                       (emacsvox-aural-tools--remap-source-input record 'voice))))
+          (should (eq (plist-get input :source) (and expected source))))
+        (emacsvox-aural-change-feedback record)
+        (should (emacsvox-aural-ui-goto-row '(part 2)))
+        (emacsvox-aural-change-feedback-open-row)
+        (should (eq (emacsvox-aural-change-feedback--source) (and expected source)))
+        (should (equal (plist-get emacsvox-aural-change-feedback-input :context) context))
+        (when expected
+          (emacsvox-test--guided-choose "Change the content voice" "bolden")
+          (setq emacsvox-aural-change-feedback-selector '(:role heading)
+                emacsvox-aural-change-feedback-scope 'buffer)
+          (emacsvox-aural-change-feedback-apply)
+          (should (buffer-local-value 'emacsvox-aural-buffer-rules source)))
+        ;; Returning to the source-less part must release buffer scope again.
+        (emacsvox-aural-change-feedback--select-part 1)
+        (should-not (emacsvox-aural-change-feedback--source))))))
+
 (ert-deftest emacsvox-aural-guided-parts-stay-in-playback-order-and-retain-voices ()
   "More than nine parts stay ordered, and navigation uses frozen speech data."
   (emacsvox-test--with-guided-feedback

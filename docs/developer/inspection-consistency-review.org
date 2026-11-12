@@ -1,0 +1,47 @@
+#+title: Feedback inspection consistency review
+#+date: 2026-11-13
+
+* Scope and result
+
+Reviewed retained and current-item input across Explain, Recent Feedback,
+direct voice/earcon remapping and Change Feedback. The investigation found
+one source-association defect in guided multipart editing. Existing checks
+cover the other boundaries below; this review adds no listening acceptance.
+
+* Corrected source association
+
+When a retained presentation's first part had no source identity, Change
+Feedback copied that part's absent source into every later selection. A later
+part could therefore lose buffer scope even when its original buffer survived.
+Direct remapping selected and associated that later part correctly.
+
+Both paths now use =emacsvox-aural-tools--retained-plan-input= to assemble the
+selected part's frozen facts, context and rendering, and associate its source
+independently. Association requires the original buffer identity. Renaming or
+editing the surviving buffer does not invalidate historical inspection; a
+killed buffer, same-name replacement or missing identity cannot acquire scope.
+Switching back to a source-less part releases buffer scope again.
+
+The regression =emacsvox-aural-guided-history-selects-source-per-part= in
+[[file:../../test/emacsvox-aural-change-feedback-tests.el][the guided-feedback tests]] failed before the fix and passes for original,
+renamed, edited, killed and replacement buffers. It compares direct and guided
+selection and exercises actual buffer-scoped application.
+
+* Preserved boundaries
+
+| Boundary | Evidence and behaviour |
+|----------+------------------------|
+| Multipart inspection | [[file:../../test/emacsvox-aural-transport-tests.el][Transport tests]] retain a real native transaction and inspect/remap later parts. Explain retains additional plans; [[file:../../test/emacsvox-aural-feedback-details-tests.el][Feedback Details tests]] cover distinct recorded voices and linked editing. |
+| Selection and replay | Guided tests preserve playback order beyond nine parts, frozen voices, exact selected-part replay and independent drafts. |
+| Truncated and older records | Explanation labels incomplete retention as a preview. Guided editing rejects truncated baselines; Feedback Details guards replay and supports older records. |
+| Current source item | [[file:../../test/emacsvox-aural-tools-tests.el][Tools tests]] reject earlier-row, replaced-item and edited-item matches. Markers follow insertion before the item; prepared edits recheck their source before saving. |
+| Historical source | Direct and guided remapping require frozen buffer identity, without imposing current-item freshness on historical facts. Buffer names alone never establish identity. |
+| Storage ownership | History remains frozen bounded data. The new helper places live source references only in temporary editor input, leaving retained plans unchanged. |
+
+* Remaining maintenance proposal
+
+The broader [[file:backlog.org::*TODO Share a complete presentation inspection model][shared inspection-model proposal]] remains optional maintenance work. This
+fix shares the demonstrated duplicate input assembly without introducing a
+second complete representation or changing source-validity policy. Further
+extraction should follow a concrete consumer need or reproducible discrepancy.
+Overlay-only invalidation remains a separate design question.

@@ -148,6 +148,19 @@ Earcon remapping includes only parts containing an earcon."
       (cdr (assoc (completing-read "Which part should change: " choices nil t)
                   choices)))))
 
+(defun emacsvox-aural-tools--retained-plan-input (plan)
+  "Return frozen input for retained PLAN and its surviving inspection source.
+Associate each part independently by buffer identity, never by its saved name.
+Historical inspection allows source edits; current-item guards remain separate."
+  (let* ((context (emacsvox-aural-concrete-plan-context plan))
+         (source (emacsvox-aural-inspection-source-buffer)))
+    (list :source (and (emacsvox-aural-tools--source-matches-context-p source context)
+                       source)
+          :facts (copy-tree (emacsvox-aural-concrete-plan-facts plan))
+          :context (copy-tree context)
+          :render (emacsvox-aural-concrete-plan-source-plan plan)
+          :concrete plan)))
+
 (defun emacsvox-aural-tools--remap-source-input (&optional record component)
   "Return presentation input for optional frozen RECORD or the current source.
 
@@ -162,25 +175,10 @@ When COMPONENT is non-nil, select the retained part to remap."
       (progn
         (unless (emacsvox-aural-presentation-record-p record)
           (user-error "Not an aural presentation record: %S" record))
-        (let* ((concrete
-                (if component
-                    (emacsvox-aural-tools--remap-record-plan record component)
-                  (emacsvox-aural-presentation-record-plan record)))
-               (source
-                (emacsvox-aural-inspection-source-buffer))
-               (source
-                (and
-                 source
-                 (emacsvox-aural-tools--source-matches-context-p
-                  source (emacsvox-aural-concrete-plan-context concrete))
-                 source)))
-          (list
-           :source source
-           :facts (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
-           :context
-           (copy-tree (emacsvox-aural-concrete-plan-context concrete))
-           :render (emacsvox-aural-concrete-plan-source-plan concrete)
-           :concrete concrete)))
+        (emacsvox-aural-tools--retained-plan-input
+         (if component
+             (emacsvox-aural-tools--remap-record-plan record component)
+           (emacsvox-aural-presentation-record-plan record))))
     (let ((source (emacsvox-aural-inspection-source-buffer)))
       (unless source
         (user-error "No live source buffer is available"))

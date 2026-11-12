@@ -122,7 +122,7 @@
          (plan (nth (1- number)
                     (emacsvox-aural-presentation-record-effective-plans
                      emacsvox-aural-change-feedback-record)))
-         (input (copy-sequence emacsvox-aural-change-feedback--record-input)))
+         (input (emacsvox-aural-tools--retained-plan-input plan)))
     (when emacsvox-aural-change-feedback--part-number
       (setf (alist-get emacsvox-aural-change-feedback--part-number
                        emacsvox-aural-change-feedback--part-drafts)
@@ -130,14 +130,6 @@
     (cl-mapc #'set fields
              (or (alist-get number emacsvox-aural-change-feedback--part-drafts)
                  (make-list (length fields) nil)))
-    (setq input (plist-put input :concrete plan)
-          input (plist-put input :facts (copy-tree (emacsvox-aural-concrete-plan-facts plan)))
-          input (plist-put input :context (copy-tree (emacsvox-aural-concrete-plan-context plan)))
-          input (plist-put input :render (emacsvox-aural-concrete-plan-source-plan plan)))
-    (when (and (plist-get input :source)
-               (not (emacsvox-aural-tools--source-matches-context-p
-                     (plist-get input :source) (plist-get input :context))))
-      (setq input (plist-put input :source nil)))
     (setq emacsvox-aural-change-feedback-input input
           emacsvox-aural-change-feedback--part-number number
           emacsvox-aural-change-feedback-part (format ", Part %d: %s" number
