@@ -1276,6 +1276,26 @@ Choose the diagnostic at the failed layer:
   speech text is complete. A mixer observation is not physical output;
   device/hardware buffering can add delay. The diagnostics menu's ~l~ also
   exposes the explicit session logging control with its privacy warning.
+- A presentation needs a repeatable construction example ::
+
+  Run ~M-x emacsvox-aural-record-next-delivery~ and choose =main= or
+  =notification=. Repeat the affected action within 60 seconds. The recorder
+  captures one delivery on that stream; its own control announcements and
+  independent callback speech are excluded. Prefer a short, non-confidential
+  example. It does not enable diagnostic logging.
+
+  ~M-x emacsvox-aural-recording-status~ reports capture state, client outcome
+  and size. ~M-x emacsvox-aural-export-recording~ saves a local JSON file and
+  clears the retained inputs. Its prompt explains that speech text and resource
+  paths may be included. Review the file before sharing. A failed save retains
+  the capture; ~M-x emacsvox-aural-cancel-recording~ discards it without stopping
+  speech. An exported file remains until you delete it.
+
+  A capture is limited to 64 KiB. Oversized or unsupported input produces an
+  incomplete summary while speech continues. ~M-x emacsvox-aural-reproduce-delivery~
+  checks a saved file and reconstructs client data without playing it. A
+  matching result establishes construction only, not server admission or sound.
+  This diagnostic is separate from Recent Feedback and audible Replay.
 
 For server selection, the launcher and Windows staging, use this manual.
 For Omnivox builds, engine behaviour, command-line options and protocols, use

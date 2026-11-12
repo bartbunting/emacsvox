@@ -7,9 +7,9 @@
 The four implementation slices from the [[file:speech-delivery-investigation.org][delivery investigation]] are complete.
 They keep the existing preparation and dispatch owners, queue proof, lane
 policy, compatibility selection and server protocols. The optional recorder
-and offline consumer have a separate, concrete design in
-[[file:../adr/0030-bounded-delivery-reproduction.org][proposed ADR 0030]]. That feature needs a scope decision; no implementation
-slice depends on it.
+and offline consumer subsequently implemented under
+[[file:../adr/0030-bounded-delivery-reproduction.org][accepted ADR 0030]] have their own [[file:speech-delivery-recording.org][implementation and measurement review]].
+The evidence below describes the preceding refactor independently.
 
 | Slice | Result | Commit |
 |-------+--------+--------|

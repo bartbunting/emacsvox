@@ -17,7 +17,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 Indirect:
 emacsvox.info-1: 384
 emacsvox.info-2: 330985
-emacsvox.info-3: 601566
+emacsvox.info-3: 601252
 
 Tag Table:
 (Indirect)
@@ -270,44 +270,44 @@ Node: Selecting And Checking Omnivox589029
 Ref: Remote workstation speech setup590823
 Node: Compatibility Speech Servers594523
 Node: Backend Diagnostics And Ownership596138
-Node: Emacsvox Keyboard Commands599522
-Node: Everyday Reading Commands601566
-Node: Everyday Editing Commands604302
-Node: Everyday Workspace Commands607462
-Node: Everyday Help Commands609867
-Node: Everyday Speech Commands611853
-Node: Emacsvox Key Prefixes613690
-Node: Finding Tasks617399
-Node: Finding Reading Tasks618869
-Node: Finding Editing Tasks621450
-Node: Finding Voice Tasks622843
-Node: Finding Settings Tasks624576
-Node: Finding Application Tasks626311
-Node: Finding Problem Tasks629158
-Node: Emacsvox Terminology632362
-Node: Working Context Terms633718
-Node: Editing Terms636606
-Node: Presentation Resource Terms639577
-Node: Speech And Settings Terms641620
-Node: Copyright643565
-Node: Acknowledgments644148
-Node: Developer Guide645174
-Node: Documentation Maintenance647685
-Node: Speech Server Protocols653354
-Ref: Testing A Direct Legacy Server662777
-Ref: Commands That Queue Output663336
-Ref: Commands That Set State666568
-Node: Integration Maintenance669039
-Ref: Background startup ownership and failure recovery679789
-Ref: Supported Emacs versions682942
-Ref: Native Windows builds686179
-Ref: Offline Windows development bundle688395
-Ref: Public Windows installer previews697416
-Ref: Remote preview validation700480
-Ref: Internal ownership and renderer tests722820
-Ref: Upstream contract layers726431
-Node: Authoring Sound Packs756600
-Node: Concept Index760773
+Node: Emacsvox Keyboard Commands601252
+Node: Everyday Reading Commands602912
+Node: Everyday Editing Commands605648
+Node: Everyday Workspace Commands608808
+Node: Everyday Help Commands611213
+Node: Everyday Speech Commands613199
+Node: Emacsvox Key Prefixes615036
+Node: Finding Tasks618745
+Node: Finding Reading Tasks620215
+Node: Finding Editing Tasks622796
+Node: Finding Voice Tasks624189
+Node: Finding Settings Tasks625922
+Node: Finding Application Tasks627657
+Node: Finding Problem Tasks630504
+Node: Emacsvox Terminology633708
+Node: Working Context Terms635064
+Node: Editing Terms637952
+Node: Presentation Resource Terms640923
+Node: Speech And Settings Terms642966
+Node: Copyright644911
+Node: Acknowledgments645494
+Node: Developer Guide646520
+Node: Documentation Maintenance649031
+Node: Speech Server Protocols654700
+Ref: Testing A Direct Legacy Server665917
+Ref: Commands That Queue Output666476
+Ref: Commands That Set State669708
+Node: Integration Maintenance672179
+Ref: Background startup ownership and failure recovery682929
+Ref: Supported Emacs versions686082
+Ref: Native Windows builds689319
+Ref: Offline Windows development bundle691535
+Ref: Public Windows installer previews700556
+Ref: Remote preview validation703620
+Ref: Internal ownership and renderer tests725960
+Ref: Upstream contract layers729571
+Node: Authoring Sound Packs759740
+Node: Concept Index763913
 
 End Tag Table
 

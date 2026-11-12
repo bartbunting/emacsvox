@@ -57,6 +57,13 @@ correctly on Emacs 31.
 
 Long passages start speaking sooner in sessions with many loaded packages.
 
+An optional delivery recorder captures one main or notification presentation
+for offline investigation. Use =M-x emacsvox-aural-record-next-delivery=,
+then inspect its status and explicitly export or cancel it. Captures are
+bounded, can contain speech text and paths, and do not enable logging.
+=M-x emacsvox-aural-reproduce-delivery= checks a saved capture without
+speaking it; a match confirms client construction, not audible playback.
+
 Voice Workbench keeps the latest Apply result when older requests finish.
 Immediate failures are no longer announced as pending, and failed processes
 retain their original speech-lane labels. Errors in status hooks no longer

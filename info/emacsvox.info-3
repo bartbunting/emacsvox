@@ -14,6 +14,34 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  Prev: Speech Backends,  Up: Top
+
+15 Emacsvox Keyboard Commands.
+******************************
+
+Use this chapter to recall an everyday command and check its important
+conditions before acting.  *note Read the key instructions: Emacs Key
+Notation. explains modifiers, capital letters and successive keypresses.
+*note Basic Usage: (emacsvox)Basic Usage. teaches the reading and
+editing workflows; the links beside each reminder lead to their details.
+
+   These are default keys, used without a prefix argument unless one is
+shown.  Application keymaps and personal bindings can change their
+meaning.  A short reference cannot replace a terminal's or editor's own
+instructions.  Use *note live Help: Using Online Help. in the affected
+buffer when a binding differs, and *note the generated keymap reference:
+(emacsvox-reference)Emacsvox Keymaps. for the full default inventory.
+
+* Menu:
+
+* Reading reminders: Everyday Reading Commands.  Choose a reading unit and check its effect on point and windows.
+* Editing reminders: Everyday Editing Commands.  Select, copy, cut, paste and recover with the right scope.
+* Files, buffers and windows: Everyday Workspace Commands.  Open and save documents without confusing buffers and views.
+* Help and orientation: Everyday Help Commands.  Find commands and return to the intended working buffer.
+* Speech and settings: Everyday Speech Commands.  Find controls and distinguish navigation from undo and saving.
+* How prefixes and menus fit together: Emacsvox Key Prefixes.  Understand the speech prefix, menu entry and application overrides.
+
+
 File: emacsvox.info,  Node: Everyday Reading Commands,  Next: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
 
 15.1 Reading reminders
@@ -1172,6 +1200,36 @@ rewrite the named-voice registry or borrow another lane's latest
 logical-voice realisation.  Ordinary history navigation retains the
 requested annotations; explicit original playback uses this observed
 snapshot.
+
+   The optional delivery recorder captures one outer main or
+notification delivery after explicit arming.  It snapshots resolved
+assembly arguments at their existing use sites, plus consumed capability
+facts, omitted actions and the client result.  It preserves the actual
+dispatch ID and framing limits.  Independent callback speech retains its
+own identity.  Scheduled output can update the retained result until
+export or cancellation.  No automatic capture ring or logging is
+enabled.
+
+   Its versioned JSON contains plain tagged data, source revision, Emacs
+version, protocol fields and hashes of the document, semantic bindings
+and prepared wire.  The 64 KiB allowance includes metadata; a shared
+4096-operation/observation limit also applies.  Exhaustion discards
+detailed inputs and keeps an incomplete summary.  Export is explicit,
+local and atomic, with owner-only permissions on systems that support
+them.  Text and resource paths may be sensitive.
+
+   ‘emacsvox-aural-reproduce-delivery’ validates size, nesting, schema
+and operation arguments before dispatch through a fixed set of pure
+assembly helpers.  It neither reads resource paths nor sends
+reconstructed wire.  Structured versions 3–7 rebuild documents and
+semantic bindings; compatibility captures compare retained command bytes
+only.  The wire hash covers prepared bytes, not socket packet boundaries
+or confirmed sending.  Source extraction, earlier rule matching, server
+admission and audio remain outside this reconstruction.  Incomplete or
+edited data cannot establish the original construction.  Change the
+construction version when assembly or framing semantics become
+incompatible.  The user procedure is in *note Backend diagnostics:
+Backend Diagnostics And Ownership.; the design is recorded in ADR 0030.
 
    The canonical protocol documents are:
 

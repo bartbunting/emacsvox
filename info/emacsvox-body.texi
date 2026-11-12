@@ -11220,6 +11220,25 @@ mixer-source delay. This Emacs log is off by default because submitted
 speech text is complete. A mixer observation is not physical output;
 device/hardware buffering can add delay. The diagnostics menu's @kbd{l} also
 exposes the explicit session logging control with its privacy warning.
+@item A presentation needs a repeatable construction example
+Run @kbd{M-x emacsvox-aural-record-next-delivery} and choose @code{main} or
+@code{notification}. Repeat the affected action within 60 seconds. The recorder
+captures one delivery on that stream; its own control announcements and
+independent callback speech are excluded. Prefer a short@comma{} non-confidential
+example. It does not enable diagnostic logging.
+
+@kbd{M-x emacsvox-aural-recording-status} reports capture state@comma{} client outcome
+and size. @kbd{M-x emacsvox-aural-export-recording} saves a local JSON file and
+clears the retained inputs. Its prompt explains that speech text and resource
+paths may be included. Review the file before sharing. A failed save retains
+the capture; @kbd{M-x emacsvox-aural-cancel-recording} discards it without stopping
+speech. An exported file remains until you delete it.
+
+A capture is limited to 64 KiB@. Oversized or unsupported input produces an
+incomplete summary while speech continues. @kbd{M-x emacsvox-aural-reproduce-delivery}
+checks a saved file and reconstructs client data without playing it. A
+matching result establishes construction only@comma{} not server admission or sound.
+This diagnostic is separate from Recent Feedback and audible Replay.
 @end table
 
 For server selection@comma{} the launcher and Windows staging@comma{} use this manual.
@@ -12416,6 +12435,31 @@ Completed snapshots drive exact private voice previews with fallback disabled.
 They never rewrite the named-voice registry or borrow another lane's latest
 logical-voice realisation. Ordinary history navigation retains the requested
 annotations; explicit original playback uses this observed snapshot.
+
+The optional delivery recorder captures one outer main or notification delivery
+after explicit arming. It snapshots resolved assembly arguments at their existing
+use sites@comma{} plus consumed capability facts@comma{} omitted actions and the client result.
+It preserves the actual dispatch ID and framing limits. Independent callback
+speech retains its own identity. Scheduled output can update the retained result
+until export or cancellation. No automatic capture ring or logging is enabled.
+
+Its versioned JSON contains plain tagged data@comma{} source revision@comma{} Emacs version@comma{}
+protocol fields and hashes of the document@comma{} semantic bindings and prepared wire.
+The 64 KiB allowance includes metadata; a shared 4096-operation/observation limit
+also applies. Exhaustion discards detailed inputs and keeps an incomplete summary.
+Export is explicit@comma{} local and atomic@comma{} with owner-only permissions on systems that
+support them. Text and resource paths may be sensitive.
+
+@code{emacsvox-aural-reproduce-delivery} validates size@comma{} nesting@comma{} schema and operation
+arguments before dispatch through a fixed set of pure assembly helpers. It neither
+reads resource paths nor sends reconstructed wire. Structured versions 3–7 rebuild
+documents and semantic bindings; compatibility captures compare retained command
+bytes only. The wire hash covers prepared bytes@comma{} not socket packet boundaries or
+confirmed sending. Source extraction@comma{} earlier rule matching@comma{} server admission and
+audio remain outside this reconstruction. Incomplete or edited data cannot establish
+the original construction. Change the construction version when assembly or framing
+semantics become incompatible. The user procedure is in
+@ref{Backend Diagnostics And Ownership, , Backend diagnostics}; the design is recorded in ADR 0030.
 
 The canonical protocol documents are:
 

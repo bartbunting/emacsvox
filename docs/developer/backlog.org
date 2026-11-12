@@ -305,15 +305,18 @@ actual editor targets and spoken summaries.  Verify that historical records
 retain no live source references and that current-item guards still reject
 stale edits.  Run the focused inspection and guided-change suites as well.
 
-** TODO Decide the scope of optional delivery reproduction
+** TODO Profile allocation across repeated presentation preparation
 
-The four delivery-refactoring slices are complete in the
-[[file:speech-delivery-implementation.org][implementation review]]. [[file:../adr/0030-bounded-delivery-reproduction.org][Proposed ADR 0030]] compares retaining the implemented
-bounded outcome diagnostics with adding an explicit single-delivery recorder
-and offline consumer. The latter can reconstruct client decisions, but adds
-sensitive text retention, capture overhead and a versioned importer. No live
-recording/export command is implemented. Accept or defer that feature before
-implementation; the completed delivery work does not depend on it.
+The [[file:speech-delivery-recording.org][delivery recorder and repeated measurements]] complete ADR 0030 and the
+earlier scope decision. Small navigation inputs spend little time copying owned
+candidate data. Styled tables and code spend substantially more time in the
+whole preparation/delivery path, with strong garbage-collection sensitivity.
+
+Profile allocation by stage using representative integration inputs, preserving
+wire, semantic and cancellation equivalence. Distinguish preparation, resource
+resolution, history, assembly and framing before choosing an optimisation.
+The muted fixture is evidence for investigation, not a live latency guarantee;
+do not change default garbage-collection settings from these measurements alone.
 
 ** TODO Represent asynchronous voice applies as explicit operations
 

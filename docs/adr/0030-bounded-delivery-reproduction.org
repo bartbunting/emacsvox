@@ -96,3 +96,11 @@ against captured fixtures through versions 3–7, and measure disabled and enabl
 recording overhead. Run source and compiled checks on Emacs 30.2 and the selected
 development toolchain. Review the accessible recording/export interaction
 separately from these automated checks.
+
+* Implementation
+
+The [[file:../developer/speech-delivery-recording.org][implementation review]] records commands, format boundaries, automated checks
+and repeated timing measurements. The recorder is optional and loaded on demand.
+Listening acceptance of its standard prompts/messages remains separate from the
+completed muted checks. Source extraction and earlier rule matching are outside
+offline reconstruction; compatibility output retains command bytes only.

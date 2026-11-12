@@ -127,6 +127,31 @@ They never rewrite the named-voice registry or borrow another lane's latest
 logical-voice realisation. Ordinary history navigation retains the requested
 annotations; explicit original playback uses this observed snapshot.
 
+The optional delivery recorder captures one outer main or notification delivery
+after explicit arming. It snapshots resolved assembly arguments at their existing
+use sites, plus consumed capability facts, omitted actions and the client result.
+It preserves the actual dispatch ID and framing limits. Independent callback
+speech retains its own identity. Scheduled output can update the retained result
+until export or cancellation. No automatic capture ring or logging is enabled.
+
+Its versioned JSON contains plain tagged data, source revision, Emacs version,
+protocol fields and hashes of the document, semantic bindings and prepared wire.
+The 64 KiB allowance includes metadata; a shared 4096-operation/observation limit
+also applies. Exhaustion discards detailed inputs and keeps an incomplete summary.
+Export is explicit, local and atomic, with owner-only permissions on systems that
+support them. Text and resource paths may be sensitive.
+
+=emacsvox-aural-reproduce-delivery= validates size, nesting, schema and operation
+arguments before dispatch through a fixed set of pure assembly helpers. It neither
+reads resource paths nor sends reconstructed wire. Structured versions 3–7 rebuild
+documents and semantic bindings; compatibility captures compare retained command
+bytes only. The wire hash covers prepared bytes, not socket packet boundaries or
+confirmed sending. Source extraction, earlier rule matching, server admission and
+audio remain outside this reconstruction. Incomplete or edited data cannot establish
+the original construction. Change the construction version when assembly or framing
+semantics become incompatible. The user procedure is in
+[[*Backend Diagnostics And Responsibilities][Backend diagnostics]]; the design is recorded in ADR 0030.
+
 The canonical protocol documents are:
 
 - [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md][Omnivox Control Protocol]]

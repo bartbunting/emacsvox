@@ -1,0 +1,174 @@
+#+title: Delivery Recording And Repeated Measurements
+#+date: 2026-11-13
+#+startup: content
+
+* Result
+
+[[file:../adr/0030-bounded-delivery-reproduction.org][ADR 0030]] is accepted and implemented. The optional recorder captures one
+delivery and reconstructs client assembly offline. It does not require an
+Omnivox change. The four earlier refactor slices retain their separate
+[[file:speech-delivery-implementation.org][implementation review]].
+
+Use =emacsvox-aural-record-next-delivery=, =emacsvox-aural-recording-status=,
+=emacsvox-aural-export-recording= and =emacsvox-aural-cancel-recording=.
+=emacsvox-aural-reproduce-delivery= validates a local capture without sending
+speech. The maintained [[file:../manual/chapters/speech-backends.org][backend chapter]] gives the user procedure; the
+[[file:speech-server-protocols.org][protocol chapter]] explains the construction boundary.
+
+* Capture and reconstruction
+
+The recorder is loaded on demand. Disabled delivery checks a nil observer before
+allocating event arguments. Arming selects main or notification and expires after
+60 seconds if unused. Capture follows the outer delivery's result identity, so
+independent callback speech and later deliveries cannot overwrite it. Its control
+commands exclude their own feedback. Scheduled compatibility work can update its
+client outcome until export or cancellation.
+
+Inputs are copied where pure assembly helpers receive resolved values. Facts
+retain consumed capability values and omitted actions. Final framing records the
+actual dispatch ID, limits and prefix commands. No resource is resolved again
+during reconstruction. Document, semantic binding/index and prepared-wire hashes
+are checked separately. Wire equality ignores socket packet grouping. A client
+write remains distinct from server admission and acoustic output.
+
+The JSON manifest has format and construction versions, source revision and Emacs
+version. Tagged arrays preserve plain Lisp data types without evaluating input or
+interning arbitrary names. The importer bounds bytes, traversal, depth and operation
+count; rejects duplicate fields and unknown operations; validates arguments
+and order before assembly; and dispatches through fixed operation names. Existing
+protocol codecs retain document validation. Compatibility captures preserve inert
+command bytes; they do not reconstruct preceding source extraction or rule matching.
+
+One capture shares a 64 KiB encoded allowance, including metadata, and a limit of
+4096 operations plus observations. Traversal permits at most 16384 data nodes and
+128 levels. Exhaustion or unsupported data discards detailed inputs and retains a
+bounded incomplete summary without changing speech. Ordinary recorder errors are
+isolated from delivery and release retained construction inputs immediately.
+Explicit user quits retain their normal meaning.
+
+Export requires a separate command, advertises text/path retention, confirms
+overwrite, writes a private temporary file beside the destination and renames it
+atomically. Failed export retains the capture. Success or cancellation clears
+memory; neither deletes an exported file. Existing logs have independent retention.
+There is no automatic upload or continuous capture. Owner-only file permissions
+depend on filesystem support; native Windows ACL behaviour is not established here.
+
+The source revision identifies the loaded build's recorded revision; it does not
+prove a development worktree was clean. Record local changes when sharing a
+development capture. Changed construction semantics require a version change.
+Redaction may invalidate text offsets and hashes; mark an edited bundle incomplete
+rather than claiming it reproduces the original.
+
+* Repeated measurement method
+
+[[file:../../test/benchmark-delivery.el][The harness]] exercises actual preparation, planning, history, structured delivery
+and ownership in fresh Emacs 31.0.90 batch processes, with isolated registered pipe
+fixtures. Writes are intercepted; terminal replies are simulated and owners are
+retired between iterations. No Omnivox or audio device participates.
+
+Five cases cover a 12-byte navigation item, 462-byte paragraph, a 40-row styled
+table, a fontified 62-line Lisp excerpt and 15400-byte prose. The code fixture is
+fixed at the pre-recorder source. Styled tokens use the fixture's registered
+emphasis voice. These are representative content shapes, not measurements of a
+live integration buffer or the distribution of everyday interactions.
+
+Each case has three rounds with alternating comparison order, five warmups per
+block, then 120, 100, 50, 30 or 20 iterations respectively. Garbage collection runs
+once before each block, not between iterations. Submission wall time excludes
+simulated completion; block allocation and GC counters include cleanup. Raw
+samples, medians, nearest-rank p95, GC and allocation counts are retained in
+[[file:../benchmarks/data/2026-11-13-speech-delivery-recording.eld][the data artifact]]. Every paired comparison asserts the same normalised document
+hash and zero retained owners.
+
+Pre-recorder comparisons deliberately load the existing byte-code from the prior
+implementation while recorder source is under development. The copy-bypass variant
+exists only in the harness. A second run uses a 16 MB collection threshold to expose
+sensitivity to collection frequency; no user setting is changed. Direct copier
+timing includes its own small instrumentation cost. Recorder measurements use the
+new compiled implementation, compare disabled capture with capture of each delivery,
+and exclude arming and export from submission timing.
+
+* Findings
+
+The earlier approximately 19 ms increment came from 4096 distinct synthetic spans.
+It is not a fixed per-navigation delay. Direct measurements of the existing owned
+copy in the repeated 16 MB run are:
+
+| Content | Spans | Median copy, ms | Copy p95, ms | Whole delivery median, ms |
+|---------+-------+-----------------+--------------+---------------------------|
+| Navigation | 1 | 0.014 | 0.026 | 0.77 |
+| Paragraph | 1 | 0.015 | 0.020 | 1.48 |
+| Styled table | 80 | 0.507 | 0.849 | 24.33 |
+| Fontified code | 139 | 0.869 | 1.289 | 51.65 |
+| Long prose | 1 | 0.025 | 0.037 | 29.64 |
+
+Each figure is the median of its three round statistics, not a pooled percentile.
+No collection occurred inside these measured copies. The whole path did collect.
+With the fresh-batch 800000-byte threshold, whole-path medians for table, code and
+long prose were approximately 111, 181 and 118 ms. A separate 16 MB run measured
+approximately 23, 49 and 30 ms. Copy/bypass differences can reverse under this
+noise and collection scheduling; a negative difference does not show copying is
+faster. These results support profiling allocation across the whole preparation
+path before another ownership optimisation. They do not justify changing default
+collection settings or claiming a physical key-to-sound latency.
+
+With the recorder implementation compiled, the same 16 MB method measured:
+
+| Content | Recording off, ms | Recording on, ms | Capture |
+|---------+-------------------+------------------+---------|
+| Navigation | 0.93 | 0.93 | Complete, 2138 bytes |
+| Paragraph | 1.57 | 1.82 | Complete, 2591 bytes |
+| Styled table | 27.52 | 29.09 | Incomplete, bounded summary |
+| Fontified code | 51.28 | 64.23 | Incomplete, bounded summary |
+| Long prose | 31.21 | 33.89 | Complete, 17528 bytes |
+
+These are medians of three round medians. Navigation's small difference is within
+timing noise, not evidence of zero recording cost. Complete paragraph and long-prose
+captures add approximately 0.25 and 2.68 ms in this fixture. Styled content can pay
+capture costs before exhausting the allowance; the code case adds about 13 ms.
+The disabled path remains a nil-observer check at each observation site; comparisons
+with earlier runs are too noisy to isolate the small cost of those checks.
+
+Both styled examples exhaust the encoded-input budget. In a separate diagnostic
+process, the table captures completely at 76003 bytes when its local allowance is
+temporarily raised to 256 KiB, confirming the limiting budget. The shipped limit
+remains 64 KiB. Short reproductions work best; larger styled selections may require
+a smaller example. Continuous recording and increased retention remain outside
+this feature. All paired measurements preserve the normalised document and retire
+every dispatch owner, including when recording becomes incomplete.
+
+* Validation and limits
+
+Automated coverage exercises protocol versions 3–7, both lanes, independent callback
+speech, positioned Unicode actions, omitted cues, run coalescing, real rule output,
+source mutation, limits, expiry, Stop, uncertain sends and scheduled flush/cancel.
+Import checks forbid live process, policy, resource and network access during
+reconstruction. Export tests cover permissions, failure, overwrite refusal and
+atomic replacement failure. Malformed, oversized, deeply nested, duplicate-key and
+unknown-version inputs fail; changed hashes report mismatch and redacted captures
+report incomplete.
+
+The implementation is in =91bdce56c=, with immediate observer-error cleanup and
+isolated test loading corrected in =cf8817739=. Emacs 30 uses the same code via
+=6484bce83= in its separate checkout; the changed Lisp and test files have matching
+hashes. Final verification is:
+
+| Check | Emacs 31.0.90 | Emacs 30.2 |
+|-------+---------------+------------|
+| Focused delivery suite, source | 480 passed | 480 passed |
+| Focused delivery suite, compiled | 480 passed | 480 passed |
+| Core suite | 1070 passed, 18 skipped | 1070 passed, 18 skipped |
+| Full byte-code rebuild and final incremental check | Passed | Passed |
+
+The focused suite includes 21 recorder tests. The broader core skips require a
+graphical display or native speech services. On Emacs 31, isolated compiled Aural
+parity, normal build-tree startup, all 27 semantic traces, headers and generated
+documentation checks pass. A separate fresh compiled process imports a complete
+capture with process creation, networking and speech writes forbidden. Startup's
+stale-byte-code inventory includes the new module.
+
+No listening acceptance, graphical interaction, native Windows export or live
+profile reload is claimed. The new commands use standard minibuffer prompts and
+messages; their spoken flow still needs a later listening check. All work here
+uses isolated source or freshly compiled batch Emacs. No backend, installed package,
+speech setting or live session is changed.
