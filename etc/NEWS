@@ -170,6 +170,10 @@ questions, permission choices, links and folded headings no longer speak
 over navigation feedback. Question forms remain an optional experimental
 Agent Shell feature.
 
+When expired question controls remain in the transcript, Tab retains their
+field-heading context and identifies them as expired. Historical navigation
+does not reactivate the form or offer instructions to submit an answer.
+
 ** Agent Shell queue and group controls
 
 With Agent Shell 0.94.1 or newer, =M-RET= at an empty prompt can redirect the

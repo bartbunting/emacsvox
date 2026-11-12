@@ -1261,6 +1261,7 @@ Return non-nil when point represents one of those semantic items."
     (agent-shell--typing-at-prompt-p :filter-return emacsvox-agent-shell--input-typing-p)
     (agent-shell-submit :around emacsvox-agent-shell--input-submit-around)
     (agent-shell-submit-override :around emacsvox-agent-shell--input-submit-override-around)
+    (agent-shell-elicitation--make-text :around emacsvox-agent-shell--question-render-around)
     (agent-shell-elicitation-act :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-toggle-preview :around emacsvox-agent-shell--question-action-around)
     (agent-shell-elicitation-interrupt :around emacsvox-agent-shell--question-action-around)

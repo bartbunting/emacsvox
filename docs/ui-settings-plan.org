@@ -119,6 +119,10 @@ for queued-prompt rerouting and recursive folds, with listening still open.
 Next: confirm those two changed interactions. Concise active-question speech
 was accepted separately and is not reopened by the upgrade.
 
+Expired-form navigation now retains field headings and identifies inactive
+controls, as described in the [[file:manual/chapters/agent-shell.org::*Answer an agent's question][Agent Shell guide]]. Automated shell and viewport
+checks cover the change; listening acceptance remains separate and deferred.
+
 * Discovery gaps and design decisions
 
 The current [[file:../lisp/ui/emacsvox-settings-integrations.el][integration catalogue]] covers Shell/comint, Agent Shell, EAT,
@@ -154,9 +158,6 @@ Other deferred choices need a concrete use case before implementation:
 - Review adjustable duration-coded indentation, dictionary draft/Apply behaviour,
   cross-store Changed settings reconciliation and Muggle context rules as
   separate designs. None is authorised merely by appearing in this plan.
-- Retaining question-heading context for expired Agent Shell forms is a known
-  interaction gap. Reproduce it and define read-only navigation separately
-  from activating a live question; the active-question path is already accepted.
 - Parent and sibling tree navigation remain proposals; the existing tree
   reading and settings work does not imply those commands are implemented.
 

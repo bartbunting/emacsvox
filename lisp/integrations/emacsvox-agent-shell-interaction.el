@@ -88,6 +88,40 @@
 (defvar emacsvox-agent-shell--question-navigation-origin nil
   "Question control where the current explicit navigation began.")
 
+(defun emacsvox-agent-shell--question-render-around (original form)
+  "Retain field headings in ORIGINAL's rendered FORM for historical reading.
+Store only plain heading text on the rendered controls, never live form state."
+  (let ((text (funcall original form))
+        (position 0))
+    (while (< position (length text))
+      (let* ((control (get-text-property position 'agent-shell-elicitation-control text))
+             (end (next-single-property-change
+                   position 'agent-shell-elicitation-control text (length text)))
+             (key (map-elt control :key))
+             (field (and key (seq-find (lambda (field) (equal (map-elt field :key) key))
+                                       (map-elt form :fields)))))
+        (when control
+          (put-text-property
+           position end 'emacsvox-agent-shell-question-heading
+           (substring-no-properties (or (map-elt field :title) key "Question")) text))
+        (setq position end)))
+    text))
+
+(defun emacsvox-agent-shell--expired-question-presentation ()
+  "Describe a rendered control whose authoritative form is no longer retained."
+  (when-let* ((control (get-text-property (point) 'agent-shell-elicitation-control))
+              (heading (get-text-property (point) 'emacsvox-agent-shell-question-heading)))
+    (let ((same-field
+           (and (map-elt control :key)
+                (equal (map-elt control :id)
+                       (map-elt emacsvox-agent-shell--question-navigation-origin :id))
+                (equal (map-elt control :key)
+                       (map-elt emacsvox-agent-shell--question-navigation-origin :key)))))
+      (list (format "%s%s. Question expired."
+                    (if same-field "" (concat heading ". "))
+                    (string-trim (substring-no-properties (ems--this-line))))
+            '(:role agent-question :events (focus-entered))))))
+
 (defun emacsvox-agent-shell--question-at-point ()
   "Return the question control, form and field at point, or nil.
 Resolve form values in the owning shell, including from a viewport."
@@ -159,8 +193,10 @@ Resolve form values in the owning shell, including from a viewport."
 
 (defun emacsvox-agent-shell--question-feedback (&optional occasion)
   "Speak the question control at point for OCCASION, returning non-nil."
-  (when-let* ((data (emacsvox-agent-shell--question-at-point))
-              (presentation (apply #'emacsvox-agent-shell--question-presentation data)))
+  (when-let* ((presentation
+              (if-let* ((data (emacsvox-agent-shell--question-at-point)))
+                  (apply #'emacsvox-agent-shell--question-presentation data)
+                (emacsvox-agent-shell--expired-question-presentation))))
     (let ((facts (cadr presentation)))
       (when (eq occasion 'state-change)
         (setq facts (plist-put facts :events '(agent-question-changed))))

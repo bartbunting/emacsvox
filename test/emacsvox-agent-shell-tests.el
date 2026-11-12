@@ -13087,6 +13087,60 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (should (= 1 (length speech)))
               (should (string-match-p "Backup, optional" (car speech))))))))))
 
+(ert-deftest emacsvox-agent-shell-expired-question-keeps-reading-context ()
+  "Expired controls retain field headings without offering live actions."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (let ((shell (current-buffer))
+          (contents (buffer-string)))
+      (agent-shell-elicitation--clear :state agent-shell--state)
+      (dolist (viewport '(nil t))
+        (with-temp-buffer
+          (insert contents)
+          (setq major-mode (if viewport 'agent-shell-viewport-view-mode 'agent-shell-mode))
+          (use-local-map (if viewport agent-shell-viewport-view-mode-map agent-shell-mode-map))
+          (switch-to-buffer (current-buffer))
+          (cl-letf (((symbol-function 'emacsvox-agent-shell--session-buffer) (lambda (&optional _) shell))
+                    ((symbol-function 'agent-shell-elicitation--shell-buffer) (lambda () shell))
+                    ((symbol-function 'agent-shell-viewport--prompt-start) (lambda () nil))
+                    ((symbol-function 'agent-shell-viewport--response-start) (lambda () nil)))
+            (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+            (backward-char)
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "TAB"))))))
+              (should (= 1 (length speech)))
+              (should (string-match-p "Destination.*Local.*expired" (car speech)))
+              (should-not (string-match-p "Press Return" (car speech))))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "TAB"))))))
+              (should (= 1 (length speech)))
+              (should (string-match-p "Remote.*expired" (car speech)))
+              (should-not (string-match-p "Destination\\|Press Return" (car speech))))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "<backtab>"))))))
+              (should (string-match-p "Local.*expired" (car speech)))
+              (should-not (string-match-p "Destination" (car speech))))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "TAB TAB"))))))
+              (should (= 2 (length speech)))
+              (should (string-match-p "Backup.*expired" (cadr speech))))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "<backtab>"))))))
+              (should (string-match-p "Destination.*Remote.*expired" (car speech))))
+            (should-not (emacsvox-agent-shell--question-at-point))
+            (should (eq (key-binding (kbd "RET")) 'agent-shell-elicitation-act))
+            (emacsvox-agent-shell-test--capture-events
+              (should-error (call-interactively #'agent-shell-elicitation-act)
+                            :type 'user-error))
+            (should (equal-including-properties contents (buffer-string)))))))))
+
 (ert-deftest emacsvox-agent-shell-question-failure-and-cancellation ()
   "Missing required values and cancelled edits do not announce success."
   (emacsvox-agent-shell-test--with-question
@@ -13211,7 +13265,18 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (pos-visible-in-window-p (point)))
       (should (seq-some (lambda (text) (string-match-p "Local, selected" text)) speech))
       (should (= 1 (seq-count (lambda (text) (string-match-p "Destination" text)) speech)))
-      (should (member "Keep files on this machine." speech)))))
+      (should (member "Keep files on this machine." speech)))
+    (agent-shell-elicitation--clear :state agent-shell--state)
+    (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+    (backward-char)
+    (let ((speech (emacsvox-agent-shell-test--question-speech
+                   (emacsvox-agent-shell-test--capture-events
+                     (execute-kbd-macro (kbd "TAB"))))))
+      (redisplay t)
+      (should (pos-visible-in-window-p (point)))
+      (should (= 1 (length speech)))
+      (should (string-match-p "Destination.*Local.*expired" (car speech)))
+      (should-not (string-match-p "Press Return" (car speech))))))
 
 (ert-deftest emacsvox-agent-shell-question-facts-compile ()
   "Question semantics survive the real aural validation and compilation path."
@@ -13226,7 +13291,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (cl-letf (((symbol-function 'tts-speak) #'ignore))
         (let ((submission (emacsvox-aural-submit text :facts facts
                                                :module 'agent-shell :occasion 'navigation)))
-          (should (emacsvox-aural-submission-plans submission)))))))
+          (should (emacsvox-aural-submission-plans submission)))))
+    (agent-shell-elicitation--clear :state agent-shell--state)
+    (pcase-let ((`(,text ,facts) (emacsvox-agent-shell--expired-question-presentation)))
+      (cl-letf (((symbol-function 'tts-speak) #'ignore))
+        (should (emacsvox-aural-submission-plans
+                 (emacsvox-aural-submit text :facts facts
+                                       :module 'agent-shell :occasion 'navigation)))))))
 
 (ert-deftest emacsvox-agent-shell-queued-prompts-block-buffer-kill ()
   "Declining the upstream queue warning preserves the shell and queued text."

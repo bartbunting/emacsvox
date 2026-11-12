@@ -8755,6 +8755,13 @@ Missing required answers are reported without announcing successful submission.
 to the latest question@comma{} use @kbd{M-x agent-shell-elicitation-jump-to-latest-form}.
 The next-field and previous-field commands are also available through @kbd{M-x}.
 
+If controls remain visible after their form expires@comma{} @kbd{@key{TAB}} and @kbd{S-@key{TAB}} read
+the displayed option and identify the question as expired. The field heading
+is announced on entry and when crossing fields. These historical controls
+cannot submit or change an answer. Older entries without retained headings
+still provide their displayed text; use arrow keys to read the surrounding
+question.
+
 @node Agent Shell Speech And Privacy
 @section Choose automatic speech and privacy
 

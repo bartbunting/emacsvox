@@ -2765,6 +2765,13 @@ including any pending form.  To return to the latest question, use ‘M-x
 agent-shell-elicitation-jump-to-latest-form’.  The next-field and
 previous-field commands are also available through ‘M-x’.
 
+   If controls remain visible after their form expires, ‘<TAB>’ and
+‘S-<TAB>’ read the displayed option and identify the question as
+expired.  The field heading is announced on entry and when crossing
+fields.  These historical controls cannot submit or change an answer.
+Older entries without retained headings still provide their displayed
+text; use arrow keys to read the surrounding question.
+
 
 File: emacsvox.info,  Node: Agent Shell Speech And Privacy,  Next: Agent Shell Permissions,  Prev: Answering Agent Questions,  Up: Agent Shell
 
