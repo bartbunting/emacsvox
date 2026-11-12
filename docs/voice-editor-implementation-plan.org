@@ -2,7 +2,15 @@
 #+date: 2026-09-09
 #+startup: content
 
-* Status and working agreement
+* Current status
+
+The complete voice workflow was accepted on 2026-10-15, as recorded in the
+[[https://github.com/bartbunting/emacsvox/blob/975d382d90f9309f97e61a4c52354b4f5ba49677/docs/ui-settings-plan.org#L2208][retained acceptance checkpoint]]. This supersedes the pending spoken-acceptance
+statements below. The [[file:ui-settings-plan.org::*Review the later voice-menu organisation and tutorial][active UI plan]] owns the separate review of later menu
+organisation and the revised tutorial. The implementation record below
+preserves the earlier checkpoints and their verification limits.
+
+* Implementation record and working agreement
 
 Planning, data-contract and storage slices are complete. The maintainer selected
 full-chain preview, and its XHI protocol contract is complete. The server preview

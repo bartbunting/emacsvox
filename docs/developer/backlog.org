@@ -1,8 +1,11 @@
 #+title: Emacsvox Backlog
 
 This file tracks concrete maintainer work that is not yet scheduled for a
-release.  Keep entries scoped, link the relevant design or implementation
-source, and remove them when completed or deliberately declined.
+release. Keep entries scoped, link the relevant design or implementation
+source, and remove them when completed or deliberately declined. The
+[[file:../ui-settings-plan.org][active UI and settings plan]] owns immediate UI priorities and the remaining
+menu-specific acceptance tasks; its later confirmations supersede older
+implementation checklists.
 
 * User experience
 
@@ -120,7 +123,7 @@ without requiring a configuration file.
 
 The follow-up =omnivox-punctuation= interface reviews host-provided defaults and
 saved overrides, edits independent drafts, saves through the negotiated local
-service, and offers a separate explicit speech restart. Aural Home exposes it
+service, and offers a separate explicit speech restart. The settings menu exposes it
 under /Voices and speech/. File conflicts retain the draft. Remote and
 native-direct editing remain outside the existing local management provider.
 
@@ -169,164 +172,6 @@ runs under WSL. Start with local configuration; remote editing needs separate
 design and authorization. Engine downloads and new language-selection rules
 remain outside this item.
 
-** TODO Design an ordinary preferred physical-voice control
-
-Aural Home already groups engine, rate, notification and spatial controls.
-Selecting a physical voice for ordinary speech needs a bounded runtime policy
-and configure-and-test journey. Do not reuse the global final fallback selector
-as though it were an ordinary preferred voice. Preserve the distinction between
-session choice, saved engine policy and palette-owned named voice choices.
-Notification output now says Use main output; a persistent mute would be a
-separate behavior, not a relabelling of that setting.
-
-** TODO Complete spoken acceptance of the unified voice editor
-
-Follow [[file:../voice-editor-design.org][the voice editor design]] and [[file:../adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] for palette-owned base voices:
-preferred physical choices, fallback order and shared adjustments. The unified model in [[file:../adr/0018-unified-voice-palette-model.org][ADR 0018]] supersedes first-save conversion. Individual choice adjustments, preview
-and runtime delivery are implemented under the accepted contract.
-Simple editing should expose one voice, common adjustments, preview and one
-save action; fallback configuration and individual tuning expand on demand.
-Complete entries and nonactivating writers are implemented. Owned runtime integration, draft/save recovery and the common base
-editor are tested. Optional context inspection and scoped field editing now
-preserve the existing cascade. Optional fallback controls, source explanations
-and experiment keeps are implemented. Live spoken acceptance remains pending.
-The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
-acceptance checks and reasoning-level stops. Planning, the
-[[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
-the original preview request accepted only one physical selector. The maintainer
-selected full-chain preview; [[file:../adr/0016-complete-voice-preview.org][ADR 0016]] and the
-[[file:../voice-editor-preview-contract.org][preview contract]] specify separate negotiated complete-voice previews. Server and
-client protocol slices now pass simulated-engine and callback/lifecycle checks.
-Owned palette selection now registers matching definitions and choices on both
-speech lanes, and Workbench logical previews use the complete chain. Shared
-style compilation preserves contextual precedence and inactive-palette routing.
-The session draft/save service now handles ordered two-store publication,
-conflicts, partial retries and operation-owned application. The maintainer
-accepted shared -> choice -> context in [[file:../adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. The
-[[file:../voice-editor-fallback-tuning-contract.org][storage/runtime contract]], [[file:../voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and independent examples
-complete the XHI review. The maintainer authorized continuation at the High
-handoff. Schema-3 storage, strict patches, identity-preserving pure operations
-and save/copy preservation now pass storage tests. Omnivox commits =ff5cb5f= and
-=0cbfa93= add typed composition and authoritative mixed registration with its
-version-2 codec; all 662 workspace tests and Clippy pass. The capability bundle
-was initially withheld. The XHI review of actual-choice handoff, streaming effects,
-early playback-ticket retention and separate accepted/started evidence is
-complete. Implementation resumed at High: =97481e7= adds fresh actual-attempt
-settings and identity, =3771c0e= verifies native defaults with 85 captured
-syntheses across all 17 Windows voices, and =7e3ecab= adds committed-choice
-DSP ownership and failure cleanup. =a652e6b= and =621da61= add immediate ticket
-handoff and accepted/started observations. =a2064cc= and =77a9c81= add strict
-private preview v2, original-row auditions and terminal playback evidence.
-Commits =c76acd3= through =8cab289= add timeline-4 mixed playback, marker-3
-start/choice pairs and validated reader/queue/multipart admission. All 716
-workspace tests and Clippy pass. Omnivox =31a0b9a= passes isolated muted
-both-lane/reconnect and legacy remote acceptance and advertises the bundle.
-Client wire conversion and per-lane version-2 registration now pass focused
-contracts and compiled parity. All 226 selected client/voice/transport tests
-passed at that registration checkpoint. Subsequent client slices are recorded
-below and in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. The
-[[file:../voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is complete, with eight reproducible
-probes and 429 passing selected baseline tests. Implementation resumed at High.
-The lifecycle slice now arms ownership before writing, prevents retired tracking
-from returning and defers server callbacks until the caller has stored its ID.
-Regression tests cover early completion, failure cleanup, callback speech,
-reentrant filters and lane-local cancellation. Registration now freezes raw palette/voice/choice provenance with its wire
-definitions; four new contracts and all 457 selected tests pass.
-Acknowledged structured runtime now uses timeline 4 and correlated marker-3
-readback with bounded frozen metadata. All 490 selected source tests, the full
-rebuild, compiled gate and muted real-server both-lane/reconnect acceptance pass.
-A subsequent XHI review records 20 preparation observations, including Stop
-before owner allocation and pending quits that leak reservation accounting.
-The selected design adds bounded cancellable scopes, explicit own-stop
-preservation and unwind-safe reservation/release. High implementation now covers
-generic preparation cancellation and reservation cleanup, with 16 new contracts
-and all 477 selected source tests passing. Shared-choice metadata cleanup adds
-five more contracts; all 482 selected source tests pass, and every pending-quit
-diagnostic now leaves zero leaked reservations. The subsequent consumer audit
-adds eight connected contracts; all 490 selected source tests pass. Normal named
-speech, notifications, sparse context, speech actions and word spelling preserve
-layered requests. Raw named-voice queue entries still force an entire mixed
-transaction to legacy projection, and isolated characters retain the separate
-letter protocol. The maintainer returned to XHI. The
-[[file:../voice-editor-legacy-queue-review.org][legacy queue review]] reproduces missing dispatch after late raw entries
-and clarifies that isolated characters supply no named palette voice. The
-maintainer selected A: upgrade complete captured submissions, retaining cross-call
-legacy queues as an explicit compatibility path. The
-[[file:../voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI handoff with sixteen diagnostic
-observations and independent expected cases. The maintainer resumed at High.
-Dispatch intent and callback identity now survive finalization, including legacy
-fallback, distinct flushes and changing sync values. Fifteen new contracts and
-all 505 selected source tests pass. Capture sealing and independent presentation
-hooks prevent late contributions from disappearing; framing is checked before
-interruption. The [[file:../voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is now complete: queue contents and framing
-have separate proof, with conservative local/remote recovery, observed birth and
-exact own-stop receipts. All 26 muted local/remote server observations pass.
-The High bounded observer and guards are implemented: 526 selected source tests
-pass, including actual primitive, producer/Stop-hook and remote lifecycle checks.
-Muted client/server acceptance passes on both lanes and reconnect, locally and
-remotely. Guarded named-queue promotion is now implemented, with 536 selected
-source tests and real local/remote actual-fallback receipts on both lanes after
-reconnect. Complete captured prefixes retain names and reserved IDs; unsupported
-shapes and cross-call queues keep compatibility, with bounded sent-delivery
-reasons. Scope A remains selected. The
-[[file:../voice-editor-preview-handoff-review.org][XHI private-preview handoff]] is now complete: twelve muted observations reproduce
-ownership, cancellation and projection gaps; independent data covers forty
-desired projection/lifecycle/evidence/compatibility cases. The maintainer resumed
-at High; one owned preview coordinator and guarded startup are implemented.
-Sixteen new contracts and all 582 selected tests pass, with muted local/remote
-fallback, exact-audition, Stop and reconnect acceptance. The private v2 service
-now preserves raw choices/context, original-row selection and strict
-accepted/started evidence. Thirteen additional contracts and all 595 selected
-tests pass; fresh compiled muted local/remote acceptance covers fallback, row
-audition, unavailable-row refusal, policy fallback and reconnect. Ordinary
-two-lane playback still produces verified fallback receipts. Pure editor
-projection now keeps the chosen base, complete rows and sparse context separate;
-six new contracts and an expanded 607-test matrix pass, with compiled parity.
-Editor and context views now use those services, with draft/view revision guards,
-stable-row comparison and precise cancellation during startup. Fourteen further
-contracts bring the selected matrix to 621 passing tests. Shared-only saves keep
-their existing schema; sample starts are distinguished from labels and accepted
-audio. Muted real-editor checks cover fallback, reordered comparison, sparse
-context, text cancellation and reconnect. Optional per-choice controls now
-provide explicit inheritance/default/numeric states and row-specific automatic
-samples; five additional contracts expand the selected matrix to 626 tests.
-Field-source Details now explains frozen shared/actual-row/context values for
-the last confirmed sample; three more contracts bring the matrix to 629 tests.
-Experiment keeps now select row/shared scope, preserve unrelated working edits
-and pending save recovery, and pass six more contracts plus a persisted
-keep/save/apply round trip (635 selected tests total). Compiled and muted
-local/remote editor checks pass through reconnect. Only spoken acceptance
-remains in this editor implementation plan; this is not complete feature
-delivery. Earlier, the maintainer
-selected shared tuning first, with explicit
-physical-only, shared-adjustment-only and combined experiment keeps. Individual
-auditions retain older-server support where faithfully representable; customized
-full-chain preview requires the negotiated bundle. Saving remains available.
-
-Preserve the existing aural CSS cascade: partial styles combine by dimension,
-competing values use rule precedence, and named presets replace the base.
-Distinguish editing a palette's base voice from editing a contextual rule;
-offer optional effective-value and source inspection with labelled context
-previews. Contextual Inherit removes a field rather than writing explicit nil.
-Implement the accepted runtime precedence: shared base, actual choice patch,
-then explicit contextual dimensions. Do not introduce numeric accumulation.
-
-The common editor connects independent-copy conversion to its save operation,
-preserving original palettes and routing profiles. Retaining palette selection
-across restart remains an explicit Presentation Profile action. Confirm spoken
-navigation through a live walkthrough before closing this work. Individual fallback adjustments must follow the voice
-actually selected at runtime, including
-server-side fallback; preview-only selection is insufficient.  Record accepted
-ownership and runtime contracts in an ADR before implementation.
-
-The first complete workflow should cover editing =bolden=, comparing opening
-and edited sound, saving once, and leaving/resuming a draft through Home or a
-voice list.  Verify consistent save/apply status, inactive palettes, inherited
-definitions, fallback order and failure recovery, then conduct a spoken
-walkthrough.  Keep this behavior-changing work separate from the maintenance
-extractions below.  The Home label/column changes and filter-amount controls
-are already implemented in =b22bfda67= and =350e0a1f2= respectively.
-
 ** Deferred: individual tuning in legacy queues built across calls
 
 The maintainer selected complete captured submissions for the current editor
@@ -371,7 +216,7 @@ coverage and fixed Workbench effect normalization and custom-style lookup.
 The remaining inspection work can be scoped narrowly; delivery and
 asynchronous state require more extensive lifecycle verification.
 Choose the next slice around a concrete maintenance need.  Each entry can be
-implemented and reviewed independently, and the new voice editor does not
+implemented and reviewed independently, and the voice editor does not
 require all three remaining refactors first.  A delivery-provenance extension
 would benefit from the common inspection model, but is a separate
 design decision rather than a prerequisite for extracting transport helpers.
@@ -589,16 +434,6 @@ checks prove the client contract; real backend lifecycle claims still need an
 isolated connected check.
 
 * Repository stewardship
-
-** TODO Introduce a reviewed Lisp directory structure
-
-The [[file:../lisp-layout-plan.org][Lisp directory reorganisation plan]] records the 2026-10-17 inventory,
-candidate ownership groups, flat-path assumptions in startup/build/packaging,
-and a staged migration beginning with three small integrations.
-[[file:../adr/0029-lisp-source-layout.org][ADR 0029]] accepts the directory contract. Nested-path infrastructure and the three-file
-pilot are implemented; their verification is recorded in the plan. Preserve
-public features and root startup paths, and keep file moves separate from
-behavioural refactoring and the shared tone-editor work.
 
 ** TODO Expand the licence and provenance audit
 
