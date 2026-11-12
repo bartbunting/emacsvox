@@ -25,6 +25,7 @@
     emacsvox-agent-shell-live-input-graphical-visual-speech
     emacsvox-agent-shell-live-input-graphical-wrapped-speech
     emacsvox-agent-shell-response-graphical-bidirectional-speech
+    emacsvox-agent-shell-divider-graphical-bidirectional-speech
     emacsvox-agent-shell-table-graphical-wrapped-navigation
     emacsvox-navigation-graphical-down-advances-and-speaks-once
     emacsvox-navigation-graphical-programmatic-movement-is-unchanged

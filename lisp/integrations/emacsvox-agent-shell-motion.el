@@ -532,6 +532,23 @@ ending at SOURCE-START labels the content that follows it."
         (end-of-visual-line)
         (cons start (point))))))
 
+(defun emacsvox-agent-shell--displayed-divider-source-bounds ()
+  "Return source bounds of a rendered Markdown divider at point.
+Agent Shell replaces the whole rule with a display string ending in a
+newline.  Both display rows can have empty visual source bounds, but they
+represent one divider, including when point is at its source line end."
+  (let* ((inhibit-field-text-motion t)
+         (start (line-beginning-position))
+         (end (line-end-position)))
+    (when (and (< start end)
+               (get-text-property start 'agent-shell-markdown-frozen)
+               (stringp (get-text-property start 'display))
+               (not (invisible-p start))
+               (string-match-p
+                "\\`[ \t]*\\([-*_]\\)\\1\\1+[ \t]*\\'"
+                (buffer-substring-no-properties start end)))
+      (cons start end))))
+
 (defun emacsvox-agent-shell--response-row-source-bounds (bounds)
   "Return visible response bounds when BOUNDS starts in its hidden marker.
 The chat indent can make visual motion land in the empty display overlay
@@ -761,12 +778,13 @@ after that response row was already visited directly."
         (buffer-substring-no-properties start end))))))
 
 (defun emacsvox-agent-shell--chat-navigation-source-bounds ()
-  "Return the current visual source bounds when they carry a chat label."
+  "Return source bounds shared by chat-label or rendered-divider rows."
   (when (or line-move-visual visual-line-mode)
-    (let ((bounds (emacsvox-agent-shell--visual-line-source-bounds)))
-      (when (emacsvox-agent-shell--chat-label-context-between
-             (car bounds) (cdr bounds))
-        bounds))))
+    (or (emacsvox-agent-shell--displayed-divider-source-bounds)
+        (let ((bounds (emacsvox-agent-shell--visual-line-source-bounds)))
+          (when (emacsvox-agent-shell--chat-label-context-between
+                 (car bounds) (cdr bounds))
+            bounds)))))
 
 (defun emacsvox-agent-shell--chat-padding-source-bounds ()
   "Return inclusive source bounds of chat label padding at point."
@@ -1413,6 +1431,8 @@ Core visual-line presentation owns blank-line semantics and interruption."
   (unless emacsvox-agent-shell--visual-line-kill-p
     (let* ((state (get-text-property (point) 'agent-shell-ui-state))
            (section (get-text-property (point) 'agent-shell-ui-section))
+           (divider-source-bounds
+            (emacsvox-agent-shell--displayed-divider-source-bounds))
            (folded-heading-bounds
             (when (and state
                        (map-elt state :collapsed)
@@ -1439,7 +1459,8 @@ Core visual-line presentation owns blank-line semantics and interruption."
            (response-source-bounds
             (emacsvox-agent-shell--response-row-source-bounds source-bounds))
            (source-bounds
-            (or input-source-bounds response-source-bounds source-bounds))
+            (or divider-source-bounds input-source-bounds
+                response-source-bounds source-bounds))
            (source-start (car source-bounds))
            (source-end (cdr source-bounds))
            (emacsvox-agent-shell--chat-label-context
@@ -1457,6 +1478,9 @@ Core visual-line presentation owns blank-line semantics and interruption."
            (car raw-source-bounds) (cdr raw-source-bounds))
         (emacsvox-agent-shell--call-with-vertical-block-entry
          (cond
+          (divider-source-bounds
+           (lambda (&rest _)
+             (emacsvox-speak--present-physical-line)))
           ((or input-source-bounds response-source-bounds)
            (lambda (&rest _)
              (emacsvox-agent-shell--submit-text-feedback

@@ -696,28 +696,11 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
 
 (defun emacsvox-agent-shell--source-block-panel-start (body-start)
   "Return the rendered panel start preceding BODY-START."
-  (let ((start body-start))
-    (while (and (> start (point-min))
-                (stringp
-                 (get-text-property
-                  (1- start) 'agent-shell-markdown-source)))
-      (setq start
-            (or (previous-single-property-change
-                 start 'agent-shell-markdown-source nil (point-min))
-                (point-min))))
-    start))
+  (car (emacsvox-agent-shell--markdown-panel-range-at-position body-start)))
 
 (defun emacsvox-agent-shell--source-block-panel-end (body-end)
   "Return the rendered panel end following BODY-END."
-  (let ((end body-end))
-    (while (and (< end (point-max))
-                (stringp
-                 (get-text-property end 'agent-shell-markdown-source)))
-      (setq end
-            (or (next-single-property-change
-                 end 'agent-shell-markdown-source nil (point-max))
-                (point-max))))
-    end))
+  (cdr (emacsvox-agent-shell--markdown-panel-range-at-position (1- body-end))))
 
 (defun emacsvox-agent-shell--source-block-line-count (body)
   "Return the number of logical lines in source block BODY."
@@ -789,29 +772,34 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
      :body body)))
 
 (defun emacsvox-agent-shell--markdown-panel-range-at-position (position)
-  "Return the contiguous rendered Markdown panel containing POSITION."
+  "Return the rendered Markdown panel containing POSITION.
+The rendered-block tag includes headers and padding whose Markdown source
+is empty.  Its identity separates adjacent panels, even with identical code.
+Older renderers without that tag retain their contiguous source range."
   (when (and (< position (point-max))
              (stringp
               (get-text-property position 'agent-shell-markdown-source)))
-    (let ((start position)
-          (end position))
-      (while (and (> start (point-min))
-                  (stringp
-                   (get-text-property
-                    (1- start) 'agent-shell-markdown-source)))
-        (setq start
-              (or (previous-single-property-change
-                   start 'agent-shell-markdown-source nil (point-min))
-                  (point-min))))
-      (while (and (< end (point-max))
-                  (stringp
-                   (get-text-property
-                    end 'agent-shell-markdown-source)))
-        (setq end
-              (or (next-single-property-change
-                   end 'agent-shell-markdown-source nil (point-max))
-                  (point-max))))
-      (cons start end))))
+    (or (emacsvox-agent-shell--property-range-at-position
+         'agent-shell-markdown-source-block-rendered position)
+        (let ((start position)
+              (end position))
+          (while (and (> start (point-min))
+                      (stringp
+                       (get-text-property
+                        (1- start) 'agent-shell-markdown-source)))
+            (setq start
+                  (or (previous-single-property-change
+                       start 'agent-shell-markdown-source nil (point-min))
+                      (point-min))))
+          (while (and (< end (point-max))
+                      (stringp
+                       (get-text-property
+                        end 'agent-shell-markdown-source)))
+            (setq end
+                  (or (next-single-property-change
+                       end 'agent-shell-markdown-source nil (point-max))
+                      (point-max))))
+          (cons start end)))))
 
 (defun emacsvox-agent-shell--source-block-location-at-position (position)
   "Return the rendered source block whose panel contains POSITION."

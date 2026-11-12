@@ -6660,6 +6660,53 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (speak "Copied source block"))))
       (should (equal (current-kill 0) "(message \"hello\")\n(+ 1 2)")))))
 
+(ert-deftest emacsvox-agent-shell-adjacent-source-blocks-stay-distinct ()
+  "Read, copy, and navigation must select each adjacent rendered block."
+  (skip-unless (fboundp 'agent-shell-markdown--separate-source-blocks))
+  (dolist (bodies '(("echo one" "echo two") ("echo same" "echo same")))
+    (dolist (streamed '(nil t))
+      (with-temp-buffer
+        (setq major-mode 'agent-shell-mode)
+        (insert "before\n")
+        (let ((chunks (mapcar (lambda (body) (format "```sh\n%s\n```\n" body))
+                              bodies))
+              (kill-ring nil) (kill-ring-yank-pointer nil))
+          (dolist (chunk (if streamed chunks (list (apply #'concat chunks))))
+            (goto-char (point-max))
+            (insert chunk)
+            (agent-shell-markdown-replace-markup))
+          (let ((locations (emacsvox-agent-shell--source-block-locations)))
+            (should (equal (mapcar (lambda (item) (plist-get item :body)) locations)
+                           bodies))
+            (should (<= (plist-get (car locations) :end)
+                        (plist-get (cadr locations) :start)))
+            (dolist (location locations)
+              (should (< (plist-get location :start)
+                         (plist-get location :position)))
+              ;; Headers, bodies, and panel padding belong to the same block.
+              (dolist (position (list (plist-get location :start)
+                                     (plist-get location :position)
+                                     (1- (plist-get location :end))))
+                (goto-char position)
+                (should (= (plist-get (emacsvox-agent-shell--source-block-at-point)
+                                      :position)
+                           (plist-get location :position)))
+                (emacsvox-agent-shell-test--capture-events
+                  (emacsvox-agent-shell-copy-source-block))
+                (should (equal (current-kill 0) (plist-get location :body)))
+                (let ((events (emacsvox-agent-shell-test--capture-events
+                                (emacsvox-agent-shell-speak-source-block))))
+                  (should (equal (cadr (assq 'speak events))
+                                 (concat "sh source block, 1 line. "
+                                         (plist-get location :body)))))))
+            (goto-char (plist-get (car locations) :position))
+            (emacsvox-agent-shell-test--capture-events
+              (emacsvox-agent-shell-next-source-block))
+            (should (= (point) (plist-get (cadr locations) :position)))
+            (emacsvox-agent-shell-test--capture-events
+              (emacsvox-agent-shell-previous-source-block))
+            (should (= (point) (plist-get (car locations) :position)))))))))
+
 (ert-deftest emacsvox-agent-shell-yank-dwim-speaks-interactive-text-once ()
   "Agent Shell text paste should inherit yank speech and prefix handling."
   (require 'emacsvox-advice)
@@ -9072,6 +9119,97 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (equal-including-properties
                    response (buffer-substring-no-properties
                              response-start (+ response-start (length response))))))))))
+
+(ert-deftest emacsvox-agent-shell-divider-graphical-bidirectional-speech ()
+  "Rendered dividers have feedback once per visit, without silent arrow stops."
+  (skip-unless (display-graphic-p))
+  (require 'agent-shell-markdown)
+  (let ((installed (advice-member-p
+                    #'emacsvox-agent-shell--speak-visual-line-around
+                    'emacsvox-speak-visual-line)))
+    (unwind-protect
+        (progn
+          (unless installed
+            (advice-add 'emacsvox-speak-visual-line :around
+                        #'emacsvox-agent-shell--speak-visual-line-around))
+          (dolist (case '(("---" separator) ("***" decorative)
+                          ("___" separator) ("  ----  " decorative)))
+            (dolist (punctuation '(some all))
+              (save-window-excursion
+                (with-temp-buffer
+                  (setq major-mode 'agent-shell-mode)
+                  (insert "Subject: sample response\n\n" (car case)
+                          "\n\nMonitoring condition cleared\n")
+                  (add-text-properties (point-min) (point-max)
+                                       '(field output line-prefix "  " wrap-prefix "  "))
+                  (agent-shell-markdown--style-dividers)
+                  (visual-line-mode 1)
+                  (set-window-buffer (selected-window) (current-buffer))
+                  (redisplay t)
+                  (let* ((source (buffer-string))
+                         (tts-punctuation-mode punctuation)
+                         (tts-quiet nil)
+                         (tts-speaker-process 'speaker)
+                         (emacsvox-audio-indentation nil)
+                         (emacsvox-show-point nil)
+                         (divider (if (eq punctuation 'all)
+                                      (string-trim (car case)) (cadr case))))
+                    (cl-letf (((symbol-function 'process-live-p)
+                               (lambda (process) (eq process 'speaker))))
+                      (cl-labels
+                          ((feedback
+                             (events)
+                             (mapcar
+                              (lambda (event)
+                                (if (eq (car event) 'submit)
+                                    (string-trim (substring-no-properties (cadr event)))
+                                  (plist-get (nth 2 event) :line-condition)))
+                              (seq-filter
+                               (lambda (event) (memq (car event) '(submit submit-actions)))
+                               events))))
+                        ;; Explicit line reading must also work at either display anchor.
+                        (goto-char (point-min))
+                        (forward-line 2)
+                        (dolist (position (list (point) (line-end-position)))
+                          (goto-char position)
+                          (should
+                           (equal
+                            (feedback (emacsvox-agent-shell-test--capture-presentations
+                                       (emacsvox-speak-visual-line)))
+                            (list divider))))
+                        (dolist (direction '(down up))
+                          (goto-char (point-min))
+                          (when (eq direction 'up) (forward-line 4))
+                          (let* ((command (if (eq direction 'down) 'next-line 'previous-line))
+                                 (wrapper (if (eq direction 'down)
+                                              #'emacsvox-agent-shell--next-line-around
+                                            #'emacsvox-agent-shell--previous-line-around))
+                                 (last-command nil)
+                                 (temporary-goal-column nil)
+                                 (goal-column nil)
+                                 visits)
+                            (dotimes (_ 4)
+                              (let ((this-command command)
+                                    (ems--interactive-fn-name command))
+                                (emacsvox-agent-shell--vertical-navigation-pre-command)
+                                (unwind-protect
+                                    (push
+                                     (feedback
+                                      (emacsvox-agent-shell-test--capture-presentations
+                                       (funcall wrapper (symbol-function command) 1)))
+                                     visits)
+                                  (emacsvox-agent-shell--vertical-navigation-post-command))
+                                (setq last-command command)))
+                            (should
+                             (equal (nreverse visits)
+                                    (list '(empty) (list divider) '(empty)
+                                          (list (if (eq direction 'down)
+                                                    "Monitoring condition cleared"
+                                                  "Subject: sample response")))))))
+                        (should (equal-including-properties source (buffer-string)))))))))))
+      (unless installed
+        (advice-remove 'emacsvox-speak-visual-line
+                       #'emacsvox-agent-shell--speak-visual-line-around)))))
 
 (ert-deftest emacsvox-agent-shell-live-input-horizontal-boundaries-are-semantic ()
   "Character motion should stop at live input edges without core artifacts."
@@ -12108,6 +12246,95 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                     (plist-get (plist-get (cdar spoken) :facts) :events)))
       (dolist (entry spoken)
         (should (eq 'notification (plist-get (cdr entry) :lane)))))))
+
+(ert-deftest emacsvox-agent-shell-late-tool-status-stays-deduplicated ()
+  "Unchanged background tool status stays quiet across successful or failed turns."
+  (skip-unless (fboundp 'agent-shell--unfinished-tool-calls))
+  (dolist (lifecycle '(turn-complete error))
+    (emacsvox-agent-shell-test--with-current-session
+      (let ((emacsvox-agent-shell-tool-output-verbosity 'summary)
+            (emacsvox-agent-shell-signal-processing nil)
+            spoken)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _)
+                     (when (string-prefix-p "Tool " text)
+                       (push (substring-no-properties text) spoken)))))
+          (agent-shell--on-notification
+           :state agent-shell--state
+           :acp-notification
+           '((method . "session/update")
+             (params . ((update . ((sessionUpdate . "tool_call")
+                                  (toolCallId . "background-1")
+                                  (kind . "execute")
+                                  (title . "Background task")
+                                  (status . "in_progress")))))))
+          ;; Replay upstream's retention before its turn-end lifecycle event.
+          (map-put! agent-shell--state :tool-calls
+                    (agent-shell--unfinished-tool-calls
+                     :tool-calls (map-elt agent-shell--state :tool-calls)))
+          (agent-shell--emit-event :event lifecycle
+                                  :data '((:stop-reason . "end_turn")))
+          (dolist (status '("in_progress" "completed" "completed"))
+            (agent-shell--on-notification
+             :state agent-shell--state
+             :acp-notification
+             `((method . "session/update")
+               (params . ((update . ((sessionUpdate . "tool_call_update")
+                                    (toolCallId . "background-1")
+                                    (status . ,status)))))))))
+        (should (equal (nreverse spoken)
+                       '("Tool started: Background task."
+                         "Tool completed: Background task.")))
+        ;; The following turn can discard the now-finished group.
+        (map-put! agent-shell--state :tool-calls
+                  (agent-shell--unfinished-tool-calls
+                   :tool-calls (map-elt agent-shell--state :tool-calls)))
+        (agent-shell--emit-event :event lifecycle
+                                :data '((:stop-reason . "end_turn")))
+        (should (zerop (hash-table-count emacsvox-agent-shell--tool-call-status-cache)))
+        (should-not emacsvox-agent-shell--tool-output-cache)))))
+
+(ert-deftest emacsvox-agent-shell-late-tool-output-keeps-retained-group-history ()
+  "Retained siblings suppress duplicate output while changed output still speaks."
+  (skip-unless (fboundp 'agent-shell--unfinished-tool-calls))
+  (emacsvox-agent-shell-test--with-current-session
+    (let ((emacsvox-agent-shell-tool-output-verbosity 'full)
+          (emacsvox-agent-shell-signal-processing nil)
+          spoken)
+      (cl-labels
+          ((update
+            (id status &optional output)
+            (agent-shell--on-notification
+             :state agent-shell--state
+             :acp-notification
+             `((method . "session/update")
+               (params . ((update . ((sessionUpdate . "tool_call_update")
+                                    (toolCallId . ,id) (title . ,id)
+                                    (status . ,status)
+                                    (rawOutput . ((formatted_output . ,output)))))))))))
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest args) (push (cons text args) spoken))))
+          (update "finished" "completed" "Original output")
+          (update "running" "in_progress")
+          (update "discarded" "completed" "Unrelated output")
+          (dolist (id '("finished" "running"))
+            (agent-shell--save-tool-call agent-shell--state id '((:group-id . "kept"))))
+          (agent-shell--save-tool-call agent-shell--state "discarded" '((:group-id . "done")))
+          (map-put! agent-shell--state :tool-calls
+                    (agent-shell--unfinished-tool-calls
+                     :tool-calls (map-elt agent-shell--state :tool-calls)))
+          (agent-shell--emit-event :event 'turn-complete
+                                  :data '((:stop-reason . "end_turn")))
+          (should (= 2 (hash-table-count emacsvox-agent-shell--tool-call-status-cache)))
+          (should (= 1 (hash-table-count emacsvox-agent-shell--tool-output-cache)))
+          (setq spoken nil)
+          (update "finished" "completed" "Original output")
+          (should-not spoken)
+          (update "finished" "completed" "Updated output")
+          (should (= 1 (length spoken)))
+          (should (string-match-p "Updated output" (caar spoken)))
+          (should (memq 'agent-tool-output-updated
+                        (plist-get (plist-get (cdar spoken) :facts) :events))))))))
 
 (ert-deftest emacsvox-agent-shell-long-tool-output-announces-upstream-omission ()
   "Full speech retains upstream truncation notices and following output lines."

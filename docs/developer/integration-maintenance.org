@@ -898,7 +898,7 @@ Use ~M-x emacsvox-agent-shell-enable~ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
 The minimum supported Agent Shell is 0.85.3. The integration pins target
-Agent Shell 0.94.1 at =14e8e2a=, Shell Maker 0.98.2 at =f57ad5e=, and
+Agent Shell 0.95.1 at =a9f3034=, Shell Maker 0.98.2 at =f57ad5e=, and
 ACP 0.18.2 at =2959da5=. A personal
 package upgrade does not refresh =test/integration-dependencies.json= or its
 prepared tree. When the preparer rejects a changed lock, choose a fresh
@@ -908,7 +908,7 @@ gates; preserve the old directory until it is no longer needed.
 For every pin refresh, compare all Emacsvox navigation, speech-control, table,
 and repeat keys against shell and viewport maps, inherited Shell Maker maps,
 list editing, inline actions, permission and question controls, and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.94.1 refresh keeps
+effective keys in real prompt and transcript contexts. The 0.95.1 refresh keeps
 the existing scoped overrides: viewport ~t~ discovers tables; table ~r~ reads
 rows instead of quoting or replying; viewport table ~c~ reads columns and ~a~
 selects table speech instead of continuing or repeating a reply. The table ~k~

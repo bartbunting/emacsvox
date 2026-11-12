@@ -27,10 +27,10 @@
     },
     {
       "name": "agent-shell",
-      "commit": "14e8e2a2f2b495f83c9d7b18be7838e45d75bf56",
-      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/14e8e2a2f2b495f83c9d7b18be7838e45d75bf56",
-      "sha256": "36688301df18aaf721656553732b7e187f94e43c5c5da1c29e7604f819246ab9",
-      "archive_root": "agent-shell-14e8e2a2f2b495f83c9d7b18be7838e45d75bf56",
+      "commit": "a9f3034281f2845d3318ad7d2c2241f4ec693227",
+      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/a9f3034281f2845d3318ad7d2c2241f4ec693227",
+      "sha256": "53bb6072744a767cf089380608d03b1563a19c928e8269feab82a393899094bf",
+      "archive_root": "agent-shell-a9f3034281f2845d3318ad7d2c2241f4ec693227",
       "subdirectory": ".",
       "excluded_paths": [
         "CLAUDE.md",

@@ -166,7 +166,7 @@ available so a timer created by an older loaded version can finish safely.")
   "Hash table mapping tool call IDs to their last announced status.")
 
 (defvar-local emacsvox-agent-shell--tool-output-cache nil
-  "Digests of terminal tool output already observed in this turn.")
+  "Output digests for tool calls still retained by Agent Shell.")
 
 (defvar-local emacsvox-agent-shell--permission-detail-cache nil
   "Snapshots of operations whose permissions are still pending.")
@@ -832,6 +832,22 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
      (when (eq semantic-event 'processing-started)
        '(:states (processing))))))
 
+(defun emacsvox-agent-shell--prune-tool-feedback-caches ()
+  "Discard announcement history for tool calls no longer retained upstream.
+Unfinished tools and their group siblings can outlive a turn.  Keep their
+status and terminal-output digests so late updates remain deduplicated."
+  (let ((retained (map-elt (bound-and-true-p agent-shell--state) :tool-calls)))
+    (dolist (cache (list emacsvox-agent-shell--tool-call-status-cache
+                        emacsvox-agent-shell--tool-output-cache))
+      (when (hash-table-p cache)
+        (maphash (lambda (id _)
+                   (unless (assoc id retained)
+                     (remhash id cache)))
+                 cache)))
+    (when (and (hash-table-p emacsvox-agent-shell--tool-output-cache)
+               (zerop (hash-table-count emacsvox-agent-shell--tool-output-cache)))
+      (setq emacsvox-agent-shell--tool-output-cache nil))))
+
 (defun emacsvox-agent-shell--handle-lifecycle-event (event)
   "Provide semantic processing feedback for public Agent Shell EVENT."
   (let ((event-type (map-elt event :event))
@@ -873,12 +889,9 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
          (emacsvox-agent-shell--discard-response-turn)))
       ('error
        (emacsvox-agent-shell--discard-response-turn)))
-    (when (and (memq event-type '(turn-complete error))
-               (hash-table-p emacsvox-agent-shell--tool-call-status-cache))
-      (clrhash emacsvox-agent-shell--tool-call-status-cache))
     (when (memq event-type '(turn-complete error))
-      (setq emacsvox-agent-shell--tool-output-cache nil
-            emacsvox-agent-shell--permission-detail-cache nil))
+      (emacsvox-agent-shell--prune-tool-feedback-caches)
+      (setq emacsvox-agent-shell--permission-detail-cache nil))
     (when emacsvox-agent-shell-signal-processing
       (pcase event-type
         ((or 'init-started 'input-submitted)
