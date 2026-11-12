@@ -4,16 +4,21 @@
 
 * Result and scope
 
+The investigation below records the original baseline. Its four implementation
+slices are now recorded in the [[file:speech-delivery-implementation.org][implementation review]]. The optional provenance
+and offline reproduction design remains proposed in [[file:../adr/0030-bounded-delivery-reproduction.org][ADR 0030]].
+
 The investigation supports a staged separation of delivery construction from
 process effects. Preserve the existing preparation, queue-proof and dispatch
 owners. First isolate presentation-observer failures and describe delivery
 outcomes accurately; then extract deterministic assembly while keeping the
 current order of resource access and state capture.
 
-This report is a proposed implementation contract, not an accepted change to
-speech policy. Production Lisp is unchanged. Two new characterization tests
-and a repeatable diagnostic retain the evidence. No listening test, live
-session change, Omnivox build or server deployment was performed.
+This report proposed an implementation contract without changing speech
+policy. At the investigation baseline, production Lisp was unchanged. Two new
+characterization tests and a repeatable diagnostic retain the evidence. No
+listening test, live session change, Omnivox build or server deployment was
+performed.
 
 The reviewed Emacsvox baseline is =89acd0601=. All 29 Emacsvox ADRs were read.
 The relevant constraints are routing readiness (0007), independent lanes

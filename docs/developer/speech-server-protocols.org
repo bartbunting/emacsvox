@@ -81,17 +81,40 @@ Receipt of a newer valid replaceable generation immediately cancels queued,
 synthesising, and buffered work in the same replacement domain.  It does not
 globally stop ordered, urgent, legacy, or differently keyed output.
 
+Client preparation separates owned delivery data from live process effects.
+The coordinator reads capabilities, resolves resources and captures policy at
+their established points, feeding explicit values into deterministic assembly.
+The resulting candidate owns its document or compatibility commands, semantic
+bindings and span index. Processes, queue guards, registration identity,
+callback reservations and timers remain with the live coordinator.
+
+An inactive callback ID may already exist during nested capture. Finalisation
+reuses it, attaches bounded metadata and frames the document with that actual
+ID before interruption. Admission and immediately-before-write checks still
+apply. Cancellation, a stale registration or an uncertain send never authorise
+compatibility retry. Presentation-observer errors are logged independently so
+they cannot discard a written completion owner; explicit Stop and nonlocal
+exits retain their cancellation behaviour.
+
+With opt-in Aural diagnostics, =delivery-outcome= separates selected
+representation and reason from execution. Readiness can suppress all output
+while =submission-complete= still reports that the API call completed.
+Compatibility work can be scheduled until idle. Pre-write rejection, an
+uncertain attempted send, a successful write and cancellation are distinct
+outcomes. Independent callback speech and pending deliveries keep their own
+result identities. These records add no payload capture beyond the existing
+opt-in diagnostic log, which can contain complete speech text.
+
 Marker events report playback start and positioned playback boundaries;
-tracked status reports terminal completion.  With opt-in Aural diagnostics,
-Emacs records successful dispatch send, first received =utterance_started=,
-and terminal observation under the same dispatch ID.  Omnivox's normal
-session log records protocol admission, worker queue wait, individual engine
-attempts, audio queueing, first mixer-source consumption, and terminal
-playback under that ID.  This correlation uses existing marker and terminal
-records rather than adding a wire-protocol version.  Playback markers track
-mixer-source consumption and may precede physical sound by the output device's
-buffer latency; a protocol write or terminal callback is therefore not proof
-of acoustic onset.
+tracked status reports terminal completion. Emacs records successful dispatch
+send, first received =utterance_started=, and terminal observation under the
+same dispatch ID. Omnivox's normal session log records protocol admission,
+worker queue wait, individual engine attempts, audio queueing, first mixer-source
+consumption, and terminal playback under that ID. Keep submission ID, delivery
+sequence, process generation and dispatch ID distinct when correlating them.
+This uses existing protocols. Playback markers track mixer-source consumption
+and may precede physical sound by the output device's buffer latency; a client
+write or terminal callback is therefore not proof of acoustic onset.
 
 Recent Feedback retains a separate, data-only playback snapshot. Owned,
 validated start and voice-choice events associate actual physical voices with

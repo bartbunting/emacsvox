@@ -1,0 +1,99 @@
+#+title: ADR 0030: Bounded Delivery Reproduction
+#+date: 2026-11-13
+#+startup: content
+
+* Status
+
+Proposed. The delivery refactor and bounded selection/write diagnostics are
+implemented independently. This proposal requires a scope decision before
+adding a recording/export command or retaining additional speech text.
+
+* Context
+
+The [[file:../developer/speech-delivery-investigation.org][delivery investigation]] identified distinct capture points for capability,
+resource and policy reads. A final timeline alone cannot reconstruct those
+choices. Existing opt-in logs correlate submissions and dispatches but are
+not an executable reproduction of client construction. Recent Feedback and
+audible Replay have their own history and observed-voice contracts.
+
+The extracted assembly helpers can reconstruct documents from explicit,
+resolved inputs. Tests already exercise this without processes or resources.
+Making that ability available for a real failure would add a new text-retaining
+feature and a versioned import surface. It is not required to finish the
+delivery cleanup.
+
+* Proposed decision
+
+Keep ordinary delivery unchanged. Add an explicit, session-local command to
+record the next outer delivery on a chosen lane, then disarm. Do not create an
+automatic capture ring or enable diagnostic logging as a side effect. Cancel
+the armed recording explicitly or expire it after 60 seconds. A recording on
+one lane must not collect independent callback speech or the other lane.
+
+The recording belongs to Aural delivery. Retain its final selection and reason,
+version, ordered resolved assembly inputs, delivery fields, and client boundary
+observations. Keep submission ID, delivery sequence, process generation,
+registry generation and dispatch ID in distinct fields. Record capability
+facts at the point they were used. Never label a successful client write as
+server admission, synthesis success or acoustic output.
+
+Limit one recording to 64 KiB of encoded data and 4096 operations. Count text,
+resource identities and metadata in that shared limit. On exhaustion, discard
+the detailed inputs and retain only a bounded incomplete-recording summary;
+speech continues normally. Do not raise existing history, dispatch or wire
+limits to accommodate recording. Report omitted data explicitly. These limits
+will exclude some long presentations; expand them only after measured need.
+
+Export only after a separate explicit command. Show the recorded lane,
+completion state and size, and explain that text and resource paths may be
+included. Save one versioned JSON object with owner-only permissions. Use an
+atomic write and normal overwrite confirmation. Do not upload it or attach it
+to an issue automatically. Clear retained recording inputs after export or
+cancellation. Existing opt-in logs keep their current retention policy.
+
+The manifest contains a format version, source commit, Emacs version, relevant
+protocol versions, capture completeness, bounded counts, and hashes of the
+recorded document and wire. Inputs contain plain data only. Resource references
+are inert identities; reconstruction must not open them. Callbacks, processes,
+buffers, markers, credentials, executable forms and personal configuration
+objects are excluded. Copying strings removes editor properties.
+
+The offline consumer validates the entire object, size, operation count,
+depth and field types before reconstruction. Dispatch operations through a
+fixed table of assembly operations; never intern arbitrary operation names,
+evaluate Lisp or call a function named by input. Reject unknown schema versions
+and incompatible construction versions. Rebuild only client data and wire;
+never send the result to a speech process or reconnect a worker.
+
+Do not promise exact reproduction from redacted or incomplete input. Editing
+text can invalidate byte offsets, hashes, coalescing and rule matches. An
+edited bundle must declare that limitation and cannot claim a matching wire
+result. Server admission, synthesis and device failures continue to require
+correlated Omnivox evidence. Audible Replay retains its existing meaning.
+
+* Alternatives and decision needed
+
+| Scope | Benefits | Costs and limits |
+|-------+----------+------------------|
+| Keep the implemented bounded outcome diagnostics | No additional retained text, command or importer; sufficient for selection and write-boundary diagnosis. | A later failure may need a synthetic reproduction because ordered construction inputs are gone. |
+| Add the explicit single-delivery recorder and offline consumer above | Reproduces many client decisions without the original editor session or speech server. | Retains potentially sensitive text, adds capture overhead and a schema to maintain; cannot prove server or audible behaviour. |
+
+The recommended extension is the explicit single-delivery recorder if offline
+reproduction is worth that additional scope. Continuous recording, automatic
+full-text export, and server replay are excluded. Deferring the extension
+leaves the completed refactor usable and fully testable.
+
+* Acceptance before enabling the feature
+
+Test complete and incomplete recordings, Unicode offsets, harmless run splits,
+mixed legacy/layered/native spans, omitted actions, source mutation and
+independent callback speech. Cover both lanes, expiry, cancellation, failed
+export and overwrite refusal. No error in recording may change delivery.
+
+Reject malformed, oversized, deeply nested and unknown-version bundles before
+construction. Demonstrate that reconstruction performs no process, resource,
+network or editor-state access. Compare complete wire and semantic bindings
+against captured fixtures through versions 3–7, and measure disabled and enabled
+recording overhead. Run source and compiled checks on Emacs 30.2 and the selected
+development toolchain. Review the accessible recording/export interaction
+separately from these automated checks.

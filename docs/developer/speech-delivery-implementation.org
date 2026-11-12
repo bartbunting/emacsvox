@@ -1,0 +1,135 @@
+#+title: Speech Delivery Implementation Review
+#+date: 2026-11-13
+#+startup: content
+
+* Result
+
+The four implementation slices from the [[file:speech-delivery-investigation.org][delivery investigation]] are complete.
+They keep the existing preparation and dispatch owners, queue proof, lane
+policy, compatibility selection and server protocols. The optional recorder
+and offline consumer have a separate, concrete design in
+[[file:../adr/0030-bounded-delivery-reproduction.org][proposed ADR 0030]]. That feature needs a scope decision; no implementation
+slice depends on it.
+
+| Slice | Result | Commit |
+|-------+--------+--------|
+| Observer isolation | Ordinary presentation-observer errors no longer discard an already written completion owner. Explicit Stop and nonlocal exits remain effective. | =00d1b574b= |
+| Selection and disposition | A private result separates representation/reason from suppression, scheduling, rejection, cancellation and write outcome. Public returns retain their meaning. | =b1fc6ae76= |
+| Explicit assembly | Grouping, action placement, effect transitions and document assembly use explicit data. Resource and capability reads retain their established order; policy is captured last. | =3dff55377= |
+| Candidate binding | Owned document/command data is separate from live process, registration, reservation and callback state. Final framing uses the actual dispatch ID. | =5aaf3553f= |
+| Review corrections | Observer-error reports cannot speak recursively; candidate validation and copying share one traversal. | =8156ee3ea= |
+
+The extraction also reproduced and fixed a replay defect. Timeline grouping
+considered layered voice provenance, while replay mapping implicitly ignored
+it. Equal-sounding spans with different provenance could therefore make
+original playback unavailable. Both paths now receive the same explicit
+grouping mode. The regression exercises real registration, history, receipt
+filters and completion before requesting the retained replay steps.
+
+* Boundaries retained
+
+The coordinator resolves resources and projects adapter values at the same
+points as before. It invokes the assembly helpers with resolved values instead
+of moving resource work ahead of all spans. The capability/resource/policy
+ordering test remains unchanged. Overlay cue resolution still occurs during
+compatibility capture and structured assembly; deduplication is not part of
+this change.
+
+A candidate contains representation, reason, required version, document or
+commands, semantic bindings and span index. Its strings have no editor
+properties and cannot alias mutable source text. Live objects are rejected.
+The existing copier supplies the owned snapshot in one pass. Candidates are
+local construction values; no queue, retry mechanism or automatic recording
+retains them after finalisation.
+
+The live coordinator reuses deferred dispatch reservations, attaches bounded
+voice/history evidence, and validates frames with the actual dispatch ID.
+It retains all admission checks, the intentional one-use Stop receipt, write
+observation, accounting and callback publication. A copied document is not
+permission to send it after a generation or registration change. Compatibility
+binding preserves original command bytes and retains the existing queue
+descriptions and owners.
+
+The private =delivery-outcome= diagnostic carries selection, reason, version,
+stage, disposition and write status with distinct submission, process-generation
+and delivery-sequence identifiers. A capability-pending call records suppressed
+output, while =submission-complete :status completed= continues to mean that
+the API call returned. Scheduled work retains its own result through later
+flush or cancellation, including a flush inside another submission.
+
+One inert observation cell marks entry into the exact low-level write. It
+cannot grant queue proof or trigger retries, and nested sends cannot consume
+another packet's observation. Rejection before that point remains distinct
+from an uncertain attempted send. Backend terminal status remains separate.
+
+Each presentation observer runs with ordinary errors contained independently.
+Errors remain visible in Messages and opt-in diagnostics; reporting does not
+speak through the failing observers again. Explicit Stop can still cancel
+publication. Quit, throw, history-effect failures and other non-observer exits
+retain their previous cleanup behaviour. No packet is retried.
+
+* Verification
+
+The focused diagnostic passes all 459 tests in both source and compiled modes
+on Emacs 30.2 and the selected Emacs 31.0.90 toolchain. Loaded implementation
+paths are checked in each fresh process. The broader core suite passes 1049
+tests on each toolchain, with no unexpected results; each run separately skips
+14 graphical checks and four native-service checks.
+
+Both toolchains pass full byte-code builds and final freshness preflights.
+The isolated compiled Aural gate, all 27 semantic traces and the maintained
+header check also pass. Manual preview, generated-document update and the
+final non-mutating =make docs-release-check= pass.
+
+The [[file:../../test/fixtures/delivery-assembly.eld][assembly baseline]] was recorded before extraction at =b1fc6ae76=. Tests
+compare complete framed wire, semantic bindings and span indexes for versions
+3–7. They also reconstruct the same results from explicit assembly operations
+while live process, resource, capability and policy reads are forbidden.
+
+Additional tests cover early and late terminal replies, several observers,
+observer Stop followed by error, recursive error reporting, nil public returns,
+readiness suppression, scheduled-result identity, pre-write rejection and
+uncertain sends. Candidate fault matrices cover Stop, death, generation and
+registration changes and preserve the other lane. Native versions 5–7 retain
+their negotiated version and admission checks. A frame-boundary test proves
+that binding a longer actual dispatch ID can require multipart output without
+mutating the candidate's placeholder document.
+
+The Emacs 30.2 compatibility checkout is separate from the development tree.
+Its initial full build encountered installed Chess byte-code requiring an
+Emacs 31 helper. A direct package load reproduced that independent failure.
+The compatibility build then used an empty package directory and the existing
+pinned Transient 0.13.3, Compat and Cond-let sources. Normal source loading was
+retained for their symbol shorthands. Installed packages were not changed.
+
+No listening test, live Emacs reload, Omnivox rebuild, server deployment or
+native Windows/macOS acceptance was performed. Automated wire and callback
+checks do not establish physical audio output.
+
+* Construction cost
+
+The diagnostic measures both the assembly/framing boundary and assembly plus
+owned candidate copying and framing. Each case uses three samples after an
+assembly warmup, with collection before each sample. Framing and the benchmark
+harness are not separately warmed, so the first sample can include their
+initialisation. Runs were sequential after the test jobs finished. The
+[[file:../benchmarks/data/2026-11-13-speech-delivery-implementation.eld][retained evidence]] includes source and compiled samples, allocation counts,
+loaded paths, toolchain, source identity and input hashes.
+
+Compiled medians in milliseconds:
+
+| Input | Emacs 31 assembly | Emacs 31 with ownership | Emacs 30 assembly | Emacs 30 with ownership |
+|-------+-------------------+-------------------------+-------------------+-------------------------|
+| One navigation span | 0.130 | 0.095 | 0.056 | 0.077 |
+| 240 distinct spans | 3.101 | 3.669 | 1.866 | 3.077 |
+| 240 runs coalesced to one span | 0.395 | 0.335 | 0.335 | 0.337 |
+| 4096 distinct spans | 28.042 | 47.239 | 30.893 | 48.410 |
+| One 300,000-byte span | 4.979 | 5.917 | 5.867 | 6.444 |
+
+Validation and copying share one traversal, but ownership still adds work.
+For 4096 distinct spans on Emacs 31, cons allocations rise from 143,737 to
+373,175 and vector cells from 37,070 to 106,733. No collection occurred inside
+those samples. This synthetic boundary excludes live binding, synthesis and
+audio, and does not predict pauses in a long-running editor. Small differences
+can reverse with timing noise, as the navigation and coalesced cases show.
+These measurements document a safety cost; they do not establish faster speech.

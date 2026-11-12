@@ -204,8 +204,8 @@ presentation review.  Its eight confirmed defects, =EVX-2026-018= through
 =EVX-2026-025=, were fixed through commit =96b8e634b=.  The work below reduces
 the chance of similar defects and makes future changes easier to assess.
 These proposals did not identify four additional bugs or schedule a release.
-The later [[file:speech-delivery-investigation.org][delivery investigation]] separately reproduces a presentation-observer
-failure after sending; its implementation entry below includes that repair.
+The later [[file:speech-delivery-implementation.org][delivery implementation review]] records the observer-error repair, explicit
+outcomes, deterministic assembly and separation of candidates from live owners.
 
 Shared voice metadata, numeric tuner consumers and limited delivery helpers
 have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
@@ -305,25 +305,15 @@ actual editor targets and spoken summaries.  Verify that historical records
 retain no live source references and that current-item guards still reject
 stale edits.  Run the focused inspection and guided-change suites as well.
 
-** TODO Separate delivery preparation from process effects
+** TODO Decide the scope of optional delivery reproduction
 
-The [[file:speech-delivery-investigation.org][13 November delivery investigation]] is complete. It records ownership and
-capture timing, reproducible source/compiled checks, failure probes and the
-staged implementation proposal. Production delivery is unchanged.
-
-Start with the confirmed presentation-observer weakness: an observer error
-after a successful write prevents callback publication. Keep explicit Stop
-and cancellation effective, report observer errors and never resend the packet.
-Then make selection/disposition explicit and extract deterministic assembly
-without moving resource access, capability reads or late policy capture.
-Retain existing preparation owners, deferred callback IDs, queue proof,
-compatibility output, byte-offset conventions and bounded replay evidence.
-
-Implementation remains open. Compare final wire and semantic bindings through
-source and compiled tests, exercise lifecycle faults and measure allocations
-before accepting each extraction. Intentional audible changes still need
-listening acceptance. Bounded delivery provenance and offline reproduction
-require a separate reviewed design; they are not prerequisites for extraction.
+The four delivery-refactoring slices are complete in the
+[[file:speech-delivery-implementation.org][implementation review]]. [[file:../adr/0030-bounded-delivery-reproduction.org][Proposed ADR 0030]] compares retaining the implemented
+bounded outcome diagnostics with adding an explicit single-delivery recorder
+and offline consumer. The latter can reconstruct client decisions, but adds
+sensitive text retention, capture overhead and a versioned importer. No live
+recording/export command is implemented. Accept or defer that feature before
+implementation; the completed delivery work does not depend on it.
 
 ** TODO Represent asynchronous voice applies as explicit operations
 

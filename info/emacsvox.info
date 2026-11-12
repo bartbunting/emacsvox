@@ -294,20 +294,20 @@ Node: Acknowledgments644148
 Node: Developer Guide645174
 Node: Documentation Maintenance647685
 Node: Speech Server Protocols653354
-Ref: Testing A Direct Legacy Server661210
-Ref: Commands That Queue Output661769
-Ref: Commands That Set State665001
-Node: Integration Maintenance667472
-Ref: Background startup ownership and failure recovery678222
-Ref: Supported Emacs versions681375
-Ref: Native Windows builds684612
-Ref: Offline Windows development bundle686828
-Ref: Public Windows installer previews695849
-Ref: Remote preview validation698913
-Ref: Internal ownership and renderer tests721253
-Ref: Upstream contract layers724864
-Node: Authoring Sound Packs755033
-Node: Concept Index759206
+Ref: Testing A Direct Legacy Server662777
+Ref: Commands That Queue Output663336
+Ref: Commands That Set State666568
+Node: Integration Maintenance669039
+Ref: Background startup ownership and failure recovery679789
+Ref: Supported Emacs versions682942
+Ref: Native Windows builds686179
+Ref: Offline Windows development bundle688395
+Ref: Public Windows installer previews697416
+Ref: Remote preview validation700480
+Ref: Internal ownership and renderer tests722820
+Ref: Upstream contract layers726431
+Node: Authoring Sound Packs756600
+Node: Concept Index760773
 
 End Tag Table
 
