@@ -175,6 +175,18 @@ Unknown objects and cycles are rejected by the type and traversal bounds."
       (error (emacsvox-aural-recording--incomplete "input-limit-or-unsupported-data")))))
 
 (defun emacsvox-aural-recording--event (event &rest values)
+  "Observe EVENT and VALUES, releasing retained construction state on error."
+  (condition-case nil
+      (apply #'emacsvox-aural-recording--observe event values)
+    (error
+     (emacsvox-aural-recording--cancel-timer)
+     (when emacsvox-aural-recording--state
+       (emacsvox-aural-recording--incomplete "recorder-error")
+       (setf (emacsvox-aural-recording--capture-phase emacsvox-aural-recording--state) 'ready))
+     (setq emacsvox-aural--recording-observer nil
+           emacsvox-aural--recording-error 'observer-error))))
+
+(defun emacsvox-aural-recording--observe (event &rest values)
   "Observe a private transport EVENT with resolved VALUES."
   (let ((state emacsvox-aural-recording--state))
     (when state

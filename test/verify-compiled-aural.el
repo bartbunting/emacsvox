@@ -403,6 +403,9 @@
   ;; Reuse the independently stated style and delivery contracts with the compiled rules,
   ;; compiler, adapter, and transport already resident.  Test files require
   ;; these features; they must not reload their source implementations.
+  ;; Recorder fixtures require the negotiated native and rich-tone test helpers.
+  ;; Keep their production dependencies on the already registered build path.
+  (add-to-list 'load-path (expand-file-name "test/" root-directory))
   (dolist (file '("emacsvox-aural-rules-tests.el"
                   "emacsvox-aural-schemes-tests.el"
                   "emacsvox-aural-voice-data-tests.el"
@@ -429,11 +432,11 @@
                   "emacsvox-aural-voice-bulk-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
-                  "emacsvox-aural-recording-tests.el"
                   "omnivox-choice-consumer-tests.el"
                   "tts-queue-handoff-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
-                  "emacsvox-aural-voice-workbench-tests.el"))
+                  "emacsvox-aural-voice-workbench-tests.el"
+                  "emacsvox-aural-recording-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
   (dolist (function '(emacsvox-aural-profile-set-startup-palette
                      emacsvox-aural-reproduce-delivery

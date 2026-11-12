@@ -122,14 +122,22 @@
         (should (eq (plist-get (emacsvox-recording-test--roundtrip) :status) 'incomplete))))))
 
 (ert-deftest emacsvox-aural-recording-operation-limit-and-recorder-fault-preserve-delivery ()
-  (dolist (fault '(limit observer))
+  (dolist (fault '(limit observer construction))
     (emacsvox-recording-test--isolated
       (omnivox-choice-consumer-test--with-speech
         (let ((emacsvox-aural-recording--operation-limit (if (eq fault 'limit) 1 4096)))
           (emacsvox-aural-record-next-delivery 'main)
           (when (eq fault 'observer)
             (setq emacsvox-aural--recording-observer (lambda (&rest _) (error "Injected recorder failure"))))
-          (tts-speak "speech survives"))
+          (if (eq fault 'construction)
+              (cl-letf (((symbol-function 'emacsvox-aural-recording--snapshot)
+                         (lambda (&rest _) (error "Injected snapshot failure"))))
+                (tts-speak "speech survives")
+                ;; Cleanup is immediate, without needing Status or Export.
+                (should-not (emacsvox-aural-recording--capture-assembly emacsvox-aural-recording--state))
+                (should-not (emacsvox-aural-recording--capture-operations emacsvox-aural-recording--state))
+                (should-not emacsvox-aural--recording-observer))
+            (tts-speak "speech survives")))
         (should writes)
         (should (eq (plist-get (emacsvox-recording-test--roundtrip) :status) 'incomplete))))))
 
