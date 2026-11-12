@@ -57,6 +57,12 @@ correctly on Emacs 31.
 
 Long passages start speaking sooner in sessions with many loaded packages.
 
+Voice Workbench keeps the latest Apply result when older requests finish.
+Immediate failures are no longer announced as pending, and failed processes
+retain their original speech-lane labels. Errors in status hooks no longer
+prevent Apply or withhold its final result. Saved profiles and unsaved drafts
+remain available for recovery.
+
 ** Reading filters
 
 Speech settings now let you edit repeated punctuation, ignored columns and

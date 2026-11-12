@@ -1,0 +1,46 @@
+#+title: Voice Apply reliability review
+#+date: 2026-11-13
+
+* Scope and result
+
+Reviewed the Emacsvox voice-configuration adapter, routing-profile status and
+Voice Workbench completion feedback. Four defects were reproduced and fixed
+without changing the Omnivox protocol or introducing an operation framework.
+
+| Failure | Corrected behaviour |
+|---------+---------------------|
+| An older Apply finishes after a newer one | Its caller still receives the result, but Workbench announces only the current routing result for its committed profile. Unsaved edits remain intact. |
+| Apply fails immediately while saving | The saved profile remains available for retry. The final Save announcement reports the failure instead of claiming Apply is pending. Reapply and restore use the same current-status wording. |
+| A speech process exits during Apply | The terminal result retains the lane captured at submission, even after the process sentinel clears live ownership. The other lane can finish independently and produce a partial result. |
+| A status or completion observer raises an error | The error is reported without preventing submission or withholding the caller's terminal result. Existing timer and request cleanup still completes. |
+
+* Evidence
+
+Five regressions failed before their corresponding fixes. The tests use real
+request tables, process sentinels and routing-profile publication; server
+responses and timer deadlines are controlled without audio output.
+
+- [[file:../../test/emacsvox-tts-tests.el][TTS tests]] close a real pipe process during routing and logical registration.
+  The surviving lane completes, duplicate and late replies do not add results,
+  pending requests retire and the operation timer is cancelled. A failing
+  completion observer still permits one terminal callback.
+- [[file:../../test/emacsvox-aural-voice-workbench-tests.el][Workbench tests]] complete two overlapping applies in reverse order while
+  retaining an unsaved draft. They also save a real temporary routing file
+  through an immediate failure and check the final announcement. A failing
+  status observer cannot prevent submission or its terminal status.
+- Existing TTS, routing, voice-runtime and choice-registration regressions cover
+  timeout ownership, late replies, reversed acknowledgements, changed
+  definitions, retries, replaced owners, partial results, send failure and
+  replies delivered during sending. Source and fresh compiled checks pass.
+
+* Boundaries
+
+An old Apply is not automatically cancelled, and its caller is not silenced.
+The Workbench guard prevents obsolete presentation of that result. Server
+changes already sent before a timeout may still have taken effect; retry
+remains the way to confirm the desired configuration.
+
+The [[file:backlog.org::*TODO Represent asynchronous voice applies as explicit operations][operation-record proposal]] remains optional maintenance work. These checks
+establish client behaviour; they do not establish audible acceptance or native
+server recovery. No live speech process or personal voice configuration was
+changed during this review.

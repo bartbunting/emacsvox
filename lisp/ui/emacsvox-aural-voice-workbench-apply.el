@@ -71,6 +71,14 @@
          (when (emacsvox-aural-voice-workbench--apply-timed-out-p status)
            "; timed out; server outcome unconfirmed"))))))
 
+(defun emacsvox-aural-voice-workbench--apply-progress-description ()
+  "Describe the submitted Apply without calling an immediate result pending."
+  (if (and (eq 'applying (plist-get emacsvox-aural-routing-apply-status :status))
+           (eq (plist-get emacsvox-aural-routing-apply-status :profile-id)
+               (plist-get emacsvox-aural-voice-workbench-staged-profile :id)))
+      "pending"
+    (emacsvox-aural-voice-workbench--apply-status-description)))
+
 (defun emacsvox-aural-voice-workbench--inventory-engine (engine-id)
   "Return staged inventory engine ENGINE-ID, or nil."
   (cl-find
@@ -149,7 +157,10 @@
   "Update live workbench BUFFER with terminal apply STATUS."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
-      (when (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+      (when (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+                 (equal status emacsvox-aural-routing-apply-status)
+                 (eq (plist-get status :profile-id)
+                     (plist-get emacsvox-aural-voice-workbench-committed-profile :id)))
         (setq emacsvox-aural-voice-workbench-diagnostics
               (emacsvox-aural-voice-workbench--profile-diagnostics
                emacsvox-aural-voice-workbench-staged-profile))
@@ -184,7 +195,8 @@
           (emacsvox-aural-apply-routing-profile
            (plist-get validated :id) callback)
           (emacsvox-aural-voice-workbench--announce
-           "Committed routing is being reapplied"))
+           "Committed routing apply %s"
+           (emacsvox-aural-voice-workbench--apply-progress-description)))
       (emacsvox-aural-commit-routing-profile-data
        validated emacsvox-aural-routing-profiles-file callback)
       (setq emacsvox-aural-voice-workbench-applied-undo previous
@@ -197,7 +209,8 @@
             "Saved and submitted complete routing profile")
       (emacsvox-aural-voice-workbench-refresh)
       (emacsvox-aural-voice-workbench--announce
-       "Routing profile saved atomically; apply pending%s"
+       "Routing profile saved atomically; apply %s%s"
+       (emacsvox-aural-voice-workbench--apply-progress-description)
        (if diagnostics
            (format ", %d current inventory warning%s"
                    (length diagnostics)
@@ -213,7 +226,8 @@
    (plist-get emacsvox-aural-voice-workbench-committed-profile :id)
    (emacsvox-aural-voice-workbench--apply-callback))
   (emacsvox-aural-voice-workbench--announce
-   "Committed voice configuration apply retried"))
+   "Committed voice configuration apply %s"
+   (emacsvox-aural-voice-workbench--apply-progress-description)))
 
 (defun emacsvox-aural-voice-workbench-undo-applied ()
   "Restore and apply the previous known-good profile revision."
@@ -235,7 +249,8 @@
             "Restored previous saved routing revision")
       (emacsvox-aural-voice-workbench-refresh)
       (emacsvox-aural-voice-workbench--announce
-       "Previous routing revision restored and apply pending"))))
+       "Previous routing revision restored; apply %s"
+       (emacsvox-aural-voice-workbench--apply-progress-description)))))
 
 (provide 'emacsvox-aural-voice-workbench-apply)
 ;;; emacsvox-aural-voice-workbench-apply.el ends here

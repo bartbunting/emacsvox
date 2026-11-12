@@ -123,8 +123,12 @@ Explicit logical-voice selectors retain precedence over this global order.")
 (defun emacsvox-aural-routing--publish-apply-status (status)
   "Publish routing-profile apply STATUS and return it."
   (setq emacsvox-aural-routing-apply-status (copy-tree status))
-  (run-hook-with-args 'emacsvox-aural-routing-apply-status-hook
-                      (copy-tree status))
+  (condition-case error-data
+      (run-hook-with-args 'emacsvox-aural-routing-apply-status-hook
+                          (copy-tree status))
+    (error
+     (message "Routing apply status observer failed: %s"
+              (error-message-string error-data))))
   status)
 
 (defun emacsvox-aural-routing--call-apply-callback (callback status)

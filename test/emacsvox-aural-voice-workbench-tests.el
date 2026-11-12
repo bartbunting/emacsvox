@@ -166,6 +166,69 @@
       (should (string-match-p "partial; timed out; server outcome unconfirmed" spoken))
       (should (string-match-p "Press r to reapply" spoken)))))
 
+(ert-deftest emacsvox-aural-voice-workbench-older-apply-cannot-announce-current-status ()
+  "An older completion cannot contradict the latest Apply or discard a draft."
+  (emacsvox-test--with-voice-workbench
+    (let (callbacks spoken)
+      (cl-letf (((symbol-function 'tts-apply-voice-configuration)
+                 (lambda (callback) (push callback callbacks)))
+                ((symbol-function 'emacsvox-aural-voice-workbench--announce)
+                 (lambda (format-string &rest args)
+                   (push (apply #'format format-string args) spoken))))
+        (emacsvox-aural-voice-workbench-retry-apply)
+        (emacsvox-aural-voice-workbench-retry-apply)
+        (setf (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+              "New unsaved draft")
+        (let ((draft (copy-tree emacsvox-aural-voice-workbench-staged-profile)))
+          (setq spoken nil)
+          (funcall (car callbacks) '(:status applied))
+          (should (= 1 (length spoken)))
+          (funcall (cadr callbacks) '(:status failed))
+          (should (= 1 (length spoken)))
+          (should (eq 'applied (plist-get emacsvox-aural-routing-apply-status :status)))
+          (should (equal draft emacsvox-aural-voice-workbench-staged-profile)))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-immediate-apply-is-not-pending ()
+  "An immediate Apply failure remains the final spoken outcome after Save."
+  (emacsvox-test--with-voice-workbench
+    (let* ((directory (make-temp-file "workbench-immediate-" t))
+           (emacsvox-aural-routing-profiles-file (expand-file-name "routing.el" directory))
+           spoken)
+      (unwind-protect
+          (cl-letf (((symbol-function 'tts-apply-voice-configuration)
+                     (lambda (callback)
+                       (funcall callback '(:status failed :code no-supported-process))))
+                    ((symbol-function 'emacsvox-aural-voice-workbench--announce)
+                     (lambda (format-string &rest args)
+                       (push (apply #'format format-string args) spoken))))
+            (setf (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+                  "Saved despite offline speech")
+            (emacsvox-aural-voice-workbench-save-and-apply)
+            (should (file-exists-p emacsvox-aural-routing-profiles-file))
+            (should-not (emacsvox-aural-voice-workbench--dirty-p))
+            (should (eq 'failed (plist-get emacsvox-aural-routing-apply-status :status)))
+            (should (string-match-p "failed" (car spoken)))
+            (should-not (string-match-p "pending" (car spoken))))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-apply-status-observer-error-still-finishes ()
+  "A broken status observer cannot prevent Apply or hide its terminal outcome."
+  (emacsvox-test--with-voice-workbench
+    (let ((emacsvox-aural-routing-apply-status-hook
+           (list (lambda (_) (error "Broken status observer"))))
+          called spoken)
+      (cl-letf (((symbol-function 'tts-apply-voice-configuration)
+                 (lambda (callback)
+                   (setq called t)
+                   (funcall callback '(:status applied))))
+                ((symbol-function 'emacsvox-aural-voice-workbench--announce)
+                 (lambda (format-string &rest args)
+                   (push (apply #'format format-string args) spoken))))
+        (emacsvox-aural-voice-workbench-retry-apply)
+        (should called)
+        (should (eq 'applied (plist-get emacsvox-aural-routing-apply-status :status)))
+        (should (string-match-p "applied" (car spoken)))))))
+
 (ert-deftest emacsvox-aural-voice-workbench-lists-only-usable-engines ()
   "Quick preference excludes disabled, unavailable, and failed engines."
   (emacsvox-test--with-voice-workbench

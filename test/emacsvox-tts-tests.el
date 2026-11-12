@@ -2685,6 +2685,50 @@
     (should (= 0 (hash-table-count (omnivox--pending-requests speaker))))
     (should (memq (car timers) cancelled-timers))))
 
+(ert-deftest emacsvox-tts-omnivox-apply-process-exit-retains-lane ()
+  "A dead lane completes once with its original role while the other succeeds."
+  (dolist (phase '(routing registration))
+    (emacsvox-test--with-configuration-requests
+      (set-process-sentinel speaker #'tts--speech-process-sentinel)
+      (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+      (when (eq phase 'registration)
+        (dolist (write (copy-sequence requests))
+          (omnivox--dispatch-control-response
+           (car write) (emacsvox-test--configuration-ack write))))
+      (let ((stale (emacsvox-test--configuration-ack (assq speaker requests))))
+        (delete-process speaker)
+        (should-not tts-speaker-process)
+        (should-not terminal)
+        (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+        (omnivox--dispatch-control-response speaker stale)
+        (dotimes (_ (if (eq phase 'routing) 2 1))
+          (let ((reply (emacsvox-test--configuration-ack (assq notification requests))))
+            (omnivox--dispatch-control-response notification reply)
+            (omnivox--dispatch-control-response notification reply)))
+        (should (= 1 (length terminal)))
+        (should (eq 'partial (plist-get (car terminal) :status)))
+        (let ((results (plist-get (car terminal) :processes)))
+          (should (eq 'failed (plist-get (seq-find (lambda (r) (eq 'speaker (plist-get r :role))) results) :status)))
+          (should (eq 'applied (plist-get (seq-find (lambda (r) (eq 'notification (plist-get r :role))) results) :status))))
+        (should (zerop (hash-table-count (omnivox--pending-requests notification))))
+        (should (memq (car timers) cancelled-timers))))))
+
+(ert-deftest emacsvox-tts-omnivox-apply-observer-error-still-completes ()
+  "A failing completion observer cannot withhold the caller's terminal result."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (process-put speaker omnivox--control-capabilities-property
+                 '(:features ("logical_voice_registration")))
+    (let ((omnivox-voice-configuration-applied-hook
+           (list (lambda (_) (error "Broken completion observer")))))
+      (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+      (omnivox--dispatch-control-response
+       speaker (emacsvox-test--configuration-ack (car requests)))
+      (should (= 1 (length terminal)))
+      (should (eq 'applied (plist-get (car terminal) :status)))
+      (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+      (should (memq (car timers) cancelled-timers)))))
+
 (ert-deftest emacsvox-tts-omnivox-apply-handles-replies-during-send ()
   "Responses received while writing cannot leave completed requests retained."
   (emacsvox-test--with-configuration-requests

@@ -1763,8 +1763,12 @@ Return the number of processes sent the atomic registry replacement."
 (defun omnivox--publish-voice-configuration-result (result callback)
   "Publish terminal configuration RESULT and safely call CALLBACK."
   (setq omnivox-voice-configuration-last-result (copy-tree result))
-  (run-hook-with-args 'omnivox-voice-configuration-applied-hook
-                      (copy-tree result))
+  (condition-case error-data
+      (run-hook-with-args 'omnivox-voice-configuration-applied-hook
+                          (copy-tree result))
+    (error
+     (message "Omnivox configuration observer failed: %s"
+              (error-message-string error-data))))
   (when (functionp callback)
     (condition-case error-data
         (funcall callback (copy-tree result))
@@ -1783,6 +1787,11 @@ Timeout closes the apply and discards its pending callbacks.  Late replies
 cannot advance it or confirm its outcome; changes already sent may still have
 taken effect on the server.  Reapply to confirm the desired configuration."
   (let* ((processes (omnivox--voice-configuration-processes))
+         ;; The lifecycle sentinel can clear lane ownership before a failed
+         ;; request completes. Keep the roles this operation actually targeted.
+         (roles (mapcar (lambda (process)
+                          (cons process (omnivox--voice-configuration-process-role process)))
+                        processes))
          (registrations (omnivox--prepare-voice-registrations processes))
          ;; Definitions and generation belong to this apply, including callbacks
          ;; that run after another apply has advanced the desired configuration.
@@ -1834,7 +1843,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                   (when (eq process (car request))
                     (omnivox--take-control-request process (cdr request))))
                 (setq requests (cl-delete process requests :key #'car :test #'eq))
-                (push result results)
+                (push (plist-put result :role (cdr (assq process roles))) results)
                 (when (zerop (hash-table-count pending)) (complete))))
              (send-request
               (process request response-function)

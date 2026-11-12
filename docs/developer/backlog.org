@@ -376,6 +376,11 @@ protocol comparisons do not replace human listening if behavior is changed.
 
 ** TODO Represent asynchronous voice applies as explicit operations
 
+The [[file:voice-apply-reliability-review.org][13 November reliability review]] fixes stale Workbench announcements,
+immediate-result wording, lost lane labels and observer-error handling. The
+operation record below remains an optional maintenance proposal; these fixes
+retain the existing overlap, retry and callback contracts.
+
 *** Why this is needed
 
 =omnivox-apply-voice-configuration= in
