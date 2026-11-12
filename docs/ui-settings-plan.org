@@ -35,15 +35,6 @@ Use a fresh normal profile with current byte-code. Close each task after its
 observable result is confirmed. The accepted Agent Shell question-button
 check and tree sounds do not need another general acceptance pass.
 
-** Repair the personal Magit installation
-
-The [[file:../test/README.org::*Pinned graphical menus][pinned graphical menu gate]] now owns repeatable dependency verification,
-including compiled Magit, CI and release checks. The separate installed-Magit
-failure recorded in the [[file:transient-menu-audit-2026-11-10.org::*Deferred decisions][menu audit]] remains a personal package repair task.
-Use the selected Emacs and matching dependencies, then run the local package
-compatibility check without a source override. Private test compilation does
-not modify that installation.
-
 ** Review the later voice-menu organisation and tutorial
 
 Status: deferred beyond the October merge, distinct from the accepted original

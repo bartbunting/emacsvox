@@ -9,10 +9,9 @@ actions, misleading linked-tone Help and repeated Agent Shell questions.
 The compiled menu suite passes with both tested Transient versions. This is
 ready for review and the short listening check below, not a release approval.
 
-The installed Magit Git module still fails from byte-code before its menu
-opens. Its matching source passes. Rebuilding that package and deciding which
-optional packages to pin for a repeatable menu gate are the two deferred
-decisions. Neither has been silently folded into the Emacsvox fixes.
+The installed Magit byte-code failure and repeatable menu gate were resolved
+on 2026-11-13. The [[*Deferred decisions][follow-up record]] distinguishes the personal package repair
+from the repository's pinned dependency checks.
 
 Tree listening remains accepted on 2026-11-10. This audit does not reopen that
 acceptance. Changes to menu wording need a short listening check of their own.
@@ -473,27 +472,19 @@ manuals have been updated; final checks are recorded in the verification table.
 
 ** Deferred decisions
 
-1. Repair the installed Magit package. Its compiled Git module fails with
-   =void-variable $= even in a clean Emacs without Emacsvox. Recommendation:
-   recompile that package using the selected Emacs and its matching
-   dependencies, then rerun the menu suite without the source override. The
-   existing installation has been left intact; this is a dependency repair,
-   not an Emacsvox source fix. Recompiling a disposable copy of =magit-git.el=
-   with Emacs 31.0.90 fixes the failing configuration lookup. This proves the
-   narrow repair, not a complete compiled-Magit interaction check.
-2. Choose packages for a repeatable graphical menu gate. The new local runner
-   covers the full menu selection and reports package paths, but Magit and
-   Markdown currently come from the explicitly chosen package installation.
-   Recommendation: pin reviewed versions and required dependencies in a
-   separate change, then add this suite to the release checks. Until then,
-   use the local compatibility check alongside the existing pinned gates.
+Both items were resolved on 2026-11-13:
 
-[[file:../AGENTS.md][AGENTS.md]] says: “Ask before broad refactors, dependency changes, destructive
-actions, public API changes, file moves, or compatibility-layer removals when
-that scope has not already been authorized.” Its repository invariants also
-cover workflow changes. These proposals extend beyond the confirmed Emacsvox
-source fixes, so the personal package installation and existing release gates
-remain unchanged pending a decision.
+1. Magit and Magit Section =20261107.2107= were rebuilt with Emacs 31.0.90 and
+   their installed dependencies in a disposable copy. All 287 graphical menu
+   tests passed. The validated 47 byte-code files then replaced the installed
+   copies; sources and package versions stayed unchanged, with originals backed
+   up. A fresh Emacs loaded the installed =magit-git.elc= and completed the
+   previously failing configuration lookup. All 287 graphical menu tests also
+   passed against the repaired installation, without a source override. Existing
+   Emacs sessions were not reloaded; a fresh session uses the repaired files.
+2. Commit =56383044e= adds verified dependency copies, private compilation and
+   the [[file:../test/README.org::*Pinned graphical menus][pinned graphical menu gate]] to CI and release checks. The compiled suite
+   passes on Emacs 30.2 and 31.0.90 locally; CI selects 30.2 and 31.1.
 
 ** Coverage limits
 
