@@ -4,9 +4,9 @@
 
 * Status
 
-Proposed. The delivery refactor and bounded selection/write diagnostics are
-implemented independently. This proposal requires a scope decision before
-adding a recording/export command or retaining additional speech text.
+Accepted on 2026-11-13. Add the explicit single-delivery recorder and offline
+consumer below. The delivery refactor and bounded selection/write diagnostics
+remain independently usable.
 
 * Context
 
@@ -22,7 +22,7 @@ Making that ability available for a real failure would add a new text-retaining
 feature and a versioned import surface. It is not required to finish the
 delivery cleanup.
 
-* Proposed decision
+* Decision
 
 Keep ordinary delivery unchanged. Add an explicit, session-local command to
 record the next outer delivery on a chosen lane, then disarm. Do not create an
@@ -71,17 +71,16 @@ edited bundle must declare that limitation and cannot claim a matching wire
 result. Server admission, synthesis and device failures continue to require
 correlated Omnivox evidence. Audible Replay retains its existing meaning.
 
-* Alternatives and decision needed
+* Alternatives
 
 | Scope | Benefits | Costs and limits |
 |-------+----------+------------------|
 | Keep the implemented bounded outcome diagnostics | No additional retained text, command or importer; sufficient for selection and write-boundary diagnosis. | A later failure may need a synthetic reproduction because ordered construction inputs are gone. |
 | Add the explicit single-delivery recorder and offline consumer above | Reproduces many client decisions without the original editor session or speech server. | Retains potentially sensitive text, adds capture overhead and a schema to maintain; cannot prove server or audible behaviour. |
 
-The recommended extension is the explicit single-delivery recorder if offline
-reproduction is worth that additional scope. Continuous recording, automatic
-full-text export, and server replay are excluded. Deferring the extension
-leaves the completed refactor usable and fully testable.
+The explicit single-delivery recorder is selected because captured inputs can
+turn a difficult construction failure into a repeatable regression. Continuous
+recording, automatic full-text export, and server replay are excluded.
 
 * Acceptance before enabling the feature
 

@@ -43,6 +43,7 @@
                     emacsvox-voice-tests
                     emacsvox-speak-tests
                     emacsvox-aural-transport-tests
+                    emacsvox-aural-recording-tests
                     emacsvox-aural-voice-workbench-tests
                     emacsvox-startup-tests
                     emacsvox-welcome-tests

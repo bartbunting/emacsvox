@@ -60,6 +60,7 @@
           emacsvox-aural-source
           emacsvox-aural-planner
           emacsvox-aural-transport
+          emacsvox-aural-recording
           emacsvox-aural-submission
           emacsvox-aural-preview
           emacsvox-aural-replay
@@ -161,6 +162,7 @@
           emacsvox-aural-submit
           emacsvox-aural-submit-actions
           emacsvox-aural--transport-error
+          emacsvox-aural-reproduce-delivery
           emacsvox-aural-preview-play-plan
           emacsvox-aural-preview-play-runs
           emacsvox-aural-validation--report

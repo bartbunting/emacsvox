@@ -429,12 +429,14 @@
                   "emacsvox-aural-voice-bulk-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
+                  "emacsvox-aural-recording-tests.el"
                   "omnivox-choice-consumer-tests.el"
                   "tts-queue-handoff-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
   (dolist (function '(emacsvox-aural-profile-set-startup-palette
+                     emacsvox-aural-reproduce-delivery
          emacsvox-aural-voice-data--read-exchange
          emacsvox-aural-voice-palettes-import
          emacsvox-aural-voice-data--resolve
@@ -504,6 +506,7 @@
                              emacsvox-aural-voice-editor-graphical-more-controls-below-button
                              emacsvox-aural-voice-editor-help-retains-field-and-draft))
                 (or "^emacsvox-emoji-" "^emacsvox-aural-rules-"
+               "^emacsvox-aural-recording-"
                "^emacsvox-aural-voice-data-"
                "^emacsvox-aural-voice-runtime-"
                "^emacsvox-aural-voice-drafts-"

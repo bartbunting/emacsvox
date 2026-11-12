@@ -154,6 +154,7 @@
     "aural/emacsvox-aural-submission.el"
     "aural/emacsvox-aural-timeline-codec.el"
     "aural/emacsvox-aural-transport.el"
+    "aural/emacsvox-aural-recording.el"
     "aural/emacsvox-aural-description.el"
     "aural/emacsvox-aural-preview.el"
     "aural/emacsvox-aural-replay.el"

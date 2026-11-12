@@ -41,6 +41,7 @@
           "speech/tts-queue-state.el"
           "aural/emacsvox-aural-timeline-codec.el"
           "aural/emacsvox-aural-transport.el"
+          "aural/emacsvox-aural-recording.el"
           "speech/omnivox-library-runtime.el"
           "speech/omnivox-remote.el"
           "speech/tts-lifecycle.el"

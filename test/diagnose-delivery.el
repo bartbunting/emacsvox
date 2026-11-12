@@ -42,6 +42,7 @@
   (require 'emacsvox-aural-replay-tests)
   (require 'omnivox-native-runtime-tests)
   (require 'omnivox-rich-tone-tests)
+  (require 'emacsvox-aural-recording-tests)
   (require 'omnivox-remote-tests))
 
 (defun delivery-investigation--paths ()
@@ -50,6 +51,7 @@
                       emacsvox-aural--assembly-span
                       emacsvox-aural--timeline-candidate
                       emacsvox-aural--bind-timeline-candidate
+                      emacsvox-aural-reproduce-delivery
                       emacsvox-aural-replay--span-map
                       emacsvox-aural--submit-content
                       emacsvox-aural--frame-structured-timeline

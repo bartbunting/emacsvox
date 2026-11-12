@@ -166,6 +166,18 @@ delay.  Ordered and urgent transactions are never delayed."
   "Private data-only selection and execution facts for the current delivery.
 This is not a backend receipt and is never used to decide whether to retry.")
 
+(defvar emacsvox-aural--recording-observer nil
+  "Private optional recorder observer; nil during ordinary delivery.")
+(defvar emacsvox-aural--recording-error nil
+  "Symbol identifying an observer failure, without retaining its arguments.")
+
+(defun emacsvox-aural--recording-event (event &rest values)
+  "Observe EVENT and VALUES without letting a recorder error affect speech."
+  (condition-case nil
+      (apply emacsvox-aural--recording-observer event values)
+    (error (setq emacsvox-aural--recording-observer nil
+                 emacsvox-aural--recording-error 'observer-error))))
+
 (defun emacsvox-aural--delivery-note (&rest fields)
   "Update explicit FIELDS in the current private delivery result."
   (when emacsvox-aural--delivery-result
@@ -175,6 +187,8 @@ This is not a backend receipt and is never used to decide whether to retry.")
 (defun emacsvox-aural--log-delivery-result ()
   "Record bounded delivery facts without payloads or live references."
   (when emacsvox-aural--delivery-result
+    (when emacsvox-aural--recording-observer
+      (emacsvox-aural--recording-event 'outcome))
     (apply #'emacsvox-aural-diagnostic-log-event
            'delivery-outcome (copy-sequence emacsvox-aural--delivery-result))))
 
@@ -340,7 +354,10 @@ server still produces the relevant protocol diagnostic."
 (defun emacsvox-aural--tone-volume-supported-p ()
   "Return non-nil when the selected worker supports standalone tone gain."
   (and (processp tts-speaker-process)
-       (memq (process-get tts-speaker-process emacsvox-aural--presentation-tone-process-property) '(2 3))))
+       (let ((version (process-get tts-speaker-process emacsvox-aural--presentation-tone-process-property)))
+         (when emacsvox-aural--recording-observer
+           (emacsvox-aural--recording-event 'capability 'presentation-tone-version version))
+         (memq version '(2 3)))))
 
 (defun emacsvox-aural--tone-volume-deliverable-p (gain)
   "Validate GAIN and decide whether the selected worker can deliver it."
@@ -983,6 +1000,9 @@ timelines with native replacement are never left pending."
                        (and (eq emacsvox-aural-submission-delivery-policy 'replaceable)
                             generation)
                        entries))
+                (when emacsvox-aural--recording-observer
+                  (emacsvox-aural--recording-event
+                   'wire (mapcar #'emacsvox-aural--delivery-entry-command entries)))
                 (dolist (entry entries)
                   (when-let* ((description (emacsvox-aural--delivery-entry-queue-description entry)))
                     (unless (tts-queue--matches-p description (emacsvox-aural--delivery-entry-command entry))
@@ -1061,6 +1081,9 @@ OWNER so a logical transaction cannot be partially delivered across streams."
                  :delivery-sequence nil :selection 'unselected :reason nil :version nil
                  :stage 'capture :disposition nil :write-status 'not-attempted
                  :failure-reason nil)))
+      (when emacsvox-aural--recording-observer
+        (emacsvox-aural--recording-event
+         'begin (if (and owner (eq owner tts-notify-process)) 'notification 'main)))
       (unwind-protect
           (condition-case error-data
               (prog1 (apply #'emacsvox-aural--capture-and-deliver owner function arguments)
@@ -1176,6 +1199,8 @@ Signal a clear installation error when negotiation found an older version."
            (process-get
             tts-speaker-process
             emacsvox-aural--structured-timeline-process-property)))
+      (when emacsvox-aural--recording-observer
+        (emacsvox-aural--recording-event 'capability 'timeline-version version))
       (cond
        ((memq version '(3 4 5 6 7)) t)
        ((memq version '(1 2))
@@ -1367,8 +1392,10 @@ Signal a clear installation error when negotiation found an older version."
      (numberp value)
      (not (zerop value))
      (processp tts-speaker-process)
-     (process-get
-      tts-speaker-process emacsvox-aural--relative-rate-process-property)
+     (let ((supported (process-get tts-speaker-process emacsvox-aural--relative-rate-process-property)))
+       (when emacsvox-aural--recording-observer
+         (emacsvox-aural--recording-event 'capability 'relative-rate (and supported t)))
+       supported)
      value)))
 
 (defun emacsvox-aural--timeline-style-effects (style &optional balance)
@@ -1607,11 +1634,16 @@ construction can retain that plan's trailing actions and context."
 
 (defun emacsvox-aural--assembly-id (assembly prefix)
   "Allocate the next action identifier in ASSEMBLY using PREFIX."
+  (when emacsvox-aural--recording-observer
+    (emacsvox-aural--recording-event 'operation assembly "id" (list prefix)))
   (format "%s.%d" prefix (cl-incf (emacsvox-aural--assembly-action-sequence assembly))))
 
 (defun emacsvox-aural--assembly-action (assembly id position lifecycle fields semantic)
   "Place resolved action FIELDS and SEMANTIC in ASSEMBLY at POSITION.
 ID and LIFECYCLE are explicit; this function never resolves resources."
+  (when emacsvox-aural--recording-observer
+    (emacsvox-aural--recording-event
+     'operation assembly "action" (list id position lifecycle fields semantic)))
   (push (append (list :id id :position position :lifecycle_anchor lifecycle) fields)
         (emacsvox-aural--assembly-actions assembly))
   (when semantic
@@ -1622,6 +1654,9 @@ ID and LIFECYCLE are explicit; this function never resolves resources."
   "Append resolved span data to ASSEMBLY and return its identifier.
 TEXT, LOGICAL, LAYERED, ACSS, EFFECTS, RATE-OFFSET and PROVENANCE are values
 captured by the coordinator.  No adapter or process state is consulted."
+  (when emacsvox-aural--recording-observer
+    (emacsvox-aural--recording-event
+     'operation assembly "span" (list text logical layered acss effects rate-offset provenance)))
   (let ((id (cl-incf (emacsvox-aural--assembly-span-sequence assembly)))
         (contexts (emacsvox-aural--assembly-span-contexts assembly)))
     (if layered
@@ -1646,6 +1681,8 @@ captured by the coordinator.  No adapter or process state is consulted."
 (defun emacsvox-aural--assembly-finish (assembly header delivery)
   "Consume ASSEMBLY, returning its document, bindings and span index.
 HEADER and DELIVERY contain explicit protocol identity and policy fields."
+  (when emacsvox-aural--recording-observer
+    (emacsvox-aural--recording-event 'operation assembly "finish" (list header delivery)))
   (when (emacsvox-aural--assembly-spans assembly)
     (list (append header delivery
                   (list :spans (vconcat (nreverse (emacsvox-aural--assembly-spans assembly)))
@@ -1663,6 +1700,8 @@ when the recorded plans have no speech span and require legacy lowering."
   (let ((assembly (emacsvox-aural--make-assembly
                    :span-contexts (and registration (make-hash-table :test #'eql))))
         deferred-actions)
+    (when emacsvox-aural--recording-observer
+      (emacsvox-aural--recording-event 'assembly assembly (and registration t)))
     (cl-labels
         ((wire-id (prefix) (emacsvox-aural--assembly-id assembly prefix))
          (add-wire-action (id position lifecycle fields semantic)
@@ -1739,6 +1778,8 @@ when the recorded plans have no speech span and require legacy lowering."
                     :effect_bus "dry"))
                    semantic-value)))
                (_ (setq modelled nil)))
+             (when (and (not modelled) emacsvox-aural--recording-observer)
+               (emacsvox-aural--recording-event 'omitted-action kind))
              (when modelled
                (let ((semantic-id (wire-id "semantic")))
                  (add-wire-action
@@ -2049,20 +2090,28 @@ interruption; a prior candidate or placeholder ID never authorises a write."
        emacsvox-aural--history-playback (reverse emacsvox-aural--history-captured-plans)))
     (setf (plist-get envelope :dispatch_id) actual-id)
     (emacsvox-aural--delivery-note :stage 'framing)
-    (list
-     (append
-      (cl-remove-if (lambda (entry)
-                      (memq (emacsvox-aural--delivery-entry-kind entry)
-                            '(structured-fallback named-fallback ordinary-dispatch explicit-dispatch)))
-                    entries)
-      (mapcar
-       (lambda (command)
-         (emacsvox-aural--make-delivery-entry
-          :process owner :kind 'structured :command command
-          :queue-description (tts-queue--describe command (if emacsvox-aural--isolated-letter 'interrupt 'neutral))
-          :owners (list (nth 2 registration))))
-       (emacsvox-aural--frame-structured-timeline envelope)))
-     effects actual-id)))
+    (let ((prefix (cl-remove-if
+                   (lambda (entry)
+                     (memq (emacsvox-aural--delivery-entry-kind entry)
+                           '(structured-fallback named-fallback ordinary-dispatch explicit-dispatch)))
+                   entries)))
+      (when emacsvox-aural--recording-observer
+        (emacsvox-aural--recording-event
+         'frame actual-id emacsvox-aural--isolated-letter
+         emacsvox-aural--timeline-frame-max-bytes emacsvox-aural--timeline-encoded-fragment-max-bytes
+         (mapcar #'emacsvox-aural--delivery-entry-command prefix)))
+      (let ((frames (emacsvox-aural--frame-structured-timeline envelope)))
+        (when emacsvox-aural--recording-observer
+          (emacsvox-aural--recording-event 'constructed envelope bindings span-index))
+        (list
+         (append prefix
+                 (mapcar
+                  (lambda (command)
+                    (emacsvox-aural--make-delivery-entry
+                     :process owner :kind 'structured :command command
+                     :queue-description (tts-queue--describe command (if emacsvox-aural--isolated-letter 'interrupt 'neutral))
+                     :owners (list (nth 2 registration)))) frames))
+         effects actual-id)))))
 
 (defun emacsvox-aural--finalize-legacy-delivery (entries effects)
   "Own compatibility bytes before binding live ENTRIES and EFFECTS."
