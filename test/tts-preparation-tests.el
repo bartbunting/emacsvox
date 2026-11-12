@@ -67,8 +67,95 @@
          (should (= (if (eq outcome 'error) 0 1) (cl-count "s\n" writes :test #'equal)))
          (should (= (if (eq outcome 'stop) 0 1)
                     (cl-count 'presentation-observer-error diagnostics :key #'car)))
+         (let ((delivery (cdr (assq 'delivery-outcome diagnostics))))
+           (should (eq 'structured (plist-get delivery :selection)))
+           (should (eq 'succeeded (plist-get delivery :write-status)))
+           (should (eq (if (eq outcome 'error) 'written 'cancelled)
+                       (plist-get delivery :disposition))))
          (tts-preparation-test--empty speaker)
          (should (= 0 (hash-table-count (process-get speaker 'omnivox--choice-snapshot-references)))))))))
+
+(ert-deftest tts-preparation-delivery-outcomes-separate-selection-and-execution ()
+  :tags '(delivery-preparation)
+  (dolist (case '(empty pending compatibility structured reject stop send-error))
+    (omnivox-choice-playback-test--with-runtime
+     (let (events writes result)
+       (when (eq case 'pending) (emacsvox-aural-set-delivery-readiness speaker 'pending))
+       (cl-letf (((symbol-function 'emacsvox-aural-diagnostic-log-event)
+                  (lambda (event &rest fields) (push (cons event fields) events)))
+                 ((symbol-function 'process-send-string)
+                  (lambda (_process command)
+                    (push command writes)
+                    (when (eq case 'send-error) (error "Uncertain write")))))
+         (setq result
+               (condition-case nil
+                   (pcase case
+                     ((or 'structured 'send-error) (omnivox-choice-playback-test--submit))
+                     (_ (emacsvox-aural-call-with-delivery-transaction
+                         speaker (lambda ()
+                                   (pcase case
+                                     ('compatibility (tts--protocol-queue-text "unchanged") (tts--protocol-dispatch))
+                                     ('reject (error "Invalid capture"))
+                                     ('stop (tts-stop))
+                                     ('pending (ert-fail "Suppressed producer ran")))
+                                   'producer-result))))
+                 (error 'rejected))))
+       (let ((delivery (cdr (assq 'delivery-outcome events))))
+         (should (eq (pcase case
+                       ((or 'empty 'pending) 'no-output)
+                       ('compatibility 'compatibility)
+                       ((or 'structured 'send-error) 'structured)
+                       (_ 'unselected))
+                     (plist-get delivery :selection)))
+         (should (eq (pcase case
+                       ((or 'empty 'pending) 'suppressed)
+                       ('reject 'rejected) ('stop 'cancelled)
+                       ('send-error 'ambiguous) (_ 'written))
+                     (plist-get delivery :disposition)))
+         (should (eq (pcase case
+                       ((or 'structured 'compatibility) 'succeeded)
+                       ('send-error 'uncertain) (_ 'not-attempted))
+                     (plist-get delivery :write-status))))
+       (when (eq case 'empty) (should (eq 'producer-result result)))
+       (when (eq case 'compatibility) (should (equal '("q {unchanged }\nd\n") writes)))
+       (when (memq case '(empty pending reject)) (should-not writes))
+       (tts--cancel-process-tracked-dispatches speaker 'cancelled)
+       (tts-preparation-test--empty speaker)))))
+
+(ert-deftest tts-preparation-scheduled-outcomes-retain-their-own-identity ()
+  :tags '(delivery-preparation)
+  (dolist (finish '(flush cancel))
+    (omnivox-choice-playback-test--with-runtime
+     (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+           (emacsvox-aural-submission-replacement-key 'test)
+           (emacsvox-aural--pending-deliveries (make-hash-table :test #'equal))
+           events writes)
+       (cl-letf (((symbol-function 'emacsvox-aural-diagnostic-log-event)
+                  (lambda (event &rest fields)
+                    (when (eq event 'delivery-outcome) (push fields events))))
+                 ((symbol-function 'process-send-string)
+                  (lambda (_process command) (push command writes))))
+         (unwind-protect
+             (progn
+               (emacsvox-aural-call-with-delivery-transaction
+                speaker (lambda () (tts--protocol-queue-text "pending") (tts--protocol-dispatch)))
+               (should-not writes)
+               (should (eq 'scheduled (plist-get (car events) :disposition)))
+               ;; Flushing can run inside another submission.  Its result must
+               ;; not overwrite that submission's selection or identity.
+               (let ((emacsvox-aural--delivery-result (list :disposition 'untouched)))
+                 (if (eq finish 'flush)
+                     (emacsvox-aural-flush-pending-deliveries speaker)
+                   (emacsvox-aural-cancel-pending-deliveries speaker))
+                 (should (eq 'untouched (plist-get emacsvox-aural--delivery-result :disposition)))))
+           (emacsvox-aural-cancel-pending-deliveries speaker)))
+       (should (= 2 (length events)))
+       (should (eq (if (eq finish 'flush) 'written 'cancelled)
+                   (plist-get (car events) :disposition)))
+       (should (equal (plist-get (car events) :delivery-sequence)
+                      (plist-get (cadr events) :delivery-sequence)))
+       (should (eq 'scheduled (plist-get (cadr events) :disposition)))
+       (should (= (if (eq finish 'flush) 1 0) (length writes)))))))
 
 (ert-deftest tts-preparation-observer-nonlocal-exits-release-written-owners ()
   :tags '(delivery-preparation)

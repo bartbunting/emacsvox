@@ -111,7 +111,7 @@
     (emacsvox-aural--pending-delivery
      (:constructor emacsvox-aural--make-pending-delivery))
   "One replaceable delivery waiting for an input-idle boundary."
-  sequence owner replacement-key entries effects timer transaction-id)
+  sequence owner replacement-key entries effects timer transaction-id result)
 
 (defcustom emacsvox-aural-replacement-idle-delay 0.025
   "Seconds of input idle before sending a replaceable presentation.
@@ -164,6 +164,22 @@ delay.  Ordered and urgent transactions are never delayed."
   (make-hash-table :test #'equal)
   "Replaceable server transactions indexed by owner and replacement key.")
 
+(defvar emacsvox-aural--delivery-result nil
+  "Private data-only selection and execution facts for the current delivery.
+This is not a backend receipt and is never used to decide whether to retry.")
+
+(defun emacsvox-aural--delivery-note (&rest fields)
+  "Update explicit FIELDS in the current private delivery result."
+  (when emacsvox-aural--delivery-result
+    (while fields
+      (setf (plist-get emacsvox-aural--delivery-result (pop fields)) (pop fields)))))
+
+(defun emacsvox-aural--log-delivery-result ()
+  "Record bounded delivery facts without payloads or live references."
+  (when emacsvox-aural--delivery-result
+    (apply #'emacsvox-aural-diagnostic-log-event
+           'delivery-outcome (copy-sequence emacsvox-aural--delivery-result))))
+
 (defvar emacsvox-aural--delivery-sequence 0
   "Sequence preserving order across independent replacement keys.")
 
@@ -208,7 +224,8 @@ Each function receives the failure plist stored in
 (defun emacsvox-aural--call-independent-callback (function &rest arguments)
   "Call FUNCTION with ARGUMENTS in fresh capture state.
 Preserve the ambient speech process, including replacements made by FUNCTION."
-  (let ((tts--current-preparation nil)
+  (let ((emacsvox-aural--delivery-result nil)
+        (tts--current-preparation nil)
         (emacsvox-aural--isolated-letter nil)
         (tts--marker-event-function nil)
         (tts--tracked-completion-function nil)
@@ -683,6 +700,10 @@ one was signalled."
           :condition (car-safe error-data)
           :error-message
           (and error-data (error-message-string error-data)))))
+    (emacsvox-aural--delivery-note
+     :failure-reason reason
+     :disposition (if (eq (plist-get emacsvox-aural--delivery-result :write-status) 'uncertain)
+                      'ambiguous 'rejected))
     (setq emacsvox-aural-last-delivery-failure failure)
     (condition-case hook-error
         (emacsvox-aural--call-independent-callback
@@ -725,12 +746,14 @@ Return non-nil when every entry was sent to a live process."
                     transaction-id))
                (condition-case error-data
                    (let ((packet (tts-queue--packet (nreverse commands) (nreverse descriptions))))
+                     (emacsvox-aural--delivery-note :stage 'write :write-status 'uncertain)
                      (if dispatch-owners
                          (tts--dispatch-write-packet
                           current-process (car packet)
                           (delete-dups (nreverse dispatch-owners)) (cdr packet))
                        (tts-queue--send current-process (car packet) (cdr packet) nil
-                                        (tts--preparation-output-guard current-process))))
+                                        (tts--preparation-output-guard current-process)))
+                     (emacsvox-aural--delivery-note :write-status 'succeeded))
                  (tts--preparation-cancelled
                   (signal (car error-data) (cdr error-data)))
                  (error
@@ -754,6 +777,7 @@ Return non-nil when every entry was sent to a live process."
 
 (defun emacsvox-aural--commit-delivery-effects (effects)
   "Run forward-ordered delivery EFFECTS."
+  (emacsvox-aural--delivery-note :stage 'effects)
   (dolist (effect effects)
     (tts--preparation-check)
     (funcall effect)))
@@ -795,14 +819,29 @@ meaning.  Keep publication after observers so an explicit Stop can cancel it."
                (gethash table-key emacsvox-aural--pending-deliveries)))
     (remhash table-key emacsvox-aural--pending-deliveries)
     (setf (emacsvox-aural--pending-delivery-timer pending) nil)
-    (when
-        (emacsvox-aural--send-delivery-entries
-         (emacsvox-aural--pending-delivery-entries pending)
-         (emacsvox-aural--pending-delivery-owner pending)
-         (emacsvox-aural--pending-delivery-sequence pending)
-         (emacsvox-aural--pending-delivery-transaction-id pending))
-      (emacsvox-aural--commit-delivery-effects
-       (emacsvox-aural--pending-delivery-effects pending)))))
+    (let ((emacsvox-aural--delivery-result (emacsvox-aural--pending-delivery-result pending)))
+      (emacsvox-aural--delivery-note :stage 'admission :disposition nil)
+      (unwind-protect
+          (condition-case error-data
+              (when (emacsvox-aural--send-delivery-entries
+                     (emacsvox-aural--pending-delivery-entries pending)
+                     (emacsvox-aural--pending-delivery-owner pending)
+                     (emacsvox-aural--pending-delivery-sequence pending)
+                     (emacsvox-aural--pending-delivery-transaction-id pending))
+                (emacsvox-aural--commit-delivery-effects
+                 (emacsvox-aural--pending-delivery-effects pending))
+                (emacsvox-aural--delivery-note :disposition 'written))
+            (error
+             (emacsvox-aural--delivery-note
+              :disposition (pcase (plist-get emacsvox-aural--delivery-result :write-status)
+                             ('succeeded 'failed-after-write)
+                             ('uncertain 'ambiguous)
+                             (_ 'rejected))
+              :failure-reason (car error-data))
+             (signal (car error-data) (cdr error-data))))
+        (unless (plist-get emacsvox-aural--delivery-result :disposition)
+          (emacsvox-aural--delivery-note :disposition 'aborted))
+        (emacsvox-aural--log-delivery-result)))))
 
 (defun emacsvox-aural--pending-delivery-keys
     (owner &optional replacement-key)
@@ -836,10 +875,12 @@ meaning.  Keep publication after observers so an explicit Stop can cancel it."
   (dolist
       (table-key
        (emacsvox-aural--pending-delivery-keys owner replacement-key))
-    (when-let* ((pending
-                 (gethash table-key emacsvox-aural--pending-deliveries))
-                (timer (emacsvox-aural--pending-delivery-timer pending)))
-      (cancel-timer timer))
+    (when-let* ((pending (gethash table-key emacsvox-aural--pending-deliveries)))
+      (when-let* ((timer (emacsvox-aural--pending-delivery-timer pending)))
+        (cancel-timer timer))
+      (let ((emacsvox-aural--delivery-result (emacsvox-aural--pending-delivery-result pending)))
+        (emacsvox-aural--delivery-note :disposition 'cancelled)
+        (emacsvox-aural--log-delivery-result)))
     (remhash table-key emacsvox-aural--pending-deliveries)))
 
 (defun emacsvox-aural-flush-pending-deliveries
@@ -867,7 +908,8 @@ meaning.  Keep publication after observers so an explicit Stop can cancel it."
            :replacement-key replacement-key
            :entries entries
            :effects effects
-           :transaction-id emacsvox-aural--history-transaction-id)))
+           :transaction-id emacsvox-aural--history-transaction-id
+           :result emacsvox-aural--delivery-result)))
     (let (complete)
       (unwind-protect
           (progn
@@ -907,6 +949,7 @@ meaning.  Keep publication after observers so an explicit Stop can cancel it."
 Return `sent' after a successful write, `pending' after idle scheduling, and
 nil when no complete write occurred.  Tracked submissions and structured
 timelines with native replacement are never left pending."
+  (emacsvox-aural--delivery-note :stage 'admission)
   (when entries
     (tts--preparation-check)
     (when-let* ((foreign
@@ -971,6 +1014,7 @@ timelines with native replacement are never left pending."
              (emacsvox-aural--schedule-replaceable-delivery
               owner emacsvox-aural-submission-replacement-key
               entries effects generation)
+             (emacsvox-aural--delivery-note :stage 'scheduled :disposition 'scheduled)
              'pending)))
 	('urgent
 	 (emacsvox-aural-cancel-pending-deliveries owner)
@@ -997,10 +1041,43 @@ Nested calls join the enclosing transaction.  The outer source submission's
 delivery policy determines whether the complete captured payload is sent now
 or supersedes an older pending payload.  Every captured command must target
 OWNER so a logical transaction cannot be partially delivered across streams."
+  (if emacsvox-aural--delivery-transaction-active-p
+      (apply function arguments)
+    (let ((emacsvox-aural--delivery-result
+           (list :submission-id emacsvox-aural--current-submission-id
+                 :process-name (emacsvox-aural--delivery-process-name owner)
+                 :process-generation (and (processp owner)
+                                          (process-get owner 'tts--speech-process-generation))
+                 :delivery-sequence nil :selection 'unselected :reason nil :version nil
+                 :stage 'capture :disposition nil :write-status 'not-attempted
+                 :failure-reason nil)))
+      (unwind-protect
+          (condition-case error-data
+              (prog1 (apply #'emacsvox-aural--capture-and-deliver owner function arguments)
+                (unless (plist-get emacsvox-aural--delivery-result :disposition)
+                  (emacsvox-aural--delivery-note
+                   :disposition (if (eq (plist-get emacsvox-aural--delivery-result :stage) 'published)
+                                    'written 'cancelled))))
+            (error
+             (emacsvox-aural--delivery-note
+              :disposition (pcase (plist-get emacsvox-aural--delivery-result :write-status)
+                             ('succeeded 'failed-after-write)
+                             ('uncertain 'ambiguous)
+                             (_ 'rejected))
+              :failure-reason (car error-data))
+             (signal (car error-data) (cdr error-data))))
+        (unless (plist-get emacsvox-aural--delivery-result :disposition)
+          (emacsvox-aural--delivery-note :disposition 'aborted))
+        (emacsvox-aural--log-delivery-result)))))
+
+(defun emacsvox-aural--capture-and-deliver (owner function &rest arguments)
+  "Capture FUNCTION's writes and finalise them for live OWNER."
   (cond
    ((and
      (not emacsvox-aural--delivery-transaction-active-p)
      (emacsvox-aural-delivery-pending-p owner))
+    (emacsvox-aural--delivery-note :selection 'no-output :reason 'readiness-pending
+                                   :disposition 'suppressed)
     nil)
    (emacsvox-aural--delivery-transaction-active-p
     (apply function arguments))
@@ -1061,6 +1138,9 @@ OWNER so a logical transaction cannot be partially delivered across streams."
 			(emacsvox-aural--tracked-submission-p)
 			(not (eq outcome 'sent)))
                      (setq result nil))))
+               (tts--preparation-check)
+               (unless (plist-get emacsvox-aural--delivery-result :disposition)
+                 (emacsvox-aural--delivery-note :stage 'published))
                (when (cl-some (lambda (dispatch)
 				(and (eql result (tts--dispatch-owner-id dispatch))
                                      (not (tts--dispatch-owner-published dispatch))))
@@ -1832,13 +1912,16 @@ when the recorded plans have no speech span and require legacy lowering."
 (defun emacsvox-aural--finalize-structured-delivery
     (owner generation entries effects runs)
   "Select one representation for OWNER's complete captured ENTRIES and RUNS."
+  (emacsvox-aural--delivery-note :stage 'selection :delivery-sequence generation)
   (let* ((named (emacsvox-aural--named-queue-records))
          (reason (and named (or (emacsvox-aural--queue-shape-reason entries named)
                                 (emacsvox-aural--named-queue-proof-reason owner))))
          selected)
     (setq selected
           (if reason
-              (emacsvox-aural--finalize-legacy-delivery entries effects)
+              (progn
+                (emacsvox-aural--delivery-note :selection 'compatibility :reason reason)
+                (emacsvox-aural--finalize-legacy-delivery entries effects))
             (when named
               (tts--preparation-set-queue-guard
                (or (tts-queue--guard owner omnivox--choice-registration-property)
@@ -1874,19 +1957,25 @@ when the recorded plans have no speech span and require legacy lowering."
 (defun emacsvox-aural--finalize-timeline-delivery
     (owner generation entries effects runs)
   "Replace eligible legacy ENTRIES with one structured timeline for OWNER."
-  (if
-      (not
-       (and
-        runs
-        (eq owner tts-speaker-process)
-        (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)
-        (emacsvox-aural--capture-single-timeline-p entries)))
-      (emacsvox-aural--finalize-legacy-delivery entries effects)
+  (let ((reason (cond ((null runs) 'no-runs)
+                      ((not (eq owner tts-speaker-process)) 'speaker-changed)
+                      ((not (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)) 'no-speech)
+                      ((emacsvox-aural--queue-shape-reason
+                        entries (emacsvox-aural--named-queue-records))))))
+    (if reason
+        (progn
+          (emacsvox-aural--delivery-note :selection 'compatibility :reason reason)
+          (emacsvox-aural--finalize-legacy-delivery entries effects))
     (let* ((snapshot (when (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(4 5 6 7))
                        (omnivox--choice-current-registration owner)))
            (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
       (if (not built)
-          (emacsvox-aural--finalize-legacy-delivery entries effects)
+          (progn
+            (emacsvox-aural--delivery-note :selection 'compatibility :reason 'no-speech)
+            (emacsvox-aural--finalize-legacy-delivery entries effects))
+        (emacsvox-aural--delivery-note :selection 'structured :reason nil
+                                       :version (plist-get (car built) :protocol_version)
+                                       :stage 'framing)
         (let* ((envelope (car built))
                (bindings (cadr built))
                (reserved
@@ -1930,10 +2019,13 @@ when the recorded plans have no speech span and require legacy lowering."
                 :owners (list (nth 2 registration))))
              (emacsvox-aural--frame-structured-timeline envelope)))
            effects
-           actual-id))))))
+           actual-id)))))))
 
 (defun emacsvox-aural--finalize-legacy-delivery (entries effects)
   "Bind pending callback owners to unchanged compatibility ENTRIES and EFFECTS."
+  (unless entries
+    (emacsvox-aural--delivery-note :selection 'no-output :reason 'empty-capture
+                                   :disposition 'suppressed))
   (dolist (entry entries)
     (dolist (owner (emacsvox-aural--delivery-entry-owners entry))
       (unless (tts--dispatch-owner-semantics-bound owner)

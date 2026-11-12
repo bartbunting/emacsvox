@@ -819,6 +819,7 @@ write.  State synchronization lines in a combined write are ignored."
     (cl-letf
         (((symbol-function 'processp)
           (lambda (process) (eq process 'speech)))
+         ((symbol-function 'process-name) (lambda (_process) "speech"))
          ((symbol-function 'process-live-p)
           (lambda (process) (eq process 'speech)))
          ((symbol-function 'process-get)
@@ -3024,7 +3025,8 @@ write.  State synchronization lines in a combined write are ignored."
       (cl-letf
           (((symbol-function 'processp)
             (lambda (process) (eq process 'speech)))
-           ((symbol-function 'process-live-p)
+           ((symbol-function 'process-name) (lambda (_process) "speech"))
+         ((symbol-function 'process-live-p)
             (lambda (process) (eq process 'speech)))
            ((symbol-function 'process-get)
             (lambda (_process property)
