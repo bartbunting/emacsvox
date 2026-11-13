@@ -1098,12 +1098,13 @@ expected speech, and recovery remain in [[*Getting Started: Installation and Fir
 :TEXINFO_NODE: no
 :END:
 
-An updated Windows development build of Omnivox can send main speech and
+An updated Windows or macOS development build of Omnivox can send main speech and
 notifications to different physical outputs. This requires the server's
 =audio_device_selection_v1= capability; the pinned 1.18.0 release does not
 provide it. It works with native Windows Emacs or WSL Emacs launching the
-Windows worker. Linux/WSLg, macOS, PulseAudio and remote device selection are
-not provided by this interface.
+Windows worker, or native Emacs and Omnivox on macOS. The macOS implementation
+is awaiting native build and listening qualification. Linux/WSLg, PulseAudio
+and remote device selection are not provided by this interface.
 
 Open ~C-e H o n~ and choose /Main output device/ (~D~) or /Notification output
 device/ (~M~). The equivalent command is ~M-x omnivox-output-devices RET~;
@@ -1137,8 +1138,9 @@ the endpoint currently used.
    choices are independent. ~q~ returns without applying or saving the current
    candidate; an already applied choice remains active for this session.
 
-Saved choices use the speech host's name, backend and device ID. Renaming the
-host creates a different scope. Friendly-name changes do not select another
+Saved choices use the speech host's identity, backend and device ID. Windows
+uses the host name, so renaming it creates a different scope. macOS uses the
+host UUID, which survives a rename. Friendly-name changes do not select another
 device. Explicit =--audio-device= or =OMNIVOX_AUDIO_DEVICE= startup overrides
 take precedence over saved choices. Ordinary startup resolves saved choices
 inside the worker without an extra discovery process.

@@ -6203,7 +6203,7 @@ the active arrangement and @kbd{R} restarts speech after confirmation. That menu
 also offers Other device for an existing device name; cancelling its prompt
 retains the previous choice and stays in the list.
 
-For physical devices on a supporting Windows Omnivox build@comma{} @kbd{D} opens main
+For physical devices on a supporting local Omnivox build@comma{} @kbd{D} opens main
 outputs and @kbd{M} opens notification outputs. Press @kbd{d} to browse their Transient
 choices. Selecting a candidate@comma{} applying it and saving it are separate actions@comma{}
 described in @ref{Selecting And Checking Omnivox,Selecting And Checking Omnivox,,emacsvox,}.
@@ -11129,12 +11129,13 @@ expected speech@comma{} and recovery remain in @ref{Installation, , Installation
 
 @subsection Choose physical output devices
 
-An updated Windows development build of Omnivox can send main speech and
+An updated Windows or macOS development build of Omnivox can send main speech and
 notifications to different physical outputs. This requires the server's
 @code{audio_device_selection_v1} capability; the pinned 1.18.0 release does not
 provide it. It works with native Windows Emacs or WSL Emacs launching the
-Windows worker. Linux/WSLg@comma{} macOS@comma{} PulseAudio and remote device selection are
-not provided by this interface.
+Windows worker@comma{} or native Emacs and Omnivox on macOS@. The macOS implementation
+is awaiting native build and listening qualification. Linux/WSLg@comma{} PulseAudio
+and remote device selection are not provided by this interface.
 
 Open @kbd{C-e H o n} and choose @emph{Main output device} (@kbd{D}) or @emph{Notification output
 device} (@kbd{M}). The equivalent command is @kbd{M-x omnivox-output-devices @key{RET}};
@@ -11174,8 +11175,9 @@ choices are independent. @kbd{q} returns without applying or saving the current
 candidate; an already applied choice remains active for this session.
 @end enumerate
 
-Saved choices use the speech host's name@comma{} backend and device ID@. Renaming the
-host creates a different scope. Friendly-name changes do not select another
+Saved choices use the speech host's identity@comma{} backend and device ID@. Windows
+uses the host name@comma{} so renaming it creates a different scope. macOS uses the
+host UUID@comma{} which survives a rename. Friendly-name changes do not select another
 device. Explicit @code{--audio-device} or @code{OMNIVOX_AUDIO_DEVICE} startup overrides
 take precedence over saved choices. Ordinary startup resolves saved choices
 inside the worker without an extra discovery process.

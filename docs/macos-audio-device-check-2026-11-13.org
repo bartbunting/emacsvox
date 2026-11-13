@@ -1,0 +1,35 @@
+#+title: macOS audio-device client preparation
+#+date: 2026-11-13
+
+* Scope
+
+Physical-output menus now describe local Omnivox without restricting the label
+to Windows. The existing capability negotiation, Transient browsing, independent
+lane Apply and separate Save are unchanged. The manual describes the macOS
+development implementation, host UUID scope, and pending native qualification.
+
+The paired Omnivox implementation is local commit =333fb6d=. Its
+=docs/guides/macos-audio-devices.md= contains the native build and listening
+checklist. No native Mac execution or listening was performed here, and the
+existing Windows candidate was not redeployed.
+
+* Verification
+
+| Check | Result |
+|-------+--------|
+| Focused source audio-device and channel ERT | 26 passed |
+| Fresh compiled graphical menus | 290 passed, none skipped |
+| Full byte-code rebuild and preflight, Emacs 31.0.90 | Passed |
+| Regenerated manual and documentation review gate | Passed |
+| Headers, version and whitespace | Passed |
+
+The graphical check uses a private display and disposable preferences with the
+verified dependency cache; its log records loaded module/dependency paths.
+The full ERT suite was not repeated for these wording changes. Native Mac
+device delivery, audible routing and reconnect require the paired user test.
+
+* Evidence
+
+The client base is =85214244b=. The [[file:evidence/macos-audio-devices-2026-11-13/checks.tar.gz][raw check logs]] preserve source tests,
+the full compiler output, graphical results and documentation checks.
+[[file:evidence/macos-audio-devices-2026-11-13/provenance.json][Provenance]] identifies the base, checked diff hash and commands.

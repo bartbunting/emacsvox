@@ -405,7 +405,7 @@ Shift arrows change it by 0.1; spatial presentation must be enabled."
 (transient-define-prefix emacsvox-output-settings ()
   "Set global notification routing and spatial presentation policy."
   :refresh-suffixes t
-  ["Physical outputs (local Windows Omnivox)"
+  ["Physical outputs (local Omnivox)"
    ("D" "Main output device" emacsvox-output-settings--main-device :transient transient--do-stack)
    ("M" "Notification output device" emacsvox-output-settings--notification-device :transient transient--do-stack)]
   [:description (lambda () (if (omnivox-audio-channels--live-p)

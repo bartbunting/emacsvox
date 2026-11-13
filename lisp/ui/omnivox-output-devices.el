@@ -182,7 +182,7 @@
   (interactive)
   (let* ((state (omnivox-output-devices--state)) (context (emacsvox-aural-menu--context)))
     (unless (eq (plist-get (plist-get state :catalogue) :supported) t)
-      (user-error "Refresh a supported local Windows output catalogue first"))
+      (user-error "Refresh a supported local output catalogue first"))
     ;; Keep identities in order while browsing, even if an earlier refresh replies.
     (setf (plist-get state :choice-ids) (omnivox-output-devices--ids state))
     (transient-setup 'omnivox-output-devices--choices nil nil :scope context)
@@ -206,7 +206,7 @@ An unavailable worker requires explicit recovery after confirmed native cleanup.
     (when (and (eq role 'notification) (not (tts--notification-process-configured-p)))
       (user-error "Choose Automatic, Left, Right or Both notification routing first"))
     (unless (eq (plist-get catalogue :supported) t)
-      (user-error "Refresh a supported local Windows output catalogue first"))
+      (user-error "Refresh a supported local output catalogue first"))
     (if (tts--speech-process-usable-p process)
         (progn
           (setf (plist-get state :message) "Preparing selected output")
