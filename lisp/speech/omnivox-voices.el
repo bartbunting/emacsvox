@@ -1809,6 +1809,216 @@ Return the number of processes sent the atomic registry replacement."
                 (error-message-string error-data)))))
   result)
 
+(cl-defstruct (omnivox--voice-apply-operation
+               (:constructor omnivox--make-voice-apply-operation))
+  "One configuration apply's generation, pending targets and completion owner."
+  generation pending results timer callback done)
+
+(cl-defstruct (omnivox--voice-apply-target
+               (:constructor omnivox--make-voice-apply-target))
+  "One original process's frozen registration and mutable apply progress.
+PROCESS, ROLE, GENERATION and REGISTRATION are fixed before sending.  Finishing
+detaches OPERATION; a bounded late observer then retains only this target."
+  process role generation registration operation (phase 'prepared) requests)
+
+(defun omnivox--voice-apply-complete (operation)
+  "Publish OPERATION's terminal aggregate once, releasing its caller first."
+  (unless (omnivox--voice-apply-operation-done operation)
+    (setf (omnivox--voice-apply-operation-done operation) t)
+    (when-let* ((timer (omnivox--voice-apply-operation-timer operation)))
+      (cancel-timer timer))
+    (let* ((ordered (nreverse (omnivox--voice-apply-operation-results operation)))
+           (unapplied
+            (cl-some (lambda (result) (plist-get result :choice-tuning-unapplied))
+                     ordered))
+           (applied (cl-count 'applied ordered
+                              :key (lambda (result) (plist-get result :status))))
+           (status (cond ((= applied (length ordered)) 'applied)
+                         ((zerop applied) 'failed)
+                         (t 'partial)))
+           (callback (omnivox--voice-apply-operation-callback operation)))
+      (setf (omnivox--voice-apply-operation-results operation) ordered
+            (omnivox--voice-apply-operation-timer operation) nil
+            (omnivox--voice-apply-operation-callback operation) nil)
+      (omnivox--publish-voice-configuration-result
+       (list :status status :adapter 'omnivox
+             :registry-generation (omnivox--voice-apply-operation-generation operation)
+             :processes ordered :time (current-time)
+             :choice-tuning-unapplied (and unapplied t)
+             :message
+             (when unapplied
+               "Saved; individual tuning not applied on every speech lane"))
+       callback))))
+
+(defun omnivox--voice-apply-retire-request (target identifier observe-registration)
+  "Release TARGET's IDENTIFIER, or bound its late registration observer.
+OBSERVE-REGISTRATION preserves only layered registration replies.  It never
+restores the completed operation or its caller."
+  (let* ((process (omnivox--voice-apply-target-process target))
+         (entry (gethash identifier (omnivox--pending-requests process))))
+    (if (and observe-registration (omnivox--control-request-p entry)
+             (member (omnivox--control-request-type entry)
+                     '("register_logical_voices_v2" "register_logical_voices_v3")))
+        (setf (omnivox--control-request-timer entry)
+              (run-at-time omnivox--control-request-timeout nil
+                           #'omnivox--control-request-expired
+                           process identifier entry))
+      (omnivox--take-control-request process identifier))))
+
+(defun omnivox--voice-apply-finish (target result)
+  "Finish TARGET with RESULT once, preserving its original lane role."
+  (when-let* ((operation (omnivox--voice-apply-target-operation target)))
+    (let ((process (omnivox--voice-apply-target-process target))
+          (pending (omnivox--voice-apply-operation-pending operation))
+          (requests (omnivox--voice-apply-target-requests target)))
+      (when (eq target (gethash process pending))
+        (remhash process pending)
+        (setf (omnivox--voice-apply-target-operation target) nil
+              (omnivox--voice-apply-target-phase target) 'terminal
+              (omnivox--voice-apply-target-requests target) nil)
+        (dolist (identifier requests)
+          (omnivox--voice-apply-retire-request
+           target identifier (eq (plist-get result :phase) 'timeout)))
+        (push (plist-put result :role (omnivox--voice-apply-target-role target))
+              (omnivox--voice-apply-operation-results operation))
+        (when (zerop (hash-table-count pending))
+          (omnivox--voice-apply-complete operation))))))
+
+(defun omnivox--voice-apply-receive
+    (target response-function observe-registration owner response)
+  "Handle OWNER's RESPONSE for TARGET through RESPONSE-FUNCTION.
+OBSERVE-REGISTRATION permits bounded connection evidence after completion."
+  (when (and (eq owner (omnivox--voice-apply-target-process target))
+             (or observe-registration
+                 (omnivox--voice-apply-target-operation target)))
+    (if (and (process-live-p owner)
+             (memq owner (list tts-speaker-process tts-notify-process)))
+        (funcall response-function target response)
+      (omnivox--voice-apply-finish
+       target (omnivox--voice-configuration-result
+               owner 'failed :phase 'submission :code 'process-unavailable)))))
+
+(defun omnivox--voice-apply-send
+    (target request response-function &optional observe-registration)
+  "Send TARGET's REQUEST and dispatch replies through RESPONSE-FUNCTION.
+OBSERVE-REGISTRATION allows a bounded late registration acknowledgement."
+  (when (omnivox--voice-apply-target-operation target)
+    (let ((process (omnivox--voice-apply-target-process target)))
+      (setf (omnivox--voice-apply-target-phase target)
+            (if (equal (plist-get request :type) "set_routing_policy")
+                'routing-policy 'logical-registration))
+      (condition-case error-data
+          (let ((identifier
+                 (omnivox--send-control-request
+                  process request
+                  (apply-partially #'omnivox--voice-apply-receive
+                                   target response-function observe-registration)
+                  'managed)))
+            ;; Replies or timeout can finish this target while the send returns.
+            ;; Retain only its connection observer, never another apply's work.
+            (if (omnivox--voice-apply-target-operation target)
+                (push identifier (omnivox--voice-apply-target-requests target))
+              (omnivox--voice-apply-retire-request
+               target identifier observe-registration)))
+        (error
+         (omnivox--voice-apply-finish
+          target (omnivox--voice-configuration-result
+                  process 'failed :phase 'submission :condition error-data)))))))
+
+(defun omnivox--voice-apply-registration-response (target response)
+  "Accept TARGET's frozen registration RESPONSE and finish its pending apply."
+  (let ((process (omnivox--voice-apply-target-process target))
+        (registration (omnivox--voice-apply-target-registration target)))
+    (if (omnivox--accept-registration-response
+         process response (omnivox--voice-apply-target-generation target) registration)
+        (when (omnivox--voice-apply-target-operation target)
+          (omnivox--voice-apply-finish
+           target
+           (omnivox--voice-configuration-result
+            process 'applied
+            :choice-tuning-unapplied
+            (omnivox--registration-unapplied-p registration response)
+            :routing-policy (copy-tree (omnivox--process-routing-registration process))
+            :registration
+            (copy-tree
+             (if (member (plist-get response :type)
+                         '("logical_voices_registered_v2" "logical_voices_registered_v3"))
+                 response (plist-get response :registration))))))
+      (when (omnivox--voice-apply-target-operation target)
+        (omnivox--record-control-error process response)
+        (omnivox--voice-apply-finish
+         target (omnivox--voice-configuration-result
+                 process 'failed :phase 'logical-registration
+                 :response (copy-tree response)))))))
+
+(defun omnivox--voice-apply-register (target)
+  "Submit TARGET's original registration after routing is acknowledged."
+  (let ((registration (omnivox--voice-apply-target-registration target)))
+    (omnivox--voice-apply-send
+     target (omnivox--registration-request
+             (omnivox--voice-apply-target-generation target) registration)
+     #'omnivox--voice-apply-registration-response
+     (member (plist-get registration :type)
+             '("register_logical_voices_v2" "register_logical_voices_v3")))))
+
+(defun omnivox--voice-apply-policy-response (target response)
+  "Check TARGET's routing RESPONSE before advancing its registration."
+  (let ((process (omnivox--voice-apply-target-process target)))
+    (if (equal (plist-get response :type) "routing_policy_applied")
+        (progn
+          (omnivox--store-routing-policy-response process response)
+          (if (omnivox--process-routing-policy-current-p process)
+              (omnivox--voice-apply-register target)
+            (omnivox--voice-apply-finish
+             target (omnivox--voice-configuration-result
+                     process 'failed :phase 'routing-policy :code 'policy-mismatch
+                     :response (copy-tree response)))))
+      (omnivox--record-control-error process response)
+      (omnivox--voice-apply-finish
+       target (omnivox--voice-configuration-result
+               process 'failed :phase 'routing-policy :response (copy-tree response))))))
+
+(defun omnivox--voice-apply-start (target)
+  "Start TARGET with the existing capability, inventory and routing checks."
+  (let ((process (omnivox--voice-apply-target-process target)))
+    (condition-case error-data
+        (cond
+         ((not (omnivox--process-supports-p process "logical_voice_registration"))
+          (omnivox--voice-apply-finish
+           target (omnivox--voice-configuration-result
+                   process 'failed :phase 'negotiation
+                   :code 'logical-registration-unsupported)))
+         ((and (omnivox--process-supports-p process "engine_inventory")
+               (not (process-get process omnivox--control-inventory-property)))
+          (omnivox--voice-apply-finish
+           target (omnivox--voice-configuration-result
+                   process 'failed :phase 'inventory :code 'inventory-not-ready)))
+         ((and (omnivox--process-supports-p process "runtime_routing_policy")
+               (not (omnivox--process-routing-policy-current-p process)))
+          (omnivox--voice-apply-send
+           target
+           (append (list :type "set_routing_policy"
+                         :routing_policy_generation
+                         (1+ (omnivox--routing-policy-generation process)))
+                   (omnivox--routing-policy-content process))
+           #'omnivox--voice-apply-policy-response))
+         (t (omnivox--voice-apply-register target)))
+      (error
+       (omnivox--voice-apply-finish
+        target (omnivox--voice-configuration-result
+                process 'failed :phase 'submission :condition error-data))))))
+
+(defun omnivox--voice-apply-timeout (operation)
+  "Fail OPERATION's remaining targets without undoing already sent changes."
+  (let (expired)
+    (maphash (lambda (_ target) (push target expired))
+             (omnivox--voice-apply-operation-pending operation))
+    (dolist (target expired)
+      (omnivox--voice-apply-finish
+       target (omnivox--voice-configuration-result
+               (omnivox--voice-apply-target-process target)
+               'failed :phase 'timeout :code 'timeout)))))
+
 (defun omnivox-apply-voice-configuration (&optional callback)
   "Apply routing policy and one logical registry generation to every stream.
 
@@ -1820,221 +2030,40 @@ layered registration retains a bounded reply observer: a valid late acknowledgem
 updates that connection's speech snapshot, but cannot reopen the apply.
 Reapply to confirm the desired configuration after an unconfirmed change."
   (let* ((processes (omnivox--voice-configuration-processes))
-         ;; The lifecycle sentinel can clear lane ownership before a failed
-         ;; request completes. Keep the roles this operation actually targeted.
+         ;; Capture roles before preparation can dispatch lifecycle callbacks.
          (roles (mapcar (lambda (process)
-                          (cons process (omnivox--voice-configuration-process-role process)))
+                          (cons process
+                                (omnivox--voice-configuration-process-role process)))
                         processes))
          (registrations (omnivox--prepare-voice-registrations processes))
-         ;; Definitions and generation belong to this apply, including callbacks
-         ;; that run after another apply has advanced the desired configuration.
          (generation
           (progn
-            (omnivox--update-logical-registry-generation
-             (mapcar #'cdr registrations))
+            (omnivox--update-logical-registry-generation (mapcar #'cdr registrations))
             omnivox--logical-registry-generation)))
     (if (null processes)
         (omnivox--publish-voice-configuration-result
-         (list :status 'failed :adapter 'omnivox
-               :registry-generation generation
-               :code 'no-supported-process :processes nil
-               :time (current-time))
+         (list :status 'failed :adapter 'omnivox :registry-generation generation
+               :code 'no-supported-process :processes nil :time (current-time))
          callback)
-      (let ((pending (make-hash-table :test #'eq))
-            requests results timer done)
-        (dolist (process processes) (puthash process t pending))
-        (cl-labels
-            ((complete
-              ()
-              (unless done
-                (setq done t)
-                (when (timerp timer) (cancel-timer timer))
-                (let* ((ordered (nreverse results))
-                       (unapplied (cl-some (lambda (result) (plist-get result :choice-tuning-unapplied)) ordered))
-                       (applied
-                        (cl-count 'applied ordered
-                                  :key (lambda (result)
-                                         (plist-get result :status))))
-                       (status
-                        (cond
-                         ((= applied (length ordered)) 'applied)
-                         ((zerop applied) 'failed)
-                         (t 'partial))))
-                  (omnivox--publish-voice-configuration-result
-                   (list
-                    :status status :adapter 'omnivox
-                    :registry-generation generation
-                    :processes ordered :time (current-time)
-                    :choice-tuning-unapplied (and unapplied t)
-                    :message (when unapplied "Saved; individual tuning not applied on every speech lane"))
-                   callback))))
-             (finish
-              (process result)
-              (when (gethash process pending)
-                (remhash process pending)
-                (dolist (request requests)
-                  (when (eq process (car request))
-                    (let* ((identifier (cdr request))
-                           (entry (gethash identifier (omnivox--pending-requests process))))
-                      (if (and (eq (plist-get result :phase) 'timeout)
-                               (omnivox--control-request-p entry)
-                               (member (omnivox--control-request-type entry)
-                                       '("register_logical_voices_v2" "register_logical_voices_v3")))
-                          ;; The worker may already have installed this registry.
-                          ;; Dropping its reply would strand speech on an older
-                          ;; generation. Retain observation, never the apply result,
-                          ;; within the ordinary request deadline and table bound.
-                          (setf (omnivox--control-request-timer entry)
-                                (run-at-time omnivox--control-request-timeout nil
-                                             #'omnivox--control-request-expired
-                                             process identifier entry))
-                        (omnivox--take-control-request process identifier)))))
-                (setq requests (cl-delete process requests :key #'car :test #'eq))
-                (push (plist-put result :role (cdr (assq process roles))) results)
-                (when (zerop (hash-table-count pending)) (complete))))
-             (send-request
-              (process request response-function &optional observe-registration)
-              (when (gethash process pending)
-                (condition-case error-data
-                    (let ((identifier
-                           (omnivox--send-control-request
-                            process request
-                            (lambda (owner response)
-                              (when (or observe-registration (gethash owner pending))
-                                (if (and (process-live-p owner)
-                                         (memq owner (list tts-speaker-process
-                                                           tts-notify-process)))
-                                    (funcall response-function owner response)
-                                  (finish
-                                   owner
-                                   (omnivox--voice-configuration-result
-                                    owner 'failed :phase 'submission
-                                    :code 'process-unavailable)))))
-                            'managed)))
-                      ;; Writing may dispatch replies, including completion,
-                      ;; before the request identifier is returned to us.
-                      (if (gethash process pending)
-                          (push (cons process identifier) requests)
-                        (let ((entry (gethash identifier (omnivox--pending-requests process))))
-                          ;; A timeout can run inside the write, before REQUESTS
-                          ;; contains this ID. Give that observer the same bound.
-                          (if (and observe-registration (omnivox--control-request-p entry))
-                              (setf (omnivox--control-request-timer entry)
-                                    (run-at-time omnivox--control-request-timeout nil
-                                                 #'omnivox--control-request-expired
-                                                 process identifier entry))
-                            (omnivox--take-control-request process identifier)))))
-                  (error
-                   (finish
-                    process
-                    (omnivox--voice-configuration-result
-                     process 'failed :phase 'submission :condition error-data))))))
-             (registration-response
-              (process response)
-              (if (omnivox--accept-registration-response
-                   process response generation (cdr (assq process registrations)))
-                  (progn
-                    (finish
-                     process
-                     (omnivox--voice-configuration-result
-                      process 'applied
-                      :choice-tuning-unapplied
-                      (omnivox--registration-unapplied-p (cdr (assq process registrations)) response)
-                      :routing-policy
-                      (copy-tree
-                       (omnivox--process-routing-registration process))
-                      :registration
-                      (copy-tree (if (member (plist-get response :type) '("logical_voices_registered_v2" "logical_voices_registered_v3"))
-                                     response (plist-get response :registration))))))
-                (when (gethash process pending)
-                  (omnivox--record-control-error process response)
-                  (finish
-                   process
-                   (omnivox--voice-configuration-result
-                    process 'failed :phase 'logical-registration
-                    :response (copy-tree response))))))
-             (register
-              (process)
-              (send-request
-               process
-               (omnivox--registration-request generation (cdr (assq process registrations)))
-               #'registration-response
-               (member (plist-get (cdr (assq process registrations)) :type)
-                       '("register_logical_voices_v2" "register_logical_voices_v3"))))
-             (policy-response
-              (process response)
-              (if (equal (plist-get response :type)
-                         "routing_policy_applied")
-                  (progn
-                    (omnivox--store-routing-policy-response process response)
-                    (if (omnivox--process-routing-policy-current-p process)
-                        (register process)
-                      (finish
-                       process
-                       (omnivox--voice-configuration-result
-                        process 'failed :phase 'routing-policy
-                        :code 'policy-mismatch
-                        :response (copy-tree response)))))
-                (omnivox--record-control-error process response)
-                (finish
-                 process
-                 (omnivox--voice-configuration-result
-                  process 'failed :phase 'routing-policy
-                  :response (copy-tree response)))))
-             (start
-              (process)
-              (condition-case error-data
-                  (cond
-                   ((not
-                     (omnivox--process-supports-p
-                      process "logical_voice_registration"))
-                    (finish
-                     process
-                     (omnivox--voice-configuration-result
-                      process 'failed :phase 'negotiation
-                      :code 'logical-registration-unsupported)))
-                   ((and
-                     (omnivox--process-supports-p process "engine_inventory")
-                     (not
-                      (process-get
-                       process omnivox--control-inventory-property)))
-                    (finish
-                     process
-                     (omnivox--voice-configuration-result
-                      process 'failed :phase 'inventory
-                      :code 'inventory-not-ready)))
-                   ((and
-                     (omnivox--process-supports-p
-                      process "runtime_routing_policy")
-                     (not
-                      (omnivox--process-routing-policy-current-p process)))
-                    (send-request
-                     process
-                     (append
-                      (list
-                       :type "set_routing_policy"
-                       :routing_policy_generation
-                       (1+ (omnivox--routing-policy-generation process)))
-                      (omnivox--routing-policy-content process))
-                     #'policy-response))
-                   (t (register process)))
-                (error
-                 (finish
-                  process
-                  (omnivox--voice-configuration-result
-                   process 'failed :phase 'submission :condition error-data)))))
-             (timeout
-              ()
-              (let (expired)
-                (maphash (lambda (process _) (push process expired)) pending)
-                (dolist (process expired)
-                  (finish
-                   process
-                   (omnivox--voice-configuration-result
-                    process 'failed :phase 'timeout :code 'timeout))))))
-          (setq timer
-                (run-at-time omnivox-voice-configuration-timeout nil #'timeout))
-          (dolist (process processes) (start process)))
+      (let* ((operation (omnivox--make-voice-apply-operation
+                         :generation generation :pending (make-hash-table :test #'eq)
+                         :callback callback))
+             (targets
+              (mapcar
+               (lambda (process)
+                 (let ((target (omnivox--make-voice-apply-target
+                                :process process :role (cdr (assq process roles))
+                                :generation generation
+                                :registration (cdr (assq process registrations))
+                                :operation operation)))
+                   (puthash process target
+                            (omnivox--voice-apply-operation-pending operation))
+                   target))
+               processes)))
+        (setf (omnivox--voice-apply-operation-timer operation)
+              (run-at-time omnivox-voice-configuration-timeout nil
+                           (apply-partially #'omnivox--voice-apply-timeout operation)))
+        (dolist (target targets) (omnivox--voice-apply-start target))
         (length processes)))))
 
 (defun omnivox--run-scheduled-registration ()

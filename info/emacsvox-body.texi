@@ -13583,12 +13583,20 @@ that capture point: resource resolution earlier in construction can re-enter
 Lisp and change the submission state.  The serialiser preserves ordered
 defaults@comma{} key conversion@comma{} circular printing@comma{} diagnostics@comma{} and byte bounds.
 
-The complete builder is not pure.  Cue resolution through
-@code{omnivox-remote-resource} may perform I/O; relative-rate support comes from the
-live speech process.  Those operations@comma{} action placement@comma{} dispatch
-registration@comma{} framing@comma{} fallback@comma{} and process writes retain their existing
-owners and sequence.  Separating a complete delivery candidate from those
-effects requires further design and failure-path characterisation.
+The coordinator resolves resources and reads capabilities at their established
+points@comma{} then passes explicit values to the assembly helpers.  Cue resolution
+through @code{omnivox-remote-resource} may perform I/O; relative-rate support comes
+from the live speech process.  The complete coordinator is therefore not pure.
+Policy remains captured after the final resource resolution.
+
+The assembled output is copied into an owned candidate containing document or
+command data@comma{} semantic bindings and a span index@comma{} without processes@comma{} callbacks
+or editor objects.  Binding attaches the existing live dispatch owner and
+validates framing with its actual dispatch ID@.  Process@comma{} generation@comma{} registration and
+queue guards still control admission; a candidate does not authorise a write
+after those inputs change.  Compatibility binding preserves the original
+command bytes.  The optional delivery recorder observes these boundaries
+without owning dispatch or recovery.
 
 The @code{delivery-preparation} tests in @code{test/emacsvox-aural-transport-tests.el}
 check complete serialised timelines and final writes@comma{} semantic bindings@comma{}
@@ -13635,25 +13643,35 @@ streams do not start remote recovery.  Exercise these boundaries in
 
 @subsection Omnivox voice configuration applies
 
-@code{omnivox-apply-voice-configuration} captures one generation and its definitions
-for the original speech processes.  Applies may overlap.  Each owns its request
-identifiers and retires only those callbacks when a process result becomes
-terminal.  Acknowledging routing precedes logical registration; one aggregate
-reports applied@comma{} partial@comma{} or failed after all participating processes finish.
+@code{omnivox-apply-voice-configuration} creates a private operation with one registry
+generation@comma{} pending targets@comma{} results@comma{} deadline and completion callback.  Each
+target captures its original process@comma{} lane role@comma{} generation and registration
+before sending@comma{} alongside its mutable phase and request identifiers.  Named
+transitions handle routing acknowledgement@comma{} registration and terminal results.
+Acknowledging routing precedes logical registration; one aggregate reports
+applied@comma{} partial@comma{} or failed after all participating processes finish.
 
-The timeout closes pending results as failed with phase @code{timeout}@comma{} cancels
-the timer@comma{} and releases the apply's pending callbacks.  A late acknowledgement
-cannot start another phase@comma{} update acknowledged configuration@comma{} or publish a
-second terminal result.  A reply from a stopped or replaced process also
-cannot advance its old apply.  Request ownership must remain correct when
-replies are dispatched while a send is still returning.
+Applies may overlap.  A target retires only its own requests and detaches from
+the operation when it finishes.  Completion cancels the deadline and releases
+the stored caller before publishing the result.  A callback may start another
+Apply immediately@comma{} including while the original send is still returning.
+Replies from stopped or replaced processes cannot advance their old targets.
 
-This closes client work; it cannot undo a change already sent to the server.
-The Workbench therefore describes a timeout as an unconfirmed server outcome
-and offers reapplication of the committed profile.  No late-reply history is
-retained for expired applies.  Keep request-table@comma{} late-reply@comma{} overlapping-apply@comma{}
-and replacement regressions in @code{test/emacsvox-tts-tests.el} and spoken timeout
-feedback coverage in @code{test/emacsvox-aural-voice-workbench-tests.el}.
+Timeout closes pending results as failed with phase @code{timeout}.  It discards
+routing and legacy-registration callbacks@comma{} but an already sent layered
+registration retains a bounded observer for its original connection.  A valid
+late acknowledgement may update that connection's speech snapshot under the
+existing generation guards.  It cannot reopen Apply@comma{} start another phase or
+publish another terminal result.  The observer retains its target data without
+the completed operation or caller and uses the ordinary request deadline and
+table limit.
+
+Closing client work cannot undo a change already sent to the server.  The
+Workbench therefore describes a timeout as an unconfirmed server outcome and
+offers reapplication of the committed profile.  Keep request-table@comma{} late-reply@comma{}
+overlapping-apply@comma{} callback-release and replacement regressions in
+@code{test/emacsvox-tts-tests.el} and spoken timeout feedback coverage in
+@code{test/emacsvox-aural-voice-workbench-tests.el}.
 
 @subsection Notmuch contracts
 

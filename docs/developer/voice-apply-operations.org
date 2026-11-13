@@ -1,0 +1,101 @@
+#+title: Voice Apply Operations and Delivery Integration
+#+date: 2026-11-13
+#+startup: content
+
+* Result
+
+The delivery preparation, recorder and allocation work is integrated with the
+lightweight preferences reload, guarded native recovery and late-registration
+handling from master at =13bb6b776=, merged in =21cfa77d9=.  Voice Apply now
+uses private operation and target records in [[file:../../lisp/speech/omnivox-voices.el][the existing adapter]].  The public callback, result shape, overlap and
+retry contracts remain unchanged.  No protocol, dependency or per-utterance
+processing was added by the operation extraction.
+
+The extraction also fixes retention of the completed caller.  Previously, a
+layered registration observer kept the whole closure environment alive after
+Apply timed out, including the callback and data it captured, until a reply or
+request expiry.  The observer now keeps only its target and the frozen
+registration needed for a valid late acknowledgement.  A weak-reference
+regression fails against the preceding implementation and passes after the
+extraction.
+
+* Ownership and transitions
+
+An operation owns its registry generation, pending targets, ordered terminal
+results, deadline, callback and completion flag.  Each target captures its
+original process, lane role, generation and registration before requests are
+sent.  Its phase, owned request identifiers and operation reference track
+mutable progress.  Named helpers handle starting, routing acknowledgement,
+registration, response validation, request retirement, timeout and completion.
+
+Routing acknowledgement still precedes registration.  Completion follows the
+last target, preserves result order and reports applied, partial or failed
+once.  Finishing detaches a target from its operation.  Aggregate completion
+cancels and clears the deadline and clears the stored callback before
+publication.  A caller can immediately start another Apply, even when the
+original response arrived inside the send function.
+
+Timeout remains an unconfirmed server outcome.  Routing and legacy callbacks
+are retired; already sent layered registrations retain a bounded observer
+under the ordinary request deadline and table limit.  It can update only its
+original live connection under the existing registration-generation guards.
+It cannot reopen Apply, publish another result or start another phase.  This
+also holds when timeout occurs during sending, before the request identifier
+returns to the operation.  A stopped or replaced process cannot advance an old
+target, and one Apply never retires another's requests.
+
+Startup and preview retain their existing machinery.  There is no global
+operation registry or new shared asynchronous framework.  Protocol readiness
+and acknowledged routing readiness remain distinct under
+[[file:../adr/0007-routing-ready-startup-checkpoint.org][ADR 0007]].
+
+* Integration regression
+
+The combined-tree regression in [[file:../../test/emacsvox-aural-recording-tests.el][the recording suite]] closes a real main pipe
+after candidate copying and before live binding, with recording armed.  It
+checks that the failed main delivery writes nothing, preparation accounting
+and dispatch ownership retire, the recorder stops observing, and the dead
+owned worker handle remains available for guarded recovery.  A subsequent
+notification still writes independently.  This exercises the shared client
+boundary without starting or recovering a native server.
+
+The [[file:../../test/emacsvox-tts-tests.el][Apply regressions]] cover both lanes, changed definitions, unchanged retries,
+reordered acknowledgements, partial failure, process death, replacement,
+overlapping operations, send failure, bounded late replies and callbacks
+during sending.  New cases verify caller collection while a late observer
+remains and completion that starts a second Apply synchronously.  Workbench
+checks preserve current-status announcements and unsaved drafts.
+
+* Verification
+
+The combined client suite passes 864 tests in both source and compiled modes
+on Emacs 30.2 and Emacs 31.0.90, with no unexpected results.  Each run skips
+eight graphical checks and two native-service checks.  Fresh processes verify
+the loaded =.el= or =.elc= paths for preparation, submission, recording and
+voice Apply.
+
+=make core-test= passes 1,128 tests on each version, separately skipping 14
+graphical checks and four native-service checks.  Both full byte-code rebuilds,
+freshness preflights, isolated compiled Aural checks and all 27 semantic traces
+pass.  The maintained header check, manual preview, generated-document update
+and final non-mutating documentation gate also pass.
+
+The caller-release regression allocates its captured data in a separate helper
+so the active test frame cannot keep it alive during collection.  It fails
+against the preceding closure implementation and passes against the operation
+implementation.  Existing timeout, overlap and late-reply tests remain in place.
+
+Canonical documentation is generated with Emacs 31.0.90.  The separate Emacs
+30.2 checkout uses its existing pinned Transient 0.13.3, Compat and Cond-let
+sources for compilation.  Its documentation check additionally preloads that
+Transient and uses Org 9.8.7 sources from the Emacs 31 installation in a
+temporary directory.  This avoids the older bundled Transient and Org exporter
+while keeping installed packages unchanged.  Its reference files are
+regenerated locally: generator provenance, hook names and some function
+argument names differ between Emacs versions.  These compatibility artifacts
+remain separate from the canonical render.
+
+These are automated client, wire and callback checks.  No listening test,
+live Emacs reload, personal-settings change, Omnivox rebuild or native-server
+recovery was performed.  Graphical and native-service skips do not establish
+acceptance in those environments.

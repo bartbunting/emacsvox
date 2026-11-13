@@ -206,6 +206,8 @@ the chance of similar defects and makes future changes easier to assess.
 These proposals did not identify four additional bugs or schedule a release.
 The later [[file:speech-delivery-implementation.org][delivery implementation review]] records the observer-error repair, explicit
 outcomes, deterministic assembly and separation of candidates from live owners.
+The [[file:voice-apply-operations.org][voice Apply operation review]] records explicit per-process progress and
+callback cleanup while preserving overlap, retry and late-registration handling.
 
 Shared voice metadata, numeric tuner consumers and limited delivery helpers
 have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
@@ -215,13 +217,9 @@ describe the remaining work, with completed foundations retained as context.
 The [[file:../voice-style-coverage.org][voice-style consumer audit]] is complete: it added edit/save/preview/delivery
 coverage and fixed Workbench effect normalization and custom-style lookup.
 
-The remaining inspection work can be scoped narrowly; delivery and
-asynchronous state require more extensive lifecycle verification.
-Choose the next slice around a concrete maintenance need.  Each entry can be
-implemented and reviewed independently, and the voice editor does not
-require all three remaining refactors first.  A delivery-provenance extension
-would benefit from the common inspection model, but is a separate
-design decision rather than a prerequisite for extracting transport helpers.
+The remaining inspection work can be scoped narrowly around a concrete
+maintenance need.  A delivery-provenance extension would benefit from the
+common inspection model, but remains a separate design decision.
 
 Use small commits that preserve observable behavior.  Keep source semantics,
 presentation policy, resource realization and process delivery as distinct
@@ -304,74 +302,6 @@ edited, killed and same-name replacement buffers.  Assert selected facts,
 actual editor targets and spoken summaries.  Verify that historical records
 retain no live source references and that current-item guards still reject
 stale edits.  Run the focused inspection and guided-change suites as well.
-
-** TODO Represent asynchronous voice applies as explicit operations
-
-The [[file:voice-apply-reliability-review.org][13 November reliability review]] fixes stale Workbench announcements,
-immediate-result wording, lost lane labels and observer-error handling. The
-operation record below remains an optional maintenance proposal; these fixes
-retain the existing overlap, retry and callback contracts.
-
-*** Why this is needed
-
-=omnivox-apply-voice-configuration= in
-[[file:../../lisp/speech/omnivox-voices.el][the Omnivox adapter]] owns definitions, generation, pending processes, results,
-timeout and completion through nested closures.  =EVX-2026-025= is fixed by
-capturing the generation with its definitions.  An explicit operation would
-make that ownership easier to inspect and make further lifecycle changes less
-dependent on understanding every closure's captured variables.
-
-Commit =d3f7c9383= also fixed timeout request cleanup and rejection of late
-responses, with regressions for overlapping applies, replaced owners, send
-failure and replies during sending.  The proposed operation record has not
-been implemented; preserve these lifecycle fixes while extracting it.
-
-*** Proposed plan
-
-1. Introduce an internal operation record separating its immutable configuration
-   snapshot from mutable progress: generation, per-process definitions, process
-   identity, phase, pending responses, results, timeout and terminal state.
-2. Extract named transitions for routing acknowledgement, registration,
-   success/failure and timeout.  Each response must refer to its operation and
-   original process; terminal completion must be guarded and published once.
-3. Preserve the public callback/result shape, routing-before-registration
-   ordering, partial-success reporting and retry behavior.  Migrate the apply
-   path first; assess shared startup/preview machinery only after parity.
-
-*** Benefits
-
-Operation state would be directly inspectable in diagnostics and tests.
-Generation ownership, per-lane progress and exactly-once completion would be
-visible contracts.  Reordered replies and partial failure would be easier to
-reason about without reading a long lexical scope.
-
-*** Disadvantages and decisions
-
-The record and transition helpers add code and explicit cleanup obligations;
-closures currently provide useful encapsulation.  Retained operations could
-hold callbacks, timers or dead processes longer than intended.  Over-generalizing
-into a shared asynchronous framework would increase scope without a proven
-benefit.
-
-Preserve overlap and retry behavior during migration.  Serializing applies,
-automatically cancelling earlier applies or suppressing their results would
-change user-visible semantics and requires a separate decision.  Keep protocol
-readiness distinct from acknowledged routing readiness under
-[[file:../adr/0007-routing-ready-startup-checkpoint.org][ADR 0007]].
-
-*** Acceptance checks
-
-Preserve [[file:../../test/emacsvox-tts-tests.el][the existing apply regressions]] through the public API: FIFO and reverse
-acknowledgements, both lanes, changed definitions, unchanged retries, partial
-failure, timeout cleanup, late registration replies, overlapping applies,
-replaced owners, second-phase send failure and replies received during sending.
-Keep assertions on generation/content identity, per-process results, one
-aggregate callback and retired timers/request state.  Add cases only for gaps
-identified while mapping the operation, such as process death without a reply
-or repeated terminal responses if not covered by the existing scenarios.
-Check Workbench apply status and fresh compiled behavior.  Model-based receiver
-checks prove the client contract; real backend lifecycle claims still need an
-isolated connected check.
 
 * Repository stewardship
 

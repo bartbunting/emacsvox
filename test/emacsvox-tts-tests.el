@@ -2808,6 +2808,68 @@
     (should (= 0 (hash-table-count (omnivox--pending-requests speaker))))
     (should (memq (car timers) cancelled-timers))))
 
+(defun emacsvox-test--apply-with-owned-caller-data (references callback)
+  "Keep caller data in a separate activation for collection through REFERENCES."
+  ;; Emacs 30's interpreter can retain locals until their function returns.
+  (let ((payload (list 'caller-owned-data)))
+    (puthash 'payload payload references)
+    (omnivox-apply-voice-configuration
+     (lambda (result) (funcall callback result) (length payload)))))
+
+(ert-deftest emacsvox-tts-omnivox-operation-releases-caller-after-timeout ()
+  "A bounded late observer does not retain the completed caller's data."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil
+          registry-content '(:type "register_logical_voices_v2" :definitions []
+                             :fallback_policy nil :choice-process-generation nil))
+    (process-put speaker omnivox--control-capabilities-property
+                 '(:features ("logical_voice_registration")))
+    (let ((references (make-hash-table :weakness 'value)))
+      (emacsvox-test--apply-with-owned-caller-data
+       references (lambda (result) (push result terminal)))
+      (funcall (timer--function (car timers)))
+      (let* ((response (emacsvox-test--configuration-ack (car requests)))
+             (entry (gethash (plist-get response :request_id)
+                             (omnivox--pending-requests speaker))))
+        (should (omnivox--control-request-p entry))
+        ;; Drop the fixture's references to the cancelled operation timer.
+        ;; Only the real request and its late-observer deadline remain.
+        (setq timers (list (omnivox--control-request-timer entry))
+              cancelled-timers nil)
+        (garbage-collect)
+        (should-not (gethash 'payload references))
+        (omnivox--dispatch-control-response speaker response)
+        (should (equal response
+                       (process-get speaker omnivox--control-registration-property)))
+        (should (= 1 (length terminal)))
+        (should (eq 'failed (plist-get (car terminal) :status)))
+        (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))))
+
+(ert-deftest emacsvox-tts-omnivox-operation-completion-can-start-another-apply ()
+  "Nested completion during a send cannot retire another apply's requests."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (process-put speaker omnivox--control-capabilities-property
+                 '(:features ("logical_voice_registration")))
+    (let ((send (symbol-function 'process-send-string)))
+      (cl-letf (((symbol-function 'process-send-string)
+                 (lambda (process command)
+                   (funcall send process command)
+                   (omnivox--dispatch-control-response
+                    process (emacsvox-test--configuration-ack (car requests))))))
+        (should
+         (= 1 (omnivox-apply-voice-configuration
+               (lambda (result)
+                 (push (cons 'first result) terminal)
+                 (omnivox-apply-voice-configuration
+                  (lambda (next) (push (cons 'second next) terminal)))))))))
+    (should (equal (mapcar #'car (reverse terminal)) '(first second)))
+    (should (cl-every (lambda (entry) (eq 'applied (plist-get (cdr entry) :status)))
+                      terminal))
+    (should (= 2 (length requests)))
+    (should (= 2 (length cancelled-timers)))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))
+
 (ert-deftest emacsvox-tts-omnivox-reports-partial-configuration-apply ()
   "Complete configuration apply returns one terminal result per speech stream."
   (let* ((speaker

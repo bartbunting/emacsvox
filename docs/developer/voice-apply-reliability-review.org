@@ -40,7 +40,8 @@ The Workbench guard prevents obsolete presentation of that result. Server
 changes already sent before a timeout may still have taken effect; retry
 remains the way to confirm the desired configuration.
 
-The [[file:backlog.org::*TODO Represent asynchronous voice applies as explicit operations][operation-record proposal]] remains optional maintenance work. These checks
-establish client behaviour; they do not establish audible acceptance or native
-server recovery. No live speech process or personal voice configuration was
-changed during this review.
+The subsequent [[file:voice-apply-operations.org][operation extraction]] preserves these contracts and releases
+the completed caller while a bounded late-registration observer remains.
+These checks establish client behaviour; they do not establish audible
+acceptance or native server recovery. No live speech process or personal
+voice configuration was changed during this review.
