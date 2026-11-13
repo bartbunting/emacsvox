@@ -28082,8 +28082,8 @@ require exact tree AND I/O proof before explicit minimal replacement.
 @node omnivox-output-devices
 @section omnivox-output-devices
 
-Row navigation only highlights a candidate.  Apply, Save and recovery are
-explicit actions.  Device IDs remain distinct even when names are equal.
+A menu visit owns its candidate and asynchronous refresh identity.  Browsing
+never applies output; Apply and Save retain the independent lane contract.
 
 @node omnivox-parameters
 @section omnivox-parameters

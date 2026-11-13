@@ -172,16 +172,16 @@
     (let ((emacsvox-speak-messages nil))
       (message content))
     (condition-case nil
-        (let ((tts-speaker-process (tts-notify-process)))
-          (emacsvox-aural-submit
-           content
-           :facts facts
-           :module 'core
-           :occasion 'notification
-           :delivery-policy (if quit-p 'replaceable 'urgent)
-           :replacement-key (and quit-p 'command-quit)
-           :compatibility-actions
-           (list (emacsvox-aural-compatibility-icon 'warn-user))))
+        (emacsvox-aural-submit
+         content
+         :facts facts
+         :module 'core
+         :occasion 'notification
+         :lane 'notification
+         :delivery-policy (if quit-p 'replaceable 'urgent)
+         :replacement-key (and quit-p 'command-quit)
+         :compatibility-actions
+         (list (emacsvox-aural-compatibility-icon 'warn-user)))
       (error
        ;; Error reporting must remain usable if native presentation fails.
        (ignore-errors (tts-notify content 'dont-log))))))

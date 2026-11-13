@@ -6,6 +6,7 @@
 (require 'cl-lib)
 (require 'omnivox-output-devices)
 (require 'omnivox-voices)
+(require 'emacsvox-advice-messages)
 
 (defmacro omnivox-devices-tests--worker (&rest body)
   (declare (indent 0))
@@ -27,6 +28,48 @@
                      :selection (if (equal outcome "applied") (plist-get change :selection) '(:mode "system_default"))
                      :connected "wasapi:headset"
                      :last_operation (when change (list :change change :outcome outcome :reason nil)))))
+
+(ert-deftest omnivox-devices-command-errors-with-missing-notifier-never-spawn-main ()
+  "Quit feedback must not create an owner in a temporary main binding."
+  (omnivox-devices-tests--worker
+    (let ((tts-notification-device nil) (emacsvox-speak-messages nil) attempted)
+      (omnivox-audio-devices--put 'speaker (list :status (omnivox-devices-tests--status)))
+      (omnivox-audio-devices--put
+       'notification (list :status (omnivox-devices-tests--status
+                                    '(:sequence 1 :expected_revision 0
+                                      :selection (:mode "device" :id "wasapi:private")) "applied")))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (_text &rest arguments)
+                   (let ((emacsvox-aural-submission-lane (plist-get arguments :lane)))
+                     (emacsvox-aural--call-on-submission-lane
+                      (lambda ()
+                        (unless (tts--speech-process-usable-p tts-speaker-process)
+                          (tts--recover-speaker)))))))
+                ((symbol-function 'tts--recover-speaker) (lambda () (setq attempted t))))
+        (dotimes (_ 5) (emacsvox--present-command-error '(quit))))
+      (should-not attempted))))
+
+(ert-deftest omnivox-devices-submission-lane-death-cannot-create-a-replacement ()
+  "A notifier dying inside a submission cannot recover onto another output."
+  (omnivox-devices-tests--worker
+    (let ((tts-notification-device nil)
+          (tts-notify-process (make-pipe-process :name "device-notify" :noquery t))
+          (emacsvox-aural-submission-lane 'notification)
+          (main tts-speaker-process))
+      (omnivox-audio-devices--put 'speaker (list :status (omnivox-devices-tests--status)))
+      (omnivox-audio-devices--put 'notification (list :override '(:mode "device" :id "wasapi:private")))
+      (unwind-protect
+          (cl-letf (((symbol-function 'tts-make-process)
+                     (lambda (_) (ert-fail "Submission started an abandoned worker"))))
+            (emacsvox-aural--call-on-submission-lane
+             (lambda ()
+               (should (eq tts-speaker-process tts-notify-process))
+               (delete-process tts-notify-process)
+               (tts--recover-speaker)
+               (should-not tts-speaker-process)))
+            (should (eq main tts-speaker-process))
+            (should (process-live-p main)))
+        (when (process-live-p tts-notify-process) (delete-process tts-notify-process))))))
 
 (ert-deftest omnivox-devices-saved-lanes-are-projected-without-starting-a-process ()
   (omnivox-devices-tests--worker
@@ -137,26 +180,25 @@
 
 (ert-deftest omnivox-devices-save-persists-only-confirmed-lane-and-keeps-missing-identity ()
   (omnivox-devices-tests--worker
-    (with-temp-buffer
-      (omnivox-output-devices-mode)
-      (setq omnivox-output-devices--catalogue
-            '(:supported t :host_scope "windows:wasapi:desk" :devices ((:id "wasapi:a" :name "Same") (:id "wasapi:b" :name "Same"))))
-      (let ((omnivox-audio-device-preferences '(("windows:wasapi:desk" notification "wasapi:notify" "Private")))
-            saved)
-        (omnivox-audio-devices--put
-         'speaker (list :process tts-speaker-process :status
-                        (omnivox-devices-tests--status '(:sequence 1 :expected_revision 0 :selection (:mode "device" :id "wasapi:missing")) "applied")))
-        (cl-letf (((symbol-function 'customize-save-variable)
-                   (lambda (symbol value &rest _) (should (eq symbol 'omnivox-audio-device-preferences)) (setq saved value))))
-          (omnivox-output-devices--render)
-          (should (assoc "wasapi:a" tabulated-list-entries))
-          (should (assoc "wasapi:b" tabulated-list-entries))
-          (should (assoc "wasapi:missing" tabulated-list-entries))
-          (goto-char (point-min))
-          (while (and (not (equal "wasapi:b" (tabulated-list-get-id))) (not (eobp))) (forward-line 1))
-          (omnivox-output-devices-save))
-        (should (equal '(("windows:wasapi:desk" speaker "wasapi:missing" "Unavailable saved or applied device")
-                         ("windows:wasapi:desk" notification "wasapi:notify" "Private")) saved))))))
+    (let ((state '(:role speaker :candidate "wasapi:b" :catalogue
+                   (:supported t :host_scope "windows:wasapi:desk"
+                    :devices ((:id "wasapi:a" :name "Same") (:id "wasapi:b" :name "Same")))))
+          (omnivox-audio-device-preferences '(("windows:wasapi:desk" notification "wasapi:notify" "Private")))
+          saved)
+      (omnivox-audio-devices--put
+       'speaker (list :process tts-speaker-process :status
+                      (omnivox-devices-tests--status '(:sequence 1 :expected_revision 0 :selection (:mode "device" :id "wasapi:missing")) "applied")))
+      (cl-letf (((symbol-function 'omnivox-output-devices--state) (lambda () state))
+                ((symbol-function 'omnivox-output-devices--render) #'ignore)
+                ((symbol-function 'omnivox-output-devices--say) #'ignore)
+                ((symbol-function 'customize-save-variable)
+                 (lambda (symbol value &rest _) (should (eq symbol 'omnivox-audio-device-preferences)) (setq saved value))))
+        (should (equal '("default" "wasapi:a" "wasapi:b" "wasapi:missing") (omnivox-output-devices--ids state)))
+        (should (string-match-p "device 1" (omnivox-output-devices--description "wasapi:a" state)))
+        (should (string-match-p "device 2" (omnivox-output-devices--description "wasapi:b" state)))
+        (omnivox-output-devices-save))
+      (should (equal '(("windows:wasapi:desk" speaker "wasapi:missing" "Unavailable saved or applied device")
+                       ("windows:wasapi:desk" notification "wasapi:notify" "Private")) saved)))))
 
 (ert-deftest omnivox-devices-death-during-notification-delivery-does-not-cross-devices ()
   (omnivox-devices-tests--worker
@@ -223,17 +265,14 @@
     (should-not (omnivox-audio-devices--supported-p tts-speaker-process))
     (omnivox-audio-devices--put
      'speaker (list :process tts-speaker-process :status (omnivox-devices-tests--status) :pending t))
-    (with-temp-buffer
-      (omnivox-output-devices-mode)
-      (setq omnivox-output-devices--catalogue
-            '(:supported t :host_scope "windows:wasapi:desk" :devices ((:id "wasapi:headset" :name "Headset"))))
-      (omnivox-output-devices--render)
-      (should (string-match-p "Last confirmed" (aref (cadr (assoc "default" tabulated-list-entries)) 1)))
-      (should-not (string-match-p "Connected" (aref (cadr (assoc "wasapi:headset" tabulated-list-entries)) 1)))
-      (goto-char (point-min))
-      (while (and (not (equal "wasapi:headset" (tabulated-list-get-id))) (not (eobp))) (forward-line 1))
+    (let ((state '(:role speaker :candidate "wasapi:headset" :catalogue
+                   (:supported t :host_scope "windows:wasapi:desk" :devices ((:id "wasapi:headset" :name "Headset"))))))
+      (should (string-match-p "Last confirmed" (omnivox-output-devices--description "default" state)))
+      (should-not (string-match-p "Connected" (omnivox-output-devices--description "wasapi:headset" state)))
       (let (retired recovered)
-        (cl-letf (((symbol-function 'yes-or-no-p) (lambda (_) t))
+        (cl-letf (((symbol-function 'omnivox-output-devices--state) (lambda () state))
+                  ((symbol-function 'omnivox-output-devices--render) #'ignore)
+                  ((symbol-function 'yes-or-no-p) (lambda (_) t))
                   ((symbol-function 'omnivox-audio-devices--apply)
                    (lambda (&rest _) (ert-fail "Sent Apply to a retired worker")))
                   ((symbol-function 'tts--confirm-owned-retirement)
@@ -249,7 +288,8 @@
                        (should (equal "wasapi:headset" (getenv "OMNIVOX_OWNED_AUDIO_DEVICE")))
                        (should (equal "windows:wasapi:desk" (getenv "OMNIVOX_OWNED_AUDIO_DEVICE_HOST"))))
                      (setq recovered t)))
-                  ((symbol-function 'omnivox-output-devices-refresh) #'ignore))
+                  ((symbol-function 'omnivox-output-devices--refresh) #'ignore))
+          (should-error (omnivox-output-devices-save) :type 'user-error)
           (omnivox-output-devices-apply))
         (should recovered)))))
 

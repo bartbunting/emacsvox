@@ -6204,8 +6204,9 @@ also offers Other device for an existing device name; cancelling its prompt
 retains the previous choice and stays in the list.
 
 For physical devices on a supporting Windows Omnivox build@comma{} @kbd{D} opens main
-outputs and @kbd{M} opens notification outputs. Their separate Apply and Save
-actions are described in @ref{Selecting And Checking Omnivox,Selecting And Checking Omnivox,,emacsvox,}.
+outputs and @kbd{M} opens notification outputs. Press @kbd{d} to browse their Transient
+choices. Selecting a candidate@comma{} applying it and saving it are separate actions@comma{}
+described in @ref{Selecting And Checking Omnivox,Selecting And Checking Omnivox,,emacsvox,}.
 
 With Omnivox@comma{} Automatic normally uses an independent notification process;
 left/right/both choose its route. @emph{Use main output (notifications remain
@@ -11141,17 +11142,21 @@ a prefix argument chooses notifications. For a separate notification device@comm
 first use Automatic@comma{} Left@comma{} Right or Both notification routing so that a
 separate worker exists. @ref{Notification Routing,Notification Routing,,emacsvox,} explains that arrangement.
 
-The table lists @emph{Follow system default} and available outputs. It also retains
+Press @kbd{d} for the Transient list of @emph{Follow system default} and available
+outputs. It also retains
 a missing saved or applied device as unavailable. Names are labels: identical
-names can identify different devices@comma{} so each row includes the backend's unique
-ID@. @emph{Applied}@comma{} @emph{Saved} and @emph{Connected} describe distinct states. In default
+names can identify different devices@comma{} so duplicate names have distinct numbers
+and each choice's Help includes its unique device ID@. @emph{Selected}@comma{} @emph{Applied}@comma{}
+@emph{Saved} and @emph{Connected} describe distinct states. Selected is the candidate
+waiting for Apply. In default
 mode@comma{} the applied choice is Follow system default while Connected identifies
 the endpoint currently used.
 
 @enumerate
 @item
-Browse with arrows. Navigation changes only the highlighted candidate;
-@kbd{@key{SPC}} or @kbd{@key{RET}} reads its name@comma{} state and ID@.
+Browse the choices with arrows to hear their names and states. @kbd{@key{RET}} selects
+a candidate and returns to the device menu without changing audio. @kbd{q}
+returns without selecting.
 @item
 Press @kbd{a} to Apply that candidate to this lane. The worker opens it while
 the old route remains usable. If preparation fails or is cancelled@comma{} a
@@ -11164,9 +11169,9 @@ live status and availability. Connected reports a working software
 connection; it does not prove that a headset is audible.
 @item
 Press @kbd{s} to Save the confirmed applied choice for this host and lane in
-Customize. Saving does not apply the highlighted row. Main and notification
+Customize. Saving does not apply the selected candidate. Main and notification
 choices are independent. @kbd{q} returns without applying or saving the current
-highlight; an already applied choice remains active for this session.
+candidate; an already applied choice remains active for this session.
 @end enumerate
 
 Saved choices use the speech host's name@comma{} backend and device ID@. Renaming the
@@ -11186,7 +11191,7 @@ An unanswered Apply remains unknown. Press @kbd{g} to reconcile it or @kbd{c} to
 cancellation; cancellation cannot undo a completed change. Automatic worker
 replacement preserves the last confirmed destination and refuses to guess
 while an Apply is unresolved. If the worker has died@comma{} Apply asks whether to
-recover it on the highlighted output. Recovery still requires confirmed cleanup
+recover it on the selected output. Recovery still requires confirmed cleanup
 of the previous native worker. A fresh Emacs session uses the saved choice;
 unsaved session choices need not survive exit. The explicit emergency-speech
 command ignores these ordinary device preferences.

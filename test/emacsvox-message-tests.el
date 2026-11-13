@@ -151,7 +151,8 @@
       (should (eq (plist-get arguments :occasion) 'notification))
       (should (eq (plist-get arguments :delivery-policy) 'replaceable))
       (should (eq (plist-get arguments :replacement-key) 'command-quit))
-      (should (eq speaker 'notification-speaker))
+      (should (eq speaker 'main-speaker))
+      (should (eq (plist-get arguments :lane) 'notification))
       (let ((actions (plist-get arguments :compatibility-actions)))
         (should (= (length actions) 1))
         (should
@@ -189,7 +190,8 @@
        (equal
         (plist-get arguments :facts)
         '(:events (operation-failed))))
-      (should (eq speaker 'notification-speaker)))))
+      (should (eq speaker 'main-speaker))
+      (should (eq (plist-get arguments :lane) 'notification)))))
 
 (ert-deftest emacsvox-repeated-command-quits-share-replacement-boundary ()
   "Repeated quits use one stable boundary that delivery can coalesce."

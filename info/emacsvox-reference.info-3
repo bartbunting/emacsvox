@@ -5013,9 +5013,9 @@ File: emacsvox-reference.info,  Node: omnivox-output-devices,  Next: omnivox-par
 2.357 omnivox-output-devices
 ============================
 
-Row navigation only highlights a candidate.  Apply, Save and recovery
-are explicit actions.  Device IDs remain distinct even when names are
-equal.
+A menu visit owns its candidate and asynchronous refresh identity.
+Browsing never applies output; Apply and Save retain the independent
+lane contract.
 
 
 File: emacsvox-reference.info,  Node: omnivox-parameters,  Next: omnivox-parameters-codec,  Prev: omnivox-output-devices,  Up: Emacsvox Commands And Options

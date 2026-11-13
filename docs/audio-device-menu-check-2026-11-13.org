@@ -1,0 +1,107 @@
+#+title: Physical output menus and notification recovery check
+#+date: 2026-11-13
+
+* Scope and result
+
+Physical output selection uses Transient under =C-e H o n D/M=. Press =d=,
+browse with arrows and press Enter to select a candidate. Apply and Save remain
+separate. Main and notification outputs keep their independent device choices,
+including the existing refusal to fall back from an unavailable explicit device.
+
+Command-error feedback now uses the notification submission lane without
+replacing the real main-process binding. Notification submissions use the
+existing guarded notification helper. Repeated Quit messages after notification
+failure no longer create abandoned main workers or consume recovery capacity.
+
+The original notification startup timeout was observed but not reproduced in
+the fresh checks. Its cause is unresolved. These checks do not establish an
+acoustic result; the new menus still need the short listening check in the
+[[file:ui-settings-plan.org::*Confirm physical-device menus by listening][settings plan]].
+
+* Observed session
+
+The affected native Emacs was PID 26148, session =20261113T043643Z-26148=,
+using the =channels-20261113= Audio Devices candidate. Main PID 34224 remained
+available. Notification PID 15524 exited with status 1. Its retained native
+guard proof reports =native creation or handoff timed out=, with started,
+tree-retired and I/O-retired all true. Its stderr also reports Windows pipe
+error 232. This identifies the failed creation/handoff phase, not a particular
+engine or the reason its deadline elapsed.
+
+Notification dispatch 3 failed at 04:37:03.631 UTC without an observed onset.
+Subsequent Quit feedback used newly created main workers =Speaker<1>=,
+=Speaker<2>= and =Speaker<3>=, PIDs 30732, 2240 and 38772. Their references were
+lost when temporary bindings unwound. Alongside the original main worker they
+occupied the four retained native-owner slots. Recovery at 04:40:15 and
+04:40:44 then reported that four native guards remained retained.
+
+The [[file:evidence/audio-devices-2026-11-13/session-events.eld][selected aural records]] and [[file:evidence/audio-devices-2026-11-13/session-snapshot.eld][sanitized process snapshot]] preserve that
+correlation. The original personal log contains arbitrary spoken content and
+is not copied into this repository. Guard authentication material is excluded.
+Live inspection was read-only; the existing Emacs and its workers were preserved.
+Initial client-request timeouts came from the diagnostic invocation and quoting;
+the window remained responsive and corrected bounded requests succeeded.
+
+* Verification and provenance
+
+Emacsvox base: =d3f62a73c28e418c4c33dad6de7f5937008906d0=.
+Omnivox source: =89a0b98=; reused Windows runtime =287fd0119a8f77d0=.
+No Rust, helper, protocol or dependency changes are included.
+WSL checks use Emacs 31.0.90; native Windows checks use Emacs 31.1.
+
+The [[file:evidence/audio-devices-2026-11-13/checks.tar.gz][check archive]] retains raw test output, failed intermediate checks,
+native harnesses and their JSON results. Its =provenance.json= identifies the
+source patch, toolchains and commands. Source regressions fail against the
+previous definitions and pass with the correction.
+
+| Check | Result |
+|-------+--------|
+| Two notification owner regressions against the old definitions | Both fail as expected |
+| Same regressions after the fix | 2 pass |
+| Focused source device, channel, recovery and message suites | 73 pass |
+| Focused graphical output settings | 6 pass, none skipped |
+| Full compiled graphical menus | 290 pass, none skipped |
+| Full source ERT | 4509 pass, 3 existing failures, 251 skipped |
+| Native compiled device and channel tests | 26 pass |
+| Guarded Eloquence and DECtalk recovery, each | 12 steps pass |
+| Native personal-profile menus, Eloquence and DECtalk | Both pass |
+| Byte-code preflight, headers and documentation gate | Pass |
+
+The full ERT failures also occur in the earlier baseline: stale generated
+aural reference, launcher log rotation exceeding its 1.5-second observation
+window, and an obsolete native-Windows ARM64 documentation expectation.
+Their raw baseline and current output is retained; unrelated fixes are deferred.
+
+The native checks start private test sessions. They verify native guard ownership,
+acknowledged engine selection and source completion for both lanes. They then
+retire notification output, present five Quit messages with independent physical
+device selections, and verify unchanged main ownership and no extra retained
+guards before recovering notifications. Channel changes, Reset, main-output
+handoff, separate Save and subsequent startup retain the expected state. Saved
+preference tests use private files.
+
+Fresh normal-profile checks exercise the actual Transient menus through Enter,
+select without applying, then apply on each lane while retaining both workers.
+They also verify live Left/Right and unchanged host-preference reload. They do
+not save personal preferences. Each test session retires its own speech workers.
+
+The initial source graphical run exposed missing mutable menu-state slots;
+focused runs then exposed dynamic-choice parsing, focus lookup and missing Enter
+registration. Those were corrected and the failing output retained. The first
+DECtalk fault-loop harness omitted an explicit require for error feedback; the
+corrected harness passes with both engines. The first full WSL byte-code build
+finished with a stale-file preflight because source edits occurred during that
+build; an incremental build then passed. Native compilation and preflight pass.
+
+* Listening handoff
+
+The new candidate is =AudioDeviceTests/transient-20261113=. The Audio Devices
+desktop shortcut is the handoff route; an already running candidate retains its
+old definitions until closed and reopened. The ordinary Windows shortcut and
+personal saved preferences are preserved.
+
+Check =C-e H o n D= for main and =M= for notifications. In each, use =d=, arrows
+and Enter, then =a= to Apply. Verify notification preview through the parent
+menu's =N= command. Use =s= only when the applied choice should persist. Report
+any fresh notification failure with its approximate time so it can be correlated
+with the new session's diagnostics.

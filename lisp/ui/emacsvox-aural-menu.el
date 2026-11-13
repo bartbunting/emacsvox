@@ -90,6 +90,7 @@
                          emacsvox-interaction--presentation
                          emacsvox-output-settings--route emacsvox-output-settings--output
                          emacsvox-output-settings--remapping
+                         omnivox-output-devices--menu omnivox-output-devices--choices
                          emacsvox-interaction emacsvox-spelling emacsvox-spelling-timing
                          emacsvox-tone-editor emacsvox-tone-editor-waveform
                          emacsvox-tone-editor-envelope emacsvox-tone-editor-presets emacsvox-tone-editor-curve

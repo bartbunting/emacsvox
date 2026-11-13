@@ -1111,15 +1111,19 @@ a prefix argument chooses notifications. For a separate notification device,
 first use Automatic, Left, Right or Both notification routing so that a
 separate worker exists. [[info:emacsvox#Notification Routing][Notification Routing]] explains that arrangement.
 
-The table lists /Follow system default/ and available outputs. It also retains
+Press ~d~ for the Transient list of /Follow system default/ and available
+outputs. It also retains
 a missing saved or applied device as unavailable. Names are labels: identical
-names can identify different devices, so each row includes the backend's unique
-ID. /Applied/, /Saved/ and /Connected/ describe distinct states. In default
+names can identify different devices, so duplicate names have distinct numbers
+and each choice's Help includes its unique device ID. /Selected/, /Applied/,
+/Saved/ and /Connected/ describe distinct states. Selected is the candidate
+waiting for Apply. In default
 mode, the applied choice is Follow system default while Connected identifies
 the endpoint currently used.
 
-1. Browse with arrows. Navigation changes only the highlighted candidate;
-   ~SPC~ or ~RET~ reads its name, state and ID.
+1. Browse the choices with arrows to hear their names and states. ~RET~ selects
+   a candidate and returns to the device menu without changing audio. ~q~
+   returns without selecting.
 2. Press ~a~ to Apply that candidate to this lane. The worker opens it while
    the old route remains usable. If preparation fails or is cancelled, a
    healthy old route keeps working. Success cancels interrupted speech and
@@ -1129,9 +1133,9 @@ the endpoint currently used.
    live status and availability. Connected reports a working software
    connection; it does not prove that a headset is audible.
 4. Press ~s~ to Save the confirmed applied choice for this host and lane in
-   Customize. Saving does not apply the highlighted row. Main and notification
+   Customize. Saving does not apply the selected candidate. Main and notification
    choices are independent. ~q~ returns without applying or saving the current
-   highlight; an already applied choice remains active for this session.
+   candidate; an already applied choice remains active for this session.
 
 Saved choices use the speech host's name, backend and device ID. Renaming the
 host creates a different scope. Friendly-name changes do not select another
@@ -1150,7 +1154,7 @@ An unanswered Apply remains unknown. Press ~g~ to reconcile it or ~c~ to request
 cancellation; cancellation cannot undo a completed change. Automatic worker
 replacement preserves the last confirmed destination and refuses to guess
 while an Apply is unresolved. If the worker has died, Apply asks whether to
-recover it on the highlighted output. Recovery still requires confirmed cleanup
+recover it on the selected output. Recovery still requires confirmed cleanup
 of the previous native worker. A fresh Emacs session uses the saved choice;
 unsaved session choices need not survive exit. The explicit emergency-speech
 command ignores these ordinary device preferences.

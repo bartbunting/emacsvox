@@ -2838,8 +2838,9 @@ also offers Other device for an existing device name; cancelling its prompt
 retains the previous choice and stays in the list.
 
 For physical devices on a supporting Windows Omnivox build, ~D~ opens main
-outputs and ~M~ opens notification outputs. Their separate Apply and Save
-actions are described in [[info:emacsvox#Selecting And Checking Omnivox][Selecting And Checking Omnivox]].
+outputs and ~M~ opens notification outputs. Press ~d~ to browse their Transient
+choices. Selecting a candidate, applying it and saving it are separate actions,
+described in [[info:emacsvox#Selecting And Checking Omnivox][Selecting And Checking Omnivox]].
 
 With Omnivox, Automatic normally uses an independent notification process;
 left/right/both choose its route. /Use main output (notifications remain

@@ -16,7 +16,7 @@ Indirect:
 emacsvox-reference.info-1: 397
 emacsvox-reference.info-2: 304589
 emacsvox-reference.info-3: 601941
-emacsvox-reference.info-4: 1207762
+emacsvox-reference.info-4: 1207766
 
 Tag Table:
 (Indirect)
@@ -390,34 +390,34 @@ Node: omnivox-library-runtime748787
 Node: omnivox-native-codec749312
 Node: omnivox-native-guard749751
 Node: omnivox-output-devices750181
-Node: omnivox-parameters750544
-Node: omnivox-parameters-codec750982
-Node: omnivox-preferences751350
-Node: omnivox-preview751710
-Node: omnivox-punctuation752129
-Node: omnivox-punctuation-profiles752563
-Node: omnivox-remote752941
-Node: omnivox-voices753356
-Node: outloud-voices753841
-Node: pip754439
-Node: plain-voices756200
-Node: soundscape756558
-Node: sox761224
-Node: sox-gen763882
-Node: swiftmac-voices770191
-Node: tetris770437
-Node: tts-lifecycle770594
-Node: tts-queue-state771419
-Node: tts-speak771749
-Node: tts-voice-api791524
-Node: voice-defs792135
-Node: voice-setup797788
-Node: xbacklight800937
-Node: URL Templates802112
-Node: Reference Concept Index807411
-Node: Key Index807595
-Node: Function Index844891
-Node: Variable Index1207762
+Node: omnivox-parameters750548
+Node: omnivox-parameters-codec750986
+Node: omnivox-preferences751354
+Node: omnivox-preview751714
+Node: omnivox-punctuation752133
+Node: omnivox-punctuation-profiles752567
+Node: omnivox-remote752945
+Node: omnivox-voices753360
+Node: outloud-voices753845
+Node: pip754443
+Node: plain-voices756204
+Node: soundscape756562
+Node: sox761228
+Node: sox-gen763886
+Node: swiftmac-voices770195
+Node: tetris770441
+Node: tts-lifecycle770598
+Node: tts-queue-state771423
+Node: tts-speak771753
+Node: tts-voice-api791528
+Node: voice-defs792139
+Node: voice-setup797792
+Node: xbacklight800941
+Node: URL Templates802116
+Node: Reference Concept Index807415
+Node: Key Index807599
+Node: Function Index844895
+Node: Variable Index1207766
 
 End Tag Table
 

@@ -58,10 +58,15 @@ correctly on Emacs 31.
 Long passages start speaking sooner in sessions with many loaded packages.
 
 With a supporting Windows Omnivox development build, output settings offer
-separate physical devices for main and notification speech. Browse without
-changing audio, Apply without restarting engines, then Save the applied choice
+separate physical devices for main and notification speech. Browse Transient
+choices with arrows and Enter to select without changing audio. Apply without
+restarting engines, then Save the applied choice
 for future sessions. Missing explicit devices never fall back to another output;
 recovery retains the confirmed choice. Other backends keep their existing routes.
+
+When notification output is unavailable, command errors and Quit feedback respect
+the device fallback policy. They no longer create abandoned main-speech workers
+that can block later recovery.
 
 Supporting local Omnivox workers also apply notification Left, Right and Both
 channels immediately, including tones and earcons. Main output retires only the

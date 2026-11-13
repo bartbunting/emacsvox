@@ -646,9 +646,10 @@ name; cancelling its prompt retains the previous choice and stays in the
 list.
 
    For physical devices on a supporting Windows Omnivox build, ‘D’ opens
-main outputs and ‘M’ opens notification outputs.  Their separate Apply
-and Save actions are described in *note Selecting And Checking Omnivox:
-(emacsvox)Selecting And Checking Omnivox.
+main outputs and ‘M’ opens notification outputs.  Press ‘d’ to browse
+their Transient choices.  Selecting a candidate, applying it and saving
+it are separate actions, described in *note Selecting And Checking
+Omnivox: (emacsvox)Selecting And Checking Omnivox.
 
    With Omnivox, Automatic normally uses an independent notification
 process; left/right/both choose its route.  _Use main output
@@ -5749,15 +5750,18 @@ Both notification routing so that a separate worker exists.  *note
 Notification Routing: (emacsvox)Notification Routing. explains that
 arrangement.
 
-   The table lists _Follow system default_ and available outputs.  It
-also retains a missing saved or applied device as unavailable.  Names
-are labels: identical names can identify different devices, so each row
-includes the backend's unique ID.  _Applied_, _Saved_ and _Connected_
-describe distinct states.  In default mode, the applied choice is Follow
-system default while Connected identifies the endpoint currently used.
+   Press ‘d’ for the Transient list of _Follow system default_ and
+available outputs.  It also retains a missing saved or applied device as
+unavailable.  Names are labels: identical names can identify different
+devices, so duplicate names have distinct numbers and each choice's Help
+includes its unique device ID.  _Selected_, _Applied_, _Saved_ and
+_Connected_ describe distinct states.  Selected is the candidate waiting
+for Apply.  In default mode, the applied choice is Follow system default
+while Connected identifies the endpoint currently used.
 
-  1. Browse with arrows.  Navigation changes only the highlighted
-     candidate; ‘<SPC>’ or ‘<RET>’ reads its name, state and ID.
+  1. Browse the choices with arrows to hear their names and states.
+     ‘<RET>’ selects a candidate and returns to the device menu without
+     changing audio.  ‘q’ returns without selecting.
   2. Press ‘a’ to Apply that candidate to this lane.  The worker opens
      it while the old route remains usable.  If preparation fails or is
      cancelled, a healthy old route keeps working.  Success cancels
@@ -5768,9 +5772,9 @@ system default while Connected identifies the endpoint currently used.
      refresh live status and availability.  Connected reports a working
      software connection; it does not prove that a headset is audible.
   4. Press ‘s’ to Save the confirmed applied choice for this host and
-     lane in Customize.  Saving does not apply the highlighted row.
+     lane in Customize.  Saving does not apply the selected candidate.
      Main and notification choices are independent.  ‘q’ returns without
-     applying or saving the current highlight; an already applied choice
+     applying or saving the current candidate; an already applied choice
      remains active for this session.
 
    Saved choices use the speech host's name, backend and device ID.
@@ -5792,7 +5796,7 @@ their text.
 ‘c’ to request cancellation; cancellation cannot undo a completed
 change.  Automatic worker replacement preserves the last confirmed
 destination and refuses to guess while an Apply is unresolved.  If the
-worker has died, Apply asks whether to recover it on the highlighted
+worker has died, Apply asks whether to recover it on the selected
 output.  Recovery still requires confirmed cleanup of the previous
 native worker.  A fresh Emacs session uses the saved choice; unsaved
 session choices need not survive exit.  The explicit emergency-speech

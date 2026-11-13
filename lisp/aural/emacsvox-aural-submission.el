@@ -39,8 +39,7 @@
 (require 'emacsvox-aural-source)
 
 (declare-function tts-speak "tts-speak" (text))
-(declare-function tts-initialize "tts-speak" ())
-(declare-function tts-notify-process "tts-speak" ())
+(declare-function tts-notify-apply "tts-speak" (func text))
 (declare-function emacsvox-log-notification "emacsvox-speak" (text))
 (autoload 'emacsvox-aural-present "emacsvox-aural-transport")
 
@@ -404,11 +403,10 @@ PHASE is `before' by default and may alternatively be `after'."
 (defun emacsvox-aural--call-on-submission-lane (function &rest arguments)
   "Call FUNCTION with ARGUMENTS on the current submission's speech lane."
   (if (eq emacsvox-aural-submission-lane 'notification)
-      (progn
-        (unless (process-live-p tts-speaker-process)
-          (tts-initialize))
-        (let ((tts-speaker-process (tts-notify-process)))
-          (apply function arguments)))
+      ;; Preserve the real main owner and the physical-output fallback policy.
+      ;; Binding a missing notifier as main lets ordinary speech recovery start
+      ;; a replacement whose reference disappears when this call returns.
+      (tts-notify-apply (lambda (_) (apply function arguments)) nil)
     (apply function arguments)))
 
 (defun emacsvox-aural--submit-content
