@@ -2798,7 +2798,7 @@ changes without saving.
 *** Understand the main and notification streams
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Notification Routing
-:DESCRIPTION: Choose where notifications play and distinguish selection from restart.
+:DESCRIPTION: Choose where notifications play, preview the route, and save it separately.
 :END:
 
 #+cindex: speech streams
@@ -2813,16 +2813,34 @@ heard concurrently, with each notification's cue and speech delivered together.
 Integrations may deliberately route particular asynchronous actions differently:
 Notmuch's explicit refresh, for example, uses interruptible main speech.
 
-Open ~C-e H o n~ for routing. ~r~ opens a list of automatic, left, right,
-both channels, main output, and other device. The configured choice is focused
-and marked. Arrows browse without applying; ~RET~ selects the route for the
-next restart and returns to the Route control. ~q~ or ~C-g~ cancels the list.
-Other device asks for an existing device name; cancelling that prompt stays on
-Other device and retains the previous route. Selecting does not restart speech.
+Open ~C-e H o n~ for routing, then ~r~ for Automatic, Left, Right, Both
+channels or Main output. The configured choice is focused and marked.
+Arrows browse without applying; ~RET~ chooses and returns to the Route
+control. ~q~ or ~C-g~ cancels the list.
 
-~N~ previews active output, which may still use the old route; ~R~ restarts
-after confirmation. ~h~ inspects a notification-history snapshot, returning
-with ~q~. ~S~ saves routing and spatial defaults without a restart.
+With a supporting local Omnivox worker, the menu says /applies live/.
+Left, Right and Both change subsequent notification speech, tones and earcons
+without restarting either speech worker. Audio already submitted keeps its
+previous route. Main output retires only the notification worker; choosing a
+separate route again starts that worker while main speech stays running.
+Automatic uses a separate worker on both channels. Engine choices and physical
+output selections are retained.
+
+Press ~N~ to preview the active route. Choose the previous route to reverse
+an experiment; ~S~ separately saves routing and spatial defaults for startup.
+If a change is reported as unconfirmed, choose its route again before saving.
+~h~ inspects a notification-history snapshot, returning with ~q~.
+
+Older Omnivox workers, remote speech and other backends retain the /next
+restart/ menu. There, selecting only sets the next route; ~N~ still previews
+the active arrangement and ~R~ restarts speech after confirmation. That menu
+also offers Other device for an existing device name; cancelling its prompt
+retains the previous choice and stays in the list.
+
+For physical devices on a supporting Windows Omnivox build, ~D~ opens main
+outputs and ~M~ opens notification outputs. Press ~d~ to browse their Transient
+choices. Selecting a candidate, applying it and saving it are separate actions,
+described in [[info:emacsvox#Selecting And Checking Omnivox][Selecting And Checking Omnivox]].
 
 With Omnivox, Automatic normally uses an independent notification process;
 left/right/both choose its route. /Use main output (notifications remain
@@ -2831,7 +2849,7 @@ It is not a mute option. Other backends use their configured device or fall
 back to main speech. In Lisp, =default= or an empty string means main output;
 use descriptive labels for ordinary configuration.
 
-After changing the route, ~C-e d C-n~ also initialises the arrangement.
+~C-e d C-n~ explicitly reinitialises the notification arrangement when needed.
 Use notification history to read an announcement you missed. Ordinary
 obsolete-main-speech cancellation is local to main; explicit =tts-stop= stops
 both streams.

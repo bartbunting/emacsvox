@@ -5608,7 +5608,7 @@ a capital @kbd{S} in one menu does not save everything described in this section
 
 @menu
 * Set the reading scope@comma{} rate@comma{} and punctuation: Reading Scope And Punctuation.  Set rate or punctuation for the current buffer and understand saving.
-* Understand the main and notification streams: Notification Routing.  Choose where notifications play and distinguish selection from restart.
+* Understand the main and notification streams: Notification Routing.  Choose where notifications play, preview the route, and save it separately.
 * Adjust output volumes: Output Volumes.  Adjust speech and cue levels without confusing volume with routing.
 * Adjust an integration's speech settings: Integration Speech Settings.  Find focused controls and their integration-specific saving boundaries.
 @end menu
@@ -6179,16 +6179,34 @@ heard concurrently@comma{} with each notification's cue and speech delivered tog
 Integrations may deliberately route particular asynchronous actions differently:
 Notmuch's explicit refresh@comma{} for example@comma{} uses interruptible main speech.
 
-Open @kbd{C-e H o n} for routing. @kbd{r} opens a list of automatic@comma{} left@comma{} right@comma{}
-both channels@comma{} main output@comma{} and other device. The configured choice is focused
-and marked. Arrows browse without applying; @kbd{@key{RET}} selects the route for the
-next restart and returns to the Route control. @kbd{q} or @kbd{C-g} cancels the list.
-Other device asks for an existing device name; cancelling that prompt stays on
-Other device and retains the previous route. Selecting does not restart speech.
+Open @kbd{C-e H o n} for routing@comma{} then @kbd{r} for Automatic@comma{} Left@comma{} Right@comma{} Both
+channels or Main output. The configured choice is focused and marked.
+Arrows browse without applying; @kbd{@key{RET}} chooses and returns to the Route
+control. @kbd{q} or @kbd{C-g} cancels the list.
 
-@kbd{N} previews active output@comma{} which may still use the old route; @kbd{R} restarts
-after confirmation. @kbd{h} inspects a notification-history snapshot@comma{} returning
-with @kbd{q}. @kbd{S} saves routing and spatial defaults without a restart.
+With a supporting local Omnivox worker@comma{} the menu says @emph{applies live}.
+Left@comma{} Right and Both change subsequent notification speech@comma{} tones and earcons
+without restarting either speech worker. Audio already submitted keeps its
+previous route. Main output retires only the notification worker; choosing a
+separate route again starts that worker while main speech stays running.
+Automatic uses a separate worker on both channels. Engine choices and physical
+output selections are retained.
+
+Press @kbd{N} to preview the active route. Choose the previous route to reverse
+an experiment; @kbd{S} separately saves routing and spatial defaults for startup.
+If a change is reported as unconfirmed@comma{} choose its route again before saving.
+@kbd{h} inspects a notification-history snapshot@comma{} returning with @kbd{q}.
+
+Older Omnivox workers@comma{} remote speech and other backends retain the @emph{next
+restart} menu. There@comma{} selecting only sets the next route; @kbd{N} still previews
+the active arrangement and @kbd{R} restarts speech after confirmation. That menu
+also offers Other device for an existing device name; cancelling its prompt
+retains the previous choice and stays in the list.
+
+For physical devices on a supporting Windows Omnivox build@comma{} @kbd{D} opens main
+outputs and @kbd{M} opens notification outputs. Press @kbd{d} to browse their Transient
+choices. Selecting a candidate@comma{} applying it and saving it are separate actions@comma{}
+described in @ref{Selecting And Checking Omnivox,Selecting And Checking Omnivox,,emacsvox,}.
 
 With Omnivox@comma{} Automatic normally uses an independent notification process;
 left/right/both choose its route. @emph{Use main output (notifications remain
@@ -6197,7 +6215,7 @@ It is not a mute option. Other backends use their configured device or fall
 back to main speech. In Lisp@comma{} @code{default} or an empty string means main output;
 use descriptive labels for ordinary configuration.
 
-After changing the route@comma{} @kbd{C-e d C-n} also initialises the arrangement.
+@kbd{C-e d C-n} explicitly reinitialises the notification arrangement when needed.
 Use notification history to read an announcement you missed. Ordinary
 obsolete-main-speech cancellation is local to main; explicit @code{tts-stop} stops
 both streams.
@@ -11108,6 +11126,75 @@ In a running session@comma{} @kbd{M-x omnivox} temporarily selects that server.
 @kbd{M-x tts-speak-version} identifies the live adapter and @kbd{M-x tts-restart}
 restarts after a deliberate configuration change. The complete isolated start@comma{}
 expected speech@comma{} and recovery remain in @ref{Installation, , Installation}.
+
+@subsection Choose physical output devices
+
+An updated Windows development build of Omnivox can send main speech and
+notifications to different physical outputs. This requires the server's
+@code{audio_device_selection_v1} capability; the pinned 1.18.0 release does not
+provide it. It works with native Windows Emacs or WSL Emacs launching the
+Windows worker. Linux/WSLg@comma{} macOS@comma{} PulseAudio and remote device selection are
+not provided by this interface.
+
+Open @kbd{C-e H o n} and choose @emph{Main output device} (@kbd{D}) or @emph{Notification output
+device} (@kbd{M}). The equivalent command is @kbd{M-x omnivox-output-devices @key{RET}};
+a prefix argument chooses notifications. For a separate notification device@comma{}
+first use Automatic@comma{} Left@comma{} Right or Both notification routing so that a
+separate worker exists. @ref{Notification Routing,Notification Routing,,emacsvox,} explains that arrangement.
+
+Press @kbd{d} for the Transient list of @emph{Follow system default} and available
+outputs. It also retains
+a missing saved or applied device as unavailable. Names are labels: identical
+names can identify different devices@comma{} so duplicate names have distinct numbers
+and each choice's Help includes its unique device ID@. @emph{Selected}@comma{} @emph{Applied}@comma{}
+@emph{Saved} and @emph{Connected} describe distinct states. Selected is the candidate
+waiting for Apply. In default
+mode@comma{} the applied choice is Follow system default while Connected identifies
+the endpoint currently used.
+
+@enumerate
+@item
+Browse the choices with arrows to hear their names and states. @kbd{@key{RET}} selects
+a candidate and returns to the device menu without changing audio. @kbd{q}
+returns without selecting.
+@item
+Press @kbd{a} to Apply that candidate to this lane. The worker opens it while
+the old route remains usable. If preparation fails or is cancelled@comma{} a
+healthy old route keeps working. Success cancels interrupted speech and
+cues@comma{} then sends fresh output to the selected device. Engines stay loaded;
+voice@comma{} rate@comma{} channel and volume settings remain in force.
+@item
+Confirm the result and listen to subsequent speech. Use @kbd{g} to refresh
+live status and availability. Connected reports a working software
+connection; it does not prove that a headset is audible.
+@item
+Press @kbd{s} to Save the confirmed applied choice for this host and lane in
+Customize. Saving does not apply the selected candidate. Main and notification
+choices are independent. @kbd{q} returns without applying or saving the current
+candidate; an already applied choice remains active for this session.
+@end enumerate
+
+Saved choices use the speech host's name@comma{} backend and device ID@. Renaming the
+host creates a different scope. Friendly-name changes do not select another
+device. Explicit @code{--audio-device} or @code{OMNIVOX_AUDIO_DEVICE} startup overrides
+take precedence over saved choices. Ordinary startup resolves saved choices
+inside the worker without an extra discovery process.
+
+An explicit device never falls back to speakers when disconnected. Its pending
+audio is cancelled@comma{} requests during the outage are discarded@comma{} and reconnect
+does not replay them. Reconnect the device@comma{} or explicitly Apply Follow system
+default or another device. Notifications do not fall back to main speech when
+their intended physical destinations differ or are unresolved; notification
+history retains their text.
+
+An unanswered Apply remains unknown. Press @kbd{g} to reconcile it or @kbd{c} to request
+cancellation; cancellation cannot undo a completed change. Automatic worker
+replacement preserves the last confirmed destination and refuses to guess
+while an Apply is unresolved. If the worker has died@comma{} Apply asks whether to
+recover it on the selected output. Recovery still requires confirmed cleanup
+of the previous native worker. A fresh Emacs session uses the saved choice;
+unsaved session choices need not survive exit. The explicit emergency-speech
+command ignores these ordinary device preferences.
 
 @subsection Remote Workstation Speech (Preview)
 

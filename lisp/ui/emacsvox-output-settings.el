@@ -24,7 +24,7 @@
 ;; along with Emacsvox.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Global output policy; persistence and speech restart are explicit actions.
+;; Global output policy; live routing and persistence are separate actions.
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-aural-spatial)
@@ -80,46 +80,55 @@
 (defun emacsvox-output-settings--choose (symbol value label)
   "Set global SYMBOL to VALUE, return to its control and announce LABEL."
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (when (and (eq symbol 'tts-notification-device) (omnivox-audio-channels--live-p))
+    (omnivox-audio-channels--set-route value))
   (customize-set-variable symbol value)
   (transient--stack-pop)
   (transient--show)
   (emacsvox-output-settings--say
    (if (eq symbol 'tts-notification-device)
-       (concat label ". Restart speech to apply; Save to keep it.")
+       (concat label (if (omnivox-audio-channels--live-p)
+                         ". Applied; Save to keep it."
+                       ". Restart speech to apply; Save to keep it."))
      label)))
 
 (defun emacsvox-output-settings--route-automatic ()
   "Use the backend default notification route.
 Omnivox uses a separate process on both channels; other servers use main speech.
-This is global and takes effect after a speech restart. Save is separate."
+Supporting local Omnivox applies this live; other workers need a speech restart.
+This is global; Save is separate."
   (interactive)
   (emacsvox-output-settings--choose 'tts-notification-device nil "Automatic"))
 
 (defun emacsvox-output-settings--route-left ()
   "Route separate notifications to the left channel.
 Supported by Omnivox and SwiftMac; other backends need a device with this name.
-This is global and takes effect after a speech restart. Save is separate."
+Supporting local Omnivox applies this live; other workers need a speech restart.
+This is global; Save is separate."
   (interactive)
   (emacsvox-output-settings--choose 'tts-notification-device "left" "Left"))
 
 (defun emacsvox-output-settings--route-right ()
   "Route separate notifications to the right channel.
 Supported by Omnivox and SwiftMac; other backends need a device with this name.
-This is global and takes effect after a speech restart. Save is separate."
+Supporting local Omnivox applies this live; other workers need a speech restart.
+This is global; Save is separate."
   (interactive)
   (emacsvox-output-settings--choose 'tts-notification-device "right" "Right"))
 
 (defun emacsvox-output-settings--route-both ()
   "Route separate notifications to both channels.
 Omnivox supports this route; other backends need a device with this name.
-This is global and takes effect after a speech restart. Save is separate."
+Supporting local Omnivox applies this live; other workers need a speech restart.
+This is global; Save is separate."
   (interactive)
   (emacsvox-output-settings--choose 'tts-notification-device "both" "Both channels"))
 
 (defun emacsvox-output-settings--route-main ()
   "Send notifications through main speech, where navigation can interrupt them.
 Notifications remain audible; this disables the separate process.
-This is global and takes effect after a speech restart. Save is separate."
+Supporting local Omnivox retires only the notification worker; main speech stays
+running. Other workers need a speech restart. This is global; Save is separate."
   (interactive)
   (emacsvox-output-settings--choose 'tts-notification-device "default" "Main output"))
 
@@ -137,10 +146,12 @@ Cancelling the name prompt retains this list and the previous route."
      (if (equal value "") "Main output" (concat "Device " value)))))
 
 (transient-define-prefix emacsvox-output-settings--route ()
-  "Choose the global notification route for the next speech restart.
+  "Choose the global notification route, applying live where supported.
 Arrows browse without applying; Enter chooses and returns to the parent control.
 The current choice is marked selected. Use q to cancel; Save is separate."
-  ["Notification route for next restart"
+  [:description (lambda () (if (omnivox-audio-channels--live-p)
+                               "Notification route (applies live)"
+                             "Notification route for next restart"))
    ("a" (lambda () (emacsvox-output-settings--choice-label 'tts-notification-device nil "Automatic"))
     emacsvox-output-settings--route-automatic :transient transient--do-replace)
    ("l" (lambda () (emacsvox-output-settings--choice-label 'tts-notification-device "left" "Left"))
@@ -156,7 +167,7 @@ The current choice is marked selected. Use q to cancel; Save is separate."
                     (if (eq (emacsvox-output-settings--route-value) 'other)
                         (format "Other device: %s" (default-value 'tts-notification-device))
                       "Other device")))
-    emacsvox-output-settings--route-other :transient t)]
+    emacsvox-output-settings--route-other :if-not omnivox-audio-channels--live-p :transient t)]
   ["Finish" ("q" "Cancel" transient-quit-one) ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (emacsvox-aural-menu--choice-setup
@@ -325,9 +336,12 @@ Shift arrows change it by 0.1; spatial presentation must be enabled."
   "Save global routing and spatial defaults without restarting speech."
   (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (omnivox-audio-channels--assert-resolved)
   (dolist (symbol emacsvox-output-settings--options)
     (customize-save-variable symbol (default-value symbol)))
-  (emacsvox-output-settings--say "Saved output policy. Route changes require a speech restart."))
+  (emacsvox-output-settings--say
+   (if (omnivox-audio-channels--live-p) "Saved output policy."
+     "Saved output policy. Route changes require a speech restart.")))
 (defun emacsvox-output-settings--restart ()
   "Explicitly restart speech to apply the selected notification route."
   (interactive)
@@ -375,15 +389,34 @@ Shift arrows change it by 0.1; spatial presentation must be enabled."
        buffer))
    'emacsvox-output-settings--history))
 
+(defun emacsvox-output-settings--main-device ()
+  "Browse main speech outputs with separate Apply and Save actions."
+  (interactive)
+  (require 'omnivox-output-devices)
+  (omnivox-output-devices 'speaker))
+
+(defun emacsvox-output-settings--notification-device ()
+  "Browse notification outputs with separate Apply and Save actions."
+  (interactive)
+  (require 'omnivox-output-devices)
+  (omnivox-output-devices 'notification))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-output-settings ()
   "Set global notification routing and spatial presentation policy."
   :refresh-suffixes t
-  ["Notifications (route changes need speech restart)"
-   ("r" (lambda () (format "Route for next restart: %s" (or tts-notification-device "automatic"))) emacsvox-output-settings--route :transient transient--do-stack)
+  ["Physical outputs (local Windows Omnivox)"
+   ("D" "Main output device" emacsvox-output-settings--main-device :transient transient--do-stack)
+   ("M" "Notification output device" emacsvox-output-settings--notification-device :transient transient--do-stack)]
+  [:description (lambda () (if (omnivox-audio-channels--live-p)
+                               "Notifications (route applies live)"
+                             "Notifications (route changes need speech restart)"))
+   ("r" (lambda () (format "%s: %s" (if (omnivox-audio-channels--live-p) "Route" "Route for next restart")
+                           (or tts-notification-device "automatic"))) emacsvox-output-settings--route :transient transient--do-stack)
    ("h" "Notification history" emacsvox-output-settings--history :transient transient--do-suspend)
    ("N" "Preview active notification output" emacsvox-output-settings--notify :transient t)
-   ("R" "Restart speech to apply route" emacsvox-output-settings--restart :transient t)]
+   ("R" "Restart speech to apply route" emacsvox-output-settings--restart
+    :if-not omnivox-audio-channels--live-p :transient t)]
   ["Spatial presentation (global, immediate)"
    ("e" (lambda () (emacsvox-output-settings--label 'emacsvox-aural-spatial-enabled "Enabled")) emacsvox-output-settings--enabled :transient t)
    ("s" (lambda () (emacsvox-output-settings--label 'emacsvox-aural-spatial-speech-enabled "Speech")) emacsvox-output-settings--speech :transient t)

@@ -1093,6 +1093,72 @@ In a running session, ~M-x omnivox~ temporarily selects that server.
 restarts after a deliberate configuration change. The complete isolated start,
 expected speech, and recovery remain in [[*Getting Started: Installation and First Speech][Installation]].
 
+*** Choose physical output devices
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+An updated Windows development build of Omnivox can send main speech and
+notifications to different physical outputs. This requires the server's
+=audio_device_selection_v1= capability; the pinned 1.18.0 release does not
+provide it. It works with native Windows Emacs or WSL Emacs launching the
+Windows worker. Linux/WSLg, macOS, PulseAudio and remote device selection are
+not provided by this interface.
+
+Open ~C-e H o n~ and choose /Main output device/ (~D~) or /Notification output
+device/ (~M~). The equivalent command is ~M-x omnivox-output-devices RET~;
+a prefix argument chooses notifications. For a separate notification device,
+first use Automatic, Left, Right or Both notification routing so that a
+separate worker exists. [[info:emacsvox#Notification Routing][Notification Routing]] explains that arrangement.
+
+Press ~d~ for the Transient list of /Follow system default/ and available
+outputs. It also retains
+a missing saved or applied device as unavailable. Names are labels: identical
+names can identify different devices, so duplicate names have distinct numbers
+and each choice's Help includes its unique device ID. /Selected/, /Applied/,
+/Saved/ and /Connected/ describe distinct states. Selected is the candidate
+waiting for Apply. In default
+mode, the applied choice is Follow system default while Connected identifies
+the endpoint currently used.
+
+1. Browse the choices with arrows to hear their names and states. ~RET~ selects
+   a candidate and returns to the device menu without changing audio. ~q~
+   returns without selecting.
+2. Press ~a~ to Apply that candidate to this lane. The worker opens it while
+   the old route remains usable. If preparation fails or is cancelled, a
+   healthy old route keeps working. Success cancels interrupted speech and
+   cues, then sends fresh output to the selected device. Engines stay loaded;
+   voice, rate, channel and volume settings remain in force.
+3. Confirm the result and listen to subsequent speech. Use ~g~ to refresh
+   live status and availability. Connected reports a working software
+   connection; it does not prove that a headset is audible.
+4. Press ~s~ to Save the confirmed applied choice for this host and lane in
+   Customize. Saving does not apply the selected candidate. Main and notification
+   choices are independent. ~q~ returns without applying or saving the current
+   candidate; an already applied choice remains active for this session.
+
+Saved choices use the speech host's name, backend and device ID. Renaming the
+host creates a different scope. Friendly-name changes do not select another
+device. Explicit =--audio-device= or =OMNIVOX_AUDIO_DEVICE= startup overrides
+take precedence over saved choices. Ordinary startup resolves saved choices
+inside the worker without an extra discovery process.
+
+An explicit device never falls back to speakers when disconnected. Its pending
+audio is cancelled, requests during the outage are discarded, and reconnect
+does not replay them. Reconnect the device, or explicitly Apply Follow system
+default or another device. Notifications do not fall back to main speech when
+their intended physical destinations differ or are unresolved; notification
+history retains their text.
+
+An unanswered Apply remains unknown. Press ~g~ to reconcile it or ~c~ to request
+cancellation; cancellation cannot undo a completed change. Automatic worker
+replacement preserves the last confirmed destination and refuses to guess
+while an Apply is unresolved. If the worker has died, Apply asks whether to
+recover it on the selected output. Recovery still requires confirmed cleanup
+of the previous native worker. A fresh Emacs session uses the saved choice;
+unsaved session choices need not survive exit. The explicit emergency-speech
+command ignores these ordinary device preferences.
+
 *** Remote Workstation Speech (Preview)
 :PROPERTIES:
 :TEXINFO_NODE: no

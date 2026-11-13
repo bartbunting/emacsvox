@@ -64,6 +64,23 @@ bounded, can contain speech text and paths, and do not enable logging.
 =M-x emacsvox-aural-reproduce-delivery= checks a saved capture without
 speaking it; a match confirms client construction, not audible playback.
 
+With a supporting Windows Omnivox development build, output settings offer
+separate physical devices for main and notification speech. Browse Transient
+choices with arrows and Enter to select without changing audio. Apply without
+restarting engines, then Save the applied choice
+for future sessions. Missing explicit devices never fall back to another output;
+recovery retains the confirmed choice. Other backends keep their existing routes.
+
+When notification output is unavailable, command errors and Quit feedback respect
+the device fallback policy. They no longer create abandoned main-speech workers
+that can block later recovery.
+
+Supporting local Omnivox workers also apply notification Left, Right and Both
+channels immediately, including tones and earcons. Main output retires only the
+notifier; choosing a separate route starts it without restarting main speech.
+Save separately to keep the route for startup. Older workers and other backends
+retain their restart controls.
+
 Voice Workbench keeps the latest Apply result when older requests finish.
 Immediate failures are no longer announced as pending, and failed processes
 retain their original speech-lane labels. Errors in status hooks no longer

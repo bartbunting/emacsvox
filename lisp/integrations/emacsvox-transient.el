@@ -1439,6 +1439,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                          emacsvox-interaction--presentation
                          emacsvox-output-settings--route emacsvox-output-settings--output
                          emacsvox-output-settings--remapping
+                     omnivox-output-devices--menu omnivox-output-devices--choices
                      emacsvox-capitalization-cue emacsvox-spelling
                      emacsvox-spelling-timing
                          emacsvox-tone-editor emacsvox-tone-editor-waveform

@@ -88,6 +88,9 @@ ui/omnivox-engine-configuration.elc \
 ui/omnivox-punctuation.elc \
 speech/omnivox-punctuation-profiles.elc \
 speech/omnivox-preferences.elc \
+speech/omnivox-audio-devices.elc \
+speech/omnivox-audio-channels.elc \
+ui/omnivox-output-devices.elc \
 ui/omnivox-espeak-variants.elc \
 speech/tts-lifecycle.elc \
 speech/tts-voice-api.elc \
@@ -519,6 +522,7 @@ ui/emacsvox-tree-settings.elc: ui/emacsvox-tone-editor.elc core/emacsvox-text-tr
 ui/emacsvox-table-settings.elc: core/emacsvox-table-reader.elc ui/emacsvox-aural-menu.elc aural/emacsvox-aural-preview.elc
 ui/emacsvox-settings.elc: ui/emacsvox-aural-menu.elc
 ui/emacsvox-output-settings.elc: ui/emacsvox-aural-menu.elc aural/emacsvox-aural-spatial.elc aural/emacsvox-aural-preview.elc
+ui/omnivox-output-devices.elc: speech/omnivox-audio-devices.elc ui/emacsvox-aural-menu.elc
 ui/emacsvox-reading-settings.elc: core/emacsvox-reading-lines.elc ui/emacsvox-tone-editor.elc ui/emacsvox-aural-menu.elc
 ui/emacsvox-line-cues.elc: ui/emacsvox-tone-editor.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-editor.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-tools.elc
 ui/emacsvox-interaction.elc: ui/emacsvox-aural-menu.elc
@@ -561,7 +565,7 @@ aural/emacsvox-aural-submission.elc: \
 aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-planner.elc \
 aural/emacsvox-aural-source.elc
 speech/tts-lifecycle.elc: aural/emacsvox-aural-transport.elc speech/tts-queue-state.elc
-speech/tts-speak.elc: speech/tts-voice-api.elc speech/tts-lifecycle.elc aural/emacsvox-aural-transport.elc
+speech/tts-speak.elc: speech/tts-voice-api.elc speech/tts-lifecycle.elc speech/omnivox-audio-devices.elc speech/omnivox-audio-channels.elc aural/emacsvox-aural-transport.elc
 speech/voice-setup.elc: \
 speech/tts-speak.elc aural/emacsvox-aural-compatibility-voice.elc
 voices/voice-defs.elc: speech/voice-setup.elc

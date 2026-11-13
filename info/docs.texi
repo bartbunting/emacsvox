@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 378 loaded; 0 intentionally omitted.
+@c Modules: 381 loaded; 0 intentionally omitted.
 @c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
 @c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
 @c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
@@ -62,22 +62,23 @@
 @c Loaded: integrations/emacsvox-xref.elc integrations/emacsvox-yaml.elc integrations/emacsvox-yasnippet.elc integrations/gm-nnir.elc integrations/gmaps.elc
 @c Loaded: integrations/ladspa.elc integrations/light.elc integrations/omaps.elc integrations/sox.elc integrations/tetris.elc
 @c Loaded: integrations/xbacklight.elc speech/dectalk-voices.elc speech/emacsvox-windows-speech.elc speech/espeak-voices.elc speech/mac-voices.elc
-@c Loaded: speech/omnivox-choice-codec.elc speech/omnivox-control-codec.elc speech/omnivox-discovery.elc speech/omnivox-engine-settings.elc speech/omnivox-inventory.elc
-@c Loaded: speech/omnivox-library-apply.elc speech/omnivox-library-runtime.elc speech/omnivox-native-codec.elc speech/omnivox-native-guard.elc speech/omnivox-parameters-codec.elc
-@c Loaded: speech/omnivox-parameters.elc speech/omnivox-preferences.elc speech/omnivox-preview.elc speech/omnivox-punctuation-profiles.elc speech/omnivox-remote.elc
-@c Loaded: speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc speech/plain-voices.elc speech/swiftmac-voices.elc
-@c Loaded: speech/tts-lifecycle.elc speech/tts-queue-state.elc speech/tts-speak.elc speech/tts-voice-api.elc speech/voice-setup.elc
-@c Loaded: ui/emacsvox-aural-change-feedback.elc ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc
-@c Loaded: ui/emacsvox-aural-home.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc
-@c Loaded: ui/emacsvox-aural-semantics.elc ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc
-@c Loaded: ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-apply.elc
-@c Loaded: ui/emacsvox-aural-voice-workbench-library.elc ui/emacsvox-aural-voice-workbench-preview.elc ui/emacsvox-aural-voice-workbench-routing.elc ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc
-@c Loaded: ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc
-@c Loaded: ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-reading-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc
-@c Loaded: ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc
-@c Loaded: ui/emacsvox-tone-editor.elc ui/emacsvox-tree-settings.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc
-@c Loaded: ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc
-@c Loaded: voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
+@c Loaded: speech/omnivox-audio-channels.elc speech/omnivox-audio-devices.elc speech/omnivox-choice-codec.elc speech/omnivox-control-codec.elc speech/omnivox-discovery.elc
+@c Loaded: speech/omnivox-engine-settings.elc speech/omnivox-inventory.elc speech/omnivox-library-apply.elc speech/omnivox-library-runtime.elc speech/omnivox-native-codec.elc
+@c Loaded: speech/omnivox-native-guard.elc speech/omnivox-parameters-codec.elc speech/omnivox-parameters.elc speech/omnivox-preferences.elc speech/omnivox-preview.elc
+@c Loaded: speech/omnivox-punctuation-profiles.elc speech/omnivox-remote.elc speech/omnivox-voices.elc speech/outloud-voices.elc speech/pip.elc
+@c Loaded: speech/plain-voices.elc speech/swiftmac-voices.elc speech/tts-lifecycle.elc speech/tts-queue-state.elc speech/tts-speak.elc
+@c Loaded: speech/tts-voice-api.elc speech/voice-setup.elc ui/emacsvox-aural-change-feedback.elc ui/emacsvox-aural-doctor.elc ui/emacsvox-aural-editor.elc
+@c Loaded: ui/emacsvox-aural-feature-fragments.elc ui/emacsvox-aural-feedback-details.elc ui/emacsvox-aural-home.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-overrides.elc
+@c Loaded: ui/emacsvox-aural-profiles.elc ui/emacsvox-aural-recent-feedback.elc ui/emacsvox-aural-semantics.elc ui/emacsvox-aural-sound-packs.elc ui/emacsvox-aural-ui.elc
+@c Loaded: ui/emacsvox-aural-voice-bulk.elc ui/emacsvox-aural-voice-context.elc ui/emacsvox-aural-voice-editor.elc ui/emacsvox-aural-voice-engine-controls.elc ui/emacsvox-aural-voice-menu.elc
+@c Loaded: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-voice-workbench-apply.elc ui/emacsvox-aural-voice-workbench-library.elc ui/emacsvox-aural-voice-workbench-preview.elc ui/emacsvox-aural-voice-workbench-routing.elc
+@c Loaded: ui/emacsvox-aural-voice-workbench-views.elc ui/emacsvox-aural-voice-workbench.elc ui/emacsvox-capitalization.elc ui/emacsvox-indentation.elc ui/emacsvox-interaction.elc
+@c Loaded: ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc ui/emacsvox-reading-settings.elc
+@c Loaded: ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc ui/emacsvox-sound-library.elc
+@c Loaded: ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-tree-settings.elc ui/emacsvox-welcome.elc
+@c Loaded: ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc ui/omnivox-library.elc ui/omnivox-output-devices.elc
+@c Loaded: ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc
+@c Loaded: voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -430,6 +431,8 @@ This chapter documents a total of 1735 commands and 261 options.
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
+* omnivox-audio-channels:: Live notification channel routing.
+* omnivox-audio-devices:: Independent physical output choices.
 * omnivox-catalogue:: Available voices and downloads.
 * omnivox-choice-codec:: Individual voice wire values.
 * omnivox-control-codec:: Omnivox control wire data.
@@ -443,6 +446,7 @@ This chapter documents a total of 1735 commands and 261 options.
 * omnivox-library-runtime:: Native voice library runtime.
 * omnivox-native-codec:: Native voice wire values.
 * omnivox-native-guard:: Independent native cleanup control.
+* omnivox-output-devices:: Choose physical speech outputs.
 * omnivox-parameters:: Asynchronous engine controls.
 * omnivox-parameters-codec:: Engine parameter metadata.
 * omnivox-preferences:: Independent host preference reload.
@@ -18777,7 +18781,7 @@ Speak current outline section starting from point
 @node emacsvox-output-settings
 @section emacsvox-output-settings
 
-Global output policy; persistence and speech restart are explicit actions.
+Global output policy; live routing and persistence are separate actions.
 
 @subsection Emacsvox-Output-Settings Commands
 
@@ -28040,6 +28044,19 @@ Default Value:
 Implements geocoding via the Open Street Maps API
 https://nominatim.org/
 
+@node omnivox-audio-channels
+@section omnivox-audio-channels
+
+Change all outputs of one worker together.  Main speech keeps running when
+notification ownership changes.  Customize owns persistence, separately.
+
+@node omnivox-audio-devices
+@section omnivox-audio-devices
+
+Saved choices are projected into ordinary startup, resolved by the speech
+host, and kept separate from confirmed session choices and engine snapshots.
+Apply is asynchronous.  An unanswered operation blocks assumed recovery.
+
 @node omnivox-catalogue
 @section omnivox-catalogue
 
@@ -28136,6 +28153,12 @@ Private previews require native execution for the actual selected choice.
 Experimental, opt-in local control for a native cleanup authority.  Speech
 remains on the owner's existing pipe.  Retain uncertain authorities and
 require exact tree AND I/O proof before explicit minimal replacement.
+
+@node omnivox-output-devices
+@section omnivox-output-devices
+
+A menu visit owns its candidate and asynchronous refresh identity.  Browsing
+never applies output; Apply and Save retain the independent lane contract.
 
 @node omnivox-parameters
 @section omnivox-parameters

@@ -14,6 +14,41 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Compatibility Speech Servers,  Next: Backend Diagnostics And Ownership,  Prev: Selecting And Checking Omnivox,  Up: Speech Backends
+
+14.8 Compatibility Speech Servers
+=================================
+
+These retained direct servers support existing installations, not the
+recommended first setup or platform matrix:
+
+‘espeak’
+     Direct Linux Tcl server.  ‘make espeak’ needs Tclx at runtime, Tcl
+     8.6 headers, eSpeak NG development libraries, and C++.  Useful for
+     compatibility testing; new installations should use Omnivox.
+‘swiftmac’
+     Direct Swift macOS server, needing Swift 5.9 or newer and ‘make
+     swiftmac’.  See ‘servers/mac-swiftmac/Readme.org’ for this
+     alternative to Omnivox's AVSpeechSynthesizer engine.
+‘mac’
+     Legacy Python/PyObjC server.  The unset Darwin selector still names
+     it as a compatibility default, not an initial-user route.  It needs
+     Foundation, AppKit, and PyObjCTools.
+‘outloud’
+     Direct Linux IBM TTS/Eloquence adapter with separately licensed
+     compatible runtime.  Emacsvox does not distribute it.  Voxin
+     availability is described at <https://voxin.oralux.net>.
+‘dtk-soft’
+     Direct Software DECtalk adapter with separately installed runtime.
+     See ‘servers/software-dtk/Readme.org’.  Licensed runtimes are not
+     distributed by Emacsvox.
+
+   The native Windows audio, standalone Eloquence, and standalone
+DECtalk bridges under ‘servers/’ are advanced WSL compatibility paths.
+Piper is an optional Omnivox engine/model workflow, not a primary
+Emacsvox server.
+
+
 File: emacsvox.info,  Node: Backend Diagnostics And Ownership,  Prev: Compatibility Speech Servers,  Up: Speech Backends
 
 14.9 Backend Diagnostics And Responsibilities

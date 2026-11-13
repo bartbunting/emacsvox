@@ -29,7 +29,7 @@ everything described in this section.
 * Menu:
 
 * Set the reading scope, rate, and punctuation: Reading Scope And Punctuation.  Set rate or punctuation for the current buffer and understand saving.
-* Understand the main and notification streams: Notification Routing.  Choose where notifications play and distinguish selection from restart.
+* Understand the main and notification streams: Notification Routing.  Choose where notifications play, preview the route, and save it separately.
 * Adjust output volumes: Output Volumes.  Adjust speech and cue levels without confusing volume with routing.
 * Adjust an integration's speech settings: Integration Speech Settings.  Find focused controls and their integration-specific saving boundaries.
 
@@ -618,18 +618,38 @@ and speech delivered together.  Integrations may deliberately route
 particular asynchronous actions differently: Notmuch's explicit refresh,
 for example, uses interruptible main speech.
 
-   Open ‘C-e H o n’ for routing.  ‘r’ opens a list of automatic, left,
-right, both channels, main output, and other device.  The configured
-choice is focused and marked.  Arrows browse without applying; ‘<RET>’
-selects the route for the next restart and returns to the Route control.
-‘q’ or ‘C-g’ cancels the list.  Other device asks for an existing device
-name; cancelling that prompt stays on Other device and retains the
-previous route.  Selecting does not restart speech.
+   Open ‘C-e H o n’ for routing, then ‘r’ for Automatic, Left, Right,
+Both channels or Main output.  The configured choice is focused and
+marked.  Arrows browse without applying; ‘<RET>’ chooses and returns to
+the Route control.  ‘q’ or ‘C-g’ cancels the list.
 
-   ‘N’ previews active output, which may still use the old route; ‘R’
-restarts after confirmation.  ‘h’ inspects a notification-history
-snapshot, returning with ‘q’.  ‘S’ saves routing and spatial defaults
-without a restart.
+   With a supporting local Omnivox worker, the menu says _applies live_.
+Left, Right and Both change subsequent notification speech, tones and
+earcons without restarting either speech worker.  Audio already
+submitted keeps its previous route.  Main output retires only the
+notification worker; choosing a separate route again starts that worker
+while main speech stays running.  Automatic uses a separate worker on
+both channels.  Engine choices and physical output selections are
+retained.
+
+   Press ‘N’ to preview the active route.  Choose the previous route to
+reverse an experiment; ‘S’ separately saves routing and spatial defaults
+for startup.  If a change is reported as unconfirmed, choose its route
+again before saving.  ‘h’ inspects a notification-history snapshot,
+returning with ‘q’.
+
+   Older Omnivox workers, remote speech and other backends retain the
+_next restart_ menu.  There, selecting only sets the next route; ‘N’
+still previews the active arrangement and ‘R’ restarts speech after
+confirmation.  That menu also offers Other device for an existing device
+name; cancelling its prompt retains the previous choice and stays in the
+list.
+
+   For physical devices on a supporting Windows Omnivox build, ‘D’ opens
+main outputs and ‘M’ opens notification outputs.  Press ‘d’ to browse
+their Transient choices.  Selecting a candidate, applying it and saving
+it are separate actions, described in *note Selecting And Checking
+Omnivox: (emacsvox)Selecting And Checking Omnivox.
 
    With Omnivox, Automatic normally uses an independent notification
 process; left/right/both choose its route.  _Use main output
@@ -639,8 +659,8 @@ use their configured device or fall back to main speech.  In Lisp,
 ‘default’ or an empty string means main output; use descriptive labels
 for ordinary configuration.
 
-   After changing the route, ‘C-e d C-n’ also initialises the
-arrangement.  Use notification history to read an announcement you
+   ‘C-e d C-n’ explicitly reinitialises the notification arrangement
+when needed.  Use notification history to read an announcement you
 missed.  Ordinary obsolete-main-speech cancellation is local to main;
 explicit ‘tts-stop’ stops both streams.
 
@@ -5712,7 +5732,77 @@ tts-restart’ restarts after a deliberate configuration change.  The
 complete isolated start, expected speech, and recovery remain in *note
 Installation: Installation.
 
-14.7.1 Remote Workstation Speech (Preview)
+14.7.1 Choose physical output devices
+-------------------------------------
+
+An updated Windows development build of Omnivox can send main speech and
+notifications to different physical outputs.  This requires the server's
+‘audio_device_selection_v1’ capability; the pinned 1.18.0 release does
+not provide it.  It works with native Windows Emacs or WSL Emacs
+launching the Windows worker.  Linux/WSLg, macOS, PulseAudio and remote
+device selection are not provided by this interface.
+
+   Open ‘C-e H o n’ and choose _Main output device_ (‘D’) or
+_Notification output device_ (‘M’).  The equivalent command is ‘M-x
+omnivox-output-devices <RET>’; a prefix argument chooses notifications.
+For a separate notification device, first use Automatic, Left, Right or
+Both notification routing so that a separate worker exists.  *note
+Notification Routing: (emacsvox)Notification Routing. explains that
+arrangement.
+
+   Press ‘d’ for the Transient list of _Follow system default_ and
+available outputs.  It also retains a missing saved or applied device as
+unavailable.  Names are labels: identical names can identify different
+devices, so duplicate names have distinct numbers and each choice's Help
+includes its unique device ID.  _Selected_, _Applied_, _Saved_ and
+_Connected_ describe distinct states.  Selected is the candidate waiting
+for Apply.  In default mode, the applied choice is Follow system default
+while Connected identifies the endpoint currently used.
+
+  1. Browse the choices with arrows to hear their names and states.
+     ‘<RET>’ selects a candidate and returns to the device menu without
+     changing audio.  ‘q’ returns without selecting.
+  2. Press ‘a’ to Apply that candidate to this lane.  The worker opens
+     it while the old route remains usable.  If preparation fails or is
+     cancelled, a healthy old route keeps working.  Success cancels
+     interrupted speech and cues, then sends fresh output to the
+     selected device.  Engines stay loaded; voice, rate, channel and
+     volume settings remain in force.
+  3. Confirm the result and listen to subsequent speech.  Use ‘g’ to
+     refresh live status and availability.  Connected reports a working
+     software connection; it does not prove that a headset is audible.
+  4. Press ‘s’ to Save the confirmed applied choice for this host and
+     lane in Customize.  Saving does not apply the selected candidate.
+     Main and notification choices are independent.  ‘q’ returns without
+     applying or saving the current candidate; an already applied choice
+     remains active for this session.
+
+   Saved choices use the speech host's name, backend and device ID.
+Renaming the host creates a different scope.  Friendly-name changes do
+not select another device.  Explicit ‘--audio-device’ or
+‘OMNIVOX_AUDIO_DEVICE’ startup overrides take precedence over saved
+choices.  Ordinary startup resolves saved choices inside the worker
+without an extra discovery process.
+
+   An explicit device never falls back to speakers when disconnected.
+Its pending audio is cancelled, requests during the outage are
+discarded, and reconnect does not replay them.  Reconnect the device, or
+explicitly Apply Follow system default or another device.  Notifications
+do not fall back to main speech when their intended physical
+destinations differ or are unresolved; notification history retains
+their text.
+
+   An unanswered Apply remains unknown.  Press ‘g’ to reconcile it or
+‘c’ to request cancellation; cancellation cannot undo a completed
+change.  Automatic worker replacement preserves the last confirmed
+destination and refuses to guess while an Apply is unresolved.  If the
+worker has died, Apply asks whether to recover it on the selected
+output.  Recovery still requires confirmed cleanup of the previous
+native worker.  A fresh Emacs session uses the saved choice; unsaved
+session choices need not survive exit.  The explicit emergency-speech
+command ignores these ordinary device preferences.
+
+14.7.2 Remote Workstation Speech (Preview)
 ------------------------------------------
 
 Emacs can run on an SSH host while Omnivox, installed voices, and
@@ -5790,38 +5880,3 @@ means no file-based icons.  For an occupied remote port, change the left
 side of ‘-R’ and match ‘omnivox-remote-port’.  Authentication failure
 indicates differing tokens or excessively broad file permissions; a busy
 service belongs to another connection.
-
-
-File: emacsvox.info,  Node: Compatibility Speech Servers,  Next: Backend Diagnostics And Ownership,  Prev: Selecting And Checking Omnivox,  Up: Speech Backends
-
-14.8 Compatibility Speech Servers
-=================================
-
-These retained direct servers support existing installations, not the
-recommended first setup or platform matrix:
-
-‘espeak’
-     Direct Linux Tcl server.  ‘make espeak’ needs Tclx at runtime, Tcl
-     8.6 headers, eSpeak NG development libraries, and C++.  Useful for
-     compatibility testing; new installations should use Omnivox.
-‘swiftmac’
-     Direct Swift macOS server, needing Swift 5.9 or newer and ‘make
-     swiftmac’.  See ‘servers/mac-swiftmac/Readme.org’ for this
-     alternative to Omnivox's AVSpeechSynthesizer engine.
-‘mac’
-     Legacy Python/PyObjC server.  The unset Darwin selector still names
-     it as a compatibility default, not an initial-user route.  It needs
-     Foundation, AppKit, and PyObjCTools.
-‘outloud’
-     Direct Linux IBM TTS/Eloquence adapter with separately licensed
-     compatible runtime.  Emacsvox does not distribute it.  Voxin
-     availability is described at <https://voxin.oralux.net>.
-‘dtk-soft’
-     Direct Software DECtalk adapter with separately installed runtime.
-     See ‘servers/software-dtk/Readme.org’.  Licensed runtimes are not
-     distributed by Emacsvox.
-
-   The native Windows audio, standalone Eloquence, and standalone
-DECtalk bridges under ‘servers/’ are advanced WSL compatibility paths.
-Piper is an optional Omnivox engine/model workflow, not a primary
-Emacsvox server.
