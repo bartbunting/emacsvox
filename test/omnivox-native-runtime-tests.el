@@ -154,6 +154,60 @@
        (should-not (plist-member (plist-get span :span) :native))
        (should-not (plist-member (plist-get span :span) :acss))))))
 
+(ert-deftest omnivox-native-runtime-timeout-repairs-speech-without-reopening-apply ()
+  "Delayed registry evidence restores coherent speech independently per lane."
+  (omnivox-native-runtime-test--with-speech
+   (let ((omnivox--logical-registry-signature nil) expire requests results)
+     (cl-letf (((symbol-function 'run-at-time)
+                (lambda (_time _repeat fn &rest _args) (setq expire fn) nil))
+               ((symbol-function 'process-send-string)
+                (lambda (process text)
+                  (push (cons process (omnivox--decode-control-response
+                                       (substring text (length "omnivox_control {") -2) t)) requests))))
+       (omnivox-apply-voice-configuration (lambda (result) (push result results)))
+       (let ((apply-expiry expire)) (funcall apply-expiry)))
+     (should (= 1 (length results)))
+     (should (eq 'failed (plist-get (car results) :status)))
+     (let ((peer (omnivox--choice-current-registration notification)))
+       (omnivox-preview-test--control-line speaker
+                                          (omnivox-native-runtime-test--ack (cdr (assq speaker requests))))
+       (should (eq peer (omnivox--choice-current-registration notification))))
+     (tts-speak (propertize "After delayed acknowledgement." 'personality 'bolden))
+     (should (= (plist-get (omnivox-choice-consumer-test--timeline (car writes)) :registry_generation)
+                (plist-get (cdr (assq speaker requests)) :registry_generation)))
+     (omnivox-preview-test--control-line notification
+                                        (omnivox-native-runtime-test--ack (cdr (assq notification requests))))
+     (should (= 1 (length results)))
+     (should (eq 'failed (plist-get (car results) :status)))
+     (dolist (lane (list speaker notification))
+       (should (zerop (hash-table-count (omnivox--pending-requests lane))))))))
+
+(ert-deftest omnivox-native-runtime-timeout-rejects-invalid-or-obsolete-evidence ()
+  "Late observation cannot accept invalid content, a replaced lane or rollback."
+  (dolist (case '(malformed replaced newer))
+    (omnivox-test--with-choice-registration
+     (emacsvox-test--with-native-storage
+      (setq tts-notify-process nil)
+      (omnivox-native-runtime-test--enable speaker)
+      (let (expire)
+        (cl-letf (((symbol-function 'run-at-time)
+                   (lambda (_time _repeat fn &rest _args) (setq expire fn) nil)))
+          (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+          (let ((apply-expiry expire)) (funcall apply-expiry)))
+        (let ((response (omnivox-native-runtime-test--ack (cdr (car requests)))) expected)
+          (pcase case
+            ('malformed (setf (plist-get response :definition_count) -1))
+            ('replaced (setq tts-speaker-process notification))
+            ('newer
+             (setq omnivox--logical-registry-signature nil)
+             (omnivox-register-logical-voices)
+             (omnivox-preview-test--control-line speaker (omnivox-native-runtime-test--ack (cdr (car requests))))
+             (setq expected (process-get speaker omnivox--choice-registration-property))))
+          (omnivox-preview-test--control-line speaker response)
+          (should (eq expected (process-get speaker omnivox--choice-registration-property)))
+          (should (= 1 (length terminal)))
+          (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))))))
+
 (ert-deftest omnivox-native-runtime-refresh-updates-status-without-rewriting-old-evidence ()
   (omnivox-test--with-choice-registration
    (emacsvox-test--with-native-storage

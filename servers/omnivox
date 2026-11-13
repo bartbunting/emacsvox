@@ -12,6 +12,8 @@ set -eu
 server_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 program="$server_directory/omnivox-bin/current/omnivox.exe"
 windows_runtime=false
+emergency_mode=false
+case ${1-} in --emergency-owner|--emergency-version|--native-guard-control) emergency_mode=true; unset ESPEAK_NG_DATA ;; esac
 explicit_piper_model=${OMNIVOX_PIPER_MODEL-}
 omnivox_config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 omnivox_config_file=${EMACSVOX_OMNIVOX_CONFIG_FILE:-"$omnivox_config_home/emacsvox/omnivox-program"}
@@ -70,6 +72,7 @@ elif [ -x "$program" ]; then
         fi
     fi
 
+    if ! $emergency_mode; then
     # Reading eSpeak's many small data files through \\wsl.localhost adds
     # several seconds to startup and to native voice discovery.
     espeak_data_path_file="$server_directory/omnivox-bin/current/espeak-ng-data.path"
@@ -119,6 +122,7 @@ elif [ -x "$program" ]; then
             export OMNIVOX_LAUNCHER_PIPER_DEFAULT
         fi
     fi
+    fi
 else
     resolved_program=$(command -v omnivox 2>/dev/null || :)
     if [ -z "$resolved_program" ] || [ "$resolved_program" -ef "$0" ]; then
@@ -127,6 +131,9 @@ else
         exit 127
     fi
 fi
+
+# Capability and lifecycle control entries need no speech data or management state.
+case ${1-} in --emergency-version|--native-guard-control) exec "$resolved_program" "$@" ;; esac
 
 # An explicitly selected development bundle can keep its executable on Windows
 # and its matching eSpeak data in shared storage.  Resolve only metadata for
@@ -152,6 +159,15 @@ if $windows_runtime && [ -z "${ESPEAK_NG_DATA-}" ]; then
             break
         fi
     done
+fi
+
+# Emergency speech uses only this exact installation's data.  Skip preference
+# conversion, optional discovery and disk logging; Emacs retains stderr itself.
+if $emergency_mode; then
+    if [ -n "${ESPEAK_NG_DATA-}" ]; then
+        exec "$resolved_program" "$@" --espeak-data "$ESPEAK_NG_DATA"
+    fi
+    exec "$resolved_program" "$@"
 fi
 
 # Private per-Emacs-profile settings use paths visible to Emacs.  Convert only

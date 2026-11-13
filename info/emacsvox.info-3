@@ -14,6 +14,90 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Backend Diagnostics And Ownership,  Prev: Compatibility Speech Servers,  Up: Speech Backends
+
+14.9 Backend Diagnostics And Responsibilities
+=============================================
+
+Local server messages/errors remain in diagnostics buffers, hidden from
+the ordinary buffer list by default.  Use ‘C-e H D m’ for main or ‘C-e H
+D n’ for notification diagnostics, or ‘M-x tts-show-diagnostics’ with
+‘Speaker’ or ‘Notify’.  Missing local diagnostics are reported rather
+than invented.
+
+   Set ‘tts-hide-diagnostic-buffers’ to nil in Customize and restart
+speech to include them in the ordinary list.  Existing diagnostics are
+retained; custom buffer switchers may show hidden buffers independently.
+
+   Choose the diagnostic at the failed layer:
+
+‘omnivox’ is not found
+     In WSL, run ‘./bin/emacsvox-wsl-install --check’ and inspect its
+     saved path.  On other POSIX systems check ‘PATH’ or an absolute
+     ‘OMNIVOX_PROGRAM’.  Keep ‘espeak-ng-data’ and
+     ‘third-party-licenses’ beside the executable.
+‘omnivox --check’ errors or is inaudible
+     Diagnose below Emacsvox using Omnivox's build guide
+     (https://github.com/bartbunting/omnivox/blob/main/README.md),
+     platform status
+     (https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md),
+     and diagnostics guide
+     (https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md).
+     Do not change Emacs configuration before tone/speech work.
+The check passes but Emacsvox is silent
+     Confirm ‘TTS_PROGRAM’ was ‘omnivox’ before setup loaded, then use
+     ‘M-x tts-speak-version’.  Rerun the WSL installer check for a
+     release installation.  For development source staging, run ‘make
+     verify-windows-omnivox-runtime’ and restart after restaging.
+A process starts and later fails
+     The POSIX/WSL launcher retains private bounded stderr logs at
+     ‘$XDG_STATE_HOME/emacsvox/omnivox’, normally
+     ‘~/.local/state/emacsvox/omnivox’.  Spoken text is excluded unless
+     ‘OMNIVOX_LOG_SYNTHESIS_TEXT’ is explicitly enabled; that can expose
+     passwords, mail, and documents.
+Speech works but is delayed
+     Note whether diagnostic logging is already enabled.  Use ‘C-e d D’
+     to enable it only if needed, reproduce one short non-confidential
+     presentation, then restore its previous on/off state.  The default
+     log path is ‘~/.emacsvox-aural-diagnostics.log’ and can be changed
+     with ‘C-u C-e d D’ when enabling.  Records ‘dispatch-sent’,
+     ‘mixer-source-observed’, and ‘playback-terminal-observed’ share a
+     dispatch ID.  Match it in Omnivox logs to separate submission,
+     queueing, synthesis, and mixer-source delay.  This Emacs log is off
+     by default because submitted speech text is complete.  A mixer
+     observation is not physical output; device/hardware buffering can
+     add delay.  The diagnostics menu's ‘l’ also exposes the explicit
+     session logging control with its privacy warning.
+A presentation needs a repeatable construction example
+     Run ‘M-x emacsvox-aural-record-next-delivery’ and choose ‘main’ or
+     ‘notification’.  Repeat the affected action within 60 seconds.  The
+     recorder captures one delivery on that stream; its own control
+     announcements and independent callback speech are excluded.  Prefer
+     a short, non-confidential example.  It does not enable diagnostic
+     logging.
+
+     ‘M-x emacsvox-aural-recording-status’ reports capture state, client
+     outcome and size.  ‘M-x emacsvox-aural-export-recording’ saves a
+     local JSON file and clears the retained inputs.  Its prompt
+     explains that speech text and resource paths may be included.
+     Review the file before sharing.  A failed save retains the capture;
+     ‘M-x emacsvox-aural-cancel-recording’ discards it without stopping
+     speech.  An exported file remains until you delete it.
+
+     A capture is limited to 256 KiB.  Oversized or unsupported input
+     produces an incomplete summary while speech continues.  ‘M-x
+     emacsvox-aural-reproduce-delivery’ checks a saved file and
+     reconstructs client data without playing it.  A matching result
+     establishes construction only, not server admission or sound.  This
+     diagnostic is separate from Recent Feedback and audible Replay.
+
+   For server selection, the launcher and Windows staging, use this
+manual.  For Omnivox builds, engine behaviour, command-line options and
+protocols, use the linked Omnivox guides.  The README beside each
+compatibility server documents that adapter and any separately licensed
+runtime it needs.
+
+
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  Prev: Speech Backends,  Up: Top
 
 15 Emacsvox Keyboard Commands.

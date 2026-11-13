@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1733 commands and 261 options.
+   This chapter documents a total of 1735 commands and 261 options.
 
 * Menu:
 
@@ -778,8 +778,10 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omnivox-library-apply:: Coordinate voice-library activation.
 * omnivox-library-runtime:: Native voice library runtime.
 * omnivox-native-codec:: Native voice wire values.
+* omnivox-native-guard:: Independent native cleanup control.
 * omnivox-parameters:: Asynchronous engine controls.
 * omnivox-parameters-codec:: Engine parameter metadata.
+* omnivox-preferences:: Independent host preference reload.
 * omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-punctuation:: Review and edit host punctuation.
 * omnivox-punctuation-profiles:: Negotiated punctuation profiles.

@@ -437,5 +437,40 @@
     (should (symbolp decoded))
     (should-not (intern-soft name))))
 
+(ert-deftest emacsvox-aural-recording-owned-process-death-keeps-notification-independent ()
+  "Retained recovery ownership cannot publish cancelled recorded speech."
+  (emacsvox-recording-test--isolated
+    (omnivox-choice-consumer-test--with-speech
+      (let ((command (symbol-function 'process-command))
+            (copier (symbol-function 'emacsvox-aural--own-candidate-data))
+            (emacsvox-speak-messages nil))
+        (cl-letf (((symbol-function 'process-command)
+                   (lambda (process)
+                     (if (eq process speaker) '("omnivox" "--voice-library-owner")
+                       (funcall command process)))))
+          (set-process-sentinel speaker #'tts--speech-process-sentinel)
+          (emacsvox-aural-record-next-delivery 'main)
+          (setq writes nil)
+          (cl-letf (((symbol-function 'emacsvox-aural--own-candidate-data)
+                     (lambda (data)
+                       (prog1 (funcall copier data) (delete-process speaker)))))
+            (condition-case nil (tts-speak "cancelled during preparation") (error nil)))
+          (should-not (process-live-p speaker))
+          (should (eq tts-speaker-process speaker))
+          (should (process-live-p notification))
+          (should-not writes)
+          (should (zerop (or (process-get speaker 'tts--dispatch-owner-count) 0)))
+          (should (zerop (or (process-get speaker 'tts--dispatch-metadata-bytes) 0)))
+          (should-not emacsvox-aural--recording-observer)
+          (let* ((result (emacsvox-recording-test--roundtrip))
+                 (capture (emacsvox-aural-recording--json (emacsvox-aural-recording--bundle))))
+            (should (memq (plist-get result :status) '(matching incomplete)))
+            (should (memq (plist-get (plist-get result :outcome) :disposition) '(cancelled rejected)))
+            (tts-notify "notification survives" t)
+            (should writes)
+            (should (cl-every (lambda (write) (eq (car write) notification)) writes))
+            (should (equal capture (emacsvox-aural-recording--json
+                                    (emacsvox-aural-recording--bundle))))))))))
+
 (provide 'emacsvox-aural-recording-tests)
 ;;; emacsvox-aural-recording-tests.el ends here
