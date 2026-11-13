@@ -91,8 +91,9 @@
 (defun emacsvox-aural-change-feedback--part-rows ()
   "Return parts in playback order, retaining their captured content voices."
   (cl-loop
-   for plan in (emacsvox-aural-presentation-record-effective-plans
-                emacsvox-aural-change-feedback-record)
+   for plan in (emacsvox-aural-inspection--view-plans
+                (emacsvox-aural-inspection--record-view
+                 emacsvox-aural-change-feedback-record))
    for n from 1
    for content = (emacsvox-aural-concrete-plan-content plan)
    collect
@@ -101,13 +102,12 @@
                          (if (eql n emacsvox-aural-change-feedback--part-number)
                              " [selected]" ""))
                  (concat
-                  (emacsvox-aural-recent-feedback--voice
-                   (emacsvox-aural--make-presentation-record :plan plan))
+                  (emacsvox-aural-inspection--voice-description
+                   (emacsvox-aural-inspection--make-view :plans (list plan)))
                   ": "
                   (propertize
                    (emacsvox-aural-recent-feedback--clean-text
-                    (or (emacsvox-aural-concrete-content-text content)
-                        "feedback without content"))
+                    (emacsvox-aural-inspection--part-text plan))
                    'emacsvox-aural-recent-feedback-voice content))))))
 
 (defun emacsvox-aural-change-feedback--select-part (number)
@@ -119,10 +119,10 @@
                    emacsvox-aural-change-feedback-scope
                    emacsvox-aural-change-feedback-applied
                    emacsvox-aural-change-feedback--match-options))
-         (plan (nth (1- number)
-                    (emacsvox-aural-presentation-record-effective-plans
-                     emacsvox-aural-change-feedback-record)))
-         (input (emacsvox-aural-tools--retained-plan-input plan)))
+         (view (emacsvox-aural-inspection--record-view
+                emacsvox-aural-change-feedback-record number))
+         (plan (emacsvox-aural-inspection--selected-plan view))
+         (input (emacsvox-aural-inspection--retained-input view)))
     (when emacsvox-aural-change-feedback--part-number
       (setf (alist-get emacsvox-aural-change-feedback--part-number
                        emacsvox-aural-change-feedback--part-drafts)
@@ -133,8 +133,7 @@
     (setq emacsvox-aural-change-feedback-input input
           emacsvox-aural-change-feedback--part-number number
           emacsvox-aural-change-feedback-part (format ", Part %d: %s" number
-                                                    (or (emacsvox-aural-concrete-content-text
-                                                         (emacsvox-aural-concrete-plan-content plan)) "feedback without content"))
+                                                    (emacsvox-aural-inspection--part-text plan))
           emacsvox-aural-change-feedback--expanded nil)
     (emacsvox-aural-change-feedback-refresh 'change)
     (unless emacsvox-aural-ui--inhibit-opening-feedback
@@ -144,14 +143,15 @@
   "Describe the frozen content voice and the proposed replacement."
   (concat
    (if emacsvox-aural-change-feedback--simulation "Simulated voice: " "Original voice: ")
-   (emacsvox-aural-recent-feedback--voice
-    (emacsvox-aural--make-presentation-record
-     :plan (plist-get emacsvox-aural-change-feedback-input :concrete)
-     :plans (when emacsvox-aural-change-feedback--review-indices
-              (let ((plans (emacsvox-aural-presentation-record-effective-plans
-                            emacsvox-aural-change-feedback-record)))
-                (mapcar (lambda (index) (nth index plans))
-                        emacsvox-aural-change-feedback--review-indices)))))
+   (emacsvox-aural-inspection--voice-description
+    (emacsvox-aural-inspection--make-view
+     :plans (if emacsvox-aural-change-feedback--review-indices
+                (let ((plans (emacsvox-aural-inspection--view-plans
+                              (emacsvox-aural-inspection--record-view
+                               emacsvox-aural-change-feedback-record))))
+                  (mapcar (lambda (index) (nth index plans))
+                          emacsvox-aural-change-feedback--review-indices))
+              (list (plist-get emacsvox-aural-change-feedback-input :concrete)))))
    (when emacsvox-aural-change-feedback-description
      (concat "; proposed: " emacsvox-aural-change-feedback-description))))
 
@@ -1070,7 +1070,7 @@
          (buffer (generate-new-buffer "*Aural Change Feedback*")))
     ;; Frozen history can identify a buffer only when its original identity survives.
     (when (and record (plist-get input :source)
-               (not (emacsvox-aural-tools--source-matches-context-p
+               (not (emacsvox-aural-inspection--source-matches-context-p
                      (plist-get input :source) (plist-get input :context))))
       (setq input (plist-put input :source nil)))
     (with-current-buffer buffer

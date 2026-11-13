@@ -1,0 +1,100 @@
+#+title: Shared Feedback Inspection
+#+date: 2026-11-13
+#+startup: content
+
+* Result
+
+Explain, Recent Feedback, direct remapping, Change Feedback and Feedback
+Details now share a private inspection view and helpers in
+[[file:../../lisp/aural/emacsvox-aural-inspection.el][the inspection service]].  The extraction preserves prompts, summary wording,
+part order, source validity and edit eligibility.  It follows the earlier
+[[file:inspection-consistency-review.org][consistency review]]; it does not claim another confirmed user-facing defect.
+
+Local master was first fast-forwarded to =684a76a13=, integrating the completed
+delivery, recording and voice Apply work.  This cleanup is developed separately
+on =refactor/feedback-inspection=.
+
+* Shared data and interface boundaries
+
+The view carries the complete frozen plan list, explanation basis, selected
+one-based part number and editing component.  It shares existing plan data
+without copying payloads or changing the retained record.  Summaries are
+computed on demand.  No view, rendered summary, buffer or marker is added to
+history, and ordinary speech delivery constructs no inspection views.
+
+Common helpers own action order, cue choices with their original phase and
+position, voice descriptions, degradation and semantic fallback counts, and
+semantic field grouping.  Feedback interfaces no longer construct temporary
+history records merely to describe a selected voice.  Explain adapts its
+existing first-plan and additional-plan fields to the view; those accessors
+and the existing private remapping wrappers remain available.
+
+Interface behaviour remains explicit.  Direct remapping selects a sole
+eligible part automatically and prompts when several qualify.  The guided
+editor still requires a part choice for multipart feedback and preserves each
+part's draft.  Silent content remains eligible for direct voice remapping;
+Feedback Details retains its spoken-content guard for the compact voice
+action.  Short rows, completion labels and full explanations keep their own
+formatting and verbosity.
+
+Historical input is associated with the selected part's original buffer
+identity.  Renaming or editing a surviving buffer does not invalidate frozen
+history; a killed or same-name replacement buffer cannot acquire its scope.
+Current-item lookup retains the stricter identity, point and modification-tick
+checks, and prepared edits still recheck their captured source guards.  Live
+buffers and markers remain in temporary interface or editor state.
+
+Playback, history bounds, recorder limits and source extraction retain their
+existing owners.  Overlay-only invalidation and the separate presentation
+contract decisions in the backlog remain outside this behaviour-preserving
+extraction.
+
+* Verification
+
+The baseline focused suite passes 369 tests, with four graphical checks skipped
+in batch.  A new cross-interface regression passes before and after extraction.
+It checks later-part voices, cues, degradation and fallback reporting; automatic
+and explicit part selection; exact action positions; selected editor input; and
+an unchanged serialised history record after inspection.
+
+The shell-prompt test now explicitly enables legacy face voices in its source
+buffer.  Under Emacs 30.2, the original batch fixture left Voice Lock disabled
+and expected =lighten-extra= despite correctly receiving =default=.  The same
+failure reproduced on unchanged =684a76a13=.  Captured contexts showed identical
+prompt faces and mappings on both versions, with only the enabled policy
+differing.  Explicit fixture setup passes on both; application policy is
+unchanged.
+
+The focused suite covers inspection, tools, Change Feedback, Feedback Details
+and transport.  Source checks pass on Emacs 31.0.90 and 30.2: 370 passed, with
+four graphical checks skipped in batch.  Targeted checks cover the final
+current-input and fixture edits.  Both complete byte-code rebuilds and
+freshness checks pass.  Fresh compiled runs pass the same 370 checks on each
+version, verifying the loaded implementation paths in the respective checkout.
+
+All four graphical checks pass on each version using a private X display:
+folding and draft return, outline navigation and editor return, minibuffer
+history ownership, and sound timing.  The unchanged master baseline also
+passes all four.  The isolated runner suppresses process-kill confirmations
+for its null speaker's diagnostics process; an initial run had waited at
+fixture cleanup after completing the sound-timing assertions.
+
+Emacs 31 uses installed Vertico =20260913.1525= byte-code.  Emacs 30 loads the
+same installed Vertico source with its verified compatibility dependency;
+the installed byte-code assumes the Emacs 31 =set-local= function.  No installed
+package or live session was changed.  Emacsvox itself uses the rebuilt byte-code
+in both graphical runs.
+
+The isolated =compiled-aural-test= gate passes on both versions.  On Emacs 31,
+=core-test= passes 1,128 checks with 18 graphical/native skips, and =trace-test=
+matches all 27 expected speech traces.  Header checks and =git diff --check=
+pass.  The maintained manual and reference artifacts are regenerated, and
+=docs-release-check= passes on both versions.  Emacs 30 uses the separate Org
+9.8.7 source and pinned Transient setup described in the
+[[file:voice-apply-operations.org][voice Apply review]], retaining its generated compatibility artifacts separately
+from the canonical Emacs 31 documentation.
+
+Local master also passed 864 compiled delivery and voice Apply checks, with
+ten graphical/native skips, and its documentation gate.  Listening and
+live-session changes remain deferred.  This extraction needs no new design
+decision; the separate backlog contract questions remain open.

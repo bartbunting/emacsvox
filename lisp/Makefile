@@ -597,7 +597,8 @@ aural/emacsvox-aural-replay.elc: aural/emacsvox-aural-preview.elc speech/tts-spe
 aural/emacsvox-aural-validation.elc: aural/emacsvox-aural-transport.elc
 aural/emacsvox-aural-inspection.elc: \
 aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-rules.elc \
-aural/emacsvox-aural-source.elc ui/emacsvox-aural-ui.elc
+aural/emacsvox-aural-source.elc ui/emacsvox-aural-ui.elc \
+aural/emacsvox-aural-history.elc aural/emacsvox-aural-description.elc
 ui/emacsvox-aural-semantics.elc: \
 aural/emacsvox-aural-schemes.elc ui/emacsvox-aural-ui.elc \
 aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-description.elc \

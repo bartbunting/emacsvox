@@ -197,111 +197,18 @@ Resolve the remaining ownership questions recorded in
 
 ** TODO Decide when integrations or transport own presentation occasions
 
-* Aural presentation refactoring
+* Aural presentation follow-ups
 
-These are proposed maintenance improvements following the 2026-09-06 aural
-presentation review.  Its eight confirmed defects, =EVX-2026-018= through
-=EVX-2026-025=, were fixed through commit =96b8e634b=.  The work below reduces
-the chance of similar defects and makes future changes easier to assess.
-These proposals did not identify four additional bugs or schedule a release.
-The later [[file:speech-delivery-implementation.org][delivery implementation review]] records the observer-error repair, explicit
-outcomes, deterministic assembly and separation of candidates from live owners.
-The [[file:voice-apply-operations.org][voice Apply operation review]] records explicit per-process progress and
-callback cleanup while preserving overlap, retry and late-registration handling.
+The proposed presentation refactors are complete.  The
+[[file:speech-delivery-implementation.org][delivery implementation review]], [[file:voice-apply-operations.org][voice Apply operation review]] and
+[[file:feedback-inspection-model.org][shared inspection review]] record the ownership boundaries and verification.
+The [[file:../voice-style-coverage.org][voice-style consumer audit]] and
+[[file:../../archive/emacsvox/reviews/CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][code-quality closeout]] retain the earlier completed work.
 
-Shared voice metadata, numeric tuner consumers and limited delivery helpers
-have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
-The [[file:../../archive/emacsvox/reviews/CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][2026-09-07 audit closeout]] records those completed slices.  The entries below
-describe the remaining work, with completed foundations retained as context.
-
-The [[file:../voice-style-coverage.org][voice-style consumer audit]] is complete: it added edit/save/preview/delivery
-coverage and fixed Workbench effect normalization and custom-style lookup.
-
-The remaining inspection work can be scoped narrowly around a concrete
-maintenance need.  A delivery-provenance extension would benefit from the
-common inspection model, but remains a separate design decision.
-
-Use small commits that preserve observable behavior.  Keep source semantics,
-presentation policy, resource realization and process delivery as distinct
-owners.  Preserve the main/notification isolation in
-[[file:../adr/0009-foreground-and-notification-speech-lanes.org][ADR 0009]], remote lifecycle in
-[[file:../adr/0010-remote-workstation-speech.org][ADR 0010]], and Emacs 30.2 minimum in
-[[file:../adr/0012-emacs-30-compatibility.org][ADR 0012]].  Follow
-[[file:integration-maintenance.org][the source and byte-code workflow]], including a full rebuild when
-record layouts, macros or public interfaces change, and verify in a fresh
-Emacs.  Keep compatibility probes in separate checkouts.
-
-Document accepted ownership or behavioral decisions in an ADR before changing
-those contracts.  Routine private helper extraction can retain the existing
-contracts.  Update the maintained developer guidance when implementation
-settles, and remove completed backlog entries.  Do not use a refactor to
-silently resolve an open behavior question or remove a compatibility path.
-
-** TODO Share a complete presentation inspection model
-
-The [[file:inspection-consistency-review.org][13 November consistency review]] fixes guided selection of a later part's
-surviving source and records the verified inspection boundaries. The broader
-model below remains a maintenance proposal, not an outstanding confirmed bug.
-
-*** Why this is needed
-
-[[file:../../lisp/aural/emacsvox-aural-explanation.el][Explanation]] now retains additional plans alongside its first-plan fields.
-The =EVX-2026-021= through =EVX-2026-023= fixes added retained-part inspection,
-captured-position guards and source-identity checks.  [[file:../../lisp/ui/emacsvox-aural-change-feedback.el][Change Feedback]] already
-reuses the input assembly and source-identity helpers in [[file:../../lisp/aural/emacsvox-aural-tools.el][remapping tools]],
-and the inspection service owns captured source access.  A complete common
-view of parts, component eligibility, summaries and explanation basis is still
-missing; future consumers must combine those pieces and choose the correct
-source-validity policy.
-
-*** Proposed plan
-
-1. Define one internal inspection view over the complete retained plan list,
-   selected part/component and explanation basis.  Adapt the existing
-   first-plan accessors so callers can migrate incrementally.
-2. Build on existing input assembly and identity helpers; consolidate the
-   remaining component eligibility and part summaries for explanation,
-   Recent Feedback, remapping and the guided workflow.  Preserve
-   automatic selection when only one part is eligible and explicit selection
-   when several parts qualify.
-3. Move shared source-association policy to
-   [[file:../../lisp/aural/emacsvox-aural-inspection.el][the inspection service]], retaining distinct policies for current-item
-   operations and historical feedback.  Current-item changes need their
-   captured-position/edit guards; historical feedback may outlive the source
-   and can associate with a surviving source by identity.
-4. Keep live buffers and markers in temporary inspection state.  Preserve
-   [[file:../../lisp/aural/emacsvox-aural-history.el][history]] as bounded frozen data, without retaining dead source buffers.
-
-*** Benefits
-
-Every consumer would see the same parts, labels, cues and degradation.
-Consistent selection and source association would reduce wrong-item edits and
-make spoken inspection more predictable.  A new inspection command could reuse
-these contracts instead of reconstructing them from several modules.
-
-*** Disadvantages and decisions
-
-A common model adds another representation and a migration period for old
-accessors.  It must not erase the useful distinction between inspecting past
-feedback and modifying the current item.  A single universal freshness check
-could wrongly reject valid history or accept stale current-item edits.
-Building summaries eagerly could also add cost for large retained records.
-
-Preserve current prompts and summary verbosity during extraction.  Changes to
-what users hear or which changes remain available after source edits need an
-explicit interaction decision.  Overlay-only invalidation remains a separate
-question requiring a contract and reproduction.
-
-*** Acceptance checks
-
-Reuse the native multi-part history regression in
-[[file:../../test/emacsvox-aural-transport-tests.el][transport tests]] and the public remapping regressions in
-[[file:../../test/emacsvox-aural-tools-tests.el][tools tests]].  Exercise labels, voices, cues and degradation found only in a
-later part; multiple eligible parts; truncated history; moved point; renamed,
-edited, killed and same-name replacement buffers.  Assert selected facts,
-actual editor targets and spoken summaries.  Verify that historical records
-retain no live source references and that current-item guards still reject
-stale edits.  Run the focused inspection and guided-change suites as well.
+A delivery-provenance extension and overlay-only invalidation remain separate
+possibilities requiring a concrete use case and an explicit contract.  They
+are not prerequisites for the completed inspection cleanup.  The unresolved
+presentation ownership decisions above remain open.
 
 * Repository stewardship
 

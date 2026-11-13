@@ -25,8 +25,8 @@
 
 ;;; Commentary:
 
-;; Source-buffer ownership and at-point context capture shared by aural
-;; managers, editors, explanations, and previews.  Each interface keeps its
+;; Frozen-part inspection, source ownership and at-point context shared by
+;; aural managers, editors, explanations and previews.  Each interface keeps its
 ;; own ordinary source buffer; the most recent source remains only as a
 ;; fallback for interfaces opened without an explicit association.
 
@@ -37,8 +37,202 @@
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-rules)
 (require 'emacsvox-aural-source)
+(require 'emacsvox-aural-history)
+(require 'emacsvox-aural-description)
 
 (declare-function emacsvox-speak-line "emacsvox-speak" (&optional arg))
+
+(cl-defstruct (emacsvox-aural-inspection--view
+               (:constructor emacsvox-aural-inspection--make-view))
+  "Temporary inspection over frozen PLANS, with explicit selection and BASIS.
+SELECTED-PART is one-based.  COMPONENT limits eligible parts for a particular
+editing route.  Views share frozen plans without copying or annotating history;
+live source buffers and guards belong only to temporary editor input."
+  plans basis selected-part component)
+
+(defun emacsvox-aural-inspection--record-view (record &optional part component)
+  "Inspect RECORD, optionally selecting one-based PART and editing COMPONENT."
+  (unless (emacsvox-aural-presentation-record-p record)
+    (user-error "Not an aural presentation record: %S" record))
+  (emacsvox-aural-inspection--make-view
+   :plans (emacsvox-aural-presentation-record-effective-plans record)
+   :basis (if (emacsvox-aural-presentation-record-effective-payload-truncated-p record)
+              'retained-preview 'exact-queued)
+   :selected-part part :component component))
+
+(defun emacsvox-aural-inspection--selected-plan (view)
+  "Return VIEW's selected plan, using the first part for legacy input assembly.
+Interactive callers retain their own requirement for an explicit selection."
+  (nth (1- (or (emacsvox-aural-inspection--view-selected-part view) 1))
+       (emacsvox-aural-inspection--view-plans view)))
+
+(defun emacsvox-aural-inspection--part-text (plan &optional width)
+  "Return PLAN's frozen content or its existing empty-content label.
+When WIDTH is non-nil, truncate without normalising the captured whitespace."
+  (let ((text (or (emacsvox-aural-concrete-content-text
+                   (emacsvox-aural-concrete-plan-content plan))
+                  "feedback without content")))
+    (if width (truncate-string-to-width text width nil nil t) text)))
+
+(defun emacsvox-aural-inspection--eligible-parts (view)
+  "Return one-based part numbers and plans eligible for VIEW's component.
+Only earcon remapping filters parts; voice remapping retains silent content."
+  (cl-loop for plan in (emacsvox-aural-inspection--view-plans view)
+           for number from 1
+           when (or (not (eq (emacsvox-aural-inspection--view-component view) 'earcon))
+                    (emacsvox-aural-inspection--earcon-choices plan))
+           collect (cons number plan)))
+
+(defun emacsvox-aural-inspection--contents (view)
+  "Return VIEW's frozen contents in playback order."
+  (mapcar #'emacsvox-aural-concrete-plan-content
+          (emacsvox-aural-inspection--view-plans view)))
+
+(defun emacsvox-aural-inspection--actions (view &optional kind)
+  "Return VIEW's actions in part, before and after order, optionally of KIND."
+  (cl-loop for plan in (emacsvox-aural-inspection--view-plans view)
+           append (cl-loop for action in (append (emacsvox-aural-concrete-plan-before plan)
+                                                (emacsvox-aural-concrete-plan-after plan))
+                           when (or (null kind)
+                                    (eq kind (emacsvox-aural-concrete-action-kind action)))
+                           collect action)))
+
+(defun emacsvox-aural-inspection--source-matches-context-p (source context)
+  "Return non-nil when live SOURCE has the identity frozen in CONTEXT."
+  (and (buffer-live-p source)
+       (let ((identity (plist-get context :source-buffer-id)))
+         (and identity
+              (eq identity
+                  (buffer-local-value 'emacsvox-aural-source-buffer-id source))))))
+
+(defun emacsvox-aural-inspection--status-counts (view)
+  "Return degradation and semantic fallback counts across all of VIEW's parts."
+  (let ((degradations 0) (fallbacks 0))
+    (dolist (plan (emacsvox-aural-inspection--view-plans view))
+      (cl-incf degradations (length (emacsvox-aural-concrete-plan-degradations plan)))
+      (dolist (rule (emacsvox-aural-concrete-plan-rule-provenance plan))
+        (cl-incf fallbacks
+                 (cl-count-if
+                  (lambda (detail)
+                    (let ((distance (plist-get detail :distance)))
+                      (and (numberp distance) (> distance 0))))
+                  (plist-get rule :semantic-matches)))))
+    (cons degradations fallbacks)))
+
+(defun emacsvox-aural-inspection--retained-input (view)
+  "Return VIEW's selected frozen input and its surviving historical source.
+Historical inspection allows edits.  Current-item callers separately capture
+and recheck source guards; this identity check does not authorise those edits."
+  (let* ((plan (emacsvox-aural-inspection--selected-plan view))
+         (context (emacsvox-aural-concrete-plan-context plan))
+         (source (emacsvox-aural-inspection-source-buffer)))
+    (list :source (and (emacsvox-aural-inspection--source-matches-context-p source context)
+                       source)
+          :facts (copy-tree (emacsvox-aural-concrete-plan-facts plan))
+          :context (copy-tree context)
+          :render (emacsvox-aural-concrete-plan-source-plan plan)
+          :concrete plan)))
+
+(defun emacsvox-aural-inspection--earcon-choices (concrete)
+  "Return labeled concrete earcon choices from CONCRETE."
+  (let (choices)
+    (dolist
+        (phase-actions
+         (list
+          (cons 'before
+                (emacsvox-aural-concrete-plan-before concrete))
+          (cons 'after
+                (emacsvox-aural-concrete-plan-after concrete))))
+      (let ((phase (car phase-actions))
+            (actions (cdr phase-actions)))
+        (cl-loop
+         for action in actions
+         for index from 0
+         when
+         (eq (emacsvox-aural-concrete-action-kind action) 'cue)
+         do
+         (let* ((cue (emacsvox-aural-concrete-action-cue action))
+                (id (emacsvox-aural-concrete-action-id action))
+                (source (emacsvox-aural-concrete-action-source action))
+                (label
+                 (format
+                  "%s position %d: %s; action %s; source %s"
+                  (capitalize (symbol-name phase))
+                  (1+ index)
+                  (emacsvox-aural-humanize cue)
+                  (emacsvox-aural-humanize id)
+                  (if source
+                      (emacsvox-aural-humanize source)
+                    "unknown"))))
+           (push
+            (cons
+             label
+             (list
+              :phase phase
+              :action action
+              :index index
+              :count (length actions)))
+            choices)))))
+    (nreverse choices)))
+
+(defun emacsvox-aural-inspection--voice-description (view)
+  "Return a concise exact voice description for VIEW."
+  (let* ((contents (emacsvox-aural-inspection--contents view))
+         (content (car contents))
+         (requests
+          (delete-dups
+           (mapcar
+            #'emacsvox-aural-concrete-content-voice-request
+            contents)))
+         (request
+          (emacsvox-aural-concrete-content-voice-request content)))
+    (cond
+     ((cdr requests)
+      (format "%d voices" (length requests)))
+     ((not
+       (cl-some #'emacsvox-aural-concrete-content-speak contents))
+      "suppressed")
+     ((null request) "default")
+     ((symbolp request) (emacsvox-aural-humanize request))
+     ((emacsvox-aural-voice-style-p request)
+      (cond
+       ((plist-get request :preset)
+        (format
+         "%s preset"
+         (emacsvox-aural-humanize
+          (plist-get request :preset))))
+       ((plist-get request :family)
+        (format
+         "%s base voice"
+         (emacsvox-aural-humanize
+          (plist-get request :family))))
+       (t "custom voice")))
+     (t (format "%s" request)))))
+
+(defun emacsvox-aural-inspection--groups (view)
+  "Group VIEW's consecutive runs by semantic field within each object.
+Return lists of zero-based run indices in playback order."
+  (let (groups key group previous)
+    (cl-loop
+     for plan in (emacsvox-aural-inspection--view-plans view)
+     for index from 0
+     for facts = (emacsvox-aural-concrete-plan-facts plan)
+     for context = (emacsvox-aural-concrete-plan-context plan)
+     for identity = (list (emacsvox-aural-concrete-plan-object-id plan)
+                          (plist-get facts :role) (plist-get facts :field-kind)
+                          (plist-get context :module) (plist-get context :occasion))
+     do
+     (when (and group
+                (or (not (equal identity key))
+                    (null (car identity))
+                    (emacsvox-aural-concrete-plan-object-start-p plan)
+                    (emacsvox-aural-concrete-plan-object-end-p previous)))
+       (push (nreverse group) groups)
+       (setq group nil))
+     (push index group)
+     (setq key identity previous plan))
+    (when group (push (nreverse group) groups))
+    (nreverse groups)))
 
 (defvar emacsvox-aural-inspection-last-source-buffer nil
   "Most recent ordinary buffer used as an aural inspection source.")

@@ -8471,9 +8471,9 @@ Function Index
 * emacsvox-aural-home-voice-workbench <1>: emacsvox-aural-home.
                                                              (line  232)
 * emacsvox-aural-inspection-return-to-source: emacsvox-aural-inspection.
-                                                             (line   17)
-* emacsvox-aural-inspection-return-to-source <1>: emacsvox-aural-inspection.
                                                              (line   18)
+* emacsvox-aural-inspection-return-to-source <1>: emacsvox-aural-inspection.
+                                                             (line   19)
 * emacsvox-aural-interface-mode:         emacsvox-aural-ui.  (line   15)
 * emacsvox-aural-interface-mode <1>:     emacsvox-aural-ui.  (line   16)
 * emacsvox-aural-list-feature-fragments: emacsvox-aural-feature-fragments.

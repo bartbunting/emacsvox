@@ -246,10 +246,9 @@ Use an exact queued record only if it still belongs to that source item."
 
 (defun emacsvox-aural-explain-record (record)
   "Return an explanation of retained frozen presentation RECORD."
-  (unless (emacsvox-aural-presentation-record-p record)
-    (user-error "Not an aural presentation record: %S" record))
-  (let* ((plans (emacsvox-aural-presentation-record-effective-plans record))
-         (concrete (car plans))
+  (let* ((view (emacsvox-aural-inspection--record-view record 1))
+         (plans (emacsvox-aural-inspection--view-plans view))
+         (concrete (emacsvox-aural-inspection--selected-plan view))
          (render (emacsvox-aural-concrete-plan-source-plan concrete)))
     (emacsvox-aural--make-explanation
      :scheme (emacsvox-aural-concrete-plan-scheme concrete)
@@ -261,12 +260,7 @@ Use an exact queued record only if it still belongs to that source item."
      :concrete-plan concrete
      :additional-plans (cdr plans)
      :suppressed-actions nil
-     :basis
-     (if
-         (emacsvox-aural-presentation-record-effective-payload-truncated-p
-          record)
-         'retained-preview
-       'exact-queued)
+     :basis (emacsvox-aural-inspection--view-basis view)
      :presentation-id (emacsvox-aural-presentation-record-id record)
      :queued-at (copy-tree
                  (emacsvox-aural-presentation-record-queued-at record))
@@ -585,6 +579,13 @@ selected occasion has no matching rule."
        "To change this object's voice or one of its earcons, use the remap rows in Aural Home."))
       " ")))
 
+(defun emacsvox-aural-explanation--inspection-view (explanation)
+  "Inspect EXPLANATION through its compatible first-plan and additional fields."
+  (emacsvox-aural-inspection--make-view
+   :plans (cons (emacsvox-aural-explanation-concrete-plan explanation)
+                (emacsvox-aural-explanation-additional-plans explanation))
+   :basis (emacsvox-aural-explanation-basis explanation) :selected-part 1))
+
 (defun emacsvox-aural-explanation--part-summary (plan index)
   "Describe frozen PLAN as part INDEX of a retained presentation."
   (string-join
@@ -616,13 +617,14 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
   ;; the help window's feedback nor the spoken summary is that source item.
   (let* ((emacsvox-aural--history-recording-inhibited t)
          (render (emacsvox-aural-explanation-render-plan explanation))
-         (concrete (emacsvox-aural-explanation-concrete-plan explanation))
+         (view (emacsvox-aural-explanation--inspection-view explanation))
+         (concrete (emacsvox-aural-inspection--selected-plan view))
          (content (emacsvox-aural-concrete-plan-content concrete))
          (context (emacsvox-aural-explanation-context explanation))
          (rules (emacsvox-aural-explanation-matching-rules explanation))
          (before (emacsvox-aural-concrete-plan-before concrete))
          (after (emacsvox-aural-concrete-plan-after concrete))
-         (additional (emacsvox-aural-explanation-additional-plans explanation))
+         (additional (cdr (emacsvox-aural-inspection--view-plans view)))
          (summary
           (string-join
            (append

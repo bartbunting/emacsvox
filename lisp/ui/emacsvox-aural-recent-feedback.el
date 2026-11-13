@@ -64,26 +64,18 @@
 
 (defun emacsvox-aural-recent-feedback--actions (record)
   "Return the ordered before and after actions from RECORD."
-  (cl-mapcan
-   (lambda (plan)
-     (append
-      (copy-sequence (emacsvox-aural-concrete-plan-before plan))
-      (copy-sequence (emacsvox-aural-concrete-plan-after plan))))
-   (emacsvox-aural-presentation-record-effective-plans record)))
+  (emacsvox-aural-inspection--actions
+   (emacsvox-aural-inspection--record-view record)))
 
 (defun emacsvox-aural-recent-feedback--cues (record)
   "Return the concrete cue actions from RECORD."
-  (cl-remove-if-not
-   (lambda (action)
-     (eq (emacsvox-aural-concrete-action-kind action) 'cue))
-   (emacsvox-aural-recent-feedback--actions record)))
+  (emacsvox-aural-inspection--actions
+   (emacsvox-aural-inspection--record-view record) 'cue))
 
 (defun emacsvox-aural-recent-feedback--tones (record)
   "Return the concrete tone actions from RECORD."
-  (cl-remove-if-not
-   (lambda (action)
-     (eq (emacsvox-aural-concrete-action-kind action) 'tone))
-   (emacsvox-aural-recent-feedback--actions record)))
+  (emacsvox-aural-inspection--actions
+   (emacsvox-aural-inspection--record-view record) 'tone))
 
 (defun emacsvox-aural-recent-feedback--clean-text (text &optional width)
   "Return single-line TEXT, optionally truncated to WIDTH."
@@ -97,10 +89,8 @@
 
 (defun emacsvox-aural-recent-feedback--content (record)
   "Return a concise description of RECORD's retained content preview."
-  (let* ((plans
-          (emacsvox-aural-presentation-record-effective-plans record))
-         (contents
-          (mapcar #'emacsvox-aural-concrete-plan-content plans))
+  (let* ((view (emacsvox-aural-inspection--record-view record))
+         (contents (emacsvox-aural-inspection--contents view))
          (text
           (emacsvox-aural-recent-feedback--clean-text
            (mapconcat
@@ -111,11 +101,7 @@
             contents
             "")
            72))
-         (speech
-          (cl-remove-if-not
-           (lambda (action)
-             (eq (emacsvox-aural-concrete-action-kind action) 'speech))
-           (emacsvox-aural-recent-feedback--actions record))))
+         (speech (emacsvox-aural-inspection--actions view 'speech)))
     (cond
      ((and
        (cl-some #'emacsvox-aural-concrete-content-speak contents)
@@ -131,59 +117,27 @@
           (emacsvox-aural-recent-feedback--clean-text
            (emacsvox-aural-concrete-action-text action)))
         speech ", ")))
-     ((emacsvox-aural-recent-feedback--cues record) "Earcon only")
-     ((emacsvox-aural-recent-feedback--tones record)
+     ((emacsvox-aural-inspection--actions view 'cue) "Earcon only")
+     ((emacsvox-aural-inspection--actions view 'tone)
       (format
        "Tone: %s"
        (mapconcat
         (lambda (action)
           (emacsvox-aural-humanize
            (emacsvox-aural-concrete-action-tone action)))
-        (emacsvox-aural-recent-feedback--tones record)
+        (emacsvox-aural-inspection--actions view 'tone)
         ", ")))
      ((cl-some
        (lambda (action)
          (eq (emacsvox-aural-concrete-action-kind action) 'pause))
-       (emacsvox-aural-recent-feedback--actions record))
+       (emacsvox-aural-inspection--actions view))
       "Pause only")
      (t "No audible output"))))
 
 (defun emacsvox-aural-recent-feedback--voice (record)
   "Return a concise exact voice description for RECORD."
-  (let* ((contents
-          (mapcar
-           #'emacsvox-aural-concrete-plan-content
-           (emacsvox-aural-presentation-record-effective-plans record)))
-         (content (car contents))
-         (requests
-          (delete-dups
-           (mapcar
-            #'emacsvox-aural-concrete-content-voice-request
-            contents)))
-         (request
-          (emacsvox-aural-concrete-content-voice-request content)))
-    (cond
-     ((cdr requests)
-      (format "%d voices" (length requests)))
-     ((not
-       (cl-some #'emacsvox-aural-concrete-content-speak contents))
-      "suppressed")
-     ((null request) "default")
-     ((symbolp request) (emacsvox-aural-humanize request))
-     ((emacsvox-aural-voice-style-p request)
-      (cond
-       ((plist-get request :preset)
-        (format
-         "%s preset"
-         (emacsvox-aural-humanize
-          (plist-get request :preset))))
-       ((plist-get request :family)
-        (format
-         "%s base voice"
-         (emacsvox-aural-humanize
-          (plist-get request :family))))
-       (t "custom voice")))
-     (t (format "%s" request)))))
+  (emacsvox-aural-inspection--voice-description
+   (emacsvox-aural-inspection--record-view record)))
 
 (defun emacsvox-aural-recent-feedback--cue-summary (record)
   "Return the ordered earcon names from RECORD."
@@ -197,30 +151,15 @@
 
 (defun emacsvox-aural-recent-feedback--semantic-fallback-count (record)
   "Return the number of semantic fallback matches retained in RECORD."
-  (cl-loop
-   for plan in
-   (emacsvox-aural-presentation-record-effective-plans record)
-   sum
-   (cl-loop
-    for rule in (emacsvox-aural-concrete-plan-rule-provenance plan)
-    sum
-    (cl-count-if
-     (lambda (detail)
-       (let ((distance (plist-get detail :distance)))
-         (and (numberp distance) (> distance 0))))
-     (plist-get rule :semantic-matches)))))
+  (cdr (emacsvox-aural-inspection--status-counts
+        (emacsvox-aural-inspection--record-view record))))
 
 (defun emacsvox-aural-recent-feedback--status (record)
   "Return fallback and degradation status for RECORD."
-  (let* ((degradations
-          (cl-loop
-           for plan in
-           (emacsvox-aural-presentation-record-effective-plans record)
-           sum
-           (length (emacsvox-aural-concrete-plan-degradations plan))))
-         (fallbacks
-          (emacsvox-aural-recent-feedback--semantic-fallback-count
-           record))
+  (let* ((view (emacsvox-aural-inspection--record-view record))
+         (counts (emacsvox-aural-inspection--status-counts view))
+         (degradations (car counts))
+         (fallbacks (cdr counts))
          parts)
     (when (> degradations 0)
       (push
@@ -237,8 +176,7 @@
         (if (= fallbacks 1) "fallback" "fallbacks"))
        parts))
     (when
-        (emacsvox-aural-presentation-record-effective-payload-truncated-p
-         record)
+        (eq (emacsvox-aural-inspection--view-basis view) 'retained-preview)
       (push
        (format
         "preview %d of %d bytes"

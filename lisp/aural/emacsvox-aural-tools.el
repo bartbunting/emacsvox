@@ -119,47 +119,38 @@ message notification policy."
 
 (defun emacsvox-aural-tools--source-matches-context-p (source context)
   "Return non-nil when live SOURCE has the identity frozen in CONTEXT."
-  (and (buffer-live-p source)
-       (let ((identity (plist-get context :source-buffer-id)))
-         (and identity
-              (eq identity
-                  (buffer-local-value 'emacsvox-aural-source-buffer-id source))))))
+  (emacsvox-aural-inspection--source-matches-context-p source context))
+
+(defun emacsvox-aural-tools--remap-record-view (record component)
+  "Choose a retained part of RECORD for COMPONENT, preserving existing prompts."
+  (let* ((view (emacsvox-aural-inspection--record-view record nil component))
+         (choices
+          (mapcar (lambda (part)
+                    (cons (format "Part %d: %s" (car part)
+                                  (emacsvox-aural-inspection--part-text (cdr part) 80))
+                          (car part)))
+                  (emacsvox-aural-inspection--eligible-parts view))))
+    (unless choices
+      (user-error "This presentation contains no earcon to remap"))
+    (setf (emacsvox-aural-inspection--view-selected-part view)
+          (if (null (cdr choices)) (cdar choices)
+            (cdr (assoc (completing-read "Which part should change: " choices nil t)
+                        choices))))
+    view))
 
 (defun emacsvox-aural-tools--remap-record-plan (record component)
   "Choose the retained part of RECORD to remap for COMPONENT.
 Earcon remapping includes only parts containing an earcon."
-  (let ((choices
-         (cl-loop
-          for plan in (emacsvox-aural-presentation-record-effective-plans record)
-          for index from 1
-          when (or (not (eq component 'earcon))
-                   (emacsvox-aural-tools--earcon-remap-choices plan))
-          collect
-          (cons (format "Part %d: %s" index
-                        (truncate-string-to-width
-                         (or (emacsvox-aural-concrete-content-text
-                              (emacsvox-aural-concrete-plan-content plan))
-                             "feedback without content")
-                         80 nil nil t))
-                plan))))
-    (unless choices
-      (user-error "This presentation contains no earcon to remap"))
-    (if (null (cdr choices)) (cdar choices)
-      (cdr (assoc (completing-read "Which part should change: " choices nil t)
-                  choices)))))
+  (emacsvox-aural-inspection--selected-plan
+   (emacsvox-aural-tools--remap-record-view record component)))
 
 (defun emacsvox-aural-tools--retained-plan-input (plan)
   "Return frozen input for retained PLAN and its surviving inspection source.
 Associate each part independently by buffer identity, never by its saved name.
 Historical inspection allows source edits; current-item guards remain separate."
-  (let* ((context (emacsvox-aural-concrete-plan-context plan))
-         (source (emacsvox-aural-inspection-source-buffer)))
-    (list :source (and (emacsvox-aural-tools--source-matches-context-p source context)
-                       source)
-          :facts (copy-tree (emacsvox-aural-concrete-plan-facts plan))
-          :context (copy-tree context)
-          :render (emacsvox-aural-concrete-plan-source-plan plan)
-          :concrete plan)))
+  (emacsvox-aural-inspection--retained-input
+   (emacsvox-aural-inspection--make-view
+    :plans (list plan) :basis 'exact-queued :selected-part 1)))
 
 (defun emacsvox-aural-tools--remap-source-input (&optional record component)
   "Return presentation input for optional frozen RECORD or the current source.
@@ -172,23 +163,21 @@ whose source identity, position, and modification tick still match.
 For voice remapping, a named source face can also identify the current text.
 When COMPONENT is non-nil, select the retained part to remap."
   (if record
-      (progn
-        (unless (emacsvox-aural-presentation-record-p record)
-          (user-error "Not an aural presentation record: %S" record))
-        (emacsvox-aural-tools--retained-plan-input
-         (if component
-             (emacsvox-aural-tools--remap-record-plan record component)
-           (emacsvox-aural-presentation-record-plan record))))
+      (emacsvox-aural-inspection--retained-input
+       (if component
+           (emacsvox-aural-tools--remap-record-view record component)
+         (emacsvox-aural-inspection--record-view record 1)))
     (let ((source (emacsvox-aural-inspection-source-buffer)))
       (unless source
         (user-error "No live source buffer is available"))
       (emacsvox-aural-inspection-call-in-source
        (lambda ()
          (if-let* ((record (emacsvox-aural-presentation-at-point)))
-             (let* ((concrete
+             (let* ((view
                      (if component
-                         (emacsvox-aural-tools--remap-record-plan record component)
-                       (emacsvox-aural-presentation-record-plan record)))
+                         (emacsvox-aural-tools--remap-record-view record component)
+                       (emacsvox-aural-inspection--record-view record 1)))
+                    (concrete (emacsvox-aural-inspection--selected-plan view))
                     (render
                      (emacsvox-aural-concrete-plan-source-plan concrete)))
                (list
@@ -231,7 +220,8 @@ When COMPONENT is non-nil, select the retained part to remap."
               :render
               (emacsvox-aural-explanation-render-plan explanation)
               :concrete
-              (emacsvox-aural-explanation-concrete-plan explanation)))))))))
+              (emacsvox-aural-inspection--selected-plan
+               (emacsvox-aural-explanation--inspection-view explanation))))))))))
 
 (defun emacsvox-aural-tools--voice-remap-selector (facts context)
   "Derive a stable object selector from FACTS and CONTEXT.
@@ -470,45 +460,7 @@ than every presentation of an object."
 
 (defun emacsvox-aural-tools--earcon-remap-choices (concrete)
   "Return labeled concrete earcon choices from CONCRETE."
-  (let (choices)
-    (dolist
-        (phase-actions
-         (list
-          (cons 'before
-                (emacsvox-aural-concrete-plan-before concrete))
-          (cons 'after
-                (emacsvox-aural-concrete-plan-after concrete))))
-      (let ((phase (car phase-actions))
-            (actions (cdr phase-actions)))
-        (cl-loop
-         for action in actions
-         for index from 0
-         when
-         (eq (emacsvox-aural-concrete-action-kind action) 'cue)
-         do
-         (let* ((cue (emacsvox-aural-concrete-action-cue action))
-                (id (emacsvox-aural-concrete-action-id action))
-                (source (emacsvox-aural-concrete-action-source action))
-                (label
-                 (format
-                  "%s position %d: %s; action %s; source %s"
-                  (capitalize (symbol-name phase))
-                  (1+ index)
-                  (emacsvox-aural-humanize cue)
-                  (emacsvox-aural-humanize id)
-                  (if source
-                      (emacsvox-aural-humanize source)
-                    "unknown"))))
-           (push
-            (cons
-             label
-             (list
-              :phase phase
-              :action action
-              :index index
-              :count (length actions)))
-            choices)))))
-    (nreverse choices)))
+  (emacsvox-aural-inspection--earcon-choices concrete))
 
 (defun emacsvox-aural-tools--earcon-remap-choice (concrete)
   "Read and return one concrete earcon choice from CONCRETE."

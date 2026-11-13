@@ -123,32 +123,14 @@
 (defun emacsvox-aural-feedback-details--groups (record)
   "Group RECORD's consecutive runs by semantic field within each object.
 Return lists of zero-based run indices in playback order."
-  (let (groups key group previous)
-    (cl-loop
-     for plan in (emacsvox-aural-presentation-record-effective-plans record)
-     for index from 0
-     for facts = (emacsvox-aural-concrete-plan-facts plan)
-     for context = (emacsvox-aural-concrete-plan-context plan)
-     for identity = (list (emacsvox-aural-concrete-plan-object-id plan)
-                          (plist-get facts :role) (plist-get facts :field-kind)
-                          (plist-get context :module) (plist-get context :occasion))
-     do
-     (when (and group
-                (or (not (equal identity key))
-                    (null (car identity))
-                    (emacsvox-aural-concrete-plan-object-start-p plan)
-                    (emacsvox-aural-concrete-plan-object-end-p previous)))
-       (push (nreverse group) groups)
-       (setq group nil))
-     (push index group)
-     (setq key identity previous plan))
-    (when group (push (nreverse group) groups))
-    (nreverse groups)))
+  (emacsvox-aural-inspection--groups
+   (emacsvox-aural-inspection--record-view record)))
 
 (defun emacsvox-aural-feedback-details--plan (index)
   "Return the frozen plan at INDEX in this report."
-  (nth index (emacsvox-aural-presentation-record-effective-plans
-              emacsvox-aural-feedback-details--record)))
+  (emacsvox-aural-inspection--selected-plan
+   (emacsvox-aural-inspection--record-view
+    emacsvox-aural-feedback-details--record (1+ index))))
 
 (defun emacsvox-aural-feedback-details--label (indices)
   "Describe the semantic field or object containing INDICES."
@@ -633,7 +615,8 @@ The existing sound override editor owns its separate unsaved rule draft."
              (source (alist-get 'voice provenance)))
         (cl-pushnew
          (format "%s, from %s%s"
-                 (emacsvox-aural-recent-feedback--voice (emacsvox-aural--make-presentation-record :plan plan))
+                 (emacsvox-aural-inspection--voice-description
+                  (emacsvox-aural-inspection--make-view :plans (list plan)))
                  (emacsvox-aural-feedback-details--source-description source plan)
                  (if (emacsvox-aural-concrete-content-speak content) "" "; content is silent"))
          voices :test #'equal)
@@ -747,9 +730,8 @@ The existing sound override editor owns its separate unsaved rule draft."
           (format "%s (%s)"
                   (emacsvox-aural-feedback-details--label indices)
                   (if (emacsvox-aural-feedback-details--spoken-p indices)
-                      (emacsvox-aural-recent-feedback--voice
-                       (emacsvox-aural--make-presentation-record
-                        :plan (emacsvox-aural-feedback-details--plan (car indices))
+                      (emacsvox-aural-inspection--voice-description
+                       (emacsvox-aural-inspection--make-view
                         :plans (mapcar #'emacsvox-aural-feedback-details--plan indices)))
                     "no spoken content"))
           expanded)
@@ -774,7 +756,7 @@ The existing sound override editor owns its separate unsaved rule draft."
           (insert "\n")
           (emacsvox-aural-feedback-details--insert-explanation indices)
           (when (cl-some (lambda (i)
-                           (emacsvox-aural-tools--earcon-remap-choices
+                           (emacsvox-aural-inspection--earcon-choices
                             (emacsvox-aural-feedback-details--plan i))) indices)
             (emacsvox-aural-feedback-details--button
              "Sound overrides: replace, suppress, or restore"
@@ -1114,7 +1096,8 @@ Simulations are private snapshots and are never added to presentation history."
       (emacsvox-aural-feedback-details record)
     (let* ((plan (emacsvox-aural--freeze-presentation-plan
                   (emacsvox-aural-preview--prepare-plan
-                   (emacsvox-aural-explanation-concrete-plan explanation))))
+                   (emacsvox-aural-inspection--selected-plan
+                    (emacsvox-aural-explanation--inspection-view explanation)))))
            (context (emacsvox-aural-concrete-plan-context plan)))
       (emacsvox-aural-feedback-details--open
        (emacsvox-aural--make-presentation-record

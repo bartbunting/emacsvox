@@ -2405,9 +2405,28 @@ protocol behaviour, not audible playback.
 20.3.10 Aural interface source ownership
 ----------------------------------------
 
-Ordinary-buffer entry captures a source buffer, a marker, and a guarded
-source line.  Child interfaces and Help inherit that context through the
-inspection and shared UI helpers.  Use
+Explain, Recent Feedback, remapping, Change Feedback and Feedback
+Details use the private inspection view in
+‘emacsvox-aural-inspection.el’.  It shares the complete frozen plan list
+and records the explanation basis, selected part and editing component.
+Helpers supply ordered actions, cue eligibility, voice descriptions,
+degradation and fallback counts, and semantic field groups.  Summaries
+are computed when requested; history stores neither views nor additional
+rendered summaries.  Existing first-plan explanation fields and private
+compatibility wrappers remain available.
+
+   Keep interface-specific wording and selection policy with each
+interface.  Direct remapping chooses a sole eligible part automatically
+and prompts when several qualify; the guided editor retains its explicit
+multipart selection.  Earcon eligibility includes the original
+before/after action positions and counts.  A voice-remapping part can
+have silent content even though Feedback Details offers its compact
+voice action only for spoken content.  Sharing inspection data must
+preserve these distinct interaction contracts.
+
+   Ordinary-buffer entry captures a source buffer, a marker, and a
+guarded source line.  Child interfaces and Help inherit that context
+through the inspection and shared UI helpers.  Use
 ‘emacsvox-aural-inspection-call-in-source’ for contextual commands so
 that moving the source cursor does not retarget an open interface.
 Re-entry from an ordinary buffer deliberately captures a new target.  A
@@ -2419,9 +2438,13 @@ captured source identity, position, and modification tick still match.
 Source identity is a buffer-local, data-only token that distinguishes
 buffers sharing a name; history continues to retain no buffer objects or
 markers.  Explicit historical selection remains valid after the source
-changes and is explained from its frozen plan.  Prepared current-item
-rules carry a source guard checked before their saved or live rule layer
-changes.
+changes and is explained from its frozen plan.  The inspection service
+associates each selected historical part with a surviving source
+independently by identity.  This permits historical inspection after
+edits or renames without granting scope to a killed or same-name
+replacement buffer.  Live source references belong to temporary editor
+input.  Prepared current-item rules carry a separate source guard
+checked before their saved or live rule layer changes.
 
    Find rule editors by scope and target identity, not by a formatted
 buffer name.  Buffer scopes belong to buffer objects, fragment scopes to

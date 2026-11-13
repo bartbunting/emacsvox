@@ -3782,10 +3782,11 @@ File: emacsvox-reference.info,  Node: emacsvox-aural-inspection,  Next: emacsvox
 2.42 emacsvox-aural-inspection
 ==============================
 
-Source-buffer ownership and at-point context capture shared by aural
-managers, editors, explanations, and previews.  Each interface keeps its
-own ordinary source buffer; the most recent source remains only as a
-fallback for interfaces opened without an explicit association.
+Frozen-part inspection, source ownership and at-point context shared by
+aural managers, editors, explanations and previews.  Each interface
+keeps its own ordinary source buffer; the most recent source remains
+only as a fallback for interfaces opened without an explicit
+association.
 
 2.42.1 Emacsvox-Aural-Inspection Commands
 -----------------------------------------

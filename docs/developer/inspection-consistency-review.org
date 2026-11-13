@@ -38,10 +38,10 @@ selection and exercises actual buffer-scoped application.
 | Historical source | Direct and guided remapping require frozen buffer identity, without imposing current-item freshness on historical facts. Buffer names alone never establish identity. |
 | Storage ownership | History remains frozen bounded data. The new helper places live source references only in temporary editor input, leaving retained plans unchanged. |
 
-* Remaining maintenance proposal
+* Shared inspection follow-up
 
-The broader [[file:backlog.org::*TODO Share a complete presentation inspection model][shared inspection-model proposal]] remains optional maintenance work. This
-fix shares the demonstrated duplicate input assembly without introducing a
-second complete representation or changing source-validity policy. Further
-extraction should follow a concrete consumer need or reproducible discrepancy.
-Overlay-only invalidation remains a separate design question.
+The subsequent [[file:feedback-inspection-model.org][shared inspection implementation]] consolidates retained-part
+selection, voice descriptions, actions, status and historical source association.
+It preserves the current-item and historical validity policies established
+here. Overlay-only invalidation remains a separate design question requiring
+a concrete reproduction and contract.
