@@ -4492,7 +4492,7 @@ executable input.
      Record the next outer delivery on LANE, main or notification.
      Arming expires after 60 seconds.  One delivery disarms recording.  Captured
      speech text and resource paths stay in memory until explicit export or cancel;
-     input above 64 KiB is discarded with an incomplete summary.  This records
+     input above 256 KiB is discarded with an incomplete summary.  This records
      client construction, not audio or server success.  Existing logs are unchanged.
 
      (fn LANE)

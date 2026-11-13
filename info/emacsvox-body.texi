@@ -11234,7 +11234,7 @@ paths may be included. Review the file before sharing. A failed save retains
 the capture; @kbd{M-x emacsvox-aural-cancel-recording} discards it without stopping
 speech. An exported file remains until you delete it.
 
-A capture is limited to 64 KiB@. Oversized or unsupported input produces an
+A capture is limited to 256 KiB@. Oversized or unsupported input produces an
 incomplete summary while speech continues. @kbd{M-x emacsvox-aural-reproduce-delivery}
 checks a saved file and reconstructs client data without playing it. A
 matching result establishes construction only@comma{} not server admission or sound.
@@ -12445,7 +12445,7 @@ until export or cancellation. No automatic capture ring or logging is enabled.
 
 Its versioned JSON contains plain tagged data@comma{} source revision@comma{} Emacs version@comma{}
 protocol fields and hashes of the document@comma{} semantic bindings and prepared wire.
-The 64 KiB allowance includes metadata; a shared 4096-operation/observation limit
+The 256 KiB allowance includes metadata; a shared 4096-operation/observation limit
 also applies. Exhaustion discards detailed inputs and keeps an incomplete summary.
 Export is explicit@comma{} local and atomic@comma{} with owner-only permissions on systems that
 support them. Text and resource paths may be sensitive.

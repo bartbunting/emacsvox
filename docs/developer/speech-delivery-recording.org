@@ -39,7 +39,7 @@ and order before assembly; and dispatches through fixed operation names. Existin
 protocol codecs retain document validation. Compatibility captures preserve inert
 command bytes; they do not reconstruct preceding source extraction or rule matching.
 
-One capture shares a 64 KiB encoded allowance, including metadata, and a limit of
+One capture shares a 256 KiB encoded allowance, including metadata, and a limit of
 4096 operations plus observations. Traversal permits at most 16384 data nodes and
 128 levels. Exhaustion or unsupported data discards detailed inputs and retains a
 bounded incomplete summary without changing speech. Ordinary recorder errors are
@@ -112,7 +112,8 @@ faster. These results support profiling allocation across the whole preparation
 path before another ownership optimisation. They do not justify changing default
 collection settings or claiming a physical key-to-sound latency.
 
-With the recorder implementation compiled, the same 16 MB method measured:
+With the initial 64 KiB recorder implementation compiled, the same 16 MB method
+measured:
 
 | Content | Recording off, ms | Recording on, ms | Capture |
 |---------+-------------------+------------------+---------|
@@ -129,13 +130,34 @@ capture costs before exhausting the allowance; the code case adds about 13 ms.
 The disabled path remains a nil-observer check at each observation site; comparisons
 with earlier runs are too noisy to isolate the small cost of those checks.
 
-Both styled examples exhaust the encoded-input budget. In a separate diagnostic
-process, the table captures completely at 76003 bytes when its local allowance is
-temporarily raised to 256 KiB, confirming the limiting budget. The shipped limit
-remains 64 KiB. Short reproductions work best; larger styled selections may require
-a smaller example. Continuous recording and increased retention remain outside
-this feature. All paired measurements preserve the normalised document and retire
-every dispatch owner, including when recording becomes incomplete.
+Both styled examples exhausted the original encoded-input budget. In a separate
+diagnostic process, the table captures completely at 76003 bytes when its allowance is
+temporarily raised to 256 KiB, confirming the limiting budget. The code example
+requires 141805 bytes and still fails at 128 KiB. These measurements justify the
+revised 256 KiB allowance for both recording and import. Short reproductions
+remain preferable; larger selections can still require a smaller example. All
+paired measurements preserve the normalised document and retire every dispatch
+owner, including when recording becomes incomplete.
+
+With the revised 256 KiB allowance, the unchanged harness and 16 MB GC method
+produce complete captures for every case. The [[file:../benchmarks/data/2026-11-13-speech-delivery-recording-256k.eld][new measurements]] retain all samples
+separately from the original evidence:
+
+| Content | Recording off, ms | Recording on, ms | Capture bytes |
+|---------+-------------------+------------------+---------------|
+| Navigation | 1.02 | 1.25 | 2138 |
+| Paragraph | 2.29 | 2.22 | 2591 |
+| Styled table | 29.29 | 38.48 | 76013 |
+| Fontified code | 62.35 | 86.87 | 141815 |
+| Long prose | 40.85 | 44.10 | 17528 |
+
+These again use medians of three round medians. Complete styled captures add
+approximately 9 ms for the table and 25 ms for the code in this run. Small
+differences remain sensitive to scheduling and GC; the paragraph's negative
+difference is noise, not a speedup. The byte allowance is consulted only while
+recording or importing, so increasing it adds no work to disabled recording.
+Capture sizes vary slightly with recorded identifiers. Complete exports reconstruct
+matching documents, semantic bindings and wire, with no live access or speech.
 
 * Validation and limits
 
@@ -148,10 +170,10 @@ atomic replacement failure. Malformed, oversized, deeply nested, duplicate-key a
 unknown-version inputs fail; changed hashes report mismatch and redacted captures
 report incomplete.
 
-The implementation is in =91bdce56c=, with immediate observer-error cleanup and
-isolated test loading corrected in =cf8817739=. Emacs 30 uses the same code via
+The initial implementation is in =91bdce56c=, with immediate observer-error cleanup
+and isolated test loading corrected in =cf8817739=. Emacs 30 used the same code via
 =6484bce83= in its separate checkout; the changed Lisp and test files have matching
-hashes. Final verification is:
+hashes. Verification of that initial implementation was:
 
 | Check | Emacs 31.0.90 | Emacs 30.2 |
 |-------+---------------+------------|
@@ -160,12 +182,22 @@ hashes. Final verification is:
 | Core suite | 1070 passed, 18 skipped | 1070 passed, 18 skipped |
 | Full byte-code rebuild and final incremental check | Passed | Passed |
 
-The focused suite includes 21 recorder tests. The broader core skips require a
+The initial focused suite included 21 recorder tests. The broader core skips require a
 graphical display or native speech services. On Emacs 31, isolated compiled Aural
 parity, normal build-tree startup, all 27 semantic traces, headers and generated
 documentation checks pass. A separate fresh compiled process imports a complete
 capture with process creation, networking and speech writes forbidden. Startup's
 stale-byte-code inventory includes the new module.
+
+The capacity revision in =000fe4100= passes all 23 recorder tests from source and
+compiled code on both Emacs versions, with loaded paths checked. Emacs 30 uses
+the same changes through =5e5a9d37f=. The added regressions reproduce the original
+styled-capture and import failures at 64 KiB, then verify complete larger exports,
+offline wire equality, valid JSON exactly at 256 KiB and rejection of one extra
+byte before reconstruction. Oversized captures still discard text and retain only
+a small incomplete summary while speech continues. Operation, traversal and depth
+limits retain their original values. Incremental byte-code and generated manuals
+are current, and the non-mutating documentation review gate passes.
 
 No listening acceptance, graphical interaction, native Windows export or live
 profile reload is claimed. The new commands use standard minibuffer prompts and

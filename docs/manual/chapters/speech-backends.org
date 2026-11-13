@@ -1291,7 +1291,7 @@ Choose the diagnostic at the failed layer:
   the capture; ~M-x emacsvox-aural-cancel-recording~ discards it without stopping
   speech. An exported file remains until you delete it.
 
-  A capture is limited to 64 KiB. Oversized or unsupported input produces an
+  A capture is limited to 256 KiB. Oversized or unsupported input produces an
   incomplete summary while speech continues. ~M-x emacsvox-aural-reproduce-delivery~
   checks a saved file and reconstructs client data without playing it. A
   matching result establishes construction only, not server admission or sound.

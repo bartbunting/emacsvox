@@ -5307,7 +5307,7 @@ A presentation needs a repeatable construction example
      ‘M-x emacsvox-aural-cancel-recording’ discards it without stopping
      speech.  An exported file remains until you delete it.
 
-     A capture is limited to 64 KiB.  Oversized or unsupported input
+     A capture is limited to 256 KiB.  Oversized or unsupported input
      produces an incomplete summary while speech continues.  ‘M-x
      emacsvox-aural-reproduce-delivery’ checks a saved file and
      reconstructs client data without playing it.  A matching result

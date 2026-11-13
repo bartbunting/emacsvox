@@ -1212,7 +1212,7 @@ enabled.
 
    Its versioned JSON contains plain tagged data, source revision, Emacs
 version, protocol fields and hashes of the document, semantic bindings
-and prepared wire.  The 64 KiB allowance includes metadata; a shared
+and prepared wire.  The 256 KiB allowance includes metadata; a shared
 4096-operation/observation limit also applies.  Exhaustion discards
 detailed inputs and keeps an incomplete summary.  Export is explicit,
 local and atomic, with owner-only permissions on systems that support
