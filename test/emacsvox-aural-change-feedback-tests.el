@@ -763,5 +763,84 @@
                                     (not retain)))))))))))
       (vertico-mode (if original-vertico-mode 1 -1)))))
 
+(ert-deftest emacsvox-aural-inspection-consumers-agree-on-later-parts ()
+  "Inspection and both editing routes retain later voices, actions and status."
+  (dolist (multiple '(nil t))
+    (emacsvox-test--with-guided-feedback
+      (let* ((first (copy-emacsvox-aural-concrete-plan concrete))
+             (later (copy-emacsvox-aural-concrete-plan concrete))
+             (first-content (copy-emacsvox-aural-concrete-content
+                             (emacsvox-aural-concrete-plan-content first)))
+             (later-content (copy-emacsvox-aural-concrete-content first-content))
+             (cue (emacsvox-aural--make-concrete-action
+                   :id 'later-cue :kind 'cue :cue 'select-object :source 'later-rule))
+             (ending (emacsvox-aural--make-concrete-action
+                      :id 'ending-cue :kind 'cue :cue 'item :source 'later-rule))
+             (record (emacsvox-aural--make-presentation-record
+                      :id 126 :queued-at (seconds-to-time 200)
+                      :plan first :plans (list first later)))
+             prompts frozen-record)
+        (setf (emacsvox-aural-concrete-plan-content first) first-content
+              (emacsvox-aural-concrete-content-voice-request first-content) 'bolden
+              (emacsvox-aural-concrete-plan-content later) later-content
+              (emacsvox-aural-concrete-content-text later-content) "Later part"
+              (emacsvox-aural-concrete-content-voice-request later-content) 'lighten
+              (emacsvox-aural-concrete-plan-facts later)
+              '(:role heading :level 2 :content "Later part")
+              (emacsvox-aural-concrete-plan-before first) (and multiple (list cue))
+              (emacsvox-aural-concrete-plan-after first) nil
+              (emacsvox-aural-concrete-plan-before later)
+              (list (emacsvox-aural--make-concrete-action
+                     :id 'later-label :kind 'speech :text "Later label") cue)
+              (emacsvox-aural-concrete-plan-after later) (list ending)
+              (emacsvox-aural-concrete-plan-degradations first) nil
+              (emacsvox-aural-concrete-plan-degradations later)
+              '((:reason unsupported-space))
+              (emacsvox-aural-concrete-plan-rule-provenance first) nil
+              (emacsvox-aural-concrete-plan-rule-provenance later)
+              '((:id later-rule :semantic-matches ((:distance 1)))))
+        (setq frozen-record (prin1-to-string record))
+        (should (equal "2 voices" (emacsvox-aural-recent-feedback--voice record)))
+        (should (equal (if multiple "select object, select object, item"
+                         "select object, item")
+                       (emacsvox-aural-recent-feedback--cue-summary record)))
+        (should (equal "1 degradation, 1 semantic fallback"
+                       (emacsvox-aural-recent-feedback--status record)))
+        (let ((explanation (emacsvox-aural-explain-record record)))
+          (should (eq 'exact-queued (emacsvox-aural-explanation-basis explanation)))
+          (should (eq later (car (emacsvox-aural-explanation-additional-plans explanation))))
+          (let ((summary (emacsvox-aural-explanation--part-summary later 2)))
+            (dolist (text '("Part 2" "Later label" "select object" "degradation"))
+              (should (string-match-p text summary)))))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (prompt choices &rest _)
+                     (push (list prompt (mapcar #'car choices)) prompts)
+                     (caar (last choices)))))
+          (let ((input (emacsvox-aural-tools--remap-source-input record 'earcon)))
+            (should (eq later (plist-get input :concrete)))
+            (should (equal (plist-get input :facts)
+                           '(:role heading :level 2 :content "Later part")))))
+        (should (equal prompts
+                       (and multiple
+                            '(("Which part should change: "
+                               ("Part 1: Example heading" "Part 2: Later part"))))))
+        (should (equal
+                 (mapcar (lambda (choice)
+                           (let ((data (cdr choice)))
+                             (list (plist-get data :phase) (plist-get data :index)
+                                   (plist-get data :count))))
+                         (emacsvox-aural-tools--earcon-remap-choices later))
+                 '((before 1 2) (after 0 1))))
+        (emacsvox-aural-change-feedback record)
+        (should (equal (substring-no-properties
+                        (aref (cadr (assoc '(part 2) tabulated-list-entries)) 1))
+                       "lighten: Later part"))
+        (should (emacsvox-aural-ui-goto-row '(part 2)))
+        (emacsvox-aural-change-feedback-open-row)
+        (should (eq later (plist-get emacsvox-aural-change-feedback-input :concrete)))
+        (let ((emacsvox-aural-feedback-details--record record))
+          (should (eq later (emacsvox-aural-feedback-details--plan 1))))
+        (should (equal frozen-record (prin1-to-string record)))))))
+
 (provide 'emacsvox-aural-change-feedback-tests)
 ;;; emacsvox-aural-change-feedback-tests.el ends here

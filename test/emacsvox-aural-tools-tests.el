@@ -525,7 +525,10 @@
   (emacsvox-test--with-home-context
     (with-current-buffer source
       (erase-buffer)
-      (shell-mode))
+      (shell-mode)
+      ;; The original preview uses face voices.  Do not depend on when a
+      ;; global mode hook enables them in this batch-created buffer.
+      (setq-local voice-lock-mode t))
     (let ((process (make-pipe-process :name "aural-prompt-test"
                                       :buffer source :noquery t))
           (prompt "bart@URSYS-8M3WMB4:~/src/emacsvox$ "))
