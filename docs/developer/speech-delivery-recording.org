@@ -9,6 +9,10 @@ delivery and reconstructs client assembly offline. It does not require an
 Omnivox change. The four earlier refactor slices retain their separate
 [[file:speech-delivery-implementation.org][implementation review]].
 
+The subsequent [[file:speech-delivery-allocation.org][allocation investigation]] profiles real integration producers
+and reduces temporary strings used for dispatch budget accounting. Its results
+separate allocation savings from GC-dependent timing changes.
+
 Use =emacsvox-aural-record-next-delivery=, =emacsvox-aural-recording-status=,
 =emacsvox-aural-export-recording= and =emacsvox-aural-cancel-recording=.
 =emacsvox-aural-reproduce-delivery= validates a local capture without sending

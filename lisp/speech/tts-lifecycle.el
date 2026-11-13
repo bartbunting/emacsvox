@@ -110,6 +110,10 @@ a `cancelled' record when pending input interrupts that wait.")
 (defvar tts--preparations (make-hash-table :test #'eq))
 (defvar tts--prepared-owners (make-hash-table :test #'eql))
 (defvar tts--current-preparation nil)
+(defvar tts--dispatch-size-buffer nil
+  "Private, lazily allocated print buffer for the current preparation.")
+(defvar tts--dispatch-size-active nil
+  "Non-nil while printing a dispatch value for accounting.")
 (defconst tts--preparation-limit 128)
 (define-error 'tts--preparation-cancelled "Speech preparation was cancelled")
 
@@ -171,7 +175,8 @@ a `cancelled' record when pending input interrupts that wait.")
                  :process process
                  :generation (and (processp process)
                                   (process-get process 'tts--speech-process-generation))))
-         (tts--current-preparation scope))
+         (tts--current-preparation scope)
+         (tts--dispatch-size-buffer nil))
     (unwind-protect
         (condition-case nil
             (progn
@@ -188,8 +193,13 @@ a `cancelled' record when pending input interrupts that wait.")
           (progn
             (setf (tts--preparation-closed scope) t)
             (tts--preparation-release-owners (tts--preparation-owners scope)))
-        (setf (tts--preparation-owners scope) nil)
-        (remhash scope tts--preparations)))))
+        (unwind-protect
+            (progn
+              (setf (tts--preparation-owners scope) nil)
+              (remhash scope tts--preparations))
+          (when (buffer-live-p tts--dispatch-size-buffer)
+            (let ((kill-buffer-hook nil) (kill-buffer-query-functions nil))
+              (kill-buffer tts--dispatch-size-buffer))))))))
 
 (defun tts--preparation-interrupt (process)
   "Perform the current preparation's one intentional policy stop on PROCESS."
@@ -244,6 +254,29 @@ a `cancelled' record when pending input interrupts that wait.")
 (defvar emacsvox-aural--submission-depth 0)
 (defvar emacsvox-aural--delivery-dispatch-owners nil)
 
+(defun tts--dispatch-data-bytes (value)
+  "Return the bytes in VALUE's printed representation for budget accounting.
+Preserve the caller's print settings.  During preparation, reuse a private
+buffer instead of allocating a string for each run.  Erase it after every
+measurement; the preparation scope destroys it on exit.  Reentrant calls and
+calls outside preparation use the ordinary string printer."
+  (if (or (null tts--current-preparation) tts--dispatch-size-active)
+      (string-bytes (prin1-to-string value))
+    (unless (buffer-live-p tts--dispatch-size-buffer)
+      (setq tts--dispatch-size-buffer
+            (generate-new-buffer " *tts-dispatch-size*" t)))
+    (let ((tts--dispatch-size-active t)
+          (inhibit-modification-hooks t))
+      (unwind-protect
+          (progn
+            ;; Pass the destination explicitly so printing retains the source
+            ;; buffer as current, just as `prin1-to-string' does.
+            (prin1 value tts--dispatch-size-buffer)
+            (with-current-buffer tts--dispatch-size-buffer
+              (1- (position-bytes (point-max)))))
+        (with-current-buffer tts--dispatch-size-buffer
+          (erase-buffer))))))
+
 (defun tts--dispatch-copy-data (value &optional copy-leaf)
   "Copy bounded dispatch VALUE, including strings and vector contents.
 Optional COPY-LEAF copies or validates strings and non-container values during
@@ -294,7 +327,7 @@ With DEFERRED, require final semantic binding before admission."
          (count (or (process-get process 'tts--dispatch-owner-count) 0))
          (used (or (process-get process 'tts--dispatch-metadata-bytes) 0))
          (print-circle t) (print-length nil) (print-level nil)
-         (bytes (string-bytes (prin1-to-string copied))))
+         (bytes (tts--dispatch-data-bytes copied)))
     (tts--preparation-check)
     (unless (eq process (tts--preparation-process tts--current-preparation))
       (error "Speech reservation belongs to another process"))
@@ -325,7 +358,7 @@ With DEFERRED, require final semantic binding before admission."
   "Bind deferred OWNER to copied SEMANTICS exactly once, charging only the delta."
   (let* ((copied (tts--dispatch-copy-data semantics))
          (print-circle t) (print-length nil) (print-level nil)
-         (bytes (string-bytes (prin1-to-string copied)))
+         (bytes (tts--dispatch-data-bytes copied))
          (process (tts--dispatch-owner-process owner)))
     (tts--preparation-check (tts--dispatch-owner-preparation owner))
     (when (or (tts--dispatch-owner-retired owner)
@@ -339,7 +372,7 @@ With DEFERRED, require final semantic binding before admission."
       (error "Speech dispatch cannot bind semantics again"))
     (let* ((old-map (tts--dispatch-owner-semantics owner))
            (old-charge (tts--dispatch-owner-metadata-bytes owner))
-           (old-bytes (string-bytes (prin1-to-string old-map)))
+           (old-bytes (tts--dispatch-data-bytes old-map))
            (used (or (process-get process 'tts--dispatch-metadata-bytes) 0))
            (count (or (process-get process 'tts--dispatch-owner-count) 0))
            (delta (- bytes old-bytes))
@@ -481,7 +514,7 @@ With DEFERRED, require final semantic binding before admission."
   "Queue FUNCTION with ARGUMENTS for OWNER, reserving TERMINAL separately."
   (let* ((process (tts--dispatch-owner-process owner))
          (print-circle t) (print-length nil) (print-level nil)
-         (bytes (if terminal 0 (string-bytes (prin1-to-string arguments))))
+         (bytes (if terminal 0 (tts--dispatch-data-bytes arguments)))
          (used (or (process-get process 'tts--dispatch-notification-bytes) 0))
          (count (or (process-get process 'tts--dispatch-notification-count) 0)))
     (if (and (not terminal)

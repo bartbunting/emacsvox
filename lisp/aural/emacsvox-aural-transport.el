@@ -1214,7 +1214,7 @@ Signal a clear installation error when negotiation found an older version."
   "Capture PLAN, final TEXT, PAUSE, and POSITIONED-ACTIONS for the timeline."
   (let* ((run (list plan text pause positioned-actions))
          (print-circle t) (print-length nil) (print-level nil)
-         (bytes (string-bytes (prin1-to-string run))))
+         (bytes (tts--dispatch-data-bytes run)))
     (emacsvox-aural--capture-record 'run run bytes)
     (push run emacsvox-aural--delivery-timeline-runs)))
 
@@ -1249,7 +1249,7 @@ Signal a clear installation error when negotiation found an older version."
            (data (list :name name :owned owned :run (and plan (list plan text nil nil))
                        :entries nil :complete nil))
            (print-circle t) (print-length nil) (print-level nil)
-           (bytes (string-bytes (prin1-to-string data)))
+           (bytes (tts--dispatch-data-bytes data))
            (prior emacsvox-aural--delivery-transaction-entries)
            result entries)
       ;; Charge before retaining copied input; original commands remain only in

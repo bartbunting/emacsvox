@@ -822,5 +822,125 @@
          (should (= 0 (hash-table-count (process-get speaker 'omnivox--choice-snapshot-references))))
          (tts-preparation-test--empty speaker))))))
 
+(ert-deftest tts-preparation-printed-budget-matches-string-printer ()
+  :tags '(delivery-preparation)
+  (let* ((shared (propertize "é🙂\n" 'face '(bold italic)))
+         (cycle (list shared))
+         (table (make-hash-table :test #'equal))
+         (values (list nil "" shared (unibyte-string 0 127 128 255)
+                       (string-as-multibyte (unibyte-string 128 255))
+                       (vector cycle cycle) table))
+         (print-circle t) buffer)
+    (setcdr cycle cycle)
+    (puthash "shared" cycle table)
+    (puthash "self" table table)
+    (with-temp-buffer
+      (insert "Keep source buffer and point")
+      (goto-char 7)
+      (let ((source (current-buffer)))
+        (tts--call-with-preparation
+         nil
+         (lambda ()
+           (dolist (escaped '(nil t))
+             (dolist (bounded '(nil t))
+               (let ((print-escape-newlines escaped)
+                     (print-escape-multibyte escaped)
+                     (print-escape-nonascii escaped)
+                     (print-length (and bounded 2))
+                     (print-level (and bounded 2)))
+                 (dolist (value values)
+                   (should (= (string-bytes (prin1-to-string value))
+                              (tts--dispatch-data-bytes value)))
+                   (should (eq (current-buffer) source))
+                   (should (= (point) 7))
+                   (if buffer (should (eq buffer tts--dispatch-size-buffer))
+                     (setq buffer tts--dispatch-size-buffer))
+                   (should (zerop (buffer-size buffer)))))))))))
+    (should-not (buffer-live-p buffer))))
+
+(ert-deftest tts-preparation-print-buffers-are-lazy-and-scope-local ()
+  :tags '(delivery-preparation)
+  (let (outer inner)
+    (tts--call-with-preparation nil (lambda () (should-not tts--dispatch-size-buffer)))
+    (tts--call-with-preparation
+     nil
+     (lambda ()
+       (tts--dispatch-data-bytes "outer")
+       (setq outer tts--dispatch-size-buffer)
+       (tts--call-with-preparation
+        nil
+        (lambda ()
+          (should-not tts--dispatch-size-buffer)
+          (tts--dispatch-data-bytes "inner")
+          (setq inner tts--dispatch-size-buffer)
+          (should-not (eq inner outer))))
+       (should-not (buffer-live-p inner))
+       (should (eq outer tts--dispatch-size-buffer))
+       (should (= 7 (tts--dispatch-data-bytes "outer")))))
+    (should-not (buffer-live-p outer))))
+
+(ert-deftest tts-preparation-printing-does-not-run-buffer-hooks ()
+  :tags '(delivery-preparation)
+  (let* (calls
+         (before-change-functions (list (lambda (&rest _) (push 'before calls))))
+         (after-change-functions (list (lambda (&rest _) (push 'after calls))))
+         (kill-buffer-hook (list (lambda () (push 'kill calls)))))
+    (tts--call-with-preparation nil (lambda () (tts--dispatch-data-bytes "private")))
+    (should-not calls)))
+
+(ert-deftest tts-preparation-print-failure-erases-and-destroys-private-buffer ()
+  :tags '(delivery-preparation)
+  (dolist (exit '(error quit throw))
+    (let (buffer)
+      (catch 'print-fault
+        (condition-case nil
+            (tts--call-with-preparation
+             nil
+             (lambda ()
+               (cl-letf (((symbol-function 'prin1)
+                          (lambda (_value destination &rest _)
+                            (setq buffer destination)
+                            (with-current-buffer destination (insert "private text"))
+                            (pcase exit
+                              ('error (error "Printer fault"))
+                              ('quit (signal 'quit nil))
+                              ('throw (throw 'print-fault t))))))
+                 (unwind-protect (tts--dispatch-data-bytes '(private text))
+                   (should (zerop (buffer-size buffer)))))))
+          ((error quit) nil)))
+      (should (bufferp buffer))
+      (should-not (buffer-live-p buffer)))))
+
+(ert-deftest tts-preparation-reentrant-printer-preserves-outer-measurement ()
+  :tags '(delivery-preparation)
+  (let ((printer (symbol-function 'prin1)) inner)
+    (tts--call-with-preparation
+     nil
+     (lambda ()
+       (cl-letf (((symbol-function 'prin1)
+                  (lambda (value &optional destination &rest args)
+                    (setq inner (tts--dispatch-data-bytes "nested"))
+                    (apply printer value destination args))))
+         (should (= 7 (tts--dispatch-data-bytes "outer")))
+         (should (= 8 inner)))))))
+
+(ert-deftest tts-preparation-budget-boundary-retains-exact-charge ()
+  :tags '(delivery-preparation)
+  (tts-handoff-test--with-process
+   (let* ((semantics (list (propertize "é🙂" 'face 'bold)))
+          (print-circle t) (print-length nil) (print-level nil)
+          (bytes (string-bytes (prin1-to-string semantics))))
+     (dolist (limit (list bytes (1- bytes)))
+       (let ((tts--dispatch-metadata-limit limit))
+         (tts--call-with-preparation
+          process
+          (lambda ()
+            (if (< limit bytes)
+                (should-error (tts--dispatch-new-owner nil nil semantics))
+              (let ((owner (tts--dispatch-new-owner nil nil semantics)))
+                (should (= bytes (tts--dispatch-owner-metadata-bytes owner)))
+                (should (= bytes (process-get process 'tts--dispatch-metadata-bytes))))))))
+       (tts-preparation-test--empty process)))))
+
 (provide 'tts-preparation-tests)
 ;;; tts-preparation-tests.el ends here

@@ -305,19 +305,6 @@ actual editor targets and spoken summaries.  Verify that historical records
 retain no live source references and that current-item guards still reject
 stale edits.  Run the focused inspection and guided-change suites as well.
 
-** TODO Profile allocation across repeated presentation preparation
-
-The [[file:speech-delivery-recording.org][delivery recorder and repeated measurements]] complete ADR 0030 and the
-earlier scope decision. Small navigation inputs spend little time copying owned
-candidate data. Styled tables and code spend substantially more time in the
-whole preparation/delivery path, with strong garbage-collection sensitivity.
-
-Profile allocation by stage using representative integration inputs, preserving
-wire, semantic and cancellation equivalence. Distinguish preparation, resource
-resolution, history, assembly and framing before choosing an optimisation.
-The muted fixture is evidence for investigation, not a live latency guarantee;
-do not change default garbage-collection settings from these measurements alone.
-
 ** TODO Represent asynchronous voice applies as explicit operations
 
 The [[file:voice-apply-reliability-review.org][13 November reliability review]] fixes stale Workbench announcements,

@@ -1,0 +1,138 @@
+#+title: Allocation during repeated speech preparation
+#+author: Emacsvox contributors
+
+* Outcome
+
+The 13 November investigation replaces temporary strings used only to measure
+dispatch budget charges with a private print buffer reused during preparation.
+Printed byte counts, capacity limits, cancellation checks and delivery ordering
+retain their existing meaning. The buffer is created on demand, erased after
+each measurement and destroyed on every preparation exit. Nested preparations
+have separate buffers; reentrant printing and calls outside preparation retain
+the original string method. Editing and kill-buffer hooks do not run for this
+internal buffer.
+
+The measured benefit is lower temporary string allocation. Timing improvements
+are modest and depend on garbage collection. This does not remove source
+preparation, rule resolution, history snapshots or ownership copies, and it
+does not change default GC settings.
+
+* Reproducible integration fixtures
+
+[[file:../../test/profile-delivery.el][The profiling harness]] loads real Magit sections, Org headings and Agent Shell's
+Markdown renderer and presentation functions. The large Agent Shell response
+contains a heading, emphasis, a table and the existing fontified Lisp fixture.
+Rendering occurs before timing; source extraction and speech submission remain
+inside it. No agent service, Omnivox process or audio device participates.
+
+These use the pinned integration dependencies, not the installed live profile:
+Magit 4.7.2 at =602760478f6d4a67e7064f5bcd2e294aa3f38f8e= and Agent Shell
+0.95.1 at =a9f3034281f2845d3318ad7d2c2241f4ec693227=. Every file matches its
+dependency manifest. The harness reports loaded implementation paths, the
+manifest hash, Emacs version, input hashes and normalized output hashes.
+
+The transport fixture has a small registered voice inventory and isolated
+scheme state. It exercises real integration producers but does not reproduce
+every live palette or rule. In particular, many prepared runs in the Agent
+Shell example coalesce into one final span. Final span count alone therefore
+does not predict preparation cost. The Magit fixture deliberately uses a
+section tree without repository refresh or Git subprocess timing.
+
+The final comparison runs current compiled code with either the new helper or
+the former =string-bytes= / =prin1-to-string= expression. Only that private
+helper is replaced in the diagnostic process. Both variants retain the helper
+call overhead. Three rounds alternate their order, with five warmups and 30
+measured deliveries per block. One explicit collection precedes each block;
+there is no collection between deliveries. Submission timing excludes simulated
+terminal replies. Allocation and GC counters include that cleanup. History
+retains its normal 20-record bound. Every pair has matching normalized document
+hashes and no retained dispatch owners.
+
+Run from this checkout, selecting the dependency directory for your Emacs:
+
+#+begin_src sh
+EMACSVOX_PROFILE_DEPS=/path/to/pinned/dependencies \
+EMACSVOX_DELIVERY_LOAD=compiled \
+EMACSVOX_PROFILE_ACCOUNTING=compare \
+EMACSVOX_DELIVERY_GC_BYTES=800000 \
+/path/to/emacs -Q --batch -l test/profile-delivery.el
+#+end_src
+
+Repeat with a threshold of =16000000=. To investigate stages separately, select
+=string= or =buffer= accounting, set =EMACSVOX_PROFILE_STAGES=1= and
+=EMACSVOX_PROFILE_ITERATIONS=10=. Function instrumentation reports inclusive
+time and allocation counts: nested functions overlap, and instrumentation
+itself allocates. Do not add those rows together or use their times as latency
+measurements. Uninstrumented comparisons establish the allocation reduction.
+
+* Measurements
+
+[[file:../benchmarks/data/2026-11-13-speech-delivery-allocation.eld][The data artifact]] retains the samples, counter totals, stage profiles, loaded
+paths, source hashes and log hashes. The tables below use Emacs 31.0.90 and
+medians of three round medians, in milliseconds.
+
+| Fixture | Original, 800 kB GC | Buffered, 800 kB GC | Original, 16 MB GC | Buffered, 16 MB GC |
+|---------+--------------------+--------------------+-------------------+-------------------|
+| Magit commit | 1.615 | 1.581 | 1.312 | 1.301 |
+| Org heading | 2.210 | 2.170 | 2.346 | 2.047 |
+| Agent Shell response | 211.682 | 205.201 | 127.554 | 130.929 |
+
+For the large response at 800 kB, each buffered block collected 65 times versus
+67 with strings. Its median p95 fell from 299.553 to 278.472 ms. At 16 MB both
+variants collected 19 times per block, and the buffered median was slightly
+higher. Timing ranges overlap; these results do not establish a uniform speedup
+or a live navigation delay. Loading all three integrations also increases the
+heap traversed by GC relative to the earlier small transport-only benchmark.
+
+Across the uninstrumented blocks, temporary string-character allocation falls
+approximately 15% for Magit, 17% for Org and 50% for Agent Shell. Cons allocation
+is essentially unchanged. The counters are =memory-use-counts= in this order:
+conses, floats, vector cells, symbols, string characters, intervals and strings.
+Buffer objects count among vectors, but buffer text does not count as string
+characters. These are allocation counters, not total memory or peak RSS. The
+reused buffer still needs storage for the largest printed value in its scope.
+
+* What the stage profiles show
+
+Preparation and rule/voice resolution remain substantial. The large response
+performs 160 rule-resolution calls and 159 voice-style compilations per delivery,
+even though its final timeline has one span. History records and compatibility
+run capture also occur before final coalescing. Framing the resulting document
+is a small part of this fixture's cost, and candidate ownership copying is
+small here. Earlier heavily styled multi-span fixtures exercise larger copies.
+
+Budget accounting was a concrete source of disposable strings: the large
+response measures 233 values per delivery. The buffer removes those final
+string allocations without approximating graph size, stripping properties,
+weakening limits or sharing mutable plan data. The same printer still handles
+Unicode, raw bytes, cycles, shared references and the caller's print settings.
+
+The evidence supports leaving rule resolution, voice snapshots, history and
+ownership semantics intact in this slice. A future optimization of repeated
+resolution must establish which facts, faces, context and resource state are
+equal across runs before reusing results. A global cache or removal of history
+copies would require additional lifetime and invalidation evidence. This
+investigation does not justify either change.
+
+* Verification and limits
+
+Six new regressions cover exact printer equivalence, nested and lazy buffers,
+reentrant printing, hook isolation, error/quit/throw cleanup and exact budget
+boundaries. Existing delivery coverage exercises source mutation, both speech
+lanes, cancellation, uncertain writes, recorder reconstruction and owner release.
+
+The broad source suite passed 718 tests on both Emacs versions before the final
+hook-isolation guard. Final validation on each version passed all 36 source
+preparation tests, all 719 fresh compiled delivery tests and 1,072 core tests.
+The 18 core skips require a graphical display or native speech services.
+Loaded compiled paths were checked. The real integration fixtures also complete
+18 short comparison blocks on Emacs 30.2 with matching paired output hashes;
+those short blocks are execution checks, not latency evidence.
+
+Both byte-code preflights pass. Header and non-mutating documentation review
+checks pass, and the two checkouts have identical changed implementation and
+test files. The data artifact records the validation counts.
+
+No listening acceptance, graphical interaction or native-service test is claimed.
+The work uses isolated batch sessions and matching Emacs 30.2 and 31.0.90 builds.
+No live profile, installed package, speech setting or backend is changed.
