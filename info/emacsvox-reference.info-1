@@ -765,6 +765,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
+* omnivox-audio-channels:: Live notification channel routing.
 * omnivox-audio-devices:: Independent physical output choices.
 * omnivox-catalogue:: Available voices and downloads.
 * omnivox-choice-codec:: Individual voice wire values.

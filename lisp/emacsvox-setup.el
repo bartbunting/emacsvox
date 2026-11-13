@@ -103,6 +103,7 @@
     "speech/omnivox-punctuation-profiles.el"
     "speech/omnivox-preferences.el"
     "speech/omnivox-audio-devices.el"
+    "speech/omnivox-audio-channels.el"
     "ui/omnivox-output-devices.el"
     "ui/omnivox-engine-configuration.el"
     "core/emacsvox-pronounce.el"

@@ -133,7 +133,10 @@ cleanup must still be confirmed before a replacement can start."
   (interactive)
   (when (and (eq omnivox-output-devices--role 'notification)
              (not (tts--notification-process-configured-p)))
-    (user-error "Choose Automatic, Left, Right or Both notification routing and restart speech first"))
+    (user-error
+     (if (omnivox-audio-channels--live-p)
+         "Choose Automatic, Left, Right or Both notification routing first"
+       "Choose Automatic, Left, Right or Both notification routing and restart speech first")))
   (unless (eq (plist-get omnivox-output-devices--catalogue :supported) t)
     (user-error "Refresh a supported local Windows output catalogue first"))
   (let* ((id (or (tabulated-list-get-id) (user-error "Highlight an output first")))

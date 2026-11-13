@@ -5608,7 +5608,7 @@ a capital @kbd{S} in one menu does not save everything described in this section
 
 @menu
 * Set the reading scope@comma{} rate@comma{} and punctuation: Reading Scope And Punctuation.  Set rate or punctuation for the current buffer and understand saving.
-* Understand the main and notification streams: Notification Routing.  Choose where notifications play and distinguish selection from restart.
+* Understand the main and notification streams: Notification Routing.  Choose where notifications play, preview the route, and save it separately.
 * Adjust output volumes: Output Volumes.  Adjust speech and cue levels without confusing volume with routing.
 * Adjust an integration's speech settings: Integration Speech Settings.  Find focused controls and their integration-specific saving boundaries.
 @end menu
@@ -6179,16 +6179,29 @@ heard concurrently@comma{} with each notification's cue and speech delivered tog
 Integrations may deliberately route particular asynchronous actions differently:
 Notmuch's explicit refresh@comma{} for example@comma{} uses interruptible main speech.
 
-Open @kbd{C-e H o n} for routing. @kbd{r} opens a list of automatic@comma{} left@comma{} right@comma{}
-both channels@comma{} main output@comma{} and other device. The configured choice is focused
-and marked. Arrows browse without applying; @kbd{@key{RET}} selects the route for the
-next restart and returns to the Route control. @kbd{q} or @kbd{C-g} cancels the list.
-Other device asks for an existing device name; cancelling that prompt stays on
-Other device and retains the previous route. Selecting does not restart speech.
+Open @kbd{C-e H o n} for routing@comma{} then @kbd{r} for Automatic@comma{} Left@comma{} Right@comma{} Both
+channels or Main output. The configured choice is focused and marked.
+Arrows browse without applying; @kbd{@key{RET}} chooses and returns to the Route
+control. @kbd{q} or @kbd{C-g} cancels the list.
 
-@kbd{N} previews active output@comma{} which may still use the old route; @kbd{R} restarts
-after confirmation. @kbd{h} inspects a notification-history snapshot@comma{} returning
-with @kbd{q}. @kbd{S} saves routing and spatial defaults without a restart.
+With a supporting local Omnivox worker@comma{} the menu says @emph{applies live}.
+Left@comma{} Right and Both change subsequent notification speech@comma{} tones and earcons
+without restarting either speech worker. Audio already submitted keeps its
+previous route. Main output retires only the notification worker; choosing a
+separate route again starts that worker while main speech stays running.
+Automatic uses a separate worker on both channels. Engine choices and physical
+output selections are retained.
+
+Press @kbd{N} to preview the active route. Choose the previous route to reverse
+an experiment; @kbd{S} separately saves routing and spatial defaults for startup.
+If a change is reported as unconfirmed@comma{} choose its route again before saving.
+@kbd{h} inspects a notification-history snapshot@comma{} returning with @kbd{q}.
+
+Older Omnivox workers@comma{} remote speech and other backends retain the @emph{next
+restart} menu. There@comma{} selecting only sets the next route; @kbd{N} still previews
+the active arrangement and @kbd{R} restarts speech after confirmation. That menu
+also offers Other device for an existing device name; cancelling its prompt
+retains the previous choice and stays in the list.
 
 For physical devices on a supporting Windows Omnivox build@comma{} @kbd{D} opens main
 outputs and @kbd{M} opens notification outputs. Their separate Apply and Save
@@ -6201,7 +6214,7 @@ It is not a mute option. Other backends use their configured device or fall
 back to main speech. In Lisp@comma{} @code{default} or an empty string means main output;
 use descriptive labels for ordinary configuration.
 
-After changing the route@comma{} @kbd{C-e d C-n} also initialises the arrangement.
+@kbd{C-e d C-n} explicitly reinitialises the notification arrangement when needed.
 Use notification history to read an announcement you missed. Ordinary
 obsolete-main-speech cancellation is local to main; explicit @code{tts-stop} stops
 both streams.

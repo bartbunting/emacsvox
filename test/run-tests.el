@@ -48,6 +48,7 @@
   (require 'tts-preparation-tests)
   (require 'omnivox-remote-tests)
   (require 'omnivox-audio-devices-tests)
+  (require 'omnivox-audio-channels-tests)
   (require 'emacsvox-speak-tests)
   (require 'emacsvox-speak-filters-tests)
   (require 'emacsvox-speak-command-tests)

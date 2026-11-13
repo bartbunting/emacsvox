@@ -1,0 +1,150 @@
+;;; omnivox-audio-channels-tests.el --- Live routing regressions -*- lexical-binding: t; -*-
+;; Copyright (C) 2026 Emacsvox contributors
+;; SPDX-License-Identifier: GPL-2.0-or-later
+;;; Code:
+(require 'ert)
+(require 'cl-lib)
+(require 'omnivox-audio-channels)
+(require 'tts-speak)
+(require 'omnivox-voices)
+(require 'omnivox-library-runtime)
+
+(defmacro omnivox-channels-tests--workers (&rest body)
+  (declare (indent 0))
+  `(let ((tts-program "omnivox") (tts-notification-device nil)
+         (omnivox-audio-devices--lanes nil) (omnivox-audio-channels--pending nil)
+         (omnivox-audio-channels--busy nil)
+         (tts-speaker-process (make-pipe-process :name "channels-main" :noquery t))
+         (tts-notify-process (make-pipe-process :name "channels-notify" :noquery t)))
+     (let ((owners (list tts-speaker-process tts-notify-process)))
+       (unwind-protect
+           (progn
+             (dolist (process owners)
+               (process-put process 'omnivox--control-capabilities '(:features ("audio_channel_selection_v1"))))
+             ,@body)
+         (dolist (process owners) (when (process-live-p process) (delete-process process)))))))
+
+(defun omnivox-channels-tests--status (channel)
+  (list :type "audio_channels_v1" :speech channel :tone channel :sound channel))
+
+(ert-deftest omnivox-channels-live-change-retains-both-workers-and-confirms-every-output ()
+  (omnivox-channels-tests--workers
+    (let ((main tts-speaker-process) (notify tts-notify-process) requests)
+      (cl-letf (((symbol-function 'tts-restart) (lambda () (ert-fail "Restarted speech")))
+                ((symbol-function 'omnivox-library--control)
+                 (lambda (process request)
+                   (should (eq process notify))
+                   (push request requests)
+                   (omnivox-channels-tests--status (plist-get request :channel)))))
+        (dolist (route '("left" "right" "both" nil))
+          (omnivox-audio-channels--set-route route)
+          (should (eq main tts-speaker-process))
+          (should (eq notify tts-notify-process))
+          (should (equal (process-get notify 'omnivox-audio-channel) (or route "both")))))
+      (should (= 4 (length requests)))
+      (should-not omnivox-audio-channels--pending))))
+
+(ert-deftest omnivox-channels-lost-reply-is-queried-without-reapplying ()
+  (omnivox-channels-tests--workers
+    (let (requests)
+      (cl-letf (((symbol-function 'omnivox-library--control)
+                 (lambda (_ request)
+                   (push request requests)
+                   (if (equal (plist-get request :type) "set_audio_channels_v1")
+                       (error "Lost reply")
+                     (omnivox-channels-tests--status "left")))))
+        (omnivox-audio-channels--set-route "left"))
+      (should (= 2 (length requests)))
+      (should-not omnivox-audio-channels--pending))))
+
+(ert-deftest omnivox-channels-unknown-result-blocks-save-and-assumed-recovery ()
+  (omnivox-channels-tests--workers
+    (cl-letf (((symbol-function 'omnivox-library--control) (lambda (&rest _) (error "No reply"))))
+      (should-error (omnivox-audio-channels--set-route "right") :type 'user-error))
+    (should-error (omnivox-audio-channels--assert-resolved) :type 'user-error)
+    (should-error (tts-notify-initialize) :type 'user-error)
+    (should-error (tts-initialize) :type 'user-error)
+    (cl-letf (((symbol-function 'omnivox-library--control)
+               (lambda (&rest _) (omnivox-channels-tests--status "both"))))
+      (omnivox-audio-channels--set-route "both"))
+    (should-not omnivox-audio-channels--pending)))
+
+(ert-deftest omnivox-channels-mixed-or-stale-replies-do-not-report-success ()
+  (omnivox-channels-tests--workers
+    (cl-letf (((symbol-function 'omnivox-library--control)
+               (lambda (&rest _) '(:type "audio_channels_v1" :speech "left" :tone "both" :sound "left"))))
+      (should-error (omnivox-audio-channels--set-route "left") :type 'user-error))
+    (should omnivox-audio-channels--pending)
+    (let ((old tts-notify-process))
+      (cl-letf (((symbol-function 'omnivox-library--control)
+                 (lambda (&rest _)
+                   (setq tts-notify-process nil)
+                   (omnivox-channels-tests--status "right"))))
+        (should-error (omnivox-audio-channels--apply old "right") :type 'user-error))
+      (should-not (process-get old 'omnivox-audio-channel)))))
+
+(ert-deftest omnivox-channels-main-routing-requires-native-cleanup-and-keeps-device-preferences ()
+  (omnivox-channels-tests--workers
+    (let ((main tts-speaker-process) (notify tts-notify-process) confirmed
+          (omnivox-audio-device-preferences '(("host" notification "wasapi:headset" "Headset"))))
+      (cl-letf (((symbol-function 'tts--confirm-owned-retirement)
+                 (lambda (process) (should (eq notify process)) (setq confirmed t)))
+                ((symbol-function 'tts--retire-process)
+                 (lambda (process) (should confirmed) (should (eq notify process)))))
+        (omnivox-audio-channels--set-route "default"))
+      (should (eq main tts-speaker-process))
+      (should-not tts-notify-process)
+      (should (equal "wasapi:headset" (nth 2 (car omnivox-audio-device-preferences)))))))
+
+(ert-deftest omnivox-channels-unconfirmed-native-cleanup-preserves-the-current-route ()
+  (omnivox-channels-tests--workers
+    (let ((old tts-notify-process))
+      (cl-letf (((symbol-function 'tts--confirm-owned-retirement) (lambda (_) (error "Cleanup unknown"))))
+        (should-error (omnivox-audio-channels--set-route "default")))
+      (should (eq old tts-notify-process)))))
+
+(ert-deftest omnivox-channels-separate-route-prepares-only-a-notifier-before-publishing ()
+  (omnivox-channels-tests--workers
+    (let ((main tts-speaker-process) (new tts-notify-process) (tts-notify-process nil) initialized)
+      (cl-letf (((symbol-function 'tts--confirm-owned-retirement) #'ignore)
+                ((symbol-function 'tts-notify-initialize)
+                 (lambda ()
+                   (should (equal "left" tts-notification-device))
+                   (should (eq main tts-speaker-process))
+                   (setq initialized t tts-notify-process new)))
+                ((symbol-function 'omnivox-library--wait-for-recovered-speech)
+                 (lambda (process) (should initialized) (should (eq new process))))
+                ((symbol-function 'omnivox-library--control)
+                 (lambda (process _) (should (eq process new)) (omnivox-channels-tests--status "left"))))
+        (omnivox-audio-channels--set-route "left"))
+      (should (eq main tts-speaker-process))
+      (should (eq new tts-notify-process)))))
+
+(ert-deftest omnivox-channels-failed-notifier-preparation-keeps-main-available ()
+  (omnivox-channels-tests--workers
+    (let ((main tts-speaker-process) (new tts-notify-process) (tts-notify-process nil) retired)
+      (cl-letf (((symbol-function 'tts--confirm-owned-retirement) #'ignore)
+                ((symbol-function 'tts-notify-initialize) (lambda () (setq tts-notify-process new)))
+                ((symbol-function 'omnivox-library--wait-for-recovered-speech) (lambda (_) (error "Not ready")))
+                ((symbol-function 'tts--retire-process) (lambda (process) (should (eq new process)) (setq retired t))))
+        (should-error (omnivox-audio-channels--set-route "left")))
+      (should retired)
+      (should (eq main tts-speaker-process))
+      (should-not tts-notify-process))))
+
+(ert-deftest omnivox-channels-reset-reapplies-the-confirmed-route-after-reset ()
+  (omnivox-channels-tests--workers
+    (process-put tts-notify-process 'omnivox-audio-channel "left")
+    (let ((tts-speaker-process tts-notify-process) wire effects)
+      (cl-letf (((symbol-function 'emacsvox-aural--delivery-send-typed)
+                 (lambda (_ text kinds &rest _) (setq wire text effects kinds))))
+        (tts--protocol-reset))
+      (should (equal '(clear neutral) effects))
+      (should (string-prefix-p "tts_reset \nomnivox_control " wire))
+      (let* ((line (cadr (split-string wire "\n")))
+             (payload (cadr (split-string line " ")))
+             (request (json-parse-string (base64-decode-string payload))))
+        (should (equal "left" (gethash "channel" request)))))))
+
+(provide 'omnivox-audio-channels-tests)
+;;; omnivox-audio-channels-tests.el ends here

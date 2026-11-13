@@ -7234,8 +7234,7 @@ File: emacsvox-reference.info,  Node: emacsvox-output-settings,  Next: emacsvox-
 2.233 emacsvox-output-settings
 ==============================
 
-Global output policy; persistence and speech restart are explicit
-actions.
+Global output policy; live routing and persistence are separate actions.
 
 2.233.1 Emacsvox-Output-Settings Commands
 -----------------------------------------

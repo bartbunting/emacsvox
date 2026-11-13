@@ -40,6 +40,7 @@
 (require 'emacsvox-aural-transport)
 (require 'omnivox-punctuation-profiles)
 (require 'omnivox-audio-devices)
+(require 'omnivox-audio-channels)
 
 ;;;  Forward Declarations:
 
@@ -315,8 +316,10 @@ use their existing isolated-letter behavior."
 ;;;;  reset
 
 (defun tts--protocol-reset ()
-  
-  (emacsvox-aural--delivery-send-typed tts-speaker-process "tts_reset \n" 'clear))
+  (let ((route (omnivox-audio-channels--reset-command tts-speaker-process)))
+    (emacsvox-aural--delivery-send-typed
+     tts-speaker-process (concat "tts_reset \n" route)
+     (if route '(clear neutral) 'clear))))
 
 ;;;   user customizations:
 
@@ -2301,6 +2304,7 @@ Signal a user error if no diagnostic buffer is available."
 
 (defun tts-initialize ()
   "Initialize speech system."
+  (omnivox-audio-channels--assert-resolved)
   (omnivox-audio-devices--assert-resolved 'speaker)
   (omnivox-audio-devices--assert-resolved 'notification)
   (tts--assert-owned-recovery-possible tts-speaker-process)
@@ -2969,6 +2973,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 (defun tts-notify-initialize ()
   "Initialize a separate notification TTS process when configured."
   (interactive)
+  (omnivox-audio-channels--assert-resolved)
   (omnivox-audio-devices--assert-resolved 'notification)
   (tts--assert-owned-recovery-possible tts-notify-process)
   (require 'omnivox-library-runtime)
@@ -2990,6 +2995,8 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
            ("OMNIVOX_AUDIO_TARGET"
             (tts--notification-omnivox-audio-target)))
         (setq new (tts-make-process "Notify"))
+        (when (and (processp new) (tts--omnivox-program-p))
+          (process-put new 'omnivox-audio-channel (tts--notification-omnivox-audio-target)))
         (unless (process-live-p new)
           (error "Fail: Notification Speech Server"))))
     ;; Publish the replacement before retirement hooks observe global state.
