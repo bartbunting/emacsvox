@@ -2824,6 +2824,10 @@ Other device and retains the previous route. Selecting does not restart speech.
 after confirmation. ~h~ inspects a notification-history snapshot, returning
 with ~q~. ~S~ saves routing and spatial defaults without a restart.
 
+For physical devices on a supporting Windows Omnivox build, ~D~ opens main
+outputs and ~M~ opens notification outputs. Their separate Apply and Save
+actions are described in [[info:emacsvox#Selecting And Checking Omnivox][Selecting And Checking Omnivox]].
+
 With Omnivox, Automatic normally uses an independent notification process;
 left/right/both choose its route. /Use main output (notifications remain
 audible)/ uses the main process instead, where navigation can interrupt it.

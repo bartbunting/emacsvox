@@ -765,6 +765,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
+* omnivox-audio-devices:: Independent physical output choices.
 * omnivox-catalogue:: Available voices and downloads.
 * omnivox-choice-codec:: Individual voice wire values.
 * omnivox-control-codec:: Omnivox control wire data.
@@ -778,6 +779,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omnivox-library-runtime:: Native voice library runtime.
 * omnivox-native-codec:: Native voice wire values.
 * omnivox-native-guard:: Independent native cleanup control.
+* omnivox-output-devices:: Choose physical speech outputs.
 * omnivox-parameters:: Asynchronous engine controls.
 * omnivox-parameters-codec:: Engine parameter metadata.
 * omnivox-preferences:: Independent host preference reload.

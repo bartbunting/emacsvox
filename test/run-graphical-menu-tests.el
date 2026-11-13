@@ -19,7 +19,8 @@
        (dependencies (getenv "EMACSVOX_TEST_DEPS_DIR"))
        (modules '(emacsvox-aural-ui emacsvox-transient emacsvox-aural-menu emacsvox-settings-changes
                   emacsvox-settings emacsvox-settings-integrations emacsvox-settings-workflows
-                  emacsvox-reading-settings emacsvox-output-settings emacsvox-table-settings
+                  emacsvox-reading-settings emacsvox-output-settings omnivox-audio-devices
+                  omnivox-output-devices emacsvox-table-settings
                   emacsvox-tree-settings emacsvox-tone-editor emacsvox-indentation
                   emacsvox-capitalization emacsvox-spelling emacsvox-interaction
                   emacsvox-line-cues emacsvox-aural-voice-menu))

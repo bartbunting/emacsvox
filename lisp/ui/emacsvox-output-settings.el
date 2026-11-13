@@ -375,10 +375,27 @@ Shift arrows change it by 0.1; spatial presentation must be enabled."
        buffer))
    'emacsvox-output-settings--history))
 
+(defun emacsvox-output-settings--main-device ()
+  "Browse main speech outputs with separate Apply and Save actions."
+  (interactive)
+  (require 'omnivox-output-devices)
+  (emacsvox-aural-menu--open-browser
+   (lambda () (omnivox-output-devices 'speaker)) 'emacsvox-output-settings--main-device))
+
+(defun emacsvox-output-settings--notification-device ()
+  "Browse notification outputs with separate Apply and Save actions."
+  (interactive)
+  (require 'omnivox-output-devices)
+  (emacsvox-aural-menu--open-browser
+   (lambda () (omnivox-output-devices 'notification)) 'emacsvox-output-settings--notification-device))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-output-settings ()
   "Set global notification routing and spatial presentation policy."
   :refresh-suffixes t
+  ["Physical outputs (local Windows Omnivox)"
+   ("D" "Main output device" emacsvox-output-settings--main-device :transient transient--do-suspend)
+   ("M" "Notification output device" emacsvox-output-settings--notification-device :transient transient--do-suspend)]
   ["Notifications (route changes need speech restart)"
    ("r" (lambda () (format "Route for next restart: %s" (or tts-notification-device "automatic"))) emacsvox-output-settings--route :transient transient--do-stack)
    ("h" "Notification history" emacsvox-output-settings--history :transient transient--do-suspend)

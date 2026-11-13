@@ -2185,6 +2185,7 @@ registration reads the current choices, never a captured startup preference."
     (process-put process omnivox--control-capabilities-property response)
     (omnivox--update-unicode-preprocessing)
     (omnivox-punctuation-profiles--negotiate process response)
+    (omnivox-audio-devices--negotiate process)
     (process-put
      process tts--tracked-playback-completion-property
      (and
