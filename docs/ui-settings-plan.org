@@ -22,13 +22,6 @@ to their recorded revisions; this reconciliation adds no listening acceptance.
 
 * Immediate work
 
-** Confirm physical-device menus by listening
-
-Physical output selection now uses Transient choices under =C-e H o n D/M=.
-Check arrow feedback, Enter to select, separate Apply and Save, and return to
-the parent control in the Audio Devices candidate. Main and notification
-outputs remain independent. The [[file:manual/chapters/speech-backends.org::*Selecting And Checking Omnivox][Omnivox guide]] describes the workflow.
-
 ** Complete the changed-menu listening check
 
 Status: implemented; the [[file:transient-menu-audit-2026-11-10.org::*Remaining verification and decisions][10 November audit]] leaves two listening tasks open.

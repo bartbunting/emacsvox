@@ -13,10 +13,11 @@ replacing the real main-process binding. Notification submissions use the
 existing guarded notification helper. Repeated Quit messages after notification
 failure no longer create abandoned main workers or consume recovery capacity.
 
+Windows listening was accepted on 2026-11-13: switching Left/Right repeatedly
+and choosing different physical devices for main and notifications worked well.
+The [[*Listening acceptance][listening record]] identifies the tested candidate and scope.
 The original notification startup timeout was observed but not reproduced in
-the fresh checks. Its cause is unresolved. These checks do not establish an
-acoustic result; the new menus still need the short listening check in the
-[[file:ui-settings-plan.org::*Confirm physical-device menus by listening][settings plan]].
+the fresh checks. Its cause remains unresolved.
 
 * Observed session
 
@@ -93,15 +94,16 @@ corrected harness passes with both engines. The first full WSL byte-code build
 finished with a stale-file preflight because source edits occurred during that
 build; an incremental build then passed. Native compilation and preflight pass.
 
-* Listening handoff
+* Listening acceptance
 
-The new candidate is =AudioDeviceTests/transient-20261113=. The Audio Devices
-desktop shortcut is the handoff route; an already running candidate retains its
-old definitions until closed and reopened. The ordinary Windows shortcut and
-personal saved preferences are preserved.
+On 2026-11-13, Bart confirmed that listening on Windows worked well after
+switching back and forth between Left and Right and selecting different audio
+devices for main and notifications. This accepts the reported Windows routing
+and device-selection interactions. The engine was not specified in the listening
+report; automated Eloquence and DECtalk coverage remains recorded separately.
 
-Check =C-e H o n D= for main and =M= for notifications. In each, use =d=, arrows
-and Enter, then =a= to Apply. Verify notification preview through the parent
-menu's =N= command. Use =s= only when the applied choice should persist. Report
-any fresh notification failure with its approximate time so it can be correlated
-with the new session's diagnostics.
+The tested handoff is =AudioDeviceTests/transient-20261113= through the Emacsvox
+Audio Devices desktop shortcut, client =a89c70565= with runtime
+=287fd0119a8f77d0=. The ordinary Windows shortcut and personal saved preferences
+were preserved during deployment. No new physical unplug/reconnect, Save/restart
+listening, Bluetooth profile or acoustic timing result is claimed.
