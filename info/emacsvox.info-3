@@ -14,6 +14,96 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Backend Diagnostics And Ownership,  Prev: Compatibility Speech Servers,  Up: Speech Backends
+
+14.9 Backend Diagnostics And Responsibilities
+=============================================
+
+Local server messages/errors remain in diagnostics buffers, hidden from
+the ordinary buffer list by default.  Use ‘C-e H D m’ for main or ‘C-e H
+D n’ for notification diagnostics, or ‘M-x tts-show-diagnostics’ with
+‘Speaker’ or ‘Notify’.  Missing local diagnostics are reported rather
+than invented.
+
+   Set ‘tts-hide-diagnostic-buffers’ to nil in Customize and restart
+speech to include them in the ordinary list.  Existing diagnostics are
+retained; custom buffer switchers may show hidden buffers independently.
+
+   Choose the diagnostic at the failed layer:
+
+‘omnivox’ is not found
+     In WSL, run ‘./bin/emacsvox-wsl-install --check’ and inspect its
+     saved path.  On other POSIX systems check ‘PATH’ or an absolute
+     ‘OMNIVOX_PROGRAM’.  Keep ‘espeak-ng-data’ and
+     ‘third-party-licenses’ beside the executable.
+‘omnivox --check’ errors or is inaudible
+     Diagnose below Emacsvox using Omnivox's build guide
+     (https://github.com/bartbunting/omnivox/blob/main/README.md),
+     platform status
+     (https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md),
+     and diagnostics guide
+     (https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md).
+     Do not change Emacs configuration before tone/speech work.
+The check passes but Emacsvox is silent
+     Confirm ‘TTS_PROGRAM’ was ‘omnivox’ before setup loaded, then use
+     ‘M-x tts-speak-version’.  Rerun the WSL installer check for a
+     release installation.  For development source staging, run ‘make
+     verify-windows-omnivox-runtime’ and restart after restaging.
+A process starts and later fails
+     The POSIX/WSL launcher retains private bounded stderr logs at
+     ‘$XDG_STATE_HOME/emacsvox/omnivox’, normally
+     ‘~/.local/state/emacsvox/omnivox’.  Spoken text is excluded unless
+     ‘OMNIVOX_LOG_SYNTHESIS_TEXT’ is explicitly enabled; that can expose
+     passwords, mail, and documents.
+Speech works but is delayed
+     Note whether diagnostic logging is already enabled.  Use ‘C-e d D’
+     to enable it only if needed, reproduce one short non-confidential
+     presentation, then restore its previous on/off state.  The default
+     log path is ‘~/.emacsvox-aural-diagnostics.log’ and can be changed
+     with ‘C-u C-e d D’ when enabling.  Records ‘dispatch-sent’,
+     ‘mixer-source-observed’, and ‘playback-terminal-observed’ share a
+     dispatch ID.  Match it in Omnivox logs to separate submission,
+     queueing, synthesis, and mixer-source delay.  This Emacs log is off
+     by default because submitted speech text is complete.  A mixer
+     observation is not physical output; device/hardware buffering can
+     add delay.  The diagnostics menu's ‘l’ also exposes the explicit
+     session logging control with its privacy warning.
+
+   For server selection, the launcher and Windows staging, use this
+manual.  For Omnivox builds, engine behaviour, command-line options and
+protocols, use the linked Omnivox guides.  The README beside each
+compatibility server documents that adapter and any separately licensed
+runtime it needs.
+
+
+File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  Prev: Speech Backends,  Up: Top
+
+15 Emacsvox Keyboard Commands.
+******************************
+
+Use this chapter to recall an everyday command and check its important
+conditions before acting.  *note Read the key instructions: Emacs Key
+Notation. explains modifiers, capital letters and successive keypresses.
+*note Basic Usage: (emacsvox)Basic Usage. teaches the reading and
+editing workflows; the links beside each reminder lead to their details.
+
+   These are default keys, used without a prefix argument unless one is
+shown.  Application keymaps and personal bindings can change their
+meaning.  A short reference cannot replace a terminal's or editor's own
+instructions.  Use *note live Help: Using Online Help. in the affected
+buffer when a binding differs, and *note the generated keymap reference:
+(emacsvox-reference)Emacsvox Keymaps. for the full default inventory.
+
+* Menu:
+
+* Reading reminders: Everyday Reading Commands.  Choose a reading unit and check its effect on point and windows.
+* Editing reminders: Everyday Editing Commands.  Select, copy, cut, paste and recover with the right scope.
+* Files, buffers and windows: Everyday Workspace Commands.  Open and save documents without confusing buffers and views.
+* Help and orientation: Everyday Help Commands.  Find commands and return to the intended working buffer.
+* Speech and settings: Everyday Speech Commands.  Find controls and distinguish navigation from undo and saving.
+* How prefixes and menus fit together: Emacsvox Key Prefixes.  Understand the speech prefix, menu entry and application overrides.
+
+
 File: emacsvox.info,  Node: Everyday Reading Commands,  Next: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
 
 15.1 Reading reminders

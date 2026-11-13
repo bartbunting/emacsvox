@@ -36,6 +36,7 @@
 (require 'emacsvox-aural-ui)
 (require 'omnivox-library)
 (require 'omnivox-punctuation-profiles)
+(require 'omnivox-preferences)
 (declare-function tts-restart "tts" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 
@@ -157,7 +158,7 @@
       (dolist (entry tables)
         (maphash (lambda (key _value) (puthash key t keys)) (cdr entry))))
     (setq header-line-format
-          (format " %s | %s | RET edit, l level/profile, N new profile, a add, s save, r restart, ? help"
+          (format " %s | %s | RET edit, l level/profile, N new profile, a add, s save, R reload, r restart, ? help"
                   omnivox-punctuation--level
                   (if (omnivox-punctuation--dirty-p) "Unsaved edits" omnivox-punctuation--status)))
     (emacsvox-aural-ui-refresh-tabulated
@@ -258,7 +259,7 @@
               (when (plist-member omnivox-punctuation--review :profiles)
                 (list :profiles_json (decode-coding-string
                                       (json-serialize profiles :null-object :null) 'utf-8 t)))))))
-  (setq omnivox-punctuation--status "Saved; restart speech to apply")
+  (setq omnivox-punctuation--status "Saved; reload punctuation or restart speech to apply")
   (omnivox-punctuation--render)
   (emacsvox-aural-ui-speak omnivox-punctuation--status))
 
@@ -279,7 +280,7 @@
                                              (list (cons id (copy-hash-table (cdr (assoc base omnivox-punctuation--defaults))))))
         omnivox-punctuation--level id)
   (omnivox-punctuation--render)
-  (emacsvox-aural-ui-speak (format "Draft profile %s, inheriting %s. Edit pronunciations, then Save and restart to select it." id base)))
+  (emacsvox-aural-ui-speak (format "Draft profile %s, inheriting %s. Edit pronunciations, then Save and Reload to select it." id base)))
 
 (defun omnivox-punctuation-delete-profile ()
   "Remove the selected named profile from the draft after confirmation."
@@ -305,6 +306,24 @@
     (setq omnivox-punctuation--status "Saved settings; active speech may differ")
     (omnivox-punctuation--render)
     (omnivox-punctuation-speak-row)))
+
+(defun omnivox-punctuation-reload ()
+  "Reload this saved punctuation file independently on current speech workers."
+  (interactive)
+  (when (omnivox-punctuation--dirty-p)
+    (user-error "Save or discard punctuation edits before reloading"))
+  (let ((buffer (current-buffer)))
+    (setq omnivox-punctuation--status "Reload requested; speech remains available")
+    (omnivox-punctuation--render)
+    (omnivox-reload-punctuation
+     (lambda (results)
+       (let ((summary (omnivox-preferences--summary results)))
+         (when (buffer-live-p buffer)
+           (with-current-buffer buffer
+             (setq omnivox-punctuation--status summary)
+             (omnivox-punctuation--render)))
+         (emacsvox-aural-ui-speak summary)))
+     (plist-get omnivox-punctuation--review :path))))
 
 (defun omnivox-punctuation-restart ()
   "Explicitly restart this session's speech workers with saved settings."
@@ -346,14 +365,17 @@
     (princ "RET edits: speak a name, preserve the character, or restore its default.\n")
     (princ "a adds a character; d restores the selected default in this level.\n")
     (princ "s saves all levels and profiles. Saving never restarts speech.\n")
+    (princ "R reloads saved punctuation independently.\n")
+    (princ "M-x omnivox-reload-preferences also reloads capital pitch, chunking and Reset defaults.\n")
+    (princ "Failed reload keeps working speech. A pending outcome can finish later.\n")
     (princ "r explicitly restarts both speech workers after confirmation.\n")
     (princ "g refreshes from the file and asks before discarding edits.\n")
     (princ "q returns to the previous view and retains your unfinished draft.\n\n")
     (princ "Preserve leaves the character for the engine's pronunciation and pauses.\n")
     (princ "Org normally selects some. Configure both straight and curly apostrophes\n")
     (princ "there to name them in prose. Each built-in level is independent.\n")
-    (princ "After restart, tts-set-punctuations selects a profile reported by both workers.\n")
-    (princ "Mode policies accept (profile ID FALLBACK); absent or differing catalogues use FALLBACK.\n")))
+    (princ "After reload, tts-set-punctuations offers available foreground profiles.\n")
+    (princ "Mode policies accept (profile ID FALLBACK); absent profiles use FALLBACK; older workers also require matching catalogues.\n")))
   (when (fboundp 'emacsvox-speak-help) (emacsvox-speak-help)))
 
 (define-derived-mode omnivox-punctuation-mode emacsvox-aural-tabulated-mode "Punctuation"
@@ -369,7 +391,7 @@
                    ("N" . omnivox-punctuation-new-profile) ("X" . omnivox-punctuation-delete-profile)
                    ("a" . omnivox-punctuation-add) ("d" . omnivox-punctuation-default)
                    ("l" . omnivox-punctuation-level) ("s" . omnivox-punctuation-save)
-                   ("r" . omnivox-punctuation-restart) ("g" . omnivox-punctuation-refresh)
+                   ("R" . omnivox-punctuation-reload) ("r" . omnivox-punctuation-restart) ("g" . omnivox-punctuation-refresh)
                    ("q" . omnivox-punctuation-quit) ("?" . omnivox-punctuation-help)))
   (define-key omnivox-punctuation-mode-map (kbd (car binding)) (cdr binding)))
 

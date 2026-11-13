@@ -55,6 +55,20 @@ history, issue or commit discussion. Remove superseded entries. If no later
 result exists, use the bounded task below; absence of a recorded result is not
 evidence of a defect.
 
+** Preference reload, recovery and early speech
+
+Independent saved host-preference reload, retained recovery and explicit
+emergency speech are implemented with the paired Omnivox runtime. Native
+Windows and WSL checks include Eloquence and DECtalk; general Development
+use has been accepted. The guard and early optional-engine discovery remain
+opt-in. Existing ordinary startup and explicit restart remain available.
+
+Next: complete targeted listening for reload, recovery and early discovery
+with navigation and notifications, without repeating the accepted general
+use check. Keep native macOS, additional engines and acoustic timing separate.
+The [[https://github.com/bartbunting/omnivox/blob/main/docs/plans/lightweight-preference-reload.md][paired delivery plan]] owns the remaining qualification work and links
+its retained successful and failed runs. No additional UI redesign is implied.
+
 ** Table controls
 <<table-reading-consolidation>>
 

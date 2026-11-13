@@ -67,6 +67,7 @@
 (defvar emacsvox-play-program)
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
+(defvar tts--notification-recovery-target)
 (defvar tts-notify-process)
 (defvar tts-speaker-process)
 (defvar tts-speech-rate)
@@ -357,6 +358,7 @@ cannot overtake server initialization or fail capability checks prematurely."
   "Detach all ordinary requests on dead PROCESS before delivering failures.
 Private preview callbacks retain their existing operation-owned cleanup."
   (unless (process-live-p process)
+    (omnivox--cancel-discovery-refresh process)
     (let ((pending (omnivox--pending-requests process)) identifiers callbacks quit-data)
       (maphash (lambda (id entry)
                  (when (omnivox--control-request-p entry) (push id identifiers))) pending)
@@ -414,6 +416,15 @@ response on timeout or process exit.  TIMEOUT overrides the ordinary deadline;
                   (setf (omnivox--control-request-timer entry) timer)
                 (cancel-timer timer))))
           (when (eq entry (gethash identifier pending))
+            ;; A write can install a registry even if its reply is delayed or
+            ;; lost. Never reuse an older acknowledged generation afterward.
+            (when (member (plist-get request :type)
+                          '("register_logical_voices" "register_logical_voices_v2"
+                            "register_logical_voices_v3"))
+              (when-let* ((generation (plist-get request :registry_generation))
+                          ((integerp generation)))
+                (process-put process 'omnivox--highest-sent-registry-generation
+                             (max generation (or (process-get process 'omnivox--highest-sent-registry-generation) 0)))))
             (tts-queue--send-typed
              process
              (format "omnivox_control {%s}\n"
@@ -1573,7 +1584,7 @@ JSON map hash tables are copied independently and cannot be compared by `equal'.
       (progn
         (omnivox--store-routing-policy-response process response)
         (if (omnivox--process-routing-policy-current-p process)
-            (omnivox-register-logical-voices)
+            (omnivox--register-logical-voices (list process))
           (omnivox--set-process-routing-policy process)))
     (omnivox--record-control-error process response)
     (when (and
@@ -1709,29 +1720,50 @@ may supply complete frozen registrations, which need no current palette data."
         (emacsvox-aural-voice-runtime--call-with-resolution-snapshot prepare)
       (funcall prepare))))
 
-(defun omnivox-register-logical-voices ()
-  "Register all Emacsvox logical voices with live Omnivox processes.
-Return the number of processes sent the atomic registry replacement."
-  (interactive)
-  (let* ((processes (omnivox--registration-processes))
-         (registrations (omnivox--prepare-voice-registrations processes)))
+(defun omnivox--unchanged-native-registry-generation (process content)
+  "Reuse PROCESS's acknowledged generation for unchanged native CONTENT.
+Discovery can refresh availability without changing the definitions used by
+speech awaiting that reply. A newer unconfirmed write prevents this reuse."
+  (let* ((old (process-get process omnivox--choice-registration-property))
+         (generation (plist-get old :registry-generation)))
+    (when (and (equal (plist-get content :type) "register_logical_voices_v3")
+               (integerp generation) (> generation 0)
+               (eql generation (process-get process 'omnivox--highest-sent-registry-generation))
+               (equal (plist-get old :process-generation)
+                      (process-get process 'tts--speech-process-generation))
+               (omnivox--native-registration-content-equal-p content (plist-get old :content)))
+      generation)))
+
+(defun omnivox--register-logical-voices (processes)
+  "Register logical voices on PROCESSES and return the number sent.
+Startup responses target their own worker; explicit client edits can target all."
+  (let ((registrations (omnivox--prepare-voice-registrations processes)))
     (omnivox--update-logical-registry-generation
      (mapcar #'cdr registrations))
     (dolist (registration registrations)
-      (let ((generation omnivox--logical-registry-generation)
-            (content (tts--dispatch-copy-data (cdr registration))))
+      (let* ((content (tts--dispatch-copy-data (cdr registration)))
+             (generation (or (omnivox--unchanged-native-registry-generation
+                              (car registration) content)
+                             omnivox--logical-registry-generation)))
         (omnivox--send-control-request
          (car registration) (omnivox--registration-request generation content)
          (lambda (process response)
            (unless (omnivox--accept-registration-response process response generation content)
              (omnivox--record-control-error process response))))))
-    (when (and (called-interactively-p 'interactive) (null processes))
+    (length processes)))
+
+(defun omnivox-register-logical-voices ()
+  "Register all Emacsvox logical voices with live Omnivox processes.
+Return the number of processes sent the atomic registry replacement."
+  (interactive)
+  (let ((count (omnivox--register-logical-voices (omnivox--registration-processes))))
+    (when (and (called-interactively-p 'interactive) (= count 0))
       (user-error "No live Omnivox process supports logical voice registration"))
     (when (called-interactively-p 'interactive)
       (message "Sent logical voice generation %d to %d Omnivox process%s"
                omnivox--logical-registry-generation
-               (length processes) (if (= (length processes) 1) "" "es")))
-    (length processes)))
+               count (if (= count 1) "" "es")))
+    count))
 
 (defun omnivox--voice-configuration-processes ()
   "Return every distinct live process targeted by voice configuration."
@@ -1783,9 +1815,10 @@ Return the number of processes sent the atomic registry replacement."
 CALLBACK receives one terminal aggregate with a result for each distinct live
 speaker or notification process.  A process policy is acknowledged before its
 logical registry is replaced, so partial failure is explicit and retryable.
-Timeout closes the apply and discards its pending callbacks.  Late replies
-cannot advance it or confirm its outcome; changes already sent may still have
-taken effect on the server.  Reapply to confirm the desired configuration."
+Timeout closes the apply without confirming its outcome.  An already sent
+layered registration retains a bounded reply observer: a valid late acknowledgement
+updates that connection's speech snapshot, but cannot reopen the apply.
+Reapply to confirm the desired configuration after an unconfirmed change."
   (let* ((processes (omnivox--voice-configuration-processes))
          ;; The lifecycle sentinel can clear lane ownership before a failed
          ;; request completes. Keep the roles this operation actually targeted.
@@ -1841,19 +1874,33 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                 (remhash process pending)
                 (dolist (request requests)
                   (when (eq process (car request))
-                    (omnivox--take-control-request process (cdr request))))
+                    (let* ((identifier (cdr request))
+                           (entry (gethash identifier (omnivox--pending-requests process))))
+                      (if (and (eq (plist-get result :phase) 'timeout)
+                               (omnivox--control-request-p entry)
+                               (member (omnivox--control-request-type entry)
+                                       '("register_logical_voices_v2" "register_logical_voices_v3")))
+                          ;; The worker may already have installed this registry.
+                          ;; Dropping its reply would strand speech on an older
+                          ;; generation. Retain observation, never the apply result,
+                          ;; within the ordinary request deadline and table bound.
+                          (setf (omnivox--control-request-timer entry)
+                                (run-at-time omnivox--control-request-timeout nil
+                                             #'omnivox--control-request-expired
+                                             process identifier entry))
+                        (omnivox--take-control-request process identifier)))))
                 (setq requests (cl-delete process requests :key #'car :test #'eq))
                 (push (plist-put result :role (cdr (assq process roles))) results)
                 (when (zerop (hash-table-count pending)) (complete))))
              (send-request
-              (process request response-function)
+              (process request response-function &optional observe-registration)
               (when (gethash process pending)
                 (condition-case error-data
                     (let ((identifier
                            (omnivox--send-control-request
                             process request
                             (lambda (owner response)
-                              (when (gethash owner pending)
+                              (when (or observe-registration (gethash owner pending))
                                 (if (and (process-live-p owner)
                                          (memq owner (list tts-speaker-process
                                                            tts-notify-process)))
@@ -1868,7 +1915,15 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                       ;; before the request identifier is returned to us.
                       (if (gethash process pending)
                           (push (cons process identifier) requests)
-                        (omnivox--take-control-request process identifier)))
+                        (let ((entry (gethash identifier (omnivox--pending-requests process))))
+                          ;; A timeout can run inside the write, before REQUESTS
+                          ;; contains this ID. Give that observer the same bound.
+                          (if (and observe-registration (omnivox--control-request-p entry))
+                              (setf (omnivox--control-request-timer entry)
+                                    (run-at-time omnivox--control-request-timeout nil
+                                                 #'omnivox--control-request-expired
+                                                 process identifier entry))
+                            (omnivox--take-control-request process identifier)))))
                   (error
                    (finish
                     process
@@ -1891,18 +1946,21 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                       :registration
                       (copy-tree (if (member (plist-get response :type) '("logical_voices_registered_v2" "logical_voices_registered_v3"))
                                      response (plist-get response :registration))))))
-                (omnivox--record-control-error process response)
-                (finish
-                 process
-                 (omnivox--voice-configuration-result
-                  process 'failed :phase 'logical-registration
-                  :response (copy-tree response)))))
+                (when (gethash process pending)
+                  (omnivox--record-control-error process response)
+                  (finish
+                   process
+                   (omnivox--voice-configuration-result
+                    process 'failed :phase 'logical-registration
+                    :response (copy-tree response))))))
              (register
               (process)
               (send-request
                process
                (omnivox--registration-request generation (cdr (assq process registrations)))
-               #'registration-response))
+               #'registration-response
+               (member (plist-get (cdr (assq process registrations)) :type)
+                       '("register_logical_voices_v2" "register_logical_voices_v3"))))
              (policy-response
               (process response)
               (if (equal (plist-get response :type)
@@ -1997,27 +2055,100 @@ taken effect on the server.  Reapply to confirm the desired configuration."
     (setq omnivox--logical-registration-timer
           (run-at-time 0 nil #'omnivox--run-scheduled-registration))))
 
-(defun omnivox--handle-inventory-response (process response)
-  "Store an inventory RESPONSE received from PROCESS."
-  (if (equal (plist-get response :type) "inventory")
-      (progn
-        (process-put process omnivox--control-inventory-property response)
-        (process-put process 'omnivox-inventory-received-at (current-time))
-        (when (eq process tts-speaker-process)
-          (setq omnivox-engine-inventory response
-                omnivox-engine-inventory-time
-                (process-get process 'omnivox-inventory-received-at)
-                omnivox-routing-policy-registration
-                (copy-tree (plist-get response :routing_policy))))
-        (run-hooks 'tts-voice-inventory-changed-hook)
-        (if (omnivox--process-supports-p process "runtime_routing_policy")
-            (if (omnivox--set-process-routing-policy process)
-                nil
-              (omnivox-register-logical-voices))
-          (when (omnivox--process-supports-p
-                 process "logical_voice_registration")
-            (omnivox-register-logical-voices))))
-    (omnivox--record-control-error process response)))
+(defun omnivox--cancel-discovery-refresh (process)
+  "Cancel the optional discovery refresh owned by PROCESS."
+  (when-let* ((timer (process-get process 'omnivox--discovery-timer)))
+    (cancel-timer timer))
+  (process-put process 'omnivox--discovery-timer nil))
+
+(defun omnivox--discovery-pending-p (inventory)
+  "Recognize pending discovery in the private early-speech INVENTORY.
+These reason strings belong to the paired experimental runtime; they are
+not a public discovery capability or a guarantee from arbitrary servers."
+  (seq-some
+   (lambda (engine)
+     (let ((availability (plist-get engine :availability)))
+       (and (equal (plist-get availability :status) "unavailable")
+            (member (plist-get availability :reason)
+                    '("Optional engine discovery pending"
+                      "Runtime rescan in progress")))))
+   (plist-get inventory :engines)))
+
+(defun omnivox--discovery-current-p (process)
+  "Return whether PROCESS owns either lane, including during notification speech."
+  (memq process (list (or (car tts--notification-recovery-target) tts-speaker-process)
+                      tts-notify-process)))
+
+(defun omnivox--schedule-discovery-refresh (process)
+  "Refresh pending experimental discovery on PROCESS without holding speech.
+Each connection has one timer and a 180-second observation budget.  Failed
+replies can retry inside that budget; final unavailable engines stop polling.
+Manual inventory refresh remains available after the budget expires."
+  (omnivox--cancel-discovery-refresh process)
+  (when (and (equal (getenv "OMNIVOX_EXPERIMENTAL_EARLY_SPEECH") "1")
+             (process-live-p process)
+             (omnivox--discovery-current-p process)
+             (not (process-get process 'tts--speech-process-retiring))
+             (omnivox--discovery-pending-p
+              (process-get process omnivox--control-inventory-property)))
+    (let ((deadline (or (process-get process 'omnivox--discovery-deadline)
+                        (+ (float-time) 180))))
+      (process-put process 'omnivox--discovery-deadline deadline)
+      (when (< (float-time) deadline)
+        (process-put process 'omnivox--discovery-timer
+                     (run-at-time 1 nil #'omnivox--refresh-discovery process))))))
+
+(defun omnivox--refresh-discovery (process)
+  "Observe optional engines on a still-current PROCESS asynchronously."
+  (omnivox--cancel-discovery-refresh process)
+  (when (and (process-live-p process)
+             (omnivox--discovery-current-p process)
+             (not (process-get process 'tts--speech-process-retiring))
+             (< (float-time) (or (process-get process 'omnivox--discovery-deadline) 0)))
+    (condition-case err
+        (omnivox--request-inventory process t)
+      (error
+       (omnivox--record-control-error
+        process (list :type "error" :code "discovery_refresh"
+                      :message (error-message-string err)))
+       (omnivox--schedule-discovery-refresh process)))))
+
+(defun omnivox--handle-discovery-response (process response)
+  "Observe RESPONSE only while PROCESS still owns a current speech lane."
+  (when (and (process-live-p process)
+             (omnivox--discovery-current-p process)
+             (not (process-get process 'tts--speech-process-retiring)))
+    (let ((tts-speaker-process (or (car tts--notification-recovery-target) tts-speaker-process)))
+      (omnivox--handle-inventory-response process response t))))
+
+(defun omnivox--handle-inventory-response (process response &optional background)
+  "Store an inventory RESPONSE received from PROCESS.
+BACKGROUND observations only re-register preferences when engines change;
+registration reads the current choices, never a captured startup preference."
+  (let ((previous (process-get process omnivox--control-inventory-property)))
+    (if (equal (plist-get response :type) "inventory")
+        (progn
+          (process-put process omnivox--control-inventory-property response)
+          (process-put process 'omnivox-inventory-received-at (current-time))
+          (when (eq process tts-speaker-process)
+            (setq omnivox-engine-inventory response
+                  omnivox-engine-inventory-time
+                  (process-get process 'omnivox-inventory-received-at)
+                  omnivox-routing-policy-registration
+                  (copy-tree (plist-get response :routing_policy))))
+          (when (or (not background)
+                    (not (equal (plist-get previous :engines)
+                                (plist-get response :engines))))
+            (run-hooks 'tts-voice-inventory-changed-hook)
+            (if (omnivox--process-supports-p process "runtime_routing_policy")
+                (if (omnivox--set-process-routing-policy process)
+                    nil
+                  (omnivox--register-logical-voices (list process)))
+              (when (omnivox--process-supports-p
+                     process "logical_voice_registration")
+                (omnivox--register-logical-voices (list process))))))
+      (omnivox--record-control-error process response))
+    (omnivox--schedule-discovery-refresh process)))
 
 (defun omnivox--update-unicode-preprocessing ()
   "Use client-side Unicode names unless every live Omnivox routes exact text."
@@ -2112,7 +2243,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
         (omnivox--request-inventory process)
       (when (member "logical_voice_registration"
                     (plist-get response :features))
-        (omnivox-register-logical-voices)))))
+        (omnivox--register-logical-voices (list process))))))
 
 (defun omnivox--negotiate-process (process)
   "Start capability negotiation for one live Omnivox PROCESS."
@@ -2139,6 +2270,28 @@ taken effect on the server.  Reapply to confirm the desired configuration."
              (list :process process :error error-data :time (current-time)))
        (message "Could not negotiate Omnivox control protocol: %s"
                 (error-message-string error-data))))))
+
+(defun omnivox--publish-prepared-main (process)
+  "Publish PROCESS's already acknowledged state after foreground handover.
+Preparation keeps the old foreground current.  Promote cached observations and
+readiness hooks without repeating inventory, policy or registration requests."
+  (unless (eq process tts-speaker-process)
+    (error "Prepared speech is not the current foreground"))
+  (setq omnivox-control-capabilities
+        (process-get process omnivox--control-capabilities-property)
+        omnivox-engine-inventory
+        (process-get process omnivox--control-inventory-property)
+        omnivox-engine-inventory-time
+        (process-get process 'omnivox-inventory-received-at)
+        omnivox-routing-policy-registration
+        (copy-tree (omnivox--process-routing-registration process)))
+  (omnivox--update-unicode-preprocessing)
+  (omnivox--finish-capability-negotiation process 'ready)
+  (omnivox--schedule-discovery-refresh process)
+  (when-let* ((registration
+              (process-get process omnivox--control-registration-property)))
+    (omnivox--handle-registration-response process registration))
+  (run-hooks 'tts-voice-inventory-changed-hook))
 
 (defun omnivox--negotiate-processes ()
   "Negotiate capabilities on all distinct live Omnivox processes."
@@ -2203,18 +2356,22 @@ Return the number of distinct processes that received the command."
         (princ (format "%s\n  ID: %s\n  Language: %s\n  Quality: %s\n\n"
                        name id language quality))))))
 
-(defun omnivox--request-inventory (process)
-  "Refresh PROCESS's background inventory with at most one outstanding request."
+(defun omnivox--request-inventory (process &optional discovery)
+  "Refresh PROCESS's inventory with at most one outstanding request.
+DISCOVERY selects the bounded background discovery observer."
   (or (let (identifier)
         (maphash
          (lambda (id entry)
            (when (and (omnivox--control-request-p entry)
                       (equal (omnivox--control-request-type entry) "inventory")
-                      (eq (omnivox--control-request-callback entry) #'omnivox--handle-inventory-response))
+                      (memq (omnivox--control-request-callback entry)
+                            '(omnivox--handle-inventory-response omnivox--handle-discovery-response)))
              (setq identifier id)))
          (omnivox--pending-requests process))
         identifier)
-      (omnivox--send-control-request process '(:type "inventory") #'omnivox--handle-inventory-response)))
+      (omnivox--send-control-request
+       process '(:type "inventory")
+       (if discovery #'omnivox--handle-discovery-response #'omnivox--handle-inventory-response))))
 
 (defun omnivox--handle-recovery-probe-response (callback process response)
   "Handle engine recovery probe RESPONSE and invoke CALLBACK."

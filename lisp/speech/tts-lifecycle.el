@@ -1056,10 +1056,15 @@ cannot deliver a second terminal result."
             (tts--forward-untracked-output process fragment)))
         (process-put process tts--tracked-fragment-property nil)
         (tts--cancel-process-tracked-dispatches process 'failed)
-        (when (eq process tts-speaker-process)
-          (setq tts-speaker-process nil))
-        (when (eq process tts-notify-process)
-          (setq tts-notify-process nil))
+        ;; Keep an unconfirmed native owner reachable.  Clearing the handle
+        ;; would let later recovery mistake lost cleanup evidence for first start.
+        (unless (or (member "--emergency-owner" (process-command process))
+                    (and (member "--voice-library-owner" (process-command process))
+                         (not (process-get process 'omnivox-library-retired))))
+          (when (eq process tts-speaker-process)
+            (setq tts-speaker-process nil))
+          (when (eq process tts-notify-process)
+            (setq tts-notify-process nil)))
         (when current
           (condition-case error-data
               (emacsvox-aural--call-independent-callback

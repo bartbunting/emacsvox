@@ -37,6 +37,8 @@
                     omnivox-rich-tone-tests
                     omnivox-library-apply-tests
                     omnivox-library-tests
+                    omnivox-preferences-tests
+                    omnivox-recovery-tests
                     omnivox-punctuation-tests
                     omnivox-punctuation-profiles-tests
                     omnivox-engine-configuration-tests
