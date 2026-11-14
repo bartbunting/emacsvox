@@ -491,5 +491,101 @@
      (should (= 1 (length writes)))
      (should (= 0 (hash-table-count emacsvox-aural--pending-deliveries))))))
 
+(ert-deftest tts-handoff-large-input-yields-and-preserves-nested-order ()
+  "Bursts yield with one owned timer while nested records remain at the end."
+  (tts-handoff-test--with-process
+   (let ((forwarded 0) last)
+     (cl-labels ((handle (owner line)
+                   (cl-incf forwarded)
+                   (setq last line)
+                   (when (= forwarded 1)
+                     (tts--consume-process-lines owner "nested\n" 'audit-input 'audit-busy #'handle 4096))))
+       (tts--consume-process-lines process (apply #'concat (make-list 1000 "ordinary\n"))
+                                   'audit-input 'audit-busy #'handle 4096)
+       (should (< forwarded 1000))
+       (let* ((input (process-get process 'audit-input))
+              (timer (buffer-local-value 'tts--input-timer input)))
+         (should (timerp timer))
+         (should-not (process-get process 'audit-busy))
+         (dotimes (_ 1001) (tts--resume-process-input process 'audit-input))
+         (should (= forwarded 1001))
+         (should (equal last "nested"))
+         (should-not (buffer-live-p input))
+         (should-not (process-get process 'tts--input-fragments)))))))
+
+(ert-deftest tts-handoff-input-errors-consume-once-and-preserve-rest ()
+  "A failing callback cannot repeat its record or lose later records."
+  (tts-handoff-test--with-process
+   (let (seen)
+     (cl-labels ((handle (_owner line)
+                   (push line seen)
+                   (when (equal line "bad") (error "Observer failed"))))
+       (should-error (tts--consume-process-lines process "bad\ngood\n" 'audit-input 'audit-busy #'handle 4096))
+       (should (equal seen '("bad")))
+       (tts--resume-process-input process 'audit-input)
+       (should (equal (nreverse seen) '("bad" "good")))
+       (should-not (process-get process 'audit-input))))))
+
+(ert-deftest tts-handoff-input-bounds-and-partial-unicode ()
+  "Partial Unicode lines preserve bytes and both input bounds remain enforced."
+  (tts-handoff-test--with-process
+   (let (lines)
+     (cl-labels ((handle (_owner line) (push line lines)))
+       (tts--consume-process-lines process "λ" 'audit-input 'audit-busy #'handle 4)
+       (tts--consume-process-lines process "λ\r\n" 'audit-input 'audit-busy #'handle 4)
+       (should (equal lines '("λλ")))
+       (should-error (tts--consume-process-lines process "λλλ" 'audit-input 'audit-busy #'handle 4))
+       (should-not (process-get process 'audit-input))
+       (should-error (tts--consume-process-lines process (make-string (1+ (* 16 1024 1024)) ?a)
+                                                 'audit-input 'audit-busy #'handle 4096))
+       (should-not (process-get process 'audit-input))))))
+
+(ert-deftest tts-handoff-process-death-drains-final-records-and-cleans-input ()
+  "EOF delivers queued records once and releases timers and partial text."
+  (tts-handoff-test--with-process
+   (let ((count 0) (sentinels 0))
+     (set-process-sentinel process (lambda (&rest _) (cl-incf sentinels)))
+     (tts--consume-process-lines process (concat (apply #'concat (make-list 1000 "line\n")) "partial")
+                                 'audit-input 'audit-busy (lambda (&rest _) (cl-incf count)) 4096)
+     (let ((input (process-get process 'audit-input)))
+       (should (< count 1000))
+       (delete-process process)
+       (should (= count 1000))
+       (should (= sentinels 1))
+       (should-not (buffer-live-p input))
+       (should-not (process-get process 'tts--input-fragments))))))
+
+(ert-deftest tts-handoff-retirement-discards-pending-input-and-cancels-drain ()
+  "Explicit retirement cannot leave a drain able to deliver stale records."
+  (tts-handoff-test--with-process
+   (let ((count 0))
+     (tts--consume-process-lines process (apply #'concat (make-list 1000 "line\n"))
+                                 'audit-input 'audit-busy (lambda (&rest _) (cl-incf count)) 4096)
+     (let ((input (process-get process 'audit-input))
+           (before count))
+       (cl-letf (((symbol-function 'process-send-string) #'ignore))
+         (tts--retire-process process))
+       (tts--resume-process-input process 'audit-input)
+       (should (= count before))
+       (should-not (buffer-live-p input))
+       (should-not (process-get process 'tts--input-fragments))))))
+
+(ert-deftest tts-handoff-eof-preserves-a-queued-terminal-record ()
+  "A final completion behind a burst wins over generic process-death failure."
+  (tts-handoff-test--with-process
+   (let (statuses)
+     (cl-letf (((symbol-function 'process-send-string) #'ignore))
+       (tts-handoff-test--submit nil (lambda (_id status) (push status statuses))))
+     (set-process-sentinel process #'tts--speech-process-sentinel)
+     (process-put process tts--tracked-filter-property #'ignore)
+     (tts--speaker-process-filter
+      process (concat (apply #'concat (make-list 1000 "notice\n"))
+                      "__EMACSVOX_TRACKED__ 1 completed\n"))
+     (should-not statuses)
+     (delete-process process)
+     (tts--dispatch-drain process)
+     (should (equal statuses '(completed)))
+     (should-not (process-get process 'tts--input-fragments)))))
+
 (provide 'tts-dispatch-handoff-tests)
 ;;; tts-dispatch-handoff-tests.el ends here

@@ -961,6 +961,7 @@ Return non-nil for every marker-prefixed line, including malformed records."
 (defun omnivox--install-control-filter (process)
   "Install bounded control-event filtering on Omnivox PROCESS once."
   (unless (process-get process omnivox--control-filter-installed-property)
+    (tts--release-input process omnivox--control-fragment-property)
     (process-put process omnivox--control-filter-installed-property t)
     (process-put
      process omnivox--control-original-filter-property (process-filter process))

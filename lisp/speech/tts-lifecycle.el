@@ -251,6 +251,8 @@ a `cancelled' record when pending input interrupts that wait.")
 (defvar tts--dispatch-call-depth 0)
 (defvar tts--dispatch-drain-active nil)
 (defvar tts--input-drain-depth 0)
+(defvar tts--input-final-drain nil
+  "Process whose received records are being consumed before EOF cleanup.")
 (defvar emacsvox-aural--submission-depth 0)
 (defvar emacsvox-aural--delivery-dispatch-owners nil)
 
@@ -805,7 +807,7 @@ not proof that audio reached a physical output device."
          (not (tts--dispatch-owner-released owner))
          (not (tts--dispatch-owner-retired owner))
          (not (tts--dispatch-owner-terminal owner))
-         (process-live-p process)
+         (or (process-live-p process) (eq tts--input-final-drain process))
          (not (process-get process 'tts--speech-process-retiring))
          (equal (tts--dispatch-owner-generation owner)
                 (process-get process 'tts--speech-process-generation))
@@ -942,37 +944,145 @@ Return non-nil when EVENT belongs to a live marker dispatch."
                   (error-message-string error-data))))
       t)))
 
+(defvar-local tts--input-bytes 0)
+(defvar-local tts--input-scan-start 1)
+(defvar-local tts--input-timer nil)
+(defvar-local tts--input-resume nil)
+
+(defun tts--input-process-sentinel (process event)
+  "Preserve a standalone PROCESS sentinel and release its line-input state."
+  (let ((original (process-get process 'tts--input-original-sentinel)))
+    (if (memq (process-status process) '(exit signal closed failed))
+        (unwind-protect
+            (progn
+              (tts--finish-process-input process)
+              (when original (funcall original process event)))
+          (tts--release-process-input process))
+      (when original (funcall original process event)))))
+
+(defun tts--input-fragment-text (process fragment)
+  "Return unread PROCESS input for FRAGMENT, including queued complete lines."
+  (let ((input (process-get process fragment)))
+    (cond ((buffer-live-p input) (with-current-buffer input (buffer-string)))
+          ((stringp input) input))))
+
+(defun tts--release-input (process fragment)
+  "Release PROCESS's owned FRAGMENT buffer and its drain timer."
+  (let ((input (process-get process fragment)))
+    (process-put process fragment nil)
+    (process-put process 'tts--input-fragments
+                 (delq fragment (process-get process 'tts--input-fragments)))
+    (when (buffer-live-p input)
+      (with-current-buffer input
+        (when (timerp tts--input-timer) (cancel-timer tts--input-timer))
+        (let ((kill-buffer-query-functions nil)) (kill-buffer input))))))
+
+(defun tts--release-process-input (process)
+  "Cancel all line drains and release all owned input buffers for PROCESS."
+  (dolist (fragment (copy-sequence (process-get process 'tts--input-fragments)))
+    (tts--release-input process fragment)))
+
+(defun tts--input-line-ready-p (input)
+  "Whether INPUT contains a complete unread line, skipping known partial text."
+  (with-current-buffer input
+    (goto-char tts--input-scan-start)
+    (or (search-forward "\n" nil t)
+        (progn (setq tts--input-scan-start (point-max)) nil))))
+
+(defun tts--resume-process-input (process fragment)
+  "Resume one bounded drain of PROCESS input in FRAGMENT."
+  (let ((input (process-get process fragment)))
+    (when (buffer-live-p input)
+      (let ((arguments (buffer-local-value 'tts--input-resume input)))
+        (apply #'tts--consume-process-lines process "" arguments)))))
+
+(defun tts--finish-process-input (process)
+  "Consume final complete records before retiring a dead PROCESS.
+An already active filter owns its callback and cannot be entered recursively."
+  (dolist (fragment (copy-sequence (process-get process 'tts--input-fragments)))
+    (let ((input (process-get process fragment)))
+      (when (buffer-live-p input)
+        (let ((arguments (buffer-local-value 'tts--input-resume input)))
+          (unless (process-get process (nth 1 arguments))
+            (condition-case nil
+                (let ((tts--input-final-drain process))
+                  (apply #'tts--consume-process-lines process "" arguments))
+              (error nil))))))))
+
 (defun tts--consume-process-lines (process output fragment busy handler limit)
   "Drain PROCESS OUTPUT through HANDLER using FRAGMENT and BUSY properties.
-Retain at most LIMIT bytes between calls; nested input follows existing input."
-  (let ((pending (concat (or (process-get process fragment) "") output)))
-    (when (> (string-bytes pending) (* 16 1024 1024))
-      (process-put process fragment "")
+Each line and unfinished tail is limited to LIMIT bytes. Queued input is
+bounded to 16 MiB. Live processes yield after 256 lines or five milliseconds;
+nested input follows existing input and final records drain before retirement."
+  (let ((input (process-get process fragment)))
+    (unless (buffer-live-p input)
+      (let ((previous input))
+        (setq input (generate-new-buffer " *speech-process-input*"))
+        (with-current-buffer input
+          (setq buffer-undo-list t)
+          (when (stringp previous)
+            (insert previous)
+            (setq tts--input-bytes (string-bytes previous))))
+        (process-put process fragment input)
+        (process-put process 'tts--input-fragments
+                     (cons fragment (delq fragment (process-get process 'tts--input-fragments))))
+        (unless (memq (process-sentinel process)
+                      '(tts--speech-process-sentinel tts--input-process-sentinel))
+          (process-put process 'tts--input-original-sentinel (process-sentinel process))
+          (set-process-sentinel process #'tts--input-process-sentinel))))
+    (when (> (+ (buffer-local-value 'tts--input-bytes input) (string-bytes output))
+             (* 16 1024 1024))
+      (tts--release-input process fragment)
       (tts--cancel-process-tracked-dispatches process 'failed)
       (error "Speech process input queue exceeded its bound"))
-    (process-put process fragment pending))
+    (with-current-buffer input
+      (setq tts--input-resume (list fragment busy handler limit))
+      (goto-char (point-max))
+      (insert output)
+      (setq tts--input-bytes (1- (position-bytes (point-max)))))
+    (when (> (buffer-local-value 'tts--input-bytes input) (* 16 1024 1024))
+      (tts--release-input process fragment)
+      (tts--cancel-process-tracked-dispatches process 'failed)
+      (error "Speech process input queue exceeded its bound")))
   (unless (process-get process busy)
-    (let ((tts--input-drain-depth (1+ tts--input-drain-depth)) complete)
+    (let ((tts--input-drain-depth (1+ tts--input-drain-depth))
+          (start (float-time)) (count 0))
       (process-put process busy t)
       (unwind-protect
-          (progn
-            (while (string-search "\n" (or (process-get process fragment) ""))
-              (let* ((pending (process-get process fragment))
-                     (end (string-search "\n" pending))
-                     (line (string-trim-right (substring pending 0 end) "\r")))
-                ;; Consume before invoking a callback that can accept more input.
-                (process-put process fragment (substring pending (1+ end)))
+          (catch 'drained
+            (while (or (eq tts--input-final-drain process) (not (process-live-p process)) (zerop count)
+                       (and (< count 256) (< (- (float-time) start) 0.005)))
+              (let ((input (process-get process fragment)) line)
+                (unless (and (buffer-live-p input) (tts--input-line-ready-p input))
+                  (when (and (buffer-live-p input)
+                             (> (buffer-local-value 'tts--input-bytes input) limit))
+                    (tts--release-input process fragment)
+                    (error "Speech process output fragment exceeded its bound"))
+                  (throw 'drained nil))
+                (with-current-buffer input
+                  ;; `tts--input-line-ready-p' left point after the newline.
+                  (setq line (buffer-substring (point-min) (1- (point))))
+                  (cl-decf tts--input-bytes (1+ (string-bytes line)))
+                  (delete-region (point-min) (point))
+                  (setq tts--input-scan-start (point-min)))
+                ;; Consume before a handler can accept nested input or signal.
+                (cl-incf count)
+                (when (string-suffix-p "\r" line)
+                  (setq line (string-trim-right line "\r")))
                 (if (> (string-bytes line) limit)
                     (error "Speech process output line exceeded its bound")
-                  (funcall handler process line))))
-            (when (> (string-bytes (or (process-get process fragment) "")) limit)
-              (process-put process fragment "")
-              (error "Speech process output fragment exceeded its bound"))
-            (setq complete t))
+                  (funcall handler process line)))))
         (process-put process busy nil)
-        (when (and (not complete) (string-search "\n" (or (process-get process fragment) "")))
-          (run-at-time 0.01 nil #'tts--consume-process-lines
-                       process "" fragment busy handler limit))))))
+        (let ((input (process-get process fragment)))
+          (when (buffer-live-p input)
+            (with-current-buffer input
+              (when (timerp tts--input-timer) (cancel-timer tts--input-timer))
+              (setq tts--input-timer nil)
+              (cond
+               ((or (tts--input-line-ready-p input) (> tts--input-bytes limit))
+                (setq tts--input-timer
+                      (run-at-time 0.001 nil #'tts--resume-process-input process fragment)))
+               ((zerop (buffer-size)) (tts--release-input process fragment))))))))))
 
 (defun tts--speaker-process-filter (process output)
   "Recognize tracked completion records in PROCESS OUTPUT."
@@ -986,6 +1096,7 @@ Retain at most LIMIT bytes between calls; nested input follows existing input."
 (defun tts--ensure-tracked-process-filter (process)
   "Install tracked completion filtering on PROCESS."
   (unless (eq (process-filter process) #'tts--speaker-process-filter)
+    (tts--release-input process tts--tracked-fragment-property)
     (process-put process tts--tracked-filter-property (process-filter process))
     (process-put process tts--tracked-fragment-property "")
     (set-process-filter process #'tts--speaker-process-filter)))
@@ -1078,6 +1189,10 @@ cannot deliver a second terminal result."
        (not
         (process-get process tts--speech-process-exit-handled-property)))
     (process-put process tts--speech-process-exit-handled-property t)
+    (tts--finish-process-input process)
+    (tts--dispatch-drain process)
+    (when (process-get process tts--speech-process-retiring-property)
+      (tts--release-process-input process))
     (unless
         (process-get process tts--speech-process-retiring-property)
       (let ((current
@@ -1088,10 +1203,10 @@ cannot deliver a second terminal result."
         (tts-queue--retire process)
         (emacsvox-aural-cancel-pending-deliveries process)
         (when-let* ((fragment
-                     (process-get process tts--tracked-fragment-property)))
+                     (tts--input-fragment-text process tts--tracked-fragment-property)))
           (unless (string-empty-p fragment)
             (tts--forward-untracked-output process fragment)))
-        (process-put process tts--tracked-fragment-property nil)
+        (tts--release-process-input process)
         (tts--cancel-process-tracked-dispatches process 'failed)
         ;; Keep an unconfirmed native owner reachable.  Clearing the handle
         ;; would let later recovery mistake lost cleanup evidence for first start.
@@ -1215,6 +1330,7 @@ the same owner is harmless."
                   function owner)
                  nil)
                process))
+          (attempt "process input" #'tts--release-process-input process)
           (delete-process process)))
       (dolist (failure (nreverse failures))
         (message "Speech server %s retired with cleanup error in %s"
