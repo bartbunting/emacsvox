@@ -367,6 +367,29 @@ undo the result.  Likewise, quitting a settings menu does not undo an
 adjustment made there.  Follow the recovery instructions for the
 operation you actually performed.
 
+   Some questions offer several single-key answers, with a longer
+explanation in Help.  A disabled-command question is one example.
+Emacsvox announces the question, explanation and choices once when input
+is ready.  Press ‘C-e s’ to stop speech without answering, or ‘C-e a’ to
+repeat the complete question.  Repeat also copies that text to the kill
+ring, replacing the next yank's source.
+
+   Press ‘C-e h’ to select that question's Help and read from its
+beginning.  The buffer may be named ‘*Disabled Command*’, ‘*Multiple
+Choice Help*’ or another name chosen by the command.  Use ordinary line,
+word and character movement and reading there.  Press ‘q’ to return to
+the unanswered question; ‘C-g’ cancels it from either the question or
+its Help.  Reading Help does not select an answer or enable a disabled
+command.  These controls also work when Emacs reads the choice directly
+without using the minibuffer.
+
+   The full question is recorded once in ‘*Messages*’, available with
+‘C-h e’ after answering or cancelling.  Recent Feedback retains
+submitted speech under its existing history and preview limits; it is
+not a complete prompt archive.  These review controls apply to Emacs's
+multiple-choice reader.  Other input loops, such as query replacement,
+keep their own interaction rules.
+
    After the prompt finishes, notice which buffer has been selected.  An
 open-file command selects a document; Help may appear in another window;
 a save normally leaves you in the document.  Press ‘C-e m’ to identify
@@ -1478,9 +1501,9 @@ buffer available, then inspect a command without running it.
   3. From the practice document, press ‘C-h k C-e l’.  Emacs describes
      the current-line reading key instead of executing it as the
      requested action.  Spoken key Help selects the ‘*Help*’ buffer and
-     can remove other windows.  Your practice document is still open.
-     ‘C-e h’ reads Help again; it selects Help rather than speaking it
-     from the document's window.
+     reads from its beginning.  Your practice document is still open.
+     ‘C-e h’ selects Help and reads it again from the beginning.  For a
+     local check, use line or paragraph reading within Help instead.
   4. Press ‘C-e m’ to check which buffer is selected.  If it is
      ‘*Help*’, read there directly; otherwise use ‘C-x b’ to select
      ‘*Help*’ by name.  Do not switch windows merely because Help
@@ -2984,8 +3007,11 @@ current buffer/modes, or position.
 
      ‘emacsvox-speak-message-again’
 
-     Repeat the last Emacs message and copy it to the kill ring.  This
-     can change what the next yank inserts.
+     Repeat the last Emacs message and copy it to the kill ring.  During
+     a multiple-choice question, repeat and copy its full explanation
+     and choices instead.  This can change what the next yank inserts.
+     See *note Reviewing and answering prompts: (emacsvox)Answering
+     Emacs Prompts.
 ‘C-e m’
 
      ‘emacsvox-speak-mode-line’
@@ -3107,9 +3133,9 @@ Ordinary Emacs Help writes its explanation in ‘*Help*’.  Some commands,
 such as ‘C-h m’, can display that buffer without selecting it.  Spoken
 descriptions such as key, function and variable Help use
 ‘emacsvox-speak-help’, also bound to ‘C-e h’.  This helper selects Help,
-removes other windows in the frame, and reads a windowful starting at
-Help's current point.  It does not kill the buffers those windows
-displayed, and it does not necessarily read all of Help.
+moves to its beginning and reads it.  It uses ordinary buffer reading,
+including the large-request limit described in *note Buffer-reading
+limits and alternatives: (emacsvox)Reading Without Moving Point.
 
    After requesting Help, press ‘C-e m’ to check the selected buffer.
 If it is ‘*Help*’, read there directly.  Otherwise, use ‘C-x b’ and
@@ -3119,14 +3145,19 @@ may now be only one window.  ‘C-e C-w’ describes the arrangement when
 needed.
 
    Once in Help, use line or paragraph reading for a local check.  ‘C-e
-h’ repeats a windowful from the current Help position; ‘M-<’ first
-returns to its beginning.  For longer reading and its effect on point,
-see *note Reading and navigating: (emacsvox)Reading.  Press ‘q’ while in
-Help to leave its view.  Then check the selected buffer and use ‘C-x b’
-to return to your document before editing or requesting buffer-specific
-Help again.  To restore a reference window, follow *note Keep a
-reference and a draft in separate windows: (emacsvox)Reference And Draft
-Windows.
+h’ returns to the beginning and reads again.  For longer reading and its
+effect on point, see *note Reading and navigating: (emacsvox)Reading.
+Press ‘q’ while in Help to leave its view.  Then check the selected
+buffer and use ‘C-x b’ to return to your document before editing or
+requesting buffer-specific Help again.  To restore a reference window,
+follow *note Keep a reference and a draft in separate windows:
+(emacsvox)Reference And Draft Windows.
+
+   While a multiple-choice question is pending, ‘C-e h’ instead selects
+that question's Help, including a specially named buffer.  There, ‘q’
+returns to the question and ‘C-g’ cancels it.  See *note Reviewing and
+answering prompts: (emacsvox)Answering Emacs Prompts. for repeat and
+history controls.
 
    Help reached through an Emacsvox settings menu has the menu-return
 behaviour explained above.  Use its ‘q’ to return to the originating
@@ -3347,14 +3378,15 @@ name is always a useful recovery route from ordinary work.  It can
 replace the current view rather than restore the old layout; the
 buffer's text remains available.
 
-   Some speech commands intentionally change the layout.  ‘C-e h’
-selects and reads Help using a windowful-reading helper, which removes
-other windows.  Whole-buffer and region reading can use that helper for
-a large request too.  A lost split therefore does not necessarily mean
-the reference was closed.  Reopen the desired view with ‘C-x 4 b’.  For
-a short inspection without that helper, use line or paragraph reading as
-described under *note Read a short passage without moving point: Reading
-Without Moving Point.
+   Some speech commands can change the layout.  ‘C-e h’ selects Help and
+reads from its beginning.  It uses ordinary buffer reading, which falls
+back to a windowful-reading helper for a large request; that helper
+removes other windows.  The same limit applies to whole-buffer and
+region reading.  A lost split therefore does not necessarily mean the
+reference was closed.  Reopen the desired view with ‘C-x 4 b’.  For a
+short inspection that preserves the layout, use line or paragraph
+reading as described under *note Read a short passage without moving
+point: Reading Without Moving Point.
 
    For the general display and selection commands, see *note Displaying
 in another window: (emacs)Pop Up Window. and *note Using other windows:

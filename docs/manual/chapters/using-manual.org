@@ -60,6 +60,26 @@ submitted it and the command has acted, cancellation does not undo the result.
 Likewise, quitting a settings menu does not undo an adjustment made there.
 Follow the recovery instructions for the operation you actually performed.
 
+Some questions offer several single-key answers, with a longer explanation
+in Help. A disabled-command question is one example. Emacsvox announces the
+question, explanation and choices once when input is ready. Press ~C-e s~
+to stop speech without answering, or ~C-e a~ to repeat the complete question.
+Repeat also copies that text to the kill ring, replacing the next yank's source.
+
+Press ~C-e h~ to select that question's Help and read from its beginning.
+The buffer may be named =*Disabled Command*=, =*Multiple Choice Help*= or
+another name chosen by the command. Use ordinary line, word and character
+movement and reading there. Press ~q~ to return to the unanswered question;
+~C-g~ cancels it from either the question or its Help. Reading Help does not
+select an answer or enable a disabled command. These controls also work when
+Emacs reads the choice directly without using the minibuffer.
+
+The full question is recorded once in =*Messages*=, available with ~C-h e~
+after answering or cancelling. Recent Feedback retains submitted speech under
+its existing history and preview limits; it is not a complete prompt archive.
+These review controls apply to Emacs's multiple-choice reader. Other input
+loops, such as query replacement, keep their own interaction rules.
+
 After the prompt finishes, notice which buffer has been selected. An open-file
 command selects a document; Help may appear in another window; a save normally
 leaves you in the document. Press ~C-e m~ to identify the current buffer and

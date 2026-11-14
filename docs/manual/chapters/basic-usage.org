@@ -1076,8 +1076,10 @@ buffer/modes, or position.
 
   =emacsvox-speak-message-again=
 
-  Repeat the last Emacs message and copy it to the kill ring. This can change
-  what the next yank inserts.
+  Repeat the last Emacs message and copy it to the kill ring. During a
+  multiple-choice question, repeat and copy its full explanation and choices
+  instead. This can change what the next yank inserts. See
+  [[info:emacsvox#Answering Emacs Prompts][Reviewing and answering prompts]].
 - C-e m ::
 
   #+findex: emacsvox-speak-mode-line

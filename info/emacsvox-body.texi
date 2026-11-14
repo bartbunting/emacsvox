@@ -263,6 +263,26 @@ submitted it and the command has acted@comma{} cancellation does not undo the re
 Likewise@comma{} quitting a settings menu does not undo an adjustment made there.
 Follow the recovery instructions for the operation you actually performed.
 
+Some questions offer several single-key answers@comma{} with a longer explanation
+in Help. A disabled-command question is one example. Emacsvox announces the
+question@comma{} explanation and choices once when input is ready. Press @kbd{C-e s}
+to stop speech without answering@comma{} or @kbd{C-e a} to repeat the complete question.
+Repeat also copies that text to the kill ring@comma{} replacing the next yank's source.
+
+Press @kbd{C-e h} to select that question's Help and read from its beginning.
+The buffer may be named @code{*Disabled Command*}@comma{} @code{*Multiple Choice Help*} or
+another name chosen by the command. Use ordinary line@comma{} word and character
+movement and reading there. Press @kbd{q} to return to the unanswered question;
+@kbd{C-g} cancels it from either the question or its Help. Reading Help does not
+select an answer or enable a disabled command. These controls also work when
+Emacs reads the choice directly without using the minibuffer.
+
+The full question is recorded once in @code{*Messages*}@comma{} available with @kbd{C-h e}
+after answering or cancelling. Recent Feedback retains submitted speech under
+its existing history and preview limits; it is not a complete prompt archive.
+These review controls apply to Emacs's multiple-choice reader. Other input
+loops@comma{} such as query replacement@comma{} keep their own interaction rules.
+
 After the prompt finishes@comma{} notice which buffer has been selected. An open-file
 command selects a document; Help may appear in another window; a save normally
 leaves you in the document. Press @kbd{C-e m} to identify the current buffer and
@@ -1325,9 +1345,10 @@ and position are still available. @kbd{C-e m} and @kbd{C-e l} confirm where you 
 @item
 From the practice document@comma{} press @kbd{C-h k C-e l}. Emacs describes the
 current-line reading key instead of executing it as the requested action.
-Spoken key Help selects the @code{*Help*} buffer and can remove other windows.
-Your practice document is still open. @kbd{C-e h} reads Help again; it selects
-Help rather than speaking it from the document's window.
+Spoken key Help selects the @code{*Help*} buffer and reads from its beginning.
+Your practice document is still open. @kbd{C-e h} selects Help and reads it
+again from the beginning. For a local check@comma{} use line or paragraph reading
+within Help instead.
 @item
 Press @kbd{C-e m} to check which buffer is selected. If it is @code{*Help*}@comma{} read
 there directly; otherwise use @kbd{C-x b} to select @code{*Help*} by name. Do not
@@ -2781,8 +2802,10 @@ buffer/modes@comma{} or position.
 
 @code{emacsvox-speak-message-again}
 
-Repeat the last Emacs message and copy it to the kill ring. This can change
-what the next yank inserts.
+Repeat the last Emacs message and copy it to the kill ring. During a
+multiple-choice question@comma{} repeat and copy its full explanation and choices
+instead. This can change what the next yank inserts. See
+@ref{Answering Emacs Prompts,Reviewing and answering prompts,,emacsvox,}.
 @item C-e m
 @findex emacsvox-speak-mode-line
 
@@ -2915,9 +2938,9 @@ search routes.
 Ordinary Emacs Help writes its explanation in @code{*Help*}. Some commands@comma{} such
 as @kbd{C-h m}@comma{} can display that buffer without selecting it. Spoken descriptions
 such as key@comma{} function and variable Help use @code{emacsvox-speak-help}@comma{} also bound
-to @kbd{C-e h}. This helper selects Help@comma{} removes other windows in the frame@comma{}
-and reads a windowful starting at Help's current point. It does not kill the
-buffers those windows displayed@comma{} and it does not necessarily read all of Help.
+to @kbd{C-e h}. This helper selects Help@comma{} moves to its beginning and reads it.
+It uses ordinary buffer reading@comma{} including the large-request limit described
+in @ref{Reading Without Moving Point,Buffer-reading limits and alternatives,,emacsvox,}.
 
 After requesting Help@comma{} press @kbd{C-e m} to check the selected buffer. If it is
 @code{*Help*}@comma{} read there directly. Otherwise@comma{} use @kbd{C-x b} and choose @code{*Help*}
@@ -2925,13 +2948,18 @@ by name@comma{} or select its existing window deliberately. Do not automatically
 press @kbd{C-x o}: Help may already be selected@comma{} or there may now be only one
 window. @kbd{C-e C-w} describes the arrangement when needed.
 
-Once in Help@comma{} use line or paragraph reading for a local check. @kbd{C-e h} repeats
-a windowful from the current Help position; @kbd{M-<} first returns to its beginning.
+Once in Help@comma{} use line or paragraph reading for a local check. @kbd{C-e h} returns
+to the beginning and reads again.
 For longer reading and its effect on point@comma{} see
 @ref{Reading,Reading and navigating,,emacsvox,}. Press @kbd{q} while in Help to leave its view.
 Then check the selected buffer and use @kbd{C-x b} to return to your document
 before editing or requesting buffer-specific Help again. To restore a reference
 window@comma{} follow @ref{Reference And Draft Windows,Keep a reference and a draft in separate windows,,emacsvox,}.
+
+While a multiple-choice question is pending@comma{} @kbd{C-e h} instead selects that
+question's Help@comma{} including a specially named buffer. There@comma{} @kbd{q} returns to
+the question and @kbd{C-g} cancels it. See
+@ref{Answering Emacs Prompts,Reviewing and answering prompts,,emacsvox,} for repeat and history controls.
 
 Help reached through an Emacsvox settings menu has the menu-return behaviour
 explained above. Use its @kbd{q} to return to the originating menu item@comma{} not the
@@ -3144,12 +3172,13 @@ If window selection becomes confusing@comma{} @kbd{C-x b} and a known buffer nam
 always a useful recovery route from ordinary work. It can replace the current
 view rather than restore the old layout; the buffer's text remains available.
 
-Some speech commands intentionally change the layout. @kbd{C-e h} selects and
-reads Help using a windowful-reading helper@comma{} which removes other windows.
-Whole-buffer and region reading can use that helper for a large request too.
-A lost split therefore does not necessarily mean the reference was closed.
-Reopen the desired view with @kbd{C-x 4 b}. For a short inspection without that
-helper@comma{} use line or paragraph reading as described under
+Some speech commands can change the layout. @kbd{C-e h} selects Help and reads
+from its beginning. It uses ordinary buffer reading@comma{} which falls back to a
+windowful-reading helper for a large request; that helper removes other windows.
+The same limit applies to whole-buffer and region reading. A lost split
+therefore does not necessarily mean the reference was closed. Reopen the
+desired view with @kbd{C-x 4 b}. For a short inspection that preserves the layout@comma{}
+use line or paragraph reading as described under
 @ref{Reading Without Moving Point, , Read a short passage without moving point}.
 
 For the general display and selection commands@comma{} see @ref{Pop Up Window,Displaying in another window,,emacs,}
@@ -11593,9 +11622,10 @@ Describe the current modes. @kbd{C-h b}
 lists effective bindings; invoke these from the application you are asking
 about. See @ref{Using Online Help,Help for the current buffer,,emacsvox,}.
 @item Read Help again (@kbd{C-e h})
-Select and read Help using a windowful helper
-that removes other windows without killing their buffers. Lowercase h is
-different from capital H for settings. See
+Select Help and read from its beginning.
+During a multiple-choice question@comma{} select that question's Help; @kbd{q} returns
+to the question and @kbd{C-g} cancels it. Lowercase h is different from capital
+H for settings. See
 @ref{Using Online Help,Reading Help and returning to work,,emacsvox,}.
 @item Open the manual (@kbd{C-e C-i})
 Open this manual directly in Info. Use @kbd{i}

@@ -8701,7 +8701,10 @@ and saved filters live in 'emacsvox-speak-filters'.
  -- Command: emacsvox-speak-help
      ‘C-e h’
 
-     Speak help buffer if one present.
+     Select Help and read it from the beginning.
+     While answering a multiple-choice question, review its explanation
+     and choices.  In that Help buffer, q returns to the question and
+     C-g cancels it.
 
 2.276.1.12 emacsvox-speak-line
 ..............................
@@ -9229,8 +9232,11 @@ in its established order.
      ‘C-e <delete>’
      ‘C-e M-a’
 
-     Speak the last message from Emacs once again.
-     The message is also placed in the kill ring for convenient yanking
+     Repeat the pending question, or the last message from Emacs.
+     During a multiple-choice question, include its full explanation and
+     choices.  Otherwise read the last Messages line, or the cached message
+     with prefix FROM-MESSAGE-CACHE.  Interactive use also copies the text
+     to the kill ring.
 
      (fn &optional FROM-MESSAGE-CACHE)
 

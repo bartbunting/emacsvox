@@ -59,27 +59,152 @@
   "Speak PROMPT before reading an event."
   (when prompt (tts-speak prompt)))
 
-(defun emacsvox--advice-read-multiple-choice-before
-    (prompt choices &rest _)
-  "Speak PROMPT and CHOICES before prompting."
-  (let
-      ((tts-stop-immediately nil)
-       (spoken-choices
-        (mapcar
-         #'(lambda (c) (format "%c: %s" (cl-first c) (cl-second c)))
-         choices))
-       (details
-        (mapcar
-         #'(lambda (c)
-             (format "%c: %s: %s" (cl-first c) (cl-second c)
-                     (or (cl-third c) "")))
-         choices)))
-    (emacsvox-icon 'open-object)
-    (ems--log-message
-     (concat prompt (mapconcat #'identity details "\n ")))
-    (tts-speak prompt)
-    (sox-tones 2 2)
-    (tts-speak-list spoken-choices)))
+(defvar emacsvox--choice-context nil
+  "Dynamically scoped question being answered or reviewed.")
+(defvar emacsvox--choice-reading nil
+  "Non-nil while a modal question is reading an event.")
+(defvar emacsvox-prefix)
+(defvar read-char-choice-use-read-key)
+(defvar ems--message-filter)
+
+(declare-function rmc--show-help "rmc")
+(declare-function rmc--add-key-description "rmc")
+
+(defun emacsvox--choice-active-p ()
+  "Return non-nil when the current input belongs to the pending question."
+  (and emacsvox--choice-context
+       (= (minibuffer-depth) (plist-get emacsvox--choice-context :depth))))
+
+(defun emacsvox--choice-text ()
+  "Return the full pending question, or nil outside its input context."
+  (when (emacsvox--choice-active-p)
+    (plist-get emacsvox--choice-context :text)))
+
+(defun emacsvox--choice-announce ()
+  "Announce the pending question once, after its input is ready."
+  (unless (plist-get emacsvox--choice-context :announced)
+    (setf (plist-get emacsvox--choice-context :announced) t)
+    (emacsvox-icon 'ask-question)
+    (tts-speak (plist-get emacsvox--choice-context :text))))
+
+(defun emacsvox--choice-return ()
+  "Return from Help to the pending question."
+  (interactive)
+  (if (plist-get emacsvox--choice-context :modal)
+      (exit-recursive-edit)
+    (quit-window)
+    (select-window (active-minibuffer-window))
+    (tts-speak (plist-get emacsvox--choice-context :prompt))))
+
+(defun emacsvox--choice-cancel ()
+  "Cancel the pending question from its Help buffer."
+  (interactive)
+  (when (active-minibuffer-window)
+    (select-window (active-minibuffer-window)))
+  (abort-recursive-edit))
+
+(defun emacsvox--choice-help ()
+  "Review the pending question in its native Help buffer."
+  (let* ((context emacsvox--choice-context)
+         (buffer
+          (rmc--show-help
+           (plist-get context :prompt) (plist-get context :text)
+           (plist-get context :name) (plist-get context :choices)
+           (mapcar #'rmc--add-key-description (plist-get context :choices))))
+         (old-map (with-current-buffer buffer (current-local-map)))
+         (map (make-sparse-keymap)))
+    (set-keymap-parent map old-map)
+    (define-key map (kbd "q") #'emacsvox--choice-return)
+    (define-key map (kbd "C-g") #'emacsvox--choice-cancel)
+    (push (list buffer old-map map) (plist-get context :maps))
+    (with-current-buffer buffer (use-local-map map))
+    (if (and (plist-get context :modal) (not (plist-get context :reviewing)))
+        (save-window-excursion
+          (pop-to-buffer buffer)
+          (goto-char (point-min))
+          (emacsvox-speak-buffer)
+          (setf (plist-get context :reviewing) t)
+          (unwind-protect (recursive-edit)
+            (setf (plist-get context :reviewing) nil)))
+      (pop-to-buffer buffer)
+      (goto-char (point-min))
+      (emacsvox-speak-buffer))))
+
+(defun emacsvox--advice-read-multiple-choice-around
+    (original prompt choices &optional help-string show-help long-form)
+  "Keep PROMPT, CHOICES and HELP-STRING reviewable while ORIGINAL reads input.
+SHOW-HELP and LONG-FORM retain their native meaning."
+  (require 'rmc)
+  (let* ((modal (and (not long-form)
+                     (or (not (fboundp 'read-multiple-choice--from-minibuffer))
+                         (bound-and-true-p read-char-choice-use-read-key)
+                         (use-dialog-box-p))))
+         (emacsvox--choice-reading nil)
+         (emacsvox--choice-context
+          (list :prompt prompt :choices choices :maps nil :announced nil :reviewing nil
+                :name (if (stringp show-help) show-help "*Multiple Choice Help*")
+                :modal modal :depth (+ (minibuffer-depth) (if modal 0 1))
+                :text
+                (concat
+                 prompt "\n\n"
+                 (when help-string (concat help-string "\n\n"))
+                 (mapconcat
+                  (lambda (choice)
+                    (format "%s: %s%s"
+                            (key-description (vector (car choice))) (cadr choice)
+                            (if (nth 2 choice) (concat ". " (nth 2 choice)) "")))
+                  choices "\n")
+                 "\n"
+                 (substitute-command-keys
+                  "\\[emacsvox-speak-message-again] repeats this question. \\[emacsvox-speak-help] reviews Help; q returns to the question. C-g cancels."))))
+         ;; Native modal readers echo the prompt on every pass through the
+         ;; loop.  Keep that display without duplicating foreground speech.
+         (ems--message-filter
+          (concat ems--message-filter "\\|\\`\\(?:Invalid choice\\. \\)?"
+                  (regexp-quote prompt) " (")))
+    (ems--log-message (plist-get emacsvox--choice-context :text))
+    (unwind-protect
+        (progn
+          (when (and modal (use-dialog-box-p)) (emacsvox--choice-announce))
+          (funcall original prompt choices help-string show-help long-form))
+      (dolist (entry (plist-get emacsvox--choice-context :maps))
+        (pcase-let ((`(,buffer ,old-map ,map) entry))
+          (when (buffer-live-p buffer)
+            (with-current-buffer buffer
+              (when (eq (current-local-map) map) (use-local-map old-map))))))
+      (when modal (tts-stop 'all)))))
+
+(defun emacsvox--advice-choice-read-around (original &rest arguments)
+  "Let modal questions use the existing Help, repeat and stop commands.
+Call ORIGINAL with ARGUMENTS for all answer events.  Emacs 30 uses
+`read-event'; Emacs 31's optional modal reader uses `read-key'."
+  (if (or emacsvox--choice-reading
+          (not (emacsvox--choice-active-p))
+          (not (plist-get emacsvox--choice-context :modal)))
+      (apply original arguments)
+    (let ((emacsvox--choice-reading t)
+          event done)
+      (emacsvox--choice-announce)
+      (while (not done)
+        (setq event (let ((emacsvox-speak-messages nil))
+                      (apply original arguments)))
+        (cond
+         ((eq event ?\C-g) (signal 'quit nil))
+         ((and (boundp 'emacsvox-prefix)
+               (equal event (aref emacsvox-prefix 0))
+               (not (assq event (plist-get emacsvox--choice-context :choices))))
+          (setq unread-command-events (cons event unread-command-events))
+          (let* ((keys (let ((emacsvox-speak-messages nil))
+                         (read-key-sequence-vector nil)))
+                 (command (key-binding keys)))
+            (when (eq (aref keys (1- (length keys))) ?\C-g)
+              (signal 'quit nil))
+            (if (memq command '(emacsvox-speak-help emacsvox-speak-message-again
+                               tts-stop))
+                (call-interactively command)
+              (tts-speak "Use Help, repeat or stop, or type an answer."))))
+         (t (setq done t))))
+      event)))
 
 (defvar-local emacsvox--password-modified-tick nil
   "Character modification tick at the last password masking update.")
@@ -172,6 +297,8 @@ Treat unknown state as hidden."
     (emacsvox-icon 'open-object)
     (when minibuffer-default (emacsvox-icon 'help))
     (cond
+     ((emacsvox--choice-active-p)
+      (emacsvox--choice-announce))
      ((bound-and-true-p read-passwd-mode)
       ;; Announce after the setup stop, and never include a default secret.
       (emacsvox-icon 'pwd)

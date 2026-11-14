@@ -20408,7 +20408,10 @@ Match patterns beg and end define the extent; optional arg
 @findex emacsvox-speak-help
 
 @format
-Speak help buffer if one present.
+Select Help and read it from the beginning.
+While answering a multiple-choice question, review its explanation
+and choices.  In that Help buffer, q returns to the question and
+C-g cancels it.
 @end format
 @end deffn
 
@@ -21117,8 +21120,11 @@ The core speech facade retains activation in its established order.
 @findex emacsvox-speak-message-again
 
 @format
-Speak the last message from Emacs once again.
-The message is also placed in the kill ring for convenient yanking
+Repeat the pending question, or the last message from Emacs.
+During a multiple-choice question, include its full explanation and
+choices.  Otherwise read the last Messages line, or the cached message
+with prefix FROM-MESSAGE-CACHE.  Interactive use also copies the text
+to the kill ring.
 
 (fn &optional FROM-MESSAGE-CACHE)
 @end format

@@ -157,12 +157,13 @@ If window selection becomes confusing, ~C-x b~ and a known buffer name is
 always a useful recovery route from ordinary work. It can replace the current
 view rather than restore the old layout; the buffer's text remains available.
 
-Some speech commands intentionally change the layout. ~C-e h~ selects and
-reads Help using a windowful-reading helper, which removes other windows.
-Whole-buffer and region reading can use that helper for a large request too.
-A lost split therefore does not necessarily mean the reference was closed.
-Reopen the desired view with ~C-x 4 b~. For a short inspection without that
-helper, use line or paragraph reading as described under
+Some speech commands can change the layout. ~C-e h~ selects Help and reads
+from its beginning. It uses ordinary buffer reading, which falls back to a
+windowful-reading helper for a large request; that helper removes other windows.
+The same limit applies to whole-buffer and region reading. A lost split
+therefore does not necessarily mean the reference was closed. Reopen the
+desired view with ~C-x 4 b~. For a short inspection that preserves the layout,
+use line or paragraph reading as described under
 [[*Read a short passage without moving point][Read a short passage without moving point]].
 
 For the general display and selection commands, see [[info:emacs#Pop Up Window][Displaying in another window]]

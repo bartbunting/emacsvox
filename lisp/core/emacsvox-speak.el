@@ -1021,17 +1021,24 @@ Useful to listen to a buffer without switching  contexts."
 
 (require 'emacsvox-tracked-reading)
 
+(declare-function emacsvox--choice-active-p "emacsvox-advice-input")
+(declare-function emacsvox--choice-help "emacsvox-advice-input")
+
 (defun emacsvox-speak-help ()
-  "Speak help buffer if one present. "
-  (interactive )
+  "Select Help and read it from the beginning.
+While answering a multiple-choice question, review its explanation
+and choices.  In that Help buffer, q returns to the question and
+C-g cancels it."
+  (interactive)
   (emacsvox-icon 'help)
-  (if-let* ((help-buffer (get-buffer "*Help*")))
-      (with-current-buffer help-buffer
-        (or (window-live-p (get-buffer-window help-buffer))
-            (display-buffer help-buffer))
-        (select-window (get-buffer-window help-buffer))
-        (call-interactively #'emacsvox-speak-windowful))
-    (tts-speak "First ask for help")))
+  (cond
+   ((and (fboundp 'emacsvox--choice-active-p) (emacsvox--choice-active-p))
+    (emacsvox--choice-help))
+   ((get-buffer "*Help*")
+    (pop-to-buffer "*Help*")
+    (goto-char (point-min))
+    (emacsvox-speak-buffer))
+   (t (tts-speak "First ask for help"))))
 
 (voice-setup-add-map '((header-line voice-bolden)))
 

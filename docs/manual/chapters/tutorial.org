@@ -194,9 +194,10 @@ inspect a command without running it.
    and position are still available. ~C-e m~ and ~C-e l~ confirm where you are.
 3. From the practice document, press ~C-h k C-e l~. Emacs describes the
    current-line reading key instead of executing it as the requested action.
-   Spoken key Help selects the =*Help*= buffer and can remove other windows.
-   Your practice document is still open. ~C-e h~ reads Help again; it selects
-   Help rather than speaking it from the document's window.
+   Spoken key Help selects the =*Help*= buffer and reads from its beginning.
+   Your practice document is still open. ~C-e h~ selects Help and reads it
+   again from the beginning. For a local check, use line or paragraph reading
+   within Help instead.
 4. Press ~C-e m~ to check which buffer is selected. If it is =*Help*=, read
    there directly; otherwise use ~C-x b~ to select =*Help*= by name. Do not
    switch windows merely because Help appeared. Press ~q~ while in Help when

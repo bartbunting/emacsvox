@@ -174,9 +174,10 @@ editing command, check that you have returned to the intended document.
 - Discover local commands (~C-h m~) :: Describe the current modes. ~C-h b~
   lists effective bindings; invoke these from the application you are asking
   about. See [[info:emacsvox#Using Online Help][Help for the current buffer]].
-- Read Help again (~C-e h~) :: Select and read Help using a windowful helper
-  that removes other windows without killing their buffers. Lowercase h is
-  different from capital H for settings. See
+- Read Help again (~C-e h~) :: Select Help and read from its beginning.
+  During a multiple-choice question, select that question's Help; ~q~ returns
+  to the question and ~C-g~ cancels it. Lowercase h is different from capital
+  H for settings. See
   [[info:emacsvox#Using Online Help][Reading Help and returning to work]].
 - Open the manual (~C-e C-i~) :: Open this manual directly in Info. Use ~i~
   in Info to look up a subject and ~l~ to retrace a link. See

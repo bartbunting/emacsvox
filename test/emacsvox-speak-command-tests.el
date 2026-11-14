@@ -11,6 +11,31 @@
 (require 'repeat)
 (require 'emacsvox-advice)
 
+(ert-deftest emacsvox-speak-help-graphical-new-window-has-content ()
+  "Help speaks text immediately, before a new window has been redisplayed."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (let* ((old-help (get-buffer "*Help*"))
+           (old-name (and old-help (with-current-buffer old-help
+                                    (rename-buffer " *saved help*" t))))
+           (help (get-buffer-create "*Help*"))
+           spoken)
+      (unwind-protect
+          (progn
+            (with-current-buffer help
+              (insert "Review this complete explanation.\n")
+              (help-mode))
+            (cl-letf (((symbol-function 'tts-speak)
+                       (lambda (text) (push (substring-no-properties text) spoken)))
+                      ((symbol-function 'emacsvox-icon) #'ignore))
+              (call-interactively #'emacsvox-speak-help))
+            (should (eq (current-buffer) help))
+            (should (cl-some (lambda (text)
+                               (string-match-p "Review this complete explanation" text))
+                             spoken)))
+        (kill-buffer help)
+        (when old-name (with-current-buffer old-help (rename-buffer "*Help*")))))))
+
 (ert-deftest emacsvox-speak-completion-graphical-candidates-and-return ()
   "Read real completion candidates, navigate with Space and return with C-o."
   (skip-unless (display-graphic-p))

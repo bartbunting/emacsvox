@@ -634,9 +634,13 @@ When on a close delimiter, speak matching delimiter after a small delay. "
  '((name . emacsvox)))
 
 (advice-add
- 'read-multiple-choice :before
- #'emacsvox--advice-read-multiple-choice-before
+ 'read-multiple-choice :around
+ #'emacsvox--advice-read-multiple-choice-around
  '((name . emacsvox)))
+
+(dolist (reader '(read-event read-key))
+  (advice-add reader :around #'emacsvox--advice-choice-read-around
+              '((name . emacsvox-choice-review) (depth . -90))))
 
 (emacsvox-advice--define-interactive-after-advice
     (minibuffer-complete-history

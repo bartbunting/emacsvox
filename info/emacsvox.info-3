@@ -350,10 +350,11 @@ Discover local commands (‘C-h m’)
      invoke these from the application you are asking about.  See *note
      Help for the current buffer: (emacsvox)Using Online Help.
 Read Help again (‘C-e h’)
-     Select and read Help using a windowful helper that removes other
-     windows without killing their buffers.  Lowercase h is different
-     from capital H for settings.  See *note Reading Help and returning
-     to work: (emacsvox)Using Online Help.
+     Select Help and read from its beginning.  During a multiple-choice
+     question, select that question's Help; ‘q’ returns to the question
+     and ‘C-g’ cancels it.  Lowercase h is different from capital H for
+     settings.  See *note Reading Help and returning to work:
+     (emacsvox)Using Online Help.
 Open the manual (‘C-e C-i’)
      Open this manual directly in Info.  Use ‘i’ in Info to look up a
      subject and ‘l’ to retrace a link.  See *note Manual lookup and

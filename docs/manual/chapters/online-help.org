@@ -97,9 +97,9 @@ search routes.
 Ordinary Emacs Help writes its explanation in =*Help*=. Some commands, such
 as ~C-h m~, can display that buffer without selecting it. Spoken descriptions
 such as key, function and variable Help use =emacsvox-speak-help=, also bound
-to ~C-e h~. This helper selects Help, removes other windows in the frame,
-and reads a windowful starting at Help's current point. It does not kill the
-buffers those windows displayed, and it does not necessarily read all of Help.
+to ~C-e h~. This helper selects Help, moves to its beginning and reads it.
+It uses ordinary buffer reading, including the large-request limit described
+in [[info:emacsvox#Reading Without Moving Point][Buffer-reading limits and alternatives]].
 
 After requesting Help, press ~C-e m~ to check the selected buffer. If it is
 =*Help*=, read there directly. Otherwise, use ~C-x b~ and choose =*Help*=
@@ -107,13 +107,18 @@ by name, or select its existing window deliberately. Do not automatically
 press ~C-x o~: Help may already be selected, or there may now be only one
 window. ~C-e C-w~ describes the arrangement when needed.
 
-Once in Help, use line or paragraph reading for a local check. ~C-e h~ repeats
-a windowful from the current Help position; ~M-<~ first returns to its beginning.
+Once in Help, use line or paragraph reading for a local check. ~C-e h~ returns
+to the beginning and reads again.
 For longer reading and its effect on point, see
 [[info:emacsvox#Reading][Reading and navigating]]. Press ~q~ while in Help to leave its view.
 Then check the selected buffer and use ~C-x b~ to return to your document
 before editing or requesting buffer-specific Help again. To restore a reference
 window, follow [[info:emacsvox#Reference And Draft Windows][Keep a reference and a draft in separate windows]].
+
+While a multiple-choice question is pending, ~C-e h~ instead selects that
+question's Help, including a specially named buffer. There, ~q~ returns to
+the question and ~C-g~ cancels it. See
+[[info:emacsvox#Answering Emacs Prompts][Reviewing and answering prompts]] for repeat and history controls.
 
 Help reached through an Emacsvox settings menu has the menu-return behaviour
 explained above. Use its ~q~ to return to the originating menu item, not the

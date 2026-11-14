@@ -109,23 +109,33 @@ message area.  You can use command
 (defvar ems--message-filter nil
   "Internal variable holding  pattern used to filter spoken messages.")
 
-(defun emacsvox-speak-message-again (&optional from-message-cache)
-  "Speak the last message from Emacs once again.
-The message is also placed in the kill ring for convenient yanking "
-  (interactive "P")
+(declare-function emacsvox--choice-text "emacsvox-advice-input")
 
-  (when  (and emacsvox-last-message (called-interactively-p 'interactive))
-    (kill-new emacsvox-last-message))
-  (cond
-   (from-message-cache (tts-speak emacsvox-last-message))
-   (t
-    (save-current-buffer
-      (set-buffer "*Messages*")
-      (goto-char (point-max))
-      (skip-syntax-backward " >")
-      (emacsvox-speak-line)
-      (when  (called-interactively-p 'interactive)
-        (kill-new (ems--this-line)))))))
+(defun emacsvox-speak-message-again (&optional from-message-cache)
+  "Repeat the pending question, or the last message from Emacs.
+During a multiple-choice question, include its full explanation and
+choices.  Otherwise read the last Messages line, or the cached message
+with prefix FROM-MESSAGE-CACHE.  Interactive use also copies the text
+to the kill ring."
+  (interactive "P")
+  (let ((question (and (fboundp 'emacsvox--choice-text)
+                       (emacsvox--choice-text))))
+    (if question
+        (progn
+          (tts-speak question)
+          (when (called-interactively-p 'interactive) (kill-new question)))
+      (when (and emacsvox-last-message (called-interactively-p 'interactive))
+        (kill-new emacsvox-last-message))
+      (cond
+       (from-message-cache (tts-speak emacsvox-last-message))
+       (t
+        (save-current-buffer
+          (set-buffer "*Messages*")
+          (goto-char (point-max))
+          (skip-syntax-backward " >")
+          (emacsvox-speak-line)
+          (when (called-interactively-p 'interactive)
+            (kill-new (ems--this-line)))))))))
 
 ;;; Pip: Use Piper if available.
 ;; Uses pip if piper loaded, otherwise falls back to notifications

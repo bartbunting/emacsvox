@@ -35,6 +35,8 @@
                                   "^emacsvox-speak-windows-"
                                   "^emacsvox-speak-status-graphical-"
                                   "^emacsvox-speak-navigation-graphical-"
+                                  "^emacsvox-speak-help-graphical-"
+                                  "^emacsvox-choice-graphical-"
                                   (member emacsvox-reading-unit-prompt-is-spoken-once-on-main)))))
                        (kill-emacs
                         (if (and (> (ert-stats-total stats) 0)

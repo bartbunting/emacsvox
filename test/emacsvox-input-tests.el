@@ -21,8 +21,10 @@
 (defconst emacsvox-test--input-direct-advice
   '((quoted-insert :after emacsvox--advice-quoted-insert-after)
     (read-event :before emacsvox--advice-read-event-before)
-    (read-multiple-choice :before
-     emacsvox--advice-read-multiple-choice-before)
+    (read-multiple-choice :around
+     emacsvox--advice-read-multiple-choice-around)
+    (read-event :around emacsvox--advice-choice-read-around)
+    (read-key :around emacsvox--advice-choice-read-around)
     (read-passwd--hide-password :after
      emacsvox--advice-read-passwd--hide-password-after)
     (read-passwd-toggle-visibility :after
@@ -46,7 +48,7 @@
       (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-input-prompts-never-use-notification-speech ()
-  "Event, key, and multiple-choice prompts all use main speech."
+  "Event and key prompts use main speech."
   (let ((emacsvox-speak-messages t)
         (emacsvox-last-message nil)
         (emacsvox-read-char-prompt-cache nil)
@@ -61,10 +63,8 @@
               ((symbol-function 'tts-speak-list) #'ignore))
       (dolist (target (cons 'read-event emacsvox-test--input-before-targets))
         (funcall (intern (format "emacsvox--advice-%s-before" target))
-                 "Continue?"))
-      (emacsvox--advice-read-multiple-choice-before
-       "Continue?" '((?y "yes") (?n "no"))))
-    (should (equal speech (make-list 7 "Continue?")))))
+                 "Continue?")))
+    (should (equal speech (make-list 6 "Continue?")))))
 
 (ert-deftest emacsvox-reading-unit-prompt-is-spoken-once-on-main ()
   "Reading choices keep their full instructions and return the chosen extent."
@@ -110,31 +110,204 @@
       (emacsvox--advice-read-event-before nil))
     (should (equal speech '("Press a key")))))
 
-(ert-deftest emacsvox-read-multiple-choice-preserves-feedback ()
-  "Multiple-choice feedback formats short and detailed choices."
-  (let (events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'ems--log-message)
-               (lambda (text) (push (list 'log text) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'sox-tones)
-               (lambda (&rest arguments)
-                 (push (list 'tones arguments) events)))
-              ((symbol-function 'tts-speak-list)
-               (lambda (items) (push (list 'speak-list items) events))))
-      (emacsvox--advice-read-multiple-choice-before
-       "Continue? "
-       '((?y "yes" "accept") (?n "no" "decline"))))
-    (should
-     (equal
-      (nreverse events)
-      '((icon open-object)
-        (log "Continue? y: yes: accept\n n: no: decline")
-        (speak "Continue? ")
-        (tones (2 2))
-        (speak-list ("y: yes" "n: no")))))))
+(defun emacsvox-test--choice-interaction (keys &optional show-help long-form)
+  "Ask a real question and process KEYS, returning observations.
+Pass SHOW-HELP and LONG-FORM to the native reader."
+  (require 'emacsvox-keymap)
+  (save-window-excursion
+    (let ((buffer (generate-new-buffer " *question source*"))
+          (use-dialog-box nil)
+          (kill-ring nil)
+          (emacsvox-speak-messages t)
+          (old-global-map (current-global-map))
+          (map (copy-keymap (current-global-map)))
+          (log-message (symbol-function 'ems--log-message))
+          answer failure speech notifications review nested logged)
+      (unwind-protect
+          (progn
+            (switch-to-buffer buffer)
+            (insert "Untouched source text")
+            (use-global-map map)
+            (define-key map (kbd "<f5>")
+                        (lambda ()
+                          (interactive)
+                          (condition-case err
+                              (setq answer
+                                    (read-multiple-choice
+                                     "Continue?" '((?y "yes" "Accept the change")
+                                                   (?n "no" "Leave it unchanged"))
+                                     "The complete explanation.\nSecond review line."
+                                     show-help long-form))
+                            ((error quit) (setq failure err)))))
+            (define-key map (kbd "<f6>")
+                        (lambda ()
+                          (interactive)
+                          (setq review (list (buffer-name) (point)
+                                             (buffer-string)))))
+            (define-key map (kbd "<f7>")
+                        (lambda ()
+                          (interactive)
+                          (let ((enable-recursive-minibuffers t))
+                            (push (read-string "Nested text: ") nested))))
+            (define-key map (kbd "<f8>")
+                        (lambda ()
+                          (interactive)
+                          (condition-case nil
+                              (push (read-multiple-choice
+                                     "Nested choice?" '((?y "yes") (?n "no"))
+                                     "Inner explanation" "*Inner Question Help*")
+                                    nested)
+                            (quit (push 'cancelled nested)))))
+            (cl-letf (((symbol-function 'tts-speak)
+                       (lambda (text)
+                         (push (list (substring-no-properties text)
+                                     (minibuffer-depth)) speech)))
+                      ((symbol-function 'tts-notify)
+                       (lambda (text &rest _) (push text notifications)))
+                      ((symbol-function 'ems--log-message)
+                       (lambda (text)
+                         (push text logged)
+                         (funcall log-message text)))
+                      ((symbol-function 'emacsvox-icon) #'ignore))
+              (execute-kbd-macro (vconcat (kbd "<f5>") (kbd keys))))
+            (should (eq (window-buffer (selected-window)) buffer))
+            (should (equal (buffer-string) "Untouched source text"))
+            (should-not emacsvox--choice-context)
+            (should (zerop (minibuffer-depth)))
+            (list :answer answer :failure failure :speech (nreverse speech)
+                  :notifications notifications :review review :nested nested :logged logged))
+        (use-global-map old-global-map)
+        (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-choice-graphical-entry-and-repeat ()
+  "Speak one full question when input is ready; repeat survives other messages."
+  (skip-unless (display-graphic-p))
+  (dolist (modal '(nil t))
+    (let* ((read-char-choice-use-read-key modal)
+           (result (emacsvox-test--choice-interaction "C-e s C-e a n"))
+           (speech (plist-get result :speech)))
+      (should-not (plist-get result :failure))
+      (should (equal (plist-get result :answer) '(?n "no" "Leave it unchanged")))
+      (should (= 2 (length speech)))
+      (should (equal (car speech) (cadr speech)))
+      (should (= (cadar speech)
+                 (if (and (fboundp 'read-multiple-choice--from-minibuffer)
+                          (not modal)) 1 0)))
+      (should (string-match-p "The complete explanation" (caar speech)))
+      (should (string-match-p "n: no. Leave it unchanged" (caar speech)))
+      (should (equal (plist-get result :logged) (list (caar speech))))
+      (should-not (plist-get result :notifications)))))
+
+(ert-deftest emacsvox-choice-graphical-help-review-and-return ()
+  "Review the named question with ordinary navigation, then answer it."
+  (skip-unless (display-graphic-p))
+  (dolist (modal '(nil t))
+    (dolist (name '(nil "*Disabled Command*" "*Custom Question Help*"))
+      (let* ((read-char-choice-use-read-key modal)
+             (result (emacsvox-test--choice-interaction
+                      "C-e h C-n C-e l <f6> q n" name))
+             (review (plist-get result :review)))
+        (should-not (plist-get result :failure))
+        (should (eq (car (plist-get result :answer)) ?n))
+        (should (equal (car review) (or name "*Multiple Choice Help*")))
+        (should (> (cadr review) 1))
+        (should (string-match-p "complete explanation" (nth 2 review)))
+        (should (string-match-p "q returns to the question" (nth 2 review)))
+        (when (get-buffer (car review))
+          (with-current-buffer (car review)
+            (should-not (eq (key-binding (kbd "q")) #'emacsvox--choice-return))))))))
+
+(ert-deftest emacsvox-choice-graphical-cancel-from-question-and-help ()
+  "C-g cancels both native reader variants, including while reviewing Help."
+  (skip-unless (display-graphic-p))
+  (dolist (modal '(nil t))
+    (dolist (keys (append '("C-g" "C-e h C-g")
+                         (when (or modal
+                                   (not (fboundp 'read-multiple-choice--from-minibuffer)))
+                           '("C-e C-g"))))
+      (let* ((read-char-choice-use-read-key modal)
+             (result (emacsvox-test--choice-interaction keys)))
+        (should-not (plist-get result :answer))
+        (should (memq 'quit (get (car (plist-get result :failure))
+                                'error-conditions)))))))
+
+(ert-deftest emacsvox-choice-graphical-long-answer ()
+  "Long answers retain completion and accept the chosen name after review."
+  (skip-unless (display-graphic-p))
+  (let ((result (emacsvox-test--choice-interaction "C-e h q n o RET" nil t)))
+    (should-not (plist-get result :failure))
+    (should (eq (car (plist-get result :answer)) ?n))))
+
+(ert-deftest emacsvox-choice-graphical-nested-prompts ()
+  "Nested text and choice prompts restore the outer question on exit."
+  (skip-unless (display-graphic-p))
+  (dolist (modal '(nil t))
+    (dolist (inner '("q n" "C-g"))
+      (let* ((read-char-choice-use-read-key modal)
+             (result (emacsvox-test--choice-interaction
+                      (concat "C-e h <f7> d r a f t RET C-e h <f8> C-e h "
+                              inner " C-e h C-e a q n")))
+             (speech (mapcar #'car (plist-get result :speech))))
+        (should-not (plist-get result :failure))
+        (should (eq (car (plist-get result :answer)) ?n))
+        (should (equal (plist-get result :nested)
+                       (list (if (equal inner "C-g") 'cancelled '(?n "no")) "draft")))
+        (should (cl-some (lambda (text) (string-prefix-p "Nested text:" text)) speech))
+        (should (cl-some (lambda (text) (string-match-p "Inner explanation" text)) speech))
+        (should (string-match-p "complete explanation"
+                                (car (last speech (if modal 1 2)))))))))
+
+(ert-deftest emacsvox-choice-repeat-copies-full-question ()
+  "Repeat copies the current explanation even after unrelated messages."
+  (let ((emacsvox--choice-context (list :depth 0 :text "Question\nFull explanation"))
+        (emacsvox-last-message "Unrelated message")
+        (kill-ring nil)
+        spoken)
+    (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text)))
+              ((symbol-function 'called-interactively-p) (lambda (&rest _) t)))
+      (call-interactively #'emacsvox-speak-message-again))
+    (should (equal spoken "Question\nFull explanation"))
+    (should (equal (car kill-ring) spoken))))
+
+(ert-deftest emacsvox-choice-graphical-disabled-command ()
+  "Review or cancel a real disabled command without enabling it."
+  (skip-unless (display-graphic-p))
+  (require 'diff-mode)
+  (require 'novice)
+  (require 'emacsvox-keymap)
+  (dolist (modal '(nil t))
+    (dolist (keys '("C-e a C-e h C-n C-e l q n" "C-e h C-g" "SPC"))
+      (save-window-excursion
+        (let ((buffer (generate-new-buffer " *disabled diff test*"))
+              (disabled (get 'diff-restrict-view 'disabled))
+              (read-char-choice-use-read-key modal)
+              (use-dialog-box nil)
+              (emacsvox-speak-messages nil)
+              speech)
+          (unwind-protect
+              (progn
+                (switch-to-buffer buffer)
+                (diff-mode)
+                (insert "--- a/test\n+++ b/test\n@@ -1 +1 @@\n-old\n+new\n")
+                (goto-char (point-min))
+                (search-forward "-old")
+                (put 'diff-restrict-view 'disabled t)
+                (cl-letf (((symbol-function 'tts-speak)
+                           (lambda (text) (push text speech)))
+                          ((symbol-function 'tts-notify) #'ignore)
+                          ((symbol-function 'emacsvox-icon) #'ignore))
+                  (condition-case nil
+                      (execute-kbd-macro (vconcat (kbd "C-c C-n") (kbd keys)))
+                    (quit nil)))
+                (should (eq (get 'diff-restrict-view 'disabled) t))
+                (should (eq (buffer-narrowed-p) (equal keys "SPC")))
+                (should (zerop (minibuffer-depth)))
+                (should-not emacsvox--choice-context)
+                (should (cl-some (lambda (text)
+                                   (string-match-p "Restrict the view to the current hunk" text))
+                                 speech)))
+            (put 'diff-restrict-view 'disabled disabled)
+            (kill-buffer buffer)))))))
 
 (ert-deftest emacsvox-read-key-advice-caches-and-speaks-prompt ()
   "Key-reader advice preserves prompt caches and spoken feedback."
