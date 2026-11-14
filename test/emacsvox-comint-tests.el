@@ -589,6 +589,77 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
       (should (equal (buffer-string) text))
       (should (equal emacsvox-comint--pending-output "")))))
 
+(ert-deftest emacsvox-comint-long-stream-emits-once-without-losing-text ()
+  "Growing unfinished output uses owned storage and emits one complete line."
+  (with-temp-buffer
+    (let ((comint-prompt-regexp "SHELL> ")
+          (chunk (propertize (make-string 4096 ?λ) 'face 'bold)))
+      (dotimes (_ 256)
+        (should (string-empty-p
+                 (plist-get (emacsvox-comint--partition-output chunk nil) :output))))
+      (should (= (length (emacsvox-comint--pending-output-text)) (* 256 4096)))
+      (let ((accumulator emacsvox-comint--pending-buffer)
+            (result (emacsvox-comint--partition-output "\nSHELL> " nil)))
+        (should (= (length (plist-get result :output)) (1+ (* 256 4096))))
+        (should (eq (get-text-property 0 'face (plist-get result :output)) 'bold))
+        (should (equal (plist-get result :prompt) "SHELL> "))
+        (should (equal (emacsvox-comint--pending-output-text) ""))
+        (should-not (buffer-live-p accumulator))))))
+
+(ert-deftest emacsvox-comint-accumulator-preserves-chunk-and-prompt-semantics ()
+  "Short and incremental assembly agree across all divisions of sample output."
+  (dolist (case `((,(concat (make-string 40 ?λ) "\nSHELL> ") nil "SHELL> ")
+                  (,(concat (make-string 40 ?a) "$ ") "$ " "[$] ")
+                  (,(concat (make-string 40 ?a) "\nunfinished") nil "SHELL> ")
+                  (,(concat (make-string 40 ?a) "\n$   ") nil "[$] *")))
+    (dotimes (cut (1+ (length (car case))))
+      (let (observed)
+        (dolist (limit '(8 8192))
+          (with-temp-buffer
+            (let ((emacsvox-comint--pending-string-limit limit)
+                  (emacsvox-comint--last-prompt (nth 1 case))
+                  (comint-prompt-regexp (nth 2 case))
+                  events)
+              (dolist (piece (list (substring (car case) 0 cut) (substring (car case) cut)))
+                (let ((result (emacsvox-comint--partition-output piece nil)))
+                  (push (list (plist-get result :output) (plist-get result :prompt)
+                              (emacsvox-comint--pending-output-text)
+                              emacsvox-comint--last-prompt emacsvox-comint--prompt-awaiting-padding)
+                        events)))
+              (push events observed))))
+        (should (equal (car observed) (cadr observed)))))))
+
+(ert-deftest emacsvox-comint-accumulator-cleanup-covers-output-lifecycle ()
+  "Replacement, flush, silence, mode changes and buffer death release storage."
+  (dolist (operation '(replace flush silent change-mode kill))
+    (let ((owner (generate-new-buffer " *comint-accumulator-test*")) accumulator)
+      (unwind-protect
+          (with-current-buffer owner
+            (let ((emacsvox-comint--pending-string-limit 8)
+                  (comint-prompt-regexp "SHELL> ")
+                  (emacsvox-comint-autospeak t)
+                  (emacsvox-comint-output-monitor t)
+                  spoken)
+              (emacsvox-comint--partition-output "long unfinished output" nil)
+              (setq accumulator emacsvox-comint--pending-buffer)
+              (should (buffer-live-p accumulator))
+              (cl-letf (((symbol-function 'emacsvox-comint--submit)
+                         (lambda (text &rest _) (push text spoken))))
+                (pcase operation
+                  ('replace (emacsvox-comint--partition-output "new\n" t))
+                  ('flush
+                   (emacsvox-comint--flush-pending-output)
+                   (should (equal spoken '("long unfinished output"))))
+                  ('silent
+                   (setq emacsvox-comint-autospeak nil)
+                   (emacsvox-comint--present-process-output "more" "more")
+                   (should-not spoken))
+                  ('change-mode (fundamental-mode))
+                  ('kill (kill-buffer owner))))
+              (should-not (buffer-live-p accumulator))))
+        (when (buffer-live-p owner) (kill-buffer owner))
+        (when (buffer-live-p accumulator) (kill-buffer accumulator))))))
+
 (ert-deftest emacsvox-comint-known-prompt-delimits-non-newline-output ()
   "A known prompt preserves preceding output that has no final newline."
   (with-temp-buffer

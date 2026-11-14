@@ -114,7 +114,27 @@ buffer is not current or its window live.")
 (make-variable-buffer-local 'emacsvox-comint-output-monitor)
 
 (defvar-local emacsvox-comint--pending-output ""
-  "Normalized process output waiting for a logical line or prompt boundary.")
+  "Short normalized output waiting for a logical line or prompt boundary.
+Long unfinished lines use `emacsvox-comint--pending-buffer' instead.")
+
+(defvar-local emacsvox-comint--pending-buffer nil
+  "Owned, undo-free accumulator for a long unfinished output line.")
+
+(defconst emacsvox-comint--pending-string-limit 8192
+  "Maximum unfinished characters assembled with string concatenation.")
+
+(defun emacsvox-comint--clear-pending-output ()
+  "Discard pending text and release its owned accumulator."
+  (let ((buffer emacsvox-comint--pending-buffer))
+    (setq emacsvox-comint--pending-output ""
+          emacsvox-comint--pending-buffer nil)
+    (when (buffer-live-p buffer) (kill-buffer buffer))))
+
+(defun emacsvox-comint--pending-output-text ()
+  "Materialize pending output only when it needs to be delivered or inspected."
+  (if (buffer-live-p emacsvox-comint--pending-buffer)
+      (with-current-buffer emacsvox-comint--pending-buffer (buffer-string))
+    emacsvox-comint--pending-output))
 
 (defvar-local emacsvox-comint--last-prompt nil
   "Most recently recognized command prompt, without text properties.")
@@ -236,6 +256,11 @@ Interactive PREFIX toggles the global default and applies it locally."
              (if emacsvox-comint-output-monitor "on" "off")
              (if prefix "" " locally")))))
 
+(defun emacsvox-comint--prompt-regexps ()
+  "Return the prompt expressions used by the current interaction buffer."
+  (delq nil (list comint-prompt-regexp
+                  (and (derived-mode-p 'shell-mode) shell-prompt-pattern))))
+
 (defun emacsvox-comint--full-prompt-match-p (text)
   "Return non-nil when TEXT is exactly a configured Comint prompt."
   (and
@@ -250,11 +275,7 @@ Interactive PREFIX toggles the global default and applies it locally."
             (concat "\\`\\(?:" regexp "\\)\\'")
             (substring-no-properties text))
          (invalid-regexp nil))))
-    (delq
-     nil
-     (list
-      comint-prompt-regexp
-      (and (derived-mode-p 'shell-mode) shell-prompt-pattern))))))
+    (emacsvox-comint--prompt-regexps))))
 
 (defun emacsvox-comint--final-line-start (text)
   "Return the index after TEXT's last newline, or zero.
@@ -286,9 +307,78 @@ previously observed prompt can delimit output that did not end in a newline."
         (when (emacsvox-comint--full-prompt-match-p tail)
           (cons (substring text 0 line-start) tail)))))))
 
+(defun emacsvox-comint--partition-long-output (text)
+  "Append TEXT without recopying a long unfinished line on each chunk.
+Return output and prompt strings, retaining an unfinished tail privately."
+  (unless (buffer-live-p emacsvox-comint--pending-buffer)
+    (setq emacsvox-comint--pending-buffer
+          (generate-new-buffer " *emacsvox-comint-output*"))
+    (with-current-buffer emacsvox-comint--pending-buffer
+      (setq buffer-undo-list t))
+    (add-hook 'kill-buffer-hook #'emacsvox-comint--clear-pending-output nil t)
+    (add-hook 'change-major-mode-hook #'emacsvox-comint--clear-pending-output nil t))
+  (let* ((buffer emacsvox-comint--pending-buffer)
+         (prefix emacsvox-comint--pending-output)
+         (known emacsvox-comint--last-prompt)
+         (regexps (emacsvox-comint--prompt-regexps))
+         (fold-search case-fold-search)
+         (syntax (syntax-table))
+         output prompt pending)
+    (setq emacsvox-comint--pending-output "")
+    (with-current-buffer buffer
+      (set-syntax-table syntax)
+      (let ((case-fold-search fold-search)
+            (inhibit-modification-hooks t))
+        (goto-char (point-max))
+        (insert prefix)
+        (let ((start (point)))
+          (insert text)
+          ;; Previously retained text contains no newline. Only the new chunk
+          ;; needs searching to find a new complete output boundary.
+          (let* ((tail-start (if (string-search "\n" text)
+                                 (+ start (emacsvox-comint--final-line-start text))
+                               (point-min)))
+                 (known-start
+                  (and (stringp known) (not (string-empty-p known))
+                       (<= (length known) (buffer-size))
+                       (let ((begin (- (point-max) (length known))))
+                         (and (equal known (buffer-substring-no-properties begin (point-max)))
+                              begin))))
+                 (prompt-start
+                  (or known-start
+                      (save-restriction
+                        (narrow-to-region tail-start (point-max))
+                        (goto-char (point-min))
+                        (and (not (eobp))
+                             (save-match-data
+                               (cl-some
+                                (lambda (regexp)
+                                  (and (stringp regexp) (not (string-empty-p regexp))
+                                       (condition-case nil
+                                           (looking-at (concat "\\(?:" regexp "\\)\\'"))
+                                         (invalid-regexp nil))))
+                                regexps))
+                             tail-start)))))
+            (setq output (buffer-substring (point-min) (or prompt-start tail-start))
+                  prompt (when prompt-start (buffer-substring prompt-start (point-max))))
+            (delete-region (point-min) (if prompt-start (point-max) tail-start))
+            (when (<= (buffer-size) emacsvox-comint--pending-string-limit)
+              (setq pending (buffer-string)))))))
+    (when pending
+      (emacsvox-comint--clear-pending-output)
+      (setq emacsvox-comint--pending-output pending))
+    (when prompt
+      (setq emacsvox-comint--last-prompt (substring-no-properties prompt)
+            emacsvox-comint--prompt-awaiting-padding
+            (string-match-p "[$#%>]\\'" emacsvox-comint--last-prompt)))
+    (list :output output :prompt prompt :pending pending)))
+
 (defun emacsvox-comint--partition-output (text replace-p)
   "Partition normalized inserted TEXT into output, prompt, and pending text.
-When REPLACE-P is non-nil, TEXT replaces pending carriage-motion output."
+When REPLACE-P is non-nil, TEXT replaces pending carriage-motion output.
+The :pending field contains a short tail; long tails remain in the owned
+accumulator until a line/prompt boundary or final flush."
+  (when replace-p (emacsvox-comint--clear-pending-output))
   (let ((plain-text (substring-no-properties text)))
     (if
         (and
@@ -301,28 +391,32 @@ When REPLACE-P is non-nil, TEXT replaces pending carriage-motion output."
                 emacsvox-comint--prompt-awaiting-padding nil)
           (list :output nil :prompt nil :pending ""))
       (setq emacsvox-comint--prompt-awaiting-padding nil)
-      (let* ((combined
-              (if replace-p
-                  text
-                (concat emacsvox-comint--pending-output text)))
-             (prompt-split (emacsvox-comint--split-final-prompt combined))
-             output prompt)
-        (if prompt-split
-            (setq output (car prompt-split)
-                  prompt (cdr prompt-split)
-                  emacsvox-comint--pending-output ""
-                  emacsvox-comint--last-prompt
-                  (substring-no-properties prompt)
-                  emacsvox-comint--prompt-awaiting-padding
-                  (string-match-p
-                   "[$#%>]\\'" emacsvox-comint--last-prompt))
-          (let* ((plain (substring-no-properties combined))
-                 (pending-start (emacsvox-comint--final-line-start plain)))
-            (setq output (substring combined 0 pending-start)
-                  emacsvox-comint--pending-output
-                  (substring combined pending-start))))
-        (list :output output :prompt prompt
-              :pending emacsvox-comint--pending-output)))))
+      (if (or (buffer-live-p emacsvox-comint--pending-buffer)
+              (> (+ (length emacsvox-comint--pending-output) (length text))
+                 emacsvox-comint--pending-string-limit))
+          (emacsvox-comint--partition-long-output text)
+        (let* ((combined
+		(if replace-p
+                    text
+                  (concat emacsvox-comint--pending-output text)))
+               (prompt-split (emacsvox-comint--split-final-prompt combined))
+               output prompt)
+          (if prompt-split
+              (setq output (car prompt-split)
+                    prompt (cdr prompt-split)
+                    emacsvox-comint--pending-output ""
+                    emacsvox-comint--last-prompt
+                    (substring-no-properties prompt)
+                    emacsvox-comint--prompt-awaiting-padding
+                    (string-match-p
+                     "[$#%>]\\'" emacsvox-comint--last-prompt))
+            (let* ((plain (substring-no-properties combined))
+                   (pending-start (emacsvox-comint--final-line-start plain)))
+              (setq output (substring combined 0 pending-start)
+                    emacsvox-comint--pending-output
+                    (substring combined pending-start))))
+          (list :output output :prompt prompt
+		:pending emacsvox-comint--pending-output))))))
 
 (defun emacsvox-comint--automatic-feedback-p ()
   "Return non-nil when process output should be presented in this buffer."
@@ -351,7 +445,7 @@ events.  Carriage-return chunks replace pending progress output."
     (if (not present-p)
         ;; Never announce output later merely because autospeak or monitoring
         ;; was enabled after it arrived.
-        (setq emacsvox-comint--pending-output "")
+        (emacsvox-comint--clear-pending-output)
       (when
           (and
            output
@@ -369,9 +463,9 @@ events.  Carriage-return chunks replace pending progress output."
 
 (defun emacsvox-comint--flush-pending-output ()
   "Present and clear any final non-newline process output."
-  (let ((output emacsvox-comint--pending-output))
-    (setq emacsvox-comint--pending-output ""
-          emacsvox-comint--prompt-awaiting-padding nil)
+  (let ((output (emacsvox-comint--pending-output-text)))
+    (emacsvox-comint--clear-pending-output)
+    (setq emacsvox-comint--prompt-awaiting-padding nil)
     (when
         (and
          (emacsvox-comint--automatic-feedback-p)
