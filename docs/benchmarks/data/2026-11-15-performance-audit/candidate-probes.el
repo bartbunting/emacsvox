@@ -1,0 +1,78 @@
+;;; candidate-probes.el --- Disposable performance investigation -*- lexical-binding: t; -*-
+;; Copyright (C) 2026 Emacsvox contributors
+;; SPDX-License-Identifier: GPL-2.0-or-later
+;;; Commentary:
+;; One-off audit reproduction. Use the report's environment and commands.
+;; This file is not loaded by Emacsvox.
+;;; Code:
+(load (expand-file-name "bootstrap.el" (file-name-directory load-file-name)) nil t)
+(require 'emacsvox-comint)
+(require 'markdown-mode)
+(require 'emacsvox-markdown)
+(require 'emacsvox-sound-library)
+;; Restore all functions after each diagnostic comparison. No repository edits.
+(let ((original (symbol-function 'string-match)))
+  (with-temp-buffer
+    (setq major-mode 'comint-mode comint-prompt-regexp "^SHELL> ")
+    (let ((piece (concat (make-string 16384 ?a) "\n")))
+      (cl-letf (((symbol-function 'string-match)
+                 (lambda (regexp string &optional start inhibit-modify)
+                   (if (and (equal regexp "[^\n]*\\'") (null start))
+                       (if-let* ((last (cl-position ?\n string :from-end t))) (1+ last) 0)
+                     (funcall original regexp string start inhibit-modify)))))
+        (audit-measure 'comint-linear-tail-probe (list :line-bytes 16384)
+                       (lambda ()
+                         (setq emacsvox-comint--pending-output "" emacsvox-comint--last-prompt nil
+                               emacsvox-comint--prompt-awaiting-padding nil)
+                         (emacsvox-comint--partition-output piece nil)) 25)))
+    (dolist (text '("" "plain" "plain\n" "one\ntwo\n" "one\ntail" "SHELL> " "output\nSHELL> "))
+      (let ((emacsvox-comint--pending-output "") (emacsvox-comint--last-prompt nil)
+            (emacsvox-comint--prompt-awaiting-padding nil))
+        (let ((baseline (emacsvox-comint--partition-output text nil))
+              (pending emacsvox-comint--pending-output))
+          (setq emacsvox-comint--pending-output "" emacsvox-comint--last-prompt nil
+                emacsvox-comint--prompt-awaiting-padding nil)
+          (cl-letf (((symbol-function 'string-match)
+                     (lambda (regexp string &optional start inhibit-modify)
+                       (if (and (equal regexp "[^\n]*\\'") (null start))
+                           (if-let* ((last (cl-position ?\n string :from-end t))) (1+ last) 0)
+                         (funcall original regexp string start inhibit-modify)))))
+            (unless (and (equal baseline (emacsvox-comint--partition-output text nil))
+                         (equal pending emacsvox-comint--pending-output))
+              (error "Tail probe changed output for %S" text))))))))
+(let* ((original (symbol-function 'emacsvox-markdown--table-plain-text))
+       (markup (regexp-opt '("\\" "`" "*" "_" "~" "!" "[" "]"))))
+  (with-temp-buffer
+    (delay-mode-hooks (markdown-mode))
+    (insert "| Name | Status | Count | Notes |\n|---|---|---|---|\n")
+    (dotimes (i 2000) (insert (format "| row-%d | ready | %d | Plain cell content |\n" i i)))
+    (goto-char (point-min)) (forward-line 1002)
+    (let* ((baseline (emacsvox-markdown--table-snapshot)) (position (point)))
+      (cl-letf (((symbol-function 'emacsvox-markdown--table-plain-text)
+                 (lambda (text) (if (string-match-p markup text) (funcall original text) text)))
+                ((symbol-function 'emacsvox-table-reader--submit) #'ignore))
+        (unless (equal baseline (emacsvox-markdown--table-snapshot)) (error "Table probe changed snapshot"))
+        (emacsvox-table-reader--enter (emacsvox-markdown--table-snapshot) t)
+        (audit-measure 'markdown-plain-cell-fast-path-probe (list :rows 2000 :columns 4)
+                       (lambda ()
+                         (goto-char position)
+                         (emacsvox-table-reader-next-row 1)
+                         (emacsvox-table-reader--post-command)) 20)))))
+(let* ((emacsvox-sound-library-directory (expand-file-name "recordings-40" audit-out))
+       (emacsvox-sound-library--cache (make-hash-table :test #'equal))
+       (original (symbol-function 'executable-find))
+       (ffprobe (executable-find "ffprobe"))
+       (baseline (emacsvox-sound-library--scan)))
+  (audit-measure 'missing-ffprobe-lookup (list :exec-path-count (length exec-path))
+                 (lambda () (executable-find "ffprobe")) 20)
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (command &optional remote)
+               (if (equal command "ffprobe") ffprobe (funcall original command remote)))))
+    (clrhash emacsvox-sound-library--cache)
+    (unless (equal baseline (emacsvox-sound-library--scan)) (error "Lookup probe changed library"))
+    (audit-measure 'sound-library-one-tool-lookup-probe (list :files 40 :ffprobe ffprobe)
+                   (lambda () (clrhash emacsvox-sound-library--cache) (emacsvox-sound-library--scan)) 20)))
+(audit-save "candidate-probes.eld" (list :exec-path-count (length exec-path)
+                                       :exec-path-hash (secure-hash 'sha256 (prin1-to-string exec-path))))
+
+;;; candidate-probes.el ends here

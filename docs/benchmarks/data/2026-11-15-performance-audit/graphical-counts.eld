@@ -1,0 +1,1 @@
+(:mode markdown-mode :rows 2000 :counts ((emacsvox-markdown--table-plain-text . 32016) (emacsvox-table-reader--source-cell . 4) (emacsvox-table-reader--pipe-spans . 20026) (emacsvox-markdown--table-line-p . 12022) (emacsvox-markdown--table-region . 4)))

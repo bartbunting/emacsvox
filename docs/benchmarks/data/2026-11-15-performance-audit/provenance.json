@@ -1,0 +1,58 @@
+{
+  "source_commit": "2563f0414d51a909f6a8986634f6f5e81cb4dbf6",
+  "initial_git_status": "clean",
+  "os": "Linux 6.18.58.1-microsoft-standard-WSL2 x86_64",
+  "emacs_binary": "/home/bart/opt/emacs-31/bin/emacs",
+  "emacs_version": "31.0.90",
+  "pinned_dependencies": "/home/bart/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90",
+  "dependency_manifest_sha256": "4fbfcaf03af19912344db98586782886ba79d34abbaa60e237f8f5eb8864ead8",
+  "live_environment": {
+    "pid": 3376,
+    "server": "emacsvox",
+    "emacs": "31.0.90",
+    "gc-threshold": 128000000,
+    "gc-percentage": 0.1,
+    "history-limit": 100,
+    "read-process-output-max": 65536,
+    "agent-version": "0.96.1",
+    "agent-path": "/home/bart/src/agent-shell/agent-shell.el",
+    "markdown-version": "2.8-alpha",
+    "markdown-path": "/home/bart/.emacs.d/elpa/markdown-mode-20261022.55/markdown-mode.elc",
+    "notmuch-path": "/home/bart/.emacs.d/elpa/notmuch-20260314.2247/notmuch.elc",
+    "speaker-pid": 12026,
+    "notify-pid": 12041,
+    "omnivox-version": "1.18.0",
+    "captured-utc": "2026-11-14T21:29:20.294880+00:00"
+  },
+  "live_exec_path_count": 31,
+  "live_windows_exec_path_count": 17,
+  "live_exec_path_sha256": "0ae8c511a80be41d1d59688f75e07dd8ae63ba67e10d7c1a140bc57a601a5d31",
+  "live_loaded_packages": {
+    "compat": "/home/bart/.emacs.d/elpa/compat-31.1.0.0/compat.elc",
+    "acp": "/home/bart/.emacs.d/elpa/acp-20261021.1225/acp.elc",
+    "shell-maker": "/home/bart/.emacs.d/elpa/shell-maker-20261029.954/shell-maker.elc",
+    "agent-shell": "/home/bart/src/agent-shell/agent-shell.el",
+    "transient": "/home/bart/.emacs.d/elpa/transient-20261101.1108/transient.elc",
+    "cond-let": "/home/bart/.emacs.d/elpa/cond-let-20261001.1537/cond-let.elc",
+    "llama": "/home/bart/.emacs.d/elpa/llama-20261001.1538/llama.elc",
+    "with-editor": "/home/bart/.emacs.d/elpa/with-editor-20261101.1104/with-editor.elc",
+    "magit": "/home/bart/.emacs.d/elpa/magit-20261107.2107/magit.elc",
+    "markdown-mode": "/home/bart/.emacs.d/elpa/markdown-mode-20261022.55/markdown-mode.elc",
+    "notmuch": "/home/bart/.emacs.d/elpa/notmuch-20260314.2247/notmuch.elc"
+  },
+  "measurement_notes": [
+    "Elapsed wall-clock durations; CPU time not separately measured.",
+    "Raw ELD median-ms is the upper middle observation for even sample counts; measurements.json recomputes the conventional median.",
+    "Bootstrap saved here now computes the conventional median for future runs.",
+    "No live probes, advice, timers, speech or production code changes were installed.",
+    "Full passive speech text and private buffer names are excluded."
+  ],
+  "measured_source_sha256": {
+    "lisp/integrations/emacsvox-comint.el": "5ca67a078711cb76a742714269915a9d891d5e8dcea431ef528ea02d37382545",
+    "lisp/core/emacsvox-table-reader.el": "e34a962af4d2bc4d344586c31379e60f49633c1c74836a3c7c3a4150d276ccf6",
+    "lisp/integrations/emacsvox-markdown.el": "d0d38bc5343d4fb9de5fe2f9a424794ffe0574457c526a505e75b54591880680",
+    "lisp/ui/emacsvox-sound-library.el": "661f4feb2e84944af7d5e17f7bb82a85323fb4daad685a2ddb8920b86b71f4f8",
+    "lisp/speech/tts-lifecycle.el": "e82eddcadc585b5c9f88052b63a1ed623ba92e568df4d9cc443593b4ebef3b2b"
+  },
+  "cpu_model": "Intel(R) Core(TM) Ultra 9 185H"
+}

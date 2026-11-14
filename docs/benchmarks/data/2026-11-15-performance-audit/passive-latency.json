@@ -1,0 +1,117 @@
+{
+  "units": "milliseconds",
+  "historical_session_pid": 3376,
+  "speaker_pid": 12026,
+  "notification_pid": 12041,
+  "client_event_count": 56829,
+  "client": {
+    "submission-elapsed-ms": {
+      "n": 4692,
+      "median": 9.994268417358398,
+      "p95": 18.94402503967285,
+      "max": 240.4031753540039
+    },
+    "command-elapsed-ms": {
+      "n": 4016,
+      "median": 9.934544563293457,
+      "p95": 23.364782333374023,
+      "max": 67.5513744354248
+    },
+    "dispatch-elapsed-ms": {
+      "n": 10962,
+      "median": 15.321731567382812,
+      "p95": 68.6638355255127,
+      "max": 1195.9927082061768
+    }
+  },
+  "server": {
+    "main": {
+      "queue_wait_ms": {
+        "n": 10927,
+        "median": 0.027,
+        "p95": 0.123,
+        "max": 440.291
+      },
+      "admission_to_audio_queued_ms": {
+        "n": 10886,
+        "median": 4.8614999999999995,
+        "p95": 34.229,
+        "max": 1193.029
+      },
+      "admission_to_mixer_source_ms": {
+        "n": 10870,
+        "median": 12.252,
+        "p95": 40.867,
+        "max": 1194.955
+      }
+    },
+    "notification": {
+      "queue_wait_ms": {
+        "n": 335,
+        "median": 0.028,
+        "p95": 4.428,
+        "max": 522.171
+      },
+      "admission_to_audio_queued_ms": {
+        "n": 332,
+        "median": 20.003500000000003,
+        "p95": 32.4,
+        "max": 544.078
+      },
+      "admission_to_mixer_source_ms": {
+        "n": 328,
+        "median": 25.738500000000002,
+        "p95": 40.703,
+        "max": 315.028
+      }
+    }
+  },
+  "onset_pairs": {
+    "n": 10962,
+    "median": 1.4351423873901368,
+    "p95": 31.008695419311522,
+    "max": 477.3375320587158
+  },
+  "outliers": [
+    {
+      "lane": "main",
+      "dispatch_id": 2751,
+      "status": "cancelled",
+      "queue_wait_ms": 4.517,
+      "worker_elapsed_ms": 2740.405,
+      "admission_to_audio_queued_ms": 1193.029,
+      "admission_to_mixer_source_ms": 1194.955,
+      "admission_to_terminal_ms": 2744.956
+    },
+    {
+      "lane": "main",
+      "dispatch_id": 4759,
+      "status": "cancelled",
+      "queue_wait_ms": 266.514,
+      "worker_elapsed_ms": 170.509,
+      "admission_to_audio_queued_ms": 288.521,
+      "admission_to_mixer_source_ms": 413.52,
+      "admission_to_terminal_ms": 443.62
+    },
+    {
+      "lane": "main",
+      "dispatch_id": 5992,
+      "status": "cancelled",
+      "queue_wait_ms": 233.593,
+      "worker_elapsed_ms": 127.156,
+      "admission_to_audio_queued_ms": 256.561,
+      "admission_to_mixer_source_ms": 341.799,
+      "admission_to_terminal_ms": 361.779
+    }
+  ],
+  "client_observation_outlier": [
+    {
+      "submission-id": null,
+      "dispatch-id": 9173,
+      "client-ms": 490.7715320587158,
+      "server-onset-ms": 13.434,
+      "queue-ms": 0.024,
+      "extra-client-ms": 477.3375320587158
+    }
+  ]
+}

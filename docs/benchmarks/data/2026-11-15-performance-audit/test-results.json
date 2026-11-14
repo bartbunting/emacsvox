@@ -1,0 +1,155 @@
+{
+  "core-test": {
+    "summary": [
+      "Ran 1146 tests, 1128 results as expected, 0 unexpected, 18 skipped (2026-11-15 08:39:35+1100, 44.996182 sec)"
+    ],
+    "skipped": [
+      "emacsvox-aural-voice-editor-graphical-more-controls-below-button",
+      "emacsvox-aural-voice-editor-graphical-save-remains-visible",
+      "emacsvox-aural-voice-editor-help-retains-field-and-draft",
+      "emacsvox-aural-voice-workbench-graphical-engine-browser-return",
+      "emacsvox-aural-workbench-graphical-engine-management-round-trip",
+      "emacsvox-aural-workbench-graphical-espeak-tree-navigation",
+      "emacsvox-aural-workbench-graphical-filter-search-and-editor-return",
+      "emacsvox-aural-workbench-graphical-language-navigation-and-refresh",
+      "emacsvox-aural-workbench-graphical-quit-unwinds-voice-browser",
+      "emacsvox-engine-controls-graphical-edit-after-reading-prompt",
+      "omnivox-engine-configuration-graphical-navigation-retains-draft",
+      "omnivox-engine-configuration-native-service-round-trip",
+      "omnivox-library-engine-native-pair-freezes-and-recovers",
+      "omnivox-library-removal-graphical-review-preserves-origin-and-return",
+      "omnivox-profiles-graphical-create-edit-and-switch",
+      "omnivox-profiles-native-workers-negotiate-frozen-catalogues",
+      "omnivox-punctuation-graphical-navigation-edit-and-return",
+      "omnivox-punctuation-native-service-round-trip"
+    ],
+    "failed": []
+  },
+  "integration-test": {
+    "summary": [
+      "Ran 746 tests, 746 results as expected, 0 unexpected (2026-11-15 08:40:33+1100, 11.337035 sec)"
+    ],
+    "skipped": [],
+    "failed": []
+  },
+  "focused-tests": {
+    "summary": [
+      "Ran 495 tests, 428 results as expected, 0 unexpected, 67 skipped (2026-11-15 08:41:33+1100, 15.354399 sec)"
+    ],
+    "skipped": [
+      "emacsvox-aural-menu-graphical-detailed-descriptions",
+      "emacsvox-aural-menu-graphical-direct-speech-and-button-entry",
+      "emacsvox-aural-menu-graphical-enter-activates-focused-item",
+      "emacsvox-aural-menu-graphical-feedback-opens-real-details",
+      "emacsvox-aural-menu-graphical-first-toggle-does-not-repeat-introduction",
+      "emacsvox-aural-menu-graphical-help-replaces-aural-origin",
+      "emacsvox-aural-menu-graphical-help-returns-to-menu",
+      "emacsvox-aural-menu-graphical-help-selection-is-spoken",
+      "emacsvox-aural-menu-graphical-links-scope-and-refresh",
+      "emacsvox-aural-menu-graphical-manual-announces-entry",
+      "emacsvox-aural-menu-graphical-manual-returns-to-menu",
+      "emacsvox-aural-menu-graphical-navigation-style-and-save",
+      "emacsvox-aural-menu-graphical-quit-announces-return-buffer",
+      "emacsvox-aural-menu-graphical-review-keeps-selection-and-activation",
+      "emacsvox-aural-menu-graphical-speech-order-and-navigation-entry",
+      "emacsvox-aural-menu-graphical-submenu-return-targets",
+      "emacsvox-aural-menu-graphical-task-sections",
+      "emacsvox-aural-menu-output-graphical-adjust-and-return",
+      "emacsvox-aural-menu-output-graphical-browser-keeps-source",
+      "emacsvox-aural-menu-speech-graphical-rate-and-punctuation",
+      "emacsvox-aural-menu-speech-graphical-save-survives-startup",
+      "emacsvox-aural-menu-voices-graphical-engine-save-is-explicit",
+      "emacsvox-aural-menu-voices-graphical-palettes-return-and-direct-entry",
+      "emacsvox-aural-menu-voices-graphical-workbench-return-and-drafts",
+      "emacsvox-aural-voice-workbench-graphical-engine-browser-return",
+      "emacsvox-aural-workbench-graphical-engine-management-round-trip",
+      "emacsvox-aural-workbench-graphical-espeak-tree-navigation",
+      "emacsvox-aural-workbench-graphical-filter-search-and-editor-return",
+      "emacsvox-aural-workbench-graphical-language-navigation-and-refresh",
+      "emacsvox-aural-workbench-graphical-quit-unwinds-voice-browser",
+      "emacsvox-capitalization-menu-graphical-cue-drafts-and-focus",
+      "emacsvox-capitalization-menu-graphical-save-customize-and-reset",
+      "emacsvox-capitalization-menu-graphical-scope-preview-and-defaults",
+      "emacsvox-capitalization-parent-volume-graphical-focus-and-save",
+      "emacsvox-capitalization-presentation-graphical-browse-return-and-cancel",
+      "emacsvox-capitalization-shared-editor-graphical-return-and-save",
+      "emacsvox-eww-link-navigation-keeps-graphical-url-echo",
+      "emacsvox-indentation-menu-graphical-adjustment-bindings-stay-local",
+      "emacsvox-indentation-menu-graphical-shift-arrows-adjust-volume",
+      "emacsvox-indentation-menu-graphical-shortcuts-and-scope",
+      "emacsvox-indentation-menu-graphical-tone-controls-and-return",
+      "emacsvox-indentation-menu-navigation-cues-follow-active-choice",
+      "emacsvox-indentation-shared-editor-graphical-navigation",
+      "emacsvox-menu-choices-graphical-device-and-custom-mapping",
+      "emacsvox-menu-choices-graphical-output-browse-and-return",
+      "emacsvox-menu-choices-graphical-point-scope-and-return",
+      "emacsvox-menu-prompts-graphical-earcon-focus",
+      "emacsvox-menu-prompts-graphical-retain-focus-on-accept-and-cancel",
+      "emacsvox-menu-prompts-graphical-shortcut-error-and-preset-focus",
+      "emacsvox-settings-action-aliases-have-one-destination",
+      "emacsvox-settings-actions-cover-home-without-activation",
+      "emacsvox-settings-focused-reading-enter",
+      "emacsvox-settings-library-preview-browses-applies-saves-and-returns",
+      "emacsvox-settings-menu-action-search-and-return",
+      "emacsvox-settings-menu-buffer-mode-and-custom-return",
+      "emacsvox-settings-menu-search-alias-and-substring-selection",
+      "emacsvox-settings-menu-search-cancel-keeps-menu",
+      "emacsvox-settings-menu-search-every-destination",
+      "emacsvox-settings-menu-search-partial-name-and-mixed-case",
+      "emacsvox-settings-menu-search-preserves-source-and-scope",
+      "emacsvox-settings-reading-enter-activation",
+      "emacsvox-settings-return-source-restores-captured-position",
+      "emacsvox-settings-search-literal-spaces-and-prompt-isolation",
+      "emacsvox-settings-tone-search-keeps-parent-context",
+      "emacsvox-sound-library-assignment-graphical-alphabetical-prompts",
+      "emacsvox-sound-library-graphical-batch-cancel-and-return",
+      "emacsvox-sound-library-graphical-cue-return-keeps-row"
+    ],
+    "failed": []
+  },
+  "runtime-agent-tests": {
+    "summary": [
+      "Ran 378 tests, 366 results as expected, 0 unexpected, 12 skipped (2026-11-15 08:47:29+1100, 22.313433 sec)"
+    ],
+    "skipped": [
+      "emacsvox-agent-shell-diff-headings-graphical-navigation",
+      "emacsvox-agent-shell-divider-graphical-bidirectional-speech",
+      "emacsvox-agent-shell-explicit-input-graphical-prompt-label",
+      "emacsvox-agent-shell-explicit-input-graphical-wrapping",
+      "emacsvox-agent-shell-folded-heading-graphical-wrapping",
+      "emacsvox-agent-shell-folded-prompt-padding-graphical-navigation",
+      "emacsvox-agent-shell-live-input-graphical-visual-speech",
+      "emacsvox-agent-shell-live-input-graphical-wrapped-speech",
+      "emacsvox-agent-shell-question-graphical-controls",
+      "emacsvox-agent-shell-response-graphical-bidirectional-speech",
+      "emacsvox-agent-shell-table-graphical-wrapped-navigation",
+      "emacsvox-agent-shell-tree-graphical-level-feedback"
+    ],
+    "failed": []
+  },
+  "runtime-agent-graphical": {
+    "summary": [
+      "Ran 12 tests, 12 results as expected, 0 unexpected (2026-11-15 08:53:02+1100, 1.069891 sec)"
+    ],
+    "skipped": [],
+    "failed": []
+  },
+  "focused-graphical-corrected": {
+    "summary": [
+      "Ran 67 tests, 65 results as expected, 1 unexpected, 1 skipped (2026-11-15 08:50:16+1100, 18.317633 sec)"
+    ],
+    "skipped": [
+      "emacsvox-sound-library-assignment-graphical-alphabetical-prompts"
+    ],
+    "failed": [
+      "emacsvox-settings-menu-search-every-destination"
+    ]
+  },
+  "focused-graphical-final": {
+    "summary": [
+      "Ran 67 tests, 67 results as expected, 0 unexpected (2026-11-15 09:01:52+1100, 19.215730 sec)"
+    ],
+    "skipped": [],
+    "failed": []
+  }
+}
