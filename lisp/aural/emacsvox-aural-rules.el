@@ -1957,6 +1957,76 @@ When VALUE is supplied, an attribute must also have that value."
                   best-score score)))))
     (and best-score (cons best-score best-input))))
 
+(defvar emacsvox-aural--match-cache nil
+  "Operation-local exact-input match cache for a pure source-run pass.")
+(defvar emacsvox-aural--match-cache-count 0)
+
+(defun emacsvox-aural--match-key (value)
+  "Copy VALUE as a bounded immutable key, or return nil when it is unsuitable.
+Matching compares string values; properties remain on each fresh input.
+Limit each key to approximately 16 KiB and 64 levels."
+  (catch 'uncacheable
+    (let ((remaining 16384))
+      (cl-labels
+          ((charge (bytes)
+             (cl-decf remaining bytes)
+             (when (< remaining 0) (throw 'uncacheable nil)))
+           (freeze (item depth)
+             (when (> depth 64) (throw 'uncacheable nil))
+             (cond
+              ((stringp item)
+               (charge (+ 24 (string-bytes item)))
+               (substring-no-properties item))
+              ((consp item)
+               (charge 16)
+               (cons (freeze (car item) (1+ depth))
+                     (freeze (cdr item) (1+ depth))))
+              ((or (recordp item) (vectorp item))
+               (charge (+ 24 (* 8 (length item))))
+               (let ((copy (copy-sequence item)))
+                 (cl-loop for index from (if (recordp item) 1 0) below (length item)
+                          do (aset copy index (freeze (aref item index) (1+ depth))))
+                 copy))
+              ((or (symbolp item) (numberp item) (bufferp item)) item)
+              (t (throw 'uncacheable nil)))))
+        (freeze value 0)))))
+
+(defun emacsvox-aural--prepared-rule-matches (rules inputs)
+  "Match RULES against fresh INPUTS, reusing exact single-input work.
+Only the bounded synchronous source-run pass binds the cache. Each hit
+uses the current input and fresh scores, keeping action facts independent."
+  (let* ((key (and emacsvox-aural--match-cache (null (cdr inputs))
+                   (<= (length rules) 256)
+                   (car inputs)))
+         (state (and key (gethash rules emacsvox-aural--match-cache))))
+    (when (and key
+               (or state (< (hash-table-count emacsvox-aural--match-cache) 64)))
+      (unless (and state
+                   (eq (aref state 0) emacsvox-aural-semantic-registry)
+                   (= (aref state 1) (hash-table-count emacsvox-aural-semantic-registry))
+                   (eq (aref state 2) emacsvox-aural-semantic-alias-registry)
+                   (= (aref state 3) (hash-table-count emacsvox-aural-semantic-alias-registry)))
+        (setq state (vector emacsvox-aural-semantic-registry
+                            (hash-table-count emacsvox-aural-semantic-registry)
+                            emacsvox-aural-semantic-alias-registry
+                            (hash-table-count emacsvox-aural-semantic-alias-registry)
+                            (make-hash-table :test #'equal)))
+        (puthash rules state emacsvox-aural--match-cache)))
+    (let ((cached (if state (condition-case nil (gethash key (aref state 4) 'absent)
+                             (error 'absent)) 'absent)))
+      (if (not (eq cached 'absent))
+          (mapcar (lambda (entry) (list (copy-sequence (car entry)) (cdr entry) (car inputs)))
+                  cached)
+        (let ((matches (emacsvox-aural--matching-rules-for-inputs rules inputs)))
+          (when (and state (< emacsvox-aural--match-cache-count 64))
+            (when-let* ((owned-key (emacsvox-aural--match-key key)))
+              (puthash owned-key
+                       (mapcar (lambda (entry) (cons (copy-sequence (car entry)) (cadr entry)))
+                               matches)
+                       (aref state 4))
+              (cl-incf emacsvox-aural--match-cache-count)))
+          matches)))))
+
 (defun emacsvox-aural--matching-rules-for-inputs (rules inputs)
   "Return scored RULES matching any normalized member of INPUTS.
 
@@ -2360,7 +2430,7 @@ render plans sharing only immutable normalized and matching work."
              (emacsvox-aural-normalize-input (car input) (cdr input)))
            inputs))
          (matches
-          (emacsvox-aural--matching-rules-for-inputs rules normalized)))
+          (emacsvox-aural--prepared-rule-matches rules normalized)))
     (mapcar
      (lambda (anchor)
        (cons anchor (emacsvox-aural--resolve-matches matches anchor)))

@@ -1310,5 +1310,69 @@
        (emacsvox-aural-render-plan-before plan))
       '(warning-object)))))
 
+(ert-deftest emacsvox-aural-rules-cached-matches-keep-fresh-facts-and-plans ()
+  "Reused matching cannot share mutable plans, scores, or source strings."
+  (let* ((rules (list (emacsvox-test--compile-rule
+                      'cached-heading '(:role heading)
+                      '(:before ((:id entry :kind cue :cue item))
+                        :content (:voice voice-bolden)))))
+         (emacsvox-aural--match-cache (make-hash-table :test #'eq))
+         (emacsvox-aural--match-cache-count 0)
+         (original (symbol-function 'emacsvox-aural--matching-rules-for-inputs))
+         (calls 0)
+         (first-text (propertize (copy-sequence "same") 'face 'bold)))
+    (cl-letf (((symbol-function 'emacsvox-aural--matching-rules-for-inputs)
+               (lambda (&rest args) (cl-incf calls) (apply original args))))
+      (let* ((first (emacsvox-aural-resolve `(:role heading :content ,first-text) nil rules))
+             (score (cdar (emacsvox-aural-render-plan-rule-scores first))))
+        (aset score 0 -1000)
+        (setf (emacsvox-aural-content-style-voice (emacsvox-aural-render-plan-content first)) 'inaudible)
+        (aset first-text 0 ?Z)
+        (let* ((text (propertize "same" 'face 'italic))
+               (second (emacsvox-aural-resolve `(:role heading :content ,text) nil rules))
+               (facts (car (emacsvox-aural-action-matched-facts
+                            (car (emacsvox-aural-render-plan-before second))))))
+          (should (= calls 1))
+          (should (eq (emacsvox-aural-content-style-voice
+                       (emacsvox-aural-render-plan-content second)) 'voice-bolden))
+          (should-not (= (aref (cdar (emacsvox-aural-render-plan-rule-scores second)) 0) -1000))
+          (should (equal (plist-get facts :content) "same"))
+          (should (eq (get-text-property 0 'face (plist-get facts :content)) 'italic)))))))
+
+(ert-deftest emacsvox-aural-rules-cached-matches-still-read-current-defaults ()
+  "Normalization observes current fallback settings even when matches repeat."
+  (let* ((rules (list (emacsvox-test--compile-rule
+                      'cached-personality '(:legacy-personality voice-bolden)
+                      '(:content (:voice voice-bolden)))))
+         (emacsvox-aural--match-cache (make-hash-table :test #'eq))
+         (emacsvox-aural--match-cache-count 0)
+         (enabled t) (reads 0))
+    (cl-letf (((symbol-function 'emacsvox-aural-voice-lock-enabled-p)
+               (lambda () (cl-incf reads) enabled)))
+      (dolist (value '(t nil t))
+        (setq enabled value)
+        (let ((plan (emacsvox-aural-resolve
+                     '(:role heading) '(:legacy-personality voice-bolden) rules)))
+          (should (eq (emacsvox-aural-content-style-voice
+                       (emacsvox-aural-render-plan-content plan))
+                      (if value 'voice-bolden 'default)))))
+      (should (= reads 3)))))
+
+(ert-deftest emacsvox-aural-rules-match-cache-is-bounded-and-optional ()
+  "Large keys and many distinct inputs cannot grow the operation cache."
+  (let* ((rules (list (emacsvox-test--compile-rule
+                      'bounded-heading '(:role heading) '(:content (:voice voice-bolden)))))
+         (emacsvox-aural--match-cache (make-hash-table :test #'eq))
+         (emacsvox-aural--match-cache-count 0))
+    (emacsvox-aural-resolve `(:role heading :content ,(make-string 20000 ?a)) nil rules)
+    (should (zerop emacsvox-aural--match-cache-count))
+    (dotimes (i 80)
+      (emacsvox-aural-resolve `(:role heading :content ,(format "item-%d" i)) nil rules))
+    (should (= emacsvox-aural--match-cache-count 64))
+    (let ((emacsvox-aural--match-cache nil))
+      (should (eq (emacsvox-aural-content-style-voice
+                   (emacsvox-aural-render-plan-content
+                    (emacsvox-aural-resolve '(:role heading) nil rules))) 'voice-bolden)))))
+
 (provide 'emacsvox-aural-rules-tests)
 ;;; emacsvox-aural-rules-tests.el ends here

@@ -491,11 +491,14 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
              (emacsvox-aural-source-run-facts (car runs))
              (emacsvox-aural-source-run-context (car runs))))
            (lifetime-renders
-            (mapcar
-             (lambda (run)
-               (emacsvox-aural--resolve-source-run-anchors
-                run '(run transition)))
-             runs))
+            (let ((emacsvox-aural--match-cache
+                   (and (> (length runs) 8) (make-hash-table :test #'eq)))
+                  (emacsvox-aural--match-cache-count 0))
+              (mapcar
+               (lambda (run)
+                 (emacsvox-aural--resolve-source-run-anchors
+                  run '(run transition)))
+               runs)))
            (run-renders
             (mapcar
              (lambda (renders) (alist-get 'run renders))
@@ -511,7 +514,7 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
        for transition-render in transition-renders
        for index from 0
        for previous-render in (cons nil transition-renders)
-       for next-render = (nth (1+ index) transition-renders)
+       for next-render in (append (cdr transition-renders) (list nil))
        for first-p = (zerop index)
        for last-p = (= index (1- count))
        collect
