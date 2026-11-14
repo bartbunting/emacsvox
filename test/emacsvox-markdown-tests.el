@@ -39,6 +39,90 @@
   (dolist (target emacsvox-markdown--removed-targets)
     (should-not (fboundp target))))
 
+(ert-deftest emacsvox-markdown-follow-link-announces-destination-once ()
+  "Following a file link speaks its destination, including an existing buffer."
+  (let ((file (make-temp-file "emacsvox-markdown-link-" nil ".md" "Target\n")))
+    (unwind-protect
+        (save-window-excursion
+          (dolist (case '((markdown-follow-thing-at-point nil nil)
+                          (markdown-follow-link-at-point nil nil)
+                          (markdown-follow-thing-at-point t nil)
+                          (markdown-follow-wiki-link-at-point t (4))
+                          (markdown-follow-thing-at-point t (4))))
+            (with-temp-buffer
+              (markdown-mode)
+              (setq-local markdown-enable-wiki-links t
+                          buffer-file-name (concat file "-source.md"))
+              (insert (if (nth 1 case)
+                          (format "[[%s]]" (file-name-sans-extension file))
+                        (format "[Target](%s)" file)))
+              (set-buffer-modified-p nil)
+              (goto-char 3)
+              (switch-to-buffer (current-buffer))
+              (when (nth 2 case) (split-window-right))
+              (let ((command (car case))
+                    (current-prefix-arg (nth 2 case))
+                    (last-command-event nil)
+                    spoken)
+                (cl-letf (((symbol-function 'tts-speak)
+                           (lambda (text)
+                             (push (substring-no-properties text) spoken))))
+                  (call-interactively
+                   (if (eq command 'markdown-follow-thing-at-point)
+                       (key-binding (kbd "C-c C-o"))
+                     command)))
+                (should (equal (buffer-file-name) file))
+                (should (eq (window-buffer (selected-window)) (current-buffer)))
+                (should (equal spoken (list (buffer-name)))))
+              (delete-other-windows))))
+      (when-let* ((buffer (get-file-buffer file))) (kill-buffer buffer))
+      (delete-file file))))
+
+(ert-deftest emacsvox-markdown-follow-link-programmatic-stays-silent ()
+  "Opening a file programmatically does not announce the destination."
+  (let ((file (make-temp-file "emacsvox-markdown-link-" nil ".txt" "Target\n")))
+    (unwind-protect
+        (save-window-excursion
+          (with-temp-buffer
+            (markdown-mode)
+            (insert (format "[Target](%s)" file))
+            (goto-char 3)
+            (let (spoken)
+              (cl-letf (((symbol-function 'tts-speak)
+                         (lambda (text) (push text spoken))))
+                (markdown-follow-thing-at-point nil))
+              (should (equal (buffer-file-name) file))
+              (should-not spoken))))
+      (when-let* ((buffer (get-file-buffer file))) (kill-buffer buffer))
+      (delete-file file))))
+
+(ert-deftest emacsvox-markdown-follow-external-link-does-not-announce-source ()
+  "An external browser handoff does not claim to enter the source buffer."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "[Example](https://example.invalid/)")
+    (goto-char 3)
+    (let (opened spoken)
+      (cl-letf (((symbol-function 'browse-url)
+                 (lambda (url &rest _) (setq opened url)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text) (push text spoken))))
+        (call-interactively #'markdown-follow-thing-at-point))
+      (should (equal opened "https://example.invalid/"))
+      (should-not spoken))))
+
+(ert-deftest emacsvox-markdown-follow-missing-link-preserves-error ()
+  "A failed link command retains its error without announcing a buffer."
+  (with-temp-buffer
+    (markdown-mode)
+    (insert "Ordinary text")
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (push text spoken))))
+        (should-error (call-interactively #'markdown-follow-thing-at-point)
+                      :type 'user-error))
+      (should-not spoken))))
+
 (ert-deftest emacsvox-markdown-speak-line-calls-original-once ()
   "Ordinary buffers delegate to the original speaker exactly once."
   (with-temp-buffer

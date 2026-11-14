@@ -625,6 +625,27 @@ When reading mode is active, strip markup from speech."
         'navigation))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
+;; Link commands call file-opening functions noninteractively, so their usual
+;; buffer-change feedback does not run.  Consume the outer command's marker
+;; before following nested links to announce the destination only once.
+(cl-loop
+ for target in
+ '(markdown-follow-thing-at-point markdown-follow-link-at-point
+   markdown-follow-wiki-link-at-point)
+ for advice-function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(defun ,advice-function (original &rest arguments)
+     "Announce the destination buffer after following a Markdown link."
+     (let* ((interactive (ems-interactive-p ',target))
+            (source (current-buffer))
+            (result (apply original arguments)))
+       (when (and interactive (not (eq source (current-buffer))))
+         (emacsvox-markdown--submit-text
+          (buffer-name) '(:event focus-entered) 'navigation))
+       result)))
+ (push (list target :around advice-function) emacsvox-markdown--advice))
+
 ;;;  Advice editing/movement commands:
 
 (cl-loop
