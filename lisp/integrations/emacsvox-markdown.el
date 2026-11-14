@@ -56,6 +56,10 @@
 (declare-function markdown-code-block-at-point-p "markdown-mode")
 (declare-function markdown-heading-at-point "markdown-mode")
 (declare-function markdown-outline-level "markdown-mode")
+(declare-function markdown-link-at-pos "markdown-mode")
+(declare-function markdown-link-url "markdown-mode")
+(declare-function markdown-wiki-link-p "markdown-mode")
+(declare-function markdown-wiki-link-alias "markdown-mode")
 
 ;;;  Customization:
 
@@ -610,6 +614,21 @@ When reading mode is active, strip markup from speech."
         'markdown-heading-navigated))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
+(defun emacsvox-markdown--link-text ()
+  "Return the selected link's label, or its destination when unlabeled."
+  (save-match-data
+    (if (markdown-wiki-link-p)
+        (emacsvox-markdown--table-plain-text (markdown-wiki-link-alias))
+      (let* ((link (markdown-link-at-pos (point)))
+             (label (and (nth 2 link)
+                         (string-trim
+                          (emacsvox-markdown--table-plain-text (nth 2 link))))))
+        (when (car link)
+          (or (and label (not (string-empty-p label)) label)
+              (markdown-link-url)
+              (nth 4 link)
+              "Unnamed link"))))))
+
 (cl-loop
  for target in
  '(markdown-next-link markdown-previous-link)
@@ -619,10 +638,12 @@ When reading mode is active, strip markup from speech."
  `(defun ,advice-function (&rest _)
      "Speak the link we moved to."
      (when (ems-interactive-p ',target)
-       (emacsvox-markdown--present-current-line
-        (emacsvox-markdown-facts-at-point
-         'markdown-link-navigated 'structural)
-        'navigation))))
+       (when-let* ((text (emacsvox-markdown--link-text)))
+         (emacsvox-markdown--submit-text
+          text
+          '(:role markdown-link :events (markdown-link-navigated)
+            :markdown-navigation-kind structural)
+          'navigation)))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 ;; Link commands call file-opening functions noninteractively, so their usual
