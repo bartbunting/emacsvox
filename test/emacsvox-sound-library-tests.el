@@ -91,6 +91,38 @@
         (should-not (emacsvox-aural-cue 'soft-click))
         (emacsvox-aural-quit)))))
 
+(ert-deftest emacsvox-sound-library-cache-releases-removed-files-and-former-roots ()
+  "The metadata cache follows the current library without deleting recordings."
+  (emacsvox-test--with-library
+    (emacsvox-sound-library--scan)
+    (should (= (hash-table-count emacsvox-sound-library--cache) 1))
+    (delete-file candidate)
+    (should-not (emacsvox-sound-library--scan))
+    (should (zerop (hash-table-count emacsvox-sound-library--cache)))
+    (write-region "restored recording" nil candidate nil 'silent)
+    (emacsvox-sound-library--scan)
+    (let ((other-root (make-temp-file "another-library-" t)))
+      (unwind-protect
+          (let ((emacsvox-sound-library-directory other-root))
+            (write-region "another recording" nil (expand-file-name "other.wav" other-root) nil 'silent)
+            (emacsvox-sound-library--scan)
+            (should (= (hash-table-count emacsvox-sound-library--cache) 1))
+            (should-not (gethash candidate emacsvox-sound-library--cache))
+            (should (file-exists-p candidate)))
+        (delete-directory other-root t)))))
+
+(ert-deftest emacsvox-sound-library-cache-keeps-the-last-complete-scan-on-error ()
+  "An incomplete metadata scan does not publish or retain a partial new cache."
+  (emacsvox-test--with-library
+    (emacsvox-sound-library--scan)
+    (let ((previous emacsvox-sound-library--cache))
+      (write-region "new recording" nil (expand-file-name "new.wav" emacsvox-sound-library-directory) nil 'silent)
+      (cl-letf (((symbol-function 'emacsvox-aural--recording-digest)
+                 (lambda (&rest _) (error "Cannot read recording"))))
+        (should-error (emacsvox-sound-library--scan)))
+      (should (eq emacsvox-sound-library--cache previous))
+      (should (= (hash-table-count emacsvox-sound-library--cache) 1)))))
+
 (ert-deftest emacsvox-sound-library-arrows-preview-only-successful-row-moves ()
   "Row navigation previews candidates without cancelling labels or assigning."
   (emacsvox-test--with-library
