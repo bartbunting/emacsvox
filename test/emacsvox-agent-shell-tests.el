@@ -5402,6 +5402,107 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Return the upstream link verb, retaining LEGACY-ACTION before simplification."
   (if (fboundp 'agent-shell-markdown--link-verb) legacy-action "open"))
 
+(ert-deftest emacsvox-agent-shell-link-opening-announces-file-buffer ()
+  "Return announces each file type once, including an already displayed file."
+  (require 'emacsvox-advice)
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (dolist (extension '(".md" ".txt" ".el"))
+      (dolist (already-displayed '(nil t))
+        (let ((file (make-temp-file "emacsvox-agent-link-" nil extension
+                                    "First line\nTarget line\nLast line\n")))
+          (unwind-protect
+              (save-window-excursion
+                (with-temp-buffer
+                  (switch-to-buffer (current-buffer))
+                  (delete-other-windows)
+                  (setq major-mode mode)
+                  (when already-displayed
+                    (set-window-buffer (split-window-right)
+                                       (find-file-noselect file)))
+                  (insert (format "[Target](%s#L2)" file))
+                  (agent-shell-markdown-replace-markup :complete t)
+                  (goto-char (point-min))
+                  (should (eq (key-binding (kbd "RET"))
+                              'agent-shell-markdown-open-link-at-point))
+                  (let ((events
+                         (emacsvox-agent-shell-test--capture-events
+                           (call-interactively (key-binding (kbd "RET"))))))
+                    (should (equal (buffer-file-name) file))
+                    (should (eq (window-buffer (selected-window)) (current-buffer)))
+                    (should (= (line-number-at-pos) 2))
+                    (should
+                     (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
+                            (list (list 'speak (buffer-name))))))))
+            (when-let* ((buffer (get-file-buffer file))) (kill-buffer buffer))
+            (delete-file file)))))))
+
+(ert-deftest emacsvox-agent-shell-link-opening-browser-destination ()
+  "Announce an Emacs browser buffer, but keep an external handoff silent."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (dolist (in-emacs '(nil t))
+      (save-window-excursion
+        (with-temp-buffer
+          (let ((source (current-buffer))
+                (destination (generate-new-buffer "*Agent link browser*")))
+            (unwind-protect
+                (progn
+                  (switch-to-buffer source)
+                  (setq major-mode mode)
+                  (insert "[Website](https://example.invalid/)")
+                  (agent-shell-markdown-replace-markup :complete t)
+                  (goto-char (point-min))
+                  (cl-letf (((symbol-function 'browse-url)
+                             (lambda (url &rest _)
+                               (should (equal url "https://example.invalid/"))
+                               (when in-emacs (switch-to-buffer destination))
+                               'browser-result)))
+                    (should
+                     (equal
+                      (seq-filter
+                       (lambda (event) (eq (car event) 'speak))
+                       (emacsvox-agent-shell-test--capture-events
+                         (should (eq (call-interactively (key-binding (kbd "RET")))
+                                     'browser-result))))
+                      (when in-emacs (list (list 'speak (buffer-name destination))))))))
+              (kill-buffer destination))))))))
+
+(ert-deftest emacsvox-agent-shell-link-opening-programmatic-and-other-modes ()
+  "Only an interactive link opened from an Agent Shell view owns feedback."
+  (save-window-excursion
+    (with-temp-buffer
+      (let ((source (current-buffer))
+            (destination (generate-new-buffer "*Programmatic link target*")))
+        (unwind-protect
+            (dolist (mode '(agent-shell-mode fundamental-mode))
+              (switch-to-buffer source)
+              (setq major-mode mode)
+              (erase-buffer)
+              (insert "[Website](https://example.invalid/)")
+              (agent-shell-markdown-replace-markup :complete t)
+              (goto-char (point-min))
+              (cl-letf (((symbol-function 'browse-url)
+                         (lambda (&rest _) (switch-to-buffer destination))))
+                (should-not
+                 (seq-filter
+                  (lambda (event) (eq (car event) 'speak))
+                  (emacsvox-agent-shell-test--capture-events
+                    (if (eq mode 'agent-shell-mode)
+                        (agent-shell-markdown-open-link-at-point)
+                      (call-interactively (key-binding (kbd "RET")))))))))
+          (kill-buffer destination))))))
+
+(ert-deftest emacsvox-agent-shell-link-opening-error-stays-silent ()
+  "A failed link action retains its error without announcing a destination."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "No link here")
+    (should-not
+     (seq-filter
+      (lambda (event) (eq (car event) 'speak))
+      (emacsvox-agent-shell-test--capture-events
+        (should-error (call-interactively #'agent-shell-markdown-open-link-at-point)
+                      :type 'user-error))))))
+
 (ert-deftest emacsvox-agent-shell-actionable-items-are-semantic ()
   "Links, images, and source controls should announce labels, not chrome."
   (with-temp-buffer

@@ -80,6 +80,23 @@
 (defvar emacsvox-agent-shell--permission-detail-cache)
 (defvar agent-shell-viewport-dismiss-on-send)
 
+;;; Link destinations
+
+(defun emacsvox-agent-shell--open-link-at-point-around (original &rest arguments)
+  "Announce the buffer selected by an interactive link through ORIGINAL.
+Consume the interactive marker before nested file or browser commands run."
+  (let* ((interactive
+          (and (ems-interactive-p 'agent-shell-markdown-open-link-at-point)
+               (derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode)))
+         (source (current-buffer))
+         (result (apply original arguments))
+         (destination (window-buffer (selected-window))))
+    (when (and interactive (not (eq source destination)))
+      (with-current-buffer destination
+        (emacsvox-agent-shell--submit-text-feedback
+         (buffer-name) '(:events (focus-entered)) 'navigation 'open-object)))
+    result))
+
 ;;; Question forms
 
 (defvar emacsvox-agent-shell--question-command-active nil
