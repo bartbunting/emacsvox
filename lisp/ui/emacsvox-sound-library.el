@@ -63,11 +63,21 @@ copies files here without changing any cue. Assigned packs own their audio."
 (defvar-local emacsvox-sound-library--target nil
   "Captured pack, current cue, manifest identity and pending cue assignments.")
 
+(defvar emacsvox-sound-library--duration-tool nil
+  "Per-scan cell holding the ffprobe path, nil, or `unresolved'.
+Nil outside a scan leaves standalone duration queries uncached.")
+
 (defun emacsvox-sound-library--duration (file)
   "Return FILE's duration in seconds when ffprobe is available, otherwise nil."
-  (when (executable-find "ffprobe")
+  (when-let* ((program
+               (if emacsvox-sound-library--duration-tool
+                   (progn
+                     (when (eq (car emacsvox-sound-library--duration-tool) 'unresolved)
+                       (setcar emacsvox-sound-library--duration-tool (executable-find "ffprobe")))
+                     (car emacsvox-sound-library--duration-tool))
+                 (executable-find "ffprobe"))))
     (with-temp-buffer
-      (when (zerop (call-process "ffprobe" nil (list t nil) nil
+      (when (zerop (call-process program nil (list t nil) nil
                                  "-v" "error" "-show_entries" "format=duration"
                                  "-of" "default=noprint_wrappers=1:nokey=1" "-i" file))
         (let ((text (string-trim (buffer-string))))
@@ -77,6 +87,7 @@ copies files here without changing any cue. Assigned packs own their audio."
 (defun emacsvox-sound-library--scan ()
   "Read candidate recordings without creating cues or writing metadata."
   (let ((root (expand-file-name emacsvox-sound-library-directory))
+        (emacsvox-sound-library--duration-tool (list 'unresolved))
         (seen (make-hash-table :test #'equal)) result)
     (when (file-directory-p root)
       (dolist (file (sort (directory-files-recursively

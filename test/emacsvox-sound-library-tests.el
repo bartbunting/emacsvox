@@ -28,6 +28,50 @@
              (kill-buffer buffer)))
          (delete-directory emacsvox-sound-library-directory t)))))
 
+(ert-deftest emacsvox-sound-library-missing-duration-tool-is-looked-up-once ()
+  "Cold files share a negative lookup; warm metadata does not search PATH."
+  (let ((emacsvox-sound-library-directory (make-temp-file "library-tool-" t))
+        (emacsvox-sound-library--cache (make-hash-table :test #'equal))
+        (lookups 0))
+    (unwind-protect
+        (progn
+          (dotimes (i 10)
+            (write-region (format "recording %d" i) nil
+                          (expand-file-name (format "%d.wav" i) emacsvox-sound-library-directory)
+                          nil 'silent))
+          (cl-letf (((symbol-function 'executable-find)
+                     (lambda (program &optional _remote)
+                       (should (equal program "ffprobe"))
+                       (cl-incf lookups) nil))
+                    ((symbol-function 'call-process)
+                     (lambda (&rest _) (ert-fail "Missing tool must not be run"))))
+            (should (= (length (emacsvox-sound-library--scan)) 10))
+            (should (= lookups 1))
+            (emacsvox-sound-library--scan)
+            (should (= lookups 1))
+            (clrhash emacsvox-sound-library--cache)
+            (emacsvox-sound-library--scan)
+            (should (= lookups 2))))
+      (delete-directory emacsvox-sound-library-directory t))))
+
+(ert-deftest emacsvox-sound-library-duration-tool-selection-is-scoped ()
+  "Scans use the resolved path and standalone calls see a changed PATH."
+  (let ((emacsvox-sound-library-directory (make-temp-file "library-tool-" t))
+        (emacsvox-sound-library--cache (make-hash-table :test #'equal))
+        (program "/first/ffprobe") calls)
+    (unwind-protect
+        (let ((file (expand-file-name "one.wav" emacsvox-sound-library-directory)))
+          (write-region "one recording" nil file nil 'silent)
+          (cl-letf (((symbol-function 'executable-find) (lambda (&rest _) program))
+                    ((symbol-function 'call-process)
+                     (lambda (executable &rest _)
+                       (push executable calls) (insert "0.25\n") 0)))
+            (should (= (plist-get (car (emacsvox-sound-library--scan)) :duration) 0.25))
+            (setq program "/second/ffprobe")
+            (should (= (emacsvox-sound-library--duration file) 0.25))
+            (should (equal (nreverse calls) '("/first/ffprobe" "/second/ffprobe")))))
+      (delete-directory emacsvox-sound-library-directory t))))
+
 (ert-deftest emacsvox-sound-library-preview-and-selection-are-private ()
   (emacsvox-test--with-library
     (let ((before (emacsvox-aural-resolve-cue 'button 'overlay))
