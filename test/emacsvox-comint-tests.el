@@ -557,6 +557,38 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
       (should (equal events '(item)))
       (should (equal emacsvox-comint--pending-output "")))))
 
+(ert-deftest emacsvox-comint-long-output-preserves-text-and-final-prompt ()
+  "Long Unicode lines retain their properties and logical output boundary."
+  (dolist (tail '("" "unfinished λ" "SHELL> "))
+    (with-temp-buffer
+      (let* ((comint-prompt-regexp "SHELL> ")
+             (line (propertize (make-string 32768 ?λ) 'face 'bold))
+             (result (emacsvox-comint--partition-output
+                      (concat line "\n" tail) nil)))
+        (should (equal (plist-get result :output) (concat line "\n")))
+        (should (eq (get-text-property 0 'face (plist-get result :output)) 'bold))
+        (if (equal tail "SHELL> ")
+            (progn
+              (should (equal (plist-get result :prompt) tail))
+              (should (equal emacsvox-comint--pending-output "")))
+          (should-not (plist-get result :prompt))
+          (should (equal emacsvox-comint--pending-output tail)))))))
+
+(ert-deftest emacsvox-comint-long-output-stays-silent-with-autospeak-off ()
+  "Silent process output still inserts a complete long line without feedback."
+  (with-temp-buffer
+    (let* ((buffer (current-buffer))
+           (process-marker (copy-marker (point-min)))
+           (emacsvox-comint-autospeak nil)
+           (emacsvox-comint-output-monitor t)
+           (comint-prompt-regexp "SHELL> ")
+           (text (concat (make-string 32768 ?a) "\n")))
+      (cl-letf (((symbol-function 'emacsvox-comint--submit)
+                 (lambda (&rest _) (ert-fail "Unexpected output speech"))))
+        (emacsvox-test--comint-output-chunk buffer process-marker text))
+      (should (equal (buffer-string) text))
+      (should (equal emacsvox-comint--pending-output "")))))
+
 (ert-deftest emacsvox-comint-known-prompt-delimits-non-newline-output ()
   "A known prompt preserves preceding output that has no final newline."
   (with-temp-buffer

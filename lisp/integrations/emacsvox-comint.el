@@ -256,6 +256,13 @@ Interactive PREFIX toggles the global default and applies it locally."
       comint-prompt-regexp
       (and (derived-mode-p 'shell-mode) shell-prompt-pattern))))))
 
+(defun emacsvox-comint--final-line-start (text)
+  "Return the index after TEXT's last newline, or zero.
+Search backward once, including when TEXT ends in a newline."
+  (if-let* ((newline (cl-position ?\n text :from-end t)))
+      (1+ newline)
+    0))
+
 (defun emacsvox-comint--split-final-prompt (text)
   "Split a recognized final prompt from TEXT.
 Return (OUTPUT . PROMPT), or nil when TEXT does not end in a prompt.  A
@@ -274,10 +281,7 @@ previously observed prompt can delimit output that did not end in a newline."
        (substring text 0 known-start)
        (substring text known-start)))
      (t
-      (let* ((line-start
-              (if-let* ((newline (string-match "[^\n]*\\'" plain)))
-                  newline
-                0))
+      (let* ((line-start (emacsvox-comint--final-line-start plain))
              (tail (substring text line-start)))
         (when (emacsvox-comint--full-prompt-match-p tail)
           (cons (substring text 0 line-start) tail)))))))
@@ -313,10 +317,7 @@ When REPLACE-P is non-nil, TEXT replaces pending carriage-motion output."
                   (string-match-p
                    "[$#%>]\\'" emacsvox-comint--last-prompt))
           (let* ((plain (substring-no-properties combined))
-                 (pending-start
-                  (if-let* ((newline (string-match "[^\n]*\\'" plain)))
-                      newline
-                    0)))
+                 (pending-start (emacsvox-comint--final-line-start plain)))
             (setq output (substring combined 0 pending-start)
                   emacsvox-comint--pending-output
                   (substring combined pending-start))))
