@@ -13500,6 +13500,35 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not emacsvox-table-reader--suspended))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
+(ert-deftest emacsvox-agent-shell-suspended-table-motion-skips-logical-parsing ()
+  "Moving after a deliberate quit stays cheap until navigation reaches prose."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (emacsvox-agent-shell-test--with-rendered-table
+        "Before\n| Name | Role |\n|---|---|\n| Alice | Engineer |\n| Bob | Writer |\nAfter\n"
+      (setq major-mode mode)
+      (let ((emacsvox-table-reader-activation 'automatic))
+        (goto-char (point-min))
+        (search-forward "Engineer")
+        (emacsvox-agent-shell--table-navigation-setup)
+        (should emacsvox-agent-shell--table-navigation-active)
+        (emacsvox-agent-shell-test--capture-events (emacsvox-table-reader-mode -1))
+        (let ((original (buffer-string)))
+          (cl-letf (((symbol-function 'emacsvox-agent-shell--table-snapshot)
+                     (lambda () (ert-fail "Parsed a deliberately suspended table"))))
+            (dotimes (_ 3)
+              (emacsvox-agent-shell--table-navigation-pre-command)
+              (goto-char (point-min))
+              (search-forward "Writer")
+              (should (get-text-property (point) 'agent-shell-markdown-table-source))
+              (emacsvox-agent-shell--table-navigation-post-command)
+              (should emacsvox-table-reader--suspended)
+              (should-not emacsvox-agent-shell--table-navigation-active)))
+          (should (equal original (buffer-string))))
+        (emacsvox-agent-shell--table-navigation-pre-command)
+        (goto-char (point-min))
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should-not emacsvox-table-reader--suspended)))))
+
 (ert-deftest emacsvox-agent-shell-end-of-buffer-omits-bottom-notification ()
   "M-> reads the live prompt once without a competing bottom notification."
   (require 'emacsvox-advice)

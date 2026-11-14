@@ -859,9 +859,17 @@ Streaming elsewhere in the transcript must not interrupt table navigation."
 
 (defun emacsvox-agent-shell--table-navigation-post-command ()
   "Track table entry and toggle the contextual table keymap."
-  (let* ((region (emacsvox-agent-shell--table-readable-region))
+  (let* ((suspended-table
+          (and emacsvox-table-reader--suspended
+               (get-text-property (point) 'agent-shell-markdown-table-source)))
+         (region (unless suspended-table
+                   (emacsvox-agent-shell--table-readable-region)))
          (table-start (and region (car region))))
     (cond
+     (suspended-table
+      ;; A deliberate quit needs no logical snapshot while still in the
+      ;; rendered table. Moving to prose below releases the suspension.
+      (setq emacsvox-agent-shell--table-navigation-active nil))
      ((not region)
       ;; A redraw can temporarily remove the mapping.  Only navigation to
       ;; prose releases a deliberate quit, never a render or text edit.
