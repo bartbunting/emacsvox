@@ -3350,6 +3350,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  72)
 * command reference:                     Emacsvox Keyboard Commands.
                                                               (line   6)
+* community support:                     Using Online Help.   (line 181)
 * completion candidates, terminal:       EAT Terminal Completion.
                                                               (line   6)
 * completion, EAT:                       EAT Input Modes.     (line   6)
@@ -3479,6 +3480,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * mail search, Notmuch:                  Notmuch Mail.        (line   6)
 * mail, limit automatic speech:          Finding Application Tasks.
                                                               (line   6)
+* mailing list:                          Using Online Help.   (line 181)
 * major modes:                           Object Oriented Desktop.
                                                               (line   6)
 * manual, using:                         Using This Manual.   (line   6)
@@ -3707,6 +3709,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * structured navigation:                 Context-Sensitive Interaction.
                                                               (line  29)
 * structured navigation <1>:             Browsing Structure.  (line   6)
+* subscribing to the mailing list:       Using Online Help.   (line 181)
 * tables, finding reading instructions:  Finding Reading Tasks.
                                                               (line   6)
 * tables, OCR:                           Desktop Applications.

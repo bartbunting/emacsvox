@@ -2,7 +2,7 @@
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Using Online Help
 :ALT_TITLE: Using Online Help
-:DESCRIPTION: Discover commands and solve problems with live Emacs help.
+:DESCRIPTION: Discover commands, inspect live help, and find community support.
 :END:
 
 #+cindex: Online Help
@@ -177,3 +177,21 @@ no speech at all, begin with
 The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in the /Emacsvox Reference Manual/ records
 default bindings. Return to ~C-h k~, ~C-h m~, and ~C-h b~ when a package or
 personal configuration changes those defaults.
+
+** Ask the Emacsvox community
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: mailing list
+#+cindex: community support
+#+cindex: subscribing to the mailing list
+
+Use the Emacsvox mailing list to ask questions, get help with setup, share
+tips, and discuss development. Send messages to
+=emacsvox@emacspeak.net=.
+
+To subscribe, email =sympa@emacspeak.net= with the subject
+=subscribe emacsvox=. See the
+[[https://mail.emacspeak.net/sympa/info/emacsvox][mailing list homepage]]
+for more information.

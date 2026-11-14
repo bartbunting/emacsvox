@@ -3013,6 +3013,21 @@ The generated @ref{Emacsvox Keymaps,Emacsvox Keymaps,,emacsvox-reference,} in th
 default bindings. Return to @kbd{C-h k}@comma{} @kbd{C-h m}@comma{} and @kbd{C-h b} when a package or
 personal configuration changes those defaults.
 
+@section Ask the Emacsvox community
+
+@cindex mailing list
+@cindex community support
+@cindex subscribing to the mailing list
+
+Use the Emacsvox mailing list to ask questions@comma{} get help with setup@comma{} share
+tips@comma{} and discuss development. Send messages to
+@code{emacsvox@@emacspeak.net}.
+
+To subscribe@comma{} email @code{sympa@@emacspeak.net} with the subject
+@code{subscribe emacsvox}. See the
+@uref{https://mail.emacspeak.net/sympa/info/emacsvox, mailing list homepage}
+for more information.
+
 @node Audio Desktop
 @chapter Work With The Audio Desktop
 

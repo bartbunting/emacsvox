@@ -3218,6 +3218,17 @@ Keymaps. in the _Emacsvox Reference Manual_ records default bindings.
 Return to ‘C-h k’, ‘C-h m’, and ‘C-h b’ when a package or personal
 configuration changes those defaults.
 
+6.6 Ask the Emacsvox community
+==============================
+
+Use the Emacsvox mailing list to ask questions, get help with setup,
+share tips, and discuss development.  Send messages to
+‘emacsvox@emacspeak.net’.
+
+   To subscribe, email ‘sympa@emacspeak.net’ with the subject ‘subscribe
+emacsvox’.  See the mailing list homepage
+(https://mail.emacspeak.net/sympa/info/emacsvox) for more information.
+
 
 File: emacsvox.info,  Node: Audio Desktop,  Next: Aural Presentation,  Prev: Using Online Help,  Up: Top
 
