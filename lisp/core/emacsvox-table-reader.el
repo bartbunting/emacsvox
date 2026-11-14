@@ -374,8 +374,10 @@ and a flat :positions list in row order.  Missing cells never clamp."
                         "No cell in that row.")))
      (t
       (if-let* ((position
-                 (nth (+ column (apply #'+ (mapcar #'length (seq-take rows row))))
-                      (plist-get cell :positions))))
+                 (if-let* ((positions (plist-get cell :source-positions)))
+                     (aref (aref positions row) column)
+                   (nth (+ column (apply #'+ (mapcar #'length (seq-take rows row))))
+                        (plist-get cell :positions)))))
           (list 'cell position)
         '(boundary "No cell at that position."))))))
 
@@ -482,10 +484,39 @@ The entry map contributes no binding outside supported tables.")
                 emacsvox-table-reader--adapters)
       (user-error "No table reader for %s" mode-name)))
 
+(defvar-local emacsvox-table-reader--source-cache nil
+  "One source table's immutable logical data and its validity key.
+Rendered adapters retain their own mapping and are never cached here.")
+
+(defun emacsvox-table-reader--forget-source-cache (&rest _)
+  "Release source table data after an edit."
+  (setq emacsvox-table-reader--source-cache nil))
+
+(defun emacsvox-table-reader--source-key (parser)
+  "Return the current source revision and implementation key for PARSER."
+  (list (buffer-modified-tick) (point-min) (point-max) major-mode
+        (indirect-function parser)
+        (symbol-function 'emacsvox-table-reader--source-cell)))
+
 (defun emacsvox-table-reader--snapshot ()
-  "Get current logical cell data without retaining stale source positions."
-  (funcall (nth 1 (or emacsvox-table-reader--adapter
-                      (emacsvox-table-reader--adapter)))))
+  "Get current cell data, reusing an unchanged source table's logical values."
+  (let* ((parser (nth 1 (or emacsvox-table-reader--adapter
+                            (emacsvox-table-reader--adapter))))
+         (cached (cdr emacsvox-table-reader--source-cache))
+         (region (plist-get cached :region)))
+    (if (and region (<= (car region) (point)) (< (point) (cdr region))
+             (equal (car emacsvox-table-reader--source-cache)
+                    (emacsvox-table-reader--source-key parser)))
+        (emacsvox-table-reader--source-cell-at-point cached)
+      (setq emacsvox-table-reader--source-cache nil)
+      (let ((cell (funcall parser)))
+        (when (plist-get cell :source-lines)
+          ;; Capture after parsing: syntax/fontification may change properties.
+          (setq emacsvox-table-reader--source-cache
+                (cons (emacsvox-table-reader--source-key parser) cell))
+          (add-hook 'after-change-functions
+                    #'emacsvox-table-reader--forget-source-cache nil t))
+        cell))))
 
 (defun emacsvox-table-reader--cell ()
   "Return the current cell or reject navigation outside a supported table."
@@ -892,12 +923,35 @@ pipes are optional; no phantom cell is added after a closing outer pipe."
         (push (cons start end) spans))
       (nreverse spans))))
 
+(defun emacsvox-table-reader--source-cell-at-point (table)
+  "Return a fresh cell plist at point using immutable source TABLE data."
+  (let* ((lines (plist-get table :source-lines))
+         (lower 0) (upper (length lines)))
+    (while (< lower upper)
+      (let ((middle (/ (+ lower upper) 2)))
+        (if (<= (aref lines middle) (point))
+            (setq lower (1+ middle))
+          (setq upper middle))))
+    (let* ((row (max 0 (1- lower)))
+           (spans (aref (plist-get table :source-spans) row))
+           (column (max 0 (1- (cl-count-if
+                               (lambda (span) (<= (car span) (point))) spans))))
+           (values (aref (plist-get table :source-rows) row))
+           (header (plist-get table :column-titles-p)))
+      (append (list :row-index row :column-index column :data (nth column values)
+                    :column-title (and header (nth column (car (plist-get table :rows))))
+                    :row-title (unless (and header (zerop row)) (car values)))
+              ;; Row and column fields belong to this fresh result, not TABLE.
+              (cl-loop for (key value) on table by #'cddr
+                       unless (memq key '(:row-index :column-index :data :column-title :row-title))
+                       append (list key value))))))
+
 (defun emacsvox-table-reader--source-cell (region markdown clean separator)
   "Build fresh logical cell data for a pipe table in REGION.
 MARKDOWN controls quoting rules; CLEAN converts each cell to logical text.
 SEPARATOR recognizes a structural line.  Only a separator immediately after
 one row establishes column titles.  Mid-table separators are never data."
-  (let ((origin (point)) rows positions spans-by-row lines header)
+  (let (rows positions positions-by-row spans-by-row lines header)
     (save-excursion
       (goto-char (car region))
       (while (< (point) (cdr region))
@@ -911,30 +965,28 @@ one row establishes column titles.  Mid-table separators are never data."
                          (lambda (span)
                            (funcall clean (string-trim
                                            (buffer-substring-no-properties
-                                            (car span) (cdr span))))) spans)))
+                                            (car span) (cdr span))))) spans))
+                   row-positions)
               (push row rows)
               (push begin lines)
               (push spans spans-by-row)
               (dolist (span spans)
                 (goto-char (car span))
                 (skip-chars-forward " \t" (cdr span))
-                (push (point) positions))))
+                (push (point) positions)
+                (push (point) row-positions))
+              (push (vconcat (nreverse row-positions)) positions-by-row)))
           (goto-char end)
           (forward-line 1))))
     (setq rows (nreverse rows) lines (nreverse lines)
           spans-by-row (nreverse spans-by-row) positions (nreverse positions))
     (when rows
-      (let* ((row (max 0 (1- (cl-count-if (lambda (line) (<= line origin)) lines))))
-             (spans (nth row spans-by-row))
-             (column (max 0 (1- (cl-count-if
-                                (lambda (span) (<= (car span) origin)) spans))))
-             (values (nth row rows)))
-        (list :region region :positions positions :rows rows
-              :row-index row :row-count (length rows)
-              :column-index column :column-count (apply #'max (mapcar #'length rows))
-              :data (nth column values) :column-titles-p header
-              :column-title (and header (nth column (car rows)))
-              :row-title (unless (and header (zerop row)) (car values)))))))
+      (emacsvox-table-reader--source-cell-at-point
+       (list :region region :positions positions :rows rows
+             :row-count (length rows) :column-count (apply #'max (mapcar #'length rows))
+             :column-titles-p header :source-lines (vconcat lines)
+             :source-spans (vconcat spans-by-row) :source-rows (vconcat rows)
+             :source-positions (vconcat (nreverse positions-by-row)))))))
 
 (provide 'emacsvox-table-reader)
 ;;; emacsvox-table-reader.el ends here

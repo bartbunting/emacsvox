@@ -578,5 +578,79 @@
       (should-not (emacsvox-table-reader--preference 'titles))
       (should (eq (emacsvox-table-reader--preference 'activation) 'on-demand)))))
 
+(ert-deftest emacsvox-table-reader-source-movement-reuses-unchanged-table ()
+  "Moving repeatedly in a large source table does not parse every cell again."
+  (dolist (mode '(markdown-mode org-mode))
+    (emacsvox-table-reader-test--with-table mode
+        (concat "| Name | Notes |\n"
+                (if (eq mode 'org-mode) "|------+-------|\n" "|---|---|\n")
+                (mapconcat (lambda (i) (format "| row-%d | value-%d |" i i))
+                           (number-sequence 0 499) "\n") "\n")
+      (let* ((parser (symbol-function 'emacsvox-table-reader--source-cell))
+             (parses 0))
+        (cl-letf (((symbol-function 'emacsvox-table-reader--source-cell)
+                   (lambda (&rest args)
+                     (cl-incf parses)
+                     (apply parser args))))
+          (emacsvox-table-reader-mode 1)
+          (dotimes (i 20)
+            (emacsvox-table-reader-next-row)
+            (emacsvox-table-reader--post-command)
+            (should (looking-at (format "row-%d |" i))))
+          (should (= parses 1))
+          (should (equal (plist-get (emacsvox-table-reader--cell) :row-title) "row-19"))
+          (should-not (buffer-modified-p)))))))
+
+(ert-deftest emacsvox-table-reader-source-cache-observes-edits-and-restriction ()
+  "Cached values cannot survive source edits, code fences, or narrowing."
+  (emacsvox-table-reader-test--with-table 'markdown-mode
+      emacsvox-table-reader-test--markdown
+    (emacsvox-table-reader-mode 1)
+    (emacsvox-table-reader-next-row)
+    (should (equal (plist-get (emacsvox-table-reader--cell) :data) "Alice"))
+    (insert "New ")
+    (should-not emacsvox-table-reader-mode)
+    (should-not emacsvox-table-reader--source-cache)
+    (should (equal (plist-get (emacsvox-table-reader--cell) :data) "New Alice"))
+    (save-restriction
+      (narrow-to-region (line-beginning-position) (point-max))
+      (should (= (plist-get (emacsvox-table-reader--cell) :row-count) 2)))
+    (should (= (plist-get (emacsvox-table-reader--cell) :row-count) 3))
+    (let ((origin (copy-marker (point))))
+      (save-excursion
+        (goto-char (point-max)) (insert "```\n")
+        (goto-char (point-min)) (insert "```text\n"))
+      (goto-char origin)
+      (font-lock-ensure)
+      (should-not (emacsvox-table-reader--snapshot))
+      (set-marker origin nil))))
+
+(ert-deftest emacsvox-table-reader-source-cache-observes-properties-and-parser ()
+  "Property-only changes and parser replacement cannot reuse old table data."
+  (emacsvox-table-reader-test--with-table 'org-mode emacsvox-table-reader-test--org
+    (let* ((parser (symbol-function 'emacsvox-org--table-snapshot))
+           (parses 0))
+      (cl-letf (((symbol-function 'emacsvox-org--table-snapshot)
+                 (lambda () (cl-incf parses) (funcall parser))))
+        (emacsvox-table-reader--cell)
+        (put-text-property (point) (1+ (point)) 'face 'bold)
+        (emacsvox-table-reader--cell)
+        (should (= parses 2)))
+      (cl-letf (((symbol-function 'emacsvox-org--table-snapshot) (lambda () nil)))
+        (should-not (emacsvox-table-reader--snapshot))))))
+
+(ert-deftest emacsvox-table-reader-source-cache-keeps-cell-boundaries ()
+  "Leading spaces, pipes and separator lines retain the original coordinates."
+  (emacsvox-table-reader-test--with-table 'markdown-mode
+      "| Name |  Value  |\n|---|---|\n| Alice |   detail |\n"
+    (let ((parser (nth 1 (emacsvox-table-reader--adapter))))
+      (emacsvox-table-reader--cell)
+      (dotimes (offset (buffer-size))
+        (goto-char (1+ offset))
+        (let ((expected (funcall parser))
+              (actual (emacsvox-table-reader--snapshot)))
+          (dolist (key '(:row-index :column-index :data :row-title :column-title))
+            (should (equal (plist-get expected key) (plist-get actual key)))))))))
+
 (provide 'emacsvox-table-reader-tests)
 ;;; emacsvox-table-reader-tests.el ends here

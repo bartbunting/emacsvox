@@ -966,35 +966,36 @@ Outer-pipe tables may omit the header delimiter."
   "Return logical TEXT, preserving literal code and escaped punctuation.
 Use labels for inline/reference links and images.  Unknown markup remains
 literal; cell values are never truncated to their displayed width."
-  (with-temp-buffer
-    (insert text)
-    (goto-char (point-min))
-    (let (pieces)
-      (while (not (eobp))
-        (cond
-         ((looking-at "\\\\\\([[:punct:]]\\)")
-          (push (match-string-no-properties 1) pieces)
-          (goto-char (match-end 0)))
-         ((eq (char-after) ?`)
-          (let* ((begin (point)) (width (skip-chars-forward "`"))
-                 (start (point)) close finish)
-            (while (and (not close) (re-search-forward "`+" nil t))
-              (when (= width (- (match-end 0) (match-beginning 0)))
-                (setq close (match-beginning 0) finish (match-end 0))))
-            (if close
-                (progn (push (buffer-substring-no-properties start close) pieces)
-                       (goto-char finish))
-              (push (buffer-substring-no-properties begin start) pieces)
-              (goto-char start))))
-         ((when-let* ((link (emacsvox-markdown--table-link)))
-            (push (emacsvox-markdown--table-plain-text (car link)) pieces)
-            (goto-char (cdr link))
-            t))
-         ((looking-at "\\(\\*\\*\\|__\\|~~\\|\\*\\|_\\)\\([^ \t\n].*?\\)\\1")
-          (push (match-string-no-properties 2) pieces)
-          (goto-char (match-end 0)))
-         (t (push (string (char-after)) pieces) (forward-char))))
-      (apply #'concat (nreverse pieces)))))
+  (if (not (string-match-p "[\\\\`*_~![]" text)) text
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      (let (pieces)
+	(while (not (eobp))
+          (cond
+           ((looking-at "\\\\\\([[:punct:]]\\)")
+            (push (match-string-no-properties 1) pieces)
+            (goto-char (match-end 0)))
+           ((eq (char-after) ?`)
+            (let* ((begin (point)) (width (skip-chars-forward "`"))
+                   (start (point)) close finish)
+              (while (and (not close) (re-search-forward "`+" nil t))
+		(when (= width (- (match-end 0) (match-beginning 0)))
+                  (setq close (match-beginning 0) finish (match-end 0))))
+              (if close
+                  (progn (push (buffer-substring-no-properties start close) pieces)
+			 (goto-char finish))
+		(push (buffer-substring-no-properties begin start) pieces)
+		(goto-char start))))
+           ((when-let* ((link (emacsvox-markdown--table-link)))
+              (push (emacsvox-markdown--table-plain-text (car link)) pieces)
+              (goto-char (cdr link))
+              t))
+           ((looking-at "\\(\\*\\*\\|__\\|~~\\|\\*\\|_\\)\\([^ \t\n].*?\\)\\1")
+            (push (match-string-no-properties 2) pieces)
+            (goto-char (match-end 0)))
+           (t (push (string (char-after)) pieces) (forward-char))))
+	(apply #'concat (nreverse pieces))))))
 
 (defun emacsvox-markdown--table-snapshot ()
   "Return a fresh logical Markdown table cell at point."
