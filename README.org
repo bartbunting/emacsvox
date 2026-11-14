@@ -159,6 +159,17 @@ independently.
 Inside Emacs, =M-x emacsvox-speak-version RET= reports the Emacsvox version and
 =M-x tts-speak-version RET= reports the live speech-server version.
 
+* Community And Support
+
+Use the Emacsvox mailing list to ask questions, get help with setup, share
+tips, and discuss development. Send messages to
+[[mailto:emacsvox@emacspeak.net][emacsvox@emacspeak.net]].
+
+To subscribe, email [[mailto:sympa@emacspeak.net][sympa@emacspeak.net]] with
+the subject =subscribe emacsvox=. See the
+[[https://mail.emacspeak.net/sympa/info/emacsvox][mailing list homepage]]
+for more information.
+
 * Where To Go Next
 
 After first speech, continue with the browser-readable
