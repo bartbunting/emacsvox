@@ -121,7 +121,7 @@ Operational semantic contract version: =1=.
 | =accepted= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The current candidate or choice was accepted |
 | =activity-ended= | =event= | =core= | - | - | - | - | - | - | - | - | A repeating or ongoing activity ended |
 | =agent-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | One navigable structural block in an agent transcript |
-| =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =heading=, =link=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
+| =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =tree=, =source-block=, =heading=, =link=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
 | =agent-content-copied= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell content was copied for reuse |
 | =agent-content-inspected= | =event= | =agent-shell= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user explicitly requested Agent Shell content |
 | =agent-diff= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | A change review opened from an agent session |
@@ -386,6 +386,13 @@ Operational semantic contract version: =1=.
 | =staged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is staged for commit |
 | =state-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered state changed |
 | =syntax-role= | =attribute= | =core= | =symbol= | - | - | - | - | - | - | - | The language-defined structural role of source code |
+| =tree= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A recognized text tree |
+| =tree-depth= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Tree depth, with zero for the root |
+| =tree-entered= | =event= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | Reading entered a recognized text tree |
+| =tree-exited= | =event= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | Reading left a recognized text tree |
+| =tree-indicator= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A tree boundary or depth indication, separate from its item label |
+| =tree-level-changed= | =event= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | Reading moved to a different tree depth |
+| =tree-tone-pitch= | =attribute= | =core= | =number= | =tree-indicator= | - | - | - | - | - | - | Depth tone pitch in Hz, rising with tree depth |
 | =unchecked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is incomplete |
 | =unread= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An item has not yet been read |
 | =unstaged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is not staged for commit |
@@ -405,6 +412,7 @@ Operational semantic contract version: =1=.
 | =vcs-view-opened= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control view was opened or selected |
 | =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | - | - | - | - | - | Whether structural descendants are visible |
 | =visibility-changed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The visible descendants of a structural object changed |
+| =wrapped-row= | =attribute= | =core= | =first=, =middle=, =last= | - | - | - | - | - | - | - | Visible row position within a wrapped source line |
 
 ** Stable Semantic Aliases
 
@@ -567,6 +575,9 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 | =waking-up= | =prompt= | =core= | - | Emacsvox speech is becoming ready |
 | =warn-user= | =cue= | =core= | - | A warning requires attention |
 | =window-resize= | =cue= | =core= | - | A window or pane was resized |
+| =wrapped-line-first= | =cue= | =core= | =left= | Source line continues below |
+| =wrapped-line-last= | =cue= | =core= | =right= | Source line continues above |
+| =wrapped-line-middle= | =cue= | =core= | =item= | Source line continues above and below |
 | =y-answer= | =cue= | =core= | - | The letter Y answer was selected |
 | =yank-object= | =cue= | =core= | - | Content was inserted from saved text |
 | =yes-answer= | =cue= | =core= | - | An affirmative answer was selected |
