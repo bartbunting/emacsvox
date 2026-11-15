@@ -14,6 +14,7 @@
 (require 'emacsvox-sounds)
 (require 'emacsvox-aural-description)
 (require 'emacsvox-aural-submission)
+(require 'emacsvox-aural-provider-workflows)
 (require 'tts-speak)
 (require 'voice-setup)
 

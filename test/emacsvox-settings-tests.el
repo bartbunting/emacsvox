@@ -6,6 +6,7 @@
 ;;; Code:
 (require 'emacsvox-capitalization-tests)
 (require 'emacsvox-settings)
+(require 'emacsvox-aural-provider-notmuch)
 (defmacro emacsvox-test--with-settings (&rest body)
   "Run BODY from the root menu with an isolated source."
   (declare (indent 0) (debug t))
@@ -13,6 +14,10 @@
      (skip-unless (display-graphic-p))
      (save-window-excursion
        (emacsvox-test--with-capitalization
+         ;; The outer fixture clears provider registries after modules have
+         ;; already loaded. Populate the destinations this menu browses.
+         (emacsvox-aural-register-workflow-provider)
+         (emacsvox-notmuch-register-aural-preview-examples)
          (let ((transient--prefix nil) (transient--stack nil) (transient-show-menu t))
            (switch-to-buffer source)
            (text-mode)
