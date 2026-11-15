@@ -67,6 +67,50 @@ copies files here without changing any cue. Assigned packs own their audio."
   "Per-scan cell holding the ffprobe path, nil, or `unresolved'.
 Nil outside a scan leaves standalone duration queries uncached.")
 
+(defconst emacsvox-sound-library--duration-timeout 2
+  "Maximum seconds to wait for one optional duration probe.")
+
+(defun emacsvox-sound-library--probe-duration (program file)
+  "Read FILE's duration with PROGRAM, bounding its wait and output.
+A stalled or excessively verbose tool is disabled for the remaining scan."
+  (with-temp-buffer
+    (let ((default-directory temporary-file-directory)
+          (deadline (+ (float-time) emacsvox-sound-library--duration-timeout))
+          (bytes 0) overflow process errors)
+      (unwind-protect
+          (condition-case nil
+              (progn
+                (setq errors (make-pipe-process :name "recording duration stderr"
+                                                :noquery t :filter #'ignore :sentinel #'ignore)
+                      process
+                      (make-process
+                       :name "recording duration" :buffer (current-buffer)
+                       :command (list program "-v" "error" "-show_entries" "format=duration"
+                                      "-of" "default=noprint_wrappers=1:nokey=1" "-i" file)
+                       :connection-type 'pipe :coding 'utf-8-unix :noquery t
+                       :sentinel #'ignore :stderr errors
+                       :filter (lambda (child text)
+                                 (cl-incf bytes (string-bytes text))
+                                 (if (> bytes 4096) (setq overflow t)
+                                   (with-current-buffer (process-buffer child)
+                                     (goto-char (point-max)) (insert text))))))
+                (while (and (or (process-live-p process) (process-live-p errors))
+                            (not overflow) (< (float-time) deadline))
+                  (accept-process-output nil (min 0.02 (max 0 (- deadline (float-time))))))
+                (if (or overflow (process-live-p process) (process-live-p errors))
+                    (when emacsvox-sound-library--duration-tool
+                      (setcar emacsvox-sound-library--duration-tool nil))
+                  (when (and (eq (process-status process) 'exit) (zerop (process-exit-status process)))
+                    (let ((text (string-trim (buffer-string))))
+                      (when (string-match-p "\\`[0-9]+\\(?:\\.[0-9]+\\)?\\'" text)
+                        (string-to-number text))))))
+            (file-error
+             (when emacsvox-sound-library--duration-tool
+               (setcar emacsvox-sound-library--duration-tool nil))
+             nil))
+        (dolist (child (list process errors))
+          (when (processp child) (delete-process child)))))))
+
 (defun emacsvox-sound-library--duration (file)
   "Return FILE's duration in seconds when ffprobe is available, otherwise nil."
   (when-let* ((program
@@ -76,13 +120,7 @@ Nil outside a scan leaves standalone duration queries uncached.")
                        (setcar emacsvox-sound-library--duration-tool (executable-find "ffprobe")))
                      (car emacsvox-sound-library--duration-tool))
                  (executable-find "ffprobe"))))
-    (with-temp-buffer
-      (when (zerop (call-process program nil (list t nil) nil
-                                 "-v" "error" "-show_entries" "format=duration"
-                                 "-of" "default=noprint_wrappers=1:nokey=1" "-i" file))
-        (let ((text (string-trim (buffer-string))))
-          (when (string-match-p "\\`[0-9]+\\(?:\\.[0-9]+\\)?\\'" text)
-            (string-to-number text)))))))
+    (emacsvox-sound-library--probe-duration program file)))
 
 (defun emacsvox-sound-library--scan ()
   "Read candidate recordings without creating cues or writing metadata."

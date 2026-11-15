@@ -43,7 +43,7 @@
                      (lambda (program &optional _remote)
                        (should (equal program "ffprobe"))
                        (cl-incf lookups) nil))
-                    ((symbol-function 'call-process)
+                    ((symbol-function 'make-process)
                      (lambda (&rest _) (ert-fail "Missing tool must not be run"))))
             (should (= (length (emacsvox-sound-library--scan)) 10))
             (should (= lookups 1))
@@ -63,14 +63,92 @@
         (let ((file (expand-file-name "one.wav" emacsvox-sound-library-directory)))
           (write-region "one recording" nil file nil 'silent)
           (cl-letf (((symbol-function 'executable-find) (lambda (&rest _) program))
-                    ((symbol-function 'call-process)
-                     (lambda (executable &rest _)
-                       (push executable calls) (insert "0.25\n") 0)))
+                    ((symbol-function 'emacsvox-sound-library--probe-duration)
+                     (lambda (executable _file)
+                       (push executable calls) 0.25)))
             (should (= (plist-get (car (emacsvox-sound-library--scan)) :duration) 0.25))
             (setq program "/second/ffprobe")
             (should (= (emacsvox-sound-library--duration file) 0.25))
             (should (equal (nreverse calls) '("/first/ffprobe" "/second/ffprobe")))))
       (delete-directory emacsvox-sound-library-directory t))))
+
+(defmacro emacsvox-test--with-duration-child (expression &rest body)
+  "Run BODY with real probe processes evaluating EXPRESSION in child Emacs."
+  (declare (indent 1) (debug t))
+  `(let ((launch (symbol-function 'make-process))
+         (emacs (expand-file-name invocation-name invocation-directory))
+         (probe-count 0) probe-command probe-process probe-errors probe-output)
+     (unwind-protect
+         (cl-letf (((symbol-function 'make-process)
+                    (lambda (&rest args)
+                      (cl-incf probe-count)
+                      (setq probe-command (plist-get args :command)
+                            probe-errors (plist-get args :stderr)
+                            probe-output (plist-get args :buffer)
+                            probe-process
+                            (apply launch
+                                   (plist-put args :command
+                                              (list emacs "-Q" "--batch" "--eval"
+                                                    (prin1-to-string ,expression))))))))
+           ,@body
+           (should-not (process-live-p probe-process))
+           (should-not (process-live-p probe-errors))
+           (should-not (buffer-live-p probe-output)))
+       (dolist (child (list probe-process probe-errors))
+         (when (processp child) (delete-process child)))
+       (when (buffer-live-p probe-output) (kill-buffer probe-output)))))
+
+(ert-deftest emacsvox-sound-library-duration-child-validates-output-and-cleans-up ()
+  "Valid duration survives stderr; invalid and unsuccessful output is unknown."
+  (dolist (case '(((progn (princ "1.25\n") (message "Diagnostic")) 1.25)
+                  ((princ "N/A\n") nil)
+                  ((princ "not a duration\n") nil)
+                  ((progn (princ "1.25\n") (kill-emacs 1)) nil)))
+    (emacsvox-test--with-duration-child (car case)
+      (should (equal (emacsvox-sound-library--probe-duration
+                      "/tool path/ffprobe" "/recording path/sample.wav") (cadr case)))
+      (should (equal (car probe-command) "/tool path/ffprobe"))
+      (should (equal (last probe-command 2) '("-i" "/recording path/sample.wav"))))))
+
+(ert-deftest emacsvox-sound-library-duration-timeout-stops-probing-that-scan ()
+  "One hung probe cannot repeat its full timeout for every recording."
+  (let ((emacsvox-sound-library-directory (make-temp-file "library-stall-" t))
+        (emacsvox-sound-library--cache (make-hash-table :test #'equal))
+        (emacsvox-sound-library--duration-timeout 0.1)
+        ticked)
+    (unwind-protect
+        (progn
+          (dotimes (i 5)
+            (write-region (format "recording %d" i) nil
+                          (expand-file-name (format "%d.wav" i) emacsvox-sound-library-directory)
+                          nil 'silent))
+          (emacsvox-test--with-duration-child '(sleep-for 60)
+            (cl-letf (((symbol-function 'executable-find) (lambda (&rest _) "/tool/ffprobe")))
+              (let ((timer (run-at-time 0.01 nil (lambda () (setq ticked t)))))
+                (unwind-protect
+                    (let ((recordings (emacsvox-sound-library--scan)))
+                      (should (= (length recordings) 5))
+                      (should (cl-every (lambda (r) (null (plist-get r :duration))) recordings)))
+                  (cancel-timer timer)))
+              (should ticked)
+              (should (= probe-count 1))
+              ;; The disabled tool belongs to this scan only.
+              (clrhash emacsvox-sound-library--cache)
+              (should (= (length (emacsvox-sound-library--scan)) 5))
+              (should (= probe-count 2)))))
+      (delete-directory emacsvox-sound-library-directory t))))
+
+(ert-deftest emacsvox-sound-library-duration-quit-and-output-limit-clean-up ()
+  "Quit propagates; excessive output degrades optional metadata without leaks."
+  (emacsvox-test--with-duration-child '(sleep-for 60)
+    (cl-letf (((symbol-function 'accept-process-output) (lambda (&rest _) (signal 'quit nil))))
+      (should (condition-case nil
+                  (progn (emacsvox-sound-library--probe-duration "/tool/ffprobe" "file") nil)
+                (quit t)))))
+  (let ((emacsvox-sound-library--duration-tool (list "/tool/ffprobe")))
+    (emacsvox-test--with-duration-child '(princ (make-string 8192 ?x))
+      (should-not (emacsvox-sound-library--probe-duration "/tool/ffprobe" "file"))
+      (should-not (car emacsvox-sound-library--duration-tool)))))
 
 (ert-deftest emacsvox-sound-library-preview-and-selection-are-private ()
   (emacsvox-test--with-library
