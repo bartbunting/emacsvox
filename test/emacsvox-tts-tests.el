@@ -188,14 +188,16 @@
                    ((symbol-function 'omnivox-remote-enabled-p) (lambda () nil))
                    ((symbol-function 'make-process)
                     (lambda (&rest args)
-                      (setq discovery-command (plist-get args :command)
-                            discovery-stderr (plist-get args :stderr)
-                            discovery-output (plist-get args :buffer)
-                            discovery-process
-                            (apply launch
-                                   (plist-put args :command
-                                              (list emacs "-Q" "--batch" "--eval"
-                                                    (prin1-to-string ,expression))))))))
+                      (if (not (equal (car (plist-get args :command)) "/tmp/server path/omnivox"))
+                          (apply launch args)
+                        (setq discovery-command (plist-get args :command)
+                              discovery-stderr (plist-get args :stderr)
+                              discovery-output (plist-get args :buffer)
+                              discovery-process
+                              (apply launch
+                                     (plist-put args :command
+                                                (list emacs "-Q" "--batch" "--eval"
+                                                      (prin1-to-string ,expression)))))))))
            ,@body
            (should-not (process-live-p discovery-process))
            (should-not (process-live-p discovery-stderr))

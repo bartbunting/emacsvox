@@ -77,19 +77,25 @@
   (declare (indent 1) (debug t))
   `(let ((launch (symbol-function 'make-process))
          (emacs (expand-file-name invocation-name invocation-directory))
-         (probe-count 0) probe-command probe-process probe-errors probe-output)
+         (probe-count 0) probe-commands probe-command probe-process probe-errors probe-output)
      (unwind-protect
          (cl-letf (((symbol-function 'make-process)
                     (lambda (&rest args)
-                      (cl-incf probe-count)
-                      (setq probe-command (plist-get args :command)
-                            probe-errors (plist-get args :stderr)
-                            probe-output (plist-get args :buffer)
-                            probe-process
-                            (apply launch
-                                   (plist-put args :command
-                                              (list emacs "-Q" "--batch" "--eval"
-                                                    (prin1-to-string ,expression))))))))
+                      ;; Process waits also permit unrelated background work.
+                      ;; Replace only this fixture's tool, including in GUI tests.
+                      (if (not (member (car (plist-get args :command))
+                                       '("/tool/ffprobe" "/tool path/ffprobe")))
+                          (apply launch args)
+                        (cl-incf probe-count)
+                        (push (list (plist-get args :name) (plist-get args :command)) probe-commands)
+                        (setq probe-command (plist-get args :command)
+                              probe-errors (plist-get args :stderr)
+                              probe-output (plist-get args :buffer)
+                              probe-process
+                              (apply launch
+                                     (plist-put args :command
+                                                (list emacs "-Q" "--batch" "--eval"
+                                                      (prin1-to-string ,expression)))))))))
            ,@body
            (should-not (process-live-p probe-process))
            (should-not (process-live-p probe-errors))
@@ -131,7 +137,8 @@
                       (should (cl-every (lambda (r) (null (plist-get r :duration))) recordings)))
                   (cancel-timer timer)))
               (should ticked)
-              (should (= probe-count 1))
+              (ert-info ((format "Probe constructors: %S" probe-commands))
+                (should (= probe-count 1)))
               ;; The disabled tool belongs to this scan only.
               (clrhash emacsvox-sound-library--cache)
               (should (= (length (emacsvox-sound-library--scan)) 5))
