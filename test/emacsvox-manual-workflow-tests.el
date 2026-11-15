@@ -125,7 +125,7 @@ ARGUMENTS are explicit: this helper does not test interactive prompt parsing."
         (should (equal (buffer-string) "oldernewer"))))))
 
 (ert-deftest emacsvox-manual-help-selects-help-without-killing-work ()
-  "Windowful Help removes splits, but both documents and unsaved text survive."
+  "Spoken Help selects its buffer while preserving documents and drafts."
   (emacsvox-manual-tests--without-output
     (let ((draft (generate-new-buffer " *manual-draft*"))
           (reference (generate-new-buffer " *manual-reference*"))
@@ -138,7 +138,8 @@ ARGUMENTS are explicit: this helper does not test interactive prompt parsing."
             (with-current-buffer help
               (insert "Help heading.\nRead this explanation.\n")
               (goto-char (point-min))
-              (help-mode))
+              (help-mode)
+              (goto-char (point-max)))
             (switch-to-buffer draft)
             (delete-other-windows)
             (set-window-buffer (split-window-below) reference)
@@ -150,7 +151,7 @@ ARGUMENTS are explicit: this helper does not test interactive prompt parsing."
                            (funcall real-get-buffer name)))))
               (emacsvox-manual-tests--command #'emacsvox-speak-help))
             (should (eq (window-buffer (selected-window)) help))
-            (should (= (length (window-list)) 1))
+            (should (= (point) (point-min)))
             (should (buffer-live-p draft))
             (should (buffer-live-p reference))
             (should (buffer-modified-p draft))

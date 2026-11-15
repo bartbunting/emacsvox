@@ -80,7 +80,7 @@
            "M-x omnivox-list-voices RET"
            "M-x emacsvox-toggle-icons RET"
            "Native Windows x64 is supported with Emacs 30.2 or newer."
-           "Native Windows ARM64 is not yet supported."
+           "Native Windows ARM64 is not supported."
            "Do not copy/load =omnivox-voices.el= from the archive"))
       (emacsvox-backend-doc-tests--assert-contains guide required))))
 
