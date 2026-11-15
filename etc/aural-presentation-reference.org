@@ -464,6 +464,7 @@ Operational semantic contract version: =1=.
 | =bs-buffer-state-tones= | =bs= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for buffer state in BS |
 | =corfu-completion-edit-tones= | =corfu= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for Corfu completion edits |
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
+| =eat-separator-content= | =eat= | =1= | emacsvox-eat-output | Keep terminal separator placeholders silent |
 | =ein-notebook-feedback= | =ein= | =16= | emacsvox-aural-provider-workflows | Present notebook cell identity, structure, and lifecycle |
 | =markdown-compatibility= | =markdown= | =12= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |

@@ -35,8 +35,11 @@
              '(progn
                 (unless (and (featurep 'emacsvox-sounds)
                              (featurep 'emacsvox-aural-validation)
-                             (featurep 'emacsvox-dired))
+                             (featurep 'emacsvox-dired)
+                             (featurep 'emacsvox-eat-output))
                   (error "Audit registries failed to load"))
+                (when (featurep 'eat)
+                  (error "Registry audit loaded the optional terminal package"))
                 (when (process-list)
                   (error "Audit loading started external processes")))))))
       (ert-info ((buffer-string)) (should (eq 0 status))))))

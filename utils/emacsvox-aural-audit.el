@@ -47,6 +47,7 @@
 (require 'emacsvox-aural-provider-markdown)
 (require 'emacsvox-aural-provider-notmuch)
 (require 'emacsvox-dired)
+(require 'emacsvox-eat-output)
 
 (defconst emacsvox-aural-audit-icon-functions
   '(emacsvox-icon emacsvox-queue-icon)
