@@ -1,0 +1,8 @@
+lane=main character="q" actual=espeak:gmw\en-US+max completed
+lane=main character="Q" actual=espeak:gmw\en-US+max completed
+lane=main character="'" actual=espeak:gmw\en-US+max completed
+lane=notification character="q" actual=espeak:gmw\en-US+max completed
+lane=notification character="Q" actual=espeak:gmw\en-US+max completed
+lane=notification character="'" actual=espeak:gmw\en-US+max completed
+rapid-character-burst=[cancelled cancelled cancelled cancelled cancelled cancelled cancelled cancelled cancelled cancelled cancelled completed]
+Muted character palette acceptance passed.

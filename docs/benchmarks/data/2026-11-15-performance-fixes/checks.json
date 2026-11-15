@@ -1,0 +1,286 @@
+{
+  "application_and_test_commit": "660ba13e3a69c8621ef6348332d5ff0a1dca1076",
+  "checks": [
+    {
+      "name": "final full source suite",
+      "command": "make unit-test",
+      "status": "passed",
+      "total": 4835,
+      "passed": 4577,
+      "unexpected": 0,
+      "skipped": 258,
+      "log_sha256": "a5ee9145ccb5207665e27aa0dbd2cc22be792ed81696a94f85fc82fad7d4d89c"
+    },
+    {
+      "name": "final core suite",
+      "command": "make core-test",
+      "status": "passed",
+      "total": 1156,
+      "passed": 1138,
+      "unexpected": 0,
+      "skipped": 18,
+      "log_sha256": "dd6c23f0baa8e03770e5e5e96467382c65798ead647748e1e6a7972fd6adc743"
+    },
+    {
+      "name": "pinned integration",
+      "command": "make integration-test",
+      "status": "passed",
+      "total": 747,
+      "passed": 747,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "7c07b19432169cfc1cad91c1815bedb44a4f83b2a7a8fb5af6b4a885750e5bf9"
+    },
+    {
+      "name": "compiled graphical integration",
+      "command": "EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make graphical-integration-test",
+      "status": "passed",
+      "total": 18,
+      "passed": 18,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "d9d9864468ad7447bcfde8a9d4648bea756f40fda18a609773d5dfa303840d4d"
+    },
+    {
+      "name": "official pinned graphical menu",
+      "command": "make pinned-graphical-menu-test",
+      "status": "passed",
+      "total": 290,
+      "passed": 290,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "e04971b17bb662bd4f8b751b824c386e1432f313a905b374db14d4febff61caa"
+    },
+    {
+      "name": "additional graphical library and tables",
+      "command": "EMACSVOX_AUDIT_VERTICO=... xvfb-run -a emacs -Q -l library-graphical.el",
+      "status": "passed",
+      "total": 53,
+      "passed": 53,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "69d3d6a8cf875d823dd3439a78d3d2e58f8a3889b0e7a56bde9b7ce8087ae264"
+    },
+    {
+      "name": "actual dependency focused Agent Shell",
+      "command": "emacs -Q --batch -l actual-agent.el",
+      "status": "passed",
+      "total": 6,
+      "passed": 6,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "c72d6e7874f5eed86b8d7fd51a71d48f38e64ba4681d3dd85c5830dc39dd26d0"
+    },
+    {
+      "name": "actual dependency graphical Agent Shell",
+      "command": "xvfb-run -a emacs -Q -l actual-agent.el",
+      "status": "passed",
+      "total": 2,
+      "passed": 2,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "d9d3ebc1957041d1766e74a396da1ca7ac7de59fe1a59f1f2b37d374940fb15a"
+    },
+    {
+      "name": "source status, audit, manual, documentation and reading",
+      "command": "selected Emacs; load-prefer-newer=t; explicit source status and audit utility; affected suites",
+      "status": "passed",
+      "total": 75,
+      "passed": 75,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "361bd2fba076ab5b0a27043f438f6770d59a07cd35790a9dfa6b2270aae390fc"
+    },
+    {
+      "name": "fresh compiled status and reading",
+      "command": "selected Emacs; load-prefer-newer=nil; explicit emacsvox-speak-status.elc; reading and manual suites",
+      "status": "passed",
+      "total": 51,
+      "passed": 51,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "83d1a1609607a8afac33bae74d51d76b7465c57f00ae5ac6caf1495595a9e96f"
+    },
+    {
+      "name": "source and transport matching",
+      "command": "selected Emacs; explicit source rules/planner; workflows provider; rules and transport tests",
+      "status": "passed",
+      "total": 233,
+      "passed": 233,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "d9b3c9b0c22cd424e52451e0262c936b37fbd7aff6b020cf9e3276353566fe31"
+    },
+    {
+      "name": "fresh compiled rules and transport",
+      "command": "selected Emacs; explicit rules.elc and planner.elc; workflows provider; rules and transport tests",
+      "status": "passed",
+      "total": 233,
+      "passed": 233,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "ada99a8f6bd9e1d31cef34452a09676369a5d09473c59fd05807af5ced8593fd"
+    },
+    {
+      "name": "source Comint",
+      "command": "selected Emacs; explicit source Comint; Comint suite",
+      "status": "passed",
+      "total": 60,
+      "passed": 60,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "b730fc26871aa278f57a691365a3c4003c04d672417ecc9524b142a166e75921"
+    },
+    {
+      "name": "fresh compiled Comint",
+      "command": "selected Emacs; explicit Comint.elc; Comint suite",
+      "status": "passed",
+      "total": 60,
+      "passed": 60,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "8ea7b90e62ae906f23a5e019606946541f8fe7dbe4fb378b9ffc412e21a130c5"
+    },
+    {
+      "name": "source input lifecycle and handoff",
+      "command": "selected Emacs; source TTS and handoff suites",
+      "status": "passed",
+      "total": 244,
+      "passed": 244,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "aa6dd90fbcce555058d89c659bdb3009776dfa32d1a6be7bc987adb63a38214c"
+    },
+    {
+      "name": "fresh compiled input lifecycle and handoff",
+      "command": "selected Emacs; compiled TTS and handoff suites",
+      "status": "passed",
+      "total": 244,
+      "passed": 244,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "8e51e452b018c0e5b7deee42b47a56578fca6928a7566b26878cc08d5235a0e7"
+    },
+    {
+      "name": "compiled voice discovery and remote behavior",
+      "command": "selected Emacs; explicit discovery.elc; TTS and remote suites",
+      "status": "passed",
+      "total": 229,
+      "passed": 229,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "441e97f6c30df726c5fdf3fac68ceb8392f6c543058dee60593afe53433c93e8"
+    },
+    {
+      "name": "source library",
+      "command": "selected Emacs; explicit library source; library suite",
+      "status": "passed",
+      "total": 35,
+      "passed": 32,
+      "unexpected": 0,
+      "skipped": 3,
+      "log_sha256": "85f3385b747f8f6db358d937e05f66309c9bc3ff40c0f1012790f3eccc51cf77"
+    },
+    {
+      "name": "compiled library",
+      "command": "selected Emacs; explicit library.elc; library suite",
+      "status": "passed",
+      "total": 35,
+      "passed": 32,
+      "unexpected": 0,
+      "skipped": 3,
+      "log_sha256": "ae2a670544ea3c9a3f1c2044e46ae9c8f439ebea62fabe4858d8adf66ed06ed4"
+    },
+    {
+      "name": "process fixture regression",
+      "command": "selected Emacs; source duration and discovery tests",
+      "status": "passed",
+      "total": 11,
+      "passed": 11,
+      "unexpected": 0,
+      "skipped": 0,
+      "log_sha256": "1f82afee28d975421096003d4c91cc6e6ade362ea6bd35b1514499ebbf541f47"
+    },
+    {
+      "name": "compiled Aural parity",
+      "command": "make compiled-aural-test",
+      "status": "passed",
+      "completion": "Compiled aural parity checks passed",
+      "log_sha256": "a64894b49c5c6a225555e3f780ea621a495fa5fb7e6227ab7827a19245d50222"
+    },
+    {
+      "name": "native exact character variant and replacement",
+      "command": "EMACSVOX_CHARACTER_TEST_SERVER=<installed runtime> emacs -Q --batch -l test/verify-omnivox-character-runtime.el",
+      "status": "passed",
+      "completion": "Muted character palette acceptance passed.",
+      "log_sha256": "28ddf08e15fe066d9cacc618265641507a75bfdf23d57eb9d57ed6eeeeb15ac2"
+    },
+    {
+      "name": "native fallback and replay",
+      "command": "EMACSVOX_CHOICE_TEST_SERVER=<installed runtime> emacs -Q --batch -l test/verify-omnivox-choice-runtime.el",
+      "status": "passed",
+      "completion": "Muted real-server client acceptance passed.",
+      "log_sha256": "cf12ddb6bf6a24ffd15cdc4963047a81045eb25ad84584f96c4e068fd3e31e1f"
+    },
+    {
+      "name": "fresh normal build-tree startup and preflight",
+      "command": "make trace-test headers-check bytecode-check build-aural-test",
+      "status": "passed",
+      "completion": "Normal build-tree aural startup checks passed",
+      "log_sha256": "4034843f1fffc9b9e02f07103664355b4566904752cf162df7394d67ac6840f1"
+    },
+    {
+      "name": "canonical audit",
+      "command": "make aural-reference aural-audit",
+      "status": "passed",
+      "completion": "Generated reference: current",
+      "log_sha256": "96301d4c55c0bad16cfb34de4d8c05316669080aa3645bc0547f150d8d2c0348"
+    },
+    {
+      "name": "final non-mutating documentation gate",
+      "command": "make docs-release-check",
+      "status": "passed",
+      "completion": "Emacsvox documentation is current and structurally valid.",
+      "log_sha256": "dc4be8da9f881bbde41b79067934c213179d1ba184e38829229751b47e0cb861"
+    }
+  ],
+  "negative_controls_and_resolved_failures": [
+    {
+      "source": "2563f0414d51a909f6a8986634f6f5e81cb4dbf6",
+      "case": "aural-audit",
+      "result": "stale generated reference"
+    },
+    {
+      "source": "2563f0414d51a909f6a8986634f6f5e81cb4dbf6",
+      "case": "Help and Windows-guide assertions",
+      "result": "both reproduced the same failures in a disposable baseline session"
+    },
+    {
+      "source": "2563f0414d51a909f6a8986634f6f5e81cb4dbf6",
+      "case": "old native character acceptance",
+      "result": "Linux-specific Max voice ID unavailable in the Windows runtime; strict route assertion failed"
+    },
+    {
+      "case": "generated reference with all unit test modules loaded",
+      "result": "EAT fragment missing from standalone generation; canonical loader corrected"
+    },
+    {
+      "case": "new duration test on graphical Emacs",
+      "result": "unscoped subprocess replacement caught native compilation; fixture scoped to owned tools"
+    },
+    {
+      "case": "fresh Help return to draft",
+      "result": "unbound Comint autospeak setting in mode-line speech; guarded and regression tested"
+    },
+    {
+      "case": "early ad hoc audit check",
+      "result": "loaded older ignored utility byte-code; discarded and rerun with explicit source"
+    },
+    {
+      "case": "early preparation profile with overlapping source tests",
+      "result": "excluded from final timing comparison"
+    }
+  ],
+  "batch_skips": "Graphical and opt-in native cases. Supplemental graphical/native acceptance covers selected cases only.",
+  "command_notes": "Top-level make commands are as executed. Component descriptions identify the selected toolchain, forced source or compiled route, and ERT suites. Graphical drivers require the isolated Xvfb setup documented in the report."
+}

@@ -1,0 +1,271 @@
+#+title: Emacsvox responsiveness fixes and verification
+#+date: 2026-11-15
+
+* Result
+
+The four confirmed foreground stalls and the recording-cache retention issue
+from the [[file:2026-11-15-performance-investigation.org][investigation]] are fixed. Additional slices reduce repeated styled
+speech matching, bound speech-input drains and compatibility subprocesses,
+and remove parsing after deliberately quitting Agent Shell table navigation.
+Final verification also found and fixed a buffer-status error before Comint
+settings have loaded. All changes are committed locally; no push or live
+session reload was performed.
+
+Historical native queue and first-audio outliers remain unexplained. Muted
+native acceptance passed, but it does not establish a fix for those outliers
+or verify physical audio output.
+
+* Measured changes
+
+Times are elapsed milliseconds. These are disposable-session measurements,
+not key-to-audible-speech measurements. Raw samples, drivers and checks are
+under [[file:data/2026-11-15-performance-fixes/][performance-fixes data]]. The original report retains the baseline evidence.
+
+| Interaction | Before | After | Scope |
+|-------------+--------+-------+-------|
+| Comint output filter, 16 KiB line plus newline, automatic speech off | 2,481.093 | 0.477 | Five samples; real advised filter and exact inserted text |
+| Markdown Down Arrow, 2,000 rows | 583.633 | 0.612 | Warm table, actual installed Markdown 2.8-alpha, graphical Emacs |
+| Org Down Arrow, 2,000 rows | 65.284 | 0.871 | Same graphical driver and seeded table snapshot |
+| Assemble a 1 MiB unfinished Comint line | 2,613.577 | 2.807 | Cumulative assembly; new driver also materializes the final tail |
+| Cold scan of 40 recordings, ffprobe absent | 1,476.083 | 54.335 | Exact live exec-path; ten new samples |
+| Warm scan of those recordings | Unmeasured on that exact path | 15.554 | Twenty samples; metadata reused |
+| Suspended Agent Shell table, 500 rows, post-command | About 8.2 | Below 0.02 | Twenty warm samples; no logical snapshot |
+| Speech input, 4,000 records: first return | Previously drained everything | 0.565 | Cleanup included; handler counts records |
+| Speech input, 4,000 records: scheduled complete drain | 72.213 for old ignored-handler single call | 27.989 | Includes timer waits; different handler and scheduling work |
+
+The unfinished-output drivers differ: the original driver reset string state;
+the new one creates a fresh owning buffer and checks the materialized tail.
+Both use 4,096-character ASCII chunks, but this is a scaling comparison rather
+than a matched microbenchmark. New medians for 16, 64 and 256 chunks were
+0.711, 1.100 and 2.807 ms, with no collections in the timed samples. The
+256-chunk maximum was 6.566 ms.
+
+Table entry and its first complete parse are outside the warm Arrow timing.
+An edited table, changed text properties, narrowing, mode change or parser
+replacement invalidates reuse. These results do not imply constant-time cold
+entry into arbitrarily large tables. Allocation and GC counts are retained
+with the samples. Timings do not isolate CPU time or native synthesis.
+
+The final preparation comparison alternates cache-off and cache-on blocks,
+with five warm-ups and twenty samples per block over three rounds. Both
+conditions use the same current implementation and measurement advice. They
+therefore isolate the matching cache, rather than every planner change.
+For the styled 4,041-byte response, cache-off/cache-on round medians were
+40.492/32.041, 46.214/32.145 and 38.261/31.432 ms. This is an 18–30 percent
+reduction across those rounds. Each 20-sample block had one collection;
+Sample maxima were 113–149 ms. The modest response is still capable of
+noticeable preparation pauses. Small Magit and Org fixtures do not activate
+the multi-run cache, and their timings remain in the saved paired samples.
+All paired concrete-document hashes match and retained owners return to zero.
+Fresh normalization, action plans, voice compilation, capabilities and resource
+reads remain outside cached matching. An earlier overlapping test/profile run
+was excluded from the final comparison.
+
+* Implementation slices
+
+** Comint output partitioning and storage
+
+=b8a2a69bb= replaces the repeated end-anchored regex searches with one backward
+newline search. =59009dc71= keeps long unfinished output in an owned, undo-free
+buffer, appends chunks without copying the prefix, and materializes text at
+delivery or flush. Short tails still use strings. Neither change truncates
+speech or changes partial-line delivery policy.
+
+Relevant implementation: [[file:../../lisp/integrations/emacsvox-comint.el::(defun emacsvox-comint--final-line-start][final-line boundary]],
+[[file:../../lisp/integrations/emacsvox-comint.el::(defun emacsvox-comint--partition-long-output][incremental partition]], and
+[[file:../../lisp/integrations/emacsvox-comint.el::(defun emacsvox-comint--clear-pending-output][owned storage cleanup]]. Regression coverage checks Unicode,
+text properties, arbitrary chunk divisions, prompt boundaries, carriage-return
+replacement, flush, disabled feedback, mode changes and buffer death. The
+source and fresh compiled Comint suites each passed all 60 tests.
+
+One unfinished line still requires storage proportional to its length.
+Configured prompt expressions still run against that final line; their own
+complexity is outside the fixed built-in final-line search.
+
+** Logical tables
+
+=3139aa86b= retains one source-table snapshot per buffer, validates its text and
+property tick, bounds, mode and parser identity, and uses row vectors for
+point lookup and destinations. Plain Markdown cells avoid a temporary parser
+buffer. Rendered adapters retain their separate invalidation behavior.
+=fff8b58d8= skips logical parsing while an Agent Shell table is deliberately
+suspended and the renderer's table-source property is still present. Moving
+to prose releases suspension through the existing path. No bindings changed.
+
+Implementation: [[file:../../lisp/core/emacsvox-table-reader.el::(defvar-local emacsvox-table-reader--source-cache][source cache]],
+[[file:../../lisp/core/emacsvox-table-reader.el::(defun emacsvox-table-reader--source-cell-at-point][source cell lookup]], and
+[[file:../../lisp/integrations/emacsvox-agent-shell-tables.el::(defun emacsvox-agent-shell--table-navigation-post-command][Agent Shell post-command]]. Tests check parser-call scaling, edits,
+properties, narrowing, replaced parsers, coordinates, escaped pipes, ragged
+tables, deliberate quit and re-entry. Real graphical checks cover wrapping,
+render refreshes and ordinary editing outside tables.
+
+** Recording library
+
+=91b205b59= resolves ffprobe lazily once per scan, including a negative result.
+Warm metadata needs no lookup. =931d0869b= stages a fresh metadata map and
+publishes it only after a completed scan. Deleted files and former roots are
+released; a failed scan retains the previous complete map. The policy retains
+only the current library root, so returning to a former root is cold.
+
+=fd3994888= gives an optional duration subprocess a two-second deadline and
+4 KiB stdout limit, permits process callbacks and quit, and cleans up both
+pipes. A timeout or excessive stdout disables further duration probes in that
+scan. Recording identity and visibility remain available with unknown duration.
+Unknown durations retain the existing file-stamp metadata cache policy.
+Deadlines are checked between callbacks; process creation and slow callbacks
+are not preempted.
+
+Implementation: [[file:../../lisp/ui/emacsvox-sound-library.el::(defun emacsvox-sound-library--scan][scan and cache publication]],
+[[file:../../lisp/ui/emacsvox-sound-library.el::(defun emacsvox-sound-library--probe-duration][duration process ownership]]. Tests use real child Emacs processes for
+valid, malformed, failed, hanging, quit and excessive-output cases. They also
+check one timeout per cold scan, callbacks during waits, changed tool paths,
+deleted files, root switches and failed scan publication. Real ffprobe was
+unavailable; its codec behavior was not accepted here. File enumeration,
+digesting and successful per-file probes remain synchronous work.
+
+** Speech input and EOF
+
+=20f9993f7= replaces repeated suffix copying with owned per-process input
+buffers. Live drains yield after 256 records or five milliseconds and use one
+owned resume timer. A queued burst is capped at 16 MiB; existing per-record
+limits remain. Consumed records are removed before callbacks, preserving
+nested-input order and exception recovery. Cleanup covers retirement and EOF.
+
+The EOF regression test found that already-received terminal records could
+lose to generic process-failure cleanup. Final input and completion callbacks
+now drain before retiring that process. The final-drain exception is bound
+to the exact process and does not relax generation or epoch ownership.
+
+Implementation: [[file:../../lisp/speech/tts-lifecycle.el::(defun tts--consume-process-lines][bounded line drain]],
+[[file:../../lisp/speech/tts-lifecycle.el::(defun tts--finish-process-input][EOF drain]], and the Omnivox filter cleanup in
+[[file:../../lisp/speech/omnivox-voices.el][omnivox-voices.el]]. New tests cover bursts, nested input, exceptions,
+Unicode, bounds, standalone process death, retirement and final completion.
+Source and compiled handoff checks passed before the broader gates.
+
+The scheduled benchmark verifies that another due timer runs before the
+burst finishes. A separate manual-resume measurement excludes timer waits;
+it must not be presented as complete event-loop latency. One expensive record
+handler can still exceed the drain budget before control returns. EOF drains
+are deliberately complete to preserve terminal evidence.
+
+** Preparation, discovery and startup status
+
+=d597e8b0d= reuses exact normalized rule matches only within one synchronous
+multi-run preparation. Keys are copied and bounded, cached scores are copied
+on return, and current input facts remain fresh. The cache has at most 64
+entries and ends before compilation or callbacks. Adjacent transition renders
+are traversed linearly. Tests protect mutable facts, plan independence,
+current defaults, large-input fallback and cache bounds.
+
+=fe39a75d5= uses the running local worker's inventory for compatibility voice
+queries, as the remote path already did. Offline fallback retains its return
+and error contract, with a 30-second deadline, 4 MiB combined output limit,
+separate diagnostics and guaranteed cleanup. This bounds the fallback; it
+does not make an explicit offline query asynchronous to its caller.
+
+=c2c8963b3= guards the Comint autospeak indicator when its setting is unbound.
+Fresh buffer switching and Help could otherwise signal a void-variable error
+before the Comint integration loaded. A regression exercises actual status
+speech with that variable unbound in ordinary, Comint and Vterm buffers.
+
+Implementation: [[file:../../lisp/aural/emacsvox-aural-rules.el::(defun emacsvox-aural--prepared-rule-matches][operation-local matching]],
+[[file:../../lisp/aural/emacsvox-aural-planner.el][planner]], [[file:../../lisp/speech/omnivox-discovery.el][voice discovery]], and
+[[file:../../lisp/core/emacsvox-speak-status.el::(defsubst ems--comint-autospeak][status indicator]].
+
+** Verification repairs
+
+=42d06dff3= makes isolated menu and transport fixtures register their required
+providers explicitly. =35377c9bd= limits child-process replacements to their
+owned test tools, allowing background native compilation during graphical
+waits. =275e8f47c= derives the eSpeak base voice path from actual inventory and
+still requires the Max variant and exact verified route on both lanes.
+
+The original commit reproduced three broad-suite failures: a stale generated
+reference, an old Help layout assertion and obsolete platform wording. The
+reference also differed with EAT loaded because standalone generation omitted
+its presentation fragment. =2b021c702= and =6efc2724f= refresh that reference and
+include EAT data without loading the optional terminal package or starting
+processes. =660ba13e3= checks the documented Help selection and buffer-preservation
+contract, and the guide's current statement that native Windows ARM64 is
+unsupported. These checks change no Help layout or platform support behavior.
+
+* Verification and environment
+
+The selected toolchain is =/home/bart/opt/emacs-31/bin/emacs=, Emacs 31.0.90,
+on WSL2 Linux 6.18.58.1. The original source is =2563f0414=; final application
+and test source is =660ba13e3=. Builds used ignored =local.mk= and the verified
+=menu-20261113-emacs-31.0.90= dependency tree. Incremental byte-code builds and
+non-mutating preflights passed. Fresh compiled sessions verified affected
+implementations; no live reload served as acceptance. Passing checks were reused
+when their code and environment were unchanged.
+
+- Full unit suite: 4,835 total, 4,577 passed, 258 skipped, zero unexpected.
+- Core gate: 1,156 total, 1,138 passed, 18 skipped, zero unexpected.
+- Pinned integration gate: 747 passed; compiled graphical integration: 18 passed.
+- Official pinned graphical menu gate: 290 passed, zero skips.
+- Additional graphical library and table checks: 53 passed, zero skips.
+- Fresh compiled Help check: one passed on a real X11 frame.
+- Compiled Aural parity and normal build-tree startup passed.
+- All 27 semantic speech traces match. Header and byte-code checks passed.
+- Non-mutating =make docs-release-check= passed after the final build checks.
+
+The skipped batch cases require graphical or opt-in native environments; they
+are not counted as passes. The listed graphical gates cover their selected
+cases, not every skipped optional integration. See the checks artifact for
+commands, per-slice checks, failures discovered during validation and final
+results. The verification repairs are described above.
+
+Muted native tests used the installed Windows Omnivox 1.18.0 executable at
+=C:/Users/bart/AppData/Local/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe=,
+with =--engine espeak --audio-output null=. They verified exact Max character
+routes on both lanes, eleven cancellations followed by the final completion
+in a twelve-character burst, physical-choice fallback, two registration
+generations and historical notification replay. No speech runtime was rebuilt.
+
+The actual live Markdown path was tested graphically at version 2.8-alpha;
+pinned tests use 2.9-alpha. Pinned Agent Shell is 0.95.1, while the live source
+was 0.96.1. Fresh checks using the recorded live Agent Shell, ACP, Shell Maker and
+Compat paths passed six focused batch cases and two graphical cases. Each
+loaded path was checked against the recorded path. These focused checks
+cover the changed table behavior; they are not a complete upgrade gate.
+Full source and runtime hashes are recorded in the provenance artifact.
+
+* Remaining acceptance and follow-up
+
+The highest-priority confirmed stalls are addressed. The next investigation
+should reproduce the historical DECtalk and Eloquence outliers with their
+actual engine/runtime configuration and physical output, correlating dispatch,
+queue, cancellation, first audio and Emacs observation. The earlier logs showed
+both pre-audio and queue delays; these fixes do not identify their causes.
+
+Styled preparation still performs fresh normalization and voice compilation
+per run and remains measurable. Further reuse needs its own evidence for
+configuration capture, action order, provenance and ownership. Large cold
+table parses and recording scans remain proportional to their data. Background
+metadata collection would be a separate behavior change, not part of these
+small guard and cache corrections.
+
+Physical listening, native Windows Emacs GUI, macOS, and extended uninterrupted
+sessions were unavailable acceptance environments. The running Emacs, its
+speech workers, buffers, point and draft input were not changed. A fresh normal
+Emacsvox restart is needed to use the compiled application fixes.
+
+* Reproduction
+
+Set =EMACSVOX_AUDIT_DEPS= to the verified dependency directory and
+=EMACSVOX_AUDIT_OUTPUT= to a new temporary directory. Run the saved drivers with
+the selected Emacs and =-Q --batch -l DRIVER=. The table driver and graphical
+checks require an isolated Xvfb frame, as in the original report. The library
+driver uses the original =generate-fixtures.py=. Set
+=EMACSVOX_AUDIT_ENV_FILE= to the saved =library-environment.json= to use the
+exact recorded exec-path. Only that path list is saved; full configuration
+snapshots and speech text are not included.
+
+For paired preparation, set =EMACSVOX_PROFILE_DEPS= to the verified directory,
+=EMACSVOX_DELIVERY_LOAD=compiled=, =EMACSVOX_DELIVERY_GC_BYTES=128000000= and
+=EMACSVOX_PROFILE_ITERATIONS=20=, then load =matching-paired.el=. Capture its
+eighteen =Paired:= records; the driver rejects different document hashes.
+=summarize.el= recomputes ordinary medians and nearest-rank percentiles from
+the saved raw samples. The original profiler's even-sample median convention
+is retained only in raw output. Do not compare those reported medians without
+normalizing them first.

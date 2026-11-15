@@ -1,0 +1,7 @@
+round=0 lane=main dispatch=1 choice=actual-fallback registry=1 verified=t
+round=0 lane=notification dispatch=2 choice=actual-fallback registry=1 verified=t
+round=0 historical-notification-replay=completed
+round=1 lane=main dispatch=3 choice=actual-fallback registry=2 verified=t
+round=1 lane=notification dispatch=4 choice=actual-fallback registry=2 verified=t
+round=1 historical-notification-replay=completed
+Muted real-server client acceptance passed.

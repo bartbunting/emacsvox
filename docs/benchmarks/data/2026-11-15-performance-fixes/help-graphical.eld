@@ -1,0 +1,1 @@
+(:emacs "31.0.90" :graphical t :implementation "/home/bart/src/emacsvox/lisp/core/emacsvox-speak.elc" :tests 1 :unexpected 0 :skipped 0)
