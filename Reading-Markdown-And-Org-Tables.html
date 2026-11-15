@@ -37,37 +37,45 @@ ul.mark-bullet {list-style-type: disc}
 Up: <a href="Browsing-Structure.html" accesskey="u" rel="up">Browsing Structure</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Reading-Markdown-and-Org-tables"><span>9.4.2 Reading Markdown and Org tables<a class="copiable-link" href="#Reading-Markdown-and-Org-tables"> &para;</a></span></h4>
+<h4 class="subsection" id="Reading-Markdown-and-Org-tables"><span>9.4.3 Reading Markdown and Org tables<a class="copiable-link" href="#Reading-Markdown-and-Org-tables"> &para;</a></span></h4>
 
 <p>In a Markdown or Org table, press a Control-Meta arrow to enter table reading
-and move immediately. Left/right moves by cell; up/down moves by logical row.
-The first movement announces table reading and the destination together.
+and move immediately. Left/right moves between columns; up/down moves between
+logical rows, retaining the column. Every Control-Meta arrow reads the
+destination cell. The first movement announces table reading and the destination
+together. Table reading starts on demand by default in these source buffers;
+you can choose automatic entry in the Tables settings described below.
 Outside supported tables, these arrows retain their existing bindings,
 including inside code examples.
 </p>
-<p><kbd class="kbd">C-e C-t C-r</kbd> enters without moving when the default speech prefix is used.
-It announces the dimensions and current cell. Press <kbd class="kbd">q</kbd> or the same command
-to restore ordinary editing keys. From prose, <kbd class="kbd">C-e C-t ]</kbd> and <kbd class="kbd">C-e C-t [</kbd>
+<p><kbd class="kbd">C-e C-t C-r</kbd> enters at the current cell with the default speech prefix.
+It announces the dimensions and current cell. The equivalent named command is
+<kbd class="kbd">M-x emacsvox-table-reader-mode</kbd>. Press <kbd class="kbd">q</kbd> or the same command to restore
+ordinary editing keys without moving point. This suspends automatic entry for
+the current visit: another explicit entry command, or leaving the table and
+returning, can start reading again. From prose, <kbd class="kbd">C-e C-t ]</kbd> and <kbd class="kbd">C-e C-t [</kbd>
 find and enter the next or previous table. Inside table reading, <kbd class="kbd">t</kbd> and <kbd class="kbd">T</kbd>
 do the same; code examples are skipped.
 </p>
 <p>While table reading is active:
 </p>
 <ul class="itemize mark-bullet">
-<li>Up/down and Control-Meta-up/down move by logical row, retain the column,
-and read the complete destination row.
+<li>Plain Up/down moves by logical row and reads the complete destination row
+by default. You can select cell speech for these keys. Control-Meta-up/down
+always reads the destination cell; both retain the column.
 </li><li>Control-Meta-left/right moves between cells. Plain left/right retains
 character movement. <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> move between cells without editing;
 <kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads the current cell.
 </li><li><kbd class="kbd">r</kbd> reads the row and <kbd class="kbd">c</kbd> the column. <kbd class="kbd">.</kbd> announces coordinates and <kbd class="kbd">=</kbd>
 gives dimensions.
-</li><li><kbd class="kbd">a</kbd> changes column titles, row titles, or data/title order for this buffer.
-The <code class="code">emacsvox-table-reader</code> customisation group sets defaults.
+</li><li><kbd class="kbd">a</kbd> opens Tables settings for titles, order, movement speech, activation
+and optional detail. Browsing settings leaves the table untouched.
 </li><li><kbd class="kbd">w</kbd> or <kbd class="kbd">k k</kbd> copies the cell, <kbd class="kbd">k r</kbd> copies the row with tabs between cells,
 and <kbd class="kbd">k c</kbd> copies the column with newlines between cells.
 </li><li>Meta-up/down leaves directly for preceding/following prose. Up/down also
-leaves across a vertical table edge when content exists beyond it;
-otherwise point stays in the table.
+leaves across a vertical table edge when content exists beyond it by default.
+Choose Stop at the edge to retain the cell instead. If no adjacent content
+exists, point stays in the table.
 </li></ul>
 
 <p>A horizontal edge or a missing cell in a shorter row leaves point unchanged
@@ -82,22 +90,26 @@ its literal text. Use the host mode to copy exact markup or formulas. This
 reader covers simple pipe tables; HTML spans, nested tables, and
 spreadsheet-specific structures have separate interfaces.
 </p>
-<p>Leaving restores ordinary mode keys. Other editing commands retain their
-normal meaning, and an edit ends the reading context. Org&rsquo;s table-editing
-feedback and Markdown&rsquo;s markup-stripping speech option remain independent.
-Agent Shell has automatic contextual table entry and its own preferences.
-In Agent Shell, Control-Meta-up/down reads the destination <em class="emph">cell</em>, whereas
-plain up/down reads the destination <em class="emph">row</em>. Do not assume identical spoken
-units merely because the keys are similar; see <a class="ref" href="Agent-Shell.html">Agent Shell</a>.
+<p>Other editing commands retain their normal meaning. An edit ends reading and
+suspends automatic re-entry while you continue typing. Org&rsquo;s native table
+editing feedback, including its table Muggle, remains independent; it can
+speak after native cell movement without starting this reader. Markdown&rsquo;s
+markup-stripping speech preference also remains independent.
+</p>
+<p>Agent Shell uses the same reading preferences and movement units, with automatic
+entry as its initial policy. It retains native Tab, Shift-Tab and Return
+actions and handles character movement within rendered cells; see
+<a class="ref" href="Agent-Shell.html">Agent Shell</a>.
 </p>
 </div>
 <div class="subsection-level-extent" id="Reading-application-lists">
-<h4 class="subsection"><span>9.4.3 Reading application lists<a class="copiable-link" href="#Reading-application-lists"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.4.4 Reading application lists<a class="copiable-link" href="#Reading-application-lists"> &para;</a></span></h4>
 
 <p>In an application built on Tabulated List mode, use a Control-Meta arrow or
 <kbd class="kbd">C-e C-t C-r</kbd> to enter shared reading. Ordinary application navigation stays
-unchanged until you enter. Within reading, up/down reads complete logical rows,
-Control-Meta-left/right reads cells, and plain left/right inspects characters.
+unchanged until you enter, unless you select automatic entry. Within reading,
+plain up/down reads complete logical rows by default, Control-Meta arrows read
+cells, and plain left/right inspects characters.
 <kbd class="kbd">q</kbd> leaves reading and restores the application&rsquo;s usual navigation.
 </p>
 <p>Application actions take precedence over other shared reader keys. Opening,
@@ -117,8 +129,81 @@ enter again to inspect the refreshed list. Custom table printers, image-only
 cells, and duplicate column names are not supported by this reader.
 </p>
 </div>
+<div class="subsection-level-extent" id="Choose-table-reading-preferences">
+<h4 class="subsection"><span>9.4.5 Choose table reading preferences<a class="copiable-link" href="#Choose-table-reading-preferences"> &para;</a></span></h4>
+
+<p>Open <kbd class="kbd">M-x emacsvox-table-settings</kbd> from the buffer you want to configure.
+While reading a source or Agent Shell table, <kbd class="kbd">a</kbd> opens the same page. The
+speech settings menu provides <kbd class="kbd">C-e H s T</kbd>, and the focused Org and Agent Shell
+menus provide <kbd class="kbd">T</kbd>. Settings search at <kbd class="kbd">C-e H /</kbd> finds table reading, titles,
+activation and inheritance. Each route captures the original buffer so moving
+through the menu does not redirect your changes.
+</p>
+<p>A control shows its pending choice, its effective value and the source of that
+value. Open the control, browse with arrows, then press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to stage a
+choice and return to that control. Press <kbd class="kbd">q</kbd> in the choice list to cancel.
+Neither browsing nor selecting changes runtime behaviour yet. Press <kbd class="kbd">?</kbd> and a
+choice&rsquo;s key for Help; returning restores the browsed choice. The page&rsquo;s <kbd class="kbd">h</kbd>
+explains scopes, migration and host exceptions.
+</p>
+<p>For example, open Titles with <kbd class="kbd">t</kbd>, select Both titles, and press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to
+preview a small sample. The sample includes a second row and a blank cell;
+it uses the pending speech choices without moving or editing your source.
+<kbd class="kbd">s</kbd> stops it. Preview treats pending choices as buffer overrides, so inheritance
+uses the current mode settings. Saving inheritance for the mode can resolve
+to a different common value; the effective labels refresh after saving.
+Try activation and edge behaviour in an actual table after
+applying them, since the speech sample does not navigate the source.
+</p>
+<p>Choose one explicit action to use the pending settings:
+</p>
+<ul class="itemize mark-bullet">
+<li><kbd class="kbd">A</kbd> applies only the changed choices temporarily to the captured buffer.
+</li><li><kbd class="kbd">W</kbd> saves only those choices as common defaults through Customize.
+</li><li><kbd class="kbd">M</kbd> saves only those choices for the captured major mode through Customize.
+Agent Shell&rsquo;s transcript and viewport share one mode setting.
+</li></ul>
+
+<p>After Apply, choices are labelled applied here, not saved. You can then Save
+without selecting them again. Closing keeps applied buffer choices but does
+not persist them.
+</p>
+<p>Buffer overrides take precedence over mode overrides, which take precedence
+over common defaults. Saving a wider default preserves narrower overrides;
+the effective labels show when an override still wins. No titles is an
+explicit choice, distinct from inheritance. Select Inherit wider scope and
+Apply to release a buffer choice, or Save mode to make that mode follow the
+common default. <kbd class="kbd">I</kbd> stages inheritance for all settings; it still requires
+Apply or Save mode. Common defaults cannot inherit. <kbd class="kbd">D</kbd> discards pending
+choices. Closing the page discards choices that were neither applied nor saved.
+</p>
+<p>The controls cover titles, data/title order, plain-arrow speech, activation,
+coordinates during movement, entry detail, repeated titles and vertical edges.
+Initial defaults retain whole-row plain arrows, full entry detail, repeated
+titles, no extra movement coordinates and leaving at vertical edges when
+adjacent prose exists. Brief entry still identifies a table and reads its cell.
+Suppressing repeated titles affects consecutive cell moves; explicit cell
+inspection remains complete. Application lists always stop at their edges.
+</p>
+<p>Activation&rsquo;s Mode defaults choice means automatic entry in Agent Shell and
+<a data-manual="emacsvox" href="./Notmuch-Messages-And-Attachments.html#Notmuch-Messages-And-Attachments">Notmuch HTML data tables</a>, and
+on-demand entry in Org, Markdown and application lists. A common Automatic or
+On demand choice applies wherever there is no narrower override. Quitting
+always provides a temporary escape from automatic reading. A redraw or
+Agent Shell response update alone cannot undo that quit.
+</p>
+<p>Existing shared title/order settings retain their scope. Older Agent Shell
+title/order choices remain effective as Agent Shell overrides, including saved
+choices equal to their original defaults. The page identifies their source;
+Help lists retained older values even when a newer override takes precedence.
+An older value whose origin cannot be determined is preserved and identified
+as uncertain. Select a replacement or inheritance explicitly to resolve it.
+Opening the page never rewrites configuration. Advanced configuration lives
+in the <code class="code">emacsvox-table-reader</code> customisation group.
+</p>
+</div>
 <div class="subsection-level-extent" id="Browsing-CSV-data">
-<h4 class="subsection"><span>9.4.4 Browsing CSV data<a class="copiable-link" href="#Browsing-CSV-data"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.4.6 Browsing CSV data<a class="copiable-link" href="#Browsing-CSV-data"> &para;</a></span></h4>
 
 <p>Use <code class="code">emacsvox-table-find-csv-file</code> to open a CSV file in the table browser,
 or <code class="code">emacsvox-table-view-csv-buffer</code> for the current buffer&rsquo;s CSV data. Quoted

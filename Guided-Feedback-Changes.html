@@ -51,9 +51,10 @@ it. Truncated history cannot provide a complete original/proposed comparison.
 voice</em> expands named voices, identifies original and replacement, and lists
 the original first when available, then alternatives alphabetically.
 Selecting a voice with <kbd class="kbd"><kbd class="key">RET</kbd></kbd> keeps the panel open for comparison. Changes
-can add a cue, tone, or spoken label, replace a sound, change a tone, or
-suppress a component. A cue can be added when none existed. Choices depend
-on integration facts; they cannot create missing semantic distinctions.
+can add a cue, tone, or spoken label, replace a sound, change its timing,
+change a tone, or suppress a component. A cue can be added when none existed.
+Choices depend on integration facts; they cannot create missing semantic
+distinctions.
 
 <p><kbd class="kbd"><kbd class="key">RET</kbd></kbd> on <em class="emph">Parts</em> reopens the parts; each retains its unfinished choices.
 <kbd class="kbd">q</kbd> goes up one level, for example from a voice to <em class="emph">Content voice</em> and
@@ -96,6 +97,20 @@ Aborting a choice or leaving before Apply does not change live rules.
 Failed saves retain the draft and report failure.
 </li></ol>
 
+<p>To change an existing earcon&rsquo;s timing, choose <em class="emph">Change sound timing</em> and
+select the sound. <em class="emph">Before speech</em> finishes the sound before the selected
+content starts. <em class="emph">Alongside speech</em> starts it at the content boundary and
+overlaps speech. <em class="emph">After speech</em> starts it when that content finishes.
+The completion list marks the current timing and explains each choice;
+browsing applies nothing. The sound keeps its volume and spatial settings,
+and other feedback keeps its order. Preview, matching criteria, lifetime
+and Apply work as described above.
+</p>
+<p><em class="emph">Before speech</em> requires structured speech delivery, supported by Omnivox.
+If a delivery cannot preserve that timing, ordinary speech continues with
+the cue omitted and a warning. Preview reports the limitation instead of
+playing a different timing. Exact overlap also depends on the speech backend.
+</p>
 <p>Replacing or suppressing a sound targets its identity in a before- or
 after-content phase while retaining other components. Existing rule data can
 insert only at a phase&rsquo;s beginning or end, so replacing a middle component

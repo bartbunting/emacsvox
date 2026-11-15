@@ -93,6 +93,11 @@ precedence from the order in which you edited settings.
 <p><kbd class="kbd">C-e H r h</kbd> opens the semantic vocabulary without changing settings.
 <kbd class="kbd">C-e H r t</kbd> toggles training explanations across all buffers for this Emacs
 session; it does not save a startup default.
+Use <kbd class="kbd">C-e H r V</kbd> or search for <em class="emph">Training explanation voice</em> to edit the global
+voice assignment, initially <code class="code">annotate</code>. The active palette resolves that name;
+changing the assignment does not edit the shared named voice or enable training.
+The focused Customize editor has separate Apply and Save actions. Outside an
+editable field, <kbd class="kbd">q</kbd> returns to the selected menu item without saving.
 </p>
 
 <ul class="mini-toc">

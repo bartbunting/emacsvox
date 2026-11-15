@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -58,11 +59,87 @@ content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
 </p>
 <ul class="mini-toc">
-<li><a href="#Review-proposed-changes" accesskey="1">Review proposed changes</a></li>
+<li><a href="#Read-and-customise-text-trees" accesskey="1">Read and customise text trees</a></li>
+<li><a href="#Review-proposed-changes" accesskey="2">Review proposed changes</a></li>
 </ul>
-<div class="subsection-level-extent" id="Review-proposed-changes">
-<h4 class="subsection"><span>11.7.1 Review proposed changes<a class="copiable-link" href="#Review-proposed-changes"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Read-and-customise-text-trees">
+<h4 class="subsection"><span>11.7.1 Read and customise text trees<a class="copiable-link" href="#Read-and-customise-text-trees"> &para;</a></span></h4>
 
+<a class="anchor" id="agent_002dshell_002dtext_002dtrees"></a>
+<a class="index-entry-id" id="index-text-trees_002c-Agent-Shell"></a>
+<a class="index-entry-id" id="index-tree-feedback"></a>
+
+<p>Navigation diagrams can use drawing characters to show parents and children.
+Emacsvox recognises complete trees in unlabelled, <code class="code">text</code> and <code class="code">plaintext</code>
+fenced blocks. Each tree needs a root and at least two branch lines with
+consistent indentation. Separate prose paragraphs do not prevent recognition;
+unfinished fences, programming-language blocks and ambiguous layouts remain
+literal. Recognition happens when the block is rendered, and navigation uses
+its stored structure.
+</p>
+<p>Ordinary line reading omits recognised drawing prefixes and retains item
+labels and annotations. By default, entering says “Tree”, changing depth says
+“Level” and the new number, and returning to the root says “Root”. Siblings
+do not repeat the level. Leaving says “End of tree”, including when the next
+line is blank. Independent reading begins with entry feedback again. Copying
+and character inspection retain the original drawing characters.
+</p>
+<p>Use <kbd class="kbd">C-c ]</kbd> or <kbd class="kbd">C-c [</kbd> and choose <em class="emph">Tree</em> to move between trees and hear the
+destination root. <kbd class="kbd">]</kbd> and <kbd class="kbd">[</kbd> repeat these jumps and infer tree movement when
+point is within a recognised tree. You can also invoke
+<kbd class="kbd">M-x emacsvox-agent-shell-next-tree</kbd> and
+<kbd class="kbd">M-x emacsvox-agent-shell-previous-tree</kbd>. Ordinary arrows read nodes within a
+tree; there are no separate parent or sibling movement commands.
+</p>
+<p>Open <kbd class="kbd">C-e S Y</kbd> from Agent Shell, or <kbd class="kbd">C-e H s Y</kbd> from Speech settings, for the
+shared Trees page. <kbd class="kbd">e</kbd> chooses entry feedback and <kbd class="kbd">x</kbd> chooses exit feedback:
+speech, an earcon, both, a fixed tone, no indication, or existing rules.
+<kbd class="kbd">l</kbd> opens level feedback, where <kbd class="kbd">s</kbd> toggles spoken levels, <kbd class="kbd">v</kbd> chooses their
+voice, <kbd class="kbd">t</kbd> toggles a tone whose pitch follows depth, and <kbd class="kbd">e</kbd> chooses an earcon.
+You can combine these level components. They affect the indication rather
+than the item label. Earcons require auditory icons to be enabled. These
+settings currently apply to recognised Agent Shell text trees, not ordinary
+outlines or file-tree packages.
+</p>
+<p>Choices remain pending until applied or saved. Press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> in Trees or Level
+changes to open a sample tree with the pending feedback. Up and Down read
+entry, deeper levels, siblings, shallower levels and exit. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> or <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+repeats the current line; <kbd class="kbd">s</kbd> stops speech; <kbd class="kbd">q</kbd> returns to the menu and keeps
+the draft. The sample leaves the source buffer and live preferences intact.
+</p>
+<p>For the depth tone, press capital <kbd class="kbd">T</kbd> in Level changes. The
+<a class="ref" href="Reading-Scope-And-Punctuation.html#spelling_002dtone_002deditor">shared tone editor</a> offers root pitch, duration, volume, waveform, sweep and
+envelope controls. <kbd class="kbd">j</kbd> sets the rise in semitones per level; zero keeps the
+pitch fixed. <kbd class="kbd">m</kbd> sets the maximum pitch, which must be at least the root
+pitch. The initial mapping starts at 220 Hz, rises three semitones per level
+and stops at 1760 Hz; the initial duration is 50 milliseconds. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an
+exact value and Shift-left/right adjusts the selected number. Sound presets
+retain the rise and maximum pitch.
+</p>
+<p>Inside the tone editor, <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> plays the root tone alone; capital <kbd class="kbd">P</kbd> opens the
+browsable sample with this draft tone privately enabled. <kbd class="kbd">q</kbd> returns from the
+sample. Use <kbd class="kbd">A</kbd> or <kbd class="kbd">W</kbd> in the editor to keep the tone and enable it in the
+pending Trees draft, then return to Trees to apply or save. Leaving the editor
+without keeping discards its edits.
+</p>
+<p>In Trees, <kbd class="kbd">A</kbd> applies pending choices only to the captured buffer; <kbd class="kbd">E</kbd> applies
+them across this Emacs session; <kbd class="kbd">W</kbd> saves personal rules for future sessions.
+Only changed indications are written. Buffer and session overrides can still
+override saved settings, including a buffer trial followed by Save. <em class="emph">Use
+existing rules</em> removes this page&rsquo;s override at the chosen scope and leaves
+other rules intact. <kbd class="kbd">D</kbd> discards pending choices; closing the page also discards
+unapplied choices. Already applied or saved preferences remain in effect.
+</p>
+</div>
+<div class="subsection-level-extent" id="Review-proposed-changes">
+<h4 class="subsection"><span>11.7.2 Review proposed changes<a class="copiable-link" href="#Review-proposed-changes"> &para;</a></span></h4>
+
+<p>In an expanded editing tool, file headings speak as “File:” followed by the
+filename. Up and Down skip the decorative lines above and below each filename;
+continuous speech also omits those borders. Diff text retains its contents,
+including literal box-drawing characters in code. Character movement and
+copying still expose the original displayed text.
+</p>
 <p>Opening an Agent Shell change review announces its file and hunk counts and,
 for a single file, its name.  The normal Diff Mode hunk navigation remains
 available; opening the review does not accept or reject changes.
@@ -73,6 +150,11 @@ changes, updated tool output and change-review entry. Use
 <a data-manual="emacsvox" href="./Explaining-Presentation.html#Explaining-Presentation">Feedback Details</a> to inspect a representative event before changing it.
 </p>
 </div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Tables.html">Navigate and copy rendered tables</a>, Previous: <a href="Agent-Shell-Transcript-Navigation.html">Navigate transcript blocks</a>, Up: <a href="Agent-Shell.html">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

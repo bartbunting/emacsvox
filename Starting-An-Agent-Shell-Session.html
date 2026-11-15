@@ -21,6 +21,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -52,32 +53,86 @@ re-enabling support after it was disabled or while diagnosing a live reload.
 <div class="subsection-level-extent" id="Write-and-edit-prompts">
 <h4 class="subsection"><span>11.1.1 Write and edit prompts<a class="copiable-link" href="#Write-and-edit-prompts"> &para;</a></span></h4>
 
-<p>Compose and submit prompts with Agent Shell&rsquo;s normal editing commands.  The
-live prompt retains Emacs undo. Interactive text yanks speak the inserted
-text, including when a prefix argument selects a different kill-ring entry.
+<p>By default, reaching the live prompt lets you type immediately. The
+<em class="emph">Input activation</em> setting offers an explicit editing step if you prefer to
+keep browsing at the end of the transcript. Open <kbd class="kbd">C-e S i</kbd>, choose <em class="emph">Automatic</em>
+or <em class="emph">Explicit</em>, and press <kbd class="kbd">w</kbd> in the parent menu to save. Settings search also
+finds <em class="emph">Agent Shell input activation</em>. The choice applies to existing and new
+shells; buffer-local overrides take precedence.
+</p>
+<p>With <em class="emph">Explicit</em> selected, <kbd class="kbd">J</kbd>, <kbd class="kbd">U</kbd> and the other navigation letters keep their
+navigation meanings at the live prompt. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on its label, on blank
+padding immediately above it, or anywhere in the draft to activate editing,
+or <kbd class="kbd">C-c i</kbd> (<code class="code">emacsvox-agent-shell-edit-input</code>) from anywhere in the shell to
+focus the draft. From the transcript or prompt label, this moves to the end of the draft;
+within input it preserves point. By default, Emacsvox says “Editing.”
+Ordinary typing, paste and editing commands then work, and submission uses Agent Shell&rsquo;s normal
+commands. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on links, permission buttons and question controls retains its
+existing action; only the inactive live prompt uses it to start editing.
+</p>
+<p>The <kbd class="kbd">C-c i</kbd> and <kbd class="kbd">C-c e</kbd> bindings apply only to inline shells using Explicit
+activation. Emacsvox&rsquo;s Org support can assign <kbd class="kbd">C-c i</kbd> globally to link
+insertion; Explicit mode uses it for input focus instead. Use
+<kbd class="kbd">M-x org-insert-link</kbd> for that action while editing, or choose Automatic to
+restore the ordinary binding.
+</p>
+<p>Press <kbd class="kbd">C-c e</kbd> (<code class="code">emacsvox-agent-shell-browse</code>) to return to browsing at point
+without sending or discarding the draft. Emacsvox says “Browsing.”
+Moving out of the live input also returns to browsing and keeps the destination&rsquo;s
+navigation speech; moving between its lines keeps editing active.
+While editing, <kbd class="kbd">M-&lt;</kbd> moves to the beginning of the draft and reads its first
+line without leaving editing. To reach the top of the transcript, press
+<kbd class="kbd">C-c e</kbd> followed by <kbd class="kbd">M-&lt;</kbd>. Automatic input and viewport editors retain their
+ordinary <kbd class="kbd">M-&lt;</kbd> binding.
+A successful submission or queueing
+returns to browsing, while a rejected submission keeps its draft editable.
+The mode line shows <em class="emph">Agent browse</em> or <em class="emph">Agent edit</em>. Reading the first input
+line says “Input” along with the agent&rsquo;s busy or waiting status.
+Browsing protects the draft from ordinary typing, paste and deletion.
+</p>
+<p>For sound-only feedback when activating editing or returning to browsing, open
+<kbd class="kbd">C-e S e</kbd> and choose <em class="emph">Earcon</em>. <em class="emph">Speech</em> is the default; <em class="emph">Both</em> combines speech
+and sound. Editing uses <code class="code">08-pop-and-collapse-on</code> and browsing uses
+<code class="code">08-pop-and-collapse-off</code>. These recordings are bundled with Emacsvox as
+the <code class="code">agent-input-on</code> and <code class="code">agent-input-off</code> cues, available with every sound
+pack. You can assign different recordings to those cues in a personal pack.
+Auditory icons must be enabled to hear these sounds.
+With <em class="emph">Earcon</em> or <em class="emph">Both</em> selected, arrowing out of the input field also plays
+the browsing sound without replacing the destination&rsquo;s speech or adding
+“Browsing.” Moving between lines within the field does not play it.
+The choice applies immediately; buffer-local overrides take precedence.
+Press <kbd class="kbd">w</kbd> in the parent menu to save the global default. Submission
+confirmations remain separate from this setting.
+</p>
+<p>The live prompt retains Emacs undo across these transitions. Interactive text
+yanks speak the inserted text, including when a prefix argument selects a
+different kill-ring entry.
 Image attachment keeps Agent Shell&rsquo;s existing feedback. Submitted transcript
 text is history rather than editable prompt input.  Press <kbd class="kbd">C-c C-c</kbd> to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 </p>
 <p>With Agent Shell&rsquo;s persistent prompt enabled, you can keep typing while the
-agent works.  Brackets and navigation letters remain ordinary input at
-that prompt.  Reading the live prompt says “Agent busy” while the agent works.
+agent works. Brackets and navigation letters are ordinary text while editing
+that prompt. Reading the live prompt says “Agent busy” while the agent works.
 A pending permission is announced
 as “Waiting for permission”; a pending question says “Waiting for an answer.”
 These cues also precede the first line of a draft;
 later lines keep ordinary reading feedback.  “Ready for input” is reserved for
-an empty prompt when the agent is idle.
+an empty prompt when the agent is idle and input activation is Automatic.
 </p>
 <p>Quoting a selected region, sending source context,
 dropping files, and inserting shell-command output can add to that live draft
-while the agent works. These insertions do not submit the draft. If there is
-no live prompt while busy, Agent Shell offers its queue editor instead.
+while the agent works, including in Explicit browse mode. These insertions do
+not submit the draft or activate editing. If there is no live prompt while
+busy, Agent Shell offers its queue editor instead.
 Use <kbd class="kbd">M-x yank-media</kbd> to attach a clipboard image on a display that supports
 native clipboard access. Image previews survive queueing and steering.
 The animated busy marker does not add repeated speech; reading the prompt
 continues to give its current state.
 </p>
-<p>In the viewport prompt editor, continuing a list announces its bullet or next
+<p>The dedicated viewport prompt editor always opens ready for typing, regardless
+of the inline input setting. <kbd class="kbd">M-x agent-shell-prompt-compose</kbd> transfers the
+inline draft to that editor. Continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
 </p>
@@ -90,8 +145,10 @@ pause does not make a partial answer sound complete.  A cancelled, refused, or
 failed turn reports its outcome without replacing the last successfully
 completed response.
 </p>
-<p>In the viewport editor, Emacsvox announces whether a prompt was
-submitted, queued, or sent for steering, and whether the editor stays open.
+<p>In Explicit inline input and the viewport editor, Emacsvox announces whether a
+prompt was submitted, queued, or sent for steering. Inline input returns to
+browsing without another state announcement. The viewport also reports whether
+its editor stays open.
 The normal and override send commands follow Agent Shell&rsquo;s configured busy
 routes, including queueing when the provider does not support steering.
 “Steering sent” confirms dispatch; the agent&rsquo;s acceptance or refusal follows
@@ -107,6 +164,18 @@ supported by the provider, follow the same completed-response speech policy.
 <div class="subsection-level-extent" id="Work-with-queued-prompts">
 <h4 class="subsection"><span>11.1.3 Work with queued prompts<a class="copiable-link" href="#Work-with-queued-prompts"> &para;</a></span></h4>
 
+<p>With Agent Shell 0.94.1 or newer, you can redirect the most recently queued
+prompt into the running turn. Leave the live prompt empty and press <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd>
+(<code class="code">agent-shell-submit-override</code>). With the default queue and steering routes,
+Agent Shell asks before steering that prompt; earlier prompts stay queued.
+Declining leaves the queue unchanged, and a failed send restores the prompt.
+The agent must still be busy and support steering. Custom busy-send routes can
+change or disable this action through <code class="code">agent-shell-busy-submit-reroute-function</code>.
+</p>
+<p>This works while browsing with Explicit input activation and keeps you in
+browse mode. An unsent draft still requires entering edit mode before sending;
+<kbd class="kbd">M-<kbd class="key">RET</kbd></kbd> does not redirect queued input when the live prompt contains a draft.
+</p>
 <p>Queued prompts announce when they start and how many remain. Recent Agent Shell
 versions merge queued prompts into one turn by default; Emacsvox announces how
 many prompts started together. Set <code class="code">agent-shell-prompt-queue-merge</code> to nil to

@@ -35,11 +35,15 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="emacsvox_002deat_002dcore.html" accesskey="n" rel="next">emacsvox-eat-core</a>, Previous: <a href="emacsvox_002ddumb_002djump.html" accesskey="p" rel="prev">emacsvox-dumb-jump</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002deat-1"><span>2.104 emacsvox-eat<a class="copiable-link" href="#emacsvox_002deat-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002deat-1"><span>2.124 emacsvox-eat<a class="copiable-link" href="#emacsvox_002deat-1"> &para;</a></span></h3>
 
 <p>Public entry point for Emacsvox speech access to EAT terminals.
 The implementation is split by responsibility:
-- &lsquo;emacsvox-eat-core&rsquo; owns screen observation, lifecycle, and output.
+- &lsquo;emacsvox-eat-screen&rsquo; owns screen snapshots and differences.
+- &lsquo;emacsvox-eat-focus&rsquo; owns focus inference and navigation feedback.
+- &lsquo;emacsvox-eat-output&rsquo; owns prompt boundaries and output collection.
+- &lsquo;emacsvox-eat-presentation&rsquo; owns status, metadata, bells, and output cues.
+- &lsquo;emacsvox-eat-core&rsquo; owns observation, lifecycle, and presentation timing.
 - &lsquo;emacsvox-eat-input&rsquo; owns input, deletion, navigation, and completion.
 - &lsquo;emacsvox-eat-review&rsquo; owns frozen screen review and inspection.
 </p>

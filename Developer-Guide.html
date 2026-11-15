@@ -51,12 +51,37 @@ is the exact inventory of Lisp commands, options, and keymaps; the chapters
 that follow explain contracts and procedures that cannot be generated from
 those interfaces.
 </p>
+<p>The entry and bootstrap files live directly under <code class="code">lisp/</code>. Load
+<code class="code">emacsvox-setup.el</code> from that directory. Related modules occupy six directories:
+<code class="code">core/</code> for shared reading and navigation, <code class="code">aural/</code> for presentation services,
+<code class="code">speech/</code> for engine and transport code, <code class="code">voices/</code> for logical voice data,
+<code class="code">ui/</code> for settings and editors, and <code class="code">integrations/</code> for package adapters.
+Use the existing filenames, features and commands when loading a module.
+</p>
+<p>When adding a module, use its owning directory and update <code class="code">lisp/Makefile</code>.
+That file remains the compilation and dependency inventory. The data-only
+<code class="code">etc/lisp-directories</code> declares the directories used by bootstrap, builds,
+autoload discovery and distribution checks; do not add a recursive scan or
+a second module list. Keep optional Muggles targets separate from the ordinary
+compiled inventory. The source template remains <code class="code">lisp/.skeleton.el</code>.
+</p>
+<p>After changing source locations, rebuild with <code class="code">make bytecode-rebuild</code> and run
+<code class="code">make bytecode-check</code> before starting a fresh Emacs. The rebuild removes owned
+obsolete byte-code; copying new sources over old compiled files is insufficient.
+A directory does not establish an independent dependency layer: preserve
+feature names, initialisation order and deferred integration loading.
+</p>
 
 <ul class="mini-toc">
 <li><a href="Documentation-Maintenance.html" accesskey="1">Documentation Maintenance</a></li>
 <li><a href="Speech-Server-Protocols.html" accesskey="2">Speech Server Protocols</a></li>
 <li><a href="Integration-Maintenance.html" accesskey="3">Integration Maintenance</a></li>
 </ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Concept-Index.html">Concept Index</a>, Previous: <a href="Acknowledgments.html">Acknowledgments</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

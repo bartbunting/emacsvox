@@ -46,6 +46,12 @@ presentation, speech, and cues independently. Output follows capabilities or
 can be declared mono. Separation ranges from zero (centred) to one (full);
 direction can be normal, reversed, or centred for some/all requests.
 </p>
+<p><kbd class="kbd">o</kbd> opens the Output list and <kbd class="kbd">m</kbd> opens Direction mapping. Each focuses and
+marks the current choice. Arrows browse without applying; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies and
+returns to the same parent control, ready to reopen. <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> cancels.
+If direction mapping uses a custom function, its selected entry lets you keep
+it; choosing a built-in mapping replaces it. Use Customize to edit the function.
+</p>
 <p>These spatial controls apply immediately and are global. Shift-left/right
 adjusts selected separation by 0.1; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact value. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> requests
 left then right cue previews; mono or limited capabilities may centre them.
@@ -60,8 +66,25 @@ a placement request cannot demonstrate separation.
 </p>
 <p>For comparison, select mono and repeat the action; content remains audible.
 Restore the original values afterward. Save deliberately with <kbd class="kbd">S</kbd> or capture
-spatial choices in a Presentation Profile. A voice&rsquo;s Pan effect and notification-device routing are separate from presentation placement.
+spatial choices in a Presentation Profile. A voice&rsquo;s Pan effect and
+notification-device routing are separate from presentation placement.
 </p>
+<p>For a mapping beyond the built-in choices, use <kbd class="kbd">M-x customize-option <kbd class="key">RET</kbd>
+emacsvox-aural-spatial-remapping <kbd class="key">RET</kbd></kbd> and select <em class="emph">Custom remapping function</em>.
+The Lisp function receives a balance from <code class="code">-1.0</code> (fully left) through <code class="code">0.0</code>
+(centre) to <code class="code">1.0</code> (fully right), and returns a balance in the same range.
+For example, <code class="code">(lambda (balance) (* 0.5 balance))</code> brings each requested
+position halfway towards the centre. Maximum separation then limits the
+result; spatial enablement and output capability still apply. Use Customize&rsquo;s
+Apply or Save actions deliberately. To return to built-in behaviour, choose
+<em class="emph">Normal</em> in Direction mapping and save if you also want to replace a saved
+custom function.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Personal-Sound-Packs.html">Inspect And Maintain A Personal Sound Pack</a>, Previous: <a href="Changing-Tones.html">Change A Blank-Line Tone</a>, Up: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

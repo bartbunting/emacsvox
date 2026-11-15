@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>tts-lifecycle (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="tts-lifecycle (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="tts-lifecycle (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="tts_002dqueue_002dstate.html" rel="next" title="tts-queue-state">
+<link href="tetris.html" rel="prev" title="tetris">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="tts_002dlifecycle">
+<div class="nav-panel">
+<p>
+Next: <a href="tts_002dqueue_002dstate.html" accesskey="n" rel="next">tts-queue-state</a>, Previous: <a href="tetris.html" accesskey="p" rel="prev">tetris</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="tts_002dlifecycle-1"><span>2.375 tts-lifecycle<a class="copiable-link" href="#tts_002dlifecycle-1"> &para;</a></span></h3>
+
+<p>Keep speech preparation, dispatch tracking, output observation, interruption
+and retirement together.  These operations share process generations,
+cancellation epochs, queue guards and callback ownership.
+</p>
+<p>The existing handoff with aural transport is retained: transport captures
+packets and binds semantic owners; this module reserves, sends, publishes
+and retires dispatches.  The public &lsquo;tts-speak&rsquo; entry point still owns speech
+configuration, process creation, text preparation and notification commands.
+Load through &lsquo;tts-speak&rsquo;.  Loading definitions does not start speech or
+install process filters; the existing runtime entry points do that.
+</p>
+</div>
+
+
+
+</body>
+</html>

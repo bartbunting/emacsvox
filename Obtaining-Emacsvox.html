@@ -74,7 +74,7 @@ You can check a specific executable in the same way:
 
 <ul class="mini-toc">
 <li><a href="#Prepare-the-settings_002dmenu-dependency" accesskey="1">Prepare the settings-menu dependency</a></li>
-<li><a href="#Obtain-the-development-checkout" accesskey="2">Obtain the development checkout</a></li>
+<li><a href="#Obtain-the-source-checkout" accesskey="2">Obtain the source checkout</a></li>
 <li><a href="#Use-the-guided-WSL2-installer" accesskey="3">Use the guided WSL2 installer</a></li>
 </ul>
 <div class="subsection-level-extent" id="Prepare-the-settings_002dmenu-dependency">
@@ -108,17 +108,16 @@ in its error. Upgrade that installation and restart Emacs; restarting only
 speech does not replace loaded Lisp. The Emacs minimum remains 30.2.
 </p>
 </div>
-<div class="subsection-level-extent" id="Obtain-the-development-checkout">
-<h4 class="subsection"><span>3.2.2 Obtain the development checkout<a class="copiable-link" href="#Obtain-the-development-checkout"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Obtain-the-source-checkout">
+<h4 class="subsection"><span>3.2.2 Obtain the source checkout<a class="copiable-link" href="#Obtain-the-source-checkout"> &para;</a></span></h4>
 
 <p>Run the clone from a terminal on GNU/Linux, macOS, or WSL. The following
-location works for an ordinary per-user installation and selects the branch
-described by this manual:
+location works for an ordinary per-user installation:
 </p>
 <div class="example">
 <pre class="example-preformatted">mkdir -p ~/src
 cd ~/src
-git clone --branch ui-experiments https://github.com/bartbunting/emacsvox
+git clone https://github.com/bartbunting/emacsvox
 cd emacsvox
 </pre></div>
 

@@ -60,11 +60,14 @@ opens spoken Help; <kbd class="kbd">q</kbd> returns to that browsed choice. In t
 the others active. <kbd class="kbd">w</kbd> saves these four limits and completion policy as the
 five displayed global defaults, not every Notmuch option.
 </p>
-<p>For ordered search/message fields, use <kbd class="kbd">s</kbd> and <kbd class="kbd">m</kbd>. <kbd class="kbd">i</kbd> and <kbd class="kbd">I</kbd> open the
+<p>For ordered search/message fields, use <kbd class="kbd">s</kbd> and <kbd class="kbd">m</kbd>. Uppercase <kbd class="kbd">S</kbd> and <kbd class="kbd">M</kbd>
+edit the text separating spoken search and message fields respectively;
+punctuation policy affects how that text sounds. <kbd class="kbd">i</kbd> and <kbd class="kbd">I</kbd> open the
 status-tag and fallback-cue maps. These linked Customize editors retain custom
 formatter functions and use their own Apply, Save, and Reset actions. Returning
 with <kbd class="kbd">q</kbd> does not save them. <kbd class="kbd">p</kbd> opens Presentation Options and <kbd class="kbd">A</kbd> advanced
-settings, including separators. The full group is also available through
+settings. Search at <kbd class="kbd">C-e H /</kbd> finds both separators after Notmuch is loaded.
+The full group is also available through
 <kbd class="kbd">M-x customize-group <kbd class="key">RET</kbd> emacsvox-notmuch <kbd class="key">RET</kbd></kbd>. These speech settings do not
 alter Notmuch&rsquo;s database or its own display configuration.
 </p>
@@ -108,7 +111,7 @@ behaviour described earlier.
 <div class="subsection-level-extent" id="Understand-limits-and-full-inspection">
 <h4 class="subsection"><span>10.6.2 Understand limits and full inspection<a class="copiable-link" href="#Understand-limits-and-full-inspection"> &para;</a></span></h4>
 
-<p>Mail-controlled text is bounded before automatic speech and Aural history.
+<p>Automatic Search and Show summaries are bounded before speech and Aural history.
 Defaults are 256 characters and 1,024 UTF-8 bytes per field, then 1,000
 characters and 4,096 bytes for the complete automatic presentation.
 </p>
@@ -123,9 +126,12 @@ characters and 4,096 bytes for the complete automatic presentation.
 </p></dd>
 <dt><code class="code">emacsvox-notmuch-mime-node-limit</code></dt>
 <dt><code class="code">emacsvox-notmuch-mime-depth-limit</code></dt>
-<dd><p>Default to 4,096 cons nodes and depth 64, limiting inspection of malformed,
-cyclic, broad, or deeply nested MIME metadata. An incomplete scan reports
-a conservative attachment lower bound, not a claim that no attachment exists.
+<dd><p>Limit inspection to 4,096 metadata list nodes and 64 levels by default.
+This bounds work on malformed, cyclic or deeply nested MIME descriptions.
+If inspection stops early, the attachment count reports a minimum rather
+than assuming that no further attachments exist.
+Search settings at <kbd class="kbd">C-e H /</kbd> for <code class="code">MIME depth limit</code> or <code class="code">MIME node limit</code>,
+then activate Advanced Notmuch settings. Use Customize&rsquo;s own Apply or Save.
 </p></dd>
 </dl>
 
@@ -133,7 +139,9 @@ a conservative attachment lower bound, not a claim that no attachment exists.
 to <kbd class="kbd">C-c C-p</kbd> for full configured details. A shortened Hello item points to
 <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Explicit Search and Show inspection deliberately bypasses automatic
 content limits; use it only when speaking the full configured fields is
-appropriate. These limits are not a general privacy guarantee for every
+appropriate. Body-line and table reading speak the content you navigate to;
+summary limits do not shorten their cells or rows. These limits are not a
+general privacy guarantee for every
 explicit command or another application&rsquo;s output.
 </p>
 </div>
@@ -144,9 +152,9 @@ explicit command or another application&rsquo;s output.
 
 <p>Main-stream Notmuch presentations can enter bounded Aural history. By default,
 Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes of speech
-preview per record. Records contain frozen data, source names, and positions,
-but never retain source buffers. Inspect them through <kbd class="kbd">C-e H f h</kbd> or
-<kbd class="kbd">M-x emacsvox-aural-list-recent-feedback</kbd>. Set
+preview per record. Records contain copies of speech data, source names and
+positions, without keeping the source buffers alive. Inspect them through
+<kbd class="kbd">C-e H f h</kbd> or <kbd class="kbd">M-x emacsvox-aural-list-recent-feedback</kbd>. Set
 <code class="code">emacsvox-aural-presentation-history-limit</code> to zero to disable this history.
 </p>
 <p>Generic asynchronous completion contains no query or message metadata, but a

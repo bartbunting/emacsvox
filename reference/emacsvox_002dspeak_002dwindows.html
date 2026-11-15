@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-speak-windows (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-speak-windows (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-speak-windows (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dspeedbar.html" rel="next" title="emacsvox-speedbar">
+<link href="emacsvox_002dspeak_002dtime.html" rel="prev" title="emacsvox-speak-time">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dspeak_002dwindows">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeedbar.html" accesskey="n" rel="next">emacsvox-speedbar</a>, Previous: <a href="emacsvox_002dspeak_002dtime.html" accesskey="p" rel="prev">emacsvox-speak-time</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dspeak_002dwindows-1"><span>2.285 emacsvox-speak-windows<a class="copiable-link" href="#emacsvox_002dspeak_002dwindows-1"> &para;</a></span></h3>
+
+<p>Window reading and buffer selection.
+The core speech facade retains activation in its established order.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dSpeak_002dWindows-Commands" accesskey="1">Emacsvox-Speak-Windows Commands</a></li>
+<li><a href="#emacsvox_002dspeak_002dwindows-Options" accesskey="2">emacsvox-speak-windows Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dSpeak_002dWindows-Commands">
+<h4 class="subsection"><span>2.285.1 Emacsvox-Speak-Windows Commands<a class="copiable-link" href="#Emacsvox_002dSpeak_002dWindows-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dbuffer_002dselect" accesskey="1">emacsvox-buffer-select</a></li>
+<li><a href="#emacsvox_002dcycle_002dto_002dnext_002dbuffer" accesskey="2">emacsvox-cycle-to-next-buffer</a></li>
+<li><a href="#emacsvox_002dcycle_002dto_002dprevious_002dbuffer" accesskey="3">emacsvox-cycle-to-previous-buffer</a></li>
+<li><a href="#emacsvox_002ddescribe_002dtapestry" accesskey="4">emacsvox-describe-tapestry</a></li>
+<li><a href="#emacsvox_002dowindow_002dnext_002dline" accesskey="5">emacsvox-owindow-next-line</a></li>
+<li><a href="#emacsvox_002dowindow_002dprevious_002dline" accesskey="6">emacsvox-owindow-previous-line</a></li>
+<li><a href="#emacsvox_002dowindow_002dscroll_002ddown" accesskey="7">emacsvox-owindow-scroll-down</a></li>
+<li><a href="#emacsvox_002dowindow_002dscroll_002dup" accesskey="8">emacsvox-owindow-scroll-up</a></li>
+<li><a href="#emacsvox_002dowindow_002dspeak_002dline" accesskey="9">emacsvox-owindow-speak-line</a></li>
+<li><a href="#emacsvox_002dselect_002dwindow_002dby_002dname">emacsvox-select-window-by-name</a></li>
+<li><a href="#emacsvox_002dspeak_002dcurrent_002dwindow">emacsvox-speak-current-window</a></li>
+<li><a href="#emacsvox_002dspeak_002dother_002dwindow">emacsvox-speak-other-window</a></li>
+<li><a href="#emacsvox_002dspeak_002dpredefined_002dwindow">emacsvox-speak-predefined-window</a></li>
+<li><a href="#emacsvox_002dspeak_002dthis_002dwindow">emacsvox-speak-this-window</a></li>
+<li><a href="#emacsvox_002dspeak_002dwindow_002dinformation">emacsvox-speak-window-information</a></li>
+<li><a href="#emacsvox_002dspeak_002dwindowful">emacsvox-speak-windowful</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dbuffer_002dselect">
+<h4 class="subsubsection"><span>2.285.1.1 emacsvox-buffer-select<a class="copiable-link" href="#emacsvox_002dbuffer_002dselect"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbuffer_002dselect"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-buffer-select</strong><a class="copiable-link" href="#index-emacsvox_002dbuffer_002dselect"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-p"></a><span><kbd class="kbd">C-e p</kbd><a class="copiable-link" href="#index-C_002de-p"> &para;</a></span></dt>
+<dt><a id="index-C_002de-n"></a><span><kbd class="kbd">C-e n</kbd><a class="copiable-link" href="#index-C_002de-n"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002e"></a><span><kbd class="kbd">C-e .</kbd><a class="copiable-link" href="#index-C_002de-_002e"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002c"></a><span><kbd class="kbd">C-e ,</kbd><a class="copiable-link" href="#index-C_002de-_002c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dbuffer_002dselect-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select buffer by smart cycling.
+Use option emacsvox-buffer-select-help to customize interactive feedback.
+By default, this command is bound to multiple keys.
+The final key of the initial  key-sequence, and  further invocations
+of the keys below call the following bindings:
+
+, previous-buffer
+. next-buffer
+b switch-to-buffer
+f find-file
+k emacsvox-kill-buffer-quietly
+n emacsvox-cycle-to-next-buffer
+o other-window
+p emacsvox-cycle-to-previous-buffer
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dcycle_002dto_002dnext_002dbuffer">
+<h4 class="subsubsection"><span>2.285.1.2 emacsvox-cycle-to-next-buffer<a class="copiable-link" href="#emacsvox_002dcycle_002dto_002dnext_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dcycle_002dto_002dnext_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-cycle-to-next-buffer</strong><a class="copiable-link" href="#index-emacsvox_002dcycle_002dto_002dnext_002dbuffer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dcycle_002dto_002dnext_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Cycles to next buffer having same mode.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dcycle_002dto_002dprevious_002dbuffer">
+<h4 class="subsubsection"><span>2.285.1.3 emacsvox-cycle-to-previous-buffer<a class="copiable-link" href="#emacsvox_002dcycle_002dto_002dprevious_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dcycle_002dto_002dprevious_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-cycle-to-previous-buffer</strong><a class="copiable-link" href="#index-emacsvox_002dcycle_002dto_002dprevious_002dbuffer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dcycle_002dto_002dprevious_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Cycles to previous buffer having same mode.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddescribe_002dtapestry">
+<h4 class="subsubsection"><span>2.285.1.4 emacsvox-describe-tapestry<a class="copiable-link" href="#emacsvox_002ddescribe_002dtapestry"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddescribe_002dtapestry"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-describe-tapestry</strong> <var class="def-var-arguments">(&amp;optional details)</var><a class="copiable-link" href="#index-emacsvox_002ddescribe_002dtapestry"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dt"></a><span><kbd class="kbd">C-e M-t</kbd><a class="copiable-link" href="#index-C_002de-M_002dt"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002ddescribe_002dtapestry-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Describe the current layout of visible buffers in current frame.
+Use interactive prefix arg to get coordinate positions of the
+displayed buffers.
+
+(fn &amp;optional DETAILS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dowindow_002dnext_002dline">
+<h4 class="subsubsection"><span>2.285.1.5 emacsvox-owindow-next-line<a class="copiable-link" href="#emacsvox_002dowindow_002dnext_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dowindow_002dnext_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-owindow-next-line</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002dowindow_002dnext_002dline"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-ESC-_003cdown_003e"></a><span><kbd class="kbd">ESC &lt;down&gt;</kbd><a class="copiable-link" href="#index-ESC-_003cdown_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dowindow_002dnext_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next line in the other window and speak it.
+Numeric prefix arg COUNT can specify number of lines to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dowindow_002dprevious_002dline">
+<h4 class="subsubsection"><span>2.285.1.6 emacsvox-owindow-previous-line<a class="copiable-link" href="#emacsvox_002dowindow_002dprevious_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dowindow_002dprevious_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-owindow-previous-line</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002dowindow_002dprevious_002dline"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-ESC-_003cup_003e"></a><span><kbd class="kbd">ESC &lt;up&gt;</kbd><a class="copiable-link" href="#index-ESC-_003cup_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dowindow_002dprevious_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next line in the other window and speak it.
+Numeric prefix arg COUNT specifies number of lines to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dowindow_002dscroll_002ddown">
+<h4 class="subsubsection"><span>2.285.1.7 emacsvox-owindow-scroll-down<a class="copiable-link" href="#emacsvox_002dowindow_002dscroll_002ddown"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dowindow_002dscroll_002ddown"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-owindow-scroll-down</strong><a class="copiable-link" href="#index-emacsvox_002dowindow_002dscroll_002ddown"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-ESC-_003cprior_003e"></a><span><kbd class="kbd">ESC &lt;prior&gt;</kbd><a class="copiable-link" href="#index-ESC-_003cprior_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dowindow_002dscroll_002ddown-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scroll down  the window that command ‘other-window’ would move to.
+Speak the window contents after scrolling.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dowindow_002dscroll_002dup">
+<h4 class="subsubsection"><span>2.285.1.8 emacsvox-owindow-scroll-up<a class="copiable-link" href="#emacsvox_002dowindow_002dscroll_002dup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dowindow_002dscroll_002dup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-owindow-scroll-up</strong><a class="copiable-link" href="#index-emacsvox_002dowindow_002dscroll_002dup"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-ESC-_003cnext_003e"></a><span><kbd class="kbd">ESC &lt;next&gt;</kbd><a class="copiable-link" href="#index-ESC-_003cnext_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dowindow_002dscroll_002dup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scroll up the window that command ‘other-window’ would move to.
+Speak the window contents after scrolling.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dowindow_002dspeak_002dline">
+<h4 class="subsubsection"><span>2.285.1.9 emacsvox-owindow-speak-line<a class="copiable-link" href="#emacsvox_002dowindow_002dspeak_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dowindow_002dspeak_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-owindow-speak-line</strong><a class="copiable-link" href="#index-emacsvox_002dowindow_002dspeak_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dowindow_002dspeak_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current line in the other window.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dselect_002dwindow_002dby_002dname">
+<h4 class="subsubsection"><span>2.285.1.10 emacsvox-select-window-by-name<a class="copiable-link" href="#emacsvox_002dselect_002dwindow_002dby_002dname"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dselect_002dwindow_002dby_002dname"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-select-window-by-name</strong> <var class="def-var-arguments">(buffer-name)</var><a class="copiable-link" href="#index-emacsvox_002dselect_002dwindow_002dby_002dname"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-W"></a><span><kbd class="kbd">C-e W</kbd><a class="copiable-link" href="#index-C_002de-W"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dselect_002dwindow_002dby_002dname-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select window by the name of the buffer it displays.
+This is useful when using modes like ECB or the new GDB UI where
+  you want to preserve the window layout
+but quickly switch to a window by name.
+
+(fn BUFFER-NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dcurrent_002dwindow">
+<h4 class="subsubsection"><span>2.285.1.11 emacsvox-speak-current-window<a class="copiable-link" href="#emacsvox_002dspeak_002dcurrent_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dcurrent_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-current-window</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dcurrent_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dspeak_002dcurrent_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak contents of current window.
+Speaks entire window irrespective of point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dother_002dwindow">
+<h4 class="subsubsection"><span>2.285.1.12 emacsvox-speak-other-window<a class="copiable-link" href="#emacsvox_002dspeak_002dother_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dother_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-other-window</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dother_002dwindow"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-2"></a><span><kbd class="kbd">C-e 2</kbd><a class="copiable-link" href="#index-C_002de-2"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dother_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak other window
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dpredefined_002dwindow">
+<h4 class="subsubsection"><span>2.285.1.13 emacsvox-speak-predefined-window<a class="copiable-link" href="#emacsvox_002dspeak_002dpredefined_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dpredefined_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-predefined-window</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002dspeak_002dpredefined_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dspeak_002dpredefined_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak one of the first 10 windows on the screen, 0 is current window.
+Speaks entire window irrespective of point.  Semantics of ‘other’
+is the same as for the Emacs builtin ‘other-window’.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dthis_002dwindow">
+<h4 class="subsubsection"><span>2.285.1.14 emacsvox-speak-this-window<a class="copiable-link" href="#emacsvox_002dspeak_002dthis_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dthis_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-this-window</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dthis_002dwindow"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-1"></a><span><kbd class="kbd">C-e 1</kbd><a class="copiable-link" href="#index-C_002de-1"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dthis_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current window.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dwindow_002dinformation">
+<h4 class="subsubsection"><span>2.285.1.15 emacsvox-speak-window-information<a class="copiable-link" href="#emacsvox_002dspeak_002dwindow_002dinformation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dwindow_002dinformation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-window-information</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dwindow_002dinformation"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dw"></a><span><kbd class="kbd">C-e C-w</kbd><a class="copiable-link" href="#index-C_002de-C_002dw"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dwindow_002dinformation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks information about current window.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dwindowful">
+<h4 class="subsubsection"><span>2.285.1.16 emacsvox-speak-windowful<a class="copiable-link" href="#emacsvox_002dspeak_002dwindowful"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dwindowful"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-windowful</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dwindowful"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-SPC"></a><span><kbd class="kbd">C-e SPC</kbd><a class="copiable-link" href="#index-C_002de-SPC"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dwindowful-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete other windows, Line to top, then Speak window contents.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dspeak_002dwindows-Options">
+<h4 class="subsection"><span>2.285.2 emacsvox-speak-windows Options<a class="copiable-link" href="#emacsvox_002dspeak_002dwindows-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-177"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-buffer-select-help</var><a class="copiable-link" href="#index-User-Option-177"> &para;</a></span></dt>
+<dd><pre class="verbatim">String passed to speak help.
+Set this to the empty string once you’ve learnt this command.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeedbar.html">emacsvox-speedbar</a>, Previous: <a href="emacsvox_002dspeak_002dtime.html">emacsvox-speak-time</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

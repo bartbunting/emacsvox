@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -44,7 +45,7 @@ local check, a selected region for exact editing boundaries, or <kbd class="kbd"
 longer reading with a tracked position. Ordinary movement speaks what you
 reach; explicit inspection does not require that movement first.
 </p>
-<p>The default keys are collected here. The following two sections explain
+<p>The default keys are collected here. The sections below explain
 which preserve point, how to stop and start again, and the limits of large
 requests. These distinctions matter before you begin selecting text.
 </p>
@@ -130,10 +131,84 @@ that command&rsquo;s documentation.
 </p>
 
 <ul class="mini-toc">
-<li><a href="Reading-Without-Moving-Point.html" accesskey="1">Read a short passage without moving point</a></li>
-<li><a href="Reading-From-Point.html" accesskey="2">Read from point, stop, and start again</a></li>
-<li><a href="Delayed-Phonetic-Reading.html" accesskey="3">Hear Phonetic Names After A Pause</a></li>
+<li><a href="#Choose-source-lines-or-wrapped-screen-rows" accesskey="1">Choose source lines or wrapped screen rows</a></li>
+<li><a href="Reading-Without-Moving-Point.html" accesskey="2">Read a short passage without moving point</a></li>
+<li><a href="Reading-From-Point.html" accesskey="3">Read from point, stop, and start again</a></li>
+<li><a href="Delayed-Phonetic-Reading.html" accesskey="4">Hear Phonetic Names After A Pause</a></li>
 </ul>
+<div class="subsection-level-extent" id="Choose-source-lines-or-wrapped-screen-rows">
+<h4 class="subsection"><span>5.5.1 Choose source lines or wrapped screen rows<a class="copiable-link" href="#Choose-source-lines-or-wrapped-screen-rows"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-visual-lines_002c-reading"></a>
+<a class="index-entry-id" id="index-wrapped-lines_002c-continuation-feedback"></a>
+<a class="index-entry-id" id="index-emacsvox_002dreading_002dsettings"></a>
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002drow_002dposition"></a>
+<a class="index-entry-id" id="index-emacsvox_002dreading_002dlines_002ddefaults"></a>
+<a class="index-entry-id" id="index-emacsvox_002dreading_002dlines_002dmodes"></a>
+
+<p>A source line ends at a newline. A long source line can occupy several screen
+rows, with the breaks changing when you resize the window. Open <kbd class="kbd">C-e H s R w</kbd>,
+<em class="emph">Line reading and wrapping</em>, or <kbd class="kbd">M-x emacsvox-reading-settings <kbd class="key">RET</kbd></kbd> to choose
+which unit ordinary Up and Down move through and speak. <em class="emph">Whole source lines</em>
+reads the entire source line. <em class="emph">Wrapped screen rows</em> enables Visual Line mode
+and reads the displayed row. <em class="emph">Native mode behaviour</em> preserves the major
+mode&rsquo;s own defaults. Tables, terminals and other integrations can own their
+navigation and keep their specialised behaviour.
+</p>
+<p>Ordinary long prose does not ask to change this choice. Unusually large lines
+and long lines containing control bytes ask before speaking; declining leaves
+the reading mode unchanged. <kbd class="kbd">C-e l</kbd> remains a one-shot whole-source-line
+inspection in either reading mode. For an occasional position check, use <kbd class="kbd">=</kbd>
+in the menu or <kbd class="kbd">M-x emacsvox-speak-row-position <kbd class="key">RET</kbd></kbd>. It reports the source
+line number and the screen row&rsquo;s position within it without moving point.
+The source buffer must be displayed so Emacs can determine its row boundaries.
+</p>
+<p>Wrapped rows can identify their place in the source line. A first row has more
+text below, a middle row has text above and below, and a last row has text
+above. A complete source line has no continuation cue. The menu&rsquo;s <kbd class="kbd">1</kbd>, <kbd class="kbd">2</kbd>
+and <kbd class="kbd">3</kbd> open independent editors for these three types. Each offers Off, Tone
+or Recorded earcon, its own sound identity and volume, and Before, Alongside
+or After speech. Before finishes the sound first; Alongside starts it with
+the spoken item; After waits for that item to finish. Navigation or Stop
+cancels remaining feedback, including an After sound.
+</p>
+<p>The initial wrapped-row choices are three distinct recorded cues alongside
+speech. <kbd class="kbd">t</kbd> stages three distinct tones instead; each row&rsquo;s tone editor
+controls pitch, duration and shaping while retaining the chosen sound type.
+Apply or Save in that editor updates the parent draft. <kbd class="kbd">P</kbd> and <kbd class="kbd">V</kbd> stage a common placement
+or volume while keeping the three sound identities. Each row&rsquo;s recording
+selector chooses a cue from the active sound pack. Its library action lets
+you audition recordings and explicitly assign them to <code class="code">wrapped-line-first</code>,
+<code class="code">wrapped-line-middle</code> or <code class="code">wrapped-line-last</code> in a personal sound pack. The
+library&rsquo;s <kbd class="kbd">W</kbd> saves pack-wide assignments separately from reading preferences;
+it returns to the reading draft when you close the library.
+</p>
+<p>Spoken continuation is independent of sound. Choose Off, Brief labels, or
+Explicit descriptions of continuation above and below. Descriptions precede
+the row text, and sound timing applies to that complete spoken item. Frequency
+can be every wrapped-row visit or only entry into a different source line,
+including a jump into its middle. Changing reading buffers or windows resets
+entry tracking. Explicit screen-row rereading can repeat the feedback.
+</p>
+<p>Choices edit a draft. Browsing does not apply them. Start in temporary buffer
+scope, or use <kbd class="kbd">g</kbd> to choose the current major mode or global defaults. Each
+preference follows buffer, mode, global and factory values in that order.
+Apply with <kbd class="kbd">a</kbd> for this session; <kbd class="kbd">S</kbd> saves and applies mode or global choices
+through Customize. Buffer scope is not saved per file. Applying wider settings
+preserves explicit buffer overrides. <kbd class="kbd">i</kbd> stages inheritance, <kbd class="kbd">r</kbd> stages factory
+values, and <kbd class="kbd">d</kbd> discards unapplied edits. Leaving keeps applied changes and
+discards unapplied edits. Apply or discard before changing scope.
+</p>
+<p>Use <kbd class="kbd">p</kbd> to preview a complete line followed by first, middle and last rows,
+or Space in an individual editor to preview one type. These previews use
+drafts without applying them; <kbd class="kbd">c</kbd> compares the source&rsquo;s applied settings and
+<kbd class="kbd">x</kbd> stops playback. Help at <kbd class="kbd">h</kbd> shows applied values, inheritance and worker
+support. Sounds require structured timeline support, and recorded earcons
+follow the auditory-icon switch. Unsupported sounds, volume or shaping are
+identified without silently changing their placement. Listening to the previews
+helps you choose levels that leave the words clear.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

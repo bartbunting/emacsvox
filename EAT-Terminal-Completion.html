@@ -44,18 +44,18 @@ Next: <a href="EAT-Screen-Review.html" accesskey="n" rel="next">Explicit Review 
 <a class="index-entry-id" id="index-router-completion"></a>
 <a class="index-entry-id" id="index-TAB-_0028EAT-terminal-completion_0029"></a>
 
-<p>Before a terminal-side <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> on the main screen, Emacsvox captures the public
-screen and waits briefly for output to settle. An inline completion speaks the
-newly displayed field; for example, <code class="code">~/sr&lt;TAB&gt;</code> can speak <code class="code">src slash</code> after the
+<p>When you press <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> on the main screen in semi-character or character mode,
+Emacsvox compares the screen before and after completion, waiting briefly for
+output to settle. An inline completion speaks the newly displayed field;
+for example, <code class="code">~/sr&lt;TAB&gt;</code> can speak <code class="code">src slash</code> after the
 shell displays <code class="code">~/src/</code>.
 </p>
-<p>An ambiguous completion printed as columns or help rows is presented as one
-transaction after the input line is redrawn. Small inferred lists speak up to
-eight candidates. Router-style descriptions keep their layout rather than
-being forced into a shell-token model. Large lists are counted and shortened
-for automatic speech. If candidates have already scrolled beyond the bounded
-screen, the count is a lower bound, such as &ldquo;at least N visible&rdquo;, not an
-invented total.
+<p>When completion prints columns of alternatives or help rows, Emacsvox reads
+them together after the input line is redrawn. Small lists speak up to eight
+candidates. Router-style help retains its layout and descriptions. Large
+lists are counted and shortened for automatic speech. If candidates have
+already scrolled beyond the captured screen, the count gives only the number
+known to be visible, such as &ldquo;at least N visible&rdquo;.
 </p>
 <p>Identical repeated lists, split output, bells, wrapping, and resizing are
 coalesced without repeating the candidate text. This works from rendered

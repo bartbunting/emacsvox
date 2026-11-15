@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-recording (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-recording (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-recording (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dreplay.html" rel="next" title="emacsvox-aural-replay">
+<link href="emacsvox_002daural_002drecent_002dfeedback.html" rel="prev" title="emacsvox-aural-recent-feedback">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002drecording">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dreplay.html" accesskey="n" rel="next">emacsvox-aural-replay</a>, Previous: <a href="emacsvox_002daural_002drecent_002dfeedback.html" accesskey="p" rel="prev">emacsvox-aural-recent-feedback</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002drecording-1"><span>2.56 emacsvox-aural-recording<a class="copiable-link" href="#emacsvox_002daural_002drecording-1"> &para;</a></span></h3>
+
+<p>Explicitly capture one outer delivery, using only resolved assembly values.
+Export is separate.  Offline reconstruction never sends the resulting wire.
+The JSON format uses tagged arrays for Lisp values, without Lisp reading,
+arbitrary symbol interning, function lookup or executable input.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dRecording-Commands" accesskey="1">Emacsvox-Aural-Recording Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dRecording-Commands">
+<h4 class="subsection"><span>2.56.1 Emacsvox-Aural-Recording Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dRecording-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dcancel_002drecording" accesskey="1">emacsvox-aural-cancel-recording</a></li>
+<li><a href="#emacsvox_002daural_002dexport_002drecording" accesskey="2">emacsvox-aural-export-recording</a></li>
+<li><a href="#emacsvox_002daural_002drecord_002dnext_002ddelivery" accesskey="3">emacsvox-aural-record-next-delivery</a></li>
+<li><a href="#emacsvox_002daural_002drecording_002dstatus" accesskey="4">emacsvox-aural-recording-status</a></li>
+<li><a href="#emacsvox_002daural_002dreproduce_002ddelivery" accesskey="5">emacsvox-aural-reproduce-delivery</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dcancel_002drecording">
+<h4 class="subsubsection"><span>2.56.1.1 emacsvox-aural-cancel-recording<a class="copiable-link" href="#emacsvox_002daural_002dcancel_002drecording"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dcancel_002drecording"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-cancel-recording</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dcancel_002drecording"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dcancel_002drecording-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Disarm delivery recording and discard its retained inputs.
+This does not stop speech or remove an already exported file.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dexport_002drecording">
+<h4 class="subsubsection"><span>2.56.1.2 emacsvox-aural-export-recording<a class="copiable-link" href="#emacsvox_002daural_002dexport_002drecording"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dexport_002drecording"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-export-recording</strong> <var class="def-var-arguments">(file)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dexport_002drecording"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dexport_002drecording-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explicitly save the captured delivery as private JSON in local FILE.
+The file can contain speech text and resource paths.  Existing files require
+normal overwrite confirmation.  Success clears memory; a failed save retains
+it.  No data is uploaded and no speech is replayed.
+
+(fn FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecord_002dnext_002ddelivery">
+<h4 class="subsubsection"><span>2.56.1.3 emacsvox-aural-record-next-delivery<a class="copiable-link" href="#emacsvox_002daural_002drecord_002dnext_002ddelivery"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecord_002dnext_002ddelivery"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-record-next-delivery</strong> <var class="def-var-arguments">(lane)</var><a class="copiable-link" href="#index-emacsvox_002daural_002drecord_002dnext_002ddelivery"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecord_002dnext_002ddelivery-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Record the next outer delivery on LANE, main or notification.
+Arming expires after 60 seconds.  One delivery disarms recording.  Captured
+speech text and resource paths stay in memory until explicit export or cancel;
+input above 256 KiB is discarded with an incomplete summary.  This records
+client construction, not audio or server success.  Existing logs are unchanged.
+
+(fn LANE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecording_002dstatus">
+<h4 class="subsubsection"><span>2.56.1.4 emacsvox-aural-recording-status<a class="copiable-link" href="#emacsvox_002daural_002drecording_002dstatus"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecording_002dstatus"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recording-status</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecording_002dstatus"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecording_002dstatus-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Report the recording’s lane, capture state and encoded size.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dreproduce_002ddelivery">
+<h4 class="subsubsection"><span>2.56.1.5 emacsvox-aural-reproduce-delivery<a class="copiable-link" href="#emacsvox_002daural_002dreproduce_002ddelivery"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dreproduce_002ddelivery"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-reproduce-delivery</strong> <var class="def-var-arguments">(file)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dreproduce_002ddelivery"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dreproduce_002ddelivery-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Reconstruct client data from local recording FILE without speaking it.
+Validate size, depth, format, operation names and types before reconstruction.
+Report matching hashes, mismatch or incomplete capture.  Matching confirms
+client construction only; it does not establish server admission or audio.
+Return a plist containing reconstructed data for programmatic inspection.
+
+(fn FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dreplay.html">emacsvox-aural-replay</a>, Previous: <a href="emacsvox_002daural_002drecent_002dfeedback.html">emacsvox-aural-recent-feedback</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

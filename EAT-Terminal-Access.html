@@ -49,10 +49,10 @@ from NonGNU ELPA. Run <kbd class="kbd">M-x eat</kbd> to start it; a prefix argum
 selects another terminal. Follow the <a data-manual="eat" href="https://elpa.nongnu.org/nongnu/doc/eat.html#Top">Eat User Manual</a> for installation,
 terminal setup, and EAT&rsquo;s complete command reference.
 </p>
-<p>Three parts cooperate here. EAT emulates the terminal; the shell, router, or
-other program handles terminal input and completion; Emacsvox presents the
-rendered result. Emacsvox observes a bounded screen, not the program&rsquo;s private
-state. It does not generate shell or router completion candidates.
+<p>EAT emulates the terminal, while the shell, router or other running program
+handles input and completion. Emacsvox speaks changes visible in the rendered
+screen. It cannot inspect the program&rsquo;s internal state or generate its
+completion candidates.
 </p>
 <p>First choose an input mode appropriate to the program. Then use automatic
 feedback for current work and explicit review for content you need to examine

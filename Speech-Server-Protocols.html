@@ -54,7 +54,7 @@ presentation protocols carry bounded JSON records beside that legacy stream.
 
 <p>This chapter is primarily for speech-server and client developers.  The
 detailed Omnivox contracts are owned by the Omnivox repository; this manual
-summarizes their relationship to Emacsvox and then documents the legacy line
+summarises their relationship to Emacsvox and then documents the legacy line
 protocol.
 </p>
 <p>For additional notes on how to log and view TTS server
@@ -119,20 +119,43 @@ their dispatch records.
 <p><code class="code">ordered</code> and <code class="code">urgent</code> timelines are admitted immediately.  Only
 matching <code class="code">replaceable</code> work uses the short server-side coalescing window.
 Receipt of a newer valid replaceable generation immediately cancels queued,
-synthesizing, and buffered work in the same replacement domain.  It does not
+synthesising, and buffered work in the same replacement domain.  It does not
 globally stop ordered, urgent, legacy, or differently keyed output.
 </p>
+<p>Client preparation separates owned delivery data from live process effects.
+The coordinator reads capabilities, resolves resources and captures policy at
+their established points, feeding explicit values into deterministic assembly.
+The resulting candidate owns its document or compatibility commands, semantic
+bindings and span index. Processes, queue guards, registration identity,
+callback reservations and timers remain with the live coordinator.
+</p>
+<p>An inactive callback ID may already exist during nested capture. Finalisation
+reuses it, attaches bounded metadata and frames the document with that actual
+ID before interruption. Admission and immediately-before-write checks still
+apply. Cancellation, a stale registration or an uncertain send never authorise
+compatibility retry. Presentation-observer errors are logged independently so
+they cannot discard a written completion owner; explicit Stop and nonlocal
+exits retain their cancellation behaviour.
+</p>
+<p>With opt-in Aural diagnostics, <code class="code">delivery-outcome</code> separates selected
+representation and reason from execution. Readiness can suppress all output
+while <code class="code">submission-complete</code> still reports that the API call completed.
+Compatibility work can be scheduled until idle. Pre-write rejection, an
+uncertain attempted send, a successful write and cancellation are distinct
+outcomes. Independent callback speech and pending deliveries keep their own
+result identities. These records add no payload capture beyond the existing
+opt-in diagnostic log, which can contain complete speech text.
+</p>
 <p>Marker events report playback start and positioned playback boundaries;
-tracked status reports terminal completion.  With opt-in Aural diagnostics,
-Emacs records successful dispatch send, first received <code class="code">utterance_started</code>,
-and terminal observation under the same dispatch ID.  Omnivox&rsquo;s normal
-session log records protocol admission, worker queue wait, individual engine
-attempts, audio queueing, first mixer-source consumption, and terminal
-playback under that ID.  This correlation uses existing marker and terminal
-records rather than adding a wire-protocol version.  Playback markers track
-mixer-source consumption and may precede physical sound by the output device&rsquo;s
-buffer latency; a protocol write or terminal callback is therefore not proof
-of acoustic onset.
+tracked status reports terminal completion. Emacs records successful dispatch
+send, first received <code class="code">utterance_started</code>, and terminal observation under the
+same dispatch ID. Omnivox&rsquo;s normal session log records protocol admission,
+worker queue wait, individual engine attempts, audio queueing, first mixer-source
+consumption, and terminal playback under that ID. Keep submission ID, delivery
+sequence, process generation and dispatch ID distinct when correlating them.
+This uses existing protocols. Playback markers track mixer-source consumption
+and may precede physical sound by the output device&rsquo;s buffer latency; a client
+write or terminal callback is therefore not proof of acoustic onset.
 </p>
 <p>Recent Feedback retains a separate, data-only playback snapshot. Owned,
 validated start and voice-choice events associate actual physical voices with
@@ -142,8 +165,33 @@ speech text remains subject to the existing 4096-byte history limit. Exhausted
 or incomplete evidence disables original replay without blocking delivery.
 Completed snapshots drive exact private voice previews with fallback disabled.
 They never rewrite the named-voice registry or borrow another lane&rsquo;s latest
-logical-voice realization. Ordinary history navigation retains the requested
+logical-voice realisation. Ordinary history navigation retains the requested
 annotations; explicit original playback uses this observed snapshot.
+</p>
+<p>The optional delivery recorder captures one outer main or notification delivery
+after explicit arming. It snapshots resolved assembly arguments at their existing
+use sites, plus consumed capability facts, omitted actions and the client result.
+It preserves the actual dispatch ID and framing limits. Independent callback
+speech retains its own identity. Scheduled output can update the retained result
+until export or cancellation. No automatic capture ring or logging is enabled.
+</p>
+<p>Its versioned JSON contains plain tagged data, source revision, Emacs version,
+protocol fields and hashes of the document, semantic bindings and prepared wire.
+The 256 KiB allowance includes metadata; a shared 4096-operation/observation limit
+also applies. Exhaustion discards detailed inputs and keeps an incomplete summary.
+Export is explicit, local and atomic, with owner-only permissions on systems that
+support them. Text and resource paths may be sensitive.
+</p>
+<p><code class="code">emacsvox-aural-reproduce-delivery</code> validates size, nesting, schema and operation
+arguments before dispatch through a fixed set of pure assembly helpers. It neither
+reads resource paths nor sends reconstructed wire. Structured versions 3–7 rebuild
+documents and semantic bindings; compatibility captures compare retained command
+bytes only. The wire hash covers prepared bytes, not socket packet boundaries or
+confirmed sending. Source extraction, earlier rule matching, server admission and
+audio remain outside this reconstruction. Incomplete or edited data cannot establish
+the original construction. Change the construction version when assembly or framing
+semantics become incompatible. The user procedure is in
+<a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend diagnostics</a>; the design is recorded in ADR 0030.
 </p>
 <p>The canonical protocol documents are:
 </p>
@@ -192,11 +240,8 @@ acknowledge that the request has been completely processed. This is a
 non-blocking operation, i.e., if the client application generates
 additional requests, these are processed <strong class="strong">immediately</strong>.
 </p>
-<p>This design allows a legacy Emacsvox TTS server to be
-<strong class="strong">highly</strong> responsive; Client applications can queue large
-amounts of text (typically queued a clause at a time to achieve the
-best prosody), ask the TTS server to start speaking, and
-interrupt the spoken output at any time.
+<p>Clients can queue text a clause at a time, start playback and interrupt it
+while the server continues accepting commands.
 </p>
 <ol class="enumerate">
 <li> <a class="anchor" id="Testing-A-Direct-Legacy-Server"></a>Testing A Direct Legacy Server
@@ -240,19 +285,13 @@ output immediately.
 <pre class="example-preformatted">tts_say text
 </pre></div>
 
-<p>Speaks the specified <strong class="strong">text</strong> immediately. The text is not
-pre-processed in any way, contrast this with the primary way of
-speaking text which is to queue text before asking the server to
-process the queue.
+<p>Speaks the specified text immediately, without the preprocessing used for
+queued text. Most speech uses <code class="code">q</code> followed by <code class="code">d</code> instead.
 </p>
-<p>Note that this command needs to handle the special syntax for morpheme
-boundaries <code class="code">[*]</code>.  The <code class="code">[*]</code> syntax is specific to the
-Dectalk family of synthesizers; servers for other TTS
-engines need to map this pattern to the engine-specific code for each
-engine. As an example, see <code class="code">servers/outloud</code> A morpheme boundary
-results in synthesizing compound words such as <strong class="strong">left bracket</strong>
-with the right intonation; using a space would result in that phrase
-being synthesized as two separate words.
+<p>The server must handle DECtalk&rsquo;s <code class="code">[*]</code> syntax for morpheme boundaries.
+Other engines need an equivalent mapping; see <code class="code">servers/outloud</code> for an
+example. A morpheme boundary joins compound terms such as <em class="emph">left bracket</em>;
+an ordinary space treats them as separate words.
 </p>
 <div class="example">
 <pre class="example-preformatted">l c
@@ -280,12 +319,7 @@ normal palette speech path.
 <pre class="example-preformatted">d
 </pre></div>
 
-<p>This command is used to <strong class="strong">dispatch</strong> all queued requests.  It was
-renamed to a single character command (like many of the commonly used
-TTS server commands) to work more effectively over slow
-(9600) dialup lines.  The effect of calling this command is for the
-TTS server to start processing items that have been queued
-via earlier requests.
+<p>Dispatches all queued requests, starting playback in queue order.
 </p>
 <div class="example">
 <pre class="example-preformatted">s
@@ -395,9 +429,8 @@ this on to speak mixed-case (AKA Camel Case) identifiers.
 
 <p><strong class="strong">Immediately</strong> apply the passed settings.
 </p>
-<p>This ensures <strong class="strong">atomicity</strong> i.e., all state settings in the TTS
-engine happen at one shot. Note that failure to do this might result
-in some utterances being spoken with a partially set state.
+<p>The settings take effect together, preventing speech from using a partially
+updated state.
 </p>
 <ul class="itemize mark-bullet">
 <li>punct: see tts<em class="math">_set</em><em class="math">_punctuations</em>

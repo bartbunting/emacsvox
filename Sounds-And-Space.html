@@ -43,9 +43,11 @@ Next: <a href="Aural-Speech-Output.html" accesskey="n" rel="next">Speech Output 
 <a class="index-entry-id" id="index-sound-packs"></a>
 <a class="index-entry-id" id="index-spatial-presentation"></a>
 
-<p>Rules request cues by semantic name. Sound packs map names to audio assets
+<p>Rules request cues by name. Sound packs supply recordings for those names
 and can inherit missing cues. This lets you change the sound of a family of
-cues without rewriting rules. For one event, use its feedback rule instead.
+cues without rewriting rules. A recording library holds available sounds;
+assigning one to a cue changes its sound in that pack. To change when the cue
+plays, use its feedback rule.
 </p>
 <p>To enable or disable earcons in the captured buffer, use <kbd class="kbd">C-e H r l e</kbd>.
 In that submenu, <kbd class="kbd">E</kbd> changes the global default for buffers without a local
@@ -72,8 +74,11 @@ opened browsers keep their usual returns.
 <dt><kbd class="kbd">v</kbd></dt>
 <dd><p>Validate resources and report missing/invalid entries.
 </p></dd>
-<dt><kbd class="kbd">a</kbd></dt>
+<dt><kbd class="kbd">a in the pack manager</kbd></dt>
 <dd><p>Activate the selected pack.
+</p></dd>
+<dt><kbd class="kbd">a in the cue browser</kbd></dt>
+<dd><p>Compare library recordings for an explicit assignment.
 </p></dd>
 </dl>
 
@@ -84,9 +89,12 @@ audible content at the centre. Named tones are separate compact resources,
 independent of sampled files and the active pack.
 </p>
 <p>For waveform, pitch sweep and envelope adjustments, use the
-<a class="ref" href="Reading-Scope-And-Punctuation.html#spelling_002dtone_002deditor">complete spelling tone editor</a>. It currently edits the global spelling cue.
-Line cues, capitalisation beeps and indentation keep the controls and saving
-rules described in their own sections; they do not yet use that draft editor.
+<a class="ref" href="Reading-Scope-And-Punctuation.html#spelling_002dtone_002deditor">shared tone editor</a>. Spelling, capitalisation, indentation, wrapped rows,
+line conditions and tree levels open it from their respective settings.
+Its controls are shared, while each destination has its own scope and saving
+rules. For tree entry, exit and depth feedback, follow
+<a class="ref" href="Agent-Shell-Source-Blocks.html#agent_002dshell_002dtext_002dtrees">Read and customise text trees</a>. General personal-rule editing retains its
+own controls.
 </p>
 
 <ul class="mini-toc">
@@ -96,6 +104,7 @@ rules described in their own sections; they do not yet use that draft editor.
 <li><a href="Changing-Tones.html" accesskey="4">Change A Blank-Line Tone</a></li>
 <li><a href="Spatial-Presentation-Controls.html" accesskey="5">Adjust Spatial Presentation</a></li>
 <li><a href="Personal-Sound-Packs.html" accesskey="6">Inspect And Maintain A Personal Sound Pack</a></li>
+<li><a href="Personal-Sound-Packs.html#Browse-recordings-and-assign-them-to-cues" accesskey="7">Browse recordings and assign them to cues</a></li>
 </ul>
 <div class="subsection-level-extent" id="Tune-line-and-boundary-cues-from-the-menu">
 <h4 class="subsection"><span>8.10.1 Tune line and boundary cues from the menu<a class="copiable-link" href="#Tune-line-and-boundary-cues-from-the-menu"> &para;</a></span></h4>
@@ -103,14 +112,23 @@ rules described in their own sections; they do not yet use that draft editor.
 <p><kbd class="kbd">C-e H o c</kbd> opens <em class="emph">Line and boundary cues</em>. Blank, whitespace-only, separator,
 decorated, and unspeakable-line tones have pitch and integer-duration controls.
 Shift-left/right adjusts by 25 Hz or 5 milliseconds; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters exactly.
+Their <kbd class="kbd">E</kbd> opens the shared tone editor for volume, waveform, sweep and envelope.
 Boundary/warning and large movement instead choose replacement earcons.
 Changing those named earcons affects every use, including warnings elsewhere.
 </p>
-<p>Each cue retains a global preview draft. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> auditions it, <kbd class="kbd">s</kbd> stops,
-<kbd class="kbd">n</kbd> silences in the draft, <kbd class="kbd">r</kbd> restores bundled values, and <kbd class="kbd">D</kbd> discards edits.
-<kbd class="kbd">S</kbd> saves through personal rules while preserving unrelated rules; stronger
-presentation rules may override it. <kbd class="kbd">q</kbd> retains the draft. This changes cue
-output, not classification of separators or decorated lines.
+<p>Each cue retains a global draft. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> auditions it, <kbd class="kbd">s</kbd> stops, <kbd class="kbd">n</kbd> silences
+in the draft, <kbd class="kbd">r</kbd> restores bundled values, and <kbd class="kbd">D</kbd> discards unapplied edits.
+<kbd class="kbd">A</kbd> applies a temporary session rule. <kbd class="kbd">S</kbd> saves the conditional personal rule
+and removes its temporary session override. Unrelated rules remain intact and
+other presentation rules may override the result. To undo an applied change,
+choose the desired values or bundled restoration, then Apply or Save again.
+</p>
+<p>Inside the shared editor, <kbd class="kbd">A</kbd> applies for the session and <kbd class="kbd">W</kbd> saves the personal
+rule. Preview leaves the parent&rsquo;s draft and live rules unchanged; <kbd class="kbd">q</kbd> discards
+unapplied editor adjustments and returns to the same <em class="emph">Edit tone</em> control.
+The parent menu&rsquo;s <kbd class="kbd">q</kbd> retains its draft, including an applied change. Line cues
+use the presentation-rule store because they match line conditions. These
+controls change cue output, not classification of separators or decorated lines.
 </p>
 </div>
 </div>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-agent-shell-presentation (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-agent-shell-presentation (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-agent-shell-presentation (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dagent_002dshell_002drender.html" rel="next" title="emacsvox-agent-shell-render">
+<link href="emacsvox_002dagent_002dshell_002dnavigation.html" rel="prev" title="emacsvox-agent-shell-navigation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dagent_002dshell_002dpresentation">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dagent_002dshell_002drender.html" accesskey="n" rel="next">emacsvox-agent-shell-render</a>, Previous: <a href="emacsvox_002dagent_002dshell_002dnavigation.html" accesskey="p" rel="prev">emacsvox-agent-shell-navigation</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dagent_002dshell_002dpresentation-1"><span>2.22 emacsvox-agent-shell-presentation<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dpresentation-1"> &para;</a></span></h3>
+
+<p>Apply foreground and background speech policy, bound automatic content,
+describe session headers and submit common feedback. Event capture,
+interaction callbacks and navigation use these unchanged entry points.
+Configuration, keymaps, advice installation and activation stay in the
+facade. Load through &lsquo;emacsvox-agent-shell&rsquo;; definitions do not activate it.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAgent_002dShell_002dPresentation-Commands" accesskey="1">Emacsvox-Agent-Shell-Presentation Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAgent_002dShell_002dPresentation-Commands">
+<h4 class="subsection"><span>2.22.1 Emacsvox-Agent-Shell-Presentation Commands<a class="copiable-link" href="#Emacsvox_002dAgent_002dShell_002dPresentation-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dagent_002dshell_002dcycle_002dspeech_002dlevel" accesskey="1">emacsvox-agent-shell-cycle-speech-level</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel" accesskey="2">emacsvox-agent-shell-select-background-speech-level</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel" accesskey="3">emacsvox-agent-shell-select-speech-level</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dspeak_002dheader" accesskey="4">emacsvox-agent-shell-speak-header</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dcycle_002dspeech_002dlevel">
+<h4 class="subsubsection"><span>2.22.1.1 emacsvox-agent-shell-cycle-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dcycle_002dspeech_002dlevel"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dcycle_002dspeech_002dlevel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-cycle-speech-level</strong> <var class="def-var-arguments">(&amp;optional reset)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dcycle_002dspeech_002dlevel"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dcycle_002dspeech_002dlevel-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Cycle automatic speech for the current agent-shell session.
+Cycle from the effective level toward less speech: full, response, notify,
+quiet, then full again.  With prefix argument RESET, restore ‘auto’ so focus
+selects the configured foreground or background level.
+
+(fn &amp;optional RESET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel">
+<h4 class="subsubsection"><span>2.22.1.2 emacsvox-agent-shell-select-background-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-select-background-speech-level</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select the automatic speech level shared by background sessions.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel">
+<h4 class="subsubsection"><span>2.22.1.3 emacsvox-agent-shell-select-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-select-speech-level</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select the automatic speech level for the current agent-shell session.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dspeak_002dheader">
+<h4 class="subsubsection"><span>2.22.1.4 emacsvox-agent-shell-speak-header<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dheader"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dspeak_002dheader"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-speak-header</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dspeak_002dheader"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dspeak_002dheader-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the full semantic header for the current agent-shell session.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dagent_002dshell_002drender.html">emacsvox-agent-shell-render</a>, Previous: <a href="emacsvox_002dagent_002dshell_002dnavigation.html">emacsvox-agent-shell-navigation</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

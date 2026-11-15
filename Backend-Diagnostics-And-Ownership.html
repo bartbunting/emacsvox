@@ -87,13 +87,32 @@ speech text is complete. A mixer observation is not physical output;
 device/hardware buffering can add delay. The diagnostics menu&rsquo;s <kbd class="kbd">l</kbd> also
 exposes the explicit session logging control with its privacy warning.
 </p></dd>
+<dt>A presentation needs a repeatable construction example</dt>
+<dd><p>Run <kbd class="kbd">M-x emacsvox-aural-record-next-delivery</kbd> and choose <code class="code">main</code> or
+<code class="code">notification</code>. Repeat the affected action within 60 seconds. The recorder
+captures one delivery on that stream; its own control announcements and
+independent callback speech are excluded. Prefer a short, non-confidential
+example. It does not enable diagnostic logging.
+</p>
+<p><kbd class="kbd">M-x emacsvox-aural-recording-status</kbd> reports capture state, client outcome
+and size. <kbd class="kbd">M-x emacsvox-aural-export-recording</kbd> saves a local JSON file and
+clears the retained inputs. Its prompt explains that speech text and resource
+paths may be included. Review the file before sharing. A failed save retains
+the capture; <kbd class="kbd">M-x emacsvox-aural-cancel-recording</kbd> discards it without stopping
+speech. An exported file remains until you delete it.
+</p>
+<p>A capture is limited to 256 KiB. Oversized or unsupported input produces an
+incomplete summary while speech continues. <kbd class="kbd">M-x emacsvox-aural-reproduce-delivery</kbd>
+checks a saved file and reconstructs client data without playing it. A
+matching result establishes construction only, not server admission or sound.
+This diagnostic is separate from Recent Feedback and audible Replay.
+</p></dd>
 </dl>
 
-<p>Emacsvox owns selection, launcher, Windows staging, and its bundled Lisp adapter.
-Omnivox owns native builds, engines, CLI, runtime layout, and protocols.
-Backend-local READMEs document compatibility adapters and licensed runtimes.
-Use those owning references for versioned details instead of duplicating their
-contracts in first-installation instructions.
+<p>For server selection, the launcher and Windows staging, use this manual.
+For Omnivox builds, engine behaviour, command-line options and protocols, use
+the linked Omnivox guides. The README beside each compatibility server
+documents that adapter and any separately licensed runtime it needs.
 </p>
 </div>
 <hr>

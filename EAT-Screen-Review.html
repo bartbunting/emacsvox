@@ -106,9 +106,9 @@ not match a changing live screen.
 
 <a class="index-entry-id" id="index-frozen-EAT-review"></a>
 
-<p><kbd class="kbd">C-e q r</kbd> opens an immutable copy of the latest visible screen. It does not
-refresh, move the live cursor, or send input. It preserves normalised styling,
-cursor and likely-focus anchors, and retained completion rows. Opening and
+<p><kbd class="kbd">C-e q r</kbd> opens a fixed copy of the latest visible screen. It does not
+refresh, move the live cursor or send input. The copy retains styling,
+positions for the cursor and likely focus, and completion rows. Opening and
 closing play distinct object cues and announce the transition.
 </p>
 <dl class="table">
@@ -150,9 +150,9 @@ terminal input. The copied content stays frozen.
 </p></dd>
 </dl>
 
-<p>Secure input, terminal reset or restart, killing the source, or leaving EAT
-mode also destroys its frozen review. These events bound the lifetime of
-copied terminal content.
+<p>Entering a password through protected input, resetting or restarting the
+terminal, killing its buffer or leaving EAT mode also closes and removes
+its frozen review.
 </p>
 </div>
 </div>

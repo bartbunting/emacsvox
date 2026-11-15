@@ -43,8 +43,10 @@ Previous: <a href="Output-Volumes.html" accesskey="p" rel="prev">Adjust output v
 <p><kbd class="kbd">C-e S</kbd> opens focused settings directly where available. Alternatively use
 <kbd class="kbd">C-e H j</kbd> or <kbd class="kbd">C-e H . j</kbd>. In that integration menu, <kbd class="kbd">s</kbd> invokes a local Agent
 Shell speech-level chooser or EAT/comint autospeak control, <kbd class="kbd">c</kbd> opens the
-source integration&rsquo;s settings, and <kbd class="kbd">a</kbd> chooses among Shell/comint and installed
-Agent Shell, EAT, Org, Notmuch, and EWW. Cancelling returns to the same entry.
+source integration&rsquo;s settings, and <kbd class="kbd">a</kbd> chooses among loaded integrations.
+Settings search uses the same rule: installed packages appear only after you
+load them, for example by opening their application. Discovery does not load
+packages to reveal their settings. Cancelling returns to the same entry.
 </p>
 <p>The selected integration determines where a change applies and what its
 Save action retains. For example, a terminal-local setting is not automatically
@@ -55,22 +57,18 @@ boundaries; the application chapters give the complete workflows.
 <li> <a class="anchor" id="Shell_002fcomint-and-EAT"></a>Shell/comint and EAT
 
 
-<p>Shell/comint&rsquo;s focused menu toggles automatic speech with <kbd class="kbd">s</kbd> and background
-monitoring with <kbd class="kbd">b</kbd>. Background reading needs autospeak enabled. Both values
-belong to the captured buffer for its lifetime; there is no Save action. Arrows
-announce values and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates. <kbd class="kbd">q</kbd> returns to the entry, or closes a
-direct focused menu. Search at <kbd class="kbd">C-e H /</kbd> finds <code class="code">comint</code> and <code class="code">monitoring</code>.
+<p>Shell/comint&rsquo;s settings belong to the captured buffer for its lifetime and
+have no Save action. Background reading needs automatic speech enabled; see
+<a data-manual="emacsvox" href="./Desktop-Applications.html#Desktop-Applications">Terminal applications</a> for the controls. Search at <kbd class="kbd">C-e H /</kbd> finds <code class="code">comint</code>
+and <code class="code">monitoring</code>.
 Choosing Shell/comint from another buffer explains the required context and
 leaves its controls unavailable.
 </p>
-<p>EAT&rsquo;s <kbd class="kbd">s</kbd> toggles foreground speech, <kbd class="kbd">b</kbd> content-free background cues/counts,
-<kbd class="kbd">p</kbd> prompt feedback, and <kbd class="kbd">d</kbd> automatic detail. Background monitoring is
-independent of foreground autospeak and never reads background content.
-Changes are local to the terminal, including from frozen review. <kbd class="kbd">w</kbd> saves all
-four displayed defaults; terminals with overrides keep them. <kbd class="kbd">A</kbd> opens advanced
-Customize and <kbd class="kbd">q</kbd> returns. All controls are searchable. Choice lists start on
-the current value; arrows browse, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies, and <kbd class="kbd">q</kbd> cancels. See
-<a data-manual="emacsvox" href="./EAT-Terminal-Access.html#EAT-Terminal-Access">EAT Terminal Access</a> for prompt integration and safety boundaries.
+<p>EAT changes also belong to the captured terminal, including when opened from
+frozen review. Its <kbd class="kbd">w</kbd> saves the four displayed values as defaults; terminals
+with local overrides keep them. Background monitoring is independent of
+foreground speech and never reads background content. Follow
+<a data-manual="emacsvox" href="./EAT-Feedback-Preferences.html#EAT-Feedback-Preferences">Adjust and save terminal feedback</a> for the controls and their conditions.
 </p>
 </li><li> <a class="anchor" id="Agent-Shell-Org-and-EWW"></a>Agent Shell, Org, and EWW
 
@@ -86,33 +84,26 @@ options and <kbd class="kbd">A</kbd> advanced Emacsvox Org settings in Customize
 <kbd class="kbd">q</kbd>. This editing feedback is separate from the shared table reader described
 in <a class="ref" href="Browsing-Structure.html">Browsing Structure</a>.
 </p>
-<p>EWW&rsquo;s <kbd class="kbd">s</kbd> controls section-navigation autospeak and <kbd class="kbd">i</kbd> suppresses images on
-subsequent rendering. It also updates the shared SHR image default while
-preserving local overrides; it does not reload the page. <kbd class="kbd">w</kbd> saves the two
-Emacsvox defaults and <kbd class="kbd">A</kbd> opens advanced settings.
+<p>EWW&rsquo;s <kbd class="kbd">w</kbd> saves its section-navigation speech and image-suppression defaults.
+Outlining and HTTP identity have separate temporary scopes and are excluded
+from Save. Follow <a data-manual="emacsvox" href="./Recovering-A-Web-Page.html#Recovering-A-Web-Page">Recover a cluttered or incomplete page</a> for these controls;
+<a data-manual="emacsvox" href="./Navigating-A-Web-Page.html#Navigating-A-Web-Page">Read by heading, paragraph or search</a> explains the outlining choice.
 </p>
 </li><li> <a class="anchor" id="Notmuch-and-shared-choice_002dlist-navigation"></a>Notmuch and shared choice-list navigation
 
 
-<p>Notmuch has the same focused menu in Hello, Search, Show, and Tree. <kbd class="kbd">c</kbd> chooses
-adaptive, count-only, cue-only, or silent successful completion; failures remain
-audible. <kbd class="kbd">f~/~b</kbd> set field character/UTF-8 byte limits and <kbd class="kbd">t~/~B</kbd> total limits.
-Shift-left/right steps by 100, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts a positive integer or <code class="code">none</code> for
-that limit only. <kbd class="kbd">w</kbd> saves those four limits and completion policy: five
-values, not every mail setting.
+<p>Notmuch has the same focused menu in Hello, Search, Show and Tree. Its <kbd class="kbd">w</kbd>
+saves four automatic speech limits and the completion policy. Field lists,
+status maps and advanced settings use separate Customize editors with their
+own Apply and Save actions. <a data-manual="emacsvox" href="./Notmuch-Speech-And-Privacy.html#Notmuch-Speech-And-Privacy">Choose speech detail and protect mail privacy</a> explains
+these controls, their scope and the limits on attachment inspection.
 </p>
 <p>Org and Notmuch choice lists start on the current global value. Arrows browse
 without applying, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies/returns, and <kbd class="kbd">q</kbd> cancels. <kbd class="kbd">?</kbd> plus a choice key
 explains effect/scope; <kbd class="kbd">q</kbd> returns to that browsed choice.
 </p>
-<p>Notmuch&rsquo;s <kbd class="kbd">s~/~m</kbd> open ordered search/message fields and <kbd class="kbd">i~/~I</kbd> their status
-maps. These Customize editors preserve custom formatters and use their own
-Apply/Save/Reset. <kbd class="kbd">p</kbd> opens Presentation Options: enabled
-<code class="code">mail-message-status-cues</code> owns standard cues, while maps still suppress spoken
-status tags. <kbd class="kbd">A</kbd> exposes advanced options such as separators. <kbd class="kbd">q</kbd> returns;
-opening or returning does not save. <a data-manual="emacsvox" href="./Notmuch-Mail.html#Notmuch-Mail">Notmuch Mail</a> explains privacy and full
-inspection. Integrations without focused entries remain accessible through
-major-mode settings and advanced Customize.
+<p>Integrations without focused entries remain accessible through major-mode
+settings and advanced Customize.
 </p></li></ol>
 
 </div>

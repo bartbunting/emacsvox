@@ -70,12 +70,13 @@ than assuming copying restored an earlier reading position.
 always a useful recovery route from ordinary work. It can replace the current
 view rather than restore the old layout; the buffer&rsquo;s text remains available.
 </p>
-<p>Some speech commands intentionally change the layout. <kbd class="kbd">C-e h</kbd> selects and
-reads Help using a windowful-reading helper, which removes other windows.
-Whole-buffer and region reading can use that helper for a large request too.
-A lost split therefore does not necessarily mean the reference was closed.
-Reopen the desired view with <kbd class="kbd">C-x 4 b</kbd>. For a short inspection without that
-helper, use line or paragraph reading as described under
+<p>Some speech commands can change the layout. <kbd class="kbd">C-e h</kbd> selects Help and reads
+from its beginning. It uses ordinary buffer reading, which falls back to a
+windowful-reading helper for a large request; that helper removes other windows.
+The same limit applies to whole-buffer and region reading. A lost split
+therefore does not necessarily mean the reference was closed. Reopen the
+desired view with <kbd class="kbd">C-x 4 b</kbd>. For a short inspection that preserves the layout,
+use line or paragraph reading as described under
 <a class="ref" href="Reading-Without-Moving-Point.html">Read a short passage without moving point</a>.
 </p>
 <p>For the general display and selection commands, see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Pop-Up-Window.html#Pop-Up-Window">Displaying in another window</a>

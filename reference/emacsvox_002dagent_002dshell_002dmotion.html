@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-agent-shell-motion (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-agent-shell-motion (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-agent-shell-motion (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dagent_002dshell_002dnavigation.html" rel="next" title="emacsvox-agent-shell-navigation">
+<link href="emacsvox_002dagent_002dshell_002dinteraction.html" rel="prev" title="emacsvox-agent-shell-interaction">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dagent_002dshell_002dmotion">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dagent_002dshell_002dnavigation.html" accesskey="n" rel="next">emacsvox-agent-shell-navigation</a>, Previous: <a href="emacsvox_002dagent_002dshell_002dinteraction.html" accesskey="p" rel="prev">emacsvox-agent-shell-interaction</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dagent_002dshell_002dmotion-1"><span>2.20 emacsvox-agent-shell-motion<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dmotion-1"> &para;</a></span></h3>
+
+<p>Map rendered chat rows, labels, folds and padding to source positions.
+Keep visual movement, editable prompt boundaries and line speech together,
+including their dynamic context and buffer-local command hooks. Semantic
+block and source navigation remain in &lsquo;emacsvox-agent-shell-navigation&rsquo;.
+The facade retains advice installation and activation order. Load through
+&lsquo;emacsvox-agent-shell&rsquo;; loading definitions does not install command hooks.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAgent_002dShell_002dMotion-Commands" accesskey="1">Emacsvox-Agent-Shell-Motion Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAgent_002dShell_002dMotion-Commands">
+<h4 class="subsection"><span>2.20.1 Emacsvox-Agent-Shell-Motion Commands<a class="copiable-link" href="#Emacsvox_002dAgent_002dShell_002dMotion-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dagent_002dshell_002dbrowse" accesskey="1">emacsvox-agent-shell-browse</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dedit_002dinput" accesskey="2">emacsvox-agent-shell-edit-input</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dbrowse">
+<h4 class="subsubsection"><span>2.20.1.1 emacsvox-agent-shell-browse<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dbrowse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dbrowse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-browse</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dbrowse"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dbrowse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return to Explicit browsing at point, preserving the live draft and undo.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dedit_002dinput">
+<h4 class="subsubsection"><span>2.20.1.2 emacsvox-agent-shell-edit-input<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dedit_002dinput"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dedit_002dinput"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-edit-input</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dedit_002dinput"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dedit_002dinput-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Activate inline input, preserving a draft and its current editing position.
+From the transcript, move to the end of the live draft.  In Explicit mode,
+‘C-c e’ returns to browsing without sending or discarding text.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+
+</body>
+</html>

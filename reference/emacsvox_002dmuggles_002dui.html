@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-muggles-ui (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-muggles-ui (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-muggles-ui (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dmultiple_002dcursors.html" rel="next" title="emacsvox-multiple-cursors">
+<link href="emacsvox_002dmuggles_002dcore.html" rel="prev" title="emacsvox-muggles-core">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dmuggles_002dui">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmultiple_002dcursors.html" accesskey="n" rel="next">emacsvox-multiple-cursors</a>, Previous: <a href="emacsvox_002dmuggles_002dcore.html" accesskey="p" rel="prev">emacsvox-muggles-core</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dmuggles_002dui-1"><span>2.216 emacsvox-muggles-ui<a class="copiable-link" href="#emacsvox_002dmuggles_002dui-1"> &para;</a></span></h3>
+
+<p>Inspect converted Muggles without loading their optional libraries.
+Session actions and explicit Customize saving retain the selected row.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dMuggles_002dUi-Commands" accesskey="1">Emacsvox-Muggles-Ui Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dMuggles_002dUi-Commands">
+<h4 class="subsection"><span>2.216.1 Emacsvox-Muggles-Ui Commands<a class="copiable-link" href="#Emacsvox_002dMuggles_002dUi-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dmuggles_002dbrowse" accesskey="1">emacsvox-muggles-browse</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002ddetails" accesskey="2">emacsvox-muggles-ui-details</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002ddisable" accesskey="3">emacsvox-muggles-ui-disable</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002denable" accesskey="4">emacsvox-muggles-ui-enable</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002dmode" accesskey="5">emacsvox-muggles-ui-mode</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002drefresh" accesskey="6">emacsvox-muggles-ui-refresh</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002drun" accesskey="7">emacsvox-muggles-ui-run</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002dsave" accesskey="8">emacsvox-muggles-ui-save</a></li>
+<li><a href="#emacsvox_002dmuggles_002dui_002dspeak_002dcurrent" accesskey="9">emacsvox-muggles-ui-speak-current</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dbrowse">
+<h4 class="subsubsection"><span>2.216.1.1 emacsvox-muggles-browse<a class="copiable-link" href="#emacsvox_002dmuggles_002dbrowse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dbrowse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-browse</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dbrowse"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dbrowse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse managed Muggles without enabling, running or saving anything.
+Only converted entries are listed.  RET explains the selected entry; e and d
+change its session choice, r runs it in the captured source, and W saves all
+session choices through Customize.  q keeps changes and returns.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002ddetails">
+<h4 class="subsubsection"><span>2.216.1.2 emacsvox-muggles-ui-details<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002ddetails"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002ddetails"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-details</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002ddetails"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002ddetails-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explain the selected Muggle, its state, entry key and explicit actions.
+Help changes no settings; q returns to the exact list row and column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002ddisable">
+<h4 class="subsubsection"><span>2.216.1.3 emacsvox-muggles-ui-disable<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002ddisable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002ddisable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-disable</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002ddisable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002ddisable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove the selected Muggle’s managed keys and close it if active.
+Keep personal bindings, completed actions and direct M-x use; do not save.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002denable">
+<h4 class="subsubsection"><span>2.216.1.4 emacsvox-muggles-ui-enable<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002denable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002denable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-enable</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002denable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002denable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enable the selected Muggle’s managed keys for this session.
+Adopt only documented standard bindings; preserve personal replacements.
+This does not run the Muggle or save settings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002dmode">
+<h4 class="subsubsection"><span>2.216.1.5 emacsvox-muggles-ui-mode<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-mode</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse managed Muggles with explicit session changes and Customize Save.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-muggles-ui-mode-hook’, as the final or penultimate step
+during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-muggles-ui-details
+?		emacsvox-muggles-ui-details
+W		emacsvox-muggles-ui-save
+d		emacsvox-muggles-ui-disable
+e		emacsvox-muggles-ui-enable
+r		emacsvox-muggles-ui-run
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002drefresh">
+<h4 class="subsubsection"><span>2.216.1.6 emacsvox-muggles-ui-refresh<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-refresh</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh state without loading Muggles, changing choices or moving selection.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002drun">
+<h4 class="subsubsection"><span>2.216.1.7 emacsvox-muggles-ui-run<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002drun"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002drun"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-run</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002drun"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002drun-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enter the selected Muggle at the captured source location.
+Run works even when managed keys are disabled or blocked.  It leaves the list
+and starts navigation; this is an action, not a preview or an enable request.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002dsave">
+<h4 class="subsubsection"><span>2.216.1.8 emacsvox-muggles-ui-save<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-save</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save all explicit session Muggle choices through Customize.
+Retain the selected row.  Failed saves leave session choices pending.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmuggles_002dui_002dspeak_002dcurrent">
+<h4 class="subsubsection"><span>2.216.1.9 emacsvox-muggles-ui-speak-current<a class="copiable-link" href="#emacsvox_002dmuggles_002dui_002dspeak_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmuggles_002dui_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-muggles-ui-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002dmuggles_002dui_002dspeak_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmuggles_002dui_002dspeak_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Read the selected Muggle’s purpose, choice and availability.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmultiple_002dcursors.html">emacsvox-multiple-cursors</a>, Previous: <a href="emacsvox_002dmuggles_002dcore.html">emacsvox-muggles-core</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -123,7 +123,7 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Before-You-Begin" href="Obtaining-Emacsvox.html">3.2 Before You Begin</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Prepare-the-settings_002dmenu-dependency" href="Obtaining-Emacsvox.html#Prepare-the-settings_002dmenu-dependency">3.2.1 Prepare the settings-menu dependency</a></li>
-      <li><a id="toc-Obtain-the-development-checkout" href="Obtaining-Emacsvox.html#Obtain-the-development-checkout">3.2.2 Obtain the development checkout</a></li>
+      <li><a id="toc-Obtain-the-source-checkout" href="Obtaining-Emacsvox.html#Obtain-the-source-checkout">3.2.2 Obtain the source checkout</a></li>
       <li><a id="toc-Use-the-guided-WSL2-installer" href="Obtaining-Emacsvox.html#Use-the-guided-WSL2-installer">3.2.3 Use the guided WSL2 installer</a></li>
     </ul></li>
     <li><a id="toc-Installing-On-A-Remote-Linux-Host" href="Installing-Remote-Emacsvox.html">3.3 Installing On A Remote Linux Host</a></li>
@@ -188,9 +188,10 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Using-Emacs-Buffers" href="Working.html">5.4 Using Emacs Buffers</a></li>
     <li><a id="toc-Reading-And-Navigating" href="Reading.html">5.5 Reading And Navigating</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Read-a-short-passage-without-moving-point" href="Reading-Without-Moving-Point.html">5.5.1 Read a short passage without moving point</a></li>
-      <li><a id="toc-Read-from-point_002c-stop_002c-and-start-again" href="Reading-From-Point.html">5.5.2 Read from point, stop, and start again</a></li>
-      <li><a id="toc-Hear-Phonetic-Names-After-A-Pause" href="Delayed-Phonetic-Reading.html">5.5.3 Hear Phonetic Names After A Pause</a></li>
+      <li><a id="toc-Choose-source-lines-or-wrapped-screen-rows" href="Reading.html#Choose-source-lines-or-wrapped-screen-rows">5.5.1 Choose source lines or wrapped screen rows</a></li>
+      <li><a id="toc-Read-a-short-passage-without-moving-point" href="Reading-Without-Moving-Point.html">5.5.2 Read a short passage without moving point</a></li>
+      <li><a id="toc-Read-from-point_002c-stop_002c-and-start-again" href="Reading-From-Point.html">5.5.3 Read from point, stop, and start again</a></li>
+      <li><a id="toc-Hear-Phonetic-Names-After-A-Pause" href="Delayed-Phonetic-Reading.html">5.5.4 Hear Phonetic Names After A Pause</a></li>
     </ul></li>
     <li><a id="toc-Select_002c-copy_002c-and-move-text" href="Editing-Text-With-Speech.html">5.6 Select, copy, and move text</a>
     <ul class="toc-numbered-mark">
@@ -224,6 +225,7 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Read-And-Leave-A-Help-Window" href="Using-Online-Help.html#Read-And-Leave-A-Help-Window">6.3 Read And Leave A Help Window</a></li>
     <li><a id="toc-Learn-Interactively-And-Read-Manuals" href="Using-Online-Help.html#Learn-Interactively-And-Read-Manuals">6.4 Learn Interactively And Read Manuals</a></li>
     <li><a id="toc-Emacsvox_002dSpecific-Help" href="Using-Online-Help.html#Emacsvox_002dSpecific-Help">6.5 Emacsvox-Specific Help</a></li>
+    <li><a id="toc-Ask-the-Emacsvox-community" href="Using-Online-Help.html#Ask-the-Emacsvox-community">6.6 Ask the Emacsvox community</a></li>
   </ul></li>
   <li><a id="toc-Work-With-The-Audio-Desktop" href="Audio-Desktop.html">7 Work With The Audio Desktop</a>
   <ul class="toc-numbered-mark">
@@ -317,6 +319,7 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
       <li><a id="toc-Change-A-Blank_002dLine-Tone" href="Changing-Tones.html">8.10.4 Change A Blank-Line Tone</a></li>
       <li><a id="toc-Adjust-Spatial-Presentation" href="Spatial-Presentation-Controls.html">8.10.5 Adjust Spatial Presentation</a></li>
       <li><a id="toc-Inspect-And-Maintain-A-Personal-Sound-Pack" href="Personal-Sound-Packs.html">8.10.6 Inspect And Maintain A Personal Sound Pack</a></li>
+      <li><a id="toc-Browse-recordings-and-assign-them-to-cues" href="Personal-Sound-Packs.html#Browse-recordings-and-assign-them-to-cues">8.10.7 Browse recordings and assign them to cues</a></li>
     </ul></li>
     <li><a id="toc-Speech-Output-And-Notifications" href="Aural-Speech-Output.html">8.11 Speech Output And Notifications</a>
     <ul class="toc-numbered-mark">
@@ -361,9 +364,11 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Browsing-Structure" href="Browsing-Structure.html">9.4 Browsing Structure</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Reading-Org-headings" href="Browsing-Structure.html#Reading-Org-headings">9.4.1 Reading Org headings</a></li>
-      <li><a id="toc-Reading-Markdown-and-Org-tables" href="Reading-Markdown-And-Org-Tables.html">9.4.2 Reading Markdown and Org tables</a></li>
-      <li><a id="toc-Reading-application-lists" href="Reading-Markdown-And-Org-Tables.html#Reading-application-lists">9.4.3 Reading application lists</a></li>
-      <li><a id="toc-Browsing-CSV-data" href="Reading-Markdown-And-Org-Tables.html#Browsing-CSV-data">9.4.4 Browsing CSV data</a></li>
+      <li><a id="toc-Use-managed-Muggles" href="Browsing-Structure.html#Use-managed-Muggles">9.4.2 Use managed Muggles</a></li>
+      <li><a id="toc-Reading-Markdown-and-Org-tables" href="Reading-Markdown-And-Org-Tables.html">9.4.3 Reading Markdown and Org tables</a></li>
+      <li><a id="toc-Reading-application-lists" href="Reading-Markdown-And-Org-Tables.html#Reading-application-lists">9.4.4 Reading application lists</a></li>
+      <li><a id="toc-Choose-table-reading-preferences" href="Reading-Markdown-And-Org-Tables.html#Choose-table-reading-preferences">9.4.5 Choose table reading preferences</a></li>
+      <li><a id="toc-Browsing-CSV-data" href="Reading-Markdown-And-Org-Tables.html#Browsing-CSV-data">9.4.6 Browsing CSV data</a></li>
     </ul></li>
     <li><a id="toc-Web-Browsing-With-EWW" href="Web-Browsing.html">9.5 Web Browsing With EWW</a>
     <ul class="toc-numbered-mark">
@@ -395,7 +400,10 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
       <li><a id="toc-Understand-asynchronous-search-completion" href="Notmuch-Hello-And-Searches.html#Understand-asynchronous-search-completion">10.2.1 Understand asynchronous search completion</a></li>
     </ul></li>
     <li><a id="toc-Navigate-and-inspect-Search-results" href="Notmuch-Search-Results.html">10.3 Navigate and inspect Search results</a></li>
-    <li><a id="toc-Read-a-thread-and-its-MIME-parts" href="Notmuch-Messages-And-Attachments.html">10.4 Read a thread and its MIME parts</a></li>
+    <li><a id="toc-Read-a-thread-and-its-MIME-parts" href="Notmuch-Messages-And-Attachments.html">10.4 Read a thread and its MIME parts</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Read-a-table-in-an-HTML-message" href="Notmuch-Messages-And-Attachments.html#Read-a-table-in-an-HTML-message">10.4.1 Read a table in an HTML message</a></li>
+    </ul></li>
     <li><a id="toc-Change-tags-and-archive-state" href="Notmuch-Tags-And-Archiving.html">10.5 Change tags and archive state</a></li>
     <li><a id="toc-Choose-fields_002c-status_002c-and-privacy" href="Notmuch-Speech-And-Privacy.html">10.6 Choose fields, status, and privacy</a>
     <ul class="toc-numbered-mark">
@@ -426,7 +434,8 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Navigate-transcript-blocks" href="Agent-Shell-Transcript-Navigation.html">11.6 Navigate transcript blocks</a></li>
     <li><a id="toc-Read-and-copy-source-blocks" href="Agent-Shell-Source-Blocks.html">11.7 Read and copy source blocks</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Review-proposed-changes" href="Agent-Shell-Source-Blocks.html#Review-proposed-changes">11.7.1 Review proposed changes</a></li>
+      <li><a id="toc-Read-and-customise-text-trees" href="Agent-Shell-Source-Blocks.html#Read-and-customise-text-trees">11.7.1 Read and customise text trees</a></li>
+      <li><a id="toc-Review-proposed-changes" href="Agent-Shell-Source-Blocks.html#Review-proposed-changes">11.7.2 Review proposed changes</a></li>
     </ul></li>
     <li><a id="toc-Navigate-and-copy-rendered-tables" href="Agent-Shell-Tables.html">11.8 Navigate and copy rendered tables</a>
     <ul class="toc-numbered-mark">
@@ -489,16 +498,13 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
       <li><a id="toc-Using-a-Windows-Setup-Build" href="Trying-Native-Windows-Emacsvox.html#Using-a-Windows-Setup-Build">14.4.1 Using a Windows Setup Build</a></li>
       <li><a id="toc-Guided-Windows-x64-Installation" href="Trying-Native-Windows-Emacsvox.html#Guided-Windows-x64-Installation">14.4.2 Guided Windows x64 Installation</a></li>
       <li><a id="toc-Manual-Native-Installation" href="Trying-Native-Windows-Emacsvox.html#Manual-Native-Installation">14.4.3 Manual Native Installation</a></li>
-      <li><a id="toc-Download-And-Verify-Omnivox" href="Trying-Native-Windows-Emacsvox.html#Download-And-Verify-Omnivox">14.4.4 Download And Verify Omnivox</a></li>
-      <li><a id="toc-Install-And-Check-The-Native-Server" href="Trying-Native-Windows-Emacsvox.html#Install-And-Check-The-Native-Server">14.4.5 Install And Check The Native Server</a></li>
-      <li><a id="toc-Start-Native-Emacsvox" href="Trying-Native-Windows-Emacsvox.html#Start-Native-Emacsvox">14.4.6 Start Native Emacsvox</a></li>
-      <li><a id="toc-Verify-Speech-And-Report-Problems" href="Trying-Native-Windows-Emacsvox.html#Verify-Speech-And-Report-Problems">14.4.7 Verify Speech And Report Problems</a></li>
     </ul></li>
     <li><a id="toc-Installing-Omnivox-From-Source" href="Installing-Omnivox-From-Source.html">14.5 Installing Omnivox From Source</a></li>
     <li><a id="toc-Building-Omnivox-For-WSL2" href="Building-Omnivox-For-WSL2.html">14.6 Building Omnivox For WSL2</a></li>
     <li><a id="toc-Selecting-And-Checking-Omnivox" href="Selecting-And-Checking-Omnivox.html">14.7 Selecting And Checking Omnivox</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Remote-Workstation-Speech-_0028Preview_0029" href="Selecting-And-Checking-Omnivox.html#Remote-Workstation-Speech-_0028Preview_0029">14.7.1 Remote Workstation Speech (Preview)</a></li>
+      <li><a id="toc-Choose-physical-output-devices" href="Selecting-And-Checking-Omnivox.html#Choose-physical-output-devices">14.7.1 Choose physical output devices</a></li>
+      <li><a id="toc-Remote-Workstation-Speech-_0028Preview_0029" href="Selecting-And-Checking-Omnivox.html#Remote-Workstation-Speech-_0028Preview_0029">14.7.2 Remote Workstation Speech (Preview)</a></li>
     </ul></li>
     <li><a id="toc-Compatibility-Speech-Servers" href="Compatibility-Speech-Servers.html">14.8 Compatibility Speech Servers</a></li>
     <li><a id="toc-Backend-Diagnostics-And-Responsibilities" href="Backend-Diagnostics-And-Ownership.html">14.9 Backend Diagnostics And Responsibilities</a></li>
@@ -553,7 +559,7 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
       <li><a id="toc-Source-checkout-and-byte_002dcode-lifecycle" href="Integration-Maintenance.html#Source-checkout-and-byte_002dcode-lifecycle">20.3.4 Source checkout and byte-code lifecycle</a></li>
       <li><a id="toc-Debian-package-builds" href="Integration-Maintenance.html#Debian-package-builds">20.3.5 Debian package builds</a></li>
       <li><a id="toc-Emacsvox-release-staging-and-publication" href="Integration-Maintenance.html#Emacsvox-release-staging-and-publication">20.3.6 Emacsvox release staging and publication</a></li>
-      <li><a id="toc-Future-Aural-contract-decisions" href="Integration-Maintenance.html#Future-Aural-contract-decisions">20.3.7 Future Aural contract decisions</a></li>
+      <li><a id="toc-Aural-extension-boundaries" href="Integration-Maintenance.html#Aural-extension-boundaries">20.3.7 Aural extension boundaries</a></li>
       <li><a id="toc-Voice_002dstyle-metadata-ownership" href="Integration-Maintenance.html#Voice_002dstyle-metadata-ownership">20.3.8 Voice-style metadata ownership</a></li>
       <li><a id="toc-Timeline-preparation-boundaries" href="Integration-Maintenance.html#Timeline-preparation-boundaries">20.3.9 Timeline preparation boundaries</a></li>
       <li><a id="toc-Aural-interface-source-ownership" href="Integration-Maintenance.html#Aural-interface-source-ownership">20.3.10 Aural interface source ownership</a></li>

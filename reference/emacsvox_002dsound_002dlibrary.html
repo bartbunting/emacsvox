@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-sound-library (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-sound-library (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-sound-library (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dsounds.html" rel="next" title="emacsvox-sounds">
+<link href="emacsvox_002dsolitaire.html" rel="prev" title="emacsvox-solitaire">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dsound_002dlibrary">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dsounds.html" accesskey="n" rel="next">emacsvox-sounds</a>, Previous: <a href="emacsvox_002dsolitaire.html" accesskey="p" rel="prev">emacsvox-solitaire</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dsound_002dlibrary-1"><span>2.274 emacsvox-sound-library<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary-1"> &para;</a></span></h3>
+
+<p>Audio files in the library are candidates, not semantic cues. Explicit
+assignment copies immutable audio into a pack before publishing its manifest.
+Browsing and preview do not assign, activate a pack, or persist settings.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dSound_002dLibrary-Commands" accesskey="1">Emacsvox-Sound-Library Commands</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary-Options" accesskey="2">emacsvox-sound-library Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dSound_002dLibrary-Commands">
+<h4 class="subsection"><span>2.274.1 Emacsvox-Sound-Library Commands<a class="copiable-link" href="#Emacsvox_002dSound_002dLibrary-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dsound_002dlibrary-2" accesskey="1">emacsvox-sound-library</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dassign" accesskey="2">emacsvox-sound-library-assign</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dcurrent" accesskey="3">emacsvox-sound-library-current</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002ddelete" accesskey="4">emacsvox-sound-library-delete</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dhelp" accesskey="5">emacsvox-sound-library-help</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dimport" accesskey="6">emacsvox-sound-library-import</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dmode" accesskey="7">emacsvox-sound-library-mode</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dnext" accesskey="8">emacsvox-sound-library-next</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dopen_002ddirectory" accesskey="9">emacsvox-sound-library-open-directory</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dpreview">emacsvox-sound-library-preview</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dprevious">emacsvox-sound-library-previous</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002drefresh">emacsvox-sound-library-refresh</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dreset">emacsvox-sound-library-reset</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dsave">emacsvox-sound-library-save</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dsearch">emacsvox-sound-library-search</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dselect">emacsvox-sound-library-select</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dspeak_002dcurrent">emacsvox-sound-library-speak-current</a></li>
+<li><a href="#emacsvox_002dsound_002dlibrary_002dunassigned">emacsvox-sound-library-unassigned</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary-2">
+<h4 class="subsubsection"><span>2.274.1.1 emacsvox-sound-library<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library</strong> <var class="def-var-arguments">(&amp;optional pack cue)</var><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse available recordings, optionally proposing an assignment for PACK/CUE.
+
+(fn &amp;optional PACK CUE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dassign">
+<h4 class="subsubsection"><span>2.274.1.2 emacsvox-sound-library-assign<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dassign"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dassign"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-assign</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dassign"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dassign-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Queue the recording for a cue, keeping other pending choices in this buffer.
+Choose a pack on the first assignment; further assignments use that pack.
+W saves all pending cues together. q discards them; reopen to change packs.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dcurrent">
+<h4 class="subsubsection"><span>2.274.1.3 emacsvox-sound-library-current<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-current</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Preview the currently assigned cue in the captured target pack.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002ddelete">
+<h4 class="subsubsection"><span>2.274.1.4 emacsvox-sound-library-delete<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002ddelete"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002ddelete"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-delete</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002ddelete"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002ddelete-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete this library file after confirmation, refusing known assignments.
+Imported originals elsewhere and immutable pack copies remain untouched.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dhelp">
+<h4 class="subsubsection"><span>2.274.1.5 emacsvox-sound-library-help<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-help</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explain available recordings, assignments, preview and explicit saving.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dimport">
+<h4 class="subsubsection"><span>2.274.1.6 emacsvox-sound-library-import<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dimport"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dimport"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-import</strong> <var class="def-var-arguments">(file collection)</var><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dimport"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dimport-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy audio FILE to COLLECTION without assigning a cue or removing its source.
+
+(fn FILE COLLECTION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dmode">
+<h4 class="subsubsection"><span>2.274.1.7 emacsvox-sound-library-mode<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-mode</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse available recordings and explicitly assign sounds to pack cues.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-sound-library-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-sound-library-select
+SPC		emacsvox-sound-library-preview
+/		emacsvox-sound-library-search
+?		emacsvox-sound-library-help
+C		emacsvox-sound-library-current
+P		emacsvox-sound-library-preview
+R		emacsvox-sound-library-reset
+W		emacsvox-sound-library-save
+a		emacsvox-sound-library-assign
+d		emacsvox-sound-library-delete
+i		emacsvox-sound-library-import
+o		emacsvox-sound-library-open-directory
+u		emacsvox-sound-library-unassigned
+
+&lt;remap&gt; &lt;emacsvox-aural-ui-next-row&gt;	 emacsvox-sound-library-next
+&lt;remap&gt; &lt;emacsvox-aural-ui-previous-row&gt; emacsvox-sound-library-previous
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dnext">
+<h4 class="subsubsection"><span>2.274.1.8 emacsvox-sound-library-next<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dnext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-next</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dnext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dnext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next recording and use the Library preview setting.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dopen_002ddirectory">
+<h4 class="subsubsection"><span>2.274.1.9 emacsvox-sound-library-open-directory<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dopen_002ddirectory"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dopen_002ddirectory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-open-directory</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dopen_002ddirectory"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dopen_002ddirectory-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the candidate library directory for adding or organising recordings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dpreview">
+<h4 class="subsubsection"><span>2.274.1.10 emacsvox-sound-library-preview<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dpreview"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dpreview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-preview</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dpreview"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dpreview-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Preview the selected recording without changing any cue or pack.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dprevious">
+<h4 class="subsubsection"><span>2.274.1.11 emacsvox-sound-library-previous<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dprevious"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-previous</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dprevious"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dprevious-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous recording and use the Library preview setting.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002drefresh">
+<h4 class="subsubsection"><span>2.274.1.12 emacsvox-sound-library-refresh<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-refresh</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Rescan candidates and assignments without applying or saving anything.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dreset">
+<h4 class="subsubsection"><span>2.274.1.13 emacsvox-sound-library-reset<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dreset"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dreset"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-reset</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dreset"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dreset-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare removal of the local cue assignment, revealing its parent or fallback.
+Original audio stays intact. W saves all pending changes; q discards them.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dsave">
+<h4 class="subsubsection"><span>2.274.1.14 emacsvox-sound-library-save<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-save</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save and apply all pending assignments to their captured pack.
+An inactive pack stays inactive. Assigned audio is copied into the pack;
+removing or renaming the library source cannot break that saved sound.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dsearch">
+<h4 class="subsubsection"><span>2.274.1.15 emacsvox-sound-library-search<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-search</strong> <var class="def-var-arguments">(text)</var><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Filter recording names and collections by case-insensitive substring TEXT.
+
+(fn TEXT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dselect">
+<h4 class="subsubsection"><span>2.274.1.16 emacsvox-sound-library-select<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dselect"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dselect"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-select</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dselect"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dselect-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Queue this recording for the current cue; W saves all pending assignments.
+Browsing and selecting do not change saved cue assignments.
+SPC replays the candidate; C compares the saved cue.
+a chooses another cue; q discards all proposals.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dspeak_002dcurrent">
+<h4 class="subsubsection"><span>2.274.1.17 emacsvox-sound-library-speak-current<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dspeak_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dspeak_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dspeak_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the recording’s name, collection, duration and known assignments.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsound_002dlibrary_002dunassigned">
+<h4 class="subsubsection"><span>2.274.1.18 emacsvox-sound-library-unassigned<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary_002dunassigned"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsound_002dlibrary_002dunassigned"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sound-library-unassigned</strong><a class="copiable-link" href="#index-emacsvox_002dsound_002dlibrary_002dunassigned"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsound_002dlibrary_002dunassigned-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle recordings without saved assignments, keeping pending rows visible.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dsound_002dlibrary-Options">
+<h4 class="subsection"><span>2.274.2 emacsvox-sound-library Options<a class="copiable-link" href="#emacsvox_002dsound_002dlibrary-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-156"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-sound-library-directory</var><a class="copiable-link" href="#index-User-Option-156"> &para;</a></span></dt>
+<dd><pre class="verbatim">Directory of candidate recordings, separate from sound-pack cue assignments.
+Put Ogg, WAV, MP3 or FLAC files here or in collection subdirectories, then
+Rescan the library. Playback support depends on the audio backend. Import
+copies files here without changing any cue. Assigned packs own their audio.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.emacsvox/sounds/library/&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-157"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-sound-library-preview-timing</var><a class="copiable-link" href="#index-User-Option-157"> &para;</a></span></dt>
+<dd><pre class="verbatim">Automatic recording previews when moving between library rows.
+Off announces the row without playing its recording. Before finishes the
+recording before the announcement; alongside overlaps them; after plays the
+recording when the announcement finishes. Before and after require an Omnivox
+structured timeline. The choice applies to all library buffers. Space and P
+still replay a recording explicitly when automatic preview is off.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+alongside
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dsounds.html">emacsvox-sounds</a>, Previous: <a href="emacsvox_002dsolitaire.html">emacsvox-solitaire</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

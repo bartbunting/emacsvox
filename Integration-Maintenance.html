@@ -43,7 +43,7 @@ Previous: <a href="Speech-Server-Protocols.html" accesskey="p" rel="prev">Speech
 
 <p>This chapter collects source-level contracts that are deliberately omitted
 from the user task guides.  Optional package APIs and renderers evolve, so
-recheck the upstream interfaces and keep compatibility behavior bounded when
+recheck the upstream interfaces and keep compatibility behaviour bounded when
 changing an integration.
 </p>
 
@@ -54,7 +54,7 @@ changing an integration.
 <li><a href="#Source-checkout-and-byte_002dcode-lifecycle" accesskey="4">Source checkout and byte-code lifecycle</a></li>
 <li><a href="#Debian-package-builds" accesskey="5">Debian package builds</a></li>
 <li><a href="#Emacsvox-release-staging-and-publication" accesskey="6">Emacsvox release staging and publication</a></li>
-<li><a href="#Future-Aural-contract-decisions" accesskey="7">Future Aural contract decisions</a></li>
+<li><a href="#Aural-extension-boundaries" accesskey="7">Aural extension boundaries</a></li>
 <li><a href="#Voice_002dstyle-metadata-ownership" accesskey="8">Voice-style metadata ownership</a></li>
 <li><a href="#Timeline-preparation-boundaries" accesskey="9">Timeline preparation boundaries</a></li>
 <li><a href="#Aural-interface-source-ownership">Aural interface source ownership</a></li>
@@ -101,8 +101,8 @@ Standalone list bounds include the buffer, so vertical edges stay put.
 </p>
 <p>The read-only table browser caches logical string rows when rendering. Text
 properties map every character, including embedded line breaks and delimiters,
-to a model cell. Pre/post-command hooks synchronize the model after ordinary
-character movement; snapshot extraction also synchronizes it. Browser movement
+to a model cell. Pre/post-command hooks synchronise the model after ordinary
+character movement; snapshot extraction also synchronises it. Browser movement
 uses the model and its rendered position index. New reader actions submit under
 module <code class="code">table-ui</code>, with role <code class="code">field</code> for cells and explicit main-lane delivery.
 The local browser map is independent of the legacy speech-prefix map. CSV
@@ -134,7 +134,7 @@ Browser coverage lives in <code class="code">test/emacsvox-table-ui-tests.el</co
 <code class="code">EMACSVOX_TABLE_UI_TEST_LOAD=compiled</code> in a fresh Emacs after building to verify
 the compiled implementation. Its <code class="code">emacsvox-table-ui-graphical-multiline-navigation</code>
 case requires a graphical display and checks actual wrapping and logical cell
-movement. Listening acceptance is separate from submission and graphical checks.
+movement.
 Tabulated-list coverage lives in <code class="code">test/emacsvox-tabulated-list-tests.el</code>,
 including full values, blanks, buttons, native action keys, sorting, filtering,
 refresh and hidden rows. Its graphical navigation case must run on a real
@@ -165,7 +165,7 @@ cursor movement and speech, plus a tall-image case, in
 trim it, including a bounded unfinished row. Never retain raw process bytes or
 unredacted concealed text. Read fresh public terminal bounds, preserve soft-wrap
 continuity, and reject uncertain clear/reset/alternate-screen replacements.
-Check selected-window following after EAT synchronizes windows, not between
+Check selected-window following after EAT synchronises windows, not between
 chunks inside its renderer. Editable line-mode text lies after <code class="code">eat-term-end</code>;
 it can share the final physical row with the terminal cursor.
 </p>
@@ -184,8 +184,7 @@ process-wide speech stop. Already dispatched speech may finish; scoped Omnivox
 cancellation remains a separate backlog direction. The graphical gate covers
 real X11 focus loss, minibuffers, selection, line drafts and scrolling. Integration
 runners force the silent <code class="code">log-null</code> backend before loading Emacsvox so a failed
-test cannot start the maintainer&rsquo;s configured speech engine. Submission checks
-are separate from the maintainer&rsquo;s final audible SSH acceptance.
+test cannot start your configured speech engine.
 </p>
 <p>When aural diagnostics are enabled, <code class="code">eat-output-decision</code> records explain
 collection rejection, pending-work cancellation, retained output, and selection
@@ -260,7 +259,7 @@ feedback and <code class="code">package-preparation</code> registers optional pa
 private task registry retains each thread, state, start/end times, and original
 error for the Emacs session.  Repeated startup reuses these records, including
 completed and failed tasks, instead of starting duplicate background work.
-Other startup effects, including speech-server initialization, still run when
+Other startup effects, including speech-server initialisation, still run when
 <code class="code">emacsvox</code> is called again; this is not a general-purpose retry command.
 </p>
 <p>Registration completion is separate from adapter loading.  An already-loaded
@@ -318,17 +317,21 @@ isolated compiled Aural check.  Optional integration suites remain outside
 this job.
 </p>
 <p>The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
-both versions with a private home directory and eight reviewed dependency
-snapshots, including Transient 0.13.3 and cond-let 1.0.0.  <code class="code">make test-deps</code> verifies the archive hashes in
+both versions with a private home directory and twelve reviewed dependency
+snapshots, including Transient 0.13.3 and cond-let 1.1.0.  <code class="code">make test-deps</code> verifies the archive hashes in
 <code class="code">test/integration-dependencies.json</code> and stages sources and autoloads under
 ignored <code class="code">.test-deps/</code>; it never changes personal packages.  <code class="code">make integration-test</code>
 verifies that prepared tree before loading it and runs the batch cases.
-<code class="code">make graphical-integration-test</code> uses the same verified tree for the two Agent
-Shell display-row cases in a real graphical Emacs on a private Xvfb display.
+<code class="code">make graphical-integration-test</code> uses the same verified tree for Agent Shell
+rendering, prompt editing, forms and table navigation, core vertical movement,
+and EAT output and focus checks in a real graphical Emacs on a private Xvfb display.
 Both gates fail on missing dependencies or skipped selected tests. The graphical
 runner requires <code class="code">xvfb-run</code>, <code class="code">Xvfb</code>, <code class="code">xauth</code> and <code class="code">timeout</code>, captures its log,
 disables speech output and stops its isolated session after 60 seconds.
-CI runs both gates on each supported Emacs version.
+CI runs both gates on each supported Emacs version, then builds Emacsvox and
+runs <code class="code">make pinned-graphical-menu-test</code> with private compiled Magit, Markdown
+and their dependencies. This menu gate is also required by <code class="code">release-check</code>;
+it preserves the prepared sources and personal packages.
 Pin updates require upstream review, new archive hashes,
 and fresh preparation for both Emacs versions.  These source tests capture
 speech events and exercise disposable EAT subprocesses; they do not replace
@@ -357,7 +360,7 @@ Do not share generated byte-code with a WSL checkout using another Emacs.
 </pre></div>
 
 <p>The PowerShell tests use temporary fixtures and an existing native Emacs.
-They check doctor behavior, explicit selections, prebuilt/offline preflight,
+They check doctor behaviour, explicit selections, prebuilt/offline preflight,
 incomplete installations, platform rejection, checksums, archive paths, argument handling, and atomic
 configuration replacement.  <code class="code">test/emacsvox-native-bytecode-tests.el</code> compares
 the native inventory with GNU Make and checks dependency order and byte-code
@@ -373,9 +376,8 @@ installed Emacs.  The installation logs also include
 MSYS2 packages are signed rolling inputs; these records do not claim a frozen
 or bit-identical compiler environment.  Verify fresh graphical startup,
 acknowledged routing, and tracked completion on both speech lanes with a PATH
-that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
-acceptance step. Native Windows x64 is supported; remote workstation speech
-remains preview, as recorded in
+that contains neither WSL nor MSYS2 tools. Native Windows x64 is supported;
+remote workstation speech remains preview, as recorded in
 <a class="uref" href="../adr/0014-native-windows-support.org">ADR 0014</a>.
 </p>
 <ol class="enumerate">
@@ -515,9 +517,8 @@ Only the main tested executable is uploaded. The failed-upgrade fixture and
 offline bundle remain build inputs. Run <code class="code">make windows-sources-test</code> for the
 isolated source/publication boundary checks.
 </p>
-<p>The setup executable remains a development artifact. Stable release
-integration and remaining acceptance work are recorded in
-<a class="uref" href="../adr/0024-native-windows-installer.org">ADR 0024</a>. Public preview promotion is described below and in
+<p>The setup executable is distributed separately from stable release artifacts,
+as specified in <a class="uref" href="../adr/0024-native-windows-installer.org">ADR 0024</a>. Public preview promotion is described below and in
 <a class="uref" href="../adr/0025-windows-preview-publication.org">ADR 0025</a>.
 </p></li></ol>
 
@@ -689,7 +690,7 @@ byte-code validation in a temporary Windows directory.
 release to be tagged and published.  Preparing an artifact, committing or
 pushing a branch, publishing documentation, or receiving a general instruction
 to continue is not permission to create or push a release tag.  Once that
-separate authorization has been given, the guarded commands are:
+separate authorisation has been given, the guarded commands are:
 </p>
 <div class="example">
 <pre class="example-preformatted">make release-tag
@@ -708,13 +709,11 @@ pushes <code class="code">master</code> or the documentation branch.  Use <code 
 when a non-mutating preflight is wanted without creating an artifact.
 </p>
 </div>
-<div class="subsection-level-extent" id="Future-Aural-contract-decisions">
-<h4 class="subsection"><span>20.3.7 Future Aural contract decisions<a class="copiable-link" href="#Future-Aural-contract-decisions"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Aural-extension-boundaries">
+<h4 class="subsection"><span>20.3.7 Aural extension boundaries<a class="copiable-link" href="#Aural-extension-boundaries"> &para;</a></span></h4>
 
-<p>The completed Aural implementation diary is preserved under
-<code class="code">archive/emacsvox/migrations/</code> rather than serving as current instructions.
-Three questions from that diary remain deliberately undecided and require an
-explicit architecture decision before implementation:
+<p>The following extensions require an explicit architecture decision before
+implementation:
 </p>
 <ul class="itemize mark-bullet">
 <li>whether a critical alert may be completely suppressed or must retain an
@@ -725,7 +724,7 @@ can participate in the presentation cascade; and
 or to a module-owned extension.
 </li></ul>
 
-<p>Do not infer answers from the archived proposals.  Current behavior is defined
+<p>Do not infer contracts from archived proposals. Current behaviour is defined
 by the Aural implementation, its generated reference, and accepted ADRs.
 </p>
 </div>
@@ -733,7 +732,7 @@ by the Aural implementation, its generated reference, and accepted ADRs.
 <h4 class="subsection"><span>20.3.8 Voice-style metadata ownership<a class="copiable-link" href="#Voice_002dstyle-metadata-ownership"> &para;</a></span></h4>
 
 <p>The private <code class="code">emacsvox-aural--voice-style-fields</code> table in
-<code class="code">lisp/emacsvox-aural-rules.el</code> owns accepted field names, groups, value types,
+<code class="code">lisp/aural/emacsvox-aural-rules.el</code> owns accepted field names, groups, value types,
 and integer bounds.  The existing public dimension lists and private accepted
 key list are derived from it; validation traverses the descriptors directly.
 Composition and provenance continue to consume the accepted-key inventory.
@@ -751,16 +750,16 @@ Legacy <code class="code">:rate</code> is accepted for loading saved data but is
 rate; nonzero legacy values produce the existing retuning degradation.
 The table supplies no implicit defaults and does not declare engine support.
 </p>
-<p>An explicit <code class="code">nil</code> over a preset is a compatibility behavior to characterize,
+<p>An explicit <code class="code">nil</code> over a preset is a compatibility behaviour to characterise,
 not an authoring decision settled by the metadata table.  For example, the
 current compiler clears the reported average-pitch value for
 <code class="code">(:preset base :average-pitch nil)</code> while retaining the base voice command and
 emitting no pitch-reset command.  The tests preserve this distinction.  A
 future inheritance, omission, or reset policy needs a separate decision.
 </p>
-<p>Compiler conversion, backend wire names, capability discovery, normalization,
+<p>Compiler conversion, backend wire names, capability discovery, normalisation,
 and delivery stay in their existing owners.  When adding a field, update those
-consumers explicitly and test final serialized output or an explicit
+consumers explicitly and test final serialised output or an explicit
 degradation. The common voice editor uses the shared field metadata for bounds
 and neutral values. It covers portable ACSS and optional rate and post-synthesis
 adjustments in the same retained draft.
@@ -769,7 +768,7 @@ adjustments in the same retained draft.
 entry requests the adapter default; zero is explicit. Individual choice fields
 distinguish shared inheritance, custom values and explicit adapter defaults.
 Rule-editor input has its own scoped inheritance semantics; do not substitute
-one editor&rsquo;s blank-input behavior for the other&rsquo;s.
+one editor&rsquo;s blank-input behaviour for the other&rsquo;s.
 </p>
 <p>The common editor displays low-pass and high-pass as amounts from zero through
 nine, increasing with stronger filtering. Low-pass converts between amount and
@@ -778,13 +777,13 @@ is labelled neutral. Stored cutoffs and adapter-default nil retain their
 meaning. Invalid boundary steps must fail before history, dirty state, refresh
 or audition changes.
 </p>
-<p>Delivery preparation has the limited helper boundaries described below;
-asynchronous operation ownership remains a separate refactoring proposal.
+<p>Delivery preparation has the helper boundaries described below; metadata
+validation does not transfer ownership of asynchronous operations.
 </p>
 <p>The rule tests state field inventories, bounds, error precedence, and
 composition expectations independently of the metadata.  Scheme tests cover
 saved rich palettes and explicit-nil rules; transport tests check distinct
-ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
+ACSS mappings, zero and omitted wire fields, effects, and preset behaviour.
 <code class="code">make compiled-aural-test</code> also runs these style contracts with the isolated
 compiled subsystem loaded, checking that the implementations stay in that
 build. The <code class="code">voice-style-ui</code> tests exercise common-editor entry, inherited
@@ -801,51 +800,76 @@ The graphical redisplay test is reported as skipped in ordinary batch runs.
 The connected saved-style regression edits a custom <code class="code">bolden</code>, reads its saved
 data back, and compares common-editor and Workbench previews with the final
 normal-speech wire for <code class="code">voice-bolden</code>.  Workbench uses the compiler&rsquo;s palette
-resolution and the shared effect normalizer: gain and pan level five must
+resolution and the shared effect normaliser: gain and pan level five must
 remain exactly neutral at 0.5.  Preserve both this path and the independently
 specified Workbench scale cases when changing preview or palette lookup.
 Preserve final-write, timeout, reentrancy, and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
-process lifecycle or audible behavior.
+process lifecycle or audible behaviour.
 </p>
 </div>
 <div class="subsection-level-extent" id="Timeline-preparation-boundaries">
 <h4 class="subsection"><span>20.3.9 Timeline preparation boundaries<a class="copiable-link" href="#Timeline-preparation-boundaries"> &para;</a></span></h4>
 
-<p>Two private helpers in <code class="code">lisp/emacsvox-aural-transport.el</code> make preparation
+<p>Two private helpers in <code class="code">lisp/aural/emacsvox-aural-transport.el</code> make preparation
 inputs explicit.  <code class="code">emacsvox-aural--timeline-effect-transition</code> takes previous
-effects, normalized next effects, and a span ID, returning a directive and the
+effects, normalised next effects, and a span ID, returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;
 retention preserves the previous state.  The builder still owns the state
-accumulator, span numbering, and when normalization runs.  Suppressed or empty
+accumulator, span numbering, and when normalisation runs.  Suppressed or empty
 content does not advance effects, while spoken boundary actions do.
 </p>
 <p><code class="code">emacsvox-aural--encode-timeline-delivery-fields</code> takes a policy and replacement
 key.  The existing <code class="code">emacsvox-aural--timeline-delivery-fields</code> wrapper reads the
 dynamic submission variables at the end of timeline construction.  Preserve
 that capture point: resource resolution earlier in construction can re-enter
-Lisp and change the submission state.  The serializer preserves ordered
+Lisp and change the submission state.  The serialiser preserves ordered
 defaults, key conversion, circular printing, diagnostics, and byte bounds.
 </p>
-<p>The complete builder is not pure.  Cue resolution through
-<code class="code">omnivox-remote-resource</code> may perform I/O; relative-rate support comes from the
-live speech process.  Those operations, action placement, dispatch
-registration, framing, fallback, and process writes retain their existing
-owners and sequence.  Separating a complete delivery candidate from those
-effects requires further design and failure-path characterization.
+<p>The coordinator resolves resources and reads capabilities at their established
+points, then passes explicit values to the assembly helpers.  Cue resolution
+through <code class="code">omnivox-remote-resource</code> may perform I/O; relative-rate support comes
+from the live speech process.  The complete coordinator is therefore not pure.
+Policy remains captured after the final resource resolution.
+</p>
+<p>The assembled output is copied into an owned candidate containing document or
+command data, semantic bindings and a span index, without processes, callbacks
+or editor objects.  Binding attaches the existing live dispatch owner and
+validates framing with its actual dispatch ID.  Process, generation, registration and
+queue guards still control admission; a candidate does not authorise a write
+after those inputs change.  Compatibility binding preserves the original
+command bytes.  The optional delivery recorder observes these boundaries
+without owning dispatch or recovery.
 </p>
 <p>The <code class="code">delivery-preparation</code> tests in <code class="code">test/emacsvox-aural-transport-tests.el</code>
-check complete serialized timelines and final writes, semantic bindings,
+check complete serialised timelines and final writes, semantic bindings,
 state ownership, policy inputs, and capture timing.  The compiled Aural gate
 also runs these contracts and existing stop and send-failure regressions with
 the compiled implementation resident.  Keep the full failure, reentrancy,
 and golden-trace suites as regression checks; captured writes establish
-protocol behavior, not audible playback.
+protocol behaviour, not audible playback.
 </p>
 </div>
 <div class="subsection-level-extent" id="Aural-interface-source-ownership">
 <h4 class="subsection"><span>20.3.10 Aural interface source ownership<a class="copiable-link" href="#Aural-interface-source-ownership"> &para;</a></span></h4>
 
+<p>Explain, Recent Feedback, remapping, Change Feedback and Feedback Details use
+the private inspection view in <code class="code">emacsvox-aural-inspection.el</code>.  It shares the
+complete frozen plan list and records the explanation basis, selected part
+and editing component.  Helpers supply ordered actions, cue eligibility,
+voice descriptions, degradation and fallback counts, and semantic field
+groups.  Summaries are computed when requested; history stores neither views
+nor additional rendered summaries.  Existing first-plan explanation fields
+and private compatibility wrappers remain available.
+</p>
+<p>Keep interface-specific wording and selection policy with each interface.
+Direct remapping chooses a sole eligible part automatically and prompts when
+several qualify; the guided editor retains its explicit multipart selection.
+Earcon eligibility includes the original before/after action positions and
+counts.  A voice-remapping part can have silent content even though Feedback
+Details offers its compact voice action only for spoken content.  Sharing
+inspection data must preserve these distinct interaction contracts.
+</p>
 <p>Ordinary-buffer entry captures a source buffer, a marker, and a guarded source
 line.  Child interfaces and Help inherit that context through the inspection
 and shared UI helpers.  Use <code class="code">emacsvox-aural-inspection-call-in-source</code> for
@@ -859,8 +883,12 @@ source identity, position, and modification tick still match.  Source identity
 is a buffer-local, data-only token that distinguishes buffers sharing a name;
 history continues to retain no buffer objects or markers.  Explicit historical
 selection remains valid after the source changes and is explained from its
-frozen plan.  Prepared current-item rules carry a source guard checked before
-their saved or live rule layer changes.
+frozen plan.  The inspection service associates each selected historical part
+with a surviving source independently by identity.  This permits historical
+inspection after edits or renames without granting scope to a killed or
+same-name replacement buffer.  Live source references belong to temporary
+editor input.  Prepared current-item rules carry a separate source guard
+checked before their saved or live rule layer changes.
 </p>
 <p>Find rule editors by scope and target identity, not by a formatted buffer
 name.  Buffer scopes belong to buffer objects, fragment scopes to fragment
@@ -885,25 +913,35 @@ streams do not start remote recovery.  Exercise these boundaries in
 <div class="subsection-level-extent" id="Omnivox-voice-configuration-applies">
 <h4 class="subsection"><span>20.3.12 Omnivox voice configuration applies<a class="copiable-link" href="#Omnivox-voice-configuration-applies"> &para;</a></span></h4>
 
-<p><code class="code">omnivox-apply-voice-configuration</code> captures one generation and its definitions
-for the original speech processes.  Applies may overlap.  Each owns its request
-identifiers and retires only those callbacks when a process result becomes
-terminal.  Acknowledging routing precedes logical registration; one aggregate
-reports applied, partial, or failed after all participating processes finish.
+<p><code class="code">omnivox-apply-voice-configuration</code> creates a private operation with one registry
+generation, pending targets, results, deadline and completion callback.  Each
+target captures its original process, lane role, generation and registration
+before sending, alongside its mutable phase and request identifiers.  Named
+transitions handle routing acknowledgement, registration and terminal results.
+Acknowledging routing precedes logical registration; one aggregate reports
+applied, partial, or failed after all participating processes finish.
 </p>
-<p>The timeout closes pending results as failed with phase <code class="code">timeout</code>, cancels
-the timer, and releases the apply&rsquo;s pending callbacks.  A late acknowledgement
-cannot start another phase, update acknowledged configuration, or publish a
-second terminal result.  A reply from a stopped or replaced process also
-cannot advance its old apply.  Request ownership must remain correct when
-replies are dispatched while a send is still returning.
+<p>Applies may overlap.  A target retires only its own requests and detaches from
+the operation when it finishes.  Completion cancels the deadline and releases
+the stored caller before publishing the result.  A callback may start another
+Apply immediately, including while the original send is still returning.
+Replies from stopped or replaced processes cannot advance their old targets.
 </p>
-<p>This closes client work; it cannot undo a change already sent to the server.
-The Workbench therefore describes a timeout as an unconfirmed server outcome
-and offers reapplication of the committed profile.  No late-reply history is
-retained for expired applies.  Keep request-table, late-reply, overlapping-apply,
-and replacement regressions in <code class="code">test/emacsvox-tts-tests.el</code> and spoken timeout
-feedback coverage in <code class="code">test/emacsvox-aural-voice-workbench-tests.el</code>.
+<p>Timeout closes pending results as failed with phase <code class="code">timeout</code>.  It discards
+routing and legacy-registration callbacks, but an already sent layered
+registration retains a bounded observer for its original connection.  A valid
+late acknowledgement may update that connection&rsquo;s speech snapshot under the
+existing generation guards.  It cannot reopen Apply, start another phase or
+publish another terminal result.  The observer retains its target data without
+the completed operation or caller and uses the ordinary request deadline and
+table limit.
+</p>
+<p>Closing client work cannot undo a change already sent to the server.  The
+Workbench therefore describes a timeout as an unconfirmed server outcome and
+offers reapplication of the committed profile.  Keep request-table, late-reply,
+overlapping-apply, callback-release and replacement regressions in
+<code class="code">test/emacsvox-tts-tests.el</code> and spoken timeout feedback coverage in
+<code class="code">test/emacsvox-aural-voice-workbench-tests.el</code>.
 </p>
 </div>
 <div class="subsection-level-extent" id="Notmuch-contracts">
@@ -918,7 +956,7 @@ or programmatic upstream call does not claim the outer user&rsquo;s feedback.
 <p>The Show landing and visibility paths also read renderer metadata such as
 <code class="code">:headers-overlay</code>, <code class="code">:message-visible</code>, message extents, <code class="code">:notmuch-part</code>,
 part-hidden state, and Notmuch part-button types.  Missing optional metadata
-should reduce presentation detail rather than authorize an operation.  Review
+should reduce presentation detail rather than authorise an operation.  Review
 these adapters whenever the Notmuch renderer changes.
 </p>
 <p>Each user-owned asynchronous Search process carries its own completion state
@@ -941,7 +979,8 @@ including real displayed-window reading for both advance paths.
 deliberately disabling them or while testing live integration changes.
 </p>
 <p>The minimum supported Agent Shell is 0.85.3. The integration pins target
-Agent Shell 0.86.1 at <code class="code">137b574</code> and Shell Maker 0.97.5 at <code class="code">dcc05a8</code>. ACP retains its reviewed snapshot. A personal
+Agent Shell 0.95.1 at <code class="code">a9f3034</code>, Shell Maker 0.98.2 at <code class="code">f57ad5e</code>, and
+ACP 0.18.2 at <code class="code">2959da5</code>. A personal
 package upgrade does not refresh <code class="code">test/integration-dependencies.json</code> or its
 prepared tree. When the preparer rejects a changed lock, choose a fresh
 <code class="code">TEST_DEPS_DIR</code> and pass the same directory to preparation and both integration
@@ -950,7 +989,7 @@ gates; preserve the old directory until it is no longer needed.
 <p>For every pin refresh, compare all Emacsvox navigation, speech-control, table,
 and repeat keys against shell and viewport maps, inherited Shell Maker maps,
 list editing, inline actions, permission and question controls, and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.86.1 refresh keeps
+effective keys in real prompt and transcript contexts. The 0.95.1 refresh keeps
 the existing scoped overrides: viewport <kbd class="kbd">t</kbd> discovers tables; table <kbd class="kbd">r</kbd> reads
 rows instead of quoting or replying; viewport table <kbd class="kbd">c</kbd> reads columns and <kbd class="kbd">a</kbd>
 selects table speech instead of continuing or repeating a reply. The table <kbd class="kbd">k</kbd>
@@ -959,12 +998,20 @@ consistent reading keys; the displaced commands remain available through
 <kbd class="kbd">M-x</kbd> as documented in the Agent Shell user chapter. Prompt letters remain
 literal input, and repeat navigation must release unrelated keys.
 </p>
+<p>Empty-input override submission may reroute queued input while explicit input
+activation is browsing; nonempty drafts retain the edit requirement. Upstream
+owns reroute confirmation and recovery. Recursive fragment feedback resolves
+the group before comparing visibility, so a folded child cannot hide a group
+change. Link feedback follows upstream&rsquo;s shorter action wording while retaining
+explicit URL inspection and filtering only redundant cursor hints. Tests cover
+both the current wording and older supported renderers.
+</p>
 <ol class="enumerate">
 <li> <a class="anchor" id="Internal-ownership-and-renderer-tests"></a>Internal ownership and renderer tests
 
 
-<p>The main <code class="code">lisp/emacsvox-agent-shell.el</code> module requires the internal
-<code class="code">lisp/emacsvox-agent-shell-render.el</code> module.  The renderer module depends
+<p>The main <code class="code">lisp/integrations/emacsvox-agent-shell.el</code> module requires the internal
+<code class="code">lisp/integrations/emacsvox-agent-shell-render.el</code> module.  The renderer module depends
 only on Emacs libraries, with no reverse dependency on the main integration.
 Its private helper names and argument contracts remain available through the
 main module.
@@ -972,13 +1019,13 @@ main module.
 <table class="multitable">
 <thead><tr><th width="30%">Owner</th><th width="70%">Responsibilities</th></tr></thead>
 <tbody><tr><td width="30%">Renderer module</td><td width="70%">Interpret prompt faces and chat label strings, current and legacy status glyphs, semantic fragment provenance, decorative controls, answer body ranges, and legacy clipboard properties. Most helpers inspect supplied strings; fragment classification can also read the current buffer without changing it.</td></tr>
-<tr><td width="30%">Main integration</td><td width="70%">Capture buffer and overlay context; apply user customization, speech limits, and delivery; own response accumulation, event subscriptions, timers, callback generations, navigation, permission handling, activation, and cleanup.</td></tr>
+<tr><td width="30%">Main integration</td><td width="70%">Capture buffer and overlay context; apply user customisation, speech limits, and delivery; own response accumulation, event subscriptions, timers, callback generations, navigation, permission handling, activation, and cleanup.</td></tr>
 </tbody>
 </table>
 
 <p>Renderer metadata supplies presentation and navigation facts; it does not
-authorize permission responses or establish lifecycle completion.  Status
-label customization stays with the main integration.  Keep compatibility
+authorise permission responses or establish lifecycle completion.  Status
+label customisation stays with the main integration.  Keep compatibility
 interpretation together in the renderer module, and keep registration and
 speech side effects in the main owner.
 </p>
@@ -1036,7 +1083,7 @@ The tests capture speech events and do not establish audible playback.
 <code class="code">turn-complete</code>, <code class="code">error</code>, <code class="code">elicitation-request</code>, and <code class="code">elicitation-response</code>.
 Dedicated subscriptions consume
 <code class="code">permission-request</code>, <code class="code">permission-response</code>, and <code class="code">tool-call-update</code>.  Add new
-semantic behavior at the public event layer when Agent Shell exposes it; keep
+semantic behaviour at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 </p>
 <p>Question feedback resolves control identity from renderer properties and values
@@ -1046,8 +1093,8 @@ request and response announcements; action advice confirms edits and previews.
 No new key overrides are installed. The upstream feature stays opt-in.
 </p>
 <p>Configuration access uses <code class="code">agent-shell-config-options</code> and
-<code class="code">agent-shell-initialized-p</code> when available. The 0.85.3 fallback reads normalized
-private options and checks the initialization pipeline flags. Startup defaults
+<code class="code">agent-shell-initialized-p</code> when available. The 0.85.3 fallback reads normalised
+private options and checks the initialisation pipeline flags. Startup defaults
 must not be announced as user changes. Verify the minimum at <code class="code">f44c96b</code> as well
 as the pinned version, including source and compiled speech and graphical form
 controls. Use separate prepared dependency directories for each version.
@@ -1067,7 +1114,7 @@ public event to the body rendered during the same call, matching both the
 owning buffer and qualified fragment ID.  Full tool speech is submitted after
 rendering returns.  Output digests and lifecycle statuses are tracked separately
 so late output is spoken without repeating identical updates.  Renderer IDs
-without a matching public event do not authorize tool feedback.
+without a matching public event do not authorise tool feedback.
 </p>
 <p>Until upstream exposes public steering and push lifecycle events, small
 adapters wrap the structured steering request&rsquo;s callbacks and the accepted
@@ -1085,7 +1132,7 @@ native command feedback.  New asynchronous tool, queue, steering, setting, and
 permission-detail submissions explicitly select the notification lane; list
 editing and diff entry remain foreground interactions.  All new events and
 their outcome, count, or setting attributes are registered by the workflow
-semantic provider so Aural rules can customize their presentation.
+semantic provider so Aural rules can customise their presentation.
 </p></li></ol>
 
 </div>
@@ -1110,7 +1157,7 @@ staging and unstaging, including removal of the last file in a section.
 <p>Magit&rsquo;s positional highlight overlays must not become source personalities.
 The integration suppresses legacy overlay voice mirroring for those highlights
 and excludes their faces from source capture.  It preserves text faces,
-deliberate personalities, and customized hash voices.  Navigation still emits
+deliberate personalities, and customised hash voices.  Navigation still emits
 section facts; empty lines supply the core line-condition facts without a
 competing selection icon.
 </p>
@@ -1137,7 +1184,7 @@ replacing it.
 <p>The installed Omnivox executable is recorded as an absolute WSL path in the
 data-only <code class="code">$XDG_CONFIG_HOME/emacsvox/omnivox-program</code> file.  Launcher selection
 is explicit <code class="code">OMNIVOX_PROGRAM</code>, that per-user file, developer staging, then
-<code class="code">PATH</code>.  Keep the selection tests synchronized with this order.  A configured
+<code class="code">PATH</code>.  Keep the selection tests synchronised with this order.  A configured
 but invalid path is a visible configuration error; silently falling through
 would hide a stale or damaged user installation.
 </p>
@@ -1159,7 +1206,7 @@ split across three boundaries:
 builds the Docker image, and validates this boundary before compilation.  The
 full target then builds Omnivox&rsquo;s two 32-bit helper sources deterministically,
 builds native Windows Omnivox plus its RHVoice, Flite, and RuTTS helpers in the
-container, and stages their licenses, provenance, and checksums.  The clean
+container, and stages their licences, provenance, and checksums.  The clean
 target also builds Piper support and verifies that the pinned companion and
 main executable identify the same Omnivox source commit.  A host Rust
 installation, MinGW installation, Visual Studio, .NET SDK, or system eSpeak
@@ -1299,8 +1346,8 @@ reuse, interruption, and activation failure.
 selects the staged runtime before Make&rsquo;s final runtime and live checks; a
 failure in those final checks does not restore the previous selection.
 Interruption before activation can leave temporary files in a new version
-directory while preserving the current link.  The fixture tests characterize
-these existing behaviors and successful retry.  Changing cleanup or rollback
+directory while preserving the current link.  The fixture tests characterise
+these existing behaviours and successful retry.  Changing cleanup or rollback
 requires a separate fix and acceptance decision.  Fixture success does not
 establish native compiler reproducibility, real Windows path conversion,
 engine startup, or audible playback; run the existing native gates for that
@@ -1379,7 +1426,7 @@ affect the selected engines. For example:
   --runtime-input voices=/path/to/voice-data
 </pre></div>
 
-<p>Initialization captures supported runtime overrides from the environment,
+<p>Initialisation captures supported runtime overrides from the environment,
 including <code class="code">OMNIVOX_DECTALK_DLL</code>, <code class="code">OMNIVOX_ECI_DLL</code> and <code class="code">ESPEAK_NG_DATA</code>.
 Inspect the resulting JSON plan. Its initial routes are Eloquence <code class="code">v1</code>,
 DECtalk <code class="code">paul</code> and eSpeak&rsquo;s British English voice (<code class="code">espeak:gmw/en</code>, with a
@@ -1397,7 +1444,7 @@ correctness; do not treat a completed timing run as clearing that failure.
 <p>The plan pins the executable path. When staging a new development build,
 update <code class="code">targets[].program</code> before measuring it. Retain the earlier executable
 and complete helper payload if an old-build comparison is wanted.
-<code class="code">--baseline-program</code> at initialization adds a second target for ordinary
+<code class="code">--baseline-program</code> at initialisation adds a second target for ordinary
 speech, with native controls and editor tests disabled for that older worker.
 An editor comparison against older Lisp needs a target with its own
 <code class="code">emacsvox_root</code> and current byte-code for that checkout. Keep runtime inputs,

@@ -61,12 +61,25 @@ Lisp data form in <code class="code">my-cues/emacsvox-sound-pack.el</code>:
  :default-spatialization neutral)
 </pre></div>
 
-<p>The file contains data, not executable initialization: do not wrap the form in
+<p>The file contains data, not executable initialisation: do not wrap the form in
 <code class="code">setq</code>, quote it, or add a second form. Put a replacement recording such as
 <code class="code">button.ogg</code> in the same directory. Its basename names the registered cue.
 Unknown cue names fail the resource audit; introducing a new semantic cue
 requires an integration to register its intent and use it. Every standalone
 sound pack must resolve <code class="code">button</code>, directly or through its declared parent.
+</p>
+<p>The recording library writes version 2 manifests when saving assignments.
+These retain the same metadata and add <code class="code">:assignments</code>: an alist mapping cue
+symbols to <code class="code">inherit</code> or <code class="code">(:recording SHA256 :file RELATIVE-PATH :name LABEL)</code>.
+Audio is copied below <code class="code">recordings/assigned/</code> inside the pack; paths and byte
+hashes are checked before publication. Copy the complete pack directory when
+relocating it. Version 1 manifests and flat cue filenames remain supported.
+</p>
+<p>Explicit assignments override flat and module-specific files at their own
+inheritance level. <code class="code">inherit</code> skips both local sources without deleting them.
+The browser shows recorded labels, while cue registration still owns semantic
+intent. Candidate files belong in the separate library, not at the pack root;
+see <a data-manual="emacsvox" href="./Personal-Sound-Packs.html#Personal-Sound-Packs">Personal Sound Packs</a> for the assignment workflow.
 </p>
 <p>The optional <code class="code">:profiles</code> field lists registered cue-coverage requirements.
 These are resource validation contracts, distinct from Presentation Profiles

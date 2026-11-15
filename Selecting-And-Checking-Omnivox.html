@@ -23,6 +23,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -57,8 +58,8 @@ installation next, then a content-addressed source runtime, then <code class="co
 </pre></div>
 
 <p>The check initialises engine/output and plays tone then speech. Its success
-message is conditional on hearing both. Exit zero alone is not audible
-acceptance.
+message asks you to confirm that you hear both. If either is absent, follow
+<a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics</a> before starting Emacsvox.
 </p>
 <p>Select before loading Emacsvox:
 </p>
@@ -79,10 +80,78 @@ restarts after a deliberate configuration change. The complete isolated start,
 expected speech, and recovery remain in <a class="ref" href="Installation.html">Installation</a>.
 </p>
 <ul class="mini-toc">
-<li><a href="#Remote-Workstation-Speech-_0028Preview_0029" accesskey="1">Remote Workstation Speech (Preview)</a></li>
+<li><a href="#Choose-physical-output-devices" accesskey="1">Choose physical output devices</a></li>
+<li><a href="#Remote-Workstation-Speech-_0028Preview_0029" accesskey="2">Remote Workstation Speech (Preview)</a></li>
 </ul>
+<div class="subsection-level-extent" id="Choose-physical-output-devices">
+<h4 class="subsection"><span>14.7.1 Choose physical output devices<a class="copiable-link" href="#Choose-physical-output-devices"> &para;</a></span></h4>
+
+<p>An updated Windows development build of Omnivox can send main speech and
+notifications to different physical outputs. This requires the server&rsquo;s
+<code class="code">audio_device_selection_v1</code> capability; the pinned 1.18.0 release does not
+provide it. It works with native Windows Emacs or WSL Emacs launching the
+Windows worker. Linux/WSLg, macOS, PulseAudio and remote device selection are
+not provided by this interface.
+</p>
+<p>Open <kbd class="kbd">C-e H o n</kbd> and choose <em class="emph">Main output device</em> (<kbd class="kbd">D</kbd>) or <em class="emph">Notification output
+device</em> (<kbd class="kbd">M</kbd>). The equivalent command is <kbd class="kbd">M-x omnivox-output-devices <kbd class="key">RET</kbd></kbd>;
+a prefix argument chooses notifications. For a separate notification device,
+first use Automatic, Left, Right or Both notification routing so that a
+separate worker exists. <a data-manual="emacsvox" href="./Notification-Routing.html#Notification-Routing">Notification Routing</a> explains that arrangement.
+</p>
+<p>Press <kbd class="kbd">d</kbd> for the Transient list of <em class="emph">Follow system default</em> and available
+outputs. It also retains
+a missing saved or applied device as unavailable. Names are labels: identical
+names can identify different devices, so duplicate names have distinct numbers
+and each choice&rsquo;s Help includes its unique device ID. <em class="emph">Selected</em>, <em class="emph">Applied</em>,
+<em class="emph">Saved</em> and <em class="emph">Connected</em> describe distinct states. Selected is the candidate
+waiting for Apply. In default
+mode, the applied choice is Follow system default while Connected identifies
+the endpoint currently used.
+</p>
+<ol class="enumerate">
+<li> Browse the choices with arrows to hear their names and states. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> selects
+a candidate and returns to the device menu without changing audio. <kbd class="kbd">q</kbd>
+returns without selecting.
+</li><li> Press <kbd class="kbd">a</kbd> to Apply that candidate to this lane. The worker opens it while
+the old route remains usable. If preparation fails or is cancelled, a
+healthy old route keeps working. Success cancels interrupted speech and
+cues, then sends fresh output to the selected device. Engines stay loaded;
+voice, rate, channel and volume settings remain in force.
+</li><li> Confirm the result and listen to subsequent speech. Use <kbd class="kbd">g</kbd> to refresh
+live status and availability. Connected reports a working software
+connection; it does not prove that a headset is audible.
+</li><li> Press <kbd class="kbd">s</kbd> to Save the confirmed applied choice for this host and lane in
+Customize. Saving does not apply the selected candidate. Main and notification
+choices are independent. <kbd class="kbd">q</kbd> returns without applying or saving the current
+candidate; an already applied choice remains active for this session.
+</li></ol>
+
+<p>Saved choices use the speech host&rsquo;s name, backend and device ID. Renaming the
+host creates a different scope. Friendly-name changes do not select another
+device. Explicit <code class="code">--audio-device</code> or <code class="code">OMNIVOX_AUDIO_DEVICE</code> startup overrides
+take precedence over saved choices. Ordinary startup resolves saved choices
+inside the worker without an extra discovery process.
+</p>
+<p>An explicit device never falls back to speakers when disconnected. Its pending
+audio is cancelled, requests during the outage are discarded, and reconnect
+does not replay them. Reconnect the device, or explicitly Apply Follow system
+default or another device. Notifications do not fall back to main speech when
+their intended physical destinations differ or are unresolved; notification
+history retains their text.
+</p>
+<p>An unanswered Apply remains unknown. Press <kbd class="kbd">g</kbd> to reconcile it or <kbd class="kbd">c</kbd> to request
+cancellation; cancellation cannot undo a completed change. Automatic worker
+replacement preserves the last confirmed destination and refuses to guess
+while an Apply is unresolved. If the worker has died, Apply asks whether to
+recover it on the selected output. Recovery still requires confirmed cleanup
+of the previous native worker. A fresh Emacs session uses the saved choice;
+unsaved session choices need not survive exit. The explicit emergency-speech
+command ignores these ordinary device preferences.
+</p>
+</div>
 <div class="subsection-level-extent" id="Remote-Workstation-Speech-_0028Preview_0029">
-<h4 class="subsection"><span>14.7.1 Remote Workstation Speech (Preview)<a class="copiable-link" href="#Remote-Workstation-Speech-_0028Preview_0029"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.2 Remote Workstation Speech (Preview)<a class="copiable-link" href="#Remote-Workstation-Speech-_0028Preview_0029"> &para;</a></span></h4>
 
 <a class="anchor" id="Remote-workstation-speech-setup"></a>
 <p>Emacs can run on an SSH host while Omnivox, installed voices, and playback stay

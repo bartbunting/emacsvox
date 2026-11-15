@@ -126,9 +126,10 @@ changes text. These previews are private and exclude contextual rules.
 Adjustments speak values without automatic samples here; the full editor&rsquo;s
 automatic-sample preference is retained. <kbd class="kbd">u</kbd> undoes the last draft change.
 </p>
-<p><kbd class="kbd">e</kbd> opens engine-specific settings, waiting for a qualified runtime catalogue
-before permitting edits. Its <kbd class="kbd">q</kbd> returns to the common editor; <kbd class="kbd">m</kbd> reopens
-focused tuning on the same draft and scope. Physical experiments, individual
+<p><kbd class="kbd">e</kbd> opens engine-specific settings. Editing becomes available when the engine
+supplies its current list of supported parameters. Its <kbd class="kbd">q</kbd> returns to the
+common editor; <kbd class="kbd">m</kbd> reopens focused tuning on the same draft and scope.
+Physical experiments, individual
 fallbacks, and engine controls remain available in the full editor.
 </p>
 <p><kbd class="kbd">w</kbd> saves and applies; <kbd class="kbd">c</kbd> saves to the collection without selecting. Existing
@@ -152,12 +153,12 @@ that reply does not save the later edits. They remain unsaved. If a file or
 destination has changed, review the proposal again rather than expecting the
 editor to merge those changes automatically.
 </p>
-<p>Complete-choice previews require Omnivox&rsquo;s complete-voice-preview capability.
-They do not select the draft or change live settings. Older hosts report this
-unsupported; individual physical auditions remain available. Playback evidence
-identifies accepted audio when reported, including unsupported adjustments,
-without inferring a successful fallback from inventory or claiming exact native
-parameter measurements.
+<p>Previewing a complete voice choice, including its fallbacks, requires support
+from Omnivox. Older hosts report when this is unavailable; you can still
+audition individual physical voices. Neither preview changes live settings.
+Playback details show what the server reports playing and which adjustments
+it could not apply. They do not measure the engine&rsquo;s exact parameter values
+or assume that an available fallback was used.
 </p>
 <p><kbd class="kbd">q</kbd> returns to the originating row and column. Keep, discard, or continue with
 unsaved work. Retained drafts can be resumed through <kbd class="kbd">C-e H p d</kbd> during

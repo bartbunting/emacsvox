@@ -49,6 +49,12 @@ corresponding level; <kbd class="kbd">M-1</kbd> through <kbd class="kbd">M-4</kb
 levels, not numbered paragraphs. A page without suitable heading markup
 cannot be navigated as though that structure existed.
 </p>
+<p>For Outline commands, <kbd class="kbd">C-e S o</kbd> chooses SHR-aware outlining based on rendered
+HTML structure or native outlining based on text list markers. Arrows browse,
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies to the captured EWW buffer, and <kbd class="kbd">q</kbd> cancels. This temporary
+choice preserves your text and position; the page&rsquo;s existing <kbd class="kbd">0</kbd> toggle remains
+available.
+</p>
 <p>Use <kbd class="kbd">]</kbd> and <kbd class="kbd">[</kbd> to move between paragraphs. <kbd class="kbd">M-<kbd class="key">SPC</kbd></kbd> requests the contents of
 the current HTML element. Section-navigation autospeak can read more than a
 heading or a line, depending on your setting; use explicit line or element

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-speak-status (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-speak-status (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-speak-status (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dspeak_002dtime.html" rel="next" title="emacsvox-speak-time">
+<link href="emacsvox_002dspeak_002dpresentation.html" rel="prev" title="emacsvox-speak-presentation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dspeak_002dstatus">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeak_002dtime.html" accesskey="n" rel="next">emacsvox-speak-time</a>, Previous: <a href="emacsvox_002dspeak_002dpresentation.html" accesskey="p" rel="prev">emacsvox-speak-presentation</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dspeak_002dstatus-1"><span>2.283 emacsvox-speak-status<a class="copiable-link" href="#emacsvox_002dspeak_002dstatus-1"> &para;</a></span></h3>
+
+<p>Buffer and system status speech.
+The core speech facade retains activation in its established order.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dSpeak_002dStatus-Commands" accesskey="1">Emacsvox-Speak-Status Commands</a></li>
+<li><a href="#emacsvox_002dspeak_002dstatus-Options" accesskey="2">emacsvox-speak-status Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dSpeak_002dStatus-Commands">
+<h4 class="subsection"><span>2.283.1 Emacsvox-Speak-Status Commands<a class="copiable-link" href="#Emacsvox_002dSpeak_002dStatus-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dspeak_002dbuffer_002dfilename" accesskey="1">emacsvox-speak-buffer-filename</a></li>
+<li><a href="#emacsvox_002dspeak_002dheader_002dline" accesskey="2">emacsvox-speak-header-line</a></li>
+<li><a href="#emacsvox_002dspeak_002dminor_002dmode_002dline" accesskey="3">emacsvox-speak-minor-mode-line</a></li>
+<li><a href="#emacsvox_002dspeak_002dmode_002dline" accesskey="4">emacsvox-speak-mode-line</a></li>
+<li><a href="#emacsvox_002dspeak_002dnet_002did" accesskey="5">emacsvox-speak-net-id</a></li>
+<li><a href="#emacsvox_002dspeak_002dwhich_002dfunction" accesskey="6">emacsvox-speak-which-function</a></li>
+<li><a href="#emacsvox_002dtoggle_002dheader_002dline" accesskey="7">emacsvox-toggle-header-line</a></li>
+<li><a href="#emacsvox_002dtoggle_002dmail_002dalert" accesskey="8">emacsvox-toggle-mail-alert</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dbuffer_002dfilename">
+<h4 class="subsubsection"><span>2.283.1.1 emacsvox-speak-buffer-filename<a class="copiable-link" href="#emacsvox_002dspeak_002dbuffer_002dfilename"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dbuffer_002dfilename"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-buffer-filename</strong> <var class="def-var-arguments">(&amp;optional filename)</var><a class="copiable-link" href="#index-emacsvox_002dspeak_002dbuffer_002dfilename"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-f"></a><span><kbd class="kbd">C-e f</kbd><a class="copiable-link" href="#index-C_002de-f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dbuffer_002dfilename-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak name of file being visited in current buffer.
+Speak default directory if invoked in a dired buffer, or when the
+buffer is not visiting any file.  Interactive prefix arg
+‘filename’ speaks only the final path component.  The result is
+put in the kill ring for convenience.
+
+(fn &amp;optional FILENAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dheader_002dline">
+<h4 class="subsubsection"><span>2.283.1.2 emacsvox-speak-header-line<a class="copiable-link" href="#emacsvox_002dspeak_002dheader_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dheader_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-header-line</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dheader_002dline"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dx"></a><span><kbd class="kbd">C-e C-x</kbd><a class="copiable-link" href="#index-C_002de-C_002dx"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dheader_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak header line if set.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dminor_002dmode_002dline">
+<h4 class="subsubsection"><span>2.283.1.3 emacsvox-speak-minor-mode-line<a class="copiable-link" href="#emacsvox_002dspeak_002dminor_002dmode_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dminor_002dmode_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-minor-mode-line</strong> <var class="def-var-arguments">(&amp;optional log-msg)</var><a class="copiable-link" href="#index-emacsvox_002dspeak_002dminor_002dmode_002dline"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M"></a><span><kbd class="kbd">C-e M</kbd><a class="copiable-link" href="#index-C_002de-M"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dminor_002dmode_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the minor mode-information.
+Optional interactive prefix arg ‘log-msg’ logs spoken info to
+*Messages*.
+
+(fn &amp;optional LOG-MSG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dmode_002dline">
+<h4 class="subsubsection"><span>2.283.1.4 emacsvox-speak-mode-line<a class="copiable-link" href="#emacsvox_002dspeak_002dmode_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dmode_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-mode-line</strong> <var class="def-var-arguments">(&amp;optional buffer-info)</var><a class="copiable-link" href="#index-emacsvox_002dspeak_002dmode_002dline"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-m"></a><span><kbd class="kbd">C-e m</kbd><a class="copiable-link" href="#index-C_002de-m"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dmode_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the mode-line.
+Speaks header-line if that is set when called non-interactively.
+Interactive prefix arg speaks buffer info.
+
+(fn &amp;optional BUFFER-INFO)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dnet_002did">
+<h4 class="subsubsection"><span>2.283.1.5 emacsvox-speak-net-id<a class="copiable-link" href="#emacsvox_002dspeak_002dnet_002did"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dnet_002did"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-net-id</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dnet_002did"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_0060"></a><span><kbd class="kbd">C-e `</kbd><a class="copiable-link" href="#index-C_002de-_0060"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dnet_002did-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Shows active network interfaces in the echo area.
+ The address is also copied to the kill ring for convenient yanking.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dwhich_002dfunction">
+<h4 class="subsubsection"><span>2.283.1.6 emacsvox-speak-which-function<a class="copiable-link" href="#emacsvox_002dspeak_002dwhich_002dfunction"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dwhich_002dfunction"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-which-function</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dwhich_002dfunction"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dw"></a><span><kbd class="kbd">C-e M-w</kbd><a class="copiable-link" href="#index-C_002de-M_002dw"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dwhich_002dfunction-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak which function we are on.  Uses which-function from
+which-func without turning that mode on.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtoggle_002dheader_002dline">
+<h4 class="subsubsection"><span>2.283.1.7 emacsvox-toggle-header-line<a class="copiable-link" href="#emacsvox_002dtoggle_002dheader_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtoggle_002dheader_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-toggle-header-line</strong><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dheader_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtoggle_002dheader_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle Emacsvox’s default header line.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtoggle_002dmail_002dalert">
+<h4 class="subsubsection"><span>2.283.1.8 emacsvox-toggle-mail-alert<a class="copiable-link" href="#emacsvox_002dtoggle_002dmail_002dalert"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtoggle_002dmail_002dalert"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-toggle-mail-alert</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dmail_002dalert"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dm"></a><span><kbd class="kbd">C-e M-m</kbd><a class="copiable-link" href="#index-C_002de-M_002dm"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtoggle_002dmail_002dalert-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of  Emacsvox  mail alert.
+Interactive PREFIX arg means toggle  the global default value, and then set the
+current local  value to the result.
+Turning on this option results in Emacsvox producing an auditory icon
+indicating the arrival  of new mail when displaying the mode line.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dspeak_002dstatus-Options">
+<h4 class="subsection"><span>2.283.2 emacsvox-speak-status Options<a class="copiable-link" href="#emacsvox_002dspeak_002dstatus-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-173"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-mail-alert-interval</var><a class="copiable-link" href="#index-User-Option-173"> &para;</a></span></dt>
+<dd><pre class="verbatim">Interval in seconds between mail alerts for the same pending
+  message.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+300
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-174"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-mail-spool-file</var><a class="copiable-link" href="#index-User-Option-174"> &para;</a></span></dt>
+<dd><pre class="verbatim">Mail spool file examined  to alert you about newly
+arrived mail.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;&lt;system-mail-spool&gt;/&lt;login&gt;&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeak_002dtime.html">emacsvox-speak-time</a>, Previous: <a href="emacsvox_002dspeak_002dpresentation.html">emacsvox-speak-presentation</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

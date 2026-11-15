@@ -21,6 +21,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -47,11 +48,102 @@ this is not a retained voice-editor draft.
 Profiles. Native assets belong to the pack; effective ones include inherited
 and fallback cues. Validation and details explain those sources.
 </p>
-<p>This manager does not record/edit audio or create a sound pack through a New
-Palette-style wizard. New packs need audio files and resource metadata; see
-<a data-manual="emacsvox" href="./Authoring-Sound-Packs.html#Authoring-Sound-Packs">Authoring Sound Packs</a> in the Developer Guide. For a change to when a cue
-plays, use the feedback-rule workflow.
+<p>Use the cue browser&rsquo;s <kbd class="kbd">a</kbd> to replace a cue from the recording library. Its
+<em class="emph">Availability</em> distinguishes explicit assignments from native files and
+inherited sounds. Assigned recordings show their names in <code class="code">Recording / file</code>;
+row speech includes the name and provider. The manager does not record or edit
+audio, or create a pack through a wizard. For a new personal pack directory,
+see <a data-manual="emacsvox" href="./Authoring-Sound-Packs.html#Authoring-Sound-Packs">Authoring Sound Packs</a> in the Developer Guide.
 </p>
+</div>
+<div class="subsection-level-extent" id="Browse-recordings-and-assign-them-to-cues">
+<h4 class="subsection"><span>8.10.7 Browse recordings and assign them to cues<a class="copiable-link" href="#Browse-recordings-and-assign-them-to-cues"> &para;</a></span></h4>
+
+<p>Open <kbd class="kbd">C-e H o l</kbd> for the recording library, or run <kbd class="kbd">M-x emacsvox-sound-library</kbd>.
+The default directory is <code class="code">~/.emacsvox/sounds/library/</code>; change it through
+<kbd class="kbd">M-x customize-option <kbd class="key">RET</kbd> emacsvox-sound-library-directory <kbd class="key">RET</kbd></kbd>. Put Ogg, WAV,
+MP3 or FLAC files there, optionally in collection subdirectories, then press
+<kbd class="kbd">g</kbd> to rescan. <kbd class="kbd">i</kbd> imports a copy into a named collection and leaves its source
+intact. Adding files does not create cues or assign them to events.
+</p>
+<p>Up and Down move between recordings and, by default, play each recording
+alongside its row announcement. Left and Right read names, collections,
+durations and known assignments without replaying the recording. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> or <kbd class="kbd">P</kbd>
+replays the current recording and <kbd class="kbd">S</kbd> stops.
+</p>
+<p>To change automatic playback, open <em class="emph">Library preview</em> with <kbd class="kbd">C-e H o L</kbd>, or
+choose it from the library&rsquo;s <kbd class="kbd">C-c C-a</kbd> Actions menu. Choose <em class="emph">Off</em>, <em class="emph">Before
+announcement</em>, <em class="emph">Alongside announcement</em> or <em class="emph">After announcement</em>. Arrows
+explain choices without applying them; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies the selected choice to
+all library buffers. <kbd class="kbd">S</kbd> saves it across restarts and <kbd class="kbd">q</kbd> returns. Off still
+allows explicit replay with <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> or <kbd class="kbd">P</kbd>. Before and After require Omnivox
+timeline support: Before finishes the recording before speaking; After
+finishes speaking before playing the recording. Moving again cancels the
+previous sequence. Alongside also supports external audio players, which
+control their own playback.
+</p>
+<p><kbd class="kbd">/</kbd> filters names and collections; an empty search restores all rows.
+<kbd class="kbd">u</kbd> filters recordings without saved assignments; it also keeps pending
+choices visible so you can review them. Duration is shown
+when the optional <code class="code">ffprobe</code> program is available. Playback still depends on
+your audio backend. Identical file bytes appear once, even under several names.
+</p>
+<p>To assign several sounds in a writable personal pack:
+</p>
+<ol class="enumerate">
+<li> Select a recording in the library and press <kbd class="kbd">a</kbd> to choose the destination
+pack and cue. This queues the recording without saving. Alternatively,
+open <kbd class="kbd">C-e H o p</kbd>, select the pack, then <kbd class="kbd"><kbd class="key">RET</kbd></kbd> for its cues. Find the cue
+and press <kbd class="kbd">a</kbd> to open the library, then <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to queue a recording.
+</li><li> The row shows and speaks <em class="emph">Pending</em> with the pack and cue. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews the
+row; <kbd class="kbd">C</kbd> plays the saved sound for the current cue. Browse and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+to replace that cue&rsquo;s pending choice. Saved cue assignments stay unchanged.
+</li><li> To assign another cue, select another recording and press <kbd class="kbd">a</kbd> again. Choose
+the cue; the pack stays the same. You stay in the same buffer, and earlier
+choices remain pending. Repeat for as many cues as needed. The header shows
+the current cue and the number of pending changes.
+</li><li> Press <kbd class="kbd">W</kbd> to save all pending changes together. Their status becomes <em class="emph">Saved</em>.
+Speech confirms the number of assignments, the pack and whether it is active.
+An active pack uses the saved sounds; an inactive pack stays inactive.
+</li><li> Press <kbd class="kbd">q</kbd> to return to the opening menu or cue row. This discards any changes
+still pending and announces how many were discarded. Saved assignments stay
+in place. Reopen the library to choose a different pack.
+</li></ol>
+
+<p>A recording can serve several cues. Its row lists each pending and saved
+assignment separately. Replacing one pending choice leaves the other cues&rsquo;
+choices intact. Until Save, an old recording still shows its saved assignment
+because that is the sound currently used.
+</p>
+<p>To restore inheritance, open that cue&rsquo;s assignment and press <kbd class="kbd">R</kbd>. This queues
+Reset to parent alongside any other pending changes. <kbd class="kbd">W</kbd> saves them together,
+skipping that cue&rsquo;s local assignment and revealing its parent or fallback while
+retaining original audio files. Select and save another recording to replace
+it again. If the pack or a candidate changes while pending, Save refuses the
+stale edit and leaves the whole batch unsaved. Cancel, refresh and reopen it.
+</p>
+<p>Saved assignments copy audio into the pack. Renaming or removing the library
+source cannot break that copy. To move a pack, copy its whole directory and
+retain its parent packs; the library is not required for playback. Older
+filename-based packs continue to work. A saved assignment takes precedence
+over their local file for that cue.
+</p>
+<p><kbd class="kbd">o</kbd> opens the library directory for file management. <kbd class="kbd">d</kbd> deletes the selected
+library file after confirmation, refusing recordings assigned in known packs
+or pending in the current buffer.
+Assignment reporting covers configured packs, not copies elsewhere. Original
+imports outside the library and audio copied into packs remain intact.
+</p>
+<p>This browser does not upload audio to a remote speech host. Personal library
+paths outside the configured workstation sound root cannot be previewed through
+the remote resource route. Use local playback for those recordings; remote
+resource installation remains a separate task.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Spatial-Presentation-Controls.html">Adjust Spatial Presentation</a>, Up: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

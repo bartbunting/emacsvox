@@ -52,9 +52,10 @@ press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. Run <kbd class="kbd">M-
 and position are still available. <kbd class="kbd">C-e m</kbd> and <kbd class="kbd">C-e l</kbd> confirm where you are.
 </li><li> From the practice document, press <kbd class="kbd">C-h k C-e l</kbd>. Emacs describes the
 current-line reading key instead of executing it as the requested action.
-Spoken key Help selects the <code class="code">*Help*</code> buffer and can remove other windows.
-Your practice document is still open. <kbd class="kbd">C-e h</kbd> reads Help again; it selects
-Help rather than speaking it from the document&rsquo;s window.
+Spoken key Help selects the <code class="code">*Help*</code> buffer and reads from its beginning.
+Your practice document is still open. <kbd class="kbd">C-e h</kbd> selects Help and reads it
+again from the beginning. For a local check, use line or paragraph reading
+within Help instead.
 </li><li> Press <kbd class="kbd">C-e m</kbd> to check which buffer is selected. If it is <code class="code">*Help*</code>, read
 there directly; otherwise use <kbd class="kbd">C-x b</kbd> to select <code class="code">*Help*</code> by name. Do not
 switch windows merely because Help appeared. Press <kbd class="kbd">q</kbd> while in Help when

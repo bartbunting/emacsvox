@@ -43,20 +43,21 @@ Next: <a href="Notmuch-Troubleshooting.html" accesskey="n" rel="next">Troublesho
 
 <dl class="table">
 <dt>Hello</dt>
-<dd><p>Widget navigation, view lifecycle, and searches have Notmuch-specific feedback.
+<dd><p>Widget navigation, opening or closing the view, and searches have
+Notmuch-specific feedback.
 </p></dd>
 <dt>Search</dt>
-<dd><p>Results, asynchronous lifecycle, tags, archiving, opening, and configured
+<dd><p>Results, background search completion, tags, archiving, opening, and configured
 detail inspection have Notmuch-specific feedback.
 </p></dd>
 <dt>Show</dt>
-<dd><p>Messages, MIME parts, pages, visibility, tags, archiving, and explicit
-inspection have Notmuch-specific feedback.
+<dd><p>Messages, HTML data tables, MIME parts, pages, visibility, tags, archiving,
+and explicit inspection have Notmuch-specific feedback.
 </p></dd>
 <dt>Tree</dt>
-<dd><p>Receives <code class="code">emacsvox-aural-module</code> context only. Core speech can operate,
-but this module has no Tree-specific row formatter, navigation, mutation,
-visibility, or asynchronous lifecycle.
+<dd><p>Ordinary reading works, and presentation rules can identify the Notmuch
+context. There are no specialised row summaries or feedback for Tree
+navigation, tag changes, folding or background updates.
 </p></dd>
 <dt>Composition</dt>
 <dd><p>Standard Message mode owns composition. Speech after new-mail, reply,
@@ -65,9 +66,9 @@ Notmuch integration.
 </p></dd>
 </dl>
 
-<p>There is no independent Notmuch speech-disable or unload command. Its advice,
-hooks, and Search arrow bindings remain installed for the Emacs session after
-loading. Repeated loading is idempotent and does not duplicate them.
+<p>Once loaded, Notmuch speech support and its Search arrow bindings stay active
+for the Emacs session. There is no separate unload or speech-disable command;
+loading the integration again does not add duplicate feedback.
 </p>
 </div>
 

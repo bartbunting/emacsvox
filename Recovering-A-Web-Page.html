@@ -67,8 +67,15 @@ toggles section-navigation autospeak and <kbd class="kbd">i</kbd> changes image 
 subsequent rendering. The latter also changes the shared SHR image default
 while preserving buffer-local overrides; it does not reload the current page.
 Lowercase <kbd class="kbd">w</kbd> saves those two Emacsvox defaults, <kbd class="kbd">A</kbd> opens advanced settings,
-and <kbd class="kbd">q</kbd> returns. These are presentation choices, not EWW&rsquo;s site or account
-preferences. Returning does not undo changes you have already made.
+and <kbd class="kbd">q</kbd> returns. Returning does not undo changes you have already made.
+</p>
+<p>In the same menu, <kbd class="kbd">m</kbd> chooses the HTTP identity default for Emacs URL requests,
+including requests outside EWW. <em class="emph">Browser</em> sends the configured browser header;
+<em class="emph">Emacs</em> identifies requests as <code class="code">URL/Emacs</code>. EWW link following explicitly uses
+browser identity regardless of this default. Arrows browse, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies,
+and <kbd class="kbd">q</kbd> cancels. Choosing an identity does not reload pages or change login
+state or browser capabilities. Both HTTP identity and the outlining choice
+are temporary and are excluded from <kbd class="kbd">w</kbd>.
 </p>
 <p>The Emacs/W3 and w3m survey is historical. Do not install either on the strength
 of the Heritage manual; use EWW unless a separately maintained integration says

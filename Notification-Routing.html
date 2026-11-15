@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -51,11 +52,34 @@ heard concurrently, with each notification&rsquo;s cue and speech delivered toge
 Integrations may deliberately route particular asynchronous actions differently:
 Notmuch&rsquo;s explicit refresh, for example, uses interruptible main speech.
 </p>
-<p>Open <kbd class="kbd">C-e H o n</kbd> for routing. <kbd class="kbd">r</kbd> chooses automatic, left, right, both, main
-output, or another device for the next restart. Selecting does not restart.
-<kbd class="kbd">N</kbd> previews active output, which may still use the old route; <kbd class="kbd">R</kbd> restarts
-after confirmation. <kbd class="kbd">h</kbd> inspects a notification-history snapshot, returning
-with <kbd class="kbd">q</kbd>. <kbd class="kbd">S</kbd> saves routing and spatial defaults without a restart.
+<p>Open <kbd class="kbd">C-e H o n</kbd> for routing, then <kbd class="kbd">r</kbd> for Automatic, Left, Right, Both
+channels or Main output. The configured choice is focused and marked.
+Arrows browse without applying; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> chooses and returns to the Route
+control. <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> cancels the list.
+</p>
+<p>With a supporting local Omnivox worker, the menu says <em class="emph">applies live</em>.
+Left, Right and Both change subsequent notification speech, tones and earcons
+without restarting either speech worker. Audio already submitted keeps its
+previous route. Main output retires only the notification worker; choosing a
+separate route again starts that worker while main speech stays running.
+Automatic uses a separate worker on both channels. Engine choices and physical
+output selections are retained.
+</p>
+<p>Press <kbd class="kbd">N</kbd> to preview the active route. Choose the previous route to reverse
+an experiment; <kbd class="kbd">S</kbd> separately saves routing and spatial defaults for startup.
+If a change is reported as unconfirmed, choose its route again before saving.
+<kbd class="kbd">h</kbd> inspects a notification-history snapshot, returning with <kbd class="kbd">q</kbd>.
+</p>
+<p>Older Omnivox workers, remote speech and other backends retain the <em class="emph">next
+restart</em> menu. There, selecting only sets the next route; <kbd class="kbd">N</kbd> still previews
+the active arrangement and <kbd class="kbd">R</kbd> restarts speech after confirmation. That menu
+also offers Other device for an existing device name; cancelling its prompt
+retains the previous choice and stays in the list.
+</p>
+<p>For physical devices on a supporting Windows Omnivox build, <kbd class="kbd">D</kbd> opens main
+outputs and <kbd class="kbd">M</kbd> opens notification outputs. Press <kbd class="kbd">d</kbd> to browse their Transient
+choices. Selecting a candidate, applying it and saving it are separate actions,
+described in <a data-manual="emacsvox" href="./Selecting-And-Checking-Omnivox.html#Selecting-And-Checking-Omnivox">Selecting And Checking Omnivox</a>.
 </p>
 <p>With Omnivox, Automatic normally uses an independent notification process;
 left/right/both choose its route. <em class="emph">Use main output (notifications remain
@@ -64,7 +88,7 @@ It is not a mute option. Other backends use their configured device or fall
 back to main speech. In Lisp, <code class="code">default</code> or an empty string means main output;
 use descriptive labels for ordinary configuration.
 </p>
-<p>After changing the route, <kbd class="kbd">C-e d C-n</kbd> also initialises the arrangement.
+<p><kbd class="kbd">C-e d C-n</kbd> explicitly reinitialises the notification arrangement when needed.
 Use notification history to read an announcement you missed. Ordinary
 obsolete-main-speech cancellation is local to main; explicit <code class="code">tts-stop</code> stops
 both streams.

@@ -21,6 +21,8 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -49,9 +51,11 @@ reading controls are distinct from commands that edit the underlying content.
 
 <ul class="mini-toc">
 <li><a href="#Reading-Org-headings" accesskey="1">Reading Org headings</a></li>
-<li><a href="Reading-Markdown-And-Org-Tables.html" accesskey="2">Reading Markdown and Org tables</a></li>
-<li><a href="Reading-Markdown-And-Org-Tables.html#Reading-application-lists" accesskey="3">Reading application lists</a></li>
-<li><a href="Reading-Markdown-And-Org-Tables.html#Browsing-CSV-data" accesskey="4">Browsing CSV data</a></li>
+<li><a href="#Use-managed-Muggles" accesskey="2">Use managed Muggles</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html" accesskey="3">Reading Markdown and Org tables</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html#Reading-application-lists" accesskey="4">Reading application lists</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html#Choose-table-reading-preferences" accesskey="5">Choose table reading preferences</a></li>
+<li><a href="Reading-Markdown-And-Org-Tables.html#Browsing-CSV-data" accesskey="6">Browsing CSV data</a></li>
 </ul>
 <div class="subsection-level-extent" id="Reading-Org-headings">
 <h4 class="subsection"><span>9.4.1 Reading Org headings<a class="copiable-link" href="#Reading-Org-headings"> &para;</a></span></h4>
@@ -69,7 +73,11 @@ in either direction, without changing the usual cursor position. Moving through
 the remaining title words does not repeat that count or heading-level
 announcement. Character reading and spelling retain the individual stars.
 Collapsed headings have a collapse cue at every level; the large-movement cue
-belongs to Org structure navigation.
+starts alongside heading speech during Org structure navigation, such as
+<kbd class="kbd">C-c C-n</kbd> and <kbd class="kbd">C-c C-p</kbd>. Hold Control for the final key too. Ordinary line
+movement with arrows or <kbd class="kbd">C-n~/~C-p</kbd> does not request that movement cue.
+To change its timing, capture the navigation in Recent Feedback and use
+<a data-manual="emacsvox" href="./Guided-Feedback-Changes.html#Guided-Feedback-Changes">Change sound timing</a>.
 </p>
 <p>Counts preserve the configured character name without adding a plural ending.
 At <code class="code">all</code> punctuation, the speech server names <code class="code">*</code>, so an active Omnivox
@@ -77,6 +85,171 @@ pronunciation of &ldquo;asterisk&rdquo; produces &ldquo;3 asterisk&rdquo;. Saved
 changes take effect after restarting speech. Explicit word and partial-line
 reads at <code class="code">some</code> or <code class="code">none</code> use <code class="code">tts-character-to-speech-table</code>, the Emacs table
 also used for character reading.
+</p>
+</div>
+<div class="subsection-level-extent" id="Use-managed-Muggles">
+<h4 class="subsection"><span>9.4.2 Use managed Muggles<a class="copiable-link" href="#Use-managed-Muggles"> &para;</a></span></h4>
+
+<a class="anchor" id="managed_002dmuggles"></a>
+<a class="index-entry-id" id="index-Muggles"></a>
+<a class="index-entry-id" id="index-Org_002c-heading-navigation-menu"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002denable"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002ddisable"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dsave"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dstatus"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dorg_002dnav_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dorg_002dtable_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dnavigate_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002doutliner_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dview_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dyank_002dpop_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dinfo_002dsummary_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dsmartparens_002fbody"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dbrowse"></a>
+<a class="index-entry-id" id="index-emacsvox_002dmuggles_002dpreferences"></a>
+
+<p>A Muggle is a temporary menu of related commands, implemented with Hydra.
+The managed list offers Org heading navigation, Org table editing, Text
+navigation, Outline navigation, View navigation, Repeatable yank, Info summary
+and Smartparens. All require the Hydra package. Enable installs a menu&rsquo;s entry
+keys when available; Run enters it
+and can move point or perform editing.
+</p>
+<p>Press <kbd class="kbd">C-e H m</kbd> to browse managed Muggles, or run
+<kbd class="kbd">M-x emacsvox-muggles-browse <kbd class="key">RET</kbd></kbd>. Select a row, then use <kbd class="kbd">e</kbd> to enable its
+entry keys or <kbd class="kbd">d</kbd> to disable them for this session. <kbd class="kbd">W</kbd> saves explicit session
+choices through Customize. Settings and action search also find the Muggles
+entry. Opening or browsing the list does not load or activate a Muggle.
+The individual menus are described below, followed by the manager&rsquo;s conflict,
+saving and restoration rules.
+</p>
+<p>Org heading navigation lets you repeat movement and section reading with
+single keys in an Org buffer.
+Start it directly with <kbd class="kbd">M-x emacsvox-muggles-org-nav/body <kbd class="key">RET</kbd></kbd>. Entry announces
+the menu without moving point or changing the document.
+</p>
+<p>Use <kbd class="kbd">n</kbd> and <kbd class="kbd">p</kbd> to move between visible headings and speak their sections.
+<kbd class="kbd"><kbd class="key">SPC</kbd></kbd> speaks the current section from point. <kbd class="kbd">f</kbd> and <kbd class="kbd">b</kbd> move between headings
+at the same level, and <kbd class="kbd">u</kbd> moves to the parent. <kbd class="kbd">g</kbd> opens Org&rsquo;s heading chooser
+and leaves the menu. <kbd class="kbd">?</kbd> reads the available keys; <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> exits. Automatic
+Hydra hints are quiet during this menu; exit restores their previous setting
+unless it was changed during the visit.
+</p>
+<p>Org table editing starts with <kbd class="kbd">M-x emacsvox-muggles-org-table/body <kbd class="key">RET</kbd></kbd> at an
+Org table cell. <kbd class="kbd">j</kbd> and <kbd class="kbd">k</kbd> move to the next or previous row; <kbd class="kbd">h</kbd> and <kbd class="kbd">l</kbd>
+move to the previous or next field. These are native Org editing commands:
+they may realign the table, recalculate formulas or create a row. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads
+the field, <kbd class="kbd">.</kbd> gives coordinates, and <kbd class="kbd">b</kbd>, <kbd class="kbd">r</kbd> or <kbd class="kbd">c</kbd> reads the value with
+both, row or column headers. <kbd class="kbd">?</kbd> explains the keys and <kbd class="kbd">q</kbd> exits. For movement
+that preserves the table text, use <a class="ref" href="Reading-Markdown-And-Org-Tables.html">the shared table reader</a>.
+</p>
+<p>Text navigation starts with <kbd class="kbd">M-x emacsvox-muggles-navigate/body <kbd class="key">RET</kbd></kbd> and
+immediately attempts to move down one line. <kbd class="kbd">n~/~p</kbd> or <kbd class="kbd">j~/~k</kbd> repeat line
+movement, <kbd class="kbd">f~/~b</kbd> move by character, and <kbd class="kbd">a~/~e</kbd> reach the line&rsquo;s beginning
+or end. <kbd class="kbd">v~/~V</kbd> scroll, <kbd class="kbd">&lt;~/~&gt;</kbd> reach the buffer&rsquo;s beginning or end, and <kbd class="kbd">l</kbd>
+recentres. <kbd class="kbd">?</kbd> reads the keys and <kbd class="kbd">q</kbd> exits. Entry temporarily toggles Hydra
+hints and exit restores them; pressing <kbd class="kbd">s</kbd> makes an explicit hint choice
+that is retained after exit. Movement uses the buffer&rsquo;s existing speech support.
+</p>
+<p>Outline navigation starts with <kbd class="kbd">M-x emacsvox-muggles-outliner/body <kbd class="key">RET</kbd></kbd>
+in a document with headings recognised by Outline. Entry enables
+<code class="code">outline-minor-mode</code> and announces the menu without moving point. <kbd class="kbd">n~/~p</kbd>
+move between visible headings, <kbd class="kbd">f~/~b</kbd> move at the same level, and <kbd class="kbd">u</kbd> moves
+to the parent. <kbd class="kbd">d</kbd> hides a subtree and <kbd class="kbd">a</kbd> shows all text. Heading movement
+and folding use the Outline speech support described under
+<a class="ref" href="Structured-Editing.html">Structured editing</a>. <kbd class="kbd">?</kbd> explains the keys. Use <kbd class="kbd">z</kbd> or <kbd class="kbd">C-g</kbd> to leave;
+<kbd class="kbd">q</kbd> hides sublevels. Exit and Disable retain Outline minor mode and completed
+folds. Use the ordinary Outline commands to change visibility afterwards.
+</p>
+<p>View navigation starts with <kbd class="kbd">M-x emacsvox-muggles-view/body <kbd class="key">RET</kbd></kbd>. It offers
+View commands without enabling View mode or making the buffer read-only.
+<kbd class="kbd">j~/~k</kbd> move by line, <kbd class="kbd">h~/~l</kbd> by character, and <kbd class="kbd"><kbd class="key">SPC</kbd>~/~<kbd class="key">DEL</kbd></kbd> scroll by page.
+<kbd class="kbd">/</kbd> searches forward and <kbd class="kbd">n~/~p</kbd> repeat the last search forward or backward.
+<kbd class="kbd">c</kbd> reads the character and <kbd class="kbd">w</kbd> the word; movement retains existing speech
+support. <kbd class="kbd">?</kbd> explains further actions, including copying and registers;
+<kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> exits. Entry temporarily toggles Hydra hints. Exit restores
+the previous value unless you choose hints explicitly with <kbd class="kbd">s</kbd>.
+</p>
+<p>Repeatable yank starts with <kbd class="kbd">M-x emacsvox-muggles-yank-pop/body <kbd class="key">RET</kbd></kbd> without
+pasting. <kbd class="kbd">C-y</kbd> pastes from the kill ring; <kbd class="kbd">M-y</kbd> replaces the previous yank.
+<kbd class="kbd">y~/~Y</kbd> cycle forward or backward. Native yank prefix arguments and undo
+remain available. <kbd class="kbd">i</kbd> or <kbd class="kbd">s</kbd> opens an Ido chooser and leaves the menu;
+cancelling that chooser preserves the previous yank. <kbd class="kbd">l</kbd> opens the optional
+<code class="code">browse-kill-ring</code> package, or explains when it is unavailable. <kbd class="kbd">?</kbd> explains
+the keys; <kbd class="kbd">C-g</kbd> leaves. Temporary quiet hints are restored on exit.
+</p>
+<p>Info summary starts with <kbd class="kbd">M-x emacsvox-muggles-info-summary/body <kbd class="key">RET</kbd></kbd> in an
+Info buffer. Choose <kbd class="kbd">n~/~p</kbd> for the next or previous node, <kbd class="kbd">u</kbd> for the parent,
+<kbd class="kbd">m</kbd> for a menu item or <kbd class="kbd">i</kbd> for the index. Most actions leave the Muggle after
+running. <kbd class="kbd">?</kbd> invokes the ordinary Info summary and <kbd class="kbd">h</kbd> opens Info help.
+<kbd class="kbd">C-g</kbd> cancels the menu; <kbd class="kbd">q</kbd> closes the Info window.
+</p>
+<p>Smartparens starts with <kbd class="kbd">M-x emacsvox-muggles-smartparens/body <kbd class="key">RET</kbd></kbd> after you
+enable <kbd class="kbd">M-x smartparens-mode <kbd class="key">RET</kbd></kbd> in the source buffer. It requires the
+Smartparens package. <kbd class="kbd">f~/~b</kbd> move by expression; <kbd class="kbd">&lt;right&gt;~/~&lt;left&gt;</kbd> slurp or
+barf forward, and <kbd class="kbd">C-&lt;right&gt;~/~C-&lt;left&gt;</kbd> do so backward. <kbd class="kbd">(</kbd> wraps with
+parentheses, <kbd class="kbd">R</kbd> splices an expression, and <kbd class="kbd">k</kbd> kills it. <kbd class="kbd">?</kbd> explains the
+remaining keys; <kbd class="kbd">C-g</kbd> leaves. Exit and Disable retain Smartparens mode and
+completed edits. Temporary quiet hints are restored on exit.
+</p>
+<p>In the Muggles manager, up/down selects a row and reads its purpose, current
+choice, configured override and availability. Left/right inspects columns;
+<kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads the full row.
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd">?</kbd> explains the selected Muggle and its actions. Returning from Help
+with <kbd class="kbd">q</kbd> restores the row and column. <kbd class="kbd">g</kbd> refreshes the displayed state.
+</p>
+<p>On the selected row, <kbd class="kbd">e</kbd> requests its entry key for this session: <kbd class="kbd">C-c C-<kbd class="key">SPC</kbd></kbd>
+in Org for heading navigation, <kbd class="kbd">C-c t</kbd> in Org for table editing, or global
+<kbd class="kbd">s-n</kbd> for text navigation, <kbd class="kbd">C-. o</kbd> for Outline, <kbd class="kbd">C-. v</kbd> for View and
+<kbd class="kbd">C-c ,</kbd> for Smartparens. Repeatable yank manages global <kbd class="kbd">C-y</kbd> and <kbd class="kbd">M-y</kbd>
+together; Info summary manages <kbd class="kbd">?</kbd> in Info buffers.
+<kbd class="kbd">s-n</kbd> means Super-n. The two <kbd class="kbd">C-.</kbd> sequences require an existing prefix map;
+the manager leaves an unbound or conflicting prefix untouched. Use Run or the
+direct <kbd class="kbd">M-x</kbd> command when a key is blocked. Org and Info entries wait for
+their corresponding application to load. The availability column names
+conflicts and missing dependencies.
+</p>
+<p>Explicit Enable may replace the standard <kbd class="kbd">C-y</kbd> <code class="code">yank</code> and <kbd class="kbd">M-y</kbd> <code class="code">yank-pop</code>
+bindings, or Info&rsquo;s standard <kbd class="kbd">?</kbd> <code class="code">Info-summary</code>. A personal binding blocks
+replacement; either blocked yank key prevents activation of the pair. These
+ordinary commands remain available through <kbd class="kbd">M-x</kbd>. Loading a legacy collection
+alone does not replace these standard bindings. Other personal or package
+bindings are preserved.
+</p>
+<p><kbd class="kbd">d</kbd> restores adopted standard bindings, removes other managed entry keys and
+closes this Muggle if active. It preserves completed actions, independently
+configured bindings and personal replacements made after Enable. Global keys remain subject to local and minor-mode bindings.
+These choices apply throughout the session, rather than to one buffer.
+</p>
+<p>Enable and Disable retain the selected row and show the choice as not saved.
+<kbd class="kbd">W</kbd> saves all explicit session Muggle choices through Customize; the
+<code class="code">emacsvox-muggles</code> customisation group contains the configured overrides.
+An absent override follows a legacy collection request, otherwise disabled;
+explicit Disabled takes precedence over a legacy request. Session choices
+take precedence until saved or changed. <kbd class="kbd">q</kbd> closes the list and keeps session
+choices; when opened through settings, it returns to the same menu item.
+</p>
+<p>To try a Muggle, open the list from the intended source and press <kbd class="kbd">r</kbd> on its
+row. This leaves the list and enters that menu at the captured position, even
+when the managed key is disabled or blocked. It does not enable keys or save
+settings. Org heading navigation requires an Org buffer; Org table editing
+also requires a table at the captured position. Info requires an Info buffer,
+and Smartparens requires its mode already enabled. A closed buffer, changed source
+item or unsuitable context requires reopening from the intended location.
+Run is an explicit action; browsing and Help never perform it. Once the menu
+starts, <kbd class="kbd">C-g</kbd> leaves any managed menu. Outline also exits on <kbd class="kbd">z</kbd>; Org and
+Text/View navigation exit on <kbd class="kbd">q</kbd>. In Info summary, <kbd class="kbd">q</kbd> closes the Info window.
+</p>
+<p>The named commands <code class="code">emacsvox-muggles-enable</code>, <code class="code">emacsvox-muggles-disable</code>,
+<code class="code">emacsvox-muggles-status</code> and <code class="code">emacsvox-muggles-save</code> offer the same management
+operations without the list. Each menu&rsquo;s direct <kbd class="kbd">M-x</kbd> command also remains
+available while disabled. Loading <code class="code">extra-muggles</code> requests Org heading,
+Outline and View navigation, Info summary and Smartparens; loading
+<code class="code">emacsvox-muggles</code> requests Org table editing, Text navigation and Repeatable
+yank. The standard-binding adoption rule still requires an explicit Enabled
+choice for yank and Info on their usual keys.
+These managed requests respect explicit Disabled choices and protect
+conflicting bindings. Unconverted collection members retain their legacy keys.
 </p>
 </div>
 </div>

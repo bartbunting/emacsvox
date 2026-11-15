@@ -70,7 +70,105 @@ displayed choices to defaults. Mode punctuation policy and explicit buffer
 settings still override the saved punctuation default.
 </p>
 <ol class="enumerate">
-<li> <a class="anchor" id="Use-Emacs-word-and-phrase-dictionaries"></a>Use Emacs word and phrase dictionaries
+<li> <a class="anchor" id="Adjust-reading-controls"></a>Adjust reading controls
+
+
+<a class="anchor" id="reading_002dcontrols_002dand_002dfilters"></a>
+<a class="index-entry-id" id="index-character-speech-rate"></a>
+<a class="index-entry-id" id="index-quiet-speech_002c-settings-menu"></a>
+<a class="index-entry-id" id="index-nonprinting-characters"></a>
+
+<p>From the buffer you want to change, open <kbd class="kbd">C-e H s R</kbd> for <em class="emph">Reading controls</em>.
+Adjusting a control takes effect immediately; browsing leaves it unchanged.
+<kbd class="kbd">g</kbd> switches between buffer scope
+and global defaults; global changes also update the captured buffer while
+preserving other buffers&rsquo; explicit overrides. This menu has no startup Save.
+</p>
+<ul class="itemize mark-bullet">
+<li><kbd class="kbd">c</kbd> changes the rate of isolated letters. A multiplier below one slows
+letters; above one speeds them up. Shift-left/right adjusts by 0.1, and
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts a value from 0.1 to 4. Phonetic names and punctuation names
+retain the ordinary rate. Omnivox supports this control; some older servers
+ignore it. <kbd class="kbd">p</kbd> previews the letter a, even while quiet speech is enabled.
+</li><li>Capital <kbd class="kbd">Q</kbd> suppresses subsequent source speech without stopping current
+playback. Menu feedback remains spoken. <kbd class="kbd">r</kbd> restores speech in the source
+and the global default, leaving other buffers&rsquo; quiet overrides intact.
+</li><li><kbd class="kbd">n</kbd> names selected nonprinting control characters and raw eight-bit bytes.
+<kbd class="kbd">o</kbd>, <em class="emph">Strip octals</em>, instead removes bytes 127–255 from speech and suppresses
+nonprinting naming altogether. It does not remove decoded Unicode accents
+or change the source text.
+</li></ul>
+
+<p>In buffer scope, <kbd class="kbd">i</kbd> removes the source&rsquo;s overrides for all four controls so
+they follow global defaults. <kbd class="kbd">q</kbd> returns, keeping adjustments. For logical
+line reading, visual wrapping and continuation cues, use <kbd class="kbd">w</kbd> and follow
+<a data-manual="emacsvox" href="./Reading.html#Reading">Reading and navigating</a>.
+</p>
+</li><li> <a class="anchor" id="Filter-text-and-adjust-speech-boundaries"></a>Filter text and adjust speech boundaries
+
+
+<a class="anchor" id="reading_002dfilters"></a>
+<a class="index-entry-id" id="index-repeated-characters_002c-cleanup"></a>
+<a class="index-entry-id" id="index-column-filtering"></a>
+<a class="index-entry-id" id="index-speech-chunking"></a>
+
+<p>Three submenus of Reading controls change how text is spoken without editing
+it. Each has a fixed scope, independent of the parent&rsquo;s buffer/global choice.
+Adjustments apply immediately; <kbd class="kbd">p</kbd> previews the captured line, including while
+quiet is enabled. <kbd class="kbd">u</kbd> reverses changes made during the current submenu visit.
+Leaving and reopening starts a new undo point.
+</p>
+<p>Use <kbd class="kbd">a</kbd> for <em class="emph">Repeat cleanup</em>, which applies globally for this session. Runs
+of three or more copies of a configured pattern become a count and the pattern
+at All punctuation, or are omitted at other punctuation levels. <kbd class="kbd">b</kbd> browses
+active patterns and previews four repetitions of the chosen one. <kbd class="kbd">a</kbd> adds a
+literal pattern, <kbd class="kbd">d</kbd> removes one, and <kbd class="kbd">x</kbd> disables cleanup by clearing the
+list. Spaces are literal; empty patterns and line breaks are rejected. <kbd class="kbd">u</kbd>
+restores the opening list. This menu has no startup Save.
+</p>
+<p>Use <kbd class="kbd">f</kbd> for <em class="emph">Column filtering</em> in the captured buffer. Press <kbd class="kbd">e</kbd> and enter
+inclusive character ranges such as <code class="code">1-10, 21-25</code>. Positions start at one;
+a tab counts as one character regardless of its displayed width. A range
+extending beyond a short line is ignored entirely. <kbd class="kbd">v</kbd> switches between
+skipping those ranges and speaking only them. The filter affects whole-line
+speech, leaving partial-line and table reading unchanged.
+</p>
+<p>Edited ranges are remembered for the file, or for the major mode of a non-file
+buffer, and saved on normal Emacs exit. They do not activate automatically
+when you revisit a file: use <kbd class="kbd">r</kbd> to restore them explicitly. The skip/speak-only
+direction is temporary and is not saved with the ranges. <kbd class="kbd">x</kbd> disables the
+active filter while keeping remembered ranges; an empty answer to <kbd class="kbd">e</kbd> also
+clears the remembered ranges. <kbd class="kbd">u</kbd> restores both the opening buffer settings
+and any remembered ranges changed during this visit.
+</p>
+<p>Use <kbd class="kbd">s</kbd> for <em class="emph">Speech chunking</em> in the captured buffer for this session. <kbd class="kbd">c</kbd>
+excludes whitespace as a speech boundary, generally grouping text around
+punctuation or clauses. <kbd class="kbd">w</kbd> includes whitespace for smaller, often word-sized
+pieces. Both retain the other boundary types defined by the mode. <kbd class="kbd">e</kbd> edits
+the syntax-class codes directly; its Help explains them. <kbd class="kbd">i</kbd> follows the
+global default, replacing any mode-specific choice, and <kbd class="kbd">u</kbd> restores the
+opening setting. Compare with <kbd class="kbd">p</kbd>, since audible phrasing depends on the
+speech engine. These settings have no startup Save and do not alter the
+size limits used by <a data-manual="emacsvox" href="./Reading-From-Point.html#Reading-From-Point">tracked reading</a>.
+</p>
+</li><li> <a class="anchor" id="Choose-Unicode-exceptions"></a>Choose Unicode exceptions
+
+
+<p>Search settings at <kbd class="kbd">C-e H /</kbd> for <code class="code">Unicode exceptions</code> or <code class="code">untouched charsets</code>,
+then press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> again to open the advanced reading editor. The direct route
+is <kbd class="kbd">C-e H s A u</kbd>. The exceptions list contains Emacs character-set names,
+such as <code class="code">ascii</code> and <code class="code">latin-iso8859-1</code>, rather than individual characters.
+It controls which sets client-side Unicode conversion leaves unchanged and
+also affects individual-character naming.
+</p>
+<p>Customize&rsquo;s Apply updates the conversion filter immediately; Save also retains
+the list for later sessions. An empty list exempts no character sets. Speech
+adapter initialisation can replace this list with its supported sets. The
+replacement and spoken-name rules in the same editor apply when client-side
+conversion is enabled; modern Omnivox can handle the original text instead.
+Outside an editable field, <kbd class="kbd">q</kbd> returns to the selected menu control.
+</p>
+</li><li> <a class="anchor" id="Use-Emacs-word-and-phrase-dictionaries"></a>Use Emacs word and phrase dictionaries
 
 
 <p>For word or phrase substitutions managed by Emacs, open <kbd class="kbd">C-e H s p d</kbd>.
@@ -112,38 +210,99 @@ for its scope and effects before applying it.
 
 
 <p>Open <kbd class="kbd">C-e H s i</kbd> or directly <kbd class="kbd">C-e d I</kbd>. In global-default scope, <kbd class="kbd">S</kbd> saves
-indentation defaults and tone volume through Customize. Select <em class="emph">Volume</em> and
-adjust by five percentage points with Shift-left/right, or enter with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
-Plain left/right changes sections and <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews indentation. Other selected
-items give guidance rather than treating every shifted arrow as volume.
+indentation defaults and tone volumes through Customize. In <em class="emph">Tone levels</em>,
+<kbd class="kbd">l</kbd> changes <em class="emph">Pitch-tone volume</em> in the selected buffer/global scope; <kbd class="kbd">v</kbd> changes
+<em class="emph">Shared tone volume</em> globally. Adjust either by five percentage points with
+Shift-left/right, or enter with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. The shared level scales all main-stream
+tones. The individual level affects rising-pitch indentation only;
+duration-coded tones still use the shared level. Plain left/right changes
+sections and <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews indentation.
 </p>
-<p><kbd class="kbd">t</kbd> opens pitch-tone settings: base pitch, rise per column, maximum pitch, and
-requested duration. Shift-left/right adjusts; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters exactly. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd>
-previews four columns without changing presentation or enabling feedback.
+<p><kbd class="kbd">t</kbd> opens pitch-tone settings: base pitch, rise per column, maximum pitch,
+requested duration and individual volume. Shift-left/right adjusts; <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
+enters exactly. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews four columns without changing presentation or enabling feedback.
 <kbd class="kbd">s</kbd> stops. Short durations show the effective blank-line-tone minimum.
-<kbd class="kbd">R</kbd> restores the four bundled values in scope. Global changes preserve local
+<kbd class="kbd">R</kbd> restores these five bundled values in scope. Global changes preserve local
 overrides; <kbd class="kbd">S</kbd> saves global defaults and tone volume. <kbd class="kbd">q</kbd> retains live changes.
+</p>
+<p>From pitch-tone settings, <kbd class="kbd">E</kbd> opens the shared base-tone editor, also reached
+with <kbd class="kbd">C-e H s i t E</kbd>. Its draft includes base pitch, requested duration,
+individual volume, waveform, sweep and envelope. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews the first
+column&rsquo;s tone; <kbd class="kbd">P</kbd> reads a four-column sample. Both retain the blank-line
+minimum duration. The starting pitch still rises with indentation; an enabled
+sweep ends at its absolute End pitch. Duration-coded tones are unchanged.
+</p>
+<p><kbd class="kbd">A</kbd> applies the draft to the captured buffer or global defaults, as shown in
+the title. <kbd class="kbd">W</kbd> saves only the base-tone fields through Customize and requires
+global scope; return to the parent to change scope. Global changes preserve
+local overrides. Rise per column, maximum pitch, timing, enablement and shared
+volume remain in the parent menu. Base pitch cannot exceed Maximum pitch;
+adjust that parent control first if needed. <kbd class="kbd">q</kbd> discards unapplied editor
+changes and returns. See <a class="ref" href="#spelling_002dtone_002deditor">the shared controls</a> for presets and envelopes.
 </p>
 </li><li> <a class="anchor" id="Set-capitalisation-feedback-and-its-beeps"></a>Set capitalisation feedback and its beeps
 
 
-<p><kbd class="kbd">C-e H s c</kbd> opens <em class="emph">Capitalization</em>. <kbd class="kbd">i</kbd> toggles indication, <kbd class="kbd">p</kbd> chooses spoken,
-tone, combined, personal-rule, or no presentation, and <kbd class="kbd">c</kbd> independently toggles
-camel-case splitting. They share buffer/global scope on <kbd class="kbd">g</kbd>. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews
-reading; <kbd class="kbd">S</kbd> saves these three startup defaults. Buffer overrides still apply.
+<p><kbd class="kbd">C-e H s c</kbd> opens <em class="emph">Capitalisation</em>. <kbd class="kbd">i</kbd> toggles indication and <kbd class="kbd">c</kbd> independently
+toggles camel-case splitting. These and the presentation choice share
+buffer/global scope on <kbd class="kbd">g</kbd>. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews reading; <kbd class="kbd">S</kbd> saves these three
+startup defaults. Buffer overrides still apply. The reading sample contains
+several camel-case identifiers. Capital cues and a voice&rsquo;s own pronunciation
+can make splitting on and off sound similar; compare with indication off to
+hear splitting without capital cues.
 </p>
-<p>Within Capitalization, <kbd class="kbd">l</kbd> edits the capital-letter beep and <kbd class="kbd">a</kbd> the all-caps
-beep. Each has a separate global draft. Select pitch/duration and adjust by
-25 Hz/5 milliseconds with Shift-left/right, or use <kbd class="kbd"><kbd class="key">RET</kbd></kbd>. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews only
-the beep and <kbd class="kbd">s</kbd> stops. Previewing neither changes reading settings nor enables
-capitalisation indication.
+<p>Press <kbd class="kbd">p</kbd> to browse Spoken, Tone, Spoken and tone, Personal rules or None.
+The current choice is focused and marked selected. Up/down browses without
+applying; <kbd class="kbd">?</kbd> followed by a choice&rsquo;s key explains its effect. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies
+in the parent menu&rsquo;s scope, announces the choice and returns to <em class="emph">Presentation</em>.
+Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> again to try another choice, or <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to preview reading. <kbd class="kbd">q</kbd> or
+<kbd class="kbd">C-g</kbd> cancels and returns to the same control. Choosing a presentation neither
+enables indication nor saves startup defaults.
 </p>
-<p>In a beep editor, <kbd class="kbd">S</kbd> saves that cue globally for tone/combined presentation.
-<kbd class="kbd">r</kbd> restores bundled values in the draft; save to remove this menu&rsquo;s override.
-<kbd class="kbd">D</kbd> discards/rereads, <kbd class="kbd">q</kbd> returns, and <kbd class="kbd">C-q</kbd> closes menus while retaining drafts
-for this session. Unrelated rules and labels survive, and stronger rules may
-override the cue. Finish unsaved personal-rule editors before cue saving. If
-saved rules changed elsewhere, discard the cue draft and reopen it.
+<p>Within Capitalisation, <kbd class="kbd">l</kbd> edits the capital-letter beep and <kbd class="kbd">a</kbd> the all-caps
+beep. Each has separate global defaults saved through Customize. You can
+preview edits before applying or saving them; these unsaved edits are what
+the editor calls a <em class="emph">draft</em>.
+</p>
+<p>Select pitch, duration or <em class="emph">Beep volume</em> (<kbd class="kbd">v</kbd>) and adjust by 25 Hz,
+5 milliseconds or 5 percentage points with Shift-left/right, or use <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.
+The individual volume affects only that beep and is scaled by shared tone
+volume. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews the beep alone. <kbd class="kbd">P</kbd> reads two sentences with several
+examples of the selected kind, so you can judge repeated beeps against speech.
+<kbd class="kbd">s</kbd> stops. Samples privately enable tone indication without changing your
+reading settings; contextual presentation rules still apply.
+</p>
+<p>In a beep menu, <kbd class="kbd">A</kbd> applies that cue&rsquo;s global defaults for this Emacs session;
+<kbd class="kbd">S</kbd> also saves them through Customize for future sessions. These defaults
+apply to tone/combined presentation, and presentation rules can override them.
+<kbd class="kbd">r</kbd> prepares factory values for preview; apply or save to use them. <kbd class="kbd">D</kbd>
+discards preview changes and rereads current defaults. <kbd class="kbd">q</kbd> returns and <kbd class="kbd">C-q</kbd>
+closes menus, retaining unsaved preview edits for this session. Applied changes
+remain effective. If defaults change elsewhere while you are editing, discard
+the preview edits and reopen before applying or saving.
+</p>
+<p>Press <kbd class="kbd">E</kbd> inside either beep menu for the shared tone editor: the full routes
+are <kbd class="kbd">C-e H s c l E</kbd> and <kbd class="kbd">C-e H s c a E</kbd>. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews the edited tone alone;
+<kbd class="kbd">C</kbd> compares the current cue and <kbd class="kbd">P</kbd> reads the same repeated-beep sample.
+<kbd class="kbd">A</kbd> applies the global defaults and <kbd class="kbd">W</kbd> also saves them through Customize.
+<kbd class="kbd">q</kbd> discards unapplied changes and returns to the parent. <kbd class="kbd">R</kbd> prepares factory
+values for preview. Waveform and envelope controls follow
+<a class="ref" href="#spelling_002dtone_002deditor">the common editor instructions</a>.
+</p>
+<p>The Customize options are <code class="code">emacsvox-capitalization-capital-tone</code> and
+<code class="code">emacsvox-capitalization-all-caps-tone</code>. Each holds pitch, duration, individual
+volume and shape. Conditional rules, profiles and palettes remain in the
+separate presentation store.
+</p>
+<p>If you previously saved these beeps as menu-generated personal rules, opening
+the beep menu imports their values into its draft without writing anything.
+Save once with <kbd class="kbd">S</kbd>, or <kbd class="kbd">W</kbd> in the shared editor, to migrate that cue into
+Customize. Apply asks you to save first while these legacy rules remain.
+Migration removes only rules that retain the generated matches and action
+structure for that cue. Rules with different matches or action structures remain
+intact. Finish any unsaved personal-rule editor before migrating. If the rule-store write fails, the old rules remain
+effective and the menu reports that Customize was saved; correct the write
+problem and retry Save to finish migrating.
 </p>
 </li><li> <a class="anchor" id="Choose-spelling-feedback"></a>Choose spelling feedback
 
@@ -179,27 +338,41 @@ individual adjustment; it is also available in Sounds and output.
 </p>
 <p>These controls change the current session immediately. <kbd class="kbd">b</kbd> previews the tone
 alone, even when tone feedback is off. <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> reads a sample containing one
-flagged word with the selected combination. <kbd class="kbd">S</kbd> saves the spelling settings,
+flagged word with the selected combination. Capitalisation follows the captured
+source buffer&rsquo;s active reading settings and presentation rules. A local Spoken
+choice can therefore say “cap” even when global defaults use Tone. Open
+Capitalisation for that buffer to inspect or change its reading settings.
+<kbd class="kbd">S</kbd> saves the spelling settings,
 including tone timing and shape, and the shared tone volume through Customize.
 <kbd class="kbd">q</kbd> returns and <kbd class="kbd">C-q</kbd> closes the menus without saving.
 </p>
-<ol class="enumerate">
-<li> <a class="anchor" id="Edit-the-complete-spelling-tone"></a>Edit the complete spelling tone
+</li><li> <a class="anchor" id="Use-the-shared-tone-editor"></a>Use the shared tone editor
 
 
 <a class="anchor" id="spelling_002dtone_002deditor"></a>
 <a class="index-entry-id" id="index-spelling-tone-editor"></a>
+<a class="index-entry-id" id="index-shared-tone-editor"></a>
 <a class="index-entry-id" id="index-tone-presets"></a>
 
-<p>Press capital <kbd class="kbd">E</kbd> in Spelling feedback, or use <kbd class="kbd">C-e H s f E</kbd>, for a private
-draft of the complete tone. The title identifies its global spelling scope.
-This editor adds waveform, pitch sweep and envelope controls to pitch, duration
-and individual volume. Unlike the parent menu&rsquo;s immediate adjustments, changes
-here affect only the draft until you apply it. Timing stays in Spelling feedback
-at <kbd class="kbd">C-e H s f m</kbd>. Voice, earcon and tone enablement also remain in that menu;
-shared main-tone volume controls all main tones from Sounds and output.
+<p>Spelling feedback, each capitalisation beep menu, indentation&rsquo;s pitch-tone
+settings and the five line-condition menus open this editor with capital <kbd class="kbd">E</kbd>.
+Wrapped-row feedback and <a class="ref" href="Agent-Shell-Source-Blocks.html#agent_002dshell_002dtext_002dtrees">tree level feedback</a> also use it; the tree&rsquo;s Level
+changes menu opens it with capital <kbd class="kbd">T</kbd>. The title identifies the cue and scope.
+Waveform, pitch sweep and envelope controls accompany pitch, duration and
+individual volume. Adjustments affect only a private draft until you apply
+or save it using the destination&rsquo;s labelled actions. For trees, those actions
+keep the tone in the pending Trees draft; return to Trees to apply or save
+that draft.
 </p>
-<p>The sections follow the editing task: the spelling tone&rsquo;s basic controls,
+<p>The exercise below uses global spelling at <kbd class="kbd">C-e H s f E</kbd>. Its timing stays
+in Spelling feedback at <kbd class="kbd">C-e H s f m</kbd>; voice, earcon and tone enablement also
+remain there. Shared main-tone volume controls all main tones from Sounds
+and output. Indentation&rsquo;s buffer/global scope follows its saving instructions
+above; capitalisation and spelling tones use global defaults. Line tones use
+conditional session or personal rules as described in
+<a data-manual="emacsvox" href="./Sounds-And-Space.html#Sounds-And-Space">Sounds, Tones, and Spatial Cues</a>.
+</p>
+<p>The sections follow the editing task: the cue&rsquo;s basic controls,
 Pitch movement, Envelope, Preview, Presets, Apply and save, then Finish.
 Left/right changes sections; up/down selects an item. Shift-left/right adjusts
 only a selected number. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> enters an exact number, toggles Pitch sweep,
@@ -330,7 +503,7 @@ cannot be replaced. Saved presets appear alongside the bundled choices at <kbd c
 </li><li> <a class="anchor" id="Apply-save-or-discard-the-draft"></a>Apply, save or discard the draft
 
 
-<p>Use <kbd class="kbd">A</kbd> to apply the draft for this session. Capital <kbd class="kbd">W</kbd> saves and applies
+<p>For spelling, use <kbd class="kbd">A</kbd> to apply the draft for this session. Capital <kbd class="kbd">W</kbd> saves and applies
 its tone defaults through Customize. These actions leave timing, voice, earcon,
 tone enablement and shared volume unchanged. <kbd class="kbd">R</kbd> resets only the draft to factory
 defaults for preview and deliberate application. <kbd class="kbd">q</kbd> returns to Spelling
@@ -361,7 +534,6 @@ A preview reports missing support instead of playing an inaccurate substitute.
 Your settings remain intact. Use an updated worker, or restore volume 100,
 sine and Classic and turn off Pitch sweep to hear the tone on an older worker.
 </p></li></ol>
-</li></ol>
 
 </li><li> <a class="anchor" id="Choose-typing-and-point-feedback"></a>Choose typing and point feedback
 
@@ -371,6 +543,14 @@ echo, point indication/presentation, and spoken messages share buffer/global
 scope; global changes also affect the source buffer. Delayed phonetics and
 delay are global. Shift-left/right changes delay by 0.1 seconds; exact entry
 through <kbd class="kbd"><kbd class="key">RET</kbd></kbd> accepts at least 0.1 seconds.
+</p>
+<p><kbd class="kbd">p</kbd> opens Point presentation with the current choice focused and marked.
+Choose animated voice, tone, earcon, voice with tone or earcon, spoken point,
+personal rules, or none. Arrows browse without applying; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> applies in the
+displayed scope and returns to Point presentation. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> again to try
+another choice, or cancel the list with <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd>. Choosing a presentation
+leaves point indication&rsquo;s on/off setting unchanged; each choice&rsquo;s Help explains
+its effect.
 </p>
 <p><kbd class="kbd"><kbd class="key">SPC</kbd></kbd> previews the captured line with point settings, <kbd class="kbd">P</kbd> speaks its character&rsquo;s
 phonetic name immediately, and <kbd class="kbd">s</kbd> stops. <kbd class="kbd">S</kbd> saves displayed settings through

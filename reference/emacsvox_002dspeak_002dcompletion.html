@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-speak-completion (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-speak-completion (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-speak-completion (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dspeak_002dfilters.html" rel="next" title="emacsvox-speak-filters">
+<link href="emacsvox_002dspeak_002dcharacters.html" rel="prev" title="emacsvox-speak-characters">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dspeak_002dcompletion">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeak_002dfilters.html" accesskey="n" rel="next">emacsvox-speak-filters</a>, Previous: <a href="emacsvox_002dspeak_002dcharacters.html" accesskey="p" rel="prev">emacsvox-speak-characters</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dspeak_002dcompletion-1"><span>2.278 emacsvox-speak-completion<a class="copiable-link" href="#emacsvox_002dspeak_002dcompletion-1"> &para;</a></span></h3>
+
+<p>Completion reading and navigation.
+The core speech facade retains activation in its established order.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dSpeak_002dCompletion-Commands" accesskey="1">Emacsvox-Speak-Completion Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dSpeak_002dCompletion-Commands">
+<h4 class="subsection"><span>2.278.1 Emacsvox-Speak-Completion Commands<a class="copiable-link" href="#Emacsvox_002dSpeak_002dCompletion-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dcompletions_002dmove_002dto_002dcompletion_002dgroup" accesskey="1">emacsvox-completions-move-to-completion-group</a></li>
+<li><a href="#emacsvox_002dspeak_002dcompletions_002dif_002davailable" accesskey="2">emacsvox-speak-completions-if-available</a></li>
+<li><a href="#emacsvox_002dswitch_002dto_002dreference_002dbuffer" accesskey="3">emacsvox-switch-to-reference-buffer</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dcompletions_002dmove_002dto_002dcompletion_002dgroup">
+<h4 class="subsubsection"><span>2.278.1.1 emacsvox-completions-move-to-completion-group<a class="copiable-link" href="#emacsvox_002dcompletions_002dmove_002dto_002dcompletion_002dgroup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dcompletions_002dmove_002dto_002dcompletion_002dgroup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-completions-move-to-completion-group</strong><a class="copiable-link" href="#index-emacsvox_002dcompletions_002dmove_002dto_002dcompletion_002dgroup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dcompletions_002dmove_002dto_002dcompletion_002dgroup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to group of choices beginning with character last
+typed. If no such group exists, then we try to search for that
+char, or dont move.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dcompletions_002dif_002davailable">
+<h4 class="subsubsection"><span>2.278.1.2 emacsvox-speak-completions-if-available<a class="copiable-link" href="#emacsvox_002dspeak_002dcompletions_002dif_002davailable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dcompletions_002dif_002davailable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-completions-if-available</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dcompletions_002dif_002davailable"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dSPC"></a><span><kbd class="kbd">C-e M-SPC</kbd><a class="copiable-link" href="#index-C_002de-M_002dSPC"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dcompletions_002dif_002davailable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak completions if available.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dswitch_002dto_002dreference_002dbuffer">
+<h4 class="subsubsection"><span>2.278.1.3 emacsvox-switch-to-reference-buffer<a class="copiable-link" href="#emacsvox_002dswitch_002dto_002dreference_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dswitch_002dto_002dreference_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-switch-to-reference-buffer</strong><a class="copiable-link" href="#index-emacsvox_002dswitch_002dto_002dreference_002dbuffer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dswitch_002dto_002dreference_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Switch back to buffer that generated completions.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+
+</body>
+</html>

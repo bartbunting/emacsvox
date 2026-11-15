@@ -59,6 +59,7 @@ Settings menus also have their own contextual Help, described below.
 <li><a href="#Read-And-Leave-A-Help-Window" accesskey="3">Read And Leave A Help Window</a></li>
 <li><a href="#Learn-Interactively-And-Read-Manuals" accesskey="4">Learn Interactively And Read Manuals</a></li>
 <li><a href="#Emacsvox_002dSpecific-Help" accesskey="5">Emacsvox-Specific Help</a></li>
+<li><a href="#Ask-the-Emacsvox-community" accesskey="6">Ask the Emacsvox community</a></li>
 </ul>
 <div class="section-level-extent" id="Ask-About-A-Key_002c-Command_002c-Or-Setting">
 <h3 class="section"><span>6.1 Ask About A Key, Command, Or Setting<a class="copiable-link" href="#Ask-About-A-Key_002c-Command_002c-Or-Setting"> &para;</a></span></h3>
@@ -112,49 +113,25 @@ opens the appropriate menu and selects the control without changing its
 value. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> again to activate or edit it. Cancelling completion
 leaves the originating menu open.
 </p>
-<p>The main menu groups its entries in this order: <em class="emph">Everyday settings</em>,
-<em class="emph">This buffer and item</em>, <em class="emph">Rules and saved work</em>, <em class="emph">Find and get help</em>, and
-<em class="emph">Finish</em>. Use left/right to reach a group, then up/down to select an item.
-Changing sections selects the first available item. Plain arrows navigate;
-Shift-left/right adjusts a selected numeric control where offered.
-Press <kbd class="kbd">C-e H n</kbd> to choose navigation and announcement preferences; the
-same controls remain available through <kbd class="kbd">C-e H s n</kbd>.
-<kbd class="kbd"><kbd class="key">RET</kbd></kbd>, <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd>, or <kbd class="kbd">C-j</kbd> activates the selected item; its displayed shortcut
-also works directly.
+<p>In the resulting menu, press <kbd class="kbd">C-c l</kbd> to repeat the selected item. Press <kbd class="kbd">?</kbd>
+followed by its displayed key to read its effect and scope, or <kbd class="kbd">? ?</kbd> for the
+menu overview. Help is read-only: return with <kbd class="kbd">q</kbd> before activating a menu
+action. Your selection is retained. For word and character inspection, use
+the <a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dreview">menu review keys</a>.
 </p>
-<p>To hear the selected item again, press <kbd class="kbd">C-c l</kbd>. This is especially useful
-after a section-only announcement: the first item is selected even though
-only the heading was spoken. <kbd class="kbd">M-f~/~M-b</kbd> reviews its words and <kbd class="kbd">C-f~/~C-b</kbd>
-its characters, leaving the selection and Enter&rsquo;s target unchanged. These
-menu keys differ from ordinary buffer reading; see
-<a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dreview">Review an item without changing the selection</a> for endpoints, repeats and
-menu-specific overrides.
-</p>
-<p>Press <kbd class="kbd">?</kbd> followed by an item&rsquo;s key to hear its effect and scope, or <kbd class="kbd">? ?</kbd>
-for the menu overview and available review keys. The overview is a read-only
-snapshot with ordinary text navigation. Its displayed actions run after you
-return to the menu. <kbd class="kbd">q</kbd> in Help returns with the selection retained.
-</p>
-<p>Within the menu itself, <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> goes back one level, while <kbd class="kbd">C-q</kbd> closes
-the sequence. Returning from an Emacsvox submenu selects the entry that opened
-it, including when you used its shortcut. The return announcement identifies
-that item; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> opens it again. These navigation commands do not undo changes
-already applied.
-Choice lists and minibuffer prompts have different roles: arrows browse a
-choice list without applying it, while a prompt uses your normal text editing
-and completion. See <a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dnavigation">Navigate menus and read Help</a> for the complete interaction.
-A linked editor keeps its own preview, saving, and discard rules. See
+<p>Use arrows to browse other controls and <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to activate one. In Emacsvox
+menus, <kbd class="kbd">q</kbd> or <kbd class="kbd">C-g</kbd> goes back one level and <kbd class="kbd">C-q</kbd> closes the sequence.
+Returning selects the entry that opened the submenu. These commands do not
+undo applied changes. <a class="ref" href="Returning-From-Settings.html#settings_002dmenu_002dnavigation">Navigate menus and read Help</a> explains section movement,
+numeric adjustment and navigation preferences in full. A linked editor keeps
+its own preview, saving and discard rules. See
 <a data-manual="emacsvox" href="./Saving-And-Startup.html#Saving-And-Startup">Choose What Persists</a> before treating a saved default, a live adjustment,
 or a retained draft as the same thing.
 </p>
 <p>Use <kbd class="kbd">C-e H a</kbd> to find an action such as browsing voices, inspecting
-diagnostics, or reading the manual. It uses the same partial-name matching and
-two-Enter selection as settings search, including literal spaces and <kbd class="kbd"><kbd class="key">TAB</kbd></kbd>
-completion. Alternative names lead to one displayed
-result for each action: for example, <code class="code">Feedback for this item</code> finds
-<em class="emph">Explain this item</em>, and <code class="code">Recent aural feedback</code> finds <em class="emph">Recent feedback</em>.
-Editors opened from these menus retain their own Help,
-preview, save, and return commands.
+diagnostics or reading the manual. It uses the same search and two-Enter
+selection. <a data-manual="emacsvox" href="./Finding-Settings-And-Actions.html#Finding-Settings-And-Actions">Finding settings and actions</a> explains aliases and the available
+search routes.
 </p>
 </div>
 </div>
@@ -164,9 +141,9 @@ preview, save, and return commands.
 <p>Ordinary Emacs Help writes its explanation in <code class="code">*Help*</code>. Some commands, such
 as <kbd class="kbd">C-h m</kbd>, can display that buffer without selecting it. Spoken descriptions
 such as key, function and variable Help use <code class="code">emacsvox-speak-help</code>, also bound
-to <kbd class="kbd">C-e h</kbd>. This helper selects Help, removes other windows in the frame,
-and reads a windowful starting at Help&rsquo;s current point. It does not kill the
-buffers those windows displayed, and it does not necessarily read all of Help.
+to <kbd class="kbd">C-e h</kbd>. This helper selects Help, moves to its beginning and reads it.
+It uses ordinary buffer reading, including the large-request limit described
+in <a data-manual="emacsvox" href="./Reading-Without-Moving-Point.html#Reading-Without-Moving-Point">Buffer-reading limits and alternatives</a>.
 </p>
 <p>After requesting Help, press <kbd class="kbd">C-e m</kbd> to check the selected buffer. If it is
 <code class="code">*Help*</code>, read there directly. Otherwise, use <kbd class="kbd">C-x b</kbd> and choose <code class="code">*Help*</code>
@@ -174,13 +151,18 @@ by name, or select its existing window deliberately. Do not automatically
 press <kbd class="kbd">C-x o</kbd>: Help may already be selected, or there may now be only one
 window. <kbd class="kbd">C-e C-w</kbd> describes the arrangement when needed.
 </p>
-<p>Once in Help, use line or paragraph reading for a local check. <kbd class="kbd">C-e h</kbd> repeats
-a windowful from the current Help position; <kbd class="kbd">M-&lt;</kbd> first returns to its beginning.
+<p>Once in Help, use line or paragraph reading for a local check. <kbd class="kbd">C-e h</kbd> returns
+to the beginning and reads again.
 For longer reading and its effect on point, see
 <a data-manual="emacsvox" href="./Reading.html#Reading">Reading and navigating</a>. Press <kbd class="kbd">q</kbd> while in Help to leave its view.
 Then check the selected buffer and use <kbd class="kbd">C-x b</kbd> to return to your document
 before editing or requesting buffer-specific Help again. To restore a reference
 window, follow <a data-manual="emacsvox" href="./Reference-And-Draft-Windows.html#Reference-And-Draft-Windows">Keep a reference and a draft in separate windows</a>.
+</p>
+<p>While a multiple-choice question is pending, <kbd class="kbd">C-e h</kbd> instead selects that
+question&rsquo;s Help, including a specially named buffer. There, <kbd class="kbd">q</kbd> returns to
+the question and <kbd class="kbd">C-g</kbd> cancels it. See
+<a data-manual="emacsvox" href="./Answering-Emacs-Prompts.html#Answering-Emacs-Prompts">Reviewing and answering prompts</a> for repeat and history controls.
 </p>
 <p>Help reached through an Emacsvox settings menu has the menu-return behaviour
 explained above. Use its <kbd class="kbd">q</kbd> to return to the originating menu item, not the
@@ -237,6 +219,23 @@ no speech at all, begin with
 <p>The generated <a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in the <em class="emph">Emacsvox Reference Manual</em> records
 default bindings. Return to <kbd class="kbd">C-h k</kbd>, <kbd class="kbd">C-h m</kbd>, and <kbd class="kbd">C-h b</kbd> when a package or
 personal configuration changes those defaults.
+</p>
+</div>
+<div class="section-level-extent" id="Ask-the-Emacsvox-community">
+<h3 class="section"><span>6.6 Ask the Emacsvox community<a class="copiable-link" href="#Ask-the-Emacsvox-community"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-mailing-list"></a>
+<a class="index-entry-id" id="index-community-support"></a>
+<a class="index-entry-id" id="index-subscribing-to-the-mailing-list"></a>
+
+<p>Use the Emacsvox mailing list to ask questions, get help with setup, share
+tips, and discuss development. Send messages to
+<code class="code">emacsvox@emacspeak.net</code>.
+</p>
+<p>To subscribe, email <code class="code">sympa@emacspeak.net</code> with the subject
+<code class="code">subscribe emacsvox</code>. See the
+<a class="uref" href="https://mail.emacspeak.net/sympa/info/emacsvox">mailing list homepage</a>
+for more information.
 </p>
 </div>
 </div>

@@ -74,6 +74,26 @@ submitted it and the command has acted, cancellation does not undo the result.
 Likewise, quitting a settings menu does not undo an adjustment made there.
 Follow the recovery instructions for the operation you actually performed.
 </p>
+<p>Some questions offer several single-key answers, with a longer explanation
+in Help. A disabled-command question is one example. Emacsvox announces the
+question, explanation and choices once when input is ready. Press <kbd class="kbd">C-e s</kbd>
+to stop speech without answering, or <kbd class="kbd">C-e a</kbd> to repeat the complete question.
+Repeat also copies that text to the kill ring, replacing the next yank&rsquo;s source.
+</p>
+<p>Press <kbd class="kbd">C-e h</kbd> to select that question&rsquo;s Help and read from its beginning.
+The buffer may be named <code class="code">*Disabled Command*</code>, <code class="code">*Multiple Choice Help*</code> or
+another name chosen by the command. Use ordinary line, word and character
+movement and reading there. Press <kbd class="kbd">q</kbd> to return to the unanswered question;
+<kbd class="kbd">C-g</kbd> cancels it from either the question or its Help. Reading Help does not
+select an answer or enable a disabled command. These controls also work when
+Emacs reads the choice directly without using the minibuffer.
+</p>
+<p>The full question is recorded once in <code class="code">*Messages*</code>, available with <kbd class="kbd">C-h e</kbd>
+after answering or cancelling. Recent Feedback retains submitted speech under
+its existing history and preview limits; it is not a complete prompt archive.
+These review controls apply to Emacs&rsquo;s multiple-choice reader. Other input
+loops, such as query replacement, keep their own interaction rules.
+</p>
 <p>After the prompt finishes, notice which buffer has been selected. An open-file
 command selects a document; Help may appear in another window; a save normally
 leaves you in the document. Press <kbd class="kbd">C-e m</kbd> to identify the current buffer and

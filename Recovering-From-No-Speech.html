@@ -88,7 +88,13 @@ Keep the original error when requesting help.
 </p></dd>
 <dt>The ready message is heard, but speech later stops</dt>
 <dd><p>If Emacs reports that a speech server exited, inspect the Omnivox session
-log and run <kbd class="kbd">M-x tts-restart <kbd class="key">RET</kbd></kbd> after correcting the server problem.
+log. With locally owned Omnivox, <kbd class="kbd">M-x tts-recover <kbd class="key">RET</kbd></kbd> reuses retained
+startup settings and keeps notification speech running. It can recover
+despite a broken saved configuration, provided native retirement is confirmed
+and retained records remain usable. If management storage itself is damaged
+or unwritable, a supporting local build offers <kbd class="kbd">M-x tts-emergency-start <kbd class="key">RET</kbd></kbd>
+for minimal eSpeak speech after verified native cleanup. Use <kbd class="kbd">M-x tts-restart <kbd class="key">RET</kbd></kbd> to capture
+corrected settings. See <a data-manual="emacsvox" href="./Miscellaneous.html#Miscellaneous">Stop or restart speech</a> for their scope.
 Logs are below <code class="code">$XDG_STATE_HOME/emacsvox/omnivox</code>, defaulting to
 <code class="code">~/.local/state/emacsvox/omnivox</code>. Spoken text is omitted unless explicit
 text logging is enabled.

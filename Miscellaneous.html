@@ -21,6 +21,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -39,7 +40,8 @@ Previous: <a href="Speech-Output-Control.html" accesskey="p" rel="prev">Adjust R
 <h4 class="subsection" id="Stop-Or-Restart-Speech"><span>5.8.3 Stop Or Restart Speech<a class="copiable-link" href="#Stop-Or-Restart-Speech"> &para;</a></span></h4>
 
 <p>Stopping ends current output without disabling future feedback. Quiet mode
-lets you work temporarily without speech. Restart after correcting a backend
+suppresses ordinary source reading; explicit settings-menu feedback remains
+available. Restart after correcting a backend
 problem or changing the selected synthesiser, not as an assumed cure for every
 missing integration.
 </p>
@@ -51,17 +53,47 @@ missing integration.
 <dd><p>Toggle current-buffer quiet mode; <kbd class="kbd">C-u</kbd> toggles it globally.
 </p></dd>
 <dt><kbd class="kbd">C-e C-s</kbd></dt>
-<dd><p>Stop and restart the selected speech server.
+<dd><p>Restart the selected speech server using newly saved settings.
+</p></dd>
+<dt><kbd class="kbd">M-x tts-recover</kbd></dt>
+<dd><p>Recover main speech from its retained startup; keep notification speech running with locally owned Omnivox.
+</p></dd>
+<dt><kbd class="kbd">M-x tts-emergency-start</kbd></dt>
+<dd><p>Start minimal local eSpeak speech after confirmed native retirement, ignoring saved Omnivox preferences and management records.
 </p></dd>
 <dt><kbd class="kbd">C-e d V</kbd></dt>
 <dd><p>Speak adapter and version information.
 </p></dd>
 </dl>
 
-<p>Server selection, repeated-pattern cleanup, text splitting, language selection,
-and direct engine controls have specialist Help and reference entries. For
+<p>For locally owned Omnivox, recovery confirms native retirement before replacing
+main speech. It can bypass a broken saved configuration, but still needs valid
+retained startup records and writable owner storage. Live host preferences may
+revert to startup values; reload them again when the saved file is usable.
+With host support, recovery can verify an existing native retirement record if
+the owner&rsquo;s final reply was lost. It uses the original host connection settings;
+missing or damaged evidence remains an error rather than permission to start
+over a possibly surviving worker.
+</p>
+<p>If damaged records or failed storage writes prevent ordinary recovery, use
+<kbd class="kbd">M-x tts-emergency-start <kbd class="key">RET</kbd></kbd> with a supporting local Omnivox build. It uses
+bundled eSpeak, built-in host settings and the default output device, while
+keeping notification speech running. It leaves saved settings and asset claims
+intact. With <kbd class="kbd">C-u</kbd>, choose another output backend; <kbd class="kbd">pulse</kbd> is Linux-only and
+<kbd class="kbd">null</kbd> is a silent diagnostic backend. Subsequent <kbd class="kbd">tts-recover</kbd> calls keep
+minimal mode. After repairing saved settings, use <kbd class="kbd">tts-restart</kbd> to return to
+ordinary speech. Emergency startup still requires verified cleanup of old
+speech; it cannot bypass lost native ownership or repair an unusable output.
+</p>
+<p>For repeat cleanup and text splitting, use the <a class="ref" href="Reading-Scope-And-Punctuation.html#reading_002dfilters">reading filter menus</a>. Server
+and language selection are covered in <a data-manual="emacsvox" href="./Speech-Backends.html#Speech-Backends">Speech Backends</a> and live Help. For
 missing speech, follow <a data-manual="emacsvox" href="./Recovering-From-No-Speech.html#Recovering-From-No-Speech">Recovering From No Speech</a>.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Speech-Output-Control.html">Adjust Rate And Spoken Detail</a>, Up: <a href="Speech-System.html">Adjust Speech While You Work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

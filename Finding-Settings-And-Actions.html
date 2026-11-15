@@ -40,7 +40,7 @@ Previous: <a href="Returning-From-Settings.html" accesskey="p" rel="prev">Choose
 <h4 class="subsection" id="Find-a-setting-or-an-action"><span>8.2.3 Find a setting or an action<a class="copiable-link" href="#Find-a-setting-or-an-action"> &para;</a></span></h4>
 
 <p>Press <kbd class="kbd">C-e H /</kbd> to find an Emacsvox setting by any part of its name, ignoring
-capitalisation. Type <code class="code">cap</code> to find <em class="emph">Capitalization indication and camel case</em>,
+capitalisation. Type <code class="code">cap</code> to find <em class="emph">Capitalisation indication and camel case</em>,
 <em class="emph">Capital-letter beep</em>, <em class="emph">All-caps beep</em>, and <em class="emph">Spatial capabilities</em>. The aliases
 <code class="code">caps beep</code> and <code class="code">allcaps</code> find both beep controls and only <em class="emph">All-caps beep</em>, respectively.
 Each result appears once under its normal name. Use completion to choose a
@@ -60,6 +60,11 @@ rules</em>, or <em class="emph">Aural Doctor</em>. It uses the same case-insensi
 matching and two-Enter selection as settings search: choose the destination,
 then activate its control. Child views return to their focused menu; another
 <kbd class="kbd">q</kbd> returns to the menu where you searched.
+</p>
+<p>Search actions for <code class="code">header line</code> to select the toggle for the buffer where
+you opened settings. Activating it hides that buffer&rsquo;s current header, or
+enables Emacsvox&rsquo;s buffer-name header. Enabling does not restore a previous
+custom header. Other buffers and startup defaults are unchanged.
 </p>
 <p>Press <kbd class="kbd">C-e H b</kbd> to close menus and return to the captured source position,
 speaking its line. A changed or deleted source item must be captured again.

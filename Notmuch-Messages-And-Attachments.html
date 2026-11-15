@@ -57,6 +57,19 @@ window, Down advances through ordinary body text before speaking the next
 line, even when the current line is only partly visible. Images or text taller
 than the window retain Emacs&rsquo;s partial scrolling.
 </p>
+<p>Tab and Shift-Tab move through the same sequence of links and MIME controls
+in either direction. HTML links retain their link voice without a navigation
+earcon; MIME controls keep their part descriptions and cues. Link navigation
+does not speak the destination URL on the notification stream.
+</p>
+<p>When a row contains one visible MIME control and otherwise only whitespace,
+you can use Enter or the part actions below from the indentation or trailing
+space. Your reading position stays on that row. Enter shows or hides content
+that Notmuch can display; otherwise it uses
+<code class="code">notmuch-show-part-button-default-action</code>, normally saving the part. Speech
+confirms the visibility change or the save/view action once. Rows containing
+other text or multiple controls require you to move onto the intended control.
+</p>
 <dl class="table">
 <dt><kbd class="kbd">n</kbd></dt>
 <dd><p>Run <code class="code">notmuch-show-next-open-message</code>.
@@ -79,7 +92,8 @@ at the thread end it reports the actual archive outcome and destination.
 <dd><p>Run <code class="code">notmuch-show-rewind</code> and read the resulting page or message.
 </p></dd>
 <dt><kbd class="kbd">RET</kbd></dt>
-<dd><p>Run <code class="code">notmuch-show-toggle-message</code> and cue the resulting visibility.
+<dd><p>Activate the button or the single MIME control on its row. Elsewhere,
+run <code class="code">notmuch-show-toggle-message</code> and cue the resulting visibility.
 </p></dd>
 <dt><kbd class="kbd">M-RET</kbd></dt>
 <dd><p>Run <code class="code">notmuch-show-open-or-close-all</code> to open every message and report the
@@ -116,10 +130,49 @@ confirmation therefore cannot distinguish partial skips.
 </p></dd>
 </dl>
 
-<p>Viewing, saving, overwriting, or launching a MIME part is an explicit Notmuch
-operation. Navigation and detail inspection never open an attachment or an
+<p>These are the ordinary Show bindings. Table reading temporarily changes the
+reading keys described below. Viewing, saving, overwriting, or launching a
+MIME part is an explicit Notmuch operation. Navigation and detail inspection never open an attachment or an
 external viewer by themselves.
 </p>
+<ul class="mini-toc">
+<li><a href="#Read-a-table-in-an-HTML-message" accesskey="1">Read a table in an HTML message</a></li>
+</ul>
+<div class="subsection-level-extent" id="Read-a-table-in-an-HTML-message">
+<h4 class="subsection"><span>10.4.1 Read a table in an HTML message<a class="copiable-link" href="#Read-a-table-in-an-HTML-message"> &para;</a></span></h4>
+
+<p>When you move into a supported data table, Emacsvox announces table reading,
+its dimensions and the current cell. The first row supplies column titles.
+Use Control-Meta-left/right to change columns and Control-Meta-up/down to
+change rows while retaining the column. These keys read the complete cell,
+even when its text wraps across several displayed lines. Blank cells say
+“blank.” Plain Up/down reads the complete destination row by default.
+</p>
+<p>Press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to repeat the cell, <kbd class="kbd">r</kbd> for its row, or <kbd class="kbd">c</kbd> for its column.
+<kbd class="kbd">.</kbd> gives coordinates and <kbd class="kbd">=</kbd> gives dimensions. Tab, Shift-Tab and Enter keep
+their usual link and MIME actions. Press <kbd class="kbd">q</kbd> to leave table reading in place
+and restore ordinary mail keys, including reply, archive, attachment saving
+and the MIME-part prefix. Another <kbd class="kbd">q</kbd> then performs Notmuch&rsquo;s usual quit.
+Meta-up/down leaves for the content before or after the table. Reading never
+changes the message or its tags.
+</p>
+<p>Automatic entry is the initial HTML-mail policy. To change it, press <kbd class="kbd">a</kbd>
+inside the table or run <kbd class="kbd">M-x emacsvox-table-settings</kbd> from the message.
+The common, mode and buffer choices work as described under
+<a data-manual="emacsvox" href="./Reading-Markdown-And-Org-Tables.html#Reading-Markdown-And-Org-Tables">table reading preferences</a>. An explicit On demand choice starts reading only
+with Control-Meta arrows or <kbd class="kbd">C-e C-t C-r</kbd>. After quitting, automatic entry
+stays suspended until you leave the table and return or explicitly enter
+again. A message refresh ends reading; enter again after the refresh.
+</p>
+<p>Supported tables have at least two rows and columns, a header row marked
+as headings or bold text, and no merged cells. Layout tables, nested tables
+and tables without a recognisable header retain ordinary mail navigation.
+For these, you can use normal text reading; the separate
+<kbd class="kbd">M-x emacsvox-eww-table-data</kbd> view also remains available for simple tables
+when the EWW integration is loaded. A message already displayed before HTML
+table support was loaded needs a refresh before it has cell navigation.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

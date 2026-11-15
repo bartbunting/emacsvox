@@ -51,10 +51,13 @@ question. Automatic question feedback follows the session&rsquo;s speech level;
 <code class="code">quiet</code> suppresses it. Explicit reading and actions still speak.
 </p>
 <p>Use <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> to move between controls in the shell or viewport.
-Emacsvox reads the field name, whether it is required, and its current value or
-selection state. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to select an option, toggle a checkbox, or edit a
-text or number field. Changes are confirmed after they take effect. When an
-option has a preview, <kbd class="kbd">?</kbd> opens or closes it; opening it reads its contents.
+Emacsvox reads the field name and whether it is required when entering a field.
+Moving between choices in that field reads the choice and its state without
+repeating the question. Returning from outside the field announces its heading
+again. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to select an option, toggle a checkbox, or edit a
+text or number field. Changes are confirmed after they take effect, without
+repeating the heading when you stay in the same question. When an option has
+a preview, <kbd class="kbd">?</kbd> opens or closes it; opening it reads its contents.
 The preview key applies only to controls that offer a preview.
 </p>
 <p>Choose <em class="emph">Submit</em> to send the answers or <em class="emph">Decline</em> to decline the question.
@@ -63,6 +66,18 @@ Missing required answers are reported without announcing successful submission.
 to the latest question, use <kbd class="kbd">M-x agent-shell-elicitation-jump-to-latest-form</kbd>.
 The next-field and previous-field commands are also available through <kbd class="kbd">M-x</kbd>.
 </p>
+<p>If controls remain visible after their form expires, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> read
+the displayed option and identify the question as expired. The field heading
+is announced on entry and when crossing fields. These historical controls
+cannot submit or change an answer. Older entries without retained headings
+still provide their displayed text; use arrow keys to read the surrounding
+question.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Agent-Shell-Speech-And-Privacy.html">Choose automatic speech and privacy</a>, Previous: <a href="Starting-An-Agent-Shell-Session.html">Start and control a session</a>, Up: <a href="Agent-Shell.html">Agent Shell</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

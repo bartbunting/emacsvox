@@ -60,9 +60,10 @@ interrupting you. Another selected terminal or an active minibuffer also
 suppresses foreground feedback. In terminal-only Emacs, or when keyboard
 focus cannot be reported, selection within Emacs is the available boundary.
 </p>
-<p>Turning autospeak off or losing eligibility discards locally pending automatic
-feedback. Speech already sent to Omnivox may finish. Returning or re-enabling
-speech starts with fresh output; it does not replay missed content. Use explicit
+<p>Turning autospeak off, leaving the live cursor or changing focus discards
+automatic feedback still waiting in Emacs. Speech already sent to Omnivox may
+finish. Returning or re-enabling speech starts with fresh output; it does not
+replay missed content. Use explicit
 review instead. This policy also applies to an embedded Eshell terminal,
 without changing ordinary Eshell output.
 </p>
@@ -75,20 +76,30 @@ without changing ordinary Eshell output.
 <div class="subsection-level-extent" id="Read-output-and-follow-progress">
 <h4 class="subsection"><span>12.2.1 Read output and follow progress<a class="copiable-link" href="#Read-output-and-follow-progress"> &para;</a></span></h4>
 
-<p>On the main screen, Emacsvox collects a burst before classifying it. Complete
+<p>On the main screen, Emacsvox collects a burst of output before speaking. Complete
 new output lines are spoken once, with automatic limits of eight lines and
 1,000 characters. Continued input rows and empty terminal placeholders are
 omitted without hiding output or rereading earlier rows. Output remains
 eligible even if it scrolls beyond the screen, including repeated identical
 lines; increasing scrollback is unnecessary for this feedback.
 </p>
+<p>For progress rows, speech omits runs of three or more horizontal box-drawing
+strokes separated from surrounding text by spaces, while retaining figures
+and labels. A row containing only a horizontal rule, with optional box
+corners, uses the separator cue even at <code class="code">all</code> punctuation. This applies to
+automatic output, explicit screen review, and line reading in EAT and frozen
+review buffers. Table junctions, vertical borders, and shorter runs keep their
+usual presentation. The buffer text remains intact, so you can inspect
+individual characters. Adjust the separator sound through
+<a data-manual="emacsvox" href="./Sounds-And-Space.html#Sounds-And-Space">Line and boundary cues</a>.
+</p>
 <p>Wrapped output is joined and oversized bursts announce how much was omitted.
 Fresh text without a newline also speaks, keeping password requests and
 confirmation questions accessible. Carriage-return progress and status
 rewrites use rate-limited, replaceable speech. Unchanged repaints and
-resize-only updates remain silent. Bells, pastes, input-mode changes,
-application-screen boundaries, and process exit are content-free semantic
-events rather than arbitrary screen readings.
+resize-only updates remain silent. Bells, pastes, input-mode changes, entry
+to or exit from an application screen, and process exit have their own cues
+or announcements without reading screen content.
 </p>
 </div>
 <div class="subsection-level-extent" id="Recognise-and-inspect-prompts">
@@ -119,10 +130,17 @@ retained cursor row in that situation.
 <div class="subsection-level-extent" id="Hear-input-and-deletion-results">
 <h4 class="subsection"><span>12.2.3 Hear input and deletion results<a class="copiable-link" href="#Hear-input-and-deletion-results"> &para;</a></span></h4>
 
-<p>On the main screen in semi-character and character modes, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> is silent.
-After rendered left/right movement, Emacsvox names the reached character;
-after up/down it speaks the resulting input or history row without the
-observed shell prompt. <kbd class="kbd">M-b</kbd>, <kbd class="kbd">M-f</kbd>, and modified left/right word movements
+<p>When the terminal has keyboard focus, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> stops earlier main speech before
+sending a newline in line, semi-character, or character mode. For example,
+advancing to the next line in <code class="code">ed</code> cuts off the preceding line. Output chunks
+within one response still play in order, and notification speech continues
+independently. <kbd class="kbd"><kbd class="key">RET</kbd></kbd> itself adds no spoken text. Sending line input without a
+newline or editing scrollback does not trigger this stop.
+</p>
+<p>On the main screen in semi-character and character modes, Emacsvox names the
+character reached by rendered left/right movement. After up/down it speaks
+the resulting input or history row without the observed shell prompt.
+<kbd class="kbd">M-b</kbd>, <kbd class="kbd">M-f</kbd>, and modified left/right word movements
 speak the rendered text crossed. A boundary key that produces no movement
 stays silent.
 </p>
@@ -131,14 +149,15 @@ history-item counter and input-restored message remain visible in the echo
 area without speaking over the command on the notification stream.
 </p>
 <p>An echoed Space is named without rereading the prompt or line. For Backspace,
-Delete, <kbd class="kbd">M-d</kbd>, and <kbd class="kbd">C-k</kbd>, Emacsvox compares bounded public snapshots before
+Delete, <kbd class="kbd">M-d</kbd>, and <kbd class="kbd">C-k</kbd>, Emacsvox compares the visible screen before
 and after the key. One unambiguous same-row removal is read as the actual
 character or text removed. Otherwise only a deletion tone is given; adjacent
 prompt or screen text is not guessed as deleted content. Padding and trailing
 input blanks do not prevent an otherwise unambiguous word deletion.
 </p>
-<p>A no-echo peer provides no visible deletion to announce. This input feedback
-requires the selected window to follow the live cursor, and is silent during
+<p>When a program does not echo input, there is no visible deletion to announce.
+This input feedback requires the selected window to follow the live cursor,
+and is silent during
 protected password entry, in an unselected terminal, and on an alternate
 screen where the application owns the keys.
 </p>
@@ -153,11 +172,11 @@ An aural rule can add a label by matching module <code class="code">eat</code>, 
 remain rate-limited and obey selected-buffer, live-cursor, and secure-input
 restrictions.
 </p>
-<p>On full-screen or alternate-screen applications, Emacsvox does not read every
-refresh. A cursor row reached by correlated arrow-style navigation, or a compact
-high-confidence transfer of selection-like styling, may be announced.
-Ambiguous repaints remain available to explicit review. Inverse video or a
-coloured row alone is not proof of an active item.
+<p>In full-screen or alternate-screen applications, Emacsvox can announce the row
+reached by an arrow key or a small, clearly identified change in selection
+highlighting. It does not speak every refresh. Use explicit review when a
+screen change is ambiguous: a coloured or inverse-video row alone does not
+establish which item is active.
 </p>
 </div>
 </div>

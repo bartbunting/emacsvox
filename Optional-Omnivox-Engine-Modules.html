@@ -40,10 +40,9 @@ Up: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey="u
 <hr>
 <h4 class="subsection" id="Optional-Omnivox-Engines"><span>14.3.2 Optional Omnivox Engines<a class="copiable-link" href="#Optional-Omnivox-Engines"> &para;</a></span></h4>
 
-<p>The ordinary WSL2 archive is the core, not a claim that every supported engine
-is installed. Companion archives provide larger, experimental, or
-architecture-specific engines. Some require a separately supplied runtime or
-chosen voice data before they can speak.
+<p>The ordinary WSL2 archive supplies the core speech engines. Companion archives
+add larger, experimental or architecture-specific engines. Some also need a
+separately installed runtime or downloaded voice data before they can speak.
 </p>
 <ol class="enumerate">
 <li> <a class="anchor" id="Inspect-running-engines"></a>Inspect running engines
@@ -61,19 +60,23 @@ engines missing from that inventory stay visible as <em class="emph">not reporte
 controls remain reachable. <kbd class="kbd">v</kbd> browses voices; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> opens details.
 </p>
 <p>Details begin with a short status and voice actions, with <em class="emph">Browse voices</em>
-selected. Matching main/notification evidence is combined and problems remain
-near the top. <em class="emph">Startup settings</em> and <em class="emph">Diagnostics</em> start folded; <kbd class="kbd"><kbd class="key">RET</kbd></kbd> toggles
-sections. Selection and folding are remembered per engine.
+selected. When main and notification speech report the same result, it is
+shown once; differences and problems appear near the top. <em class="emph">Startup settings</em>
+and <em class="emph">Diagnostics</em> start folded. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to open or close a section.
+The browser remembers your selection and folds for each engine.
 </p>
-<p><em class="emph">Available</em> describes discovery from the current worker. An older check does
-not alone make it unavailable. <em class="emph">Previously available</em> belongs to a stopped or
-replaced worker. Details announce the engine before requesting newer inventory
-in the background when its check is over five minutes old or belongs to another
-worker. File checks likewise run in the background where requested.
-<em class="emph">Streams differ</em> identifies different availability, policy, health, or voice
-identities. A bridge&rsquo;s presence does not establish its runtime; <em class="emph">Not checked</em>
-does not mean missing. Diagnostics shows each worker&rsquo;s paths, inventory time,
-runtime discovery, and health.
+<p><em class="emph">Available</em> means the current speech worker found the engine; the result does
+not expire merely because the check is old. <em class="emph">Previously available</em> refers to
+a worker that has stopped or been replaced. Opening details announces the
+engine first, then requests a background refresh if the result is over five
+minutes old or came from another worker. Requested file checks also run in
+the background, leaving navigation available.
+</p>
+<p><em class="emph">Streams differ</em> means main and notification speech disagree about engine
+availability, policy, health or voice identity. <em class="emph">Not checked</em> means no check
+result is available, rather than that files are missing. An installed bridge
+may still need a separate runtime. Diagnostics shows each worker&rsquo;s paths,
+check time, runtime discovery and health.
 </p>
 <p><em class="emph">Required runtime</em> appears near the top when native libraries are needed.
 Successful DECtalk discovery, for example, confirms DLL and dictionary loading.
@@ -93,12 +96,13 @@ A one-language list starts expanded and selection/folding are remembered.
 opens an unsaved experiment. Saving asks for a palette destination; browsing
 or previewing changes no palette. <kbd class="kbd">q</kbd> returns to selected engine details.
 </p>
-<p>Library data loads asynchronously with quiet refresh. <em class="emph">Installed</em> identifies
-library entries versus supplied voices. <em class="emph">Enabled</em> is the desired selection
-for the next Apply. <em class="emph">Active</em> describes eligibility on both streams, main only,
-notification only, or neither. <em class="emph">Unknown</em> means missing/inconsistent evidence;
-<kbd class="kbd">R</kbd> refreshes. Active does not measure model residency or prove listening.
-Samples use main speech; inactive downloads need enablement and Apply first.
+<p>The library loads in the background without repeated speech. <em class="emph">Installed</em>
+distinguishes managed library entries from supplied voices. <em class="emph">Enabled</em> shows
+the choice to use at the next Apply. <em class="emph">Active</em> shows where a voice can currently
+be used: both streams, main only, notification only or neither. It does not
+measure memory use or confirm that you can hear the voice. <em class="emph">Unknown</em> means
+the reported information is missing or inconsistent; press <kbd class="kbd">R</kbd> to refresh.
+Samples use main speech. Enable inactive downloads and Apply before sampling.
 </p>
 <p><em class="emph">Voice variants</em> in eSpeak details lists the running worker&rsquo;s bundled variants.
 Choose a base with <kbd class="kbd">b</kbd>, browse with arrows or <kbd class="kbd">C-n~/~C-p</kbd>, and audition with

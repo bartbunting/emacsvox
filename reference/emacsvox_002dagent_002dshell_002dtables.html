@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-agent-shell-tables (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-agent-shell-tables (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-agent-shell-tables (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002damark.html" rel="next" title="emacsvox-amark">
+<link href="emacsvox_002dagent_002dshell_002drender.html" rel="prev" title="emacsvox-agent-shell-render">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dagent_002dshell_002dtables">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002damark.html" accesskey="n" rel="next">emacsvox-amark</a>, Previous: <a href="emacsvox_002dagent_002dshell_002drender.html" accesskey="p" rel="prev">emacsvox-agent-shell-render</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dagent_002dshell_002dtables-1"><span>2.24 emacsvox-agent-shell-tables<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtables-1"> &para;</a></span></h3>
+
+<p>Rendered Markdown table mapping, movement, speech and contextual keys.
+Load through &lsquo;emacsvox-agent-shell&rsquo;, which owns integration activation.
+This adapter delegates logical reading to &lsquo;emacsvox-table-reader&rsquo;.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAgent_002dShell_002dTables-Commands" accesskey="1">Emacsvox-Agent-Shell-Tables Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAgent_002dShell_002dTables-Commands">
+<h4 class="subsection"><span>2.24.1 Emacsvox-Agent-Shell-Tables Commands<a class="copiable-link" href="#Emacsvox_002dAgent_002dShell_002dTables-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell" accesskey="1">emacsvox-agent-shell-table-copy-cell</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn" accesskey="2">emacsvox-agent-shell-table-copy-column</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow" accesskey="3">emacsvox-agent-shell-table-copy-row</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward" accesskey="4">emacsvox-agent-shell-table-exit-backward</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward" accesskey="5">emacsvox-agent-shell-table-exit-forward</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn" accesskey="6">emacsvox-agent-shell-table-next-column</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow" accesskey="7">emacsvox-agent-shell-table-next-row</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell" accesskey="8">emacsvox-agent-shell-table-next-row-cell</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn" accesskey="9">emacsvox-agent-shell-table-previous-column</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow">emacsvox-agent-shell-table-previous-row</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell">emacsvox-agent-shell-table-previous-row-cell</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod">emacsvox-agent-shell-table-select-speaking-method</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell">emacsvox-agent-shell-table-speak-cell</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn">emacsvox-agent-shell-table-speak-column</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext">emacsvox-agent-shell-table-speak-context</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions">emacsvox-agent-shell-table-speak-dimensions</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow">emacsvox-agent-shell-table-speak-row</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell">
+<h4 class="subsubsection"><span>2.24.1.1 emacsvox-agent-shell-table-copy-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-copy-cell</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the logical Markdown table cell at point to the kill ring.
+Remove renderer padding, borders, and text properties.  Preserve the complete
+logical value of a wrapped cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn">
+<h4 class="subsubsection"><span>2.24.1.2 emacsvox-agent-shell-table-copy-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-copy-column</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the logical Markdown table column at point to the kill ring.
+Separate cells with newlines and omit Markdown separator syntax.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow">
+<h4 class="subsubsection"><span>2.24.1.3 emacsvox-agent-shell-table-copy-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-copy-row</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the logical Markdown table row at point to the kill ring.
+Separate cells with tabs and omit Markdown separator syntax.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward">
+<h4 class="subsubsection"><span>2.24.1.4 emacsvox-agent-shell-table-exit-backward<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-exit-backward</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Leave the current Markdown table and move to preceding content.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward">
+<h4 class="subsubsection"><span>2.24.1.5 emacsvox-agent-shell-table-exit-forward<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-exit-forward</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Leave the current Markdown table and move to following content.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn">
+<h4 class="subsubsection"><span>2.24.1.6 emacsvox-agent-shell-table-next-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-next-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT columns right in the current logical Markdown table row.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dnext_002drow">
+<h4 class="subsubsection"><span>2.24.1.7 emacsvox-agent-shell-table-next-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-next-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical Markdown table rows down, retaining the column.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell">
+<h4 class="subsubsection"><span>2.24.1.8 emacsvox-agent-shell-table-next-row-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-next-row-cell</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical table rows down and speak the destination cell.
+Retain the current column and use the current table title settings.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn">
+<h4 class="subsubsection"><span>2.24.1.9 emacsvox-agent-shell-table-previous-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT columns left in the current logical Markdown table row.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow">
+<h4 class="subsubsection"><span>2.24.1.10 emacsvox-agent-shell-table-previous-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical Markdown table rows up, retaining the column.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell">
+<h4 class="subsubsection"><span>2.24.1.11 emacsvox-agent-shell-table-previous-row-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-row-cell</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical table rows up and speak the destination cell.
+Retain the current column and use the current table title settings.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod">
+<h4 class="subsubsection"><span>2.24.1.12 emacsvox-agent-shell-table-select-speaking-method<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-select-speaking-method</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Interactively change automatic Markdown table cell speech.
+Press c to toggle column titles, r to toggle row titles, or o to
+switch between data-first and title-first ordering.  Speak the complete
+resulting configuration after the change.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell">
+<h4 class="subsubsection"><span>2.24.1.13 emacsvox-agent-shell-table-speak-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-cell</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the logical Markdown table cell at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn">
+<h4 class="subsubsection"><span>2.24.1.14 emacsvox-agent-shell-table-speak-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-column</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the logical Markdown table column at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext">
+<h4 class="subsubsection"><span>2.24.1.15 emacsvox-agent-shell-table-speak-context<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-context</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current Markdown table position and dimensions.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions">
+<h4 class="subsubsection"><span>2.24.1.16 emacsvox-agent-shell-table-speak-dimensions<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-dimensions</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the dimensions of the Markdown table at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow">
+<h4 class="subsubsection"><span>2.24.1.17 emacsvox-agent-shell-table-speak-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-row</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the logical Markdown table row at point.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002damark.html">emacsvox-amark</a>, Previous: <a href="emacsvox_002dagent_002dshell_002drender.html">emacsvox-agent-shell-render</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

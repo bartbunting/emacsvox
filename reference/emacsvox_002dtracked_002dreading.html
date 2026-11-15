@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-tracked-reading (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-tracked-reading (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-tracked-reading (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dtransient.html" rel="next" title="emacsvox-transient">
+<link href="emacsvox_002dtone_002deditor.html" rel="prev" title="emacsvox-tone-editor">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dtracked_002dreading">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtransient.html" accesskey="n" rel="next">emacsvox-transient</a>, Previous: <a href="emacsvox_002dtone_002deditor.html" accesskey="p" rel="prev">emacsvox-tone-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dtracked_002dreading-1"><span>2.307 emacsvox-tracked-reading<a class="copiable-link" href="#emacsvox_002dtracked_002dreading-1"> &para;</a></span></h3>
+
+<p>Read a buffer in bounded chunks, advancing point after playback completion.
+Keep session markers, callback generations and cancellation hooks together.
+The core speech library loads these definitions; loading them alone neither
+starts speech nor installs hooks.  The public command starts each session.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dTracked_002dReading-Commands" accesskey="1">Emacsvox-Tracked-Reading Commands</a></li>
+<li><a href="#emacsvox_002dtracked_002dreading-Options" accesskey="2">emacsvox-tracked-reading Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dTracked_002dReading-Commands">
+<h4 class="subsection"><span>2.307.1 Emacsvox-Tracked-Reading Commands<a class="copiable-link" href="#Emacsvox_002dTracked_002dReading-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dspeak_002drest_002dof_002dbuffer" accesskey="1">emacsvox-speak-rest-of-buffer</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002drest_002dof_002dbuffer">
+<h4 class="subsubsection"><span>2.307.1.1 emacsvox-speak-rest-of-buffer<a class="copiable-link" href="#emacsvox_002dspeak_002drest_002dof_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002drest_002dof_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-rest-of-buffer</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002drest_002dof_002dbuffer"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-i"></a><span><kbd class="kbd">C-e i</kbd><a class="copiable-link" href="#index-C_002de-i"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002drest_002dof_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak from point to buffer end, tracking interrupt position by chunk.
+Any subsequent user command interrupts speech.  Point remains at the start of
+the sentence-oriented chunk that was audible when interruption occurred.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dtracked_002dreading-Options">
+<h4 class="subsection"><span>2.307.2 emacsvox-tracked-reading Options<a class="copiable-link" href="#emacsvox_002dtracked_002dreading-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-189"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-tracked-reading-max-chars</var><a class="copiable-link" href="#index-User-Option-189"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum source characters in one tracked reading chunk.
+Tracked reading prefers sentence boundaries and uses this limit to keep the
+position retained after interruption reasonably close to audible playback.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+280
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+
+
+
+</body>
+</html>
