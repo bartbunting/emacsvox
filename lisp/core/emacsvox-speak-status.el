@@ -204,7 +204,7 @@ which-func without turning that mode on.  "
 
 (defsubst ems--comint-autospeak nil
   "Predicate to test if comint autospeak applies."
-  (and emacsvox-comint-autospeak
+  (and (bound-and-true-p emacsvox-comint-autospeak)
        (or (derived-mode-p 'comint-mode) (eq 'vterm-mode major-mode))))
 
 (defun emacsvox-speak-mode-line (&optional buffer-info)

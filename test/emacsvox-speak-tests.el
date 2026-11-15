@@ -10,6 +10,25 @@
 (require 'ert)
 (require 'emacsvox-speak)
 
+(ert-deftest emacsvox-speak-mode-line-without-comint-settings ()
+  "Buffer status works before Comint loads, including in an unadvised terminal."
+  (let ((emacsvox-comint-autospeak nil)
+        (emacsvox-mail-alert nil) spoken)
+    ;; The dynamic binding restores the preceding state, bound or unbound.
+    (makunbound 'emacsvox-comint-autospeak)
+    (save-window-excursion
+      (with-temp-buffer
+        (set-window-buffer (selected-window) (current-buffer))
+        (setq-local header-line-format nil mode-line-process nil visual-line-mode nil)
+        (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'tts-speak) (lambda (text) (setq spoken text)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (dolist (mode '(fundamental-mode comint-mode vterm-mode))
+            (setq major-mode mode spoken nil)
+            (emacsvox-speak-mode-line)
+            (should (stringp spoken))
+            (should-not (string-search "Autospeak" spoken))))))))
+
 (ert-deftest emacsvox-reading-feedback-wire-retains-after-cue-and-gain ()
   "Row cues retain gain and a cancellable after anchor in one replacement packet."
   (require 'omnivox-voices)
