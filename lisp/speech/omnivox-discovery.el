@@ -52,6 +52,50 @@
   "Physical voices most recently discovered from Omnivox.
 Each entry has the form (ID NAME LANGUAGE QUALITY).")
 
+(defconst omnivox--discovery-timeout 30
+  "Maximum seconds to wait for offline compatibility voice discovery.")
+
+(defun omnivox--query-voices-program (program)
+  "Run PROGRAM's compatibility voice listing with bounded output and waiting."
+  (with-temp-buffer
+    (let ((default-directory temporary-file-directory)
+          (stderr (generate-new-buffer " *omnivox discovery errors*"))
+          (deadline (+ (float-time) omnivox--discovery-timeout))
+          (bytes 0) overflow process error-process)
+      (unwind-protect
+          (cl-labels ((capture (child text)
+                       (cl-incf bytes (string-bytes text))
+                       (if (> bytes (* 4 1024 1024))
+                           (setq overflow t)
+                         (with-current-buffer (process-buffer child)
+                           (goto-char (point-max)) (insert text)))))
+            (setq error-process
+                  (make-pipe-process :name "omnivox discovery stderr" :buffer stderr
+                                     :coding 'utf-8-unix :noquery t
+                                     :filter #'capture :sentinel #'ignore)
+                  process
+                  (make-process :name "omnivox discovery" :buffer (current-buffer)
+                                :command (list program "--list-voices-alist")
+                                :connection-type 'pipe :coding 'utf-8-unix :noquery t
+                                :filter #'capture :sentinel #'ignore :stderr error-process))
+            ;; A separate stderr pipe must also reach EOF before parsing. Waits
+            ;; permit other process callbacks and C-g, with no timer left behind.
+            (while (and (or (process-live-p process) (process-live-p error-process))
+                        (not overflow) (< (float-time) deadline))
+              (accept-process-output nil (min 0.05 (max 0 (- deadline (float-time))))))
+            (when overflow (error "Omnivox voice discovery exceeded its output limit"))
+            (when (or (process-live-p process) (process-live-p error-process))
+              (error "Omnivox voice discovery timed out after %s seconds" omnivox--discovery-timeout))
+            (unless (and (eq (process-status process) 'exit) (zerop (process-exit-status process)))
+              (error "Omnivox voice discovery failed: %s"
+                     (truncate-string-to-width
+                      (string-trim (concat (buffer-string) "\n"
+                                           (with-current-buffer stderr (buffer-string)))) 4096)))
+            (omnivox--parse-voices (buffer-string)))
+        (dolist (child (list process error-process))
+          (when (processp child) (delete-process child)))
+        (kill-buffer stderr)))))
+
 (defun omnivox--server-program ()
   "Return the Omnivox server program used for discovery, or nil."
   (let ((program (tts--resolve-program tts-program)))
@@ -82,41 +126,28 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defun omnivox-query-voices ()
   "Return physical voices reported by the current Omnivox workstation.
 Signal an error if discovery cannot run or returns malformed data."
-  (if (omnivox-remote-enabled-p)
-      (let ((inventory
-             (and (process-live-p tts-speaker-process)
-                  (process-get tts-speaker-process omnivox--control-inventory-property))))
-        (unless inventory
-          (user-error "Workstation voice inventory is not ready; connect and wait for routing readiness"))
-        (cl-mapcan
-         (lambda (engine)
-           (mapcar
-            (lambda (voice)
-              (list (plist-get (plist-get voice :id) :voice_id)
-                    (plist-get voice :display_name)
-                    (or (plist-get voice :language) "")
-                    (or (plist-get voice :quality) "")))
-            (append (plist-get engine :voices) nil)))
-         (append (plist-get inventory :engines) nil)))
-    (let ((program (omnivox--server-program)))
-      (unless program
-        (error "Could not find the Omnivox server executable"))
-      (let ((stderr-file (make-temp-file "omnivox-discovery-")))
-        (unwind-protect
-            (with-temp-buffer
-              (let ((status
-                     (process-file program nil (list t stderr-file) nil
-                                   "--list-voices-alist")))
-                (unless (and (integerp status) (zerop status))
-                  (goto-char (point-max))
-                  (insert "\n")
-                  (insert-file-contents stderr-file)
-                  (error "Omnivox voice discovery failed%s"
-                         (if (string-empty-p (string-trim (buffer-string)))
-                             ""
-                           (format ": %s" (string-trim (buffer-string))))))
-                (omnivox--parse-voices (buffer-string))))
-          (delete-file stderr-file))))))
+  (let ((inventory
+         (and (process-live-p tts-speaker-process)
+              (process-get tts-speaker-process omnivox--control-inventory-property))))
+    (cond
+     (inventory
+      (cl-mapcan
+       (lambda (engine)
+         (mapcar
+          (lambda (voice)
+            (list (plist-get (plist-get voice :id) :voice_id)
+                  (plist-get voice :display_name)
+                  (or (plist-get voice :language) "")
+                  (or (plist-get voice :quality) "")))
+          (append (plist-get engine :voices) nil)))
+       (append (plist-get inventory :engines) nil)))
+     ((omnivox-remote-enabled-p)
+      (user-error "Workstation voice inventory is not ready; connect and wait for routing readiness"))
+     (t
+      (let ((program (omnivox--server-program)))
+        (unless program
+          (error "Could not find the Omnivox server executable"))
+        (omnivox--query-voices-program program))))))
 
 (defun omnivox-refresh-voices ()
   "Refresh and return the physical voices available from Omnivox."

@@ -175,59 +175,100 @@
     dtk-initialize)
   "Removed DECtalk-era names for generic server lifecycle operations.")
 
+(defmacro emacsvox-test--with-discovery-child (expression &rest body)
+  "Run BODY with discovery launching a real child Emacs evaluating EXPRESSION."
+  (declare (indent 1) (debug t))
+  `(let ((launch (symbol-function 'make-process))
+         (emacs (expand-file-name invocation-name invocation-directory))
+         (tts-speaker-process nil)
+         discovery-command discovery-process discovery-stderr discovery-output)
+     (unwind-protect
+         (cl-letf (((symbol-function 'omnivox--server-program)
+                    (lambda () "/tmp/server path/omnivox"))
+                   ((symbol-function 'omnivox-remote-enabled-p) (lambda () nil))
+                   ((symbol-function 'make-process)
+                    (lambda (&rest args)
+                      (setq discovery-command (plist-get args :command)
+                            discovery-stderr (plist-get args :stderr)
+                            discovery-output (plist-get args :buffer)
+                            discovery-process
+                            (apply launch
+                                   (plist-put args :command
+                                              (list emacs "-Q" "--batch" "--eval"
+                                                    (prin1-to-string ,expression))))))))
+           ,@body
+           (should-not (process-live-p discovery-process))
+           (should-not (process-live-p discovery-stderr))
+           (should-not (buffer-live-p discovery-output))
+           (should-not (buffer-live-p (process-buffer discovery-stderr))))
+       (dolist (child (list discovery-process discovery-stderr))
+         (when (processp child) (delete-process child)))
+       (when (buffer-live-p discovery-output) (kill-buffer discovery-output)))))
+
 (ert-deftest emacsvox-tts-omnivox-discovers-physical-voice-identifiers ()
   "Omnivox discovery invokes the server safely and preserves backend IDs."
-  (let (invocation stderr-file)
-    (cl-letf
-        (((symbol-function 'omnivox--server-program)
-          (lambda () "/tmp/server path/omnivox"))
-         ((symbol-function 'process-file)
-          (lambda (program input destination display &rest arguments)
-            (setq stderr-file (cadr destination))
-            (setq invocation
-                  (list program input destination display arguments))
-            (insert
-             "((\"winrt:HKEY\\\\Voice\" \"Microsoft David\" \"en-US\" \"Enhanced\"))")
-            0)))
-      (should
-       (equal
-        (omnivox-query-voices)
-        '(("winrt:HKEY\\Voice" "Microsoft David" "en-US" "Enhanced"))))
-      (should
-       (equal
-        invocation
-        (list "/tmp/server path/omnivox" nil (list t stderr-file) nil
-              '("--list-voices-alist"))))
-      (should (stringp stderr-file))
-      (should-not (file-exists-p stderr-file)))))
+  (emacsvox-test--with-discovery-child
+      '(princ "((\"winrt:HKEY\\\\Voice\" \"Microsoft David\" \"en-US\" \"Enhanced\"))")
+    (should (equal (omnivox-query-voices)
+                   '(("winrt:HKEY\\Voice" "Microsoft David" "en-US" "Enhanced"))))
+    (should (equal discovery-command '("/tmp/server path/omnivox" "--list-voices-alist")))))
 
 (ert-deftest emacsvox-tts-omnivox-separates-voice-discovery-diagnostics ()
   "Child stderr cannot corrupt voices, but remains available on failure."
-  (let ((run-process (symbol-function 'process-file))
-        (emacs (expand-file-name invocation-name invocation-directory)))
-    (dolist (exit-status '(0 1))
-      (let (stderr-file)
-        (cl-letf
-            (((symbol-function 'omnivox--server-program) (lambda () emacs))
-             ((symbol-function 'process-file)
-              (lambda (program input destination display &rest _arguments)
-                (setq stderr-file (cadr destination))
-                (funcall
-                 run-process program input destination display
-                 "-Q" "--batch" "--eval"
-                 (prin1-to-string
-                  `(progn
-                     (princ "((\"id\" \"Voice\" \"en\" \"Standard\"))")
-                     (princ "Backend diagnostic" 'external-debugging-output)
-                     (kill-emacs ,exit-status)))))))
-          (if (zerop exit-status)
-              (should (equal (omnivox-query-voices)
-                             '(("id" "Voice" "en" "Standard"))))
-            (should
-             (string-match-p
-              "Backend diagnostic"
-              (error-message-string (should-error (omnivox-query-voices))))))
-          (should-not (file-exists-p stderr-file)))))))
+  (dolist (exit-status '(0 1))
+    (emacsvox-test--with-discovery-child
+        `(progn
+           (princ "((\"id\" \"Voice\" \"en\" \"Standard\"))")
+           (princ "Backend diagnostic" 'external-debugging-output)
+           (kill-emacs ,exit-status))
+      (if (zerop exit-status)
+          (should (equal (omnivox-query-voices) '(("id" "Voice" "en" "Standard"))))
+        (should (string-match-p
+                 "Backend diagnostic"
+                 (error-message-string (should-error (omnivox-query-voices)))))))))
+
+(ert-deftest emacsvox-tts-omnivox-local-discovery-reuses-live-inventory ()
+  "Local compatibility queries need no subprocess once inventory is ready."
+  (let ((tts-speaker-process (make-pipe-process :name "local-inventory-test" :noquery t)))
+    (unwind-protect
+        (progn
+          (process-put tts-speaker-process omnivox--control-inventory-property
+                       '(:engines [(:id "espeak" :voices
+                                   [(:id (:voice_id "en") :display_name "English")])]))
+          (cl-letf (((symbol-function 'omnivox-remote-enabled-p) (lambda () nil))
+                    ((symbol-function 'omnivox--server-program)
+                     (lambda () (ert-fail "Ready inventory must not spawn discovery"))))
+            (should (equal (omnivox-query-voices) '(("en" "English" "" ""))))))
+      (delete-process tts-speaker-process))
+    ;; A retired worker's inventory cannot substitute for a new connection.
+    (cl-letf (((symbol-function 'omnivox--server-program) (lambda () nil))
+              ((symbol-function 'omnivox-remote-enabled-p) (lambda () nil)))
+      (should (string-match-p "Could not find" (error-message-string
+                                               (should-error (omnivox-query-voices)))))
+      (cl-letf (((symbol-function 'omnivox-remote-enabled-p) (lambda () t)))
+        (should-error (omnivox-query-voices) :type 'user-error)))))
+
+(ert-deftest emacsvox-tts-omnivox-discovery-timeout-keeps-callbacks-and-cleans-up ()
+  "A hanging child is retired at the deadline while other timers can run."
+  (let ((omnivox--discovery-timeout 0.1) ticked)
+    (emacsvox-test--with-discovery-child '(sleep-for 60)
+      (let ((timer (run-at-time 0.01 nil (lambda () (setq ticked t)))))
+        (unwind-protect
+            (should (string-match-p "timed out" (error-message-string
+                                                 (should-error (omnivox-query-voices)))))
+          (cancel-timer timer)))
+      (should ticked))))
+
+(ert-deftest emacsvox-tts-omnivox-discovery-quit-and-large-output-clean-up ()
+  "Quitting and excessive stdout or stderr release all discovery resources."
+  (emacsvox-test--with-discovery-child '(sleep-for 60)
+    (cl-letf (((symbol-function 'accept-process-output) (lambda (&rest _) (signal 'quit nil))))
+      (should (condition-case nil (progn (omnivox-query-voices) nil) (quit t)))))
+  (dolist (destination '(nil external-debugging-output))
+    (emacsvox-test--with-discovery-child
+        `(princ (make-string (* 5 1024 1024) ?x) ',destination)
+      (should (string-match-p "output limit" (error-message-string
+                                             (should-error (omnivox-query-voices))))))))
 
 (ert-deftest emacsvox-tts-omnivox-rejects-malformed-voice-discovery ()
   "Malformed discovery data cannot become selectable Omnivox voices."
