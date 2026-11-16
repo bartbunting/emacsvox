@@ -13144,6 +13144,131 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                      (execute-kbd-macro (kbd "RET"))))))
       (should (equal speech '("Answers sent."))))))
 
+(ert-deftest emacsvox-agent-shell-question-links-select-or-open ()
+  "RET chooses a linked answer; C-u RET opens its URL without choosing."
+  (dolist (title '("https://example.invalid/choice — use this site"
+                   "[Use this site](https://example.invalid/choice)"))
+    (dolist (viewport '(nil t))
+      (emacsvox-agent-shell-test--with-question
+        (let ((request (emacsvox-agent-shell-test--question-request)))
+          (setf (map-elt (aref (map-nested-elt
+                               request '(params requestedSchema properties destination oneOf))
+                              0)
+                        'title)
+                title)
+          (emacsvox-agent-shell-test--capture-events
+            (agent-shell--on-request :state agent-shell--state :acp-request request)))
+        (let ((shell (current-buffer))
+              (contents (buffer-string))
+              visited)
+          (with-temp-buffer
+            (insert contents)
+            (setq major-mode (if viewport 'agent-shell-viewport-view-mode 'agent-shell-mode))
+            (use-local-map (if viewport agent-shell-viewport-view-mode-map agent-shell-mode-map))
+            (switch-to-buffer (current-buffer))
+            (cl-letf (((symbol-function 'emacsvox-agent-shell--session-buffer) (lambda (&optional _) shell))
+                      ((symbol-function 'agent-shell-elicitation--shell-buffer) (lambda () shell))
+                      ((symbol-function 'browse-url) (lambda (url &rest _) (push url visited))))
+              (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+              (let* ((start (point))
+                     (end (next-single-property-change start 'agent-shell-elicitation-control nil (point-max)))
+                     (url (text-property-not-all start end 'agent-shell-markdown-url nil))
+                     (form (cadr (emacsvox-agent-shell--question-at-point))))
+                (should url)
+                (let ((speech (emacsvox-agent-shell-test--question-speech
+                               (emacsvox-agent-shell-test--capture-events
+                                 (funcall-interactively #'emacsvox-agent-shell-next-link)))))
+                  (should (= (point) url))
+                  (should (= 1 (length speech)))
+                  (should (string-match-p "Return to select" (car speech)))
+                  (should (string-match-p "C-u Return to open link" (car speech))))
+                (should (eq (key-binding (kbd "RET")) 'agent-shell-elicitation-act))
+                (should (eq (key-binding [mouse-1]) 'agent-shell-elicitation-act))
+                (should (eq (key-binding (kbd "?")) 'agent-shell-elicitation-toggle-preview))
+                (should (string-match-p "C-u RET opens link" (get-text-property (point) 'help-echo)))
+                (let (hint)
+                  (cl-letf (((symbol-function 'message) (lambda (format &rest args) (setq hint (apply #'format format args)))))
+                    (dolist (sensor (get-text-property (point) 'cursor-sensor-functions))
+                      (funcall sensor nil nil 'entered)))
+                  (should (string-match-p "pick this option" hint))
+                  (should-not (string-match-p "open:" hint)))
+                (let ((speech (emacsvox-agent-shell-test--question-speech
+                               (emacsvox-agent-shell-test--capture-events
+                                 (execute-kbd-macro
+                                  (kbd (if (display-graphic-p) "C-u <return>" "C-u RET")))))))
+                  (should-not speech))
+                (should (equal visited '("https://example.invalid/choice")))
+                (setq form (cadr (emacsvox-agent-shell--question-at-point)))
+                (should-not (map-nested-elt form '(:values "destination")))
+                (let ((speech (emacsvox-agent-shell-test--question-speech
+                               (emacsvox-agent-shell-test--capture-events
+                                 (execute-kbd-macro
+                                  (kbd (if (display-graphic-p) "<return>" "RET")))))))
+                  (should (= 1 (length speech)))
+                  (should (string-match-p "selected" (car speech))))
+                (setq form (cadr (emacsvox-agent-shell--question-at-point)))
+                (should (equal "local" (map-nested-elt form '(:values "destination"))))
+                (should (= 1 (length visited)))
+                ;; A prefix on an ordinary control still selects it.
+                (emacsvox-agent-shell-test--question-goto 'select "destination" "remote")
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "C-u RET")))
+                (setq form (cadr (emacsvox-agent-shell--question-at-point)))
+                (should (equal "remote" (map-nested-elt form '(:values "destination"))))
+                (should (= 1 (length visited)))))))))))
+
+(ert-deftest emacsvox-agent-shell-question-file-link-announces-buffer ()
+  "C-u RET on an answer's file link announces the buffer without selecting."
+  (require 'emacsvox-advice)
+  (let ((file (make-temp-file "emacsvox-question-link-" nil ".txt" "Target\n")))
+    (unwind-protect
+        (emacsvox-agent-shell-test--with-question
+          (let ((request (emacsvox-agent-shell-test--question-request)))
+            (setf (map-elt (aref (map-nested-elt request '(params requestedSchema properties destination oneOf)) 0) 'title)
+                  (format "[Target](%s)" file))
+            (emacsvox-agent-shell-test--capture-events
+              (agent-shell--on-request :state agent-shell--state :acp-request request)))
+          (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+          (let* ((shell (current-buffer))
+                 (url (text-property-search-forward 'agent-shell-markdown-url file #'equal)))
+            (should url)
+            (goto-char (prop-match-beginning url))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "C-u RET"))))))
+              (should (equal (buffer-file-name) file))
+              (should (equal speech (list (buffer-name)))))
+            (with-current-buffer shell
+              (should-not (map-nested-elt
+                           (cadr (emacsvox-agent-shell--question-at-point))
+                           '(:values "destination"))))))
+      (when-let* ((buffer (get-file-buffer file))) (kill-buffer buffer))
+      (delete-file file))))
+
+(ert-deftest emacsvox-agent-shell-question-preview-links-still-open ()
+  "Links in expanded previews keep their ordinary action and leave answers alone."
+  (emacsvox-agent-shell-test--with-question
+    (let ((request (emacsvox-agent-shell-test--question-request)) visited)
+      (setf (map-elt (map-nested-elt
+                      (aref (map-nested-elt request '(params requestedSchema properties destination oneOf)) 0)
+                      '(_meta _claude/askUserQuestionOption))
+                     'preview)
+            "See [the reference](https://example.invalid/preview).")
+      (emacsvox-agent-shell-test--capture-events
+        (agent-shell--on-request :state agent-shell--state :acp-request request))
+      (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+      (emacsvox-agent-shell-test--capture-events
+        (execute-kbd-macro (kbd "?")))
+      (goto-char (point-min))
+      (let ((url (text-property-search-forward 'agent-shell-markdown-url "https://example.invalid/preview" #'equal)))
+        (should url)
+        (goto-char (prop-match-beginning url))
+        (should-not (get-text-property (point) 'agent-shell-elicitation-control))
+        (should (eq (key-binding (kbd "RET")) 'agent-shell-markdown-open-link-at-point))
+        (cl-letf (((symbol-function 'browse-url) (lambda (url &rest _) (push url visited))))
+          (emacsvox-agent-shell-test--capture-events (execute-kbd-macro (kbd "RET"))))
+        (should (equal visited '("https://example.invalid/preview")))))))
+
 (ert-deftest emacsvox-agent-shell-question-navigation-shell-and-viewport ()
   "Both item navigation paths identify the question field and current state."
   (emacsvox-agent-shell-test--with-question

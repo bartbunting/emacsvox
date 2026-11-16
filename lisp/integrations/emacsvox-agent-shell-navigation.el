@@ -54,6 +54,8 @@
                   "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function emacsvox-agent-shell--semantic-item-feedback
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--question-feedback
+                  "emacsvox-agent-shell-interaction" (&optional occasion))
 (defvar emacsvox-agent-shell-block-navigation-max-characters)
 (defvar emacsvox-agent-shell--tree-navigation-speech-p nil
   "Non-nil while a block jump updates tree speech context.")
@@ -1419,7 +1421,8 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
               ('table
                (emacsvox-agent-shell--table-entry-feedback direction))
               ('link
-               (emacsvox-agent-shell--semantic-item-feedback))
+               (or (emacsvox-agent-shell--question-feedback)
+                   (emacsvox-agent-shell--semantic-item-feedback)))
               ('source-block
                (emacsvox-agent-shell--submit-text-feedback
                 (emacsvox-agent-shell--source-block-summary target)

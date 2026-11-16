@@ -1258,6 +1258,8 @@ Return non-nil when point represents one of those semantic items."
 (defconst emacsvox-agent-shell--advice-list
   '((agent-shell-markdown-open-link-at-point :around
      emacsvox-agent-shell--open-link-at-point-around)
+    (agent-shell-markdown--apply-link-properties :around
+     emacsvox-agent-shell--question-link-properties-around)
     (agent-shell-markdown--style-source-blocks :after emacsvox-agent-shell--mark-text-trees)
     (agent-shell--diff-box :filter-return emacsvox-agent-shell--mark-diff-heading)
     (agent-shell--typing-at-prompt-p :filter-return emacsvox-agent-shell--input-typing-p)

@@ -8865,6 +8865,12 @@ repeating the heading when you stay in the same question. When an option has
 a preview@comma{} @kbd{?} opens or closes it; opening it reads its contents.
 The preview key applies only to controls that offer a preview.
 
+An option containing a link still uses @kbd{@key{RET}} to select the option@comma{} including
+when point is on the link. To follow the link without selecting the option@comma{}
+move onto its linked text and press @kbd{C-u @key{RET}}. Emacsvox reads both actions when
+you navigate to that link. Links in the question text or expanded previews
+use ordinary @kbd{@key{RET}} to open.
+
 Choose @emph{Submit} to send the answers or @emph{Decline} to decline the question.
 Missing required answers are reported without announcing successful submission.
 @kbd{C-c C-c} interrupts the running request@comma{} including any pending form. To return
@@ -9076,7 +9082,8 @@ Move to the next or previous visible rendered link and speak its label and
 Return action together. The cursor hint remains visible without a second
 voice repeating it@comma{} including when you reach links with ordinary arrows or
 word movement.
-Press @kbd{@key{RET}} to follow the link.
+Press @kbd{@key{RET}} to follow the link. Inside a question control@comma{} use @kbd{C-u @key{RET}};
+ordinary @kbd{@key{RET}} performs the control's selection or editing action.
 To inspect the full destination@comma{} press @kbd{C-h .} (@code{display-local-help}).
 @kbd{M-x agent-shell-copy-link-url-at-point} copies it to the kill ring.
 Both commands announce the URL when message speech is enabled.

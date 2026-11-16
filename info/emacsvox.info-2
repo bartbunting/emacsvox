@@ -3368,6 +3368,12 @@ stay in the same question.  When an option has a preview, ‘?’ opens or
 closes it; opening it reads its contents.  The preview key applies only
 to controls that offer a preview.
 
+   An option containing a link still uses ‘<RET>’ to select the option,
+including when point is on the link.  To follow the link without
+selecting the option, move onto its linked text and press ‘C-u <RET>’.
+Emacsvox reads both actions when you navigate to that link.  Links in
+the question text or expanded previews use ordinary ‘<RET>’ to open.
+
    Choose _Submit_ to send the answers or _Decline_ to decline the
 question.  Missing required answers are reported without announcing
 successful submission.  ‘C-c C-c’ interrupts the running request,
@@ -3604,11 +3610,12 @@ from a child moves point to the group heading.
      previous visible rendered link and speak its label and Return
      action together.  The cursor hint remains visible without a second
      voice repeating it, including when you reach links with ordinary
-     arrows or word movement.  Press ‘<RET>’ to follow the link.  To
-     inspect the full destination, press ‘C-h .’ (‘display-local-help’).
-     ‘M-x agent-shell-copy-link-url-at-point’ copies it to the kill
-     ring.  Both commands announce the URL when message speech is
-     enabled.
+     arrows or word movement.  Press ‘<RET>’ to follow the link.  Inside
+     a question control, use ‘C-u <RET>’; ordinary ‘<RET>’ performs the
+     control's selection or editing action.  To inspect the full
+     destination, press ‘C-h .’ (‘display-local-help’).  ‘M-x
+     agent-shell-copy-link-url-at-point’ copies it to the kill ring.
+     Both commands announce the URL when message speech is enabled.
 ‘e / E’
      Use ‘e’ (‘emacsvox-agent-shell-next-error’) or ‘E’
      (‘emacsvox-agent-shell-previous-error’).  Move to the next or

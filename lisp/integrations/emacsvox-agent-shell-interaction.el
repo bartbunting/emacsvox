@@ -55,6 +55,7 @@
                   "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function agent-shell-elicitation--preview-open-p "agent-shell-elicitation" (elicitation key value))
 (declare-function agent-shell-elicitation--option-preview-at "agent-shell-elicitation" (elicitation key value))
+(declare-function agent-shell-markdown-open-link-at-point "agent-shell-markdown" (&optional pos))
 (defvar agent-shell--state)
 
 (declare-function emacsvox-agent-shell--header-state
@@ -98,6 +99,31 @@ Consume the interactive marker before nested file or browser commands run."
     result))
 
 ;;; Question forms
+
+(defun emacsvox-agent-shell--question-link-properties-around (original &rest arguments)
+  "Keep question controls active when ORIGINAL styles a link.
+Save control bindings and feedback only within the link's text span.
+Link metadata remains available for explicit opening with a prefix."
+  (let ((position (plist-get arguments :start))
+        (end (plist-get arguments :end))
+        controls)
+    (while (< position end)
+      (let ((next (next-property-change position nil end)))
+        (when (get-text-property position 'agent-shell-elicitation-control)
+          (push (list position next
+                      (get-text-property position 'keymap)
+                      (get-text-property position 'cursor-sensor-functions)
+                      (get-text-property position 'help-echo))
+                controls))
+        (setq position next)))
+    (prog1 (apply original arguments)
+      (pcase-dolist (`(,start ,finish ,keymap ,sensor ,help) controls)
+        (add-text-properties
+         start finish
+         (list 'keymap keymap 'cursor-sensor-functions sensor
+               'help-echo (concat (when help (concat help "\n"))
+                                  "C-u RET opens link: "
+                                  (plist-get arguments :url))))))))
 
 (defvar emacsvox-agent-shell--question-command-active nil
   "Non-nil while an interactive question action owns its feedback.")
@@ -200,6 +226,8 @@ Resolve form values in the owning shell, including from a viewport."
                            (format " Preview %s; question mark to %s."
                                    (if opened "expanded" "collapsed")
                                    (if opened "close" "open")) ""))))))
+    (when (get-text-property (point) 'agent-shell-markdown-url)
+      (setq speech (concat speech " C-u Return to open link.")))
     (list speech
           (emacsvox-agent-shell--presentation-facts
            'agent-question 'focus-entered nil
@@ -239,31 +267,39 @@ Omit the field heading when moving between controls in the same question."
     result))
 
 (defun emacsvox-agent-shell--question-action-around (original &rest arguments)
-  "Run ORIGINAL with ARGUMENTS and speak its confirmed question change."
-  (if (not (or (ems-interactive-p 'agent-shell-elicitation-act)
+  "Run ORIGINAL with ARGUMENTS and speak its confirmed question change.
+On a linked control, a prefixed action opens the link without changing answers."
+  (let ((act-interactive (ems-interactive-p 'agent-shell-elicitation-act)))
+    (cond
+     ((not (or act-interactive
                (ems-interactive-p 'agent-shell-elicitation-toggle-preview)
                (ems-interactive-p 'agent-shell-elicitation-interrupt)))
-      (apply original arguments)
-    (let* ((emacsvox-agent-shell--question-command-active t)
-           (before (emacsvox-agent-shell--question-at-point))
-           (control (car before))
-           (emacsvox-agent-shell--question-navigation-origin control)
-           (action (map-elt control :action))
-           (preview-command (eq this-command 'agent-shell-elicitation-toggle-preview))
-           (ems--message-filter
-            (concat "\\(?:" ems--message-filter "\\|\\`\\(?:Answer sent\\|Declined\\)\\'\\)")))
-      (prog1 (apply original arguments)
-        (when-let* ((after (emacsvox-agent-shell--question-at-point))
-                    ((eq (map-elt (cadr after) :status) 'pending)))
-          (emacsvox-agent-shell--question-feedback 'state-change)
-          (when (or preview-command (eq action 'preview))
-            (let* ((form (cadr after))
-                   (key (map-elt control :key))
-                   (value (map-elt control :value))
-                   (preview (agent-shell-elicitation--option-preview-at form key value)))
-              (when (and preview (agent-shell-elicitation--preview-open-p form key value))
-                (emacsvox-agent-shell--submit-text-feedback
-                 preview '(:role agent-question) 'inspection)))))))))
+      (apply original arguments))
+     ((and act-interactive current-prefix-arg
+           (get-text-property (point) 'agent-shell-elicitation-control)
+           (get-text-property (point) 'agent-shell-markdown-url))
+      (call-interactively #'agent-shell-markdown-open-link-at-point))
+     (t
+      (let* ((emacsvox-agent-shell--question-command-active t)
+             (before (emacsvox-agent-shell--question-at-point))
+             (control (car before))
+             (emacsvox-agent-shell--question-navigation-origin control)
+             (action (map-elt control :action))
+             (preview-command (eq this-command 'agent-shell-elicitation-toggle-preview))
+             (ems--message-filter
+              (concat "\\(?:" ems--message-filter "\\|\\`\\(?:Answer sent\\|Declined\\)\\'\\)")))
+        (prog1 (apply original arguments)
+          (when-let* ((after (emacsvox-agent-shell--question-at-point))
+                      ((eq (map-elt (cadr after) :status) 'pending)))
+            (emacsvox-agent-shell--question-feedback 'state-change)
+            (when (or preview-command (eq action 'preview))
+              (let* ((form (cadr after))
+                     (key (map-elt control :key))
+                     (value (map-elt control :value))
+                     (preview (agent-shell-elicitation--option-preview-at form key value)))
+                (when (and preview (agent-shell-elicitation--preview-open-p form key value))
+                  (emacsvox-agent-shell--submit-text-feedback
+                   preview '(:role agent-question) 'inspection)))))))))))
 
 (defun emacsvox-agent-shell--question-event (event)
   "Present question EVENT with session speech policy and semantic facts."
