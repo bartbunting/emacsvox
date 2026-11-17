@@ -23,6 +23,7 @@
                   omnivox-output-devices emacsvox-table-settings
                   emacsvox-tree-settings emacsvox-tone-editor emacsvox-indentation
                   emacsvox-capitalization emacsvox-spelling emacsvox-interaction
+                  emacsvox-caps-lock emacsvox-caps-lock-settings
                   emacsvox-line-cues emacsvox-aural-voice-menu))
        (suites '(emacsvox-transient-tests emacsvox-indentation-tests emacsvox-aural-menu-tests
                  emacsvox-capitalization-tests emacsvox-spelling-tests emacsvox-interaction-tests

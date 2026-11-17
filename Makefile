@@ -183,6 +183,16 @@ graphical-integration-test: check-emacs
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
 
+.PHONY: caps-lock-test compiled-caps-lock-test graphical-caps-lock-test
+caps-lock-test: check-emacs
+	$(EMACS) -Q --batch -l test/run-caps-lock-tests.el
+
+compiled-caps-lock-test: bytecode-check
+	EMACSVOX_CAPS_LOCK_TEST_LOAD=compiled $(EMACS) -Q --batch -l test/run-caps-lock-tests.el
+
+graphical-caps-lock-test: bytecode-check
+	sh test/run-graphical-caps-lock-tests.sh "$(EMACS)"
+
 notmuch-test:
 	EMACSVOX_NOTMUCH_TEST_LOAD=source \
 	$(EMACS) -Q --batch -l test/run-notmuch-tests.el

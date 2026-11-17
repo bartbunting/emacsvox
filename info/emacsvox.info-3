@@ -3300,7 +3300,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * attachments, Notmuch:                  Notmuch Messages And Attachments.
                                                               (line   6)
 * attack, decay, sustain and release:    Reading Scope And Punctuation.
-                                                              (line 440)
+                                                              (line 441)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  15)
@@ -3328,6 +3328,10 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * cancel versus undo:                    Everyday Speech Commands.
                                                               (line   6)
+* Caps Lock announcements:               Reading Scope And Punctuation.
+                                                              (line 573)
+* Caps Lock reminder tone:               Reading Scope And Punctuation.
+                                                              (line 573)
 * captured source:                       Working Context Terms.
                                                               (line   6)
 * character echo:                        Controlling Echo.    (line   6)
@@ -3744,7 +3748,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * timeout, did anything change:          Finding Problem Tasks.
                                                               (line   6)
 * tone envelope, ADSR:                   Reading Scope And Punctuation.
-                                                              (line 440)
+                                                              (line 441)
 * tone presets:                          Reading Scope And Punctuation.
                                                               (line 341)
 * too much talking:                      Feedback Differs Between Buffers.

@@ -87,6 +87,7 @@
                          emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-capitalization--presentation
+                         emacsvox-caps-lock-settings emacsvox-caps-lock-settings--presentation
                          emacsvox-interaction--presentation
                          emacsvox-output-settings--route emacsvox-output-settings--output
                          emacsvox-output-settings--remapping

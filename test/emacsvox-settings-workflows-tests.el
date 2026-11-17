@@ -2348,6 +2348,166 @@
             (with-current-buffer (car entry)
               (voice-lock-mode (if (cdr entry) 1 -1)))))))))
 
+(ert-deftest emacsvox-settings-switches-caps-lock ()
+  "Search stays passive; toggle is global and only explicit Save persists."
+  (require 'emacsvox-caps-lock)
+  (let ((properties (copy-tree (symbol-plist 'emacsvox-caps-lock-mode)))
+        (find-program (symbol-function 'executable-find)))
+    (unwind-protect
+        (emacsvox-test--with-settings
+          (cl-letf (((symbol-function 'emacsvox-caps-lock--focused-display) #'ignore)
+                    ((symbol-function 'executable-find)
+                     (lambda (program &rest arguments)
+                       (if (equal program "xset") "/test/xset"
+                         (apply find-program program arguments)))))
+            (execute-kbd-macro (vconcat (kbd "/") "capslock" (kbd "RET")))
+            (should (eq (emacsvox-test--menu-focused-command)
+                        'emacsvox-settings-workflows--caps-lock))
+            (should-not emacsvox-caps-lock-mode)
+            (should-not emacsvox-caps-lock--timer)
+            (execute-kbd-macro (kbd "RET"))
+            (should emacsvox-caps-lock-mode)
+            (should (timerp emacsvox-caps-lock--timer))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "K"))
+            (with-temp-buffer
+              (insert-file-contents custom-file)
+              (should (search-forward "emacsvox-caps-lock-mode" nil t))
+              (should-not (search-forward "global-voice-lock-mode" nil t)))
+            (emacsvox-caps-lock-mode -1)
+            (load custom-file nil t)
+            (should emacsvox-caps-lock-mode)
+            (should (timerp emacsvox-caps-lock--timer))
+            (execute-kbd-macro (kbd "k K"))
+            (should-not emacsvox-caps-lock-mode)
+            (should-not emacsvox-caps-lock--timer)
+            (execute-kbd-macro (kbd "q"))
+            (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))))
+      (emacsvox-caps-lock-mode -1)
+      (setplist 'emacsvox-caps-lock-mode properties))))
+
+(defmacro emacsvox-settings-test--with-caps-lock (&rest body)
+  "Run BODY with isolated Caps Lock choices and a capable test worker."
+  (declare (indent 0) (debug t))
+  `(progn
+     (require 'emacsvox-caps-lock-settings)
+     (let* ((options '(emacsvox-caps-lock-reminder-presentation
+                       emacsvox-caps-lock-reminder-tone))
+            (values (mapcar (lambda (s) (cons s (default-value s))) options))
+            (properties (mapcar (lambda (s) (cons s (copy-tree (symbol-plist s)))) options)))
+       (unwind-protect
+           (emacsvox-test--with-settings
+             (dolist (s options)
+               (set-default s (eval (car (get s 'standard-value)) t)))
+             (let ((capability (process-get tts-speaker-process
+                                            emacsvox-aural--presentation-tone-process-property)))
+               (unwind-protect
+                   (progn
+                     (process-put tts-speaker-process
+                                  emacsvox-aural--presentation-tone-process-property 2)
+                     ,@body)
+                 (process-put tts-speaker-process
+                              emacsvox-aural--presentation-tone-process-property capability))))
+         (dolist (entry values) (set-default (car entry) (cdr entry)))
+         (dolist (entry properties) (setplist (car entry) (cdr entry)))))))
+
+(defun emacsvox-settings-test--caps-lock-restart (file expected)
+  "Load saved FILE before Caps Lock definitions and check EXPECTED values."
+  (with-temp-buffer
+    (should
+     (zerop
+      (call-process
+       (expand-file-name invocation-name invocation-directory) nil t nil
+       "-Q" "--batch" "-L" emacsvox-lisp-directory "-l" "emacsvox-preamble"
+       "--eval"
+       (format
+        "(progn (load %S nil t) (load %S nil t) (prin1 (list emacsvox-caps-lock-reminder-presentation emacsvox-caps-lock-reminder-tone emacsvox-caps-lock-mode)))"
+        file (symbol-file 'emacsvox-caps-lock-mode)))))
+    (should (string-match-p (regexp-quote (prin1-to-string expected)) (buffer-string)))))
+
+(ert-deftest emacsvox-settings-caps-lock-choice-preview-and-save ()
+  "Browse without applying; choose, preview and save without enabling a watcher."
+  (emacsvox-settings-test--with-caps-lock
+    (execute-kbd-macro (vconcat (kbd "/") "caps lock reminder style" (kbd "RET")))
+    (should (eq (emacsvox-test--menu-focused-command)
+                'emacsvox-caps-lock-settings--presentation))
+    (execute-kbd-macro (kbd "RET"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-caps-lock-settings--tone))
+    (execute-kbd-macro (kbd "<down>"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-caps-lock-settings--spoken))
+    (should (eq emacsvox-caps-lock-reminder-presentation 'tone))
+    (execute-kbd-macro (kbd "q r <down> RET"))
+    (should (eq (oref transient--prefix command) 'emacsvox-caps-lock-settings))
+    (should (eq emacsvox-caps-lock-reminder-presentation 'spoken))
+    (let (preview)
+      (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                 (lambda (plan) (setq preview plan))))
+        (execute-kbd-macro (kbd "SPC")))
+      (should (equal "Caps Lock" (emacsvox-aural-concrete-content-text
+                                 (emacsvox-aural-concrete-plan-content preview)))))
+    (should-not (file-exists-p custom-file))
+    (should-not emacsvox-caps-lock-mode)
+    (should-not emacsvox-caps-lock--timer)
+    (execute-kbd-macro (kbd "w"))
+    (emacsvox-settings-test--caps-lock-restart
+     custom-file (list 'spoken emacsvox-caps-lock-reminder-tone nil))
+    (with-temp-buffer
+      (insert-file-contents custom-file)
+      (should-not (search-forward "emacsvox-caps-lock-reminder-tone" nil t)))
+    (execute-kbd-macro (kbd "C-q"))
+    (should (eq (current-buffer) source))
+    (should (= (point) 3))
+    ;; The public command also captures context when opened without a parent.
+    (local-set-key (kbd "<f9>") #'emacsvox-caps-lock-settings)
+    (execute-kbd-macro (kbd "<f9> r"))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-caps-lock-settings--spoken))
+    (should (eq source (emacsvox-aural-menu--source (emacsvox-aural-menu--context))))))
+
+(ert-deftest emacsvox-settings-caps-lock-tone-private-draft-and-persistence ()
+  "Preview, discard, Apply and Save use the shared editor and preserve enablement."
+  (emacsvox-settings-test--with-caps-lock
+    (set-default 'emacsvox-caps-lock-reminder-presentation 'spoken)
+    (execute-kbd-macro (vconcat (kbd "/") "caps lock tone" (kbd "RET")))
+    (should (eq (emacsvox-test--menu-focused-command) 'emacsvox-caps-lock-settings--edit-tone))
+    (execute-kbd-macro (kbd "RET"))
+    (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
+    (should (string-search "Customize" (documentation 'emacsvox-tone-editor--save t)))
+    (should (eq source (emacsvox-aural-menu--source (emacsvox-aural-menu--context))))
+    (emacsvox-settings-test--select-key "p")
+    (execute-kbd-macro (kbd "S-<right>"))
+    (should (= 160 (plist-get emacsvox-caps-lock-reminder-tone :pitch)))
+    (let (preview)
+      (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                 (lambda (plan) (setq preview plan))))
+        (execute-kbd-macro (kbd "SPC"))
+        (should-not (emacsvox-aural-concrete-content-speak
+                     (emacsvox-aural-concrete-plan-content preview)))
+        (should (= 185 (emacsvox-aural-concrete-action-pitch
+                        (car (emacsvox-aural-concrete-plan-before preview)))))
+        (execute-kbd-macro (kbd "P"))
+        (should (equal "Capital A" (emacsvox-aural-concrete-content-text
+                                   (emacsvox-aural-concrete-plan-content preview))))))
+    (execute-kbd-macro (kbd "q e"))
+    (should (= 160 (emacsvox-tone-editor--get :pitch)))
+    (emacsvox-settings-test--select-key "p")
+    (execute-kbd-macro (kbd "S-<right> A"))
+    (should (= 185 (plist-get emacsvox-caps-lock-reminder-tone :pitch)))
+    (should-not (file-exists-p custom-file))
+    (emacsvox-settings-test--select-key "v")
+    (execute-kbd-macro (kbd "S-<left> W"))
+    (should (= 0.25 (plist-get emacsvox-caps-lock-reminder-tone :volume)))
+    (should (eq emacsvox-caps-lock-reminder-presentation 'spoken))
+    (should-not emacsvox-caps-lock-mode)
+    (should-not emacsvox-caps-lock--timer)
+    (emacsvox-settings-test--caps-lock-restart
+     custom-file (list 'tone emacsvox-caps-lock-reminder-tone nil))
+    (with-temp-buffer
+      (insert-file-contents custom-file)
+      (should-not (search-forward "emacsvox-caps-lock-reminder-presentation" nil t)))
+    (execute-kbd-macro (kbd "C-q"))
+    (should (eq (current-buffer) source))
+    (should (= (point) 3))))
+
 (ert-deftest emacsvox-settings-switches-silence-captured-item ()
   "Local suppression targets the captured personality, and can be restored."
   (emacsvox-test--with-settings

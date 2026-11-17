@@ -28,6 +28,9 @@
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (autoload 'emacsvox-reading-settings "emacsvox-reading-settings" nil t)
+(autoload 'emacsvox-caps-lock-mode "emacsvox-caps-lock" nil t)
+(autoload 'emacsvox-caps-lock-settings "emacsvox-caps-lock-settings" nil t)
+(defvar emacsvox-caps-lock-mode nil)
 (require 'emacsvox-aural-history)
 (require 'emacsvox-pronounce)
 (require 'emacsvox-speak-filters)
@@ -348,6 +351,31 @@ Local Voice Lock, local silence and earcon switches are not saved here."
   (customize-save-variable 'global-voice-lock-mode global-voice-lock-mode)
   (emacsvox-settings-workflows--say "Global Voice Lock default saved" 'save-object))
 
+(defun emacsvox-settings-workflows--caps-lock ()
+  "Toggle global keyboard Caps Lock announcements for this session.
+Speak state changes while an X11 Emacs frame has focus, including WSLg when
+its X display reports the keyboard indicator.  Requires xset.  Entering Emacs
+or enabling announces Caps Lock on when active, and stays quiet when off.
+Keyboard input while on adds the selected tone or spoken reminder.  The tone
+overlays current speech; spoken reminders follow normal key feedback.
+Modifier presses alone also remind when Python 3 and libX11 are available.
+Their spoken reminder can interrupt older main speech.  Releases stay silent.
+Native Wayland, Windows, macOS and terminal frames are unsupported.
+Save the Caps Lock default separately to keep it across restarts."
+  (interactive)
+  (emacsvox-caps-lock-mode (if emacsvox-caps-lock-mode -1 1))
+  (emacsvox-settings-workflows--say
+   (format "Caps Lock announcements: %s" (if emacsvox-caps-lock-mode "on" "off"))))
+
+(defun emacsvox-settings-workflows--save-caps-lock ()
+  "Save only the global Caps Lock announcement preference through Customize.
+This controls future Emacsvox sessions; it does not change keyboard Caps Lock
+state or save Voice Lock, earcon or buffer-local settings."
+  (interactive)
+  (require 'emacsvox-caps-lock)
+  (customize-save-variable 'emacsvox-caps-lock-mode emacsvox-caps-lock-mode)
+  (emacsvox-settings-workflows--say "Caps Lock announcement default saved" 'save-object))
+
 (defun emacsvox-settings-workflows--silence ()
   "Silence or restore the captured item's mapped voice in its source buffer.
 This toggles the existing local personality/face suppression, which can affect
@@ -512,9 +540,9 @@ Changes apply now; Save defaults explicitly to keep them across restarts."
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-switches ()
-  "Control Voice Lock, local silence, earcons and headers with explicit scopes.
-Only global Voice Lock has a Customize save here.  Other switches last for the
-session or buffer; Help explains which presentation each switch affects."
+  "Control Voice Lock, Caps Lock announcements, earcons and local switches.
+Global Voice Lock and Caps Lock announcements have separate Customize saves.
+Other switches last for the session or buffer; Help explains each scope."
   :refresh-suffixes t
   ["Captured buffer"
    ("v" (lambda () (emacsvox-settings-workflows--source-toggle-label 'voice-lock-mode "Voice Lock"))
@@ -529,9 +557,13 @@ session or buffer; Help explains which presentation each switch affects."
    ("V" (lambda () (format "Voice Lock: %s" (if global-voice-lock-mode "on" "off")))
     emacsvox-settings-workflows--global-voice-lock :transient t)
    ("E" (lambda () (format "Earcon default: %s" (if (default-value 'emacsvox-use-icons) "on" "off")))
-    emacsvox-settings-workflows--default-icons :transient t)]
+    emacsvox-settings-workflows--default-icons :transient t)
+   ("k" (lambda () (format "Caps Lock announcements: %s" (if emacsvox-caps-lock-mode "on" "off")))
+    emacsvox-settings-workflows--caps-lock :transient t)
+   ("c" "Caps Lock reminder choice and tone" emacsvox-caps-lock-settings :transient transient--do-stack)]
   ["Save and finish"
    ("w" "Save global Voice Lock default" emacsvox-settings-workflows--save-voice-lock :transient t)
+   ("K" "Save Caps Lock announcement default" emacsvox-settings-workflows--save-caps-lock :transient t)
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)

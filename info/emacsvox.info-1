@@ -3893,17 +3893,17 @@ File: emacsvox.info,  Node: Finding Settings And Actions,  Prev: Returning From 
 ---------------------------------
 
 Press ‘C-e H /’ to find an Emacsvox setting by any part of its name,
-ignoring capitalisation.  Type ‘cap’ to find _Capitalisation indication
-and camel case_, _Capital-letter beep_, _All-caps beep_, and _Spatial
-capabilities_.  The aliases ‘caps beep’ and ‘allcaps’ find both beep
-controls and only _All-caps beep_, respectively.  Each result appears
-once under its normal name.  Use completion to choose a result;
-ambiguous text does not choose one automatically.  These matching rules
-apply to this search without changing completion elsewhere in Emacs.
-Space inserts a literal space; ‘<TAB>’ completes.  Use your configured
-completion interface to browse results, displaying completions with
-‘<TAB>’ if needed.  The menu's section and item arrows do not govern
-this minibuffer prompt.
+ignoring capitalisation.  Type ‘cap’ to find controls including
+_Capitalisation indication and camel case_, _Capital-letter beep_,
+_All-caps beep_, _Caps Lock announcements_ and _Spatial capabilities_.
+The aliases ‘caps beep’ and ‘allcaps’ find both beep controls and only
+_All-caps beep_, respectively.  Each result appears once under its
+normal name.  Use completion to choose a result; ambiguous text does not
+choose one automatically.  These matching rules apply to this search
+without changing completion elsewhere in Emacs.  Space inserts a literal
+space; ‘<TAB>’ completes.  Use your configured completion interface to
+browse results, displaying completions with ‘<TAB>’ if needed.  The
+menu's section and item arrows do not govern this minibuffer prompt.
 
    ‘<RET>’ accepts the choice, opens its menu, and selects the matching
 control without changing its value.  Press ‘<RET>’ again to activate or
@@ -5710,12 +5710,12 @@ pack.
 
    For waveform, pitch sweep and envelope adjustments, use the *note
 shared tone editor: spelling-tone-editor.  Spelling, capitalisation,
-indentation, wrapped rows, line conditions and tree levels open it from
-their respective settings.  Its controls are shared, while each
-destination has its own scope and saving rules.  For tree entry, exit
-and depth feedback, follow *note Read and customise text trees:
-agent-shell-text-trees.  General personal-rule editing retains its own
-controls.
+indentation, wrapped rows, line conditions, tree levels and *note Caps
+Lock reminders: caps-lock-feedback. open it from their respective
+settings.  Its controls are shared, while each destination has its own
+scope and saving rules.  For tree entry, exit and depth feedback, follow
+*note Read and customise text trees: agent-shell-text-trees.  General
+personal-rule editing retains its own controls.
 
 * Menu:
 
