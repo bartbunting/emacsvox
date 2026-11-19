@@ -144,6 +144,28 @@
                                        (or string-end "!" blank)) (string-trim (car above)))))
       (string-replace "\n" ". " (emacsvox-eat--bounded-output entries)))))
 
+(defun emacsvox-eat--vim-table-result (rows end)
+  "Read visible marks or registers under their table heading before END in ROWS."
+  (let* ((above (seq-take rows end))
+         (marks (rx string-start (* blank) "mark" (+ blank) "line" (+ blank) "col" (+ blank) "file/text" (* blank) string-end))
+         (regs (rx string-start (* blank) "Type" (+ blank) "Name" (+ blank) "Content" (* blank) string-end))
+         (heading (cl-position-if (lambda (s) (or (string-match-p marks s) (string-match-p regs s)))
+                                  above :from-end t)))
+    (when heading
+      (let ((mark-table (string-match-p marks (nth heading above))) entries)
+        (dolist (s (nthcdr (1+ heading) above))
+          (cond
+           ((and mark-table
+                 (string-match (rx string-start (* blank) (group (not blank)) (+ blank) (group (+ digit))
+                                   (+ blank) (group (+ digit)) (+ blank) (group (* nonl))) s))
+            (push (format "Mark %s, line %s, column %s, %s" (match-string 1 s) (match-string 2 s)
+                          (match-string 3 s) (string-trim-right (match-string 4 s))) entries))
+           ((and (not mark-table)
+                 (string-match (rx string-start (* blank) (any "clb") (+ blank) "\"" (group (not blank))
+                                   (+ blank) (group (* nonl))) s))
+            (push (format "Register %s, %s" (match-string 1 s) (string-trim-right (match-string 2 s))) entries))))
+        (when entries (string-replace "\n" ". " (emacsvox-eat--bounded-output (nreverse entries))))))))
+
 (defun emacsvox-eat--vim-confirmation (screen row ruler question)
   "Describe QUESTION and its visible substitution match above ROW on SCREEN."
   (let* ((hits (cl-remove-if-not
@@ -195,14 +217,19 @@
          (message
           (cond
            (confirmation confirmation)
+           ((string-match-p (rx string-start (+ digit) blank
+                                (or "match" "matches" "substitution" "substitutions")
+                                " on " (+ digit) " line" (optional "s") string-end) text) text)
            ((string-match-p "\\`\\(?:Press ENTER\\|-- More --\\)" text)
             (if-let* ((result (or (and previous (string-match-p "\\`[EW][0-9]+:" previous) previous)
-                                  (emacsvox-eat--vim-buffer-list rows row))))
+                                  (emacsvox-eat--vim-buffer-list rows row)
+                                  (emacsvox-eat--vim-table-result rows row))))
                 (concat result ". " text) text))
            ((string-match-p "\\`\\(?:[EW][0-9]+:\\|search hit \\|Pattern not found\\)" text) text)
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :completion completion :prompt prompt :message message :ruler ruler :text text
+          :pager (string-match-p (rx string-start (or "Press ENTER" "-- More --")) text)
           :confirmation confirmation
           :command (and (string-prefix-p ":" text) text)
           :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
@@ -831,6 +858,11 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                             after (= (plist-get after :row) (emacsvox-eat--vim-status-index screen))
                             (not (plist-get to :message))))
          (message (or (plist-get to :message)
+                      (and command (string-match-p (rx string-start (or "set" "setlocal" "setglobal")
+                                                       (+ blank) (+ (or alnum "_")) "?" string-end) command)
+                           (string-match-p (rx string-start (* blank) (+ (or alnum "_"))
+                                               (optional "=" (* nonl)) string-end) (plist-get to :text))
+                           (string-trim (plist-get to :text)))
                       (and after keys (not (or prompt mode opening-help))
                            (emacsvox-eat--vim-destination keys command from to screen after))))
          (submitted (and (memq 'return keys) (not prompt)
@@ -846,7 +878,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
           (cond
            ((and message (not (equal message prior-message))
                  (not (and prior-message (string-prefix-p (concat message ". ") prior-message))))
-            (emacsvox-eat--vim-row-text message))
+            (if (plist-get to :pager) message (emacsvox-eat--vim-row-text message)))
            ((and (plist-get from :confirmation) (not (plist-get to :confirmation))
                  (memq (car (last keys)) '(?q escape ?y ?n ?a ?l)))
             (if (memq (car (last keys)) '(?q escape)) "Substitution stopped" "Substitution finished"))

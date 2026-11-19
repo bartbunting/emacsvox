@@ -4840,6 +4840,25 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-ex-results-and-retention ()
+  "Separate command output from file rows and retain the result with its prompt."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:set number?\e[K")
+    (should (equal (send "\e[4;1Hnonumber   1,1 All\e[K\e[H" 'return) '("nonumber")))
+    (send "\e[4;1H:%s/a/b/gn\e[K")
+    (should (equal (send "\e[4;1H5 matches on 3 lines  1,1 All\e[K\e[H" 'return)
+                   '("5 matches on 3 lines")))
+    (let ((marks "Mark a, line 2, column 0, beta two. Press ENTER to continue"))
+      (should (equal (send (concat "\e[2;1Hmark line  col file/text\e[K"
+                                   "\e[3;1H a    2   0 beta two\e[K\e[4;1HPress ENTER to continue\e[K"))
+                     (list marks)))
+      (setq speech nil)
+      (emacsvox-eat-speak-retained-status)
+      (should (equal speech (list (concat "Retained terminal status: " marks)))))
+    (should (equal (send (concat "\e[2;1HType Name Content\e[K\e[3;1H  l  \"a   note^J\e[K"
+                                 "\e[4;1HPress ENTER to continue\e[K"))
+                   '("Register a, note^J. Press ENTER to continue")))))
+
 (ert-deftest emacsvox-eat-vim-buffers-tabs-and-quickfix ()
   "Prefer the active tab to a stale filename and speak a quickfix diagnostic."
   (emacsvox-eat-test--with-vim
