@@ -9094,6 +9094,12 @@ presents one visibility change for the affected group: expansion reads the
 group's name and state@comma{} while collapse uses the configured visibility cue.
 Collapsing a group from a child moves point to the group heading.
 
+When browsing a shell or viewport@comma{} use @kbd{n} and @kbd{p} to move between items.
+On a rendered blockquote@comma{} Emacsvox announces the copy action and previews the
+first line. Press @kbd{@key{RET}} to copy the whole quote. On a link or source-block
+copy control inside the quote@comma{} @kbd{@key{RET}} acts on that item. Up and Down cross a
+rendered divider inside a quote in one step.
+
 @table @kbd
 @item h / H
 Use @kbd{h} (@code{emacsvox-agent-shell-next-heading}) or
@@ -13908,8 +13914,8 @@ Use @kbd{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
 The minimum supported Agent Shell is 0.85.3. The integration pins target
-Agent Shell 0.95.1 at @code{a9f3034}@comma{} Shell Maker 0.98.2 at @code{f57ad5e}@comma{} and
-ACP 0.18.2 at @code{2959da5}. A personal
+Agent Shell 0.97.3 at @code{83b22ac}@comma{} Shell Maker 0.98.3 at @code{cba42ef}@comma{} and
+ACP 0.19.1 at @code{0b4240f}. A personal
 package upgrade does not refresh @code{test/integration-dependencies.json} or its
 prepared tree. When the preparer rejects a changed lock@comma{} choose a fresh
 @code{TEST_DEPS_DIR} and pass the same directory to preparation and both integration
@@ -13918,8 +13924,7 @@ gates; preserve the old directory until it is no longer needed.
 For every pin refresh@comma{} compare all Emacsvox navigation@comma{} speech-control@comma{} table@comma{}
 and repeat keys against shell and viewport maps@comma{} inherited Shell Maker maps@comma{}
 list editing@comma{} inline actions@comma{} permission and question controls@comma{} and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.95.1 refresh keeps
-the existing scoped overrides: viewport @kbd{t} discovers tables; table @kbd{r} reads
+effective keys in real prompt and transcript contexts. The scoped overrides are: viewport @kbd{t} discovers tables; table @kbd{r} reads
 rows instead of quoting or replying; viewport table @kbd{c} reads columns and @kbd{a}
 selects table speech instead of continuing or repeating a reply. The table @kbd{k}
 copy prefix takes precedence over Emacsvox's source-block jump. These preserve

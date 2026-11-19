@@ -421,6 +421,12 @@ presents one visibility change for the affected group: expansion reads the
 group's name and state, while collapse uses the configured visibility cue.
 Collapsing a group from a child moves point to the group heading.
 
+When browsing a shell or viewport, use ~n~ and ~p~ to move between items.
+On a rendered blockquote, Emacsvox announces the copy action and previews the
+first line. Press ~RET~ to copy the whole quote. On a link or source-block
+copy control inside the quote, ~RET~ acts on that item. Up and Down cross a
+rendered divider inside a quote in one step.
+
 #+attr_texinfo: :indic kbd :compact t
 - h / H ::
 

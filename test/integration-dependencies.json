@@ -11,26 +11,26 @@
     },
     {
       "name": "acp",
-      "commit": "2959da5fa8657da17a78ac6ceef303a50e3e69de",
-      "url": "https://codeload.github.com/xenodium/acp.el/tar.gz/2959da5fa8657da17a78ac6ceef303a50e3e69de",
-      "sha256": "a1a128408394ef077bf58e7ee78b61ccca0b4c897df8e0fae533fe955541690f",
-      "archive_root": "acp.el-2959da5fa8657da17a78ac6ceef303a50e3e69de",
+      "commit": "0b4240f07d4f3476e49b4a352ee854ff9d28e556",
+      "url": "https://codeload.github.com/xenodium/acp.el/tar.gz/0b4240f07d4f3476e49b4a352ee854ff9d28e556",
+      "sha256": "543b85326274df6a923bd4ce683f8197beec3d6fc15d79e14a602cea8faff030",
+      "archive_root": "acp.el-0b4240f07d4f3476e49b4a352ee854ff9d28e556",
       "subdirectory": "."
     },
     {
       "name": "shell-maker",
-      "commit": "f57ad5e361621a38549d47ee5bd9cd1106cc07ef",
-      "url": "https://codeload.github.com/xenodium/shell-maker/tar.gz/f57ad5e361621a38549d47ee5bd9cd1106cc07ef",
-      "sha256": "7691c761695546f40b6c607dcd3da87132dccd952e7036a88d77352d1bc1aa7a",
-      "archive_root": "shell-maker-f57ad5e361621a38549d47ee5bd9cd1106cc07ef",
+      "commit": "cba42efd503bbdf19a7244b9119efd8764e99ecb",
+      "url": "https://codeload.github.com/xenodium/shell-maker/tar.gz/cba42efd503bbdf19a7244b9119efd8764e99ecb",
+      "sha256": "3fc16eb486976d34da26a082327bfafc6054d316f287f5f0da70ac1ef837b1e8",
+      "archive_root": "shell-maker-cba42efd503bbdf19a7244b9119efd8764e99ecb",
       "subdirectory": "."
     },
     {
       "name": "agent-shell",
-      "commit": "a9f3034281f2845d3318ad7d2c2241f4ec693227",
-      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/a9f3034281f2845d3318ad7d2c2241f4ec693227",
-      "sha256": "53bb6072744a767cf089380608d03b1563a19c928e8269feab82a393899094bf",
-      "archive_root": "agent-shell-a9f3034281f2845d3318ad7d2c2241f4ec693227",
+      "commit": "83b22ac45faf64fff1128556f18829953c3c5714",
+      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/83b22ac45faf64fff1128556f18829953c3c5714",
+      "sha256": "7ffd420432a9297580ec31dbf8678f9eea9e4b3858dae6363e6afc46f6d1e6fc",
+      "archive_root": "agent-shell-83b22ac45faf64fff1128556f18829953c3c5714",
       "subdirectory": ".",
       "excluded_paths": [
         "CLAUDE.md",

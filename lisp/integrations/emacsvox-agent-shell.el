@@ -845,7 +845,7 @@ the corresponding buffer boundary."
          (string-match-p "\\`[[:space:]]*!\\[" source))))
 
 (defun emacsvox-agent-shell--semantic-item-feedback ()
-  "Speak an actionable source block, image, or link at point.
+  "Speak an actionable source block, image, link, or blockquote at point.
 Return non-nil when point represents one of those semantic items."
   (let ((position (point))
         speech)
@@ -906,7 +906,13 @@ Return non-nil when point represents one of those semantic items."
                  (propertize label 'face 'agent-shell-markdown-link)
                  ", link. "
                  (emacsvox-agent-shell--item-action-sentence
-                  position "open")))))))
+                  position "open"))))))
+     ((and (get-text-property position 'agent-shell-markdown-blockquote-rendered)
+           (eq (key-binding (kbd "RET")) 'agent-shell-markdown-copy-blockquote-at-point))
+      (let ((preview (emacsvox-agent-shell--block-navigation-body-text
+                      (buffer-substring position (line-end-position)))))
+        (setq speech (concat "Blockquote. Press Return to copy."
+                             (when preview (concat " " preview)))))))
     (when speech
       ;; The cursor sensor still displays its dynamic hint in the echo area.
       ;; Filter only its redundant speech after this atomic announcement.

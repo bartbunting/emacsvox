@@ -114,7 +114,8 @@ with Agent Shell's live input marker."
       (setq position (1+ position)))
     (let ((prompt-start position))
       (while (and (< position length)
-                  (emacsvox-agent-shell--prompt-face-at-p text position))
+                  (or (emacsvox-agent-shell--prompt-face-at-p text position)
+                      (get-text-property position 'agent-shell-steer-prefix text)))
         (setq position (next-property-change position text length)))
       (if (= position prompt-start)
           text
