@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1737 commands and 265 options.
+   This chapter documents a total of 1772 commands and 269 options.
 
 * Menu:
 
@@ -637,6 +637,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-marginalia:: Speech-enable Marginalia.
 * emacsvox-markdown:: Speech-enable Markdown.
 * emacsvox-maths:: Audio-Formatted Maths.
+* emacsvox-mermaid:: Explore Mermaid flowcharts with speech.
 * emacsvox-message:: Speech enable Message.
 * emacsvox-mines:: Speech-enable MINES.
 * emacsvox-mu4e:: Speech-enable MU4E.

@@ -183,6 +183,18 @@ graphical-integration-test: check-emacs
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
 
+# Optional Mermaid prototype: installing its parser is an explicit local step.
+.PHONY: mermaid-deps mermaid-test compiled-mermaid-test
+mermaid-deps:
+	npm ci --prefix js/mermaid --ignore-scripts --no-audit --no-fund
+
+mermaid-test: check-emacs
+	npm test --prefix js/mermaid
+	$(EMACS) -Q --batch -l test/run-mermaid-tests.el
+
+compiled-mermaid-test: bytecode-check
+	EMACSVOX_MERMAID_TEST_LOAD=compiled $(EMACS) -Q --batch -l test/run-mermaid-tests.el
+
 .PHONY: caps-lock-test compiled-caps-lock-test graphical-caps-lock-test
 caps-lock-test: check-emacs
 	$(EMACS) -Q --batch -l test/run-caps-lock-tests.el

@@ -1,0 +1,12 @@
+{
+  "name": "emacsvox-mermaid-prototype",
+  "private": true,
+  "type": "module",
+  "license": "GPL-2.0-or-later",
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test adapter.test.mjs" },
+  "dependencies": {
+    "@mermaid-js/core": "13.0.0-alpha.3",
+    "@mermaid-js/diagram-flowchart": "13.0.0-alpha.3"
+  }
+}

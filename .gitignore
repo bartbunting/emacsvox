@@ -15,6 +15,7 @@ lisp/emacsvox-loaddefs.el
 lisp/TAGS
 info/TAGS
 js/node/node_modules/
+js/mermaid/node_modules/
 js/node/auto/
 .tern-port
 .amarks.el

@@ -1,0 +1,195 @@
+#+title: Mermaid explorer prototype
+
+This optional integration turns a Mermaid flowchart into a graph you can
+explore with speech. It uses the unchanged Mermaid v13 language parser from
+=@mermaid-js/diagram-flowchart/language= and its matching core package, both
+pinned to =13.0.0-alpha.3=. This is an experimental upstream alpha, so the
+prototype is intended for listening and navigation trials.
+
+* Try it
+
+You need Node 20 or newer and npm. From the Emacsvox checkout, run:
+
+#+begin_src sh
+make mermaid-deps
+make bytecode-rebuild
+#+end_src
+
+Start a fresh Emacsvox session. Open a Mermaid source file, place point inside
+a Markdown Mermaid fence or Org Mermaid source block, or select the diagram
+as a region. Run =M-x emacsvox-mermaid-explore=.
+
+The explorer opens in a separate read-only buffer. It speaks the overview and
+a brief description of the current node. Arrivals omit ordinary box shapes;
+period gives full details. Labels use identifiers only when needed to
+distinguish duplicates. Find also includes identifiers for searching.
+
+Up and Down, or =n= and =p=, browse a combined list: outgoing connections first,
+then incoming connections, then undirected links. Two-way and self connections
+appear once; separate arrows to the same node remain separate choices. Speech
+gives the connection's label, destination and position within its section, such
+as "Yes: Follow guide. 1 of 2." Crossing sections announces the new direction.
+Selection leaves the current node unchanged. Return follows the selected item.
+
+Right follows the selected outgoing connection immediately, including in the
+combined list. Left follows the selected incoming connection. Either arrow
+follows a selected two-way or undirected link. If the selection does not match
+the requested direction, the arrow follows a sole connection or opens that
+direction's list and speaks its first item. Up and Down select; Return or the
+matching arrow follows. An empty direction is announced without moving.
+Press =C-g= to return to the combined list.
+Undirected links remain available in either direction's list, identified
+explicitly and placed after its directed connections.
+
+Press =o= to summarize outgoing connections or =i= to summarize incoming ones.
+These commands prepare their direction's list with the first item selected,
+without following it. Return or the matching arrow then follows that selection.
+Following a connection starts a fresh combined list at the destination. Press
+=b= to restore the previous node, list and selection, including visits against
+an arrow's direction.
+
+The option =emacsvox-mermaid-connection-speech-limit= defaults to 3. Period,
+=i= and =o= name every connection when their direction has at most that many;
+larger sets use counts, such as "4 outgoing." Each direction is evaluated
+separately, including undirected links when present. Arrival speech uses the
+same rule for its outgoing summary. Branch explanations also use this limit
+when naming outgoing connections and the sources of joins. Zero uses counts
+for every nonempty set; individual list selections always speak names. Change
+the option with =M-x customize-variable=; subsequent summaries in every explorer
+use the new value without refreshing the diagram.
+
+Press =e= to explain the current node's branches, joins and loops without
+moving. It names outgoing branches and looks for a nearby destination they
+share. For example, at Known solution in the support-ticket diagram, it
+describes the yes and no branches, then says that both rejoin at Resolve the
+ticket. At Resolve the ticket, it describes the incoming yes and no paths.
+
+Paths are traced through nodes with exactly one incoming and one outgoing
+arrow. Incoming paths are traced backward, then spoken in forward order;
+outgoing paths follow arrows ahead. The trace includes and
+stops at a start, split or join. Connections determine these boundaries, rather
+than node shapes. Loops and two-way connections also stop the trace. At Schedule
+work in the duplicate-label example, the explanation identifies the manager
+and security paths from Receive change request and names their Review and
+Approved steps. Unique path labels supply enough context to omit the duplicate
+node IDs in this explanation. Ambiguous path names and repeated labels within
+one path keep their IDs; ordinary navigation still uses its usual identifiers.
+At Receive change request, the forward explanation describes the same two
+sequences and names their shared destination once.
+
+The option =emacsvox-mermaid-explanation-path-limit= defaults to 5 arrows per
+path, including its connection to the current node. If tracing stops at this
+limit, speech announces "Earlier steps omitted" or "Later steps omitted."
+Zero disables tracing and keeps immediate connection summaries. This limit is
+separate from the number of connections named, and changes apply to the next
+explanation without a refresh. Above the connection speech limit, incoming connections use a count
+instead of individual path descriptions. Saying paths meet describes their
+arrows; it does not assert that every path must finish before work can continue.
+
+Press capital =E= to open a browsable explanation. Its first row contains the
+summary; subsequent rows describe individual outgoing, incoming and undirected
+connections. Up and Down, or =n= and =p=, select rows. Period reads the selected
+row. Entry announces the available paths without speaking the entire summary.
+Individual paths remain available even when the summary uses connection counts.
+Return, Right or =+= doubles the selected path's tracing limit when steps were
+omitted. Other paths and global settings keep their limits. Expansion stops at
+structural boundaries and cannot choose a branch for you. Press =q= to return
+to the explorer with its node and selection preserved.
+
+Press =r= in the explorer to choose a route destination by label or ID. A
+separate buffer lists one route using the fewest arrows; source order breaks
+ties. Up and Down preview steps without moving through the diagram. Return or
+Right follows the next uncompleted step, regardless of which step you were
+previewing. =b= or Left retraces a step followed through this route, restoring
+the explorer's previous selection. Period repeats the selected step. Press =q=
+to return to the explorer at the node reached so far. Connection labels and
+group crossings remain audible. Two-way links can be followed in either
+direction; undirected links and group membership do not create routes.
+
+A route describes arrow connections; conditions are not evaluated. For example,
+a route through one validation branch does not establish that all checks have
+passed. Unreachable destinations leave your position unchanged. If you move
+the explorer outside the route, return with =q= and choose a new route with =r=.
+Explanation buffers stay about the node where they were opened. Refreshing the
+diagram invalidates both companion buffers; reopen them to use the new graph.
+Killing the explorer buffer also removes its companion buffers.
+
+The explanation follows explicit arrows. Group membership and undirected
+links do not create routes. It says branches "rejoin" only when every arrow
+path reaches the shared destination. If a path can end elsewhere, return to
+the original decision or keep looping before that destination, it says the
+branches "can reach" it and that other paths can avoid it. Searches stop at
+the original node, so returning there and choosing a different branch cannot
+create a shared destination. It also identifies self loops, branches that can
+return to the current node and reachable directed cycles. As in the overview,
+reversing a single two-way connection does not count as a cycle. These are
+descriptions of the graph, without AI interpretation of its meaning.
+
+Press =f= to find a node or group by label or ID. Capital =F= first narrows Find
+to entry points, exit points, branches, joins, disconnected nodes, upstream,
+downstream, unvisited items or groups. Choosing a filter does not move you;
+choosing a matching item does. Entry points have outgoing arrows and no incoming
+arrows; exit points have incoming arrows and no outgoing arrows. Neither filter
+includes isolated items or items with undirected connections. Branches and joins
+have multiple outgoing or incoming arrows, including parallel connections.
+Upstream and downstream follow arrows transitively, including both directions of
+two-way connections, and exclude the current node. Undirected links and group
+membership do not create arrow paths. Disconnected nodes have no visible
+connections or group membership.
+
+Press =a= to list all nodes and groups, including disconnected components, and
+=m= to list a group's members. Press =u= to visit a containing group, with the
+member you left selected. If there are several containing groups, choose one.
+Find and member navigation remember positions in group members, All and combined
+connection lists. Direction choices are restored by Back; a new visit starts
+with fresh choices. Speech announces group boundaries as you cross them. Press
+=w= for your current node, containing groups, section and selected connection.
+
+Press =v= for the overview, including separate parts, isolated nodes and directed
+cycles when present. Containment connects parts for this overview, but does not
+create a cycle. Following a single two-way connection out and back is not counted
+as a cycle. Any author-supplied description remains part of the overview.
+Press =s= to visit the current node's first source occurrence, =g= to refresh
+after editing the source, =?= for spoken help, and =q= to leave the explorer.
+Quitting plays the normal close earcon and announces the buffer now selected.
+
+Navigation uses a snapshot. Refresh preserves the current node if it remains,
+clears traversal history and remembered positions, and rebuilds the overview and
+filters. Source jumps refuse stale offsets after an edit. Syntax errors appear
+with line numbers relative to the diagram. A partial model recovered by the
+parser is never offered for navigation.
+
+* Scope and implementation
+
+The persistent local Node process returns a small, versioned JSON graph.
+Mermaid owns syntax, graph expansion, diagnostics and source ranges. The
+adapter converts UTF-16 ranges to Emacs character offsets and simplifies
+basic HTML and Markdown label styling for speech. Unknown styling can remain
+literal. No browser, rendering engine or changes to Mermaid are required.
+Diagram links, callbacks and external resources are never executed or fetched.
+The parser packages are installed locally; ordinary Emacsvox startup and
+navigation outside the explorer do not require Node.
+
+The graph retains directed, bidirectional and undirected connections, parallel
+edges, self links, cycles, groups and edge labels. Invisible layout links are
+counted but omitted from navigation. Brief speech names diamond, cylinder and
+stadium shapes as decision, database and terminal. These are shape conventions;
+the diagram's labels and arrows determine its meaning. Full details retain the
+parser's shape names. Connections retain their line styles and endpoint markers.
+Layout direction describes visual order.
+Node colors, class styling and tooltips are not narrated in this prototype.
+The prototype limits input to 256 KiB, 1,000 nodes, 2,000 edges and 50 nested
+levels; exceeding a limit fails visibly. A stalled helper times out and can
+be restarted by refreshing.
+
+Other diagram types, spatial sound, automatic Agent Shell integration and
+installer packaging are outside this first prototype. Automated checks capture
+speech submissions; listening acceptance and the maintained manual update
+remain separate steps before treating the integration as ready for review.
+
+* Checks
+
+=make mermaid-test= runs adapter tests and fresh Emacs tests against the real
+Node helper. After compilation, =make compiled-mermaid-test= verifies the
+loaded byte-code path and repeats the Emacs interaction tests. The fixture at
+=test/fixtures/mermaid/zabbix.mmd= has 13 nodes and 15 connections.
