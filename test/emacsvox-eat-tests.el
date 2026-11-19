@@ -4871,6 +4871,31 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should (= (plist-get screen :cursor-offset) 8)))
     (should (equal (send "\e[1;6H" 'C-left) '("界面")))))
 
+(ert-deftest emacsvox-eat-vim-word-arrows-wait-for-the-latest-cursor ()
+  "A pending redraw must not consume an arrow sent from the new cursor."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hred green blue gold\e[K\e[H")
+    (key 'C-right)
+    (eat-term-process-output eat-terminal "\e[1;5H")
+    (eat-term-redisplay eat-terminal)
+    (emacsvox-eat-update-hook)
+    (key 'C-right)
+    (setq speech nil)
+    (emacsvox-eat-test--finish-screen-burst)
+    (should-not speech)
+    (should (equal (send "\e[1;11H") '("blue")))
+    ;; Both keys can also reach the peer before it sends either redraw.
+    (key 'C-left)
+    (key 'C-left)
+    (should (equal (send "\e[1;5H") '("green")))
+    (should (equal (send "\e[H") '("red")))
+    ;; A coalesced redraw speaks once. A new edit starts at that destination.
+    (key 'C-right)
+    (key 'C-right)
+    (should (equal (send "\e[1;11H") '("blue")))
+    (should-not (send "\e[1;11H"))
+    (should (equal (send "\e[1;11Hlue gold\e[K\e[1;11H" ?x) '(?b)))))
+
 (ert-deftest emacsvox-eat-vim-terminal-input-keys ()
   "Forward graphical Escape and word arrows only in Vim terminal input maps."
   (let ((eat-semi-char-mode-map (make-sparse-keymap))

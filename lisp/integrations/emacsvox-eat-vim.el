@@ -55,6 +55,7 @@
   "Seconds to associate input with an SSH redraw, without polling.")
 
 (declare-function eat-self-input "eat" (n &optional event))
+(defvar emacsvox-eat-application-profile)
 
 (defun emacsvox-eat--vim-escape ()
   "Send one Escape through EAT's normal input path."
@@ -97,11 +98,22 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
   (emacsvox-eat--vim-forget-input)
   (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil emacsvox-eat--vim-tabs nil))
 
+(defun emacsvox-eat--vim-word-arrows-p (keys)
+  "Whether KEYS contains only Control word arrows."
+  (and keys (cl-every (lambda (key) (memq key '(C-left C-right))) keys)))
+
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
   (when (or emacsvox-eat--vim-awaiting-match emacsvox-eat--vim-quitting
             (eq emacsvox-eat--vim-replay-timer 'announced)
-            (> (float-time) emacsvox-eat--vim-deadline))
+            (> (float-time) emacsvox-eat--vim-deadline)
+            ;; An earlier word may already be on screen awaiting speech.
+            ;; Start the new key at the latest rendered cursor.
+            (and (emacsvox-eat--vim-word-arrows-p emacsvox-eat--vim-keys)
+                 (or (not (memq event '(C-left C-right)))
+                     (and (not (eq screen emacsvox-eat--vim-origin))
+                          (not (equal (emacsvox-eat--vim-point screen)
+                                      (emacsvox-eat--vim-point emacsvox-eat--vim-origin)))))))
     (emacsvox-eat--vim-forget-input))
   (let ((count (or count 1))
         (key (pcase event
@@ -614,7 +626,6 @@ Motions at a boundary can leave no repaint to consume their input."
             ((string-match-p (rx string-start (or alnum "\"") string-end) (string (cadr tail)))
              (format "Replay register %c" (cadr tail)))))))
 
-(defvar emacsvox-eat-application-profile)
 (defvar emacsvox-eat--secure-input-active-p)
 (defvar emacsvox-eat--screen-snapshot)
 (declare-function emacsvox-eat--foreground-p "emacsvox-eat-core" ())
@@ -1165,6 +1176,10 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
          (remaining (cond ((and emacsvox-eat--vim-quitting (not (or message mode))
                                 (or prompt (not (plist-get to :ruler)))) keys)
                           ((eq (car feedback) 'match-location) keys)
+                          ;; A peer may deliver a separate redraw for each arrow.
+                          ((and (memq (car feedback) '(navigation character row))
+                                (cdr keys) (emacsvox-eat--vim-word-arrows-p keys))
+                           (cdr keys))
                           (feedback (nth 2 feedback))
                           ((or submitted (and announcement message)) (cdr (memq 'return keys)))
                           (announcement (emacsvox-eat--vim-after-entry keys mode prompt)))))
