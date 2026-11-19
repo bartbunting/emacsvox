@@ -72,15 +72,17 @@ speech library load independently during native compilation.")
                     (/ (+ (/ total 2) (* 100 (1- pos))) (max total 1)))))
     percent))
 
+(defun emacsvox-speak--percentage-description (percent)
+  "Format PERCENT for a spoken position notification."
+  (propertize
+   (cond ((= 0 percent) " top ")
+         ((= 100 percent) " bottom ")
+         (t (format " %d%% " percent)))
+   'personality 'voice-monotone-extra))
+
 (defun emacsvox-get-current-percentage-verbosely ()
   "Return percentage of position into current buffer as a string."
-  (let ((percent (emacsvox-get-current-percentage-into-buffer)))
-    (propertize
-     (cond
-      ((= 0 percent) " top ")
-      ((= 100 percent) " bottom ")
-      (t (format " %d%% " percent)))
-     'personality 'voice-monotone-extra)))
+  (emacsvox-speak--percentage-description (emacsvox-get-current-percentage-into-buffer)))
 
 ;;;  mail check
 

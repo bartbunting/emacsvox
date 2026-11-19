@@ -32,6 +32,7 @@
 
 (require 'emacsvox-eat-presentation)
 (eval-when-compile (require 'cl-lib))
+(autoload 'emacsvox-speak--percentage-description "emacsvox-speak-status")
 
 (defvar-local emacsvox-eat--vim-keys nil
   "Delivered keys awaiting visible evidence, oldest first.")
@@ -39,7 +40,7 @@
   "Screen as it looked before the oldest pending key.")
 (defvar-local emacsvox-eat--vim-deadline 0.0)
 (defvar-local emacsvox-eat--vim-expiry nil)
-(defvar-local emacsvox-eat--vim-replay-timer nil)
+(defvar-local emacsvox-eat--vim-quiet-timer nil)
 (defvar-local emacsvox-eat--vim-normal-evidence nil
   "Whether an observed Normal action permits feedback for a silent replay.")
 (defvar-local emacsvox-eat--vim-awaiting-match nil
@@ -50,6 +51,8 @@
   "File or screen coordinates at the observed start of a Visual selection.")
 (defvar-local emacsvox-eat--vim-tabs nil
   "Last identified tab and its visible neighbours on a plain Vim tab line.")
+(defvar-local emacsvox-eat--vim-last-boundary nil
+  "Last confirmed file boundary and the screen where Vim reached it.")
 (defconst emacsvox-eat--vim-input-limit 128)
 (defconst emacsvox-eat--vim-input-timeout 3.0
   "Seconds to associate input with an SSH redraw, without polling.")
@@ -79,10 +82,10 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 (defun emacsvox-eat--vim-forget-input ()
   "Discard keys and their original screen."
   (when (timerp emacsvox-eat--vim-expiry) (cancel-timer emacsvox-eat--vim-expiry))
-  (when (timerp emacsvox-eat--vim-replay-timer) (cancel-timer emacsvox-eat--vim-replay-timer))
+  (when (timerp emacsvox-eat--vim-quiet-timer) (cancel-timer emacsvox-eat--vim-quiet-timer))
   (setq emacsvox-eat--vim-keys nil emacsvox-eat--vim-origin nil
         emacsvox-eat--vim-awaiting-match nil emacsvox-eat--vim-quitting nil
-        emacsvox-eat--vim-expiry nil emacsvox-eat--vim-replay-timer nil emacsvox-eat--vim-deadline 0.0))
+        emacsvox-eat--vim-expiry nil emacsvox-eat--vim-quiet-timer nil emacsvox-eat--vim-deadline 0.0))
 
 (defun emacsvox-eat--vim-expire (buffer)
   "Release pending input in BUFFER even if the peer never redraws."
@@ -96,7 +99,8 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 (defun emacsvox-eat--vim-reset ()
   "Forget all keyboard and selection evidence for this terminal."
   (emacsvox-eat--vim-forget-input)
-  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil emacsvox-eat--vim-tabs nil))
+  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil
+        emacsvox-eat--vim-tabs nil emacsvox-eat--vim-last-boundary nil))
 
 (defun emacsvox-eat--vim-word-arrows-p (keys)
   "Whether KEYS contains only Control word arrows."
@@ -104,8 +108,9 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
+  (unless (memq event '(?g ?G)) (setq emacsvox-eat--vim-last-boundary nil))
   (when (or emacsvox-eat--vim-awaiting-match emacsvox-eat--vim-quitting
-            (eq emacsvox-eat--vim-replay-timer 'announced)
+            (eq emacsvox-eat--vim-quiet-timer 'announced)
             (> (float-time) emacsvox-eat--vim-deadline)
             ;; An earlier word may already be on screen awaiting speech.
             ;; Start the new key at the latest rendered cursor.
@@ -486,6 +491,36 @@ INSPECTION marks an explicit review rather than cursor movement."
       (emacsvox-aural-submit-actions :facts facts :module 'eat :occasion 'navigation :lane 'main
                                      :delivery-policy 'replaceable :replacement-key key))))
 
+(defun emacsvox-eat--vim-file-boundary (tail)
+  "Return the buffer percentage requested by a plain gg or G in TAIL."
+  (cond ((equal tail '(?g ?g)) 0) ((equal tail '(?G)) 100)))
+
+(defun emacsvox-eat--vim-at-file-boundary-p (percent screen)
+  "Whether SCREEN already places the cursor at the file boundary PERCENT."
+  (let* ((state (emacsvox-eat--vim-status screen)) (ruler (plist-get state :ruler))
+         (row (plist-get screen :cursor-row)) (saved (cdr emacsvox-eat--vim-last-boundary)))
+    (and ruler row (not (or (plist-get state :mode) (plist-get state :prompt)
+                            (plist-get state :message) (plist-get state :confirmation)))
+         (or (zerop (car ruler))
+             (if (zerop percent) (= (car ruler) 1)
+               (or (and (eql percent (car emacsvox-eat--vim-last-boundary))
+                        (equal row (plist-get saved :cursor-row))
+                        (equal (plist-get screen :rows) (plist-get saved :rows)))
+                   (and (< row (1- (emacsvox-eat--vim-status-index screen)))
+                        (equal "~" (string-trim-right
+                                    (or (emacsvox-eat--vim-line screen (1+ row)
+                                          (emacsvox-eat--vim-window screen)) ""))))))))))
+
+(defun emacsvox-eat--vim-present-boundary (percent screen)
+  "Read the destination line and give the usual PERCENT position notification."
+  (let ((line (emacsvox-eat--vim-cursor-line screen))
+        (emacsvox-aural-submission-module 'eat))
+    (emacsvox-icon 'large-movement)
+    (if (string-blank-p line) (emacsvox-eat--vim-blank-row)
+      (emacsvox-eat--vim-say (emacsvox-eat--vim-row-text line) 'navigation))
+    (tts-notify (emacsvox-speak--percentage-description percent))
+    (setq emacsvox-eat--vim-last-boundary (cons percent screen))))
+
 (defun emacsvox-eat--vim-echo (keys before after old new replace &optional changing)
   "Match the visible inserted text between BEFORE and AFTER to a prefix of KEYS.
 OLD and NEW are the public screens.  REPLACE permits a visible overwrite.
@@ -571,9 +606,19 @@ their respective command rows."
          (find-key (and (cdr keys) (car (last keys 2))))
          (ruler (plist-get to :ruler))
          (tail (emacsvox-eat--vim-command-tail keys))
+         (boundary (emacsvox-eat--vim-file-boundary tail))
          (mark (and (length= tail 2) (characterp key)
                     (string-match-p (rx string-start alpha string-end) (string key)))))
     (cond
+     ((and boundary (or moved (not (equal line (plist-get before :line)))
+                        (emacsvox-eat--vim-at-file-boundary-p boundary new)))
+      (cons 'file-boundary boundary))
+     ((and ruler (memq key '(?g ?G)) (characterp (car tail)) (<= ?1 (car tail) ?9)
+           (cl-every #'characterp tail)
+           (string-match-p (rx string-start (+ digit) (or "gg" "G") string-end) (apply #'string tail)))
+      (let ((location (format "Line %d" (car ruler))))
+        (if (string-blank-p line) (cons 'blank-location location)
+          (cons 'jump (concat location ", " (emacsvox-eat--vim-row-text line))))))
      ((and (memq key '(C-left C-right)) moved)
       (cond
        ((string-blank-p line) (cons 'row "blank"))
@@ -643,14 +688,15 @@ Motions at a boundary can leave no repaint to consume their input."
   (while (and (cdr keys)
               (cond ((and (eq (car keys) ?g) (eq (cadr keys) ?g) (cddr keys))
                      (setq keys (cddr keys)))
-                    ((memq (car keys) '(?0 ?^ ?$ ?h ?j ?k ?l home end left right up down))
+                    ((memq (car keys) '(?0 ?^ ?$ ?h ?j ?k ?l ?G home end left right up down))
                      (setq keys (cdr keys))))))
   keys)
 
 (defun emacsvox-eat--vim-unchanged-input-p ()
   "Whether a pending Vim command may finish without changing a cell."
   (let ((keys (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys)))
-    (or (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L) (9) (tab)))
+    (or (emacsvox-eat--vim-file-boundary keys)
+        (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L) (9) (tab)))
         (and (eq (car keys) ?m) (length= keys 2)))))
 
 (defun emacsvox-eat--vim-replay-label (keys)
@@ -667,27 +713,39 @@ Motions at a boundary can leave no repaint to consume their input."
 (declare-function emacsvox-eat--foreground-p "emacsvox-eat-core" ())
 (declare-function emacsvox-eat--following-live-p "emacsvox-eat-core" ())
 
-(defun emacsvox-eat--vim-replay-request (buffer keys label)
-  "Acknowledge delivered KEYS as LABEL in BUFFER if Vim has shown no result."
+(defun emacsvox-eat--vim-quiet-response (buffer keys result)
+  "Present RESULT in BUFFER when delivered KEYS leave Vim's cursor still.
+A numeric RESULT is a verified file boundary. A string names a requested replay."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
-      (when (and (eq emacsvox-eat-application-profile 'vim) emacsvox-eat--vim-normal-evidence
+      (when (and (eq emacsvox-eat-application-profile 'vim)
+                 (or (numberp result) emacsvox-eat--vim-normal-evidence)
                  (equal emacsvox-eat--vim-keys keys) (< (float-time) emacsvox-eat--vim-deadline)
                  (not emacsvox-eat--secure-input-active-p) (emacsvox-eat--foreground-p)
                  (emacsvox-eat--following-live-p)
                  (equal (emacsvox-eat--vim-point emacsvox-eat--vim-origin)
                         (emacsvox-eat--vim-point emacsvox-eat--screen-snapshot)))
-        (emacsvox-eat--vim-say (concat label " requested") 'edit)
-        ;; Keep the original screen for a late SSH result until another key.
-        (setq emacsvox-eat--vim-replay-timer 'announced)))))
+        (if (numberp result)
+            (when (emacsvox-eat--vim-at-file-boundary-p result emacsvox-eat--screen-snapshot)
+              (emacsvox-eat--vim-present-boundary result emacsvox-eat--screen-snapshot)
+              (emacsvox-eat--vim-forget-input))
+          (emacsvox-eat--vim-say (concat result " requested") 'edit)
+          ;; Keep the original screen for a late SSH result until another key.
+          (setq emacsvox-eat--vim-quiet-timer 'announced))))))
 
 (defun emacsvox-eat--vim-after-send ()
-  "Arrange one acknowledgement if a delivered macro never changes the screen."
-  (when (and emacsvox-eat--vim-normal-evidence (memq ?@ emacsvox-eat--vim-keys))
-    (when-let* ((label (emacsvox-eat--vim-replay-label emacsvox-eat--vim-keys)))
-      (setq emacsvox-eat--vim-replay-timer
-            (run-at-time 0.35 nil #'emacsvox-eat--vim-replay-request
-                         (current-buffer) (copy-sequence emacsvox-eat--vim-keys) label)))))
+  "Allow one response for a silent replay or a jump to an existing boundary."
+  (let* ((keys emacsvox-eat--vim-keys)
+         (boundary (and (memq (car (last keys)) '(?G ?g))
+                        (emacsvox-eat--vim-file-boundary (emacsvox-eat--vim-command-tail keys))))
+         (result (cond ((and boundary (emacsvox-eat--vim-at-file-boundary-p boundary emacsvox-eat--vim-origin))
+                        boundary)
+                       ((and emacsvox-eat--vim-normal-evidence (memq ?@ keys))
+                        (emacsvox-eat--vim-replay-label keys)))))
+    (when result
+      (when (timerp emacsvox-eat--vim-quiet-timer) (cancel-timer emacsvox-eat--vim-quiet-timer))
+      (setq emacsvox-eat--vim-quiet-timer
+            (run-at-time 0.35 nil #'emacsvox-eat--vim-quiet-response (current-buffer) (copy-sequence keys) result)))))
 
 (defun emacsvox-eat--vim-normal-edit (keys a b i j next status)
   "Describe a Normal command in KEYS using rows A, B, indexes I, J and NEXT.
@@ -1246,6 +1304,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                ((and (plist-get previous :recording) (not (plist-get to :recording))) 'close-object)
                ((and mode (string-prefix-p "Visual" mode) (not prior-mode)) 'mark-object)))))
     (pcase (car feedback)
+      ('file-boundary (emacsvox-eat--vim-present-boundary (nth 1 feedback) screen))
       ('echo (emacsvox-eat--vim-present-echo (nth 1 feedback) after))
       ('match-location
        (setq emacsvox-eat--vim-awaiting-match t)
