@@ -549,6 +549,11 @@ mode. Press ~C-e q a~ to hear the selected profile. Browse to Vim with the
 arrows and press ~RET~ to apply it, or ~q~ to cancel. This choice belongs to
 the current EAT buffer and works with stock Vim.
 
+If Vim is already waiting for an answer, the profile announcement includes
+the prompt. For example, when a swap file exists, you hear the letters for
+the choices Vim offers. Press the letter for your choice. Press ~RET~ if
+Vim asks you to continue. Use ~C-e q t~ to hear the prompt again.
+
 In Normal mode, ~j~ and ~k~ read the line you reach. A blank line plays
 your usual blank-line cue. ~h~ and ~l~ speak the character, and ~w~, ~b~
 and ~e~ speak the word. The arrows give the same line or character feedback
@@ -560,7 +565,10 @@ word in both semi-character and character mode. You hear the word you land
 on. In Normal mode, Vim treats =green,blue= as one word for these keys. In
 Insert mode, it stops on =green=, the comma and =blue= separately.
 
-Use ~gg~ or ~G~ to hear the row at the start or end of the file. Page with
+Use ~gg~ to go to the first line or ~G~ to go to the last line. As with
+~M-<~ and ~M->~ in Emacs, you hear the large-movement cue, the destination
+line and a “top” or “bottom” notification. A count such as ~5G~ or ~5gg~
+takes you to line 5 and reads its number and text. Page with
 ~C-d~, ~C-u~, ~C-f~ or ~C-b~, or move within the screen with ~H~, ~M~ or
 ~L~, to hear the destination and its position. With ~ma~, you hear where
 you asked Vim to set mark a. Jump to its line with ~'a~ or its exact
