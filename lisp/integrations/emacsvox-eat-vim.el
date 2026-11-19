@@ -230,6 +230,32 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
                      question))
      ". ")))
 
+(defun emacsvox-eat--vim-swap-prompt (rows row)
+  "Read the available choices in a Vim swap question ending on ROW of ROWS."
+  (let ((text (mapconcat #'identity (seq-subseq rows (max 0 (- row 6)) (1+ row)) "")))
+    (when (string-match (rx (* nonl) (group (any "[(") "O" (any "])") "pen Read-Only, " (* nonl)
+                                            (any "[(") "A" (any "])") "bort:") (* blank) string-end) text)
+      (let ((choices (match-string 1 text)))
+        (concat "Swap file already exists. "
+                (string-join
+                 (cl-loop for (key . label) in '(("O" . "O open read-only") ("E" . "E edit anyway")
+                                                 ("R" . "R recover") ("D" . "D delete it")
+                                                 ("Q" . "Q quit") ("A" . "A abort"))
+                          when (or (string-search (concat "(" key ")") choices)
+                                   (string-search (concat "[" key "]") choices))
+                          collect label) ", "))))))
+
+(defun emacsvox-eat--vim-blocking-prompt (screen)
+  "Read a Vim startup or continuation prompt at the rendered cursor on SCREEN.
+The prompt may wrap or sit above the last row after the profile menu resizes EAT."
+  (let* ((rows (plist-get screen :rows)) (row (plist-get screen :cursor-row))
+         (line (and row (nth row rows)))
+         (end (and line (string-trim-right line))))
+    (when (and end (>= (plist-get screen :cursor-column) (string-width end)))
+      (cond
+       ((string-match-p (rx string-start (or "Press ENTER" "-- More --")) end) end)
+       ((string-suffix-p ":" end) (emacsvox-eat--vim-swap-prompt rows row))))))
+
 (defun emacsvox-eat--vim-status (screen)
   "Return visible mode, prompt, command result and ruler facts on SCREEN."
   (let* ((rows (plist-get screen :rows))
@@ -241,6 +267,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
                                (string-to-number (or (match-string 3 line) (match-string 2 line))))
                     (setq line (substring line 0 (match-beginning 0))))))
          (text (string-trim-right line))
+         (blocking (emacsvox-eat--vim-blocking-prompt screen))
          (at-command (= (or (plist-get screen :cursor-row) -1) row))
          (completion (when (string-match (rx string-start "-- "
                                              (or "Keyword completion (^N^P)" "File name completion (^F^N^P)")
@@ -272,9 +299,11 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
                                   (emacsvox-eat--vim-table-result rows row))))
                 (concat result ". " text) text))
            ((string-match-p "\\`\\(?:[EW][0-9]+:\\|search hit \\|Pattern not found\\)" text) text)
+           (blocking)
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :completion completion :prompt prompt :message message :ruler ruler :text text
+          :blocking blocking
           :recording (when (string-match (rx (or string-start blank) "recording @" (group alnum)
                                              (* blank) string-end) text) (match-string 1 text))
           :file-completion (and completion (string-prefix-p "-- File name completion" text))
@@ -283,6 +312,13 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
           :command (and (string-prefix-p ":" text) text)
           :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
+
+(defun emacsvox-eat--vim-entry-prompt (screen)
+  "Return the current Vim question or continuation message when selecting its profile."
+  (when screen
+    (let ((state (emacsvox-eat--vim-status screen)))
+      (when (or (plist-get state :blocking) (plist-get state :pager) (plist-get state :confirmation))
+        (plist-get state :message)))))
 
 (defun emacsvox-eat--vim-quit-command-p (origin keys)
   "Whether KEYS submit a Vim quit from the command or editing screen at ORIGIN."
@@ -937,6 +973,9 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                                     (and (equal mode "Insert") (eq (car keys) ?c))))
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
+     ((plist-get to :blocking) nil)
+     ((and (plist-get from :blocking) keys (plist-get to :ruler) (not (or mode prompt)))
+      (list 'row (emacsvox-eat--vim-row-text (plist-get after :line))))
      ((and (not (or typing selection (plist-get from :prompt))) (not (plist-get from :completion))
            (emacsvox-eat--vim-fold keys before after)))
      ((and (memq (car (last keys)) '(escape 5)) (not (plist-get to :prompt))

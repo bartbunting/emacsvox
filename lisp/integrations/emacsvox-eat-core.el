@@ -66,6 +66,7 @@
 (autoload 'emacsvox-eat--vim-shell-return-p "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-reset "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-install-input-keys "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-entry-prompt "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-forget-input "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-record-key "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-cursor-line "emacsvox-eat-vim")
@@ -1026,7 +1027,7 @@ Ignore a stale or duplicate exit after another process has become active."
    (t (user-error "This is not an EAT terminal or frozen review buffer"))))
 
 (defun emacsvox-eat--set-application-profile (profile)
-  "Apply PROFILE in this terminal and discard input awaiting interpretation."
+  "Apply PROFILE and return a visible Vim prompt that needs an answer."
   (unless (eq profile emacsvox-eat-application-profile)
     (when (eq profile 'vim) (emacsvox-eat--vim-install-input-keys))
     (emacsvox-eat--vim-reset)
@@ -1038,7 +1039,10 @@ Ignore a stale or duplicate exit after another process has become active."
           emacsvox-eat--recent-navigation-intent nil
           emacsvox-eat--pending-navigation-intent nil
           emacsvox-eat--last-likely-focus nil
-          emacsvox-eat--last-focus-presentation-identity nil)))
+          emacsvox-eat--last-focus-presentation-identity nil))
+  (when (and (eq profile 'vim) (not emacsvox-eat--secure-input-active-p))
+    (when-let* ((prompt (emacsvox-eat--vim-entry-prompt emacsvox-eat--screen-snapshot)))
+      (setq emacsvox-eat--last-status-text prompt))))
 
 (defun emacsvox-eat-toggle-autospeak (&optional argument)
   "Toggle automatic foreground feedback for this EAT terminal.

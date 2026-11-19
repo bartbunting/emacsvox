@@ -4720,6 +4720,24 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
          (emacsvox-eat--cancel-quiescence)
          (eat-term-delete eat-terminal)))))
 
+(ert-deftest emacsvox-eat-vim-activation-reads-an-existing-question ()
+  "Read the choices Vim is waiting for, even above the bottom terminal row."
+  (emacsvox-eat-test--with-vim
+    (emacsvox-eat--set-application-profile 'terminal)
+    (send (concat "\e[2J\e[HSwap file already exists!\r\n"
+                  "[O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (A)bort: "))
+    (let ((question "Swap file already exists. O open read-only, E edit anyway, R recover, Q quit, A abort"))
+      (should (equal (emacsvox-eat--set-application-profile 'vim) question))
+      (setq speech nil)
+      (emacsvox-eat-speak-retained-status)
+      (should (equal speech (list (concat "Retained terminal status: " question)))))
+    (should (equal (send "\e[2J\e[Halpha\e[2;1Hbeta\e[4;1H1,1 All\e[H" ?o) '("alpha")))
+    (should (equal (send "\e[4;1H2,1 All\e[2;1H" 'down) '("beta")))
+    (emacsvox-eat--set-application-profile 'terminal)
+    (send "\e[2J\e[HPress ENTER or type command to continue")
+    (should (equal (emacsvox-eat--set-application-profile 'vim)
+                   "Press ENTER or type command to continue"))))
+
 (ert-deftest emacsvox-eat-vim-modes-search-and-command-results ()
   "Speak visible transitions, the match and a two-stage error with its prompt."
   (emacsvox-eat-test--with-vim
