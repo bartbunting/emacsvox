@@ -14,6 +14,157 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Installing Omnivox From Source,  Next: Building Omnivox For WSL2,  Prev: Trying Native Windows Emacsvox,  Up: Speech Backends
+
+14.5 Installing Omnivox From Source
+===================================
+
+On GNU/Linux/macOS, a source build needs network access for clone,
+toolchain, and locked dependencies.  Prepare:
+
+   • rustup (https://rustup.rs/), with the checked-in
+     ‘rust-toolchain.toml’ selecting Rust.
+   • Python 3, C/C++, CMake, and Clang/libclang for eSpeak NG and
+     generated data.
+   • GNU/Linux ‘pkg-config’ and ALSA development headers, commonly
+     ‘libasound2-dev’ on Debian/Ubuntu or ‘alsa-lib-devel’ on Fedora.
+   • macOS Xcode command-line tools, installed with ‘xcode-select
+     --install’.
+
+   Keep Omnivox beside Emacsvox, also matching the WSL layout:
+
+     cd /path/containing/emacsvox
+     git clone https://github.com/bartbunting/omnivox
+     cd omnivox
+     make build
+     make install
+
+   ‘make build’ runs the locked release build and stages matching eSpeak
+data and notices.  ‘make install’ installs binary/data normally under
+‘~/.cargo/bin’.  Set ‘OMNIVOX_INSTALL_BIN’ only for another Cargo binary
+directory.  A bare ‘cargo build’ does not produce the complete
+installation payload.
+
+   Make the installed directory visible on ‘PATH’.  No proprietary
+runtime is needed for the recommended Linux/Mac route.
+
+
+File: emacsvox.info,  Node: Building Omnivox For WSL2,  Next: Selecting And Checking Omnivox,  Prev: Installing Omnivox From Source,  Up: Speech Backends
+
+14.6 Building Omnivox For WSL2
+==============================
+
+This advanced path maintains the reproducible Windows bundle or optional
+engine integrations.  Ordinary WSL2 installations should use the *note
+prebuilt Windows release: Installing An Omnivox Windows Release Under
+WSL2.  This source target produces x86-64 Windows.
+
+   Requirements are:
+
+   • WSL2 with working ‘powershell.exe’ and ‘wslpath’, plus writable
+     Windows ‘LocalAppData’.
+   • A Docker client/daemon supporting Linux/AMD64 containers, runnable
+     by the WSL user without ‘sudo’.  Docker Desktop's WSL integration
+     is one option.
+   • Windows .NET Framework 4.7.2 or newer, not merely a modern ‘dotnet’
+     SDK.  Visual Studio is unnecessary.
+   • ‘git’, GNU ‘make’, ‘curl’, ‘unzip’, ‘sha256sum’, and standard GNU
+     utilities including ‘awk’, ‘cmp’, ‘find’, ‘readlink’, ‘sed’,
+     ‘sort’, and ‘xargs’.
+   • Network for the initial Docker image, Rust dependencies, and two
+     checksum-pinned NuGet packages.  Subsequent builds reuse caches.
+   • Sibling ‘emacsvox’ and ‘omnivox’ checkouts, or explicit
+     ‘OMNIVOX_DIR’.  The clean release target requires the Omnivox
+     source commit recorded for the pinned Piper companion in
+     ‘servers/omnivox-release/toolchain.lock’; mismatches fail rather
+     than combining versions.  The development route accepts current
+     source by omitting Piper.  Allow disk space for Docker,
+     native/cross builds, and caches.
+
+   Rust, MinGW, CMake, Clang/libclang, eSpeak NG, Roslyn, Visual Studio,
+and .NET reference assemblies need not be installed in WSL; the
+controlled toolchain pins/builds them.  Eloquence, DECtalk, and RHVoice
+runtime/data remain optional and unnecessary for WinRT.
+
+   Check prerequisites with:
+
+     cd /path/to/emacsvox
+     make verify-windows-omnivox-toolchain
+
+   The first run downloads pinned .NET compiler packages, builds the
+pinned Docker image, and checks exact Rust, MinGW, libclang, Roslyn, and
+Framework versions.  It is not a read-only presence check.  Failures
+identify missing host tools or unsupported Framework before the full
+build.
+
+   With clean Emacsvox and sibling Omnivox tracked files, run:
+
+     cd /path/to/emacsvox
+     make windows-omnivox
+
+   This reproducible release path builds a pinned Windows-GNU executable
+and stages a content-addressed runtime under ‘servers/omnivox-bin’.
+When the Piper lock identifies the matching integrations, it includes
+the checksum-pinned Piper companion, RHVoice helper without runtime,
+Flite with CMU US SLT, and RuTTS with male/female Russian voices.  It
+bundles no Piper model or RuLex.  The payload is also copied to
+Windows-local storage to avoid WSL filesystem cost during discovery.  It
+does not download Eloquence, DECtalk, or RHVoice runtimes or require
+them for WinRT.
+
+   The final live gate starts that exact runtime, discovers Flite SLT
+and both RuTTS voices, and requires nonempty WAV synthesis from each
+helper.  Repeat without rebuilding using ‘make
+verify-windows-omnivox-live’.
+
+   To register Piper, review its model/card and keep the adjacent
+‘.onnx.json’ or ‘.json’.  Supply the absolute model path while staging:
+
+     OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx make windows-omnivox
+
+   Model/configuration are copied to separate content-addressed Windows
+‘LocalAppData’ storage with recorded hashes, not bundled into the
+runtime.  Omitting that variable installs the companion but leaves Piper
+unregistered.  After staging, check with a fresh process:
+
+     ./servers/omnivox --engine piper --list-voices
+
+   Restart both speech processes or Emacs, then inspect running engines
+with ‘C-e H v b’.  Piper requires the newly staged server and
+successfully loaded model/helper.  The direct ‘C-e d e’ preference
+chooser is not a read-only inventory command; use the browser to inspect
+without selecting a preference.
+
+   For tracked development changes, use the route in *note Integration
+Maintenance: Integration Maintenance. rather than bypassing the
+clean-release guard:
+
+     OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
+       OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
+       make windows-omnivox-dev
+     ./servers/omnivox --engine flite --list-voices
+     ./servers/omnivox --engine rutts --list-voices
+
+   It builds current source, stages RHVoice's helper, Flite SLT, and
+RuTTS 6.3.3 male/female voices, deliberately omitting the older pinned
+Piper companion.  RuTTS needs no separate install; RuLex is excluded.
+RHVoice needs compatible ‘RHVoice.dll’ and language/voice data.
+Supplied library/data variables are validated and Windows path pointers
+retained beside the local runtime; the launcher restores them for fresh
+sessions.  Also set ‘OMNIVOX_RHVOICE_CONFIG’ for a separate
+configuration directory.  These external files are not copied into the
+payload.  Omnivox's ‘docs/RHVOICE.md’ and ‘docs/RUTTS.md’ give
+validation details.  Restart after restaging/changing inputs, then
+inspect with ‘C-e H v b’.
+
+   Piper tests against newer committed Omnivox use
+‘windows-omnivox-piper-dev’ and a native Windows CI artifact.  It
+requires the published SHA-256 and a reviewed external model, rejecting
+dirty or different source.  See *note Integration Maintenance:
+Integration Maintenance. for provenance and the complete command.  This
+does not alter the reproducible release's pinned companion.
+
+
 File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
 
 14.7 Selecting And Checking Omnivox
@@ -3966,7 +4117,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * unwanted sound:                        Finding Voice Tasks. (line   6)
 * uppercase keys:                        Emacs Key Notation.  (line   6)
-* Vim in a terminal:                     EAT Full-screen Applications.
+* Vim command results:                   Vim search and command results.
+                                                              (line   6)
+* Vim cursor movement:                   Vim navigation.      (line   6)
+* Vim in a terminal:                     Vim in EAT.          (line   6)
+* Vim over SSH:                          Vim over SSH or inside tmux.
+                                                              (line   6)
+* Vim selections:                        Vim editing and selection.
                                                               (line   6)
 * visual lines, reading:                 Reading.             (line  70)
 * voice adjustments:                     Editing Named Voices.

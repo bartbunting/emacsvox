@@ -161,6 +161,11 @@ EAT Shell Integration
 EAT Passwords And Privacy
 EAT Clipboard Trust
 EAT Full-screen Applications
+Vim in EAT
+Vim navigation
+Vim editing and selection
+Vim search and command results
+Vim over SSH or inside tmux
 EAT In Eshell
 Running Terminal Based Applications
 Starting Term
