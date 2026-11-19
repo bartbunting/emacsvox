@@ -555,6 +555,11 @@ and ~e~ speak the word. The arrows give the same line or character feedback
 in Insert mode. Use ~f~ followed by a character to find it on the current
 line. Repeat the find with a semicolon or reverse it with a comma.
 
+With the Vim profile selected, ~C-Left~ and ~C-Right~ move Vim's cursor by
+word in both semi-character and character mode. You hear the word you land
+on. In Normal mode, Vim treats =green,blue= as one word for these keys. In
+Insert mode, it stops on =green=, the comma and =blue= separately.
+
 Use ~gg~ or ~G~ to hear the row at the start or end of the file. Page with
 ~C-d~, ~C-u~, ~C-f~ or ~C-b~, or move within the screen with ~H~, ~M~ or
 ~L~, to hear the destination and its position. With ~ma~, you hear where
