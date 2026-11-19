@@ -346,7 +346,20 @@
 (declare-function emacsvox-eat--deleted-character-name "emacsvox-eat-input" (character))
 (defvar emacsvox-eat--last-status-text)
 (defvar emacsvox-eat--last-likely-focus)
+(defvar emacsvox-eat--last-focus-presentation-identity)
 (defvar emacsvox-eat--update-serial)
+
+(defun emacsvox-eat--vim-blank-row (&optional location inspection)
+  "Present the configured empty-line cue, optionally speaking LOCATION.
+INSPECTION marks an explicit review rather than cursor movement."
+  (let ((facts (emacsvox-eat--facts 'command-output 'focus-entered 'output-navigation
+                                    '(:line-condition empty)))
+        (key (emacsvox-eat--terminal-delivery-key 'focus)))
+    (if location
+        (emacsvox-eat--submit location facts (if inspection 'inspection 'navigation) nil
+                              (unless inspection 'replaceable) (unless inspection key))
+      (emacsvox-aural-submit-actions :facts facts :module 'eat :occasion 'navigation :lane 'main
+                                     :delivery-policy 'replaceable :replacement-key key))))
 
 (defun emacsvox-eat--vim-echo (keys before after old new replace &optional changing)
   "Match the visible inserted text between BEFORE and AFTER to a prefix of KEYS.
@@ -443,9 +456,10 @@ their respective command rows."
                (and (memq (car tail) '(?\' ?\x60)) (length= tail 2)))
            (or moved (not (equal line (plist-get before :line)))
                (and ruler (memq key '(?H ?M ?L)))))
-      (cons 'navigation
-            (format "%s, column %d, %s" (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
-                    (or (cdr ruler) (1+ (plist-get after :column))) (emacsvox-eat--vim-row-text line))))
+      (let ((location (format "%s, column %d" (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
+                              (or (cdr ruler) (1+ (plist-get after :column))))))
+        (if (string-blank-p line) (cons 'blank-location location)
+          (cons 'navigation (concat location ", " (emacsvox-eat--vim-row-text line))))))
      ((and moved (memq key '(?\; ?,)) (= origin row) (< index (length line))
            (equal line (plist-get before :line)))
       (cons 'navigation (emacsvox-eat--deleted-character-name (aref line index))))
@@ -460,12 +474,14 @@ their respective command rows."
                    (< index (length line)))
           (cons 'navigation (emacsvox-eat--deleted-character-name (aref line index))))))
      ((and moved (memq key '(?% ?{ ?})))
-      (cons 'navigation
-            (concat (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
+      (let ((location (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))))
+        (if (string-blank-p line) (cons 'blank-location location)
+          (cons 'navigation
+            (concat location
                     (if (and (eq key ?%) (< index (length line)))
                         (format ", column %d, %s" (or (cdr ruler) (1+ (plist-get after :column)))
                                 (emacsvox-eat--deleted-character-name (aref line index)))
-                      (concat ", " (emacsvox-eat--vim-row-text line))))))
+                      (concat ", " (emacsvox-eat--vim-row-text line))))))))
      ((and direction (emacsvox-eat--vim-row-motion-p
                       old new origin row (plist-get after :window) direction))
       (cons 'row (emacsvox-eat--vim-row-text line)))
@@ -1072,15 +1088,21 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
       ('match-location
        (setq emacsvox-eat--vim-awaiting-match t)
        (emacsvox-eat--vim-say (nth 1 feedback) 'navigation))
+      ('blank-location (emacsvox-eat--vim-blank-row (nth 1 feedback)))
       ('row
        (let* ((row (plist-get after :row)) (text (nth 1 feedback))
+              (identity (list 'cursor-row (plist-get screen :generation) row
+                              (car (plist-get to :ruler)) (plist-get after :window) text))
               (focus (list :kind 'cursor-row :text text :row-start row :row-end row
                            :column-start (or (car (plist-get after :window)) 0) :confidence 'medium
                            :generation (plist-get screen :generation) :screen-serial emacsvox-eat--update-serial
-                           :identity (list 'cursor-row (plist-get screen :generation) row text))))
+                           :identity identity)))
          (setq emacsvox-eat--last-likely-focus focus)
          (setf (plist-get diff :likely-focus) focus)
-         (emacsvox-eat--present-likely-focus focus)))
+         (unless (equal identity emacsvox-eat--last-focus-presentation-identity)
+           (setq emacsvox-eat--last-focus-presentation-identity identity)
+           (if (string-blank-p (plist-get after :line)) (emacsvox-eat--vim-blank-row)
+             (emacsvox-eat--vim-say text 'navigation)))))
       ((or 'navigation 'edit) (emacsvox-eat--vim-say (nth 1 feedback) (car feedback))))
     (cond
      (opening-help)

@@ -58,6 +58,7 @@
   "Visible Vim selection rows copied when opening this review.")
 
 (autoload 'emacsvox-eat--vim-selected-rows "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-blank-row "emacsvox-eat-vim")
 
 (defvar-local emacsvox-eat-review--metadata nil
   "Immutable sanitized terminal metadata change copied for this review buffer.")
@@ -251,13 +252,14 @@ This explicit command works regardless of autospeak or prompt preference."
                    (if (eq emacsvox-eat-application-profile 'vim)
                        (emacsvox-eat--vim-cursor-line snapshot)
                      (nth row rows)))))
-        (emacsvox-eat--submit-review
-         (if (string-empty-p (string-trim text))
-             (format "Current terminal row %d of %d is blank"
-                     (1+ row) (length rows))
-           (format "Current terminal row %d of %d: %s"
-                   (1+ row) (length rows) (emacsvox-eat--speech-row text)))
-         'output-navigation))))))
+        (if (and (eq emacsvox-eat-application-profile 'vim) (string-blank-p text))
+            (emacsvox-eat--vim-blank-row (format "Current terminal row %d of %d" (1+ row) (length rows)) t)
+          (emacsvox-eat--submit-review
+           (if (string-empty-p (string-trim text))
+               (format "Current terminal row %d of %d is blank" (1+ row) (length rows))
+             (format "Current terminal row %d of %d: %s"
+                     (1+ row) (length rows) (emacsvox-eat--speech-row text)))
+           'output-navigation)))))))
 
 (defun emacsvox-eat--style-change-row-label (diff snapshot)
   "Return the retained row label for a style-only DIFF at SNAPSHOT."
