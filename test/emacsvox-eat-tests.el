@@ -4840,6 +4840,31 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-macro-feedback ()
+  "Distinguish an observed replay result, an invisible request and literal input."
+  (emacsvox-eat-test--with-vim
+    (key ?q)
+    (should (equal (send "\e[4;1Hrecording @a     1,1 All\e[H" ?a) '("Recording register a")))
+    (should (equal (send "\e[4;1H\e[K1,1 All\e[H" ?q) '("Recording stopped")))
+    (key ?@)
+    (should (equal (send "\e[Hlpha one\e[K\e[H" ?a) '("Replay register a, lpha one")))
+    (key ?@)
+    (should (equal (send "\e[2;1Hedited below\e[K\e[H" ?a)
+                   '("Replay register a, 1 visible row changed. Row 2, edited below")))
+    (mapc #'key '(?@ ?@))
+    (emacsvox-eat--vim-after-send)
+    (should (timerp emacsvox-eat--vim-replay-timer))
+    (cancel-timer emacsvox-eat--vim-replay-timer)
+    (setq speech nil)
+    (emacsvox-eat--vim-replay-request (current-buffer) '(?@ ?@) "Replay last macro")
+    (should (equal speech '("Replay last macro requested")))
+    (should (equal (send "\e[Hpha one\e[K\e[H") '("Replay last macro, pha one")))
+    (send "\e[4;1H-- INSERT --\e[K\e[H" ?i)
+    (mapc #'key '(?@ ?a))
+    (emacsvox-eat--vim-after-send)
+    (should-not emacsvox-eat--vim-replay-timer)
+    (should (equal (send "@apha one\e[1;3H") '("@a")))))
+
 (ert-deftest emacsvox-eat-vim-folds ()
   "Speak the rendered fold count and the row exposed when it opens."
   (emacsvox-eat-test--with-vim

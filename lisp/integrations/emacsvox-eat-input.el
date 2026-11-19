@@ -937,6 +937,8 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
       (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-input event)))))
 
+(autoload 'emacsvox-eat--vim-after-send "emacsvox-eat-vim")
+
 (defun emacsvox--advice-eat-self-input-around
     (original count &optional event)
   "Call ORIGINAL, observing rendered deletion for COUNT copies of EVENT.
@@ -953,7 +955,9 @@ that is ambiguous."
           (setq result (funcall original count event)
                 completed t))
       (if completed
-          (emacsvox-eat--commit-deletion serial)
+          (progn
+            (emacsvox-eat--commit-deletion serial)
+            (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-after-send)))
         (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-forget-input))
         (when (and serial emacsvox-eat--deletion-intent
                    (= serial

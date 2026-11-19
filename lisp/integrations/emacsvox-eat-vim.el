@@ -39,6 +39,9 @@
   "Screen as it looked before the oldest pending key.")
 (defvar-local emacsvox-eat--vim-deadline 0.0)
 (defvar-local emacsvox-eat--vim-expiry nil)
+(defvar-local emacsvox-eat--vim-replay-timer nil)
+(defvar-local emacsvox-eat--vim-normal-evidence nil
+  "Whether an observed Normal action permits feedback for a silent replay.")
 (defvar-local emacsvox-eat--vim-awaiting-match nil
   "Non-nil after a search announces its ruler while the match row is missing.")
 (defvar-local emacsvox-eat--vim-quitting nil
@@ -52,9 +55,10 @@
 (defun emacsvox-eat--vim-forget-input ()
   "Discard keys and their original screen."
   (when (timerp emacsvox-eat--vim-expiry) (cancel-timer emacsvox-eat--vim-expiry))
+  (when (timerp emacsvox-eat--vim-replay-timer) (cancel-timer emacsvox-eat--vim-replay-timer))
   (setq emacsvox-eat--vim-keys nil emacsvox-eat--vim-origin nil
         emacsvox-eat--vim-awaiting-match nil emacsvox-eat--vim-quitting nil
-        emacsvox-eat--vim-expiry nil emacsvox-eat--vim-deadline 0.0))
+        emacsvox-eat--vim-expiry nil emacsvox-eat--vim-replay-timer nil emacsvox-eat--vim-deadline 0.0))
 
 (defun emacsvox-eat--vim-expire (buffer)
   "Release pending input in BUFFER even if the peer never redraws."
@@ -68,11 +72,12 @@
 (defun emacsvox-eat--vim-reset ()
   "Forget all keyboard and selection evidence for this terminal."
   (emacsvox-eat--vim-forget-input)
-  (setq emacsvox-eat--vim-anchor nil))
+  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil))
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
   (when (or emacsvox-eat--vim-awaiting-match emacsvox-eat--vim-quitting
+            (eq emacsvox-eat--vim-replay-timer 'announced)
             (> (float-time) emacsvox-eat--vim-deadline))
     (emacsvox-eat--vim-forget-input))
   (let ((count (or count 1))
@@ -230,6 +235,8 @@
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :completion completion :prompt prompt :message message :ruler ruler :text text
+          :recording (when (string-match (rx (or string-start blank) "recording @" (group alnum)
+                                             (* blank) string-end) text) (match-string 1 text))
           :file-completion (and completion (string-prefix-p "-- File name completion" text))
           :pager (string-match-p (rx string-start (or "Press ENTER" "-- More --")) text)
           :confirmation confirmation
@@ -496,6 +503,43 @@ Motions at a boundary can leave no repaint to consume their input."
     (or (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L) (9) (tab)))
         (and (eq (car keys) ?m) (length= keys 2)))))
 
+(defun emacsvox-eat--vim-replay-label (keys)
+  "Name the replay requested by KEYS, including a repeat of the last macro."
+  (let ((tail (emacsvox-eat--vim-command-tail keys)))
+    (while (and (characterp (car tail)) (<= ?0 (car tail) ?9)) (setq tail (cdr tail)))
+    (when (and (eq (car tail) ?@) (length= tail 2) (characterp (cadr tail)))
+      (cond ((eq (cadr tail) ?@) "Replay last macro")
+            ((string-match-p (rx string-start (or alnum "\"") string-end) (string (cadr tail)))
+             (format "Replay register %c" (cadr tail)))))))
+
+(defvar emacsvox-eat-application-profile)
+(defvar emacsvox-eat--secure-input-active-p)
+(defvar emacsvox-eat--screen-snapshot)
+(declare-function emacsvox-eat--foreground-p "emacsvox-eat-core" ())
+(declare-function emacsvox-eat--following-live-p "emacsvox-eat-core" ())
+
+(defun emacsvox-eat--vim-replay-request (buffer keys label)
+  "Acknowledge delivered KEYS as LABEL in BUFFER if Vim has shown no result."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (and (eq emacsvox-eat-application-profile 'vim) emacsvox-eat--vim-normal-evidence
+                 (equal emacsvox-eat--vim-keys keys) (< (float-time) emacsvox-eat--vim-deadline)
+                 (not emacsvox-eat--secure-input-active-p) (emacsvox-eat--foreground-p)
+                 (emacsvox-eat--following-live-p)
+                 (equal (emacsvox-eat--vim-point emacsvox-eat--vim-origin)
+                        (emacsvox-eat--vim-point emacsvox-eat--screen-snapshot)))
+        (emacsvox-eat--vim-say (concat label " requested") 'edit)
+        ;; Keep the original screen for a late SSH result until another key.
+        (setq emacsvox-eat--vim-replay-timer 'announced)))))
+
+(defun emacsvox-eat--vim-after-send ()
+  "Arrange one acknowledgement if a delivered macro never changes the screen."
+  (when (and emacsvox-eat--vim-normal-evidence (memq ?@ emacsvox-eat--vim-keys))
+    (when-let* ((label (emacsvox-eat--vim-replay-label emacsvox-eat--vim-keys)))
+      (setq emacsvox-eat--vim-replay-timer
+            (run-at-time 0.35 nil #'emacsvox-eat--vim-replay-request
+                         (current-buffer) (copy-sequence emacsvox-eat--vim-keys) label)))))
+
 (defun emacsvox-eat--vim-normal-edit (keys a b i j next status)
   "Describe a Normal command in KEYS using rows A, B, indexes I, J and NEXT.
 STATUS contains Vim's rendered command row."
@@ -744,6 +788,22 @@ STATUS, when supplied, is the already parsed Vim footer."
          ((and old (memq op '(?o ?O ?a ?A)))
           (format "Fold opened, %s lines, %s" (car old) (emacsvox-eat--vim-row-text (plist-get after :line)))))))))
 
+(defun emacsvox-eat--vim-replay-result (label old new before after from to)
+  "Describe the visible result of LABEL between OLD and NEW.
+BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
+  (if (or (not (equal before after)) (not (equal (plist-get from :ruler) (plist-get to :ruler))))
+      (concat label ", " (emacsvox-eat--vim-row-text (plist-get after :line)))
+    (let ((window (plist-get after :window)) changes)
+      (dotimes (row (emacsvox-eat--vim-status-index new))
+        (let ((a (emacsvox-eat--vim-line old row window)) (b (emacsvox-eat--vim-line new row window)))
+          (when (and a b (not (equal (string-trim-right a) (string-trim-right b))))
+            (push (cons (1+ row) b) changes))))
+      (when changes
+        (let ((first (car (last changes))))
+          (format "%s, %d visible %s changed. Row %d, %s" label (length changes)
+                  (if (length= changes 1) "row" "rows") (car first)
+                  (emacsvox-eat--vim-row-text (cdr first))))))))
+
 (defun emacsvox-eat--vim-feedback (keys old new before after from to)
   "Return keyboard feedback proved by the two screens and their parsed views."
   (let* ((mode (plist-get to :mode))
@@ -792,6 +852,11 @@ STATUS, when supplied, is the already parsed Vim footer."
         (5 (list 'edit "Completion cancelled"))
         (_ (when echo (list 'echo (car echo) (cdr echo))))))
      (echo (list 'echo (car echo) (cdr echo)))
+     ((and (not (or typing selection new-mode (plist-get from :prompt)))
+           (emacsvox-eat--vim-replay-label keys))
+      (when-let* ((result (emacsvox-eat--vim-replay-result (emacsvox-eat--vim-replay-label keys)
+                                                           old new before after from to)))
+        (list 'edit result)))
      ((and (not typing) (not selection) (not new-mode)
            (member (emacsvox-eat--vim-command-tail keys) '((?y ?y) (?y ?w)))
            (not (plist-get to :pending-yank)) (equal before after)
@@ -949,6 +1014,11 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
            ((and (plist-get from :confirmation) (not (plist-get to :confirmation))
                  (memq (car (last keys)) '(?q escape ?y ?n ?a ?l)))
             (if (memq (car (last keys)) '(?q escape)) "Substitution stopped" "Substitution finished"))
+           ((and (plist-get to :recording) (not (equal (plist-get to :recording) (plist-get previous :recording))))
+            (concat "Recording register " (plist-get to :recording)))
+           ((and (plist-get previous :recording) (not (plist-get to :recording))
+                 (eq (car (last keys)) ?q) (not (or mode prompt)))
+            "Recording stopped")
            ((and mode (not (equal mode prior-mode))) (concat mode " mode"))
            ((and prompt (not (eq prompt (plist-get previous :prompt))))
             (if (= prompt ?:) "Command" (if (= prompt ??) "Search backward" "Search forward")))
@@ -976,6 +1046,11 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                           (feedback (nth 2 feedback))
                           ((or submitted (and announcement message)) (cdr (memq 'return keys)))
                           (announcement (emacsvox-eat--vim-after-entry keys mode prompt)))))
+    (cond ((or mode prompt (plist-get to :confirmation) (eq (car feedback) 'echo))
+           (setq emacsvox-eat--vim-normal-evidence nil))
+          ((or feedback submitted (plist-get to :recording) (equal announcement "Normal mode")
+               (equal announcement "Recording stopped"))
+           (setq emacsvox-eat--vim-normal-evidence t)))
     (unless (equal mode prior-mode)
       (setq emacsvox-eat--vim-anchor
             (when (and mode after (string-match-p "\\`\\(?:Visual\\|Select\\)" mode))
