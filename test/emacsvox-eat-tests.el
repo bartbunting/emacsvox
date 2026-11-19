@@ -4840,6 +4840,31 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-hidden-insert-cannot-acknowledge-a-macro ()
+  "An open line can enter Insert while Vim hides the mode indicator."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1H" ?j)
+    (should emacsvox-eat--vim-normal-evidence)
+    (send "\e[3;1H\e[K\e[4;1H3,1 All\e[3;1H" ?o)
+    (mapc #'key '(?@ ?a))
+    (emacsvox-eat--vim-after-send)
+    (should-not emacsvox-eat--vim-replay-timer)
+    (should (equal (send "@a") '("@a")))))
+
+(ert-deftest emacsvox-eat-vim-typing-echo-preferences ()
+  "Honor independent character, word and line echo on Vim's rendered text."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- INSERT --\e[K\e[1;10H" ?A)
+    (let ((emacsvox-character-echo nil) (emacsvox-word-echo t) (emacsvox-line-echo t))
+      (should-not (send "s" ?s))
+      (should (equal (send " " ?\s) '("ones")))
+      (mapc #'key (string-to-list "two new "))
+      (should (equal (send "two new ") '("two new")))
+      (should (equal (send "\e[2;1H\e[K" 'return) '("alpha ones two new")))
+      (let ((emacsvox-word-echo nil))
+        (mapc #'key '(?a ?\s))
+        (should-not (send "a "))))))
+
 (ert-deftest emacsvox-eat-vim-open-type-and-backspace ()
   "Use the same edit tone and character reader as ordinary Emacs Backspace."
   (emacsvox-eat-test--with-vim

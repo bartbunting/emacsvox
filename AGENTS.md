@@ -34,6 +34,9 @@
 
 ## Writing style
 
+- Use standard Emacsvox feedback for equivalent actions in every integration.
+  Reuse the character reader, configured line and edit cues, and typing echo
+  preferences. Add spoken context when it helps identify the result.
 - Keep spoken menu feedback concise. Announce menu and section titles on
   entry or when crossing sections, rather than repeating them before each
   item. Speak the key itself without a "shortcut" label. Repeated adjustments

@@ -97,6 +97,11 @@
                                                     #'emacsvox-eat--vim-expire (current-buffer))))
       (setq emacsvox-eat--vim-keys (nconc emacsvox-eat--vim-keys (make-list count key))
             emacsvox-eat--vim-deadline (+ (float-time) emacsvox-eat--vim-input-timeout))
+      (when (and emacsvox-eat--vim-normal-evidence
+                 (memq key '(?i ?I ?a ?A ?o ?O ?c ?C ?s ?S ?R))
+                 (eq key (car (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys))))
+        ;; The peer can enter Insert even if it hides the mode label.
+        (setq emacsvox-eat--vim-normal-evidence nil))
       (when (memq key '(return ?Z ?Q))
         (setq emacsvox-eat--vim-quitting
               (emacsvox-eat--vim-quit-command-p emacsvox-eat--vim-origin emacsvox-eat--vim-keys)))))))
@@ -366,6 +371,28 @@
 (declare-function emacsvox-eat--deleted-character-name "emacsvox-eat-input" (character))
 (declare-function emacsvox-eat--deleted-text-content "emacsvox-eat-input" (text intent))
 (defvar emacsvox-line-echo)
+(defvar emacsvox-character-echo)
+(defvar emacsvox-word-echo)
+
+(defun emacsvox-eat--vim-present-echo (text after)
+  "Apply typing echo preferences to verified TEXT ending at AFTER."
+  (let* ((line (plist-get after :line)) (end (plist-get after :index))
+         (start (max 0 (- end (length text))))
+         (pos start) words)
+    (when (and emacsvox-word-echo (string-match-p (rx blank) text))
+      ;; Include the word already under construction when its space arrives.
+      (while (and (> pos 0) (memq (char-syntax (aref line (1- pos))) '(?w ?_))) (cl-decf pos))
+      (while (and (string-match (rx (group (+ (or word "_"))) (+ blank)) line pos)
+                  (<= (match-end 0) end))
+        (setq pos (match-end 0))
+        (when (> pos start) (push (match-string 1 line) words))))
+    (cond
+     ((and words (or (not emacsvox-character-echo) (string-blank-p text)))
+      (emacsvox-eat--vim-say (string-join (nreverse words) " ") 'edit))
+     ((not emacsvox-character-echo))
+     ((length= text 1) (emacsvox-speak-this-char (aref text 0)))
+     ((string-blank-p text) (emacsvox-eat--vim-say (format "%d spaces" (length text)) 'edit))
+     (t (emacsvox-eat--vim-say text 'edit)))))
 
 (defun emacsvox-eat--vim-deletion (text)
   "Present verified removed TEXT using the ordinary character or text feedback."
@@ -1111,12 +1138,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                ((and (plist-get previous :recording) (not (plist-get to :recording))) 'close-object)
                ((and mode (string-prefix-p "Visual" mode) (not prior-mode)) 'mark-object)))))
     (pcase (car feedback)
-      ('echo
-       (let ((text (nth 1 feedback)))
-         (cond ((= (length text) 1) (emacsvox-speak-this-char (aref text 0)))
-               ((string-match-p "\\` +\\'" text)
-                (emacsvox-eat--vim-say (format "%d spaces" (length text)) 'edit))
-               (t (emacsvox-eat--vim-say text 'edit)))))
+      ('echo (emacsvox-eat--vim-present-echo (nth 1 feedback) after))
       ('match-location
        (setq emacsvox-eat--vim-awaiting-match t)
        (emacsvox-eat--vim-say (nth 1 feedback) 'navigation))
