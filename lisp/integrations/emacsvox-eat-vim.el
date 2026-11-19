@@ -52,6 +52,25 @@
 (defconst emacsvox-eat--vim-input-timeout 3.0
   "Seconds to associate input with an SSH redraw, without polling.")
 
+(declare-function eat-self-input "eat" (n &optional event))
+
+(defun emacsvox-eat--vim-escape ()
+  "Send one Escape through EAT's normal input path."
+  (interactive)
+  (eat-self-input 1 27))
+
+(defun emacsvox-eat--vim-install-escape ()
+  "Route the physical Escape key in Vim's terminal input modes.
+Keep existing explicit bindings and leave the ASCII Meta prefix available."
+  (dolist (symbol '(eat-semi-char-mode-map eat-char-mode-map
+                    eat-eshell-semi-char-mode-map eat-eshell-char-mode-map))
+    (when-let* ((map (and (boundp symbol) (symbol-value symbol)))
+                ((not (lookup-key map [escape]))))
+      (define-key map [escape]
+                  '(menu-item "" emacsvox-eat--vim-escape :filter
+                              (lambda (command)
+                                (when (eq emacsvox-eat-application-profile 'vim) command)))))))
+
 (defun emacsvox-eat--vim-forget-input ()
   "Discard keys and their original screen."
   (when (timerp emacsvox-eat--vim-expiry) (cancel-timer emacsvox-eat--vim-expiry))

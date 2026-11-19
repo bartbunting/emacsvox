@@ -4840,6 +4840,23 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-physical-escape ()
+  "The physical key sends Escape only in Vim terminal input maps."
+  (let ((eat-semi-char-mode-map (make-sparse-keymap))
+        (eat-char-mode-map (make-sparse-keymap))
+        (eat-eshell-char-mode-map (make-sparse-keymap))
+        (eat-eshell-semi-char-mode-map (make-sparse-keymap))
+        (emacsvox-eat-application-profile 'terminal) sent)
+    (define-key eat-char-mode-map [escape] #'ignore)
+    (emacsvox-eat--vim-install-escape)
+    (should-not (lookup-key eat-semi-char-mode-map [escape]))
+    (setq emacsvox-eat-application-profile 'vim)
+    (should (eq (lookup-key eat-char-mode-map [escape]) #'ignore))
+    (should-not (lookup-key eat-semi-char-mode-map [27]))
+    (cl-letf (((symbol-function 'eat-self-input) (lambda (n event) (setq sent (list n event)))))
+      (call-interactively (lookup-key eat-semi-char-mode-map [escape])))
+    (should (equal sent '(1 27)))))
+
 (ert-deftest emacsvox-eat-vim-hidden-insert-cannot-acknowledge-a-macro ()
   "An open line can enter Insert while Vim hides the mode indicator."
   (emacsvox-eat-test--with-vim
