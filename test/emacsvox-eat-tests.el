@@ -4869,6 +4869,17 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (key ?y)
     (should (equal (send "yy" ?y) '("yy")))))
 
+(ert-deftest emacsvox-eat-vim-insert-word-line-erase-and-tabs ()
+  "Use the displayed deletion and tab width, including a retained suffix."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- INSERT --\e[K\e[1;10H" ?A)
+    (should (equal (send "\e[1;7H\e[K" 23) '("Deleted one")))
+    (send "\e[1;7Hlast\e[1;7H")
+    (should (equal (send "\e[Hlast\e[K\e[H" 21) '("Deleted alpha")))
+    (should (equal (send "\e[H    last\e[1;5H" 'tab) '("Column 5")))
+    (should (equal (send "\e[H        last\e[1;9H" 9) '("Column 9")))
+    (should-not (send "\e[1;9H" 21))))
+
 (ert-deftest emacsvox-eat-vim-normal-operators ()
   "Read the rendered replacement, deletion, indentation, join and yank request."
   (emacsvox-eat-test--with-vim

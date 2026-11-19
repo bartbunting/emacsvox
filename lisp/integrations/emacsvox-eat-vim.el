@@ -501,6 +501,16 @@ STATUS describes the command row on NEW."
     (cond
      ((and (not inserting) same-row
            (emacsvox-eat--vim-normal-edit keys a b i j next status)))
+     ((and same-row (equal (plist-get status :mode) "Insert")
+           (memq key '(21 23)) (< j i) (<= i (length a))
+           (equal (string-trim-right (concat (substring a 0 j) (substring a i)))
+                  (string-trim-right b)))
+      (concat "Deleted " (emacsvox-eat--vim-row-text (substring a j i))))
+     ((and same-row (equal (plist-get status :mode) "Insert") (memq key '(9 tab))
+           (< i j) (<= j (length b)) (equal (substring a 0 i) (substring b 0 i))
+           (string-match-p (rx string-start (+ blank) string-end) (substring b i j))
+           (equal (string-trim-right (substring a i)) (string-trim-right (substring b j))))
+      (format "Column %d" (or (cdr (plist-get status :ruler)) (1+ (plist-get after :column)))))
      ((and (not inserting) (memq key '(?x ?X)) same-row
            (string-empty-p (string-trim a)) (not (string-empty-p (string-trim b))))
       ;; A terminal can leave a row empty until Vim edits it after closing a split.
