@@ -4745,7 +4745,17 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (emacsvox-eat-test--with-vim
     (send "\e[2;1H\e[K\e[4;1H/alpha         1,1 Top\e[K\e[H")
     (should (equal (send "\e[4;16H2,1 Top\e[2;1H" ?n) '("Match on line 2")))
+    (should (equal (send "\e[2;1Halpha again\e[2;1H") '("Terminal row: alpha again")))
     (should (equal (send "\e[4;16H1,1 Top\e[H" ?N) '("Terminal row: alpha one")))))
+
+(ert-deftest emacsvox-eat-vim-recover-match-with-redraw ()
+  "Announce Vim's redraw at the current cursor, including after a missing match."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1H\e[K\e[4;1H/alpha         1,1 Top\e[K\e[H")
+    (should (equal (send "\e[4;16H2,1 Top\e[2;1H" ?n) '("Match on line 2")))
+    (should (equal (send "\e[2;1Halpha again\e[2;1H" 12) '("alpha again")))
+    (should (equal (send "\e[2;1H" 12) '("alpha again")))
+    (should-not (send "\e[2;1Hother\e[K\e[2;1H"))))
 
 (ert-deftest emacsvox-eat-vim-edits-and-word-motions ()
   "Use verified text at the cursor for movements, deletes, paste and undo."

@@ -677,9 +677,9 @@ the terminal still existed instead of consulting its deleted cursor."
               (emacsvox-eat--screen-diff
                emacsvox-eat--pending-screen-baseline new))
         (if (and (plist-get emacsvox-eat--pending-screen-diff :unchanged)
-                 ;; A line yank can finish with the same cursor and text.
+                 ;; A line yank or explicit redraw can leave every cell unchanged.
                  (not (and (eq emacsvox-eat-application-profile 'vim)
-                           (equal emacsvox-eat--vim-keys '(?y ?y))))
+                           (member emacsvox-eat--vim-keys '((?y ?y) (12)))))
                  (zerop emacsvox-eat--collected-output-lines)
                  (null emacsvox-eat--pending-prompt)
                  (null emacsvox-eat--pending-alternate-screen-transitions))

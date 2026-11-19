@@ -39,6 +39,8 @@
   "Screen as it looked before the oldest pending key.")
 (defvar-local emacsvox-eat--vim-deadline 0.0)
 (defvar-local emacsvox-eat--vim-expiry nil)
+(defvar-local emacsvox-eat--vim-awaiting-match nil
+  "Non-nil after a search announces its ruler while the match row is missing.")
 (defvar-local emacsvox-eat--vim-anchor nil
   "File or screen coordinates at the observed start of a Visual selection.")
 (defconst emacsvox-eat--vim-input-limit 128)
@@ -49,6 +51,7 @@
   "Discard keys and their original screen."
   (when (timerp emacsvox-eat--vim-expiry) (cancel-timer emacsvox-eat--vim-expiry))
   (setq emacsvox-eat--vim-keys nil emacsvox-eat--vim-origin nil
+        emacsvox-eat--vim-awaiting-match nil
         emacsvox-eat--vim-expiry nil emacsvox-eat--vim-deadline 0.0))
 
 (defun emacsvox-eat--vim-expire (buffer)
@@ -67,7 +70,7 @@
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
-  (when (> (float-time) emacsvox-eat--vim-deadline)
+  (when (or emacsvox-eat--vim-awaiting-match (> (float-time) emacsvox-eat--vim-deadline))
     (emacsvox-eat--vim-forget-input))
   (let ((count (or count 1))
         (key (pcase event
@@ -302,7 +305,8 @@ At a scrolling edge, two distinct rows must have shifted together."
 A partially redrawn empty row cannot satisfy a nonempty literal search."
   (let ((pattern (or (plist-get to :search) (plist-get from :search))))
     (or (not (string-empty-p (string-trim line)))
-        (and pattern (not (string-match-p "\\`[[:alnum:]_]+\\'" pattern))))))
+        (and pattern (not (string-match-p (rx string-start (optional "\\<") (+ (or alnum "_"))
+                                             (optional "\\>") string-end) pattern))))))
 
 (defun emacsvox-eat--vim-motion (keys old new before after from to)
   "Describe a movement supported by KEYS and the rendered cursor and text.
@@ -319,6 +323,10 @@ their respective command rows."
          (find-key (and (cdr keys) (car (last keys 2))))
          (ruler (plist-get to :ruler)))
     (cond
+     ((eq key 12)
+      (if (and ruler (string-empty-p (string-trim line)))
+          (cons 'navigation (format "Line %d, no text displayed" (car ruler)))
+        (cons 'navigation (emacsvox-eat--vim-row-text line))))
      ((and moved (memq find-key '(?f ?F ?t ?T)) (characterp key)
            (= origin row) (equal line (plist-get before :line)))
       (let ((found (+ index (pcase find-key (?t 1) (?T -1) (_ 0)))))
@@ -338,7 +346,7 @@ their respective command rows."
      ((and moved (emacsvox-eat--vim-search-p keys from)
            (not (emacsvox-eat--vim-search-ready-p line from to))
            (plist-get to :ruler))
-      (cons 'navigation (format "Match on line %d" (car (plist-get to :ruler)))))
+      (cons 'match-location (format "Match on line %d" (car (plist-get to :ruler)))))
      ((and (or moved (not (equal line (plist-get before :line))))
            (or (eq key ?G) (equal (last keys 2) '(?g ?g))
                (and (emacsvox-eat--vim-search-p keys from)
@@ -560,12 +568,20 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                      (and (string-match-p "\\`\\(?:Visual\\|Select\\)" prior-mode)
                           (memq (car (last keys)) '(?v ?V ?y ?d ?x ?p ?P)))))
             "Normal mode")))
-         (feedback (or (and same-display (not mode) (not prompt) (not message)
-                            (emacsvox-eat--vim-window-switch keys before after))
-                       (and compatible
-                        (not (and announcement message))
-                        (emacsvox-eat--vim-feedback keys old screen before after from to))))
-         (remaining (cond (feedback (nth 2 feedback))
+         (same-match (and emacsvox-eat--vim-awaiting-match compatible
+                          (not (or prompt mode message))
+                          (equal (plist-get from :ruler) (plist-get to :ruler))
+                          (= (plist-get before :row) (plist-get after :row))
+                          (= (plist-get before :column) (plist-get after :column))))
+         (feedback (if emacsvox-eat--vim-awaiting-match
+                       (when (and same-match (not (string-empty-p (string-trim (plist-get after :line)))))
+                         (list 'row (emacsvox-eat--vim-row-text (plist-get after :line))))
+                     (or (and same-display (not mode) (not prompt) (not message)
+                              (emacsvox-eat--vim-window-switch keys before after))
+                         (and compatible (not (and announcement message))
+                              (emacsvox-eat--vim-feedback keys old screen before after from to)))))
+         (remaining (cond ((eq (car feedback) 'match-location) keys)
+                          (feedback (nth 2 feedback))
                           ((or submitted (and announcement message)) (cdr (memq 'return keys)))
                           (announcement (emacsvox-eat--vim-after-entry keys mode prompt)))))
     (unless (equal mode prior-mode)
@@ -586,6 +602,9 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                ((string-match-p "\\` +\\'" text)
                 (emacsvox-eat--vim-say (format "%d spaces" (length text)) 'edit))
                (t (emacsvox-eat--vim-say text 'edit)))))
+      ('match-location
+       (setq emacsvox-eat--vim-awaiting-match t)
+       (emacsvox-eat--vim-say (nth 1 feedback) 'navigation))
       ('row
        (let* ((row (plist-get after :row)) (text (nth 1 feedback))
               (focus (list :kind 'cursor-row :text text :row-start row :row-end row
@@ -599,6 +618,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
     (cond
      (remaining
       (setq emacsvox-eat--vim-keys remaining emacsvox-eat--vim-origin screen))
+     ((and emacsvox-eat--vim-awaiting-match (not same-match)) (emacsvox-eat--vim-forget-input))
      ((and compatible (not announcement) (not feedback)
            (emacsvox-eat--vim-search-p keys from)
            (not (emacsvox-eat--vim-search-ready-p (plist-get after :line) from to))))
