@@ -251,8 +251,8 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
                           collect label) ", "))))))
 
 (defun emacsvox-eat--vim-blocking-prompt (screen)
-  "Read a Vim startup or continuation prompt at the rendered cursor on SCREEN.
-The prompt may wrap or sit above the last row after the profile menu resizes EAT."
+  "Read a Vim startup or continuation prompt at the cursor on SCREEN.
+After the profile menu resizes EAT, the prompt can sit above the last row."
   (let* ((rows (plist-get screen :rows)) (row (plist-get screen :cursor-row))
          (line (and row (nth row rows)))
          (end (and line (string-trim-right line))))
@@ -319,7 +319,7 @@ The prompt may wrap or sit above the last row after the profile menu resizes EAT
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
 
 (defun emacsvox-eat--vim-entry-prompt (screen)
-  "Return the current Vim question or continuation message when selecting its profile."
+  "Read a pending question on SCREEN when selecting the Vim profile."
   (when screen
     (let ((state (emacsvox-eat--vim-status screen)))
       (when (or (plist-get state :blocking) (plist-get state :pager) (plist-get state :confirmation))
@@ -1239,6 +1239,10 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
          (announcement
           (cond
            ((and message (not (equal message prior-message))
+                 ;; A resize can hide a result above its continuation prompt.
+                 (not (and (null keys) (plist-get diff :size-changed) prior-message
+                           (equal message (plist-get to :blocking))
+                           (string-suffix-p (concat ". " message) prior-message)))
                  (not (and prior-message (string-prefix-p (concat message ". ") prior-message))))
             (if (plist-get to :pager) message (emacsvox-eat--vim-row-text message)))
            ((and (plist-get from :confirmation) (not (plist-get to :confirmation))

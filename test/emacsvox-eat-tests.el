@@ -4736,7 +4736,15 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (emacsvox-eat--set-application-profile 'terminal)
     (send "\e[2J\e[HPress ENTER or type command to continue")
     (should (equal (emacsvox-eat--set-application-profile 'vim)
-                   "Press ENTER or type command to continue"))))
+                   "Press ENTER or type command to continue"))
+    (emacsvox-eat--set-application-profile 'terminal)
+    (send (concat "\e[2J\e[2;1H:ls\e[3;1H  1 %a   \"sample\"   line 1"
+                  "\e[4;1HPress ENTER or type command to continue"))
+    (let ((result (emacsvox-eat--set-application-profile 'vim)))
+      (should (string-prefix-p "Buffer 1, sample" result))
+      (eat-term-resize eat-terminal 40 5)
+      (should-not (send "\e[2J\e[5;1HPress ENTER or type command to continue"))
+      (should (equal emacsvox-eat--last-status-text result)))))
 
 (ert-deftest emacsvox-eat-vim-modes-search-and-command-results ()
   "Speak visible transitions, the match and a two-stage error with its prompt."
