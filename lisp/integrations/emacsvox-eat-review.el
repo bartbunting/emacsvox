@@ -825,8 +825,9 @@ review because only the newly reached row remains useful."
 The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
 RET, or period speaks the current row; C returns to the captured cursor; h
 moves to a retained likely focus; [ and ] move among selection-like styled
-regions without treating them as focus; c shows retained completion/help
-output; s returns to screen rows; a speaks the bounded current view; t and i
+regions without treating them as focus; x reads the captured Vim selection.
+c shows retained completion/help output; s returns to screen rows;
+a speaks the bounded current view; t and i
 speak frozen status and metadata; v and m control source-terminal feedback
 without sending terminal input; and q kills the content-bearing review buffer."
   (setq-local emacsvox-aural-module 'eat

@@ -300,6 +300,7 @@ EAT input mode:
 - C-e q c :: Speak retained completion candidates or help rows.
 - C-e q s :: Speak a bounded copy of the retained visible screen.
 - C-e q r :: Open a read-only frozen copy for line-by-line review.
+- C-e q x :: Read the visible Vim selection.
 - C-e q t :: Repeat the last retained status, including a Vim message or prompt.
 - C-e q p :: Speak the last identified shell prompt.
 - C-e q i :: Speak the retained, sanitised title or working-directory change.
@@ -338,6 +339,7 @@ closing play distinct object cues and announce the transition.
 
   Move among inverse/background-styled, selection-like regions. They are not
   labelled as confirmed focus.
+- x :: Read the visible Vim selection copied when review opened.
 - t, i :: Speak status or metadata copied when review opened.
 - v, m ::
 
@@ -533,6 +535,8 @@ paste commands, not these terminal-originated sequences.
 #+cindex: alternate screen, EAT
 #+cindex: Vim in a terminal
 #+findex: emacsvox-eat-select-application-profile
+#+findex: emacsvox-eat-speak-vim-selection
+#+kindex: C-e q x (EAT)
 #+kindex: C-e q a (EAT)
 
 Pagers, editors, menus, and refreshing dashboards often rewrite cells instead
@@ -545,35 +549,66 @@ mode. Press ~C-e q a~ to hear the selected profile. Browse to Vim with the
 arrows and press ~RET~ to apply it, or ~q~ to cancel. This choice belongs to
 the current EAT buffer and works with stock Vim.
 
-In Normal mode, ~h~ and ~l~ read the character you reach. ~w~, ~b~ and ~e~
-read the destination word. To find a character on the same line, press ~f~
-and the character to hear where you land. ~j~ and ~k~ read the destination row. The arrows
-give the same character or row feedback in Normal and Insert modes. ~gg~
-and ~G~ read the row where you land. A paragraph jump with ~{~ or ~}~ gives
-the position and row, including a blank line. Press ~%~ on a bracket to hear
-the position and character at the other end of the pair.
+In Normal mode, ~j~ and ~k~ read the line you reach. A blank line plays
+your usual blank-line cue. ~h~ and ~l~ speak the character, and ~w~, ~b~
+and ~e~ speak the word. The arrows give the same line or character feedback
+in Insert mode. Use ~f~ followed by a character to find it on the current
+line. Repeat the find with a semicolon or reverse it with a comma.
+
+Use ~gg~ or ~G~ to hear the row at the start or end of the file. Page with
+~C-d~, ~C-u~, ~C-f~ or ~C-b~, or move within the screen with ~H~, ~M~ or
+~L~, to hear the destination and its position. With ~ma~, you hear where
+you asked Vim to set mark a. Jump to its line with ~'a~ or its exact
+position with a backtick followed by ~a~. Use ~C-o~ and ~C-i~ to move
+through Vim's jump history. A paragraph jump with ~{~ or ~}~ gives the
+position even on a blank line. Press ~%~ on a bracket to hear the position
+and character at the other end of the pair.
 
 When you move between Vim windows with ~C-w w~ or the directional window
 commands, you hear which way you moved and the row in the destination window.
 In side-by-side windows, movement and ~C-e q l~ read your side when Vim
 displays a distinctly styled divider.
 
-Press ~i~ to insert text or ~cw~ to replace a word. Emacsvox announces
-Insert mode and echoes your typing as Vim draws it. Several letters arriving
-together over SSH can be spoken together. Backspace speaks the character
-removed. For keyword completion, use ~C-n~ and ~C-p~ to hear the word Vim
-inserts and its position among the matches. Press Escape to hear the return
-to Normal mode when the mode label clears.
-Replace and Visual modes also have announcements. Emacsvox recognises Vim's
-standard English mode labels. With labels hidden, visible typing and movement
-still provide feedback. In Visual mode, extending a selection reports its
-extent when the starting position was observed.
+Press ~i~ to insert, ~o~ to open a line below, or ~cw~ to replace a word.
+Emacsvox announces Insert mode and echoes text as Vim draws it. Letters
+arriving together over SSH can be spoken together. Vim follows your Emacsvox
+character, word and line echo settings. Backspace plays your
+deletion cue and speaks the character removed. ~C-w~ and ~C-u~ read the
+word or line prefix that disappeared. ~TAB~ reports the column you reach.
+Escape announces the return to Normal mode when the mode label clears.
+With the standard English labels hidden, visible typing and movement can
+still provide feedback.
 
-In Normal mode, ~x~, ~dw~ and ~dd~ read the character, word or line removed
-when the redraw identifies it. If the original text was missing from EAT,
-~x~ can read the resulting row. With ~yy~, you hear the line you asked Vim
-to copy. ~p~ reads the pasted text or row. Repeating a change with ~.~ or
-undoing it with ~u~ reads the resulting row.
+For keyword completion, use ~C-n~ and ~C-p~. For a filename, start with
+~C-x C-f~, then use ~C-n~ and ~C-p~ to hear the name and match position.
+~C-y~ accepts and ~C-e~ cancels when sent to Vim. In semi-character mode,
+~C-q C-e~ sends that cancellation key. Switch to character mode for sequences
+that EAT reserves, or quote the reserved key as described in
+[[info:emacsvox#EAT Input Modes][Choose an input mode]]. At a Vim command prompt such as ~:edit~, press
+~TAB~ to hear the completed path.
+
+In Visual mode, extend or shrink a character, line or block selection to
+hear its extent. Short selections include the visible text. For a longer
+selection use ~C-e q x~ to read the portion on screen. In a frozen review,
+~x~ reads the selection as it appeared when you opened the review.
+Replace mode also announces its visible mode label.
+
+In Normal mode, ~x~, ~dw~, ~diw~, ~D~ and ~dd~ use the deletion cue and
+read what the redraw identifies. A counted deletion such as ~3dd~ can report
+Vim's count and the row now under the cursor. If the original row was missing
+from EAT, ~x~ can read the resulting row. ~r~ followed by a character reports
+the replacement. The tilde key changes case. ~J~ reads the joined line, and
+~>>~ or ~<<~ reports its new indentation. With ~yw~ or ~yy~ you hear the word
+or line you asked Vim to copy. ~p~ gives the usual paste cue with the pasted
+text. Repeating a change with ~.~ or undoing it with ~u~ reads the result.
+
+Create a fold with a motion such as ~zf2j~. When Vim displays the closed
+fold, you hear its line count and summary. ~zo~ opens it and reads the
+exposed row. ~zc~ closes it. When recording a macro, ~qa~ announces the
+displayed register and ~q~ announces the end of recording. Play it with
+~@a~ or repeat it with ~@@~. Speech describes a visible result. After an
+observed Normal-mode action, a replay that leaves the display quiet gives
+a request acknowledgement.
 
 Start a search with ~/~ or ~?~ and press ~RET~. To search for the word under
 the cursor, press ~*~ or ~#~. These searches and ~n~ or ~N~ read the row
@@ -583,11 +618,21 @@ position within three seconds. In Normal mode, ~C-l~ asks Vim to redraw and
 reads the current row. This can recover a match hidden by an incomplete
 =tmux= redraw. ~C-e q l~ reads the row EAT already has.
 
-Use ~:ls~ to hear the visible buffer numbers and names before Vim asks you
-to press Enter. ~C-e q t~ repeats the result. It can also repeat a failed
-search, a save confirmation from ~:w~, or the error and prompt after a
-refused quit. Motions at a file boundary, ambiguous changes and replies
-arriving more than three seconds after your last key can stay quiet.
+For a substitution with confirmation, such as ~:%s/one/two/gc~, listen for
+the replacement, match position and available answers. ~y~ or ~n~ advances
+to the next match, including a second match on the same row. ~a~ accepts the
+remaining matches and ~q~ stops. A count-only substitution reports the
+number of matches Vim displays.
+
+Use ~:bnext~ to switch buffers or ~gt~ and ~gT~ to change tabs. You hear
+the destination and its current row. Opening help reads the help destination.
+With ~:cnext~ or ~:cprevious~, listen for the quickfix entry number, position
+and diagnostic. ~:ls~, ~:marks~ and ~:registers~ read visible entries before
+the continuation prompt. Option queries such as ~:set number?~ read the
+displayed value. ~C-e q t~ repeats the retained result, including a save
+confirmation, a failed search, or the error and prompt after a refused quit.
+Ambiguous redraws, movements at a boundary and replies arriving more than
+three seconds after your last key can stay quiet.
 
 Emacsvox restores the Terminal profile when EAT sees the alternate screen
 close or the terminal resets or exits. Over SSH or inside =tmux=, a quit
