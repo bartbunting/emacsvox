@@ -41,6 +41,8 @@
 (defvar-local emacsvox-eat--vim-expiry nil)
 (defvar-local emacsvox-eat--vim-awaiting-match nil
   "Non-nil after a search announces its ruler while the match row is missing.")
+(defvar-local emacsvox-eat--vim-quitting nil
+  "Non-nil while a delivered quit awaits evidence of a return to the shell.")
 (defvar-local emacsvox-eat--vim-anchor nil
   "File or screen coordinates at the observed start of a Visual selection.")
 (defconst emacsvox-eat--vim-input-limit 128)
@@ -51,7 +53,7 @@
   "Discard keys and their original screen."
   (when (timerp emacsvox-eat--vim-expiry) (cancel-timer emacsvox-eat--vim-expiry))
   (setq emacsvox-eat--vim-keys nil emacsvox-eat--vim-origin nil
-        emacsvox-eat--vim-awaiting-match nil
+        emacsvox-eat--vim-awaiting-match nil emacsvox-eat--vim-quitting nil
         emacsvox-eat--vim-expiry nil emacsvox-eat--vim-deadline 0.0))
 
 (defun emacsvox-eat--vim-expire (buffer)
@@ -70,7 +72,8 @@
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
-  (when (or emacsvox-eat--vim-awaiting-match (> (float-time) emacsvox-eat--vim-deadline))
+  (when (or emacsvox-eat--vim-awaiting-match emacsvox-eat--vim-quitting
+            (> (float-time) emacsvox-eat--vim-deadline))
     (emacsvox-eat--vim-forget-input))
   (let ((count (or count 1))
         (key (pcase event
@@ -88,7 +91,10 @@
               emacsvox-eat--vim-expiry (run-at-time emacsvox-eat--vim-input-timeout nil
                                                     #'emacsvox-eat--vim-expire (current-buffer))))
       (setq emacsvox-eat--vim-keys (nconc emacsvox-eat--vim-keys (make-list count key))
-            emacsvox-eat--vim-deadline (+ (float-time) emacsvox-eat--vim-input-timeout))))))
+            emacsvox-eat--vim-deadline (+ (float-time) emacsvox-eat--vim-input-timeout))
+      (when (memq key '(return ?Z ?Q))
+        (setq emacsvox-eat--vim-quitting
+              (emacsvox-eat--vim-quit-command-p emacsvox-eat--vim-origin emacsvox-eat--vim-keys)))))))
 
 (defconst emacsvox-eat--vim-ruler
   "\\([0-9]+\\),\\([0-9]+\\)\\(?:-\\([0-9]+\\)\\)?[ \t]+\\(?:Top\\|Bot\\|All\\|[0-9]+%\\)[ \t]*\\'")
@@ -168,9 +174,47 @@
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :completion completion :prompt prompt :message message :ruler ruler
-          :command (string-prefix-p ":" text)
+          :command (and (string-prefix-p ":" text) text)
           :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
+
+(defun emacsvox-eat--vim-quit-command-p (origin keys)
+  "Whether KEYS submit a Vim quit from the command or editing screen at ORIGIN."
+  (let* ((state (emacsvox-eat--vim-status origin)) (prompt (plist-get state :prompt))
+         (input (butlast keys)))
+    (and (not (plist-get state :mode))
+         (or (and (not prompt) (member keys '((?Z ?Z) (?Z ?Q))))
+             (and (eq (car (last keys)) 'return) (cl-every #'characterp input)
+                  (or (eq prompt ?:) (and (not prompt) (eq (car input) ?:)))
+                  (string-match-p
+                   (rx string-start ":" (* blank)
+                       (or "q" "qu" "qui" "quit" "qa" "qall" "quitall" "wq" "wqa" "wqall"
+                           "x" "xit" "exit" "xa" "xall")
+                       (optional "!") (* blank) string-end)
+                   (concat (when prompt (plist-get state :command)) (apply #'string input))))))))
+
+(defun emacsvox-eat--vim-shell-return-p (screen integrated-prompt)
+  "Confirm a pending quit using SCREEN or a newly reported INTEGRATED-PROMPT."
+  (when (and emacsvox-eat--vim-quitting (<= (float-time) emacsvox-eat--vim-deadline))
+    (or integrated-prompt
+        (let* ((state (emacsvox-eat--vim-status screen))
+               (rows (plist-get screen :rows)) (row (plist-get screen :cursor-row))
+               (line (and row (nth row rows)))
+               (previous (and row (> row 0) (nth (1- row) rows)))
+               (command-row (emacsvox-eat--vim-status-index screen)))
+          (and line (not (or (plist-get state :mode) (plist-get state :ruler)
+                             (plist-get state :command) (plist-get state :message)))
+               (string-match-p (rx (any "$#%>❯") (* blank) string-end) line)
+               (>= (plist-get screen :cursor-column) (string-width (string-trim-right line)))
+               (or (= row command-row)
+                   ;; A restored tmux pane can put the prompt anywhere on screen.
+                   (and previous (string-prefix-p line previous)
+                        (string-match-p (rx word-start (or "vi" "vim" "nvim") word-end)
+                                        (substring previous (length line))))
+                   (and (< command-row (1- (length rows)))
+                        (string-match-p
+                         (rx (+ digit) ":" (or "sh" "bash" "dash" "zsh" "ksh" "fish") "*")
+                         (car (last rows))))))))))
 
 (defun emacsvox-eat--vim-divider-p (screen starts row column)
   "Whether ROW has an individually styled window divider at display COLUMN."
@@ -580,7 +624,9 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                               (emacsvox-eat--vim-window-switch keys before after))
                          (and compatible (not (and announcement message))
                               (emacsvox-eat--vim-feedback keys old screen before after from to)))))
-         (remaining (cond ((eq (car feedback) 'match-location) keys)
+         (remaining (cond ((and emacsvox-eat--vim-quitting (not (or message mode))
+                                (or prompt (not (plist-get to :ruler)))) keys)
+                          ((eq (car feedback) 'match-location) keys)
                           (feedback (nth 2 feedback))
                           ((or submitted (and announcement message)) (cdr (memq 'return keys)))
                           (announcement (emacsvox-eat--vim-after-entry keys mode prompt)))))
@@ -618,6 +664,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
     (cond
      (remaining
       (setq emacsvox-eat--vim-keys remaining emacsvox-eat--vim-origin screen))
+     (emacsvox-eat--vim-quitting (emacsvox-eat--vim-forget-input))
      ((and emacsvox-eat--vim-awaiting-match (not same-match)) (emacsvox-eat--vim-forget-input))
      ((and compatible (not announcement) (not feedback)
            (emacsvox-eat--vim-search-p keys from)

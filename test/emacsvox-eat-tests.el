@@ -4757,6 +4757,34 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[2;1H" 12) '("alpha again")))
     (should-not (send "\e[2;1Hother\e[K\e[2;1H"))))
 
+(ert-deftest emacsvox-eat-vim-restore-shell-profile-after-quit ()
+  "Keep Vim on a failed or partial quit and recognise the restored shell pane."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:q\e[K")
+    (send "\e[4;1HE37: No write since last change\e[K\e[H" 'return)
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (mapc #'key (list ?: ?q 'return))
+    (send "\e[Hhost$ \e[K\e[4;1H:q    1,6 Top\e[K\e[1;7H")
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (send "\e[4;1H:q!\e[K")
+    (should (equal (send "\e[2J\e[Hhost$ vim file\e[2;1Hhost$ \e[4;1H[0] 0:vim*\e[2;7H" 'return)
+                   '("Terminal profile")))
+    (should (eq emacsvox-eat-application-profile 'terminal))))
+
+(ert-deftest emacsvox-eat-vim-keep-profile-on-unconfirmed-quit ()
+  "An ordinary file line ending like a shell prompt cannot confirm a quit."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1Hhost$ \e[K\e[H")
+    (send "\e[4;1H\e[K\e[2;7H" ?j)
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (mapc #'key (string-to-list ":q"))
+    (send "\e[2;7H" 'return)
+    (should (eq emacsvox-eat-application-profile 'vim))
+    ;; The next key cancels this pending quit before an unrelated prompt appears.
+    (send "\e[2;1Hother\e[K\e[2;1H" ?j)
+    (send "\e[4;1Hhost$ \e[K")
+    (should (eq emacsvox-eat-application-profile 'vim))))
+
 (ert-deftest emacsvox-eat-vim-edits-and-word-motions ()
   "Use verified text at the cursor for movements, deletes, paste and undo."
   (emacsvox-eat-test--with-vim

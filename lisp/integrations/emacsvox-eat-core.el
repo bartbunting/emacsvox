@@ -62,6 +62,7 @@
 (require 'emacsvox-eat-focus)
 (require 'emacsvox-eat-presentation)
 (autoload 'emacsvox-eat--vim-settled "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-shell-return-p "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-reset "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-forget-input "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-record-key "emacsvox-eat-vim")
@@ -567,9 +568,19 @@ the terminal still existed instead of consulting its deleted cursor."
                ((and (eq emacsvox-eat-application-profile 'vim) (null alternate-screen-transitions))
                 (unless live (emacsvox-eat--vim-reset))
                 (emacsvox-eat--retain-screen-change diff snapshot)
-                (emacsvox-eat--vim-settled
-                 baseline snapshot diff
-                 (and live emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)))
+                (if (and live (emacsvox-eat--vim-shell-return-p snapshot prompt))
+                    (progn
+                      (emacsvox-eat--set-application-profile 'terminal)
+                      (when (or user-input-p (and emacsvox-eat-autospeak
+                                                  emacsvox-eat--automatic-feedback-allowed-p))
+                        (emacsvox-eat--submit "Terminal profile"
+                                              (emacsvox-eat--facts 'command-interaction 'state-changed)
+                                              'state-change))
+                      (when (and prompt emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)
+                        (emacsvox-eat--present-ready-prompt prompt)))
+                  (emacsvox-eat--vim-settled
+                   baseline snapshot diff
+                   (and live emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p))))
                (live
                 (emacsvox-eat--screen-quiesced diff snapshot)
                 (when (and prompt emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)
