@@ -4768,6 +4768,18 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H\e[K\e[2;1Hpha one\e[K\e[2;1H" ?d)
                    '("Normal mode" "Deleted al")))))
 
+(ert-deftest emacsvox-eat-vim-jump-destinations ()
+  "Speak confirmed word searches, character finds, bracket and paragraph jumps."
+  (emacsvox-eat-test--with-vim
+    (key ?f)
+    (should (equal (send "\e[1;7H" ?o) '("o")))
+    (should (equal (send "\e[2;6H" ?*) '("Terminal row: beta two")))
+    (should (equal (send "\e[1;7H" ?#) '("Terminal row: alpha one")))
+    (send "\e[2;1H(x)\e[K\e[2;1H")
+    (should (equal (send "\e[4;1H2,3 Top\e[K\e[2;3H" ?%)
+                   (list (concat "Line 2, column 3, " (emacsvox-eat--deleted-character-name ?\))))))
+    (should (equal (send "\e[3;1H\e[K\e[4;1H3,1 Top\e[K\e[3;1H" ?}) '("Line 3, blank")))))
+
 (ert-deftest emacsvox-eat-vim-yank-delete-word-and-repeat ()
   "Read a completed yank request and the results of a deletion and repeat."
   (emacsvox-eat-test--with-vim
@@ -4833,7 +4845,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (emacsvox-eat-test--with-vim
     (send "\e[Hleft  \e[7m|\e[0mRIGHT\e[2;1Hone|a \e[7m|\e[0mTWO\e[3;1Hthree \e[7m|\e[0mFOUR\e[H")
     (should (equal (send "\e[2;1H" ?j) '("Terminal row: one|a")))
-    (send "\e[2;8H")
+    (key 23)
+    (should (equal (send "\e[2;8H" ?w) '("Right window, TWO")))
     (should (equal (send "\e[3;8H" ?j) '("Terminal row: FOUR")))
     (setq speech nil)
     (emacsvox-eat-speak-current-row)

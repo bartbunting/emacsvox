@@ -264,7 +264,7 @@ At a scrolling edge, two distinct rows must have shifted together."
 (defun emacsvox-eat--vim-search-p (keys from)
   "Whether KEYS repeat a search or submit the search prompt visible in FROM."
   (let ((key (car (last keys))))
-    (or (memq key '(?n ?N))
+    (or (memq key '(?n ?N ?* ?#))
         (and (eq key 'return)
              (or (memq (plist-get from :prompt) '(?/ ??)) (memq (car keys) '(?/ ??)))))))
 
@@ -286,8 +286,23 @@ their respective command rows."
          (moved (or (/= row origin) (/= index column)
                     (and (plist-get to :ruler)
                          (not (equal (plist-get from :ruler) (plist-get to :ruler))))))
-         (direction (cond ((memq key '(?j down)) 'down) ((memq key '(?k up)) 'up))))
+         (direction (cond ((memq key '(?j down)) 'down) ((memq key '(?k up)) 'up)))
+         (find-key (and (cdr keys) (car (last keys 2))))
+         (ruler (plist-get to :ruler)))
     (cond
+     ((and moved (memq find-key '(?f ?F ?t ?T)) (characterp key)
+           (= origin row) (equal line (plist-get before :line)))
+      (let ((found (+ index (pcase find-key (?t 1) (?T -1) (_ 0)))))
+        (when (and (<= 0 found) (< found (length line)) (= (aref line found) key)
+                   (< index (length line)))
+          (cons 'navigation (emacsvox-eat--deleted-character-name (aref line index))))))
+     ((and moved (memq key '(?% ?{ ?})))
+      (cons 'navigation
+            (concat (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
+                    (if (and (eq key ?%) (< index (length line)))
+                        (format ", column %d, %s" (or (cdr ruler) (1+ (plist-get after :column)))
+                                (emacsvox-eat--deleted-character-name (aref line index)))
+                      (concat ", " (emacsvox-eat--vim-row-text line))))))
      ((and direction (emacsvox-eat--vim-row-motion-p
                       old new origin row (plist-get after :window) direction))
       (cons 'row (emacsvox-eat--vim-row-text line)))
@@ -451,6 +466,19 @@ INSERTING means the visible mode or command prompt accepts text."
           (when-let* ((motion (emacsvox-eat--vim-motion keys old new before after from to)))
             (list (car motion) (cdr motion)))))))))
 
+(defun emacsvox-eat--vim-window-switch (keys before after)
+  "Describe the destination of a window command in KEYS from BEFORE to AFTER."
+  (when (and (cdr keys) (eq (car (last keys 2)) 23)
+             (memq (car (last keys)) '(?w ?W ?p ?h ?j ?k ?l 23 left right up down)))
+    (let* ((left (or (car (plist-get before :window)) 0))
+           (new-left (or (car (plist-get after :window)) 0))
+           (row (plist-get before :row)) (new-row (plist-get after :row))
+           (direction (cond ((< left new-left) "Right") ((> left new-left) "Left")
+                            ((< row new-row) "Lower") ((> row new-row) "Upper"))))
+      (when direction
+        (list 'navigation (concat direction " window, "
+                                  (emacsvox-eat--vim-row-text (plist-get after :line))))))))
+
 (defun emacsvox-eat--vim-settled (baseline screen diff automatic)
   "Handle a foreground Vim repaint from BASELINE to SCREEN.
 DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
@@ -469,8 +497,9 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                                   (or message (plist-get to :command) (plist-get to :search))))))
          (before (and keys (emacsvox-eat--vim-point old)))
          (after (emacsvox-eat--vim-point screen))
-         (compatible (and before after (equal (plist-get old :size) (plist-get screen :size))
-                          (eq (plist-get old :alternate-screen) (plist-get screen :alternate-screen))
+         (same-display (and before after (equal (plist-get old :size) (plist-get screen :size))
+                            (eq (plist-get old :alternate-screen) (plist-get screen :alternate-screen))))
+         (compatible (and same-display
                           (equal (plist-get before :window) (plist-get after :window))))
          (announcement
           (cond
@@ -485,9 +514,11 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                      (and (string-match-p "\\`\\(?:Visual\\|Select\\)" prior-mode)
                           (memq (car (last keys)) '(?v ?V ?y ?d ?x ?p ?P)))))
             "Normal mode")))
-         (feedback (and compatible
+         (feedback (or (and same-display (not mode) (not prompt) (not message)
+                            (emacsvox-eat--vim-window-switch keys before after))
+                       (and compatible
                         (not (and announcement message))
-                        (emacsvox-eat--vim-feedback keys old screen before after from to)))
+                        (emacsvox-eat--vim-feedback keys old screen before after from to))))
          (remaining (cond (feedback (nth 2 feedback))
                           ((or submitted (and announcement message)) (cdr (memq 'return keys)))
                           (announcement (emacsvox-eat--vim-after-entry keys mode prompt)))))
