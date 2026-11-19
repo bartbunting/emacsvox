@@ -4768,6 +4768,22 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H\e[K\e[2;1Hpha one\e[K\e[2;1H" ?d)
                    '("Normal mode" "Deleted al")))))
 
+(ert-deftest emacsvox-eat-vim-yank-delete-word-and-repeat ()
+  "Read a completed yank request and the results of a deletion and repeat."
+  (emacsvox-eat-test--with-vim
+    (key ?y)
+    (key ?y)
+    (should-not (send "\e[4;1H            y     1,1 Top\e[H"))
+    (should (equal (send "\e[4;1H\e[K1,1 Top\e[H") '("Yank line, alpha one")))
+    (key ?y)
+    (should (equal (send "\e[H" ?y) '("Yank line, alpha one")))
+    (key ?d)
+    (should (equal (send "\e[Hone\e[K\e[H" ?w) '("Deleted alpha")))
+    (should (equal (send "\e[H\e[K" ?.) '("Repeated change, blank")))
+    (send "\e[4;1H-- INSERT --\e[K\e[H" ?i)
+    (key ?y)
+    (should (equal (send "yy" ?y) '("yy")))))
+
 (ert-deftest emacsvox-eat-vim-insert-arrows-and-change-word-echo ()
   "Read Insert arrow destinations and keep the first replacement characters."
   (emacsvox-eat-test--with-vim

@@ -137,6 +137,7 @@
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :prompt prompt :message message :ruler ruler :command (string-prefix-p ":" text)
+          :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
 
 (defun emacsvox-eat--vim-divider-p (screen starts row column)
@@ -317,6 +318,8 @@ INSERTING means the visible mode or command prompt accepts text."
          (window (plist-get after :window))
          (next (emacsvox-eat--vim-line old (1+ row) window))
          (same-row (= row target))
+         (delete-word (and (not inserting) (eq (car (last keys 2)) ?d)
+                           (memq key '(?w ?W ?e ?E ?b ?B))))
          (change (and same-row (emacsvox-eat--sequence-change (string-trim-right a)
                                                              (string-trim-right b)))))
     (cond
@@ -324,10 +327,10 @@ INSERTING means the visible mode or command prompt accepts text."
            (string-empty-p (string-trim a)) (not (string-empty-p (string-trim b))))
       ;; A terminal can leave a row empty until Vim edits it after closing a split.
       (concat "Current row, " (emacsvox-eat--vim-row-text b)))
-     ((and (memq key '(backspace delete ?x ?X))
+     ((and (or delete-word (memq key '(backspace delete ?x ?X)))
            (or (not inserting) (memq key '(backspace delete)))
            same-row (not (equal a b)))
-      (let* ((back (memq key '(backspace ?X))) (start (if back j i))
+      (let* ((back (memq key '(backspace ?X ?b ?B))) (start (if back j i))
              (trimmed (string-trim-right b))
              ;; Closing a split can leave right-side padding until the next edit.
              (ends (if back (list i)
@@ -361,8 +364,9 @@ INSERTING means the visible mode or command prompt accepts text."
                           (equal (emacsvox-eat--vim-line old target window)
                                  (emacsvox-eat--vim-line new (1+ target) window))) b))))
         (concat "Pasted " (emacsvox-eat--vim-row-text added))))
-     ((and (not inserting) (memq key '(?u 18)) (or change (not same-row)))
-      (concat (if (eq key ?u) "Undo, " "Redo, ") (emacsvox-eat--vim-row-text b))))))
+     ((and (not inserting) (memq key '(?u 18 ?.)) (or change (not same-row)))
+      (concat (pcase key (?u "Undo, ") (18 "Redo, ") (?. "Repeated change, "))
+              (emacsvox-eat--vim-row-text b))))))
 
 (defun emacsvox-eat--vim-selection-position (status point)
   "Return a comparable file or screen position from STATUS and POINT."
@@ -414,6 +418,14 @@ INSERTING means the visible mode or command prompt accepts text."
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
      (echo (list 'echo (car echo) (cdr echo)))
+     ((and (not typing) (not selection) (not new-mode) (equal keys '(?y ?y))
+           (not (plist-get to :pending-yank)) (equal before after)
+           (or (plist-get to :ruler) (plist-get from :pending-yank)))
+      ;; The register is private to Vim. Describe the requested line.
+      (list 'edit (concat "Yank line, " (emacsvox-eat--vim-row-text (plist-get after :line)))))
+     ((and new-mode (not mode) (eq (car (last keys)) ?y)
+           (string-prefix-p "Visual" (or (plist-get from :mode) "")))
+      (list 'edit "Yanked selection"))
      ((and new-mode (not mode) (memq (car (last keys)) '(?d ?x))
            (string-prefix-p "Visual" (or (plist-get from :mode) "")))
       (let* ((window (plist-get after :window)) (row (plist-get after :row))
