@@ -4740,6 +4740,21 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H\"notes\" 3L, 12B written\e[K\e[H" 'return)
                    '("\"notes\" 3L, 12B written")))))
 
+(ert-deftest emacsvox-eat-vim-substitution-confirmation ()
+  "Read each highlighted match, including two on the same line, and the exit."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 80 4)
+    (let ((question "replace with RED (y/n/a/q/l/^E/^Y)?"))
+      (should (string-prefix-p
+               "Line 1, column 1. alpha alpha. Replace with RED? y yes"
+               (car (send (concat "\e[H\e[7malpha\e[0m alpha\e[4;1H" question "  1,1 All\e[4;36H") 'return))))
+      (should (string-prefix-p
+               "Line 1, column 7. alpha alpha."
+               (car (send (concat "\e[Halpha \e[7malpha\e[0m\e[4;1H" question "  1,7 All\e[4;36H") ?n))))
+      (should-not (send "\e[4;36H"))
+      (should (equal (send "\e[Halpha alpha\e[4;1H\e[K1,7 All\e[1;7H" ?q)
+                     '("Substitution stopped"))))))
+
 (ert-deftest emacsvox-eat-vim-search-with-incomplete-terminal-row ()
   "Report Vim's visible file line when a literal match is missing from EAT."
   (emacsvox-eat-test--with-vim

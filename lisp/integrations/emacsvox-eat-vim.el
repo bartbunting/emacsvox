@@ -144,6 +144,25 @@
                                        (or string-end "!" blank)) (string-trim (car above)))))
       (string-replace "\n" ". " (emacsvox-eat--bounded-output entries)))))
 
+(defun emacsvox-eat--vim-confirmation (screen row ruler question)
+  "Describe QUESTION and its visible substitution match above ROW on SCREEN."
+  (let* ((hits (cl-remove-if-not
+                (lambda (region)
+                  (and (< (plist-get region :row-start) row)
+                       (or (not ruler) (= (plist-get region :column-start) (1- (cdr ruler))))))
+                (emacsvox-eat--highlight-regions screen)))
+         (hit (and (length= hits 1) (car hits)))
+         (point (when hit
+                  (let ((view (copy-sequence screen)))
+                    (setq view (plist-put view :cursor-row (plist-get hit :row-start))
+                          view (plist-put view :cursor-column (plist-get hit :column-start)))
+                    (emacsvox-eat--vim-point view)))))
+    (string-join
+     (delq nil (list (when ruler (format "Line %d, column %d" (car ruler) (cdr ruler)))
+                     (when point (emacsvox-eat--vim-row-text (plist-get point :line)))
+                     question))
+     ". ")))
+
 (defun emacsvox-eat--vim-status (screen)
   "Return visible mode, prompt, command result and ruler facts on SCREEN."
   (let* ((rows (plist-get screen :rows))
@@ -164,8 +183,18 @@
                       (cdr (assoc (match-string 1 text) emacsvox-eat--vim-modes)))))
          (prompt (and at-command (string-match-p "\\`[:/?]" text) (aref text 0)))
          (previous (when-let* ((line (and (> row 0) (nth (1- row) rows)))) (string-trim line)))
+         (confirmation
+          (when (and at-command (string-match (rx string-start "replace with " (group (* nonl))
+                                                   " (y/n/a/q/l/" (* nonl) ")?") text))
+            (let ((replacement (match-string 1 text)))
+              (emacsvox-eat--vim-confirmation
+               screen row ruler
+               (concat (if (string-empty-p replacement) "Replace with empty text"
+                         (concat "Replace with " replacement))
+                       "? y yes, n no, a all, q quit, l last, Control E or Y to scroll")))))
          (message
           (cond
+           (confirmation confirmation)
            ((string-match-p "\\`\\(?:Press ENTER\\|-- More --\\)" text)
             (if-let* ((result (or (and previous (string-match-p "\\`[EW][0-9]+:" previous) previous)
                                   (emacsvox-eat--vim-buffer-list rows row))))
@@ -174,6 +203,7 @@
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :completion completion :prompt prompt :message message :ruler ruler
+          :confirmation confirmation
           :command (and (string-prefix-p ":" text) text)
           :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
@@ -604,6 +634,9 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
            ((and message (not (equal message prior-message))
                  (not (and prior-message (string-prefix-p (concat message ". ") prior-message))))
             (emacsvox-eat--vim-row-text message))
+           ((and (plist-get from :confirmation) (not (plist-get to :confirmation))
+                 (memq (car (last keys)) '(?q escape ?y ?n ?a ?l)))
+            (if (memq (car (last keys)) '(?q escape)) "Substitution stopped" "Substitution finished"))
            ((and mode (not (equal mode prior-mode))) (concat mode " mode"))
            ((and prompt (not (eq prompt (plist-get previous :prompt))))
             (if (= prompt ?:) "Command" (if (= prompt ??) "Search backward" "Search forward")))
@@ -622,7 +655,8 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                          (list 'row (emacsvox-eat--vim-row-text (plist-get after :line))))
                      (or (and same-display (not mode) (not prompt) (not (and announcement message))
                               (emacsvox-eat--vim-window-switch keys before after))
-                         (and compatible (not (and announcement message))
+                         (and compatible (not (or (plist-get from :confirmation) (plist-get to :confirmation)))
+                              (not (and announcement message))
                               (emacsvox-eat--vim-feedback keys old screen before after from to)))))
          (remaining (cond ((and emacsvox-eat--vim-quitting (not (or message mode))
                                 (or prompt (not (plist-get to :ruler)))) keys)
