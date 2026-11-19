@@ -54,6 +54,11 @@
 (defvar-local emacsvox-eat-review--status nil
   "Immutable terminal status copied for this review buffer.")
 
+(defvar-local emacsvox-eat-review--selection nil
+  "Visible Vim selection rows copied when opening this review.")
+
+(autoload 'emacsvox-eat--vim-selected-rows "emacsvox-eat-vim")
+
 (defvar-local emacsvox-eat-review--metadata nil
   "Immutable sanitized terminal metadata change copied for this review buffer.")
 
@@ -147,6 +152,17 @@ This explicit command works regardless of autospeak or prompt preference."
        (concat "Retained terminal status: " content) 'output-navigation)
     (emacsvox-eat--submit-review
      "No terminal status is retained" 'output-navigation)))
+
+(defun emacsvox-eat-speak-vim-selection ()
+  "Read the visible Vim selection in this EAT terminal or frozen review."
+  (interactive)
+  (let* ((rows (if (derived-mode-p 'emacsvox-eat-review-mode) emacsvox-eat-review--selection
+                 (emacsvox-eat--ensure-review-context)
+                 (when (and (eq emacsvox-eat-application-profile 'vim) emacsvox-eat--screen-snapshot)
+                   (emacsvox-eat--vim-selected-rows emacsvox-eat--screen-snapshot))))
+         (text (and rows (emacsvox-eat--bounded-review-output rows))))
+    (emacsvox-eat--submit-review
+     (if text (concat "Visible selection, " text) "No visible Vim selection") 'output-navigation)))
 
 (defun emacsvox-eat--retained-metadata-lines (metadata)
   "Return explicit-review lines for sanitized retained METADATA."
@@ -791,6 +807,7 @@ review because only the newly reached row remains useful."
            ("]" . emacsvox-eat-review-next-styled-region)
            ("[" . emacsvox-eat-review-previous-styled-region)
            ("t" . emacsvox-eat-speak-retained-status)
+           ("x" . emacsvox-eat-speak-vim-selection)
            ("i" . emacsvox-eat-speak-retained-metadata)
            ("v" . emacsvox-eat-cycle-verbosity)
            ("m" . emacsvox-eat-toggle-background-monitoring)
@@ -839,6 +856,8 @@ The command never captures mutable live terminal-buffer text."
            (status
             (emacsvox-eat-review--copy-data
              emacsvox-eat--last-status-text))
+           (selection (when (eq emacsvox-eat-application-profile 'vim)
+                        (emacsvox-eat--vim-selected-rows snapshot)))
            (metadata
             (emacsvox-eat-review--copy-data
              emacsvox-eat--last-metadata-change))
@@ -857,6 +876,7 @@ The command never captures mutable live terminal-buffer text."
                     emacsvox-eat-review--completion completion
                     emacsvox-eat-review--focus focus
                     emacsvox-eat-review--status status
+                    emacsvox-eat-review--selection selection
                     emacsvox-eat-review--metadata metadata
                     emacsvox-eat-review--navigation-delivery-key
                     navigation-delivery-key)
@@ -884,6 +904,7 @@ motion, edits and command results in local or remote Vim sessions."
 
 (define-prefix-command 'emacsvox-eat-review-map)
 (define-key emacsvox-eat-review-map (kbd "a") #'emacsvox-eat-select-application-profile)
+(define-key emacsvox-eat-review-map (kbd "x") #'emacsvox-eat-speak-vim-selection)
 (define-key emacsvox-eat-review-map (kbd "l")
             #'emacsvox-eat-speak-current-row)
 (define-key emacsvox-eat-review-map (kbd "d")

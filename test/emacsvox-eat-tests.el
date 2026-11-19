@@ -4880,6 +4880,27 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[H        last\e[1;9H" 9) '("Column 9")))
     (should-not (send "\e[1;9H" 21))))
 
+(ert-deftest emacsvox-eat-vim-selection-text-and-review ()
+  "Include Vim's unstyled cursor cell and follow the selection as it shrinks."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- VISUAL --     1    1,1 All\e[H" ?v)
+    (should (equal (send "\e[H\e[7malph\e[0ma\e[4;18H5    1,5 All\e[1;5H" ?e)
+                   '("5 columns selected, alpha")))
+    (should (equal (send "\e[H\e[7malp\e[0mha\e[4;18H4    1,4 All\e[1;4H" ?h)
+                   '("4 columns selected, alph")))
+    (setq speech nil)
+    (emacsvox-eat-speak-vim-selection)
+    (should (equal speech '("Visible selection, alph")))
+    (let ((review (save-window-excursion (emacsvox-eat-review-screen))))
+      (unwind-protect
+          (progn
+            (send "\e[Halpha\e[4;1H\e[K1,4 All\e[1;4H" 'escape)
+            (with-current-buffer review
+              (setq speech nil)
+              (emacsvox-eat-speak-vim-selection)
+              (should (equal speech '("Visible selection, alph")))))
+        (kill-buffer review)))))
+
 (ert-deftest emacsvox-eat-vim-normal-operators ()
   "Read the rendered replacement, deletion, indentation, join and yank request."
   (emacsvox-eat-test--with-vim
