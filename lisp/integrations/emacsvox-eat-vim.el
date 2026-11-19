@@ -486,7 +486,7 @@ INSERTING means the visible mode or command prompt accepts text."
                      ((member mode '("Replace" "Virtual Replace")) '(?R))
                      ((and mode (string-match-p "\\`\\(?:Visual\\|Select\\)" mode)) '(?v ?V 22))
                      (t '(escape 3 ?v ?V ?y ?d ?x ?p ?P)))))
-    (when-let* ((tail (cl-member-if (lambda (key) (memq key entry)) keys)))
+    (when-let* ((tail (cl-loop for pending on keys when (memq (car pending) entry) return pending)))
       (if (and (eq (car tail) ?c) (equal mode "Insert") (not prompt))
           ;; A change enters Insert after its motion or text object.
           (let ((motion (seq-drop-while (lambda (k) (and (integerp k) (<= ?0 k ?9)))
@@ -620,7 +620,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
          (feedback (if emacsvox-eat--vim-awaiting-match
                        (when (and same-match (not (string-empty-p (string-trim (plist-get after :line)))))
                          (list 'row (emacsvox-eat--vim-row-text (plist-get after :line))))
-                     (or (and same-display (not mode) (not prompt) (not message)
+                     (or (and same-display (not mode) (not prompt) (not (and announcement message))
                               (emacsvox-eat--vim-window-switch keys before after))
                          (and compatible (not (and announcement message))
                               (emacsvox-eat--vim-feedback keys old screen before after from to)))))
