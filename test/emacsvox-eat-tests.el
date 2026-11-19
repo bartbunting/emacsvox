@@ -4768,6 +4768,24 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H\e[K\e[2;1Hpha one\e[K\e[2;1H" ?d)
                    '("Normal mode" "Deleted al")))))
 
+(ert-deftest emacsvox-eat-vim-insert-arrows-and-change-word-echo ()
+  "Read Insert arrow destinations and keep the first replacement characters."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- INSERT --\e[K\e[H" ?i)
+    (should (equal (send "\e[1;2H" 'right) '("l")))
+    (should (equal (send "\e[2;2H" 'down) '("Terminal row: beta two")))
+    (should (equal (send "\e[1;2H" 'up) '("Terminal row: alpha one")))
+    (should (equal (send "\e[H" 'left) '("a")))
+    (send "\e[4;1H\e[K\e[H" 'escape)
+    (key ?c)
+    (should (equal (send "\e[H one\e[K\e[4;1H-- INSERT --\e[H" ?w) '("Insert mode")))
+    (mapc #'key (string-to-list "new"))
+    (should (equal (send "new one\e[1;4H") '("new")))
+    (send "\e[4;1H\e[K\e[H" 'escape)
+    (mapc #'key (string-to-list "cwblue"))
+    (should (equal (send "\e[Hblue one\e[K\e[4;1H-- INSERT --\e[1;5H")
+                   '("Insert mode" "blue")))))
+
 (ert-deftest emacsvox-eat-vim-delayed-and-partial-echo ()
   "Handle a late reply, acknowledge partial echoes and discard stale typing."
   (emacsvox-eat-test--with-vim

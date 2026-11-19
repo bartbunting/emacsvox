@@ -205,9 +205,10 @@
 (defvar emacsvox-eat--last-likely-focus)
 (defvar emacsvox-eat--update-serial)
 
-(defun emacsvox-eat--vim-echo (keys before after old new replace)
+(defun emacsvox-eat--vim-echo (keys before after old new replace &optional changing)
   "Match the visible inserted text between BEFORE and AFTER to a prefix of KEYS.
-OLD and NEW are the public screens.  REPLACE permits a visible overwrite."
+OLD and NEW are the public screens.  REPLACE permits a visible overwrite.
+CHANGING permits a change operator to remove text before the insertion."
   (let* ((a (plist-get before :line)) (b (plist-get after :line))
          (start (plist-get before :index)) (end (plist-get after :index))
          (row (plist-get before :row)) (target (plist-get after :row))
@@ -221,6 +222,9 @@ OLD and NEW are the public screens.  REPLACE permits a visible overwrite."
                (not (equal a b)) (<= (- end start) (length keys))
                (eq t (compare-strings a 0 start b 0 start))
                (or replace
+                   (and changing
+                        (string-suffix-p (string-trim-right (substring b end))
+                                         (string-trim-right (substring a start))))
                    (equal (string-trim-right (substring a start))
                           (string-trim-right (substring b end)))))
       (let* ((inserted (substring b start end))
@@ -382,7 +386,13 @@ INSERTING means the visible mode or command prompt accepts text."
                      ((member mode '("Replace" "Virtual Replace")) '(?R))
                      ((and mode (string-match-p "\\`\\(?:Visual\\|Select\\)" mode)) '(?v ?V 22))
                      (t '(escape 3 ?v ?V ?y ?d ?x ?p ?P)))))
-    (cl-loop for tail on keys when (memq (car tail) entry) return (cdr tail))))
+    (when-let* ((tail (cl-member-if (lambda (key) (memq key entry)) keys)))
+      (if (and (eq (car tail) ?c) (equal mode "Insert") (not prompt))
+          ;; A change enters Insert after its motion or text object.
+          (let ((motion (seq-drop-while (lambda (k) (and (integerp k) (<= ?0 k ?9)))
+                                        (cdr tail))))
+            (nthcdr (if (memq (car motion) '(?i ?a ?f ?F ?t ?T ?g)) 2 1) motion))
+        (cdr tail)))))
 
 (defun emacsvox-eat--vim-feedback (keys old new before after from to)
   "Return keyboard feedback proved by the two screens and their parsed views."
@@ -398,7 +408,9 @@ INSERTING means the visible mode or command prompt accepts text."
                           (list :line (char-to-string prompt) :index 1 :row (plist-get after :row))
                         before))
          (echo (and (not selection)
-                    (or (and entry (emacsvox-eat--vim-echo entry echo-before after old new replace))
+                    (or (and entry (emacsvox-eat--vim-echo
+                                    entry echo-before after old new replace
+                                    (and (equal mode "Insert") (eq (car keys) ?c))))
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
      (echo (list 'echo (car echo) (cdr echo)))
@@ -422,7 +434,8 @@ INSERTING means the visible mode or command prompt accepts text."
      ((and (not selection) (not new-mode))
       (if-let* ((edit (emacsvox-eat--vim-edit keys old new before after typing)))
           (list 'edit edit)
-        (when (not typing)
+        (when (or (not typing)
+                  (and (not prompt) (memq (car (last keys)) '(left right up down))))
           (when-let* ((motion (emacsvox-eat--vim-motion keys old new before after from to)))
             (list (car motion) (cdr motion)))))))))
 
