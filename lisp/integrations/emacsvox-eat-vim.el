@@ -332,18 +332,45 @@
   "Return a bounded spoken form of a Vim LINE, including an empty row."
   (or (emacsvox-eat--bounded-output (list (string-trim-right line))) "blank"))
 
-(defun emacsvox-eat--vim-say (content kind)
-  "Present CONTENT as navigation, an edit, or a state change of KIND."
+(defun emacsvox-eat--vim-say (content kind &optional icon)
+  "Present CONTENT for KIND using the usual edit tone or optional auditory ICON."
   (pcase kind
     ('navigation
      (emacsvox-eat--submit content (emacsvox-eat--facts 'command-output 'focus-entered 'output-navigation)
+                           'navigation icon 'replaceable (emacsvox-eat--terminal-delivery-key 'focus)))
+    ('character (emacsvox-speak-this-char content))
+    ('completion
+     (emacsvox-eat--submit content (emacsvox-eat--facts 'command-output 'focus-entered 'completion)
                            'navigation nil 'replaceable (emacsvox-eat--terminal-delivery-key 'focus)))
+    ('deletion
+     (if (characterp content)
+         (let ((emacsvox-aural-submission-module 'eat) (emacsvox-aural-submission-occasion 'edit))
+           (emacsvox-speak-edit-operation 'deletion)
+           (emacsvox-speak-this-char content))
+       (emacsvox-eat--submit content (emacsvox-eat--facts 'command-input 'object-changed nil
+                                                         '(:edit-operation deletion)) 'edit)))
+    ((or 'uppercase 'lowercase 'line-created)
+     (if content
+         (emacsvox-eat--submit content (emacsvox-eat--facts 'command-input 'object-changed nil
+                                                           (list :edit-operation kind)) 'edit)
+       (let ((emacsvox-aural-submission-module 'eat))
+         (emacsvox-speak-edit-operation kind))))
+    ('paste
+     (emacsvox-eat--submit content (emacsvox-eat--facts 'command-input 'object-changed nil
+                                                       '(:command-input-origin copied)) 'edit 'yank-object))
     ('edit
-     (emacsvox-eat--submit content (emacsvox-eat--facts 'command-input 'object-changed) 'edit))
+     (emacsvox-eat--submit content (emacsvox-eat--facts 'command-input 'object-changed) 'edit icon))
     (_ (emacsvox-eat--submit content (emacsvox-eat--facts 'command-interaction 'state-changed)
-                             'state-change))))
+                             'state-change icon))))
 
 (declare-function emacsvox-eat--deleted-character-name "emacsvox-eat-input" (character))
+(declare-function emacsvox-eat--deleted-text-content "emacsvox-eat-input" (text intent))
+(defvar emacsvox-line-echo)
+
+(defun emacsvox-eat--vim-deletion (text)
+  "Present verified removed TEXT using the ordinary character or text feedback."
+  (list 'deletion (if (length= text 1) (aref text 0)
+                    (string-trim-right (emacsvox-eat--deleted-text-content text '(:action delete))))))
 (defvar emacsvox-eat--last-status-text)
 (defvar emacsvox-eat--last-likely-focus)
 (defvar emacsvox-eat--last-focus-presentation-identity)
@@ -451,7 +478,7 @@ their respective command rows."
     (cond
      ((and mark (eq (car tail) ?m) (equal before after)
            (not (plist-get to :prompt)) ruler)
-      (cons 'navigation (format "Mark %c requested at line %d, column %d" key (car ruler) (cdr ruler))))
+      (cons 'mark (format "Mark %c requested at line %d, column %d" key (car ruler) (cdr ruler))))
      ((and (or (memq key '(4 21 6 2 15 9 tab ?H ?M ?L))
                (and (memq (car tail) '(?\' ?\x60)) (length= tail 2)))
            (or moved (not (equal line (plist-get before :line)))
@@ -459,10 +486,10 @@ their respective command rows."
       (let ((location (format "%s, column %d" (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
                               (or (cdr ruler) (1+ (plist-get after :column))))))
         (if (string-blank-p line) (cons 'blank-location location)
-          (cons 'navigation (concat location ", " (emacsvox-eat--vim-row-text line))))))
+          (cons 'jump (concat location ", " (emacsvox-eat--vim-row-text line))))))
      ((and moved (memq key '(?\; ?,)) (= origin row) (< index (length line))
            (equal line (plist-get before :line)))
-      (cons 'navigation (emacsvox-eat--deleted-character-name (aref line index))))
+      (cons 'character (aref line index)))
      ((eq key 12)
       (if (and ruler (string-empty-p (string-trim line)))
           (cons 'navigation (format "Line %d, no text displayed" (car ruler)))
@@ -472,7 +499,7 @@ their respective command rows."
       (let ((found (+ index (pcase find-key (?t 1) (?T -1) (_ 0)))))
         (when (and (<= 0 found) (< found (length line)) (= (aref line found) key)
                    (< index (length line)))
-          (cons 'navigation (emacsvox-eat--deleted-character-name (aref line index))))))
+          (cons 'character (aref line index)))))
      ((and moved (memq key '(?% ?{ ?})))
       (let ((location (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))))
         (if (string-blank-p line) (cons 'blank-location location)
@@ -498,8 +525,7 @@ their respective command rows."
            (equal line (emacsvox-eat--vim-line old row (plist-get after :window))))
       (cond
        ((memq key '(?h ?l left right ?0 ?^ ?$ home end))
-        (cons 'navigation (if (< index (length line))
-                              (emacsvox-eat--deleted-character-name (aref line index)) "blank")))
+        (if (< index (length line)) (cons 'character (aref line index)) (cons 'navigation "blank")))
        ((memq key '(?b ?w ?e ?B ?W ?E))
         (cons 'navigation (emacsvox-eat--vim-word line index (memq key '(?B ?W ?E))))))))))
 
@@ -569,27 +595,29 @@ STATUS contains Vim's rendered command row."
              (or (equal command "~") (= (cadr keys) (aref b i)))
              (equal (substring a 0 i) (substring b 0 i))
              (equal (substring a (1+ i)) (substring b (1+ i))))
-        (format "Replaced %s with %s" (emacsvox-eat--deleted-character-name (aref a i))
-                (emacsvox-eat--deleted-character-name (aref b i))))
+        (if (equal command "~")
+            (list (if (= (upcase (aref b i)) (aref b i)) 'uppercase 'lowercase)
+                  (emacsvox-eat--deleted-character-name (aref b i)))
+          (format "Replaced %s with %s" (emacsvox-eat--deleted-character-name (aref a i))
+                  (emacsvox-eat--deleted-character-name (aref b i)))))
        ((and (equal command "D") (< i (length a)) (equal (string-trim-right (substring a 0 i)) b))
-        (concat "Deleted " (emacsvox-eat--vim-row-text (substring a i))))
+        (emacsvox-eat--vim-deletion (substring a i)))
        ((and (equal command "diw") (<= j i) (< i (length a)))
         (let ((end (+ j (- (length a) (length b)))))
           (when (and (< i end) (<= end (length a))
                      (equal b (concat (substring a 0 j) (substring a end))))
-            (concat "Deleted " (emacsvox-eat--vim-row-text (substring a j end))))))
+            (emacsvox-eat--vim-deletion (substring a j end)))))
        ((and (string-match-p (rx string-start (+ digit) "dd" string-end) command)
              (string-match (rx string-start (group (+ digit)) " fewer lines" string-end)
                            (plist-get status :text)))
-        (format "Deleted %s lines, %s" (match-string 1 (plist-get status :text))
-                (emacsvox-eat--vim-row-text b)))
+        (list 'deletion (format "%s lines deleted, %s" (match-string 1 (plist-get status :text))
+                                (emacsvox-eat--vim-row-text b))))
        ((and (equal command "J") next (not (equal a b)) (string-prefix-p a b)
              (string-suffix-p (string-trim next) b))
         (concat "Joined, " (emacsvox-eat--vim-row-text b)))
        ((and (member command '(">>" "<<")) (not (equal a b))
              (equal (string-trim-left a) (string-trim-left b)))
-        (format "%s, column %d" (if (equal command ">>") "Indented" "Outdented")
-                (1+ (- (string-width b) (string-width (string-trim-left b))))))))))
+        (list 'indent (format "Column %d" (1+ (- (string-width b) (string-width (string-trim-left b)))))))))))
 
 (defun emacsvox-eat--vim-edit (keys old new before after inserting status)
   "Describe an edit confirmed between OLD and NEW at BEFORE and AFTER.
@@ -612,12 +640,12 @@ STATUS describes the command row on NEW."
            (memq key '(21 23)) (< j i) (<= i (length a))
            (equal (string-trim-right (concat (substring a 0 j) (substring a i)))
                   (string-trim-right b)))
-      (concat "Deleted " (emacsvox-eat--vim-row-text (substring a j i))))
+      (emacsvox-eat--vim-deletion (substring a j i)))
      ((and same-row (equal (plist-get status :mode) "Insert") (memq key '(9 tab))
            (< i j) (<= j (length b)) (equal (substring a 0 i) (substring b 0 i))
            (string-match-p (rx string-start (+ blank) string-end) (substring b i j))
            (equal (string-trim-right (substring a i)) (string-trim-right (substring b j))))
-      (format "Column %d" (or (cdr (plist-get status :ruler)) (1+ (plist-get after :column)))))
+      (list 'indent (format "Column %d" (or (cdr (plist-get status :ruler)) (1+ (plist-get after :column))))))
      ((and (not inserting) (memq key '(?x ?X)) same-row
            (string-empty-p (string-trim a)) (not (string-empty-p (string-trim b))))
       ;; A terminal can leave a row empty until Vim edits it after closing a split.
@@ -635,21 +663,19 @@ STATUS describes the command row on NEW."
                  when (and (<= 0 start) (< start end) (<= end (length a))
                            (equal (string-trim-right (concat (substring a 0 start) (substring a end)))
                                   trimmed))
-                 return (concat "Deleted "
-                                (if (= (1+ start) end)
-                                    (emacsvox-eat--deleted-character-name (aref a start))
-                                  (emacsvox-eat--vim-row-text (substring a start end)))))))
+                 return (emacsvox-eat--vim-deletion (substring a start end)))))
      ((and inserting (eq key 'backspace) (= (1+ target) row)
            (string-suffix-p (string-trim-right a) (string-trim-right b)))
-      "Deleted newline")
+      (emacsvox-eat--vim-deletion "\n"))
      ((and inserting (eq key 'return) (= target (1+ row))
            (string-suffix-p (string-trim-right (substring a i)) (string-trim-right b)))
-      "New line")
+      (list 'line-created (and emacsvox-line-echo (emacsvox-eat--vim-row-text
+                                                   (emacsvox-eat--vim-line new row window)))))
      ((and (not inserting) (equal (last keys 2) '(?d ?d))
            (or (and same-row next (equal (string-trim-right b) (string-trim-right next)))
                (and (= (1+ target) row)
                     (equal b (emacsvox-eat--vim-line old target window)))))
-      (concat "Deleted line, " (emacsvox-eat--vim-row-text a)))
+      (list 'deletion (emacsvox-eat--vim-row-text a)))
      ((and (not inserting) (memq key '(?p ?P)))
       (when-let* ((added
                    (cond
@@ -658,10 +684,10 @@ STATUS describes the command row on NEW."
                     ((and (or (= target (1+ row)) (and same-row change))
                           (equal (emacsvox-eat--vim-line old target window)
                                  (emacsvox-eat--vim-line new (1+ target) window))) b))))
-        (concat "Pasted " (emacsvox-eat--vim-row-text added))))
+        (list 'paste (emacsvox-eat--vim-row-text added))))
      ((and (not inserting) (memq key '(?u 18 ?.)) (or change (not same-row)))
-      (concat (pcase key (?u "Undo, ") (18 "Redo, ") (?. "Repeated change, "))
-              (emacsvox-eat--vim-row-text b))))))
+      (if (eq key ?.) (concat "Repeated change, " (emacsvox-eat--vim-row-text b))
+        (list 'row (emacsvox-eat--vim-row-text b)))))))
 
 (defun emacsvox-eat--vim-selection-position (status point)
   "Return a comparable file or screen position from STATUS and POINT."
@@ -799,10 +825,11 @@ STATUS, when supplied, is the already parsed Vim footer."
       (let ((old (emacsvox-eat--vim-fold-summary before)) (new (emacsvox-eat--vim-fold-summary after)))
         (cond
          ((and new (memq op '(?f ?c ?C ?a ?A)))
-          (format "Fold %s, %s lines, %s" (if (eq op ?f) "created" "closed")
-                  (car new) (emacsvox-eat--vim-row-text (cdr new))))
+          (list 'fold-closed (format "Fold %s, %s lines, %s" (if (eq op ?f) "created" "closed")
+                                     (car new) (emacsvox-eat--vim-row-text (cdr new)))))
          ((and old (memq op '(?o ?O ?a ?A)))
-          (format "Fold opened, %s lines, %s" (car old) (emacsvox-eat--vim-row-text (plist-get after :line)))))))))
+          (list 'fold-opened (format "Fold opened, %s lines, %s" (car old)
+                                     (emacsvox-eat--vim-row-text (plist-get after :line))))))))))
 
 (defun emacsvox-eat--vim-replay-result (label old new before after from to)
   "Describe the visible result of LABEL between OLD and NEW.
@@ -840,7 +867,7 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
      ((and (not (or typing selection (plist-get from :prompt))) (not (plist-get from :completion))
-           (when-let* ((fold (emacsvox-eat--vim-fold keys before after))) (list 'navigation fold))))
+           (emacsvox-eat--vim-fold keys before after)))
      ((and (memq (car (last keys)) '(escape 5)) (not (plist-get to :prompt))
            (emacsvox-eat--vim-file-argument from)
            (cl-some (lambda (r) (= (plist-get r :row-start) (1- (plist-get before :row))))
@@ -849,19 +876,19 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
      ((and (memq (car (last keys)) '(9 tab)) (emacsvox-eat--vim-file-argument to))
       (let ((name (emacsvox-eat--vim-file-argument to)))
         (cond ((not (equal name (emacsvox-eat--vim-file-argument from)))
-               (list 'navigation name))
+               (list 'completion name))
               ((and emacsvox-eat--last-bell-at
                     (>= emacsvox-eat--last-bell-at (- emacsvox-eat--vim-deadline emacsvox-eat--vim-input-timeout)))
-               (list 'navigation "No filename match")))))
+               (list 'completion "No filename match")))))
      ((and (plist-get to :file-completion) (memq (car (last keys)) '(6 14 16)))
       (let ((status (plist-get to :completion)))
-        (list 'navigation
+        (list 'completion
               (if (or (string-prefix-p "match " status) (equal status "The only match"))
                   (string-join (delq nil (list (emacsvox-eat--vim-file-candidate new before after)
                                                 (string-remove-prefix "match " status))) ", ")
                 status))))
      ((and (plist-get to :completion) (memq (car (last keys)) '(14 16)))
-      (list 'navigation (emacsvox-eat--vim-completion (plist-get to :completion) before after)))
+      (list 'completion (emacsvox-eat--vim-completion (plist-get to :completion) before after)))
      ((and (plist-get from :completion) (not (plist-get to :completion)) (equal mode "Insert"))
       (pcase (car (last keys))
         (25 (list 'edit "Completion accepted"))
@@ -879,13 +906,13 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
            (or (plist-get to :ruler) (plist-get from :pending-yank)))
       ;; The register is private to Vim. Describe the requested line.
       (let ((line (plist-get after :line)))
-        (list 'edit (if (eq (car (last keys)) ?y)
+        (list 'copy (if (eq (car (last keys)) ?y)
                         (concat "Yank line, " (emacsvox-eat--vim-row-text line))
                       (concat "Yank word, " (emacsvox-eat--vim-word
                                              (substring line (plist-get after :index)) 0 nil))))))
      ((and new-mode (not mode) (eq (car (last keys)) ?y)
            (string-prefix-p "Visual" (or (plist-get from :mode) "")))
-      (list 'edit "Yanked selection"))
+      (list 'copy "Yanked selection"))
      ((and new-mode (not mode) (memq (car (last keys)) '(?d ?x))
            (string-prefix-p "Visual" (or (plist-get from :mode) "")))
       (let* ((window (plist-get after :window)) (row (plist-get after :row))
@@ -893,12 +920,10 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
              (change (and original (emacsvox-eat--sequence-change
                                     (string-trim-right original) (string-trim-right line)))))
         (when change
-          (list 'edit
-                (if (= (plist-get change :start) (plist-get change :new-end))
-                    (concat "Deleted " (emacsvox-eat--vim-row-text
-                                        (substring original (plist-get change :start)
-                                                   (plist-get change :old-end))))
-                  (concat "Deleted selection. " (emacsvox-eat--vim-row-text line)))))))
+          (if (= (plist-get change :start) (plist-get change :new-end))
+              (emacsvox-eat--vim-deletion (substring original (plist-get change :start)
+                                                     (plist-get change :old-end)))
+            (list 'deletion (concat "Selection deleted. " (emacsvox-eat--vim-row-text line)))))))
      ((and selection (not new-mode) (not (equal before after)))
       (when-let* ((extent (emacsvox-eat--vim-selection
                            mode (emacsvox-eat--vim-selection-position to after))))
@@ -912,7 +937,7 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                   extent)))))
      ((and (not selection) (not new-mode))
       (if-let* ((edit (emacsvox-eat--vim-edit keys old new before after typing to)))
-          (list 'edit edit)
+          (if (consp edit) edit (list 'edit edit))
         (when (or (not typing)
                   (and (not prompt) (memq (car (last keys)) '(left right up down))))
           (when-let* ((motion (emacsvox-eat--vim-motion keys old new before after from to)))
@@ -1077,7 +1102,14 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
         (emacsvox-eat--vim-say
          (if (and message prior-message (string-prefix-p (concat prior-message ". ") message))
              (substring message (+ 2 (length prior-message))) announcement)
-         'status)))
+         (if (and (equal mode "Insert") (not prior-mode) compatible
+                  (memq (car (emacsvox-eat--vim-command-tail keys)) '(?o ?O))
+                  (or (/= (plist-get before :row) (plist-get after :row))
+                      (not (equal (plist-get old :rows) (plist-get screen :rows)))))
+             'line-created 'status)
+         (cond ((and (plist-get to :recording) (not (plist-get previous :recording))) 'open-object)
+               ((and (plist-get previous :recording) (not (plist-get to :recording))) 'close-object)
+               ((and mode (string-prefix-p "Visual" mode) (not prior-mode)) 'mark-object)))))
     (pcase (car feedback)
       ('echo
        (let ((text (nth 1 feedback)))
@@ -1103,7 +1135,14 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
            (setq emacsvox-eat--last-focus-presentation-identity identity)
            (if (string-blank-p (plist-get after :line)) (emacsvox-eat--vim-blank-row)
              (emacsvox-eat--vim-say text 'navigation)))))
-      ((or 'navigation 'edit) (emacsvox-eat--vim-say (nth 1 feedback) (car feedback))))
+      ('copy (emacsvox-eat--vim-say (nth 1 feedback) 'edit 'mark-object))
+      ('indent (emacsvox-eat--vim-say (nth 1 feedback) 'edit 'fill-object))
+      ('fold-opened (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'open-object))
+      ('fold-closed (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'close-object))
+      ('mark (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'mark-object))
+      ('jump (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'large-movement))
+      ((or 'navigation 'character 'edit 'deletion 'paste 'line-created 'uppercase 'lowercase 'completion)
+       (emacsvox-eat--vim-say (nth 1 feedback) (car feedback))))
     (cond
      (opening-help)
      (remaining
