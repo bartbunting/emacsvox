@@ -6314,9 +6314,9 @@ Choosing Shell/comint from another buffer explains the required context and
 leaves its controls unavailable.
 
 EAT changes also belong to the captured terminal@comma{} including when opened from
-frozen review. Its @kbd{w} saves the four displayed values as defaults; terminals
-with local overrides keep them. Background monitoring is independent of
-foreground speech and never reads background content. Follow
+frozen review. Its @kbd{w} saves the speech@comma{} monitoring@comma{} prompt and verbosity
+defaults. Terminals with local overrides keep them. Background monitoring is
+independent of foreground speech and never reads background content. Follow
 @ref{EAT Feedback Preferences,Adjust and save terminal feedback,,emacsvox,} for the controls and their conditions.
 
 @item
@@ -9640,12 +9640,16 @@ Speak retained completion candidates or help rows.
 Speak a bounded copy of the retained visible screen.
 @item C-e q r
 Open a read-only frozen copy for line-by-line review.
+@item C-e q x
+Read the visible Vim selection.
 @item C-e q t
-Speak retained progress@comma{} application@comma{} or shell-prompt status.
+Repeat the last retained status@comma{} including a Vim message or prompt.
 @item C-e q p
 Speak the last identified shell prompt.
 @item C-e q i
 Speak the retained@comma{} sanitised title or working-directory change.
+@item C-e q a
+Choose the application speech profile for this terminal.
 @item C-e q v
 Cycle terse@comma{} normal@comma{} and verbose automatic feedback for this terminal.
 @item C-e q m
@@ -9653,10 +9657,9 @@ Toggle content-free background monitoring for this terminal.
 @end table
 
 The reading commands inspect retained snapshots with concealed content
-redacted. The verbosity and monitoring commands instead change the source
-terminal's preferences. Neither operation sends terminal input. Speech is
-bounded: the retained visible screen is not arbitrary scrollback and need
-not match a changing live screen.
+redacted. The profile@comma{} verbosity and monitoring commands act on the source
+terminal. These commands run locally in Emacs. Review covers the visible
+screen at the time of capture. The live display can change while you read.
 
 @subsection Frozen Screen Review
 
@@ -9684,6 +9687,8 @@ Go to retained likely focus when available.
 @item [@comma{} ]
 Move among inverse/background-styled@comma{} selection-like regions. They are not
 labelled as confirmed focus.
+@item x
+Read the visible Vim selection copied when review opened.
 @item t@comma{} i
 Speak status or metadata copied when review opened.
 @item v@comma{} m
@@ -9742,6 +9747,8 @@ the integration chooser@comma{} and @kbd{C-e H /} finds individual controls.
 shell integration and automatic delivery obeys foreground autospeak.
 @item
 @kbd{d} chooses terse@comma{} normal@comma{} or verbose feedback.
+@item
+@kbd{a} chooses the application profile for this terminal session.
 @end itemize
 
 Arrows announce values and @kbd{@key{RET}} activates a control. Choice lists start on
@@ -9752,10 +9759,9 @@ belong to its source terminal.
 
 @kbd{q} returns to the originating menu entry. From direct @kbd{C-e S}@comma{} it closes
 the menu and announces the restored buffer and mode with a close cue. @kbd{w}
-saves the four displayed values as defaults through Customize. Terminals with
-local overrides keep them; others inherit the new defaults. Adjustment alone
-does not save. @kbd{A} opens advanced EAT settings and @kbd{q} there returns to the
-focused menu.
+saves the speech@comma{} monitoring@comma{} prompt and verbosity defaults through Customize.
+Terminals with local overrides keep them. Others inherit the new defaults.
+@kbd{A} opens advanced EAT settings and @kbd{q} there returns to the focused menu.
 
 @node EAT Shell Integration
 @section Shell Integration And Command Status
@@ -9861,12 +9867,126 @@ paste commands@comma{} not these terminal-originated sequences.
 
 @cindex curses applications, EAT
 @cindex alternate screen, EAT
+@cindex Vim in a terminal
+@findex emacsvox-eat-select-application-profile
+@findex emacsvox-eat-speak-vim-selection
+@kindex C-e q x (EAT)
+@kindex C-e q a (EAT)
 
 Pagers@comma{} editors@comma{} menus@comma{} and refreshing dashboards often rewrite cells instead
-of printing lines. Emacsvox uses conservative cursor@comma{} style-change@comma{} input-
-direction@comma{} and timing evidence. Arrow movement and clear paired highlight
-movement work best. Printable keys such as @kbd{h}@comma{} @kbd{j}@comma{} @kbd{k}@comma{} and @kbd{l} are not
-assumed to mean navigation: the application may treat them as text.
+of printing lines. The default Terminal profile follows arrow movement and
+clear changes in selection highlighting. Programs interpret printable keys
+themselves.
+
+When you open Vim locally or over SSH@comma{} use EAT's semi-character or character
+mode. Press @kbd{C-e q a} to hear the selected profile. Browse to Vim with the
+arrows and press @kbd{@key{RET}} to apply it@comma{} or @kbd{q} to cancel. This choice belongs to
+the current EAT buffer and works with stock Vim.
+
+If Vim is already waiting for an answer@comma{} the profile announcement includes
+the prompt. For example@comma{} when a swap file exists@comma{} you hear the letters for
+the choices Vim offers. Press the letter for your choice. Press @kbd{@key{RET}} if
+Vim asks you to continue. Use @kbd{C-e q t} to hear the prompt again.
+
+In Normal mode@comma{} @kbd{j} and @kbd{k} read the line you reach. A blank line plays
+your usual blank-line cue. @kbd{h} and @kbd{l} speak the character@comma{} and @kbd{w}@comma{} @kbd{b}
+and @kbd{e} speak the word. The arrows give the same line or character feedback
+in Insert mode. Use @kbd{f} followed by a character to find it on the current
+line. Repeat the find with a semicolon or reverse it with a comma.
+
+With the Vim profile selected@comma{} @kbd{C-Left} and @kbd{C-Right} move Vim's cursor by
+word in both semi-character and character mode. You hear the word you land
+on. In Normal mode@comma{} Vim treats @code{green@comma{}blue} as one word for these keys. In
+Insert mode@comma{} it stops on @code{green}@comma{} the comma and @code{blue} separately.
+
+Use @kbd{gg} to go to the first line or @kbd{G} to go to the last line. As with
+@kbd{M-<} and @kbd{M->} in Emacs@comma{} you hear the large-movement cue@comma{} the destination
+line and a “top” or “bottom” notification. A count such as @kbd{5G} or @kbd{5gg}
+takes you to line 5 and reads its number and text. Page with
+@kbd{C-d}@comma{} @kbd{C-u}@comma{} @kbd{C-f} or @kbd{C-b}@comma{} or move within the screen with @kbd{H}@comma{} @kbd{M} or
+@kbd{L}@comma{} to hear the destination and its position. With @kbd{ma}@comma{} you hear where
+you asked Vim to set mark a. Jump to its line with @kbd{'a} or its exact
+position with a backtick followed by @kbd{a}. Use @kbd{C-o} and @kbd{C-i} to move
+through Vim's jump history. A paragraph jump with @kbd{@{} or @kbd{@}} gives the
+position even on a blank line. Press @kbd{%} on a bracket to hear the position
+and character at the other end of the pair.
+
+When you move between Vim windows with @kbd{C-w w} or the directional window
+commands@comma{} you hear which way you moved and the row in the destination window.
+In side-by-side windows@comma{} movement and @kbd{C-e q l} read your side when Vim
+displays a distinctly styled divider.
+
+Press @kbd{i} to insert@comma{} @kbd{o} to open a line below@comma{} or @kbd{cw} to replace a word.
+Emacsvox announces Insert mode and echoes text as Vim draws it. Letters
+arriving together over SSH can be spoken together. Vim follows your Emacsvox
+character@comma{} word and line echo settings. Backspace plays your
+deletion cue and speaks the character removed. @kbd{C-w} and @kbd{C-u} read the
+word or line prefix that disappeared. @kbd{@key{TAB}} reports the column you reach.
+Escape announces the return to Normal mode when the mode label clears.
+With the standard English labels hidden@comma{} visible typing and movement can
+still provide feedback.
+
+For keyword completion@comma{} use @kbd{C-n} and @kbd{C-p}. For a filename@comma{} start with
+@kbd{C-x C-f}@comma{} then use @kbd{C-n} and @kbd{C-p} to hear the name and match position.
+@kbd{C-y} accepts and @kbd{C-e} cancels when sent to Vim. In semi-character mode@comma{}
+@kbd{C-q C-e} sends that cancellation key. Switch to character mode for sequences
+that EAT reserves@comma{} or quote the reserved key as described in
+@ref{EAT Input Modes,Choose an input mode,,emacsvox,}. At a Vim command prompt such as @kbd{:edit}@comma{} press
+@kbd{@key{TAB}} to hear the completed path.
+
+In Visual mode@comma{} extend or shrink a character@comma{} line or block selection to
+hear its extent. Short selections include the visible text. For a longer
+selection use @kbd{C-e q x} to read the portion on screen. In a frozen review@comma{}
+@kbd{x} reads the selection as it appeared when you opened the review.
+Replace mode also announces its visible mode label.
+
+In Normal mode@comma{} @kbd{x}@comma{} @kbd{dw}@comma{} @kbd{diw}@comma{} @kbd{D} and @kbd{dd} use the deletion cue and
+read what the redraw identifies. A counted deletion such as @kbd{3dd} can report
+Vim's count and the row now under the cursor. If the original row was missing
+from EAT@comma{} @kbd{x} can read the resulting row. @kbd{r} followed by a character reports
+the replacement. The tilde key changes case. @kbd{J} reads the joined line@comma{} and
+@kbd{>>} or @kbd{<<} reports its new indentation. With @kbd{yw} or @kbd{yy} you hear the word
+or line you asked Vim to copy. @kbd{p} gives the usual paste cue with the pasted
+text. Repeating a change with @kbd{.} or undoing it with @kbd{u} reads the result.
+
+Create a fold with a motion such as @kbd{zf2j}. When Vim displays the closed
+fold@comma{} you hear its line count and summary. @kbd{zo} opens it and reads the
+exposed row. @kbd{zc} closes it. When recording a macro@comma{} @kbd{qa} announces the
+displayed register and @kbd{q} announces the end of recording. Play it with
+@kbd{@@a} or repeat it with @kbd{@@@@}. Speech describes a visible result. After an
+observed Normal-mode action@comma{} a replay that leaves the display quiet gives
+a request acknowledgement.
+
+Start a search with @kbd{/} or @kbd{?} and press @kbd{@key{RET}}. To search for the word under
+the cursor@comma{} press @kbd{*} or @kbd{#}. These searches and @kbd{n} or @kbd{N} read the row
+containing the match. If EAT initially shows only the file line number@comma{}
+Emacsvox speaks that number and then the text if it arrives at the same
+position within three seconds. In Normal mode@comma{} @kbd{C-l} asks Vim to redraw and
+reads the current row. This can recover a match hidden by an incomplete
+@code{tmux} redraw. @kbd{C-e q l} reads the row EAT already has.
+
+For a substitution with confirmation@comma{} such as @kbd{:%s/one/two/gc}@comma{} listen for
+the replacement@comma{} match position and available answers. @kbd{y} or @kbd{n} advances
+to the next match@comma{} including a second match on the same row. @kbd{a} accepts the
+remaining matches and @kbd{q} stops. A count-only substitution reports the
+number of matches Vim displays.
+
+Use @kbd{:bnext} to switch buffers or @kbd{gt} and @kbd{gT} to change tabs. You hear
+the destination and its current row. Opening help reads the help destination.
+With @kbd{:cnext} or @kbd{:cprevious}@comma{} listen for the quickfix entry number@comma{} position
+and diagnostic. @kbd{:ls}@comma{} @kbd{:marks} and @kbd{:registers} read visible entries before
+the continuation prompt. Option queries such as @kbd{:set number?} read the
+displayed value. @kbd{C-e q t} repeats the retained result@comma{} including a save
+confirmation@comma{} a failed search@comma{} or the error and prompt after a refused quit.
+Ambiguous redraws@comma{} movements at a boundary and replies arriving more than
+three seconds after your last key can stay quiet.
+
+Emacsvox restores the Terminal profile when EAT sees the alternate screen
+close or the terminal resets or exits. Over SSH or inside @code{tmux}@comma{} a quit
+such as @kbd{:q} can leave the same terminal screen open. When Emacsvox
+recognises the returning shell prompt@comma{} you hear “Terminal profile”.
+If the prompt is unfamiliar and the Vim profile stays active@comma{} press
+@kbd{C-e q a} at the shell and choose Terminal.
 
 After a silent update@comma{} use @kbd{C-e q l}@comma{} @kbd{C-e q d}@comma{} or @kbd{C-e q h}. For systematic
 inspection@comma{} open @kbd{C-e q r} and review rows or selection-like regions. Rapid

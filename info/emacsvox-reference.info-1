@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1735 commands and 261 options.
+   This chapter documents a total of 1737 commands and 261 options.
 
 * Menu:
 
@@ -555,6 +555,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-eat-presentation:: EAT status and output presentation.
 * emacsvox-eat-review:: Frozen EAT screen review.
 * emacsvox-eat-screen:: EAT screen snapshots and differences.
+* emacsvox-eat-vim:: Speak Vim's rendered EAT display.
 * emacsvox-ebuku:: Speech-enable EBUKU.
 * emacsvox-ediff:: Speech enable  ediff.
 * emacsvox-eglot:: Speech-enable EGLOT.
@@ -8934,8 +8935,9 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
      RET, or period speaks the current row; C returns to the captured cursor; h
      moves to a retained likely focus; [ and ] move among selection-like styled
-     regions without treating them as focus; c shows retained completion/help
-     output; s returns to screen rows; a speaks the bounded current view; t and i
+     regions without treating them as focus; x reads the captured Vim selection.
+     c shows retained completion/help output; s returns to screen rows;
+     a speaks the bounded current view; t and i
      speak frozen status and metadata; v and m control source-terminal feedback
      without sending terminal input; and q kills the content-bearing review buffer.
 
@@ -8970,6 +8972,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      s		emacsvox-eat-review-show-screen
      t		emacsvox-eat-speak-retained-status
      v		emacsvox-eat-cycle-verbosity
+     x		emacsvox-eat-speak-vim-selection
      DEL		scroll-down-command
      S-SPC		scroll-down-command
      <down>		emacsvox-eat-review-next-line
@@ -9056,7 +9059,17 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak a bounded overview of the current immutable review view.
 
-2.130.1.14 emacsvox-eat-speak-completion-output
+2.130.1.14 emacsvox-eat-select-application-profile
+..................................................
+
+ -- Command: emacsvox-eat-select-application-profile
+     ‘C-e q a’
+
+     Choose Terminal or Vim speech for this EAT buffer.
+     Browse with the arrows and press Return to apply. Vim speaks visible modes,
+     motion, edits and command results in local or remote Vim sessions.
+
+2.130.1.15 emacsvox-eat-speak-completion-output
 ...............................................
 
  -- Command: emacsvox-eat-speak-completion-output
@@ -9064,7 +9077,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained terminal candidate or help-row presentation.
 
-2.130.1.15 emacsvox-eat-speak-current-row
+2.130.1.16 emacsvox-eat-speak-current-row
 .........................................
 
  -- Command: emacsvox-eat-speak-current-row
@@ -9072,7 +9085,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the terminal cursor row from the latest retained screen snapshot.
 
-2.130.1.16 emacsvox-eat-speak-last-change
+2.130.1.17 emacsvox-eat-speak-last-change
 .........................................
 
  -- Command: emacsvox-eat-speak-last-change
@@ -9080,7 +9093,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the most recent quiesced terminal change from retained state.
 
-2.130.1.17 emacsvox-eat-speak-likely-focus
+2.130.1.18 emacsvox-eat-speak-likely-focus
 ..........................................
 
  -- Command: emacsvox-eat-speak-likely-focus
@@ -9088,7 +9101,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest conservative terminal focus inference for review.
 
-2.130.1.18 emacsvox-eat-speak-prompt
+2.130.1.19 emacsvox-eat-speak-prompt
 ....................................
 
  -- Command: emacsvox-eat-speak-prompt
@@ -9097,7 +9110,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      Read the most recently identified EAT shell prompt.
      This explicit command works regardless of autospeak or prompt preference.
 
-2.130.1.19 emacsvox-eat-speak-retained-metadata
+2.130.1.20 emacsvox-eat-speak-retained-metadata
 ...............................................
 
  -- Command: emacsvox-eat-speak-retained-metadata
@@ -9105,7 +9118,7 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained or explicitly frozen title/directory change.
 
-2.130.1.20 emacsvox-eat-speak-retained-status
+2.130.1.21 emacsvox-eat-speak-retained-status
 .............................................
 
  -- Command: emacsvox-eat-speak-retained-status
@@ -9113,7 +9126,15 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest retained or explicitly frozen terminal status row.
 
-2.130.1.21 emacsvox-eat-speak-visible-screen
+2.130.1.22 emacsvox-eat-speak-vim-selection
+...........................................
+
+ -- Command: emacsvox-eat-speak-vim-selection
+     ‘C-e q x’
+
+     Read the visible Vim selection in this EAT terminal or frozen review.
+
+2.130.1.23 emacsvox-eat-speak-visible-screen
 ............................................
 
  -- Command: emacsvox-eat-speak-visible-screen
