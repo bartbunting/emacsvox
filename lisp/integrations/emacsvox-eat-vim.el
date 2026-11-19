@@ -743,6 +743,62 @@ STATUS, when supplied, is the already parsed Vim footer."
           (when-let* ((motion (emacsvox-eat--vim-motion keys old new before after from to)))
             (list (car motion) (cdr motion)))))))))
 
+(defun emacsvox-eat--vim-submitted-command (from keys)
+  "Return the Ex command submitted by KEYS from the displayed prompt FROM."
+  (when (eq (car (last keys)) 'return)
+    (let ((input (butlast keys)) (prompt (plist-get from :prompt)))
+      (when (and (cl-every #'characterp input)
+                 (or (eq prompt ?:) (and (not prompt) (eq (car input) ?:))))
+        (string-trim (substring (concat (and prompt (plist-get from :command))
+                                        (apply #'string input)) 1))))))
+
+(defun emacsvox-eat--vim-active-tab (screen)
+  "Read the active label from a stock Vim tab line on SCREEN."
+  (let ((line (car (plist-get screen :rows))))
+    (when (and line (string-suffix-p "X" (string-trim-right line)))
+      (cl-loop for (start end style) in (plist-get screen :styles)
+               while (< start (length line))
+               when (and (memq 'bold (plist-get style :traits)) (<= end (length line))
+                         (not (memq 'concealed (plist-get style :traits))))
+               return (string-trim (substring line start end))))))
+
+(defun emacsvox-eat--vim-destination (keys command from to screen after)
+  "Describe a visible destination reached with KEYS or submitted COMMAND.
+FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
+  (let* ((text (plist-get to :text)) (ruler (plist-get to :ruler))
+         (verb (and command (car (split-string command "[ !]+" t))))
+         (tail (emacsvox-eat--vim-command-tail keys))
+         (tab (or (member verb '("tabnew" "tabedit" "tabe" "tabnext" "tabn" "tabprevious"
+                                 "tabp" "tabfirst" "tablast" "tabclose" "tabonly"))
+                  (and (not (or (plist-get from :prompt) (plist-get from :mode)))
+                       (member tail '((?g ?t) (?g ?T))))))
+         (location (and ruler (format "line %d, column %d" (car ruler) (cdr ruler))))
+         (line (string-trim (plist-get after :line))))
+    (cond
+     ((and command
+           (string-match (rx string-start "(" (group (+ digit)) " of " (group (+ digit)) ")"
+                             (* (any ": ")) (group (* nonl)) string-end) text)
+           (member verb '("cn" "cnext" "cp" "cprev" "cprevious" "cc" "cfirst" "clast"
+                          "vimgrep" "grep" "lnext" "lprevious")))
+      (string-join (delq nil (list (format "Result %s of %s" (match-string 1 text) (match-string 2 text))
+                                   location (match-string 3 text))) ", "))
+     ((or tab (member verb '("e" "edit" "enew" "b" "buffer" "bn" "bnext" "bp" "bprev"
+                             "bprevious" "bf" "bfirst" "blast" "h" "help" "helpc" "helpclose")))
+      (let* ((help (member verb '("h" "help")))
+             (help-line (and help (cl-find-if (lambda (s) (string-match-p (rx "[Help]") s))
+                                               (nthcdr (plist-get after :row) (plist-get screen :rows)))))
+             (name (or (and tab (emacsvox-eat--vim-active-tab screen))
+                       (and (or (not tab) (member verb '("tabedit" "tabe" "tabnew")))
+                            (string-match (rx string-start "\"" (group (+ (not (any "\"")))) "\""
+                                              (+ blank)) text)
+                            (match-string 1 text)))))
+        (when (and help-line (string-match emacsvox-eat--vim-ruler help-line))
+          (setq location (format "line %s, column %s" (match-string 1 help-line)
+                                 (or (match-string 3 help-line) (match-string 2 help-line)))))
+        (string-join
+         (delq nil (list (string-join (delq nil (list (cond (tab "Tab") (help "Help") (t "Buffer")) name)) " ")
+                         location (emacsvox-eat--vim-row-text line))) ", "))))))
+
 (defun emacsvox-eat--vim-window-switch (keys before after)
   "Describe the destination of a window command in KEYS from BEFORE to AFTER."
   (when (and (cdr keys) (eq (car (last keys 2)) 23)
@@ -767,13 +823,21 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
          (previous (if (eq old baseline) from (emacsvox-eat--vim-status baseline)))
          (prior-message (plist-get previous :message))
          (mode (plist-get to :mode)) (prior-mode (plist-get previous :mode))
-         (prompt (plist-get to :prompt)) (message (plist-get to :message))
+         (prompt (plist-get to :prompt))
+         (command (and keys (not prompt) (emacsvox-eat--vim-submitted-command from keys)))
+         (after (emacsvox-eat--vim-point screen))
+         ;; Vim can print the help filename before it draws and enters the split.
+         (opening-help (and command (string-match-p (rx string-start (or "h" "help") (or blank string-end)) command)
+                            after (= (plist-get after :row) (emacsvox-eat--vim-status-index screen))
+                            (not (plist-get to :message))))
+         (message (or (plist-get to :message)
+                      (and after keys (not (or prompt mode opening-help))
+                           (emacsvox-eat--vim-destination keys command from to screen after))))
          (submitted (and (memq 'return keys) (not prompt)
                          (or (plist-get from :prompt)
                              (and (memq (car keys) '(?: ?/ ??))
                                   (or message (plist-get to :command) (plist-get to :search))))))
          (before (and keys (emacsvox-eat--vim-point old)))
-         (after (emacsvox-eat--vim-point screen))
          (same-display (and before after (equal (plist-get old :size) (plist-get screen :size))
                             (eq (plist-get old :alternate-screen) (plist-get screen :alternate-screen))))
          (compatible (and same-display
@@ -845,6 +909,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
          (emacsvox-eat--present-likely-focus focus)))
       ((or 'navigation 'edit) (emacsvox-eat--vim-say (nth 1 feedback) (car feedback))))
     (cond
+     (opening-help)
      (remaining
       (setq emacsvox-eat--vim-keys remaining emacsvox-eat--vim-origin screen))
      (emacsvox-eat--vim-quitting (emacsvox-eat--vim-forget-input))

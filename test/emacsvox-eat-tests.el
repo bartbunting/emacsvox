@@ -4840,6 +4840,27 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-buffers-tabs-and-quickfix ()
+  "Prefer the active tab to a stale filename and speak a quickfix diagnostic."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:bnext\e[K")
+    (should (equal (send "\e[Hsecond file\e[4;1H\"two\" 1L, 12B    1,1 All\e[H" 'return)
+                   '("Buffer two, line 1, column 1, second file")))
+    (key ?g)
+    (should (equal (send "\e[H\e[1m one \e[0m two                  X\e[2;1Hfirst file\e[2;1H" ?t)
+                   '("Tab one, line 1, column 1, first file")))
+    (send "\e[4;1H:cprevious\e[K")
+    (should (equal (send "\e[4;1H(1 of 3): missing comma   2,2 All\e[2;2H" 'return)
+                   '("Result 1 of 3, line 2, column 2, missing comma")))))
+
+(ert-deftest emacsvox-eat-vim-help-two-repaints ()
+  "Wait for the help split when the filename arrives first."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:help motion\e[K")
+    (should-not (send "\e[4;1H\"intro.txt\" [readonly] 90L, 500B\e[K" 'return))
+    (should (equal (send "\e[Hmotion help\e[K\e[2;1Hintro.txt [Help][RO]   20,1 All\e[K\e[H")
+                   '("Help intro.txt, line 20, column 1, motion help")))))
+
 (ert-deftest emacsvox-eat-vim-pages-marks-and-find-repeat ()
   "Read the destination when a scroll reuses the same cursor cell."
   (emacsvox-eat-test--with-vim
