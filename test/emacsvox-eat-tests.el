@@ -4840,6 +4840,20 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-folds ()
+  "Speak the rendered fold count and the row exposed when it opens."
+  (emacsvox-eat-test--with-vim
+    (mapc #'key '(?z ?f ?2))
+    (should (equal (send "\e[H+--  3 lines: alpha one---------\e[K\e[H" ?j)
+                   '("Fold created, 3 lines, alpha one")))
+    (key ?z)
+    (should (equal (send "\e[Halpha one\e[K\e[H" ?o) '("Fold opened, 3 lines, alpha one")))
+    (key ?z)
+    (should (equal (send "\e[H+--  3 lines: alpha one---------\e[K\e[H" ?c)
+                   '("Fold closed, 3 lines, alpha one")))
+    (key ?z)
+    (should-not (send "\e[H" ?c))))
+
 (ert-deftest emacsvox-eat-vim-filename-completion ()
   "Read the full name including spaces from the Ex prompt and Insert popup."
   (emacsvox-eat-test--with-vim

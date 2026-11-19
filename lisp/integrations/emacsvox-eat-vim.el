@@ -723,6 +723,27 @@ STATUS, when supplied, is the already parsed Vim footer."
         (concat (match-string 1 prefix) ", " position)
       status)))
 
+(defun emacsvox-eat--vim-fold-summary (point)
+  "Return the line count and description of a stock closed fold at POINT."
+  (let ((line (plist-get point :line)))
+    (when (string-match (rx string-start (* blank) "+" (+ "-") (+ blank) (group (+ digit))
+                            " line" (optional "s") ":" (* blank) (group (* nonl))) line)
+      (let ((count (match-string 1 line)) (label (match-string 2 line)))
+        (cons count (string-trim-right label (rx (+ (any "-─ ")) string-end)))))))
+
+(defun emacsvox-eat--vim-fold (keys before after)
+  "Describe opening or closing a fold when KEYS and both rendered rows agree."
+  (let* ((tail (emacsvox-eat--vim-command-tail keys)) (op (cadr tail)))
+    (when (and (eq (car tail) ?z) (memq op '(?f ?o ?O ?c ?C ?a ?A))
+               (not (equal (plist-get before :line) (plist-get after :line))))
+      (let ((old (emacsvox-eat--vim-fold-summary before)) (new (emacsvox-eat--vim-fold-summary after)))
+        (cond
+         ((and new (memq op '(?f ?c ?C ?a ?A)))
+          (format "Fold %s, %s lines, %s" (if (eq op ?f) "created" "closed")
+                  (car new) (emacsvox-eat--vim-row-text (cdr new))))
+         ((and old (memq op '(?o ?O ?a ?A)))
+          (format "Fold opened, %s lines, %s" (car old) (emacsvox-eat--vim-row-text (plist-get after :line)))))))))
+
 (defun emacsvox-eat--vim-feedback (keys old new before after from to)
   "Return keyboard feedback proved by the two screens and their parsed views."
   (let* ((mode (plist-get to :mode))
@@ -742,6 +763,8 @@ STATUS, when supplied, is the already parsed Vim footer."
                                     (and (equal mode "Insert") (eq (car keys) ?c))))
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
+     ((and (not (or typing selection (plist-get from :prompt))) (not (plist-get from :completion))
+           (when-let* ((fold (emacsvox-eat--vim-fold keys before after))) (list 'navigation fold))))
      ((and (memq (car (last keys)) '(escape 5)) (not (plist-get to :prompt))
            (emacsvox-eat--vim-file-argument from)
            (cl-some (lambda (r) (= (plist-get r :row-start) (1- (plist-get before :row))))
