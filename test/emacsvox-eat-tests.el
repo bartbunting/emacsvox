@@ -4840,6 +4840,20 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-pages-marks-and-find-repeat ()
+  "Read the destination when a scroll reuses the same cursor cell."
+  (emacsvox-eat-test--with-vim
+    (should (equal (send "\e[Hrow 20\e[K\e[4;1H20,1 50%\e[H" 4)
+                   '("Line 20, column 1, row 20")))
+    (key ?m)
+    (should (equal (send "\e[H" ?a) '("Mark a requested at line 20, column 1")))
+    (key ?')
+    (should (equal (send "\e[4;1H21,1 50%\e[2;1H" ?b) '("Line 21, column 1, beta two")))
+    (should (equal (send "\e[4;1H20,1 50%\e[H" 15) '("Line 20, column 1, row 20")))
+    (should (equal (send "\e[4;1H21,1 50%\e[2;1H" 9) '("Line 21, column 1, beta two")))
+    (should (equal (send "\e[2;3H" ?\;) '("t")))
+    (should (equal (send "\e[2;1H" ?,) '("b")))))
+
 (ert-deftest emacsvox-eat-vim-jump-destinations ()
   "Speak confirmed word searches, character finds, bracket and paragraph jumps."
   (emacsvox-eat-test--with-vim

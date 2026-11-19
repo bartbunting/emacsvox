@@ -395,8 +395,24 @@ their respective command rows."
                          (not (equal (plist-get from :ruler) (plist-get to :ruler))))))
          (direction (cond ((memq key '(?j down)) 'down) ((memq key '(?k up)) 'up)))
          (find-key (and (cdr keys) (car (last keys 2))))
-         (ruler (plist-get to :ruler)))
+         (ruler (plist-get to :ruler))
+         (tail (emacsvox-eat--vim-command-tail keys))
+         (mark (and (length= tail 2) (characterp key)
+                    (string-match-p (rx string-start alpha string-end) (string key)))))
     (cond
+     ((and mark (eq (car tail) ?m) (equal before after)
+           (not (plist-get to :prompt)) ruler)
+      (cons 'navigation (format "Mark %c requested at line %d, column %d" key (car ruler) (cdr ruler))))
+     ((and (or (memq key '(4 21 6 2 15 9 tab ?H ?M ?L))
+               (and (memq (car tail) '(?\' ?\x60)) (length= tail 2)))
+           (or moved (not (equal line (plist-get before :line)))
+               (and ruler (memq key '(?H ?M ?L)))))
+      (cons 'navigation
+            (format "%s, column %d, %s" (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
+                    (or (cdr ruler) (1+ (plist-get after :column))) (emacsvox-eat--vim-row-text line))))
+     ((and moved (memq key '(?\; ?,)) (= origin row) (< index (length line))
+           (equal line (plist-get before :line)))
+      (cons 'navigation (emacsvox-eat--deleted-character-name (aref line index))))
      ((eq key 12)
       (if (and ruler (string-empty-p (string-trim line)))
           (cons 'navigation (format "Line %d, no text displayed" (car ruler)))
@@ -447,7 +463,9 @@ Motions at a boundary can leave no repaint to consume their input."
 
 (defun emacsvox-eat--vim-unchanged-input-p ()
   "Whether a pending Vim command may finish without changing a cell."
-  (member (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys) '((?y ?y) (?y ?w) (12))))
+  (let ((keys (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys)))
+    (or (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L)))
+        (and (eq (car keys) ?m) (length= keys 2)))))
 
 (defun emacsvox-eat--vim-normal-edit (keys a b i j next status)
   "Describe a Normal command in KEYS using rows A, B, indexes I, J and NEXT.
