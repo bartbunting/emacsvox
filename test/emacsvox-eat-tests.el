@@ -4840,6 +4840,22 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (emacsvox-eat-speak-retained-status)
       (should (equal speech (list (concat "Retained terminal status: " listing)))))))
 
+(ert-deftest emacsvox-eat-vim-filename-completion ()
+  "Read the full name including spaces from the Ex prompt and Insert popup."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 72 4)
+    (send "\e[4;1H:edit tw\e[K")
+    (should (equal (send "o\\ words.txt" 9) '("two words.txt")))
+    (send "\e[4;1H-- INSERT --\e[K\e[Hfind tw\e[K\e[1;8H" ?i)
+    (key 24)
+    (should (equal (send (concat "o words.txt\e[2;1H\e[7mtwo words.txt\e[0m\e[K"
+                                 "\e[4;1H-- File name completion (^F^N^P) match 1 of 2\e[1;19H") 6)
+                   '("two words.txt, 1 of 2")))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[1;8H" 5) '("Completion cancelled")))
+    (key 24)
+    (should (equal (send "\e[4;1H-- File name completion (^F^N^P) Pattern not found\e[1;8H" 6)
+                   '("Pattern not found")))))
+
 (ert-deftest emacsvox-eat-vim-ex-results-and-retention ()
   "Separate command output from file rows and retain the result with its prompt."
   (emacsvox-eat-test--with-vim

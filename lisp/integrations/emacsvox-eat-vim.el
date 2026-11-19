@@ -197,7 +197,8 @@
                     (setq line (substring line 0 (match-beginning 0))))))
          (text (string-trim-right line))
          (at-command (= (or (plist-get screen :cursor-row) -1) row))
-         (completion (when (string-match (rx string-start "-- Keyword completion (^N^P)"
+         (completion (when (string-match (rx string-start "-- "
+                                             (or "Keyword completion (^N^P)" "File name completion (^F^N^P)")
                                              (+ blank) (group (+ nonl))) text)
                        (match-string 1 text)))
          (mode (cond (completion "Insert")
@@ -229,6 +230,7 @@
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
     (list :mode mode :completion completion :prompt prompt :message message :ruler ruler :text text
+          :file-completion (and completion (string-prefix-p "-- File name completion" text))
           :pager (string-match-p (rx string-start (or "Press ENTER" "-- More --")) text)
           :confirmation confirmation
           :command (and (string-prefix-p ":" text) text)
@@ -491,7 +493,7 @@ Motions at a boundary can leave no repaint to consume their input."
 (defun emacsvox-eat--vim-unchanged-input-p ()
   "Whether a pending Vim command may finish without changing a cell."
   (let ((keys (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys)))
-    (or (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L)))
+    (or (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L) (9) (tab)))
         (and (eq (car keys) ?m) (length= keys 2)))))
 
 (defun emacsvox-eat--vim-normal-edit (keys a b i j next status)
@@ -688,6 +690,29 @@ STATUS, when supplied, is the already parsed Vim footer."
             (nthcdr (if (memq (car motion) '(?i ?a ?f ?F ?t ?T ?g)) 2 1) motion))
         (cdr tail)))))
 
+(defun emacsvox-eat--vim-file-argument (state)
+  "Return the displayed filename argument in an active Ex file prompt STATE."
+  (when-let* (((eq (plist-get state :prompt) ?:)) (command (plist-get state :command))
+              ((string-match (rx string-start ":" (* blank)
+                                 (or "e" "edit" "tabedit" "tabe" "split" "vsplit" "read" "write")
+                                 (optional "!") (+ blank) (group (* nonl)) string-end) command)))
+    (string-replace "\\ " " " (match-string 1 command))))
+
+(defun emacsvox-eat--vim-file-candidate (screen before after)
+  "Read the completed filename at AFTER on SCREEN, using BEFORE for a single match."
+  (let* ((prefix (substring (plist-get after :line) 0 (plist-get after :index)))
+         (initial (substring (plist-get before :line) 0 (plist-get before :index)))
+         (candidates
+          (cl-loop for r in (emacsvox-eat--highlight-regions screen)
+                   for name = (plist-get r :text)
+                   when (and (not (= (plist-get after :row) (plist-get r :row-start)))
+                             (not (string-empty-p name)) (string-suffix-p name prefix))
+                   collect name)))
+    (or (car (sort candidates :key #'length :lessp #'>))
+        (let ((start (if (string-match (rx (* (not blank)) string-end) initial) (match-beginning 0) 0)))
+          (when (and (< start (length prefix)) (string-prefix-p (substring initial 0 start) prefix))
+            (substring prefix start))))))
+
 (defun emacsvox-eat--vim-completion (status before after)
   "Read the keyword Vim inserted and the match position displayed in STATUS."
   (let ((position (string-remove-prefix "match " status))
@@ -717,6 +742,25 @@ STATUS, when supplied, is the already parsed Vim footer."
                                     (and (equal mode "Insert") (eq (car keys) ?c))))
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
+     ((and (memq (car (last keys)) '(escape 5)) (not (plist-get to :prompt))
+           (emacsvox-eat--vim-file-argument from)
+           (cl-some (lambda (r) (= (plist-get r :row-start) (1- (plist-get before :row))))
+                    (emacsvox-eat--highlight-regions old)))
+      (list 'edit "Filename completion cancelled"))
+     ((and (memq (car (last keys)) '(9 tab)) (emacsvox-eat--vim-file-argument to))
+      (let ((name (emacsvox-eat--vim-file-argument to)))
+        (cond ((not (equal name (emacsvox-eat--vim-file-argument from)))
+               (list 'navigation name))
+              ((and emacsvox-eat--last-bell-at
+                    (>= emacsvox-eat--last-bell-at (- emacsvox-eat--vim-deadline emacsvox-eat--vim-input-timeout)))
+               (list 'navigation "No filename match")))))
+     ((and (plist-get to :file-completion) (memq (car (last keys)) '(6 14 16)))
+      (let ((status (plist-get to :completion)))
+        (list 'navigation
+              (if (or (string-prefix-p "match " status) (equal status "The only match"))
+                  (string-join (delq nil (list (emacsvox-eat--vim-file-candidate new before after)
+                                                (string-remove-prefix "match " status))) ", ")
+                status))))
      ((and (plist-get to :completion) (memq (car (last keys)) '(14 16)))
       (list 'navigation (emacsvox-eat--vim-completion (plist-get to :completion) before after)))
      ((and (plist-get from :completion) (not (plist-get to :completion)) (equal mode "Insert"))
