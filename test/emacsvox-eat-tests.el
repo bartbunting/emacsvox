@@ -4869,6 +4869,29 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (key ?y)
     (should (equal (send "yy" ?y) '("yy")))))
 
+(ert-deftest emacsvox-eat-vim-normal-operators ()
+  "Read the rendered replacement, deletion, indentation, join and yank request."
+  (emacsvox-eat-test--with-vim
+    (key ?r)
+    (should (equal (send "\e[Hx\e[H" ?x) '("Replaced a with x")))
+    (should (equal (send "\e[HX\e[1;2H" ?~) '("Replaced x with cap x")))
+    (should (equal (send "\e[K\e[H" ?D) '("Deleted lpha one")))
+    (send "\e[Halpha one\e[1;3H")
+    (mapc #'key '(?d ?i))
+    (should (equal (send "\e[H one\e[K\e[H" ?w) '("Deleted alpha")))
+    (send "\e[Halpha one\e[H")
+    (key ?y)
+    (should (equal (send "\e[H" ?w) '("Yank word, alpha")))
+    (key ?>)
+    (should (equal (send "\e[H    alpha one\e[1;5H" ?>) '("Indented, column 5")))
+    (key ?<)
+    (should (equal (send "\e[Halpha one\e[K\e[H" ?<) '("Outdented, column 1")))
+    (should (equal (send "\e[1;10H beta two\e[2;1Hgamma\e[K\e[1;10H" ?J)
+                   '("Joined, alpha one beta two")))
+    (mapc #'key '(?3 ?d))
+    (should (equal (send "\e[Hlast\e[K\e[4;1H3 fewer lines    1,1 All\e[H" ?d)
+                   '("Deleted 3 lines, last")))))
+
 (ert-deftest emacsvox-eat-vim-insert-arrows-and-change-word-echo ()
   "Read Insert arrow destinations and keep the first replacement characters."
   (emacsvox-eat-test--with-vim

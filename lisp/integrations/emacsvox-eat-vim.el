@@ -202,7 +202,7 @@
            ((string-match-p "\\`\\(?:[EW][0-9]+:\\|search hit \\|Pattern not found\\)" text) text)
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
-    (list :mode mode :completion completion :prompt prompt :message message :ruler ruler
+    (list :mode mode :completion completion :prompt prompt :message message :ruler ruler :text text
           :confirmation confirmation
           :command (and (string-prefix-p ":" text) text)
           :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
@@ -435,9 +435,59 @@ their respective command rows."
        ((memq key '(?b ?w ?e ?B ?W ?E))
         (cons 'navigation (emacsvox-eat--vim-word line index (memq key '(?B ?W ?E))))))))))
 
-(defun emacsvox-eat--vim-edit (keys old new before after inserting)
+(defun emacsvox-eat--vim-command-tail (keys)
+  "Skip completed positioning keys before the final command in KEYS.
+Motions at a boundary can leave no repaint to consume their input."
+  (while (and (cdr keys)
+              (cond ((and (eq (car keys) ?g) (eq (cadr keys) ?g) (cddr keys))
+                     (setq keys (cddr keys)))
+                    ((memq (car keys) '(?0 ?^ ?$ ?h ?j ?k ?l home end left right up down))
+                     (setq keys (cdr keys))))))
+  keys)
+
+(defun emacsvox-eat--vim-unchanged-input-p ()
+  "Whether a pending Vim command may finish without changing a cell."
+  (member (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys) '((?y ?y) (?y ?w) (12))))
+
+(defun emacsvox-eat--vim-normal-edit (keys a b i j next status)
+  "Describe a Normal command in KEYS using rows A, B, indexes I, J and NEXT.
+STATUS contains Vim's rendered command row."
+  (setq keys (emacsvox-eat--vim-command-tail keys))
+  (let ((a (string-trim-right a)) (b (string-trim-right b))
+        (command (when (cl-every #'characterp keys) (apply #'string keys))))
+    (when command
+      (cond
+       ((and (or (and (length= keys 2) (eq (car keys) ?r)) (equal command "~"))
+             (< i (length a)) (< i (length b)) (/= (aref a i) (aref b i))
+             (or (equal command "~") (= (cadr keys) (aref b i)))
+             (equal (substring a 0 i) (substring b 0 i))
+             (equal (substring a (1+ i)) (substring b (1+ i))))
+        (format "Replaced %s with %s" (emacsvox-eat--deleted-character-name (aref a i))
+                (emacsvox-eat--deleted-character-name (aref b i))))
+       ((and (equal command "D") (< i (length a)) (equal (string-trim-right (substring a 0 i)) b))
+        (concat "Deleted " (emacsvox-eat--vim-row-text (substring a i))))
+       ((and (equal command "diw") (<= j i) (< i (length a)))
+        (let ((end (+ j (- (length a) (length b)))))
+          (when (and (< i end) (<= end (length a))
+                     (equal b (concat (substring a 0 j) (substring a end))))
+            (concat "Deleted " (emacsvox-eat--vim-row-text (substring a j end))))))
+       ((and (string-match-p (rx string-start (+ digit) "dd" string-end) command)
+             (string-match (rx string-start (group (+ digit)) " fewer lines" string-end)
+                           (plist-get status :text)))
+        (format "Deleted %s lines, %s" (match-string 1 (plist-get status :text))
+                (emacsvox-eat--vim-row-text b)))
+       ((and (equal command "J") next (not (equal a b)) (string-prefix-p a b)
+             (string-suffix-p (string-trim next) b))
+        (concat "Joined, " (emacsvox-eat--vim-row-text b)))
+       ((and (member command '(">>" "<<")) (not (equal a b))
+             (equal (string-trim-left a) (string-trim-left b)))
+        (format "%s, column %d" (if (equal command ">>") "Indented" "Outdented")
+                (1+ (- (string-width b) (string-width (string-trim-left b))))))))))
+
+(defun emacsvox-eat--vim-edit (keys old new before after inserting status)
   "Describe an edit confirmed between OLD and NEW at BEFORE and AFTER.
-INSERTING means the visible mode or command prompt accepts text."
+INSERTING means the visible mode or command prompt accepts text.
+STATUS describes the command row on NEW."
   (let* ((key (car (last keys))) (row (plist-get before :row)) (target (plist-get after :row))
          (a (plist-get before :line)) (b (plist-get after :line))
          (i (plist-get before :index)) (j (plist-get after :index))
@@ -449,6 +499,8 @@ INSERTING means the visible mode or command prompt accepts text."
          (change (and same-row (emacsvox-eat--sequence-change (string-trim-right a)
                                                              (string-trim-right b)))))
     (cond
+     ((and (not inserting) same-row
+           (emacsvox-eat--vim-normal-edit keys a b i j next status)))
      ((and (not inserting) (memq key '(?x ?X)) same-row
            (string-empty-p (string-trim a)) (not (string-empty-p (string-trim b))))
       ;; A terminal can leave a row empty until Vim edits it after closing a split.
@@ -561,11 +613,16 @@ INSERTING means the visible mode or command prompt accepts text."
         (5 (list 'edit "Completion cancelled"))
         (_ (when echo (list 'echo (car echo) (cdr echo))))))
      (echo (list 'echo (car echo) (cdr echo)))
-     ((and (not typing) (not selection) (not new-mode) (equal keys '(?y ?y))
+     ((and (not typing) (not selection) (not new-mode)
+           (member (emacsvox-eat--vim-command-tail keys) '((?y ?y) (?y ?w)))
            (not (plist-get to :pending-yank)) (equal before after)
            (or (plist-get to :ruler) (plist-get from :pending-yank)))
       ;; The register is private to Vim. Describe the requested line.
-      (list 'edit (concat "Yank line, " (emacsvox-eat--vim-row-text (plist-get after :line)))))
+      (let ((line (plist-get after :line)))
+        (list 'edit (if (eq (car (last keys)) ?y)
+                        (concat "Yank line, " (emacsvox-eat--vim-row-text line))
+                      (concat "Yank word, " (emacsvox-eat--vim-word
+                                             (substring line (plist-get after :index)) 0 nil))))))
      ((and new-mode (not mode) (eq (car (last keys)) ?y)
            (string-prefix-p "Visual" (or (plist-get from :mode) "")))
       (list 'edit "Yanked selection"))
@@ -587,7 +644,7 @@ INSERTING means the visible mode or command prompt accepts text."
                            mode (emacsvox-eat--vim-selection-position to after))))
         (list 'navigation extent)))
      ((and (not selection) (not new-mode))
-      (if-let* ((edit (emacsvox-eat--vim-edit keys old new before after typing)))
+      (if-let* ((edit (emacsvox-eat--vim-edit keys old new before after typing to)))
           (list 'edit edit)
         (when (or (not typing)
                   (and (not prompt) (memq (car (last keys)) '(left right up down))))
