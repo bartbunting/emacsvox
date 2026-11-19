@@ -2910,9 +2910,9 @@ Choosing Shell/comint from another buffer explains the required context and
 leaves its controls unavailable.
 
 EAT changes also belong to the captured terminal, including when opened from
-frozen review. Its ~w~ saves the four displayed values as defaults; terminals
-with local overrides keep them. Background monitoring is independent of
-foreground speech and never reads background content. Follow
+frozen review. Its ~w~ saves the speech, monitoring, prompt and verbosity
+defaults. Terminals with local overrides keep them. Background monitoring is
+independent of foreground speech and never reads background content. Follow
 [[info:emacsvox#EAT Feedback Preferences][Adjust and save terminal feedback]] for the controls and their conditions.
 
 **** Agent Shell, Org, and EWW

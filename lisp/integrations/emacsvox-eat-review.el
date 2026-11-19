@@ -34,6 +34,8 @@
 
 (require 'emacsvox-eat-input)
 (defvar emacsvox-eat-review-map)
+(declare-function emacsvox-settings-integrations--eat-choose
+                  "emacsvox-settings-integrations" (kind &optional context))
 
 ;;;  Snapshot Review:
 
@@ -229,8 +231,10 @@ This explicit command works regardless of autospeak or prompt preference."
        "The retained terminal screen has no cursor row"
        'output-navigation))
      (t
-      (let ((text
-             (emacsvox-eat--sanitize-output-row (nth row rows))))
+      (let ((text (emacsvox-eat--sanitize-output-row
+                   (if (eq emacsvox-eat-application-profile 'vim)
+                       (emacsvox-eat--vim-cursor-line snapshot)
+                     (nth row rows)))))
         (emacsvox-eat--submit-review
          (if (string-empty-p (string-trim text))
              (format "Current terminal row %d of %d is blank"
@@ -869,7 +873,17 @@ The command never captures mutable live terminal-buffer text."
        'state-change 'open-object 'urgent)
       buffer)))
 
+(defun emacsvox-eat-select-application-profile ()
+  "Choose Terminal or Vim speech for this EAT buffer.
+Browse with the arrows and press Return to apply. Vim speaks visible modes,
+motion, edits and command results in local or remote Vim sessions."
+  (interactive)
+  (let ((terminal (emacsvox-eat--control-buffer)))
+    (require 'emacsvox-settings-integrations)
+    (emacsvox-settings-integrations--eat-choose 'profile (list :source terminal))))
+
 (define-prefix-command 'emacsvox-eat-review-map)
+(define-key emacsvox-eat-review-map (kbd "a") #'emacsvox-eat-select-application-profile)
 (define-key emacsvox-eat-review-map (kbd "l")
             #'emacsvox-eat-speak-current-row)
 (define-key emacsvox-eat-review-map (kbd "d")

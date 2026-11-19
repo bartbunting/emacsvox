@@ -300,17 +300,17 @@ EAT input mode:
 - C-e q c :: Speak retained completion candidates or help rows.
 - C-e q s :: Speak a bounded copy of the retained visible screen.
 - C-e q r :: Open a read-only frozen copy for line-by-line review.
-- C-e q t :: Speak retained progress, application, or shell-prompt status.
+- C-e q t :: Repeat the last retained status, including a Vim message or prompt.
 - C-e q p :: Speak the last identified shell prompt.
 - C-e q i :: Speak the retained, sanitised title or working-directory change.
+- C-e q a :: Choose the application speech profile for this terminal.
 - C-e q v :: Cycle terse, normal, and verbose automatic feedback for this terminal.
 - C-e q m :: Toggle content-free background monitoring for this terminal.
 
 The reading commands inspect retained snapshots with concealed content
-redacted. The verbosity and monitoring commands instead change the source
-terminal's preferences. Neither operation sends terminal input. Speech is
-bounded: the retained visible screen is not arbitrary scrollback and need
-not match a changing live screen.
+redacted. The profile, verbosity and monitoring commands act on the source
+terminal. These commands run locally in Emacs. Review covers the visible
+screen at the time of capture. The live display can change while you read.
 
 *** Frozen Screen Review
 :PROPERTIES:
@@ -397,6 +397,7 @@ the integration chooser, and ~C-e H /~ finds individual controls.
 - ~p~ chooses ready-prompt cue, text, or silence; recognition still requires
   shell integration and automatic delivery obeys foreground autospeak.
 - ~d~ chooses terse, normal, or verbose feedback.
+- ~a~ chooses the application profile for this terminal session.
 
 Arrows announce values and ~RET~ activates a control. Choice lists start on
 the current value; browsing does not apply a choice, ~RET~ applies and returns,
@@ -406,10 +407,9 @@ belong to its source terminal.
 
 ~q~ returns to the originating menu entry. From direct ~C-e S~, it closes
 the menu and announces the restored buffer and mode with a close cue. ~w~
-saves the four displayed values as defaults through Customize. Terminals with
-local overrides keep them; others inherit the new defaults. Adjustment alone
-does not save. ~A~ opens advanced EAT settings and ~q~ there returns to the
-focused menu.
+saves the speech, monitoring, prompt and verbosity defaults through Customize.
+Terminals with local overrides keep them. Others inherit the new defaults.
+~A~ opens advanced EAT settings and ~q~ there returns to the focused menu.
 
 ** Shell Integration And Command Status
 :PROPERTIES:
@@ -531,12 +531,53 @@ paste commands, not these terminal-originated sequences.
 
 #+cindex: curses applications, EAT
 #+cindex: alternate screen, EAT
+#+cindex: Vim in a terminal
+#+findex: emacsvox-eat-select-application-profile
+#+kindex: C-e q a (EAT)
 
 Pagers, editors, menus, and refreshing dashboards often rewrite cells instead
-of printing lines. Emacsvox uses conservative cursor, style-change, input-
-direction, and timing evidence. Arrow movement and clear paired highlight
-movement work best. Printable keys such as ~h~, ~j~, ~k~, and ~l~ are not
-assumed to mean navigation: the application may treat them as text.
+of printing lines. The default Terminal profile follows arrow movement and
+clear changes in selection highlighting. Programs interpret printable keys
+themselves.
+
+When you open Vim locally or over SSH, use EAT's semi-character or character
+mode. Press ~C-e q a~ to hear the selected profile. Browse to Vim with the
+arrows and press ~RET~ to apply it, or ~q~ to cancel. This choice belongs to
+the current EAT buffer and works with stock Vim.
+
+In Normal mode, ~h~ and ~l~ read the character you reach. ~w~, ~b~ and ~e~
+read the destination word. ~j~ and ~k~ read the destination row. The four
+arrows give the corresponding character or row feedback. ~gg~ and ~G~ read
+the row where you land. In a vertical split, movement and ~C-e q l~ read
+your window when its dividers are visible and distinctly styled.
+
+Press ~i~ to enter Insert mode. Emacsvox announces the displayed mode and
+echoes text as Vim draws it. Several letters arriving together over SSH
+can be spoken together. Backspace speaks the character removed. Press
+Escape to hear the return to Normal mode when the mode label clears.
+Replace and Visual modes also have announcements. Emacsvox recognises Vim's
+standard English mode labels. With labels hidden, visible typing and movement
+still provide feedback. In Visual mode, extending a selection reports its
+extent when the starting position was observed.
+
+In Normal mode, ~x~ and ~dd~ read the deleted character or line when the
+redraw identifies it. If the original text was missing from EAT, ~x~ can
+read the resulting row. ~p~ reads the pasted text or row, and ~u~ reads the
+resulting row. Start a search with ~/~ or ~?~. After ~RET~, ~n~ or ~N~,
+Emacsvox reads the row containing the match. If EAT shows an empty row for
+a word Vim found, Emacsvox can give the file line from Vim's ruler.
+A failed search speaks Vim's error. Saving with ~:w~ speaks Vim's confirmation.
+If you try to quit with unsaved changes, you hear the error and any prompt
+to press Enter. Use ~C-e q t~ to repeat the message.
+
+Ambiguous redraws, motions at the edge of a file and replies arriving more
+than three seconds after the last key can stay quiet. Use ~C-e q l~ to read
+the current row.
+
+Emacsvox restores the Terminal profile when EAT sees the alternate screen
+close, or when the terminal resets or exits. A remote Vim can use the main screen,
+and =tmux= can keep the alternate screen open after Vim exits. In either
+case, press ~C-e q a~ at the shell and choose Terminal.
 
 After a silent update, use ~C-e q l~, ~C-e q d~, or ~C-e q h~. For systematic
 inspection, open ~C-e q r~ and review rows or selection-like regions. Rapid
