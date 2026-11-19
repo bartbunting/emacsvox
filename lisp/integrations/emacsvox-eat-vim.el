@@ -61,17 +61,19 @@
   (interactive)
   (eat-self-input 1 27))
 
-(defun emacsvox-eat--vim-install-escape ()
-  "Route the physical Escape key in Vim's terminal input modes.
+(defun emacsvox-eat--vim-install-input-keys ()
+  "Route physical Escape and Control word arrows in Vim terminal input modes.
 Keep existing explicit bindings and leave the ASCII Meta prefix available."
   (dolist (symbol '(eat-semi-char-mode-map eat-char-mode-map
                     eat-eshell-semi-char-mode-map eat-eshell-char-mode-map))
-    (when-let* ((map (and (boundp symbol) (symbol-value symbol)))
-                ((not (lookup-key map [escape]))))
-      (define-key map [escape]
-                  '(menu-item "" emacsvox-eat--vim-escape :filter
-                              (lambda (command)
-                                (when (eq emacsvox-eat-application-profile 'vim) command)))))))
+    (when-let* ((map (and (boundp symbol) (symbol-value symbol))))
+      (dolist (binding '(([escape] . emacsvox-eat--vim-escape)
+                         ([C-left] . eat-self-input) ([C-right] . eat-self-input)))
+        (unless (lookup-key map (car binding))
+          (define-key map (car binding)
+                      (list 'menu-item "" (cdr binding) :filter
+                            (lambda (command)
+                              (when (eq emacsvox-eat-application-profile 'vim) command)))))))))
 
 (defun emacsvox-eat--vim-forget-input ()
   "Discard keys and their original screen."
@@ -524,6 +526,16 @@ their respective command rows."
          (mark (and (length= tail 2) (characterp key)
                     (string-match-p (rx string-start alpha string-end) (string key)))))
     (cond
+     ((and (memq key '(C-left C-right)) moved)
+      (cond
+       ((string-blank-p line) (cons 'row "blank"))
+       ((>= index (length line)) (cons 'navigation "End of line"))
+       (t
+        (let ((word (emacsvox-eat--vim-word line index (not (or (plist-get to :mode) (plist-get to :prompt))))))
+          (if (or (memq (aref line index) '(?\s ?\t))
+                  (and (length= word 1) (not (string-match-p "[[:alnum:]_]" word))))
+              (cons 'character (aref line index))
+            (cons 'navigation word))))))
      ((and mark (eq (car tail) ?m) (equal before after)
            (not (plist-get to :prompt)) ruler)
       (cons 'mark (format "Mark %c requested at line %d, column %d" key (car ruler) (cdr ruler))))
@@ -987,6 +999,7 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
       (if-let* ((edit (emacsvox-eat--vim-edit keys old new before after typing to)))
           (if (consp edit) edit (list 'edit edit))
         (when (or (not typing)
+                  (memq (car (last keys)) '(C-left C-right))
                   (and (not prompt) (memq (car (last keys)) '(left right up down))))
           (when-let* ((motion (emacsvox-eat--vim-motion keys old new before after from to)))
             (list (car motion) (cdr motion)))))))))

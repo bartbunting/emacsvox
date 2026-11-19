@@ -65,7 +65,7 @@
 (autoload 'emacsvox-eat--vim-unchanged-input-p "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-shell-return-p "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-reset "emacsvox-eat-vim")
-(autoload 'emacsvox-eat--vim-install-escape "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-install-input-keys "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-forget-input "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-record-key "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-cursor-line "emacsvox-eat-vim")
@@ -1028,7 +1028,7 @@ Ignore a stale or duplicate exit after another process has become active."
 (defun emacsvox-eat--set-application-profile (profile)
   "Apply PROFILE in this terminal and discard input awaiting interpretation."
   (unless (eq profile emacsvox-eat-application-profile)
-    (when (eq profile 'vim) (emacsvox-eat--vim-install-escape))
+    (when (eq profile 'vim) (emacsvox-eat--vim-install-input-keys))
     (emacsvox-eat--vim-reset)
     (emacsvox-eat--cancel-completion)
     (emacsvox-eat--cancel-deletion)
