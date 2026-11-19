@@ -4855,6 +4855,22 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[H" 'C-left) '("red")))
     (should-not (send "\e[H" 'C-left))))
 
+(ert-deftest emacsvox-eat-vim-word-arrows-across-wide-glyphs ()
+  "Words, highlight offsets and the cursor agree on a mixed-width Vim row."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hwide 界面 \e[7mend\e[0m  \e[8m秘\e[0mZ\e[K\e[H")
+    (should (equal (send "\e[1;6H" 'C-right) '("界面")))
+    (should (equal (send "\e[1;11H" 'C-right) '("end")))
+    (let* ((screen emacsvox-eat--screen-snapshot)
+           (text (plist-get screen :text))
+           (highlight (seq-find (lambda (run) (memq 'inverse-like (plist-get (caddr run) :traits)))
+                                (plist-get screen :styles))))
+      (should (equal (car (plist-get screen :rows)) "wide 界面 end    Z"))
+      (should (equal (substring text (car highlight) (cadr highlight)) "end"))
+      (should (= (plist-get screen :cursor-column) 10))
+      (should (= (plist-get screen :cursor-offset) 8)))
+    (should (equal (send "\e[1;6H" 'C-left) '("界面")))))
+
 (ert-deftest emacsvox-eat-vim-terminal-input-keys ()
   "Forward graphical Escape and word arrows only in Vim terminal input maps."
   (let ((eat-semi-char-mode-map (make-sparse-keymap))
