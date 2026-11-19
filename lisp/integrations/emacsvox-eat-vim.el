@@ -112,6 +112,29 @@
       (1- bottom))
      (t bottom))))
 
+(defun emacsvox-eat--vim-buffer-list (rows end)
+  "Read the visible Vim buffer list immediately above the prompt at END in ROWS."
+  (let ((above (reverse (seq-take rows end))) entries)
+    (while (and above
+                (string-match
+                 (rx string-start (* blank) (group (+ digit)) (+ blank)
+                     (group (* (any ?- "u%#ah=+xRF? "))) "\"" (group (* nonl)) "\""
+                     (+ blank) "line" (+ blank) (group (+ digit)) (* blank) string-end)
+                 (car above)))
+      (let* ((line (pop above)) (number (match-string 1 line)) (flags (match-string 2 line))
+             (name (match-string 3 line)) (position (match-string 4 line)))
+        (push (concat "Buffer " number ", " name
+                      (when (string-search "%" flags) ", current")
+                      (when (string-search "#" flags) ", alternate")
+                      (when (string-search "+" flags) ", modified")
+                      (unless (equal position "0") (concat ", line " position)))
+              entries)))
+    (when (and entries
+               (or (null above)
+                   (string-match-p (rx string-start ":" (or "ls" "buffers" "files")
+                                       (or string-end "!" blank)) (string-trim (car above)))))
+      (string-replace "\n" ". " (emacsvox-eat--bounded-output entries)))))
+
 (defun emacsvox-eat--vim-status (screen)
   "Return visible mode, prompt, command result and ruler facts on SCREEN."
   (let* ((rows (plist-get screen :rows))
@@ -124,19 +147,25 @@
                     (setq line (substring line 0 (match-beginning 0))))))
          (text (string-trim-right line))
          (at-command (= (or (plist-get screen :cursor-row) -1) row))
-         (mode (when (string-match "\\`-- \\([A-Z ]+\\) --" text)
-                 (cdr (assoc (match-string 1 text) emacsvox-eat--vim-modes))))
+         (completion (when (string-match (rx string-start "-- Keyword completion (^N^P)"
+                                             (+ blank) (group (+ nonl))) text)
+                       (match-string 1 text)))
+         (mode (cond (completion "Insert")
+                     ((string-match "\\`-- \\([A-Z ]+\\) --" text)
+                      (cdr (assoc (match-string 1 text) emacsvox-eat--vim-modes)))))
          (prompt (and at-command (string-match-p "\\`[:/?]" text) (aref text 0)))
          (previous (when-let* ((line (and (> row 0) (nth (1- row) rows)))) (string-trim line)))
          (message
           (cond
            ((string-match-p "\\`\\(?:Press ENTER\\|-- More --\\)" text)
-            (if (and previous (string-match-p "\\`[EW][0-9]+:" previous))
-                (concat previous ". " text) text))
+            (if-let* ((result (or (and previous (string-match-p "\\`[EW][0-9]+:" previous) previous)
+                                  (emacsvox-eat--vim-buffer-list rows row))))
+                (concat result ". " text) text))
            ((string-match-p "\\`\\(?:[EW][0-9]+:\\|search hit \\|Pattern not found\\)" text) text)
            ((and (string-prefix-p "\"" text)
                  (string-match-p "\\b\\(?:written\\|appended\\)\\'" text)) text))))
-    (list :mode mode :prompt prompt :message message :ruler ruler :command (string-prefix-p ":" text)
+    (list :mode mode :completion completion :prompt prompt :message message :ruler ruler
+          :command (string-prefix-p ":" text)
           :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
 
@@ -413,6 +442,16 @@ INSERTING means the visible mode or command prompt accepts text."
             (nthcdr (if (memq (car motion) '(?i ?a ?f ?F ?t ?T ?g)) 2 1) motion))
         (cdr tail)))))
 
+(defun emacsvox-eat--vim-completion (status before after)
+  "Read the keyword Vim inserted and the match position displayed in STATUS."
+  (let ((position (string-remove-prefix "match " status))
+        (prefix (substring (plist-get after :line) 0 (plist-get after :index))))
+    (if (and (or (string-prefix-p "match " status) (equal status "The only match"))
+             (not (equal before after))
+             (string-match (rx (group (+ (or alnum "_"))) string-end) prefix))
+        (concat (match-string 1 prefix) ", " position)
+      status)))
+
 (defun emacsvox-eat--vim-feedback (keys old new before after from to)
   "Return keyboard feedback proved by the two screens and their parsed views."
   (let* ((mode (plist-get to :mode))
@@ -432,6 +471,13 @@ INSERTING means the visible mode or command prompt accepts text."
                                     (and (equal mode "Insert") (eq (car keys) ?c))))
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
+     ((and (plist-get to :completion) (memq (car (last keys)) '(14 16)))
+      (list 'navigation (emacsvox-eat--vim-completion (plist-get to :completion) before after)))
+     ((and (plist-get from :completion) (not (plist-get to :completion)) (equal mode "Insert"))
+      (pcase (car (last keys))
+        (25 (list 'edit "Completion accepted"))
+        (5 (list 'edit "Completion cancelled"))
+        (_ (when echo (list 'echo (car echo) (cdr echo))))))
      (echo (list 'echo (car echo) (cdr echo)))
      ((and (not typing) (not selection) (not new-mode) (equal keys '(?y ?y))
            (not (plist-get to :pending-yank)) (equal before after)

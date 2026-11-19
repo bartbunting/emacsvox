@@ -4768,6 +4768,25 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H\e[K\e[2;1Hpha one\e[K\e[2;1H" ?d)
                    '("Normal mode" "Deleted al")))))
 
+(ert-deftest emacsvox-eat-vim-keyword-candidates-and-buffer-list ()
+  "Read selected completions and visible buffer entries before the prompt."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 60 4)
+    (send "\e[4;1H-- INSERT --\e[K\e[1;6H" ?a)
+    (should (equal (send "\e[Halphabet one\e[4;1H-- Keyword completion (^N^P) match 1 of 2\e[1;9H" 14)
+                   '("alphabet, 1 of 2")))
+    (should (equal (send "\e[Halphabetic one\e[4;36H2\e[1;11H" 14) '("alphabetic, 2 of 2")))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[1;11H" 25) '("Completion accepted")))
+    (send "\e[4;1H\e[K\e[H" 'escape)
+    (let ((listing "Buffer 1, sample, current, modified, line 1. Buffer 2, second. Press ENTER to continue"))
+      (should (equal (send (concat "\e[H:ls\e[K\e[2;1H  1 %a + \"sample\"   line 1\e[K"
+                                   "\e[3;1H  2      \"second\"   line 0\e[K"
+                                   "\e[4;1HPress ENTER to continue\e[K") 'return)
+                     (list listing)))
+      (setq speech nil)
+      (emacsvox-eat-speak-retained-status)
+      (should (equal speech (list (concat "Retained terminal status: " listing)))))))
+
 (ert-deftest emacsvox-eat-vim-jump-destinations ()
   "Speak confirmed word searches, character finds, bracket and paragraph jumps."
   (emacsvox-eat-test--with-vim
