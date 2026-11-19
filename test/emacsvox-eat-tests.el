@@ -4598,6 +4598,705 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-vim-profile-reads-motion-and-echoes-visible-insert ()
+  "The same key reads a destination or echoes an insertion with a live ruler."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          speech)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p) #'always)
+                    ((symbol-function 'emacsvox-eat--following-live-p) #'always)
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (push text speech)))
+                    ((symbol-function 'emacsvox-speak-this-char)
+                     (lambda (char) (push char speech))))
+            (eat-term-resize eat-terminal 30 4)
+            (cl-flet ((send (bytes &optional key)
+                        (setq speech nil)
+                        (emacsvox-eat-test--deliver-screen eat-terminal bytes key)
+                        (reverse speech)))
+              (send "shell$ ")
+              (send "\e[?1049h\e[2J\e[Halpha\e[2;1Hbeta\e[3;1H}\e[4;1H1,1\e[H")
+              (emacsvox-eat--set-application-profile 'vim)
+              (should-not (send "\e[4;1H2,1\e[1;1H" ?j))
+              (should (equal (send "\e[2;1H") '("beta")))
+              (should (equal (send "\e[4;1H3,1\e[3;1H" 'down) '("}")))
+              (should (eq t (plist-get emacsvox-eat--last-screen-diff :user-input)))
+              (should-not (plist-get (plist-get emacsvox-eat--last-screen-diff :navigation)
+                                     :screen))
+              (should (equal (send "\e[4;1H2,1\e[2;1H" ?k) '("beta")))
+              (should (equal (send "\e[4;1H-- INSERT --\e[2;1H" ?i) '("Insert mode")))
+              ;; Remote status and the eventual insert can arrive separately.
+              (should-not (send "\e[4;16H2,2\e[2;1H" ?j))
+              (should (equal (send "\e[2;1Hjbeta\e[2;2H") '(?j)))
+              (emacsvox--advice-eat-self-input-before 1 ?x)
+              (should (equal (send "\e[2;2Hxjbeta\e[2;4H" ?j) '("xj")))
+              (should (equal (send "\e[2;4HJbeta\e[2;5H" ?J) '(?J)))
+              ;; A repaint replacing both source and destination is ambiguous.
+              (should-not (send "\e[2;1Hother\e[3;1Hchanged\e[3;2H" ?j))
+              (should (equal (send "\e[?1049l") '("Terminal application screen exited")))
+              (should (eq emacsvox-eat-application-profile 'terminal))))
+        (emacsvox-eat--cancel-quiescence)
+        (eat-term-delete eat-terminal)))))
+
+(ert-deftest emacsvox-eat-vim-profile-works-on-an-ordinary-ssh-screen ()
+  "A Vim drawing on the main screen only gets row speech in the selected profile."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))) speech)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p) #'always)
+                    ((symbol-function 'emacsvox-eat--following-live-p) #'always)
+                    ((symbol-function 'emacsvox-speak-this-char) #'ignore)
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (push text speech))))
+            (eat-term-resize eat-terminal 30 4)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "alpha\e[2;1Hbeta\e[4;1H1,1\e[H")
+            (setq speech nil)
+            (emacsvox-eat-test--deliver-screen eat-terminal "\e[4;1H2,1\e[2;1H" ?j)
+            (should-not (member "beta" speech))
+            (emacsvox-eat--set-application-profile 'vim)
+            (setq speech nil)
+            (emacsvox-eat-test--deliver-screen eat-terminal "\e[4;1H1,1\e[1;1H" ?k)
+            (should (equal speech '("alpha")))
+            (emacsvox--advice-eat-reset-before)
+            (should (eq emacsvox-eat-application-profile 'terminal)))
+        (emacsvox-eat--cancel-quiescence)
+        (eat-term-delete eat-terminal)))))
+
+(ert-deftest emacsvox-eat-vim-profile-scroll-and-background-exit ()
+  "Read a scrolling destination and restore ordinary speech on an unseen exit."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (foreground t) speech)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--foreground-p) (lambda () foreground))
+                    ((symbol-function 'emacsvox-eat--selected-buffer-p) (lambda () foreground))
+                    ((symbol-function 'emacsvox-eat--following-live-p) #'always)
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (push text speech)))
+                    ((symbol-function 'emacsvox-speak-this-char)
+                     (lambda (char) (push char speech))))
+            (eat-term-resize eat-terminal 20 4)
+            (emacsvox-eat-test--deliver-screen eat-terminal "prompt")
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\e[?1049h\e[Hone\e[2;1Htwo\e[3;1Hthree\e[3;1H")
+            (emacsvox-eat--set-application-profile 'vim)
+            (setq speech nil)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\e[Htwo\e[2;1Hthree\e[3;1Hfour\e[K\e[3;1H" ?j)
+            (should (equal speech '("four")))
+            (setq foreground nil speech nil)
+            (emacsvox-eat-test--deliver-screen eat-terminal "\e[?1049l")
+            (should (eq emacsvox-eat-application-profile 'terminal))
+            (should-not speech))
+        (emacsvox-eat--cancel-quiescence)
+        (eat-term-delete eat-terminal)))))
+
+(defmacro emacsvox-eat-test--with-vim (&rest body)
+  "Run BODY in a disposable 40-column Vim display, capturing spoken feedback."
+  (declare (indent 0) (debug t))
+  `(with-temp-buffer
+     (setq major-mode 'eat-mode)
+     (let ((eat-terminal (eat-term-make (current-buffer) (point-min))) speech)
+       (unwind-protect
+           (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p) #'always)
+                     ((symbol-function 'emacsvox-eat--following-live-p) #'always)
+                     ((symbol-function 'tts-stop) #'ignore)
+                     ((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest _) (push text speech)))
+                     ((symbol-function 'emacsvox-speak-this-char) (lambda (char) (push char speech))))
+             (eat-term-resize eat-terminal 40 4)
+             (cl-flet ((key (event) (emacsvox--advice-eat-self-input-before 1 event))
+                       (send (bytes &optional event)
+                         (setq speech nil)
+                         (emacsvox-eat-test--deliver-screen eat-terminal bytes event)
+                         (reverse speech)))
+               (send "shell$ ")
+               (send "\e[?1049h\e[2J\e[Halpha one\e[2;1Hbeta two\e[3;1Hgamma\e[4;1H1,1 Top\e[H")
+               (emacsvox-eat--set-application-profile 'vim)
+               ,@body))
+         (emacsvox-eat--vim-reset)
+         (emacsvox-eat--cancel-quiescence)
+         (eat-term-delete eat-terminal)))))
+
+(ert-deftest emacsvox-eat-vim-activation-reads-an-existing-question ()
+  "Read the choices Vim is waiting for, even above the bottom terminal row."
+  (emacsvox-eat-test--with-vim
+    (emacsvox-eat--set-application-profile 'terminal)
+    (send (concat "\e[2J\e[HSwap file already exists!\r\n"
+                  "[O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (A)bort: "))
+    (let ((question "Swap file already exists. O open read-only, E edit anyway, R recover, Q quit, A abort"))
+      (should (equal (emacsvox-eat--set-application-profile 'vim) question))
+      (setq speech nil)
+      (emacsvox-eat-speak-retained-status)
+      (should (equal speech (list (concat "Retained terminal status: " question)))))
+    (should (equal (send "\e[2J\e[Halpha\e[2;1Hbeta\e[4;1H1,1 All\e[H" ?o) '("alpha")))
+    (should (equal (send "\e[4;1H2,1 All\e[2;1H" 'down) '("beta")))
+    (emacsvox-eat--set-application-profile 'terminal)
+    (send "\e[2J\e[HPress ENTER or type command to continue")
+    (should (equal (emacsvox-eat--set-application-profile 'vim)
+                   "Press ENTER or type command to continue"))
+    (emacsvox-eat--set-application-profile 'terminal)
+    (send (concat "\e[2J\e[2;1H:ls\e[3;1H  1 %a   \"sample\"   line 1"
+                  "\e[4;1HPress ENTER or type command to continue"))
+    (let ((result (emacsvox-eat--set-application-profile 'vim)))
+      (should (string-prefix-p "Buffer 1, sample" result))
+      (eat-term-resize eat-terminal 40 5)
+      (should-not (send "\e[2J\e[5;1HPress ENTER or type command to continue"))
+      (should (equal emacsvox-eat--last-status-text result)))))
+
+(ert-deftest emacsvox-eat-vim-modes-search-and-command-results ()
+  "Speak visible transitions, the match and a two-stage error with its prompt."
+  (emacsvox-eat-test--with-vim
+    (should (equal (send "\e[4;1H-- VISUAL --    1,1 Top\e[H" ?v) '("Visual mode")))
+    (should (equal (send "\e[4;17H1,2 Top\e[1;2H" ?l) '("2 columns selected")))
+    (should (equal (send "\e[4;1H\e[K2,2 Top\e[2;2H" 'escape) '("Normal mode")))
+    (should (equal (send "\e[4;1H/\e[K" ?/) '("Search forward")))
+    (should (equal (send "a" ?a) '(?a)))
+    (should (equal (send "\e[4;5H3,2 Top\e[3;2H" 'return) '("gamma")))
+    (should (equal (send "\e[4;1HE486: Pattern not found: z\e[K\e[3;2H")
+                   '("E486: Pattern not found: z")))
+    (should-not (send "\e[4;31H3,2 Top\e[3;2H"))
+    (should (equal (send "\e[3;1HE486: Pattern not found: z\e[K\e[4;1HPress ENTER to continue\e[K")
+                   '("Press ENTER to continue")))
+    (setq speech nil)
+    (emacsvox-eat-speak-retained-status)
+    (should (equal speech '("Retained terminal status: E486: Pattern not found: z. Press ENTER to continue")))
+    (should (equal (send "\e[4;1H\"notes\" 3L, 12B written\e[K\e[H" 'return)
+                   '("\"notes\" 3L, 12B written")))))
+
+(ert-deftest emacsvox-eat-vim-substitution-confirmation ()
+  "Read each highlighted match, including two on the same line, and the exit."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 80 4)
+    (let ((question "replace with RED (y/n/a/q/l/^E/^Y)?"))
+      (should (string-prefix-p
+               "Line 1, column 1. alpha alpha. Replace with RED? y yes"
+               (car (send (concat "\e[H\e[7malpha\e[0m alpha\e[4;1H" question "  1,1 All\e[4;36H") 'return))))
+      (should (string-prefix-p
+               "Line 1, column 7. alpha alpha."
+               (car (send (concat "\e[Halpha \e[7malpha\e[0m\e[4;1H" question "  1,7 All\e[4;36H") ?n))))
+      (should-not (send "\e[4;36H"))
+      (should (equal (send "\e[Halpha alpha\e[4;1H\e[K1,7 All\e[1;7H" ?q)
+                     '("Substitution stopped"))))))
+
+(ert-deftest emacsvox-eat-vim-search-with-incomplete-terminal-row ()
+  "Report Vim's visible file line when a literal match is missing from EAT."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1H\e[K\e[4;1H/alpha         1,1 Top\e[K\e[H")
+    (should (equal (send "\e[4;16H2,1 Top\e[2;1H" ?n) '("Match on line 2")))
+    (should (equal (send "\e[2;1Halpha again\e[2;1H") '("alpha again")))
+    (should (equal (send "\e[4;16H1,1 Top\e[H" ?N) '("alpha one")))))
+
+(ert-deftest emacsvox-eat-vim-recover-match-with-redraw ()
+  "Announce Vim's redraw at the current cursor, including after a missing match."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1H\e[K\e[4;1H/alpha         1,1 Top\e[K\e[H")
+    (should (equal (send "\e[4;16H2,1 Top\e[2;1H" ?n) '("Match on line 2")))
+    (should (equal (send "\e[2;1Halpha again\e[2;1H" 12) '("alpha again")))
+    (should (equal (send "\e[2;1H" 12) '("alpha again")))
+    (should-not (send "\e[2;1Hother\e[K\e[2;1H"))))
+
+(ert-deftest emacsvox-eat-vim-restore-shell-profile-after-quit ()
+  "Keep Vim on a failed or partial quit and recognise the restored shell pane."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:q\e[K")
+    (send "\e[4;1HE37: No write since last change\e[K\e[H" 'return)
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (mapc #'key (list ?: ?q 'return))
+    (send "\e[Hhost$ \e[K\e[4;1H:q    1,6 Top\e[K\e[1;7H")
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (send "\e[4;1H:q!\e[K")
+    (should (equal (send "\e[2J\e[Hhost$ vim file\e[2;1Hhost$ \e[4;1H[0] 0:vim*\e[2;7H" 'return)
+                   '("Terminal profile")))
+    (should (eq emacsvox-eat-application-profile 'terminal))))
+
+(ert-deftest emacsvox-eat-vim-keep-profile-on-unconfirmed-quit ()
+  "An ordinary file line ending like a shell prompt cannot confirm a quit."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1Hhost$ \e[K\e[H")
+    (send "\e[4;1H\e[K\e[2;7H" ?j)
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (mapc #'key (string-to-list ":q"))
+    (send "\e[2;7H" 'return)
+    (should (eq emacsvox-eat-application-profile 'vim))
+    ;; The next key cancels this pending quit before an unrelated prompt appears.
+    (send "\e[2;1Hother\e[K\e[2;1H" ?j)
+    (send "\e[4;1Hhost$ \e[K")
+    (should (eq emacsvox-eat-application-profile 'vim))))
+
+(ert-deftest emacsvox-eat-vim-edits-and-word-motions ()
+  "Use verified text at the cursor for movements, deletes, paste and undo."
+  (emacsvox-eat-test--with-vim
+    (should (equal (send "\e[1;7H" ?w) '("one")))
+    (should (equal (send "\e[H" ?b) '("alpha")))
+    (should (equal (send "\e[1;2H" 'right) '(?l)))
+    (should (equal (send "\e[H" ?h) '(?a)))
+    (should (equal (send "\e[Hlpha one\e[K\e[H" ?x) '(?a)))
+    (should (equal (send "\e[Halpha one\e[H" ?u) '("alpha one")))
+    (key ?d)
+    (should (equal (send "\e[Hbeta two\e[K\e[2;1Hgamma\e[K\e[H" ?d) '("alpha one")))
+    (should (equal (send "\e[2;1Halpha one\e[3;1Hgamma\e[2;1H" ?p) '("alpha one")))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[2;1H" ?i) '("Insert mode")))
+    (should (equal (send "xalpha one\e[2;2H" ?x) '(?x)))
+    (should (equal (send "\e[2;1Halpha one\e[K\e[2;1H" 'backspace) '(?x)))
+    (send "\e[4;1H\e[K\e[2;1H" 'escape)
+    (send "\e[4;1H-- VISUAL --\e[K\e[2;1H" ?v)
+    (send "\e[2;2H" ?l)
+    (should (equal (send "\e[4;1H\e[K\e[2;1Hpha one\e[K\e[2;1H" ?d)
+                   '("Normal mode" "al")))))
+
+(ert-deftest emacsvox-eat-vim-keyword-candidates-and-buffer-list ()
+  "Read selected completions and visible buffer entries before the prompt."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 60 4)
+    (send "\e[4;1H-- INSERT --\e[K\e[1;6H" ?a)
+    (should (equal (send "\e[Halphabet one\e[4;1H-- Keyword completion (^N^P) match 1 of 2\e[1;9H" 14)
+                   '("alphabet, 1 of 2")))
+    (should (equal (send "\e[Halphabetic one\e[4;36H2\e[1;11H" 14) '("alphabetic, 2 of 2")))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[1;11H" 25) '("Completion accepted")))
+    (send "\e[4;1H\e[K\e[H" 'escape)
+    (let ((listing "Buffer 1, sample, current, modified, line 1. Buffer 2, second. Press ENTER to continue"))
+      (should (equal (send (concat "\e[H:ls\e[K\e[2;1H  1 %a + \"sample\"   line 1\e[K"
+                                   "\e[3;1H  2      \"second\"   line 0\e[K"
+                                   "\e[4;1HPress ENTER to continue\e[K") 'return)
+                     (list listing)))
+      (setq speech nil)
+      (emacsvox-eat-speak-retained-status)
+      (should (equal speech (list (concat "Retained terminal status: " listing)))))))
+
+(ert-deftest emacsvox-eat-vim-control-arrows-read-the-destination ()
+  "Normal WORD motion includes punctuation. Insert word motion can land on it."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hred green,blue  gold\e[K\e[H")
+    (should (equal (send "\e[1;5H" 'C-right) '("green,blue")))
+    (should (equal (send "\e[1;17H" 'C-right) '("gold")))
+    (should (equal (send "\e[2;1H" 'C-right) '("beta")))
+    (should (equal (send "\e[1;17H" 'C-left) '("gold")))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[1;17H" ?i) '("Insert mode")))
+    (should (equal (send "\e[1;11H" 'C-left) '("blue")))
+    (should (equal (send "\e[1;10H" 'C-left) '(?,)))
+    (should (equal (send "\e[1;5H" 'C-left) '("green")))
+    (should (equal (send "\e[H" 'C-left) '("red")))
+    (should-not (send "\e[H" 'C-left))))
+
+(ert-deftest emacsvox-eat-vim-word-arrows-across-wide-glyphs ()
+  "Words, highlight offsets and the cursor agree on a mixed-width Vim row."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hwide 界面 \e[7mend\e[0m  \e[8m秘\e[0mZ\e[K\e[H")
+    (should (equal (send "\e[1;6H" 'C-right) '("界面")))
+    (should (equal (send "\e[1;11H" 'C-right) '("end")))
+    (let* ((screen emacsvox-eat--screen-snapshot)
+           (text (plist-get screen :text))
+           (highlight (seq-find (lambda (run) (memq 'inverse-like (plist-get (caddr run) :traits)))
+                                (plist-get screen :styles))))
+      (should (equal (car (plist-get screen :rows)) "wide 界面 end    Z"))
+      (should (equal (substring text (car highlight) (cadr highlight)) "end"))
+      (should (= (plist-get screen :cursor-column) 10))
+      (should (= (plist-get screen :cursor-offset) 8)))
+    (should (equal (send "\e[1;6H" 'C-left) '("界面")))))
+
+(ert-deftest emacsvox-eat-vim-word-arrows-wait-for-the-latest-cursor ()
+  "A pending redraw must not consume an arrow sent from the new cursor."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hred green blue gold\e[K\e[H")
+    (key 'C-right)
+    (eat-term-process-output eat-terminal "\e[1;5H")
+    (eat-term-redisplay eat-terminal)
+    (emacsvox-eat-update-hook)
+    (key 'C-right)
+    (setq speech nil)
+    (emacsvox-eat-test--finish-screen-burst)
+    (should-not speech)
+    (should (equal (send "\e[1;11H") '("blue")))
+    ;; Both keys can also reach the peer before it sends either redraw.
+    (key 'C-left)
+    (key 'C-left)
+    (should (equal (send "\e[1;5H") '("green")))
+    (should (equal (send "\e[H") '("red")))
+    ;; A coalesced redraw speaks once. A new edit starts at that destination.
+    (key 'C-right)
+    (key 'C-right)
+    (should (equal (send "\e[1;11H") '("blue")))
+    (should-not (send "\e[1;11H"))
+    (should (equal (send "\e[1;11Hlue gold\e[K\e[1;11H" ?x) '(?b)))))
+
+(ert-deftest emacsvox-eat-vim-terminal-input-keys ()
+  "Forward graphical Escape and word arrows only in Vim terminal input maps."
+  (let ((eat-semi-char-mode-map (make-sparse-keymap))
+        (eat-char-mode-map (make-sparse-keymap))
+        (eat-eshell-char-mode-map (make-sparse-keymap))
+        (eat-eshell-semi-char-mode-map (make-sparse-keymap))
+        (emacsvox-eat-application-profile 'terminal) sent)
+    (define-key eat-char-mode-map [escape] #'ignore)
+    (emacsvox-eat--vim-install-input-keys)
+    (should-not (lookup-key eat-semi-char-mode-map [escape]))
+    (should-not (lookup-key eat-semi-char-mode-map [C-right]))
+    (setq emacsvox-eat-application-profile 'vim)
+    (should (eq (lookup-key eat-char-mode-map [escape]) #'ignore))
+    (should (eq (lookup-key eat-semi-char-mode-map [C-right]) #'eat-self-input))
+    (should (eq (lookup-key eat-eshell-semi-char-mode-map [C-left]) #'eat-self-input))
+    (should-not (lookup-key eat-semi-char-mode-map [27]))
+    (cl-letf (((symbol-function 'eat-self-input) (lambda (n event) (setq sent (list n event)))))
+      (call-interactively (lookup-key eat-semi-char-mode-map [escape])))
+    (should (equal sent '(1 27)))))
+
+(ert-deftest emacsvox-eat-vim-hidden-insert-cannot-acknowledge-a-macro ()
+  "An open line can enter Insert while Vim hides the mode indicator."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1H" ?j)
+    (should emacsvox-eat--vim-normal-evidence)
+    (send "\e[3;1H\e[K\e[4;1H3,1 All\e[3;1H" ?o)
+    (mapc #'key '(?@ ?a))
+    (emacsvox-eat--vim-after-send)
+    (should-not emacsvox-eat--vim-quiet-timer)
+    (should (equal (send "@a") '("@a")))))
+
+(ert-deftest emacsvox-eat-vim-typing-echo-preferences ()
+  "Honor independent character, word and line echo on Vim's rendered text."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- INSERT --\e[K\e[1;10H" ?A)
+    (let ((emacsvox-character-echo nil) (emacsvox-word-echo t) (emacsvox-line-echo t))
+      (should-not (send "s" ?s))
+      (should (equal (send " " ?\s) '("ones")))
+      (mapc #'key (string-to-list "two new "))
+      (should (equal (send "two new ") '("two new")))
+      (should (equal (send "\e[2;1H\e[K" 'return) '("alpha ones two new")))
+      (let ((emacsvox-word-echo nil))
+        (mapc #'key '(?a ?\s))
+        (should-not (send "a "))))))
+
+(ert-deftest emacsvox-eat-vim-open-type-and-backspace ()
+  "Use the same edit tone and character reader as ordinary Emacs Backspace."
+  (emacsvox-eat-test--with-vim
+    (let (calls)
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation) (lambda (op &rest _) (push op calls)))
+                ((symbol-function 'emacsvox-speak-this-char) (lambda (char) (push char calls)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args)
+                   (push (list text (plist-get (plist-get args :facts) :edit-operation)) calls))))
+        (send "\e[2;1H\e[K\e[3;1Hbeta two\e[4;1H-- INSERT --\e[K\e[2;1H" ?o)
+        (should (equal calls '(("Insert mode" line-created))))
+        (send "o" ?o)
+        (setq calls nil)
+        (send "\e[2;1H\e[K" 'backspace)
+        (should (equal (reverse calls) '(deletion ?o)))
+        (setq calls nil)
+        (send "\e[2;1H" 'backspace)
+        (should-not calls)))))
+
+(ert-deftest emacsvox-eat-vim-plain-and-blank-rows ()
+  "Read a literal file row named blank and use the configured cue on an empty row."
+  (emacsvox-eat-test--with-vim
+    (let (actions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                 (lambda (&rest args) (push args actions))))
+        (send "\e[2;1Hblank\e[K\e[3;1H\e[K\e[H")
+        (should (equal (send "\e[2;1H" ?j) '("blank")))
+        (should-not actions)
+        (should-not (send "\e[3;1H" 'down))
+        (should (length= actions 1))
+        (should (eq 'empty (plist-get (plist-get (car actions) :facts) :line-condition)))
+        (should (eq 'replaceable (plist-get (car actions) :delivery-policy)))
+        (should-not (send "\e[3;1H"))
+        (should (length= actions 1))
+        (setq speech nil)
+        (emacsvox-eat-speak-current-row)
+        (should (equal speech '("Current terminal row 3 of 4")))))))
+
+(ert-deftest emacsvox-eat-vim-macro-feedback ()
+  "Distinguish an observed replay result, an invisible request and literal input."
+  (emacsvox-eat-test--with-vim
+    (key ?q)
+    (should (equal (send "\e[4;1Hrecording @a     1,1 All\e[H" ?a) '("Recording register a")))
+    (should (equal (send "\e[4;1H\e[K1,1 All\e[H" ?q) '("Recording stopped")))
+    (key ?@)
+    (should (equal (send "\e[Hlpha one\e[K\e[H" ?a) '("Replay register a, lpha one")))
+    (key ?@)
+    (should (equal (send "\e[2;1Hedited below\e[K\e[H" ?a)
+                   '("Replay register a, 1 visible row changed. Row 2, edited below")))
+    (mapc #'key '(?@ ?@))
+    (emacsvox-eat--vim-after-send)
+    (should (timerp emacsvox-eat--vim-quiet-timer))
+    (cancel-timer emacsvox-eat--vim-quiet-timer)
+    (setq speech nil)
+    (emacsvox-eat--vim-quiet-response (current-buffer) '(?@ ?@) "Replay last macro")
+    (should (equal speech '("Replay last macro requested")))
+    (should (equal (send "\e[Hpha one\e[K\e[H") '("Replay last macro, pha one")))
+    (send "\e[4;1H-- INSERT --\e[K\e[H" ?i)
+    (mapc #'key '(?@ ?a))
+    (emacsvox-eat--vim-after-send)
+    (should-not emacsvox-eat--vim-quiet-timer)
+    (should (equal (send "@apha one\e[1;3H") '("@a")))))
+
+(ert-deftest emacsvox-eat-vim-folds ()
+  "Speak the rendered fold count and the row exposed when it opens."
+  (emacsvox-eat-test--with-vim
+    (mapc #'key '(?z ?f ?2))
+    (should (equal (send "\e[H+--  3 lines: alpha one---------\e[K\e[H" ?j)
+                   '("Fold created, 3 lines, alpha one")))
+    (key ?z)
+    (should (equal (send "\e[Halpha one\e[K\e[H" ?o) '("Fold opened, 3 lines, alpha one")))
+    (key ?z)
+    (should (equal (send "\e[H+--  3 lines: alpha one---------\e[K\e[H" ?c)
+                   '("Fold closed, 3 lines, alpha one")))
+    (key ?z)
+    (should-not (send "\e[H" ?c))))
+
+(ert-deftest emacsvox-eat-vim-filename-completion ()
+  "Read the full name including spaces from the Ex prompt and Insert popup."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 72 4)
+    (send "\e[4;1H:edit tw\e[K")
+    (should (equal (send "o\\ words.txt" 9) '("two words.txt")))
+    (send "\e[4;1H-- INSERT --\e[K\e[Hfind tw\e[K\e[1;8H" ?i)
+    (key 24)
+    (should (equal (send (concat "o words.txt\e[2;1H\e[7mtwo words.txt\e[0m\e[K"
+                                 "\e[4;1H-- File name completion (^F^N^P) match 1 of 2\e[1;19H") 6)
+                   '("two words.txt, 1 of 2")))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[1;8H" 5) '("Completion cancelled")))
+    (key 24)
+    (should (equal (send "\e[4;1H-- File name completion (^F^N^P) Pattern not found\e[1;8H" 6)
+                   '("Pattern not found")))))
+
+(ert-deftest emacsvox-eat-vim-ex-results-and-retention ()
+  "Separate command output from file rows and retain the result with its prompt."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:set number?\e[K")
+    (should (equal (send "\e[4;1Hnonumber   1,1 All\e[K\e[H" 'return) '("nonumber")))
+    (send "\e[4;1H:%s/a/b/gn\e[K")
+    (should (equal (send "\e[4;1H5 matches on 3 lines  1,1 All\e[K\e[H" 'return)
+                   '("5 matches on 3 lines")))
+    (let ((marks "Mark a, line 2, column 0, beta two. Press ENTER to continue"))
+      (should (equal (send (concat "\e[2;1Hmark line  col file/text\e[K"
+                                   "\e[3;1H a    2   0 beta two\e[K\e[4;1HPress ENTER to continue\e[K"))
+                     (list marks)))
+      (setq speech nil)
+      (emacsvox-eat-speak-retained-status)
+      (should (equal speech (list (concat "Retained terminal status: " marks)))))
+    (should (equal (send (concat "\e[2;1HType Name Content\e[K\e[3;1H  l  \"a   note^J\e[K"
+                                 "\e[4;1HPress ENTER to continue\e[K"))
+                   '("Register a, note^J. Press ENTER to continue")))))
+
+(ert-deftest emacsvox-eat-vim-buffers-tabs-and-quickfix ()
+  "Prefer the active tab to a stale filename and speak a quickfix diagnostic."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:bnext\e[K")
+    (should (equal (send "\e[Hsecond file\e[4;1H\"two\" 1L, 12B    1,1 All\e[H" 'return)
+                   '("Buffer two, line 1, column 1, second file")))
+    (key ?g)
+    (should (equal (send "\e[H\e[1m one \e[0m two                  X\e[2;1Hfirst file\e[2;1H" ?t)
+                   '("Tab one, line 1, column 1, first file")))
+    (send "\e[4;1H:cprevious\e[K")
+    (should (equal (send "\e[4;1H(1 of 3): missing comma   2,2 All\e[2;2H" 'return)
+                   '("Result 1 of 3, line 2, column 2, missing comma")))))
+
+(ert-deftest emacsvox-eat-vim-main-screen-tabs ()
+  "A plain stock tab bar can confirm a neighbour after a known tab opens."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:tabedit one\e[K")
+    (should (equal (send "\e[H two | one __________X\e[2;1Hfirst\e[K\e[4;1H\"one\" 1L, 6B   1,1 All\e[2;1H" 'return)
+                   '("Tab one, line 1, column 1, first")))
+    (key ?g)
+    (should (equal (send "\e[2;1Hsecond\e[2;1H" ?t) '("Tab two, line 1, column 1, second")))
+    (key ?g)
+    (should (equal (send "\e[H new | one __________X\e[2;1Hfirst\e[K\e[2;1H" ?T)
+                   '("Tab, line 1, column 1, first")))))
+
+(ert-deftest emacsvox-eat-vim-help-two-repaints ()
+  "Wait for the help split when the filename arrives first."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:help motion\e[K")
+    (should-not (send "\e[4;1H\"intro.txt\" [readonly] 90L, 500B\e[K" 'return))
+    (should (equal (send "\e[Hmotion help\e[K\e[2;1Hintro.txt [Help][RO]   20,1 All\e[K\e[H")
+                   '("Help intro.txt, line 20, column 1, motion help")))))
+
+(ert-deftest emacsvox-eat-vim-pages-marks-and-find-repeat ()
+  "Read the destination when a scroll reuses the same cursor cell."
+  (emacsvox-eat-test--with-vim
+    (should (equal (send "\e[Hrow 20\e[K\e[4;1H20,1 50%\e[H" 4)
+                   '("Line 20, column 1, row 20")))
+    (key ?m)
+    (should (equal (send "\e[H" ?a) '("Mark a requested at line 20, column 1")))
+    (key ?')
+    (should (equal (send "\e[4;1H21,1 50%\e[2;1H" ?b) '("Line 21, column 1, beta two")))
+    (should (equal (send "\e[4;1H20,1 50%\e[H" 15) '("Line 20, column 1, row 20")))
+    (should (equal (send "\e[4;1H21,1 50%\e[2;1H" 9) '("Line 21, column 1, beta two")))
+    (should (equal (send "\e[2;3H" ?\;) '(?t)))
+    (should (equal (send "\e[2;1H" ?,) '(?b)))))
+
+(ert-deftest emacsvox-eat-vim-jump-destinations ()
+  "Speak confirmed word searches, character finds, bracket and paragraph jumps."
+  (emacsvox-eat-test--with-vim
+    (send "\e[2;1Hbeta one\e[K\e[H")
+    (key ?f)
+    (should (equal (send "\e[1;7H" ?o) '(?o)))
+    (should (equal (send "\e[2;6H" ?*) '("beta one")))
+    (should (equal (send "\e[1;7H" ?#) '("alpha one")))
+    (send "\e[2;1H(x)\e[K\e[2;1H")
+    (should (equal (send "\e[4;1H2,3 Top\e[K\e[2;3H" ?%)
+                   (list (concat "Line 2, column 3, " (emacsvox-eat--deleted-character-name ?\))))))
+    (should (equal (send "\e[3;1H\e[K\e[4;1H3,1 Top\e[K\e[3;1H" ?}) '("Line 3")))))
+
+(ert-deftest emacsvox-eat-vim-file-boundaries-use-normal-position-feedback ()
+  "G and gg read the destination and notify on the same terms as buffer jumps."
+  (emacsvox-eat-test--with-vim
+    (cl-letf (((symbol-function 'emacsvox-icon) (lambda (icon &rest _) (push icon speech)))
+              ((symbol-function 'tts-notify)
+               (lambda (text &rest _)
+                 (should (eq (get-text-property 0 'personality text) 'voice-monotone-extra))
+                 (push (string-trim text) speech)))
+              ((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest args) (push (plist-get (plist-get args :facts) :line-condition) speech))))
+      (should (equal (send "\e[4;1H3,1 All\e[K\e[3;1H" ?G) '(large-movement "gamma" "bottom")))
+      (key ?G)
+      (emacsvox-eat--vim-after-send)
+      (should (timerp emacsvox-eat--vim-quiet-timer))
+      (setq speech nil)
+      (emacsvox-eat--vim-quiet-response (current-buffer) '(?G) 100)
+      (should (equal (reverse speech) '(large-movement "gamma" "bottom")))
+      (key ?g)
+      (should (equal (send "\e[4;1H1,1 All\e[K\e[H" ?g) '(large-movement "alpha one" "top")))
+      (key ?2)
+      (should (equal (send "\e[4;1H2,1 All\e[K\e[2;1H" ?G) '("Line 2, beta two")))
+      (should (equal (send "\e[3;1H\e[K\e[4;1H3,0-1 All\e[K\e[3;1H" ?G)
+                     '(large-movement empty "bottom")))
+      (send "\e[4;1H-- INSERT --\e[K\e[3;1H" ?i)
+      (should (equal (send "G" ?G) '(?G))))))
+
+(ert-deftest emacsvox-eat-vim-yank-delete-word-and-repeat ()
+  "Read a completed yank request and the results of a deletion and repeat."
+  (emacsvox-eat-test--with-vim
+    (key ?y)
+    (key ?y)
+    (should-not (send "\e[4;1H            y     1,1 Top\e[H"))
+    (should (equal (send "\e[4;1H\e[K1,1 Top\e[H") '("Yank line, alpha one")))
+    (key ?y)
+    (should (equal (send "\e[H" ?y) '("Yank line, alpha one")))
+    (key ?d)
+    (should (equal (send "\e[Hone\e[K\e[H" ?w) '("alpha")))
+    (should (equal (send "\e[H\e[K" ?.) '("Repeated change, blank")))
+    (send "\e[4;1H-- INSERT --\e[K\e[H" ?i)
+    (key ?y)
+    (should (equal (send "yy" ?y) '("yy")))))
+
+(ert-deftest emacsvox-eat-vim-insert-word-line-erase-and-tabs ()
+  "Use the displayed deletion and tab width, including a retained suffix."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- INSERT --\e[K\e[1;10H" ?A)
+    (should (equal (send "\e[1;7H\e[K" 23) '("one")))
+    (send "\e[1;7Hlast\e[1;7H")
+    (should (equal (send "\e[Hlast\e[K\e[H" 21) '("alpha")))
+    (should (equal (send "\e[H    last\e[1;5H" 'tab) '("Column 5")))
+    (should (equal (send "\e[H        last\e[1;9H" 9) '("Column 9")))
+    (should-not (send "\e[1;9H" 21))))
+
+(ert-deftest emacsvox-eat-vim-selection-text-and-review ()
+  "Include Vim's unstyled cursor cell and follow the selection as it shrinks."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- VISUAL --     1    1,1 All\e[H" ?v)
+    (should (equal (send "\e[H\e[7malph\e[0ma\e[4;18H5    1,5 All\e[1;5H" ?e)
+                   '("5 columns selected, alpha")))
+    (should (equal (send "\e[H\e[7malp\e[0mha\e[4;18H4    1,4 All\e[1;4H" ?h)
+                   '("4 columns selected, alph")))
+    (setq speech nil)
+    (emacsvox-eat-speak-vim-selection)
+    (should (equal speech '("Visible selection, alph")))
+    (let ((review (save-window-excursion (emacsvox-eat-review-screen))))
+      (unwind-protect
+          (progn
+            (send "\e[Halpha\e[4;1H\e[K1,4 All\e[1;4H" 'escape)
+            (with-current-buffer review
+              (setq speech nil)
+              (emacsvox-eat-speak-vim-selection)
+              (should (equal speech '("Visible selection, alph")))))
+        (kill-buffer review)))))
+
+(ert-deftest emacsvox-eat-vim-normal-operators ()
+  "Read the rendered replacement, deletion, indentation, join and yank request."
+  (emacsvox-eat-test--with-vim
+    (key ?r)
+    (should (equal (send "\e[Hx\e[H" ?x) '("Replaced a with x")))
+    (should (equal (send "\e[HX\e[1;2H" ?~) '("cap x")))
+    (should (equal (send "\e[K\e[H" ?D) '("lpha one")))
+    (send "\e[Halpha one\e[1;3H")
+    (mapc #'key '(?d ?i))
+    (should (equal (send "\e[H one\e[K\e[H" ?w) '("alpha")))
+    (send "\e[Halpha one\e[H")
+    (key ?y)
+    (should (equal (send "\e[H" ?w) '("Yank word, alpha")))
+    (key ?>)
+    (should (equal (send "\e[H    alpha one\e[1;5H" ?>) '("Column 5")))
+    (key ?<)
+    (should (equal (send "\e[Halpha one\e[K\e[H" ?<) '("Column 1")))
+    (should (equal (send "\e[1;10H beta two\e[2;1Hgamma\e[K\e[1;10H" ?J)
+                   '("Joined, alpha one beta two")))
+    (mapc #'key '(?3 ?d))
+    (should (equal (send "\e[Hlast\e[K\e[4;1H3 fewer lines    1,1 All\e[H" ?d)
+                   '("3 lines deleted, last")))))
+
+(ert-deftest emacsvox-eat-vim-insert-arrows-and-change-word-echo ()
+  "Read Insert arrow destinations and keep the first replacement characters."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- INSERT --\e[K\e[H" ?i)
+    (should (equal (send "\e[1;2H" 'right) '(?l)))
+    (should (equal (send "\e[2;2H" 'down) '("beta two")))
+    (should (equal (send "\e[1;2H" 'up) '("alpha one")))
+    (should (equal (send "\e[H" 'left) '(?a)))
+    (send "\e[4;1H\e[K\e[H" 'escape)
+    (key ?c)
+    (should (equal (send "\e[H one\e[K\e[4;1H-- INSERT --\e[H" ?w) '("Insert mode")))
+    (mapc #'key (string-to-list "new"))
+    (should (equal (send "new one\e[1;4H") '("new")))
+    (send "\e[4;1H\e[K\e[H" 'escape)
+    (mapc #'key (string-to-list "cwblue"))
+    (should (equal (send "\e[Hblue one\e[K\e[4;1H-- INSERT --\e[1;5H")
+                   '("Insert mode" "blue")))))
+
+(ert-deftest emacsvox-eat-vim-delayed-and-partial-echo ()
+  "Handle a late reply, acknowledge partial echoes and discard stale typing."
+  (emacsvox-eat-test--with-vim
+    (let ((clock (symbol-function 'float-time)))
+      (cl-letf (((symbol-function 'float-time)
+                 (lambda (&optional time) (- (funcall clock time) 1.25))))
+        (key ?j)))
+    (should (equal (send "\e[2;1H") '("beta two")))
+    (mapc #'key (append ":set noshowmode" '(return)))
+    (should-not (send "\e[4;1H:set noshowmode    2,1 Top\e[K\e[2;1H"))
+    ;; Without showmode, the i can cause no redraw of its own.
+    (mapc #'key '(?i ?a ?j ?k ?l))
+    (should (equal (send "\e[2;1Hajbeta two\e[2;3H") '("aj")))
+    (should (equal (send "\e[2;3Hklbeta two\e[2;5H") '("kl")))
+    (key ?j)
+    (emacsvox-eat--set-application-profile 'terminal)
+    (emacsvox-eat--set-application-profile 'vim)
+    (should-not (send "\e[3;1H"))
+    (key ?x)
+    (setq emacsvox-eat--vim-deadline (1- (float-time)))
+    (should-not (send "xgamma\e[3;2H"))
+    (should-not emacsvox-eat--vim-keys)
+    (mapc #'key '(?i ?j ?k))
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[3;2H") '("Insert mode")))
+    (should (equal (send "jkgamma\e[3;4H") '("jk")))))
+
+(ert-deftest emacsvox-eat-vim-split-reads-the-active-window ()
+  "Styled dividers delimit either window.  A literal pipe remains file text."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hleft  \e[7m|\e[0mRIGHT\e[2;1Hone|a \e[7m|\e[0mTWO\e[3;1Hthree \e[7m|\e[0mFOUR\e[H")
+    (should (equal (send "\e[2;1H" ?j) '("one|a")))
+    (send "\e[4;1HE486: Pattern not found: z\e[K\e[2;1H")
+    (key 23)
+    (should (equal (send "\e[2;8H" ?w) '("Right window, TWO")))
+    (should (equal (send "\e[3;8H" ?j) '("FOUR")))
+    (setq speech nil)
+    (emacsvox-eat-speak-current-row)
+    (should (equal speech '("Current terminal row 3 of 4: FOUR")))
+    (send "\e[3;1Hthree            \e[K\e[3;1H")
+    (should (equal (send "\e[3;1Hhree\e[K\e[3;1H" ?x) '(?t)))
+    (send "\e[3;1H\e[K")
+    (should (equal (send "\e[3;1Hree\e[3;1H" ?x) '("Current row, ree")))))
+
 (ert-deftest emacsvox-eat-menu-fixture-tracks-selection-with-fixed-cursor ()
   "A whiptail-shaped style transfer speaks one selected row."
   (with-temp-buffer

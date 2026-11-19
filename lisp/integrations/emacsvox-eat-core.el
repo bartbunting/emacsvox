@@ -61,6 +61,16 @@
 (require 'emacsvox-eat-output)
 (require 'emacsvox-eat-focus)
 (require 'emacsvox-eat-presentation)
+(autoload 'emacsvox-eat--vim-settled "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-unchanged-input-p "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-shell-return-p "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-reset "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-install-input-keys "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-entry-prompt "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-forget-input "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-record-key "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-cursor-line "emacsvox-eat-vim")
+(defvar emacsvox-eat--vim-keys nil)
 (eval-when-compile (require 'eat "eat" 'no-error))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-end "eat" (terminal))
@@ -156,6 +166,9 @@ when the terminal is selected again."
 (make-variable-buffer-local 'emacsvox-eat-monitor-background-output)
 
 ;;;  Lifecycle state:
+
+(defvar-local emacsvox-eat-application-profile 'terminal
+  "Speech profile selected for this EAT session, either `terminal' or `vim'.")
 
 (defvar-local emacsvox-eat--generation 0
   "Monotonic identity for the current EAT terminal presentation.")
@@ -370,6 +383,7 @@ Do nothing when an input start is already known for the current prompt."
             emacsvox-eat--last-focus-presentation-identity nil)))
   (emacsvox-eat--retain-metadata-change diff snapshot)
   (cond
+   ((eq emacsvox-eat-application-profile 'vim) nil)
    ((plist-get diff :prompt-status-changed)
     (setq emacsvox-eat--last-status-text
           (emacsvox-eat--prompt-status-text
@@ -528,7 +542,7 @@ the terminal still existed instead of consulting its deleted cursor."
           (emacsvox-eat--clear-collected-output)
           (when (and diff
                      (emacsvox-eat--foreground-p))
-            (setq diff (plist-put diff :user-input user-input-p))
+            (setq diff (plist-put diff :user-input (not (null user-input-p))))
             (when prompt-output-p
               (setq diff (plist-put diff :prompt-output t)))
             (when (and output-observed (zerop completed-output-lines))
@@ -544,24 +558,39 @@ the terminal still existed instead of consulting its deleted cursor."
                      alternate-screen-transitions)))
             (when (and (emacsvox-eat--navigation-intent-current-p navigation)
                        (not (plist-get navigation :ambiguous)))
-              (setq diff (plist-put diff :navigation navigation))
               (when-let* ((focus
                            (emacsvox-eat--likely-focus-change
                             baseline snapshot diff navigation)))
-                (setq diff (plist-put diff :likely-focus focus))))
+                (setq diff (plist-put diff :likely-focus focus)))
+              (setq diff (plist-put diff :navigation navigation)))
             (when (and (emacsvox-eat--deletion-intent-current-p deletion)
                        (plist-get deletion :transported))
               (setq diff (plist-put diff :deletion deletion)))
-            (if (if terminal-exiting-p
-                    followed-live-p
-                  (emacsvox-eat--following-live-p))
-                (progn
-                  (emacsvox-eat--screen-quiesced diff snapshot)
-                  (when (and prompt emacsvox-eat-autospeak
-                             emacsvox-eat--automatic-feedback-allowed-p)
-                    (emacsvox-eat--present-ready-prompt prompt)))
-              (emacsvox-eat--retain-screen-change diff snapshot)
-              (emacsvox-eat--diagnose-output 'retained 'reviewing-scrollback))))))))
+            (let ((live (if terminal-exiting-p followed-live-p (emacsvox-eat--following-live-p))))
+              (cond
+               ((and (eq emacsvox-eat-application-profile 'vim) (null alternate-screen-transitions))
+                (unless live (emacsvox-eat--vim-reset))
+                (emacsvox-eat--retain-screen-change diff snapshot)
+                (if (and live (emacsvox-eat--vim-shell-return-p snapshot prompt))
+                    (progn
+                      (emacsvox-eat--set-application-profile 'terminal)
+                      (when (or user-input-p (and emacsvox-eat-autospeak
+                                                  emacsvox-eat--automatic-feedback-allowed-p))
+                        (emacsvox-eat--submit "Terminal profile"
+                                              (emacsvox-eat--facts 'command-interaction 'state-changed)
+                                              'state-change))
+                      (when (and prompt emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)
+                        (emacsvox-eat--present-ready-prompt prompt)))
+                  (emacsvox-eat--vim-settled
+                   baseline snapshot diff
+                   (and live emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p))))
+               (live
+                (emacsvox-eat--screen-quiesced diff snapshot)
+                (when (and prompt emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)
+                  (emacsvox-eat--present-ready-prompt prompt)))
+               (t
+                (emacsvox-eat--retain-screen-change diff snapshot)
+                (emacsvox-eat--diagnose-output 'retained 'reviewing-scrollback))))))))))
 
 (defun emacsvox-eat--flush-quiescence-before-exit ()
   "Finish eligible foreground output before EAT deletes its process state."
@@ -594,6 +623,15 @@ the terminal still existed instead of consulting its deleted cursor."
   (when-let* ((new (emacsvox-eat--capture-screen)))
     (let ((old emacsvox-eat--screen-snapshot)
           (navigation (emacsvox-eat--current-navigation-intent)))
+      ;; An application can exit while its terminal is in the background.
+      (when (and (eq emacsvox-eat-application-profile 'vim)
+                 (plist-get old :alternate-screen)
+                 (not (plist-get new :alternate-screen)))
+        (emacsvox-eat--set-application-profile 'terminal)
+        (setq navigation nil))
+      (when (and (eq emacsvox-eat-application-profile 'vim)
+                 (not (and (emacsvox-eat--foreground-p) (emacsvox-eat--following-live-p))))
+        (emacsvox-eat--vim-reset))
       (unless (emacsvox-eat--automatic-eligible-p)
         (emacsvox-eat--discard-automatic-feedback))
       (setq emacsvox-eat--recent-navigation-intent nil)
@@ -622,6 +660,7 @@ the terminal still existed instead of consulting its deleted cursor."
                 emacsvox-eat--quiescence-started-at (float-time)))
         (when (not (eq (plist-get old :alternate-screen)
                        (plist-get new :alternate-screen)))
+          (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-reset))
           (push (not (null (plist-get new :alternate-screen)))
                 emacsvox-eat--pending-alternate-screen-transitions)
           ;; Terminal completion and replaceable status state cannot span a
@@ -642,6 +681,7 @@ the terminal still existed instead of consulting its deleted cursor."
         (setq emacsvox-eat--pending-user-input-p
               (or emacsvox-eat--pending-user-input-p
                   emacsvox-eat--recent-input
+                  (and (eq emacsvox-eat-application-profile 'vim) emacsvox-eat--vim-keys)
                   navigation
                   (emacsvox-eat--current-deletion-intent)
                   emacsvox-eat--completion-snapshot))
@@ -651,6 +691,9 @@ the terminal still existed instead of consulting its deleted cursor."
               (emacsvox-eat--screen-diff
                emacsvox-eat--pending-screen-baseline new))
         (if (and (plist-get emacsvox-eat--pending-screen-diff :unchanged)
+                 ;; A yank or explicit redraw can leave every cell unchanged.
+                 (not (and (eq emacsvox-eat-application-profile 'vim)
+                           (emacsvox-eat--vim-unchanged-input-p)))
                  (zerop emacsvox-eat--collected-output-lines)
                  (null emacsvox-eat--pending-prompt)
                  (null emacsvox-eat--pending-alternate-screen-transitions))
@@ -740,6 +783,7 @@ the terminal still existed instead of consulting its deleted cursor."
   "Forget content-bearing EAT observation state in the current buffer."
   (emacsvox-eat--discard-automatic-feedback)
   (emacsvox-eat--clear-prompt-state)
+  (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-reset))
   (emacsvox-eat--kill-review-buffer)
   (emacsvox-eat--clear-background-monitor-state)
   (emacsvox-eat--cancel-quiescence)
@@ -764,7 +808,8 @@ the terminal still existed instead of consulting its deleted cursor."
 (defun emacsvox-eat--clear-transient-state ()
   "Clear asynchronous EAT interaction state in the current buffer."
   (emacsvox-eat--clear-sensitive-screen-state)
-  (setq emacsvox-eat--secure-input-active-p nil
+  (setq emacsvox-eat-application-profile 'terminal
+        emacsvox-eat--secure-input-active-p nil
         emacsvox-eat--visual-command-origin-p nil
         emacsvox-eat--last-bell-at nil
         emacsvox-eat--last-bell-spoken-at nil))
@@ -981,6 +1026,24 @@ Ignore a stale or duplicate exit after another process has become active."
       (user-error "The source EAT terminal is no longer available")))
    (t (user-error "This is not an EAT terminal or frozen review buffer"))))
 
+(defun emacsvox-eat--set-application-profile (profile)
+  "Apply PROFILE and return a visible Vim prompt that needs an answer."
+  (unless (eq profile emacsvox-eat-application-profile)
+    (when (eq profile 'vim) (emacsvox-eat--vim-install-input-keys))
+    (emacsvox-eat--vim-reset)
+    (emacsvox-eat--cancel-completion)
+    (emacsvox-eat--cancel-deletion)
+    (setq emacsvox-eat--last-status-text nil
+          emacsvox-eat-application-profile profile
+          emacsvox-eat--recent-input nil
+          emacsvox-eat--recent-navigation-intent nil
+          emacsvox-eat--pending-navigation-intent nil
+          emacsvox-eat--last-likely-focus nil
+          emacsvox-eat--last-focus-presentation-identity nil))
+  (when (and (eq profile 'vim) (not emacsvox-eat--secure-input-active-p))
+    (when-let* ((prompt (emacsvox-eat--vim-entry-prompt emacsvox-eat--screen-snapshot)))
+      (setq emacsvox-eat--last-status-text prompt))))
+
 (defun emacsvox-eat-toggle-autospeak (&optional argument)
   "Toggle automatic foreground feedback for this EAT terminal.
 With positive prefix ARGUMENT enable it; with zero or negative prefix disable
@@ -1089,6 +1152,9 @@ Ordered output has already been sent.  Never stop a shared speech process."
 
 (defun emacsvox-eat--check-foreground ()
   "Discard automatic feedback when this terminal loses eligibility."
+  (when (and (eq emacsvox-eat-application-profile 'vim)
+             (not (emacsvox-eat--foreground-p)))
+    (emacsvox-eat--vim-reset))
   (unless (emacsvox-eat--automatic-eligible-p)
     (emacsvox-eat--discard-automatic-feedback)))
 

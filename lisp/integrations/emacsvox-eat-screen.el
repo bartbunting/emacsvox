@@ -203,17 +203,18 @@ Run bounds are offsets from BEGINNING."
   "Return a same-length copy of TEXT with concealed STYLE cells blanked.
 Newlines remain intact so row and cursor offsets continue to describe the
 rendered terminal screen."
-  (let ((redacted (copy-sequence text))
-        (length (length text)))
+  (let ((length (length text)) redacted)
     (dolist (run styles)
       (when (memq 'concealed (plist-get (caddr run) :traits))
+        ;; A character vector permits replacing a multibyte glyph with a space.
+        (unless redacted (setq redacted (vconcat text)))
         (let ((position (max 0 (car run)))
               (end (min length (cadr run))))
           (while (< position end)
             (unless (= (aref redacted position) ?\n)
               (aset redacted position ?\s))
             (setq position (1+ position))))))
-    redacted))
+    (if redacted (concat redacted) (copy-sequence text))))
 
 (defun emacsvox-eat--split-screen-rows (text)
   "Split terminal TEXT into rows while preserving empty rows."
@@ -224,6 +225,44 @@ rendered terminal screen."
       (setq start (match-end 0)))
     (push (substring text start) rows)
     (nreverse rows)))
+
+(defun emacsvox-eat--display-content (beginning end cursor)
+  "Return visible text, style runs and CURSOR offset for BEGINNING through END.
+EAT pads wide glyphs with invisible spaces in its buffer.  Removing that
+padding keeps string widths aligned with the rendered terminal columns."
+  (let* ((styles (emacsvox-eat--style-runs beginning end))
+         (text (emacsvox-eat--redact-concealed-text
+                (buffer-substring-no-properties beginning end) styles))
+         (cursor-offset (and cursor (- cursor beginning)))
+         (position beginning) (start 0) pieces offsets)
+    (while (setq position (text-property-not-all position end 'invisible nil))
+      (let* ((next (next-single-property-change position 'invisible nil end))
+             (from (- position beginning))
+             (to (- next beginning)))
+        ;; A concealed wide glyph is already blank.  Keep all its cells.
+        (when (and (< to (length text))
+                   (= (- to from) (1- (char-width (aref text to))))
+                   (string-match-p "\\` +\\'" (substring text from to)))
+          (unless offsets (setq offsets (make-vector (1+ (length text)) 0)))
+          (cl-loop for i from (1+ from) to to do (aset offsets i 1))
+          (push (substring text start from) pieces)
+          (setq start to))
+        (setq position next)))
+    (when offsets
+      ;; Map every raw boundary once, including those inside a padding run.
+      (let ((removed 0))
+        (dotimes (i (length offsets))
+          (cl-incf removed (aref offsets i))
+          (aset offsets i (- i removed))))
+      (dolist (run styles)
+        (setf (car run) (aref offsets (car run))
+              (cadr run) (aref offsets (cadr run))))
+      (setq styles (cl-delete-if (lambda (run) (= (car run) (cadr run))) styles)
+            text (apply #'concat (nreverse (cons (substring text start) pieces))))
+      (when cursor-offset
+        (let ((within (max 0 (min cursor-offset (1- (length offsets))))))
+          (cl-incf cursor-offset (- (aref offsets within) within)))))
+    (list text styles cursor-offset)))
 
 (defun emacsvox-eat--cursor-coordinates (cursor beginning end)
   "Return zero-based cursor coordinates for CURSOR in BEGINNING..END."
@@ -322,10 +361,8 @@ Only public EAT terminal accessors and rendered buffer properties are used."
             (emacsvox-eat--cursor-coordinates cursor beginning end))
            (size (eat-term-size eat-terminal))
            (title (eat-term-title eat-terminal))
-           (styles (emacsvox-eat--style-runs beginning end))
-           (text
-            (emacsvox-eat--redact-concealed-text
-             (buffer-substring-no-properties beginning end) styles))
+           (content (emacsvox-eat--display-content beginning end cursor))
+           (text (car content))
            (prompt-status
             (emacsvox-eat--capture-prompt-status
              beginning end cursor alternate-screen)))
@@ -336,8 +373,8 @@ Only public EAT terminal accessors and rendered buffer properties are used."
        :display-end end
        :text text
        :rows (emacsvox-eat--split-screen-rows text)
-       :styles styles
-       :cursor-offset (and cursor (- cursor beginning))
+       :styles (nth 1 content)
+       :cursor-offset (nth 2 content)
        :cursor-row (car coordinates)
        :cursor-column (cdr coordinates)
        :cursor-type (eat-term-cursor-type eat-terminal)

@@ -14,6 +14,197 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
+
+14.7 Selecting And Checking Omnivox
+===================================
+
+Test the installed server outside Emacs on GNU/Linux/macOS:
+
+     omnivox --version
+     omnivox --check
+     omnivox --list-voices
+
+   In WSL2, the launcher selects ‘OMNIVOX_PROGRAM’ first, the per-user
+recorded installation next, then a content-addressed source runtime,
+then ‘omnivox’ on ‘PATH’:
+
+     ./servers/omnivox --check
+
+   The check initialises engine/output and plays tone then speech.  Its
+success message asks you to confirm that you hear both.  If either is
+absent, follow *note Backend Diagnostics: Backend Diagnostics And
+Ownership. before starting Emacsvox.
+
+   Select before loading Emacsvox:
+
+     export TTS_PROGRAM=omnivox
+
+   An export affects that shell and children; a shell-startup entry
+persists it.  On POSIX, ‘servers/omnivox’ finds ‘omnivox’ on ‘PATH’;
+‘OMNIVOX_PROGRAM’ can explicitly override it.  The WSL per-user
+selection persists across shells and outranks staged source runtimes.
+Native Windows resolves ‘omnivox.exe’ through ‘exec-path’ or the
+absolute ‘TTS_PROGRAM’.  Follow *note Installing Native Windows
+Emacsvox: Trying Native Windows Emacsvox. for the supported native x64
+route.
+
+   In a running session, ‘M-x omnivox’ temporarily selects that server.
+‘M-x tts-speak-version’ identifies the live adapter and ‘M-x
+tts-restart’ restarts after a deliberate configuration change.  The
+complete isolated start, expected speech, and recovery remain in *note
+Installation: Installation.
+
+14.7.1 Choose physical output devices
+-------------------------------------
+
+An updated Windows development build of Omnivox can send main speech and
+notifications to different physical outputs.  This requires the server's
+‘audio_device_selection_v1’ capability; the pinned 1.18.0 release does
+not provide it.  It works with native Windows Emacs or WSL Emacs
+launching the Windows worker.  Linux/WSLg, macOS, PulseAudio and remote
+device selection are not provided by this interface.
+
+   Open ‘C-e H o n’ and choose _Main output device_ (‘D’) or
+_Notification output device_ (‘M’).  The equivalent command is ‘M-x
+omnivox-output-devices <RET>’; a prefix argument chooses notifications.
+For a separate notification device, first use Automatic, Left, Right or
+Both notification routing so that a separate worker exists.  *note
+Notification Routing: (emacsvox)Notification Routing. explains that
+arrangement.
+
+   Press ‘d’ for the Transient list of _Follow system default_ and
+available outputs.  It also retains a missing saved or applied device as
+unavailable.  Names are labels: identical names can identify different
+devices, so duplicate names have distinct numbers and each choice's Help
+includes its unique device ID.  _Selected_, _Applied_, _Saved_ and
+_Connected_ describe distinct states.  Selected is the candidate waiting
+for Apply.  In default mode, the applied choice is Follow system default
+while Connected identifies the endpoint currently used.
+
+  1. Browse the choices with arrows to hear their names and states.
+     ‘<RET>’ selects a candidate and returns to the device menu without
+     changing audio.  ‘q’ returns without selecting.
+  2. Press ‘a’ to Apply that candidate to this lane.  The worker opens
+     it while the old route remains usable.  If preparation fails or is
+     cancelled, a healthy old route keeps working.  Success cancels
+     interrupted speech and cues, then sends fresh output to the
+     selected device.  Engines stay loaded; voice, rate, channel and
+     volume settings remain in force.
+  3. Confirm the result and listen to subsequent speech.  Use ‘g’ to
+     refresh live status and availability.  Connected reports a working
+     software connection; it does not prove that a headset is audible.
+  4. Press ‘s’ to Save the confirmed applied choice for this host and
+     lane in Customize.  Saving does not apply the selected candidate.
+     Main and notification choices are independent.  ‘q’ returns without
+     applying or saving the current candidate; an already applied choice
+     remains active for this session.
+
+   Saved choices use the speech host's name, backend and device ID.
+Renaming the host creates a different scope.  Friendly-name changes do
+not select another device.  Explicit ‘--audio-device’ or
+‘OMNIVOX_AUDIO_DEVICE’ startup overrides take precedence over saved
+choices.  Ordinary startup resolves saved choices inside the worker
+without an extra discovery process.
+
+   An explicit device never falls back to speakers when disconnected.
+Its pending audio is cancelled, requests during the outage are
+discarded, and reconnect does not replay them.  Reconnect the device, or
+explicitly Apply Follow system default or another device.  Notifications
+do not fall back to main speech when their intended physical
+destinations differ or are unresolved; notification history retains
+their text.
+
+   An unanswered Apply remains unknown.  Press ‘g’ to reconcile it or
+‘c’ to request cancellation; cancellation cannot undo a completed
+change.  Automatic worker replacement preserves the last confirmed
+destination and refuses to guess while an Apply is unresolved.  If the
+worker has died, Apply asks whether to recover it on the selected
+output.  Recovery still requires confirmed cleanup of the previous
+native worker.  A fresh Emacs session uses the saved choice; unsaved
+session choices need not survive exit.  The explicit emergency-speech
+command ignores these ordinary device preferences.
+
+14.7.2 Remote Workstation Speech (Preview)
+------------------------------------------
+
+Emacs can run on an SSH host while Omnivox, installed voices, and
+playback stay on your workstation.  This uses Omnivox 1.18.0's ‘--serve’
+and Emacsvox's remote transport.  Remote access remains a preview
+feature.
+
+   Create a private token on the workstation.  The tool refuses to
+overwrite or print an existing token:
+
+     mkdir -p "$HOME/.config/omnivox"
+     python3 /path/to/omnivox/tools/create_remote_token.py \
+         "$HOME/.config/omnivox/remote-token"
+
+   Leave the installed server running in a terminal, with the matching
+Emacsvox sound-pack directory:
+
+     omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
+         --sound-root /path/to/emacsvox/sounds
+
+   For a Windows service through the WSL launcher, translate both paths:
+
+     /path/to/emacsvox/servers/omnivox --serve \
+         --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
+         --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
+
+   In another workstation terminal, copy the token through verified SSH
+and open the reverse forward, replacing ‘user@emacs-host’:
+
+     ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
+     scp "$HOME/.config/omnivox/remote-token" user@emacs-host:.config/omnivox/remote-token
+     ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
+     ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
+         -o ServerAliveCountMax=2 \
+         -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
+
+   When Omnivox runs on Windows, use Windows OpenSSH for the final
+connection: ‘ssh.exe’ from WSL or ‘ssh’ from PowerShell.  It must reach
+Windows loopback; a WSL client under NAT reaches separate WSL loopback
+instead.  Windows SSH uses its Windows keys and host-trust
+configuration.
+
+   *note Installing Remote Emacsvox: Installing Remote Emacsvox.
+provides the remote-only installation and isolated launcher.  ‘--remote’
+configures transport before speech starts and needs no local Omnivox
+binary.  For personal configuration, set before startup:
+
+     (setq tts-program "omnivox"
+           omnivox-remote-host "127.0.0.1"
+           omnivox-remote-port 6417
+           omnivox-remote-token-file "~/.config/omnivox/remote-token")
+
+   ‘M-x omnivox-remote-connect’ connects/retries, ‘M-x
+omnivox-remote-status’ inspects, and ‘M-x omnivox-remote-disconnect’
+stops and suspends retries.  Reconnection refreshes voices/routing and
+discards unfinished speech.  Main and notification retain separate
+workers.  Only one Emacs session owns a service at a time.
+
+   If main connects but notification fails, main remains available while
+the missing connection retries.  Recovery does not replace working main
+speech.  ‘omnivox-remote-auto-reconnect’ set to nil disables automatic
+retry; explicit disconnect suspends it until another connection.  Status
+retains retry and error information.
+
+   Keep service and forwarded endpoint on loopback; do not enable SSH
+‘GatewayPorts’.  SSH encrypts the transport and the token excludes other
+remote host users.  To rotate, stop the service, replace both private
+token files, and restart.  Typing ‘quit’ or interrupting the service
+terminal stops workers.
+
+   Inventory belongs to the workstation; install/manage engines there.
+Bundled icons resolve by pack-relative name.  Personal sounds outside
+that directory and sound uploads are unsupported; no ‘--sound-root’
+means no file-based icons.  For an occupied remote port, change the left
+side of ‘-R’ and match ‘omnivox-remote-port’.  Authentication failure
+indicates differing tokens or excessively broad file permissions; a busy
+service belongs to another connection.
+
+
 File: emacsvox.info,  Node: Compatibility Speech Servers,  Next: Backend Diagnostics And Ownership,  Prev: Selecting And Checking Omnivox,  Up: Speech Backends
 
 14.8 Compatibility Speech Servers
@@ -3442,7 +3633,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  35)
 * frame, meaning:                        Working Context Terms.
                                                               (line   6)
-* frozen EAT review:                     EAT Screen Review.   (line  42)
+* frozen EAT review:                     EAT Screen Review.   (line  46)
 * glossary:                              Emacsvox Terminology.
                                                               (line   6)
 * go back, settings:                     Finding Problem Tasks.
@@ -3775,6 +3966,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * unwanted sound:                        Finding Voice Tasks. (line   6)
 * uppercase keys:                        Emacs Key Notation.  (line   6)
+* Vim in a terminal:                     EAT Full-screen Applications.
+                                                              (line   6)
 * visual lines, reading:                 Reading.             (line  70)
 * voice adjustments:                     Editing Named Voices.
                                                               (line   6)

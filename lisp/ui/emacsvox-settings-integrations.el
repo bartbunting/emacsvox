@@ -33,6 +33,9 @@
 (declare-function emacsvox-agent-shell--cancel-background-pending-speech "emacsvox-agent-shell" ())
 (declare-function emacsvox-eat--control-buffer "emacsvox-eat-core" ())
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
+(declare-function emacsvox-eat--set-application-profile "emacsvox-eat-core" (profile))
+(defvar emacsvox-eat--generation)
+(defvar emacsvox-eat--screen-snapshot)
 (declare-function emacsvox-eww-shr-outline-toggle "emacsvox-eww" ())
 (defvar emacsvox-eww-masquerade)
 (defvar outline-search-function)
@@ -265,7 +268,11 @@ A nil group denotes a focused menu with buffer-only controls.")
   (interactive)
   (emacsvox-settings-integrations--eat-call 'emacsvox-eat-toggle-background-monitoring))
 (defconst emacsvox-settings-integrations--eat-choices
-  '((prompt emacsvox-eat-prompt-feedback "Prompt feedback"
+  '((profile emacsvox-eat-application-profile "Application profile"
+             emacsvox-settings-integrations--eat-profile
+             (terminal "Terminal, ordinary shell and application feedback")
+             (vim "Vim, hear modes, movements, edits and command results"))
+    (prompt emacsvox-eat-prompt-feedback "Prompt feedback"
             emacsvox-settings-integrations--eat-prompt
             (earcon "Ready cue") (text "Read prompt") (silent "Silent"))
     (detail emacsvox-eat-verbosity "Automatic feedback detail"
@@ -286,16 +293,23 @@ A nil group denotes a focused menu with buffer-only controls.")
                        (buffer-local-value (nth 1 spec)
                                            (emacsvox-settings-integrations--eat-source)))))
     (concat (cadr choice) (when selected ", selected"))))
-(defun emacsvox-settings-integrations--eat-choose (kind)
-  "Open KIND's choices without changing the captured terminal."
-  (let* ((spec (assq kind emacsvox-settings-integrations--eat-choices))
-         (source (emacsvox-settings-integrations--eat-source))
+(defun emacsvox-settings-integrations--eat-choose (kind &optional context)
+  "Open KIND's choices for CONTEXT or the terminal in the current menu."
+  (let* ((context (copy-sequence (or context (emacsvox-aural-menu--context))))
+         (spec (assq kind emacsvox-settings-integrations--eat-choices))
+         (source (with-current-buffer (emacsvox-aural-menu--source context)
+                   (emacsvox-eat--control-buffer)))
          (value (buffer-local-value (nth 1 spec) source))
          (index (or (seq-position (nthcdr 4 spec) value
                                  (lambda (choice selected) (eq (car choice) selected))) 0)))
+    (when (eq kind 'profile)
+      (with-current-buffer source
+        (setq context (plist-put context :eat-generation emacsvox-eat--generation)
+              context (plist-put context :eat-alternate
+                                 (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))))
     (transient-setup
      'emacsvox-settings-integrations--eat-choice nil nil
-     :scope (plist-put (copy-sequence (emacsvox-aural-menu--context)) :eat-choice kind))
+     :scope (plist-put context :eat-choice kind))
     (transient--show)
     (with-selected-window transient--window
       (transient--goto-button
@@ -305,6 +319,10 @@ A nil group denotes a focused menu with buffer-only controls.")
                      emacsvox-settings-integrations--eat-choice-third))
         transient--suffixes :key (lambda (item) (oref item command)))))
     (emacsvox-transient--speak-button)))
+(defun emacsvox-settings-integrations--eat-profile ()
+  "Choose speech for the application running in this terminal, including over SSH."
+  (interactive)
+  (emacsvox-settings-integrations--eat-choose 'profile))
 (defun emacsvox-settings-integrations--eat-detail ()
   "Choose how much automatic terminal output to hear."
   (interactive)
@@ -321,12 +339,21 @@ A nil group denotes a focused menu with buffer-only controls.")
 (defun emacsvox-settings-integrations--eat-choice-apply (index)
   "Apply choice INDEX locally and return to its parent control."
   (let* ((spec (emacsvox-settings-integrations--eat-choice-spec))
-         (value (car (nth index (nthcdr 4 spec)))))
+         (value (car (nth index (nthcdr 4 spec))))
+         label prompt)
     (with-current-buffer (emacsvox-settings-integrations--eat-source)
-      (set (make-local-variable (nth 1 spec)) value))
+      (if (eq (car spec) 'profile)
+          (let ((context (emacsvox-aural-menu--context)))
+            (when (and (eq value 'vim)
+                       (or (/= emacsvox-eat--generation (plist-get context :eat-generation))
+                           (and (plist-get context :eat-alternate)
+                                (not (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))))
+              (user-error "The terminal session or application screen has ended"))
+            (setq prompt (emacsvox-eat--set-application-profile value)))
+        (set (make-local-variable (nth 1 spec)) value)))
+    (setq label (emacsvox-settings-integrations--eat-label (nth 1 spec) (nth 2 spec)))
     (emacsvox-settings-integrations--return (nth 3 spec))
-    (emacsvox-settings-integrations--say
-     (emacsvox-settings-integrations--eat-label (nth 1 spec) (nth 2 spec)))))
+    (emacsvox-settings-integrations--say (if prompt (concat label ". " prompt) label))))
 (defun emacsvox-settings-integrations--eat-choice-first ()
   "Apply this choice." (interactive)
   (emacsvox-settings-integrations--eat-choice-apply 0))
@@ -344,7 +371,9 @@ A nil group denotes a focused menu with buffer-only controls.")
    ("2" (lambda () (emacsvox-settings-integrations--eat-choice-label 1))
     emacsvox-settings-integrations--eat-choice-second :transient transient--do-replace)
    ("3" (lambda () (emacsvox-settings-integrations--eat-choice-label 2))
-    emacsvox-settings-integrations--eat-choice-third :transient transient--do-replace)]
+    emacsvox-settings-integrations--eat-choice-third
+    :if (lambda () (nth 6 (emacsvox-settings-integrations--eat-choice-spec)))
+    :transient transient--do-replace)]
   ["Finish"
    ("q" "Cancel" emacsvox-settings-integrations--eat-choice-back :transient transient--do-replace)
    ("C-q" "Close menus" transient-quit-all)]
@@ -393,9 +422,13 @@ A nil group denotes a focused menu with buffer-only controls.")
    ("d" (lambda () (emacsvox-settings-integrations--eat-label
                     'emacsvox-eat-verbosity "Automatic feedback detail"))
     emacsvox-settings-integrations--eat-detail
+    :inapt-if-not emacsvox-settings-integrations--eat-p :transient transient--do-suspend)
+   ("a" (lambda () (emacsvox-settings-integrations--eat-label
+                    'emacsvox-eat-application-profile "Application profile"))
+    emacsvox-settings-integrations--eat-profile
     :inapt-if-not emacsvox-settings-integrations--eat-p :transient transient--do-suspend)]
   ["Defaults and advanced settings"
-   ("w" "Save these four values as defaults" emacsvox-settings-integrations--eat-save
+   ("w" "Save speech, monitoring, prompt and detail defaults" emacsvox-settings-integrations--eat-save
     :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)
    ("A" "Advanced EAT settings (Customize)" emacsvox-settings-integrations--eat-custom
     :transient transient--do-suspend)]

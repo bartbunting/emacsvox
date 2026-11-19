@@ -1126,6 +1126,33 @@
     (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
     (should-not (file-exists-p custom-file))))
 
+(ert-deftest emacsvox-settings-eat-application-profile-shortcut ()
+  "Browse and cancel from EAT, then select and restore a local profile."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "C-q"))
+    (eat-mode)
+    (let (spoken)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest _) (when (stringp text) (push text spoken)))))
+        (execute-kbd-macro (kbd "C-e q a"))
+        (should (string-match-p "Terminal.*selected" (car spoken)))
+        (execute-kbd-macro (kbd "<down>"))
+        (should (string-match-p "Vim.*command results" (car spoken)))
+        (should (eq (buffer-local-value 'emacsvox-eat-application-profile source) 'terminal))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (current-buffer) source))
+        (execute-kbd-macro (kbd "C-e q a <down> RET"))
+        (should (eq (current-buffer) source))
+        (should (eq emacsvox-eat-application-profile 'vim))
+        (should (eq (default-value 'emacsvox-eat-application-profile) 'terminal))
+        (execute-kbd-macro (kbd "C-e q a"))
+        (should (string-match-p "Vim.*selected" (car spoken)))
+        (execute-kbd-macro (kbd "<up> RET"))
+        (should (eq emacsvox-eat-application-profile 'terminal))
+        (should-not (file-exists-p custom-file))))))
+
 (ert-deftest emacsvox-settings-integrations-eat-local-controls ()
   "EAT controls speak their values and preserve local lifecycle and independence."
   (skip-unless (require 'eat nil t))

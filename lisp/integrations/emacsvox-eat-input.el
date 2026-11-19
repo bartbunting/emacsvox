@@ -172,6 +172,7 @@ the recalled input's navigation presentation.  Other messages remain audible."
 
 (defun emacsvox-eat--before-terminal-paste (&rest _)
   "Invalidate input-correlated state before sending terminal paste content."
+  (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-forget-input))
   (emacsvox-eat--output-input-boundary)
   (emacsvox-eat--resolve-deletion-as-cue)
   (emacsvox-eat--cancel-completion)
@@ -535,6 +536,7 @@ The return value is one of `submit', `backspace', `delete', `kill', or nil."
   "Begin an observed terminal deletion for ACTION repeated COUNT times.
 Return its serial, or nil when rendered feedback would be unsafe."
   (when (and (memq action '(backspace delete kill))
+             (not (eq emacsvox-eat-application-profile 'vim))
              (emacsvox-eat--raw-input-feedback-eligible-p))
     (when-let* ((screen (ignore-errors (emacsvox-eat--capture-screen))))
       (let* ((now (float-time))
@@ -907,6 +909,10 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
     (unless (memq action '(backspace delete kill))
       (emacsvox-eat--resolve-deletion-as-cue))
     (cond
+     ((eq emacsvox-eat-application-profile 'vim)
+      (when (and (not emacsvox-eat--secure-input-active-p) (emacsvox-eat--foreground-p))
+        (when (eq action 'submit) (emacsvox-eat--interrupt-for-submit))
+        (emacsvox-eat--vim-record-key event count emacsvox-eat--screen-snapshot)))
      ((and eat-terminal tab-p (not alternate-screen-p))
       (setq emacsvox-eat--recent-input nil)
       (emacsvox-eat--remember-input-row-offset)
@@ -931,6 +937,8 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
       (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-input event)))))
 
+(autoload 'emacsvox-eat--vim-after-send "emacsvox-eat-vim")
+
 (defun emacsvox--advice-eat-self-input-around
     (original count &optional event)
   "Call ORIGINAL, observing rendered deletion for COUNT copies of EVENT.
@@ -947,7 +955,10 @@ that is ambiguous."
           (setq result (funcall original count event)
                 completed t))
       (if completed
-          (emacsvox-eat--commit-deletion serial)
+          (progn
+            (emacsvox-eat--commit-deletion serial)
+            (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-after-send)))
+        (when (eq emacsvox-eat-application-profile 'vim) (emacsvox-eat--vim-forget-input))
         (when (and serial emacsvox-eat--deletion-intent
                    (= serial
                       (plist-get emacsvox-eat--deletion-intent :serial)))

@@ -276,6 +276,7 @@ integrations/emacsvox-eat-screen.elc \
 integrations/emacsvox-eat-output.elc \
 integrations/emacsvox-eat-focus.elc \
 integrations/emacsvox-eat-presentation.elc \
+integrations/emacsvox-eat-vim.elc \
 integrations/emacsvox-eat-core.elc \
 integrations/emacsvox-eat-input.elc \
 integrations/emacsvox-eat-review.elc \
@@ -494,7 +495,8 @@ integrations/emacsvox-markdown.elc integrations/emacsvox-org.elc: core/emacsvox-
 integrations/emacsvox-eat-output.elc: integrations/emacsvox-eat-screen.elc
 integrations/emacsvox-eat-focus.elc: integrations/emacsvox-eat-output.elc
 integrations/emacsvox-eat-presentation.elc: integrations/emacsvox-eat-focus.elc
-integrations/emacsvox-eat-core.elc: \
+integrations/emacsvox-eat-vim.elc: integrations/emacsvox-eat-presentation.elc
+integrations/emacsvox-eat-core.elc: integrations/emacsvox-eat-vim.elc \
 integrations/emacsvox-eat-screen.elc integrations/emacsvox-eat-output.elc \
 integrations/emacsvox-eat-focus.elc integrations/emacsvox-eat-presentation.elc
 integrations/emacsvox-eat-input.elc: integrations/emacsvox-eat-core.elc

@@ -34,6 +34,8 @@
 
 (require 'emacsvox-eat-input)
 (defvar emacsvox-eat-review-map)
+(declare-function emacsvox-settings-integrations--eat-choose
+                  "emacsvox-settings-integrations" (kind &optional context))
 
 ;;;  Snapshot Review:
 
@@ -51,6 +53,12 @@
 
 (defvar-local emacsvox-eat-review--status nil
   "Immutable terminal status copied for this review buffer.")
+
+(defvar-local emacsvox-eat-review--selection nil
+  "Visible Vim selection rows copied when opening this review.")
+
+(autoload 'emacsvox-eat--vim-selected-rows "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-blank-row "emacsvox-eat-vim")
 
 (defvar-local emacsvox-eat-review--metadata nil
   "Immutable sanitized terminal metadata change copied for this review buffer.")
@@ -146,6 +154,17 @@ This explicit command works regardless of autospeak or prompt preference."
     (emacsvox-eat--submit-review
      "No terminal status is retained" 'output-navigation)))
 
+(defun emacsvox-eat-speak-vim-selection ()
+  "Read the visible Vim selection in this EAT terminal or frozen review."
+  (interactive)
+  (let* ((rows (if (derived-mode-p 'emacsvox-eat-review-mode) emacsvox-eat-review--selection
+                 (emacsvox-eat--ensure-review-context)
+                 (when (and (eq emacsvox-eat-application-profile 'vim) emacsvox-eat--screen-snapshot)
+                   (emacsvox-eat--vim-selected-rows emacsvox-eat--screen-snapshot))))
+         (text (and rows (emacsvox-eat--bounded-review-output rows))))
+    (emacsvox-eat--submit-review
+     (if text (concat "Visible selection, " text) "No visible Vim selection") 'output-navigation)))
+
 (defun emacsvox-eat--retained-metadata-lines (metadata)
   "Return explicit-review lines for sanitized retained METADATA."
   (let (lines)
@@ -229,15 +248,18 @@ This explicit command works regardless of autospeak or prompt preference."
        "The retained terminal screen has no cursor row"
        'output-navigation))
      (t
-      (let ((text
-             (emacsvox-eat--sanitize-output-row (nth row rows))))
-        (emacsvox-eat--submit-review
-         (if (string-empty-p (string-trim text))
-             (format "Current terminal row %d of %d is blank"
-                     (1+ row) (length rows))
-           (format "Current terminal row %d of %d: %s"
-                   (1+ row) (length rows) (emacsvox-eat--speech-row text)))
-         'output-navigation))))))
+      (let ((text (emacsvox-eat--sanitize-output-row
+                   (if (eq emacsvox-eat-application-profile 'vim)
+                       (emacsvox-eat--vim-cursor-line snapshot)
+                     (nth row rows)))))
+        (if (and (eq emacsvox-eat-application-profile 'vim) (string-blank-p text))
+            (emacsvox-eat--vim-blank-row (format "Current terminal row %d of %d" (1+ row) (length rows)) t)
+          (emacsvox-eat--submit-review
+           (if (string-empty-p (string-trim text))
+               (format "Current terminal row %d of %d is blank" (1+ row) (length rows))
+             (format "Current terminal row %d of %d: %s"
+                     (1+ row) (length rows) (emacsvox-eat--speech-row text)))
+           'output-navigation)))))))
 
 (defun emacsvox-eat--style-change-row-label (diff snapshot)
   "Return the retained row label for a style-only DIFF at SNAPSHOT."
@@ -787,6 +809,7 @@ review because only the newly reached row remains useful."
            ("]" . emacsvox-eat-review-next-styled-region)
            ("[" . emacsvox-eat-review-previous-styled-region)
            ("t" . emacsvox-eat-speak-retained-status)
+           ("x" . emacsvox-eat-speak-vim-selection)
            ("i" . emacsvox-eat-speak-retained-metadata)
            ("v" . emacsvox-eat-cycle-verbosity)
            ("m" . emacsvox-eat-toggle-background-monitoring)
@@ -802,8 +825,9 @@ review because only the newly reached row remains useful."
 The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
 RET, or period speaks the current row; C returns to the captured cursor; h
 moves to a retained likely focus; [ and ] move among selection-like styled
-regions without treating them as focus; c shows retained completion/help
-output; s returns to screen rows; a speaks the bounded current view; t and i
+regions without treating them as focus; x reads the captured Vim selection.
+c shows retained completion/help output; s returns to screen rows;
+a speaks the bounded current view; t and i
 speak frozen status and metadata; v and m control source-terminal feedback
 without sending terminal input; and q kills the content-bearing review buffer."
   (setq-local emacsvox-aural-module 'eat
@@ -835,6 +859,8 @@ The command never captures mutable live terminal-buffer text."
            (status
             (emacsvox-eat-review--copy-data
              emacsvox-eat--last-status-text))
+           (selection (when (eq emacsvox-eat-application-profile 'vim)
+                        (emacsvox-eat--vim-selected-rows snapshot)))
            (metadata
             (emacsvox-eat-review--copy-data
              emacsvox-eat--last-metadata-change))
@@ -853,6 +879,7 @@ The command never captures mutable live terminal-buffer text."
                     emacsvox-eat-review--completion completion
                     emacsvox-eat-review--focus focus
                     emacsvox-eat-review--status status
+                    emacsvox-eat-review--selection selection
                     emacsvox-eat-review--metadata metadata
                     emacsvox-eat-review--navigation-delivery-key
                     navigation-delivery-key)
@@ -869,7 +896,18 @@ The command never captures mutable live terminal-buffer text."
        'state-change 'open-object 'urgent)
       buffer)))
 
+(defun emacsvox-eat-select-application-profile ()
+  "Choose Terminal or Vim speech for this EAT buffer.
+Browse with the arrows and press Return to apply. Vim speaks visible modes,
+motion, edits and command results in local or remote Vim sessions."
+  (interactive)
+  (let ((terminal (emacsvox-eat--control-buffer)))
+    (require 'emacsvox-settings-integrations)
+    (emacsvox-settings-integrations--eat-choose 'profile (list :source terminal))))
+
 (define-prefix-command 'emacsvox-eat-review-map)
+(define-key emacsvox-eat-review-map (kbd "a") #'emacsvox-eat-select-application-profile)
+(define-key emacsvox-eat-review-map (kbd "x") #'emacsvox-eat-speak-vim-selection)
 (define-key emacsvox-eat-review-map (kbd "l")
             #'emacsvox-eat-speak-current-row)
 (define-key emacsvox-eat-review-map (kbd "d")

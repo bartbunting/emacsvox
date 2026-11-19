@@ -720,12 +720,12 @@ complete workflows.
      controls unavailable.
 
      EAT changes also belong to the captured terminal, including when
-     opened from frozen review.  Its ‘w’ saves the four displayed values
-     as defaults; terminals with local overrides keep them.  Background
-     monitoring is independent of foreground speech and never reads
-     background content.  Follow *note Adjust and save terminal
-     feedback: (emacsvox)EAT Feedback Preferences. for the controls and
-     their conditions.
+     opened from frozen review.  Its ‘w’ saves the speech, monitoring,
+     prompt and verbosity defaults.  Terminals with local overrides keep
+     them.  Background monitoring is independent of foreground speech
+     and never reads background content.  Follow *note Adjust and save
+     terminal feedback: (emacsvox)EAT Feedback Preferences. for the
+     controls and their conditions.
 
   2. Agent Shell, Org, and EWW
 
@@ -4174,12 +4174,16 @@ every EAT input mode:
      Speak a bounded copy of the retained visible screen.
 ‘C-e q r’
      Open a read-only frozen copy for line-by-line review.
+‘C-e q x’
+     Read the visible Vim selection.
 ‘C-e q t’
-     Speak retained progress, application, or shell-prompt status.
+     Repeat the last retained status, including a Vim message or prompt.
 ‘C-e q p’
      Speak the last identified shell prompt.
 ‘C-e q i’
      Speak the retained, sanitised title or working-directory change.
+‘C-e q a’
+     Choose the application speech profile for this terminal.
 ‘C-e q v’
      Cycle terse, normal, and verbose automatic feedback for this
      terminal.
@@ -4187,10 +4191,10 @@ every EAT input mode:
      Toggle content-free background monitoring for this terminal.
 
    The reading commands inspect retained snapshots with concealed
-content redacted.  The verbosity and monitoring commands instead change
-the source terminal's preferences.  Neither operation sends terminal
-input.  Speech is bounded: the retained visible screen is not arbitrary
-scrollback and need not match a changing live screen.
+content redacted.  The profile, verbosity and monitoring commands act on
+the source terminal.  These commands run locally in Emacs.  Review
+covers the visible screen at the time of capture.  The live display can
+change while you read.
 
 12.4.1 Frozen Screen Review
 ---------------------------
@@ -4216,6 +4220,8 @@ and closing play distinct object cues and announce the transition.
 ‘[, ]’
      Move among inverse/background-styled, selection-like regions.  They
      are not labelled as confirmed focus.
+‘x’
+     Read the visible Vim selection copied when review opened.
 ‘t, i’
      Speak status or metadata copied when review opened.
 ‘v, m’
@@ -4269,6 +4275,7 @@ opens the integration chooser, and ‘C-e H /’ finds individual controls.
      requires shell integration and automatic delivery obeys foreground
      autospeak.
    • ‘d’ chooses terse, normal, or verbose feedback.
+   • ‘a’ chooses the application profile for this terminal session.
 
    Arrows announce values and ‘<RET>’ activates a control.  Choice lists
 start on the current value; browsing does not apply a choice, ‘<RET>’
@@ -4279,10 +4286,10 @@ terminal.
 
    ‘q’ returns to the originating menu entry.  From direct ‘C-e S’, it
 closes the menu and announces the restored buffer and mode with a close
-cue.  ‘w’ saves the four displayed values as defaults through Customize.
-Terminals with local overrides keep them; others inherit the new
-defaults.  Adjustment alone does not save.  ‘A’ opens advanced EAT
-settings and ‘q’ there returns to the focused menu.
+cue.  ‘w’ saves the speech, monitoring, prompt and verbosity defaults
+through Customize.  Terminals with local overrides keep them.  Others
+inherit the new defaults.  ‘A’ opens advanced EAT settings and ‘q’ there
+returns to the focused menu.
 
 
 File: emacsvox.info,  Node: EAT Shell Integration,  Next: EAT Passwords And Privacy,  Prev: EAT Feedback Preferences,  Up: EAT Terminal Access
@@ -4385,11 +4392,126 @@ File: emacsvox.info,  Node: EAT Full-screen Applications,  Next: EAT In Eshell, 
 =============================================
 
 Pagers, editors, menus, and refreshing dashboards often rewrite cells
-instead of printing lines.  Emacsvox uses conservative cursor,
-style-change, input- direction, and timing evidence.  Arrow movement and
-clear paired highlight movement work best.  Printable keys such as ‘h’,
-‘j’, ‘k’, and ‘l’ are not assumed to mean navigation: the application
-may treat them as text.
+instead of printing lines.  The default Terminal profile follows arrow
+movement and clear changes in selection highlighting.  Programs
+interpret printable keys themselves.
+
+   When you open Vim locally or over SSH, use EAT's semi-character or
+character mode.  Press ‘C-e q a’ to hear the selected profile.  Browse
+to Vim with the arrows and press ‘<RET>’ to apply it, or ‘q’ to cancel.
+This choice belongs to the current EAT buffer and works with stock Vim.
+
+   If Vim is already waiting for an answer, the profile announcement
+includes the prompt.  For example, when a swap file exists, you hear the
+letters for the choices Vim offers.  Press the letter for your choice.
+Press ‘<RET>’ if Vim asks you to continue.  Use ‘C-e q t’ to hear the
+prompt again.
+
+   In Normal mode, ‘j’ and ‘k’ read the line you reach.  A blank line
+plays your usual blank-line cue.  ‘h’ and ‘l’ speak the character, and
+‘w’, ‘b’ and ‘e’ speak the word.  The arrows give the same line or
+character feedback in Insert mode.  Use ‘f’ followed by a character to
+find it on the current line.  Repeat the find with a semicolon or
+reverse it with a comma.
+
+   With the Vim profile selected, ‘C-Left’ and ‘C-Right’ move Vim's
+cursor by word in both semi-character and character mode.  You hear the
+word you land on.  In Normal mode, Vim treats ‘green,blue’ as one word
+for these keys.  In Insert mode, it stops on ‘green’, the comma and
+‘blue’ separately.
+
+   Use ‘gg’ to go to the first line or ‘G’ to go to the last line.  As
+with ‘M-<’ and ‘M->’ in Emacs, you hear the large-movement cue, the
+destination line and a “top” or “bottom” notification.  A count such as
+‘5G’ or ‘5gg’ takes you to line 5 and reads its number and text.  Page
+with ‘C-d’, ‘C-u’, ‘C-f’ or ‘C-b’, or move within the screen with ‘H’,
+‘M’ or ‘L’, to hear the destination and its position.  With ‘ma’, you
+hear where you asked Vim to set mark a.  Jump to its line with ‘'a’ or
+its exact position with a backtick followed by ‘a’.  Use ‘C-o’ and ‘C-i’
+to move through Vim's jump history.  A paragraph jump with ‘{’ or ‘}’
+gives the position even on a blank line.  Press ‘%’ on a bracket to hear
+the position and character at the other end of the pair.
+
+   When you move between Vim windows with ‘C-w w’ or the directional
+window commands, you hear which way you moved and the row in the
+destination window.  In side-by-side windows, movement and ‘C-e q l’
+read your side when Vim displays a distinctly styled divider.
+
+   Press ‘i’ to insert, ‘o’ to open a line below, or ‘cw’ to replace a
+word.  Emacsvox announces Insert mode and echoes text as Vim draws it.
+Letters arriving together over SSH can be spoken together.  Vim follows
+your Emacsvox character, word and line echo settings.  Backspace plays
+your deletion cue and speaks the character removed.  ‘C-w’ and ‘C-u’
+read the word or line prefix that disappeared.  ‘<TAB>’ reports the
+column you reach.  Escape announces the return to Normal mode when the
+mode label clears.  With the standard English labels hidden, visible
+typing and movement can still provide feedback.
+
+   For keyword completion, use ‘C-n’ and ‘C-p’.  For a filename, start
+with ‘C-x C-f’, then use ‘C-n’ and ‘C-p’ to hear the name and match
+position.  ‘C-y’ accepts and ‘C-e’ cancels when sent to Vim.  In
+semi-character mode, ‘C-q C-e’ sends that cancellation key.  Switch to
+character mode for sequences that EAT reserves, or quote the reserved
+key as described in *note Choose an input mode: (emacsvox)EAT Input
+Modes.  At a Vim command prompt such as ‘:edit’, press ‘<TAB>’ to hear
+the completed path.
+
+   In Visual mode, extend or shrink a character, line or block selection
+to hear its extent.  Short selections include the visible text.  For a
+longer selection use ‘C-e q x’ to read the portion on screen.  In a
+frozen review, ‘x’ reads the selection as it appeared when you opened
+the review.  Replace mode also announces its visible mode label.
+
+   In Normal mode, ‘x’, ‘dw’, ‘diw’, ‘D’ and ‘dd’ use the deletion cue
+and read what the redraw identifies.  A counted deletion such as ‘3dd’
+can report Vim's count and the row now under the cursor.  If the
+original row was missing from EAT, ‘x’ can read the resulting row.  ‘r’
+followed by a character reports the replacement.  The tilde key changes
+case.  ‘J’ reads the joined line, and ‘>>’ or ‘<<’ reports its new
+indentation.  With ‘yw’ or ‘yy’ you hear the word or line you asked Vim
+to copy.  ‘p’ gives the usual paste cue with the pasted text.  Repeating
+a change with ‘.’ or undoing it with ‘u’ reads the result.
+
+   Create a fold with a motion such as ‘zf2j’.  When Vim displays the
+closed fold, you hear its line count and summary.  ‘zo’ opens it and
+reads the exposed row.  ‘zc’ closes it.  When recording a macro, ‘qa’
+announces the displayed register and ‘q’ announces the end of recording.
+Play it with ‘@a’ or repeat it with ‘@@’.  Speech describes a visible
+result.  After an observed Normal-mode action, a replay that leaves the
+display quiet gives a request acknowledgement.
+
+   Start a search with ‘/’ or ‘?’ and press ‘<RET>’.  To search for the
+word under the cursor, press ‘*’ or ‘#’.  These searches and ‘n’ or ‘N’
+read the row containing the match.  If EAT initially shows only the file
+line number, Emacsvox speaks that number and then the text if it arrives
+at the same position within three seconds.  In Normal mode, ‘C-l’ asks
+Vim to redraw and reads the current row.  This can recover a match
+hidden by an incomplete ‘tmux’ redraw.  ‘C-e q l’ reads the row EAT
+already has.
+
+   For a substitution with confirmation, such as ‘:%s/one/two/gc’,
+listen for the replacement, match position and available answers.  ‘y’
+or ‘n’ advances to the next match, including a second match on the same
+row.  ‘a’ accepts the remaining matches and ‘q’ stops.  A count-only
+substitution reports the number of matches Vim displays.
+
+   Use ‘:bnext’ to switch buffers or ‘gt’ and ‘gT’ to change tabs.  You
+hear the destination and its current row.  Opening help reads the help
+destination.  With ‘:cnext’ or ‘:cprevious’, listen for the quickfix
+entry number, position and diagnostic.  ‘:ls’, ‘:marks’ and ‘:registers’
+read visible entries before the continuation prompt.  Option queries
+such as ‘:set number?’ read the displayed value.  ‘C-e q t’ repeats the
+retained result, including a save confirmation, a failed search, or the
+error and prompt after a refused quit.  Ambiguous redraws, movements at
+a boundary and replies arriving more than three seconds after your last
+key can stay quiet.
+
+   Emacsvox restores the Terminal profile when EAT sees the alternate
+screen close or the terminal resets or exits.  Over SSH or inside
+‘tmux’, a quit such as ‘:q’ can leave the same terminal screen open.
+When Emacsvox recognises the returning shell prompt, you hear “Terminal
+profile”.  If the prompt is unfamiliar and the Vim profile stays active,
+press ‘C-e q a’ at the shell and choose Terminal.
 
    After a silent update, use ‘C-e q l’, ‘C-e q d’, or ‘C-e q h’.  For
 systematic inspection, open ‘C-e q r’ and review rows or selection-like
@@ -5696,194 +5818,3 @@ requires the published SHA-256 and a reviewed external model, rejecting
 dirty or different source.  See *note Integration Maintenance:
 Integration Maintenance. for provenance and the complete command.  This
 does not alter the reproducible release's pinned companion.
-
-
-File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
-
-14.7 Selecting And Checking Omnivox
-===================================
-
-Test the installed server outside Emacs on GNU/Linux/macOS:
-
-     omnivox --version
-     omnivox --check
-     omnivox --list-voices
-
-   In WSL2, the launcher selects ‘OMNIVOX_PROGRAM’ first, the per-user
-recorded installation next, then a content-addressed source runtime,
-then ‘omnivox’ on ‘PATH’:
-
-     ./servers/omnivox --check
-
-   The check initialises engine/output and plays tone then speech.  Its
-success message asks you to confirm that you hear both.  If either is
-absent, follow *note Backend Diagnostics: Backend Diagnostics And
-Ownership. before starting Emacsvox.
-
-   Select before loading Emacsvox:
-
-     export TTS_PROGRAM=omnivox
-
-   An export affects that shell and children; a shell-startup entry
-persists it.  On POSIX, ‘servers/omnivox’ finds ‘omnivox’ on ‘PATH’;
-‘OMNIVOX_PROGRAM’ can explicitly override it.  The WSL per-user
-selection persists across shells and outranks staged source runtimes.
-Native Windows resolves ‘omnivox.exe’ through ‘exec-path’ or the
-absolute ‘TTS_PROGRAM’.  Follow *note Installing Native Windows
-Emacsvox: Trying Native Windows Emacsvox. for the supported native x64
-route.
-
-   In a running session, ‘M-x omnivox’ temporarily selects that server.
-‘M-x tts-speak-version’ identifies the live adapter and ‘M-x
-tts-restart’ restarts after a deliberate configuration change.  The
-complete isolated start, expected speech, and recovery remain in *note
-Installation: Installation.
-
-14.7.1 Choose physical output devices
--------------------------------------
-
-An updated Windows development build of Omnivox can send main speech and
-notifications to different physical outputs.  This requires the server's
-‘audio_device_selection_v1’ capability; the pinned 1.18.0 release does
-not provide it.  It works with native Windows Emacs or WSL Emacs
-launching the Windows worker.  Linux/WSLg, macOS, PulseAudio and remote
-device selection are not provided by this interface.
-
-   Open ‘C-e H o n’ and choose _Main output device_ (‘D’) or
-_Notification output device_ (‘M’).  The equivalent command is ‘M-x
-omnivox-output-devices <RET>’; a prefix argument chooses notifications.
-For a separate notification device, first use Automatic, Left, Right or
-Both notification routing so that a separate worker exists.  *note
-Notification Routing: (emacsvox)Notification Routing. explains that
-arrangement.
-
-   Press ‘d’ for the Transient list of _Follow system default_ and
-available outputs.  It also retains a missing saved or applied device as
-unavailable.  Names are labels: identical names can identify different
-devices, so duplicate names have distinct numbers and each choice's Help
-includes its unique device ID.  _Selected_, _Applied_, _Saved_ and
-_Connected_ describe distinct states.  Selected is the candidate waiting
-for Apply.  In default mode, the applied choice is Follow system default
-while Connected identifies the endpoint currently used.
-
-  1. Browse the choices with arrows to hear their names and states.
-     ‘<RET>’ selects a candidate and returns to the device menu without
-     changing audio.  ‘q’ returns without selecting.
-  2. Press ‘a’ to Apply that candidate to this lane.  The worker opens
-     it while the old route remains usable.  If preparation fails or is
-     cancelled, a healthy old route keeps working.  Success cancels
-     interrupted speech and cues, then sends fresh output to the
-     selected device.  Engines stay loaded; voice, rate, channel and
-     volume settings remain in force.
-  3. Confirm the result and listen to subsequent speech.  Use ‘g’ to
-     refresh live status and availability.  Connected reports a working
-     software connection; it does not prove that a headset is audible.
-  4. Press ‘s’ to Save the confirmed applied choice for this host and
-     lane in Customize.  Saving does not apply the selected candidate.
-     Main and notification choices are independent.  ‘q’ returns without
-     applying or saving the current candidate; an already applied choice
-     remains active for this session.
-
-   Saved choices use the speech host's name, backend and device ID.
-Renaming the host creates a different scope.  Friendly-name changes do
-not select another device.  Explicit ‘--audio-device’ or
-‘OMNIVOX_AUDIO_DEVICE’ startup overrides take precedence over saved
-choices.  Ordinary startup resolves saved choices inside the worker
-without an extra discovery process.
-
-   An explicit device never falls back to speakers when disconnected.
-Its pending audio is cancelled, requests during the outage are
-discarded, and reconnect does not replay them.  Reconnect the device, or
-explicitly Apply Follow system default or another device.  Notifications
-do not fall back to main speech when their intended physical
-destinations differ or are unresolved; notification history retains
-their text.
-
-   An unanswered Apply remains unknown.  Press ‘g’ to reconcile it or
-‘c’ to request cancellation; cancellation cannot undo a completed
-change.  Automatic worker replacement preserves the last confirmed
-destination and refuses to guess while an Apply is unresolved.  If the
-worker has died, Apply asks whether to recover it on the selected
-output.  Recovery still requires confirmed cleanup of the previous
-native worker.  A fresh Emacs session uses the saved choice; unsaved
-session choices need not survive exit.  The explicit emergency-speech
-command ignores these ordinary device preferences.
-
-14.7.2 Remote Workstation Speech (Preview)
-------------------------------------------
-
-Emacs can run on an SSH host while Omnivox, installed voices, and
-playback stay on your workstation.  This uses Omnivox 1.18.0's ‘--serve’
-and Emacsvox's remote transport.  Remote access remains a preview
-feature.
-
-   Create a private token on the workstation.  The tool refuses to
-overwrite or print an existing token:
-
-     mkdir -p "$HOME/.config/omnivox"
-     python3 /path/to/omnivox/tools/create_remote_token.py \
-         "$HOME/.config/omnivox/remote-token"
-
-   Leave the installed server running in a terminal, with the matching
-Emacsvox sound-pack directory:
-
-     omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
-         --sound-root /path/to/emacsvox/sounds
-
-   For a Windows service through the WSL launcher, translate both paths:
-
-     /path/to/emacsvox/servers/omnivox --serve \
-         --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
-         --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
-
-   In another workstation terminal, copy the token through verified SSH
-and open the reverse forward, replacing ‘user@emacs-host’:
-
-     ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
-     scp "$HOME/.config/omnivox/remote-token" user@emacs-host:.config/omnivox/remote-token
-     ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
-     ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
-         -o ServerAliveCountMax=2 \
-         -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
-
-   When Omnivox runs on Windows, use Windows OpenSSH for the final
-connection: ‘ssh.exe’ from WSL or ‘ssh’ from PowerShell.  It must reach
-Windows loopback; a WSL client under NAT reaches separate WSL loopback
-instead.  Windows SSH uses its Windows keys and host-trust
-configuration.
-
-   *note Installing Remote Emacsvox: Installing Remote Emacsvox.
-provides the remote-only installation and isolated launcher.  ‘--remote’
-configures transport before speech starts and needs no local Omnivox
-binary.  For personal configuration, set before startup:
-
-     (setq tts-program "omnivox"
-           omnivox-remote-host "127.0.0.1"
-           omnivox-remote-port 6417
-           omnivox-remote-token-file "~/.config/omnivox/remote-token")
-
-   ‘M-x omnivox-remote-connect’ connects/retries, ‘M-x
-omnivox-remote-status’ inspects, and ‘M-x omnivox-remote-disconnect’
-stops and suspends retries.  Reconnection refreshes voices/routing and
-discards unfinished speech.  Main and notification retain separate
-workers.  Only one Emacs session owns a service at a time.
-
-   If main connects but notification fails, main remains available while
-the missing connection retries.  Recovery does not replace working main
-speech.  ‘omnivox-remote-auto-reconnect’ set to nil disables automatic
-retry; explicit disconnect suspends it until another connection.  Status
-retains retry and error information.
-
-   Keep service and forwarded endpoint on loopback; do not enable SSH
-‘GatewayPorts’.  SSH encrypts the transport and the token excludes other
-remote host users.  To rotate, stop the service, replace both private
-token files, and restart.  Typing ‘quit’ or interrupting the service
-terminal stops workers.
-
-   Inventory belongs to the workstation; install/manage engines there.
-Bundled icons resolve by pack-relative name.  Personal sounds outside
-that directory and sound uploads are unsupported; no ‘--sound-root’
-means no file-based icons.  For an occupied remote port, change the left
-side of ‘-R’ and match ‘omnivox-remote-port’.  Authentication failure
-indicates differing tokens or excessively broad file permissions; a busy
-service belongs to another connection.
