@@ -5007,6 +5007,18 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H(1 of 3): missing comma   2,2 All\e[2;2H" 'return)
                    '("Result 1 of 3, line 2, column 2, missing comma")))))
 
+(ert-deftest emacsvox-eat-vim-main-screen-tabs ()
+  "A plain stock tab bar can confirm a neighbour after a known tab opens."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:tabedit one\e[K")
+    (should (equal (send "\e[H two | one __________X\e[2;1Hfirst\e[K\e[4;1H\"one\" 1L, 6B   1,1 All\e[2;1H" 'return)
+                   '("Tab one, line 1, column 1, first")))
+    (key ?g)
+    (should (equal (send "\e[2;1Hsecond\e[2;1H" ?t) '("Tab two, line 1, column 1, second")))
+    (key ?g)
+    (should (equal (send "\e[H new | one __________X\e[2;1Hfirst\e[K\e[2;1H" ?T)
+                   '("Tab, line 1, column 1, first")))))
+
 (ert-deftest emacsvox-eat-vim-help-two-repaints ()
   "Wait for the help split when the filename arrives first."
   (emacsvox-eat-test--with-vim

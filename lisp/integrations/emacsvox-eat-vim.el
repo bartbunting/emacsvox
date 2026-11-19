@@ -48,6 +48,8 @@
   "Non-nil while a delivered quit awaits evidence of a return to the shell.")
 (defvar-local emacsvox-eat--vim-anchor nil
   "File or screen coordinates at the observed start of a Visual selection.")
+(defvar-local emacsvox-eat--vim-tabs nil
+  "Last identified tab and its visible neighbours on a plain Vim tab line.")
 (defconst emacsvox-eat--vim-input-limit 128)
 (defconst emacsvox-eat--vim-input-timeout 3.0
   "Seconds to associate input with an SSH redraw, without polling.")
@@ -91,7 +93,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 (defun emacsvox-eat--vim-reset ()
   "Forget all keyboard and selection evidence for this terminal."
   (emacsvox-eat--vim-forget-input)
-  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil))
+  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil emacsvox-eat--vim-tabs nil))
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
@@ -1008,6 +1010,22 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                          (not (memq 'concealed (plist-get style :traits))))
                return (string-trim (substring line start end))))))
 
+(defun emacsvox-eat--vim-tab-name (screen reported tail changed)
+  "Identify the tab on SCREEN after TAIL, using a newly REPORTED filename.
+On monochrome terminals, follow the visible order only if the body CHANGED
+and the preceding tab was identified on the same tab line."
+  (let* ((line (car (plist-get screen :rows)))
+         (names (when (and line (string-match (rx string-start (group (+? nonl)) (+ "_") "X" (* blank) string-end) line))
+                  (split-string (string-trim (match-string 1 line)) " +| +" t)))
+         (previous (when (and names (equal names (cdr emacsvox-eat--vim-tabs)))
+                     (cl-position (car emacsvox-eat--vim-tabs) names :test #'equal)))
+         (name (or (emacsvox-eat--vim-active-tab screen) reported
+                   (and previous changed (member tail '((?g ?t) (?g ?T)))
+                        (nth (mod (+ previous (if (eq (cadr tail) ?T) -1 1)) (length names)) names)))))
+    (setq emacsvox-eat--vim-tabs (and name (member name names) (= (cl-count name names :test #'equal) 1)
+                                      (cons name names)))
+    name))
+
 (defun emacsvox-eat--vim-destination (keys command from to screen after)
   "Describe a visible destination reached with KEYS or submitted COMMAND.
 FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
@@ -1033,11 +1051,15 @@ FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
       (let* ((help (member verb '("h" "help")))
              (help-line (and help (cl-find-if (lambda (s) (string-match-p (rx "[Help]") s))
                                                (nthcdr (plist-get after :row) (plist-get screen :rows)))))
-             (name (or (and tab (emacsvox-eat--vim-active-tab screen))
-                       (and (or (not tab) (member verb '("tabedit" "tabe" "tabnew")))
+             (reported (and (or (not tab) (member verb '("tabedit" "tabe" "tabnew")))
                             (string-match (rx string-start "\"" (group (+ (not (any "\"")))) "\""
                                               (+ blank)) text)
-                            (match-string 1 text)))))
+                            (match-string 1 text)))
+             (name (if tab (emacsvox-eat--vim-tab-name
+                            screen reported tail
+                            (and emacsvox-eat--vim-origin
+                                 (not (equal after (emacsvox-eat--vim-point emacsvox-eat--vim-origin)))))
+                     reported)))
         (when (and help-line (string-match emacsvox-eat--vim-ruler help-line))
           (setq location (format "line %s, column %s" (match-string 1 help-line)
                                  (or (match-string 3 help-line) (match-string 2 help-line)))))
