@@ -988,9 +988,11 @@ Motions at a boundary can leave no repaint to consume their input."
       (when (string-match (rx string-start (group (optional (any "1-9") (* digit))) "y"
                               (group (optional (any "1-9") (* digit))) (group (any "yw$0^")) string-end)
                           command)
-        (cons (aref (match-string 3 command) 0)
-              (* (max 1 (string-to-number (match-string 1 command)))
-                 (max 1 (string-to-number (match-string 2 command)))))))))
+        (let ((motion (aref (match-string 3 command) 0))
+              (outer (match-string 1 command)) (inner (match-string 2 command)))
+          ;; After a nonzero motion count, 0 extends the count (y10w).
+          (unless (and (eq motion ?0) (not (string-empty-p inner)))
+            (cons motion (* (max 1 (string-to-number outer)) (max 1 (string-to-number inner))))))))))
 
 (defun emacsvox-eat--vim-yank-feedback (keys before after from to)
   "Describe a yank request using the visible motion, cursor and Vim's report."

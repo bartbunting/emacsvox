@@ -5435,6 +5435,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[H" ?w) '("Yank 4 words")))
     (mapc #'key '(?y ?2))
     (should (equal (send "\e[H" ?$) '("Yank through 2 lines")))
+    (mapc #'key '(?y ?1))
+    (should-not (send "\e[H" ?0))
+    (should (equal (send "\e[H" ?w) '("Yank 10 words")))
     (mapc #'key '(?5 ?y))
     (should (equal (send "\e[4;1H3 lines yanked    1,1 All\e[K\e[H" ?y) '("3 lines yanked")))))
 
