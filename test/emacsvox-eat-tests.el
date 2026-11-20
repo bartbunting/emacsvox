@@ -5073,6 +5073,30 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (should (string-match "beta" line))
         (should-not (text-property-not-all 0 (length line) 'emacsvox-aural-facts nil line))))))
 
+(ert-deftest emacsvox-eat-vim-numbered-editing-rows ()
+  "Follow relative numbers and distinguish file indentation from the margin."
+  (emacsvox-eat-test--with-vim
+    (let ((emacsvox-audio-indentation t) (emacsvox-indentation-presentation 'spoken))
+      (send "\e[H1   alpha\e[K\e[2;1H  1   beta\e[K\e[3;1H  2 \e[K\e[4;1H1,1 All\e[K\e[1;5H")
+      (let ((line (car (send "\e[H  1 \e[2;1H2   \e[3;1H  1 \e[4;1H2,1 All\e[2;5H" ?j))))
+        (should (equal line "  beta"))
+        (should (= 2 (plist-get (get-text-property 2 'emacsvox-aural-facts line) :indentation-columns))))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                 (lambda (&rest args) (push (plist-get (plist-get args :facts) :line-condition) speech))))
+        (should (equal (send "\e[H  2 \e[2;1H  1 \e[3;1H3   \e[4;1H3,1 All\e[3;5H" 'down) '(empty))))
+      (send (concat "\e[H\e[33m  1 \e[0malpha\e[K\e[2;1H\e[33m  2 \e[0m  beta\e[K"
+                    "\e[3;1H\e[33m  3 \e[0m\e[K\e[4;1H\e[K\e[1;5H"))
+      (let ((line (car (send "\e[2;5H" ?j))))
+        (should (equal line "  beta"))
+        (should (= 2 (plist-get (get-text-property 2 'emacsvox-aural-facts line) :indentation-columns))))
+      (should (equal (send "\e[1;5H" ?k) '("alpha")))
+      (key ?d)
+      (should (equal (send "\e[1;5H  beta\e[K\e[2;5H\e[K\e[1;7H" ?d) '("alpha")))
+      (key ?>)
+      (should (equal (send "\e[1;5H    beta\e[K\e[1;9H" ?>) '("Column 5")))
+      (send "\e[1;1H  7 literal text\e[K\e[1;1H")
+      (should (equal (emacsvox-eat--vim-cursor-line emacsvox-eat--screen-snapshot) "  7 literal text")))))
+
 (ert-deftest emacsvox-eat-vim-navigation-capitalization ()
   "Present capitals and all-caps words using the EAT buffer's reading settings."
   (let ((submit (symbol-function 'emacsvox-aural-submit)))

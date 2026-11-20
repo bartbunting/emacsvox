@@ -322,6 +322,12 @@ After the profile menu resizes EAT, the prompt can sit above the last row."
         (or (and (string-suffix-p ":" end) (emacsvox-eat--vim-swap-prompt rows row))
             (emacsvox-eat--vim-recovery-prompt rows row width)))))))
 
+(defun emacsvox-eat--vim-read-ruler (line)
+  "Return the file line and display column at the end of LINE, leaving match data."
+  (when (and line (string-match emacsvox-eat--vim-ruler line))
+    (cons (string-to-number (match-string 1 line))
+          (string-to-number (or (match-string 3 line) (match-string 2 line))))))
+
 (defun emacsvox-eat--vim-window-ruler (screen command-row)
   "Read the ruler in the first styled status line below the cursor on SCREEN.
 Use only the cursor's pane and stop before COMMAND-ROW."
@@ -338,10 +344,8 @@ Use only the cursor's pane and stop before COMMAND-ROW."
                    (setq pane (or (emacsvox-eat--vim-window screen)
                                   (cons 0 (car (plist-get screen :size))))))
                  (let ((part (truncate-string-to-width line (cdr pane) (car pane))))
-                   (when (string-match emacsvox-eat--vim-ruler part)
-                     (let ((ruler (cons (string-to-number (match-string 1 part))
-                                        (string-to-number (or (match-string 3 part) (match-string 2 part)))))
-                           (index (match-beginning 0)))
+                   (when-let* ((ruler (emacsvox-eat--vim-read-ruler part)))
+                     (let ((index (match-beginning 0)))
                        (unless starts (setq starts (emacsvox-eat--row-start-offsets (plist-get screen :text))))
                        (let ((offset (+ (aref starts row) (length (truncate-string-to-width line (car pane))) index)))
                          (when (cl-some (lambda (run)
@@ -356,10 +360,8 @@ Use only the cursor's pane and stop before COMMAND-ROW."
          (row (emacsvox-eat--vim-status-index screen))
          (line (or (nth row rows) ""))
          (case-fold-search nil)
-         (ruler (if (string-match emacsvox-eat--vim-ruler line)
-                  (prog1 (cons (string-to-number (match-string 1 line))
-                               (string-to-number (or (match-string 3 line) (match-string 2 line))))
-                    (setq line (substring line 0 (match-beginning 0))))
+         (ruler (if-let* ((position (emacsvox-eat--vim-read-ruler line)))
+                    (prog1 position (setq line (substring line 0 (match-beginning 0))))
                   (emacsvox-eat--vim-window-ruler screen row)))
          (text (string-trim-right line))
          (at-command (= (or (plist-get screen :cursor-row) -1) row))
@@ -486,45 +488,56 @@ Use only the cursor's pane and stop before COMMAND-ROW."
   (when-let* ((line (and (natnump row) (nth row (plist-get screen :rows)))))
     (if window (truncate-string-to-width line (cdr window) (car window)) line)))
 
-(defun emacsvox-eat--vim-cursor-line (screen)
-  "Return the current Vim window's row from SCREEN."
-  (emacsvox-eat--vim-line screen (plist-get screen :cursor-row) (emacsvox-eat--vim-window screen)))
+(defun emacsvox-eat--vim-number-margin (screen row pane line column status)
+  "Identify the line-number margin in LINE at ROW and COLUMN within PANE.
+Use the file column in STATUS or the styling Vim gives its number cells."
+  (when (string-match (rx string-start (* space) (+ digit) (group (+ space))) line)
+    (let* ((minimum (1+ (match-beginning 1))) (maximum (match-end 1))
+           (ruler (if status (plist-get status :ruler)
+                    (emacsvox-eat--vim-read-ruler
+                     (nth (emacsvox-eat--vim-status-index screen) (plist-get screen :rows)))))
+           (width (and ruler (- (1+ column) (cdr ruler)))))
+      (cond
+       ((and width (<= minimum width maximum)) width)
+       ((and (or (null width) (/= width 0)) (>= column minimum))
+        (let* ((full (nth row (plist-get screen :rows)))
+               (start (+ (aref (emacsvox-eat--row-start-offsets (plist-get screen :text)) row)
+                         (length (truncate-string-to-width full (or (car pane) 0)))))
+               (end start))
+          (cl-loop for (a b style) in (plist-get screen :styles) while (<= a end)
+                   when (and (< end b) (<= b (+ start maximum)) (plist-get style :traits))
+                   do (setq end b))
+          (when (<= minimum (- end start) column) (- end start))))))))
 
-(defun emacsvox-eat--vim-point (screen)
-  "Describe the terminal cursor using redacted text and its active window."
+(defun emacsvox-eat--vim-cursor-line (screen)
+  "Return the current Vim window's editable row from SCREEN."
+  (plist-get (emacsvox-eat--vim-point screen) :line))
+
+(defun emacsvox-eat--vim-point (screen &optional status)
+  "Describe the terminal cursor and editable text inside the active window.
+STATUS supplies an already parsed ruler when available."
   (let* ((row (plist-get screen :cursor-row)) (col (plist-get screen :cursor-column))
          (window (emacsvox-eat--vim-window screen))
          (line (emacsvox-eat--vim-line screen row window))
-         (column (and col (- col (or (car window) 0)))))
+         (left (or (car window) 0))
+         (column (and col (- col left))))
     (when (and line column (>= column 0))
-      (list :row row :column column :window window :line line
-            :index (length (truncate-string-to-width line column))))))
+      (let* ((margin (emacsvox-eat--vim-number-margin screen row window line column status))
+             (bounds (if margin (cons (+ left margin) (or (cdr window) (car (plist-get screen :size)))) window)))
+        (when margin (setq line (substring line margin) column (- column margin)))
+        (list :row row :column column :window window :text-window bounds :line line
+              :index (length (truncate-string-to-width line column)))))))
 
 (defun emacsvox-eat--vim-row-text (line)
   "Return a bounded spoken form of a Vim LINE, including an empty row."
   (or (emacsvox-eat--bounded-output (list (string-trim-right line))) "blank"))
 
-(defun emacsvox-eat--vim-navigation-line (point status)
-  "Prepare the line at POINT with indentation from the rendered Vim window.
-When STATUS gives a ruler column, recognize a stock line-number margin
-whose width accounts for the difference from the terminal cursor column."
-  (let* ((line (plist-get point :line))
-         (text (emacsvox-eat--vim-row-text line))
-         (column (cdr (plist-get status :ruler)))
-         (offset (and column (- (1+ (plist-get point :column)) column)))
-         (start (if (and offset (> offset 0) (<= offset (length line))
-                         (string-match-p (rx string-start (* space) (+ digit) (+ space) string-end)
-                                         (substring line 0 offset)))
-                    offset 0))
-         ;; EAT supplies terminal cells after Vim has expanded file tabs.
-         (first (string-match "[^ ]" line start))
-         (facts (and first (< first (length text))
-                     (emacsvox-speak--indentation-facts (- first start)))))
-    (cond
-     ((null facts) text)
-     ((zerop start) (emacsvox-speak--annotate-indentation text facts))
-     (t (concat (substring text 0 start)
-                (emacsvox-speak--annotate-indentation (substring text start) facts))))))
+(defun emacsvox-eat--vim-navigation-line (point)
+  "Prepare the editable line at POINT with its rendered indentation."
+  (let* ((text (emacsvox-eat--vim-row-text (plist-get point :line)))
+         (first (string-match "[^ ]" text)))
+    (emacsvox-speak--annotate-indentation text (and first (emacsvox-speak--indentation-facts first)))
+    text))
 
 (defun emacsvox-eat--vim-say (content kind &optional icon)
   "Present CONTENT for KIND using the usual edit tone or optional auditory ICON."
@@ -631,7 +644,7 @@ INSPECTION marks an explicit review rather than cursor movement."
     (emacsvox-icon 'large-movement)
     (if (string-blank-p (plist-get point :line)) (emacsvox-eat--vim-blank-row)
       (emacsvox-eat--vim-say
-       (emacsvox-eat--vim-navigation-line point (emacsvox-eat--vim-status screen)) 'navigation))
+       (emacsvox-eat--vim-navigation-line point) 'navigation))
     (tts-notify (emacsvox-speak--percentage-description percent))
     (setq emacsvox-eat--vim-last-boundary (cons percent screen))))
 
@@ -732,7 +745,7 @@ their respective command rows."
            (string-match-p (rx string-start (+ digit) (or "gg" "G") string-end) (apply #'string tail)))
       (let ((location (format "Line %d" (car ruler))))
         (if (string-blank-p line) (cons 'blank-location location)
-          (cons 'jump (concat location ", " (emacsvox-eat--vim-navigation-line after to))))))
+          (cons 'jump (concat location ", " (emacsvox-eat--vim-navigation-line after))))))
      ((and (memq key '(C-left C-right)) moved)
       (cond
        ((string-blank-p line) (cons 'row "blank"))
@@ -753,14 +766,14 @@ their respective command rows."
       (let ((location (format "%s, column %d" (if ruler (format "Line %d" (car ruler)) (format "Row %d" (1+ row)))
                               (or (cdr ruler) (1+ (plist-get after :column))))))
         (if (string-blank-p line) (cons 'blank-location location)
-          (cons 'jump (concat location ", " (emacsvox-eat--vim-navigation-line after to))))))
+          (cons 'jump (concat location ", " (emacsvox-eat--vim-navigation-line after))))))
      ((and moved (memq key '(?\; ?,)) (= origin row) (< index (length line))
            (equal line (plist-get before :line)))
       (cons 'character (aref line index)))
      ((eq key 12)
       (if (and ruler (string-empty-p (string-trim line)))
           (cons 'navigation (format "Line %d, no text displayed" (car ruler)))
-        (cons 'navigation (emacsvox-eat--vim-navigation-line after to))))
+        (cons 'navigation (emacsvox-eat--vim-navigation-line after))))
      ((and moved (memq find-key '(?f ?F ?t ?T)) (characterp key)
            (= origin row) (equal line (plist-get before :line)))
       (let ((found (+ index (pcase find-key (?t 1) (?T -1) (_ 0)))))
@@ -775,10 +788,10 @@ their respective command rows."
                     (if (and (eq key ?%) (< index (length line)))
                         (format ", column %d, %s" (or (cdr ruler) (1+ (plist-get after :column)))
                                 (emacsvox-eat--deleted-character-name (aref line index)))
-                      (concat ", " (emacsvox-eat--vim-navigation-line after to))))))))
+                      (concat ", " (emacsvox-eat--vim-navigation-line after))))))))
      ((and direction (emacsvox-eat--vim-row-motion-p
-                      old new origin row (plist-get after :window) direction))
-      (cons 'row (emacsvox-eat--vim-navigation-line after to)))
+                      old new origin row (plist-get after :text-window) direction))
+      (cons 'row (emacsvox-eat--vim-navigation-line after)))
      ((and moved (emacsvox-eat--vim-search-p keys from)
            (not (emacsvox-eat--vim-search-ready-p line from to))
            (plist-get to :ruler))
@@ -787,9 +800,9 @@ their respective command rows."
            (or (eq key ?G) (equal (last keys 2) '(?g ?g))
                (and (emacsvox-eat--vim-search-p keys from)
                     (emacsvox-eat--vim-search-ready-p line from to))))
-      (cons 'row (emacsvox-eat--vim-navigation-line after to)))
+      (cons 'row (emacsvox-eat--vim-navigation-line after)))
      ((and moved
-           (equal line (emacsvox-eat--vim-line old row (plist-get after :window))))
+           (equal line (emacsvox-eat--vim-line old row (plist-get after :text-window))))
       (cond
        ((memq key '(?h ?l left right ?0 ?^ ?$ home end))
         (if (< index (length line)) (cons 'character (aref line index)) (cons 'navigation "blank")))
@@ -905,7 +918,7 @@ STATUS describes the command row on NEW."
   (let* ((key (car (last keys))) (row (plist-get before :row)) (target (plist-get after :row))
          (a (plist-get before :line)) (b (plist-get after :line))
          (i (plist-get before :index)) (j (plist-get after :index))
-         (window (plist-get after :window))
+         (window (plist-get after :text-window))
          (next (emacsvox-eat--vim-line old (1+ row) window))
          (same-row (= row target))
          (delete-word (and (not inserting) (eq (car (last keys 2)) ?d)
@@ -990,7 +1003,7 @@ STATUS, when supplied, is the already parsed Vim footer."
          (mode (plist-get state :mode)))
     (when (and mode (string-match-p (rx string-start (or "Visual" "Select")) mode))
       (let* ((point (emacsvox-eat--vim-point screen)) (row (plist-get point :row))
-             (col (plist-get screen :cursor-column)) (pane (plist-get point :window))
+             (col (plist-get screen :cursor-column)) (pane (plist-get point :text-window))
              (left (or (car pane) 0)) (right (or (cdr pane) (car (plist-get screen :size))))
              (line (plist-get point :line)) (index (plist-get point :index))
              (cell (if (< index (length line)) (max 1 (char-width (aref line index))) 1))
@@ -1115,7 +1128,7 @@ STATUS, when supplied, is the already parsed Vim footer."
 BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
   (if (or (not (equal before after)) (not (equal (plist-get from :ruler) (plist-get to :ruler))))
       (concat label ", " (emacsvox-eat--vim-row-text (plist-get after :line)))
-    (let ((window (plist-get after :window)) changes)
+    (let ((window (plist-get after :text-window)) changes)
       (dotimes (row (emacsvox-eat--vim-status-index new))
         (let ((a (emacsvox-eat--vim-line old row window)) (b (emacsvox-eat--vim-line new row window)))
           (when (and a b (not (equal (string-trim-right a) (string-trim-right b))))
@@ -1203,7 +1216,7 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
       (list 'copy "Yanked selection"))
      ((and new-mode (not mode) (memq (car (last keys)) '(?d ?x))
            (string-prefix-p "Visual" (or (plist-get from :mode) "")))
-      (let* ((window (plist-get after :window)) (row (plist-get after :row))
+      (let* ((window (plist-get after :text-window)) (row (plist-get after :row))
              (line (plist-get after :line)) (original (emacsvox-eat--vim-line old row window))
              (change (and original (emacsvox-eat--sequence-change
                                     (string-trim-right original) (string-trim-right line)))))
@@ -1308,8 +1321,8 @@ FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
          (delq nil (list (string-join (delq nil (list (cond (tab "Tab") (help "Help") (t "Buffer")) name)) " ")
                          location (emacsvox-eat--vim-row-text line))) ", "))))))
 
-(defun emacsvox-eat--vim-window-switch (keys before after status)
-  "Describe a window switch in KEYS using BEFORE, AFTER and the new STATUS."
+(defun emacsvox-eat--vim-window-switch (keys before after)
+  "Describe a window switch in KEYS using the rendered windows in BEFORE and AFTER."
   (when (and (cdr keys) (eq (car (last keys 2)) 23)
              (memq (car (last keys)) '(?w ?W ?p ?h ?j ?k ?l 23 left right up down)))
     (let* ((left (or (car (plist-get before :window)) 0))
@@ -1319,7 +1332,7 @@ FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
                             ((< row new-row) "Lower") ((> row new-row) "Upper"))))
       (when direction
         (list 'navigation (concat direction " window, "
-                                  (emacsvox-eat--vim-navigation-line after status)))))))
+                                  (emacsvox-eat--vim-navigation-line after)))))))
 
 (defun emacsvox-eat--vim-settled (baseline screen diff automatic)
   "Handle a foreground Vim repaint from BASELINE to SCREEN.
@@ -1334,7 +1347,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
          (mode (plist-get to :mode)) (prior-mode (plist-get previous :mode))
          (prompt (plist-get to :prompt))
          (command (and keys (not prompt) (emacsvox-eat--vim-submitted-command from keys)))
-         (after (emacsvox-eat--vim-point screen))
+         (after (emacsvox-eat--vim-point screen to))
          ;; Vim can print the help filename before it draws and enters the split.
          (opening-help (and command (string-match-p (rx string-start (or "h" "help") (or blank string-end)) command)
                             after (= (plist-get after :row) (emacsvox-eat--vim-status-index screen))
@@ -1351,7 +1364,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                          (or (plist-get from :prompt)
                              (and (memq (car keys) '(?: ?/ ??))
                                   (or message (plist-get to :command) (plist-get to :search))))))
-         (before (and keys (emacsvox-eat--vim-point old)))
+         (before (and keys (emacsvox-eat--vim-point old from)))
          (same-display (and before after (equal (plist-get old :size) (plist-get screen :size))
                             (eq (plist-get old :alternate-screen) (plist-get screen :alternate-screen))))
          (compatible (and same-display
@@ -1388,9 +1401,9 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                           (= (plist-get before :column) (plist-get after :column))))
          (feedback (if emacsvox-eat--vim-awaiting-match
                        (when (and same-match (not (string-empty-p (string-trim (plist-get after :line)))))
-                         (list 'row (emacsvox-eat--vim-navigation-line after to)))
+                         (list 'row (emacsvox-eat--vim-navigation-line after)))
                      (or (and same-display (not mode) (not prompt) (not (and announcement message))
-                              (emacsvox-eat--vim-window-switch keys before after to))
+                              (emacsvox-eat--vim-window-switch keys before after))
                          (and compatible (not (or (plist-get from :confirmation) (plist-get to :confirmation)))
                               (not (and announcement message))
                               (emacsvox-eat--vim-feedback keys old screen before after from to)))))
