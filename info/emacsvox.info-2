@@ -4440,11 +4440,14 @@ mode changes.  Press ‘k’ to hear ‘one’ and ‘j’ to hear ‘two’.  W
 finish practising, type ‘:q!’ and press ‘<RET>’ to discard the practice
 text and return to the shell.
 
-   When you open an existing file, Vim may already be waiting for an
-answer.  If you select the profile at a swap-file warning, for example,
-Emacsvox includes the prompt and the letters for the available choices.
-Press the letter for your choice.  At a prompt asking you to continue,
-press ‘<RET>’.  Use ‘C-e q t’ to hear the prompt again.
+   When you open an existing file with a swap-file warning, Emacsvox
+reads the available choices even if you select the profile after the
+warning appears.  Press the letter for your choice.  If you press ‘R’ to
+recover and Vim finds several swap files, you hear their numbers, names
+and visible details such as the date and whether a copy was modified.
+Press Space if Vim pauses the listing for another page.  At the number
+prompt, type the number of the copy you want and press ‘<RET>’, or type
+‘0 <RET>’ to cancel recovery.  Use ‘C-e q t’ to hear the prompt again.
 
 * Menu:
 
@@ -4465,10 +4468,20 @@ Move left with ‘h’ or right with ‘l’ to hear the character under the
 cursor.  The arrow keys give the same line and character feedback in
 both Normal and Insert modes.
 
-   Use ‘w’, ‘b’ and ‘e’ to move by word and hear the word you reach.
-‘C-Left’ and ‘C-Right’ also move by word in semi-character and character
-mode.  With these keys Vim treats ‘green,blue’ as one word in Normal
-mode.  In Insert mode it stops on ‘green’, the comma and ‘blue’
+   When Vim shows absolute or relative line numbers, Emacsvox reads the
+file text following the number margin.  To hear its indentation, toggle
+indentation feedback with ‘C-e d i’.  Use ‘C-e d c’ to toggle the cues
+for a capital letter and an all-caps word.  Choose how those indications
+sound with ‘C-e d I’ for indentation and ‘C-e d C’ for capitalisation.
+
+   Use ‘w’, ‘b’ and ‘e’ to move by word and hear the word you reach.  If
+your Vim configuration gives words special characters, run ‘:setlocal
+iskeyword?’ and press ‘<RET>’ in the file you are editing.  This shows
+Emacsvox the current word characters.  For example, after ‘:set
+iskeyword+=-’, moving to ‘two-part’ reads the whole word.  ‘C-Left’ and
+‘C-Right’ also move by word in semi-character and character mode.  With
+Vim's usual settings these keys treat ‘green,blue’ as one word in Normal
+mode.  In Insert mode they stop on ‘green’, the comma and ‘blue’
 separately.
 
    Use ‘gg’ to go to the first line or ‘G’ to go to the last line.  As
@@ -4494,9 +4507,10 @@ Use ‘C-o’ and ‘C-i’ to move through Vim's jump history.
    When you move between Vim windows with ‘C-w w’ or the directional
 window commands, you hear which way you moved and the row in the
 destination window.  In side-by-side windows, movement and ‘C-e q l’
-read your side when Vim displays a distinctly styled divider.  Use
-‘:bnext’ to switch buffers or ‘gt’ and ‘gT’ to change tabs.  You hear
-the destination and its current row.
+read your side when Vim displays a distinctly styled divider.  Position
+announcements use the line and column shown in the active window's
+ruler.  Use ‘:bnext’ to switch buffers or ‘gt’ and ‘gT’ to change tabs.
+You hear the destination and its current row.
 
 
 File: emacsvox.info,  Node: Vim editing and selection,  Next: Vim search and command results,  Prev: Vim navigation,  Up: Vim in EAT
@@ -4516,9 +4530,10 @@ the column you reach.
 filename, start with ‘C-x C-f’, then use ‘C-n’ and ‘C-p’ to hear the
 name and match position.  ‘C-y’ accepts the candidate and ‘C-e’ cancels
 when sent to Vim.  In semi-character mode, use ‘C-q C-x C-f’ to start
-filename completion, ‘C-q C-y’ to accept or ‘C-q C-e’ to cancel.  For
-other reserved keys or to switch to character mode, see *note Choose an
-input mode: EAT Input Modes.
+filename completion, ‘C-q C-y’ to accept or ‘C-q C-e’ to cancel.  In
+character mode with the default speech prefix, press ‘M-<RET>’ to return
+to semi-character mode, then ‘C-q C-e’ to cancel.  For other reserved
+keys, see *note Choose an input mode: EAT Input Modes.
 
    In Normal mode, ‘x’, ‘dw’, ‘diw’, ‘D’ and ‘dd’ use the deletion cue
 and read what Vim's redraw identifies.  A counted deletion such as ‘3dd’
@@ -4537,10 +4552,11 @@ still give feedback.
 
    To select text in Normal mode, press ‘v’ for characters, ‘V’ for
 lines or ‘C-v’ for a rectangular block.  As you move the cursor in
-Visual mode, you hear the extent of the selection.  Short selections
-include the visible text.  For a longer selection, press ‘C-e q x’ to
-read the portion on screen.  In frozen review, ‘x’ reads the selection
-as it appeared when you opened the review.
+Visual mode, you hear the extent of the selection.  For a short
+selection you also hear the text, including a selected space or blank
+line.  For a longer selection, press ‘C-e q x’ to read the portion on
+screen.  In frozen review, ‘x’ reads the selection as it appeared when
+you opened the review.
 
    Create a fold with a motion such as ‘zf2j’.  When Vim displays the
 closed fold, you hear its line count and summary.  ‘zo’ opens the fold
@@ -4562,9 +4578,10 @@ File: emacsvox.info,  Node: Vim search and command results,  Next: Vim over SSH 
 In Normal mode, press ‘/’ to search forwards or ‘?’ to search backwards.
 Type your search and press ‘<RET>’.  To search for the word under the
 cursor, press ‘*’ or ‘#’.  These searches and the repeat keys ‘n’ and
-‘N’ read the line containing the match.  If EAT initially shows only the
-file line number, Emacsvox speaks that number.  You hear the text if it
-arrives at the same position within three seconds.
+‘N’ read the line containing the match.  When the search wraps, you hear
+Vim's wrap notice and the destination line together.  If EAT initially
+shows only the file line number, Emacsvox speaks that number.  You hear
+the text if it arrives at the same position within three seconds.
 
    For a substitution with confirmation, such as ‘:%s/one/two/gc’,
 listen for the replacement, match position and available answers.  Press
@@ -4605,8 +4622,11 @@ current line.  To read the row EAT already has, press ‘C-e q l’.  An
 ambiguous redraw, a motion that stops at a boundary or a reply arriving
 more than three seconds after your last key can stay quiet.
 
-   Emacsvox restores the Terminal profile when EAT sees the alternate
-screen close or the terminal resets or exits.  Over SSH or inside
+   You can run a shell command from Vim with ‘:!’ followed by the
+command and ‘<RET>’.  At Vim's continuation prompt, press ‘<RET>’ to
+resume editing with the Vim profile.  When you quit Vim and its
+alternate screen closes, Emacsvox restores the Terminal profile.
+Resetting or exiting the terminal also restores it.  Over SSH or inside
 ‘tmux’, quitting Vim with ‘:q’ can leave the same terminal screen open.
 When Emacsvox recognises the returning shell prompt, you hear “Terminal
 profile”.  If the Vim profile stays active at an unfamiliar shell

@@ -9913,11 +9913,14 @@ mode. With Vim's usual mode display@comma{} you hear both mode changes. Press @k
 to hear @code{one} and @kbd{j} to hear @code{two}. When you finish practising@comma{} type
 @kbd{:q!} and press @kbd{@key{RET}} to discard the practice text and return to the shell.
 
-When you open an existing file@comma{} Vim may already be waiting for an answer.
-If you select the profile at a swap-file warning@comma{} for example@comma{} Emacsvox
-includes the prompt and the letters for the available choices. Press the
-letter for your choice. At a prompt asking you to continue@comma{} press @kbd{@key{RET}}.
-Use @kbd{C-e q t} to hear the prompt again.
+When you open an existing file with a swap-file warning@comma{} Emacsvox reads
+the available choices even if you select the profile after the warning
+appears. Press the letter for your choice. If you press @kbd{R} to recover
+and Vim finds several swap files@comma{} you hear their numbers@comma{} names and
+visible details such as the date and whether a copy was modified. Press
+Space if Vim pauses the listing for another page. At the number prompt@comma{}
+type the number of the copy you want and press @kbd{@key{RET}}@comma{} or type @kbd{0 @key{RET}}
+to cancel recovery. Use @kbd{C-e q t} to hear the prompt again.
 
 @menu
 * Move around a file: Vim navigation.  Hear the character, word, line or window you reach.
@@ -9937,10 +9940,21 @@ left with @kbd{h} or right with @kbd{l} to hear the character under the cursor.
 The arrow keys give the same line and character feedback in both Normal
 and Insert modes.
 
+When Vim shows absolute or relative line numbers@comma{} Emacsvox reads the
+file text following the number margin. To hear its indentation@comma{} toggle
+indentation feedback with @kbd{C-e d i}. Use @kbd{C-e d c} to toggle the cues
+for a capital letter and an all-caps word. Choose how those indications
+sound with @kbd{C-e d I} for indentation and @kbd{C-e d C} for capitalisation.
+
 Use @kbd{w}@comma{} @kbd{b} and @kbd{e} to move by word and hear the word you reach.
+If your Vim configuration gives words special characters@comma{} run
+@kbd{:setlocal iskeyword?} and press @kbd{@key{RET}} in the file you are editing.
+This shows Emacsvox the current word characters. For example@comma{} after
+@kbd{:set iskeyword+=-}@comma{} moving to @code{two-part} reads the whole word.
 @kbd{C-Left} and @kbd{C-Right} also move by word in semi-character and character
-mode. With these keys Vim treats @code{green@comma{}blue} as one word in Normal mode.
-In Insert mode it stops on @code{green}@comma{} the comma and @code{blue} separately.
+mode. With Vim's usual settings these keys treat @code{green@comma{}blue} as one word
+in Normal mode. In Insert mode they stop on @code{green}@comma{} the comma and @code{blue}
+separately.
 
 Use @kbd{gg} to go to the first line or @kbd{G} to go to the last line. As with
 @kbd{M-<} and @kbd{M->} in Emacs@comma{} you hear the large-movement cue@comma{} the destination
@@ -9964,8 +9978,10 @@ with @kbd{'a} or its exact position with a backtick followed by @kbd{a}. Use
 When you move between Vim windows with @kbd{C-w w} or the directional window
 commands@comma{} you hear which way you moved and the row in the destination window.
 In side-by-side windows@comma{} movement and @kbd{C-e q l} read your side when Vim
-displays a distinctly styled divider. Use @kbd{:bnext} to switch buffers or
-@kbd{gt} and @kbd{gT} to change tabs. You hear the destination and its current row.
+displays a distinctly styled divider. Position announcements use the
+line and column shown in the active window's ruler. Use @kbd{:bnext} to
+switch buffers or @kbd{gt} and @kbd{gT} to change tabs. You hear the destination
+and its current row.
 
 @node Vim editing and selection
 @subsection Edit text and review selections
@@ -9986,8 +10002,10 @@ For keyword completion in Insert mode@comma{} use @kbd{C-n} and @kbd{C-p}. For a
 filename@comma{} start with @kbd{C-x C-f}@comma{} then use @kbd{C-n} and @kbd{C-p} to hear the
 name and match position. @kbd{C-y} accepts the candidate and @kbd{C-e} cancels
 when sent to Vim. In semi-character mode@comma{} use @kbd{C-q C-x C-f} to start
-filename completion@comma{} @kbd{C-q C-y} to accept or @kbd{C-q C-e} to cancel. For
-other reserved keys or to switch to character mode@comma{} see
+filename completion@comma{} @kbd{C-q C-y} to accept or @kbd{C-q C-e} to cancel. In
+character mode with the default speech prefix@comma{} press @kbd{M-@key{RET}} to return
+to semi-character mode@comma{} then @kbd{C-q C-e} to cancel. For other reserved
+keys@comma{} see
 @ref{EAT Input Modes, , Choose an input mode}.
 
 In Normal mode@comma{} @kbd{x}@comma{} @kbd{dw}@comma{} @kbd{diw}@comma{} @kbd{D} and @kbd{dd} use the deletion cue and
@@ -10007,10 +10025,10 @@ feedback.
 
 To select text in Normal mode@comma{} press @kbd{v} for characters@comma{} @kbd{V} for lines
 or @kbd{C-v} for a rectangular block. As you move the cursor in Visual mode@comma{}
-you hear the extent of the selection. Short selections include the visible
-text. For a longer selection@comma{} press @kbd{C-e q x} to read the portion on
-screen. In frozen review@comma{} @kbd{x} reads the selection as it appeared when you
-opened the review.
+you hear the extent of the selection. For a short selection you also
+hear the text@comma{} including a selected space or blank line. For a longer
+selection@comma{} press @kbd{C-e q x} to read the portion on screen. In frozen
+review@comma{} @kbd{x} reads the selection as it appeared when you opened the review.
 
 Create a fold with a motion such as @kbd{zf2j}. When Vim displays the closed
 fold@comma{} you hear its line count and summary. @kbd{zo} opens the fold and reads
@@ -10031,9 +10049,10 @@ requested.
 In Normal mode@comma{} press @kbd{/} to search forwards or @kbd{?} to search backwards.
 Type your search and press @kbd{@key{RET}}. To search for the word under the cursor@comma{}
 press @kbd{*} or @kbd{#}. These searches and the repeat keys @kbd{n} and @kbd{N} read the
-line containing the match. If EAT initially shows only the file line
-number@comma{} Emacsvox speaks that number. You hear the text if it arrives at
-the same position within three seconds.
+line containing the match. When the search wraps@comma{} you hear Vim's wrap
+notice and the destination line together. If EAT initially shows only
+the file line number@comma{} Emacsvox speaks that number. You hear the text if
+it arrives at the same position within three seconds.
 
 For a substitution with confirmation@comma{} such as @kbd{:%s/one/two/gc}@comma{} listen for
 the replacement@comma{} match position and available answers. Press @kbd{y} to
@@ -10071,9 +10090,12 @@ To read the row EAT already has@comma{} press @kbd{C-e q l}. An ambiguous redraw
 motion that stops at a boundary or a reply arriving more than three
 seconds after your last key can stay quiet.
 
-Emacsvox restores the Terminal profile when EAT sees the alternate screen
-close or the terminal resets or exits. Over SSH or inside @code{tmux}@comma{} quitting
-Vim with @kbd{:q} can leave the same terminal screen open. When Emacsvox
+You can run a shell command from Vim with @kbd{:!} followed by the command
+and @kbd{@key{RET}}. At Vim's continuation prompt@comma{} press @kbd{@key{RET}} to resume editing
+with the Vim profile. When you quit Vim and its alternate screen closes@comma{}
+Emacsvox restores the Terminal profile. Resetting or exiting the terminal
+also restores it. Over SSH or inside @code{tmux}@comma{} quitting Vim with @kbd{:q}
+can leave the same terminal screen open. When Emacsvox
 recognises the returning shell prompt@comma{} you hear “Terminal profile”. If the
 Vim profile stays active at an unfamiliar shell prompt@comma{} press @kbd{C-e q a}
 and choose Terminal.
