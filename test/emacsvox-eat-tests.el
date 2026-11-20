@@ -5407,6 +5407,37 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (key ?y)
     (should (equal (send "yy" ?y) '("yy")))))
 
+(ert-deftest emacsvox-eat-vim-yank-motions-and-counts ()
+  "Speak the requested extent, including backwards yanks that move the cursor."
+  (emacsvox-eat-test--with-vim
+    (send "\e[H  alpha beta\e[K\e[4;1H1,9 All\e[K\e[1;9H")
+    (key ?y)
+    (should (equal (send "\e[1;9H" ?$) '("Yank to end, beta")))
+    (key ?y)
+    (should (equal (send "\e[4;1H1,3 All\e[1;3H" ?^) '("Yank to first nonblank, alpha, space")))
+    (key ?y)
+    (should (equal (send "\e[4;1H1,1 All\e[H" ?0) '("Yank to start, 2 spaces")))
+    (mapc #'key '(?2 ?y ?2))
+    (should (equal (send "\e[H" ?w) '("Yank 4 words")))
+    (mapc #'key '(?y ?2))
+    (should (equal (send "\e[H" ?$) '("Yank through 2 lines")))
+    (mapc #'key '(?5 ?y))
+    (should (equal (send "\e[4;1H3 lines yanked    1,1 All\e[K\e[H" ?y) '("3 lines yanked")))))
+
+(ert-deftest emacsvox-eat-vim-yank-with-no-redraw ()
+  "A silent yank needs Normal-mode evidence and produces only one response."
+  (emacsvox-eat-test--with-vim
+    (setq speech nil)
+    (mapc #'key '(?y ?$))
+    (emacsvox-eat--vim-quiet-response (current-buffer) '(?y ?$) 'yank)
+    (should-not speech)
+    (setq emacsvox-eat--vim-normal-evidence t)
+    (emacsvox-eat--vim-after-send)
+    (should (timerp emacsvox-eat--vim-quiet-timer))
+    (emacsvox-eat--vim-quiet-response (current-buffer) '(?y ?$) 'yank)
+    (should (equal speech '("Yank to end, alpha one")))
+    (should-not (send "\e[H"))))
+
 (ert-deftest emacsvox-eat-vim-backspace-over-trailing-spaces ()
   "Read the erased space when its blank terminal cell stays on screen."
   (emacsvox-eat-test--with-vim

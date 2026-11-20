@@ -426,7 +426,7 @@ Use only the cursor's pane and stop before COMMAND-ROW."
           :pager (string-match-p (rx string-start (or "Press ENTER" "-- More --")) text)
           :confirmation confirmation
           :command (and (string-prefix-p ":" text) text)
-          :pending-yank (string-match-p "\\(?:\\`\\|[ \t]\\)y\\'" text)
+          :pending-yank (string-match-p (rx (or string-start blank) (* digit) "y" (* digit) string-end) text)
           :search (when (string-match "\\`[/?]\\(.+\\)" text) (match-string 1 text)))))
 
 (defun emacsvox-eat--vim-entry-prompt (screen)
@@ -952,11 +952,64 @@ Motions at a boundary can leave no repaint to consume their input."
                      (setq keys (cdr keys))))))
   keys)
 
+(defun emacsvox-eat--vim-yank-command (keys)
+  "Return the motion and combined count of a supported yank in KEYS."
+  (when (and (memq ?y keys) (cl-every #'characterp keys))
+    (let ((command (apply #'string keys)) (case-fold-search nil))
+      (when (string-match (rx string-start (group (optional (any "1-9") (* digit))) "y"
+                              (group (optional (any "1-9") (* digit))) (group (any "yw$0^")) string-end)
+                          command)
+        (cons (aref (match-string 3 command) 0)
+              (* (max 1 (string-to-number (match-string 1 command)))
+                 (max 1 (string-to-number (match-string 2 command)))))))))
+
+(defun emacsvox-eat--vim-yank-feedback (keys before after from to)
+  "Describe a yank request using the visible motion, cursor and Vim's report."
+  (when-let* ((command (emacsvox-eat--vim-yank-command (emacsvox-eat--vim-command-tail keys)))
+              ((not (plist-get to :pending-yank)))
+              ((not (or (plist-get from :mode) (plist-get to :mode) (plist-get from :prompt)
+                        (plist-get to :prompt) (plist-get to :message))))
+              ((or emacsvox-eat--vim-normal-evidence (plist-get to :ruler) (plist-get from :pending-yank)))
+              ((= (plist-get before :row) (plist-get after :row)))
+              (line (plist-get before :line))
+              (motion (car command)) (count (cdr command))
+              (index (plist-get before :index))
+              ((or (memq motion '(?0 ?^)) (= index (plist-get after :index))))
+              ((or (equal (string-trim-right line) (string-trim-right (plist-get after :line)))
+                   (and (memq motion '(?0 ?^)) (plist-get from :ruler) (plist-get to :ruler)
+                        (= (car (plist-get from :ruler)) (car (plist-get to :ruler)))))))
+    (let* ((status (plist-get to :text))
+           (label
+            (cond
+             ((and (string-match-p (rx string-start (+ digit) " lines yanked" string-end) status)
+                   (not (equal status (plist-get from :text)))) status)
+             ((and (> count 1) (memq motion '(?y ?w ?$)))
+              (format (pcase motion (?y "Yank %d lines") (?w "Yank %d words") (?$ "Yank through %d lines")) count))
+             ((eq motion ?y) (concat "Yank line, " (emacsvox-eat--vim-row-text line)))
+             ((eq motion ?w) (concat "Yank word, " (emacsvox-eat--vim-word (substring line index) 0 nil)))
+             (t
+              (let* ((direction (pcase motion (?$ "end") (?0 "start") (?^ "first nonblank")))
+                     (label (concat "Yank to " direction))
+                     (ruler (plist-get from :ruler))
+                     (left-visible (and ruler (= (cdr ruler) (1+ (plist-get before :column)))))
+                     (target (pcase motion
+                               (?$ (length line))
+                               (?0 (and left-visible 0))
+                               (?^ (and left-visible (string-match "[^ ]" line)))))
+                     (text (and target (/= index target)
+                                (substring line (min index target) (max index target)))))
+                (if (and text (not (and (eq motion ?$) (string-blank-p text))))
+                    (concat label ", " (emacsvox-eat--vim-row-text
+                                        (if (eq motion ?$) text (emacsvox-eat--vim-selection-row-text text))))
+                  label))))))
+      (list 'copy label))))
+
 (defun emacsvox-eat--vim-unchanged-input-p ()
   "Whether a pending Vim command may finish without changing a cell."
   (let ((keys (emacsvox-eat--vim-command-tail emacsvox-eat--vim-keys)))
     (or (emacsvox-eat--vim-file-boundary keys)
-        (member keys '((?y ?y) (?y ?w) (12) (?H) (?M) (?L) (9) (tab)))
+        (emacsvox-eat--vim-yank-command keys)
+        (member keys '((12) (?H) (?M) (?L) (9) (tab)))
         (and (eq (car keys) ?m) (length= keys 2)))))
 
 (defun emacsvox-eat--vim-replay-label (keys)
@@ -975,7 +1028,7 @@ Motions at a boundary can leave no repaint to consume their input."
 
 (defun emacsvox-eat--vim-quiet-response (buffer keys result)
   "Present RESULT in BUFFER when delivered KEYS leave Vim's cursor still.
-A numeric RESULT is a verified file boundary. A string names a requested replay."
+RESULT is a boundary percentage, a replay label, or the symbol `yank'."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (when (and (eq emacsvox-eat-application-profile 'vim)
@@ -985,23 +1038,38 @@ A numeric RESULT is a verified file boundary. A string names a requested replay.
                  (emacsvox-eat--following-live-p)
                  (equal (emacsvox-eat--vim-point emacsvox-eat--vim-origin)
                         (emacsvox-eat--vim-point emacsvox-eat--screen-snapshot)))
-        (if (numberp result)
-            (when (emacsvox-eat--vim-at-file-boundary-p result emacsvox-eat--screen-snapshot)
-              (emacsvox-eat--vim-present-boundary result emacsvox-eat--screen-snapshot)
-              (emacsvox-eat--vim-forget-input))
+        (cond
+         ((numberp result)
+          (when (emacsvox-eat--vim-at-file-boundary-p result emacsvox-eat--screen-snapshot)
+            (emacsvox-eat--vim-present-boundary result emacsvox-eat--screen-snapshot)
+            (emacsvox-eat--vim-forget-input)))
+         ((eq result 'yank)
+          (let* ((screen emacsvox-eat--screen-snapshot) (origin emacsvox-eat--vim-origin)
+                 (from (emacsvox-eat--vim-status origin)) (to (emacsvox-eat--vim-status screen))
+                 (point (emacsvox-eat--vim-point screen to)))
+            (when-let* (((equal (plist-get origin :size) (plist-get screen :size)))
+                        ((eq (plist-get origin :alternate-screen) (plist-get screen :alternate-screen)))
+                        (point)
+                        (feedback (emacsvox-eat--vim-yank-feedback keys point point from to)))
+              (emacsvox-eat--vim-say (cadr feedback) 'edit 'mark-object)
+              (emacsvox-eat--vim-forget-input))))
+         (t
           (emacsvox-eat--vim-say (concat result " requested") 'edit)
           ;; Keep the original screen for a late SSH result until another key.
-          (setq emacsvox-eat--vim-quiet-timer 'announced))))))
+          (setq emacsvox-eat--vim-quiet-timer 'announced)))))))
 
 (defun emacsvox-eat--vim-after-send ()
-  "Allow one response for a silent replay or a jump to an existing boundary."
+  "Allow one response for a silent yank, replay or jump to an existing boundary."
   (let* ((keys emacsvox-eat--vim-keys)
          (boundary (and (memq (car (last keys)) '(?G ?g))
                         (emacsvox-eat--vim-file-boundary (emacsvox-eat--vim-command-tail keys))))
          (result (cond ((and boundary (emacsvox-eat--vim-at-file-boundary-p boundary emacsvox-eat--vim-origin))
                         boundary)
                        ((and emacsvox-eat--vim-normal-evidence (memq ?@ keys))
-                        (emacsvox-eat--vim-replay-label keys)))))
+                        (emacsvox-eat--vim-replay-label keys))
+                       ((and emacsvox-eat--vim-normal-evidence
+                             (emacsvox-eat--vim-yank-command (emacsvox-eat--vim-command-tail keys)))
+                        'yank))))
     (when result
       (when (timerp emacsvox-eat--vim-quiet-timer) (cancel-timer emacsvox-eat--vim-quiet-timer))
       (setq emacsvox-eat--vim-quiet-timer
@@ -1371,16 +1439,8 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
       (when-let* ((result (emacsvox-eat--vim-replay-result (emacsvox-eat--vim-replay-label keys)
                                                            old new before after from to)))
         (list 'edit result)))
-     ((and (not typing) (not selection) (not new-mode)
-           (member (emacsvox-eat--vim-command-tail keys) '((?y ?y) (?y ?w)))
-           (not (plist-get to :pending-yank)) (equal before after)
-           (or (plist-get to :ruler) (plist-get from :pending-yank)))
-      ;; The register is private to Vim. Describe the requested line.
-      (let ((line (plist-get after :line)))
-        (list 'copy (if (eq (car (last keys)) ?y)
-                        (concat "Yank line, " (emacsvox-eat--vim-row-text line))
-                      (concat "Yank word, " (emacsvox-eat--vim-word
-                                             (substring line (plist-get after :index)) 0 nil))))))
+     ((and (not (or typing selection new-mode (plist-get from :prompt)))
+           (emacsvox-eat--vim-yank-feedback keys before after from to)))
      ((and new-mode (not mode) (eq (car (last keys)) ?y)
            (string-prefix-p "Visual" (or (plist-get from :mode) "")))
       (list 'copy "Yanked selection"))
