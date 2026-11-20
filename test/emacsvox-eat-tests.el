@@ -5328,6 +5328,20 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (send "\e[Hword\e[K\e[4;1H1,1 All\e[K\e[H")
     (should (equal (send "\e[1;5H  \e[4;1H1,7 All\e[K\e[1;7H" ?$) '(32)))))
 
+(ert-deftest emacsvox-eat-vim-word-clipping-requires-visible-evidence ()
+  "Distinguish a panned word from a complete word at the terminal edge."
+  (emacsvox-eat-test--with-vim
+    (send "\e[H6789TAIL\e[K\e[4;1H1,244 All\e[K\e[1;8H")
+    (let ((prefix (make-string 40 ?a)))
+      (should (equal (send (concat "\e[H" prefix "\e[4;1H1,1 All\e[K\e[H") ?b)
+                     (list (concat prefix ", continues off screen"))))
+      (should (equal (send "\e[H6789TAIL\e[K\e[4;1H1,244 All\e[K\e[1;8H" ?e)
+                     '("Starts off screen, 6789TAIL")))
+      (send "\e[H      x\e[K\e[4;1H1,247 All\e[K\e[1;7H")
+      (should (equal (send (concat "\e[H" prefix "\e[4;1H1,1 All\e[K\e[H") ?b) (list prefix)))
+      (send "\e[4;1H1,40 All\e[K\e[1;40H")
+      (should (equal (send "\e[4;1H1,1 All\e[K\e[H" ?b) (list prefix))))))
+
 (ert-deftest emacsvox-eat-vim-pages-marks-and-find-repeat ()
   "Read the destination when a scroll reuses the same cursor cell."
   (emacsvox-eat-test--with-vim

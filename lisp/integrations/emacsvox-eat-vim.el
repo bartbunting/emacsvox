@@ -797,6 +797,35 @@ COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
           (cl-incf end))
         (emacsvox-eat--vim-row-text (substring line start end))))))
 
+(defun emacsvox-eat--vim-motion-word (keys before after from to)
+  "Read the destination word, identifying a fragment proved by a single motion.
+Vim's b starts at the preceding character, and e at the following one.
+If that character belongs to the word but lies outside the new pane, the
+visible text cannot be the whole word."
+  (let* ((key (car (last keys))) (big (memq key '(?B ?W ?E)))
+         (line (plist-get after :line)) (i (plist-get after :index))
+         (word (emacsvox-eat--vim-word line i big))
+         (old (plist-get before :line)) (j (plist-get before :index))
+         (back (memq key '(?b ?B))) (adjacent (if back (1- j) (1+ j)))
+         (origin (plist-get from :ruler)) (target (plist-get to :ruler)))
+    (if (and (length= keys 1) (memq key '(?b ?B ?e ?E)) origin target
+             (= (car origin) (car target)) (= (plist-get before :row) (plist-get after :row))
+             (<= 0 adjacent) (< adjacent (length old)) (< i (length line))
+             (not (memq (aref line i) '(?\s ?\t)))
+             (eq (emacsvox-eat--vim-word-class (aref line i) big)
+                 (emacsvox-eat--vim-word-class (aref old adjacent) big)))
+        (cond
+         ((and back (equal (substring line i) word)
+               (>= (- (cdr origin) (char-width (aref old adjacent)))
+                   (+ (cdr target) (string-width word))))
+          (concat word ", continues off screen"))
+         ((and (not back) (equal (substring line 0 (1+ i)) word)
+               (< (+ (cdr origin) (char-width (aref old j)))
+                  (- (cdr target) (string-width (substring line 0 i)))))
+          (concat "Starts off screen, " word))
+         (t word))
+      word)))
+
 (defun emacsvox-eat--vim-row-motion-p (old new from to window direction)
   "Check a move from FROM to TO in WINDOW between OLD and NEW.
 At a scrolling edge, two distinct rows must have shifted together."
@@ -940,7 +969,7 @@ their respective command rows."
        ((or (memq key '(?h ?l left right ?0 ?^ ?$ home end)) (equal (last tail 2) '(?g ?_)))
         (if (< index (length line)) (cons 'character (aref line index)) (cons 'navigation "blank")))
        ((memq key '(?b ?w ?e ?B ?W ?E))
-        (cons 'navigation (emacsvox-eat--vim-word line index (memq key '(?B ?W ?E))))))))))
+        (cons 'navigation (emacsvox-eat--vim-motion-word keys before after from to))))))))
 
 (defun emacsvox-eat--vim-command-tail (keys)
   "Skip completed positioning keys before the final command in KEYS.
