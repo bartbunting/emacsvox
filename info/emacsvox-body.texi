@@ -9938,7 +9938,9 @@ In Normal mode@comma{} @kbd{j} moves down a line and @kbd{k} moves up. Emacsvox 
 line you reach or plays your usual blank-line cue on an empty line. Move
 left with @kbd{h} or right with @kbd{l} to hear the character under the cursor.
 The arrow keys give the same line and character feedback in both Normal
-and Insert modes.
+and Insert modes. On the current line@comma{} @kbd{0} and @kbd{$} take you to the first
+and last characters. Use @kbd{^} and @kbd{g_} for the first and last nonblank
+characters. Each motion reads the character you reach.
 
 When Vim shows absolute or relative line numbers@comma{} Emacsvox reads the
 file text following the number margin. To hear its indentation@comma{} toggle
@@ -9969,7 +9971,8 @@ To find a character on the current line@comma{} press @kbd{f} followed by the
 character. A semicolon repeats the find and a comma reverses it. Press @kbd{%}
 on a bracket to hear the position and character at the other end of the
 pair. A paragraph jump with @kbd{@{} or @kbd{@}} gives the position even on a blank
-line.
+line. Move back one sentence with @kbd{(} or forwards with @kbd{)} to hear the
+destination position and the text from there to the end of the screen row.
 
 With @kbd{ma}@comma{} you hear where you asked Vim to set mark a. Jump to its line
 with @kbd{'a} or its exact position with a backtick followed by @kbd{a}. Use
@@ -10009,7 +10012,8 @@ keys@comma{} see
 @ref{EAT Input Modes, , Choose an input mode}.
 
 In Normal mode@comma{} @kbd{x}@comma{} @kbd{dw}@comma{} @kbd{diw}@comma{} @kbd{D} and @kbd{dd} use the deletion cue and
-read what Vim's redraw identifies. A counted deletion such as @kbd{3dd} can
+read what Vim's redraw identifies. Use @kbd{D} or @kbd{d$} to delete from the
+cursor to the end of the line. A counted deletion such as @kbd{3dd} can
 report Vim's count and the line now under the cursor. If the original
 line was missing from EAT@comma{} @kbd{x} can read the resulting line. With @kbd{yw} or
 @kbd{yy} you hear the word or line you asked Vim to copy. Press @kbd{p} to paste
@@ -10025,7 +10029,8 @@ feedback.
 
 To select text in Normal mode@comma{} press @kbd{v} for characters@comma{} @kbd{V} for lines
 or @kbd{C-v} for a rectangular block. As you move the cursor in Visual mode@comma{}
-you hear the extent of the selection. For a short selection you also
+you hear the extent of the selection. Press @kbd{o} to move the other end@comma{}
+or use @kbd{gv} in Normal mode to restore the previous selection. For a short selection you also
 hear the text@comma{} including a selected space or blank line. For a longer
 selection@comma{} press @kbd{C-e q x} to read the portion on screen. In frozen
 review@comma{} @kbd{x} reads the selection as it appeared when you opened the review.

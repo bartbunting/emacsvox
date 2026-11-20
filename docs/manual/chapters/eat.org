@@ -603,7 +603,9 @@ In Normal mode, ~j~ moves down a line and ~k~ moves up. Emacsvox reads the
 line you reach or plays your usual blank-line cue on an empty line. Move
 left with ~h~ or right with ~l~ to hear the character under the cursor.
 The arrow keys give the same line and character feedback in both Normal
-and Insert modes.
+and Insert modes. On the current line, ~0~ and ~$~ take you to the first
+and last characters. Use ~^~ and ~g_~ for the first and last nonblank
+characters. Each motion reads the character you reach.
 
 When Vim shows absolute or relative line numbers, Emacsvox reads the
 file text following the number margin. To hear its indentation, toggle
@@ -634,7 +636,8 @@ To find a character on the current line, press ~f~ followed by the
 character. A semicolon repeats the find and a comma reverses it. Press ~%~
 on a bracket to hear the position and character at the other end of the
 pair. A paragraph jump with ~{~ or ~}~ gives the position even on a blank
-line.
+line. Move back one sentence with ~(~ or forwards with ~)~ to hear the
+destination position and the text from there to the end of the screen row.
 
 With ~ma~, you hear where you asked Vim to set mark a. Jump to its line
 with ~'a~ or its exact position with a backtick followed by ~a~. Use
@@ -678,7 +681,8 @@ keys, see
 [[*Input Modes And Completion Responsibilities][Choose an input mode]].
 
 In Normal mode, ~x~, ~dw~, ~diw~, ~D~ and ~dd~ use the deletion cue and
-read what Vim's redraw identifies. A counted deletion such as ~3dd~ can
+read what Vim's redraw identifies. Use ~D~ or ~d$~ to delete from the
+cursor to the end of the line. A counted deletion such as ~3dd~ can
 report Vim's count and the line now under the cursor. If the original
 line was missing from EAT, ~x~ can read the resulting line. With ~yw~ or
 ~yy~ you hear the word or line you asked Vim to copy. Press ~p~ to paste
@@ -694,7 +698,8 @@ feedback.
 
 To select text in Normal mode, press ~v~ for characters, ~V~ for lines
 or ~C-v~ for a rectangular block. As you move the cursor in Visual mode,
-you hear the extent of the selection. For a short selection you also
+you hear the extent of the selection. Press ~o~ to move the other end,
+or use ~gv~ in Normal mode to restore the previous selection. For a short selection you also
 hear the text, including a selected space or blank line. For a longer
 selection, press ~C-e q x~ to read the portion on screen. In frozen
 review, ~x~ reads the selection as it appeared when you opened the review.
