@@ -770,6 +770,17 @@ COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
   "Classify CHAR for a Vim word or BIG nonblank word."
   (cond ((memq char '(?\s ?\t)) nil)
         (big 'word)
+        ;; Vim gives these UTF-8 ranges distinct classes even when two
+        ;; adjacent characters both have word syntax in Emacs.
+        ((<= #x2070 char #x207f) 'superscript)
+        ((<= #x2080 char #x2094) 'subscript)
+        ((<= #x2800 char #x28ff) 'braille)
+        ((<= #x3040 char #x309f) 'hiragana)
+        ((<= #x30a0 char #x30ff) 'katakana)
+        ((<= #xac00 char #xd7a3) 'hangul)
+        ((or (<= #x3300 char #x9fff) (<= #xf900 char #xfaff)
+             (<= #x20000 char #x2a6df) (<= #x2a700 char #x2b81f)
+             (<= #x2f800 char #x2fa1f)) 'ideograph)
         ((if (and emacsvox-eat--vim-keywords (< char 256))
              (aref (cdr emacsvox-eat--vim-keywords) char)
            (string-match-p "[[:alnum:]_]" (string char))) 'word)

@@ -4986,6 +4986,19 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[H" 'C-left) '("red")))
     (should-not (send "\e[H" 'C-left))))
 
+(ert-deftest emacsvox-eat-vim-word-stops-between-writing-systems ()
+  "Lowercase motions distinguish Vim word classes while W groups a whole WORD."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hgo abc漢字xyzあア한\e[K\e[H")
+    (should (equal (send "\e[1;4H" ?w) '("abc")))
+    (should (equal (send "\e[1;7H" ?w) '("漢字")))
+    (should (equal (send "\e[1;11H" ?w) '("xyz")))
+    (should (equal (send "\e[1;14H" ?w) '("あ")))
+    (should (equal (send "\e[1;16H" ?w) '("ア")))
+    (should (equal (send "\e[1;18H" ?e) '("한")))
+    (send "\e[H")
+    (should (equal (send "\e[1;4H" ?W) '("abc漢字xyzあア한")))))
+
 (ert-deftest emacsvox-eat-vim-word-arrows-across-wide-glyphs ()
   "Words, highlight offsets and the cursor agree on a mixed-width Vim row."
   (emacsvox-eat-test--with-vim
