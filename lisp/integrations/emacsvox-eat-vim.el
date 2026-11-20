@@ -1000,7 +1000,7 @@ STATUS contains Vim's rendered command row."
                   (emacsvox-eat--deleted-character-name (aref b i)))
           (format "Replaced %s with %s" (emacsvox-eat--deleted-character-name (aref a i))
                   (emacsvox-eat--deleted-character-name (aref b i)))))
-       ((and (equal command "D") (< i (length a)) (equal (string-trim-right (substring a 0 i)) b))
+       ((and (member command '("D" "d$")) (< i (length a)) (equal (string-trim-right (substring a 0 i)) b))
         (emacsvox-eat--vim-deletion (substring a i)))
        ((and (equal command "diw") (<= j i) (< i (length a)))
         (let ((end (+ j (- (length a) (length b)))))
@@ -1050,6 +1050,13 @@ STATUS describes the command row on NEW."
            (string-empty-p (string-trim a)) (not (string-empty-p (string-trim b))))
       ;; A terminal can leave a row empty until Vim edits it after closing a split.
       (concat "Current row, " (emacsvox-eat--vim-row-text b)))
+     ((and (not inserting) (equal (emacsvox-eat--vim-command-tail keys) '(?x))
+           same-row (= j (1- i)) (<= i (length a))
+           (string-match-p (rx string-start (* space) string-end) (substring a i))
+           (equal (string-trim-right a) (string-trim-right b)))
+      ;; Normal x steps back when it removes the last character.  The
+      ;; final space can be indistinguishable from terminal padding.
+      (emacsvox-eat--vim-deletion " "))
      ((and (eq key 'backspace) (equal (plist-get status :mode) "Insert")
            same-row (< j i) (<= i (length a)) (equal a b)
            (string-match-p (rx string-start (+ space) string-end) (substring a j)))
