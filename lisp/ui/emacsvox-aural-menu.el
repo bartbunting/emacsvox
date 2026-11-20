@@ -864,13 +864,16 @@ Engine preferences last for this session unless explicitly saved."
     (transient-setup 'emacsvox-aural-menu-voices nil nil :scope context)))
 
 (transient-define-prefix emacsvox-aural-menu-line-cues ()
-  "Choose a global line tone or boundary earcon to preview and edit."
+  "Preview and edit global cues for lines, Vim word fragments and boundaries."
   ["Line tones"
    ("b" "Blank line" (lambda () "Choose the tone used when reading an empty line." (interactive) (emacsvox-line-cues-edit 'empty)) :transient transient--do-stack)
    ("w" "Whitespace-only line" (lambda () "Choose the tone used for a line containing only spaces or tabs." (interactive) (emacsvox-line-cues-edit 'whitespace-only)) :transient transient--do-stack)
    ("s" "Separator line" (lambda () "Choose the tone used for a repeated-character separator line." (interactive) (emacsvox-line-cues-edit 'separator)) :transient transient--do-stack)
    ("d" "Decorated line" (lambda () "Choose the tone used when a line contains decorative separators." (interactive) (emacsvox-line-cues-edit 'decorative)) :transient transient--do-stack)
    ("u" "Unspeakable line" (lambda () "Choose the tone used when a line has no speakable text." (interactive) (emacsvox-line-cues-edit 'unspeakable)) :transient transient--do-stack)]
+  ["Vim words in EAT"
+   ("[" "Starts off screen" (lambda () "Set the cue before a word fragment whose start is hidden." (interactive) (emacsvox-line-cues-edit 'starts-offscreen)) :transient transient--do-stack)
+   ("]" "Continues off screen" (lambda () "Set the cue after a word fragment whose end is hidden." (interactive) (emacsvox-line-cues-edit 'continues-offscreen)) :transient transient--do-stack)]
   ["Boundary earcons (all uses of these cues)"
    ("e" "Boundary and warning" (lambda () "Choose the earcon used for boundaries and warnings throughout Emacsvox." (interactive) (emacsvox-line-cues-edit 'warn-user)) :transient transient--do-stack)
    ("m" "Large movement" (lambda () "Choose the earcon used for large navigation movements throughout Emacsvox." (interactive) (emacsvox-line-cues-edit 'large-movement)) :transient transient--do-stack)]

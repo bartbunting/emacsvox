@@ -38,9 +38,11 @@
     (separator "Separator line" line-separator core-separator-line-tone-action)
     (decorative "Decorated line" line-decoration core-decorative-line-tone-action)
     (unspeakable "Unspeakable line" line-unspeakable core-unspeakable-line-tone-action)
+    (starts-offscreen "Starts off screen" edit-uppercase vim-word-start-cue :before)
+    (continues-offscreen "Continues off screen" edit-lowercase vim-word-end-cue :after)
     (warn-user "Boundary and warning earcon (all uses)" warn-user)
     (large-movement "Large movement earcon (all uses)" large-movement))
-  "Kind, label, resource, and optional line action to replace.")
+  "Kind, label, tone or earcon resource, owned action and optional word-cue slot.")
 (defvar emacsvox-line-cues--drafts (make-hash-table :test #'eq)
   "Retained drafts keyed by cue kind.")
 
@@ -61,8 +63,14 @@
   "Return the description of this draft's cue."
   (assq (plist-get (emacsvox-line-cues--current) :kind) emacsvox-line-cues--entries))
 (defun emacsvox-line-cues--tone-p ()
-  "Return non-nil for a line tone."
+  "Return non-nil when this cue can use a tone."
   (nth 3 (emacsvox-line-cues--entry)))
+(defun emacsvox-line-cues--word-p ()
+  "Whether this draft describes a clipped word in Vim."
+  (nth 4 (emacsvox-line-cues--entry)))
+(defun emacsvox-line-cues--earcon-p ()
+  "Whether this draft can select a recorded earcon."
+  (or (emacsvox-line-cues--word-p) (not (emacsvox-line-cues--tone-p))))
 (defun emacsvox-line-cues--say (text)
   "Speak replaceable feedback TEXT."
   (emacsvox-transient--submit-text
@@ -71,6 +79,12 @@
 (defun emacsvox-line-cues--id (kind &optional session)
   "Return the owned rule identifier for KIND, optionally for SESSION."
   (intern (format "settings-line-cue-%s%s" kind (if session "-session" ""))))
+(defun emacsvox-line-cues--action-data (value)
+  "Describe the spoken label, recorded earcon or generated tone in VALUE."
+  (cond ((stringp value) (list :kind 'speech :text value))
+        ((symbolp value) (list :kind 'cue :cue value))
+        ((numberp (car value)) (list :kind 'tone :pitch (car value) :duration (cdr value)))
+        (t (cons :kind (cons 'tone (copy-tree value))))))
 (defun emacsvox-line-cues--rules (kind value &optional session)
   "Build KIND's rule for VALUE, with a distinct identifier for SESSION."
   (unless (eq value 'bundled)
@@ -81,16 +95,14 @@
                  (emacsvox-line-cues--id kind session) (nth 2 entry)
                  (unless (eq value 'silent) value)))
         (list (list :id (emacsvox-line-cues--id kind session)
-                    :match (list :line-condition kind)
+                    :match (list (if (nth 4 entry) :word-clipping :line-condition) kind)
                     :render
-                    (list :before
+                    (list (or (nth 4 entry) :before)
                           (append (list :remove (list action))
                                   (unless (eq value 'silent)
                                     (list :append
-                                          (list (append (list :id action :kind 'tone)
-                                                        (if (numberp (car value))
-                                                            (list :pitch (car value) :duration (cdr value))
-                                                          value)))))))))))))
+                                          (list (append (list :id action)
+                                                        (emacsvox-line-cues--action-data value)))))))))))))
 (defun emacsvox-line-cues--saved (kind)
   "Read only the personal rule owned for KIND."
   (cl-remove-if-not (lambda (r) (eq (plist-get r :id) (emacsvox-line-cues--id kind)))
@@ -102,9 +114,12 @@
 
 (defun emacsvox-line-cues--rule-value (kind rules &optional session)
   "Read KIND's owned RULES, refusing rules edited outside this menu."
-  (let* ((action (car (plist-get (plist-get (plist-get (car rules) :render) :before) :append)))
+  (let* ((entry (assq kind emacsvox-line-cues--entries))
+         (slot (or (nth 4 entry) :before))
+         (action (car (plist-get (plist-get (plist-get (car rules) :render) slot) :append)))
          (value (cond ((not rules) 'bundled) ((not action) 'silent)
-                      ((nth 3 (assq kind emacsvox-line-cues--entries))
+                      ((eq (plist-get action :kind) 'speech) (plist-get action :text))
+                      ((eq (plist-get action :kind) 'tone)
                        (if (or (plist-member action :volume) (plist-member action :shape))
                            (cl-loop for (key val) on action by #'cddr
                                     when (memq key '(:pitch :duration :volume :shape))
@@ -153,7 +168,10 @@
   "Describe cue scope and draft state."
   (let ((draft (emacsvox-line-cues--current)))
     (format "%s, global: %s%s" (nth 1 (emacsvox-line-cues--entry))
-            (pcase (plist-get draft :value) ('bundled "bundled") ('silent "silent") (_ "override"))
+            (pcase (plist-get draft :value)
+              ('bundled (if (emacsvox-line-cues--word-p) "bundled spoken label" "bundled"))
+              ('silent "silent") ((pred stringp) "spoken label")
+              ((pred consp) "tone") (cue (format "earcon %s" cue)))
             (if (equal (plist-get draft :value) (plist-get draft :initial)) "" "; unsaved draft"))))
 (defun emacsvox-line-cues--edit (field &optional delta)
   "Edit tone FIELD exactly or by DELTA."
@@ -194,6 +212,15 @@
     (setf (plist-get draft :value)
           (intern (emacsvox-transient--read #'completing-read "Earcon: " (emacsvox-aural-tools--earcon-remap-candidates) nil t))))
   (emacsvox-line-cues--say "Earcon in draft. Space previews; capital S saves."))
+(defun emacsvox-line-cues--label ()
+  "Choose speech for this boundary and edit the words in its draft."
+  (interactive)
+  (let* ((draft (emacsvox-line-cues--current)) (value (plist-get draft :value))
+         (label (emacsvox-transient--read #'read-string "Spoken label: "
+                                          (if (stringp value) value (nth 1 (emacsvox-line-cues--entry))))))
+    (when (string-blank-p label) (user-error "Enter a label, or choose Silence"))
+    (setf (plist-get draft :value) label)
+    (emacsvox-line-cues--say label)))
 (defun emacsvox-line-cues--silent ()
   "Suppress only this cue when the draft is saved."
   (interactive)
@@ -242,9 +269,9 @@
               (unless save
                 (or (emacsvox-line-cues--rules kind value t)
                     (emacsvox-line-cues--rules
-                     kind (if (nth 3 (assq kind emacsvox-line-cues--entries))
-                              (emacsvox-line-cues--tone-values 'bundled)
-                            (nth 2 (assq kind emacsvox-line-cues--entries))) t)))))
+                     kind (cond ((emacsvox-line-cues--word-p) (nth 1 (emacsvox-line-cues--entry)))
+                                ((emacsvox-line-cues--tone-p) (emacsvox-line-cues--tone-values 'bundled))
+                                (t (nth 2 (emacsvox-line-cues--entry)))) t)))))
         (emacsvox-aural-editor--commit-layer
          (append (cl-remove-if (lambda (r) (memq r session)) emacsvox-aural-session-rules)
                  replacement))
@@ -298,18 +325,16 @@ Other rules remain intact. Restoring bundled removes this menu's personal rule."
     (emacsvox-line-cues--preview)))
 
 (defun emacsvox-line-cues--edit-tone ()
-  "Edit this line condition's tone in a private shared-editor draft.
-A applies a global session rule; W saves a personal rule. C compares the
-current tone values. Silence, bundled restoration and earcons stay in
-the parent."
+  "Design a tone for this cue.  A uses it for this session.
+W saves it as a personal rule.  C compares the current tone values."
   (interactive)
   (emacsvox-tone-editor--open
    (emacsvox-line-cues--context)
    (list :label (emacsvox-line-cues--title) :read #'emacsvox-line-cues--tone-data
          :current (lambda () (emacsvox-line-cues--tone-data nil t))
          :apply #'emacsvox-line-cues--apply-tone :preview #'emacsvox-line-cues--preview-tone
-         :apply-label "Apply line tone for session" :save-label "Save line tone as personal rule"
-         :save-message "Saved line tone; other presentation rules still apply")))
+         :apply-label "Use tone for this session" :save-label "Save tone as personal rule"
+         :save-message "Saved tone. Other presentation rules still apply.")))
 
 (defun emacsvox-line-cues--preview ()
   "Preview just this draft's cue without applying or saving it."
@@ -317,9 +342,11 @@ the parent."
   (let* ((entry (emacsvox-line-cues--entry))
          (value (plist-get (emacsvox-line-cues--current) :value)))
     (if (eq value 'silent) (progn (emacsvox-aural-preview-stop) (emacsvox-line-cues--say "Silent cue"))
-      (let* ((data (if (nth 3 entry)
-                       (append (list :kind 'tone) (emacsvox-line-cues--tone-values))
-                     (list :kind 'cue :cue (if (eq value 'bundled) (nth 2 entry) value))))
+      (let* ((data (cond ((and (nth 4 entry) (eq value 'bundled))
+                          (emacsvox-line-cues--action-data (nth 1 entry)))
+                         ((and (nth 3 entry) (or (eq value 'bundled) (consp value)))
+                          (append (list :kind 'tone) (emacsvox-line-cues--tone-values)))
+                         (t (emacsvox-line-cues--action-data (if (eq value 'bundled) (nth 2 entry) value)))))
              (action (emacsvox-aural--compile-action
                       (append '(:id line-cue-preview) data) 'line-cue-preview 'before 0 'object))
              (render (emacsvox-aural--make-render-plan
@@ -360,7 +387,8 @@ the parent."
   [:description emacsvox-line-cues--title
    ("p" (lambda () (format "Pitch: %s Hz" (car (emacsvox-line-cues--values)))) emacsvox-line-cues--pitch :if emacsvox-line-cues--tone-p :transient t)
    ("d" (lambda () (format "Duration: %s milliseconds" (cdr (emacsvox-line-cues--values)))) emacsvox-line-cues--duration :if emacsvox-line-cues--tone-p :transient t)
-   ("e" "Choose replacement earcon" emacsvox-line-cues--choose :if-not emacsvox-line-cues--tone-p :transient t)
+   ("e" "Choose replacement earcon" emacsvox-line-cues--choose :if emacsvox-line-cues--earcon-p :transient t)
+   ("t" "Edit spoken label" emacsvox-line-cues--label :if emacsvox-line-cues--word-p :transient t)
    ("E" "Edit tone shape and envelope" emacsvox-line-cues--edit-tone :if emacsvox-line-cues--tone-p :transient transient--do-stack)
    ("n" "Silence cue in draft" emacsvox-line-cues--silent :transient t)]
   ["Preview and save"

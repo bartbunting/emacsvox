@@ -428,6 +428,8 @@ A nil group denotes a focused menu with buffer-only controls.")
     emacsvox-settings-integrations--eat-profile
     :inapt-if-not emacsvox-settings-integrations--eat-p :transient transient--do-suspend)]
   ["Defaults and advanced settings"
+   ("c" "Line and boundary cues, including Vim words (global)" emacsvox-aural-menu-line-cues
+    :transient transient--do-stack)
    ("w" "Save speech, monitoring, prompt and detail defaults" emacsvox-settings-integrations--eat-save
     :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)
    ("A" "Advanced EAT settings (Customize)" emacsvox-settings-integrations--eat-custom
