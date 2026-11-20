@@ -5403,6 +5403,19 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H-- INSERT --\e[K\e[3;2H") '("Insert mode")))
     (should (equal (send "jkgamma\e[3;4H") '("jk")))))
 
+(ert-deftest emacsvox-eat-vim-split-reads-the-active-ruler ()
+  "Use the cursor's status line even when another window shows a different ruler."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 40 7)
+    (send (concat "\e[2J\e[Halpha\e[2;1Hbeta\e[3;1H\e[7mfirst    1,1 All\e[0m"
+                  "\e[4;1Hother\e[6;1H\e[7msecond  80,5 Bot\e[0m\e[H"))
+    (key ?2)
+    (should (equal (send "\e[3;10H\e[7m2,1 All\e[0m\e[2;1H" ?G) '("Line 2, beta")))
+    (key ?m)
+    (should (equal (send "\e[2;1H" ?a) '("Mark a requested at line 2, column 1")))
+    (send "\e[3;1Hfirst    2,1 All\e[K\e[6;1H\e[K\e[2;1H")
+    (should-not (plist-get (emacsvox-eat--vim-status emacsvox-eat--screen-snapshot) :ruler))))
+
 (ert-deftest emacsvox-eat-vim-split-reads-the-active-window ()
   "Styled dividers delimit either window.  A literal pipe remains file text."
   (emacsvox-eat-test--with-vim

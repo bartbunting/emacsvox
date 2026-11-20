@@ -322,16 +322,45 @@ After the profile menu resizes EAT, the prompt can sit above the last row."
         (or (and (string-suffix-p ":" end) (emacsvox-eat--vim-swap-prompt rows row))
             (emacsvox-eat--vim-recovery-prompt rows row width)))))))
 
+(defun emacsvox-eat--vim-window-ruler (screen command-row)
+  "Read the ruler in the first styled status line below the cursor on SCREEN.
+Use only the cursor's pane and stop before COMMAND-ROW."
+  (let ((cursor (plist-get screen :cursor-row))
+        (rows (plist-get screen :rows)) pane starts)
+    (when (and cursor (< cursor command-row))
+      (cl-loop for row from (1+ cursor) below command-row
+               for line in (nthcdr (1+ cursor) rows)
+               ;; A vertical split can have more than one ruler on a row.
+               when (string-match-p "[0-9],[0-9]" line)
+               thereis
+               (progn
+                 (unless pane
+                   (setq pane (or (emacsvox-eat--vim-window screen)
+                                  (cons 0 (car (plist-get screen :size))))))
+                 (let ((part (truncate-string-to-width line (cdr pane) (car pane))))
+                   (when (string-match emacsvox-eat--vim-ruler part)
+                     (let ((ruler (cons (string-to-number (match-string 1 part))
+                                        (string-to-number (or (match-string 3 part) (match-string 2 part)))))
+                           (index (match-beginning 0)))
+                       (unless starts (setq starts (emacsvox-eat--row-start-offsets (plist-get screen :text))))
+                       (let ((offset (+ (aref starts row) (length (truncate-string-to-width line (car pane))) index)))
+                         (when (cl-some (lambda (run)
+                                          (and (<= (car run) offset) (< offset (cadr run))
+                                               (emacsvox-eat--highlight-signature (caddr run))))
+                                        (plist-get screen :styles))
+                           ruler))))))))))
+
 (defun emacsvox-eat--vim-status (screen)
   "Return visible mode, prompt, command result and ruler facts on SCREEN."
   (let* ((rows (plist-get screen :rows))
          (row (emacsvox-eat--vim-status-index screen))
          (line (or (nth row rows) ""))
          (case-fold-search nil)
-         (ruler (when (string-match emacsvox-eat--vim-ruler line)
+         (ruler (if (string-match emacsvox-eat--vim-ruler line)
                   (prog1 (cons (string-to-number (match-string 1 line))
                                (string-to-number (or (match-string 3 line) (match-string 2 line))))
-                    (setq line (substring line 0 (match-beginning 0))))))
+                    (setq line (substring line 0 (match-beginning 0))))
+                  (emacsvox-eat--vim-window-ruler screen row)))
          (text (string-trim-right line))
          (at-command (= (or (plist-get screen :cursor-row) -1) row))
          (completion (when (string-match (rx string-start "-- "
