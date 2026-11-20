@@ -52,6 +52,8 @@
   "Deadline for an observed :! command to leave Vim's alternate screen.")
 (defvar-local emacsvox-eat--vim-anchor nil
   "File or screen coordinates at the observed start of a Visual selection.")
+(defvar-local emacsvox-eat--vim-last-selection nil
+  "Mode and endpoints of the last observed Visual selection, for gv.")
 (defvar-local emacsvox-eat--vim-tabs nil
   "Last identified tab and its visible neighbours on a plain Vim tab line.")
 (defvar-local emacsvox-eat--vim-keywords nil
@@ -106,7 +108,8 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 (defun emacsvox-eat--vim-reset ()
   "Forget all keyboard and selection evidence for this terminal."
   (emacsvox-eat--vim-forget-input)
-  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil
+  (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-last-selection nil
+        emacsvox-eat--vim-normal-evidence nil
         emacsvox-eat--vim-shell-command-until nil emacsvox-eat--vim-keyword-query-until nil
         emacsvox-eat--vim-tabs nil emacsvox-eat--vim-keywords nil emacsvox-eat--vim-last-boundary nil))
 
@@ -741,7 +744,7 @@ COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
                                                        "split" "vsplit" "new" "vnew" (seq "tab" (* alpha))
                                                        "next" "previous" "cnext" "cprevious" "filetype")
                                       (or (not alpha) string-end)) ex)))
-      (setq emacsvox-eat--vim-keywords nil))
+      (setq emacsvox-eat--vim-keywords nil emacsvox-eat--vim-last-selection nil))
      ((and ex (not (plist-get to :prompt)) (not (plist-get to :message))
            (string-match (rx string-start (or "set" "setlocal" "setl") (+ blank) (or "iskeyword" "isk")
                              (group (or "+=" "-=" "^=" "=" "?" "&")) (group (* (not (any " |"))))
@@ -1089,17 +1092,30 @@ STATUS describes the command row on NEW."
   (if-let* ((ruler (plist-get status :ruler))) (list 'file (car ruler) (cdr ruler))
     (list 'screen (plist-get point :row) (plist-get point :column))))
 
-(defun emacsvox-eat--vim-selection (mode position visible)
-  "Describe the selection from its anchor to POSITION in MODE using VISIBLE rows."
-  (when (and emacsvox-eat--vim-anchor (eq (car position) (car emacsvox-eat--vim-anchor)))
-    (let ((rows (1+ (abs (- (nth 1 position) (nth 1 emacsvox-eat--vim-anchor)))))
-          (cols (1+ (abs (- (nth 2 position) (nth 2 emacsvox-eat--vim-anchor))))))
-      (cond ((string-suffix-p "block" mode) (format "Selection, %d by %d" rows cols))
-            ((or (> rows 1) (string-suffix-p "line" mode))
-             (format "%d %s selected" rows (if (= rows 1) "line" "lines")))
-            (t (when (and (length= visible 1) (not (string-empty-p (car visible))))
-                 (setq cols (string-width (car visible))))
-               (format "%d %s selected" cols (if (= cols 1) "column" "columns")))))))
+(defun emacsvox-eat--vim-selection (mode position visible status)
+  "Describe the selected extent using Vim's STATUS, anchor and VISIBLE rows."
+  (let* ((anchor (and (eq (car position) (car emacsvox-eat--vim-anchor))
+                      emacsvox-eat--vim-anchor))
+         (rows (and anchor (1+ (abs (- (nth 1 position) (nth 1 anchor))))))
+         (cols (and anchor (1+ (abs (- (nth 2 position) (nth 2 anchor))))))
+         (text (plist-get status :text)))
+    ;; A restored selection may have started outside the visible window.
+    (cond
+     ((string-suffix-p "line" mode)
+      (when (string-match (rx "--" (+ blank) (group (+ digit)) string-end) text)
+        (setq rows (string-to-number (match-string 1 text)))))
+     ((string-suffix-p "block" mode)
+      (when (string-match (rx "--" (+ blank) (group (+ digit)) "x" (group (+ digit)) string-end) text)
+        (setq rows (string-to-number (match-string 1 text))
+              cols (string-to-number (match-string 2 text))))))
+    (cond ((string-suffix-p "block" mode)
+           (when (and rows cols) (format "Selection, %d by %d" rows cols)))
+          ((or (string-suffix-p "line" mode) (and rows (> rows 1)))
+           (when rows (format "%d %s selected" rows (if (= rows 1) "line" "lines"))))
+          ((and rows cols)
+           (when (and (length= visible 1) (not (string-empty-p (car visible))))
+             (setq cols (string-width (car visible))))
+           (format "%d %s selected" cols (if (= cols 1) "column" "columns"))))))
 
 (defun emacsvox-eat--vim-selection-row-text (line)
   "Speak LINE with an explicit description of selected trailing spaces."
@@ -1341,12 +1357,15 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                                                      (plist-get change :old-end)))
             (list 'deletion (concat "Selection deleted. " (emacsvox-eat--vim-row-text line)))))))
      ((and selection (not new-mode) (not (equal before after)))
+      (when (and (eq (car (last keys)) ?o) (not (equal before after)))
+        (setq emacsvox-eat--vim-anchor (emacsvox-eat--vim-selection-position from before)))
       (let* ((rows (emacsvox-eat--vim-selected-rows new to))
              (position (emacsvox-eat--vim-selection-position to after))
-             (extent (emacsvox-eat--vim-selection mode position rows)))
+             (extent (emacsvox-eat--vim-selection mode position rows to)))
         (when extent
           (list 'navigation
                 (if (and rows (<= (length rows) 2)
+                         emacsvox-eat--vim-anchor
                          (< (abs (- (nth 1 position) (nth 1 emacsvox-eat--vim-anchor))) 2)
                          (<= (apply #'+ (mapcar #'length rows)) 48))
                     (concat extent ", " (string-join (mapcar #'emacsvox-eat--vim-selection-row-text rows) ". "))
@@ -1548,9 +1567,23 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                (equal announcement "Recording stopped"))
            (setq emacsvox-eat--vim-normal-evidence t)))
     (unless (equal mode prior-mode)
-      (setq emacsvox-eat--vim-anchor
-            (when (and mode after (string-match-p "\\`\\(?:Visual\\|Select\\)" mode))
-              (emacsvox-eat--vim-selection-position to after))))
+      (let ((selecting (rx string-start (or "Visual" "Select"))))
+        (cond
+         ((and prior-mode (string-match-p selecting prior-mode)
+               (not (and mode (string-match-p selecting mode))))
+          (setq emacsvox-eat--vim-last-selection
+                (when-let* ((anchor emacsvox-eat--vim-anchor)
+                            (point (emacsvox-eat--vim-point baseline previous)))
+                  (list prior-mode (emacsvox-eat--vim-selection-position previous point) anchor))
+                emacsvox-eat--vim-anchor nil))
+         ((and after mode (string-match-p selecting mode)
+               (not (and prior-mode (string-match-p selecting prior-mode))))
+          (let ((position (emacsvox-eat--vim-selection-position to after)))
+            (setq emacsvox-eat--vim-anchor
+                  (if (equal (last keys 2) '(?g ?v))
+                      (pcase emacsvox-eat--vim-last-selection
+                        (`(,(pred (equal mode)) ,(pred (equal position)) ,anchor) anchor))
+                    position)))))))
     (when announcement
       (setq emacsvox-eat--last-status-text announcement)
       (when (and (or automatic keys) (not (and wrapped-search feedback)))

@@ -5408,6 +5408,20 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
               (should (equal speech '("Visible selection, alph")))))
         (kill-buffer review)))))
 
+(ert-deftest emacsvox-eat-vim-selection-changes-type-swaps-and-restores ()
+  "Follow the fixed end across Visual mode changes and read a restored count."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- VISUAL --    1,1 All\e[H" ?v)
+    (send "\e[4;1H-- VISUAL --    2,1 All\e[2;1H" ?j)
+    (send "\e[4;1H-- VISUAL LINE --    2,1 All\e[2;1H" ?V)
+    (should (equal (send "\e[4;1H-- VISUAL LINE --    3,1 All\e[3;1H" ?j) '("3 lines selected")))
+    (should (equal (send "\e[4;1H-- VISUAL LINE --    1,1 All\e[H" ?o) '("3 lines selected")))
+    (send "\e[4;1H1,1 All\e[K\e[H" 'escape)
+    (key ?g)
+    (send "\e[4;1H-- VISUAL LINE --   3   1,1 All\e[H" ?v)
+    (should (equal (send "\e[4;1H-- VISUAL LINE --   2   2,1 All\e[2;1H" ?j)
+                   '("2 lines selected, beta two")))))
+
 (ert-deftest emacsvox-eat-vim-review-selected-whitespace-and-exclusive-end ()
   "Speak the selected text and extent, including a space or an empty file line."
   (emacsvox-eat-test--with-vim
