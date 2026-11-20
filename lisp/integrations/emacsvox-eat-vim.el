@@ -1381,6 +1381,9 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                             (eq (plist-get old :alternate-screen) (plist-get screen :alternate-screen))))
          (compatible (and same-display
                           (equal (plist-get before :window) (plist-get after :window))))
+         (wrapped-search
+          (and compatible (not (or mode prompt)) (emacsvox-eat--vim-search-p keys from)
+               (member message '("search hit BOTTOM, continuing at TOP" "search hit TOP, continuing at BOTTOM"))))
          (announcement
           (cond
            ((and message (not (equal message prior-message))
@@ -1407,14 +1410,20 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                           (memq (car (last keys)) '(?v ?V ?y ?d ?x ?p ?P)))))
             "Normal mode")))
          (same-match (and emacsvox-eat--vim-awaiting-match compatible
-                          (not (or prompt mode message))
+                          (not (or prompt mode (and message (not wrapped-search))))
                           (equal (plist-get from :ruler) (plist-get to :ruler))
                           (= (plist-get before :row) (plist-get after :row))
                           (= (plist-get before :column) (plist-get after :column))))
          (feedback (if emacsvox-eat--vim-awaiting-match
                        (when (and same-match (not (string-empty-p (string-trim (plist-get after :line)))))
                          (list 'row (emacsvox-eat--vim-navigation-line after)))
-                     (or (and same-display (not mode) (not prompt) (not (and announcement message))
+                     (or (when wrapped-search
+                           (cond ((emacsvox-eat--vim-search-ready-p (plist-get after :line) from to)
+                                  (list 'navigation (concat message ". " (emacsvox-eat--vim-navigation-line after))))
+                                 ((plist-get to :ruler)
+                                  (list 'match-location (format "%s. Match on line %d" message
+                                                                (car (plist-get to :ruler)))))))
+                         (and same-display (not mode) (not prompt) (not (and announcement message))
                               (emacsvox-eat--vim-window-switch keys before after))
                          (and compatible (not (or (plist-get from :confirmation) (plist-get to :confirmation)))
                               (not (and announcement message))
@@ -1440,7 +1449,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
               (emacsvox-eat--vim-selection-position to after))))
     (when announcement
       (setq emacsvox-eat--last-status-text announcement)
-      (when (or automatic keys)
+      (when (and (or automatic keys) (not (and wrapped-search feedback)))
         (emacsvox-eat--vim-say
          (if (and message prior-message (string-prefix-p (concat prior-message ". ") message))
              (substring message (+ 2 (length prior-message))) announcement)

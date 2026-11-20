@@ -4846,6 +4846,15 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should (equal (send "\e[Halpha alpha\e[4;1H\e[K1,7 All\e[1;7H" ?q)
                      '("Substitution stopped"))))))
 
+(ert-deftest emacsvox-eat-vim-wrapped-search-reads-the-match ()
+  "Include the destination with the wrap notice in each direction."
+  (emacsvox-eat-test--with-vim
+    (send "\e[3;1Halpha last\e[K\e[4;1H3,1 All\e[K\e[3;1H")
+    (should (equal (send "\e[4;1Hsearch hit BOTTOM, continuing at TOP\e[K\e[H" ?n)
+                   '("search hit BOTTOM, continuing at TOP. alpha one")))
+    (should (equal (send "\e[4;1Hsearch hit TOP, continuing at BOTTOM\e[K\e[3;1H" ?N)
+                   '("search hit TOP, continuing at BOTTOM. alpha last")))))
+
 (ert-deftest emacsvox-eat-vim-search-with-incomplete-terminal-row ()
   "Report Vim's visible file line when a literal match is missing from EAT."
   (emacsvox-eat-test--with-vim
