@@ -71,6 +71,7 @@
 (autoload 'emacsvox-eat--vim-record-key "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-cursor-line "emacsvox-eat-vim")
 (defvar emacsvox-eat--vim-keys nil)
+(defvar emacsvox-eat--vim-shell-command-until)
 (eval-when-compile (require 'eat "eat" 'no-error))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-end "eat" (terminal))
@@ -568,7 +569,8 @@ the terminal still existed instead of consulting its deleted cursor."
               (setq diff (plist-put diff :deletion deletion)))
             (let ((live (if terminal-exiting-p followed-live-p (emacsvox-eat--following-live-p))))
               (cond
-               ((and (eq emacsvox-eat-application-profile 'vim) (null alternate-screen-transitions))
+               ((and (eq emacsvox-eat-application-profile 'vim)
+                     (or (null alternate-screen-transitions) (not (plist-get snapshot :alternate-screen))))
                 (unless live (emacsvox-eat--vim-reset))
                 (emacsvox-eat--retain-screen-change diff snapshot)
                 (if (and live (emacsvox-eat--vim-shell-return-p snapshot prompt))
@@ -626,7 +628,9 @@ the terminal still existed instead of consulting its deleted cursor."
       ;; An application can exit while its terminal is in the background.
       (when (and (eq emacsvox-eat-application-profile 'vim)
                  (plist-get old :alternate-screen)
-                 (not (plist-get new :alternate-screen)))
+                 (not (plist-get new :alternate-screen))
+                 (not (and emacsvox-eat--vim-shell-command-until
+                           (<= (float-time) emacsvox-eat--vim-shell-command-until))))
         (emacsvox-eat--set-application-profile 'terminal)
         (setq navigation nil))
       (when (and (eq emacsvox-eat-application-profile 'vim)

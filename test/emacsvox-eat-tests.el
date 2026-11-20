@@ -4872,6 +4872,18 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[2;1H" 12) '("alpha again")))
     (should-not (send "\e[2;1Hother\e[K\e[2;1H"))))
 
+(ert-deftest emacsvox-eat-vim-shell-command-returns-to-editing ()
+  "Keep Vim across a submitted shell escape and still restore Terminal on quit."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H:!echo ready\e[K")
+    (should (member "Press ENTER or type command to continue"
+                    (send "\e[?1049l\e[2J\e[Hready\r\nPress ENTER or type command to continue" 'return)))
+    (should (eq emacsvox-eat-application-profile 'vim))
+    (send "\e[?1049h\e[2J\e[Halpha\e[2;1Hbeta\e[4;1H1,1 All\e[H" 'return)
+    (should (equal (send "\e[4;1H2,1 All\e[2;1H" ?j) '("beta")))
+    (send "\e[?1049l")
+    (should (eq emacsvox-eat-application-profile 'terminal))))
+
 (ert-deftest emacsvox-eat-vim-restore-shell-profile-after-quit ()
   "Keep Vim on a failed or partial quit and recognise the restored shell pane."
   (emacsvox-eat-test--with-vim

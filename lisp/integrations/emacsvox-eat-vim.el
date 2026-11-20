@@ -48,6 +48,8 @@
   "Non-nil after a search announces its ruler while the match row is missing.")
 (defvar-local emacsvox-eat--vim-quitting nil
   "Non-nil while a delivered quit awaits evidence of a return to the shell.")
+(defvar-local emacsvox-eat--vim-shell-command-until nil
+  "Deadline for an observed :! command to leave Vim's alternate screen.")
 (defvar-local emacsvox-eat--vim-anchor nil
   "File or screen coordinates at the observed start of a Visual selection.")
 (defvar-local emacsvox-eat--vim-tabs nil
@@ -101,6 +103,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
   "Forget all keyboard and selection evidence for this terminal."
   (emacsvox-eat--vim-forget-input)
   (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil
+        emacsvox-eat--vim-shell-command-until nil
         emacsvox-eat--vim-tabs nil emacsvox-eat--vim-last-boundary nil))
 
 (defun emacsvox-eat--vim-word-arrows-p (keys)
@@ -109,6 +112,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
+  (setq emacsvox-eat--vim-shell-command-until nil)
   (unless (memq event '(?g ?G)) (setq emacsvox-eat--vim-last-boundary nil))
   (when (or emacsvox-eat--vim-awaiting-match emacsvox-eat--vim-quitting
             (eq emacsvox-eat--vim-quiet-timer 'announced)
@@ -144,8 +148,11 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
         ;; The peer can enter Insert even if it hides the mode label.
         (setq emacsvox-eat--vim-normal-evidence nil))
       (when (memq key '(return ?Z ?Q))
-        (setq emacsvox-eat--vim-quitting
-              (emacsvox-eat--vim-quit-command-p emacsvox-eat--vim-origin emacsvox-eat--vim-keys)))))))
+        (let ((from (emacsvox-eat--vim-status emacsvox-eat--vim-origin)))
+          (setq emacsvox-eat--vim-quitting (emacsvox-eat--vim-quit-command-p from emacsvox-eat--vim-keys))
+          (when (and (eq key 'return) (not (plist-get from :mode))
+                     (string-prefix-p "!" (or (emacsvox-eat--vim-submitted-command from emacsvox-eat--vim-keys) "")))
+            (setq emacsvox-eat--vim-shell-command-until emacsvox-eat--vim-deadline))))))))
 
 (defconst emacsvox-eat--vim-ruler
   "\\([0-9]+\\),\\([0-9]+\\)\\(?:-\\([0-9]+\\)\\)?[ \t]+\\(?:Top\\|Bot\\|All\\|[0-9]+%\\)[ \t]*\\'")
@@ -418,9 +425,9 @@ Use only the cursor's pane and stop before COMMAND-ROW."
       (when (or (plist-get state :blocking) (plist-get state :pager) (plist-get state :confirmation))
         (plist-get state :message)))))
 
-(defun emacsvox-eat--vim-quit-command-p (origin keys)
-  "Whether KEYS submit a Vim quit from the command or editing screen at ORIGIN."
-  (let* ((state (emacsvox-eat--vim-status origin)) (prompt (plist-get state :prompt))
+(defun emacsvox-eat--vim-quit-command-p (state keys)
+  "Whether KEYS submit a Vim quit from the command or editing screen in STATE."
+  (let* ((prompt (plist-get state :prompt))
          (input (butlast keys)))
     (and (not (plist-get state :mode))
          (or (and (not prompt) (member keys '((?Z ?Z) (?Z ?Q))))
