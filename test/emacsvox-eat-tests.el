@@ -5322,6 +5322,12 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H36,1 50%\e[H" 'up) '("same")))
     (should-not (send "\e[H" 'up))))
 
+(ert-deftest emacsvox-eat-vim-end-on-an-omitted-space ()
+  "Vim's final file column can land on a blank beyond the captured text."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hword\e[K\e[4;1H1,1 All\e[K\e[H")
+    (should (equal (send "\e[1;5H  \e[4;1H1,7 All\e[K\e[1;7H" ?$) '(32)))))
+
 (ert-deftest emacsvox-eat-vim-pages-marks-and-find-repeat ()
   "Read the destination when a scroll reuses the same cursor cell."
   (emacsvox-eat-test--with-vim

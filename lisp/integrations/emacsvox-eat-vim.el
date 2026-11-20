@@ -924,6 +924,12 @@ their respective command rows."
                (and (emacsvox-eat--vim-search-p keys from)
                     (emacsvox-eat--vim-search-ready-p line from to))))
       (cons 'row (emacsvox-eat--vim-navigation-line after)))
+     ((and (equal tail '(?$)) ruler old-ruler (= (car ruler) (car old-ruler))
+           (> (cdr ruler) (cdr old-ruler)) (= row origin)
+           (= (plist-get after :column) (string-width line))
+           (equal (string-trim-right line) (string-trim-right (plist-get before :line))))
+      ;; EAT can omit the blank cell under the final cursor.
+      (cons 'character 32))
      ((and moved
            (or (equal line (emacsvox-eat--vim-line old row (plist-get after :text-window)))
                ;; The same file line can pan horizontally in a nowrap window.
