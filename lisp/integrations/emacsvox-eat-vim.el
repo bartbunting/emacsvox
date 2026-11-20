@@ -250,16 +250,76 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
                                    (string-search (concat "[" key "]") choices))
                           collect label) ", "))))))
 
+(defun emacsvox-eat--vim-recovery-choices (lines width pager)
+  "Describe visible swap files in LINES of WIDTH columns, bottom row first.
+A PAGER needs evidence of a swap listing because other Vim lists also page."
+  (let (choices details listing continuation)
+    (while lines
+      (let ((line (string-trim-right (concat (pop lines) continuation))))
+        (setq continuation nil)
+        (cond
+         ((string-match (rx string-start (group (+ digit)) ".    " (group (+ nonl))) line)
+          (push (string-join (cons (concat (match-string 1 line) ", " (match-string 2 line))
+                                   details) ", ") choices)
+          (setq details nil))
+         ((string-match (rx string-start (+ blank) (optional "owned by:" (* nonl) blank)
+                            "dated:" (+ blank) (group (+ nonl))) line)
+          (setq listing t)
+          (push (concat "dated " (match-string 1 line)) details))
+         ((string-match (rx string-start (+ blank) "modified: " (group (or "YES" "no")) string-end) line)
+          (push (if (equal (match-string 1 line) "YES") "modified" "unmodified") details))
+         ((string-match (rx string-start (+ blank) "process ID: " (group (+ digit)) " (STILL RUNNING)") line)
+          (push (format "process %s still running" (match-string 1 line)) details))
+         ((string-match-p (rx string-start (+ blank) "[" (+ nonl) "]" string-end) line)
+          (push (string-trim line) details))
+         ((equal line "Swap files found:") (setq listing t lines nil))
+         ((or (string-empty-p line)
+              (string-match-p (rx string-start (+ blank)
+                                  (or "owned by:" "file name:" "user name:" "host name:" "process ID:"
+                                      "Using specified name:"
+                                      "In current directory:" "In directory " "-- none --")) line)))
+         ;; A filename or date may continue at the left margin. Recognise
+         ;; field labels first, even when the preceding row was exactly full.
+         ((and lines (= width (string-width (car lines)))) (setq continuation line))
+         (t (setq lines nil)))))
+    (when (or (not pager) (and listing choices))
+      (string-join
+       (delq nil
+             (list (if pager "Swap files. Press Space for the next page."
+                     "Enter the swap file number, or 0 to quit, then press Enter.")
+                   (when choices
+                     (string-replace "\n" ". " (emacsvox-eat--bounded-output choices)))))
+       " "))))
+
+(defun emacsvox-eat--vim-recovery-prompt (rows row width &optional pager)
+  "Read a swap-file selector or its PAGER at ROW in a WIDTH-column display."
+  (let* ((question "Enter number of swap file to use (0 to quit):")
+         (above (reverse (seq-take rows (1+ row))))
+         (prompt (string-trim-right (pop above) "[0-9 \t]+")))
+    ;; The menu can resize EAT after Vim wraps the question. Use the
+    ;; displayed break and ignore any number already entered at the prompt.
+    (while (and (not pager) above (not (string-empty-p (car above)))
+                (not (equal prompt question)) (string-suffix-p prompt question))
+      (setq width (string-width (car above))
+            prompt (string-trim-right (concat (pop above) prompt) "[0-9 \t]+")))
+    (when (or pager (equal prompt question))
+      (emacsvox-eat--vim-recovery-choices above width pager))))
+
 (defun emacsvox-eat--vim-blocking-prompt (screen)
   "Read a Vim startup or continuation prompt at the cursor on SCREEN.
 After the profile menu resizes EAT, the prompt can sit above the last row."
   (let* ((rows (plist-get screen :rows)) (row (plist-get screen :cursor-row))
          (line (and row (nth row rows)))
-         (end (and line (string-trim-right line))))
+         (end (and line (string-trim-right line)))
+         (width (car (plist-get screen :size))))
     (when (and end (>= (plist-get screen :cursor-column) (string-width end)))
       (cond
-       ((string-match-p (rx string-start (or "Press ENTER" "-- More --")) end) end)
-       ((string-suffix-p ":" end) (emacsvox-eat--vim-swap-prompt rows row))))))
+       ((string-prefix-p "Press ENTER" end) end)
+       ((string-prefix-p "-- More --" end)
+        (or (emacsvox-eat--vim-recovery-prompt rows row width t) end))
+       ((string-match-p (rx (or string-start ":") (* blank) (* digit) string-end) end)
+        (or (and (string-suffix-p ":" end) (emacsvox-eat--vim-swap-prompt rows row))
+            (emacsvox-eat--vim-recovery-prompt rows row width)))))))
 
 (defun emacsvox-eat--vim-status (screen)
   "Return visible mode, prompt, command result and ruler facts on SCREEN."
@@ -302,7 +362,7 @@ After the profile menu resizes EAT, the prompt can sit above the last row."
             (if-let* ((result (or (and previous (string-match-p "\\`[EW][0-9]+:" previous) previous)
                                   (emacsvox-eat--vim-buffer-list rows row)
                                   (emacsvox-eat--vim-table-result rows row))))
-                (concat result ". " text) text))
+                (concat result ". " text) (or blocking text)))
            ((string-match-p "\\`\\(?:[EW][0-9]+:\\|search hit \\|Pattern not found\\)" text) text)
            (blocking)
            ((and (string-prefix-p "\"" text)
@@ -1031,7 +1091,13 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                                     (and (equal mode "Insert") (eq (car keys) ?c))))
                         (emacsvox-eat--vim-echo keys before after old new replace)))))
     (cond
-     ((plist-get to :blocking) nil)
+     ((plist-get to :blocking)
+      (when (equal (plist-get from :blocking) (plist-get to :blocking))
+        (cond
+         ((and echo (string-match-p (rx string-start (+ digit) string-end) (car echo)))
+          (list 'echo (car echo) (cdr echo)))
+         ((memq (car (last keys)) '(backspace delete))
+          (emacsvox-eat--vim-edit keys old new before after typing to)))))
      ((and (plist-get from :blocking) keys (plist-get to :ruler) (not (or mode prompt)))
       (list 'row (emacsvox-eat--vim-row-text (plist-get after :line))))
      ((and (not (or typing selection (plist-get from :prompt))) (not (plist-get from :completion))

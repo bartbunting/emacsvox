@@ -4746,6 +4746,61 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not (send "\e[2J\e[5;1HPress ENTER or type command to continue"))
       (should (equal emacsvox-eat--last-status-text result)))))
 
+(ert-deftest emacsvox-eat-vim-reads-swap-recovery-choices ()
+  "Read the numbered files after Recover and keep the question available for review."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 40 20)
+    (send "\e[2J\e[H[O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (A)bort: ")
+    (let* ((files (concat "Swap files found:\r\n   Using specified name:\r\n"
+                          "1.    .meeting notes for November 20.swo\r\n"
+                          "          owned by: test   dated: Fri Nov 20 11:32:01 2026\r\n"
+                          "         file name: /tmp/meeting notes\r\n          modified: YES\r\n"
+                          "        process ID: 123\r\n2.    /tmp/.meeting notes for November 20.swp\r\n"
+                          "          owned by: test\r\n             dated: Fri Nov 20 11:40:01 2026\r\n"
+                          "          modified: no\r\n         host name: testbox\r\n"
+                          "        process ID: 124 (STILL RUNNING)\r\n"))
+           (redraw (concat "\e[2J\e[H" files "\r\nEnter number of swap file to use (0 to quit): "))
+           (reply (send redraw ?r)))
+      (should (length= reply 1))
+      (let ((question (car reply)))
+        (should (string-search "0 to quit" question))
+        (should (string-search "1, .meeting notes for November 20.swo, dated Fri Nov 20 11:32:01 2026, modified"
+                               question))
+        (should (string-search "2, /tmp/.meeting notes for November 20.swp, dated Fri Nov 20 11:40:01 2026, unmodified"
+                               question))
+        (should (string-search "still running" question))
+        (should-not (send redraw))
+        (emacsvox-eat--set-application-profile 'terminal)
+        (should (equal (emacsvox-eat--set-application-profile 'vim) question))
+        (let ((emacsvox-character-echo t))
+          (should (equal (send "2" ?2) '(?2))))
+        (let (cues)
+          (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                     (lambda (cue) (push cue cues))))
+            (should (equal (send "\b \b" 'backspace) '(?2)))
+            (should (equal cues '(deletion)))))
+        (setq speech nil)
+        (emacsvox-eat-speak-retained-status)
+        (should (equal speech (list (concat "Retained terminal status: " question))))))))
+
+(ert-deftest emacsvox-eat-vim-reads-paged-swap-choices ()
+  "Read the available choices on each page, including a clipped last page."
+  (emacsvox-eat-test--with-vim
+    (eat-term-resize eat-terminal 80 5)
+    (let ((page (car (send (concat "\e[2J\e[HSwap files found:\r\n1.    .draft.swo\r\n"
+                                   "          modified: YES\r\n2.    .draft.swp\r\n-- More --") ?r))))
+      (should (string-search "1, .draft.swo" page))
+      (should (string-search "2, .draft.swp" page))
+      (should (string-search "Space" page)))
+    (let ((question (car (send (concat "\e[2J\e[H        process ID: 123\r\n2.    .draft.swp\r\n"
+                                       "          modified: no\r\n\r\n"
+                                       "Enter number of swap file to use (0 to quit): ") ?\s))))
+      (should (string-search "2, .draft.swp, unmodified" question))
+      (should (string-search "0 to quit" question)))
+    ;; An unrelated numbered list still has its ordinary pager prompt.
+    (should (equal (send "\e[2J\e[H1.    first\r\n2.    second\e[5;1H-- More --")
+                   '("-- More --")))))
+
 (ert-deftest emacsvox-eat-vim-modes-search-and-command-results ()
   "Speak visible transitions, the match and a two-stage error with its prompt."
   (emacsvox-eat-test--with-vim
