@@ -4933,6 +4933,24 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[4;1H\e[K\e[2;1Hpha one\e[K\e[2;1H" ?d)
                    '("Normal mode" "al")))))
 
+(ert-deftest emacsvox-eat-vim-word-motion-observes-iskeyword ()
+  "Follow a local option change and an explicitly displayed filetype setting."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hhead two-part,one tail\e[K\e[H")
+    (should (equal (send "\e[1;6H" ?w) '("two")))
+    (send "\e[4;1H:setlocal isk+=-\e[K")
+    (send "\e[4;1H1,1 All\e[K\e[H" 'return)
+    (should (equal (send "\e[1;6H" ?w) '("two-part")))
+    (send "\e[4;1H:setlocal iskeyword?\e[K")
+    (send "\e[4;1H  iskeyword=@,48-57,_,-,,,\e[K\e[1;6H" 'return)
+    (should (equal (send "\e[1;17H" ?e) '("two-part,one")))
+    (send "\e[4;1H:setlocal iskeyword-= -\e[K")
+    (send "\e[4;1HE474: Invalid argument\e[K\e[1;17H" 'return)
+    (should (equal (send "\e[1;6H" ?b) '("two-part,one")))
+    (send "\e[4;1H:bnext\e[K")
+    (send "\e[4;1H1,1 All\e[K\e[H" 'return)
+    (should (equal (send "\e[1;6H" ?w) '("two")))))
+
 (ert-deftest emacsvox-eat-vim-keyword-candidates-and-buffer-list ()
   "Read selected completions and visible buffer entries before the prompt."
   (emacsvox-eat-test--with-vim

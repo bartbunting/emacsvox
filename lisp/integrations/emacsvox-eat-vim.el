@@ -54,6 +54,8 @@
   "File or screen coordinates at the observed start of a Visual selection.")
 (defvar-local emacsvox-eat--vim-tabs nil
   "Last identified tab and its visible neighbours on a plain Vim tab line.")
+(defvar-local emacsvox-eat--vim-keywords nil
+  "Observed iskeyword entries and their byte-character table for Vim's current buffer.")
 (defvar-local emacsvox-eat--vim-last-boundary nil
   "Last confirmed file boundary and the screen where Vim reached it.")
 (defconst emacsvox-eat--vim-input-limit 128)
@@ -104,7 +106,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
   (emacsvox-eat--vim-forget-input)
   (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil
         emacsvox-eat--vim-shell-command-until nil
-        emacsvox-eat--vim-tabs nil emacsvox-eat--vim-last-boundary nil))
+        emacsvox-eat--vim-tabs nil emacsvox-eat--vim-keywords nil emacsvox-eat--vim-last-boundary nil))
 
 (defun emacsvox-eat--vim-word-arrows-p (keys)
   "Whether KEYS contains only Control word arrows."
@@ -682,16 +684,94 @@ CHANGING permits a change operator to remove text before the insertion."
         (when (equal (string-to-list inserted) (seq-take keys size))
           (cons inserted (nthcdr size keys)))))))
 
+(defun emacsvox-eat--vim-keyword-entries (value)
+  "Split Vim's iskeyword VALUE, preserving literal commas and numeric ranges."
+  (let ((start 0) entries)
+    (while (and (< start (length value))
+                (string-match (rx (group (optional "^") (or (+ digit) nonl)
+                                         (optional "-" (or (+ digit) nonl)))
+                                  (or "," string-end)) value start)
+                (= (match-beginning 0) start))
+      (push (match-string 1 value) entries)
+      (setq start (match-end 0)))
+    (when (= start (length value)) (nreverse entries))))
+
+(defun emacsvox-eat--vim-keyword-table (entries)
+  "Build the keyword table for byte values from Vim's ordered ENTRIES."
+  (let ((table (make-bool-vector 256 nil)))
+    (dolist (entry entries)
+      (let* ((include (not (and (> (length entry) 1) (eq (aref entry 0) ?^))))
+             (item (if include entry (substring entry 1))))
+        (cond
+         ((equal item "@")
+          (dotimes (char 256)
+            (when (string-match-p "[[:alpha:]]" (string char)) (aset table char include))))
+         ((string-match (rx string-start (group (or (+ digit) nonl))
+                            (optional "-" (group (or (+ digit) nonl))) string-end) item)
+          (let* ((low (match-string 1 item)) (high (or (match-string 2 item) low))
+                 (first (if (<= ?0 (aref low 0) ?9) (string-to-number low) (aref low 0)))
+                 (last (if (<= ?0 (aref high 0) ?9) (string-to-number high) (aref high 0))))
+            (cl-loop for char from first to (min 255 last) do (aset table char include)))))))
+    table))
+
+(defun emacsvox-eat--vim-observe-keywords (command from to keys)
+  "Follow an iskeyword change or query visible between FROM and TO.
+COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
+  (let* ((text (plist-get to :text))
+         (ex (and (not (or (plist-get from :mode) (plist-get to :mode)))
+                  (or command (and (not (plist-get to :prompt))
+                              (not (equal text (plist-get from :text))) (string-prefix-p ":" text)
+                              (substring text 1)))))
+         (case-fold-search nil))
+    (cond
+     ((or (and (not (or (plist-get to :mode) (plist-get to :prompt)))
+               (or (eq (car (last keys 2)) 23) (equal keys '(30)) (member keys '((?g ?t) (?g ?T)))))
+          (and ex (string-match-p (rx string-start (or "e" "edit" "enew" "b" "buffer" "bn" "bnext" "bp"
+                                                       "bprev" "bprevious" "bf" "bfirst" "blast" "h" "help"
+                                                       "split" "vsplit" "new" "vnew" (seq "tab" (* alpha))
+                                                       "next" "previous" "cnext" "cprevious" "filetype")
+                                      (or (not alpha) string-end)) ex)))
+      (setq emacsvox-eat--vim-keywords nil))
+     ((and ex (not (plist-get to :prompt)) (not (plist-get to :message))
+           (string-match (rx string-start (or "set" "setlocal" "setl") (+ blank) (or "iskeyword" "isk")
+                             (group (or "+=" "-=" "^=" "=" "?" "&")) (group (* (not (any " |"))))
+                             (* blank) (or "|" string-end)) ex))
+      (let* ((op (match-string 1 ex)) (arg (match-string 2 ex))
+             (base (if emacsvox-eat--vim-keywords (car emacsvox-eat--vim-keywords) '("@" "48-57" "_" "192-255")))
+             (value (if (equal op "?")
+                        (and (string-match (rx string-start (* blank) "iskeyword=" (group (* nonl)) string-end) text)
+                             (match-string 1 text))
+                      arg))
+             (items (and value (emacsvox-eat--vim-keyword-entries value))))
+        (cond ((equal op "&") (setq emacsvox-eat--vim-keywords nil))
+              ((and value (or items (string-empty-p value)))
+               (let ((entries (pcase op
+                                ("+=" (append base (seq-remove (lambda (item) (member item base)) items)))
+                                ("^=" (append (seq-remove (lambda (item) (member item base)) items) base))
+                                ("-=" (seq-remove (lambda (item) (member item items)) base))
+                                (_ items))))
+                 (setq emacsvox-eat--vim-keywords (cons entries (emacsvox-eat--vim-keyword-table entries)))))))))))
+
+(defun emacsvox-eat--vim-word-class (char big)
+  "Classify CHAR for a Vim word or BIG nonblank word."
+  (cond ((memq char '(?\s ?\t)) nil)
+        (big 'word)
+        ((if (and emacsvox-eat--vim-keywords (< char 256))
+             (aref (cdr emacsvox-eat--vim-keywords) char)
+           (string-match-p "[[:alnum:]_]" (string char))) 'word)
+        (t 'punctuation)))
+
 (defun emacsvox-eat--vim-word (line index big)
   "Read the displayed word at INDEX in LINE.  BIG groups nonblank characters."
-  (let ((pattern (if big "[^[:space:]]+" "[[:alnum:]_]+\\|[^[:alnum:]_[:space:]]+"))
-        (start 0) word)
-    (while (and (not word) (<= start index) (string-match pattern line start))
-      (setq start (match-end 0))
-      (when (<= (match-beginning 0) index (1- start))
-        (setq word (match-string 0 line))))
-    (if word (emacsvox-eat--vim-row-text word)
-      (if (< index (length line)) (emacsvox-eat--deleted-character-name (aref line index)) "blank"))))
+  (if (>= index (length line)) "blank"
+    (let* ((char (aref line index)) (class (emacsvox-eat--vim-word-class char big))
+           (start index) (end (1+ index)))
+      (if (null class) (emacsvox-eat--deleted-character-name char)
+        (while (and (> start 0) (eq class (emacsvox-eat--vim-word-class (aref line (1- start)) big)))
+          (cl-decf start))
+        (while (and (< end (length line)) (eq class (emacsvox-eat--vim-word-class (aref line end) big)))
+          (cl-incf end))
+        (emacsvox-eat--vim-row-text (substring line start end))))))
 
 (defun emacsvox-eat--vim-row-motion-p (old new from to window direction)
   "Check a move from FROM to TO in WINDOW between OLD and NEW.
@@ -1450,6 +1530,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
                           (feedback (nth 2 feedback))
                           ((or submitted (and announcement message)) (cdr (memq 'return keys)))
                           (announcement (emacsvox-eat--vim-after-entry keys mode prompt)))))
+    (emacsvox-eat--vim-observe-keywords command from to keys)
     (cond ((or mode prompt (plist-get to :confirmation) (eq (car feedback) 'echo))
            (setq emacsvox-eat--vim-normal-evidence nil))
           ((or feedback submitted (plist-get to :recording) (equal announcement "Normal mode")
