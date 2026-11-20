@@ -16,6 +16,7 @@
                   "integrations/emacsvox-eat-focus.el"
                   "integrations/emacsvox-eat-presentation.el"
                   "integrations/emacsvox-eat-core.el"
+                  "integrations/emacsvox-eat-vim.el"
                   "integrations/emacsvox-eat-input.el"
                   "integrations/emacsvox-eat-review.el"
                   "integrations/emacsvox-eat.el"))
@@ -5040,6 +5041,64 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (setq calls nil)
         (send "\e[2;1H" 'backspace)
         (should-not calls)))))
+
+(ert-deftest emacsvox-eat-vim-navigation-indentation ()
+  "Give the configured indentation cue on the destination line."
+  (emacsvox-eat-test--with-vim
+    (let ((emacsvox-audio-indentation t)
+          (emacsvox-indentation-presentation 'spoken-pitch-tone))
+      (send "\e[2;1H    beta two\e[K\e[H")
+      (let* ((line (car (send "\e[4;1H2,5 All\e[2;5H" ?j)))
+             (facts (get-text-property (string-match "beta" line) 'emacsvox-aural-facts line)))
+        (should (= 4 (plist-get facts :indentation-columns)))
+        (should (eq 'spoken-pitch-tone (plist-get facts :indentation-presentation))))
+      (should (equal (send "\e[2;6H" ?l) '(?e)))
+      (send "\e[3;1H  3   gamma\e[K\e[2;6H")
+      (key ?3)
+      (let* ((line (car (send "\e[4;1H3,3 All\e[3;7H" ?G)))
+             (facts (get-text-property (string-match "gamma" line) 'emacsvox-aural-facts line)))
+        (should (= 2 (plist-get facts :indentation-columns)))
+        (should-not (get-text-property 0 'emacsvox-aural-facts line)))
+      (setq emacsvox-audio-indentation nil)
+      (let ((line (car (send "\e[4;1H2,5 All\e[2;5H" ?k))))
+        (should (string-match "beta" line))
+        (should-not (text-property-not-all 0 (length line) 'emacsvox-aural-facts nil line))))))
+
+(ert-deftest emacsvox-eat-vim-navigation-capitalization ()
+  "Present capitals and all-caps words using the EAT buffer's reading settings."
+  (let ((submit (symbol-function 'emacsvox-aural-submit)))
+    (emacsvox-eat-test--with-vim
+      (emacsvox-eat-mode-setup)
+      (setq-local tts-caps t
+                  emacsvox-capitalization-presentation 'spoken
+                  emacsvox-audio-indentation t
+                  emacsvox-indentation-presentation 'spoken)
+      (send "\e[2;1H    Ready HTTP end\e[K\e[H")
+      ;; Capture the prepared utterance, after the shared reader applies its cues.
+      (cl-letf (((symbol-function 'emacsvox-aural-submit) submit)
+                ((symbol-function 'tts-speak) (lambda (text) (push text speech))))
+        (let* ((line (car (send "\e[4;1H2,5 All\e[2;5H" ?j)))
+               (labels (cl-loop for plan in (emacsvox-aural--submission-plans-in line)
+                                append (mapcar #'emacsvox-aural-concrete-action-text
+                                               (emacsvox-aural-concrete-plan-before plan)))))
+          (should (equal line "    Ready HTTP end"))
+          (should (equal (delq nil labels) '("indent 4" "cap" "all caps"))))
+        (setq-local emacsvox-capitalization-presentation 'tone)
+        (dolist (motion `((?w "\e[4;1H2,11 All\e[2;11H" "HTTP" ,emacsvox-capitalization-all-caps-tone)
+                          (?b "\e[4;1H2,5 All\e[2;5H" "Ready" ,emacsvox-capitalization-capital-tone)))
+          (pcase-let* ((`(,key ,redraw ,expected ,tone) motion)
+                       (word (car (send redraw key)))
+                       (actions (get-text-property 0 emacsvox-aural-concrete-positioned-actions-property word)))
+            (should (equal word expected))
+            (should (length= actions 1))
+            (should (= (emacsvox-aural-concrete-action-pitch
+                        (emacsvox-aural-concrete-positioned-action-action (car actions)))
+                       (plist-get tone :pitch)))))
+        (setq-local tts-caps nil)
+        (let ((word (car (send "\e[4;1H2,11 All\e[2;11H" ?w))))
+          (should (equal word "HTTP"))
+          (should-not (text-property-not-all
+                       0 (length word) emacsvox-aural-concrete-positioned-actions-property nil word)))))))
 
 (ert-deftest emacsvox-eat-vim-plain-and-blank-rows ()
   "Read a literal file row named blank and use the configured cue on an empty row."
