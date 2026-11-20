@@ -559,8 +559,10 @@ STATUS supplies an already parsed ruler when available."
 (defun emacsvox-eat--vim-say (content kind &optional icon)
   "Present CONTENT for KIND using the usual edit tone or optional auditory ICON."
   (pcase kind
-    ('navigation
-     (emacsvox-eat--submit content (emacsvox-eat--facts 'command-output 'focus-entered 'output-navigation)
+    ((or 'navigation 'starts-offscreen 'continues-offscreen)
+     (emacsvox-eat--submit content (emacsvox-eat--facts 'command-output 'focus-entered 'output-navigation
+                                                      (unless (eq kind 'navigation)
+                                                        (list :word-clipping kind)))
                            'navigation icon 'replaceable (emacsvox-eat--terminal-delivery-key 'focus)))
     ('character (emacsvox-speak-this-char content))
     ('completion
@@ -818,13 +820,13 @@ visible text cannot be the whole word."
          ((and back (equal (substring line i) word)
                (>= (- (cdr origin) (char-width (aref old adjacent)))
                    (+ (cdr target) (string-width word))))
-          (concat word ", continues off screen"))
+          (cons 'continues-offscreen word))
          ((and (not back) (equal (substring line 0 (1+ i)) word)
                (< (+ (cdr origin) (char-width (aref old j)))
                   (- (cdr target) (string-width (substring line 0 i)))))
-          (concat "Starts off screen, " word))
-         (t word))
-      word)))
+          (cons 'starts-offscreen word))
+         (t (cons 'navigation word)))
+      (cons 'navigation word))))
 
 (defun emacsvox-eat--vim-row-motion-p (old new from to window direction)
   "Check a move from FROM to TO in WINDOW between OLD and NEW.
@@ -969,7 +971,7 @@ their respective command rows."
        ((or (memq key '(?h ?l left right ?0 ?^ ?$ home end)) (equal (last tail 2) '(?g ?_)))
         (if (< index (length line)) (cons 'character (aref line index)) (cons 'navigation "blank")))
        ((memq key '(?b ?w ?e ?B ?W ?E))
-        (cons 'navigation (emacsvox-eat--vim-motion-word keys before after from to))))))))
+        (emacsvox-eat--vim-motion-word keys before after from to)))))))
 
 (defun emacsvox-eat--vim-command-tail (keys)
   "Skip completed positioning keys before the final command in KEYS.
@@ -1755,7 +1757,7 @@ DIFF is retained for explicit review.  AUTOMATIC permits unsolicited messages."
       ('fold-closed (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'close-object))
       ('mark (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'mark-object))
       ('jump (emacsvox-eat--vim-say (nth 1 feedback) 'navigation 'large-movement))
-      ((or 'navigation 'character 'edit 'deletion 'paste 'line-created 'uppercase 'lowercase 'completion)
+      ((or 'navigation 'starts-offscreen 'continues-offscreen 'character 'edit 'deletion 'paste 'line-created 'uppercase 'lowercase 'completion)
        (emacsvox-eat--vim-say (nth 1 feedback) (car feedback))))
     (cond
      (opening-help)

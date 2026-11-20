@@ -606,6 +606,11 @@ Registry validation rejects missing targets and alias cycles."
      'wrapped-row :kind 'attribute :value-type 'symbol
      :allowed-values '(first middle last)
      :summary "Visible row position within a wrapped source line"))
+  (unless (emacsvox-aural-semantic 'word-clipping)
+    (emacsvox-aural-register-semantic
+     'word-clipping :kind 'attribute :value-type 'symbol
+     :allowed-values '(starts-offscreen continues-offscreen)
+     :summary "Which end of the spoken word lies outside the visible row"))
   (unless (emacsvox-aural-semantic 'line-condition)
     (emacsvox-aural-register-semantic
      'line-condition

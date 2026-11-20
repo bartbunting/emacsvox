@@ -2249,6 +2249,12 @@ An existing file is copied to FILE~ before replacement."
          (:before
           ((:id core-edit-capitalize-tone-action
             :kind tone :tone edit-uppercase))))
+        (:id vim-word-starts-offscreen
+         :match (:word-clipping starts-offscreen)
+         :render (:before ((:id vim-word-start-cue :kind speech :text "Starts off screen"))))
+        (:id vim-word-continues-offscreen
+         :match (:word-clipping continues-offscreen)
+         :render (:after ((:id vim-word-end-cue :kind speech :text "Continues off screen"))))
         (:id core-empty-line-tone
          :match (:line-condition empty)
          :render
