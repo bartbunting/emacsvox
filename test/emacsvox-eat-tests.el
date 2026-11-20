@@ -5299,6 +5299,16 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[Hmotion help\e[K\e[2;1Hintro.txt [Help][RO]   20,1 All\e[K\e[H")
                    '("Help intro.txt, line 20, column 1, motion help")))))
 
+(ert-deftest emacsvox-eat-vim-motion-follows-the-file-ruler-when-scrolling ()
+  "Read a horizontally panned line and identical rows scrolling past the cursor."
+  (emacsvox-eat-test--with-vim
+    (should (equal (send "\e[Hlong tail\e[K\e[4;1H1,204 Top\e[K\e[1;9H" ?$) '(?l)))
+    (should (equal (send "\e[Halpha one\e[K\e[4;1H1,1 Top\e[K\e[H" ?0) '(?a)))
+    (send "\e[Hsame\e[K\e[2;1Hsame\e[K\e[3;1Hsame\e[K\e[4;1H38,1 50%\e[K\e[H")
+    (should (equal (send "\e[4;1H37,1 50%\e[H" ?k) '("same")))
+    (should (equal (send "\e[4;1H36,1 50%\e[H" 'up) '("same")))
+    (should-not (send "\e[H" 'up))))
+
 (ert-deftest emacsvox-eat-vim-pages-marks-and-find-repeat ()
   "Read the destination when a scroll reuses the same cursor cell."
   (emacsvox-eat-test--with-vim

@@ -832,7 +832,7 @@ their respective command rows."
                          (not (equal (plist-get from :ruler) (plist-get to :ruler))))))
          (direction (cond ((memq key '(?j down)) 'down) ((memq key '(?k up)) 'up)))
          (find-key (and (cdr keys) (car (last keys 2))))
-         (ruler (plist-get to :ruler))
+         (ruler (plist-get to :ruler)) (old-ruler (plist-get from :ruler))
          (tail (emacsvox-eat--vim-command-tail keys))
          (boundary (emacsvox-eat--vim-file-boundary tail))
          (mark (and (length= tail 2) (characterp key)
@@ -890,8 +890,11 @@ their respective command rows."
                         (format ", column %d, %s" (or (cdr ruler) (1+ (plist-get after :column)))
                                 (emacsvox-eat--deleted-character-name (aref line index)))
                       (concat ", " (emacsvox-eat--vim-navigation-line after))))))))
-     ((and direction (emacsvox-eat--vim-row-motion-p
-                      old new origin row (plist-get after :text-window) direction))
+     ((and direction
+           (or (and ruler old-ruler (= origin row)
+                    (if (eq direction 'down) (> (car ruler) (car old-ruler))
+                      (< (car ruler) (car old-ruler))))
+               (emacsvox-eat--vim-row-motion-p old new origin row (plist-get after :text-window) direction)))
       (cons 'row (emacsvox-eat--vim-navigation-line after)))
      ((and moved (emacsvox-eat--vim-search-p keys from)
            (not (emacsvox-eat--vim-search-ready-p line from to))
@@ -903,7 +906,11 @@ their respective command rows."
                     (emacsvox-eat--vim-search-ready-p line from to))))
       (cons 'row (emacsvox-eat--vim-navigation-line after)))
      ((and moved
-           (equal line (emacsvox-eat--vim-line old row (plist-get after :text-window))))
+           (or (equal line (emacsvox-eat--vim-line old row (plist-get after :text-window)))
+               ;; The same file line can pan horizontally in a nowrap window.
+               (and ruler old-ruler (= (car ruler) (car old-ruler)) (= origin row)
+                    (/= (- (cdr ruler) (plist-get after :column))
+                        (- (cdr old-ruler) (plist-get before :column))))))
       (cond
        ((memq key '(?h ?l left right ?0 ?^ ?$ home end))
         (if (< index (length line)) (cons 'character (aref line index)) (cons 'navigation "blank")))
