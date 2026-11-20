@@ -986,15 +986,26 @@ STATUS describes the command row on NEW."
   (if-let* ((ruler (plist-get status :ruler))) (list 'file (car ruler) (cdr ruler))
     (list 'screen (plist-get point :row) (plist-get point :column))))
 
-(defun emacsvox-eat--vim-selection (mode position)
-  "Describe the extent from the observed selection anchor to POSITION in MODE."
+(defun emacsvox-eat--vim-selection (mode position visible)
+  "Describe the selection from its anchor to POSITION in MODE using VISIBLE rows."
   (when (and emacsvox-eat--vim-anchor (eq (car position) (car emacsvox-eat--vim-anchor)))
     (let ((rows (1+ (abs (- (nth 1 position) (nth 1 emacsvox-eat--vim-anchor)))))
           (cols (1+ (abs (- (nth 2 position) (nth 2 emacsvox-eat--vim-anchor))))))
       (cond ((string-suffix-p "block" mode) (format "Selection, %d by %d" rows cols))
             ((or (> rows 1) (string-suffix-p "line" mode))
              (format "%d %s selected" rows (if (= rows 1) "line" "lines")))
-            (t (format "%d %s selected" cols (if (= cols 1) "column" "columns")))))))
+            (t (when (and (length= visible 1) (not (string-empty-p (car visible))))
+                 (setq cols (string-width (car visible))))
+               (format "%d %s selected" cols (if (= cols 1) "column" "columns")))))))
+
+(defun emacsvox-eat--vim-selection-row-text (line)
+  "Speak LINE with an explicit description of selected trailing spaces."
+  (if (string-empty-p line) "blank line"
+    (let* ((body (string-trim-right line " +"))
+           (spaces (- (length line) (length body))))
+      (if (zerop spaces) line
+        (concat (unless (string-empty-p body) (concat body ", "))
+                (if (= spaces 1) "space" (format "%d spaces" spaces)))))))
 
 (defun emacsvox-eat--vim-selected-rows (screen &optional status)
   "Read contiguous visible selection spans in the cursor's pane on SCREEN.
@@ -1002,7 +1013,7 @@ STATUS, when supplied, is the already parsed Vim footer."
   (let* ((state (or status (emacsvox-eat--vim-status screen)))
          (mode (plist-get state :mode)))
     (when (and mode (string-match-p (rx string-start (or "Visual" "Select")) mode))
-      (let* ((point (emacsvox-eat--vim-point screen)) (row (plist-get point :row))
+      (let* ((point (emacsvox-eat--vim-point screen state)) (row (plist-get point :row))
              (col (plist-get screen :cursor-column)) (pane (plist-get point :text-window))
              (left (or (car pane) 0)) (right (or (cdr pane) (car (plist-get screen :size))))
              (line (plist-get point :line)) (index (plist-get point :index))
@@ -1038,19 +1049,20 @@ STATUS, when supplied, is the already parsed Vim footer."
           (while (gethash (1- first) spans) (cl-decf first))
           (while (gethash (1+ last) spans) (cl-incf last)))
         (let ((span (gethash row spans))
-              (count (when (string-match (rx "--" (+ blank) (group (+ digit)) (* blank) string-end)
+              (count (when (string-match (rx "--" (+ blank) (group (+ digit)) (optional "-" (+ digit)) (* blank) string-end)
                                          (plist-get state :text))
                        (string-to-number (match-string 1 (plist-get state :text))))))
-          (when (or span (< first row) (and count (= count 1)) (string-suffix-p "line" mode))
+          (when (or span (< first row) (eql count 1) (string-suffix-p "line" mode)
+                    (equal emacsvox-eat--vim-anchor (emacsvox-eat--vim-selection-position state point)))
             (cond
              ((string-suffix-p "line" mode) (puthash row (cons left right) spans))
              ((or (not span) (/= first last) (not count) (> count (- (cdr span) (car span))))
               (puthash row (cons (min col (or (car span) col))
                                  (max (+ col cell) (or (cdr span) col))) spans)))
             (cl-loop for n from first to last for bounds = (gethash n spans)
-                     do (push (string-trim-right
-                               (truncate-string-to-width (nth n (plist-get screen :rows))
-                                                         (cdr bounds) (car bounds))) result))
+                     for selected = (truncate-string-to-width (nth n (plist-get screen :rows))
+                                                              (cdr bounds) (car bounds))
+                     do (push (if (string-suffix-p "line" mode) (string-trim-right selected) selected) result))
             (nreverse result)))))))
 
 (defun emacsvox-eat--vim-after-entry (keys mode prompt)
@@ -1226,15 +1238,15 @@ BEFORE and AFTER are cursor views.  FROM and TO describe their command rows."
                                                      (plist-get change :old-end)))
             (list 'deletion (concat "Selection deleted. " (emacsvox-eat--vim-row-text line)))))))
      ((and selection (not new-mode) (not (equal before after)))
-      (when-let* ((extent (emacsvox-eat--vim-selection
-                           mode (emacsvox-eat--vim-selection-position to after))))
-        (let ((rows (emacsvox-eat--vim-selected-rows new to))
-              (position (emacsvox-eat--vim-selection-position to after)))
+      (let* ((rows (emacsvox-eat--vim-selected-rows new to))
+             (position (emacsvox-eat--vim-selection-position to after))
+             (extent (emacsvox-eat--vim-selection mode position rows)))
+        (when extent
           (list 'navigation
                 (if (and rows (<= (length rows) 2)
                          (< (abs (- (nth 1 position) (nth 1 emacsvox-eat--vim-anchor))) 2)
                          (<= (apply #'+ (mapcar #'length rows)) 48))
-                    (concat extent ", " (string-join (mapcar #'emacsvox-eat--vim-row-text rows) ". "))
+                    (concat extent ", " (string-join (mapcar #'emacsvox-eat--vim-selection-row-text rows) ". "))
                   extent)))))
      ((and (not selection) (not new-mode))
       (if-let* ((edit (emacsvox-eat--vim-edit keys old new before after typing to)))

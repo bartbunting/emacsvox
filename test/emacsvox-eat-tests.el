@@ -5360,6 +5360,27 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
               (should (equal speech '("Visible selection, alph")))))
         (kill-buffer review)))))
 
+(ert-deftest emacsvox-eat-vim-review-selected-whitespace-and-exclusive-end ()
+  "Speak the selected text and extent, including a space or an empty file line."
+  (emacsvox-eat-test--with-vim
+    (send "\e[4;1H-- VISUAL --      1      1,6 All\e[K\e[1;6H" ?v)
+    (setq speech nil)
+    (emacsvox-eat-speak-vim-selection)
+    (should (equal speech '("Visible selection, space")))
+    (send "\e[4;1H1,1 All\e[K\e[H" 'escape)
+    (send "\e[4;1H-- VISUAL --      1      1,1 All\e[K\e[H" ?v)
+    (should (equal (send "\e[H\e[7ma\e[0m\e[4;26H1,2 All\e[1;2H" ?l)
+                   '("1 column selected, a")))
+    (send "\e[Halpha\e[3;1H\e[K\e[4;1H3,1 All\e[K\e[3;1H" 'escape)
+    (send "\e[4;1H-- VISUAL LINE --   1    3,1 All\e[K\e[3;1H" ?V)
+    (let ((review (save-window-excursion (emacsvox-eat-review-screen))))
+      (unwind-protect
+          (with-current-buffer review
+            (setq speech nil)
+            (emacsvox-eat-speak-vim-selection)
+            (should (equal speech '("Visible selection, blank line"))))
+        (kill-buffer review)))))
+
 (ert-deftest emacsvox-eat-vim-normal-operators ()
   "Read the rendered replacement, deletion, indentation, join and yank request."
   (emacsvox-eat-test--with-vim

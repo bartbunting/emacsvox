@@ -58,6 +58,7 @@
   "Visible Vim selection rows copied when opening this review.")
 
 (autoload 'emacsvox-eat--vim-selected-rows "emacsvox-eat-vim")
+(autoload 'emacsvox-eat--vim-selection-row-text "emacsvox-eat-vim")
 (autoload 'emacsvox-eat--vim-blank-row "emacsvox-eat-vim")
 
 (defvar-local emacsvox-eat-review--metadata nil
@@ -161,7 +162,8 @@ This explicit command works regardless of autospeak or prompt preference."
                  (emacsvox-eat--ensure-review-context)
                  (when (and (eq emacsvox-eat-application-profile 'vim) emacsvox-eat--screen-snapshot)
                    (emacsvox-eat--vim-selected-rows emacsvox-eat--screen-snapshot))))
-         (text (and rows (emacsvox-eat--bounded-review-output rows))))
+         (text (and rows (emacsvox-eat--bounded-review-output
+                          (mapcar #'emacsvox-eat--vim-selection-row-text rows)))))
     (emacsvox-eat--submit-review
      (if text (concat "Visible selection, " text) "No visible Vim selection") 'output-navigation)))
 
