@@ -55,7 +55,9 @@
 (defvar-local emacsvox-eat--vim-tabs nil
   "Last identified tab and its visible neighbours on a plain Vim tab line.")
 (defvar-local emacsvox-eat--vim-keywords nil
-  "Observed iskeyword entries and their byte-character table for Vim's current buffer.")
+  "Observed iskeyword entries and their character table for this Vim buffer.")
+(defvar-local emacsvox-eat--vim-keyword-query-until nil
+  "Deadline for the displayed value of a submitted local iskeyword query.")
 (defvar-local emacsvox-eat--vim-last-boundary nil
   "Last confirmed file boundary and the screen where Vim reached it.")
 (defconst emacsvox-eat--vim-input-limit 128)
@@ -105,7 +107,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
   "Forget all keyboard and selection evidence for this terminal."
   (emacsvox-eat--vim-forget-input)
   (setq emacsvox-eat--vim-anchor nil emacsvox-eat--vim-normal-evidence nil
-        emacsvox-eat--vim-shell-command-until nil
+        emacsvox-eat--vim-shell-command-until nil emacsvox-eat--vim-keyword-query-until nil
         emacsvox-eat--vim-tabs nil emacsvox-eat--vim-keywords nil emacsvox-eat--vim-last-boundary nil))
 
 (defun emacsvox-eat--vim-word-arrows-p (keys)
@@ -114,7 +116,7 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 
 (defun emacsvox-eat--vim-record-key (event count screen)
   "Remember COUNT copies of EVENT delivered at SCREEN."
-  (setq emacsvox-eat--vim-shell-command-until nil)
+  (setq emacsvox-eat--vim-shell-command-until nil emacsvox-eat--vim-keyword-query-until nil)
   (unless (memq event '(?g ?G)) (setq emacsvox-eat--vim-last-boundary nil))
   (when (or emacsvox-eat--vim-awaiting-match emacsvox-eat--vim-quitting
             (eq emacsvox-eat--vim-quiet-timer 'announced)
@@ -152,9 +154,13 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
       (when (memq key '(return ?Z ?Q))
         (let ((from (emacsvox-eat--vim-status emacsvox-eat--vim-origin)))
           (setq emacsvox-eat--vim-quitting (emacsvox-eat--vim-quit-command-p from emacsvox-eat--vim-keys))
-          (when (and (eq key 'return) (not (plist-get from :mode))
-                     (string-prefix-p "!" (or (emacsvox-eat--vim-submitted-command from emacsvox-eat--vim-keys) "")))
-            (setq emacsvox-eat--vim-shell-command-until emacsvox-eat--vim-deadline))))))))
+          (when-let* (((eq key 'return)) ((not (plist-get from :mode)))
+                      (command (emacsvox-eat--vim-submitted-command from emacsvox-eat--vim-keys)))
+            (cond ((string-prefix-p "!" command)
+                   (setq emacsvox-eat--vim-shell-command-until emacsvox-eat--vim-deadline))
+                  ((string-match-p (rx string-start (or "set" "setl" "setlocal") (+ blank)
+                                       (or "iskeyword" "isk") (optional "?") string-end) command)
+                   (setq emacsvox-eat--vim-keyword-query-until emacsvox-eat--vim-deadline))))))))))
 
 (defconst emacsvox-eat--vim-ruler
   "\\([0-9]+\\),\\([0-9]+\\)\\(?:-\\([0-9]+\\)\\)?[ \t]+\\(?:Top\\|Bot\\|All\\|[0-9]+%\\)[ \t]*\\'")
@@ -719,9 +725,13 @@ CHANGING permits a change operator to remove text before the insertion."
 COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
   (let* ((text (plist-get to :text))
          (ex (and (not (or (plist-get from :mode) (plist-get to :mode)))
-                  (or command (and (not (plist-get to :prompt))
-                              (not (equal text (plist-get from :text))) (string-prefix-p ":" text)
-                              (substring text 1)))))
+                  (or (and emacsvox-eat--vim-keyword-query-until
+                           (< (float-time) emacsvox-eat--vim-keyword-query-until)
+                           (string-prefix-p "iskeyword=" (string-trim-left text))
+                           "setlocal iskeyword?")
+                      command
+                      (and (not (plist-get to :prompt)) (not (equal text (plist-get from :text)))
+                           (string-prefix-p ":" text) (substring text 1)))))
          (case-fold-search nil))
     (cond
      ((or (and (not (or (plist-get to :mode) (plist-get to :prompt)))
@@ -750,7 +760,8 @@ COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
                                 ("^=" (append (seq-remove (lambda (item) (member item base)) items) base))
                                 ("-=" (seq-remove (lambda (item) (member item items)) base))
                                 (_ items))))
-                 (setq emacsvox-eat--vim-keywords (cons entries (emacsvox-eat--vim-keyword-table entries)))))))))))
+                 (setq emacsvox-eat--vim-keyword-query-until nil
+                       emacsvox-eat--vim-keywords (cons entries (emacsvox-eat--vim-keyword-table entries)))))))))))
 
 (defun emacsvox-eat--vim-word-class (char big)
   "Classify CHAR for a Vim word or BIG nonblank word."
