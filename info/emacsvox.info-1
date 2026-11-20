@@ -5736,6 +5736,12 @@ editor for volume, waveform, sweep and envelope.  Boundary/warning and
 large movement instead choose replacement earcons.  Changing those named
 earcons affects every use, including warnings elsewhere.
 
+   Under _Vim words in EAT_, choose ‘[’ for a hidden start or ‘]’ for a
+hidden end.  The start cue precedes the visible part of the word and the
+end cue follows it.  Use ‘t’ to edit the spoken label, ‘e’ to choose an
+earcon, or ‘E’ to design a tone.  With ‘n’ you hear just the visible
+part of the word.
+
    Each cue retains a global draft.  ‘<SPC>’ auditions it, ‘s’ stops,
 ‘n’ silences in the draft, ‘r’ restores bundled values, and ‘D’ discards
 unapplied edits.  ‘A’ applies a temporary session rule.  ‘S’ saves the

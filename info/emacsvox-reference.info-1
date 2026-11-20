@@ -3846,7 +3846,7 @@ submenus and delegate settings and feedback to their existing commands.
 
  -- Command: emacsvox-aural-menu-line-cues
 
-     Choose a global line tone or boundary earcon to preview and edit.
+     Preview and edit global cues for lines, Vim word fragments and boundaries.
 
 2.43.1.4 emacsvox-aural-menu-navigation
 .......................................

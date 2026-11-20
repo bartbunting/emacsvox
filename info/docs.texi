@@ -4049,7 +4049,7 @@ replays explicitly when Off is selected.
 @findex emacsvox-aural-menu-line-cues
 
 @format
-Choose a global line tone or boundary earcon to preview and edit.
+Preview and edit global cues for lines, Vim word fragments and boundaries.
 @end format
 @end deffn
 
@@ -9449,6 +9449,7 @@ Typically you hear the file names as you move through the dired buffer
 Voicification is used to indicate directories, marked files etc.
 
 @subsection Emacsvox-Dired Commands
+
 @subsubsection emacsvox-dired-csv-open
 @deffn {Command} emacsvox-dired-csv-open
 @findex emacsvox-dired-csv-open
