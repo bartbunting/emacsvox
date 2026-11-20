@@ -239,8 +239,8 @@ Keep existing explicit bindings and leave the ASCII Meta prefix available."
 (defun emacsvox-eat--vim-swap-prompt (rows row)
   "Read the available choices in a Vim swap question ending on ROW of ROWS."
   (let ((text (mapconcat #'identity (seq-subseq rows (max 0 (- row 6)) (1+ row)) "")))
-    (when (string-match (rx (* nonl) (group (any "[(") "O" (any "])") "pen Read-Only, " (* nonl)
-                                            (any "[(") "A" (any "])") "bort:") (* blank) string-end) text)
+    (when (string-match (rx (group (any "[(") "O" (any "])") "pen Read-Only, " (* nonl)
+                                    (any "[(") "A" (any "])") "bort:") (* blank) string-end) text)
       (let ((choices (match-string 1 text)))
         (concat "Swap file already exists. "
                 (string-join
@@ -315,7 +315,7 @@ After the profile menu resizes EAT, the prompt can sit above the last row."
          (width (car (plist-get screen :size))))
     (when (and end (>= (plist-get screen :cursor-column) (string-width end)))
       (cond
-       ((string-prefix-p "Press ENTER" end) end)
+       ((member end '("Press ENTER or type command to continue" "Press ENTER to continue")) end)
        ((string-prefix-p "-- More --" end)
         (or (emacsvox-eat--vim-recovery-prompt rows row width t) end))
        ((string-match-p (rx (or string-start ":") (* blank) (* digit) string-end) end)
@@ -333,7 +333,6 @@ After the profile menu resizes EAT, the prompt can sit above the last row."
                                (string-to-number (or (match-string 3 line) (match-string 2 line))))
                     (setq line (substring line 0 (match-beginning 0))))))
          (text (string-trim-right line))
-         (blocking (emacsvox-eat--vim-blocking-prompt screen))
          (at-command (= (or (plist-get screen :cursor-row) -1) row))
          (completion (when (string-match (rx string-start "-- "
                                              (or "Keyword completion (^N^P)" "File name completion (^F^N^P)")
@@ -342,6 +341,8 @@ After the profile menu resizes EAT, the prompt can sit above the last row."
          (mode (cond (completion "Insert")
                      ((string-match "\\`-- \\([A-Z ]+\\) --" text)
                       (cdr (assoc (match-string 1 text) emacsvox-eat--vim-modes)))))
+         (blocking (and (or at-command (not (or mode ruler)))
+                        (emacsvox-eat--vim-blocking-prompt screen)))
          (prompt (and at-command (string-match-p "\\`[:/?]" text) (aref text 0)))
          (previous (when-let* ((line (and (> row 0) (nth (1- row) rows)))) (string-trim line)))
          (confirmation

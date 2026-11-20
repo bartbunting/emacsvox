@@ -4747,6 +4747,15 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not (send "\e[2J\e[5;1HPress ENTER or type command to continue"))
       (should (equal emacsvox-eat--last-status-text result)))))
 
+(ert-deftest emacsvox-eat-vim-prompt-words-in-file-text ()
+  "Typing on a line that resembles a continuation prompt uses ordinary echo."
+  (emacsvox-eat-test--with-vim
+    (send "\e[HPress ENTER or type command to continue\e[K\e[H")
+    (should (equal (send "\e[4;1H-- INSERT --\e[K\e[1;40H" ?A) '("Insert mode")))
+    (send "\e[2;1HPress ENTER here\e[K\e[2;17H")
+    (let ((emacsvox-character-echo t))
+      (should (equal (send "x" ?x) '(?x))))))
+
 (ert-deftest emacsvox-eat-vim-reads-swap-recovery-choices ()
   "Read the numbered files after Recover and keep the question available for review."
   (emacsvox-eat-test--with-vim
