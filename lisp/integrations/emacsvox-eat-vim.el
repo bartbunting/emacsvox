@@ -942,6 +942,11 @@ STATUS describes the command row on NEW."
            (string-empty-p (string-trim a)) (not (string-empty-p (string-trim b))))
       ;; A terminal can leave a row empty until Vim edits it after closing a split.
       (concat "Current row, " (emacsvox-eat--vim-row-text b)))
+     ((and (eq key 'backspace) (equal (plist-get status :mode) "Insert")
+           same-row (< j i) (<= i (length a)) (equal a b)
+           (string-match-p (rx string-start (+ space) string-end) (substring a j)))
+      ;; Erasing trailing spaces can leave identical blank terminal cells.
+      (emacsvox-eat--vim-deletion (substring a j i)))
      ((and (or delete-word (memq key '(backspace delete ?x ?X)))
            (or (not inserting) (memq key '(backspace delete)))
            same-row (not (equal a b)))

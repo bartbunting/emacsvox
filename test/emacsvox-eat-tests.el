@@ -5337,6 +5337,14 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (key ?y)
     (should (equal (send "yy" ?y) '("yy")))))
 
+(ert-deftest emacsvox-eat-vim-backspace-over-trailing-spaces ()
+  "Read the erased space when its blank terminal cell stays on screen."
+  (emacsvox-eat-test--with-vim
+    (send "\e[Hword  \e[K\e[4;1H-- INSERT --     1,7 All\e[K\e[1;7H" ?A)
+    (should (equal (send "\e[4;20H6 All\e[1;6H" 'backspace) '(32)))
+    (should (equal (send "\e[4;20H5 All\e[1;5H" 'backspace) '(32)))
+    (should-not (send "\e[1;5H" 'backspace))))
+
 (ert-deftest emacsvox-eat-vim-insert-word-line-erase-and-tabs ()
   "Use the displayed deletion and tab width, including a retained suffix."
   (emacsvox-eat-test--with-vim
