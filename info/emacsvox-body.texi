@@ -9949,6 +9949,11 @@ for a capital letter and an all-caps word. Choose how those indications
 sound with @kbd{C-e d I} for indentation and @kbd{C-e d C} for capitalisation.
 
 Use @kbd{w}@comma{} @kbd{b} and @kbd{e} to move by word and hear the word you reach.
+If @kbd{b} scrolls a long word horizontally@comma{} you hear “continues off screen”
+after the visible text when the ruler and cursor positions confirm the
+word extends to the right. For @kbd{e}@comma{} “starts off screen” introduces the
+visible ending. The same cues apply to @kbd{B} and @kbd{E}.
+
 If your Vim configuration gives words special characters@comma{} run
 @kbd{:setlocal iskeyword?} and press @kbd{@key{RET}} in the file you are editing.
 This shows Emacsvox the current word characters. For example@comma{} after
@@ -10015,9 +10020,14 @@ In Normal mode@comma{} @kbd{x}@comma{} @kbd{dw}@comma{} @kbd{diw}@comma{} @kbd{D
 read what Vim's redraw identifies. Use @kbd{D} or @kbd{d$} to delete from the
 cursor to the end of the line. A counted deletion such as @kbd{3dd} can
 report Vim's count and the line now under the cursor. If the original
-line was missing from EAT@comma{} @kbd{x} can read the resulting line. With @kbd{yw} or
-@kbd{yy} you hear the word or line you asked Vim to copy. Press @kbd{p} to paste
-it and hear the paste cue and the inserted text.
+line was missing from EAT@comma{} @kbd{x} can read the resulting line.
+
+With @kbd{yw} or @kbd{yy} you hear the word or line you asked Vim to copy. Use
+@kbd{y$} to copy from the cursor to the line end@comma{} @kbd{y0} to copy back to the
+start@comma{} or @kbd{y^} to copy to the first nonblank character. Emacsvox names
+the motion and reads the text it can identify on screen. For a counted
+yank@comma{} such as @kbd{3yy} or @kbd{y2w}@comma{} you hear the requested extent or the line
+count Vim reports. Press @kbd{p} to paste and hear the inserted text.
 
 To replace one character@comma{} press @kbd{r} followed by its replacement. You hear
 what changed. The tilde key changes case@comma{} @kbd{J} joins lines and reads the

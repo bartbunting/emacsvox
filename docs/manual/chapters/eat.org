@@ -614,6 +614,11 @@ for a capital letter and an all-caps word. Choose how those indications
 sound with ~C-e d I~ for indentation and ~C-e d C~ for capitalisation.
 
 Use ~w~, ~b~ and ~e~ to move by word and hear the word you reach.
+If ~b~ scrolls a long word horizontally, you hear “continues off screen”
+after the visible text when the ruler and cursor positions confirm the
+word extends to the right. For ~e~, “starts off screen” introduces the
+visible ending. The same cues apply to ~B~ and ~E~.
+
 If your Vim configuration gives words special characters, run
 ~:setlocal iskeyword?~ and press ~RET~ in the file you are editing.
 This shows Emacsvox the current word characters. For example, after
@@ -684,9 +689,14 @@ In Normal mode, ~x~, ~dw~, ~diw~, ~D~ and ~dd~ use the deletion cue and
 read what Vim's redraw identifies. Use ~D~ or ~d$~ to delete from the
 cursor to the end of the line. A counted deletion such as ~3dd~ can
 report Vim's count and the line now under the cursor. If the original
-line was missing from EAT, ~x~ can read the resulting line. With ~yw~ or
-~yy~ you hear the word or line you asked Vim to copy. Press ~p~ to paste
-it and hear the paste cue and the inserted text.
+line was missing from EAT, ~x~ can read the resulting line.
+
+With ~yw~ or ~yy~ you hear the word or line you asked Vim to copy. Use
+~y$~ to copy from the cursor to the line end, ~y0~ to copy back to the
+start, or ~y^~ to copy to the first nonblank character. Emacsvox names
+the motion and reads the text it can identify on screen. For a counted
+yank, such as ~3yy~ or ~y2w~, you hear the requested extent or the line
+count Vim reports. Press ~p~ to paste and hear the inserted text.
 
 To replace one character, press ~r~ followed by its replacement. You hear
 what changed. The tilde key changes case, ~J~ joins lines and reads the
