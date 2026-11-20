@@ -5336,6 +5336,16 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[2;3H" ?\;) '(?t)))
     (should (equal (send "\e[2;1H" ?,) '(?b)))))
 
+(ert-deftest emacsvox-eat-vim-last-nonblank-and-sentence-destinations ()
+  "Read the last nonblank and distinguish two sentences on one screen row."
+  (emacsvox-eat-test--with-vim
+    (send "\e[HFirst.  Second.   \e[K\e[H")
+    (key ?g)
+    (should (equal (send "\e[1;15H" ?_) '(?.)))
+    (should (equal (send "\e[4;1H1,9 Top\e[K\e[1;9H" ?\() '("Line 1, column 9, Second.")))
+    (send "\e[4;1H1,1 Top\e[K\e[H")
+    (should (equal (send "\e[4;1H1,9 Top\e[K\e[1;9H" ?\)) '("Line 1, column 9, Second.")))))
+
 (ert-deftest emacsvox-eat-vim-jump-destinations ()
   "Speak confirmed word searches, character finds, bracket and paragraph jumps."
   (emacsvox-eat-test--with-vim
