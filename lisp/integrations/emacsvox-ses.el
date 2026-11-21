@@ -86,33 +86,36 @@
 
 ;;;  new navigation commands 
 
-;; ses uses intangible properties to enable cell navigation
-;; here we define navigation primitives that call built-ins and
-;;then speak the right information.
+(defun emacsvox-ses--move (rows columns)
+  "Move by ROWS and COLUMNS in the print area and read the destination."
+  (let* ((cell (emacsvox-ses-current-cell-symbol))
+         (coordinates (or (ses-sym-rowcol cell) (user-error "No cell here")))
+         (row (+ (car coordinates) rows))
+         (column (+ (cdr coordinates) columns)))
+    (unless (and (< -1 row ses--numrows) (< -1 column ses--numcols))
+      (user-error "Edge of spreadsheet"))
+    (ses-goto-print row column)
+    (emacsvox-ses-summarize-current-cell)))
 
 (defun emacsvox-ses-forward-column-and-summarize ()
   "Move to next column and summarize."
   (interactive)
-  (forward-char)
-  (emacsvox-ses-summarize-current-cell))
+  (emacsvox-ses--move 0 1))
 
 (defun emacsvox-ses-backward-column-and-summarize ()
   "Move to previous column and summarize."
   (interactive)
-  (forward-char -1)
-  (emacsvox-ses-summarize-current-cell))
+  (emacsvox-ses--move 0 -1))
 
 (defun emacsvox-ses-forward-row-and-summarize ()
   "Move to next row and summarize."
   (interactive)
-  (forward-line 1)
-  (emacsvox-ses-summarize-current-cell))
+  (emacsvox-ses--move 1 0))
 
 (defun emacsvox-ses-backward-row-and-summarize ()
   "Move to previous row  and summarize."
   (interactive)
-  (forward-line -1)
-  (emacsvox-ses-summarize-current-cell))
+  (emacsvox-ses--move -1 0))
 
 ;;;  advice interactive commands
 
