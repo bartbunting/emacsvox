@@ -1779,6 +1779,27 @@ Return the beginning of the inserted row."
         (emacsvox-table-reader--automatic-entry)
         (should-not emacsvox-table-reader-mode)))))
 
+(ert-deftest emacsvox-notmuch-html-table-displayed-index-survives-motion-only ()
+  (with-temp-buffer
+    (emacsvox-notmuch-test--render-table)
+    (let ((build (symbol-function 'emacsvox-shr--displayed-table)) (calls 0))
+      (cl-letf (((symbol-function 'emacsvox-shr--displayed-table)
+                 (lambda (&rest args) (cl-incf calls) (apply build args))))
+        (let* ((table (emacsvox-shr--table-snapshot))
+               (positions (plist-get table :positions)))
+          (goto-char (nth 4 positions))
+          (should (= 1 (plist-get (emacsvox-shr--table-snapshot) :row-index)))
+          (should (= 1 calls))
+          (save-restriction
+            (narrow-to-region (nth 3 positions) (point-max))
+            (should-not (emacsvox-shr--table-snapshot)))
+          (should (emacsvox-shr--table-snapshot))
+          (let ((inhibit-read-only t))
+            (save-excursion (goto-char (point-min)) (insert "Prefix")))
+          (should (= (+ 6 (car positions))
+                     (car (plist-get (emacsvox-shr--table-snapshot) :positions))))
+          (should (= 4 calls)))))))
+
 (ert-deftest emacsvox-notmuch-html-table-submission-resolves ()
   "Table movement resolves a native, audible foreground mail presentation."
   (let (arguments)

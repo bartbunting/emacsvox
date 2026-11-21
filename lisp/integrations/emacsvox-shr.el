@@ -182,35 +182,49 @@ Return nil if the actual rendering does not match the logical row structure."
                                'emacsvox-shr-table-cell (nthcdr 2 span))))))
     result))
 
+(defvar-local emacsvox-shr--table-cache nil
+  "Displayed cell positions for one intact rendering in this buffer.")
+
+(defun emacsvox-shr--displayed-table (model begin end)
+  "Index MODEL's displayed logical cells between BEGIN and END."
+  (let* ((rows (plist-get model :rows))
+         (width (length (car rows)))
+         (grid (vconcat (mapcar (lambda (_) (make-vector width nil)) rows))))
+    (save-excursion
+      (goto-char begin)
+      (while (< (point) end)
+        (when-let* ((cell (get-text-property (point) 'emacsvox-shr-table-cell))
+                    (row (aref grid (car cell))))
+          (unless (aref row (cadr cell))
+            (aset row (cadr cell) (point))))
+        (goto-char (next-single-property-change (point) 'emacsvox-shr-table-cell nil end))))
+    (when (cl-every (lambda (row) (cl-every #'identity row)) grid)
+      (list :region (cons begin end) :rows rows :source-rows (vconcat rows)
+            :positions (cl-mapcan (lambda (row) (append row nil)) grid)
+            :source-positions grid :row-count (length grid) :column-count width
+            :column-titles-p (not (plist-get model :headerless))))))
+
 (defun emacsvox-shr--table-snapshot ()
-  "Return the complete logical HTML cell at point and fresh displayed bounds."
+  "Return the logical HTML cell at point within the current displayed bounds."
   (when-let* (((not (invisible-p (point))))
               (model (get-text-property (point) 'emacsvox-shr-table))
-              (coordinates (get-text-property (point) 'emacsvox-shr-table-cell)))
-    (let* ((begin (or (previous-single-property-change
-                      (1+ (point)) 'emacsvox-shr-table nil (point-min)) (point-min)))
+              (cell (get-text-property (point) 'emacsvox-shr-table-cell)))
+    (let* ((begin (previous-single-property-change (1+ (point)) 'emacsvox-shr-table nil (point-min)))
            (end (next-single-property-change (point) 'emacsvox-shr-table nil (point-max)))
-           (rows (plist-get model :rows))
-           (width (length (car rows)))
-           (positions (make-vector (* width (length rows)) nil))
-           (row (car coordinates)) (column (cadr coordinates))
-           (header (not (plist-get model :headerless))))
-      (save-excursion
-        (goto-char begin)
-        (while (< (point) end)
-          (when-let* ((cell (get-text-property (point) 'emacsvox-shr-table-cell)))
-            (let ((index (+ (* width (car cell)) (cadr cell))))
-              (unless (aref positions index)
-                (aset positions index (point)))))
-          (goto-char (next-single-property-change
-                      (point) 'emacsvox-shr-table-cell nil end))))
-      (when (cl-every #'identity positions)
-        (list :region (cons begin end) :positions (append positions nil) :rows rows
-              :row-index row :row-count (length rows)
-              :column-index column :column-count width
-              :data (nth column (nth row rows)) :column-titles-p header
-              :column-title (and header (nth column (car rows)))
-              :row-title (unless (and header (zerop row)) (car (nth row rows))))))))
+           (key (list (buffer-modified-tick) begin end))
+           (table (if (and (eq model (car emacsvox-shr--table-cache))
+                           (equal key (cadr emacsvox-shr--table-cache)))
+                      (nth 2 emacsvox-shr--table-cache)
+                    (nth 2 (setq emacsvox-shr--table-cache
+                                 (list model key (emacsvox-shr--displayed-table model begin end)))))))
+      (when table
+        (let* ((row (car cell)) (column (cadr cell))
+               (values (aref (plist-get table :source-rows) row))
+               (header (plist-get table :column-titles-p)))
+          (append (list :row-index row :column-index column :data (nth column values)
+                        :column-title (and header (nth column (car (plist-get table :rows))))
+                        :row-title (unless (and header (zerop row)) (car values)))
+                  table))))))
 
 (advice-add 'shr-tag-table :around #'emacsvox--advice-shr-table-role-around
             '((name . emacsvox-logical-table)))
