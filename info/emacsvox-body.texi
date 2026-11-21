@@ -6302,7 +6302,7 @@ the active arrangement and @kbd{R} restarts speech after confirmation. That menu
 also offers Other device for an existing device name; cancelling its prompt
 retains the previous choice and stays in the list.
 
-For physical devices on a supporting Windows Omnivox build@comma{} @kbd{D} opens main
+For physical devices on a supporting local Omnivox build@comma{} @kbd{D} opens main
 outputs and @kbd{M} opens notification outputs. Press @kbd{d} to browse their Transient
 choices. Selecting a candidate@comma{} applying it and saving it are separate actions@comma{}
 described in @ref{Selecting And Checking Omnivox,Selecting And Checking Omnivox,,emacsvox,}.
@@ -9122,6 +9122,12 @@ presents one visibility change for the affected group: expansion reads the
 group's name and state@comma{} while collapse uses the configured visibility cue.
 Collapsing a group from a child moves point to the group heading.
 
+When browsing a shell or viewport@comma{} use @kbd{n} and @kbd{p} to move between items.
+On a rendered blockquote@comma{} Emacsvox announces the copy action and previews the
+first line. Press @kbd{@key{RET}} to copy the whole quote. On a link or source-block
+copy control inside the quote@comma{} @kbd{@key{RET}} acts on that item. Up and Down cross a
+rendered divider inside a quote in one step.
+
 @table @kbd
 @item h / H
 Use @kbd{h} (@code{emacsvox-agent-shell-next-heading}) or
@@ -11487,12 +11493,13 @@ expected speech@comma{} and recovery remain in @ref{Installation, , Installation
 
 @subsection Choose physical output devices
 
-An updated Windows development build of Omnivox can send main speech and
+An updated Windows or macOS development build of Omnivox can send main speech and
 notifications to different physical outputs. This requires the server's
 @code{audio_device_selection_v1} capability; the pinned 1.18.0 release does not
 provide it. It works with native Windows Emacs or WSL Emacs launching the
-Windows worker. Linux/WSLg@comma{} macOS@comma{} PulseAudio and remote device selection are
-not provided by this interface.
+Windows worker@comma{} or native Emacs and Omnivox on macOS@. The macOS implementation
+is awaiting native build and listening qualification. Linux/WSLg@comma{} PulseAudio
+and remote device selection are not provided by this interface.
 
 Open @kbd{C-e H o n} and choose @emph{Main output device} (@kbd{D}) or @emph{Notification output
 device} (@kbd{M}). The equivalent command is @kbd{M-x omnivox-output-devices @key{RET}};
@@ -11532,8 +11539,9 @@ choices are independent. @kbd{q} returns without applying or saving the current
 candidate; an already applied choice remains active for this session.
 @end enumerate
 
-Saved choices use the speech host's name@comma{} backend and device ID@. Renaming the
-host creates a different scope. Friendly-name changes do not select another
+Saved choices use the speech host's identity@comma{} backend and device ID@. Windows
+uses the host name@comma{} so renaming it creates a different scope. macOS uses the
+host UUID@comma{} which survives a rename. Friendly-name changes do not select another
 device. Explicit @code{--audio-device} or @code{OMNIVOX_AUDIO_DEVICE} startup overrides
 take precedence over saved choices. Ordinary startup resolves saved choices
 inside the worker without an extra discovery process.
@@ -14172,8 +14180,8 @@ Use @kbd{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
 The minimum supported Agent Shell is 0.85.3. The integration pins target
-Agent Shell 0.95.1 at @code{a9f3034}@comma{} Shell Maker 0.98.2 at @code{f57ad5e}@comma{} and
-ACP 0.18.2 at @code{2959da5}. A personal
+Agent Shell 0.97.3 at @code{83b22ac}@comma{} Shell Maker 0.98.3 at @code{cba42ef}@comma{} and
+ACP 0.19.1 at @code{0b4240f}. A personal
 package upgrade does not refresh @code{test/integration-dependencies.json} or its
 prepared tree. When the preparer rejects a changed lock@comma{} choose a fresh
 @code{TEST_DEPS_DIR} and pass the same directory to preparation and both integration
@@ -14182,8 +14190,7 @@ gates; preserve the old directory until it is no longer needed.
 For every pin refresh@comma{} compare all Emacsvox navigation@comma{} speech-control@comma{} table@comma{}
 and repeat keys against shell and viewport maps@comma{} inherited Shell Maker maps@comma{}
 list editing@comma{} inline actions@comma{} permission and question controls@comma{} and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.95.1 refresh keeps
-the existing scoped overrides: viewport @kbd{t} discovers tables; table @kbd{r} reads
+effective keys in real prompt and transcript contexts. The scoped overrides are: viewport @kbd{t} discovers tables; table @kbd{r} reads
 rows instead of quoting or replying; viewport table @kbd{c} reads columns and @kbd{a}
 selects table speech instead of continuing or repeating a reply. The table @kbd{k}
 copy prefix takes precedence over Emacsvox's source-block jump. These preserve

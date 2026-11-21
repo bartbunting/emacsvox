@@ -209,12 +209,14 @@ Installation: Installation.
 14.7.1 Choose physical output devices
 -------------------------------------
 
-An updated Windows development build of Omnivox can send main speech and
-notifications to different physical outputs.  This requires the server's
-‘audio_device_selection_v1’ capability; the pinned 1.18.0 release does
-not provide it.  It works with native Windows Emacs or WSL Emacs
-launching the Windows worker.  Linux/WSLg, macOS, PulseAudio and remote
-device selection are not provided by this interface.
+An updated Windows or macOS development build of Omnivox can send main
+speech and notifications to different physical outputs.  This requires
+the server's ‘audio_device_selection_v1’ capability; the pinned 1.18.0
+release does not provide it.  It works with native Windows Emacs or WSL
+Emacs launching the Windows worker, or native Emacs and Omnivox on
+macOS.  The macOS implementation is awaiting native build and listening
+qualification.  Linux/WSLg, PulseAudio and remote device selection are
+not provided by this interface.
 
    Open ‘C-e H o n’ and choose _Main output device_ (‘D’) or
 _Notification output device_ (‘M’).  The equivalent command is ‘M-x
@@ -251,9 +253,10 @@ while Connected identifies the endpoint currently used.
      applying or saving the current candidate; an already applied choice
      remains active for this session.
 
-   Saved choices use the speech host's name, backend and device ID.
-Renaming the host creates a different scope.  Friendly-name changes do
-not select another device.  Explicit ‘--audio-device’ or
+   Saved choices use the speech host's identity, backend and device ID.
+Windows uses the host name, so renaming it creates a different scope.
+macOS uses the host UUID, which survives a rename.  Friendly-name
+changes do not select another device.  Explicit ‘--audio-device’ or
 ‘OMNIVOX_AUDIO_DEVICE’ startup overrides take precedence over saved
 choices.  Ordinary startup resolves saved choices inside the worker
 without an extra discovery process.
@@ -2919,8 +2922,8 @@ Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
    The minimum supported Agent Shell is 0.85.3.  The integration pins
-target Agent Shell 0.95.1 at ‘a9f3034’, Shell Maker 0.98.2 at ‘f57ad5e’,
-and ACP 0.18.2 at ‘2959da5’.  A personal package upgrade does not
+target Agent Shell 0.97.3 at ‘83b22ac’, Shell Maker 0.98.3 at ‘cba42ef’,
+and ACP 0.19.1 at ‘0b4240f’.  A personal package upgrade does not
 refresh ‘test/integration-dependencies.json’ or its prepared tree.  When
 the preparer rejects a changed lock, choose a fresh ‘TEST_DEPS_DIR’ and
 pass the same directory to preparation and both integration gates;
@@ -2930,15 +2933,14 @@ preserve the old directory until it is no longer needed.
 speech-control, table, and repeat keys against shell and viewport maps,
 inherited Shell Maker maps, list editing, inline actions, permission and
 question controls, and transients.  Verify effective keys in real prompt
-and transcript contexts.  The 0.95.1 refresh keeps the existing scoped
-overrides: viewport ‘t’ discovers tables; table ‘r’ reads rows instead
-of quoting or replying; viewport table ‘c’ reads columns and ‘a’ selects
-table speech instead of continuing or repeating a reply.  The table ‘k’
-copy prefix takes precedence over Emacsvox's source-block jump.  These
-preserve consistent reading keys; the displaced commands remain
-available through ‘M-x’ as documented in the Agent Shell user chapter.
-Prompt letters remain literal input, and repeat navigation must release
-unrelated keys.
+and transcript contexts.  The scoped overrides are: viewport ‘t’
+discovers tables; table ‘r’ reads rows instead of quoting or replying;
+viewport table ‘c’ reads columns and ‘a’ selects table speech instead of
+continuing or repeating a reply.  The table ‘k’ copy prefix takes
+precedence over Emacsvox's source-block jump.  These preserve consistent
+reading keys; the displaced commands remain available through ‘M-x’ as
+documented in the Agent Shell user chapter.  Prompt letters remain
+literal input, and repeat navigation must release unrelated keys.
 
    Empty-input override submission may reroute queued input while
 explicit input activation is browsing; nonempty drafts retain the edit

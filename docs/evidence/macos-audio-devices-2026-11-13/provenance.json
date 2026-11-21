@@ -1,0 +1,15 @@
+{
+  "base": "85214244b307ce39438355c30cd407409c9905b3",
+  "paired_omnivox": "333fb6d",
+  "checked_diff_sha256": "971121e9f3fb5d9a0b9acddf47245c10de229f694be9c549dc22bcbbe1c971c2",
+  "emacs": "31.0.90",
+  "commands": [
+    "make check-emacs bytecode-rebuild",
+    "make docs-update",
+    "fresh batch Emacs: load changed UI source, require omnivox-audio-devices-tests and omnivox-audio-channels-tests, ert-run-tests-batch-and-exit",
+    "make graphical-menu-test",
+    "make docs-release-check headers-check version-check",
+    "git diff --check"
+  ],
+  "native_macos_executed": false
+}

@@ -5561,6 +5561,28 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (should (string-match-p ems--message-filter "Press RET to copy"))
     (emacsvox-agent-shell--restore-message-filter)))
 
+(ert-deftest emacsvox-agent-shell-blockquote-item-navigation ()
+  "Item movement announces the quote and keeps nested links actionable."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (setq major-mode mode)
+        (use-local-map (symbol-value (intern (format "%s-map" mode))))
+        (insert "before\n> Quoted words\n> see [details](https://example.org)\nafter\n")
+        (agent-shell-markdown-replace-markup :complete t)
+        (goto-char (point-min))
+        (let ((quote-feedback "Blockquote. Press Return to copy. Quoted words")
+              (link-feedback "details, link. Press Return to open."))
+          (dolist (step `(("n" ,quote-feedback agent-shell-markdown-copy-blockquote-at-point)
+                          ("n" ,link-feedback agent-shell-markdown-open-link-at-point)
+                          ("p" ,quote-feedback agent-shell-markdown-copy-blockquote-at-point)))
+            (let* ((events (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd (car step)))))
+                   (speech (seq-filter (lambda (event) (eq (car event) 'speak)) events)))
+              (should (equal (mapcar #'cadr speech) (list (nth 1 step))))
+              (should (eq (key-binding (kbd "RET")) (nth 2 step))))))))))
+
 (ert-deftest emacsvox-agent-shell-link-actions-preserve-other-hint-details ()
   "Older hints and descriptive colons remain audible; URLs stay inspectable."
   (dolist (case '(("Open in browser" . "open in browser")
@@ -8708,6 +8730,26 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (eq (get-text-property 0 'face spoken)
                   'agent-shell-chat-agent-label)))))
 
+(ert-deftest emacsvox-agent-shell-steered-label-keeps-literal-input ()
+  "Speak the visible steering label and preserve a literal marker in the prompt."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local agent-shell--state '((:agent-config . ((:mode-line-name . "Codex"))))
+                agent-shell-chat--labeled t)
+    (let ((prompt (propertize "Codex> " 'font-lock-face 'agent-shell-prompt 'field 'output))
+          (marker (propertize "<shell-maker-end-of-prompt>" 'invisible t 'shell-maker--marker t)))
+      (insert prompt (propertize "[steer] " 'agent-shell-steer-prefix t)
+              "[steer] is literal\n" marker "\nDone\n\n" prompt)
+      (agent-shell-chat--relabel)
+      (goto-char (point-min))
+      (search-forward "literal")
+      (let ((emacsvox-agent-shell--chat-label-context
+             (emacsvox-agent-shell--chat-label-context-at-point)))
+        (should (string-match-p
+                 (rx string-start "Me" (+ space) "steer. [steer] is literal" string-end)
+                 (emacsvox-agent-shell--prepare-speech-text
+                  (buffer-substring (pos-bol) (pos-eol)))))))))
+
 (ert-deftest emacsvox-agent-shell-chat-labels-follow-separate-content-lines ()
   "Chat labels should describe content after whitespace-swallowing overlays."
   (skip-unless (require 'agent-shell-chat-mode nil t))
@@ -9254,6 +9296,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 (ert-deftest emacsvox-agent-shell-divider-graphical-bidirectional-speech ()
   "Rendered dividers have feedback once per visit, without silent arrow stops."
   (skip-unless (display-graphic-p))
+  (require 'emacsvox-advice)
   (require 'agent-shell-markdown)
   (let ((installed (advice-member-p
                     #'emacsvox-agent-shell--speak-visual-line-around
@@ -9264,16 +9307,18 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (advice-add 'emacsvox-speak-visual-line :around
                         #'emacsvox-agent-shell--speak-visual-line-around))
           (dolist (case '(("---" separator) ("***" decorative)
-                          ("___" separator) ("  ----  " decorative)))
+                          ("___" separator) ("  ----  " decorative)
+                          ("> ---" separator "---") ("> > ***" decorative "***")
+                          ("> ---" separator "---" agent-shell-viewport-view-mode)))
             (dolist (punctuation '(some all))
               (save-window-excursion
                 (with-temp-buffer
-                  (setq major-mode 'agent-shell-mode)
+                  (setq major-mode (or (nth 3 case) 'agent-shell-mode))
                   (insert "Subject: sample response\n\n" (car case)
                           "\n\nMonitoring condition cleared\n")
                   (add-text-properties (point-min) (point-max)
                                        '(field output line-prefix "  " wrap-prefix "  "))
-                  (agent-shell-markdown--style-dividers)
+                  (agent-shell-markdown-replace-markup :complete t)
                   (visual-line-mode 1)
                   (set-window-buffer (selected-window) (current-buffer))
                   (redisplay t)
@@ -9284,7 +9329,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                          (emacsvox-audio-indentation nil)
                          (emacsvox-show-point nil)
                          (divider (if (eq punctuation 'all)
-                                      (string-trim (car case)) (cadr case))))
+                                      (or (nth 2 case) (string-trim (car case)))
+                                    (cadr case))))
                     (cl-letf (((symbol-function 'process-live-p)
                                (lambda (process) (eq process 'speaker))))
                       (cl-labels
@@ -12147,6 +12193,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                    emacsvox-agent-shell--table-navigation-map
                    emacsvox-agent-shell--block-repeat-map))
       (dolist (upstream '(agent-shell-mode-map shell-maker-mode-map
+                          agent-shell-markdown--blockquote-map
                           agent-shell-viewport-view-mode-map
                           agent-shell-viewport-edit-mode-map
                           agent-shell-ui-fragment-map

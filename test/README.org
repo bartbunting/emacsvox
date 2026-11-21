@@ -213,32 +213,16 @@ an explicit local package directory. These local overrides cannot replace the
 pinned CI or release gate. A successful private compiled check does not repair
 an existing personal package installation.
 
-** Agent Shell command-output patch
+** Agent Shell streamed command output
 
-The supplemental =emacsvox-agent-shell-output-tests.el= suite checks Codex
-terminal-output chunks against the patched Agent Shell checkout. The pinned
-upstream archive does not yet contain that output patch, so the ordinary
-integration runner does not load this supplemental file. Keep the verified
-dependency tree unchanged.
+Run =make graphical-integration-test= to check Codex terminal-output chunks.
+The test passes notifications through the pinned Codex adapter, expands the
+rendered output with Return, reads the next line and checks that completion
+announces the accumulated output once.
 
-Use a fresh graphical =emacs -Q= with the prepared supporting dependencies,
-the patched Agent Shell checkout, and Emacsvox's =lisp/= and =test/= directories
-on =load-path=. Load =agent-shell= from the patched checkout first, then
-=emacsvox-preamble= and =emacsvox-agent-shell-output-tests=. Run =M-x ert= with
-=^emacsvox-agent-shell-streamed-output-=. Verify =symbol-file= for
-=agent-shell--on-notification= to establish which core was loaded; matching
-version strings alone do not identify the patch. The test captures speech
-submissions and checks expansion with Return, visible output, line reading
-and one completion announcement. It skips in batch, which does not establish
-graphical coverage. Set =TTS_PROGRAM= to the absolute path of =servers/log-null=
-before starting the test Emacs.
-
-The Emacsvox integration tests explicitly load source by default. For compiled
-coverage, finish =make bytecode= and =make bytecode-check=, then start another
-fresh test Emacs with =EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled=. Move the
-supplemental regression into the pinned graphical gate when its dependency
-includes the output fix. Until then, report the pinned gates and patched
-checkout check separately.
+The Agent Shell tests load Emacsvox source by default. For compiled coverage,
+run =make bytecode= and =make bytecode-check=, then run the integration gates
+with =EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled=.
 
 * Pinned Emacspeak Reference
 

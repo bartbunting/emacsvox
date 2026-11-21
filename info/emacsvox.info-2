@@ -692,7 +692,7 @@ confirmation.  That menu also offers Other device for an existing device
 name; cancelling its prompt retains the previous choice and stays in the
 list.
 
-   For physical devices on a supporting Windows Omnivox build, ‘D’ opens
+   For physical devices on a supporting local Omnivox build, ‘D’ opens
 main outputs and ‘M’ opens notification outputs.  Press ‘d’ to browse
 their Transient choices.  Selecting a candidate, applying it and saving
 it are separate actions, described in *note Selecting And Checking
@@ -3640,6 +3640,12 @@ toggles that fragment alone.  Emacsvox presents one visibility change
 for the affected group: expansion reads the group's name and state,
 while collapse uses the configured visibility cue.  Collapsing a group
 from a child moves point to the group heading.
+
+   When browsing a shell or viewport, use ‘n’ and ‘p’ to move between
+items.  On a rendered blockquote, Emacsvox announces the copy action and
+previews the first line.  Press ‘<RET>’ to copy the whole quote.  On a
+link or source-block copy control inside the quote, ‘<RET>’ acts on that
+item.  Up and Down cross a rendered divider inside a quote in one step.
 
 ‘h / H’
      Use ‘h’ (‘emacsvox-agent-shell-next-heading’) or ‘H’

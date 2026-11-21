@@ -1,0 +1,24 @@
+flowchart TD
+    accTitle: Deployment pipeline
+    accDescr: Parallel validation paths converge before staging. Approval can wait, and production monitoring can trigger a rollback.
+    Commit([Submit change]) --> Build[Build application]
+    Build --> Unit[Run unit tests]
+    Build --> Lint[Check code style]
+    Build --> Security[Check dependencies]
+    Unit --> Gate{All checks passed?}
+    Lint --> Gate
+    Security --> Gate
+    Gate -->|yes| Package[Package release]
+    Gate -->|no| Fix[Correct the change]
+    Fix --> Build
+    Package --> Stage[Deploy to staging]
+    Stage --> Smoke{Smoke tests passed?}
+    Smoke -->|yes| Approval{Release approved?}
+    Smoke -->|no| Fix
+    Approval -->|yes| Production[Deploy to production]
+    Approval -->|wait| Window[Wait for release window]
+    Window --> Approval
+    Production --> Monitor{Service healthy?}
+    Monitor -->|yes| Done([Release complete])
+    Monitor -->|no| Rollback[Restore previous release]
+    Rollback --> Fix
