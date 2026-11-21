@@ -331,5 +331,32 @@
       (should (pos-visible-in-window-p (point)))
       (should-not (buffer-modified-p)))))
 
+(ert-deftest emacsvox-tabulated-list-reuses-rows-until-visibility-or-print-changes ()
+  (emacsvox-tabulated-list-test--with-reader
+    (let ((build (symbol-function 'emacsvox-tabulated-list--printed-table)) (calls 0))
+      (cl-letf (((symbol-function 'emacsvox-tabulated-list--printed-table)
+                 (lambda (titles) (cl-incf calls) (funcall build titles))))
+        (emacsvox-table-reader-mode 1)
+        (emacsvox-table-reader-next-row)
+        (emacsvox-table-reader-next-column)
+        (emacsvox-table-reader--post-command)
+        (emacsvox-table-reader-mode -1)
+        (emacsvox-table-reader--automatic-entry)
+        (should (= calls 1))
+        (goto-char (point-min))
+        (let ((hidden (make-overlay (line-beginning-position 2) (line-beginning-position 3))))
+          (overlay-put hidden 'invisible t)
+          (should (= 2 (plist-get (emacsvox-tabulated-list--snapshot) :row-count)))
+          (delete-overlay hidden))
+        (should (= 3 (plist-get (emacsvox-tabulated-list--snapshot) :row-count)))
+        (should (= calls 3))
+        (save-restriction
+          (narrow-to-region (point-min) (line-beginning-position 2))
+          (should (= 1 (plist-get (emacsvox-tabulated-list--snapshot) :row-count))))
+        (setq tabulated-list-entries '((new ["Changed" "Value"])))
+        (tabulated-list-print)
+        (goto-char (point-min))
+        (should (equal "Changed" (plist-get (emacsvox-tabulated-list--snapshot) :data)))))))
+
 (provide 'emacsvox-tabulated-list-tests)
 ;;; emacsvox-tabulated-list-tests.el ends here

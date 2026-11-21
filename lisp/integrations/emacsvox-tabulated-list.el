@@ -169,72 +169,79 @@
   (cond ((stringp descriptor) descriptor)
         ((and (consp descriptor) (stringp (car descriptor))) (car descriptor))))
 
-(defun emacsvox-tabulated-list--snapshot ()
-  "Read visible, printed entries in display order without invoking producers.
-Use complete entry values rather than truncated display text.  Custom printers
-and ambiguous column names are not supported.  Headers are metadata, not rows."
-  (when (and (eq tabulated-list-printer #'tabulated-list-print-entry)
-             (> (length tabulated-list-format) 0)
-             (tabulated-list-get-entry))
-    (let* ((origin (point))
-           (titles (mapcar #'car (append tabulated-list-format nil)))
-           rows positions selected-row selected-column
-           (supported (= (length titles) (length (delete-dups (copy-sequence titles))))))
+(defvar-local emacsvox-tabulated-list--cache nil
+  "Printed rows indexed for the current buffer revision and visibility.")
+
+(defun emacsvox-tabulated-list--printed-table (titles)
+  "Index visible printed entries using TITLES, without calling a producer."
+  (let (rows positions starts ends)
+    (catch 'unsupported
+      (unless (= (length titles) (length (delete-dups (copy-sequence titles))))
+        (throw 'unsupported nil))
       (save-excursion
         (goto-char (point-min))
-        (while (and supported (< (point) (point-max)))
+        (while (< (point) (point-max))
           (let* ((start (point))
-                 (entry (tabulated-list-get-entry))
-                 (end (min (next-single-property-change
-                            start 'tabulated-list-entry nil (point-max))
-                           (next-single-property-change
-                            start 'tabulated-list-id nil (point-max)))))
+                 (end (min (next-single-property-change start 'tabulated-list-entry nil (point-max))
+                           (next-single-property-change start 'tabulated-list-id nil (point-max))))
+                 (entry (tabulated-list-get-entry)))
             (when (and entry (not (invisible-p start)))
-              (let ((values (mapcar #'emacsvox-tabulated-list--label
-                                    (append entry nil)))
-                    cell-positions)
-                (setq supported (and (= (length values) (length titles))
-                                     (cl-every #'stringp values)))
-                (cl-loop for title in titles for column from 0 do
-                         (let ((position
-                                (text-property-any start end
-                                                   'tabulated-list-column-name title)))
-                           ;; An empty final column has no printed characters;
-                           ;; the row's newline is its stable source position.
-                           (when (and (not position)
-                                      (= column (1- (length titles)))
-                                      (equal (nth column values) ""))
-                             (setq position (1- end)))
-                           (when (and position (invisible-p position))
-                             (setq supported nil))
-                           (push position cell-positions)))
-                (setq cell-positions (nreverse cell-positions))
-                (when (and (<= start origin) (< origin end))
-                  (setq selected-row (length rows)
-                        selected-column
-                        (or (cl-position
-                             (get-text-property origin 'tabulated-list-column-name)
-                             titles :test #'equal)
-                            (if (>= origin (1- end)) (1- (length titles)) 0))))
+              (let ((values (mapcar #'emacsvox-tabulated-list--label entry))
+                    cells)
+                (unless (and (= (length values) (length titles)) (cl-every #'stringp values))
+                  (throw 'unsupported nil))
+                (cl-loop for title in titles for value in values for column from 0 do
+                         (let ((pos (or (text-property-any start end 'tabulated-list-column-name title)
+                                        (when (and (= column (1- (length titles))) (equal value ""))
+                                          (1- end)))))
+                           (when (and pos (invisible-p pos)) (throw 'unsupported nil))
+                           (push pos cells)))
+                (push start starts)
+                (push end ends)
                 (push values rows)
-                (push cell-positions positions)))
+                (push (vconcat (nreverse cells)) positions)))
             (goto-char end))))
-      (when (and supported selected-row)
-        (setq rows (nreverse rows)
-              positions (apply #'append (nreverse positions)))
-        (list :region (cons (point-min) (point-max))
-              :rows rows :positions positions
-              :row-index selected-row :row-count (length rows)
-              :column-index selected-column :column-count (length titles)
-              :column-titles titles :column-title (nth selected-column titles)
-              :row-title (car (nth selected-row rows))
-              :data (nth selected-column (nth selected-row rows)))))))
+      (setq rows (nreverse rows) positions (nreverse positions))
+      (list :region (cons (point-min) (point-max)) :rows rows :row-count (length rows)
+            :column-count (length titles) :column-titles titles
+            :source-rows (vconcat rows) :source-positions (vconcat positions)
+            :positions (cl-mapcan (lambda (row) (append row nil)) positions)
+            :starts (vconcat (nreverse starts)) :ends (vconcat (nreverse ends))))))
+
+(defun emacsvox-tabulated-list--snapshot ()
+  "Return the visible printed cell at point with its complete logical value."
+  (when (and (eq tabulated-list-printer #'tabulated-list-print-entry)
+             (> (length tabulated-list-format) 0)
+             (tabulated-list-get-entry) (not (invisible-p (point))))
+    (let* ((titles (mapcar #'car tabulated-list-format))
+           ;; Moving or hiding an overlay can change the visible rows without
+           ;; changing the buffer tick.  Ignore overlays that only paint text.
+           (key (list (buffer-modified-tick) (point-min) (point-max) titles
+                      (copy-tree buffer-invisibility-spec)
+                      (cl-loop for ov in (overlays-in (point-min) (point-max))
+                               when (overlay-get ov 'invisible)
+                               collect (list (overlay-start ov) (overlay-end ov)
+                                             (overlay-get ov 'invisible)))))
+           (table (if (equal key (car emacsvox-tabulated-list--cache))
+                      (cdr emacsvox-tabulated-list--cache)
+                    (cdr (setq emacsvox-tabulated-list--cache
+                               (cons key (emacsvox-tabulated-list--printed-table titles)))))))
+      (when table
+        (let ((row (emacsvox-table-reader--index-at (plist-get table :starts) (point)))
+              (column (emacsvox-tabulated-list--column-at-point)))
+          (when (and (>= row 0) (< (point) (aref (plist-get table :ends) row)))
+            (let ((values (aref (plist-get table :source-rows) row)))
+              (append (list :row-index row :column-index column :data (nth column values)
+                            :column-title (nth column titles) :row-title (car values))
+                      table))))))))
 
 (defun emacsvox-tabulated-list--reader-submit (text occasion presentation icon)
   "Submit shared-reader TEXT with OCCASION, PRESENTATION and ICON."
-  (let* ((cell (emacsvox-tabulated-list--snapshot))
-         (empty (and (eq presentation 'cell)
-                     (string-empty-p (string-trim (or (plist-get cell :data) ""))))))
+  (let ((empty (and (eq presentation 'cell)
+                    (string-blank-p (or (emacsvox-tabulated-list--label
+                                         (elt (tabulated-list-get-entry)
+                                              (emacsvox-tabulated-list--column-at-point)))
+                                        "")))))
     (emacsvox-aural-submit
      text :module (emacsvox-tabulated-list--module) :occasion occasion
      :facts (emacsvox-tabulated-list--cell-facts empty)

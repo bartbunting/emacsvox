@@ -362,19 +362,20 @@ ROW-DELTA and COLUMN-DELTA use logical coordinates.  The result is
 CELL carries complete :rows, zero-based :row-index and :column-index,
 and a flat :positions list in row order.  Missing cells never clamp."
   (let* ((rows (plist-get cell :rows))
+         (positions (plist-get cell :source-positions))
          (row (+ (plist-get cell :row-index) row-delta))
          (column (+ (plist-get cell :column-index) column-delta)))
     (cond
      ((< row 0) '(exit backward))
-     ((>= row (length rows)) '(exit forward))
+     ((>= row (or (plist-get cell :row-count) (length rows))) '(exit forward))
      ((< column 0) '(boundary "Left edge of table."))
-     ((>= column (length (nth row rows)))
+     ((>= column (length (if positions (aref positions row) (nth row rows))))
       (list 'boundary (if (zerop row-delta)
                           "Right edge of table."
                         "No cell in that row.")))
      (t
       (if-let* ((position
-                 (if-let* ((positions (plist-get cell :source-positions)))
+                 (if positions
                      (aref (aref positions row) column)
                    (nth (+ column (apply #'+ (mapcar #'length (seq-take rows row))))
                         (plist-get cell :positions)))))
@@ -934,28 +935,29 @@ pipes are optional; no phantom cell is added after a closing outer pipe."
         (push (cons start end) spans))
       (nreverse spans))))
 
-(defun emacsvox-table-reader--source-cell-at-point (table)
-  "Return a fresh cell plist at point using immutable source TABLE data."
-  (let* ((lines (plist-get table :source-lines))
-         (lower 0) (upper (length lines)))
+(defun emacsvox-table-reader--index-at (starts position)
+  "Return the last index in ordered vector STARTS at or before POSITION, or -1."
+  (let ((lower 0) (upper (length starts)))
     (while (< lower upper)
       (let ((middle (/ (+ lower upper) 2)))
-        (if (<= (aref lines middle) (point))
+        (if (<= (aref starts middle) position)
             (setq lower (1+ middle))
           (setq upper middle))))
-    (let* ((row (max 0 (1- lower)))
-           (spans (aref (plist-get table :source-spans) row))
-           (column (max 0 (1- (cl-count-if
-                               (lambda (span) (<= (car span) (point))) spans))))
-           (values (aref (plist-get table :source-rows) row))
-           (header (plist-get table :column-titles-p)))
-      (append (list :row-index row :column-index column :data (nth column values)
-                    :column-title (and header (nth column (car (plist-get table :rows))))
-                    :row-title (unless (and header (zerop row)) (car values)))
-              ;; Row and column fields belong to this fresh result, not TABLE.
-              (cl-loop for (key value) on table by #'cddr
-                       unless (memq key '(:row-index :column-index :data :column-title :row-title))
-                       append (list key value))))))
+    (1- lower)))
+
+(defun emacsvox-table-reader--source-cell-at-point (table)
+  "Return a fresh cell plist at point using immutable source TABLE data."
+  (let* ((row (max 0 (emacsvox-table-reader--index-at (plist-get table :source-lines) (point))))
+         (spans (aref (plist-get table :source-spans) row))
+         (column (max 0 (1- (cl-count-if (lambda (span) (<= (car span) (point))) spans))))
+         (values (aref (plist-get table :source-rows) row))
+         (header (plist-get table :column-titles-p)))
+    (append (list :row-index row :column-index column :data (nth column values)
+                  :column-title (and header (nth column (car (plist-get table :rows))))
+                  :row-title (unless (and header (zerop row)) (car values)))
+            (cl-loop for (key value) on table by #'cddr
+                     unless (memq key '(:row-index :column-index :data :column-title :row-title))
+                     append (list key value)))))
 
 (defun emacsvox-table-reader--source-cell (region markdown clean separator)
   "Build fresh logical cell data for a pipe table in REGION.
