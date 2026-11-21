@@ -114,10 +114,12 @@ vectors")
   (length (emacsvox-table-row-header table)))
 
 (defun emacsvox-table-num-columns (table)
-  (length (emacsvox-table-column-header table)))
+  (length (aref (emacsvox-table-elements table) 0)))
 
 (defun emacsvox-table-column-header-element (table column)
-  (aref (emacsvox-table-column-header table) column))
+  (if-let* ((headers (emacsvox-table-column-header table)))
+      (aref headers column)
+    (format "Column %d" (1+ column))))
 
 (defun emacsvox-table-row-header-element (table row)
   (aref (emacsvox-table-row-header table) row))

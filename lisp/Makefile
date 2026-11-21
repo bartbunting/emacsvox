@@ -740,7 +740,7 @@ speech/omnivox-remote.elc speech/omnivox-voices.elc aural/emacsvox-aural-transpo
 #end:
 
 # EWW shares HTML link feedback with mail and other SHR clients.
-integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc
+integrations/emacsvox-eww.elc: integrations/emacsvox-shr.elc core/emacsvox-table.elc
 integrations/emacsvox-shr.elc: core/emacsvox-table-reader.elc
 
 speech/omnivox-library-runtime.elc: speech/tts-queue-state.elc speech/omnivox-engine-settings.elc speech/omnivox-library-apply.elc speech/omnivox-native-guard.elc

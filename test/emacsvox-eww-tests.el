@@ -540,7 +540,7 @@
     (with-temp-buffer
       (eww-mode)
       (let ((inhibit-read-only t) (shr-use-fonts (display-graphic-p)) (shr-width 45)
-            speech exported)
+            speech)
         (shr-insert-document
          (list 'table nil (list 'tr nil (list heading nil "Name") (list heading nil "Role"))
                '(tr nil (td nil "Alice") (td nil "Engineer"))
@@ -560,12 +560,18 @@
           (should (equal speech "Writer"))
           (emacsvox-eww-table-speak-dimensions)
           (should (equal speech "Table with 3 rows and 6 cells"))
-          (cl-letf (((symbol-function 'emacsvox-table-prepare-table-buffer)
-                     (lambda (table buffer)
-                       (setq exported (emacsvox-table-elements table)) (kill-buffer buffer))))
-            (setq-local eww-data '(:title "EWW table fixture"))
-            (call-interactively (key-binding (kbd "C-t"))))
-          (should (equal exported [["Name" "Role"] ["Alice" "Engineer"] ["Bob" "Writer"]])))))))
+          (setq-local eww-data '(:title "EWW table fixture"))
+          (save-window-excursion
+            (call-interactively (key-binding (kbd "C-t")))
+            (unwind-protect
+                (let ((cell (emacsvox-table-ui--snapshot)))
+                  (should (equal (plist-get cell :rows)
+                                 '(("Name" "Role") ("Alice" "Engineer") ("Bob" "Writer"))))
+                  (should (eq (plist-get cell :column-titles-p) (eq heading 'th)))
+                  (should (equal (emacsvox-table-reader--dimensions-speech cell)
+                                 (if (eq heading 'th) "Table, 2 data rows, 2 columns."
+                                   "Table, 3 rows, 2 columns."))))
+              (kill-buffer (current-buffer)))))))))
 
 (ert-deftest emacsvox-eww-shr-table-advice-calls-original-once ()
   "Table rendering preserves its result and caches the table DOM once."

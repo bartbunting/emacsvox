@@ -471,6 +471,7 @@
 (require 'emacsvox-preamble)
 (require 'eww  )
 (require 'emacsvox-shr)
+(require 'emacsvox-table)
 (require 'dom)
 (require 'dom-addons)
 (require 'emacsvox-we)
@@ -2560,16 +2561,16 @@ Value is specified as a position in the list of table cells.")
   (emacsvox-eww--table-move -1 nil prefix))
 
 (defun emacsvox-eww-table-data ()
-  "View  table at point as a data table using Emacsvox Table UI."
+  "Open the current table in the table browser, retaining any header row."
   (interactive)
-  (let ((data (emacsvox-eww-table-table))
-        (data-table nil)
-        (inhibit-read-only  t)
-        (buffer
-         (get-buffer-create
-          (format  "Table: %s" (emacsvox-eww-current-title)))))
-    (setq data-table (emacsvox-table-make-table data))
-    (emacsvox-table-prepare-table-buffer data-table buffer)))
+  (let* ((model (get-text-property (point) 'emacsvox-shr-table))
+         (table (emacsvox-table-make-table (emacsvox-eww-table-table))))
+    (when (if model (plist-get model :headerless)
+            (not (cl-some (lambda (cell) (eq (dom-tag cell) 'th))
+                          (car (emacsvox-eww--table-dom-rows)))))
+      (setf (emacsvox-table-column-header table) nil))
+    (emacsvox-table-prepare-table-buffer
+     table (get-buffer-create (format "Table: %s" (emacsvox-eww-current-title))))))
 
 ;;; Dive Into DOM: div
 

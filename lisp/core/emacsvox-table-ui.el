@@ -212,11 +212,12 @@ cell, not to an additional logical row."
   (emacsvox-table-ui--sync-point)
   (let* ((row (emacsvox-table-current-row emacsvox-table))
          (column (emacsvox-table-current-column emacsvox-table))
-         (values (nth row emacsvox-table-ui--rows)))
+         (values (nth row emacsvox-table-ui--rows))
+         (headers (emacsvox-table-column-header emacsvox-table)))
     (list :data (nth column values) :rows emacsvox-table-ui--rows
           :row-title (car values)
-          :column-title (nth column (car emacsvox-table-ui--rows))
-          :row-index row :column-index column :column-titles-p t
+          :column-title (and headers (nth column (car emacsvox-table-ui--rows)))
+          :row-index row :column-index column :column-titles-p (and headers t)
           :row-count (emacsvox-table-num-rows emacsvox-table)
           :column-count (emacsvox-table-num-columns emacsvox-table))))
 
@@ -989,7 +990,8 @@ match, makes the matching row or column current."
             ((eq slice 'row)
              (append (emacsvox-table-row-header emacsvox-table) nil))
             ((eq slice 'column)
-             (append (emacsvox-table-column-header emacsvox-table) nil)))
+             (append (or (emacsvox-table-column-header emacsvox-table)
+                         (user-error "This table has no column headers")) nil)))
            nil 'must-match)))
     (cond
      ((eq slice 'row)
