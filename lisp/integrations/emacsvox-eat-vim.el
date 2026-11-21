@@ -740,7 +740,7 @@ COMMAND is the submitted Ex command, when known.  KEYS can switch buffers."
     (cond
      ((or (and (not (or (plist-get to :mode) (plist-get to :prompt)))
                (or (eq (car (last keys 2)) 23) (equal keys '(30)) (member keys '((?g ?t) (?g ?T)))))
-          (and ex (string-match-p (rx string-start (or "e" "edit" "enew" "b" "buffer" "bn" "bnext" "bp"
+          (and ex (string-match-p (rx string-start (or "e" "edit" "enew" "b" "buffer" "bn" "bnext" "bp" ; codespell:ignore enew
                                                        "bprev" "bprevious" "bf" "bfirst" "blast" "h" "help"
                                                        "split" "vsplit" "new" "vnew" (seq "tab" (* alpha))
                                                        "next" "previous" "cnext" "cprevious" "filetype")
@@ -1343,7 +1343,7 @@ STATUS, when supplied, is the already parsed Vim footer."
   "Return the displayed filename argument in an active Ex file prompt STATE."
   (when-let* (((eq (plist-get state :prompt) ?:)) (command (plist-get state :command))
               ((string-match (rx string-start ":" (* blank)
-                                 (or "e" "edit" "tabedit" "tabe" "split" "vsplit" "read" "write")
+                                 (or "e" "edit" "tabedit" "tabe" "split" "vsplit" "read" "write") ; codespell:ignore tabe
                                  (optional "!") (+ blank) (group (* nonl)) string-end) command)))
     (string-replace "\\ " " " (match-string 1 command))))
 
@@ -1552,7 +1552,7 @@ FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
   (let* ((text (plist-get to :text)) (ruler (plist-get to :ruler))
          (verb (and command (car (split-string command "[ !]+" t))))
          (tail (emacsvox-eat--vim-command-tail keys))
-         (tab (or (member verb '("tabnew" "tabedit" "tabe" "tabnext" "tabn" "tabprevious"
+         (tab (or (member verb '("tabnew" "tabedit" "tabe" "tabnext" "tabn" "tabprevious" ; codespell:ignore tabe
                                  "tabp" "tabfirst" "tablast" "tabclose" "tabonly"))
                   (and (not (or (plist-get from :prompt) (plist-get from :mode)))
                        (member tail '((?g ?t) (?g ?T))))))
@@ -1566,12 +1566,12 @@ FROM and TO describe the footers.  AFTER is the cursor on SCREEN."
                           "vimgrep" "grep" "lnext" "lprevious")))
       (string-join (delq nil (list (format "Result %s of %s" (match-string 1 text) (match-string 2 text))
                                    location (match-string 3 text))) ", "))
-     ((or tab (member verb '("e" "edit" "enew" "b" "buffer" "bn" "bnext" "bp" "bprev"
+     ((or tab (member verb '("e" "edit" "enew" "b" "buffer" "bn" "bnext" "bp" "bprev" ; codespell:ignore enew
                              "bprevious" "bf" "bfirst" "blast" "h" "help" "helpc" "helpclose")))
       (let* ((help (member verb '("h" "help")))
              (help-line (and help (cl-find-if (lambda (s) (string-match-p (rx "[Help]") s))
                                                (nthcdr (plist-get after :row) (plist-get screen :rows)))))
-             (reported (and (or (not tab) (member verb '("tabedit" "tabe" "tabnew")))
+             (reported (and (or (not tab) (member verb '("tabedit" "tabe" "tabnew"))) ; codespell:ignore tabe
                             (string-match (rx string-start "\"" (group (+ (not (any "\"")))) "\""
                                               (+ blank)) text)
                             (match-string 1 text)))

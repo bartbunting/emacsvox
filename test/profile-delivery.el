@@ -219,14 +219,14 @@
                      :accounting delivery-profile--accounting
                      :instrumented (and (getenv "EMACSVOX_PROFILE_STAGES") t))))
 (let ((fixtures (omnivox-choice-consumer-test--with-speech
-                 (delivery-profile--fixtures))) advices)
+                 (delivery-profile--fixtures))) installed-advice)
   (unwind-protect
       (progn
         (when (getenv "EMACSVOX_PROFILE_STAGES")
           (dolist (name (seq-filter #'fboundp delivery-profile--functions))
             (let ((advice (apply-partially #'delivery-profile--measure name)))
               (advice-add name :around advice)
-              (push (cons name advice) advices))))
+              (push (cons name advice) installed-advice))))
         (dotimes (round (if (getenv "EMACSVOX_PROFILE_STAGES") 1 3))
           (dolist (fixture (if (cl-evenp round) fixtures (reverse fixtures)))
             (if (not (equal delivery-profile--accounting "compare"))
@@ -241,7 +241,7 @@
                     (push (plist-get result :document-sha256) digests)
                     (princ (format "Profile: %S\n" (append (list :round round :accounting method) result)))))
                 (unless (equal (car digests) (cadr digests)) (error "Accounting changed document")))))))
-    (dolist (advice advices) (advice-remove (car advice) (cdr advice)))
+    (dolist (advice installed-advice) (advice-remove (car advice) (cdr advice)))
     (dolist (fixture fixtures) (kill-buffer (cadr fixture)))))
 
 ;;; profile-delivery.el ends here

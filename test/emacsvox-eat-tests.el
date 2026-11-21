@@ -5496,10 +5496,10 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (equal (send "\e[H\e[7malph\e[0ma\e[4;18H5    1,5 All\e[1;5H" ?e)
                    '("5 columns selected, alpha")))
     (should (equal (send "\e[H\e[7malp\e[0mha\e[4;18H4    1,4 All\e[1;4H" ?h)
-                   '("4 columns selected, alph")))
+                   '("4 columns selected, alph"))) ; codespell:ignore alph
     (setq speech nil)
     (emacsvox-eat-speak-vim-selection)
-    (should (equal speech '("Visible selection, alph")))
+    (should (equal speech '("Visible selection, alph"))) ; codespell:ignore alph
     (let ((review (save-window-excursion (emacsvox-eat-review-screen))))
       (unwind-protect
           (progn
@@ -5507,7 +5507,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (with-current-buffer review
               (setq speech nil)
               (emacsvox-eat-speak-vim-selection)
-              (should (equal speech '("Visible selection, alph")))))
+              (should (equal speech '("Visible selection, alph"))))) ; codespell:ignore alph
         (kill-buffer review)))))
 
 (ert-deftest emacsvox-eat-vim-selection-changes-type-swaps-and-restores ()
