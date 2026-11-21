@@ -632,6 +632,12 @@ Safari/537.36"
   (define-key eww-link-keymap "Y" 'emacsvox-eww-yt-dl)
   (define-key eww-link-keymap "x" 'emacsvox-feeds-select-feed)
   (define-key eww-link-keymap  "y" 'emacsvox-empv-play-url)
+  (dolist (binding '(("C-M-<up>" . emacsvox-eww--table-cell-up)
+                     ("C-M-<down>" . emacsvox-eww--table-cell-down)))
+    (define-key eww-mode-map (kbd (car binding))
+                `(menu-item "" ,(cdr binding) :filter
+                            ,(lambda (command)
+                               (and (emacsvox-shr--table-snapshot) command)))))
   (cl-loop
    for binding  in
    '(
@@ -2524,6 +2530,24 @@ Value is specified as a position in the list of table cells.")
   "Speak the complete displayed cell at point."
   (interactive)
   (emacsvox-eww--speak-table-cell (emacsvox-eww--table-cell)))
+
+(defun emacsvox-eww--table-cell-down (count)
+  "Read the cell COUNT rows below point, stopping at the table edge."
+  (interactive "p")
+  (pcase (emacsvox-table-reader--destination (emacsvox-eww--table-cell) count 0 t)
+    (`(cell ,position)
+     (goto-char position)
+     (emacsvox-icon 'large-movement)
+     (emacsvox-eww--speak-table-cell (emacsvox-eww--table-cell)))
+    (`(exit ,direction)
+     (emacsvox-icon 'warn-user)
+     (tts-speak (if (eq direction 'backward) "First row of table." "Last row of table.")))
+    (`(boundary ,text) (emacsvox-icon 'warn-user) (tts-speak text))))
+
+(defun emacsvox-eww--table-cell-up (count)
+  "Read the cell COUNT rows above point, stopping at the table edge."
+  (interactive "p")
+  (emacsvox-eww--table-cell-down (- count)))
 
 (defun emacsvox-eww--table-move (direction row-p edge)
   "Move by a row or cell in DIRECTION.  EDGE selects the first or last cell."
