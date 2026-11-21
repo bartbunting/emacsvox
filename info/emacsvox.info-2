@@ -1948,10 +1948,12 @@ examples are skipped.
 
    While table reading is active:
 
-   • Plain Up/down moves by logical row and reads the complete
-     destination row by default.  You can select cell speech for these
-     keys.  Control-Meta-up/down always reads the destination cell; both
-     retain the column.
+   • Control-Meta-up/down follows the current column and reads each
+     cell.  A count larger than the number of rows left takes you to the
+     edge row.  Press again there to hear “First row of table” or “Last
+     row of table”.
+   • Plain Up/down also follows the column and reads the whole row by
+     default.  You can choose cell speech for these keys.
    • Control-Meta-left/right moves between cells.  Plain left/right
      retains character movement.  ‘<TAB>’ and ‘S-<TAB>’ move between
      cells without editing; ‘<RET>’ or ‘<SPC>’ reads the current cell.
@@ -1963,11 +1965,11 @@ examples are skipped.
    • ‘w’ or ‘k k’ copies the cell, ‘k r’ copies the row with tabs
      between cells, and ‘k c’ copies the column with newlines between
      cells.
-   • Meta-up/down leaves directly for preceding/following prose.
-     Up/down also leaves across a vertical table edge when content
-     exists beyond it by default.  Choose Stop at the edge to retain the
-     cell instead.  If no adjacent content exists, point stays in the
-     table.
+   • Plain Up/down takes you into adjacent text when you cross an edge.
+     Choose _Stop at the edge_ to stay in the table with these keys as
+     well.  ‘C-n’ and ‘C-p’ move by ordinary lines.  Meta-up/down takes
+     you directly to the text above or below the table when that text
+     exists.
 
    A horizontal edge or a missing cell in a shorter row leaves point
 unchanged and announces the boundary.  Separators are skipped.  A
@@ -2080,9 +2082,9 @@ the page discards choices that were neither applied nor saved.
 activation, coordinates during movement, entry detail, repeated titles
 and vertical edges.  Initial defaults retain whole-row plain arrows,
 full entry detail, repeated titles, no extra movement coordinates and
-leaving at vertical edges when adjacent prose exists.  Brief entry still
-identifies a table and reads its cell.  Suppressing repeated titles
-affects consecutive cell moves; explicit cell inspection remains
+plain arrows that leave at vertical edges when adjacent prose exists.
+Brief entry identifies a table and reads its cell.  Suppressing repeated
+titles affects consecutive cell moves; explicit cell inspection remains
 complete.  Application lists always stop at their edges.
 
    Activation's Mode defaults choice means automatic entry in Agent
@@ -2122,7 +2124,7 @@ unsaved changes from an open source file and preserves your place there.
    Shared table controls are active as soon as the view opens:
 
    • Up/down and Control-Meta-up/down move by logical row and read the
-     whole row.
+     whole row.  A large count stops at the first or last row.
    • Control-Meta-left/right and ‘<TAB>~/~S-<TAB>’ move by cell.  Plain
      left/right and ‘C-b~/~C-f’ move by character; ‘C-p~/~C-n’ move by
      logical row.
@@ -2247,12 +2249,14 @@ readable view.  Search covers the current rendered buffer; it does not
 submit a web search or find text that was never loaded into the page.
 
    Within a rectangular HTML table, ‘M-.’ reads the cell at point.  Use
-‘M-<up>’ and ‘M-<down>’ to follow its column, or ‘M-<left>’ and
-‘M-<right>’ to move one cell at a time in reading order.  ‘M-,’ gives
-the dimensions.  Press ‘C-t’ to open the table in the *note table
-browser: Browsing Structure., where you can copy a cell, row or column.
-The view retains the page’s header row when present.  In a headerless
-table, the first row counts as data.
+Control-Meta-up/down to follow its column and stop at the first or last
+row.  Plain arrows and ‘C-n~/~C-p’ can carry you into the surrounding
+page text.  Meta-up/down also follows the column.  Meta-left/right moves
+one cell at a time in reading order.  ‘M-,’ gives the dimensions.  Press
+‘C-t’ to open the table in the *note table browser: Browsing Structure.,
+where you can copy a cell, row or column.  The view retains the page’s
+header row when present.  In a headerless table, the first row counts as
+data.
 
    Use the original page when checking whether information is genuinely
 absent.  A readable or filtered view can omit menus, tables or other

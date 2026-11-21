@@ -74,10 +74,12 @@ Control-Meta vertical arrows deliberately do nothing outside rendered tables,
 including in editable prompts, to prevent repeated movement falling through
 to Lisp-list navigation.
 
-Source and Agent Shell readers can leave across vertical edges when surrounding
-content exists. Application lists stop at their edges. Horizontal boundaries
-and missing cells in uneven rows keep point in place. Tabulated List reading
-uses full entry values, even when the display truncates a column.
+Control-Meta-Up/Down stays in the current column. A count can reach the first
+or last row, and another step announces the boundary. Plain arrows can leave
+an embedded table when surrounding content exists. Application lists stop at
+their edges. Horizontal boundaries and missing cells in uneven rows keep point
+in place. Tabulated List reading uses full entry values, even when the display
+truncates a column.
 
 ** Current preference ownership
 

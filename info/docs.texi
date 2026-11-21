@@ -22895,8 +22895,8 @@ first
 
 @defvar {User Option} emacsvox-table-reader-edge-action
 @verbatim
-Whether vertical movement leaves a table or stops at its edge.
-Application lists always stop.  Explicit exit commands remain available.
+Whether plain row movement leaves a table or stops at its edge.
+Control-Meta arrows and application lists always stop.
 @end verbatim
 
 Default Value:
