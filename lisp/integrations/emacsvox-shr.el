@@ -81,15 +81,16 @@
   "Non-nil while rendering a table explicitly marked as presentation.")
 
 (defun emacsvox-shr--data-table-p (dom)
-  "Whether normalized DOM has a header row and unmerged data cells.
-Reject nested tables and layout-only structures rather than guessing columns."
+  "Return t for a data table, or 'plain for an explicitly browsable EWW grid."
   (let* ((body (or (dom-child-by-tag dom 'tbody) dom))
          (rows (dom-non-text-children body))
          (cells (mapcar #'dom-non-text-children rows))
-         (width (length (car cells))))
-    (and (not emacsvox-shr--presentation-table-p)
-         (> (length rows) 1) (> width 1)
-         (<= (* width (length rows)) 2000)
+         (width (length (car cells)))
+         (eww (derived-mode-p 'eww-mode)))
+    (and (> width 0)
+         (or eww (and (not emacsvox-shr--presentation-table-p)
+                      (> (length rows) 1) (> width 1)
+                      (<= (* width (length rows)) 2000)))
          (cl-every (lambda (row) (eq (dom-tag row) 'tr)) rows)
          (cl-every
           (lambda (row)
@@ -102,10 +103,11 @@ Reject nested tables and layout-only structures rather than guessing columns."
                           (lambda (attribute)
                             (member (dom-attr cell attribute) '(nil "1")))
                           '(rowspan colspan)))) row))) cells)
-         (cl-every
-          (lambda (cell)
-            (or (eq (dom-tag cell) 'th)
-                (dom-by-tag cell 'b) (dom-by-tag cell 'strong))) (car cells)))))
+         (or (cl-every (lambda (cell)
+                         (or (eq (dom-tag cell) 'th)
+                             (dom-by-tag cell 'b) (dom-by-tag cell 'strong)))
+                       (car cells))
+             (and eww 'plain)))))
 
 (defun emacsvox--advice-shr-table-role-around (original dom)
   "Keep DOM's layout role before SHR normalizes its attributes."
@@ -173,7 +175,7 @@ Return nil if the actual rendering does not match the logical row structure."
                            (emacsvox-shr--table-cell-text (nth 3 cell))) row)) table))
                ;; A distinct object identifies this rendering, without keeping
                ;; the DOM, renderer caches or source buffer alive.
-               (model (list :rows rows)))
+               (model (list :rows rows :headerless (eq emacsvox-shr--data-table-p 'plain))))
           (put-text-property begin (point) 'emacsvox-shr-table model)
           (dolist (span spans)
             (put-text-property (nth 0 span) (nth 1 span)
@@ -191,7 +193,8 @@ Return nil if the actual rendering does not match the logical row structure."
            (rows (plist-get model :rows))
            (width (length (car rows)))
            (positions (make-vector (* width (length rows)) nil))
-           (row (car coordinates)) (column (cadr coordinates)))
+           (row (car coordinates)) (column (cadr coordinates))
+           (header (not (plist-get model :headerless))))
       (save-excursion
         (goto-char begin)
         (while (< (point) end)
@@ -205,9 +208,9 @@ Return nil if the actual rendering does not match the logical row structure."
         (list :region (cons begin end) :positions (append positions nil) :rows rows
               :row-index row :row-count (length rows)
               :column-index column :column-count width
-              :data (nth column (nth row rows)) :column-titles-p t
-              :column-title (nth column (car rows))
-              :row-title (unless (zerop row) (car (nth row rows))))))))
+              :data (nth column (nth row rows)) :column-titles-p header
+              :column-title (and header (nth column (car rows)))
+              :row-title (unless (and header (zerop row)) (car (nth row rows))))))))
 
 (advice-add 'shr-tag-table :around #'emacsvox--advice-shr-table-role-around
             '((name . emacsvox-logical-table)))

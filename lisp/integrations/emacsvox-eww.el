@@ -2469,142 +2469,95 @@ with an interactive prefix arg. "
   "Track current table cell to enable table navigation.
 Value is specified as a position in the list of table cells.")
 
+(defun emacsvox-eww--table-dom-rows ()
+  "Return the current table's rows of DOM cells in document order."
+  (let ((table (or (get-text-property (point) 'table-dom)
+                   (user-error "No table here"))))
+    (mapcar (lambda (row)
+              (seq-filter (lambda (cell) (memq (dom-tag cell) '(td th)))
+                          (dom-non-text-children row)))
+            (dom-by-tag table 'tr))))
+
 (defsubst emacsvox-eww-table-table ()
-  "Return table cells as a table, a 2d structure."
-  (let* ((data nil)
-         (table (get-text-property (point) 'table-dom))
-         (head (dom-by-tag table 'th)))
-    (cl-assert table t "No table here.")
-    (setq data
-          (cl-loop
-           for r in (dom-by-tag table 'tr) collect
-           (cl-loop
-            for c in
-            (append
-             (dom-by-tag r 'th)
-             (dom-by-tag r 'td))
-            collect
-            (string-trim (dom-node-as-text c)))))
-    ;;; handle head case differently:
-    (if head
-        (apply #'vector (mapcar #'vconcat  (cdr data)))
-      (apply #'vector (mapcar #'vconcat  data)))))
+  "Return every logical row of the current table, including its headers."
+  (let ((rows (or (plist-get (get-text-property (point) 'emacsvox-shr-table) :rows)
+                  (mapcar (lambda (row)
+                            (mapcar (lambda (cell) (string-trim (dom-node-as-text cell))) row))
+                          (emacsvox-eww--table-dom-rows)))))
+    (vconcat (mapcar #'vconcat rows))))
 
 (defsubst emacsvox-eww-table-cells ()
-  "Returns  table cells as a list."
-  (let* ((table (get-text-property (point) 'table-dom))
-         (head (dom-by-tag table 'th)))
-    (cond
-     (head (cdr (append head (dom-by-tag table 'td))))
-     (t (dom-by-tag table 'td)))))
+  "Return the current table's DOM cells in row order."
+  (apply #'append (emacsvox-eww--table-dom-rows)))
 
 (defsubst emacsvox-eww-table-row-count ()
-  "Returns number of table rows."
-  (length (dom-by-tag (get-text-property (point) 'table-dom) 'tr)))
+  "Return the number of rows, including any header row."
+  (length (emacsvox-eww--table-dom-rows)))
 
 (defsubst emacsvox-eww-table-cell-count ()
-  "Returns number of  table cells."
+  "Return the number of cells, including header cells."
   (length (emacsvox-eww-table-cells)))
 
 (defun emacsvox-eww-table-speak-dimensions ()
-  "Speak number of rows and cells."
+  "Speak the total number of rows and cells."
   (interactive)
-  (tts-speak
-   (format "Table with %s rows and %s cells"
-           (emacsvox-eww-table-row-count) (emacsvox-eww-table-cell-count))))
+  (let ((rows (or (plist-get (get-text-property (point) 'emacsvox-shr-table) :rows)
+                  (emacsvox-eww--table-dom-rows))))
+    (tts-speak (format "Table with %d rows and %d cells"
+                       (length rows) (cl-loop for row in rows sum (length row))))))
 
-(defsubst emacsvox-eww-table-speak-cell ()
-  "Speak current cell."
+(defun emacsvox-eww--table-cell ()
+  "Return the logical HTML cell at point."
+  (or (emacsvox-shr--table-snapshot)
+      (user-error "No identifiable table cell here")))
+
+(defun emacsvox-eww--speak-table-cell (cell)
+  "Speak CELL and remember its index for callers inspecting the browser."
+  (setq emacsvox-eww-table-cell (+ (* (plist-get cell :row-index)
+                                      (plist-get cell :column-count))
+                                   (plist-get cell :column-index)))
+  (let ((text (plist-get cell :data)))
+    (tts-speak (if (string-blank-p text) "blank" text))))
+
+(defun emacsvox-eww-table-speak-cell ()
+  "Speak the complete displayed cell at point."
   (interactive)
-  
-  (tts-speak
-   (dom-node-as-text
-    (elt (emacsvox-eww-table-cells) emacsvox-eww-table-cell))))
+  (emacsvox-eww--speak-table-cell (emacsvox-eww--table-cell)))
+
+(defun emacsvox-eww--table-move (direction row-p edge)
+  "Move by a row or cell in DIRECTION.  EDGE selects the first or last cell."
+  (emacsvox-eww-browser-check)
+  (let* ((cell (emacsvox-eww--table-cell))
+         (width (plist-get cell :column-count))
+         (size (* width (plist-get cell :row-count)))
+         (index (+ (* width (plist-get cell :row-index)) (plist-get cell :column-index)))
+         (target (if edge (if (> direction 0) (1- size) 0)
+                   (+ index (* direction (if row-p width 1))))))
+    (unless (< -1 target size)
+      (user-error "On %s %s" (if (> direction 0) "last" "first") (if row-p "row" "cell")))
+    (goto-char (nth target (plist-get cell :positions)))
+    (emacsvox-icon (cond (row-p 'large-movement) ((> direction 0) 'right) (t 'left)))
+    (emacsvox-eww--speak-table-cell (emacsvox-eww--table-cell))))
 
 (defun emacsvox-eww-table-previous-row (&optional prefix)
-  "Speak  cell after moving to previous row.
- Optional interactive prefix arg moves to start of table."
+  "Read the previous row in this column.  With PREFIX, go to the first cell."
   (interactive "P")
-  
-  (emacsvox-eww-browser-check)
-  (cond
-   (prefix
-    (goto-char (get-text-property (point) 'table-start))
-    (setq emacsvox-eww-table-cell 0))
-   (t
-    (let* ((n-rows (emacsvox-eww-table-row-count))
-           (n-cells (emacsvox-eww-table-cell-count))
-           (quotient (/ n-cells n-rows)))
-      (cl-assert
-       (>= emacsvox-eww-table-cell quotient)
-       t "On first row.")
-      (cl-decf emacsvox-eww-table-cell quotient)
-      (emacsvox-icon 'large-movement)
-      (emacsvox-eww-table-speak-cell)))))
+  (emacsvox-eww--table-move -1 t prefix))
 
 (defun emacsvox-eww-table-next-row (&optional prefix)
-  "Speak  cell after moving to next row.
- Optional interactive prefix arg moves to end of table."
+  "Read the next row in this column.  With PREFIX, go to the last cell."
   (interactive "P")
-  
-  (emacsvox-eww-browser-check)
-  (cond
-   (prefix
-    (goto-char (get-text-property (point) 'table-end))
-    (setq
-     emacsvox-eww-table-cell
-     (1- (length (emacsvox-eww-table-cells)))))
-   (t
-    (let* ((n-rows (emacsvox-eww-table-row-count))
-           (n-cells (emacsvox-eww-table-cell-count))
-           (quotient (/ n-cells n-rows)))
-      (cl-assert
-       (< (+ emacsvox-eww-table-cell quotient) n-cells)
-       t "On last row.")
-      (cl-incf emacsvox-eww-table-cell quotient)
-      (emacsvox-icon 'large-movement)
-      (emacsvox-eww-table-speak-cell)))))
+  (emacsvox-eww--table-move 1 t prefix))
 
 (defun emacsvox-eww-table-next-cell (&optional prefix)
-  "Speak next cell after making it current.
-Interactive prefix arg moves to the last cell in the table."
+  "Read the next cell in row order.  With PREFIX, go to the last cell."
   (interactive "P")
-  
-  (emacsvox-eww-browser-check)
-  (cl-assert
-   (< (1+ emacsvox-eww-table-cell) (length (emacsvox-eww-table-cells)))
-   t "On last cell.")
-  (cond
-   (prefix
-    (goto-char (get-text-property (point) 'table-end))
-    (cl-incf emacsvox-eww-table-cell
-             (1- (length (emacsvox-eww-table-cells)))))
-   (t
-    (goto-char (next-single-property-change (point) 'display))
-    (skip-syntax-forward " ")
-    (cl-incf emacsvox-eww-table-cell 1)
-    (goto-char (next-single-property-change (point) 'display))))
-  (emacsvox-icon 'left)
-  (emacsvox-eww-table-speak-cell))
+  (emacsvox-eww--table-move 1 nil prefix))
 
 (defun emacsvox-eww-table-previous-cell (&optional prefix)
-  "Speak previous cell after making it current.
-With interactive prefix arg, move to the start of the table."
+  "Read the previous cell in row order.  With PREFIX, go to the first cell."
   (interactive "P")
-  
-  (emacsvox-eww-browser-check)
-  (when  (zerop emacsvox-eww-table-cell  ) (error  "On first cell."))
-  (cond
-   (prefix
-    (goto-char (get-text-property (point) 'table-start))
-    (setq emacsvox-eww-table-cell 0)
-    (goto-char (get-text-property (point) 'table-start)))
-   (t
-    (goto-char (previous-single-property-change (point) 'display))
-    (skip-syntax-backward " ")
-    (cl-decf emacsvox-eww-table-cell 1)))
-  (emacsvox-icon 'right)
-  (emacsvox-eww-table-speak-cell))
+  (emacsvox-eww--table-move -1 nil prefix))
 
 (defun emacsvox-eww-table-data ()
   "View  table at point as a data table using Emacsvox Table UI."

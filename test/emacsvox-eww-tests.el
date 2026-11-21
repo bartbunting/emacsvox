@@ -535,6 +535,38 @@
       (should (eq (get-text-property 1 'h) 'shr-tag))
       (should-not (get-text-property 8 'h1)))))
 
+(ert-deftest emacsvox-eww-table-keys-follow-displayed-cells ()
+  (dolist (heading '(th td))
+    (with-temp-buffer
+      (eww-mode)
+      (let ((inhibit-read-only t) (shr-use-fonts (display-graphic-p)) (shr-width 45)
+            speech exported)
+        (shr-insert-document
+         (list 'table nil (list 'tr nil (list heading nil "Name") (list heading nil "Role"))
+               '(tr nil (td nil "Alice") (td nil "Engineer"))
+               '(tr nil (td nil "Bob") (td nil "Writer"))))
+        (goto-char (point-min)) (search-forward "Engineer") (backward-char)
+        (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq speech text)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (call-interactively (key-binding (kbd "M-.")))
+          (should (equal speech "Engineer"))
+          (call-interactively (key-binding (kbd "M-<down>")))
+          (should (equal speech "Writer"))
+          (should (equal (plist-get (emacsvox-shr--table-snapshot) :data) "Writer"))
+          (should-error (emacsvox-eww-table-next-row) :type 'user-error)
+          (emacsvox-eww-table-previous-cell t)
+          (should (equal speech "Name"))
+          (emacsvox-eww-table-next-cell t)
+          (should (equal speech "Writer"))
+          (emacsvox-eww-table-speak-dimensions)
+          (should (equal speech "Table with 3 rows and 6 cells"))
+          (cl-letf (((symbol-function 'emacsvox-table-prepare-table-buffer)
+                     (lambda (table buffer)
+                       (setq exported (emacsvox-table-elements table)) (kill-buffer buffer))))
+            (setq-local eww-data '(:title "EWW table fixture"))
+            (call-interactively (key-binding (kbd "C-t"))))
+          (should (equal exported [["Name" "Role"] ["Alice" "Engineer"] ["Bob" "Writer"]])))))))
+
 (ert-deftest emacsvox-eww-shr-table-advice-calls-original-once ()
   "Table rendering preserves its result and caches the table DOM once."
   (with-temp-buffer
