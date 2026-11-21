@@ -81,7 +81,7 @@
   "Non-nil while rendering a table explicitly marked as presentation.")
 
 (defun emacsvox-shr--data-table-p (dom)
-  "Return t for a data table, or 'plain for an explicitly browsable EWW grid."
+  "Return t for a data table or the symbol plain for a headerless EWW grid."
   (let* ((body (or (dom-child-by-tag dom 'tbody) dom))
          (rows (dom-non-text-children body))
          (cells (mapcar #'dom-non-text-children rows))

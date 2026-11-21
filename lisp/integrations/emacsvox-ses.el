@@ -36,6 +36,11 @@
 (require 'emacsvox-preamble)
 (require 'ses)
 
+(defvar ses--cells)
+(defvar ses--named-cell-hashmap)
+(defvar ses--numrows)
+(defvar ses--numcols)
+
 ;;;  emacsvox ses accessors 
 
 ;; these additional accessors are defined in terms of the

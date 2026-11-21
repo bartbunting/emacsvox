@@ -54,6 +54,8 @@
                   "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function emacsvox-agent-shell--semantic-item-feedback
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--live-input-bounds
+                  "emacsvox-agent-shell-motion" ())
 (declare-function emacsvox-agent-shell--question-feedback
                   "emacsvox-agent-shell-interaction" (&optional occasion))
 (defvar emacsvox-agent-shell-block-navigation-max-characters)

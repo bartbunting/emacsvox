@@ -496,7 +496,7 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 
 (defun emacsvox-agent-shell--table-entry-feedback (direction)
   "Enter and speak the table at point in navigation DIRECTION."
-  (when-let* ((region (emacsvox-agent-shell--table-readable-region))
+  (when-let* (((emacsvox-agent-shell--table-browsable-p))
               (starts (plist-get (emacsvox-agent-shell--rendered-table) :starts)))
     (goto-char (aref starts (if (eq direction 'forward) 0 (1- (length starts)))))
     (when-let* ((cell (emacsvox-agent-shell--table-snapshot)))
@@ -802,7 +802,7 @@ Streaming elsewhere in the transcript must not interrupt table navigation."
         (setq emacsvox-agent-shell--table-navigation-active nil)))))
 
 (defun emacsvox-agent-shell--table-navigation-post-command ()
-  "Update the contextual table keymap.  Return 'entered on a spoken entry."
+  "Update the contextual keymap, returning the symbol entered on a spoken entry."
   ;; A direct jump to another table ends a visit when the old rendering is
   ;; still intact.  After a redraw its identity is uncertain until we reach prose.
   (when-let* ((visit emacsvox-agent-shell--table-navigation-region)
