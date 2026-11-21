@@ -77,35 +77,26 @@
         (apply #'emacsvox-aural-submit-actions arguments)
       (apply #'emacsvox-aural-submit content arguments))))
 
+(defun emacsvox-tabulated-list--column-at-point ()
+  "Return the printed column, treating padding as part of the nearest cell."
+  (or (cl-position (get-text-property (point) 'tabulated-list-column-name)
+                   tabulated-list-format :test #'equal :key #'car)
+      (if (eolp) (1- (length tabulated-list-format)) 0)))
+
 (defun emacsvox-tabulated-list-speak-cell (&optional movement-icon)
   "Speak the current cell with optional MOVEMENT-ICON."
   (interactive)
-  (when (bobp) (error "Beginning  of buffer"))
-  (when (eobp) (error "End of buffer"))
-  (save-excursion
-    (when-let*
-        ((name (get-text-property (point) 'tabulated-list-column-name))
-         (col
-          (cl-position name tabulated-list-format
-                       :test #'string= :key #'car))
-         (value (elt (tabulated-list-get-entry) col)))
-      (let ((edge-icons
-             (append
-              (when (= 0 col) '(left))
-              (when (= (1- (length tabulated-list-format)) col) '(right)))))
-        (when (listp value) (setq value (car value)))
-        (let* ((empty (zerop (length (string-trim value))))
-               (content
-                (if (called-interactively-p 'interactive)
-                    (concat name " " value)
-                  value)))
-          (apply
-           #'emacsvox-tabulated-list--submit-cell
-           content
-           (emacsvox-tabulated-list--cell-facts empty)
-           (append
-            (when movement-icon (list movement-icon))
-            edge-icons)))))))
+  (let* ((entry (or (tabulated-list-get-entry) (user-error "No entry here")))
+         (column (emacsvox-tabulated-list--column-at-point))
+         (name (car (elt tabulated-list-format column)))
+         (value (emacsvox-tabulated-list--label (elt entry column))))
+    (when value
+      (apply #'emacsvox-tabulated-list--submit-cell
+             (if (called-interactively-p 'interactive) (concat name " " value) value)
+             (emacsvox-tabulated-list--cell-facts (string-blank-p value))
+             (append (when movement-icon (list movement-icon))
+                     (when (zerop column) '(left))
+                     (when (= column (1- (length tabulated-list-format))) '(right)))))))
 
 (cl-loop
  for target in
@@ -121,35 +112,38 @@
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun emacsvox-tabulated-list-next-row ()
-  "Move to next row and speak that cell"
-  (interactive)
-  (let ((col
-         (cl-position
-          (get-text-property (point) 'tabulated-list-column-name)
-          tabulated-list-format
-          :test #'string= :key #'car)))
-    (forward-line 1)
-    (tabulated-list-next-column  col)
-    (when-let* ((goal (next-single-property-change (point)
-                                                  'tabulated-list-column-name)))
-      (goto-char goal))
+(defun emacsvox-tabulated-list--move-row (direction)
+  "Move to the same column of the next visible entry in DIRECTION."
+  (let* ((inhibit-field-text-motion t)
+         (column (emacsvox-tabulated-list--column-at-point))
+         (name (car (elt tabulated-list-format column)))
+         (destination
+          (save-excursion
+            (beginning-of-line)
+            (catch 'cell
+              (while (zerop (forward-line direction))
+                (when (and (tabulated-list-get-entry) (not (invisible-p (point))))
+                  (throw 'cell
+                         (or (text-property-any (point) (line-end-position)
+                                                'tabulated-list-column-name name)
+                             (when (and (= column (1- (length tabulated-list-format)))
+                                        (equal "" (emacsvox-tabulated-list--label
+                                                   (elt (tabulated-list-get-entry) column))))
+                               (line-end-position))))))))))
+    (unless destination
+      (user-error "%s" (if (> direction 0) "No next entry" "No previous entry")))
+    (goto-char destination)
     (emacsvox-tabulated-list-speak-cell 'select-object)))
 
-(defun emacsvox-tabulated-list-previous-row ()
-  "Move to previous row and speak that cell."
+(defun emacsvox-tabulated-list-next-row ()
+  "Move to the next entry and speak the same column."
   (interactive)
-  (let ((col
-         (cl-position
-          (get-text-property (point) 'tabulated-list-column-name)
-          tabulated-list-format
-          :test #'string= :key #'car)))
-    (forward-line -1)
-    (tabulated-list-next-column  col)
-    (when-let* ((goal (next-single-property-change
-                      (point) 'tabulated-list-column-name)))
-      (goto-char goal))
-    (emacsvox-tabulated-list-speak-cell 'select-object)))
+  (emacsvox-tabulated-list--move-row 1))
+
+(defun emacsvox-tabulated-list-previous-row ()
+  "Move to the previous entry and speak the same column."
+  (interactive)
+  (emacsvox-tabulated-list--move-row -1))
 
 (defun emacsvox-tabulated-list-setup ()
   "Setup Emacsvox"

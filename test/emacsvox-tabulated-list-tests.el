@@ -172,6 +172,32 @@
                   (lambda (text &rest args) (push (cons text args) spoken))))
          ,@body))))
 
+(ert-deftest emacsvox-tabulated-list-ordinary-arrows-retain-column-and-edges ()
+  (dolist (padding '(0 2))
+    (emacsvox-tabulated-list-test--with-reader
+      (setq tabulated-list-padding padding)
+      (tabulated-list-print)
+      (goto-char (point-min))
+      (emacsvox-tabulated-list-speak-cell)
+      (should (equal (caar spoken) "Alice, complete name"))
+      (let ((origin (point)))
+        (should-error (emacsvox-tabulated-list-previous-row) :type 'user-error)
+        (should (= origin (point))))
+      (emacsvox-tabulated-list-next-row)
+      (should (equal (caar spoken) "Bob"))
+      (goto-char (point-min)) (search-forward "Engineer")
+      (backward-char)
+      (emacsvox-tabulated-list-next-row)
+      (should (= (point) (line-end-position)))
+      (emacsvox-tabulated-list-next-row)
+      (should (equal (caar spoken) "Writer"))
+      (let ((origin (point)))
+        (should-error (emacsvox-tabulated-list-next-row) :type 'user-error)
+        (should (= origin (point))))
+      (emacsvox-tabulated-list-previous-row)
+      (emacsvox-tabulated-list-previous-row)
+      (should (equal (caar spoken) "Engineer")))))
+
 (ert-deftest emacsvox-tabulated-list-reader-complete-values-and-blank ()
   "Read logical values, including truncated labels and empty final columns."
   (emacsvox-tabulated-list-test--with-reader
