@@ -10412,6 +10412,35 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not (member (select 4) ids))
           (should (equal (read-node) "End of tree. Tree. Level 1. Peer")))))))
 
+(ert-deftest emacsvox-agent-shell-tree-parent-follows-the-selected-branch ()
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (with-temp-buffer
+      (setq major-mode mode)
+      (insert (agent-shell-markdown-convert
+               (concat "```text\nRoot\n├─ Personal\n│  └─ Overview\n"
+                       "└─ Shared\n   └─ Overview\n```\n\nProse\n")))
+      (let ((original (buffer-string)) spoken)
+        (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'emacsvox-agent-shell--submit-text-feedback)
+                   (lambda (text &rest _)
+                     (setq spoken (substring-no-properties
+                                   (emacsvox-agent-shell--prepare-speech-text text))))))
+          (dolist (branch '("Personal" "Shared"))
+            (goto-char (point-min))
+            (search-forward branch)
+            (search-forward "Overview")
+            (call-interactively #'emacsvox-agent-shell-tree-parent)
+            (should (string-suffix-p branch spoken))
+            (should (= (get-text-property (point) 'emacsvox-text-tree-depth) 1))
+            (emacsvox-agent-shell-tree-parent)
+            (let ((origin (point)))
+              (should (looking-at "Root"))
+              (should-error (emacsvox-agent-shell-tree-parent) :type 'user-error)
+              (should (= origin (point)))))
+          (goto-char (point-max))
+          (should-error (emacsvox-agent-shell-tree-parent) :type 'user-error)
+          (should (equal (buffer-string) original)))))))
+
 (ert-deftest emacsvox-agent-shell-tree-line-level-feedback ()
   "Line preparation tracks depth while independent reading starts at entry."
   (with-temp-buffer

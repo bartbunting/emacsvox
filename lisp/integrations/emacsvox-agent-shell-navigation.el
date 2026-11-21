@@ -1395,6 +1395,14 @@ the legacy fallback when its local boundary metadata is incomplete."
         (delq nil (list fallback (plist-get location :fold-state))) ", ")
        ".")))))
 
+(defun emacsvox-agent-shell--speak-tree-node (location)
+  "Speak the current node in tree LOCATION with its navigation context."
+  (let ((emacsvox-agent-shell--tree-navigation-speech-p t))
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-aural-source-substring (line-beginning-position) (line-end-position))
+     (emacsvox-agent-shell--block-location-facts location 'focus-entered)
+     'navigation)))
+
 (defun emacsvox-agent-shell--jump-block-of-type
     (type direction &optional origin)
   "Move to semantic block TYPE in DIRECTION and announce it.
@@ -1413,11 +1421,7 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (tts-stop)
           (let ((emacsvox-agent-shell--tree-navigation-speech-p t))
             (pcase type
-              ('tree
-               (emacsvox-agent-shell--submit-text-feedback
-                (buffer-substring (line-beginning-position) (line-end-position))
-                (emacsvox-agent-shell--block-location-facts target 'focus-entered)
-                'navigation))
+              ('tree (emacsvox-agent-shell--speak-tree-node target))
               ('table
                (emacsvox-agent-shell--table-entry-feedback direction))
               ('link
@@ -1766,6 +1770,30 @@ Use the existing bracket repeat map for further tree movement."
 Use the existing bracket repeat map for further tree movement."
   (interactive)
   (emacsvox-agent-shell--navigate-block-at-point 'backward 'tree))
+
+(defun emacsvox-agent-shell-tree-parent ()
+  "Move to the parent of the current recognized text-tree node and read it."
+  (interactive)
+  (let* ((line (line-beginning-position))
+         (input (emacsvox-agent-shell--live-input-bounds))
+         (tree (and (derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode)
+                    (not (and input (>= (point) (car input))))
+                    (not (invisible-p (point)))
+                    (emacsvox-agent-shell--tree-location-at-position line)))
+         (depth (and tree (get-text-property line 'emacsvox-text-tree-depth))))
+    (unless depth (user-error "No tree node here"))
+    (when (zerop depth) (user-error "At the root of this tree"))
+    (let ((root (plist-get tree :position))
+          (parent line))
+      (while (and (> parent root)
+                  (not (eql (get-text-property parent 'emacsvox-text-tree-depth) (1- depth))))
+        (setq parent (previous-single-property-change parent 'emacsvox-text-tree-depth nil root)))
+      (unless (and (eql (get-text-property parent 'emacsvox-text-tree-depth) (1- depth))
+                   (not (invisible-p parent)))
+        (user-error "No visible parent"))
+      (goto-char parent)
+      (tts-stop)
+      (emacsvox-agent-shell--speak-tree-node tree))))
 
 (defun emacsvox-agent-shell-next-table ()
   "Move to the next rendered Markdown table and announce it.

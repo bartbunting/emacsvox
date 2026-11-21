@@ -551,8 +551,11 @@ Use ~C-c ]~ or ~C-c [~ and choose /Tree/ to move between trees and hear the
 destination root. ~]~ and ~[~ repeat these jumps and infer tree movement when
 point is within a recognised tree. You can also invoke
 ~M-x emacsvox-agent-shell-next-tree~ and
-~M-x emacsvox-agent-shell-previous-tree~. Ordinary arrows read nodes within a
-tree; there are no separate parent or sibling movement commands.
+~M-x emacsvox-agent-shell-previous-tree~. Up and Down read the nodes in order.
+To hear which branch contains the current node, use
+~M-x emacsvox-agent-shell-tree-parent~. For example, if two branches contain
+an /Overview/ node, the command moves to and reads the parent of the one you
+are on. Repeat it to reach the root.
 
 Open ~C-e S Y~ from Agent Shell, or ~C-e H s Y~ from Speech settings, for the
 shared Trees page. ~e~ chooses entry feedback and ~x~ chooses exit feedback:
