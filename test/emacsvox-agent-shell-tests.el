@@ -13625,6 +13625,39 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not emacsvox-table-reader--suspended))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
+(ert-deftest emacsvox-agent-shell-table-reuses-one-complete-rendering ()
+  (emacsvox-agent-shell-test--with-rendered-table
+      "| Name | Role |\n|---|---|\n| Alice | Engineer |\n| Bob | Writer |\n"
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (search-forward "Name")
+    (let ((build (symbol-function 'emacsvox-agent-shell--index-table)) (calls 0))
+      (cl-letf (((symbol-function 'emacsvox-agent-shell--index-table)
+                 (lambda (&rest args) (cl-incf calls) (apply build args))))
+        (emacsvox-agent-shell-test--capture-presentations
+          (emacsvox-agent-shell--table-navigation-setup)
+          (emacsvox-agent-shell-table-next-row)
+          (emacsvox-agent-shell-table-next-column)
+          (emacsvox-agent-shell--table-navigation-post-command)
+          (emacsvox-agent-shell-table-copy-cell)
+          (should (equal (car kill-ring) "Engineer")))
+        (should (= calls 1))
+        (let* ((cell (emacsvox-agent-shell--table-snapshot))
+               (start (car (plist-get cell :positions))))
+          (save-restriction
+            (narrow-to-region (point) (point-max))
+            (should-not (emacsvox-agent-shell--table-snapshot)))
+          (should (emacsvox-agent-shell--table-snapshot))
+          (let ((hidden (make-overlay (point) (1+ (point)))))
+            (overlay-put hidden 'invisible t)
+            (should-not (emacsvox-agent-shell--table-snapshot))
+            (delete-overlay hidden))
+          (with-silent-modifications
+            (remove-text-properties start (1+ start) '(agent-shell-markdown-table-cell-start nil)))
+          (should-not (emacsvox-agent-shell--table-readable-region))
+          (should-not (emacsvox-agent-shell--table-snapshot))
+          (should (= calls 4)))))))
+
 (ert-deftest emacsvox-agent-shell-suspended-table-motion-skips-logical-parsing ()
   "Moving after a deliberate quit stays cheap until navigation reaches prose."
   (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))

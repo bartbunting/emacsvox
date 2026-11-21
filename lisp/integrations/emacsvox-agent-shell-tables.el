@@ -165,6 +165,42 @@ Markdown renderer."
           (push (prop-match-beginning match) positions))))
     (nreverse positions)))
 
+(defvar-local emacsvox-agent-shell--rendered-table-cache nil
+  "The last rendered table, valid only within its source and display revision.")
+
+(defun emacsvox-agent-shell--index-table (source region)
+  "Match logical rows in SOURCE to displayed cell starts in REGION."
+  (let* ((starts (emacsvox-agent-shell--markdown-table-cell-starts region))
+         (parsed (emacsvox-agent-shell--markdown-table-rows source))
+         (rows (plist-get parsed :rows))
+         (remaining starts) (offset 0) (width 0) offsets grid)
+    (when (and starts (= (length starts) (cl-loop for row in rows sum (length row))))
+      (dolist (row rows)
+        (let ((cells (make-vector (length row) nil)))
+          (push offset offsets)
+          (dotimes (column (length cells)) (aset cells column (pop remaining)))
+          (setq offset (+ offset (length cells)) width (max width (length cells)))
+          (push cells grid)))
+      (append (list :region region :positions starts :starts (vconcat starts)
+                    :row-offsets (vconcat (nreverse offsets))
+                    :source-positions (vconcat (nreverse grid)) :source-rows (vconcat rows)
+                    :row-count (length rows) :column-count width)
+              parsed))))
+
+(defun emacsvox-agent-shell--rendered-table ()
+  "Return the complete table containing point for this revision and window width."
+  (when-let* ((source (get-text-property (point) 'agent-shell-markdown-table-source)))
+    (let* ((key (list (buffer-modified-tick) (point-min) (point-max) (window-body-width)))
+           (cache emacsvox-agent-shell--rendered-table-cache)
+           (region (nth 2 cache)))
+      (if (and (eq source (cadr cache)) (equal key (car cache))
+               (<= (car region) (point)) (< (point) (cdr region)))
+          (nth 3 cache)
+        (setq region (emacsvox-agent-shell--markdown-table-region-at-point))
+        (let ((table (emacsvox-agent-shell--index-table source region)))
+          (setq emacsvox-agent-shell--rendered-table-cache (list key source region table))
+          table)))))
+
 (defun emacsvox-agent-shell--table-line-borders ()
   "Return the rendered vertical border positions on the current line."
   (let ((end (line-end-position)) borders)
@@ -188,9 +224,8 @@ lines use their bordered column and the preceding logical row's markers."
   (let* ((position (point))
          (inhibit-field-text-motion t)
          (line-end (line-end-position))
-         (anchor (car (last (seq-take-while
-                            (lambda (start) (<= start line-end)) starts)))))
-    (when anchor
+         (last-on-line (emacsvox-table-reader--index-at starts line-end)))
+    (when (>= last-on-line 0)
       (save-excursion
         (let* ((borders (emacsvox-agent-shell--table-line-borders))
                (column (and (cdr borders)
@@ -200,16 +235,16 @@ lines use their bordered column and the preceding logical row's markers."
                                                        (<= border position))
                                                      borders))))))))
           (when column
-            (goto-char anchor)
+            (goto-char (aref starts last-on-line))
             (let* ((row-start (line-beginning-position))
                    (row-end (line-end-position))
-                   (first (seq-find (lambda (start) (>= start row-start)) starts))
-                   (next-row (seq-find (lambda (start) (> start row-end)) starts))
-                   (limit (if next-row
+                   (first (1+ (emacsvox-table-reader--index-at starts (1- row-start))))
+                   (next (1+ (emacsvox-table-reader--index-at starts row-end)))
+                   (limit (if (< next (length starts))
                               (save-excursion
-                                (goto-char next-row) (line-beginning-position))
+                                (goto-char (aref starts next)) (line-beginning-position))
                             (cdr region)))
-                   (index (+ (cl-position first starts) column))
+                   (index (+ first column))
                    spans)
               (goto-char row-start)
               (while (< (point) limit)
@@ -329,89 +364,46 @@ characters.  Return non-nil only when this function owns the movement."
       (apply original arguments))))
 
 (defun emacsvox-agent-shell--markdown-table-cell-at-point ()
-  "Return semantic Markdown table cell data for point, or nil."
-  (when-let* ((source (get-text-property
-                       (point) 'agent-shell-markdown-table-source))
-              (region (emacsvox-agent-shell--markdown-table-region-at-point))
-              (starts
-               (emacsvox-agent-shell--markdown-table-cell-starts region)))
-    (let* ((layout (emacsvox-agent-shell--table-cell-layout region starts))
-           (position (point))
-           (line-start (line-beginning-position))
-           (line-end (line-end-position))
-           (first-cell-on-line
-            (seq-find
-             (lambda (start)
-               (and (<= line-start start) (<= start line-end)))
-             starts))
-           ;; Ordinary line motion can land on a row's leading border or
-           ;; padding, before that row's first navigable cell marker.  Resolve
-           ;; that prefix as the first cell on the same rendered row instead
-           ;; of retaining the final cell from the preceding row.
-           (effective-position
-            (if (and first-cell-on-line (< position first-cell-on-line))
-                first-cell-on-line
-              position))
-           (cell-index -1)
-          (index 0))
-      (dolist (start starts)
-        (when (<= start effective-position)
-          (setq cell-index index))
-        (setq index (1+ index)))
-      (when layout (setq cell-index (plist-get layout :index)))
-      (when (>= cell-index 0)
-        (let* ((parsed (emacsvox-agent-shell--markdown-table-rows source))
-               (rows (plist-get parsed :rows))
-               (column-titles-p (plist-get parsed :column-titles-p))
-               (remaining cell-index)
-               (row-index 0)
-               current-row
-               column-index)
-          (while (and rows (not current-row))
-            (if (< remaining (length (car rows)))
-                (setq current-row (car rows)
-                      column-index remaining)
-              (setq remaining (- remaining (length (car rows)))
-                    rows (cdr rows)
-                    row-index (1+ row-index))))
-          (when current-row
-            (let ((all-rows (plist-get parsed :rows)))
-              (list
-               :positions starts
-               :spans (plist-get layout :spans)
-               :data (nth column-index current-row)
-               :row-index row-index
-               :row-count (length all-rows)
-               :column-index column-index
-               :column-count
-               (apply #'max 0 (mapcar #'length all-rows))
-               :column-titles-p column-titles-p
-               :rows all-rows
-               :column-title
-               (when column-titles-p
-                 (nth column-index (car all-rows)))
-               :row-title
-               (unless (and column-titles-p (zerop row-index))
-                 (car current-row))))))))))
+  "Return the logical Markdown cell and its current rendered spans."
+  (when-let* ((table (emacsvox-agent-shell--rendered-table)))
+    (let* ((starts (plist-get table :starts))
+           (layout (emacsvox-agent-shell--table-cell-layout (plist-get table :region) starts))
+           ;; Leading row padding belongs to the first cell on that line.
+           (first (1+ (emacsvox-table-reader--index-at starts (1- (line-beginning-position)))))
+           (index (or (plist-get layout :index)
+                      (if (and (< first (length starts))
+                               (< (point) (aref starts first))
+                               (<= (aref starts first) (line-end-position)))
+                          first
+                        (emacsvox-table-reader--index-at starts (point))))))
+      (when (< -1 index (length starts))
+        (let* ((offsets (plist-get table :row-offsets))
+               (row (emacsvox-table-reader--index-at offsets index))
+               (column (- index (aref offsets row)))
+               (values (aref (plist-get table :source-rows) row))
+               (header (plist-get table :column-titles-p)))
+          (append (list :spans (plist-get layout :spans) :data (nth column values)
+                        :row-index row :column-index column
+                        :column-title (and header (nth column (car (plist-get table :rows))))
+                        :row-title (unless (and header (zerop row)) (car values)))
+                  table))))))
+
+(defun emacsvox-agent-shell--table-browsable-p ()
+  "Whether point is in visible rendered output outside editable input."
+  (and (get-text-property (point) 'agent-shell-markdown-table-source)
+       (not (invisible-p (point)))
+       (not (derived-mode-p 'agent-shell-viewport-edit-mode))
+       (let ((input (emacsvox-agent-shell--live-input-bounds)))
+         (not (and input (>= (point) (car input)))))))
 
 (defun emacsvox-agent-shell--table-snapshot ()
-  "Return a fresh rendered cell for the shared reader, or nil.
-Reject editable input and incomplete source-to-display mappings.  Never keep
-positions across a render or resize."
-  (let* ((input (emacsvox-agent-shell--live-input-bounds))
-         (region (emacsvox-agent-shell--markdown-table-region-at-point))
-         (cell
-          (and region
-               (not (derived-mode-p 'agent-shell-viewport-edit-mode))
-               (not (and input (>= (point) (car input))))
-               (emacsvox-agent-shell--markdown-table-cell-at-point))))
-    (if (and cell
-             (= (length (plist-get cell :positions))
-                (apply #'+ (mapcar #'length (plist-get cell :rows)))))
-        (plist-put cell :region region)
-      (setq emacsvox-agent-shell--table-navigation-active nil
-            emacsvox-agent-shell--table-navigation-table-start nil)
-      nil)))
+  "Return a logical cell at point if its displayed mapping is complete."
+  (or (and (emacsvox-agent-shell--table-browsable-p)
+           (emacsvox-agent-shell--markdown-table-cell-at-point))
+      (progn
+        (setq emacsvox-agent-shell--table-navigation-active nil
+              emacsvox-agent-shell--table-navigation-table-start nil)
+        nil)))
 
 (defun emacsvox-agent-shell--table-submit (text occasion presentation icon)
   "Submit shared-reader TEXT with Agent Shell's existing semantic facts.
@@ -485,10 +477,9 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 
 (defun emacsvox-agent-shell--table-entry-feedback (direction)
   "Enter and speak the table at point in navigation DIRECTION."
-  (when-let* ((region (emacsvox-agent-shell--markdown-table-region-at-point))
-              (starts
-               (emacsvox-agent-shell--markdown-table-cell-starts region)))
-    (goto-char (if (eq direction 'forward) (car starts) (car (last starts))))
+  (when-let* ((region (emacsvox-agent-shell--table-readable-region))
+              (starts (plist-get (emacsvox-agent-shell--rendered-table) :starts)))
+    (goto-char (aref starts (if (eq direction 'forward) 0 (1- (length starts)))))
     (when-let* ((cell (emacsvox-agent-shell--table-snapshot)))
       (setq emacsvox-table-reader--suspended nil
             emacsvox-table-reader--last-titles nil)
@@ -518,13 +509,6 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
   (interactive)
   (emacsvox-agent-shell--table-read #'emacsvox-table-reader--inspect 'dimensions))
 
-(defun emacsvox-agent-shell--table-leading-title-speech (title face)
-  "Delegate table leading-title-speech to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--leading-title-speech title face)))
-
 (defun emacsvox-agent-shell--table-row-speech (cell)
   "Format table row with the effective reading preferences."
   (let ((emacsvox-table-reader--preference-mode 'agent-shell-mode))
@@ -547,23 +531,6 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 
 ;; Agent-shell does not currently expose a current-cell value or copy command.
 ;; Prefer speech-enabling that command if agent-shell adds one in the future.
-(defun emacsvox-agent-shell--table-plain-cell (data)
-  "Delegate table plain-cell to the shared reader."
-  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
-        (emacsvox-table-reader-data-position
-         emacsvox-agent-shell-table-data-position))
-    (emacsvox-table-reader--plain-cell data)))
-
-(defun emacsvox-agent-shell--table-copy (text object)
-  "Copy plain TEXT to the kill ring and announce copied table OBJECT."
-  (kill-new (substring-no-properties text))
-  (emacsvox-agent-shell--submit-text-feedback
-   (format "Copied table %s." object)
-   (emacsvox-agent-shell--presentation-facts
-    (if (string= object "cell") 'agent-table-cell 'agent-table)
-    'agent-content-copied)
-   'state-change 'save-object))
-
 (defun emacsvox-agent-shell-table-copy-cell ()
   "Copy the logical Markdown table cell at point to the kill ring.
 Remove renderer padding, borders, and text properties.  Preserve the complete
@@ -582,20 +549,6 @@ Separate cells with tabs and omit Markdown separator syntax."
 Separate cells with newlines and omit Markdown separator syntax."
   (interactive)
   (emacsvox-agent-shell--table-read #'emacsvox-table-reader--copy 'column))
-
-(defun emacsvox-agent-shell--table-cell-position (cell row column)
-  "Return the rendered position for ROW and COLUMN relative to CELL.
-Return nil when that logical cell does not exist."
-  (let* ((rows (plist-get cell :rows))
-         (region (emacsvox-agent-shell--markdown-table-region-at-point))
-         (starts
-          (and region
-               (emacsvox-agent-shell--markdown-table-cell-starts region)))
-         (target-row (nth row rows)))
-    (when (and target-row (<= 0 column) (< column (length target-row)))
-      (nth (+ column
-              (apply #'+ (mapcar #'length (seq-take rows row))))
-           starts))))
 
 (defun emacsvox-agent-shell--table-boundary-feedback (message)
   "Play a boundary cue and speak MESSAGE."
@@ -831,13 +784,9 @@ In a viewport, q now resumes its ordinary bury-buffer action."
   (emacsvox-table-reader--before-command))
 
 (defun emacsvox-agent-shell--table-readable-region ()
-  "Return a rendered region only while its logical mapping is usable.
-At a leading table border, validate from the first navigable cell."
-  (when-let* ((region (emacsvox-agent-shell--markdown-table-region-at-point)))
-    (save-excursion
-      (when-let* ((start (car (emacsvox-agent-shell--markdown-table-cell-starts region))))
-        (goto-char start)
-        (when (emacsvox-agent-shell--table-snapshot) region)))))
+  "Return the complete readable region, including its leading border."
+  (and (emacsvox-agent-shell--table-browsable-p)
+       (plist-get (emacsvox-agent-shell--rendered-table) :region)))
 
 (defun emacsvox-agent-shell--table-track-region (region)
   "Track rendered REGION through edits, releasing old markers first."
@@ -937,6 +886,7 @@ Streaming elsewhere in the transcript must not interrupt table navigation."
 (defun emacsvox-agent-shell--table-navigation-cleanup ()
   "Remove contextual Markdown table navigation from the current buffer."
   (emacsvox-agent-shell--table-track-region nil)
+  (setq emacsvox-agent-shell--rendered-table-cache nil)
   (emacsvox-agent-shell--vertical-toggle-hint-cleanup)
   (setq emacsvox-agent-shell--speech-control-active nil
         emacsvox-agent-shell--table-navigation-active nil
