@@ -355,19 +355,23 @@ MOVEMENT enables optional coordinate and repeated-title feedback."
          (back-to-indentation)
          (point))))))
 
-(defun emacsvox-table-reader--destination (cell row-delta column-delta)
+(defun emacsvox-table-reader--destination (cell row-delta column-delta &optional limit-rows)
   "Return a non-mutating movement result for CELL and the requested deltas.
 ROW-DELTA and COLUMN-DELTA use logical coordinates.  The result is
 \(`cell' POSITION), (`exit' DIRECTION), or (`boundary' MESSAGE).
 CELL carries complete :rows, zero-based :row-index and :column-index,
-and a flat :positions list in row order.  Missing cells never clamp."
+and a flat :positions list in row order.  With LIMIT-ROWS, stop a counted
+move at the edge row.  A further step there reports the edge direction."
   (let* ((rows (plist-get cell :rows))
          (positions (plist-get cell :source-positions))
-         (row (+ (plist-get cell :row-index) row-delta))
+         (current-row (plist-get cell :row-index))
+         (last-row (1- (or (plist-get cell :row-count) (length rows))))
+         (target (+ current-row row-delta))
+         (row (if limit-rows (max 0 (min last-row target)) target))
          (column (+ (plist-get cell :column-index) column-delta)))
     (cond
-     ((< row 0) '(exit backward))
-     ((>= row (or (plist-get cell :row-count) (length rows))) '(exit forward))
+     ((and (< target 0) (or (not limit-rows) (zerop current-row))) '(exit backward))
+     ((and (> target last-row) (or (not limit-rows) (= current-row last-row))) '(exit forward))
      ((< column 0) '(boundary "Left edge of table."))
      ((>= column (length (if positions (aref positions row) (nth row rows))))
       (list 'boundary (if (zerop row-delta)
@@ -722,18 +726,19 @@ With QUIET, let the following movement submit the single entry announcement."
   (interactive)
   (emacsvox-table-reader--exit 'backward))
 
-(defun emacsvox-table-reader--move (rows columns &optional cell-only exit-function)
+(defun emacsvox-table-reader--move (rows columns &optional cell-only edge-action)
   "Move by logical ROWS and COLUMNS, reading rows after vertical movement.
-With CELL-ONLY, read a cell instead.  EXIT-FUNCTION, when supplied, owns
-the host's exit lifecycle; otherwise use the explicit reader's exit."
+With CELL-ONLY, read a cell instead.  EDGE-ACTION can be `stop' to keep
+movement within the table, or a function to handle exits for the host."
   (let ((origin (emacsvox-table-reader--cell)))
-    (pcase (emacsvox-table-reader--destination origin rows columns)
+    (pcase (emacsvox-table-reader--destination origin rows columns (eq edge-action 'stop))
       (`(exit ,direction)
-       (if (eq (emacsvox-table-reader--preference 'edge-action) 'stop)
+       (if (or (eq edge-action 'stop)
+               (eq (emacsvox-table-reader--preference 'edge-action) 'stop))
            (emacsvox-table-reader--submit
             (if (eq direction 'backward) "First row of table." "Last row of table.")
             'navigation 'context 'warn-user origin)
-         (funcall (or exit-function #'emacsvox-table-reader--exit) direction)))
+         (funcall (or edge-action #'emacsvox-table-reader--exit) direction)))
       (`(boundary ,text)
        (emacsvox-table-reader--submit text 'navigation 'context 'warn-user origin))
       (`(cell ,position)

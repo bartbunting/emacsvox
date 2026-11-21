@@ -8084,18 +8084,21 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (dolist (case '(("C-M-<right>" "Engineer")
                           ("C-M-<up>" "Role")
                           ("C-M-<down>" "Engineer")
-                          ("C-M-<down>" "after")))
+                          ("C-M-<down>" "Engineer")
+                          ("<down>" "after")))
             (emacsvox-agent-shell-test--capture-events
               (execute-kbd-macro (kbd (car case))))
             (should (looking-at (cadr case))))
           (should-not emacsvox-agent-shell--table-navigation-active))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
-(ert-deftest emacsvox-agent-shell-table-vertical-arrows-stop-after-exit ()
-  "Repeating a table arrow after either exit must not enter surrounding lists."
+(ert-deftest emacsvox-agent-shell-table-vertical-arrows-stop-at-edges ()
+  "Cell arrows stop at either edge.  Plain arrows and line motion can leave."
   (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
-    (dolist (case '(("C-M-<up>" "Name" "before")
-                    ("C-M-<down>" "Alice" "after")))
+    (dolist (case '(("C-M-<up>" "Name" "First row of table." "<up>" "before")
+                    ("C-M-<down>" "Alice" "Last row of table." "<down>" "after")
+                    ("C-M-<up>" "Name" "First row of table." "C-p" "before")
+                    ("C-M-<down>" "Alice" "Last row of table." "C-n" "after")))
       (save-window-excursion
         (emacsvox-agent-shell-test--with-rendered-table
             "(before)\n| Name | Role |\n|---|---|\n| Alice | Engineer |\n(after)\n"
@@ -8108,10 +8111,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (search-forward (nth 1 case))
           (backward-char (length (nth 1 case)))
           (emacsvox-agent-shell-test--capture-events
-            (emacsvox-agent-shell--table-navigation-post-command)
-            (execute-kbd-macro (kbd (car case))))
+            (emacsvox-agent-shell--table-navigation-post-command))
+          (let ((origin (point)))
+            (dotimes (_ 2)
+              (should (member (list 'speak (nth 2 case))
+                              (emacsvox-agent-shell-test--capture-events
+                                (execute-kbd-macro (kbd (car case))))))
+              (should (= (point) origin))
+              (should emacsvox-agent-shell--table-navigation-active))
+            (emacsvox-agent-shell-test--capture-events (execute-kbd-macro (kbd "q")))
+            (should-not emacsvox-agent-shell--table-navigation-active)
+            (should (member (list 'speak (concat "Table reading. " (nth 2 case)))
+                            (emacsvox-agent-shell-test--capture-events
+                              (execute-kbd-macro (kbd (car case))))))
+            (should (= (point) origin))
+            (should emacsvox-agent-shell--table-navigation-active))
+          ;; Ordinary line motion can cross borders and blank lines on the way out.
+          (let ((emacsvox-table-reader-movement-speech 'cell))
+            (if (member (nth 3 case) '("C-p" "C-n"))
+                (cl-loop repeat 6
+                         until (save-excursion
+                                 (beginning-of-line)
+                                 (looking-at-p (regexp-quote (concat "(" (nth 4 case) ")"))))
+                         do (emacsvox-agent-shell-test--capture-events
+                              (execute-kbd-macro (kbd (nth 3 case)))))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd (nth 3 case))))))
           (should-not emacsvox-agent-shell--table-navigation-active)
-          (should (string-match-p (nth 2 case)
+          (should (string-match-p (nth 4 case)
                                   (buffer-substring-no-properties
                                    (line-beginning-position) (line-end-position))))
           (let ((origin (point)))
@@ -8274,6 +8301,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                           ("C-M-<up>" "Role" "Role.")
                           ("C-u 2 C-M-<down>" "Reviewer" "Reviewer, Bob, Role.")
                           ("C-u -1 C-M-<down>" "Engineer" "Engineer, Alice, Role.")
+                          ("C-u 9 C-M-<down>" "Reviewer" "Reviewer, Bob, Role.")
+                          ("C-u 9 C-M-<up>" "Role" "Role.")
+                          ("C-M-<down>" "Engineer" "Engineer, Alice, Role.")
                           ("C-M-<up>" "Role" "Role.")
                           ("C-M-<down>" "Engineer" "Engineer, Alice, Role.")))
             (let ((events (emacsvox-agent-shell-test--capture-events
@@ -13048,7 +13078,11 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (equal (nth 1 (car presentations)) (concat long ", Notes."))))
           (call-interactively (key-binding (kbd "C-M-<down>")))
           (should (looking-at "End"))
-          (call-interactively (key-binding (kbd "M-<down>")))
+          (let ((origin (point)))
+            (call-interactively (key-binding (kbd "C-M-<down>")))
+            (should (= (point) origin))
+            (should emacsvox-agent-shell--table-navigation-active))
+          (call-interactively (key-binding (kbd "<down>")))
           (should (looking-at "after")))))))
 
 

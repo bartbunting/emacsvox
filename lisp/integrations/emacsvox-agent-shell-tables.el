@@ -640,13 +640,13 @@ When CELL-ONLY is non-nil, read only the destination cell after row movement."
   "Move COUNT logical table rows down and speak the destination cell.
 Retain the current column and use the current table title settings."
   (interactive "p")
-  (emacsvox-agent-shell--table-move (or count 1) 0 t))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--move (or count 1) 0 t 'stop))
 
 (defun emacsvox-agent-shell-table-previous-row-cell (&optional count)
   "Move COUNT logical table rows up and speak the destination cell.
 Retain the current column and use the current table title settings."
   (interactive "p")
-  (emacsvox-agent-shell--table-move (- (or count 1)) 0 t))
+  (emacsvox-agent-shell-table-next-row-cell (- (or count 1))))
 
 (defvar emacsvox-agent-shell--table-navigation-map
   (let ((map (make-sparse-keymap)))
@@ -719,7 +719,7 @@ In a viewport, q now resumes its ordinary bury-buffer action."
    (or (emacsvox-agent-shell--table-snapshot)
        (user-error "Not in a rendered Markdown table")) t)
   (let ((emacsvox-table-reader--entering t))
-    (emacsvox-agent-shell--table-move rows columns t)))
+    (emacsvox-agent-shell--table-read #'emacsvox-table-reader--move rows columns t 'stop)))
 
 (dolist (entry '((emacsvox-agent-shell--table-enter-down 1 0)
                  (emacsvox-agent-shell--table-enter-up -1 0)
