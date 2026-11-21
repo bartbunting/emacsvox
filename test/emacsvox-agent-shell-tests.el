@@ -10382,6 +10382,36 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (string-match-p (regexp-quote body)
                                (agent-shell-markdown-reconstruct (point-min) (point-max))))))))
 
+(ert-deftest emacsvox-agent-shell-tree-identity-survives-fragment-replacement ()
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let* ((agent-shell-section-functions nil)
+           (emacsvox-agent-shell--line-navigation-speech-p t)
+           (tree "Root\n├─ Same\n└─ Peer")
+           (body (concat "```text\n" tree "\n\n" tree "\n```\n\n```text\n" tree "\n```\n")))
+      (cl-labels ((render (id content)
+                    (emacsvox-agent-shell-test--render-response-section
+                     :namespace-id "turn" :block-id id :body content))
+                  (select (count)
+                    (goto-char (point-min))
+                    (search-forward "Peer" nil nil count)
+                    (beginning-of-line)
+                    (get-text-property (point) 'emacsvox-text-tree-id))
+                  (read-node ()
+                    (substring-no-properties
+                     (emacsvox-agent-shell--prepare-speech-text
+                      (buffer-substring (line-beginning-position) (line-end-position))))))
+        (render "first" body)
+        (let ((ids (mapcar #'select '(1 2 3))))
+          (should (= 3 (length (delete-dups (copy-sequence ids)))))
+          (should (equal (read-node) "Tree. Level 1. Peer"))
+          (render "first" (concat "New introduction\n\n" body "\nNew prose."))
+          (should (equal ids (mapcar #'select '(1 2 3))))
+          (should (equal (read-node) "Peer"))
+          (render "second" body)
+          (should-not (member (select 4) ids))
+          (should (equal (read-node) "End of tree. Tree. Level 1. Peer")))))))
+
 (ert-deftest emacsvox-agent-shell-tree-line-level-feedback ()
   "Line preparation tracks depth while independent reading starts at entry."
   (with-temp-buffer

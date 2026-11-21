@@ -285,6 +285,19 @@ to a semantic thought fragment so ordinary faced text is never suppressed."
                 end))))
         (and (< position end) position)))))
 
+(defun emacsvox-agent-shell--previous-tree-number (start fragment)
+  "Return the preceding tree number in FRAGMENT before this panel's START."
+  (save-restriction
+    ;; The Markdown renderer narrows to the newly streamed tail.
+    (widen)
+    (let* ((edge (if (and (> start (point-min))
+                          (get-text-property (1- start) 'emacsvox-text-tree-id))
+                     start
+                   (previous-single-property-change start 'emacsvox-text-tree-id nil (point-min))))
+           (id (and (> edge (point-min))
+                    (get-text-property (1- edge) 'emacsvox-text-tree-id))))
+      (if (and (consp id) (equal (car id) fragment)) (cadr id) 0))))
+
 (defun emacsvox-agent-shell--mark-text-trees (&rest _)
   "Mark complete plain-text tree panels in the accessible rendered region.
 The renderer supplies complete source-block bodies and their original fences.
@@ -300,7 +313,19 @@ Open fences, programming-language blocks and ambiguous bodies remain literal."
                      (string-match-p
                       "\\`[ \t]*\\(?:`\\{3,\\}\\|~\\{3,\\}\\)[ \t]*\\(?:text\\|plaintext\\)?[ \t]*\n"
                       source))
-            (emacsvox-text-tree--mark-region position end))
+            (let ((fragment (map-elt (get-text-property position 'agent-shell-ui-state)
+                                     :qualified-id))
+                  number)
+              (emacsvox-text-tree--mark-region
+               position end
+               (when fragment
+                 (lambda (root)
+                   (unless number
+                     (setq number (emacsvox-agent-shell--previous-tree-number position fragment)))
+                   (list fragment (cl-incf number)
+                         (save-excursion
+                           (goto-char root)
+                           (buffer-substring-no-properties root (line-end-position)))))))))
           (setq position end))))))
 
 (defun emacsvox-agent-shell--without-table-borders-for-speech (text)

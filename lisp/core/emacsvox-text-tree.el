@@ -93,20 +93,24 @@ before or after a tree does not invalidate that tree.  Offsets refer to TEXT."
           (setq start next)))
       (nreverse nodes))))
 
-(defun emacsvox-text-tree--mark-region (start end)
+(defun emacsvox-text-tree--mark-region (start end &optional root-identity)
   "Mark confirmed tree paragraphs between START and END without changing text.
 Return parsed nodes, or nil if no paragraph is a confirmed tree.
 Replace previous tree annotations, including when recognition fails.
 Keep depth on labels and prefixes, so copies and line speech retain context.
-Callers must supply a complete eligible region, not an arbitrary selection."
+Callers supply a complete eligible region.  Optional ROOT-IDENTITY maps a
+root position to its persistent identity within the host document."
   (let ((nodes (emacsvox-text-tree--parse-paragraphs
                 (buffer-substring-no-properties start end)))
         identity)
     (dolist (node nodes)
       (when (zerop (plist-get node :depth))
-        (setq identity (or (get-text-property (+ start (plist-get node :start))
-                                             'emacsvox-text-tree-id)
-                           (make-symbol "text-tree"))))
+        (let* ((root (+ start (plist-get node :start)))
+               (old (get-text-property root 'emacsvox-text-tree-id))
+               (new (and root-identity (funcall root-identity root))))
+          (setq identity (cond ((and new (not (equal new old))) new)
+                               (old old)
+                               (t (make-symbol "text-tree"))))))
       (plist-put node :tree-id identity))
     (with-silent-modifications
       (remove-text-properties start end
@@ -178,12 +182,12 @@ This function has no state and leaves TEXT and its properties unchanged."
                (span (substring clean position next)))
           (cond
            ((and id (integerp depth))
-            (unless (eq id (car context))
+            (unless (equal id (car context))
               (when context
                 (push (emacsvox-text-tree--indicator 'tree-exited "End of tree. ") parts))
               (push (emacsvox-text-tree--indicator 'tree-entered "Tree. " depth) parts))
             (when (and (not (equal (cons id depth) context))
-                       (or (> depth 0) (eq id (car context))))
+                       (or (> depth 0) (equal id (car context))))
               (push (emacsvox-text-tree--indicator
                      'tree-level-changed
                      (if (zerop depth) "Root. " (format "Level %d. " depth)) depth) parts))
