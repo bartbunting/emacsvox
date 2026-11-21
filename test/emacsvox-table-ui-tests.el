@@ -348,5 +348,21 @@
                      (= 1 (emacsvox-table-current-row emacsvox-table))
                      (= 1 (emacsvox-table-current-column emacsvox-table))))))))
 
+(ert-deftest emacsvox-table-ui-sort-includes-first-headerless-row-and-blank-cells ()
+  (emacsvox-table-ui-test--with-view [["Zulu" "3"] ["Alpha" ""] ["Beta" "1"]]
+    (setf (emacsvox-table-column-header emacsvox-table) nil)
+    (let ((view (generate-new-buffer " *headerless-sort*")))
+      (unwind-protect
+          (cl-letf (((symbol-function 'get-buffer-create) (lambda (_) view)))
+            (execute-kbd-macro "#")
+            (should (looking-at "Alpha"))
+            (should-not (plist-get (emacsvox-table-ui--snapshot) :column-titles-p))
+            (should (equal '(("Alpha" "") ("Beta" "1") ("Zulu" "3"))
+                           (plist-get (emacsvox-table-ui--snapshot) :rows)))
+            (execute-kbd-macro (kbd "TAB #"))
+            (should (= 3 (emacsvox-table-num-rows emacsvox-table)))
+            (should (member '("Alpha" "") (plist-get (emacsvox-table-ui--snapshot) :rows))))
+        (when (buffer-live-p view) (kill-buffer view))))))
+
 (provide 'emacsvox-table-ui-tests)
 ;;; emacsvox-table-ui-tests.el ends here

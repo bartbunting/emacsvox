@@ -1199,58 +1199,42 @@ markup to use."
 
 ;;;   table sorting:
 
+(defun emacsvox-table-ui--sort-key (value)
+  "Return a number for numeric cells or the displayed string for other VALUEs."
+  (cond ((numberp value) value)
+        ((and (stringp value)
+              (string-match-p
+               (rx string-start (* blank) (? (any "+-"))
+                   (or (seq (+ digit) (? "." (* digit))) (seq "." (+ digit)))
+                   (? (any "eE") (? (any "+-")) (+ digit)) (* blank) string-end)
+               value))
+         (string-to-number (string-trim value)))
+        (t (format "%s" (or value "")))))
+
 (defun emacsvox-table-sort-on-current-column ()
-  "Sort table on current column. "
+  "Open a view sorted on this column, retaining its headers and all data rows."
   (interactive)
-  (cl-assert (eq major-mode  'emacsvox-table-mode) nil "Not in table mode.")
-  (let* ((column  (emacsvox-table-current-column emacsvox-table))
-         (row-head   nil)
+  (cl-assert (eq major-mode 'emacsvox-table-mode) nil "Not in table mode.")
+  (let* ((column (emacsvox-table-current-column emacsvox-table))
          (row-filter emacsvox-table-speak-row-filter)
          (column-filter emacsvox-table-speak-column-filter)
          (titles emacsvox-table-reader-titles)
          (data-position emacsvox-table-reader-data-position)
-         (rows (append
-                (emacsvox-table-elements emacsvox-table) nil))
-         (sorted-table nil)
-         (sorted-row-list nil)
-         (buffer(get-buffer-create  (format "sorted-on-%d" column))))
-    (setq row-head (pop rows)) ;;; header does not play in sort
-    (setq  rows
-           (cl-remove-if
-            #'(lambda (row)
-                (null (aref row column)))
-            rows))
-    (setq
-     sorted-row-list
-     (sort
-      rows
-      #'(lambda (x y)
-          (cond
-           ((and (numberp (read  (aref x column)))
-                 (numberp (read  (aref y column))))
-            (< (read  (aref x column))
-               (read  (aref y column))))
-           ((and (stringp  (aref x column))
-                 (stringp (aref y column)))
-            (string-lessp (aref x column)
-                          (aref y column)))
-           (t (string-lessp
-               (format "%s" (aref x column))
-               (format "%s" (aref y column))))))))
-    (push row-head sorted-row-list)
-    (setq sorted-table (make-vector (length sorted-row-list) nil))
-    (cl-loop
-     for i from 0 to (1- (length sorted-row-list)) do
-     (aset sorted-table i (nth i sorted-row-list)))
-    (emacsvox-table-prepare-table-buffer
-     (emacsvox-table-make-table  sorted-table) buffer)
-    (switch-to-buffer buffer)
+         (rows (append (emacsvox-table-elements emacsvox-table) nil))
+         (header (and (emacsvox-table-column-header emacsvox-table) (pop rows)))
+         (sorted (sort rows :key (lambda (row) (emacsvox-table-ui--sort-key (aref row column)))
+                       :lessp (lambda (a b)
+                                (if (numberp a) (or (stringp b) (< a b))
+                                  (and (stringp b) (string-lessp a b))))))
+         (table (emacsvox-table-make-table (vconcat (if header (cons header sorted) sorted)))))
+    (unless header (setf (emacsvox-table-column-header table) nil))
+    (emacsvox-table-prepare-table-buffer table (get-buffer-create (format "sorted-on-%d" column)))
     (setq emacsvox-table-speak-row-filter row-filter
           emacsvox-table-speak-column-filter column-filter)
     (setq-local emacsvox-table-reader-titles titles
                 emacsvox-table-reader-data-position data-position)
-    (emacsvox-table-goto  0 column)
-    (call-interactively #'emacsvox-table-next-row)))
+    (emacsvox-table-goto 0 column)
+    (when (and header sorted) (call-interactively #'emacsvox-table-next-row))))
 
 ;;;   persistent store
 
