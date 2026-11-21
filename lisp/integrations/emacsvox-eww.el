@@ -2587,6 +2587,7 @@ Value is specified as a position in the list of table cells.")
 (defun emacsvox-eww-table-data ()
   "Open the current table in the table browser, retaining any header row."
   (interactive)
+  (require 'emacsvox-table-ui)
   (let* ((model (get-text-property (point) 'emacsvox-shr-table))
          (table (emacsvox-table-make-table (emacsvox-eww-table-table))))
     (when (if model (plist-get model :headerless)
