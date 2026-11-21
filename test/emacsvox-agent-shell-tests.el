@@ -13753,6 +13753,24 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not (emacsvox-agent-shell--table-snapshot))
           (should (= calls 4)))))))
 
+(ert-deftest emacsvox-agent-shell-table-quit-permits-a-direct-jump-to-another-table ()
+  (emacsvox-agent-shell-test--with-rendered-table
+      "| Name | Age |\n|---|---|\n| Alice | 40 |\n\nBetween\n\n| Name | Age |\n|---|---|\n| Bob | 50 |\n"
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (search-forward "Alice")
+    (let ((emacsvox-table-reader-activation 'automatic))
+      (emacsvox-agent-shell--table-navigation-setup)
+      (emacsvox-agent-shell-test--capture-presentations
+        (emacsvox-agent-shell--table-leave)
+        (search-forward "40")
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should-not emacsvox-agent-shell--table-navigation-active)
+        (search-forward "Bob")
+        (emacsvox-agent-shell--table-navigation-post-command)
+        (should emacsvox-agent-shell--table-navigation-active)
+        (should (equal "Bob" (plist-get (emacsvox-agent-shell--table-snapshot) :data)))))))
+
 (ert-deftest emacsvox-agent-shell-suspended-table-motion-skips-logical-parsing ()
   "Moving after a deliberate quit stays cheap until navigation reaches prose."
   (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))

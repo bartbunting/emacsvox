@@ -691,7 +691,7 @@ Retain the current column and use the current table title settings."
   "Leave table reading in place until explicit entry or a visit through prose.
 In a viewport, q now resumes its ordinary bury-buffer action."
   (interactive)
-  (setq emacsvox-table-reader--suspended t
+  (setq emacsvox-table-reader--suspended (buffer-modified-tick)
         emacsvox-table-reader--last-titles nil
         emacsvox-agent-shell--table-navigation-active nil)
   (emacsvox-agent-shell--submit-text-feedback
@@ -781,13 +781,16 @@ In a viewport, q now resumes its ordinary bury-buffer action."
        (plist-get (emacsvox-agent-shell--rendered-table) :region)))
 
 (defun emacsvox-agent-shell--table-track-region (region)
-  "Track rendered REGION through edits, releasing old markers first."
-  (when emacsvox-agent-shell--table-navigation-region
-    (set-marker (car emacsvox-agent-shell--table-navigation-region) nil)
-    (set-marker (cdr emacsvox-agent-shell--table-navigation-region) nil))
-  (setq emacsvox-agent-shell--table-navigation-region
-        (when region
-          (cons (copy-marker (car region)) (copy-marker (cdr region) t)))))
+  "Track rendered REGION through edits.  Release its markers when REGION is nil."
+  (let ((markers emacsvox-agent-shell--table-navigation-region))
+    (if markers
+        (progn
+          (set-marker (car markers) (car region))
+          (set-marker (cdr markers) (cdr region))
+          (unless region (setq emacsvox-agent-shell--table-navigation-region nil)))
+      (when region
+        (setq emacsvox-agent-shell--table-navigation-region
+              (cons (copy-marker (car region)) (copy-marker (cdr region) t)))))))
 
 (defun emacsvox-agent-shell--table-navigation-invalidate (begin end _old-length)
   "Suspend table keys when the changed BEGIN..END range affects this table.
@@ -800,6 +803,13 @@ Streaming elsewhere in the transcript must not interrupt table navigation."
 
 (defun emacsvox-agent-shell--table-navigation-post-command ()
   "Update the contextual table keymap.  Return 'entered on a spoken entry."
+  ;; A direct jump to another table ends a visit when the old rendering is
+  ;; still intact.  After a redraw its identity is uncertain until we reach prose.
+  (when-let* ((visit emacsvox-agent-shell--table-navigation-region)
+              ((eql emacsvox-table-reader--suspended (buffer-modified-tick)))
+              ((get-text-property (point) 'agent-shell-markdown-table-source))
+              ((or (< (point) (car visit)) (>= (point) (cdr visit)))))
+    (setq emacsvox-table-reader--suspended nil))
   (let* ((suspended-table
           (and emacsvox-table-reader--suspended
                (get-text-property (point) 'agent-shell-markdown-table-source)))
