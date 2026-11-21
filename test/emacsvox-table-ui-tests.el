@@ -307,5 +307,46 @@
       (execute-kbd-macro (kbd "<up>"))
       (should (= start (point))))))
 
+(ert-deftest emacsvox-table-ui-tab-file-preserves-open-source-and-point ()
+  (let* ((file (make-temp-file "emacsvox-table-" nil ".tab" "[[\"saved\"]]"))
+         (view-name (format "*%s*" (file-name-nondirectory file)))
+         (source (find-file-noselect file)))
+    (unwind-protect
+        (save-window-excursion
+          (with-current-buffer source
+            (erase-buffer)
+            (insert "[[\"edited\"]]")
+            (narrow-to-region 3 (point-max)))
+          (let ((position (with-current-buffer source (point))))
+            (emacsvox-table-find-file file)
+            (should (equal (emacsvox-table-current-element emacsvox-table) "edited"))
+            (with-current-buffer source
+              (should (and (= position (point)) (buffer-narrowed-p) (buffer-modified-p)))
+              (set-buffer-modified-p nil)))
+          (kill-buffer source)
+          (emacsvox-table-find-file file)
+          (should (equal (emacsvox-table-current-element emacsvox-table) "saved"))
+          (should-not (find-buffer-visiting file))
+          (kill-buffer (get-buffer view-name))
+          (with-temp-file file (insert "[["))
+          (should-error (emacsvox-table-find-file file))
+          (should-not (get-buffer view-name))
+          (should-not (find-buffer-visiting file)))
+      (when (buffer-live-p source)
+        (with-current-buffer source (set-buffer-modified-p nil))
+        (kill-buffer source))
+      (when (get-buffer view-name) (kill-buffer view-name))
+      (delete-file file))))
+
+(ert-deftest emacsvox-table-ui-jump-rejects-invalid-coordinates-in-place ()
+  (emacsvox-table-ui-test--with-view [["Name" "Age"] ["Alice" "42"]]
+    (funcall (key-binding "j") 1 1)
+    (let ((position (point)) (feedback spoken))
+      (dolist (target '((-1 0) (0 -1) (2 0) (0 2) (1.5 0)))
+        (should-error (apply (key-binding "j") target) :type 'user-error)
+        (should (and (= position (point)) (eq feedback spoken)
+                     (= 1 (emacsvox-table-current-row emacsvox-table))
+                     (= 1 (emacsvox-table-current-column emacsvox-table))))))))
+
 (provide 'emacsvox-table-ui-tests)
 ;;; emacsvox-table-ui-tests.el ends here

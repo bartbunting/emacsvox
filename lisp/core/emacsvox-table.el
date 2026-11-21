@@ -185,18 +185,15 @@ Calls callback once per column."
 ;;;   Moving point:
 
 (defun emacsvox-table-goto-cell (table row column)
-  "Move to a cell of the table"
-  (let  ((row-count (emacsvox-table-num-rows table))
-         (column-count (emacsvox-table-num-columns table)))
-    (cond
-     ((or (<= 0 row)
-          (>= row row-count)
-          (<= 0 column)
-          (>= column column-count))
-      (setf (emacsvox-table-current-row table) row)
-      (setf (emacsvox-table-current-column table) column))
-     (t (error "Current table has %s rows and %s columns"
-               row-count column-count)))))
+  "Select zero-based ROW and COLUMN in TABLE."
+  (let ((rows (emacsvox-table-num-rows table))
+        (columns (emacsvox-table-num-columns table)))
+    (unless (and (integerp row) (< -1 row rows)
+                 (integerp column) (< -1 column columns))
+      (user-error "Table coordinates must be within rows 0–%d and columns 0–%d"
+                  (1- rows) (1- columns)))
+    (setf (emacsvox-table-current-row table) row
+          (emacsvox-table-current-column table) column)))
 
 (defun emacsvox-table-move-up (table &optional count)
   "Move up in the table if possible."

@@ -629,14 +629,21 @@ CalTrain schedules.  Execute command `describe-mode' bound to
 the documentation on the table browser."
   (interactive "FEnter filename containing table data: ")
   
-  (let ((buffer (get-buffer-create (format  "*%s*"
-                                            (file-name-nondirectory filename))))
-        (data nil)
-        (table nil))
-    (setq data (find-file-noselect filename))
-    (setq table (emacsvox-table-make-table (read data)))
-    (kill-buffer data)
-    (emacsvox-table-prepare-table-buffer table buffer)))
+  (let* ((existing (find-buffer-visiting filename))
+         (elements
+          (if existing
+              (with-current-buffer existing
+                (save-excursion
+                  (save-restriction
+                    (widen)
+                    (goto-char (point-min))
+                    (read (current-buffer)))))
+            (with-temp-buffer
+              (insert-file-contents filename)
+              (read (current-buffer)))))
+         (table (emacsvox-table-make-table elements)))
+    (emacsvox-table-prepare-table-buffer
+     table (get-buffer-create (format "*%s*" (file-name-nondirectory filename))))))
 
 (defun ems-csv-get-fields ()
   "Return list of fields on this line."
