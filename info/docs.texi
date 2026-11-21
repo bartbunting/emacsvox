@@ -86,7 +86,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1737 commands and 261 options.
+This chapter documents a total of 1738 commands and 261 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -1658,6 +1658,15 @@ Speak a concise overview of the latest completed agent answer.
 
 @format
 Read the complete rendered Markdown source block at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-tree-parent
+@deffn {Command} emacsvox-agent-shell-tree-parent
+@findex emacsvox-agent-shell-tree-parent
+
+@format
+Move to the parent of the current recognized text-tree node and read it.
 @end format
 @end deffn
 
@@ -13288,7 +13297,7 @@ Speak current .
 @findex emacsvox-eww-table-data
 
 @format
-View  table at point as a data table using Emacsvox Table UI.
+Open the current table in the table browser, retaining any header row.
 @end format
 @end deffn
 
@@ -13297,8 +13306,7 @@ View  table at point as a data table using Emacsvox Table UI.
 @findex emacsvox-eww-table-next-cell
 
 @format
-Speak next cell after making it current.
-Interactive prefix arg moves to the last cell in the table.
+Read the next cell in row order.  With PREFIX, go to the last cell.
 
 (fn &optional PREFIX)
 @end format
@@ -13309,8 +13317,7 @@ Interactive prefix arg moves to the last cell in the table.
 @findex emacsvox-eww-table-next-row
 
 @format
-Speak  cell after moving to next row.
- Optional interactive prefix arg moves to end of table.
+Read the next row in this column.  With PREFIX, go to the last cell.
 
 (fn &optional PREFIX)
 @end format
@@ -13321,8 +13328,7 @@ Speak  cell after moving to next row.
 @findex emacsvox-eww-table-previous-cell
 
 @format
-Speak previous cell after making it current.
-With interactive prefix arg, move to the start of the table.
+Read the previous cell in row order.  With PREFIX, go to the first cell.
 
 (fn &optional PREFIX)
 @end format
@@ -13333,8 +13339,7 @@ With interactive prefix arg, move to the start of the table.
 @findex emacsvox-eww-table-previous-row
 
 @format
-Speak  cell after moving to previous row.
- Optional interactive prefix arg moves to start of table.
+Read the previous row in this column.  With PREFIX, go to the first cell.
 
 (fn &optional PREFIX)
 @end format
@@ -13345,7 +13350,7 @@ Speak  cell after moving to previous row.
 @findex emacsvox-eww-table-speak-cell
 
 @format
-Speak current cell.
+Speak the complete displayed cell at point.
 @end format
 @end deffn
 
@@ -13354,7 +13359,7 @@ Speak current cell.
 @findex emacsvox-eww-table-speak-dimensions
 
 @format
-Speak number of rows and cells.
+Speak the total number of rows and cells.
 @end format
 @end deffn
 
@@ -18209,7 +18214,6 @@ Default Value:
 @verbatim
 
 t
-
 @end verbatim
 
 @end defvar
@@ -23448,7 +23452,7 @@ browsing table elements
 @findex emacsvox-table-sort-on-current-column
 
 @format
-Sort table on current column.
+Open a view sorted on this column, retaining its headers and all data rows.
 @end format
 @end deffn
 
@@ -23696,7 +23700,7 @@ spoken output
 @findex emacsvox-tabulated-list-next-row
 
 @format
-Move to next row and speak that cell
+Move to the next entry and speak the same column.
 @end format
 @end deffn
 
@@ -23705,7 +23709,7 @@ Move to next row and speak that cell
 @findex emacsvox-tabulated-list-previous-row
 
 @format
-Move to previous row and speak that cell.
+Move to the previous entry and speak the same column.
 @end format
 @end deffn
 

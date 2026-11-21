@@ -7667,7 +7667,11 @@ view.
 
 Browsing preserves source text. If the file is already open@comma{} the view uses
 that buffer's current contents@comma{} including unsaved edits@comma{} without replacing the
-source buffer. Shared table controls are active immediately:
+source buffer. For a Lisp table file with the @code{.tab} extension@comma{} use
+@kbd{M-x emacsvox-table-find-file}. It also reads unsaved changes from an open
+source file and preserves your place there.
+
+Shared table controls are active as soon as the view opens:
 
 @itemize
 @item
@@ -7793,6 +7797,13 @@ the match. Repeat @kbd{C-s} while searching to find another occurrence. This is
 Control-s@comma{} not the unmodified @kbd{s} key used for a readable view. Search covers
 the current rendered buffer; it does not submit a web search or find text
 that was never loaded into the page.
+
+Within a rectangular HTML table@comma{} @kbd{M-.} reads the cell at point. Use
+@kbd{M-<up>} and @kbd{M-<down>} to follow its column@comma{} or @kbd{M-<left>} and @kbd{M-<right>}
+to move one cell at a time in reading order. @kbd{M-@comma{}} gives the dimensions.
+Press @kbd{C-t} to open the table in the @ref{Browsing Structure, , table browser}@comma{} where
+you can copy a cell@comma{} row or column. The view retains the page’s header row
+when present. In a headerless table@comma{} the first row counts as data.
 
 Use the original page when checking whether information is genuinely absent.
 A readable or filtered view can omit menus@comma{} tables or other useful material.
@@ -9162,8 +9173,11 @@ Use @kbd{C-c ]} or @kbd{C-c [} and choose @emph{Tree} to move between trees and 
 destination root. @kbd{]} and @kbd{[} repeat these jumps and infer tree movement when
 point is within a recognised tree. You can also invoke
 @kbd{M-x emacsvox-agent-shell-next-tree} and
-@kbd{M-x emacsvox-agent-shell-previous-tree}. Ordinary arrows read nodes within a
-tree; there are no separate parent or sibling movement commands.
+@kbd{M-x emacsvox-agent-shell-previous-tree}. Up and Down read the nodes in order.
+To hear which branch contains the current node@comma{} use
+@kbd{M-x emacsvox-agent-shell-tree-parent}. For example@comma{} if two branches contain
+an @emph{Overview} node@comma{} the command moves to and reads the parent of the one you
+are on. Repeat it to reach the root.
 
 Open @kbd{C-e S Y} from Agent Shell@comma{} or @kbd{C-e H s Y} from Speech settings@comma{} for the
 shared Trees page. @kbd{e} chooses entry feedback and @kbd{x} chooses exit feedback:

@@ -235,6 +235,19 @@ never retain stale cell positions. Mode changes and buffer death remove owned
 maps and hooks. A setting change must not activate reading in another buffer,
 move point, or produce background entry speech.
 
+Source-table visits use markers so a direct jump to another table can start a
+new visit. Agent Shell can distinguish two rendered tables while the original
+rendering is intact. After replacement it keeps a deliberate quit in effect
+until navigation reaches prose or the reader is explicitly entered again.
+
+Agent Shell indexes the complete logical rows and cell starts for the current
+rendering, accessible bounds and window width. SHR indexes the displayed
+positions of a complete rendering. Tabulated List indexes printed entries in
+display order and checks row visibility, including invisibility overlays.
+Speech and copying use the cell selected by navigation. Org reader feedback
+uses its coordinates directly. Native Org editing still obtains coordinates
+from Org. Ordinary movement through an unchanged table reuses its index.
+
 * Evidence and implementation gates
 
 Fresh Emacs runs used the installed packages and, separately, verified current

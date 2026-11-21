@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1737 commands and 261 options.
+   This chapter documents a total of 1738 commands and 261 options.
 
 * Menu:
 
@@ -1787,6 +1787,13 @@ order.  Load through 'emacsvox-agent-shell'.
  -- Command: emacsvox-agent-shell-speak-source-block
 
      Read the complete rendered Markdown source block at point.
+
+2.21.1.27 emacsvox-agent-shell-tree-parent
+..........................................
+
+ -- Command: emacsvox-agent-shell-tree-parent
+
+     Move to the parent of the current recognized text-tree node and read it.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-agent-shell-presentation,  Next: emacsvox-agent-shell-render,  Prev: emacsvox-agent-shell-navigation,  Up: Emacsvox Commands And Options

@@ -2115,8 +2115,11 @@ produces an error before creating a view.
 
    Browsing preserves source text.  If the file is already open, the
 view uses that buffer's current contents, including unsaved edits,
-without replacing the source buffer.  Shared table controls are active
-immediately:
+without replacing the source buffer.  For a Lisp table file with the
+‘.tab’ extension, use ‘M-x emacsvox-table-find-file’.  It also reads
+unsaved changes from an open source file and preserves your place there.
+
+   Shared table controls are active as soon as the view opens:
 
    • Up/down and Control-Meta-up/down move by logical row and read the
      whole row.
@@ -2242,6 +2245,14 @@ finish at the match.  Repeat ‘C-s’ while searching to find another
 occurrence.  This is Control-s, not the unmodified ‘s’ key used for a
 readable view.  Search covers the current rendered buffer; it does not
 submit a web search or find text that was never loaded into the page.
+
+   Within a rectangular HTML table, ‘M-.’ reads the cell at point.  Use
+‘M-<up>’ and ‘M-<down>’ to follow its column, or ‘M-<left>’ and
+‘M-<right>’ to move one cell at a time in reading order.  ‘M-,’ gives
+the dimensions.  Press ‘C-t’ to open the table in the *note table
+browser: Browsing Structure., where you can copy a cell, row or column.
+The view retains the page’s header row when present.  In a headerless
+table, the first row counts as data.
 
    Use the original page when checking whether information is genuinely
 absent.  A readable or filtered view can omit menus, tables or other
@@ -3684,8 +3695,11 @@ original drawing characters.
 hear the destination root.  ‘]’  and ‘[’ repeat these jumps and infer
 tree movement when point is within a recognised tree.  You can also
 invoke ‘M-x emacsvox-agent-shell-next-tree’ and ‘M-x
-emacsvox-agent-shell-previous-tree’.  Ordinary arrows read nodes within
-a tree; there are no separate parent or sibling movement commands.
+emacsvox-agent-shell-previous-tree’.  Up and Down read the nodes in
+order.  To hear which branch contains the current node, use ‘M-x
+emacsvox-agent-shell-tree-parent’.  For example, if two branches contain
+an _Overview_ node, the command moves to and reads the parent of the one
+you are on.  Repeat it to reach the root.
 
    Open ‘C-e S Y’ from Agent Shell, or ‘C-e H s Y’ from Speech settings,
 for the shared Trees page.  ‘e’ chooses entry feedback and ‘x’ chooses

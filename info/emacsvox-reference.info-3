@@ -1365,7 +1365,7 @@ User interface to tables
  -- Command: emacsvox-table-sort-on-current-column
      ‘C-e C-t #’
 
-     Sort table on current column.
+     Open a view sorted on this column, retaining its headers and all data rows.
 
 2.297.1.23 emacsvox-table-speak-both-headers-and-element
 ........................................................
@@ -1541,14 +1541,14 @@ provide commands for intelligent spoken output
 
  -- Command: emacsvox-tabulated-list-next-row
 
-     Move to next row and speak that cell
+     Move to the next entry and speak the same column.
 
 2.299.1.2 emacsvox-tabulated-list-previous-row
 ..............................................
 
  -- Command: emacsvox-tabulated-list-previous-row
 
-     Move to previous row and speak that cell.
+     Move to the previous entry and speak the same column.
 
 2.299.1.3 emacsvox-tabulated-list-speak-cell
 ............................................
@@ -7948,6 +7948,10 @@ Function Index
                                                              (line  151)
 * emacsvox-agent-shell-table-speak-row <1>: emacsvox-agent-shell-tables.
                                                              (line  152)
+* emacsvox-agent-shell-tree-parent:      emacsvox-agent-shell-navigation.
+                                                             (line  220)
+* emacsvox-agent-shell-tree-parent <1>:  emacsvox-agent-shell-navigation.
+                                                             (line  221)
 * emacsvox-amark-add:                    emacsvox-amark.     (line   23)
 * emacsvox-amark-add <1>:                emacsvox-amark.     (line   24)
 * emacsvox-amark-bookshelf:              emacsvox-amark.     (line   34)
@@ -10373,22 +10377,22 @@ Function Index
 * emacsvox-eww-table-data <1>:           emacsvox-eww.       (line  966)
 * emacsvox-eww-table-next-cell:          emacsvox-eww.       (line  972)
 * emacsvox-eww-table-next-cell <1>:      emacsvox-eww.       (line  973)
-* emacsvox-eww-table-next-row:           emacsvox-eww.       (line  982)
-* emacsvox-eww-table-next-row <1>:       emacsvox-eww.       (line  983)
-* emacsvox-eww-table-previous-cell:      emacsvox-eww.       (line  992)
-* emacsvox-eww-table-previous-cell <1>:  emacsvox-eww.       (line  993)
-* emacsvox-eww-table-previous-row:       emacsvox-eww.       (line 1002)
-* emacsvox-eww-table-previous-row <1>:   emacsvox-eww.       (line 1003)
-* emacsvox-eww-table-speak-cell:         emacsvox-eww.       (line 1012)
-* emacsvox-eww-table-speak-cell <1>:     emacsvox-eww.       (line 1013)
-* emacsvox-eww-table-speak-dimensions:   emacsvox-eww.       (line 1019)
-* emacsvox-eww-table-speak-dimensions <1>: emacsvox-eww.     (line 1020)
-* emacsvox-eww-tags-at-point:            emacsvox-eww.       (line 1026)
-* emacsvox-eww-tags-at-point <1>:        emacsvox-eww.       (line 1027)
-* emacsvox-eww-url-to-register:          emacsvox-eww.       (line 1033)
-* emacsvox-eww-url-to-register <1>:      emacsvox-eww.       (line 1034)
-* emacsvox-eww-yt-dl:                    emacsvox-eww.       (line 1040)
-* emacsvox-eww-yt-dl <1>:                emacsvox-eww.       (line 1041)
+* emacsvox-eww-table-next-row:           emacsvox-eww.       (line  981)
+* emacsvox-eww-table-next-row <1>:       emacsvox-eww.       (line  982)
+* emacsvox-eww-table-previous-cell:      emacsvox-eww.       (line  990)
+* emacsvox-eww-table-previous-cell <1>:  emacsvox-eww.       (line  991)
+* emacsvox-eww-table-previous-row:       emacsvox-eww.       (line  999)
+* emacsvox-eww-table-previous-row <1>:   emacsvox-eww.       (line 1000)
+* emacsvox-eww-table-speak-cell:         emacsvox-eww.       (line 1008)
+* emacsvox-eww-table-speak-cell <1>:     emacsvox-eww.       (line 1009)
+* emacsvox-eww-table-speak-dimensions:   emacsvox-eww.       (line 1015)
+* emacsvox-eww-table-speak-dimensions <1>: emacsvox-eww.     (line 1016)
+* emacsvox-eww-tags-at-point:            emacsvox-eww.       (line 1022)
+* emacsvox-eww-tags-at-point <1>:        emacsvox-eww.       (line 1023)
+* emacsvox-eww-url-to-register:          emacsvox-eww.       (line 1029)
+* emacsvox-eww-url-to-register <1>:      emacsvox-eww.       (line 1030)
+* emacsvox-eww-yt-dl:                    emacsvox-eww.       (line 1036)
+* emacsvox-eww-yt-dl <1>:                emacsvox-eww.       (line 1037)
 * emacsvox-explain-aural-presentation:   emacsvox-aural-explanation.
                                                              (line   70)
 * emacsvox-explain-aural-presentation <1>: emacsvox-aural-explanation.
