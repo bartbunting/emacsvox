@@ -692,7 +692,7 @@ confirmation.  That menu also offers Other device for an existing device
 name; cancelling its prompt retains the previous choice and stays in the
 list.
 
-   For physical devices on a supporting Windows Omnivox build, ‘D’ opens
+   For physical devices on a supporting local Omnivox build, ‘D’ opens
 main outputs and ‘M’ opens notification outputs.  Press ‘d’ to browse
 their Transient choices.  Selecting a candidate, applying it and saving
 it are separate actions, described in *note Selecting And Checking
