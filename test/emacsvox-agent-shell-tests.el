@@ -13684,6 +13684,42 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not emacsvox-table-reader--suspended))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
+(ert-deftest emacsvox-agent-shell-table-graphical-line-entry-speaks-once ()
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (setq major-mode 'agent-shell-mode)
+      (use-local-map agent-shell-mode-map)
+      (setq-local agent-shell--state '((:agent-config . ((:mode-line-name . "Codex")))))
+      (setq-local emacsvox-aural-source-transform-function #'emacsvox-agent-shell--prepare-speech-text)
+      (insert (agent-shell-markdown-convert
+               "Before\n\n| Name | Notes |\n|---|---|\n| Alice | Long |\n| Bob | Short |\n\nAfter\n"))
+      (visual-line-mode 1)
+      (goto-char (point-min))
+      (emacsvox-agent-shell--table-navigation-setup)
+      (redisplay t)
+      (let (spoken)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text &rest _) (push (string-trim (substring-no-properties text)) spoken)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (while (and (not emacsvox-agent-shell--table-navigation-active) (not (eobp)))
+            (setq spoken nil)
+            (execute-kbd-macro (kbd "<down>")))
+          (should (equal spoken '("Table, 2 data rows, 2 columns. Name.")))
+          (setq spoken nil)
+          (execute-kbd-macro (kbd "<down>"))
+          (should (equal spoken '("Alice, Name. Long, Notes.")))
+          (execute-kbd-macro "q")
+          (setq spoken nil)
+          (should (eq (key-binding (kbd "<up>")) 'previous-line))
+          (while (and (> (point) (point-min))
+                      (not (seq-some (lambda (text) (string-match-p "Name.*Notes" text)) spoken)))
+            (execute-kbd-macro (kbd "<up>"))
+            (should-not emacsvox-agent-shell--table-navigation-active))
+          (should (seq-some (lambda (text) (string-match-p "Name.*Notes" text)) spoken))
+          (should-not (seq-some (lambda (text) (string-match-p "Table," text)) spoken)))))))
+
 (ert-deftest emacsvox-agent-shell-table-reuses-one-complete-rendering ()
   (emacsvox-agent-shell-test--with-rendered-table
       "| Name | Role |\n|---|---|\n| Alice | Engineer |\n| Bob | Writer |\n"

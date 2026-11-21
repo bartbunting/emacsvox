@@ -1011,6 +1011,15 @@ a positive argument to the advised command."
   (emacsvox-agent-shell--vertical-motion-around
    original-function 'backward arguments))
 
+(defun emacsvox-agent-shell--enter-table-on-line-motion ()
+  "Present a newly reached table as the single result of ordinary line motion."
+  (and (memq this-command '(next-line previous-line))
+       (get-text-property (point) 'agent-shell-markdown-table-source)
+       (not emacsvox-agent-shell--table-navigation-active)
+       (not emacsvox-table-reader--suspended)
+       (memq #'emacsvox-agent-shell--table-navigation-post-command post-command-hook)
+       (eq 'entered (emacsvox-agent-shell--table-navigation-post-command))))
+
 (defun emacsvox-agent-shell--call-with-vertical-block-entry
     (original-function arguments)
   "Call ORIGINAL-FUNCTION with ARGUMENTS and authoritative entry facts.
@@ -1029,16 +1038,17 @@ and therefore do not pass through the text transformation hook."
                               options))
                    (apply submit-actions options)))))
       (prog1
-          (if-let* ((facts (emacsvox-agent-shell--vertical-block-entry-facts))
-                    (module 'agent-shell)
-                    (occasion 'navigation)
-                    (context (emacsvox-aural-capture-context module occasion)))
-              (let ((emacsvox-aural-submission-facts facts)
-                    (emacsvox-aural-submission-context context)
-                    (emacsvox-aural-submission-module module)
-                    (emacsvox-aural-submission-occasion occasion))
-                (apply original-function arguments))
-            (apply original-function arguments))
+          (unless (emacsvox-agent-shell--enter-table-on-line-motion)
+            (if-let* ((facts (emacsvox-agent-shell--vertical-block-entry-facts))
+                      (module 'agent-shell)
+                      (occasion 'navigation)
+                      (context (emacsvox-aural-capture-context module occasion)))
+                (let ((emacsvox-aural-submission-facts facts)
+                      (emacsvox-aural-submission-context context)
+                      (emacsvox-aural-submission-module module)
+                      (emacsvox-aural-submission-occasion occasion))
+                  (apply original-function arguments))
+              (apply original-function arguments)))
         ;; Blank feedback can be disabled altogether.  A boundary still
         ;; needs its own transaction when no blank-line action was submitted.
         (when (and (not tts-quiet)
