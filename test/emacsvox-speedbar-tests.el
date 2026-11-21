@@ -162,5 +162,22 @@
         (get-text-property (point-min) 'personality)
         'file-voice)))))
 
+(ert-deftest emacsvox-speedbar-reads-native-depth-and-expansion ()
+  (with-temp-buffer
+    (speedbar-mode)
+    (let ((inhibit-read-only t))
+      (speedbar-make-tag-line 'bracket ?- nil nil "Root" nil nil 'speedbar-directory-face 0)
+      (speedbar-make-tag-line 'bracket ?+ nil nil "Child" nil nil 'speedbar-file-face 1))
+    (goto-char (point-min))
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text)))
+                ((symbol-function 'emacsvox-icon) #'ignore))
+        (emacsvox-speedbar-speak-line)
+        (should (string-match-p (regexp-quote "[-] Root") spoken))
+        (should-not (string-match-p "0:" spoken))
+        (let ((ems--interactive-fn-name 'speedbar-next))
+          (funcall-interactively #'speedbar-next 1))
+        (should (equal (string-trim spoken) "Level 1. [+] Child"))))))
+
 (provide 'emacsvox-speedbar-tests)
 ;;; emacsvox-speedbar-tests.el ends here

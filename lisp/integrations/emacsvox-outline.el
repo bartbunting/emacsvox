@@ -175,26 +175,22 @@
 (defvar emacsvox-outline-dont-query-before-speaking t
   "Option to control prompts when speaking  outline sections.")
 
-(defun emacsvox-outline-speak-heading (what direction)
-  "Function used by all interactive section speaking
-commands. "
-  
-  (let ((start nil)
-        (end nil))
-    (funcall what  direction)
-    (setq start (point))
-    (save-excursion
-      (condition-case nil
-          (progn
-            (forward-line 1)
-            (funcall what 1)
-            (setq end (point)))
-        (error (setq end (point-max)))))
-    (when (or  emacsvox-outline-dont-query-before-speaking
-               (y-or-n-p
-                (format  "Speak %s lines from section %s"
-                         (count-lines start end) (ems--this-line))))
+(defun emacsvox-outline--speak-section (subtree)
+  "Speak from point to the next visible heading, or through the current SUBTREE."
+  (let ((start (point))
+        (end (save-excursion
+               (if subtree (outline-end-of-subtree) (outline-next-visible-heading 1))
+               (point))))
+    (when (or emacsvox-outline-dont-query-before-speaking
+              (y-or-n-p (format "Speak %s lines from section %s? "
+                                (count-lines start end) (ems--this-line))))
       (emacsvox-speak-region start end))))
+
+(defun emacsvox-outline-speak-heading (what direction)
+  "Move with WHAT in DIRECTION and speak the section at the destination."
+  (funcall what direction)
+  (emacsvox-outline--speak-section
+   (memq what '(outline-forward-same-level outline-backward-same-level))))
 
 (defun emacsvox-outline-speak-next-heading ()
   "Analogous to outline-next-visible-heading,
@@ -222,27 +218,13 @@ except that the outline section is  spoken"
 except that the outline section is  spoken"
   (interactive)
   (emacsvox-icon 'section)
-  (forward-line -1)
-  (emacsvox-outline-speak-heading 'outline-forward-same-level -1))
+  (emacsvox-outline-speak-heading 'outline-backward-same-level 1))
 
 (defun emacsvox-outline-speak-this-heading ()
   "Speak current outline section starting from point"
   (interactive)
   (emacsvox-icon 'select-object)
-  (let ((start (point))
-        (end nil))
-    (save-excursion
-      (condition-case nil
-          (progn
-            (outline-next-visible-heading 1)
-            (setq end (point)))
-        (error (setq end (point-max)))))
-    (and
-     (or emacsvox-outline-dont-query-before-speaking
-         (y-or-n-p
-          (format "Speak %s lines from section %s"
-                  (count-lines start end) (ems--this-line))))
-     (emacsvox-speak-region start end))))
+  (emacsvox-outline--speak-section nil))
 
 ;;;  bind these in outline mode
 

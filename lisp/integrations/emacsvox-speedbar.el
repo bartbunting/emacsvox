@@ -50,24 +50,16 @@
 
 ;;;  Helper:
 
-(defun emacsvox-speedbar-speak-line()
-  "Speak a line in the speedbar display"
-  (let ((indent nil))  
-    (save-excursion
-      (beginning-of-line)
-      (setq indent 
-            (save-excursion
-              (save-match-data
-                (beginning-of-line)
-                (string-to-number
-                 (if (looking-at "[0-9]+")
-                     (buffer-substring-no-properties
-                      (match-beginning 0) (match-end 0))
-                   "0")))))
-      (setq indent 
-            (if (zerop indent) "" indent))
-      (tts-speak
-       (concat indent (ems--this-line))))))
+(defun emacsvox-speedbar-speak-line ()
+  "Speak the Speedbar row and its depth, preserving the expansion indicator."
+  (save-excursion
+    (beginning-of-line)
+    (if (looking-at "\\([0-9]+\\):[ \t]*")
+        (let ((depth (string-to-number (match-string 1))))
+          (goto-char (match-end 0))
+          (tts-speak (concat (when (> depth 0) (format "Level %d. " depth))
+                             (emacsvox-aural-source-substring (point) (line-end-position)))))
+      (tts-speak (ems--this-line)))))
 
 ;;;  Advice interactive commands:
 

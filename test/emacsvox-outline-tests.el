@@ -180,5 +180,26 @@
           (message "Zoomed into outline %s containing %s lines"
                    "Heading" 2)))))))
 
+(ert-deftest emacsvox-outline-spoken-sections-follow-native-heading-boundaries ()
+  (with-temp-buffer
+    (outline-mode)
+    (insert "* Start\n* First\n** Child\nbody\n* Last\nend\n")
+    (goto-char (point-min))
+    (let (spoken)
+      (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'emacsvox-speak-region)
+                 (lambda (begin end) (setq spoken (string-trim-right
+                                                  (buffer-substring begin end))))))
+        (emacsvox-outline-speak-next-heading)
+        (should (equal spoken "* First"))
+        (emacsvox-outline-speak-forward-heading)
+        (should (equal spoken "* Last\nend"))
+        (emacsvox-outline-speak-backward-heading)
+        (should (looking-at-p "\\* First"))
+        (should (equal spoken "* First\n** Child\nbody"))
+        (forward-char 2)
+        (emacsvox-outline-speak-this-heading)
+        (should (equal spoken "First"))))))
+
 (provide 'emacsvox-outline-tests)
 ;;; emacsvox-outline-tests.el ends here
