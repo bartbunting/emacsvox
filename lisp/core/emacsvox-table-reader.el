@@ -74,8 +74,8 @@ When nil, omit unchanged row and column titles on consecutive cell moves.
 Explicit inspection always uses the selected titles."
   :type 'boolean :group 'emacsvox-table-reader)
 (defcustom emacsvox-table-reader-edge-action 'leave
-  "Whether vertical movement leaves a table or stops at its edge.
-Application lists always stop.  Explicit exit commands remain available."
+  "Whether plain row movement leaves a table or stops at its edge.
+Control-Meta arrows and application lists always stop."
   :type '(choice (const leave) (const stop)) :group 'emacsvox-table-reader)
 (defcustom emacsvox-table-reader-mode-preferences nil
   "Table preferences by major mode.
@@ -355,6 +355,12 @@ MOVEMENT enables optional coordinate and repeated-title feedback."
          (back-to-indentation)
          (point))))))
 
+(defun emacsvox-table-reader--bounded-row (current target last)
+  "Limit TARGET to rows zero through LAST when moving from CURRENT.
+Keep an out-of-range target when already at that edge so callers can announce it."
+  (let ((bounded (max 0 (min target last))))
+    (if (= bounded current) target bounded)))
+
 (defun emacsvox-table-reader--destination (cell row-delta column-delta &optional limit-rows)
   "Return a non-mutating movement result for CELL and the requested deltas.
 ROW-DELTA and COLUMN-DELTA use logical coordinates.  The result is
@@ -367,11 +373,11 @@ move at the edge row.  A further step there reports the edge direction."
          (current-row (plist-get cell :row-index))
          (last-row (1- (or (plist-get cell :row-count) (length rows))))
          (target (+ current-row row-delta))
-         (row (if limit-rows (max 0 (min last-row target)) target))
+         (row (if limit-rows (emacsvox-table-reader--bounded-row current-row target last-row) target))
          (column (+ (plist-get cell :column-index) column-delta)))
     (cond
-     ((and (< target 0) (or (not limit-rows) (zerop current-row))) '(exit backward))
-     ((and (> target last-row) (or (not limit-rows) (= current-row last-row))) '(exit forward))
+     ((< row 0) '(exit backward))
+     ((> row last-row) '(exit forward))
      ((< column 0) '(boundary "Left edge of table."))
      ((>= column (length (if positions (aref positions row) (nth row rows))))
       (list 'boundary (if (zerop row-delta)
@@ -448,7 +454,7 @@ Returning nil lets Emacs resolve the existing binding in lower keymaps."
     ;; Keep boundary and zero-count behaviour relative to the original point.
     (goto-char origin)
     (let ((emacsvox-table-reader--entering t))
-      (emacsvox-table-reader--move rows columns t))))
+      (emacsvox-table-reader--move rows columns t 'stop))))
 
 (defun emacsvox-table-reader--enter-next-row (count)
   "Enter table reading and move COUNT rows down."
@@ -759,11 +765,11 @@ movement within the table, or a function to handle exits for the host."
 (defun emacsvox-table-reader-next-row-cell (&optional count)
   "Move COUNT rows down, retaining the column and reading the cell."
   (interactive "p")
-  (emacsvox-table-reader--move (or count 1) 0 t))
+  (emacsvox-table-reader--move (or count 1) 0 t 'stop))
 (defun emacsvox-table-reader-previous-row-cell (&optional count)
   "Move COUNT rows up, retaining the column and reading the cell."
   (interactive "p")
-  (emacsvox-table-reader--move (- (or count 1)) 0 t))
+  (emacsvox-table-reader-next-row-cell (- (or count 1))))
 (defun emacsvox-table-reader--plain-next-row (count)
   "Move COUNT rows down with the selected movement speech."
   (interactive "p")

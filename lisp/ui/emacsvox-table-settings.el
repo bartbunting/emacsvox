@@ -65,8 +65,8 @@
      (t "Repeat titles" "Include the selected headings on each cell move, even when unchanged.")
      (nil "Omit unchanged titles" "Skip headings repeated from the previous cell; explicit inspection keeps them.")
      (inherit "Inherit wider scope"))
-    (edge-action "Vertical edges" "Choose what happens past the first or last row. Agent Shell's Control-Meta arrows and application lists always stop. Meta-Up and Meta-Down can leave a rendered table."
-     (leave "Leave for adjacent prose" "Move into surrounding text at a vertical edge. In Agent Shell, use plain Up or Down to leave.")
+    (edge-action "Vertical edges" "Choose how plain row movement behaves at the first and last row. Control-Meta arrows and application lists always stop."
+     (leave "Leave for adjacent prose" "Use plain Up or Down to move into surrounding text at a vertical edge.")
      (stop "Stop at the edge" "Keep the current cell at the first or last row; q still exits reading.")
      (inherit "Inherit wider scope")))
   "Settings, labels, explanations and ordered choices.")

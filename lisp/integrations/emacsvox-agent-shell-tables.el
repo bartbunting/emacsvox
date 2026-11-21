@@ -640,7 +640,7 @@ When CELL-ONLY is non-nil, read only the destination cell after row movement."
   "Move COUNT logical table rows down and speak the destination cell.
 Retain the current column and use the current table title settings."
   (interactive "p")
-  (emacsvox-agent-shell--table-read #'emacsvox-table-reader--move (or count 1) 0 t 'stop))
+  (emacsvox-agent-shell--table-read #'emacsvox-table-reader-next-row-cell count))
 
 (defun emacsvox-agent-shell-table-previous-row-cell (&optional count)
   "Move COUNT logical table rows up and speak the destination cell.
