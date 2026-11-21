@@ -412,6 +412,7 @@ Operational semantic contract version: =1=.
 | =vcs-view-opened= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control view was opened or selected |
 | =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | - | - | - | - | - | Whether structural descendants are visible |
 | =visibility-changed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The visible descendants of a structural object changed |
+| =word-clipping= | =attribute= | =core= | =starts-offscreen=, =continues-offscreen= | - | - | - | - | - | - | - | Which end of the spoken word lies outside the visible row |
 | =wrapped-row= | =attribute= | =core= | =first=, =middle=, =last= | - | - | - | - | - | - | - | Visible row position within a wrapped source line |
 
 ** Stable Semantic Aliases
@@ -435,7 +436,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =49= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =51= | Compatibility-preserving Emacsvox presentation |
 
 * Built-in Presentation Options
 
