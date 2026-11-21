@@ -61,6 +61,7 @@
     "ui/emacsvox-interaction.el"
     "ui/emacsvox-spelling.el"
     "ui/emacsvox-tone-editor.el"
+    "ui/emacsvox-caps-lock-settings.el"
     "ui/emacsvox-line-cues.el"
     "ui/emacsvox-reading-settings.el"
     "ui/emacsvox-output-settings.el"

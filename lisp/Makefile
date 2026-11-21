@@ -132,6 +132,7 @@ ui/emacsvox-capitalization.elc \
 ui/emacsvox-interaction.elc \
 ui/emacsvox-spelling.elc \
 ui/emacsvox-tone-editor.elc \
+ui/emacsvox-caps-lock-settings.elc \
 ui/emacsvox-line-cues.elc \
 ui/emacsvox-reading-settings.elc \
 ui/emacsvox-output-settings.elc \
@@ -219,6 +220,7 @@ emacsvox.elc \
 emacsvox-setup.elc
 
 CORE_OBJECTS =  \
+core/emacsvox-caps-lock.elc \
 core/emacsvox-text-tree.elc \
 integrations/amixer.elc \
 integrations/emacsvox-2048.elc \
@@ -529,6 +531,7 @@ ui/emacsvox-reading-settings.elc: core/emacsvox-reading-lines.elc ui/emacsvox-to
 ui/emacsvox-line-cues.elc: ui/emacsvox-tone-editor.elc ui/emacsvox-aural-menu.elc ui/emacsvox-aural-editor.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-tools.elc
 ui/emacsvox-interaction.elc: ui/emacsvox-aural-menu.elc
 ui/emacsvox-tone-editor.elc: ui/emacsvox-aural-menu.elc
+ui/emacsvox-caps-lock-settings.elc: core/emacsvox-caps-lock.elc ui/emacsvox-tone-editor.elc aural/emacsvox-aural-preview.elc
 ui/emacsvox-spelling.elc: ui/emacsvox-aural-menu.elc integrations/emacsvox-flyspell.elc ui/emacsvox-tone-editor.elc
 ui/emacsvox-aural-voice-bulk.elc: ui/emacsvox-aural-voice-editor.elc
 ui/emacsvox-aural-voice-engine-controls.elc: ui/emacsvox-aural-voice-editor.elc speech/omnivox-parameters.elc
@@ -588,6 +591,7 @@ core/emacsvox-speak-status.elc: speech/tts-speak.elc core/emacsvox-speak-time.el
 core/emacsvox-speak-navigation.elc: speech/tts-speak.elc aural/emacsvox-aural-source.elc core/emacsvox-speak-status.elc
 core/emacsvox-speak-filters.elc: speech/tts-speak.elc
 core/emacsvox-reading-lines.elc: aural/emacsvox-aural-submission.elc
+core/emacsvox-caps-lock.elc: aural/emacsvox-aural-submission.elc
 core/emacsvox-speak.elc: core/emacsvox-reading-lines.elc \
 core/emacsvox-speak-navigation.elc core/emacsvox-speak-status.elc \
 core/emacsvox-speak-windows.elc core/emacsvox-speak-time.elc \

@@ -347,6 +347,8 @@ generator always skips the declared module instead of probing the host.")
          (user-home (file-name-as-directory (expand-file-name "~/")))
          (rendered
           (with-temp-buffer
+            (set-syntax-table emacs-lisp-mode-syntax-table)
+            (setq-local indent-tabs-mode nil)
             (cl-prettyprint value)
             (buffer-substring-no-properties (point-min) (point-max)))))
     (when self-document-temporary-user-directory

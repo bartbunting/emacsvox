@@ -9,6 +9,27 @@ implementation checklists.
 
 * User experience
 
+** TODO Port Caps Lock feedback to native Windows and macOS
+
+The [[file:../../lisp/core/emacsvox-caps-lock.el][Caps Lock watcher]] currently uses X11 state queries and an optional
+[[file:../../etc/emacsvox-caps-lock-watch.py][Python/XKB modifier observer]]. Add native platform readers while retaining
+the shared focus rules, ordinary-key reminders, tone/speech choice and tone editor.
+Avoid requiring an additional runtime installation.
+
+On Windows, prefer one persistent Windows PowerShell 5.1 helper, using embedded
+C# and =Add-Type= for native keyboard-state and modifier-event APIs. Use the
+PowerShell included with Windows; do not require Python or PowerShell 7.
+Pass keyboard events through normally and test alongside JAWS and NVDA.
+[[https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_windows_powershell_5.1?view=powershell-5.1][PowerShell availability]] and [[https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1][native API access]] support this approach.
+
+On macOS, prefer a suitable built-in facility; otherwise package a small
+standalone helper using Core Graphics keyboard flags and passive events.
+Do not require Python, Xcode, developer tools or additional packages.
+Handle input-monitoring permission denial without breaking ordinary Emacs use,
+and test alongside VoiceOver. Verify actual state, focus entry and loss,
+modifier presses and releases, helper cleanup, and tone delivery on both systems.
+The [[file:../manual/chapters/aural-presentation.org::*Hear Caps Lock state while typing][Caps Lock guide]] describes the current X11 behaviour and settings.
+
 ** TODO Consider targeted cancellation of EAT speech already sent to Omnivox
 
 Deferred by the maintainer on 2026-10-05. The chosen foreground autospeak

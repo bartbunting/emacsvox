@@ -323,8 +323,9 @@ preference through Customize.
 :END:
 
 Press ~C-e H /~ to find an Emacsvox setting by any part of its name, ignoring
-capitalisation. Type =cap= to find /Capitalisation indication and camel case/,
-/Capital-letter beep/, /All-caps beep/, and /Spatial capabilities/. The aliases
+capitalisation. Type =cap= to find controls including /Capitalisation indication
+and camel case/, /Capital-letter beep/, /All-caps beep/, /Caps Lock announcements/
+and /Spatial capabilities/. The aliases
 =caps beep= and =allcaps= find both beep controls and only /All-caps beep/, respectively.
 Each result appears once under its normal name. Use completion to choose a
 result; ambiguous text does not choose one automatically. These matching rules
@@ -1974,7 +1975,7 @@ independent of sampled files and the active pack.
 
 For waveform, pitch sweep and envelope adjustments, use the
 [[spelling-tone-editor][shared tone editor]]. Spelling, capitalisation, indentation, wrapped rows,
-line conditions and tree levels open it from their respective settings.
+line conditions, tree levels and [[caps-lock-feedback][Caps Lock reminders]] open it from their respective settings.
 Its controls are shared, while each destination has its own scope and saving
 rules. For tree entry, exit and depth feedback, follow
 [[agent-shell-text-trees][Read and customise text trees]]. General personal-rule editing retains its
@@ -2591,8 +2592,9 @@ including tone timing and shape, and the shared tone volume through Customize.
 
 Spelling feedback, each capitalisation beep menu, indentation's pitch-tone
 settings and the five line-condition menus open this editor with capital ~E~.
-Wrapped-row feedback and [[agent-shell-text-trees][tree level feedback]] also use it; the tree's Level
-changes menu opens it with capital ~T~. The title identifies the cue and scope.
+Wrapped-row feedback, [[caps-lock-feedback][Caps Lock reminders]] and [[agent-shell-text-trees][tree level feedback]] also use it;
+Caps Lock settings opens it with ~e~, and the tree's Level changes menu uses
+capital ~T~. The title identifies the cue and scope.
 Waveform, pitch sweep and envelope controls accompany pitch, duration and
 individual volume. Adjustments affect only a private draft until you apply
 or save it using the destination's labelled actions. For trees, those actions
@@ -2799,6 +2801,55 @@ its effect.
 phonetic name immediately, and ~s~ stops. ~S~ saves displayed settings through
 Customize, promoting buffer choices to startup defaults. Closing retains live
 changes without saving.
+
+**** Hear Caps Lock state while typing
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<caps-lock-feedback>>
+
+#+cindex: Caps Lock announcements
+#+cindex: Caps Lock reminder tone
+#+findex: emacsvox-caps-lock-mode
+#+findex: emacsvox-caps-lock-settings
+
+Caps Lock feedback is optional and starts disabled. Use
+~M-x emacsvox-caps-lock-mode RET~, or search settings for =Caps Lock announcements=
+and activate the selected control. This global switch enables feedback for
+this session; it does not change the keyboard's Caps Lock state. In
+~C-e H r l~, ~k~ toggles feedback and capital ~K~ saves that preference through
+Customize. To disable it at future startup, turn it off and save again.
+
+While Emacs has focus, state changes say “Caps Lock on” or “Caps Lock off”.
+Entering Emacs with Caps Lock on says “Caps Lock on”; entering with it off
+stays quiet. Keyboard input while it is on adds a low reminder tone alongside
+ordinary speech, including letter echo, without stopping that speech. Modifier
+presses also remind when the optional helper is available; releases stay quiet.
+State-change and focus announcements remain ordinary interruptible main speech.
+
+Open ~M-x emacsvox-caps-lock-settings RET~, or ~C-e H r l c~, to choose and
+edit reminders globally. Press ~r~ to browse Tone or Speech; ~RET~ applies
+and returns, while ~q~ cancels. Speech says “Caps Lock” after ordinary key
+feedback; modifier reminders interrupt older main speech. Lowercase ~w~ saves
+only this presentation choice. Neither choosing nor saving enables feedback.
+
+Press ~e~ for the [[spelling-tone-editor][shared tone editor]]. The default is a 160 Hz triangle tone
+lasting 400 milliseconds at 30 percent individual volume; shared main-tone
+volume also scales it. ~SPC~ previews the draft alone and capital ~P~ adds
+a spoken “Capital A” sample. Previews interrupt previous main output but do
+not change live settings. ~A~ applies the tone for this session; ~W~ also
+saves it through Customize. ~q~ discards unapplied edits. These actions leave
+feedback enablement and the Tone/Speech choice unchanged.
+
+This currently requires an X11 Emacs frame and =xset=, including WSLg when
+its X display exposes the actual keyboard indicator. Native Windows, macOS,
+Wayland and terminal frames are unsupported. Modifier-only reminders also
+need Python 3 and libX11, with no additional Python packages; ordinary-key
+and focus feedback work without that helper. State sampling is every
+0.2 seconds, so very rapid toggles can be missed. If a screen reader captures
+Caps Lock, feedback follows the reported state rather than guessing from
+keypresses.
 
 *** Understand the main and notification streams
 :PROPERTIES:

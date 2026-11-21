@@ -241,8 +241,13 @@
                (lambda (_prompt table &rest _)
                  (dolist (case '(("cap" "Capitalisation indication and camel case"
                                   "Capital-letter beep" "All-caps beep" "Spatial capabilities"
+                                  "Caps Lock announcements"
+                                  "Caps Lock reminder style" "Caps Lock reminder tone"
                                   "Silence mapped voice at captured item")
                                  ("CAPS BEEP" "Capital-letter beep" "All-caps beep")
+                                 ("capslock" "Caps Lock announcements")
+                                 ("keyboard lock state" "Caps Lock announcements")
+                                 ("caps lock tone" "Caps Lock reminder tone")
                                  ("allcaps" "All-caps beep")
                                  ("allcaps beep" "All-caps beep")
                                  ("all caps" "All-caps beep")

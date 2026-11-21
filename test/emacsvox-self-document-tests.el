@@ -75,6 +75,17 @@
     (should (string-match-p "~/books/book-share" rendered))
     (should-not (string-match-p "build-user" rendered))))
 
+(ert-deftest emacsvox-self-document-renders-nested-tone-defaults ()
+  "Nested tone plists should round-trip through the generated reference."
+  (let* ((tone '(:pitch 160 :duration 400 :volume 0.3
+                :shape (:waveform triangle
+                        :envelope (:attack-ms 5 :decay-ms 20
+                                   :sustain-level 0.4 :release-ms 45))))
+         (rendered (self-document--portable-default-value
+                    'emacsvox-caps-lock-reminder-tone tone)))
+    (should (equal (read rendered) tone))
+    (should-not (string-match-p "\t" rendered))))
+
 (ert-deftest emacsvox-self-document-rejects-unresolved-autoload-commands ()
   "A documented command should have a loaded function definition."
   (let ((command 'emacsvox-self-document-autoload-fixture))
