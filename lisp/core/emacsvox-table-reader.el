@@ -411,6 +411,8 @@ inside the reading context.  No adapter may edit the source to read it.")
   "Markers delimiting the table in the current reading context.")
 (defvar-local emacsvox-table-reader--map-override nil
   "Owned entry in `minor-mode-overriding-map-alist' during reading.")
+(defvar-local emacsvox-table-reader--source-visit nil
+  "Bounds of an editable source table that can be tracked through edits.")
 (defvar-local emacsvox-table-reader--suspended nil
   "Non-nil after leaving or editing, until leaving the table or explicit entry.
 For rendered tables an uncertain identity remains suspended until prose is
@@ -545,7 +547,8 @@ OCCASION, PRESENTATION and ICON describe the user's action."
                 minor-mode-overriding-map-alist)
           emacsvox-table-reader--map-override nil))
   (mapc (lambda (marker) (set-marker marker nil)) emacsvox-table-reader--region)
-  (setq emacsvox-table-reader--region nil)
+  (setq emacsvox-table-reader--region nil
+        emacsvox-table-reader--source-visit nil)
   (remove-hook 'post-command-hook #'emacsvox-table-reader--post-command t)
   (remove-hook 'after-change-functions #'emacsvox-table-reader--after-change t)
   (remove-hook 'change-major-mode-hook #'emacsvox-table-reader--release t)
@@ -554,14 +557,13 @@ OCCASION, PRESENTATION and ICON describe the user's action."
 
 (defun emacsvox-table-reader--leave ()
   "Leave explicit reading and announce restoration of ordinary mode keys."
-  (setq emacsvox-table-reader--suspended t)
-  (emacsvox-table-reader--release)
+  (emacsvox-table-reader--after-change)
   (emacsvox-table-reader--submit
    "Table reading off." 'navigation 'context 'close-object))
 
 (defun emacsvox-table-reader--after-change (&rest _)
   "End reading after a source edit; let the editing command give feedback."
-  (setq emacsvox-table-reader--suspended t)
+  (setq emacsvox-table-reader--suspended (or emacsvox-table-reader--source-visit t))
   (emacsvox-table-reader--release))
 
 (defvar-local emacsvox-table-reader--command-tick nil)
@@ -583,11 +585,16 @@ OCCASION, PRESENTATION and ICON describe the user's action."
                        emacsvox-table-reader--adapters)
              (or emacsvox-table-reader--suspended
                  (eq (emacsvox-table-reader--preference 'activation) 'automatic)))
-    (let ((cell (emacsvox-table-reader--snapshot)))
-      (cond
-       ((null cell) (setq emacsvox-table-reader--suspended nil))
-       ((not emacsvox-table-reader--suspended)
-        (emacsvox-table-reader--enter cell))))))
+    (let* ((cell (emacsvox-table-reader--snapshot))
+           (region (plist-get cell :region))
+           (visit emacsvox-table-reader--suspended))
+      (when (or (null cell)
+                (and (consp visit) region
+                     (or (<= (cdr region) (car visit)) (>= (car region) (cdr visit)))))
+        (setq emacsvox-table-reader--suspended nil))
+      (when (and cell (not emacsvox-table-reader--suspended)
+                 (eq (emacsvox-table-reader--preference 'activation) 'automatic))
+        (emacsvox-table-reader--enter cell)))))
 
 (add-hook 'post-command-hook #'emacsvox-table-reader--automatic-entry)
 
@@ -611,6 +618,10 @@ With QUIET, let the following movement submit the single entry announcement."
   (goto-char (cadr (emacsvox-table-reader--destination cell 0 0)))
   (setq emacsvox-table-reader--adapter (emacsvox-table-reader--adapter)
         emacsvox-table-reader-mode t
+        emacsvox-table-reader--source-visit
+        (when (plist-get cell :source-lines)
+          (let ((region (plist-get cell :region)))
+            (cons (copy-marker (car region)) (copy-marker (cdr region) t))))
         emacsvox-table-reader--region
         (list (copy-marker (car (plist-get cell :region)))
               (copy-marker (cdr (plist-get cell :region)))))

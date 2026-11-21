@@ -673,5 +673,23 @@
           (dolist (key '(:row-index :column-index :data :row-title :column-title))
             (should (equal (plist-get expected key) (plist-get actual key)))))))))
 
+(ert-deftest emacsvox-table-reader-quitting-only-suspends-that-source-table ()
+  (dolist (mode '(org-mode markdown-mode))
+    (emacsvox-table-reader-test--with-table mode
+        "| Name | Age |\n| Alice | 42 |\n\nOther list\n\n| Name | Age |\n| Bob | 40 |\n"
+      (let ((emacsvox-table-reader-activation 'automatic)
+            (emacsvox-table-reader--command-tick nil))
+        (emacsvox-table-reader--automatic-entry)
+        (should emacsvox-table-reader-mode)
+        (emacsvox-table-reader-mode -1)
+        (save-excursion (goto-char (point-min)) (insert "Before\n"))
+        (search-forward "Alice")
+        (emacsvox-table-reader--automatic-entry)
+        (should-not emacsvox-table-reader-mode)
+        (search-forward "Bob")
+        (emacsvox-table-reader--automatic-entry)
+        (should emacsvox-table-reader-mode)
+        (should (equal (plist-get (emacsvox-table-reader--cell) :data) "Bob"))))))
+
 (provide 'emacsvox-table-reader-tests)
 ;;; emacsvox-table-reader-tests.el ends here
