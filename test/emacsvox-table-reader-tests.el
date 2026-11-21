@@ -330,6 +330,27 @@
     (should (looking-at "Literal pipe"))
     (should-error (emacsvox-table-reader-mode 1) :type 'user-error)))
 
+(ert-deftest emacsvox-table-reader-markdown-prose-after-headerless-table ()
+  (emacsvox-table-reader-test--with-table 'markdown-mode
+      "| Name | Value |\n| Alice | Item |\nChoose tea | coffee here.\n"
+    (search-forward "coffee")
+    (let ((origin (point)) (emacsvox-table-reader-activation 'automatic))
+      (emacsvox-table-reader--automatic-entry)
+      (should-not emacsvox-table-reader-mode)
+      (should-not (emacsvox-table-reader--entry-filter 'next-line))
+      (should (= origin (point)))
+      (should-not spoken))))
+
+(ert-deftest emacsvox-table-reader-markdown-copies-literal-underscores ()
+  (emacsvox-table-reader-test--with-table 'markdown-mode
+      "| Name | Value |\n|---|---|\n| One | customer_account_id __is bold__ _a_b_ |\n"
+    (search-forward "customer")
+    (emacsvox-table-reader-mode 1)
+    (emacsvox-table-reader-speak-cell)
+    (should (string-search "customer_account_id is bold a_b" (caar spoken)))
+    (emacsvox-table-reader-copy-cell)
+    (should (equal (car kill-ring) "customer_account_id is bold a_b"))))
+
 (ert-deftest emacsvox-table-reader-arrow-entry-moves-and-speaks-once ()
   "Each modified arrow enters and moves immediately, preserving plain editing."
   (dolist (case `((markdown-mode ,emacsvox-table-reader-test--markdown)

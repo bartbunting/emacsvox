@@ -932,7 +932,7 @@ Outer-pipe tables may omit the header delimiter."
             (while (and (not (eobp)) (emacsvox-markdown--table-line-p)
                         (or header (looking-at-p "[ \t]*|")))
               (forward-line 1))
-            (when (> (point) begin) (cons begin (point)))))))))
+            (when (< origin (point)) (cons begin (point)))))))))
 
 (defun emacsvox-markdown--table-delimited-end (open close)
   "Return the end of a balanced OPEN/CLOSE construct at point, or nil."
@@ -991,7 +991,13 @@ literal; cell values are never truncated to their displayed width."
               (push (emacsvox-markdown--table-plain-text (car link)) pieces)
               (goto-char (cdr link))
               t))
-           ((looking-at "\\(\\*\\*\\|__\\|~~\\|\\*\\|_\\)\\([^ \t\n].*?\\)\\1")
+           ((and (eq (char-after) ?_)
+                 (or (bobp) (save-excursion
+                              (backward-char) (looking-at-p "[^[:alnum:]_]")))
+                 (looking-at "\\(__?\\)\\([^_ \t\n]\\(?:.*?[^ \t\n]\\)?\\)\\(\\1\\)\\(?:\\'\\|[^[:alnum:]_]\\)"))
+            (push (match-string-no-properties 2) pieces)
+            (goto-char (match-end 3)))
+           ((looking-at "\\(\\*\\*\\|~~\\|\\*\\)\\([^ \t\n].*?\\)\\1")
             (push (match-string-no-properties 2) pieces)
             (goto-char (match-end 0)))
            (t (push (string (char-after)) pieces) (forward-char))))
