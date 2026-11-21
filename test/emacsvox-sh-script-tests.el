@@ -46,18 +46,14 @@
           events)
       (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy)
                  (lambda () (push 'punctuation-policy events)))
-                ((symbol-function 'emacsvox-toggle-audio-indentation)
-                 (lambda ()
-                   (setq emacsvox-audio-indentation t)
-                   (push 'indentation events)))
                 ((symbol-function 'emacsvox-speak-mode-line)
-                 (lambda () (push 'mode-line events))))
+                 (lambda () (push (list 'mode-line emacsvox-audio-indentation) events))))
         (emacsvox--advice-sh-mode-after))
       (should emacsvox-audio-indentation)
       (should
        (equal
         (nreverse events)
-        '(punctuation-policy indentation mode-line))))))
+        '(punctuation-policy (mode-line t)))))))
 
 (ert-deftest emacsvox-sh-script-navigation-is-target-aware ()
   "Only the matching Sh command-navigation advice produces feedback."
@@ -84,8 +80,8 @@
       (setq-local comint-indirect-setup-function #'sh-mode)
       (set-window-buffer (selected-window) (current-buffer))
       (let (announcements)
-        (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy) #'ignore)
-                  ((symbol-function 'tts--protocol-sync) #'ignore)
+        (cl-letf (((symbol-function 'tts--protocol-sync)
+                   (lambda () (ert-fail "Fontification touched the speech server")))
                   ((symbol-function 'emacsvox-speak-mode-line)
                    (lambda () (push (buffer-name) announcements))))
           (let ((indirect (comint-indirect-buffer)))
