@@ -43,12 +43,16 @@
   (save-window-excursion
     (set-window-buffer (selected-window) (current-buffer))
     (let ((emacsvox-audio-indentation nil)
+          (tts-speaker-process nil)
           events)
       (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy)
                  (lambda () (push 'punctuation-policy events)))
                 ((symbol-function 'emacsvox-speak-mode-line)
-                 (lambda () (push (list 'mode-line emacsvox-audio-indentation) events))))
+                 (lambda ()
+                   (setq tts-speaker-process 'selected-speaker)
+                   (push (list 'mode-line emacsvox-audio-indentation) events))))
         (emacsvox--advice-sh-mode-after))
+      (should (eq tts-speaker-process 'selected-speaker))
       (should emacsvox-audio-indentation)
       (should
        (equal

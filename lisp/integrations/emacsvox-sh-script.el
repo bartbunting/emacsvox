@@ -40,13 +40,15 @@
 
 (defun emacsvox--advice-sh-mode-after (&rest _)
   "Speech-enable sh-script editing."
-  (let* ((selected (eq (current-buffer) (window-buffer (selected-window))))
-         ;; Shell and Agent Shell also use Sh mode to fontify hidden buffers.
-         (tts-speaker-process (and selected tts-speaker-process)))
-    (tts-apply-punctuation-mode-policy)
-    (unless emacsvox-audio-indentation
-      (setq emacsvox-audio-indentation t))
-    (when selected (emacsvox-speak-mode-line))))
+  (unless emacsvox-audio-indentation
+    (setq emacsvox-audio-indentation t))
+  (if (eq (current-buffer) (window-buffer (selected-window)))
+      (progn
+        (tts-apply-punctuation-mode-policy)
+        (emacsvox-speak-mode-line))
+    ;; Shell and Agent Shell also use Sh mode to fontify hidden buffers.
+    (let ((tts-speaker-process nil))
+      (tts-apply-punctuation-mode-policy))))
 
 (advice-add 'sh-mode :after
             #'emacsvox--advice-sh-mode-after)
