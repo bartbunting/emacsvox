@@ -44,6 +44,35 @@
 (defconst emacsvox-table-reader-test--org
   "Before\n\n| Name | Role |\n|------+------|\n| Alice | Engineer |\n| Bob | |\n\nAfter\n")
 
+(ert-deftest emacsvox-table-reader-org-reuses-selected-coordinates ()
+  "Reading submits the selected Org coordinates without counting source rows again."
+  (emacsvox-table-reader-test--with-table 'org-mode emacsvox-table-reader-test--org
+    (let ((row-lookup (symbol-function 'org-table-current-line))
+          (native-lookups 0))
+      (cl-letf (((symbol-function 'org-table-current-line)
+                 (lambda ()
+                   (cl-incf native-lookups)
+                   (funcall row-lookup))))
+        (emacsvox-table-reader-mode 1)
+        (dolist (step '((emacsvox-table-reader-speak-cell 1 1)
+                        (emacsvox-table-reader-next-column 1 2)
+                        (emacsvox-table-reader-next-row 2 2)
+                        (emacsvox-table-reader-copy-cell 2 2)
+                        (emacsvox-table-reader-next-row 3 2)
+                        (emacsvox-table-reader-next-column 3 2)))
+          (funcall (car step))
+          (let ((facts (plist-get (cdar spoken) :facts)))
+            (should (equal (list (plist-get facts :org-table-row)
+                                 (plist-get facts :org-table-column))
+                           (cdr step)))))
+        (should (equal (current-kill 0) "Engineer"))
+        (should (zerop native-lookups))
+        (emacsvox-table-reader-mode -1)
+        (let ((facts (emacsvox-org--table-facts 'cell)))
+          (should (= (plist-get facts :org-table-row) 3))
+          (should (= (plist-get facts :org-table-column) 2)))
+        (should (> native-lookups 0))))))
+
 (ert-deftest emacsvox-table-reader-equivalent-source-navigation ()
   "Both adapters preserve text, columns, complete rows and native Aural roles."
   (dolist (case `((markdown-mode ,emacsvox-table-reader-test--markdown markdown markdown-table-row)

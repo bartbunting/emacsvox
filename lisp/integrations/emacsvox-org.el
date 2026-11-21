@@ -579,8 +579,8 @@ operation, and FALLBACK-ICON plays alongside a non-heading line."
   "Occasion captured by an Org table presentation command.")
 
 (defun emacsvox-org--table-facts
-    (presentation &optional action event)
-  "Return semantic facts for Org table PRESENTATION at point.
+    (presentation &optional action event cell)
+  "Return semantic facts for Org table PRESENTATION at CELL or at point.
 
 ACTION defaults to navigation or inspection according to the captured
 occasion.  EVENT defaults to `focus-entered'."
@@ -592,10 +592,10 @@ occasion.  EVENT defaults to `focus-entered'."
      (if (eq emacsvox-org--table-presentation-occasion 'navigation)
          'table-navigation
        'table-inspection)))
-   (when (org-at-table-p 'any)
+   (when (or cell (org-at-table-p 'any))
      (list
-      :org-table-row (org-table-current-line)
-      :org-table-column (org-table-current-column)
+      :org-table-row (if cell (1+ (plist-get cell :row-index)) (org-table-current-line))
+      :org-table-column (if cell (1+ (plist-get cell :column-index)) (org-table-current-column))
       :org-table-presentation presentation))))
 
 (defun emacsvox-org--submit-table-text (text presentation)
@@ -2752,7 +2752,8 @@ Formulas are not evaluated; unrecognized syntax remains literal."
          (facts (emacsvox-org--table-facts
                  (if (memq presentation '(context dimensions)) 'coordinates 'cell)
                  (if (eq occasion 'navigation) 'table-navigation 'table-inspection)
-                 (if (eq occasion 'state-change) 'state-changed 'focus-entered))))
+                 (if (eq occasion 'state-change) 'state-changed 'focus-entered)
+                 emacsvox-table-reader--presentation-cell)))
     ;; Existing cell/header options keep their registered meanings.  Whole
     ;; row/column speech carries coordinates without pretending to be a cell.
     (when (memq presentation '(row column))

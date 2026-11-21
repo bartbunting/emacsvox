@@ -419,6 +419,9 @@ inside the reading context.  No adapter may edit the source to read it.")
 For rendered tables an uncertain identity remains suspended until prose is
 reached; a re-render alone never resumes reading.")
 
+(defvar emacsvox-table-reader--presentation-cell nil
+  "Logical cell already selected for the current adapter submission.")
+
 (defvar emacsvox-table-reader--entering nil
   "Non-nil while the first arrow's feedback should announce reader entry.")
 
@@ -526,17 +529,17 @@ Rendered adapters retain their own mapping and are never cached here.")
   (or (emacsvox-table-reader--snapshot)
       (user-error "Not in a supported table")))
 
-(defun emacsvox-table-reader--submit (text occasion presentation icon)
-  "Submit one TEXT presentation using the active adapter.
-OCCASION, PRESENTATION and ICON describe the user's action."
-  (funcall (nth 2 (or emacsvox-table-reader--adapter
-                      (emacsvox-table-reader--adapter)))
-           (if (and emacsvox-table-reader--entering
-                    (or emacsvox-table-reader-mode
-                        (bound-and-true-p emacsvox-agent-shell--table-navigation-active)))
-               (concat "Table reading. " text)
-             text)
-           occasion presentation icon))
+(defun emacsvox-table-reader--submit (text occasion presentation icon &optional cell)
+  "Submit TEXT, OCCASION, PRESENTATION and ICON with the selected CELL's facts."
+  (let ((emacsvox-table-reader--presentation-cell cell))
+    (funcall (nth 2 (or emacsvox-table-reader--adapter
+                        (emacsvox-table-reader--adapter)))
+             (if (and emacsvox-table-reader--entering
+                      (or emacsvox-table-reader-mode
+                          (bound-and-true-p emacsvox-agent-shell--table-navigation-active)))
+                 (concat "Table reading. " text)
+               text)
+             occasion presentation icon)))
 
 (defun emacsvox-table-reader--release ()
   "Release the reading context without speech or source changes."
@@ -642,15 +645,15 @@ With QUIET, let the following movement submit the single entry announcement."
              (when (eq (emacsvox-table-reader--preference 'entry-detail) 'full)
                (concat (emacsvox-table-reader--dimensions-speech cell) " "))
              (emacsvox-table-reader--format cell 'cell))
-     'navigation 'cell 'open-object))
+     'navigation 'cell 'open-object cell))
   (force-mode-line-update)))
 
-(defun emacsvox-table-reader--inspect (presentation &optional occasion)
-  "Speak PRESENTATION once, using OCCASION or the default inspection intent."
-  (let ((cell (emacsvox-table-reader--cell)))
+(defun emacsvox-table-reader--inspect (presentation &optional occasion cell)
+  "Speak PRESENTATION for CELL or point under OCCASION, normally inspection."
+  (let ((cell (or cell (emacsvox-table-reader--cell))))
     (emacsvox-table-reader--submit
      (emacsvox-table-reader--format cell presentation)
-     (or occasion 'inspection) presentation 'item)))
+     (or occasion 'inspection) presentation 'item cell)))
 
 (defun emacsvox-table-reader-speak-cell ()
   "Speak the complete logical table cell at point."
@@ -675,10 +678,10 @@ With QUIET, let the following movement submit the single entry announcement."
 
 (defun emacsvox-table-reader--copy (object)
   "Copy the logical table OBJECT and confirm with one submission."
-  (kill-new (emacsvox-table-reader--copy-text
-             (emacsvox-table-reader--cell) object))
-  (emacsvox-table-reader--submit
-   (format "Copied table %s." object) 'state-change object 'save-object))
+  (let ((cell (emacsvox-table-reader--cell)))
+    (kill-new (emacsvox-table-reader--copy-text cell object))
+    (emacsvox-table-reader--submit
+     (format "Copied table %s." object) 'state-change object 'save-object cell)))
 (defun emacsvox-table-reader-copy-cell ()
   "Copy the logical cell as plain text."
   (interactive)
@@ -701,7 +704,7 @@ With QUIET, let the following movement submit the single entry announcement."
         (emacsvox-table-reader--submit
          (format "No content %s table."
                  (if (eq direction 'forward) "after" "before"))
-         'navigation 'context 'warn-user)
+         'navigation 'context 'warn-user cell)
       (goto-char position)
       (emacsvox-table-reader--release)
       (emacsvox-table-reader--submit
@@ -723,23 +726,23 @@ With QUIET, let the following movement submit the single entry announcement."
   "Move by logical ROWS and COLUMNS, reading rows after vertical movement.
 With CELL-ONLY, read a cell instead.  EXIT-FUNCTION, when supplied, owns
 the host's exit lifecycle; otherwise use the explicit reader's exit."
-  (pcase (emacsvox-table-reader--destination
-          (emacsvox-table-reader--cell) rows columns)
-    (`(exit ,direction)
-     (if (eq (emacsvox-table-reader--preference 'edge-action) 'stop)
+  (let ((origin (emacsvox-table-reader--cell)))
+    (pcase (emacsvox-table-reader--destination origin rows columns)
+      (`(exit ,direction)
+       (if (eq (emacsvox-table-reader--preference 'edge-action) 'stop)
+           (emacsvox-table-reader--submit
+            (if (eq direction 'backward) "First row of table." "Last row of table.")
+            'navigation 'context 'warn-user origin)
+         (funcall (or exit-function #'emacsvox-table-reader--exit) direction)))
+      (`(boundary ,text)
+       (emacsvox-table-reader--submit text 'navigation 'context 'warn-user origin))
+      (`(cell ,position)
+       (goto-char position)
+       (let ((cell (emacsvox-table-reader--cell))
+             (presentation (if (or cell-only (zerop rows)) 'cell 'row)))
          (emacsvox-table-reader--submit
-          (if (eq direction 'backward) "First row of table." "Last row of table.")
-          'navigation 'context 'warn-user)
-       (funcall (or exit-function #'emacsvox-table-reader--exit) direction)))
-    (`(boundary ,text)
-     (emacsvox-table-reader--submit text 'navigation 'context 'warn-user))
-    (`(cell ,position)
-     (goto-char position)
-     (let ((cell (emacsvox-table-reader--cell)))
-       (emacsvox-table-reader--submit
-        (emacsvox-table-reader--format
-         cell (if (or cell-only (zerop rows)) 'cell 'row) t)
-        'navigation (if (or cell-only (zerop rows)) 'cell 'row) 'item)))))
+          (emacsvox-table-reader--format cell presentation t)
+          'navigation presentation 'item cell))))))
 (defun emacsvox-table-reader-next-row (&optional count)
   "Move COUNT logical rows down, retaining the column and reading the row."
   (interactive "p")

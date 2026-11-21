@@ -238,10 +238,8 @@
 (defun emacsvox-tabulated-list--reader-submit (text occasion presentation icon)
   "Submit shared-reader TEXT with OCCASION, PRESENTATION and ICON."
   (let ((empty (and (eq presentation 'cell)
-                    (string-blank-p (or (emacsvox-tabulated-list--label
-                                         (elt (tabulated-list-get-entry)
-                                              (emacsvox-tabulated-list--column-at-point)))
-                                        "")))))
+                    (string-blank-p
+                     (or (plist-get emacsvox-table-reader--presentation-cell :data) "")))))
     (emacsvox-aural-submit
      text :module (emacsvox-tabulated-list--module) :occasion occasion
      :facts (emacsvox-tabulated-list--cell-facts empty)

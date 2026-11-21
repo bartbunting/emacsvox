@@ -423,7 +423,7 @@ OCCASION, PRESENTATION and ICON identify inspection, movement or copying."
       'agent-table 'agent-content-inspected))
     (t
      (emacsvox-agent-shell--table-cell-facts
-      (emacsvox-agent-shell--table-snapshot)
+      (or emacsvox-table-reader--presentation-cell (emacsvox-agent-shell--table-snapshot))
       (if (eq occasion 'navigation) 'focus-entered 'agent-content-inspected))))
    occasion icon))
 
@@ -461,9 +461,9 @@ or changing the scope of existing presentation preferences."
 (defun emacsvox-agent-shell--table-cell-feedback (&optional whole-row)
   "Speak the rendered Markdown table cell at point semantically.
 When WHOLE-ROW is non-nil, speak its entire logical row."
-  (when (emacsvox-agent-shell--table-snapshot)
+  (when-let* ((cell (emacsvox-agent-shell--table-snapshot)))
     (emacsvox-agent-shell--table-read
-     #'emacsvox-table-reader--inspect (if whole-row 'row 'cell) 'navigation)
+     #'emacsvox-table-reader--inspect (if whole-row 'row 'cell) 'navigation cell)
     t))
 
 (defun emacsvox-agent-shell--table-context-speech (cell)
