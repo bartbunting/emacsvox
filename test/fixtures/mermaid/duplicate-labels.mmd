@@ -1,0 +1,9 @@
+flowchart TD
+    accTitle: Two independent reviews
+    accDescr: The manager and security paths deliberately reuse Review and Approved labels.
+    Request[Receive change request] -->|manager| R1[Review]
+    Request -->|security| R2[Review]
+    R1 --> A1[Approved]
+    R2 --> A2[Approved]
+    A1 --> Schedule[Schedule work]
+    A2 --> Schedule

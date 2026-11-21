@@ -359,6 +359,7 @@ integrations/emacsvox-man.elc \
 integrations/emacsvox-marginalia.elc \
 integrations/emacsvox-markdown.elc \
 integrations/emacsvox-maths.elc \
+integrations/emacsvox-mermaid.elc \
 integrations/emacsvox-message.elc \
 integrations/emacsvox-mines.elc \
 integrations/emacsvox-mu4e.elc \
@@ -478,6 +479,8 @@ $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 integrations/emacsvox-bookshare.elc integrations/emacsvox-epub.elc integrations/emacsvox-eww.elc integrations/emacsvox-librivox.elc: core/dom-addons.elc
 
 emacsvox-preamble.elc: emacsvox-version.elc emacsvox-paths.elc
+
+integrations/emacsvox-mermaid.elc: emacsvox-preamble.elc aural/emacsvox-aural-submission.elc
 
 integrations/emacsvox-agent-shell-render.elc: core/emacsvox-text-tree.elc
 

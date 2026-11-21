@@ -1,0 +1,16 @@
+flowchart TD
+    P[Device inventory] --> G[Generate configuration]
+    G --> H[Monitored hosts]
+    G --> S[Service checks]
+    T[Templates] --> H
+    H --> L[Discover devices]
+    H --> S
+    X[External checks] --> H
+    S --> A[Handle alerts]
+    A --> E[Dispatch notifications]
+    E --> J[Open a ticket]
+    E --> K[Update status]
+    G --> K
+    C[Review rules] -. capture and compare .-> T
+    C -. capture and compare .-> A
+    I[Investigate] -. record evidence .-> C

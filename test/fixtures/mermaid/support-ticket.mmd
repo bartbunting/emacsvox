@@ -1,0 +1,9 @@
+flowchart TD
+    accTitle: Support ticket routing
+    accDescr: A known solution and an investigation path meet at resolution.
+    Start([Receive ticket]) --> Triage{Known solution?}
+    Triage -->|yes| Guide[Follow support guide]
+    Triage -->|no| Investigate[Investigate the problem]
+    Guide --> Resolve[Resolve the ticket]
+    Investigate --> Resolve
+    Resolve --> Close([Close ticket])

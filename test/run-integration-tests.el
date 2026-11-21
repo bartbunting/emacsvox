@@ -22,6 +22,7 @@
     emacsvox-agent-shell-explicit-input-graphical-prompt-label
     emacsvox-agent-shell-diff-headings-graphical-navigation
     emacsvox-agent-shell-question-graphical-controls
+    emacsvox-agent-shell-streamed-output-graphical-reading
     emacsvox-agent-shell-live-input-graphical-visual-speech
     emacsvox-agent-shell-live-input-graphical-wrapped-speech
     emacsvox-agent-shell-response-graphical-bidirectional-speech
@@ -91,7 +92,8 @@
     (advice-add 'emacsvox-sounds-play-concrete-cue :override #'ignore)
     ;; This order also covers core advice being installed after Agent Shell.
     (dolist (module '(emacsvox-agent-shell-render-tests
-                      emacsvox-agent-shell-tests emacsvox-notmuch-tests
+                      emacsvox-agent-shell-tests emacsvox-agent-shell-output-tests
+                      emacsvox-notmuch-tests
                       emacsvox-vertical-navigation-tests
                                                emacsvox-eat-tests))
       (require module)))

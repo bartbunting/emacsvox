@@ -534,20 +534,22 @@ ending at SOURCE-START labels the content that follows it."
 
 (defun emacsvox-agent-shell--displayed-divider-source-bounds ()
   "Return source bounds of a rendered Markdown divider at point.
-Agent Shell replaces the whole rule with a display string ending in a
-newline.  Both display rows can have empty visual source bounds, but they
-represent one divider, including when point is at its source line end."
+Both display rows represent one divider.  Inside a blockquote only
+the rule characters and their surrounding whitespace draw the divider."
   (let* ((inhibit-field-text-motion t)
          (start (line-beginning-position))
          (end (line-end-position)))
-    (when (and (< start end)
-               (get-text-property start 'agent-shell-markdown-frozen)
-               (stringp (get-text-property start 'display))
-               (not (invisible-p start))
-               (string-match-p
-                "\\`[ \t]*\\([-*_]\\)\\1\\1+[ \t]*\\'"
-                (buffer-substring-no-properties start end)))
-      (cons start end))))
+    (when-let* (((< start end))
+                (last (1- end))
+                ((get-text-property last 'agent-shell-markdown-frozen))
+                ((stringp (get-text-property last 'display)))
+                ((not (invisible-p last)))
+                (rule (previous-single-property-change end 'display nil start))
+                ((or (= start rule)
+                     (get-text-property rule 'agent-shell-markdown-blockquote-rendered)))
+                ((string-match-p "\\`[ \t]*\\([-*_]\\)\\1\\1+[ \t]*\\'"
+                                 (buffer-substring-no-properties rule end))))
+      (cons rule end))))
 
 (defun emacsvox-agent-shell--response-row-source-bounds (bounds)
   "Return visible response bounds when BOUNDS starts in its hidden marker.
@@ -780,7 +782,9 @@ after that response row was already visited directly."
 (defun emacsvox-agent-shell--chat-navigation-source-bounds ()
   "Return source bounds shared by chat-label or rendered-divider rows."
   (when (or line-move-visual visual-line-mode)
-    (or (emacsvox-agent-shell--displayed-divider-source-bounds)
+    (or (when-let* ((divider (emacsvox-agent-shell--displayed-divider-source-bounds)))
+          (let ((inhibit-field-text-motion t))
+            (cons (line-beginning-position) (cdr divider))))
         (let ((bounds (emacsvox-agent-shell--visual-line-source-bounds)))
           (when (emacsvox-agent-shell--chat-label-context-between
                  (car bounds) (cdr bounds))
@@ -898,7 +902,9 @@ a positive argument to the advised command."
          (normalize-p
           (and interactive-p
                (/= count 0)
-               (derived-mode-p 'agent-shell-mode)))
+               (or (derived-mode-p 'agent-shell-mode)
+                   (and (derived-mode-p 'agent-shell-viewport-view-mode)
+                        (emacsvox-agent-shell--displayed-divider-source-bounds)))))
          (direction
           (if (< count 0)
               (if (eq nominal-direction 'forward) 'backward 'forward)
@@ -1490,7 +1496,10 @@ Core visual-line presentation owns blank-line semantics and interruption."
          (cond
           (divider-source-bounds
            (lambda (&rest _)
-             (emacsvox-speak--present-physical-line)))
+             (save-excursion
+               (save-restriction
+                 (narrow-to-region (car divider-source-bounds) (cdr divider-source-bounds))
+                 (emacsvox-speak--present-physical-line)))))
           ((or input-source-bounds response-source-bounds)
            (lambda (&rest _)
              (emacsvox-agent-shell--submit-text-feedback

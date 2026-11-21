@@ -1,14 +1,10 @@
-;;; emacsvox-agent-shell-output-tests.el --- Patched Codex output checks -*- lexical-binding: t; -*-
+;;; emacsvox-agent-shell-output-tests.el --- Codex streamed output checks -*- lexical-binding: t; -*-
 ;; Copyright (C) 2026 Emacsvox contributors
 ;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Commentary:
-;; Supplemental regression for Agent Shell's terminal-output-delta patch.
-;; Load the patched Agent Shell before this suite, with its dependencies on
-;; load-path, then run in a fresh graphical Emacs.  The pinned upstream commit
-;; does not contain that patch yet; the ordinary integration gate therefore
-;; does not load this file.  No substitute renderer is installed by the test.
-;; See test/README.org for the required testing route.
+;; Exercise Codex terminal-output notifications through the upstream adapter,
+;; fragment renderer and Emacsvox speech in a displayed window.
 
 ;;; Code:
 
@@ -20,6 +16,8 @@
   (save-window-excursion
     (emacsvox-agent-shell-test--with-current-session
       (switch-to-buffer (current-buffer))
+      (setf (alist-get :agent-config agent-shell--state)
+            (agent-shell-openai-make-codex-config))
       (use-local-map agent-shell-mode-map)
       (let ((emacsvox-agent-shell-tool-output-verbosity 'full)
             (agent-shell-tool-use-expand-by-default nil)
@@ -38,9 +36,12 @@
             (agent-shell--on-notification
              :state agent-shell--state
              :acp-notification
-             `((method . "session/update")
-               (params (update (sessionUpdate . "tool_call_update")
-                               (toolCallId . "delta-command") ,@update)))))
+             (agent-shell--adapt-notification
+              :state agent-shell--state
+              :acp-notification
+              `((method . "session/update")
+                (params (update (sessionUpdate . "tool_call_update")
+                                (toolCallId . "delta-command") ,@update))))))
           (let ((results
                  (seq-filter
                   (lambda (entry) (string-search "Last result" (car entry)))
