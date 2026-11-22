@@ -25,11 +25,14 @@ async function findVoice(speech) {
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
 function createReceiver({ speech, cuePlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
-                          keyboard = () => {}, screen = () => {}, now = Date.now }) {
+                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
   let voiceLookup;
+  let permission = null;
+  const waitingPermissions = new Map();
+  const seenPermissions = new Set();
   let cueRequest = 0, cueStarted = false;
 
   function refreshVoice() {
@@ -83,30 +86,39 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
   }
 
   function drain() {
-    if (speaking || !queue.length) return;
+    if (speaking) return;
+    let urgentText;
+    if (waitingPermissions.size) {
+      const [id, words] = waitingPermissions.entries().next().value;
+      waitingPermissions.delete(id);
+      permission = id;
+      urgentText = words;
+    }
+    if (!urgentText && !queue.length) return;
     speaking = true;
     const owner = epoch;
     barrier.then(async result => {
       if (owner !== epoch || !result) return;
       // Queued sound starts at its place in the dispatch and can overlap speech.
-      while (queue[0] === openObjectCue) {
+      while (!urgentText && queue[0] === openObjectCue) {
         queue.shift();
         await playOpenObject();
         if (owner !== epoch) return;
       }
-      if (!queue.length) {
+      if (!urgentText && !queue.length) {
         speaking = false;
         return;
       }
       const voice = await voiceLookup;
       if (owner !== epoch) return;
-      const item = queue.shift();
+      const item = urgentText ?? queue.shift();
       const mix = item === mixedSample;
       const text = mix ? 'This is the mixer test. The lighthouse keeper climbed the stairs to light the lamp.' : item;
-      if (!mix) queuedChars -= text.length;
+      if (!mix && !urgentText) queuedChars -= text.length;
       const finish = state => {
         if (owner !== epoch) return;
         playback(state);
+        permission = null;
         speaking = false;
         drain();
       };
@@ -138,11 +150,38 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     drain();
   }
 
+  function clearPermissions() {
+    permission = null;
+    waitingPermissions.clear();
+  }
+
+  function permissionRecord(record) {
+    if (typeof record.id !== 'string') return;
+    if (record.type === 'resolved') {
+      waitingPermissions.delete(record.id);
+      seenPermissions.delete(record.id);
+      if (permission === record.id) {
+        permission = null;
+        silence();
+        drain();
+      }
+    } else if (!seenPermissions.has(record.id) && typeof record.text === 'string' && record.text) {
+      if (seenPermissions.size >= 256) return disconnect('Too many pending requests. Reconnect to refresh.');
+      seenPermissions.add(record.id);
+      waitingPermissions.set(record.id, record.text);
+      if (permission === null) silence();
+      drain();
+    }
+  }
+
   function disconnect(message = 'Disconnected') {
     const old = socket;
     socket = null;
     ready = false;
     keyboard(null);
+    sshOffer(null);
+    clearPermissions();
+    seenPermissions.clear();
     screen('');
     clearInterval(heartbeat);
     silence();
@@ -183,10 +222,17 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
             }
           }});
         }
+      } else if (record.type === 'ssh' && typeof record.frame === 'string' &&
+                 typeof record.client === 'string' && typeof record.server === 'string') {
+        sshOffer(record);
+      } else if (ready && (record.type === 'permission' || record.type === 'resolved')) {
+        permissionRecord(record);
       } else if (record.type === 'screen' && typeof record.text === 'string') {
         screen(record.text);
       } else if (ready && record.type === 'stop') {
-        silence(record.scope !== 'speech');
+        if (record.scope === 'all') clearPermissions();
+        if (permission === null) silence(record.scope !== 'speech');
+        else { queue = []; queuedChars = 0; }
       } else if (ready && record.type === 'cue' && record.name === 'open-object') {
         if (record.immediate) playOpenObject();
         else enqueue(openObjectCue);
@@ -200,6 +246,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
   }
 
   function stop() {
+    clearPermissions();
     silence();
     if (socket?.readyState !== 1) return;
     // Ignore traffic already in flight until the relay clears its pending batch.
@@ -209,6 +256,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
   }
 
   function testVoice(mix = false) {
+    clearPermissions();
     silence();
     refreshVoice();
     enqueue(mix ? mixedSample : 'This is the iPhone voice test.');

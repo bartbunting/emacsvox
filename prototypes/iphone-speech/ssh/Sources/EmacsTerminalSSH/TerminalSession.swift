@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+import Foundation
 import Crypto
 import NIOCore
 import NIOPosix
@@ -76,7 +77,7 @@ public final class TerminalSession: Sendable {
     /// Output is delivered in order on the NIO event loop. Keep the callback short.
     public static func connect(host: String, port: Int, username: String, pinnedHostKey: String,
                                identity: Curve25519.Signing.PrivateKey, server: String,
-                               emacsclient: String = "emacsclient", size: TerminalSize,
+                               emacsclient: String = "emacsclient", phoneFrame: String? = nil, size: TerminalSize,
                                group: EventLoopGroup, output: @escaping @Sendable ([UInt8]) -> Void)
         async throws -> TerminalSession {
         guard !host.isEmpty, !username.isEmpty, (1...65535).contains(port),
@@ -89,7 +90,14 @@ public final class TerminalSession: Sendable {
             "'" + word.split(separator: "'", omittingEmptySubsequences: false).joined(separator: "'\\''") + "'"
         }
         // A WSL login without a locale can make Emacs interpret UTF-8 bytes as Meta keys.
-        let command = "exec env LC_ALL=C.UTF-8 " + quote(emacsclient) + " --alternate-editor=/bin/false --tty --socket-name=" + quote(server)
+        var command = "exec env LC_ALL=C.UTF-8 " + quote(emacsclient) + " --alternate-editor=/bin/false --tty --socket-name=" + quote(server)
+        if let phoneFrame {
+            guard phoneFrame.hasPrefix("phone-"), UUID(uuidString: String(phoneFrame.dropFirst(6))) != nil else {
+                throw TerminalError.invalidDestination
+            }
+            command += " " + quote("--frame-parameters=((emacsvox-phone-id . \"\(phoneFrame)\") (emacsvox-native-ssh . t))")
+        }
+        let shellCommand = command
         let loop = group.next()
         let ready = loop.makePromise(of: TerminalSession.self)
         let bootstrap = ClientBootstrap(group: loop).connectTimeout(.seconds(10)).channelInitializer { channel in
@@ -100,7 +108,7 @@ public final class TerminalSession: Sendable {
                                         inboundChildChannelInitializer: nil)
                 let sync = channel.pipeline.syncOperations
                 try sync.addHandler(ssh)
-                try sync.addHandler(ParentHandler(ready: ready, size: size, command: command, output: output))
+                try sync.addHandler(ParentHandler(ready: ready, size: size, command: shellCommand, output: output))
             }
         }
         let transport: Channel

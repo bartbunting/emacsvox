@@ -233,3 +233,35 @@ test('Stop during rewind and reconnection discard stale cues and allow the next 
     assert.deepEqual(spoken, ['new']);
   } finally { receiver.disconnect(); }
 });
+
+test('rapid navigation preserves active and pending permission identities until Stop', async () => {
+  const spoken = [], stops = [];
+  const socket = {readyState: 1, send() {}, close() {}};
+  const receiver = createReceiver({status() {}, openSocket: () => socket,
+    speech: {stop: async () => { stops.push(true); }, speak: (text, cb) => spoken.push([text, cb])}});
+  const send = record => socket.onmessage({data: JSON.stringify(record)});
+  try {
+    receiver.connect();
+    send({type: 'ready', id: 0});
+    send({type: 'permission', id: '1', text: 'First request'});
+    send({type: 'stop'});
+    send({type: 'speak', text: 'old line'});
+    send({type: 'permission', id: '2', text: 'Second request'});
+    send({type: 'permission', id: '2', text: 'Duplicate'});
+    await flush();
+    const before = stops.length;
+    send({type: 'stop'});
+    send({type: 'speak', text: 'latest line'});
+    assert.equal(stops.length, before);
+    assert.deepEqual(spoken.map(p => p[0]), ['First request']);
+    spoken[0][1].onDone();
+    await flush();
+    spoken[1][1].onDone();
+    await flush();
+    assert.deepEqual(spoken.map(p => p[0]), ['First request', 'Second request', 'latest line']);
+    send({type: 'permission', id: '3', text: 'Pending request'});
+    send({type: 'stop', scope: 'all'});
+    await flush();
+    assert.equal(spoken.length, 3);
+  } finally { receiver.disconnect(); }
+});
