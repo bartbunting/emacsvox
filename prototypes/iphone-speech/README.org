@@ -1,5 +1,8 @@
 #+title: Listen to Emacsvox on an iPhone
 
+Track the path from this speech receiver to a full terminal in the
+[[file:PLAN.org][iPhone prototype plan]].
+
 * Listen from the PC keyboard
 
 The test Emacs runs Codex in WSL. Its speech server sends text and
@@ -160,17 +163,28 @@ Metro served an iOS bundle with the Tailscale bundle URL, and the iOS
 Hermes export succeeded. On a physical iPhone, both the local voice test
 and line navigation in a rendered Agent Shell sample produced audible speech.
 
-* One foreground app for SSH and speech
+* Full terminal Emacs on the iPhone
 
-A subsequent signed build could include a native SSH client, accessible
-terminal view and the speech controller in one app. Verify the WSL SSH
-host key and keep SSH credentials in the iOS Keychain. Allocate a PTY and
-run =emacsclient -t -s SERVER= against the server that already owns the
-Codex buffer. Switch to that buffer in the new terminal frame. A native
-text input should accept committed Braille Screen Input text and paste.
-Forward external keyboard control sequences and window-size changes to
-the PTY. Test VoiceOver focus, editing, and duplicate terminal echo with
-the same hardware used for listening.
+The planned app gives you a terminal frame in your existing WSL Emacs.
+Your buffers, packages, keymaps and commands are available as they would
+be in =emacsclient -t=. You can move between a file, Dired, the minibuffer
+and a running Agent Shell conversation, with Emacsvox speaking on the phone.
+
+The signed app would combine SSH, an accessible terminal and the speech
+receiver. Verify the WSL host key, keep SSH credentials in the iOS
+Keychain, allocate a PTY and run =emacsclient -t -s SERVER=. Pass keyboard
+input and terminal size changes to Emacs. Support Control, Meta, Escape
+and prefix sequences such as =C-x= and =C-c=. Provide VoiceOver-accessible
+ways to enter these with Braille Screen Input and to reach commands whose
+key combinations iOS or VoiceOver intercepts.
+
+Test on the phone with a real editing task. Open a scratch file with
+=C-x C-f=, enter text with Braille Screen Input, search with =C-s=,
+and save with =C-x C-s=. Run =M-x=, navigate completions and cancel with
+=C-g=. Switch to the existing Codex buffer with =C-x b= and press
+=C-n= twice during speech. Listen for each destination line and check
+for duplicate echo from VoiceOver. Check that desktop activity still
+speaks on the desktop while the phone frame is open.
 
 Pair the phone's authenticated SSH connection and TTY with a fresh speech
 endpoint. One option is to forward the relay socket through the same SSH
