@@ -536,6 +536,13 @@ when you press Control+C.
 1. In Diagnostics, activate “Test half-second tone”. Listen for one steady
    pitch. Try “Test three-second tone” and interrupt it with Stop Speech.
    Both controls work offline and use the same player as an Emacs tone.
+   For a timing comparison, try the half-second tone twice. Close Diagnostics
+   and run =M-x iphone-test-tone RET= twice in the isolated phone frame.
+   Both paths play 660 Hz for 480 ms. Keep the same speaker or headphones
+   and compare the pause between activation and the start of the sound.
+   To compare a single keypress, run =C-u M-x iphone-test-tone RET=. In the
+   read-only tone buffer, wait for quiet, then press Return again. Press
+   =q= to close the comparison and return to your editing buffer.
 2. On the main screen, connect and focus the Emacs keyboard field. Type a
    lowercase letter with ordinary Emacs typing echo on. Listen for one echo.
    In an Agent Shell response, press =C-n= twice during a line and compare
@@ -562,6 +569,10 @@ when you press Control+C.
 6. From the phone, press =C-e=, pause for the prefix help, then press =m=.
    Listen for the help and the mode line on the phone. Repeat on the PC to
    hear its own mode line on the desktop.
+7. Arrow onto an =a= on the phone and pause for the configured phonetic
+   delay (one second by default). Both “a” and “alpha” should come from the
+   phone. Move twice quickly to check that only the last letter gets a
+   phonetic name. Try it on the PC to hear the same feedback there.
 
 ** Attach to an existing conversation
 

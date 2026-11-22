@@ -19,6 +19,24 @@ The earlier local branches named above are stages of this checkout. Emacsvox
 revisions in the build notes point to the corresponding commits in this
 history. The private signed builds predate the removal of local setup details.
 
+* Next trials with signed build 3
+
+1. Use both keyboards to check delayed feedback. Move onto a letter, pause
+   for its phonetic name, then move rapidly. Each frame should speak its own
+   letter and describe only the last one.
+2. Compare the same 480 ms tone in Diagnostics and from an Emacs command
+   over SSH. Use the same output device for both. Compare first use with
+   repeat use before choosing an audio change.
+3. Use an existing Codex conversation from both frames. Continue a draft,
+   hear a reply, review a permission while navigating and reconnect after
+   locking the phone. Leave the desktop frame and draft open.
+4. Extend Omnivox cue support on the phone, starting with the visual-line
+   mode-line chime. Verify cue order, cancellation and timing on the device
+   before enabling each additional protocol capability.
+5. Finish daily-use setup. Start the opt-in relay, reconnect with the
+   saved SSH settings after a WSL restart, then disconnect the phone and
+   continue in the same desktop session.
+
 * Delivery plan
 
 Slices 1 through 3 use Expo Go and a named test server in WSL. Slice 4
@@ -58,6 +76,12 @@ physical keyboards. A paused phone =C-e m= exposed an exception: Emacs
 spoke prefix help on the laptop before the command hooks ran. After
 routing the partial key sequence, pausing at =C-e= in Org-mode on the
 physical phone spoke the help there and the laptop stayed quiet.
+
+Arrowing onto =a= also exposed a delayed routing error. The character
+reader now saves the phone speaker when scheduling its idle timer. The
+two-frame check recorded “alpha” on the phone connection and “oscar” on
+the PC connection. The SSH check also covers moving twice before the
+timer expires.
 
 ** NEXT 3. Deliver replies and permission requests across reconnects
 
@@ -112,7 +136,8 @@ Signed device build 3 contains =c10c897f8=. With the Emacs keyboard
 field enabled, SwiftTerm stays out of the ordinary VoiceOver swipe order.
 Review terminal screen opens a snapshot of its visible rows. WSL verified
 the signed executable, registered iPhone and bundled review control.
-The slower voice heard when crossing the terminal still needs a device check.
+On 23 November the slower voice disappeared when swiping across the
+keyboard field on the physical phone.
 
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move
@@ -160,6 +185,15 @@ build. Response still felt slightly slower. The next comparison covers
 the first tone after connecting and subsequent tones on the same output
 device. The [[file:README.org::*Check keyboard speech and permissions on the signed app][phone checks]] also cover the VoiceOver swipe order,
 interruption, pending permissions and lock recovery.
+
+On build 3 both half-second tones in Diagnostics started promptly. The
+same 660 Hz tone felt delayed on both invocations of =M-x iphone-test-tone=
+over SSH. From entry to that Emacs command to its tone write took under
+1 ms in both trials. On WSL alone, nine single-key trials from SSH input
+to the tone packet at a loopback receiver took 3.9 to 25.4 ms, with a
+median of 6.5 ms. Neither measurement includes iPhone playback. Compare a
+single Return press after the minibuffer has gone quiet, then measure
+handset input and output separately if the delay persists.
 
 The desktop visual-line chime in =C-e m= uses SoX directly. In the two-frame
 check, two mode-line reads started it 0.75 seconds apart. Rendering its

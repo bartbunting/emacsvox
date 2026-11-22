@@ -14,6 +14,27 @@
 (defvar-local iphone-test--permission-id 0)
 (defvar iphone-test--armed-frame nil)
 
+(defun iphone-test-tone (&optional repeat-with-return)
+  "Play the receiver's 480 ms Diagnostics tone through the phone frame.
+With a prefix argument, open a test buffer where Return plays the tone."
+  (interactive "P")
+  (unless (and (getenv "EMACSVOX_TRIAL_ROUTED")
+               (process-live-p (frame-parameter nil 'emacsvox-phone-speaker)))
+    (user-error "Run this command from the connected test phone"))
+  (when repeat-with-return
+    (let ((buffer (generate-new-buffer "*iPhone tone comparison*")))
+      (with-current-buffer buffer
+        (insert "Press Return to play the tone. Press q to return to your buffer.\n")
+        (goto-char (point-min))
+        (special-mode)
+        (use-local-map (define-keymap :parent special-mode-map
+                        "RET" #'iphone-test-tone
+                        "q" (lambda () (interactive) (quit-window t))))
+        (set-buffer-modified-p nil))
+      (pop-to-buffer-same-window buffer)))
+  (tts-stop)
+  (tts-tone 660 480 t))
+
 (defun iphone-test-permission (&optional on-next-line)
   "Announce a practice permission or visit its choices.
 With a prefix argument, start a fresh request after your next line move."

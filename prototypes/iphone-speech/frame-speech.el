@@ -188,6 +188,15 @@
            (or (with-current-buffer buffer (iphone-frame-speech--subscriber)) 'desktop)))
       (apply original buffer args))))
 
+(defun iphone-frame-speech--phonetic (original request)
+  ;; The character reader saves the source window and speaker together.
+  ;; It validates both the request and its speaker again when the timer fires.
+  (let* ((window (nth 1 request))
+         (owner (and (window-live-p window)
+                     (frame-parameter (window-frame window) 'emacsvox-phone-speaker)))
+         (iphone-frame-speech--command-owner (or owner 'desktop)))
+    (iphone-frame-speech--route original request)))
+
 (defun iphone-frame-speech--focused (original &optional buffer)
   (let* ((target (or buffer (current-buffer)))
          (frame (buffer-local-value 'iphone-frame-speech--subscriber target)))
@@ -246,7 +255,8 @@
 
 (defconst iphone-frame-speech--entries
   '(emacsvox-aural-call-with-submission emacsvox-icon tts-letter
-    tts-dispatch tts-tone tts-silence tts-notify-apply tts--protocol-set-punctuations))
+    tts-dispatch tts-tone tts-silence tts-notify-apply tts--protocol-set-punctuations
+    emacsvox--delayed-phonetic-schedule))
 
 (defconst iphone-frame-speech--deferred-entries
   '(emacsvox-agent-shell--deliver-pending-blocks emacsvox-agent-shell--deliver-out-of-turn-pending))
@@ -291,6 +301,7 @@
     (remove-hook 'delete-frame-functions #'iphone-frame-speech--detach)
     (advice-remove 'command-execute #'iphone-frame-speech--command)
     (advice-remove 'set-minibuffer-message #'iphone-frame-speech--key-echo)
+    (advice-remove 'emacsvox--delayed-phonetic-announce #'iphone-frame-speech--phonetic)
     (advice-remove 'agent-shell--emit-event #'iphone-frame-speech--event)
     (advice-remove 'emacsvox-agent-shell--session-focused-p #'iphone-frame-speech--focused)
     (advice-remove 'emacsvox-agent-shell--deliver-announcement #'iphone-frame-speech--announce)
@@ -320,6 +331,7 @@
   (advice-add 'emacsvox-agent-shell--deliver-announcement :around #'iphone-frame-speech--announce)
   (advice-add 'command-execute :around #'iphone-frame-speech--command)
   (advice-add 'set-minibuffer-message :around #'iphone-frame-speech--key-echo '((depth . -90)))
+  (advice-add 'emacsvox--delayed-phonetic-announce :around #'iphone-frame-speech--phonetic)
   (dolist (entry iphone-frame-speech--entries)
     (advice-add entry :around #'iphone-frame-speech--route)))
 

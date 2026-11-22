@@ -133,6 +133,20 @@ async function main() {
       await until('unrelated message still goes to desktop', () => spoke(desktop, 'Fixture desktop reminder'));
       assert.ok(!records.some(p => p.type === 'speak' && /Fixture desktop reminder/.test(p.text)));
       assert.ok(!desktop.some(p => p.type === 'speak' && /C-e|PhoneModeFixture/i.test(p.text)));
+      // The phonetic word is delivered by a real idle timer after the
+      // movement command has returned. Both speakers are recording packets.
+      await observe(`(with-selected-window (frame-selected-window ${phone})
+        (goto-char (point-min)) (forward-line 1))`);
+      desktop.length = records.length = 0;
+      ws.send('key \x1b[C');
+      await until('phone reads the letter a', () => records.some(p => p.type === 'letter' && p.text === 'a'));
+      await until('idle phonetic word alpha', () => spoke(records, 'alpha') || spoke(desktop, 'alpha'));
+      assert.ok(spoke(records, 'alpha') && !spoke(desktop, 'alpha'), 'phone Alpha went to the desktop');
+      await position(pc, 'Cobalt lighthouse');
+      await pressPC('Right');
+      await until('PC reads the letter o', () => desktop.some(p => p.type === 'letter' && p.text === 'o'));
+      await until('PC phonetic word oscar', () => spoke(desktop, 'oscar'));
+      assert.ok(!spoke(records, 'oscar'));
       await observe(`(with-selected-frame ${phone} (switch-to-buffer iphone-shared-buffer))`);
       await observe("(global-set-key (kbd \"<f8>\") #'tts-stop)");
       await position(pc, 'Starting row');
@@ -274,6 +288,7 @@ async function main() {
           assert.equal(connection.exitCode, 0, 'SSH command ended after the speech peer left');
         }
         function sshKeys(bytes) { connection.stdin.write('input ' + Buffer.from(bytes).toString('base64') + '\n'); }
+        const phoneWindow = "(frame-selected-window (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))";
         const packets = await attachSSH();
         assert.ok(!packets.some(p => p.keyboard || p.type === 'screen'));
         await observe(`(set-window-point (frame-selected-window
@@ -284,9 +299,27 @@ async function main() {
         connection.stdin.write('input Dg==\n');
         await until('SSH C-n on the paired phone', () => packets.some(p => p.type === 'speak' && p.text.trim() === 'Cobalt lighthouse'));
         assert.ok(!desktop.some(p => p.text?.trim() === 'Cobalt lighthouse'));
+        // Move over the o to the b before the phonetic timer expires.
+        sshKeys('\x1b[C\x1b[C');
+        await until('newest SSH letter is described', () =>
+          packets.some(p => p.type === 'speak' && p.text.trim() === 'bravo'));
+        assert.ok(!packets.some(p => p.type === 'speak' && p.text.trim() === 'oscar'));
+        assert.ok(!desktop.some(p => p.type === 'speak' && ['oscar', 'bravo'].includes(p.text.trim())));
+        sshKeys('\x15\x1bxiphone-test-tone\r');
+        await until('the Emacs tone matches the Diagnostics tone', () =>
+          packets.some(p => p.type === 'tone' && p.hz === 660 && p.ms === 480));
+        await until('read-only tone comparison has the Return key', async () => (await observe(
+          `(with-selected-window ${phoneWindow} (and buffer-read-only (eq (key-binding (kbd "RET")) 'iphone-test-tone)))`)) === 't');
+        const beforeRepeat = packets.length;
+        sshKeys('\r');
+        await until('Return repeats the comparison tone outside the minibuffer', () =>
+          packets.slice(beforeRepeat).some(p => p.type === 'tone' && p.hz === 660 && p.ms === 480));
+        assert.ok(!desktop.some(p => p.type === 'tone' && p.hz === 660 && p.ms === 480));
+        sshKeys('q');
+        await until('comparison returns to the conversation', async () =>
+          (await observe(`(eq (window-buffer ${phoneWindow}) iphone-shared-buffer)`)) === 't');
         await observe('(global-set-key (kbd "<f6>") (lambda () (interactive) (switch-to-buffer (get-buffer-create "Phone resume draft"))))');
         sshKeys('\x1b[17~');
-        const phoneWindow = "(frame-selected-window (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))";
         await until('SSH edit buffer', async () => (await observe('(buffer-name (window-buffer ' + phoneWindow + '))')) === '"Phone resume draft"');
         packets.length = 0;
         await observe('(with-selected-window ' + phoneWindow + ' (iphone-test-permission) nil)');
@@ -325,6 +358,23 @@ async function main() {
         sshKeys('y');
         await until('phone answers the practice request', () =>
           resumed.some(p => p.type === 'resolved' && p.id === newRequest));
+        await observe(`(with-selected-window ${phoneWindow}
+          (switch-to-buffer "PhoneModeFixture") (goto-char (point-min)) (forward-line 1))`);
+        desktop.length = 0;
+        const beforeDetach = resumed.length;
+        sshKeys('\x1b[C');
+        await until('a pending SSH letter before disconnect', () =>
+          resumed.slice(beforeDetach).some(p => p.type === 'letter' && p.text === 'a'));
+        assert.equal(await observe('(and emacsvox--delayed-phonetic-request t)'), 't');
+        await closeSSH();
+        const attached = await attachSSH();
+        // Leave the new frame idle longer than the discarded request's delay.
+        const phoneticDelay = Number(await observe('emacsvox-delayed-phonetic-delay'));
+        await delay(phoneticDelay * 1000 + 100);
+        assert.ok(![...desktop, ...attached].some(p => p.type === 'speak' && p.text.trim() === 'alpha'));
+        sshKeys('\x1b[C');
+        await until('fresh phonetic speech after reconnect', () =>
+          attached.some(p => p.type === 'speak' && p.text.trim() === 'romeo'));
         await closeSSH();
         console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
       } finally {
@@ -336,6 +386,7 @@ async function main() {
       assert.equal(await observe('(emacs-pid)'), pid);
       assert.ok(await pcSeesDraft('Started on PC first and phone'));
       assert.equal(await observe("(advice-member-p #'iphone-frame-speech--stop 'tts-stop)"), 'nil');
+      assert.equal(await observe("(advice-member-p #'iphone-frame-speech--phonetic 'emacsvox--delayed-phonetic-announce)"), 'nil');
       console.log('Released the existing server with the original PC draft and desktop speech intact.');
     }
     console.log('Passed editing one Agent Shell draft from PC and phone, closing only the phone frame, and reopening the same draft.');
