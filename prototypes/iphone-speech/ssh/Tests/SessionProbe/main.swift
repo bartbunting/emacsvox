@@ -37,13 +37,13 @@ private func run() async throws {
         report(TerminalSession.publicKey(for: key))
         return
     }
-    guard args.count == 7, args[0] == "connect", let port = Int(args[2]) else { throw ProbeError.arguments }
+    guard (7...8).contains(args.count), args[0] == "connect", let port = Int(args[2]) else { throw ProbeError.arguments }
     let pin = try String(contentsOfFile: args[4], encoding: .utf8)
     let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     do {
         let display = Display()
         let session = try await TerminalSession.connect(host: "127.0.0.1", port: port, username: args[3],
-            pinnedHostKey: pin, identity: key, server: args[5], emacsclient: args[6],
+            pinnedHostKey: pin, identity: key, server: args[5], emacsclient: args[6], phoneFrame: args.count == 8 ? args[7] : nil,
             size: TerminalSize(columns: 80, rows: 24), group: group, output: { display.receive($0) })
         report("ready")
         while let line = readLine() {

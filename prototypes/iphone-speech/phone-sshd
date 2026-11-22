@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+"""Start the private iPhone SSH trial until interrupted."""
+import argparse
+import getpass
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import subprocess
+import tempfile
+from ssh_listener import serve_ssh
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("phone", help="iPhone Tailscale IPv4 address")
+parser.add_argument("public_key", type=Path, help="file containing the key copied from the iPhone")
+parser.add_argument("--sshd", type=Path, default=Path("/usr/sbin/sshd"))
+args = parser.parse_args()
+peers = json.loads(subprocess.check_output(["tailscale", "status", "--json"]))["Peer"].values()
+if not any(args.phone in peer["TailscaleIPs"] and peer["OS"].lower() == "ios" for peer in peers):
+    parser.error("Choose the iPhone's Tailscale address.")
+key = args.public_key.read_text().strip()
+if not re.fullmatch(r"ssh-ed25519 [A-Za-z0-9+/=]+(?: [^\n\r]+)?", key):
+    parser.error("The file must contain one Ed25519 public key.")
+subprocess.run(["ssh-keygen", "-lf", args.public_key], check=True, stdout=subprocess.DEVNULL)
+if not args.sshd.is_file():
+    parser.error("Pass --sshd with the absolute path to the unpacked WSL sshd.")
+
+def finish(signum, frame):
+    raise SystemExit
+
+signal.signal(signal.SIGTERM, finish)
+address = subprocess.check_output(["tailscale", "ip", "-4"], text=True).strip()
+os.umask(0o077)
+cache = Path.home() / ".cache/emacsvox"
+cache.mkdir(mode=0o700, parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(prefix="phone-sshd-", dir=cache) as directory:
+    root = Path(directory)
+    (root / "authorized_keys").write_text('restrict,pty,from="' + args.phone + '" ' + key + "\n")
+    with serve_ssh(args.sshd.resolve(), root, address=address, port=8822, peer=args.phone):
+        print(f"WSL {address}   SSH port 8822   Username {getpass.getuser()}", flush=True)
+        print("Trusted WSL host public key", (root / "host.pub").read_text().strip(), flush=True)
+        print("Press Control+C here to end this SSH trial.", flush=True)
+        try:
+            signal.pause()
+        except KeyboardInterrupt:
+            pass

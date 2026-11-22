@@ -6,18 +6,26 @@
 ;;; Code:
 (load (expand-file-name "response.el" (file-name-directory load-file-name)) nil nil t)
 (require 'server)
+(when (getenv "EMACSVOX_TRIAL_ROUTED")
+  (load (expand-file-name "../frame-speech.el" (file-name-directory load-file-name)) nil nil t)
+  (iphone-frame-speech-enable))
 (defvar iphone-shared-buffer nil)
 
 (defun iphone-shared-show-draft ()
   (when-let* ((id (frame-parameter nil 'emacsvox-phone-id))
               ((not (display-graphic-p)))
               ((buffer-live-p iphone-shared-buffer)))
+    (when (getenv "EMACSVOX_TRIAL_ROUTED") (iphone-frame-speech-attach id))
     (switch-to-buffer iphone-shared-buffer)
+    (when (getenv "EMACSVOX_TRIAL_ROUTED")
+      (iphone-frame-speech-subscribe iphone-shared-buffer)
+      (iphone-frame-speech--packet (frame-parameter nil 'emacsvox-phone-speaker) "attached" id))
     (goto-char (point-max))
     (redisplay t)
-    (call-process "tmux" nil nil nil "-N" "-S"
+    (unless (frame-parameter nil 'emacsvox-native-ssh)
+      (call-process "tmux" nil nil nil "-N" "-S"
                   (expand-file-name "tmux.sock" server-socket-dir)
-                  "wait-for" "-S" id)))
+                  "wait-for" "-S" id))))
 
 (defun iphone-shared-prepare ()
   (setq iphone-shared-buffer (iphone-test-render-response))

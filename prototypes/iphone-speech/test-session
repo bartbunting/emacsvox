@@ -17,6 +17,10 @@ if [[ -z $emacs && -r $root/local.mk ]]; then
     emacs=$(sed -n 's/^EMACS=//p' "$root/local.mk")
 fi
 export EMACSVOX_DIR=$root TTS_PROGRAM=$here/phone-backend
+if [[ -n ${EMACSVOX_TRIAL_ROUTED:-} ]]; then
+    export TTS_PROGRAM=${EMACSVOX_TRIAL_DESKTOP_PROGRAM:-$root/servers/omnivox}
+    export OMNIVOX_LOG_SYNTHESIS_TEXT=0
+fi
 unset EMACSVOX_REMOTE_HOST EMACSVOX_REMOTE_PORT EMACSVOX_REMOTE_TOKEN_FILE EMACSVOX_PLAY
 umask 077
 mkdir -p "$runtime"

@@ -13,7 +13,7 @@ import queue
 import shutil
 import signal
 import socket
-import socketserver
+import sys
 import subprocess
 import tempfile
 import termios
@@ -21,6 +21,9 @@ import threading
 import time
 
 APP = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(APP))
+from ssh_listener import serve_ssh
+
 QUIET = subprocess.DEVNULL
 
 
@@ -32,48 +35,6 @@ def until(label, check, seconds=12):
             return result
         time.sleep(0.07)
     raise RuntimeError("Timed out waiting for " + label)
-
-
-class LocalSSH(socketserver.ThreadingTCPServer):
-    daemon_threads = True
-
-
-@contextlib.contextmanager
-def serve_ssh(sshd, root):
-    host = root / "host"
-    subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", host], check=True)
-    config = root / "sshd_config"
-    lines = [
-        f'HostKey "{host}"', f'AuthorizedKeysFile "{root}/authorized_keys"',
-        "AuthenticationMethods publickey", "PasswordAuthentication no", "UsePAM no",
-        "PermitUserRC no", "DisableForwarding yes", "LogLevel ERROR",
-    ]
-    # Ubuntu's unpacked server uses matching session and authentication helpers.
-    helpers = sshd.parent.parent / "lib/openssh"
-    if sshd != Path("/usr/sbin/sshd"):
-        for option, binary in [("SshdSessionPath", "sshd-session"), ("SshdAuthPath", "sshd-auth")]:
-            if (helpers / binary).is_file():
-                lines.append(f'{option} "{helpers / binary}"')
-    config.write_text("\n".join(lines) + "\n")
-    subprocess.run([sshd, "-t", "-f", config], check=True)
-
-    class Connection(socketserver.BaseRequestHandler):
-        def handle(self):
-            with subprocess.Popen([sshd, "-i", "-f", config], stdin=self.request,
-                                  stdout=self.request, stderr=QUIET) as child:
-                try:
-                    child.wait(timeout=90)
-                except subprocess.TimeoutExpired:
-                    child.kill()
-
-    with LocalSSH(("127.0.0.1", 0), Connection) as server:
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        try:
-            yield server.server_address[1]
-        finally:
-            server.shutdown()
-            thread.join()
 
 
 @contextlib.contextmanager
@@ -114,7 +75,15 @@ def test_emacs(root, speech):
                           cwd=APP, env=env, stdout=QUIET, stderr=QUIET, start_new_session=True) as proc:
         try:
             marker = root / "server-path"
-            until("isolated Emacs server", lambda: marker.is_file() and marker.stat().st_size, 45)
+            def ready():
+                failure = root / "startup-error"
+                if failure.exists():
+                    raise RuntimeError("Isolated Emacs setup failed: " + failure.read_text())
+                if proc.poll() is not None:
+                    raise RuntimeError(f"Isolated Emacs exited during startup ({proc.returncode})")
+                return marker.is_file() and marker.stat().st_size
+
+            until("isolated Emacs server", ready, 45)
             yield marker.read_text()
         finally:
             if proc.poll() is None:
@@ -140,7 +109,10 @@ class Client:
     def ready(self):
         seen = set()
         while seen != {"ready", "display"}:
-            event = self.events.get(timeout=15)
+            try:
+                event = self.events.get(timeout=25)
+            except queue.Empty as exc:
+                raise RuntimeError(f"SSH terminal startup timed out after {sorted(seen)}") from exc
             if event not in {"ready", "display"}:
                 raise RuntimeError("SSH startup failed: " + event)
             seen.add(event)
@@ -241,8 +213,13 @@ def check_session(probe, emacsclient, root, port, server, arm_speech, speech):
         until("command in the phone minibuffer", lambda: on_frame(
             '(and (minibufferp) (equal (minibuffer-contents-no-properties) "forward-ch"))'))
         first.keys(b"\x07")
-        until("C-g returns to the edited file", lambda: on_frame(
-            "(equal buffer-file-name " + json.dumps(str(file)) + ")"))
+        time.sleep(0.15)
+        try:
+            until("C-g returns to the edited file", lambda: on_frame(
+                "(equal buffer-file-name " + json.dumps(str(file)) + ")"))
+        except RuntimeError as err:
+            state = frame_value("(list major-mode (minibuffer-depth) last-command)")
+            raise RuntimeError(f"Minibuffer cancellation at {state}") from err
         first.command("disconnect")
         assert first.proc.wait(timeout=5) == 0
     until("old TTY frame to close", lambda: observe(frame_gone) == "t")
@@ -264,12 +241,19 @@ def main():
     args.add_argument("--sshd", type=Path, default=Path("/usr/sbin/sshd"))
     args.add_argument("--probe", type=Path, default=APP / "ssh/.build/debug/SessionProbe")
     args.add_argument("--emacsclient", default=shutil.which("emacsclient"))
+    args.add_argument("--peer-only", type=Path, help="serve the generated public key for the routed integration")
     opt = args.parse_args()
     cache = Path.home() / ".cache/emacsvox"
     cache.mkdir(parents=True, exist_ok=True)
     # StrictModes checks every parent of authorized_keys. Use a private home directory.
     with tempfile.TemporaryDirectory(prefix="ssh-", dir=cache) as temp:
         root = Path(temp)
+        if opt.peer_only:
+            (root / "authorized_keys").write_bytes(opt.peer_only.read_bytes())
+            with serve_ssh(opt.sshd.resolve(), root) as port:
+                print(json.dumps({"port": port, "pin": str(root / "host.pub")}), flush=True)
+                sys.stdin.readline()
+            return
         with serve_ssh(opt.sshd.resolve(), root) as port, listen_for_navigation(root) as (socket_path, arm, marker):
             with test_emacs(root, socket_path) as server:
                 check_session(opt.probe.resolve(), opt.emacsclient, root, port, server, arm, marker)

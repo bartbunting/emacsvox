@@ -2,15 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 const { execFile } = require('node:child_process');
-const { randomUUID } = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { promisify } = require('node:util');
 const run = promisify(execFile);
 
 // Each shared-frame connection owns the tmux session that runs its emacsclient.
-async function openPhoneFrame(socketPath, directory) {
-  const session = 'phone-' + randomUUID();
+async function openPhoneFrame(socketPath, directory, session) {
   const client = await fs.readFile(path.join(directory, 'ready'), 'utf8');
   const tmux = (...args) => run('tmux', ['-N', '-S', socketPath, ...args], {timeout: 8000});
   await tmux('new-session', '-d', '-s', session,
@@ -73,4 +71,15 @@ function attachTerminal(socketPath, send, failed, session = 'phone') {
     if (session !== 'phone') void tmux('kill-session', '-t', '=' + session).catch(() => {});
   }};
 }
-module.exports = { attachTerminal, openPhoneFrame };
+async function sshOffer(directory, session) {
+  return {type: 'ssh', frame: session, server: path.join(directory, 'shared'),
+    client: await fs.readFile(path.join(directory, 'ready'), 'utf8')};
+}
+
+async function frameControl(directory, session, action, serial) {
+  // Both the frame ID and the control action come from the relay.
+  const {client, server} = await sshOffer(directory, session);
+  await run(client, ['--alternate-editor=/bin/false', '--socket-name=' + server, '--eval',
+    `(iphone-frame-speech-control "${session}" '${action} ${serial})`], {timeout: 5000});
+}
+module.exports = { attachTerminal, openPhoneFrame, frameControl, sshOffer };

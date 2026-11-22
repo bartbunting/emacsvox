@@ -19,5 +19,16 @@
   (with-temp-file (expand-file-name "server-path" (getenv "EMACSVOX_SSH_TEST_DIR"))
     (insert (expand-file-name server-name server-socket-dir))))
 
-(add-hook 'emacs-startup-hook #'iphone-ssh-prepare-session)
+(defun iphone-ssh-start-test ()
+  ;; Prepare the sample once the graphical frame has entered its command loop.
+  (run-with-idle-timer
+   0.2 nil
+   (lambda ()
+     (condition-case err
+         (iphone-ssh-prepare-session)
+       (error
+        (with-temp-file (expand-file-name "startup-error" (getenv "EMACSVOX_SSH_TEST_DIR"))
+          (insert (symbol-name (car err)))))))))
+
+(add-hook 'emacs-startup-hook #'iphone-ssh-start-test)
 ;;; ssh-session.el ends here

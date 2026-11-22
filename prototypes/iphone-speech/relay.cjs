@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 const net = require('node:net');
+const { randomUUID } = require('node:crypto');
+const { once } = require('node:events');
 const http = require('node:http');
 const path = require('node:path');
 const { WebSocketServer, WebSocket } = require('ws');
-const { attachTerminal, openPhoneFrame } = require('./terminal.cjs');
+const { attachTerminal, openPhoneFrame, frameControl, sshOffer } = require('./terminal.cjs');
 
 const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
@@ -16,7 +18,9 @@ const openObjectPaths = new Set([resource, JSON.stringify(resource).replace(/[$[
 // One instance per Emacs stdio producer. A receiver change invalidates even
 // the tail of a partially received UTF-8 record or undispatched batch.
 class LegacyInput {
-  constructor(send) {
+  constructor(send, control, phoneAudio = false) {
+    this.phoneAudio = phoneAudio;
+    this.control = control;
     this.send = send;
     this.tail = Buffer.alloc(0);
     this.skipLine = false;
@@ -64,14 +68,14 @@ class LegacyInput {
   dispatch() {
     let words = [];
     const flushWords = () => {
-      if (words.length) this.send({type: 'speak', text: words.join(' ')});
+      if (words.length) this.voice('speak', words.join(' '));
       words = [];
     };
     if (!this.abandoned) {
       for (const item of this.parts) {
-        if (item === openObject) {
+        if (typeof item !== 'string') {
           flushWords();
-          this.send(openObject);
+          this.send(item);
         } else {
           words.push(item);
         }
@@ -81,7 +85,21 @@ class LegacyInput {
     this.clear();
   }
 
+  voice(type, text) {
+    this.send({type, text, ...(this.rate !== undefined && {rate: this.rate})});
+  }
+
+  setRate(raw) {
+    if (raw === undefined || raw.trim() === '' || !Number.isFinite(Number(raw))) return;
+    const n = Number(raw);
+    this.rate = Math.max(0, Math.min(2, n > 1 ? n / 100 : n));
+  }
+
   record(line) {
+    if (this.control && line.startsWith('iphone_event ')) {
+      try { this.control(JSON.parse(line.slice(13))); } catch { /* Drop malformed control records. */ }
+      return;
+    }
     const match = /^(\w+)(?:\s+(.*))?$/u.exec(line);
     if (!match) return;
     const [, command, argument = ''] = match;
@@ -91,6 +109,20 @@ class LegacyInput {
       case 'q':
         this.queue(value);
         break;
+      case 'tts_sync_state':
+        if (this.phoneAudio) this.setRate(value.split(/\s+/)[3]);
+        break;
+      case 'tts_set_speech_rate':
+        if (this.phoneAudio) this.setRate(value);
+        break;
+      case 't': {
+        if (!this.phoneAudio) break;
+        const args = value.trim().split(/\s+/);
+        const [hz, ms] = args.map(Number);
+        if (args.length === 2 && Number.isFinite(hz) && hz > 0 && hz <= 24000 &&
+            Number.isInteger(ms) && ms > 0 && ms <= 60000) this.queue({type: 'tone', hz, ms});
+        break;
+      }
       case 'a':
         if (openObjectPaths.has(value)) this.queue(openObject);
         break;
@@ -108,13 +140,34 @@ class LegacyInput {
       case 'l':
       case 'tts_say':
         this.send({ type: 'stop', scope: 'speech' });
-        if (value) this.send({ type: command === 'l' ? 'letter' : 'speak', text: value });
+        if (value) this.voice(command === 'l' ? 'letter' : 'speak', value);
         break;
     }
   }
 }
 
-function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket, sharedDirectory} = {}) {
+// A new terminal gets a private Unix socket. Late bytes and an old producer's
+// EOF belong to that WebSocket even while its replacement is attaching.
+function frameSpeech(directory, session, send, control, fail) {
+  let writer;
+  const input = new LegacyInput(send, control, true);
+  const server = net.createServer(socket => {
+    if (writer) return socket.destroy();
+    writer = socket;
+    socket.on('data', bytes => input.write(bytes));
+    socket.on('error', () => socket.destroy());
+    socket.on('close', () => send({type: 'stop'}));
+  });
+  server.on('error', fail);
+  const listening = once(server, 'listening');
+  server.listen(path.join(directory, session + '.sock'));
+  return {listening, input, close() {
+    writer?.destroy();
+    server.close();
+  }};
+}
+
+function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket, sharedDirectory, routed = false, sshOnly = false} = {}) {
   let phone, producer, input, terminal;
   const send = message => {
     if (phone?.readyState !== WebSocket.OPEN) return;
@@ -122,7 +175,7 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
     phone.send(JSON.stringify(message));
   };
   const backend = net.createServer(socket => {
-    if (producer) return socket.destroy();
+    if (routed || producer) return socket.destroy();
     producer = socket;
     input = new LegacyInput(send);
     socket.on('data', chunk => input.write(chunk));
@@ -133,7 +186,7 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
     });
   });
   const httpServer = http.createServer((req, res) => {
-    if (req.socket.remoteAddress !== peer || req.url !== '/') {
+    if (sshOnly || req.socket.remoteAddress !== peer || req.url !== '/') {
       res.writeHead(403).end();
       return;
     }
@@ -145,7 +198,8 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
   httpServer.on('upgrade', (req, socket, head) => {
     // The native iOS WebSocket may supply its own endpoint as Origin.
     const origin = req.headers.origin;
-    if (req.socket.remoteAddress !== peer || req.url !== '/speech' ||
+    const ssh = routed && req.url === '/speech/ssh';
+    if (req.socket.remoteAddress !== peer || (!ssh && (sshOnly || req.url !== '/speech')) ||
         (origin && origin !== 'http://' + host + ':' + port)) return socket.destroy();
     wss.handleUpgrade(req, socket, head, ws => {
       const previous = phone;
@@ -154,13 +208,28 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
       phone = ws;
       previous?.terminate();
       input?.invalidate();
-      let lastSeen = Date.now(), readyId = 0;
+      const session = sharedDirectory && 'phone-' + randomUUID();
+      let lastSeen = Date.now(), readyId = 0, attached = false;
+      const control = (action, serial = 0) =>
+        frameControl(sharedDirectory, session, action, serial).catch(() => ws.terminate());
+      const receiveControl = packet => {
+        if (phone !== ws || !packet) return;
+        if (packet.type === 'attached' && packet.id === session && ssh && !attached) connected();
+        else if (packet.type === 'stop-all') send({type: 'stop', scope: 'all'});
+        else if (packet.type === 'reset-done' && packet.id === readyId && attached) send({type: 'ready', id: readyId});
+        else if (attached && ['permission', 'resolved'].includes(packet.type) &&
+                 typeof packet.id === 'string') send(packet);
+      };
+      const endpoint = routed && frameSpeech(sharedDirectory, session,
+        packet => { if (phone === ws) send(packet); }, receiveControl, () => ws.terminate());
       const timer = setInterval(() => {
         if (Date.now() - lastSeen > 12000) ws.terminate();
       }, 3000);
       ws.on('error', () => ws.terminate());
       ws.on('close', () => {
         clearInterval(timer);
+        if (ssh && attached) void frameControl(sharedDirectory, session, 'detach', 0).catch(() => {});
+        if (endpoint) endpoint.close();
         if (phone !== ws) return;
         terminal?.close();
         terminal = undefined;
@@ -174,19 +243,28 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         if (command === 'ping') send({ type: 'pong' });
         else if (/^reset [0-9]{1,12}$/.test(command)) {
           input?.invalidate();
+          if (endpoint) endpoint.input.invalidate();
           readyId = Number(command.slice(6));
-          if (!sharedDirectory || terminal) send({ type: 'ready', id: readyId });
+          if (routed && attached) void control('stop', readyId);
+          else if (!sharedDirectory || terminal) send({ type: 'ready', id: readyId });
         } else if (terminal && command.startsWith('key ') && command.length > 4) {
           void terminal.write(command.slice(4));
         } else ws.terminate();
       });
-      function connected(session) {
-        const attached = terminalSocket && attachTerminal(terminalSocket, send, () => ws.terminate(), session);
-        if (phone !== ws || ws.readyState !== WebSocket.OPEN) return attached?.close();
-        terminal = attached;
-        send({ type: 'ready', id: readyId, ...(terminalSocket && {keyboard: true}) });
+      function connected(terminalSession) {
+        const pane = !ssh && terminalSocket && attachTerminal(terminalSocket,
+          packet => { if (phone === ws) send(packet); }, () => ws.terminate(), terminalSession);
+        if (phone !== ws || ws.readyState !== WebSocket.OPEN) { if (pane) pane.close(); return; }
+        terminal = pane || undefined;
+        attached = true;
+        send({ type: 'ready', id: readyId, ...(pane && {keyboard: true}) });
+        if (routed) void control('sync');
       }
-      if (sharedDirectory) openPhoneFrame(terminalSocket, sharedDirectory).then(connected, () => ws.terminate());
+      if (sharedDirectory) Promise.resolve(endpoint && endpoint.listening).then(() => {
+        if (phone !== ws || ws.readyState !== WebSocket.OPEN) return;
+        if (ssh) return sshOffer(sharedDirectory, session).then(packet => { if (phone === ws) send(packet); });
+        return openPhoneFrame(terminalSocket, sharedDirectory, session).then(connected);
+      }).catch(() => ws.terminate());
       else connected();
     });
   });
@@ -196,11 +274,13 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
 module.exports = { createRelay, LegacyInput };
 
 if (require.main === module) {
-  const [host, peer, socketPath, terminalSocket, sharedDirectory] = process.argv.slice(2);
-  const port = sharedDirectory ? 8794 : terminalSocket ? 8791 : 8787;
-  const relay = createRelay(host, peer, {port, metroPort: port + 1, terminalSocket, sharedDirectory});
+  const [host, peer, socketPath, terminalSocket, sharedDirectory, mode] = process.argv.slice(2);
+  const sshOnly = mode === '--ssh-only';
+  const routed = sshOnly || mode === '--routed';
+  const port = routed ? 8797 : sharedDirectory ? 8794 : terminalSocket ? 8791 : 8787;
+  const relay = createRelay(host, peer, {port, metroPort: port + 1, terminalSocket, sharedDirectory, routed, sshOnly});
   const listen = () => relay.httpServer.listen(port, host, () =>
-    console.log('On your iPhone, open http://' + host + ':' + port + ' in Safari.'));
+    console.log(sshOnly ? 'Ready for the signed SSH app.' : 'On your iPhone, open http://' + host + ':' + port + ' in Safari.'));
   // The keyboard launcher signals after the isolated Emacs reaches its command loop.
   if (terminalSocket) process.once('SIGUSR2', listen);
   else listen();

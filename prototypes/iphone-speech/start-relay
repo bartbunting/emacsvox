@@ -6,15 +6,30 @@ set -euo pipefail
 cd "$(dirname "$0")"
 mode=--go
 trial=
-if [[ ${1:-} == --native-metro ]]; then
+standalone=
+existing=
+conversation=
+if [[ ${1:-} == --existing ]]; then
+    [[ $# == 4 && -S $3 ]] || { echo 'Usage: ./start-relay --existing IPHONE_IP EMACS_SOCKET BUFFER_NAME' >&2; exit 2; }
+    existing=$(realpath "$3")
+    conversation=$4
+    client=${EMACSCLIENT:-$(command -v emacsclient)}
+    standalone=1
+    trial=routed
+    set -- "$2"
+elif [[ ${1:-} == --standalone ]]; then
+    trial=routed
+    standalone=1
+    shift
+elif [[ ${1:-} == --native-metro ]]; then
     mode=--dev-client
     shift
-elif [[ ${1:-} == --keyboard || ${1:-} == --shared ]]; then
+elif [[ ${1:-} == --keyboard || ${1:-} == --shared || ${1:-} == --routed ]]; then
     trial=${1#--}
     shift
 fi
 if [[ $# != 1 ]]; then
-    echo "Usage: ./start-relay [--native-metro|--keyboard|--shared] IPHONE_TAILSCALE_IPV4"
+    echo "Usage: ./start-relay [--native-metro|--keyboard|--shared|--routed|--standalone] IPHONE_TAILSCALE_IPV4"
     tailscale status | awk 'tolower($0) ~ /ios/ { print $1, $2 }'
     exit 2
 fi
@@ -42,11 +57,19 @@ if [[ -n $trial ]]; then
     port=8793
     proxy=8792
     relay_args=("$session/tmux.sock")
-    if [[ $trial == shared ]]; then
+    if [[ $trial != keyboard ]]; then
         export EMACSVOX_SHARED_DIR=$session EXPO_PUBLIC_EMACSVOX_PORT=8794
         port=8796
         proxy=8795
         relay_args+=("$session")
+        title="Emacsvox Shared Draft"
+        if [[ $trial == routed ]]; then
+            export EMACSVOX_TRIAL_ROUTED=1 EXPO_PUBLIC_EMACSVOX_PORT=8797
+            port=8799
+            proxy=8798
+            title="Emacsvox Routed Draft"
+            if [[ -n $standalone ]]; then relay_args+=(--ssh-only); else relay_args+=(--routed); fi
+        fi
     fi
 elif [[ $mode == --dev-client ]]; then
     if [[ ! -S $socket ]] || flock -n "$runtime/relay.lock" true; then
@@ -67,12 +90,15 @@ fi
 children=()
 cleanup() {
     trap - EXIT INT TERM
-    if [[ -n $trial ]]; then tmux -S "$session/tmux.sock" kill-server 2>/dev/null || true; fi
+    if [[ -n $existing && -L $session/shared ]]; then
+        ./existing-session release "$client" "$existing" "$session" "$conversation" || true
+    fi
+    if [[ -n $trial && -z $existing ]]; then tmux -S "$session/tmux.sock" kill-server 2>/dev/null || true; fi
     for child in "${children[@]}"; do kill "$child" 2>/dev/null || true; done
     wait || true
     if [[ $mode == --go && -S $socket ]]; then unlink "$socket"; fi
     if [[ -n $trial ]]; then
-        rm -f -- "$session/ready" "$session/ready.tmp" "$session/tmux.sock" "$session/shared"
+        rm -f -- "$session/ready" "$session/ready.tmp" "$session/tmux.sock" "$session/shared" "$session"/phone-*.sock
         rmdir "$session"
     fi
 }
@@ -89,9 +115,13 @@ if [[ -n $trial ]]; then
         sleep .1
     done
     [[ -S $socket ]] || { echo 'Keyboard relay failed to start.' >&2; exit 1; }
-    if [[ $trial == shared ]]; then
-        tmux -S "$session/tmux.sock" -f /dev/null start-server \; set-option -s exit-empty off 9>&-
-        ./test-session -T "Emacsvox Shared Draft" -l "$PWD/test/shared-session.el" 9>&- &
+    if [[ -n $existing ]]; then
+        ./existing-session attach "$client" "$existing" "$session" "$conversation"
+    elif [[ $trial != keyboard ]]; then
+        if [[ -z $standalone ]]; then
+            tmux -S "$session/tmux.sock" -f /dev/null start-server \; set-option -s exit-empty off 9>&-
+        fi
+        ./test-session -T "$title" -l "$PWD/test/shared-session.el" 9>&- &
         children+=($!)
     else
         tmux -S "$session/tmux.sock" -f /dev/null new-session -d -s phone -x 100 -y 32 \
@@ -99,7 +129,7 @@ if [[ -n $trial ]]; then
     fi
     for ((i=0; i<450; ++i)); do
         [[ ! -e $EMACSVOX_KEYBOARD_READY ]] || break
-        if [[ $trial == shared ]]; then
+        if [[ $trial != keyboard ]]; then
             kill -0 "${children[1]}" 2>/dev/null || break
         else
             tmux -S "$session/tmux.sock" has-session -t phone 2>/dev/null || break
@@ -108,6 +138,11 @@ if [[ -n $trial ]]; then
     done
     [[ -e $EMACSVOX_KEYBOARD_READY ]] || { echo 'Keyboard Emacs failed to start.' >&2; exit 1; }
     kill -USR2 "${children[0]}"
+fi
+if [[ -n $standalone ]]; then
+    echo "The signed app can now connect to $address. Press Control+C to end this trial."
+    wait -n
+    exit
 fi
 CI=1 node_modules/.bin/expo start "$mode" --localhost --port "$port" </dev/null &
 children+=($!)
