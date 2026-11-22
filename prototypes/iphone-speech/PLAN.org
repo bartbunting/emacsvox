@@ -124,14 +124,9 @@ native terminal display and physical keyboard behaviour still need testing.
 The [[file:README.org::*Try the external keyboard in Expo Go][Expo Go keyboard test]]
 connects the phone field to a separate terminal Emacs over the private relay.
 WSL checks cover two response lines, speech interruption, UTF-8 file
-editing, buffer switching and reconnect. Check VoiceOver focus and
-hardware shortcuts on the iPhone before moving the input path to SSH.
-
-The first phone input test uses an external keyboard connected to the
-iPhone with VoiceOver on. Focus the terminal in the foreground app. In an
-Agent Shell response, press =C-n= and press it again during speech. Each
-press should move one line and speak its destination. The second press
-should cut off the first line.
+editing, buffer switching and reconnect. On 22 November 2026, the first
+listening trial with the keyboard connected to the iPhone indicated that
+the two =C-n= presses worked in an Agent Shell response.
 
 Use the same keyboard to open and save a file, use =M-x= completion and
 =C-g=, browse Dired and switch buffers. Check that typed text arrives
