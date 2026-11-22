@@ -10,10 +10,12 @@ import { createReceiver } from './receiver';
 function App() {
   const [status, setStatus] = useState('Disconnected');
   const [playback, setPlayback] = useState('');
+  const [voice, setVoice] = useState('');
   const receiver = useMemo(() => createReceiver({
     speech: Speech,
     status: setStatus,
     playback: setPlayback,
+    voiceStatus: setVoice,
     openSocket: () => new WebSocket('ws://' + process.env.EXPO_PUBLIC_EMACSVOX_HOST + ':8787/speech'),
   }), []);
   useEffect(() => {
@@ -26,6 +28,7 @@ function App() {
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.page}>
       <Text accessibilityRole="header" style={styles.heading}>Emacsvox Speech</Text>
       <Text accessibilityLabel={'Connection status. ' + status} style={styles.status}>{status}</Text>
+      {voice ? <Text style={styles.status}>{voice}</Text> : null}
       <View style={styles.controls}>
         <Button title="Connect" accessibilityLabel="Connect" onPress={receiver.connect} />
         <Button title="Disconnect" accessibilityLabel="Disconnect" onPress={() => receiver.disconnect()} />

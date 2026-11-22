@@ -1,12 +1,41 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+const speechRate = 1.5;
+const eloquenceNames = ['Reed', 'Eddy', 'Rocko', 'Grandpa'];
+
+async function findVoice(speech) {
+  const voices = await speech.getAvailableVoicesAsync();
+  const english = voices.filter(voice => voice.identifier && /^en(?:[-_]|$)/i.test(voice.language));
+  for (const name of [...eloquenceNames, 'Daniel', 'Aaron', 'Lee']) {
+    // iOS can append the language in parentheses to the display name.
+    const matches = english.filter(voice => voice.name.split(' (')[0].toLowerCase() === name.toLowerCase());
+    const voice = matches.find(v => /^en[-_]US$/i.test(v.language)) ?? matches[0];
+    if (voice) {
+      const label = eloquenceNames.includes(name) ? 'Eloquence ' + name : name;
+      return { identifier: voice.identifier, label };
+    }
+  }
+  return null;
+}
+
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, openSocket, status, playback = () => {}, now = Date.now }) {
+function createReceiver({ speech, openSocket, status, playback = () => {}, voiceStatus = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
+  let voiceLookup;
+
+  function refreshVoice() {
+    const lookup = findVoice(speech).catch(() => null);
+    voiceLookup = lookup;
+    lookup.then(voice => {
+      if (voiceLookup !== lookup) return;
+      const label = voice?.label ?? 'iPhone default';
+      voiceStatus(label + ' at ' + speechRate + ' times normal speed');
+    });
+  }
 
   function silence() {
     const owner = ++epoch;
@@ -25,7 +54,7 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, now =
     if (speaking || !queue.length) return;
     speaking = true;
     const owner = epoch;
-    barrier.then(result => {
+    Promise.all([barrier, voiceLookup]).then(([result, voice]) => {
       if (owner !== epoch || !result) return;
       const text = queue.shift();
       queuedChars -= text.length;
@@ -36,6 +65,8 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, now =
         drain();
       };
       speech.speak(text, {
+        ...(voice && { voice: voice.identifier }),
+        rate: speechRate,
         useApplicationAudioSession: false,
         onStart: () => {
           if (owner === epoch) playback('iOS started speech.');
@@ -71,6 +102,7 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, now =
 
   function connect() {
     disconnect('Connecting');
+    refreshVoice();
     let current;
     try {
       current = openSocket();
@@ -115,6 +147,7 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, now =
 
   function testVoice() {
     silence();
+    refreshVoice();
     enqueue('This is the iPhone voice test.');
   }
 

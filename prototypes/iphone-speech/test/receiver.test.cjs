@@ -90,3 +90,69 @@ test('local voice test works without a socket and reports native callbacks', asy
   utterance.options.onDone();
   assert.deepEqual(states.slice(-2), ['iOS started speech.', 'iOS finished speech.']);
 });
+
+test('navigation, character and preview use the phone’s English Reed at the faster rate', async () => {
+  const voices = [
+    {name:'Daniel', language:'en-GB', identifier:'daniel'},
+    {name:'Reed', language:'fr-FR', identifier:'french'},
+    {name:'Reed (English (UK))', language:'en-GB', identifier:'british'},
+    {name:'Reed (English (US))', language:'en-US', identifier:'installed-us-reed'},
+  ];
+  const spoken = [], labels = [];
+  const socket = { readyState:1, close() {} };
+  const receiver = createReceiver({
+    status() {}, voiceStatus: value => labels.push(value), openSocket: () => socket,
+    speech: {stop: async () => false, getAvailableVoicesAsync: async () => voices,
+      speak: (text, options) => spoken.push(options)},
+  });
+  try {
+    receiver.connect();
+    const send = record => socket.onmessage({data:JSON.stringify(record)});
+    send({type:'ready', id:0});
+    send({type:'speak', text:'Navigation'});
+    await flush();
+    send({type:'stop'});
+    send({type:'letter', text:'X'});
+    await flush();
+    receiver.testVoice();
+    await flush();
+    assert.equal(spoken.length, 3);
+    for (const options of spoken) {
+      assert.equal(options.voice, 'installed-us-reed');
+      assert.equal(options.rate, 1.5);
+    }
+    assert.ok(labels.includes('Eloquence Reed at 1.5 times normal speed'));
+  } finally { receiver.disconnect(); }
+});
+
+test('preview refreshes installed voices and keeps speech available if no match exists', async () => {
+  const voices = [], options = [];
+  const receiver = createReceiver({
+    status() {},
+    speech: {stop: async () => false, getAvailableVoicesAsync: async () => voices,
+      speak: (text, value) => options.push(value)},
+  });
+  for (const [name, id] of [['Flo','flo'], ['Lee','lee'], ['Eddy','eddy'], ['Reed','reed']]) {
+    voices.push({name, identifier:id, language:'en-AU'});
+    receiver.testVoice();
+    await flush();
+  }
+  assert.deepEqual(options.map(value => value.voice), [undefined, 'lee', 'eddy', 'reed']);
+  assert.ok(options.every(value => value.rate === 1.5));
+});
+
+test('a stop during voice lookup retires old speech', async () => {
+  let resolveVoices;
+  const spoken = [];
+  const receiver = createReceiver({
+    status() {},
+    speech: {stop: async () => false,
+      getAvailableVoicesAsync: () => new Promise(resolve => { resolveVoices = resolve; }),
+      speak: text => spoken.push(text)},
+  });
+  receiver.testVoice();
+  receiver.stop();
+  resolveVoices([]);
+  await flush();
+  assert.deepEqual(spoken, []);
+});

@@ -120,9 +120,15 @@ dispatch containing the destination row on the WebSocket. On the stdio
 side, =q {text}= adds text, =d= dispatches and clears the batch, and =s=
 clears pending text and stops playback. =l= interrupts and reads a
 character, including common punctuation names. =tts_say= also interrupts.
-The receiver uses the default iOS voice. Voice style, rate commands, tones,
-audio icons, timing markers and concurrent notification audio are outside
-this listening prototype. A line represented solely by a tone can be silent.
+The receiver prefers English Eloquence Reed at 1.5 times normal speed.
+Connect and Test iPhone Voice both check the voices available on your phone.
+If Reed is unavailable, the receiver tries Eddy, Rocko and Grandpa, then
+Daniel, Aaron and Lee. It uses the iPhone default if none are available.
+The current voice and rate appear below the connection status. These
+settings apply to receiver speech, including characters. Voice style,
+Emacs rate commands, tones, audio icons, timing markers and concurrent
+notification audio are outside this listening prototype. A line represented
+solely by a tone can be silent.
 For the full protocol see [[file:../../docs/developer/speech-server-protocols.org][Speech Server Protocols]] and the Omnivox checkout's
 =docs/protocols/{control,legacy,remote}.md=.
 
