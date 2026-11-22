@@ -604,6 +604,7 @@ with the following command in its own WSL terminal.
 
 #+begin_src sh
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+export EMACSCLIENT="$(command -v emacsclient)"
 read -rp 'Emacs server socket: ' socket
 read -rp 'Agent Shell buffer name: ' conversation
 read -rp 'iPhone Tailscale IPv4 address: ' phone
@@ -625,6 +626,12 @@ node test/keyboard-terminal.cjs
 IPHONE_TEST_SSHD=/usr/sbin/sshd \
   node test/shared-frame.cjs --routed
 #+end_src
+
+Append =--time-tones= to the routed check to compare seven pairs of final
+Return presses. It alternates the minibuffer and the quiet tone buffer,
+using the Swift SSH client and a loopback receiver. Each result gives
+milliseconds until the matching tone packet and the number of intervening
+Stop packets. Listen on the phone to assess audible onset.
 
 Use =./stage-ios-build= in this worktree to stage the committed app only.
 In the printed directory, run =npm ci=, then

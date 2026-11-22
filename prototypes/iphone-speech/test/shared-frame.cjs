@@ -3,7 +3,7 @@
 
 const assert = require('node:assert/strict');
 const {execFile, execFileSync, spawn} = require('node:child_process');
-const {once} = require('node:events');
+const {on, once} = require('node:events');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -13,6 +13,26 @@ const {WebSocket} = require('ws');
 const {createRelay, LegacyInput} = require('../relay.cjs');
 const net = require('node:net');
 const routed = process.argv.includes('--routed');
+const timeTones = process.argv.includes('--time-tones');
+
+async function measureToneReturn(socket, pressReturn) {
+  const messages = on(socket, 'message', {signal: AbortSignal.timeout(8000), close: ['close']});
+  let stops = 0;
+  const started = performance.now();
+  try {
+    pressReturn();
+    for await (const [data] of messages) {
+      const packet = JSON.parse(data);
+      if (packet.type === 'stop') stops++;
+      if (packet.type === 'tone' && packet.hz === 660 && packet.ms === 480) {
+        return {ms: Math.round((performance.now() - started) * 10) / 10, stops};
+      }
+    }
+    throw new Error('Connection closed before the comparison tone.');
+  } finally {
+    await messages.return();
+  }
+}
 
 async function until(label, predicate, ms = 8000) {
   const end = Date.now() + ms;
@@ -24,6 +44,9 @@ async function until(label, predicate, ms = 8000) {
 }
 
 async function main() {
+  if (timeTones && (!routed || !process.env.IPHONE_TEST_SSHD)) {
+    throw new Error('For tone timings use --routed and set IPHONE_TEST_SSHD to the test sshd.');
+  }
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'shared-emacs-'));
   const socket = path.join(dir, 'speech.sock');
   const tmuxSocket = path.join(dir, 'tmux.sock');
@@ -346,6 +369,24 @@ async function main() {
           packets.some(p => p.type === 'tone' && p.hz === 660 && p.ms === 480));
         await until('read-only tone comparison has the Return key', async () => (await observe(
           `(with-selected-window ${phoneWindow} (and buffer-read-only (eq (key-binding (kbd "RET")) 'iphone-test-tone)))`)) === 't');
+        if (timeTones) {
+          const samples = {direct: [], minibuffer: []};
+          for (let pair = 0; pair < 7; pair++) {
+            for (const kind of (pair % 2 ? ['direct', 'minibuffer'] : ['minibuffer', 'direct'])) {
+              if (kind === 'minibuffer') {
+                sshKeys('\x1bxiphone-test-tone');
+                await until('M-x is ready for Return', async () => (await observe(
+                  `(with-selected-frame (window-frame ${phoneWindow})
+                     (when-let* ((mini (active-minibuffer-window)))
+                       (with-current-buffer (window-buffer mini)
+                         (equal (minibuffer-contents-no-properties) "iphone-test-tone"))))`)) === 't');
+              }
+              await delay(120);
+              samples[kind].push(await measureToneReturn(ws, () => sshKeys('\r')));
+            }
+          }
+          console.log('Loopback SSH Return to tone packet (milliseconds and Stop counts):', JSON.stringify(samples));
+        }
         const beforeRepeat = packets.length;
         sshKeys('\r');
         await until('Return repeats the comparison tone outside the minibuffer', () =>
