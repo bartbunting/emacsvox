@@ -210,11 +210,10 @@ def check_session(probe, emacsclient, root, port, server, arm_speech, speech):
         first.keys("Café from the terminal".encode() + b"\r\x18\x13")
         until("UTF-8 file saved exactly once", lambda: file.is_file() and file.read_bytes() == "Café from the terminal\n".encode())
         first.keys(b"\x1bxforward-ch")  # M-x plus a partial command
-        until("command in the phone minibuffer", lambda: on_frame(
-            '(and (minibufferp) (equal (minibuffer-contents-no-properties) "forward-ch"))'))
+        until("command waiting in the phone minibuffer", (root / "prompt-ready").is_file)
         first.keys(b"\x07")
-        time.sleep(0.15)
         try:
+            until("C-g closes the command prompt", (root / "prompt-closed").is_file)
             until("C-g returns to the edited file", lambda: on_frame(
                 "(equal buffer-file-name " + json.dumps(str(file)) + ")"))
         except RuntimeError as err:

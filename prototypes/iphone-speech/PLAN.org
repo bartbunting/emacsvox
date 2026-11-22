@@ -98,6 +98,8 @@ echoed a typed letter even with Emacs character and word echo disabled.
 The second device trial routes the previously tested keyboard field through
 the same native SSH session. WSL also verified reconnect to the last edit
 buffer and point while a permission remained pending.
+Signed device build 2 contains =921452ad6=. WSL verified the arm64 signature,
+registered phone, bundled controls and dark appearance setting.
 
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move

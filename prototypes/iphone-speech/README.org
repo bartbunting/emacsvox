@@ -441,7 +441,7 @@ speech socket before the receiver reports Connected.
 
 ** Start the signed app against the test server
 
-1. Open the private build link in iPhone Safari. Activate Install and
+1. Open the private install link for your registered iPhone in iPhone Safari. Activate Install and
    confirm the iOS prompt. Open Emacsvox Speech from the Home Screen.
    If iOS asks for Developer Mode, turn it on under Settings, Privacy
    & Security, Developer Mode. Restart, unlock and confirm Turn On.
@@ -500,6 +500,11 @@ automatic screen lock while the receiver is connected in the foreground.
 Disconnect restores the normal idle timer. You can still lock the phone with
 the side button. Locking or switching apps stops local audio and releases
 the phone frame. Emacs, its buffers and Codex keep running in WSL.
+
+To use your keyboard with the display dark and the app active, turn on
+VoiceOver Screen Curtain with a three-finger triple-tap. Use a three-finger
+quadruple-tap if Zoom is also on. Repeat the gesture to restore the display.
+[[https://support.apple.com/guide/iphone/keep-the-screen-off-iph756788a12/ios][Apple’s Screen Curtain guide]].
 
 Unlock and return to the app. It reconnects a previously active session,
 opens the last live phone buffer at its saved position and refreshes any
