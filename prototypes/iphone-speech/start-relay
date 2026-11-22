@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+set -euo pipefail
+cd "$(dirname "$0")"
+if [[ $# != 1 ]]; then
+    echo "Usage: ./start-relay IPHONE_TAILSCALE_IPV4"
+    tailscale status | awk 'tolower($0) ~ /ios/ { print $1, $2 }'
+    exit 2
+fi
+phone=$1
+tailscale status --json | python3 -c '
+import ipaddress, json, sys
+ip = str(ipaddress.IPv4Address(sys.argv[1]))
+peers = (json.load(sys.stdin).get("Peer") or {}).values()
+if not any(ip in peer["TailscaleIPs"] and peer["OS"].lower() == "ios" for peer in peers):
+    sys.exit("Choose the address shown in Tailscale on your iPhone.")
+' "$phone"
+address=$(tailscale ip -4)
+runtime=${XDG_RUNTIME_DIR:?}/emacsvox-iphone
+umask 077
+mkdir -p "$runtime"
+exec 9>"$runtime/relay.lock"
+flock -n 9 || { echo 'Phone relay already running.' >&2; exit 1; }
+socket=$runtime/speech.sock
+[[ ! -S $socket ]] || rm -- "$socket"
+children=()
+cleanup() {
+    trap - EXIT INT TERM
+    for child in "${children[@]}"; do kill "$child" 2>/dev/null || true; done
+    wait || true
+    [[ ! -S $socket ]] || unlink "$socket"
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM
+export EXPO_PUBLIC_EMACSVOX_HOST=$address
+export EXPO_PACKAGER_PROXY_URL="http://$address:8788"
+export EXPO_NO_TELEMETRY=1
+CI=1 node_modules/.bin/expo start --go --localhost --port 8786 </dev/null &
+children+=($!)
+socat "TCP4-LISTEN:8788,bind=$address,range=$phone/32,fork,reuseaddr" TCP4:127.0.0.1:8786 &
+children+=($!)
+node relay.cjs "$address" "$phone" "$socket" &
+children+=($!)
+wait -n

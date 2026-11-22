@@ -1,0 +1,191 @@
+#+title: Listen to Emacsvox on an iPhone
+
+* Listen from the PC keyboard
+
+The test Emacs runs Codex in WSL. Its speech server sends text and
+interruption commands to the foreground Expo Go app over Tailscale.
+The iPhone synthesises each utterance locally. Your desktop Emacs keeps
+its own speech process and conversation.
+
+1. Install [[https://apps.apple.com/app/expo-go/id982107779][Expo Go]] on your iPhone. This prototype targets Expo SDK 58.
+   Connect Tailscale on both devices. In Tailscale on the phone, find
+   the phone's own 100.x IPv4 address. Turn Silent Mode off and check
+   media volume. [[https://docs.expo.dev/versions/latest/sdk/speech/][Expo Speech on physical iOS devices]].
+2. In WSL, enter the prototype directory. Run =npm ci= to install the
+   pinned JavaScript dependencies before starting the relay.
+
+   #+begin_src sh
+   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   read -rp 'iPhone Tailscale IPv4 address: ' phone
+   ./start-relay "$phone"
+   #+end_src
+
+3. Wait for Metro to print “Waiting on http://localhost:8786”. Open
+   the HTTP address printed for the iPhone in Safari.
+   Use VoiceOver's Links rotor or swipe to “Open receiver in Expo Go”.
+   Activate the link and confirm Open. Allow local network access if iOS
+   asks. Bundling can take a moment on the first launch. Find and
+   activate Connect. Swipe to the connection status and check that it
+   reads “Connected”. Keep the receiver in the foreground.
+4. In a second WSL terminal start the isolated graphical Emacs with Node
+   and Codex ACP on your PATH. The launcher uses Emacs from local.mk, the existing ELPA
+   packages and the Agent Shell checkout. It creates a private scratch
+   project and a fresh Emacs directory under XDG_RUNTIME_DIR. Codex uses
+   your normal login.
+
+   #+begin_src sh
+   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   ./test-session
+   #+end_src
+
+5. In that new Emacs, type =M-x agent-shell-openai-start-codex RET=.
+   Ask for three paragraphs about a lighthouse. In the rendered reply,
+   move point just above a line you want to hear. Press =C-n=. Press it
+   again while the line is speaking. Listen for the old line to cut off
+   and the next row to begin. Wrapped rows follow Emacsvox's usual visual
+   line setting. Try =C-f= to hear character feedback.
+6. While a long utterance is playing, activate Stop Speech on the phone.
+   Try =M-x tts-stop RET= from the test Emacs as well. Activate Disconnect,
+   move twice in Emacs, then activate Connect. Wait for “Connected”.
+   Listen for silence until you move again. To try the local stop during
+   a stall, interrupt the network from the PC while the phone is speaking
+   and activate Stop Speech on the phone. Reconnect once the relay is reachable.
+7. Exit the test Emacs with =C-x C-c=, activate Disconnect on the phone,
+   and press =Ctrl-C= in the relay terminal. Switch to your original Emacs
+   window for desktop speech.
+
+* Connection and recovery
+
+The shell launcher binds the relay and Expo forwarder to WSL's Tailscale
+IPv4 address. Only the specified iOS peer address can open the receiver
+page, load the bundle or subscribe to speech. Metro listens on loopback.
+Ports 8787 and 8788 must be reachable from that peer through your tailnet
+policy. The relay uses the source address of the connection, so connect
+directly over Tailscale. There is no public tunnel or audio stream.
+If Safari fails to load the page, check the peer address, Tailscale and
+those ports. If the page opens but the app fails to load, check the Metro
+output and the Expo Go SDK version. If status reports a timeout, activate
+Connect after restoring the network.
+
+The private Unix socket accepts one Emacs producer. Speech is delivered
+only to the current foreground receiver. Each new phone connection drops
+unfinished records and invalidates the old queue. The app stops iOS speech
+on disconnect, backgrounding or heartbeat timeout. A local Stop calls iOS
+immediately and ignores older in-flight messages until the relay confirms
+a reset. A stop from Emacs invalidates pending native callbacks before
+admitting fresh speech. Relay and receiver logs omit speech payloads.
+The test profile disables Aural diagnostic logging, ACP traffic logging and
+Agent Shell transcript files. Codex keeps its own ordinary conversation
+history. Emacsvox's interactive feedback histories are local to the session.
+
+* Trace from the key to the phone
+
+The checkouts used for the trace were Emacsvox d289925d5 and Omnivox
+7879419. In an Agent Shell response, the effective =C-n= command is
+=next-line=. The advice in =emacsvox-agent-shell-motion.el= runs the move,
+normalises display-only rows, then calls
+=emacsvox-agent-shell--present-current-navigation-line=. That selects
+=emacsvox-speak-visual-line= or =emacsvox-speak-line=. The reader extracts
+the destination text and submits it to Aural with navigation context.
+Aural owns the interruption and lowers the presentation according to the
+destination process's capabilities.
+
+With the desktop Omnivox backend, =tts-initialize= opens the speaker and,
+when configured, a notification process. =omnivox--negotiate-process= sends
+a base64 JSON capabilities request and marks the process pending.
+Acknowledged features govern inventory, routing, framed delivery, structured
+timelines and playback tracking. Protocol readiness and initial routing
+readiness have separate hooks. The foreground process owns navigation stops,
+and explicit interactive Stop also targets a distinct notification process.
+
+The prototype selects =phone-backend= via =TTS_PROGRAM= in the test
+process environment. =voice-setup= selects the existing plain voice adapter.
+This standalone server uses the legacy protocol from its first command and
+advertises zero Omnivox extensions. It never acknowledges synthesis or
+playback. =tts-notification-device= selects main output. Automatic replies
+and permission announcements use the existing Agent Shell handlers. A
+focused permission request uses urgent delivery, and ordinary navigation can
+subsequently interrupt it on the shared stream.
+
+In the graphical test, each interactive =C-n= produced a stop and a
+dispatch containing the destination row on the WebSocket. On the stdio
+side, =q {text}= adds text, =d= dispatches and clears the batch, and =s=
+clears pending text and stops playback. =l= interrupts and reads a
+character, including common punctuation names. =tts_say= also interrupts.
+The receiver uses the default iOS voice. Voice style, rate commands, tones,
+audio icons, timing markers and concurrent notification audio are outside
+this listening prototype. A line represented solely by a tone can be silent.
+For the full protocol see [[file:../../docs/developer/speech-server-protocols.org][Speech Server Protocols]] and the Omnivox checkout's
+=docs/protocols/{control,legacy,remote}.md=.
+
+* Reproduce the checks
+
+From the prototype directory run the following checks. The graphical check
+requires current byte-code, Xvfb, xauth, socat and the local Emacs packages.
+
+#+begin_src sh
+npm ci
+npm test
+npx --no-install expo install --check
+node test/navigation.cjs
+#+end_src
+
+The last command uses Xvfb, the real Agent Shell renderer and two interactive
+key presses in a fresh Emacs. It injects a sample ACP reply during testing.
+The normal reader, speech process, Unix socket and WebSocket stay active.
+It checks automatic reply delivery, permission text, character feedback,
+shared notification routing, and interruption. Receiver tests cover stale
+callbacks and a delayed reset acknowledgement with a substitute synthesiser.
+Phone listening establishes acoustic interruption latency, pronunciation,
+VoiceOver coexistence, accessibility focus and recovery on the tailnet.
+
+On 2026-11-22, the checks passed on WSL2 with the configured Emacs 31,
+Agent Shell checkout dde9392 and Expo SDK 58. A separate fresh session
+reached Codex ACP readiness with version 2.9.0 without submitting a prompt.
+Metro served an iOS bundle with the Tailscale bundle URL, and the iOS
+Hermes export succeeded. The physical iPhone listening test is pending.
+
+* One foreground app for SSH and speech
+
+A subsequent signed build could include a native SSH client, accessible
+terminal view and the speech controller in one app. Verify the WSL SSH
+host key and keep SSH credentials in the iOS Keychain. Allocate a PTY and
+run =emacsclient -t -s SERVER= against the server that already owns the
+Codex buffer. Switch to that buffer in the new terminal frame. A native
+text input should accept committed Braille Screen Input text and paste.
+Forward external keyboard control sequences and window-size changes to
+the PTY. Test VoiceOver focus, editing, and duplicate terminal echo with
+the same hardware used for listening.
+
+Pair the phone's authenticated SSH connection and TTY with a fresh speech
+endpoint. One option is to forward the relay socket through the same SSH
+connection. Register that association when the terminal frame is created,
+and revoke it when the frame or SSH channel closes. Capture the destination
+frame at command entry and carry it through Aural submission, deferred
+timers and stops. Keep independent queues per destination. For asynchronous
+Agent Shell events, retain the conversation's explicit frame subscription.
+Multiple frames can display the same buffer, and timers can fire after focus
+moves. A background event needs a stable owner in both cases.
+
+Retain permission request identity and urgency before lowering to text.
+Give the phone scheduler a permission queue and one replaceable navigation
+slot. Interrupt obsolete navigation for a permission request, preserve the
+announcement across subsequent navigation, then speak only the latest row.
+Provide a focused way to review unanswered requests. Resolution and explicit
+Stop clear the corresponding announcements. On reconnect, query outstanding
+permission state and announce a still-pending request once. Keep prior
+speech packets discarded. This needs semantic metadata beyond the prototype's
+plain queue protocol and a deliberate policy for the two logical lanes.
+
+From WSL, give the combined app an iOS bundle identifier, configure an
+Expo Build project with =eas build:configure= and select Apple signing
+credentials. For a private device build use an internal distribution
+profile, =eas device:create= and =eas build --platform ios --profile preview=.
+Hosted macOS runs Xcode, compiles the native SSH dependency, signs the app
+and returns an install link for the registered iPhone. For TestFlight use
+the production profile and =eas submit --platform ios=. This later
+distribution path requires Apple Developer Program membership. Expo Go
+covers the current test without enrolment.
+[[https://docs.expo.dev/build/internal-distribution/][Device provisioning]],
+[[https://docs.expo.dev/build-reference/ios-builds/][hosted iOS builds]] and
+[[https://docs.expo.dev/submit/ios/][TestFlight submission]].

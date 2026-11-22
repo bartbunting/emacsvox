@@ -1,0 +1,16 @@
+{
+  "name": "emacsvox-iphone-speech",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test/*.test.cjs"
+  },
+  "dependencies": {
+    "expo": "58.0.26",
+    "expo-speech": "58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "ws": "8.23.0"
+  }
+}

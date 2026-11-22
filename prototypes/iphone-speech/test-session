@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+root=$(cd "$here/../.." && pwd)
+runtime=${XDG_RUNTIME_DIR:?}/emacsvox-iphone
+export EMACSVOX_PHONE_SOCKET=${EMACSVOX_PHONE_SOCKET:-$runtime/speech.sock}
+[[ -S $EMACSVOX_PHONE_SOCKET ]] || { echo "Start the relay first." >&2; exit 1; }
+if [[ $EMACSVOX_PHONE_SOCKET == "$runtime/speech.sock" ]] && flock -n "$runtime/relay.lock" true; then
+    echo "The relay is stopped. Run start-relay first." >&2
+    exit 1
+fi
+emacs=${EMACS:-}
+if [[ -z $emacs && -r $root/local.mk ]]; then
+    emacs=$(sed -n 's/^EMACS=//p' "$root/local.mk")
+fi
+export EMACSVOX_DIR=$root TTS_PROGRAM=$here/phone-backend
+unset EMACSVOX_REMOTE_HOST EMACSVOX_REMOTE_PORT EMACSVOX_REMOTE_TOKEN_FILE EMACSVOX_PLAY
+umask 077
+mkdir -p "$runtime"
+profile=$(mktemp -d "$runtime/profile.XXXXXXXX")
+mkdir -p "$profile/project"
+export EMACSVOX_PHONE_PROFILE=$profile
+cd "$profile/project"
+exec "${emacs:-emacs}" -Q --init-directory="$profile" --no-splash -l "$here/profile.el" "$@"
