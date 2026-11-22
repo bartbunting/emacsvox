@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("phone", help="iPhone Tailscale IPv4 address")
 parser.add_argument("public_key", type=Path, help="file containing the key copied from the iPhone")
 parser.add_argument("--sshd", type=Path, default=Path("/usr/sbin/sshd"))
+parser.add_argument("--host-key", type=Path, help="reuse this WSL Ed25519 host key between trials")
 args = parser.parse_args()
 peers = json.loads(subprocess.check_output(["tailscale", "status", "--json"]))["Peer"].values()
 if not any(args.phone in peer["TailscaleIPs"] and peer["OS"].lower() == "ios" for peer in peers):
@@ -27,6 +28,8 @@ if not re.fullmatch(r"ssh-ed25519 [A-Za-z0-9+/=]+(?: [^\n\r]+)?", key):
 subprocess.run(["ssh-keygen", "-lf", args.public_key], check=True, stdout=subprocess.DEVNULL)
 if not args.sshd.is_file():
     parser.error("Pass --sshd with the absolute path to the unpacked WSL sshd.")
+if args.host_key and not args.host_key.is_file():
+    parser.error("Pass an existing Ed25519 private host key with --host-key.")
 
 def finish(signum, frame):
     raise SystemExit
@@ -39,7 +42,8 @@ cache.mkdir(mode=0o700, parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix="phone-sshd-", dir=cache) as directory:
     root = Path(directory)
     (root / "authorized_keys").write_text('restrict,pty,from="' + args.phone + '" ' + key + "\n")
-    with serve_ssh(args.sshd.resolve(), root, address=address, port=8822, peer=args.phone):
+    with serve_ssh(args.sshd.resolve(), root, address=address, port=8822, peer=args.phone,
+                   host_key=args.host_key.resolve() if args.host_key else None):
         print(f"WSL {address}   SSH port 8822   Username {getpass.getuser()}", flush=True)
         print("Trusted WSL host public key", (root / "host.pub").read_text().strip(), flush=True)
         print("Press Control+C here to end this SSH trial.", flush=True)

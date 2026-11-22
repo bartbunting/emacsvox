@@ -25,8 +25,9 @@ async function findVoice(speech) {
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
 function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
-                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, now = Date.now }) {
+                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
+  let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
   let voiceLookup, currentRate = speechRate;
@@ -214,6 +215,12 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
   function disconnect(message = 'Disconnected') {
     const old = socket;
     socket = null;
+    resumeOnActive = false;
+    activeBeforeLock = false;
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    frameId = null;
+    sessionActive(false);
     ready = false;
     keyboard(null);
     sshOffer(null);
@@ -226,22 +233,36 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
     status(message);
   }
 
-  function connect() {
-    disconnect('Connecting');
+  function connect(attempt = 0) {
+    if (background) return;
+    disconnect(attempt ? 'Reconnecting' : 'Connecting');
     currentRate = speechRate;
     refreshVoice();
+    // Give Tailscale time to resume after unlocking. A manual disconnect or
+    // a host-key or authentication error cancels any further attempts.
+    function networkFailed(message) {
+      const resumeCandidate = activeBeforeLock;
+      disconnect(message);
+      activeBeforeLock = resumeCandidate;
+      if (attempt > 0 && attempt < 4 && !background) {
+        status('Waiting for the relay to reconnect');
+        sessionActive(true);
+        retryTimer = setTimeout(() => connect(attempt + 1), 1000 * attempt);
+      }
+    }
     let current;
     try {
       current = openSocket();
     } catch {
-      disconnect('Connection failed. Check Tailscale and the relay.');
+      networkFailed('Connection failed. Check Tailscale and the relay.');
       return;
     }
     socket = current;
+    sessionActive(true);
     resetId = 0;
     lastReceived = now();
     heartbeat = setInterval(() => {
-      if (now() - lastReceived > 12000) disconnect('Connection timed out. Activate Connect to retry.');
+      if (now() - lastReceived > 12000) networkFailed('Connection timed out. Activate Connect to retry.');
       else if (current.readyState === 1) current.send('ping');
     }, 3000);
     current.onmessage = event => {
@@ -251,6 +272,7 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
       lastReceived = now();
       if (record.type === 'ready' && record.id === resetId) {
         ready = true;
+        attempt = 0;
         status('Connected');
         if (record.keyboard === true) {
           keyboard({sendKeys(text) {
@@ -262,6 +284,7 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
         }
       } else if (record.type === 'ssh' && typeof record.frame === 'string' &&
                  typeof record.client === 'string' && typeof record.server === 'string') {
+        frameId = record.frame;
         sshOffer(record);
       } else if (ready && (record.type === 'permission' || record.type === 'resolved')) {
         permissionRecord(record);
@@ -288,8 +311,27 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
       }
     };
     current.onclose = current.onerror = () => {
-      if (socket === current) disconnect('Disconnected. Activate Connect to retry.');
+      if (socket === current) networkFailed('Disconnected. Activate Connect to retry.');
     };
+  }
+
+  function appState(state) {
+    if (state === 'inactive' && !background) {
+      activeBeforeLock ||= Boolean(socket || retryTimer);
+    } else if (state === 'background' && !background) {
+      background = true;
+      const resume = Boolean(socket || retryTimer || activeBeforeLock);
+      disconnect(resume ? 'Paused until you return' : 'Disconnected');
+      resumeOnActive = resume;
+    } else if (state === 'active') {
+      activeBeforeLock = false;
+      background = false;
+      if (resumeOnActive) connect(1);
+    }
+  }
+
+  function terminalClosed(frame, message) {
+    if (frame && frameId === frame) disconnect(message || 'SSH terminal closed. Activate Connect to retry.');
   }
 
   function stop() {
@@ -309,7 +351,14 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
     enqueue(mix ? mixedSample : 'This is the iPhone voice test.');
   }
 
-  return { connect, disconnect, stop, testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: playOpenObject };
+  function testTone(ms) {
+    clearPermissions();
+    silence();
+    enqueue({type: 'tone', hz: 660, ms});
+  }
+
+  return { connect: () => connect(), disconnect, appState, terminalClosed, stop, testTone,
+    testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: playOpenObject };
 }
 
 const symbols = {

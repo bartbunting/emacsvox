@@ -6,6 +6,90 @@ const assert = require('node:assert/strict');
 const { createReceiver } = require('../receiver');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('unlock reattaches once with fresh speech and ignores the replaced SSH view', async () => {
+  const sockets = [], spoken = [];
+  const receiver = createReceiver({
+    openSocket() { const ws = {close() {}}; sockets.push(ws); return ws; },
+    status() {}, speech: {stop: async () => true, speak: text => spoken.push(text)},
+  });
+  const send = (ws, data) => ws.onmessage({data:JSON.stringify(data)});
+  try {
+    receiver.connect();
+    const old = sockets[0];
+    send(old, {type:'ssh', frame:'first', server:'server', client:'client'});
+    send(old, {type:'ready', id:0});
+    send(old, {type:'speak', text:'obsolete'});
+    receiver.appState('inactive');
+    receiver.appState('active');
+    assert.equal(sockets.length, 1);
+    receiver.appState('inactive');
+    old.onclose();
+    receiver.appState('background');
+    receiver.appState('background');
+    receiver.appState('active');
+    receiver.appState('active');
+    assert.equal(sockets.length, 2);
+    const fresh = sockets[1];
+    send(fresh, {type:'ssh', frame:'second', server:'server', client:'client'});
+    receiver.terminalClosed('first', 'Late close from background');
+    old.onclose();
+    send(old, {type:'speak', text:'late'});
+    send(fresh, {type:'ready', id:0});
+    send(fresh, {type:'speak', text:'new line'});
+    await flush();
+    assert.deepEqual(spoken, ['new line']);
+    receiver.disconnect();
+    receiver.appState('background');
+    receiver.appState('active');
+    assert.equal(sockets.length, 2);
+  } finally { receiver.disconnect(); }
+});
+
+test('unlock retries a waking network and Disconnect or a rejected host stops retries', t => {
+  t.mock.timers.enable({apis:['setTimeout']});
+  const sockets = [];
+  const receiver = createReceiver({
+    openSocket() { const ws = {close() {}}; sockets.push(ws); return ws; },
+    status() {}, speech: {stop: async () => true},
+  });
+  function unlock() { receiver.appState('background'); receiver.appState('active'); }
+  try {
+    receiver.connect();
+    unlock();
+    sockets.at(-1).onclose();
+    t.mock.timers.tick(1000);
+    assert.equal(sockets.length, 3);
+    const ws = sockets.at(-1);
+    ws.onmessage({data:JSON.stringify({type:'ssh', frame:'second', server:'s', client:'c'})});
+    receiver.terminalClosed('second', 'The SSH host key does not match.');
+    t.mock.timers.tick(10000);
+    assert.equal(sockets.length, 3);
+    receiver.connect();
+    unlock();
+    sockets.at(-1).onerror();
+    receiver.disconnect();
+    t.mock.timers.tick(20000);
+    assert.equal(sockets.length, 5);
+  } finally { receiver.disconnect(); }
+});
+
+test('the diagnostic tones use the local cancellable Emacs tone player without a connection', async () => {
+  const played = [];
+  let stops = 0;
+  const receiver = createReceiver({
+    openSocket: () => assert.fail('Local tone opened a connection'), status() {},
+    speech: {stop: async () => true}, tonePlayer: {prepare: async () => {},
+      play: (hz, ms) => played.push([hz, ms]), stop: () => { stops++; }},
+  });
+  receiver.testTone(480);
+  await flush();
+  receiver.testTone(3000);
+  await flush();
+  receiver.stop();
+  assert.deepEqual(played, [[660,480], [660,3000]]);
+  assert.equal(stops, 3);
+});
+
 test('native stop races, stalled socket and delayed callbacks after reconnect', async () => {
   const sockets = [], stops = [], spoken = [];
   const receiver = createReceiver({

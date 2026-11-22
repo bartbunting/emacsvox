@@ -5,7 +5,12 @@
 const html = String.raw`<!doctype html><html lang="en"><head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; form-action 'none'">
-<style>body{margin:6px;font:18px -apple-system,sans-serif} textarea{box-sizing:border-box;display:block;width:100%;font:inherit;border:1px solid;padding:6px}</style>
+<meta name="color-scheme" content="dark">
+<style>
+html,body{background:#000;color:#f5f5f5}body{margin:6px;font:18px -apple-system,sans-serif}
+textarea{box-sizing:border-box;display:block;width:100%;font:inherit;background:#000;color:#fff;border:1px solid #aaa;padding:6px}
+textarea:focus{outline:2px solid #90c4ff}
+</style>
 </head><body><label for="keys">Emacs keyboard</label>
 <textarea id="keys" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
 <script>

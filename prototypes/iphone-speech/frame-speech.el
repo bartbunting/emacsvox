@@ -19,6 +19,8 @@
   (expand-file-name "phone-backend" (file-name-directory load-file-name)))
 (defvar iphone-frame-speech--directory nil)
 (defvar iphone-frame-speech--entry-buffer nil)
+(defvar iphone-frame-speech--last-terminal nil)
+(defvar iphone-frame-speech--position (make-marker))
 (defvar iphone-frame-speech--command-owner nil)
 (defvar iphone-frame-speech--hook-owner nil)
 (defvar iphone-frame-speech--bound nil)
@@ -36,7 +38,8 @@
     (when-let* ((shell (cond ((derived-mode-p 'agent-shell-mode) (current-buffer))
                              ((derived-mode-p 'agent-shell-viewport-view-mode 'agent-shell-viewport-edit-mode)
                               (emacsvox-agent-shell--viewport-session-buffer (current-buffer))))))
-      (iphone-frame-speech-subscribe shell)))
+      (iphone-frame-speech-subscribe shell))
+    (iphone-frame-speech--remember (selected-frame)))
   (setq iphone-frame-speech--hook-owner nil))
 
 (defun iphone-frame-speech--command (original &rest args)
@@ -46,10 +49,12 @@
 
 (defun iphone-frame-speech--stop (original &optional all)
   ;; Preserve the desktop command's interactive stop of both speech lanes.
-  (interactive (list t))
+  (interactive (list 'iphone-explicit-stop))
   (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
     (iphone-frame-speech--route original all)
-    (when (and all (processp owner) (process-live-p owner))
+    ;; Several typing and movement commands call (tts-stop 'all) before
+    ;; giving feedback. Only explicit Stop clears an urgent phone request.
+    (when (and (eq all 'iphone-explicit-stop) (processp owner) (process-live-p owner))
       (iphone-frame-speech--packet owner "stop-all" 0))))
 
 (defun iphone-frame-speech--route (original &rest args)
@@ -86,8 +91,28 @@
       (setenv "EMACSVOX_PHONE_SOCKET" (expand-file-name (concat id ".sock") directory))
       (set-frame-parameter nil 'emacsvox-phone-speaker (tts-make-process "Phone frame")))))
 
+(defun iphone-frame-speech--remember (frame)
+  (when (and (eq frame iphone-frame-speech--last-terminal) (frame-live-p frame))
+    (let ((window (frame-selected-window frame)))
+      (unless (window-minibuffer-p window)
+        (set-marker iphone-frame-speech--position (window-point window) (window-buffer window))))))
+
+(defun iphone-frame-speech--open-terminal-buffer (conversation)
+  ;; Each opted-in relay serves one phone. A late detach from a replaced
+  ;; frame must not overwrite the position on its successor.
+  (iphone-frame-speech--remember iphone-frame-speech--last-terminal)
+  (setq iphone-frame-speech--last-terminal (selected-frame))
+  (when (buffer-live-p conversation) (iphone-frame-speech-subscribe conversation))
+  (if-let* ((saved (marker-buffer iphone-frame-speech--position)))
+      (progn (switch-to-buffer saved) (goto-char iphone-frame-speech--position) t)
+    (when (buffer-live-p conversation) (switch-to-buffer conversation))
+    nil))
+
 (defun iphone-frame-speech--detach (frame)
   (when-let* ((owner (frame-parameter frame 'emacsvox-phone-speaker)))
+    (iphone-frame-speech--remember frame)
+    (when (eq frame iphone-frame-speech--last-terminal)
+      (setq iphone-frame-speech--last-terminal nil))
     (when-let* ((buffer (frame-parameter frame 'emacsvox-conversation)) ((buffer-live-p buffer)))
       (with-current-buffer buffer
         (when (eq iphone-frame-speech--subscriber frame)
@@ -115,7 +140,8 @@
         (with-current-buffer old
           (when (eq iphone-frame-speech--subscriber frame)
             (setq iphone-frame-speech--subscriber nil))))
-      (when iphone-frame-speech--directory (setq iphone-frame-speech--entry-buffer buffer))
+      (when (or iphone-frame-speech--directory (frame-parameter frame 'emacsvox-native-ssh))
+        (setq iphone-frame-speech--entry-buffer buffer))
       (set-frame-parameter frame 'emacsvox-conversation buffer)
       (with-current-buffer buffer (setq iphone-frame-speech--subscriber frame))
       (when (process-get owner 'iphone-synced)
@@ -216,9 +242,7 @@
              (frame-parameter nil 'emacsvox-native-ssh))
     (let ((id (frame-parameter nil 'emacsvox-phone-id)))
       (iphone-frame-speech-attach id)
-      (when (buffer-live-p iphone-frame-speech--entry-buffer)
-        (switch-to-buffer iphone-frame-speech--entry-buffer)
-        (iphone-frame-speech-subscribe (current-buffer)))
+      (iphone-frame-speech--open-terminal-buffer iphone-frame-speech--entry-buffer)
       (iphone-frame-speech--packet (frame-parameter nil 'emacsvox-phone-speaker) "attached" id))))
 
 (defun iphone-frame-speech-use-server (directory name)
@@ -232,7 +256,9 @@
   (let ((buffer (get-buffer name)))
     (unless (and buffer (with-current-buffer buffer (derived-mode-p 'agent-shell-mode)))
       (user-error "Choose an existing Agent Shell conversation buffer"))
-    (setq iphone-frame-speech--directory directory iphone-frame-speech--entry-buffer buffer))
+    (set-marker iphone-frame-speech--position nil)
+    (setq iphone-frame-speech--directory directory iphone-frame-speech--entry-buffer buffer
+          iphone-frame-speech--last-terminal nil))
   (iphone-frame-speech-enable)
   (add-hook 'server-after-make-frame-hook #'iphone-frame-speech--native-frame)
   (expand-file-name "emacsclient" invocation-directory))
@@ -259,7 +285,9 @@
       (advice-remove entry #'iphone-frame-speech--deferred))
     (dolist (entry iphone-frame-speech--entries)
       (advice-remove entry #'iphone-frame-speech--route))
+    (set-marker iphone-frame-speech--position nil)
     (setq iphone-frame-speech--directory nil iphone-frame-speech--entry-buffer nil
+          iphone-frame-speech--last-terminal nil
           iphone-frame-speech--hook-owner nil))
   t)
 

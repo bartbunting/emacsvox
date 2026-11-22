@@ -3,11 +3,15 @@
     "name": "Emacsvox Speech",
     "slug": "emacsvox-iphone-speech",
     "version": "0.1.0",
+    "backgroundColor": "#000000",
+    "userInterfaceStyle": "dark",
+    "splash": {"backgroundColor": "#000000"},
     "platforms": [
       "ios"
     ],
     "scheme": "emacsvox-speech",
     "ios": {
+      "buildNumber": "2",
       "bundleIdentifier": "org.emacsvox.iphone.speech",
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "Connect to your Emacsvox speech relay on Tailscale."

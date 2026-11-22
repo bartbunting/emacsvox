@@ -15,9 +15,15 @@ class LocalSSH(socketserver.ThreadingTCPServer):
 
 
 @contextlib.contextmanager
-def serve_ssh(sshd, root, *, address="127.0.0.1", port=0, peer=None):
-    host = root / "host"
-    subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", host], check=True)
+def serve_ssh(sshd, root, *, address="127.0.0.1", port=0, peer=None, host_key=None):
+    host = host_key or root / "host"
+    if host_key is None:
+        subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", host], check=True)
+    else:
+        public = subprocess.check_output(["ssh-keygen", "-y", "-P", "", "-f", host], text=True)
+        if not public.startswith("ssh-ed25519 "):
+            raise ValueError("Choose an Ed25519 host key.")
+        (root / "host.pub").write_text(public)
     config = root / "sshd_config"
     lines = [
         f'HostKey "{host}"', f'AuthorizedKeysFile "{root}/authorized_keys"',

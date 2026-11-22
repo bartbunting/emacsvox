@@ -79,8 +79,8 @@ directly over Tailscale. There is no public tunnel or audio stream.
 If Safari fails to load the page, check the peer address, Tailscale and
 those ports. If the page opens but the app fails to load, check the Metro
 output and the Expo Go SDK version. If status reports a timeout, activate
-Connect after restoring the network. If you hear silence, activate
-“Test iPhone Voice”. This speaks a short phrase locally even while
+Connect after restoring the network. If you hear silence, open Diagnostics
+in the signed app and activate “Test iPhone Voice”. This speaks a short phrase locally even while
 disconnected. “Test Open Object Sound” plays the same recording used by
 Agent Shell. The playback status follows these controls in VoiceOver order.
 
@@ -445,8 +445,9 @@ speech socket before the receiver reports Connected.
    confirm the iOS prompt. Open Emacsvox Speech from the Home Screen.
    If iOS asks for Developer Mode, turn it on under Settings, Privacy
    & Security, Developer Mode. Restart, unlock and confirm Turn On.
-   Activate “Test iPhone Voice” to hear local speech before connecting.
-   Allow local network access if prompted. For SSH, activate
+   Open Diagnostics and activate “Test iPhone Voice” to hear local speech
+   before connecting. Activate Done. Allow local network access if prompted.
+   For SSH, open Settings and activate
    “Copy iPhone SSH public key” and transfer that one public
    line to a file of your choice in WSL.
 2. From the prototype directory, run the following in WSL. If your
@@ -471,20 +472,75 @@ speech socket before the receiver reports Connected.
    ./phone-sshd "$phone" "$phone_key"
    #+end_src
 
-4. In the app fill in WSL Tailscale IPv4 address,
+4. In Settings fill in WSL Tailscale IPv4 address,
    SSH port (=8822=), WSL username and the full =ssh-ed25519= host public
-   key printed by the listener. Activate Connect, check the connection
-   status and activate “Focus Emacs terminal”. The app saves these public
-   connection settings. The temporary listener generates a fresh host key
-   at each start. Update the pin from its WSL terminal before reconnecting.
+   key printed by the listener. Activate Save settings, then Connect.
+   When you hear Connected, focus the Emacs keyboard field and double-tap.
+   The app remembers these values, the input method, the audio mode and
+   your keep-awake preference across launches. An update installed over the
+   first signed build reads its saved SSH settings and keeps the iPhone key.
+   The temporary listener generates a fresh host key each time unless you
+   give it a stable key as described below.
 5. Use the phone keyboard to try =C-n= during a line, =C-x C-f= to visit
    a file, =C-x C-s= to save, and =M-x= with Tab completion. Use VoiceOver
-   to reach Stop Speech and return to the terminal. Try the permission
-   and reconnect checks above. Activate “Use native mixer”, reconnect
-   and activate “Test mixed audio” to compare the two audio paths.
+   to reach Stop Speech and return to the keyboard. To compare input
+   paths, switch off “Use Emacs keyboard field” in Settings, save and
+   activate “Focus Emacs terminal”. Control+Option stays available to VoiceOver.
+   For the audio comparison, turn on “Use native mixer”, save and open
+   Diagnostics. Activate “Test mixed audio”. Saving a changed connection or
+   audio mode reconnects an active session.
 6. Activate Disconnect, then press Control+C in the listener and relay
    terminals. The listener accepts the nominated Tailscale phone and its
    public key while it runs. It uses its own host key and authorized keys.
+
+** Resume after locking the iPhone
+
+“Keep awake while connected” starts enabled for the signed app. It prevents
+automatic screen lock while the receiver is connected in the foreground.
+Disconnect restores the normal idle timer. You can still lock the phone with
+the side button. Locking or switching apps stops local audio and releases
+the phone frame. Emacs, its buffers and Codex keep running in WSL.
+
+Unlock and return to the app. It reconnects a previously active session,
+opens the last live phone buffer at its saved position and refreshes any
+still-pending permission. The next navigation command speaks fresh output.
+If that buffer has been killed, the terminal opens the subscribed conversation
+if it is still live. If iOS terminated the app, launch it and activate Connect.
+An explicit Disconnect stays disconnected. [[https://developer.apple.com/documentation/xcode/configuring-background-execution-modes][Apple’s background execution guide]].
+
+** Keep the same WSL host key between trials
+
+Give the temporary listener a dedicated private host key to keep the saved
+phone pin valid when you stop and restart the listener. To create one for
+the first time, run the following in WSL. If you already kept the current
+test host key at this path, skip this step.
+
+#+begin_src sh
+install -d -m 700 ~/.local/state/emacsvox/iphone-ssh
+test -e ~/.local/state/emacsvox/iphone-ssh/host || ssh-keygen -q -t ed25519 \
+  -N '' -f ~/.local/state/emacsvox/iphone-ssh/host
+#+end_src
+
+Add =--host-key ~/.local/state/emacsvox/iphone-ssh/host= to the
+=./phone-sshd= command above. For a newly created identity, compare the public
+key printed by WSL and save it on the phone once. The listener still ends
+when you press Control+C.
+
+** Check the second device build
+
+1. In Diagnostics, activate “Test half-second tone”. Listen for one steady
+   pitch. Try “Test three-second tone” and interrupt it with Stop Speech.
+   Both controls work offline and use the same player as an Emacs tone.
+2. On the main screen, connect and focus the Emacs keyboard field. Type a
+   lowercase letter with ordinary Emacs typing echo on. Listen for one echo.
+   In an Agent Shell response, press =C-n= twice during a line and compare
+   the cutoff on speaker and headphones.
+3. Navigate during a permission request. Listen for the complete request
+   while navigation keeps speaking. Check that explicit Stop silences both.
+4. Visit a second buffer with an unsaved edit, note point and lock the phone.
+   Unlock and reopen the app. Check the saved position, type one character and
+   listen for fresh feedback. Repeat after explicitly disconnecting to check
+   the phone stays quiet.
 
 ** Attach to an existing conversation
 

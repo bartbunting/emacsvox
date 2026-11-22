@@ -92,6 +92,13 @@ hosted macOS produced the Ad Hoc device build of =438705434=. WSL verified
 its distribution signer, signed arm64 executable and registered iPhone.
 The [[file:README.org::*Start the signed app against the test server][device trial]] covers physical SSH, keyboard input and VoiceOver focus.
 
+On 23 November the installed signed app spoke “Cobalt lighthouse” and
+“Amber orchard” for two external-keyboard moves over SSH. A second voice
+echoed a typed letter even with Emacs character and word echo disabled.
+The second device trial routes the previously tested keyboard field through
+the same native SSH session. WSL also verified reconnect to the last edit
+buffer and point while a permission remained pending.
+
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move
 to Stop Speech, return to the terminal and resume navigation.
@@ -130,6 +137,12 @@ A hosted simulator build of =838ad97f5= also packaged the separate
 permission synthesizer, cancellable generated tones, SwiftTerm and SSH.
 The inclusion of these components was checked in the downloaded app.
 
+On the first signed build, a single 480 ms Emacs tone sounded broken in
+about six places. Both audio modes gave the same impression. WSL counted
+one tone and one dispatch. The revised player renders that cue in one
+23,040-frame buffer. The [[file:README.org::*Check the second device build][phone checks]] cover audible continuity, the extra
+typing voice, interruption, pending permissions and lock recovery.
+
 ** TODO 6. Bring across the Omnivox speech features
 
 Use the same line, character, tone, earcon and Stop sequences as fixtures
@@ -166,8 +179,8 @@ Close just the phone frame and continue on the desktop with ordinary speech.
 The [[file:README.org::*Attach to an existing conversation][existing-server launcher]] selects an explicit socket and buffer.
 The SSH integration check kept the original server and draft after the
 phone disconnected and routing was released. The standalone launcher
-uses bundled JavaScript and a private Tailscale listener. Physical
-installation and everyday-session acceptance are open.
+uses bundled JavaScript and a private Tailscale listener. Physical installation
+and isolated navigation passed. Everyday-session acceptance remains open.
 
 Close this milestone when the session works from a fresh launch, the setup
 and return steps are reproducible in the README, and the timing and

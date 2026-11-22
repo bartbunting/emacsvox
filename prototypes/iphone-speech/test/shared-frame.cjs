@@ -174,7 +174,14 @@ async function main() {
           (rename-buffer "Second permission sample")
           (map-put! agent-shell--state :tool-calls
             '(("second" . ((:title . "Review copper") (:permission-request-id . 17)))))))`);
-      ws.send('key \x18bSecond permission sample\r');
+      async function switchPhoneBuffer(name) {
+        const start = after.length;
+        ws.send('key \x18b');
+        await until('buffer prompt in the phone terminal', () =>
+          after.slice(start).some(p => p.type === 'screen' && /switch to buffer/i.test(p.text)));
+        ws.send('key ' + name + '\r');
+      }
+      await switchPhoneBuffer('Second permission sample');
       await until('switch restores the second conversation request', () =>
         after.some(p => p.type === 'permission' && p.id !== pendingRequest && p.text.includes('Review copper')))
         .catch(async error => {
@@ -185,7 +192,7 @@ async function main() {
         });
       assert.ok(after.some(p => p.type === 'resolved' && p.id === pendingRequest));
       after.length = 0;
-      ws.send('key \x18bShared Codex sample\r');
+      await switchPhoneBuffer('Shared Codex sample');
       await until('return to first pending request', () => after.some(p => p.type === 'permission' && p.id === pendingRequest));
       await observe(`(with-current-buffer iphone-shared-buffer
         (map-put! agent-shell--state :tool-calls nil)
@@ -221,14 +228,26 @@ async function main() {
       let connection;
       try {
         const {port, pin} = JSON.parse((await once(peer.stdout, 'data'))[0]);
-        const packets = [];
-        ws = new WebSocket('ws://127.0.0.1:' + sshRelay.httpServer.address().port + '/speech/ssh');
-        ws.on('message', data => packets.push(JSON.parse(data)));
-        await until('SSH pairing offer', () => packets.some(p => p.type === 'ssh'));
-        const offer = packets.find(p => p.type === 'ssh');
-        connection = spawn(probe, ['connect', seed, String(port), os.userInfo().username, pin,
-          offer.server, offer.client, offer.frame], {stdio: ['pipe', 'pipe', 'inherit']});
-        await until('SSH frame attached to its phone speech connection', () => packets.some(p => p.type === 'ready'), 25000);
+        async function attachSSH() {
+          const packets = [];
+          ws = new WebSocket('ws://127.0.0.1:' + sshRelay.httpServer.address().port + '/speech/ssh');
+          ws.on('message', data => packets.push(JSON.parse(data)));
+          await until('SSH pairing offer', () => packets.some(p => p.type === 'ssh'));
+          const offer = packets.find(p => p.type === 'ssh');
+          connection = spawn(probe, ['connect', seed, String(port), os.userInfo().username, pin,
+            offer.server, offer.client, offer.frame], {stdio: ['pipe', 'pipe', 'inherit']});
+          await until('SSH frame attached to its phone speech connection', () => packets.some(p => p.type === 'ready'), 25000);
+          return packets;
+        }
+        async function closeSSH() {
+          await disconnect();
+          const exit = once(connection, 'exit');
+          connection.stdin.end('wait\n');
+          await exit;
+          assert.equal(connection.exitCode, 0, 'SSH command ended after the speech peer left');
+        }
+        function sshKeys(bytes) { connection.stdin.write('input ' + Buffer.from(bytes).toString('base64') + '\n'); }
+        const packets = await attachSSH();
         assert.ok(!packets.some(p => p.keyboard || p.type === 'screen'));
         await observe(`(set-window-point (frame-selected-window
           (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))
@@ -238,12 +257,32 @@ async function main() {
         connection.stdin.write('input Dg==\n');
         await until('SSH C-n on the paired phone', () => packets.some(p => p.type === 'speak' && p.text.trim() === 'Cobalt lighthouse'));
         assert.ok(!desktop.some(p => p.text?.trim() === 'Cobalt lighthouse'));
-        await disconnect();
-        const exit = once(connection, 'exit');
-        connection.stdin.end('wait\n');
-        await exit;
-        assert.equal(connection.exitCode, 0, 'SSH command ended after the speech peer left');
-        console.log('Passed native SSH pairing and C-n from a real SSH PTY to the matching phone socket.');
+        await observe('(global-set-key (kbd "<f6>") (lambda () (interactive) (switch-to-buffer (get-buffer-create "Phone resume draft"))))');
+        sshKeys('\x1b[17~');
+        const phoneWindow = "(frame-selected-window (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))";
+        await until('SSH edit buffer', async () => (await observe('(buffer-name (window-buffer ' + phoneWindow + '))')) === '"Phone resume draft"');
+        packets.length = 0;
+        await observe(`(with-current-buffer iphone-shared-buffer
+          (let ((tool '((:title . "Inspect typing sample") (:permission-request-id . 23))))
+            (map-put! agent-shell--state :tool-calls (list (cons "typing" tool)))
+            (agent-shell--emit-event :event 'permission-request
+              :data (list '(:request-id . 23) '(:tool-call-id . "typing") (cons :tool-call tool)))))`);
+        await until('permission reaches the subscribed frame', () => packets.some(p => p.type === 'permission'));
+        sshKeys('j');
+        await until('character echo during permission', () => packets.some(p => p.type === 'letter' && p.text === 'j'));
+        assert.ok(!packets.some(p => p.type === 'stop' && p.scope === 'all'));
+        await closeSSH();
+        await observe('(with-current-buffer "Phone resume draft" (save-excursion (goto-char (point-max)) (insert " other edits")))');
+        const resumed = await attachSSH();
+        await until('pending permission on resuming the edit buffer', () => resumed.some(p => p.type === 'permission'));
+        assert.equal(resumed.filter(p => p.type === 'permission').length, 1);
+        assert.equal(await observe('(buffer-name (window-buffer ' + phoneWindow + '))'), '"Phone resume draft"');
+        assert.equal(await observe('(window-point ' + phoneWindow + ')'), '2');
+        sshKeys('k');
+        await until('fresh SSH input at the restored point', async () =>
+          (await observe('(with-current-buffer "Phone resume draft" (buffer-string))')) === '"jk other edits"');
+        await closeSSH();
+        console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
       } finally {
         if (connection?.exitCode === null) connection.kill();
         peer.stdin.end();

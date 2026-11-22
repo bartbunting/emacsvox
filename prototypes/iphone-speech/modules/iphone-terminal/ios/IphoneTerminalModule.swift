@@ -6,17 +6,36 @@ import SwiftTerm
 import UIKit
 
 public final class IphoneTerminalModule: Module {
+  private var holdsIdleTimer = false
+
   public func definition() -> ModuleDefinition {
     Name("IphoneTerminal")
     AsyncFunction("copyPublicKey") { UIPasteboard.general.string = try PhoneIdentity.publicKey() }.runOnQueue(.main)
     Function("loadProfile") { UserDefaults.standard.dictionary(forKey: "emacsvox.ssh.profile") as? [String:String] ?? [:] }
     Function("saveProfile") { (profile: [String:String]) in UserDefaults.standard.set(profile, forKey: "emacsvox.ssh.profile") }
+    AsyncFunction("keepAwake") { (enabled: Bool) in
+      if enabled && !UIApplication.shared.isIdleTimerDisabled {
+        UIApplication.shared.isIdleTimerDisabled = true
+        self.holdsIdleTimer = true
+      } else if !enabled && self.holdsIdleTimer {
+        UIApplication.shared.isIdleTimerDisabled = false
+        self.holdsIdleTimer = false
+      }
+    }.runOnQueue(.main)
+    OnDestroy {
+      DispatchQueue.main.async {
+        if self.holdsIdleTimer { UIApplication.shared.isIdleTimerDisabled = false }
+      }
+    }
     View(PhoneTerminalView.self) {
       Events("onSessionStatus")
       Prop("connection") { (view: PhoneTerminalView, config: [String: String]) in view.configure(config) }
       AsyncFunction("focusKeyboard") { (view: PhoneTerminalView) in
         view.terminal.becomeFirstResponder()
         UIAccessibility.post(notification: .layoutChanged, argument: view.terminal)
+      }
+      AsyncFunction("sendKeys") { (view: PhoneTerminalView, frame: String, text: String) in
+        view.sendKeys(text, to: frame)
       }
     }
   }
@@ -37,6 +56,8 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     terminal.optionAsMetaKey = true
+    terminal.nativeBackgroundColor = .black
+    terminal.nativeForegroundColor = .white
     terminal.accessibilityLabel = "Emacs terminal"
     terminal.terminalDelegate = self
     addSubview(terminal)
@@ -93,7 +114,7 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
         try await live.resize(TerminalSize(columns: columns, rows: rows))
         onSessionStatus(["state":"connected"])
         _ = try await live.waitForExit()
-        if generation == owner { close(); onSessionStatus(["state":"closed"]) }
+        if generation == owner { close(); onSessionStatus(["state":"closed", "frame":frame]) }
       } catch {
         if generation == owner {
           let reason: String
@@ -103,22 +124,27 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
           default: reason = "Could not open the SSH terminal."
           }
           close()
-          onSessionStatus(["state":"failed", "detail":reason])
+          onSessionStatus(["state":"failed", "frame":frame, "detail":reason])
         }
       }
     }
   }
 
+  func sendKeys(_ text: String, to frame: String) {
+    guard configuration["frame"] == frame, !text.isEmpty, text.utf8.count <= 1024 else { return }
+    send(source: terminal, data: Array(text.utf8)[...])
+  }
+
   func send(source: TerminalView, data: ArraySlice<UInt8>) {
-    guard let session else { return }
+    guard let session, let frame = configuration["frame"] else { return }
     let bytes = Array(data), owner = generation, previous = writes
     pendingBytes += bytes.count
-    guard pendingBytes <= 65536 else { close(); onSessionStatus(["state":"failed", "detail":"Terminal input queue full."]); return }
+    guard pendingBytes <= 65536 else { close(); onSessionStatus(["state":"failed", "frame":frame, "detail":"Terminal input queue full."]); return }
     writes = Task { @MainActor [weak self] in
       await previous?.value
       guard let self, generation == owner else { return }
       do { try await session.send(bytes) }
-      catch { if generation == owner { close(); onSessionStatus(["state":"closed"]) }; return }
+      catch { if generation == owner { close(); onSessionStatus(["state":"closed", "frame":frame]) }; return }
       if generation == owner { pendingBytes -= bytes.count }
     }
   }
