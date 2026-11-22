@@ -3,6 +3,24 @@
     "name": "Emacsvox Speech",
     "slug": "emacsvox-iphone-speech",
     "version": "0.1.0",
-    "platforms": ["ios"]
+    "platforms": [
+      "ios"
+    ],
+    "scheme": "emacsvox-speech",
+    "ios": {
+      "bundleIdentifier": "org.emacsvox.iphone.speech",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Connect to your Emacsvox speech relay on Tailscale."
+      }
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
+    ]
   }
 }

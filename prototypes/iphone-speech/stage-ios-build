@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+set -euo pipefail
+cd "$(dirname "$0")"
+stage=$(mktemp -d "${TMPDIR:-/tmp}/emacsvox-ios-build.XXXXXXXX")
+prefix=$(git rev-parse --show-prefix)
+git archive "HEAD:${prefix%/}" -- .gitignore app.json eas.json index.js mixer.js \
+    receiver.js package.json package-lock.json modules assets/open-object.wav |
+    tar -x -C "$stage"
+printf '%s\n' "$stage"

@@ -5,6 +5,8 @@ const speechRate = 1.5;
 const eloquenceNames = ['Reed', 'Eddy', 'Rocko', 'Grandpa'];
 const openObjectCue = Symbol('open-object');
 
+const mixedSample = Symbol('mixed audio test');
+
 async function findVoice(speech) {
   const voices = await speech.getAvailableVoicesAsync();
   const english = voices.filter(voice => voice.identifier && /^en(?:[-_]|$)/i.test(voice.language));
@@ -43,7 +45,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     ++cueRequest;
     if (!cueStarted) return;
     cueStarted = false;
-    try { cuePlayer.pause(); } catch { playback('iOS could not stop the sound.'); }
+    try { Promise.resolve(cuePlayer.pause()).catch(() => { if (!cueStarted) playback('iOS could not stop the sound.'); }); } catch { playback('iOS could not stop the sound.'); }
   }
 
   async function playOpenObject() {
@@ -56,8 +58,9 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       }
       if (cuePlayer.currentTime > 0) await cuePlayer.seekTo(0, 0, 0);
       if (owner !== cueRequest) return;
-      cuePlayer.play();
       cueStarted = true;
+      await cuePlayer.play();
+      if (owner !== cueRequest) return;
       playback('Open Object sound requested.');
     } catch {
       if (owner === cueRequest) playback('iOS could not play the Open Object sound.');
@@ -71,7 +74,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     speaking = false;
     // An idle AVSpeechSynthesizer can return false from stopSpeaking.
     // Any fulfilled stop permits fresh speech. Only rejection blocks it.
-    barrier = speech.stop().then(() => true, () => {
+    barrier = speech.stop(includeSound).then(() => true, () => {
       if (epoch === owner) playback('iOS could not stop speech.');
       return false;
     });
@@ -96,8 +99,10 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       }
       const voice = await voiceLookup;
       if (owner !== epoch) return;
-      const text = queue.shift();
-      queuedChars -= text.length;
+      const item = queue.shift();
+      const mix = item === mixedSample;
+      const text = mix ? 'This is the mixer test. The lighthouse keeper climbed the stairs to light the lamp.' : item;
+      if (!mix) queuedChars -= text.length;
       const finish = state => {
         if (owner !== epoch) return;
         playback(state);
@@ -106,6 +111,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       };
       speech.speak(text, {
         ...(voice && { voice: voice.identifier }),
+        ...(mix && { mixSample: true }),
         rate: speechRate,
         useApplicationAudioSession: false,
         onStart: () => {
@@ -189,13 +195,13 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     socket.send('reset ' + ++resetId);
   }
 
-  function testVoice() {
+  function testVoice(mix = false) {
     silence();
     refreshVoice();
-    enqueue('This is the iPhone voice test.');
+    enqueue(mix ? mixedSample : 'This is the iPhone voice test.');
   }
 
-  return { connect, disconnect, stop, testVoice, testCue: playOpenObject };
+  return { connect, disconnect, stop, testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: playOpenObject };
 }
 
 const symbols = {

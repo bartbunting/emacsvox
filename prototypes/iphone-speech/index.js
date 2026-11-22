@@ -3,42 +3,74 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppState, Button, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { registerRootComponent } from 'expo';
+import { registerRootComponent, requireOptionalNativeModule } from 'expo';
+import { Asset } from 'expo-asset';
+import { mixerAdapters } from './mixer';
 import { useAudioPlayer } from 'expo-audio';
 import * as Speech from 'expo-speech';
 import { createReceiver } from './receiver';
 
+const native = requireOptionalNativeModule('IphoneMixer');
+const sound = require('./assets/open-object.wav');
+
 function App() {
+  const [mixed, setMixed] = useState(false);
+  return <Session key={String(mixed)} mixed={mixed} switchMode={() => setMixed(value => !value)} />;
+}
+
+function Session({mixed, switchMode}) {
   const [status, setStatus] = useState('Disconnected');
   const [playback, setPlayback] = useState('');
   const [voice, setVoice] = useState('');
-  const cuePlayer = useAudioPlayer(require('./assets/open-object.wav'), {downloadFirst: true});
+  const directCue = useAudioPlayer(sound, {downloadFirst: true});
+  const [timing, setTiming] = useState('');
+  const [loading, setLoading] = useState(false);
+  const adapters = useMemo(() => mixed
+    ? mixerAdapters(native, Speech, setTiming)
+    : {speech: Speech, cuePlayer: directCue}, [mixed, directCue]);
   const receiver = useMemo(() => createReceiver({
-    speech: Speech,
-    cuePlayer,
+    ...adapters,
     status: setStatus,
     playback: setPlayback,
     voiceStatus: setVoice,
     openSocket: () => new WebSocket('ws://' + process.env.EXPO_PUBLIC_EMACSVOX_HOST + ':8787/speech'),
-  }), [cuePlayer]);
+  }), [adapters]);
   useEffect(() => {
     const listener = AppState.addEventListener('change', state => {
       if (state === 'background') receiver.disconnect();
     });
     return () => { listener.remove(); receiver.disconnect(); };
   }, [receiver]);
+  async function changeMode() {
+    if (!mixed) {
+      setLoading(true);
+      try {
+        const asset = await Asset.fromModule(sound).downloadAsync();
+        await native.prepare(asset.localUri);
+      } catch {
+        setPlayback('Could not load the local Accent recording for the mixer.');
+        setLoading(false);
+        return;
+      }
+    }
+    switchMode();
+  }
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.page}>
       <Text accessibilityRole="header" style={styles.heading}>Emacsvox Speech</Text>
       <Text accessibilityLabel={'Connection status. ' + status} style={styles.status}>{status}</Text>
       {voice ? <Text style={styles.status}>{voice}</Text> : null}
+      {native && <Text style={styles.status}>{mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <View style={styles.controls}>
         <Button title="Connect" accessibilityLabel="Connect" onPress={receiver.connect} />
         <Button title="Disconnect" accessibilityLabel="Disconnect" onPress={() => receiver.disconnect()} />
         <Button title="Stop Speech" accessibilityLabel="Stop Speech" onPress={receiver.stop} />
         <Button title="Test iPhone Voice" accessibilityLabel="Test iPhone Voice" onPress={receiver.testVoice} />
+        {native && <Button title={mixed ? 'Use direct speech' : 'Use native mixer'} disabled={loading} onPress={changeMode} />}
+        {mixed && <Button title="Test mixed audio" onPress={receiver.testMix} />}
         <Button title="Test Open Object Sound" accessibilityLabel="Test Open Object Sound" onPress={receiver.testCue} />
       </View>
+      {timing ? <Text style={styles.status}>{timing}</Text> : null}
       {playback ? <Text style={styles.status}>{playback}</Text> : null}
     </ScrollView>
   );
