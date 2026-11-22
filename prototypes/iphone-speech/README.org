@@ -341,8 +341,12 @@ use this relay. It can issue ordinary Emacs commands as your WSL user.
    turn off Quick Nav and focus the field again.
 4. Press =Control+x=, then =Control+f=. Type =keyboard-test.txt= and
    press Return. Type a sentence and save with =Control+x Control+s=.
-   Press Escape, then =x= to open the command minibuffer. Cancel with
-   =Control+g=. Use =Control+x b= to return to =Phone keyboard sample=.
+   Press =Alt+x= to open the command minibuffer. Cancel with =Control+g=.
+   Press =Control+a= on your sentence and use =Alt+f= to move by word.
+   In the Emacs keyboard field, Alt (Option) plus a letter sends an Emacs
+   Meta command. You can also press Escape, release it, then type the
+   letter. Control+Option remains available for VoiceOver.
+   Use =Control+x b= to return to =Phone keyboard sample=.
    The receiver also has a readable terminal screen below the controls.
 5. Use VoiceOver to activate Stop Speech or Disconnect. On reconnect,
    double-tap the keyboard field to resume at the same place. To end the

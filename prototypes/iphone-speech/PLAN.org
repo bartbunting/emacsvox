@@ -126,12 +126,13 @@ connects the phone field to a separate terminal Emacs over the private relay.
 WSL checks cover two response lines, speech interruption, UTF-8 file
 editing, buffer switching and reconnect. On 22 November 2026, the first
 listening trial with the keyboard connected to the iPhone indicated that
-the two =C-n= presses worked in an Agent Shell response.
+the two =C-n= presses worked in an Agent Shell response. Typing and
+saving worked on the phone with no audible duplicate echo.
 
-Use the same keyboard to open and save a file, use =M-x= completion and
-=C-g=, browse Dired and switch buffers. Check that typed text arrives
-once and that VoiceOver can move focus to Stop Speech and back to the
-terminal. The [[file:README.org::*Full terminal Emacs on the iPhone][editing walkthrough]] gives the keys.
+Check the updated Alt mapping for =M-x= and =M-f= on the phone. Try
+command completion and =C-g=, browse Dired and switch buffers. Check
+that VoiceOver can move focus to Stop Speech and back to the terminal.
+The [[file:README.org::*Full terminal Emacs on the iPhone][editing walkthrough]] gives the keys.
 
 ** TODO Route speech by frame and preserve pending permissions
 

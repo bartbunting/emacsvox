@@ -11,6 +11,7 @@ const path = require('node:path');
 const { setTimeout: delay } = require('node:timers/promises');
 const { WebSocket } = require('ws');
 const { createRelay } = require('../relay.cjs');
+const { keyboardField } = require('./keyboard-field.cjs');
 
 async function until(label, matches, timeout = 8000) {
   const end = Date.now() + timeout;
@@ -48,6 +49,7 @@ async function main() {
     await until('keyboard handshake', () => packets.some(p => p.type === 'ready' && p.keyboard));
   }
   const keys = text => ws.send('key ' + text);
+  const {down} = keyboardField(keys);
   const screenHas = text => screen.includes(text);
   try {
     relay.backend.listen(socket);
@@ -75,7 +77,12 @@ async function main() {
     keys(sentence);
     keys('\x18\x13');
     await until('saved UTF-8 file', () => fs.existsSync(file) && fs.readFileSync(file, 'utf8').trimEnd() === sentence);
-    keys('\x1bx');
+    keys('\x1b<');
+    assert.ok(down('ƒ', {code: 'KeyF', altKey: true}));
+    keys('!\x18\x13');
+    // Emacsvox moves past the space so the next word is under point.
+    await until('Meta forward one word', () => fs.readFileSync(file, 'utf8').trimEnd() === 'Café !lantern 雪');
+    assert.ok(down('≈', {code: 'KeyX', altKey: true}));
     await until('extended command prompt', () => screenHas('M-x'));
     keys('\x07');
     keys('\x18bPhone keyboard sample\r');
@@ -88,7 +95,7 @@ async function main() {
     assert.ok(!packets.some(p => p.type === 'speak'));
     keys('\x10');
     await until('fresh speech after reconnect', () => packets.some(p => p.type === 'speak' && p.text.trim().startsWith('Cobalt lighthouse')));
-    console.log('Passed terminal navigation and cutoff, UTF-8 file save, Escape x, cancel, buffer switch and reconnect.');
+    console.log('Passed terminal navigation and cutoff, UTF-8 file save, Alt+f, Alt+x, cancel, buffer switch and reconnect.');
   } catch (error) {
     console.error('Packet kinds during the failed step:', packets.map(p => p.type).slice(-20).join(' '));
     throw error;

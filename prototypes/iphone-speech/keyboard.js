@@ -26,9 +26,18 @@ const special = {Enter:'\r', Escape:'\x1b', Tab:'\t', Backspace:'\x7f', Delete:'
   ArrowUp:'\x1b[A', ArrowDown:'\x1b[B', ArrowRight:'\x1b[C', ArrowLeft:'\x1b[D',
   Home:'\x1b[H', End:'\x1b[F', PageUp:'\x1b[5~', PageDown:'\x1b[6~'};
 field.addEventListener('keydown', event => {
-  if (event.isComposing || event.metaKey || event.altKey) return;
+  if (event.isComposing || event.metaKey || (event.altKey && event.ctrlKey)) return;
   let bytes;
-  if (event.ctrlKey) {
+  if (event.altKey) {
+    let letter = event.key;
+    if (!/^[a-zA-Z]$/.test(letter)) {
+      // Option can produce a symbol such as ƒ on the physical F key.
+      if (!/^Key[A-Z]$/.test(event.code)) return;
+      letter = event.code.slice(3);
+      if (!event.shiftKey) letter = letter.toLowerCase();
+    }
+    bytes = '\x1b' + letter;
+  } else if (event.ctrlKey) {
     const k = event.key.toUpperCase();
     if (k === ' ') bytes = '\x00';
     else if (k === '?') bytes = '\x7f';

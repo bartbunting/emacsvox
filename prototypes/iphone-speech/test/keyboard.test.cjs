@@ -3,23 +3,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const vm = require('node:vm');
-const { keyboardSource } = require('../keyboard');
+const { keyboardField } = require('./keyboard-field.cjs');
 const { createReceiver } = require('../receiver');
 
 test('keyboard field forwards Emacs sequences and committed Unicode text', () => {
-  const listeners = {}, sent = [];
-  const field = {value: '', addEventListener(name, fn) { listeners[name] = fn; }};
-  const html = decodeURIComponent(keyboardSource.uri.split(',')[1]);
-  vm.runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], {
-    document: {getElementById: () => field},
-    window: {ReactNativeWebView: {postMessage: text => sent.push(text)}},
-  });
-  function down(key, modifiers) {
-    let prevented = false;
-    listeners.keydown({key, ...modifiers, preventDefault() { prevented = true; }});
-    return prevented;
-  }
+  const sent = [];
+  const {field, listeners, down} = keyboardField(text => sent.push(text));
   for (const key of ['n', 'x', 'f', 's', 'g']) assert.ok(down(key, {ctrlKey: true}));
   assert.ok(down('Escape'));
   assert.ok(!down('x'));
@@ -36,6 +25,21 @@ test('keyboard field forwards Emacs sequences and committed Unicode text', () =>
   listeners.input({});
   assert.deepEqual(sent, ['é'.repeat(255), '🌱']);
   assert.equal(field.value, '');
+});
+
+test('Option letters send Meta once and leave VoiceOver chords to iOS', () => {
+  const sent = [];
+  const {down} = keyboardField(text => sent.push(text));
+  assert.ok(down('x', {altKey: true}));
+  assert.ok(down('≈', {altKey: true, code: 'KeyX'}));
+  assert.ok(down('ƒ', {altKey: true, code: 'KeyF'}));
+  assert.ok(down('Dead', {altKey: true, shiftKey: true, code: 'KeyE'}));
+  assert.ok(down('a', {altKey: true, code: 'KeyQ'}));
+  assert.ok(!down('ƒ', {altKey: true, ctrlKey: true, code: 'KeyF'}));
+  assert.ok(!down('ƒ', {altKey: true, metaKey: true, code: 'KeyF'}));
+  assert.ok(!down('Dead', {altKey: true, isComposing: true, code: 'KeyE'}));
+  assert.ok(!down('Alt', {altKey: true, code: 'AltLeft'}));
+  assert.deepEqual(sent, ['\x1bx', '\x1bx', '\x1bf', '\x1bE', '\x1ba']);
 });
 
 test('old keyboard events cannot enter a replacement session', () => {
