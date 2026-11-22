@@ -11,7 +11,7 @@ import {WebView} from '@expo/dom-webview';
 import {keyboardSource} from './keyboard';
 import {mixerAdapters} from './mixer';
 import {createReceiver} from './receiver';
-import {Action, colors, Panel, Settings} from './panels';
+import {Action, colors, Panel, Settings, TerminalReview} from './panels';
 
 const native = requireOptionalNativeModule('IphoneMixer');
 const ssh = requireOptionalNativeModule('IphoneTerminal');
@@ -29,9 +29,14 @@ function validHost(host) {
     Number(parts[0]) === 100 && Number(parts[1]) >= 64 && Number(parts[1]) <= 127;
 }
 
-async function prepareAudio() {
-  const asset = await Asset.fromModule(sound).downloadAsync();
-  await native.prepare(asset.localUri);
+let audioPreparation;
+function prepareAudio() {
+  if (!audioPreparation) {
+    audioPreparation = Asset.fromModule(sound).downloadAsync()
+      .then(asset => native.prepare(asset.localUri))
+      .catch(error => { audioPreparation = undefined; throw error; });
+  }
+  return audioPreparation;
 }
 
 function App() {
@@ -82,7 +87,10 @@ function Session({settings, save, active, reconnect}) {
       prepare: prepareAudio, play: (hz, ms) => native.queueTone(hz, ms), stop: () => native.stopEffects(),
     },
     status: setStatus, playback: setPlayback, voiceStatus: setVoice, keyboard: setKeyboard,
-    screen: setScreen, sshOffer: setOffer,
+    screen: setScreen, sshOffer: value => {
+      setOffer(value);
+      if (!value) setPanel(current => current === 'review' ? null : current);
+    },
     sessionActive: value => { active.current = value; setActiveSession(value); },
     openSocket: () => new WebSocket('ws://' + host + (sshMode ? ':8797/speech/ssh' : ':' + relayPort + '/speech')),
   }), [adapters, host, sshMode, active]);
@@ -120,7 +128,10 @@ function Session({settings, save, active, reconnect}) {
       setAudioFailed(false);
       reconnect.current = true;
       setPrepareAttempt(n => n + 1);
-    } else if (prepared) receiver.connect();
+    } else if (prepared) {
+      if (native && !mixed) void prepareAudio().catch(() => {});
+      receiver.connect();
+    }
   }
   const useField = sshMode && offer && settings.input === 'field';
   return <>
@@ -144,21 +155,25 @@ function Session({settings, save, active, reconnect}) {
           }}
           onContentProcessDidTerminate={() => receiver.disconnect('Keyboard closed. Activate Connect to retry.')} />
       </View>}
-      {sshMode && offer && <Terminal key={offer.frame} ref={terminalRef} style={styles.nativeTerminal}
-        connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
-        onSessionStatus={({nativeEvent}) => {
-          if (nativeEvent.state !== 'connected') receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail);
-        }} />}
+      {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
+        <Terminal ref={terminalRef} style={styles.nativeTerminal}
+          connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
+          onSessionStatus={({nativeEvent}) => {
+            if (nativeEvent.state !== 'connected') receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail);
+          }} /></View>}
       {screen ? <View><Text accessibilityRole="header" style={styles.status}>Terminal screen</Text>
         <Text selectable style={styles.terminal}>{screen}</Text></View> : null}
       <View style={styles.actions}>
         {(ssh || native) && <Action title="Settings" onPress={openSettings} />}
         <Action title="Diagnostics" onPress={() => setPanel('diagnostics')} />
+        {sshMode && offer && <Action title="Review terminal screen" onPress={() => setPanel('review')} />}
       </View>
     </ScrollView>
     {panel === 'settings' && <Settings draft={draft} ssh={ssh} mixer={native}
       edit={(k,v) => setDraft(prev => ({...prev, [k]:v}))}
       cancel={() => setPanel(null)} save={() => { save(draft); setPanel(null); }} />}
+    {panel === 'review' && offer && <TerminalReview key={offer.frame} terminalRef={terminalRef} frame={offer.frame}
+      close={() => setPanel(null)} />}
     {panel === 'diagnostics' && <Panel title="Diagnostics" close={() => setPanel(null)}>
       <Action title="Done" onPress={() => setPanel(null)} />
       {voice ? <Text style={styles.status}>{voice}</Text> : null}

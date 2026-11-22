@@ -25,6 +25,27 @@ export function Panel({title, close, onDismiss, children}) {
   </Modal>;
 }
 
+export function TerminalReview({terminalRef, frame, close}) {
+  const [rows, setRows] = React.useState(null);
+  const [failed, setFailed] = React.useState(false);
+  React.useEffect(() => {
+    let open = true;
+    const terminal = terminalRef.current;
+    if (terminal) {
+      terminal.visibleRows(frame).then(value => { if (open) setRows(value); },
+        () => { if (open) setFailed(true); });
+    } else setFailed(true);
+    return () => { open = false; };
+  }, [terminalRef, frame]);
+  return <Panel title="Terminal screen" close={close}>
+    <Action title="Done" onPress={close} />
+    {failed ? <Text style={styles.label}>Terminal unavailable.</Text>
+      : rows === null ? <Text style={styles.label}>Reading the screen.</Text>
+      : rows.length ? rows.map((row, index) => <Text key={index} style={styles.row}>{row}</Text>)
+      : <Text style={styles.label}>The terminal screen is blank.</Text>}
+  </Panel>;
+}
+
 function Toggle({label, hint, value, change}) {
   return <View style={styles.toggle}>
     <Text accessible={false} accessibilityElementsHidden style={styles.label}>{label}</Text>
@@ -68,6 +89,7 @@ const styles = StyleSheet.create({
   panel: {flexGrow: 1, gap: 18, paddingHorizontal: 24, paddingVertical: 40},
   heading: {fontSize: 28, fontWeight: '600', color: colors.text},
   label: {fontSize: 18, color: colors.text, flexShrink: 1},
+  row: {fontFamily: 'Menlo', fontSize: 16, color: colors.text},
   toggle: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44},
   field: {color: colors.text, borderColor: '#aaa', borderWidth: 1, padding: 10, marginTop: 6, borderRadius: 4},
 });

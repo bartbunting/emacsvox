@@ -37,6 +37,9 @@ public final class IphoneTerminalModule: Module {
       AsyncFunction("sendKeys") { (view: PhoneTerminalView, frame: String, text: String) in
         view.sendKeys(text, to: frame)
       }
+      AsyncFunction("visibleRows") { (view: PhoneTerminalView, frame: String) -> [String] in
+        view.visibleRows(for: frame)
+      }
     }
   }
 }
@@ -133,6 +136,18 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
   func sendKeys(_ text: String, to frame: String) {
     guard configuration["frame"] == frame, !text.isEmpty, text.utf8.count <= 1024 else { return }
     send(source: terminal, data: Array(text.utf8)[...])
+  }
+
+  func visibleRows(for frame: String) -> [String] {
+    guard configuration["frame"] == frame, session != nil else { return [] }
+    let screen = terminal.getTerminal()
+    return (0..<screen.rows).compactMap { row in
+      guard let line = screen.getLine(row: row) else { return nil }
+      let text = line.translateToString(trimRight: true, skipNullCellsFollowingWide: true,
+                                        characterProvider: { screen.getCharacter(for: $0) })
+                     .replacingOccurrences(of: "\0", with: " ")
+      return text.trimmingCharacters(in: .whitespaces).isEmpty ? nil : text
+    }
   }
 
   func send(source: TerminalView, data: ArraySlice<UInt8>) {
