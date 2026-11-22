@@ -529,11 +529,16 @@ and certificate, and prints a private build directory. EAS reads the
 signing identity separately from the source archive.
 
 #+begin_src sh
-read -rp 'Full WSL path of downloaded .mobileprovision: ' profile
-stage=$(./stage-device-build "$profile") && cd "$stage"
-npm ci
-export EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD"
-npx --yes eas-cli@27.11.0 build --platform ios --profile device-local
+(
+  set -e
+  cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+  read -rp 'Full WSL path of downloaded .mobileprovision: ' profile
+  stage=$(./stage-device-build "$profile")
+  cd "$stage"
+  npm ci
+  export EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD"
+  npx --yes eas-cli@27.11.0 build --platform ios --profile device-local
+)
 #+end_src
 
 The EAS build page provides the device install link when signing succeeds.
