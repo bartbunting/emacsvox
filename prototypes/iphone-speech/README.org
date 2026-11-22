@@ -441,9 +441,13 @@ speech socket before the receiver reports Connected.
 
 ** Start the signed app against the test server
 
-1. Install the private EAS device build using its install link in iPhone
-   Safari. Allow local network access if prompted. Open Emacsvox Speech,
-   activate “Copy iPhone SSH public key” and transfer that one public
+1. Open the private build link in iPhone Safari. Activate Install and
+   confirm the iOS prompt. Open Emacsvox Speech from the Home Screen.
+   If iOS asks for Developer Mode, turn it on under Settings, Privacy
+   & Security, Developer Mode. Restart, unlock and confirm Turn On.
+   Activate “Test iPhone Voice” to hear local speech before connecting.
+   Allow local network access if prompted. For SSH, activate
+   “Copy iPhone SSH public key” and transfer that one public
    line to a file of your choice in WSL.
 2. From the prototype directory, run the following in WSL. If your
    earlier routed test is using port 8797, close that test launcher with

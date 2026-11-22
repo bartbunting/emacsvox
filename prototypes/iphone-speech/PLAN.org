@@ -87,14 +87,16 @@ an existing Agent Shell sample, dispatched the destination line through
 Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
 the same buffer. The current phone app pins the SSH host key, uses a device-only
 Keychain identity and presents a SwiftTerm terminal. A hosted simulator build
-compiled and packaged these components. Physical SSH, keyboard
-and VoiceOver focus testing await installation of the signed app.
+compiled and packaged these components. On 22 November 2026,
+hosted macOS produced the Ad Hoc device build of =438705434=. WSL verified
+its distribution signer, signed arm64 executable and registered iPhone.
+The [[file:README.org::*Start the signed app against the test server][device trial]] covers physical SSH, keyboard input and VoiceOver focus.
 
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move
 to Stop Speech, return to the terminal and resume navigation.
 
-** TODO 5. Prove native audio with Eloquence on the phone
+** NEXT 5. Prove native audio with Eloquence on the phone
 
 Build a small Swift audio module in the same Expo app. Ask iOS for Reed's
 speech samples, start playback as samples arrive, and mix one generated
@@ -102,11 +104,9 @@ tone and one preloaded earcon. On Stop, clear scheduled audio immediately
 and discard later callbacks for the cancelled utterance. Use the existing
 relay and PC keyboard so this experiment changes only the phone audio path.
 
-Use the signed development app from slice 4. Check dependencies, tests
-and the iOS JavaScript export in WSL, then build native changes with
-=eas build --platform ios --profile development=. Reuse the installed
-development build for JavaScript-only changes.
-[[https://docs.expo.dev/tutorial/eas/ios-development-build-for-devices/][Expo device build]] · [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer/write%28_%3Atobuffercallback%3A%29][Apple speech buffers]].
+Use the signed app from slice 4. Start with “Test iPhone Voice”, then
+activate “Use native mixer” and “Test mixed audio”. The device build
+includes the JavaScript and both playback modes. [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer/write%28_%3Atobuffercallback%3A%29][Apple speech buffers]].
 
 Compare keypress to audible cue, keypress to first word, and Stop to
 silence for direct speech and the mixer. Use one recording clock for the
@@ -123,8 +123,8 @@ The [[file:README.org::*Native mixer experiment][native mixer experiment]] inclu
 a fixed tone and the Accent recording. On 22 November 2026 the
 hosted simulator build of =dd21276ef= succeeded. The downloaded iOS
 Simulator app contained the compiled Swift mixer. All 14 WSL receiver and
-relay tests passed. Device signing, Eloquence sample delivery and acoustic
-timing on both routes are open.
+relay tests passed. Eloquence sample delivery and acoustic timing on
+speaker and headphones still need a physical check.
 
 A hosted simulator build of =838ad97f5= also packaged the separate
 permission synthesizer, cancellable generated tones, SwiftTerm and SSH.
