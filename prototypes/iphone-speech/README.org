@@ -269,6 +269,51 @@ read -rp 'iPhone Tailscale IPv4 address: ' phone
    terminal. Open Expo Go and activate Connect to use the original
    receiver again.
 
+* Exercise the SSH transport in WSL
+
+The =prototype/iphone-ssh= branch contains a Swift package in =ssh/=.
+It connects to a chosen SSH endpoint, checks its public host key against
+a pin supplied by the caller and authenticates with an Ed25519 key.
+The server must accept both a PTY and the command that starts
+=emacsclient -t= on an explicitly named Emacs server. The client sets
+=C.UTF-8= for that command so accented input reaches the terminal frame.
+A missing Emacs socket returns a failed command exit. The transport
+delivers the terminal's bytes to the caller and accepts input bytes,
+window size changes and disconnect. The phone UI and Keychain integration
+are future work. [[https://github.com/apple/swift-nio-ssh][SwiftNIO SSH]].
+
+The integration check starts a temporary OpenSSH listener on a random
+loopback port, a dedicated graphical Emacs under Xvfb and a phone speech
+backend that records only whether the test line was dispatched. It creates
+fresh keys and a rendered Agent Shell reply. It closes its listener and
+removes its keys on exit. Your eventual route from the phone to WSL is
+a separate choice.
+
+In WSL, build the test client with Docker from the
+worktree. The static Swift runtime lets the probe run directly in WSL.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech/ssh"
+mkdir -p .build/swift-home
+docker run --rm -u "$(id -u):$(id -g)" -e HOME=/work/.build/swift-home \
+  -v "$PWD:/work" -w /work swift:6.3-noble \
+  swift build -j 4 --static-swift-stdlib --product SessionProbe
+cd ..
+#+end_src
+
+When =/usr/sbin/sshd= is installed, run the test from that directory with
+=python3 test/ssh-terminal.py --emacsclient "$(command -v emacsclient)"=.
+The test launches its own instance. Ubuntu provides the
+server and matching helpers as a downloadable package. To use that copy
+without installing a service, run the following commands.
+
+#+begin_src sh
+server_dir=$(mktemp -d)
+(cd "$server_dir" && apt download openssh-server && dpkg-deb -x ./*.deb .)
+python3 test/ssh-terminal.py --sshd "$server_dir/usr/sbin/sshd" \
+  --emacsclient "$(command -v emacsclient)"
+#+end_src
+
 * Full terminal Emacs on the iPhone
 
 The planned app gives you a terminal frame in your existing WSL Emacs.

@@ -1,0 +1,23 @@
+;;; ssh-session.el --- Prepare an isolated TTY attachment test -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 Emacsvox contributors
+;; SPDX-License-Identifier: GPL-2.0-or-later
+
+;;; Code:
+(load (expand-file-name "response.el" (file-name-directory load-file-name)) nil nil t)
+(require 'server)
+(defvar iphone-ssh-test-buffer nil)
+
+(defun iphone-ssh-prepare-session ()
+  (setq iphone-ssh-test-buffer (iphone-test-render-response))
+  (with-current-buffer iphone-ssh-test-buffer
+    (rename-buffer "Phone SSH sample")
+    (goto-char (point-min))
+    (search-forward "Starting row")
+    (beginning-of-line))
+  (unless (server-running-p server-name) (server-start))
+  (with-temp-file (expand-file-name "server-path" (getenv "EMACSVOX_SSH_TEST_DIR"))
+    (insert (expand-file-name server-name server-socket-dir))))
+
+(add-hook 'emacs-startup-hook #'iphone-ssh-prepare-session)
+;;; ssh-session.el ends here

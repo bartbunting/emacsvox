@@ -56,7 +56,7 @@ acceptable delay. The built-in iPhone speaker felt a little quicker.
 These are listening impressions. Keypress-to-sound timing and the
 source of the delay have yet to be measured.
 
-** NEXT Prove local mixing and stop latency in a signed build
+** TODO Prove local mixing and stop latency in a signed build
 
 Build a small Swift audio module in the same Expo app. Ask iOS for Reed's
 speech samples, start playback as samples arrive, and mix one generated
@@ -105,13 +105,20 @@ audible, and a rapid move discards the obsolete line and its pending cue.
 Track finer word-aligned cues, voice palettes and effects individually as
 their timing and voice support are demonstrated.
 
-** TODO Use the iPhone as a full Emacs terminal
+** NEXT Use the iPhone as a full Emacs terminal
 
 This work can start in WSL during the audio trials. Test SSH authentication,
 host-key verification, interactive terminal allocation and resize against
 the isolated server. Try SwiftNIO SSH and SwiftTerm in the signed app.
 Keep the SSH key in the iOS Keychain. Run =emacsclient -t -s SERVER= and
 keep terminal input and local speech available in the same foreground app.
+
+The [[file:README.org::*Exercise the SSH transport in WSL][WSL SSH test]] on =prototype/iphone-ssh= uses the Swift transport against
+a temporary loopback OpenSSH server. On 22 November 2026 it attached to
+an existing Agent Shell sample, dispatched the destination line through
+Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
+the same buffer. The phone-facing SSH endpoint, Keychain storage,
+terminal display and accessible input still need implementation or testing.
 
 On the phone, open and save a file using Braille Screen Input, use =M-x=
 completion and =C-g=, browse Dired, then switch to the running Codex buffer.

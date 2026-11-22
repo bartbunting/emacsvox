@@ -15,25 +15,12 @@
 
 ;;; Code:
 
+(load (expand-file-name "response.el" (file-name-directory load-file-name)) nil nil t)
+
 (defun iphone-test-navigation ()
   (condition-case err
-      (let* ((agent-shell-show-welcome-message nil)
-             (agent-shell-openai-codex-acp-command '("true"))
-             ;; Render a reproducible incoming reply without contacting Codex.
-             (buffer (cl-letf (((symbol-function 'agent-shell--handle) #'ignore))
-                       (agent-shell--start :config (agent-shell-openai-make-codex-config)
-                                           :cwd default-directory :session-strategy 'new))))
+      (let ((buffer (iphone-test-render-response)))
         (switch-to-buffer buffer)
-        (agent-shell--emit-event :event 'input-submitted :data nil)
-        (agent-shell--on-notification
-         :state agent-shell--state
-         :acp-notification
-         '((method . "session/update")
-           (params . ((update . ((sessionUpdate . "agent_message_chunk")
-                                 (content . ((type . "text")
-                                             (text . "Starting row\nCobalt lighthouse\nAmber orchard\nLast row")))))))))
-        (agent-shell--flush-stream-render agent-shell--state)
-        (agent-shell--emit-event :event 'turn-complete :data '((:stop-reason . "end_turn")))
         (sit-for 0.3)
         (goto-char (point-min))
         (search-forward "Starting row")
