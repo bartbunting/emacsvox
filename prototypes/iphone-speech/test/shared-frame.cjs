@@ -291,6 +291,32 @@ async function main() {
         const phoneWindow = "(frame-selected-window (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))";
         const packets = await attachSSH();
         assert.ok(!packets.some(p => p.keyboard || p.type === 'screen'));
+        const otherSounds = path.join(dir, 'second installation', 'sounds');
+        const relativeCue = 'packs/accent/open-object.ogg';
+        const otherCue = path.join(otherSounds, relativeCue);
+        fs.mkdirSync(path.dirname(otherCue), {recursive: true});
+        fs.copyFileSync(path.resolve(__dirname, '../../../sounds', relativeCue), otherCue);
+        await observe(`(global-set-key (kbd "<f5>") (lambda () (interactive)
+          (let ((emacsvox-sounds-dir ${JSON.stringify(otherSounds)}) (emacsvox-play-program "/bin/false"))
+            (emacsvox-aural-call-with-submission (lambda ()
+              (let ((file (expand-file-name "${relativeCue}" emacsvox-sounds-dir)))
+                (emacsvox-sounds-play-concrete-cue file "open-object")
+                (emacsvox-queue-resource file)
+                (tts-tone 520 40 t)))))))`);
+        const playCues = async () => {
+          const start = packets.length;
+          sshKeys('\x1b[15~');
+          await until('cue submission reached the receiver', () =>
+            packets.slice(start).some(p => p.type === 'tone' && p.hz === 520));
+          return packets.slice(start).filter(p => p.type === 'cue');
+        };
+        assert.deepEqual(await playCues(), [
+          {type:'cue', name:'open-object', immediate:true}, {type:'cue', name:'open-object'},
+        ]);
+        assert.equal(JSON.parse(await observe(`(omnivox-remote-resource ${JSON.stringify(otherCue)})`)), otherCue);
+        fs.writeFileSync(otherCue, 'different recording');
+        assert.deepEqual(await playCues(), []);
+        console.log('Passed immediate and queued Accent from a second installation and skipped a different recording.');
         await observe(`(set-window-point (frame-selected-window
           (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))
           (with-current-buffer iphone-shared-buffer (save-excursion (goto-char (point-min))
@@ -386,6 +412,7 @@ async function main() {
       assert.equal(await observe('(emacs-pid)'), pid);
       assert.ok(await pcSeesDraft('Started on PC first and phone'));
       assert.equal(await observe("(advice-member-p #'iphone-frame-speech--stop 'tts-stop)"), 'nil');
+      assert.equal(await observe("(advice-member-p #'iphone-frame-speech--resource 'omnivox-remote-resource)"), 'nil');
       assert.equal(await observe("(advice-member-p #'iphone-frame-speech--phonetic 'emacsvox--delayed-phonetic-announce)"), 'nil');
       console.log('Released the existing server with the original PC draft and desktop speech intact.');
     }

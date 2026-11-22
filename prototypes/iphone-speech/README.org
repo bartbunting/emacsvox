@@ -140,7 +140,11 @@ rates and generated tones. A tone-only line is silent in Expo Go.
 
 The isolated profile selects the bundled Accent pack. Its
 [[file:../../sounds/packs/accent/open-object.ogg][Open Object recording]] is the first supported earcon. The relay recognises
-that recording's resolved path in the legacy =a= and =p= commands.
+that recording's resolved path in the legacy =a= and =p= commands. When
+you attach another Emacs installation, its phone frame identifies the
+bundled Accent file by its SHA-256 digest and sends the standard
+=omnivox-icon:packs/accent/open-object.ogg= resource ID. A different
+recording at the same path in that installation keeps its own identity.
 =a= queues the cue in order until =d=. The receiver can start following
 speech as the sound plays. =p= plays the sound immediately. A hard stop,
 disconnect or background transition silences both speech and sound.

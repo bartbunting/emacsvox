@@ -13,7 +13,8 @@ const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
 const resource = path.resolve(__dirname, '../../sounds/packs/accent/open-object.ogg');
 // Emacsvox escapes dollar signs and opening brackets in quoted Tcl paths.
-const openObjectPaths = new Set([resource, JSON.stringify(resource).replace(/[$[]/g, '\\$&')]);
+const openObjectPaths = new Set([resource, JSON.stringify(resource).replace(/[$[]/g, '\\$&'),
+  'omnivox-icon:packs/accent/open-object.ogg', '"omnivox-icon:packs/accent/open-object.ogg"']);
 
 // One instance per Emacs stdio producer. A receiver change invalidates even
 // the tail of a partially received UTF-8 record or undispatched batch.

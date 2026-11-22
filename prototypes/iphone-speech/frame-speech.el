@@ -10,6 +10,8 @@
 (defvar tts-speech-rate)
 (defvar tts-speaker-process)
 (defvar tts-notify-process)
+(defvar emacsvox-play-program)
+(defvar emacsvox-sounds-dir)
 (defvar server-socket-dir)
 (defvar-local iphone-frame-speech--subscriber nil)
 (defvar-local iphone-frame-speech--buffer-id nil)
@@ -17,6 +19,7 @@
 (defvar iphone-frame-speech--request-id nil)
 (defconst iphone-frame-speech--program
   (expand-file-name "phone-backend" (file-name-directory load-file-name)))
+(defconst iphone-frame-speech--accent-file "packs/accent/open-object.ogg")
 (defvar iphone-frame-speech--directory nil)
 (defvar iphone-frame-speech--entry-buffer nil)
 (defvar iphone-frame-speech--last-terminal nil)
@@ -79,11 +82,22 @@
      ((and (processp owner) (process-live-p owner))
       ;; The existing delivery scheduler keys pending work and Stop by process.
       (let ((iphone-frame-speech--bound t)
+            (emacsvox-play-program nil)
             (tts-program iphone-frame-speech--program)
             (tts-speaker-process owner)
             (tts-speech-rate (or (process-get owner 'iphone-speech-rate) 150))
             (tts-notify-process owner))
         (apply original args))))))
+
+(defun iphone-frame-speech--resource (original file)
+  ;; Different installations can resolve the same bundled cue to different
+  ;; absolute paths. Use Omnivox's bundled-resource ID on the phone stream.
+  (if (and iphone-frame-speech--bound
+           (equal file (expand-file-name iphone-frame-speech--accent-file emacsvox-sounds-dir))
+           (equal (ignore-errors (emacsvox-aural--file-digest file))
+                  "d5ee5d380a01d530f9a09336161b75e6426cb3604843967612d370b0fc547e96"))
+      (concat "omnivox-icon:" iphone-frame-speech--accent-file)
+    (funcall original file)))
 
 (defun iphone-frame-speech--set-rate (original rate &optional prefix)
   (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
@@ -307,6 +321,7 @@
     (advice-remove 'emacsvox-agent-shell--deliver-announcement #'iphone-frame-speech--announce)
     (advice-remove 'tts-set-rate #'iphone-frame-speech--set-rate)
     (advice-remove 'tts-stop #'iphone-frame-speech--stop)
+    (advice-remove 'omnivox-remote-resource #'iphone-frame-speech--resource)
     (dolist (entry iphone-frame-speech--deferred-entries)
       (advice-remove entry #'iphone-frame-speech--deferred))
     (dolist (entry iphone-frame-speech--entries)
@@ -324,6 +339,7 @@
   (add-hook 'delete-frame-functions #'iphone-frame-speech--detach)
   (advice-add 'tts-set-rate :around #'iphone-frame-speech--set-rate)
   (advice-add 'tts-stop :around #'iphone-frame-speech--stop)
+  (advice-add 'omnivox-remote-resource :around #'iphone-frame-speech--resource)
   (dolist (entry iphone-frame-speech--deferred-entries)
     (advice-add entry :around #'iphone-frame-speech--deferred))
   (advice-add 'agent-shell--emit-event :around #'iphone-frame-speech--event)

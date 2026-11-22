@@ -24,9 +24,9 @@ history. The private signed builds predate the removal of local setup details.
 1. Use both keyboards to check delayed feedback. Move onto a letter, pause
    for its phonetic name, then move rapidly. Each frame should speak its own
    letter and describe only the last one.
-2. Compare the same 480 ms tone in Diagnostics and from an Emacs command
-   over SSH. Use the same output device for both. Compare first use with
-   repeat use before choosing an audio change.
+2. The 480 ms Diagnostics tone and a direct Return in the SSH tone buffer
+   both start promptly on build 3. Use the command-completion comparison
+   below when investigating the slower response after =M-x=.
 3. Use an existing Codex conversation from both frames. Continue a draft,
    hear a reply, review a permission while navigating and reconnect after
    locking the phone. Leave the desktop frame and draft open.
@@ -191,9 +191,16 @@ same 660 Hz tone felt delayed on both invocations of =M-x iphone-test-tone=
 over SSH. From entry to that Emacs command to its tone write took under
 1 ms in both trials. On WSL alone, nine single-key trials from SSH input
 to the tone packet at a loopback receiver took 3.9 to 25.4 ms, with a
-median of 6.5 ms. Neither measurement includes iPhone playback. Compare a
-single Return press after the minibuffer has gone quiet, then measure
-handset input and output separately if the delay persists.
+median of 6.5 ms. On the physical phone, both direct Return presses in
+the quiet tone buffer felt prompt.
+
+Seven alternating pairs on WSL measured from the final SSH key submission
+to the matching tone packet. Direct Return had a median of 2.9 ms
+(2.5–3.1 ms) and one Stop. Completing the command with Return had a
+median of 11.6 ms (9.7–138.9 ms) and two Stops. The minibuffer exit hook
+requests a Stop before the command requests its own. These measurements end
+at the loopback receiver. The handset's handling of the two Stops and the
+time to audible output remain unmeasured.
 
 The desktop visual-line chime in =C-e m= uses SoX directly. In the two-frame
 check, two mode-line reads started it 0.75 seconds apart. Rendering its
