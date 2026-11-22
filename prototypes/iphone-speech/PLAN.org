@@ -59,6 +59,15 @@ socket. Both frames showed the same buffer and the PC retained the edited
 draft and its original Emacs process after the phone frame closed.
 The physical check is to continue that draft from the iPhone and reopen it.
 
+On 23 November 2026 the signed iPhone opened the running Codex conversation
+in the everyday WSL Emacs. The terminal frame and its subscription matched
+the existing ACP session. Navigation spoke the conversation on the handset,
+and a message typed there arrived in the same thread. After the phone
+frame closed on lock, its replacement selected the same conversation
+and synchronised a fresh speech worker. After unlocking and focusing
+the keyboard, only the new navigation line spoke. The desktop retained
+its original main and notification speech processes.
+
 ** NEXT 2. Route speech to the frame that requested it
 
 In the test server, give the PC and phone separate speech destinations

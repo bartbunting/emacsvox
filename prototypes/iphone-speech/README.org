@@ -496,8 +496,8 @@ speech socket before the receiver reports Connected.
    The app remembers these values, the input method, the audio mode and
    your keep-awake preference across launches. An update installed over the
    first signed build reads its saved SSH settings and keeps the iPhone key.
-   The temporary listener generates a fresh host key each time unless you
-   give it a stable key as described below.
+   The listener reuses your saved host key. With no saved key it generates
+   a temporary one for that run.
 5. Use the phone keyboard to try =C-n= during a line, =C-x C-f= to visit
    a file, =C-x C-s= to save, and =M-x= with Tab completion. Use VoiceOver
    to reach Stop Speech and return to the keyboard. To compare input
@@ -532,21 +532,20 @@ An explicit Disconnect stays disconnected. [[https://developer.apple.com/documen
 
 ** Keep the same WSL host key between trials
 
-Give the temporary listener a dedicated private host key to keep the saved
-phone pin valid when you stop and restart the listener. To create one for
-the first time, run the following in WSL. If you already kept the current
-test host key at this path, skip this step.
+The listener looks for a dedicated Ed25519 key under your WSL state
+directory. Keeping the current key there preserves the pin already saved
+on the phone. To create a host identity for the first time, run this in WSL.
 
 #+begin_src sh
-install -d -m 700 ~/.local/state/emacsvox/iphone-ssh
-test -e ~/.local/state/emacsvox/iphone-ssh/host || ssh-keygen -q -t ed25519 \
-  -N '' -f ~/.local/state/emacsvox/iphone-ssh/host
+key_dir="${XDG_STATE_HOME:-$HOME/.local/state}/emacsvox/iphone-ssh"
+install -d -m 700 "$key_dir"
+test -e "$key_dir/host" || ssh-keygen -q -t ed25519 -N '' -f "$key_dir/host"
 #+end_src
 
-Add =--host-key ~/.local/state/emacsvox/iphone-ssh/host= to the
-=./phone-sshd= command above. For a newly created identity, compare the public
-key printed by WSL and save it on the phone once. The listener still ends
-when you press Control+C.
+The ordinary =./phone-sshd= command now uses this identity. For a newly
+created key, compare the public key printed by WSL and save it on the phone
+once. To select another existing key, pass =--host-key /path/to/key=.
+Control+C ends the listener.
 
 ** Check keyboard speech and permissions on the signed app
 
@@ -613,9 +612,20 @@ read -rp 'iPhone Tailscale IPv4 address: ' phone
 
 Connect from the signed app. The new terminal opens the chosen buffer.
 Disconnect closes the phone frame. Control+C in the relay releases
-its speech hooks and leaves the chosen Emacs server running. The
-automated test exercises this command's attach and release steps on a
-disposable graphical server. Everyday use awaits physical acceptance.
+its speech hooks and leaves the chosen Emacs server running. On the
+physical iPhone, the external keyboard could navigate the existing
+conversation, hear it in the phone voice and send a message to the same
+thread. After unlocking the phone, focus the Emacs keyboard again.
+In the listening check the same conversation reopened and only the next
+navigation line spoke. A disposable graphical test also exercises release
+and reattachment.
+
+After restarting WSL, start your usual Emacsvox profile and open the
+conversation again. If you have its session ID, =M-x agent-shell-resume-session=
+can reopen it with Codex. Once its buffer exists, start the SSH listener
+and the existing-server relay with the socket and buffer of this Emacs.
+Connect using the saved iPhone settings. Locking only the phone leaves
+the WSL Emacs process running.
 
 ** Reproduce routing and the hosted build
 
