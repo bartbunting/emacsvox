@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+"""Check the downloaded Ad Hoc profile and stage the private EAS build."""
+import argparse
+import datetime
+import json
+import os
+from pathlib import Path
+import plistlib
+import subprocess
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("profile", type=Path, help="downloaded Apple .mobileprovision")
+parser.add_argument("--signing-dir", type=Path, default=Path.home()/".local/state/emacsvox/iphone-signing")
+args = parser.parse_args()
+here = Path(__file__).resolve().parent
+signing = args.signing_dir.resolve()
+os.umask(0o077)
+
+def openssl(*arguments, data=None):
+    return subprocess.check_output(["openssl", *arguments], input=data, stderr=subprocess.DEVNULL)
+
+try:
+    # Verify the CMS signature for this local consistency check. Xcode verifies
+    # Apple's signing chain during installation of the profile on the builder.
+    profile_path = args.profile.resolve(strict=True)
+    profile = plistlib.loads(openssl("cms", "-verify", "-noverify", "-inform", "DER", "-in", profile_path))
+    identity = signing / "distribution.p12"
+    password_file = signing / "distribution.pass"
+    cert = openssl("pkcs12", "-clcerts", "-nokeys", "-in", identity, "-passin", "file:" + str(password_file))
+    der = openssl("x509", "-outform", "DER", data=cert)
+    openssl("x509", "-checkend", "0", "-noout", data=cert)
+    device_id = (signing / "registered-udid").read_text().strip().upper()
+except (OSError, ValueError, plistlib.InvalidFileException, subprocess.CalledProcessError):
+    parser.exit(1, "Could not read the signed Apple profile and the local signing identity.\n")
+
+team = profile.get("TeamIdentifier", [])
+app = json.loads((here / "app.json").read_text())["expo"]["ios"]["bundleIdentifier"]
+entitlements = profile.get("Entitlements", {})
+if len(team) != 1 or entitlements.get("application-identifier") != team[0] + "." + app:
+    parser.exit(1, f"Choose the explicit App ID for {app}.\n")
+if der not in profile.get("DeveloperCertificates", []):
+    parser.exit(1, "The profile must include the prepared Apple Distribution certificate.\n")
+if entitlements.get("get-task-allow") or profile.get("ProvisionsAllDevices"):
+    parser.exit(1, "Create an Ad Hoc distribution profile for registered iPhones.\n")
+if device_id not in {item.upper() for item in profile.get("ProvisionedDevices", [])}:
+    parser.exit(1, "The profile does not include the registered iPhone.\n")
+if profile["ExpirationDate"].replace(tzinfo=datetime.timezone.utc) <= datetime.datetime.now(datetime.timezone.utc):
+    parser.exit(1, "The provisioning profile has expired.\n")
+
+stage = Path(subprocess.check_output([here / "stage-ios-build"], text=True).strip())
+credentials = {"ios": {"provisioningProfilePath": str(profile_path), "distributionCertificate": {
+    "path": str(identity), "password": password_file.read_text().strip()}}}
+with (stage / "credentials.json").open("x") as stream:
+    json.dump(credentials, stream)
+print(stage)

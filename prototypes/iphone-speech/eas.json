@@ -6,6 +6,7 @@
       "distribution": "internal"
     },
     "device": {"distribution": "internal"},
+    "device-local": {"extends": "device", "credentialsSource": "local"},
     "simulator-private": {"extends": "device", "ios": {"simulator": true}},
     "simulator": {
       "extends": "development",
