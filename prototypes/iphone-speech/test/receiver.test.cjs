@@ -318,6 +318,36 @@ test('Stop during rewind and reconnection discard stale cues and allow the next 
   } finally { receiver.disconnect(); }
 });
 
+test('visual-line chime replaces its spoken label when ready and Stop cancels a pending rewind', async () => {
+  const events = [];
+  let rewound;
+  const player = {isLoaded: false, currentTime: 0,
+    seekTo: () => new Promise(resolve => { rewound = resolve; }),
+    play: () => events.push('chime'), pause: () => events.push('pause')};
+  const socket = {close() {}, send() {}, readyState: 1};
+  const receiver = createReceiver({status() {}, openSocket: () => socket, visualLinePlayer: player,
+    speech: {stop: async () => true, speak: (text, options) => { events.push(text); options.onDone(); }}});
+  const send = packet => socket.onmessage({data: JSON.stringify(packet)});
+  const cue = {type:'speak', text:'Visual lines', cue:'visual-line'};
+  try {
+    receiver.connect();
+    send({type:'ready', id:0});
+    send({...cue, immediate:true});
+    await flush();
+    player.isLoaded = true;
+    send(cue);
+    send({type:'speak', text:'Org'});
+    await flush();
+    assert.deepEqual(events, ['Visual lines', 'chime', 'Org']);
+    player.currentTime = 0.4;
+    send({...cue, immediate:true});
+    receiver.stop();
+    rewound();
+    await flush();
+    assert.deepEqual(events, ['Visual lines', 'chime', 'Org', 'pause']);
+  } finally { receiver.disconnect(); }
+});
+
 test('rapid navigation preserves active and pending permission identities until Stop', async () => {
   const spoken = [], stops = [];
   const socket = {readyState: 1, send() {}, close() {}};

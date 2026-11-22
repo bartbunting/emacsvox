@@ -208,8 +208,12 @@ check, two mode-line reads started it 0.75 seconds apart. Rendering its
 default worker count and 0.094 seconds with one worker. Both produced
 identical samples in the file comparison. The single prerecorded cue
 sounded clear through WSL and slightly clearer through native Windows.
-The chime now uses one SoX worker. This cue still needs a phone-side
-equivalent when visual-line mode is enabled on the phone frame.
+The desktop chime now uses one SoX worker. The phone frame sends the same
+mode-line indication in the legacy immediate-play command. A two-frame
+test counted one desktop SoX request for the desktop command and one
+phone cue for the phone command. The build 3 receiver accepted its spoken
+label in a compatibility test. The new receiver bundles the 675 ms recording
+and plays it in direct and mixed audio. Physical listening remains open.
 
 ** TODO 6. Bring across the Omnivox speech features
 
@@ -247,8 +251,11 @@ Close just the phone frame and continue on the desktop with ordinary speech.
 The [[file:README.org::*Attach to an existing conversation][existing-server launcher]] selects an explicit socket and buffer.
 The SSH integration check kept the original server and draft after the
 phone disconnected and routing was released. The standalone launcher
-uses bundled JavaScript and a private Tailscale listener. Physical installation
-and isolated navigation passed. Everyday-session acceptance remains open.
+uses bundled JavaScript and a private Tailscale listener. WSL reconnected
+with the same pinned key and port after the temporary SSH listener closed
+an active connection and restarted. Physical installation and isolated
+navigation passed. Reopening an everyday conversation on the phone after
+a WSL restart remains open.
 
 Close this milestone when the session works from a fresh launch, the setup
 and return steps are reproducible in the README, and the timing and

@@ -51,6 +51,18 @@ test('receiver change drops partial records and queued fragments', () => {
   assert.deepEqual(packets, [{type:'speak', text:'fresh'}]);
 });
 
+test('visual-line recording has a spoken fallback and follows legacy cue ordering and Stop', () => {
+  const packets = [];
+  const input = new LegacyInput(p => packets.push(p));
+  const file = JSON.stringify(path.resolve(__dirname, '../assets/visual-line.wav')).replace(/[$[]/g, '\\$&');
+  const cue = {type:'speak', text:'Visual lines', cue:'visual-line'};
+  input.write(Buffer.from('q before\na ' + file + '\nq after\np ' + file + '\nd\n'));
+  assert.deepEqual(packets, [{...cue, immediate:true}, {type:'speak', text:'before'}, cue, {type:'speak', text:'after'}]);
+  packets.length = 0;
+  input.write(Buffer.from('a ' + file + '\ns\nd\np "/unrelated/visual-line.wav"\n'));
+  assert.deepEqual(packets, [{type:'stop'}]);
+});
+
 test('physical socket reset, receiver replacement and producer EOF', async t => {
   const {backend, httpServer} = createRelay('127.0.0.1', '127.0.0.1');
   for (const server of [backend, httpServer]) {

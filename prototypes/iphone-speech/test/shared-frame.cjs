@@ -114,7 +114,10 @@ async function main() {
       // waiting for the second physical key. Redisplay timing varies on Xvfb.
       await observe(`(with-selected-frame ${phone}
         (switch-to-buffer (get-buffer-create "PhoneModeFixture"))
-        (org-mode) (insert "Row one\\nWarmup row\\nLast row\\n") (goto-char (point-min)))`);
+        (org-mode) (visual-line-mode 1) (insert "Row one\\nWarmup row\\nLast row\\n") (goto-char (point-min))
+        (setq sox-play "/bin/true" iphone-test-chimes 0)
+        (advice-add 'sox-gen-cmd :before (lambda (cmd)
+          (when (string-prefix-p sox-chime-cmd cmd) (cl-incf iphone-test-chimes)))))`);
       ws.send('key \x0e');
       await until('phone reads its Org window', () => records.some(p => p.type === 'speak' && p.text.includes('Warmup row')));
       desktop.length = records.length = 0;
@@ -129,6 +132,13 @@ async function main() {
       assert.ok(!desktop.some(p => p.type === 'speak' && /C-e.*for help/.test(p.text)));
       ws.send('key m');
       await until('phone reads its mode line', () => records.some(p => p.type === 'speak' && /PhoneModeFixture/i.test(p.text)));
+      assert.equal(records.filter(p => p.cue === 'visual-line' && p.immediate).length, 1);
+      assert.equal(await observe('iphone-test-chimes'), '0');
+      await observe(`(global-set-key (kbd "<f4>") (lambda () (interactive)
+        (let ((visual-line-mode t) (global-visual-line-mode nil)) (emacsvox-speak-mode-line))))`);
+      await pressPC('F4');
+      await until('desktop mode line still requests its SoX chime', async () => (await observe('iphone-test-chimes')) === '1');
+      assert.equal(records.filter(p => p.cue === 'visual-line').length, 1);
       await observe(`(with-selected-frame ${phone} (message "Fixture desktop reminder"))`);
       await until('unrelated message still goes to desktop', () => spoke(desktop, 'Fixture desktop reminder'));
       assert.ok(!records.some(p => p.type === 'speak' && /Fixture desktop reminder/.test(p.text)));
@@ -413,6 +423,7 @@ async function main() {
       assert.ok(await pcSeesDraft('Started on PC first and phone'));
       assert.equal(await observe("(advice-member-p #'iphone-frame-speech--stop 'tts-stop)"), 'nil');
       assert.equal(await observe("(advice-member-p #'iphone-frame-speech--resource 'omnivox-remote-resource)"), 'nil');
+      assert.equal(await observe("(advice-member-p #'iphone-frame-speech--chime 'sox-chime)"), 'nil');
       assert.equal(await observe("(advice-member-p #'iphone-frame-speech--phonetic 'emacsvox--delayed-phonetic-announce)"), 'nil');
       console.log('Released the existing server with the original PC draft and desktop speech intact.');
     }

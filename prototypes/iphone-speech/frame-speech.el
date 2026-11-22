@@ -20,6 +20,8 @@
 (defconst iphone-frame-speech--program
   (expand-file-name "phone-backend" (file-name-directory load-file-name)))
 (defconst iphone-frame-speech--accent-file "packs/accent/open-object.ogg")
+(defconst iphone-frame-speech--visual-line-file
+  (expand-file-name "assets/visual-line.wav" (file-name-directory load-file-name)))
 (defvar iphone-frame-speech--directory nil)
 (defvar iphone-frame-speech--entry-buffer nil)
 (defvar iphone-frame-speech--last-terminal nil)
@@ -98,6 +100,15 @@
                   "d5ee5d380a01d530f9a09336161b75e6426cb3604843967612d370b0fc547e96"))
       (concat "omnivox-icon:" iphone-frame-speech--accent-file)
     (funcall original file)))
+
+(defun iphone-frame-speech--chime (original &optional tempo speed)
+  ;; The visual-line indicator normally starts a local SoX process.
+  (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
+    (if (and owner (not (eq owner 'desktop)) (equal tempo 2) (equal speed 2))
+        (when (bound-and-true-p sox-gen-p)
+          (iphone-frame-speech--route #'emacsvox-sounds-play-concrete-cue
+                                      iphone-frame-speech--visual-line-file "visual-line"))
+      (funcall original tempo speed))))
 
 (defun iphone-frame-speech--set-rate (original rate &optional prefix)
   (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
@@ -322,6 +333,7 @@
     (advice-remove 'tts-set-rate #'iphone-frame-speech--set-rate)
     (advice-remove 'tts-stop #'iphone-frame-speech--stop)
     (advice-remove 'omnivox-remote-resource #'iphone-frame-speech--resource)
+    (advice-remove 'sox-chime #'iphone-frame-speech--chime)
     (dolist (entry iphone-frame-speech--deferred-entries)
       (advice-remove entry #'iphone-frame-speech--deferred))
     (dolist (entry iphone-frame-speech--entries)
@@ -340,6 +352,7 @@
   (advice-add 'tts-set-rate :around #'iphone-frame-speech--set-rate)
   (advice-add 'tts-stop :around #'iphone-frame-speech--stop)
   (advice-add 'omnivox-remote-resource :around #'iphone-frame-speech--resource)
+  (advice-add 'sox-chime :around #'iphone-frame-speech--chime)
   (dolist (entry iphone-frame-speech--deferred-entries)
     (advice-add entry :around #'iphone-frame-speech--deferred))
   (advice-add 'agent-shell--emit-event :around #'iphone-frame-speech--event)

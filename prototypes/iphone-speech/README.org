@@ -154,6 +154,21 @@ when the receiver opens. To regenerate it from the prototype directory,
 run =sox -D ../../sounds/packs/accent/open-object.ogg -b 16 assets/open-object.wav=.
 The [[file:../../sounds/packs/accent/README.org][Accent notes]] describe the original pack.
 
+With visual-line mode enabled locally in a buffer, =C-e m= starts a rising
+chime and reads the mode line. In a phone frame the updated relay sends
+that indicator to the handset. Signed build 3 speaks “Visual lines”.
+The updated receiver plays the bundled chime once its player is ready.
+The desktop continues to play the configured SoX chime on its own output.
+To regenerate the phone's recording from the =sox-chime 2 2= recipe in
+[[file:../../lisp/aural/sox-gen.el][sox-gen.el]], run this in the prototype directory.
+
+#+begin_src sh
+OMP_NUM_THREADS=1 sox -q -R -D -r 48000 -n -r 44100 -c 1 -b 16 assets/visual-line.wav \
+  synth -j 3 sin %3 sin %-2 sin %-5 sin %-9 sin %-14 sin %-21 \
+  fade h .01 2 1.5 delay 1.3 1 .76 .54 .27 remix - fade h 0 2.7 2.5 \
+  norm -1 channels 2 tempo 2 speed 2 rate 44100 channels 1
+#+end_src
+
 For the full protocol see [[file:../../docs/developer/speech-server-protocols.org][Speech Server Protocols]] and the Omnivox checkout's
 =docs/protocols/{control,legacy,remote}.md=.
 
@@ -464,10 +479,8 @@ speech socket before the receiver reports Connected.
    ./start-relay --standalone "$phone"
    #+end_src
 
-3. In a second WSL terminal in the same directory, start the temporary
-   SSH listener. Here is the command for the unpacked server on this
-   machine. For a fresh unpack, use the =apt download= instructions above
-   and pass its =usr/sbin/sshd= path.
+3. In a second WSL terminal, start the temporary SSH listener. To use a
+   downloaded OpenSSH package, pass its server path with =--sshd=.
 
    #+begin_src sh
    cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
@@ -547,6 +560,8 @@ when you press Control+C.
    To compare a single keypress, run =C-u M-x iphone-test-tone RET=. In the
    read-only tone buffer, wait for quiet, then press Return again. Press
    =q= to close the comparison and return to your editing buffer.
+   Receivers with “Test visual-line chime” in Diagnostics can also compare
+   that local recording with =C-e m= in a visual-line buffer.
 2. On the main screen, connect and focus the Emacs keyboard field. Type a
    lowercase letter with ordinary Emacs typing echo on. Listen for one echo.
    In an Agent Shell response, press =C-n= twice during a line and compare

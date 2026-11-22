@@ -39,6 +39,7 @@ public final class IphoneMixerModule: Module {
   private var toneBuffers = 0
   private var pendingTones: [QueuedTone] = []
   private var recording: AVAudioPCMBuffer?
+  private var visualLine: AVAudioPCMBuffer?
   private var beep: AVAudioPCMBuffer?
   private var voiceFormat: AVAudioFormat?
   private var current: Reading?
@@ -58,6 +59,15 @@ public final class IphoneMixerModule: Module {
       try self.prepare(uri)
     }.runOnQueue(.main)
 
+    AsyncFunction("prepareChime") { (uri: String) in
+      if self.visualLine != nil { return }
+      let sound = try self.loadRecording(uri)
+      guard let accent = self.recording, sound.format == accent.format else {
+        throw MixerFailure("The visual-line chime has a different audio format.")
+      }
+      self.visualLine = sound
+    }.runOnQueue(.main)
+
     AsyncFunction("speak") { (text: String, identifier: String?, rate: Double, mixSample: Bool, promise: Promise) in
       self.read(text, identifier: identifier, rate: rate, mixSample: mixSample, promise: promise)
     }.runOnQueue(.main)
@@ -66,6 +76,14 @@ public final class IphoneMixerModule: Module {
       try self.startAudio()
       if let recording = self.recording { self.play(recording, on: self.cue) }
     }.runOnQueue(.main)
+
+    AsyncFunction("chime") {
+      guard let sound = self.visualLine else { throw MixerFailure("Visual-line chime is still loading.") }
+      try self.startAudio()
+      self.play(sound, on: self.cue)
+    }.runOnQueue(.main)
+
+    AsyncFunction("stopCue") { self.cue.stop() }.runOnQueue(.main)
 
     AsyncFunction("queueTone") { (hz: Double, ms: Int) in
       guard hz.isFinite, hz > 0, hz <= 24000, (1...60000).contains(ms),
@@ -97,16 +115,22 @@ public final class IphoneMixerModule: Module {
     }
   }
 
-  private func prepare(_ uri: String) throws {
-    if recording != nil { return }
-    guard let url = URL(string: uri), url.isFileURL else { throw MixerFailure("Missing local Accent sound.") }
+  private func loadRecording(_ uri: String) throws -> AVAudioPCMBuffer {
+    guard let url = URL(string: uri), url.isFileURL else { throw MixerFailure("Missing local sound.") }
     let file = try AVAudioFile(forReading: url)
     guard file.length > 0, file.length <= 100000,
-          let sound = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)),
-          let format = AVAudioFormat(standardFormatWithSampleRate: 48000, channels: 1),
+          let sound = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))
+    else { throw MixerFailure("Cannot load the sound.") }
+    try file.read(into: sound)
+    return sound
+  }
+
+  private func prepare(_ uri: String) throws {
+    if recording != nil { return }
+    let sound = try loadRecording(uri)
+    guard let format = AVAudioFormat(standardFormatWithSampleRate: 48000, channels: 1),
           let signal = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4800),
           let data = signal.floatChannelData?[0] else { throw MixerFailure("Cannot prepare the test sounds.") }
-    try file.read(into: sound)
     signal.frameLength = signal.frameCapacity
     for frame in 0..<Int(signal.frameLength) {
       let edge = min(1.0, Double(min(frame, Int(signal.frameLength) - 1 - frame)) / 220)

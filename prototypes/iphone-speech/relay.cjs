@@ -12,9 +12,14 @@ const { attachTerminal, openPhoneFrame, frameControl, sshOffer } = require('./te
 const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
 const resource = path.resolve(__dirname, '../../sounds/packs/accent/open-object.ogg');
-// Emacsvox escapes dollar signs and opening brackets in quoted Tcl paths.
-const openObjectPaths = new Set([resource, JSON.stringify(resource).replace(/[$[]/g, '\\$&'),
-  'omnivox-icon:packs/accent/open-object.ogg', '"omnivox-icon:packs/accent/open-object.ogg"']);
+function resourceWords(...paths) {
+  // Emacsvox escapes dollar signs and opening brackets in quoted Tcl paths.
+  return new Set(paths.flatMap(p => [p, JSON.stringify(p).replace(/[$[]/g, '\\$&')]));
+}
+const openObjectPaths = resourceWords(resource, 'omnivox-icon:packs/accent/open-object.ogg');
+const chimePaths = resourceWords(path.join(__dirname, 'assets/visual-line.wav'));
+// Older receivers speak the label. Receivers with the recording play it locally.
+const visualLine = {type: 'speak', text: 'Visual lines', cue: 'visual-line'};
 
 // One instance per Emacs stdio producer. A receiver change invalidates even
 // the tail of a partially received UTF-8 record or undispatched batch.
@@ -126,9 +131,11 @@ class LegacyInput {
       }
       case 'a':
         if (openObjectPaths.has(value)) this.queue(openObject);
+        else if (chimePaths.has(value)) this.queue(visualLine);
         break;
       case 'p':
         if (openObjectPaths.has(value)) this.send({...openObject, immediate: true});
+        else if (chimePaths.has(value)) this.send({...visualLine, immediate: true});
         break;
       case 'd':
         this.dispatch();

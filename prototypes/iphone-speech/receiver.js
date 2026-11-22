@@ -3,7 +3,6 @@
 
 const speechRate = 1.5;
 const eloquenceNames = ['Reed', 'Eddy', 'Rocko', 'Grandpa'];
-const openObjectCue = Symbol('open-object');
 
 const mixedSample = Symbol('mixed audio test');
 
@@ -24,7 +23,7 @@ async function findVoice(speech) {
 
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
+function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
                           keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
@@ -34,7 +33,9 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
   let permission = null;
   const waitingPermissions = new Map();
   const seenPermissions = new Set();
-  let cueRequest = 0, cueStarted = false;
+  const openObjectCue = {type: 'cue', player: cuePlayer, label: 'Open Object'};
+  const visualLineCue = {type: 'cue', player: visualLinePlayer, label: 'Visual line'};
+  let cueRequest = 0, activeCuePlayer;
 
   function refreshVoice() {
     const lookup = findVoice(speech).catch(() => null);
@@ -48,27 +49,28 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
 
   function stopCue() {
     ++cueRequest;
-    if (!cueStarted) return;
-    cueStarted = false;
-    try { Promise.resolve(cuePlayer.pause()).catch(() => { if (!cueStarted) playback('iOS could not stop the sound.'); }); } catch { playback('iOS could not stop the sound.'); }
+    const player = activeCuePlayer;
+    if (!player) return;
+    activeCuePlayer = undefined;
+    try { Promise.resolve(player.pause()).catch(() => { if (!activeCuePlayer) playback('iOS could not stop the sound.'); }); } catch { playback('iOS could not stop the sound.'); }
   }
 
-  async function playOpenObject() {
+  async function playCue({player, label}) {
     stopCue();
     const owner = cueRequest;
     try {
-      if (!cuePlayer?.isLoaded) {
-        playback('Open Object sound is still loading.');
+      if (!player?.isLoaded) {
+        playback(label + ' sound is still loading.');
         return;
       }
-      if (cuePlayer.currentTime > 0) await cuePlayer.seekTo(0, 0, 0);
+      if (player.currentTime > 0) await player.seekTo(0, 0, 0);
       if (owner !== cueRequest) return;
-      cueStarted = true;
-      await cuePlayer.play();
+      activeCuePlayer = player;
+      await player.play();
       if (owner !== cueRequest) return;
-      playback('Open Object sound requested.');
+      playback(label + ' sound requested.');
     } catch {
-      if (owner === cueRequest) playback('iOS could not play the Open Object sound.');
+      if (owner === cueRequest) playback('iOS could not play the ' + label + ' sound.');
     }
   }
 
@@ -104,9 +106,9 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
     barrier.then(async result => {
       if (owner !== epoch || !result) return;
       // Queued sound starts at its place in the dispatch and can overlap speech.
-      while (!urgentText && (queue[0] === openObjectCue || queue[0]?.type === 'tone')) {
+      while (!urgentText && (queue[0]?.type === 'cue' || queue[0]?.type === 'tone')) {
         const cue = queue.shift();
-        if (cue === openObjectCue) await playOpenObject();
+        if (cue.type === 'cue') await playCue(cue);
         else if (tonePlayer) {
           try {
             await tonePlayer.prepare();
@@ -294,9 +296,11 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
         if (record.scope === 'all') clearPermissions();
         if (notificationPlayer || permission === null) silence(record.scope !== 'speech');
         else { queue = []; queuedChars = 0; }
-      } else if (ready && record.type === 'cue' && record.name === 'open-object') {
-        if (record.immediate) playOpenObject();
-        else enqueue(openObjectCue);
+      } else if (ready && ((record.type === 'cue' && record.name === 'open-object') ||
+                 (record.type === 'speak' && record.cue === 'visual-line' && visualLinePlayer?.isLoaded))) {
+        const cue = record.type === 'cue' ? openObjectCue : visualLineCue;
+        if (record.immediate) void playCue(cue);
+        else enqueue(cue);
       } else if (ready && record.type === 'tone' && tonePlayer) {
         enqueue(record);
       } else if (ready && ['letter', 'speak'].includes(record.type) && typeof record.text === 'string') {
@@ -358,7 +362,8 @@ function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, ope
   }
 
   return { connect: () => connect(), disconnect, appState, terminalClosed, stop, testTone,
-    testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: playOpenObject };
+    testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => playCue(openObjectCue),
+    testVisualLine: () => playCue(visualLineCue) };
 }
 
 const symbols = {

@@ -3,7 +3,7 @@
 
 // The native promise settles after playback or cancellation. Keep its identity
 // through Stop so delayed results cannot replace the current timing readout.
-function mixerAdapters(native, directSpeech, timing) {
+function mixerAdapters(native, directSpeech, timing, chimeReady = () => false) {
   let generation = 0;
   return {
     speech: {
@@ -29,7 +29,12 @@ function mixerAdapters(native, directSpeech, timing) {
     cuePlayer: {
       isLoaded: true, currentTime: 0,
       play: () => native.cue(),
-      pause: () => native.stopEffects(),
+      pause: () => native.stopCue ? native.stopCue() : native.stopEffects(),
+    },
+    visualLinePlayer: native.chime && {
+      get isLoaded() { return chimeReady(); }, currentTime: 0,
+      play: () => native.chime(),
+      pause: () => native.stopCue(),
     },
   };
 }

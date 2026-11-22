@@ -7,6 +7,20 @@ const {createReceiver} = require('../receiver');
 const {mixerAdapters} = require('../mixer');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('the mixed chime uses the native cue player once its own recording is ready', () => {
+  let ready = false;
+  const calls = [];
+  const native = {chime: () => calls.push('chime'), stopCue: () => calls.push('stop cue'),
+    stopEffects: () => calls.push('stop tones too')};
+  const {visualLinePlayer} = mixerAdapters(native, {}, () => {}, () => ready);
+  assert.equal(visualLinePlayer.isLoaded, false);
+  ready = true;
+  assert.equal(visualLinePlayer.isLoaded, true);
+  visualLinePlayer.play();
+  visualLinePlayer.pause();
+  assert.deepEqual(calls, ['chime', 'stop cue']);
+});
+
 test('a stopped mixed preview cannot finish a replacement line or publish its timing', async () => {
   const calls = [], stops = [], timing = [], playback = [];
   const native = {

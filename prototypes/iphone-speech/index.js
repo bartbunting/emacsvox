@@ -17,6 +17,7 @@ const native = requireOptionalNativeModule('IphoneMixer');
 const ssh = requireOptionalNativeModule('IphoneTerminal');
 const Terminal = ssh ? requireNativeView('IphoneTerminal') : null;
 const sound = require('./assets/open-object.wav');
+const chime = require('./assets/visual-line.wav');
 const relayPort = process.env.EXPO_PUBLIC_EMACSVOX_PORT || '8787';
 
 function connectionKey(p) {
@@ -30,6 +31,7 @@ function validHost(host) {
 }
 
 let audioPreparation;
+let nativeChimeReady = false;
 function prepareAudio() {
   if (!audioPreparation) {
     audioPreparation = Asset.fromModule(sound).downloadAsync()
@@ -71,8 +73,9 @@ function Session({settings, save, active, reconnect}) {
   const sshMode = Boolean(ssh) && settings.transport === 'ssh';
   const mixed = Boolean(native) && settings.audio === 'mixed';
   const directCue = useAudioPlayer(sound, {downloadFirst: true});
-  const adapters = useMemo(() => mixed ? mixerAdapters(native, Speech, setTiming)
-    : {speech: Speech, cuePlayer: directCue}, [mixed, directCue]);
+  const directChime = useAudioPlayer(chime, {downloadFirst: true});
+  const adapters = useMemo(() => mixed ? mixerAdapters(native, Speech, setTiming, () => nativeChimeReady)
+    : {speech: Speech, cuePlayer: directCue, visualLinePlayer: directChime}, [mixed, directCue, directChime]);
   const [prepared, setPrepared] = useState(!mixed);
   const [prepareAttempt, setPrepareAttempt] = useState(0);
   const [audioFailed, setAudioFailed] = useState(false);
@@ -97,7 +100,19 @@ function Session({settings, save, active, reconnect}) {
   useEffect(() => {
     if (!mixed) return;
     let live = true;
-    prepareAudio().then(() => { if (live) setPrepared(true); }, () => {
+    prepareAudio().then(async () => {
+      if (!live) return;
+      setPrepared(true);
+      if (native.prepareChime && !nativeChimeReady) {
+        try {
+          const asset = await Asset.fromModule(chime).downloadAsync();
+          await native.prepareChime(asset.localUri);
+          nativeChimeReady = true;
+        } catch {
+          if (live) setPlayback('Visual-line chime unavailable. Emacs will say Visual lines.');
+        }
+      }
+    }, () => {
       if (live) { setAudioFailed(true); setStatus('Could not prepare the native mixer.'); }
     });
     return () => { live = false; };
@@ -182,6 +197,7 @@ function Session({settings, save, active, reconnect}) {
       {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}
       {native && <Action title="Test three-second tone" onPress={() => receiver.testTone(3000)} />}
       <Action title="Test Open Object Sound" disabled={!prepared} onPress={receiver.testCue} />
+      {adapters.visualLinePlayer && <Action title="Test visual-line chime" disabled={!prepared} onPress={receiver.testVisualLine} />}
       {mixed && <Action title="Test mixed audio" disabled={!prepared} onPress={receiver.testMix} />}
       <Action title="Stop Speech" onPress={receiver.stop} />
       {timing ? <Text style={styles.status}>{timing}</Text> : null}
