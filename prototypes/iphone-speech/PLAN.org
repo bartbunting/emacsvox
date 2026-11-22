@@ -9,8 +9,9 @@ Codex conversation. The phone speaks its own frame locally, including
 Emacsvox navigation, tones, earcons and permission announcements.
 
 The Expo Go baseline is on the local Emacsvox branch =prototype/iphone-speech=.
-The native experiment builds on it on =prototype/iphone-native-audio=. Make reusable Rust changes on a separate Omnivox
-feature branch when the audio experiment calls for them. Use a named test
+The native experiment builds on it on =prototype/iphone-native-audio=.
+The signed SSH app lives on =prototype/iphone-ssh=. Make reusable Rust
+changes on a separate Omnivox feature branch. Use a named test
 Emacs server until phone and desktop routing pass together. Record a date,
 revision and short result under each milestone when its acceptance test passes.
 Use a fixed sample for listening tests and keep spoken text out of routine logs.
@@ -19,10 +20,17 @@ The earlier local branches named above are stages of this checkout. Emacsvox
 revisions in the build notes point to the corresponding commits in this
 history. The private signed builds predate the removal of local setup details.
 
-* Proposed additions to the next signed build
+* Next implementation and device build
 
-The build 4 source includes the visual-line chime heard in Expo Go.
-Group the following three slices into the next device trial.
+Follow the [[file:OMNIVOX.org][Omnivox iPhone implementation plan]] for the shared Rust
+runtime, legacy and structured audio, on-device voice inventory and
+Emacs voice settings. Start the two-way worker connection and reference
+tests now. Advance each slice on automated checks. Batch listening checks
+on signed builds when convenient.
+
+The next signed build should include the keyboard and focus fixes, the
+visual-line chime heard in Expo Go, and the Omnivox slices that pass their
+automated checks. Track these comparisons alongside the port.
 
 1. *Everyday earcons.* Bundle the [[file:../../sounds/packs/accent/README.org][Accent pack]] and its inherited 3d cues.
    Match each recording selected by Emacsvox and play it locally.
@@ -51,11 +59,10 @@ Group the following three slices into the next device trial.
 - *Live permissions on build 3.* At the next real Codex permission
   request, navigate during the choices, review the pending request and
   answer it. The practice request and lock recovery have passed.
-- *Shared Omnivox core.* Start in WSL by replaying the same queue,
-  dispatch, character, tone and Stop sequences through the Rust core
-  and the receiver. Then integrate the core in the iPhone app while
-  Swift supplies local Eloquence audio. Later slices cover word-aligned
-  cues, voice palettes and effects as their protocol tests pass.
+- *Mobile keyboard.* Check the external keyboard in the phone's terminal, including
+  =M-<=, =M->= and =C-M-f=. Check focus on connection and unlock while
+  keeping other app controls accessible. The mobile design and optional
+  self-voicing work are in the [[file:OMNIVOX.org::*External keyboard and self-voicing][keyboard roadmap]].
 - *Daily startup and recovery.* After a planned WSL restart, reopen
   Codex, start the private listener and relay, and connect with the
   saved phone settings. Disconnect and continue on the desktop.
@@ -249,21 +256,10 @@ in Expo Go Diagnostics played the 675 ms recording successfully on the iPhone.
 The remaining listening check is =C-e m= with direct speech and with the
 native mixer in a signed build that includes the recording.
 
-** TODO 6. Bring across the Omnivox speech features
+** NEXT 6. Bring across the Omnivox speech features
 
-Use the same line, character, tone, earcon and Stop sequences as fixtures
-in WSL and on the phone. Reuse the Rust command, queue and timeline types
-from =omnivox-core= where those fixtures exercise them. Use Omnivox's
-macOS speech-buffer adapter as a reference. The iOS adapter owns local voice
-selection, playback and cancellation. Map the Emacsvox cue to a bundled
-recording by identity. Negotiate only capabilities that pass the complete
-protocol contract on the device.
-
-Pass when a configured cue and spoken line play in order, an uppercase
-letter and punctuation get their usual feedback, an Emacs rate change is
-audible, and a rapid move discards the obsolete line and its pending cue.
-Track finer word-aligned cues, voice palettes and effects individually as
-their timing and voice support are demonstrated.
+The [[file:OMNIVOX.org::*Implementation order][implementation slices]] specify the expected playback and control
+behaviour, automated proof and separate physical listening checks.
 
 The routed WSL test exercises the legacy character, rate and tone commands.
 With Rust 1.97.1, the unchanged Omnivox core at =3ed4e8d= built from WSL
