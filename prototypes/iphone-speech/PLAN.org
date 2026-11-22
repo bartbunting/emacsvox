@@ -41,7 +41,7 @@ socket. Both frames showed the same buffer and the PC retained the edited
 draft and its original Emacs process after the phone frame closed.
 The physical check is to continue that draft from the iPhone and reopen it.
 
-** TODO 2. Route speech to the frame that requested it
+** NEXT 2. Route speech to the frame that requested it
 
 In the test server, give the PC and phone separate speech destinations
 and queues. Capture the destination when the command runs and carry it
@@ -50,7 +50,13 @@ closes. Pass when both frames display the same buffer and alternating
 navigation and Stop affect only the device that issued each command.
 Verify this before attaching to the everyday Emacs server.
 
-** TODO 3. Deliver replies and permission requests across reconnects
+On 22 November 2026 the [[file:README.org::*Route each frame to its own speaker][routed trial]] passed with an Xvfb desktop frame
+and a real terminal frame. Alternating Control+n and Stop affected the
+expected speech process. The same test passed over SwiftNIO SSH to a
+disposable existing Emacs. Listen on the PC and iPhone together to finish
+this slice.
+
+** NEXT 3. Deliver replies and permission requests across reconnects
 
 Route asynchronous events to the frame subscribed to the conversation.
 Keep permission identity and urgency through playback. During rapid
@@ -60,7 +66,14 @@ request once from current Emacs state. Resolved requests and old audio
 stay silent. Check the policy against the
 [[file:../../docs/adr/0009-foreground-and-notification-speech-lanes.org][main and notification lane rules]].
 
-** TODO 4. Put SSH and an accessible terminal in the signed app
+WSL tests cover a delayed Agent Shell update after focus moves,
+permission identity, reconnect and resolution, and an Emacs Stop
+acknowledgement. Expo Go uses protected permission playback on its
+single synthesizer. The native receiver has an independent notification
+synthesizer. Hearing a permission finish during navigation and reviewing
+and answering one on the phone are still open.
+
+** NEXT 4. Put SSH and an accessible terminal in the signed app
 
 Test SSH authentication,
 host-key verification, interactive terminal allocation and resize against
@@ -72,8 +85,10 @@ The [[file:README.org::*Exercise the SSH transport in WSL][WSL SSH test]] on =pr
 a temporary loopback OpenSSH server. On 22 November 2026 it attached to
 an existing Agent Shell sample, dispatched the destination line through
 Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
-the same buffer. The phone-facing SSH endpoint, Keychain storage,
-native terminal display and physical keyboard behaviour still need testing.
+the same buffer. The current phone app pins the SSH host key, uses a device-only
+Keychain identity and presents a SwiftTerm terminal. A hosted simulator build
+compiled and packaged these components. Physical SSH, keyboard
+and VoiceOver focus testing await installation of the signed app.
 
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move
@@ -111,6 +126,10 @@ Simulator app contained the compiled Swift mixer. All 14 WSL receiver and
 relay tests passed. Device signing, Eloquence sample delivery and acoustic
 timing on both routes are open.
 
+A hosted simulator build of =838ad97f5= also packaged the separate
+permission synthesizer, cancellable generated tones, SwiftTerm and SSH.
+The inclusion of these components was checked in the downloaded app.
+
 ** TODO 6. Bring across the Omnivox speech features
 
 Use the same line, character, tone, earcon and Stop sequences as fixtures
@@ -127,6 +146,13 @@ audible, and a rapid move discards the obsolete line and its pending cue.
 Track finer word-aligned cues, voice palettes and effects individually as
 their timing and voice support are demonstrated.
 
+The routed WSL test exercises the legacy character, rate and tone commands.
+With Rust 1.97.1, the unchanged Omnivox core at =3ed4e8d= built from WSL
+for =aarch64-apple-ios= and =aarch64-apple-ios-sim= using
+=cargo build --locked -p omnivox-core --lib=. The iPhone app runs its Swift audio
+adapter. Integrating the Rust core and measuring mixed Eloquence on the
+physical phone remain open.
+
 ** TODO 7. Ship the daily-use build
 
 Install a private signed build with the JavaScript bundled. Run the WSL
@@ -136,6 +162,12 @@ conversation. Using the keyboard connected to the iPhone, edit a file, send a pr
 hear a reply, interrupt it, handle a permission request and reconnect.
 Confirm you return to the same buffer and conversation.
 Close just the phone frame and continue on the desktop with ordinary speech.
+
+The [[file:README.org::*Attach to an existing conversation][existing-server launcher]] selects an explicit socket and buffer.
+The SSH integration check kept the original server and draft after the
+phone disconnected and routing was released. The standalone launcher
+uses bundled JavaScript and a private Tailscale listener. Physical
+installation and everyday-session acceptance are open.
 
 Close this milestone when the session works from a fresh launch, the setup
 and return steps are reproducible in the README, and the timing and

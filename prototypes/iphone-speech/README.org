@@ -115,7 +115,7 @@ timelines and playback tracking. Protocol readiness and initial routing
 readiness have separate hooks. The foreground process owns navigation stops,
 and explicit interactive Stop also targets a distinct notification process.
 
-The prototype selects =phone-backend= via =TTS_PROGRAM= in the test
+The first PC-keyboard trial selects =phone-backend= via =TTS_PROGRAM= in the test
 process environment. =voice-setup= selects the existing plain voice adapter.
 This standalone server uses the legacy protocol from its first command and
 advertises zero Omnivox extensions. It never acknowledges synthesis or
@@ -134,10 +134,9 @@ Connect and Test iPhone Voice both check the voices available on your phone.
 If Reed is unavailable, the receiver tries Eddy, Rocko and Grandpa, then
 Daniel, Aaron and Lee. It uses the iPhone default if none are available.
 The current voice and rate appear below the connection status. These
-settings apply to receiver speech, including characters. Voice style,
-Emacs rate commands, tones, timing markers and concurrent
-notification audio are outside this listening prototype. A line represented
-solely by a tone can be silent.
+settings apply to receiver speech, including characters. Expo Go can play
+the bundled Accent recording. The routed signed app also accepts speech
+rates and generated tones. A tone-only line is silent in Expo Go.
 
 The isolated profile selects the bundled Accent pack. Its
 [[file:../../sounds/packs/accent/open-object.ogg][Open Object recording]] is the first supported earcon. The relay recognises
@@ -279,15 +278,15 @@ The server must accept both a PTY and the command that starts
 =C.UTF-8= for that command so accented input reaches the terminal frame.
 A missing Emacs socket returns a failed command exit. The transport
 delivers the terminal's bytes to the caller and accepts input bytes,
-window size changes and disconnect. The phone UI and Keychain integration
-are future work. [[https://github.com/apple/swift-nio-ssh][SwiftNIO SSH]].
+window size changes and disconnect. The signed app uses this transport with
+SwiftTerm and an iOS Keychain identity. [[https://github.com/apple/swift-nio-ssh][SwiftNIO SSH]].
 
 The integration check starts a temporary OpenSSH listener on a random
 loopback port, a dedicated graphical Emacs under Xvfb and a phone speech
 backend that records only whether the test line was dispatched. It creates
 fresh keys and a rendered Agent Shell reply. It closes its listener and
-removes its keys on exit. Your eventual route from the phone to WSL is
-a separate choice.
+removes its keys on exit. The phone trial below opens a separate listener
+on the WSL Tailscale address.
 
 In WSL, build the test client with Docker from the
 worktree. The static Swift runtime lets the probe run directly in WSL.
@@ -355,8 +354,7 @@ use this relay. It can issue ordinary Emacs commands as your WSL user.
    available for desktop speech.
 
 The test uses a fixed 100-column, 32-row tmux terminal. The keyboard and
-speech share a WebSocket. SSH on the phone and speech routing for frames
-in your existing Emacs are later stages. Run =npm test= for the keyboard
+speech share a WebSocket. For separate speech destinations or SSH, use the routed trial below. Run =npm test= for the keyboard
 field and receiver checks and =node test/keyboard-terminal.cjs= for the
 real terminal editing and speech test in WSL.
 
@@ -388,68 +386,156 @@ read -rp 'iPhone Tailscale IPv4 address: ' phone
 
 The sample uses the real Agent Shell buffer and a fixed reply. Both
 test frames send their speech to the phone while it is connected.
-Independent speech destinations are the next slice. The launcher
+The routed trial below gives the two frames independent speech. The launcher
 creates a private server and accepts the named iPhone over Tailscale.
 Your regular desktop Emacs and the earlier keyboard test run separately.
 Run =node test/shared-frame.cjs= in this directory for the WSL check
 with a graphical frame under Xvfb.
 
+* Route each frame to its own speaker
+
+Use this mode to hear your PC on its usual Omnivox voice and the phone
+on its local iOS voice. Both frames use the same Agent Shell buffer.
+Start the test server and relay together in WSL.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+read -rp 'iPhone Tailscale IPv4 address: ' phone
+./start-relay --routed "$phone"
+#+end_src
+
+1. On the iPhone, open the host’s Tailscale address on port 8797 in Safari using HTTP. Activate
+   “Open receiver in Expo Go”, “Connect” and then “Emacs keyboard”.
+2. In “Emacsvox Routed Draft” on the PC, navigate the rendered response
+   with =C-n=. On the phone keyboard, move through the same response.
+   Check that you hear each command on the device where you pressed it.
+   Try =M-x tts-stop RET= on either keyboard during speech on the other.
+3. While the phone displays the conversation, its automatic replies and
+   permission requests follow its frame. Moving to a different Agent
+   Shell conversation changes the subscription. Rapid navigation
+   preserves a permission announcement. To review and answer a request,
+   use =M-x agent-shell-jump-to-latest-permission-button-row RET=, move to
+   the intended choice and activate it. Stop Speech silences local audio
+   immediately. Reconnecting reads pending requests from Emacs.
+4. Activate Disconnect to close the phone frame. The PC keeps the draft.
+   Press Control+C in the launcher to close the isolated test server.
+
+The routed relay creates a private speech socket for each new terminal
+frame. Emacs runs its ordinary line and character readers, with a
+separate main speech process for that frame. Emacsvox queues deferred
+speech by process. The relay carries permission identity and the reset
+acknowledgement alongside the plain speech commands. The receiver advertises
+no Omnivox extensions. Expo Go protects permissions using one synthesizer.
+The signed app has a dedicated iOS synthesizer for permissions, plus
+generated tones and the optional PCM mixer. A phone listening check
+is still needed for simultaneous playback and mixed Eloquence.
+
 * Full terminal Emacs on the iPhone
 
-The planned app gives you a terminal frame in your existing WSL Emacs.
-Your buffers, packages, keymaps and commands are available as they would
-be in =emacsclient -t=. You can move between a file, Dired, the minibuffer
-and a running Agent Shell conversation, with Emacsvox speaking on the phone.
+The private signed app runs SwiftTerm and SwiftNIO SSH in the foreground.
+It stores the phone's private Ed25519 key in the iOS Keychain. Tailscale
+carries both SSH and the speech WebSocket. The relay offers a fresh frame
+ID and server path. SSH checks the pinned WSL host key and runs
+=emacsclient -t= with that ID. Emacs sends “attached” over the matching
+speech socket before the receiver reports Connected.
 
-The signed app would combine SSH, an accessible terminal and the speech
-receiver. Verify the WSL host key, keep SSH credentials in the iOS
-Keychain, allocate a PTY and run =emacsclient -t -s SERVER=. Pass input
-from the external keyboard connected to the iPhone and terminal size
-changes to Emacs. Support Control, Meta, Escape and prefix sequences
-such as =C-x= and =C-c=. Check which keys reach the terminal with
-VoiceOver active.
+** Start the signed app against the test server
 
-Connect the external keyboard to the iPhone, turn on VoiceOver and focus
-the terminal. Use =C-x b= to switch to the Codex buffer. In a response,
-press =C-n=, then press it again halfway through the line. Listen for
-the new line to interrupt the old one.
+1. Install the private EAS device build using its install link in iPhone
+   Safari. Allow local network access if prompted. Open Emacsvox Speech,
+   activate “Copy iPhone SSH public key” and transfer that one public
+   line to a file of your choice in WSL.
+2. From the prototype directory, run the following in WSL. If your
+   earlier routed test is using port 8797, close that test launcher with
+   Control+C first. This mode runs with the JavaScript bundled in the app.
 
-Open a scratch file with =C-x C-f=, type a sentence, search with =C-s=
-and save with =C-x C-s=. Check that the saved text appears once. Press
-Escape and then =x= to invoke =M-x=, navigate completions and cancel with
-=C-g=. Use VoiceOver to reach Stop Speech, return focus to the terminal
-and type again. Check for duplicate echo and confirm that desktop
-activity still speaks on the desktop while the phone frame is open.
+   #+begin_src sh
+   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   read -rp 'iPhone Tailscale IPv4 address: ' phone
+   ./start-relay --standalone "$phone"
+   #+end_src
 
-Pair the phone's authenticated SSH connection and TTY with a fresh speech
-endpoint. One option is to forward the relay socket through the same SSH
-connection. Register that association when the terminal frame is created,
-and revoke it when the frame or SSH channel closes. Capture the destination
-frame at command entry and carry it through Aural submission, deferred
-timers and stops. Keep independent queues per destination. For asynchronous
-Agent Shell events, retain the conversation's explicit frame subscription.
-Multiple frames can display the same buffer, and timers can fire after focus
-moves. A background event needs a stable owner in both cases.
+3. In a second WSL terminal in the same directory, start the temporary
+   SSH listener. Here is the command for the unpacked server on this
+   machine. For a fresh unpack, use the =apt download= instructions above
+   and pass its =usr/sbin/sshd= path.
 
-Retain permission request identity and urgency before lowering to text.
-Give the phone scheduler a permission queue and one replaceable navigation
-slot. Interrupt obsolete navigation for a permission request, preserve the
-announcement across subsequent navigation, then speak only the latest row.
-Provide a focused way to review unanswered requests. Resolution and explicit
-Stop clear the corresponding announcements. On reconnect, query outstanding
-permission state and announce a still-pending request once. Keep prior
-speech packets discarded. This needs semantic metadata beyond the prototype's
-plain queue protocol and a deliberate policy for the two logical lanes.
+   #+begin_src sh
+   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   read -rp 'iPhone Tailscale IPv4 address: ' phone
+   read -rp 'Path to the iPhone public key: ' phone_key
+   ./phone-sshd "$phone" "$phone_key"
+   #+end_src
 
-From WSL, give the combined app an iOS bundle identifier, configure an
-Expo Build project with =eas build:configure= and select Apple signing
-credentials. For a private device build use an internal distribution
-profile, =eas device:create= and =eas build --platform ios --profile preview=.
-Hosted macOS runs Xcode, compiles the native SSH dependency, signs the app
-and returns an install link for the registered iPhone. For TestFlight use
-the production profile and =eas submit --platform ios=. This later
-distribution path requires Apple Developer Program membership. Expo Go
-covers the current test without enrolment.
-[[https://docs.expo.dev/build/internal-distribution/][Device provisioning]],
-[[https://docs.expo.dev/build-reference/ios-builds/][hosted iOS builds]] and
-[[https://docs.expo.dev/submit/ios/][TestFlight submission]].
+4. In the app fill in WSL Tailscale IPv4 address,
+   SSH port (=8822=), WSL username and the full =ssh-ed25519= host public
+   key printed by the listener. Activate Connect, check the connection
+   status and activate “Focus Emacs terminal”. The app saves these public
+   connection settings. The temporary listener generates a fresh host key
+   at each start. Update the pin from its WSL terminal before reconnecting.
+5. Use the phone keyboard to try =C-n= during a line, =C-x C-f= to visit
+   a file, =C-x C-s= to save, and =M-x= with Tab completion. Use VoiceOver
+   to reach Stop Speech and return to the terminal. Try the permission
+   and reconnect checks above. Activate “Use native mixer”, reconnect
+   and activate “Test mixed audio” to compare the two audio paths.
+6. Activate Disconnect, then press Control+C in the listener and relay
+   terminals. The listener accepts the nominated Tailscale phone and its
+   public key while it runs. It uses its own host key and authorized keys.
+
+** Attach to an existing conversation
+
+After listening on both devices in the isolated test, you can choose an
+existing Emacs server with a local desktop Omnivox process. In the target
+conversation, =M-: (buffer-name) RET= gives the buffer name and
+=M-: (expand-file-name server-name server-socket-dir) RET= gives the socket.
+Run the same temporary SSH listener as above. Replace the standalone relay
+with the following command in its own WSL terminal.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+read -rp 'Emacs server socket: ' socket
+read -rp 'Agent Shell buffer name: ' conversation
+read -rp 'iPhone Tailscale IPv4 address: ' phone
+./start-relay --existing "$phone" "$socket" "$conversation"
+#+end_src
+
+Connect from the signed app. The new terminal opens the chosen buffer.
+Disconnect closes the phone frame. Control+C in the relay releases
+its speech hooks and leaves the chosen Emacs server running. The
+automated test exercises this command's attach and release steps on a
+disposable graphical server. Everyday use awaits physical acceptance.
+
+** Reproduce routing and the hosted build
+
+#+begin_src sh
+npm test
+node test/navigation.cjs
+node test/keyboard-terminal.cjs
+IPHONE_TEST_SSHD=/usr/sbin/sshd \
+  node test/shared-frame.cjs --routed
+#+end_src
+
+Use =./stage-ios-build= in this worktree to stage the committed app only.
+In the printed directory, run =npm ci=, then
+=export EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD"=. The =simulator-private=
+profile compiles and embeds JavaScript without device signing. The
+=device= profile builds a private installable app. Apple requires the
+distribution certificate with its matching private key, the registered
+iPhone, and an Ad Hoc profile for =org.emacsvox.iphone.speech=.
+For the Apple website signing route, save the downloaded profile in Windows
+Downloads. In the prototype directory run these commands. The staging helper
+uses the prepared WSL signing directory, checks the app ID, iPhone, expiry
+and certificate, and prints a private build directory. EAS reads the
+signing identity separately from the source archive.
+
+#+begin_src sh
+read -rp 'Full WSL path of downloaded .mobileprovision: ' profile
+stage=$(./stage-device-build "$profile") && cd "$stage"
+npm ci
+export EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD"
+npx --yes eas-cli@27.11.0 build --platform ios --profile device-local
+#+end_src
+
+The EAS build page provides the device install link when signing succeeds.
+[[https://developer.apple.com/help/account/provisioning-profiles/create-an-ad-hoc-provisioning-profile/][Apple Ad Hoc provisioning]]
+and [[https://docs.expo.dev/build/internal-distribution/][Expo internal distribution]].
