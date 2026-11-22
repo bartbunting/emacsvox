@@ -567,12 +567,13 @@ Freq can be specified as a frequency, note (%nn) or frequency range."
 
 (defun sox-chime (&optional tempo speed)
   "Play chime --- optional args tempo and speed default to 1."
-  
-  (sox-gen-cmd
-   (concat
-    sox-chime-cmd
-    (when tempo (format " tempo %s" tempo))
-    (when speed (format " speed %s" speed)))))
+  ;; Parallel channel processing can take longer than this short cue lasts.
+  (let ((process-environment (cons "OMP_NUM_THREADS=1" process-environment)))
+    (sox-gen-cmd
+     (concat
+      sox-chime-cmd
+      (when tempo (format " tempo %s" tempo))
+      (when speed (format " speed %s" speed))))))
 
 ;;;  Multiwindow:
 
