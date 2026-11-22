@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppState, Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { registerRootComponent } from 'expo';
+import { useAudioPlayer } from 'expo-audio';
 import * as Speech from 'expo-speech';
 import { createReceiver } from './receiver';
 
@@ -11,13 +12,15 @@ function App() {
   const [status, setStatus] = useState('Disconnected');
   const [playback, setPlayback] = useState('');
   const [voice, setVoice] = useState('');
+  const cuePlayer = useAudioPlayer(require('./assets/open-object.wav'), {downloadFirst: true});
   const receiver = useMemo(() => createReceiver({
     speech: Speech,
+    cuePlayer,
     status: setStatus,
     playback: setPlayback,
     voiceStatus: setVoice,
     openSocket: () => new WebSocket('ws://' + process.env.EXPO_PUBLIC_EMACSVOX_HOST + ':8787/speech'),
-  }), []);
+  }), [cuePlayer]);
   useEffect(() => {
     const listener = AppState.addEventListener('change', state => {
       if (state === 'background') receiver.disconnect();
@@ -34,6 +37,7 @@ function App() {
         <Button title="Disconnect" accessibilityLabel="Disconnect" onPress={() => receiver.disconnect()} />
         <Button title="Stop Speech" accessibilityLabel="Stop Speech" onPress={receiver.stop} />
         <Button title="Test iPhone Voice" accessibilityLabel="Test iPhone Voice" onPress={receiver.testVoice} />
+        <Button title="Test Open Object Sound" accessibilityLabel="Test Open Object Sound" onPress={receiver.testCue} />
       </View>
       {playback ? <Text style={styles.status}>{playback}</Text> : null}
     </ScrollView>

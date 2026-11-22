@@ -59,6 +59,8 @@
         (sit-for 0.2)
         (call-interactively #'tts-stop)
         (sit-for 0.2)
+        (execute-kbd-macro (kbd "M-x agent-shell-prompt-compose RET"))
+        (sit-for 0.3)
         (dolist (fn '(agent-shell--on-notification emacsvox-agent-shell--next-line-around
                       emacsvox-speak-visual-line tts-letter))
           (princ (format "%s: %s\n" fn (symbol-file fn)) #'external-debugging-output))

@@ -156,3 +156,80 @@ test('a stop during voice lookup retires old speech', async () => {
   await flush();
   assert.deepEqual(spoken, []);
 });
+
+test('queued sound starts before its phrase and immediate sound can play during speech', async () => {
+  const events = [];
+  const player = {
+    isLoaded: true, currentTime: 0.4,
+    seekTo: () => new Promise(resolve => { player.rewound = resolve; }),
+    play: () => events.push('cue'), pause: () => events.push('pause'),
+  };
+  const socket = {readyState: 1, close() {}, send() {}};
+  const receiver = createReceiver({
+    status() {}, cuePlayer: player, openSocket: () => socket,
+    speech: {stop: async () => false, speak: text => events.push(text)},
+  });
+  const send = record => socket.onmessage({data: JSON.stringify(record)});
+  try {
+    receiver.connect();
+    send({type: 'ready', id: 0});
+    send({type: 'cue', name: 'open-object'});
+    send({type: 'speak', text: 'Compose prompt'});
+    await flush();
+    assert.deepEqual(events, []);
+    player.rewound();
+    await flush();
+    assert.deepEqual(events, ['cue', 'Compose prompt']);
+    player.currentTime = 0;
+    send({type: 'cue', name: 'open-object', immediate: true});
+    send({type: 'stop', scope: 'speech'});
+    assert.deepEqual(events, ['cue', 'Compose prompt', 'pause', 'cue']);
+    receiver.stop();
+    assert.equal(events.at(-1), 'pause');
+  } finally { receiver.disconnect(); }
+});
+
+test('Stop during rewind and reconnection discard stale cues and allow the next cue', async () => {
+  let rewind, plays = 0;
+  const player = {
+    isLoaded: true, currentTime: 0.4,
+    seekTo: () => new Promise(resolve => { rewind = resolve; }),
+    play: () => { plays++; }, pause() {},
+  };
+  const sockets = [];
+  const spoken = [];
+  const receiver = createReceiver({
+    status() {}, cuePlayer: player,
+    openSocket() {
+      const socket = {readyState: 1, close() {}, send() {}};
+      sockets.push(socket);
+      return socket;
+    },
+    speech: {stop: async () => false, speak: text => spoken.push(text)},
+  });
+  const send = (record, socket = sockets.at(-1)) => socket.onmessage({data: JSON.stringify(record)});
+  const cue = {type: 'cue', name: 'open-object'};
+  try {
+    receiver.connect();
+    send({type: 'ready', id: 0});
+    send(cue);
+    send({type: 'speak', text: 'old'});
+    await flush();
+    receiver.stop();
+    send({...cue, immediate: true});
+    receiver.disconnect();
+    receiver.connect();
+    send({type: 'ready', id: 0});
+    send({...cue, immediate: true}, sockets[0]);
+    rewind();
+    await flush();
+    assert.equal(plays, 0);
+    assert.deepEqual(spoken, []);
+    player.currentTime = 0;
+    send(cue);
+    send({type: 'speak', text: 'new'});
+    await flush();
+    assert.equal(plays, 1);
+    assert.deepEqual(spoken, ['new']);
+  } finally { receiver.disconnect(); }
+});

@@ -3,6 +3,7 @@
 
 const speechRate = 1.5;
 const eloquenceNames = ['Reed', 'Eddy', 'Rocko', 'Grandpa'];
+const openObjectCue = Symbol('open-object');
 
 async function findVoice(speech) {
   const voices = await speech.getAvailableVoicesAsync();
@@ -21,11 +22,12 @@ async function findVoice(speech) {
 
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, openSocket, status, playback = () => {}, voiceStatus = () => {}, now = Date.now }) {
+function createReceiver({ speech, cuePlayer, openSocket, status, playback = () => {}, voiceStatus = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
   let voiceLookup;
+  let cueRequest = 0, cueStarted = false;
 
   function refreshVoice() {
     const lookup = findVoice(speech).catch(() => null);
@@ -37,7 +39,32 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, voice
     });
   }
 
-  function silence() {
+  function stopCue() {
+    ++cueRequest;
+    if (!cueStarted) return;
+    cueStarted = false;
+    try { cuePlayer.pause(); } catch { playback('iOS could not stop the sound.'); }
+  }
+
+  async function playOpenObject() {
+    stopCue();
+    const owner = cueRequest;
+    try {
+      if (!cuePlayer?.isLoaded) {
+        playback('Open Object sound is still loading.');
+        return;
+      }
+      if (cuePlayer.currentTime > 0) await cuePlayer.seekTo(0, 0, 0);
+      if (owner !== cueRequest) return;
+      cuePlayer.play();
+      cueStarted = true;
+      playback('Open Object sound requested.');
+    } catch {
+      if (owner === cueRequest) playback('iOS could not play the Open Object sound.');
+    }
+  }
+
+  function silence(includeSound = true) {
     const owner = ++epoch;
     queue = [];
     queuedChars = 0;
@@ -48,14 +75,27 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, voice
       if (epoch === owner) playback('iOS could not stop speech.');
       return false;
     });
+    if (includeSound) stopCue();
   }
 
   function drain() {
     if (speaking || !queue.length) return;
     speaking = true;
     const owner = epoch;
-    Promise.all([barrier, voiceLookup]).then(([result, voice]) => {
+    barrier.then(async result => {
       if (owner !== epoch || !result) return;
+      // Queued sound starts at its place in the dispatch and can overlap speech.
+      while (queue[0] === openObjectCue) {
+        queue.shift();
+        await playOpenObject();
+        if (owner !== epoch) return;
+      }
+      if (!queue.length) {
+        speaking = false;
+        return;
+      }
+      const voice = await voiceLookup;
+      if (owner !== epoch) return;
       const text = queue.shift();
       queuedChars -= text.length;
       const finish = state => {
@@ -78,15 +118,16 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, voice
     });
   }
 
-  function enqueue(text) {
-    if (!text) return;
-    if (queuedChars + text.length > 1_000_000 || queue.length >= 1024) {
+  function enqueue(item) {
+    if (!item) return;
+    const chars = typeof item === 'string' ? item.length : 0;
+    if (queuedChars + chars > 1_000_000 || queue.length >= 1024) {
       disconnect('Speech queue full. Activate Connect to retry.');
       return;
     }
-    queue.push(text);
-    queuedChars += text.length;
-    playback('Speech queued.');
+    queue.push(item);
+    queuedChars += chars;
+    if (chars) playback('Speech queued.');
     drain();
   }
 
@@ -126,7 +167,10 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, voice
         ready = true;
         status('Connected');
       } else if (ready && record.type === 'stop') {
-        silence();
+        silence(record.scope !== 'speech');
+      } else if (ready && record.type === 'cue' && record.name === 'open-object') {
+        if (record.immediate) playOpenObject();
+        else enqueue(openObjectCue);
       } else if (ready && ['letter', 'speak'].includes(record.type) && typeof record.text === 'string') {
         enqueue(record.type === 'letter' ? characterName(record.text) : record.text);
       }
@@ -151,7 +195,7 @@ function createReceiver({ speech, openSocket, status, playback = () => {}, voice
     enqueue('This is the iPhone voice test.');
   }
 
-  return { connect, disconnect, stop, testVoice };
+  return { connect, disconnect, stop, testVoice, testCue: playOpenObject };
 }
 
 const symbols = {

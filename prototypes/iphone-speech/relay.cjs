@@ -3,9 +3,14 @@
 
 const net = require('node:net');
 const http = require('node:http');
+const path = require('node:path');
 const { WebSocketServer, WebSocket } = require('ws');
 
 const maxBytes = 512 * 1024;
+const openObject = {type: 'cue', name: 'open-object'};
+const resource = path.resolve(__dirname, '../../sounds/packs/accent/open-object.ogg');
+// Emacsvox escapes dollar signs and opening brackets in quoted Tcl paths.
+const openObjectPaths = new Set([resource, JSON.stringify(resource).replace(/[$[]/g, '\\$&')]);
 
 // One instance per Emacs stdio producer. A receiver change invalidates even
 // the tail of a partially received UTF-8 record or undispatched batch.
@@ -49,6 +54,32 @@ class LegacyInput {
     }
   }
 
+  queue(item) {
+    if (typeof item === 'string') this.bytes += Buffer.byteLength(item);
+    if (this.bytes > maxBytes || this.parts.length >= 4096) this.abandoned = true;
+    if (!this.abandoned) this.parts.push(item);
+  }
+
+  dispatch() {
+    let words = [];
+    const flushWords = () => {
+      if (words.length) this.send({type: 'speak', text: words.join(' ')});
+      words = [];
+    };
+    if (!this.abandoned) {
+      for (const item of this.parts) {
+        if (item === openObject) {
+          flushWords();
+          this.send(openObject);
+        } else {
+          words.push(item);
+        }
+      }
+      flushWords();
+    }
+    this.clear();
+  }
+
   record(line) {
     const match = /^(\w+)(?:\s+(.*))?$/u.exec(line);
     if (!match) return;
@@ -57,15 +88,16 @@ class LegacyInput {
       ? argument.slice(1, -1) : argument;
     switch (command) {
       case 'q':
-        this.bytes += Buffer.byteLength(value);
-        if (this.bytes > maxBytes || this.parts.length >= 4096) this.abandoned = true;
-        if (!this.abandoned) this.parts.push(value);
+        this.queue(value);
+        break;
+      case 'a':
+        if (openObjectPaths.has(value)) this.queue(openObject);
+        break;
+      case 'p':
+        if (openObjectPaths.has(value)) this.send({...openObject, immediate: true});
         break;
       case 'd':
-        if (!this.abandoned && this.parts.length) {
-          this.send({ type: 'speak', text: this.parts.join(' ') });
-        }
-        this.clear();
+        this.dispatch();
         break;
       case 's':
       case 'tts_reset':
@@ -74,7 +106,7 @@ class LegacyInput {
         break;
       case 'l':
       case 'tts_say':
-        this.send({ type: 'stop' });
+        this.send({ type: 'stop', scope: 'speech' });
         if (value) this.send({ type: command === 'l' ? 'letter' : 'speak', text: value });
         break;
     }

@@ -52,7 +52,11 @@ async function main() {
     const permission = records.findIndex((r, i) => i > last && /permission request/i.test(r.text));
     assert.ok(permission > last, 'Missing permission announcement');
     assert.ok(records.slice(permission + 1).some(r => r.type === 'stop'));
-    console.log('Passed two interactive C-n moves, automatic reply, permission, letter, notification and stop.');
+    const compose = records.findIndex((r, i) => i > permission && r.text?.trim() === 'Compose prompt');
+    assert.ok(compose > permission, 'Missing interactive compose announcement');
+    assert.deepEqual(records[compose - 1], {type: 'cue', name: 'open-object'},
+      'The configured queued sound must precede the compose announcement');
+    console.log('Passed two C-n moves, reply, permission, letter, notification, stop and the Agent Shell compose cue.');
   } finally {
     ws?.terminate();
     relay.backend.close();

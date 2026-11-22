@@ -53,12 +53,17 @@ its own speech process and conversation.
    again while the line is speaking. Listen for the old line to cut off
    and the next row to begin. Wrapped rows follow Emacsvox's usual visual
    line setting. Try =C-f= to hear character feedback.
+   To hear an Emacsvox earcon, run =M-x agent-shell-prompt-compose RET=
+   from the transcript. Listen for the Accent Open Object sound and
+   “Compose prompt”. Use =C-c C-k= to cancel the empty editor.
 6. While a long utterance is playing, activate Stop Speech on the phone.
    Try =M-x tts-stop RET= from the test Emacs as well. Activate Disconnect,
    move twice in Emacs, then activate Connect. Wait for “Connected”.
-   Listen for silence until you move again. To try the local stop during
-   a stall, interrupt the network from the PC while the phone is speaking
-   and activate Stop Speech on the phone. Reconnect once the relay is reachable.
+   Listen for silence until you move again. To repeat the stall test from
+   an interactive WSL shell, start a long line and press =Ctrl-Z= in the
+   relay terminal. Activate Stop Speech on the phone while the relay is
+   suspended. Type =fg= in the same terminal to resume the relay. If the
+   receiver timed out, activate Connect.
 7. Exit the test Emacs with =C-x C-c=, activate Disconnect on the phone,
    and press =Ctrl-C= in the relay terminal. Switch to your original Emacs
    window for desktop speech.
@@ -76,7 +81,8 @@ those ports. If the page opens but the app fails to load, check the Metro
 output and the Expo Go SDK version. If status reports a timeout, activate
 Connect after restoring the network. If you hear silence, activate
 “Test iPhone Voice”. This speaks a short phrase locally even while
-disconnected. Swipe right once more to read the latest speech status.
+disconnected. “Test Open Object Sound” plays the same recording used by
+Agent Shell. The playback status follows these controls in VoiceOver order.
 
 The private Unix socket accepts one Emacs producer. Speech is delivered
 only to the current foreground receiver. Each new phone connection drops
@@ -129,9 +135,22 @@ If Reed is unavailable, the receiver tries Eddy, Rocko and Grandpa, then
 Daniel, Aaron and Lee. It uses the iPhone default if none are available.
 The current voice and rate appear below the connection status. These
 settings apply to receiver speech, including characters. Voice style,
-Emacs rate commands, tones, audio icons, timing markers and concurrent
+Emacs rate commands, tones, timing markers and concurrent
 notification audio are outside this listening prototype. A line represented
 solely by a tone can be silent.
+
+The isolated profile selects the bundled Accent pack. Its
+[[file:../../sounds/packs/accent/open-object.ogg][Open Object recording]] is the first supported earcon. The relay recognises
+that recording's resolved path in the legacy =a= and =p= commands.
+=a= queues the cue in order until =d=. The receiver can start following
+speech as the sound plays. =p= plays the sound immediately. A hard stop,
+disconnect or background transition silences both speech and sound.
+Character speech and immediate speech can interrupt voice independently.
+Only the cue name travels to the phone. Expo Audio loads the local WAV
+when the receiver opens. To regenerate it from the prototype directory,
+run =sox -D ../../sounds/packs/accent/open-object.ogg -b 16 assets/open-object.wav=.
+The [[file:../../sounds/packs/accent/README.org][Accent notes]] describe the original pack.
+
 For the full protocol see [[file:../../docs/developer/speech-server-protocols.org][Speech Server Protocols]] and the Omnivox checkout's
 =docs/protocols/{control,legacy,remote}.md=.
 
@@ -147,14 +166,14 @@ npx --no-install expo install --check
 node test/navigation.cjs
 #+end_src
 
-The last command uses Xvfb, the real Agent Shell renderer and two interactive
-key presses in a fresh Emacs. It injects a sample ACP reply during testing.
-The normal reader, speech process, Unix socket and WebSocket stay active.
-It checks automatic reply delivery, permission text, character feedback,
-shared notification routing, and interruption. Receiver tests cover stale
-callbacks and a delayed reset acknowledgement with a substitute synthesiser.
-Phone listening establishes acoustic interruption latency, pronunciation,
-VoiceOver coexistence, accessibility focus and recovery on the tailnet.
+The last command opens a fresh graphical Emacs under Xvfb, renders a
+sample ACP reply in Agent Shell, presses =C-n= twice and opens the compose
+editor. It checks which lines reach the receiver and whether the cue
+precedes “Compose prompt”. It also checks automatic reply delivery,
+permission text, character speech, shared notification routing and Stop.
+Receiver tests use a substitute synthesiser to delay callbacks and a
+substitute audio player to interrupt a cue during rewind. Use the phone
+to hear the cutoff, check VoiceOver focus and try recovery on your tailnet.
 
 On 2026-11-22, the checks passed on WSL2 with the configured Emacs 31,
 Agent Shell checkout dde9392 and Expo SDK 58. A separate fresh session

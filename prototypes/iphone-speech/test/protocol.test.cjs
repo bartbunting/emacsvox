@@ -3,6 +3,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
 const { once } = require('node:events');
 const { connect } = require('node:net');
 const { WebSocket } = require('ws');
@@ -15,8 +16,30 @@ test('line framing, UTF-8, queue order, stop and plain capabilities', () => {
   for (const byte of wire) input.write(Buffer.from([byte]));
   assert.deepEqual(packets, [
     {type:'stop'}, {type:'speak', text:'café {雪}'},
-    {type:'stop'}, {type:'letter', text:' '}, {type:'stop'}, {type:'speak', text:'now'},
+    {type:'stop', scope:'speech'}, {type:'letter', text:' '},
+    {type:'stop', scope:'speech'}, {type:'speak', text:'now'},
   ]);
+});
+
+test('dispatch preserves the Accent recording position and immediate play leaves the batch alone', () => {
+  const packets = [];
+  const input = new LegacyInput(packet => packets.push(packet));
+  const file = path.resolve(__dirname, '../../../sounds/packs/accent/open-object.ogg');
+  const quoted = JSON.stringify(file).replace(/[$[]/g, '\\$&');
+  const write = wire => input.write(Buffer.from(wire));
+  const queued = {type: 'cue', name: 'open-object'};
+  write('q first\nq part\na ' + quoted + '\nq last\n');
+  assert.deepEqual(packets, []);
+  write('p ' + quoted + '\nd\n');
+  assert.deepEqual(packets, [
+    {...queued, immediate: true}, {type: 'speak', text: 'first part'},
+    queued, {type: 'speak', text: 'last'},
+  ]);
+  packets.length = 0;
+  write('a {' + file + '}\ns\nd\na ' + quoted + '\n');
+  input.invalidate();
+  write('d\np "/another/pack/open-object.ogg"\na ' + file + '\nd\n');
+  assert.deepEqual(packets, [{type: 'stop'}, queued]);
 });
 
 test('receiver change drops partial records and queued fragments', () => {
