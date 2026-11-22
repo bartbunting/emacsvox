@@ -53,8 +53,11 @@ Verify this before attaching to the everyday Emacs server.
 On 22 November 2026 the [[file:README.org::*Route each frame to its own speaker][routed trial]] passed with an Xvfb desktop frame
 and a real terminal frame. Alternating Control+n and Stop affected the
 expected speech process. The same test passed over SwiftNIO SSH to a
-disposable existing Emacs. Listen on the PC and iPhone together to finish
-this slice.
+disposable existing Emacs. On 23 November, navigation worked from both
+physical keyboards. A paused phone =C-e m= exposed an exception: Emacs
+spoke prefix help on the laptop before the command hooks ran. After
+routing the partial key sequence, pausing at =C-e= in Org-mode on the
+physical phone spoke the help there and the laptop stayed quiet.
 
 ** NEXT 3. Deliver replies and permission requests across reconnects
 
@@ -70,8 +73,12 @@ WSL tests cover a delayed Agent Shell update after focus moves,
 permission identity, reconnect and resolution, and an Emacs Stop
 acknowledgement. Expo Go uses protected permission playback on its
 single synthesizer. The native receiver has an independent notification
-synthesizer. Hearing a permission finish during navigation and reviewing
-and answering one on the phone are still open.
+synthesizer. On the signed app, the second =C-n= arrived 2.3 seconds
+after Emacs submitted the lighthouse request. The final “Choice 2, Reject”
+and the new Org line were both audible. On the phone, opening the
+pending choices and pressing =y= for Allow once gave an audible result.
+The [[file:README.org::*Check keyboard speech and permissions on the signed app][listening exercise]] is repeatable
+from the editing buffer.
 
 ** NEXT 4. Put SSH and an accessible terminal in the signed app
 
@@ -100,6 +107,12 @@ the same native SSH session. WSL also verified reconnect to the last edit
 buffer and point while a permission remained pending.
 Signed device build 2 contains =921452ad6=. WSL verified the arm64 signature,
 registered phone, bundled controls and dark appearance setting.
+
+Signed device build 3 contains =c10c897f8=. With the Emacs keyboard
+field enabled, SwiftTerm stays out of the ordinary VoiceOver swipe order.
+Review terminal screen opens a snapshot of its visible rows. WSL verified
+the signed executable, registered iPhone and bundled review control.
+The slower voice heard when crossing the terminal still needs a device check.
 
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move
@@ -142,8 +155,20 @@ The inclusion of these components was checked in the downloaded app.
 On the first signed build, a single 480 ms Emacs tone sounded broken in
 about six places. Both audio modes gave the same impression. WSL counted
 one tone and one dispatch. The revised player renders that cue in one
-23,040-frame buffer. The [[file:README.org::*Check the second device build][phone checks]] cover audible continuity, the extra
-typing voice, interruption, pending permissions and lock recovery.
+23,040-frame buffer. On 23 November the tones worked on the second device
+build. Response still felt slightly slower. The next comparison covers
+the first tone after connecting and subsequent tones on the same output
+device. The [[file:README.org::*Check keyboard speech and permissions on the signed app][phone checks]] also cover the VoiceOver swipe order,
+interruption, pending permissions and lock recovery.
+
+The desktop visual-line chime in =C-e m= uses SoX directly. In the two-frame
+check, two mode-line reads started it 0.75 seconds apart. Rendering its
+675 ms waveform to a silent output on WSL took 3.17 seconds with the
+default worker count and 0.094 seconds with one worker. Both produced
+identical samples in the file comparison. The single prerecorded cue
+sounded clear through WSL and slightly clearer through native Windows.
+The chime now uses one SoX worker. This cue still needs a phone-side
+equivalent when visual-line mode is enabled on the phone frame.
 
 ** TODO 6. Bring across the Omnivox speech features
 

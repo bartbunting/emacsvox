@@ -531,7 +531,7 @@ Add =--host-key ~/.local/state/emacsvox/iphone-ssh/host= to the
 key printed by WSL and save it on the phone once. The listener still ends
 when you press Control+C.
 
-** Check the second device build
+** Check keyboard speech and permissions on the signed app
 
 1. In Diagnostics, activate “Test half-second tone”. Listen for one steady
    pitch. Try “Test three-second tone” and interrupt it with Stop Speech.
@@ -540,12 +540,28 @@ when you press Control+C.
    lowercase letter with ordinary Emacs typing echo on. Listen for one echo.
    In an Agent Shell response, press =C-n= twice during a line and compare
    the cutoff on speaker and headphones.
-3. Navigate during a permission request. Listen for the complete request
-   while navigation keeps speaking. Check that explicit Stop silences both.
+3. In the isolated test session, run =C-u M-x iphone-test-permission RET=
+   from the phone. Stay in your editing buffer. Press =C-n= to start a
+   practice request to read the lighthouse notes. As soon as you hear
+   “lighthouse”, press =C-n= again. Listen for your new line and the end
+   of the request, “Choice 2, Reject”. Run =M-x iphone-test-permission RET=
+   without the prefix argument to visit the pending choices.
+   Press =y= for Allow once, or move to Reject and press Return. You can
+   repeat the exercise with the prefix argument at any time. The sample
+   uses a local Agent Shell client and performs no file operation. Stop
+   Speech silences both speech streams and leaves the choice pending.
 4. Visit a second buffer with an unsaved edit, note point and lock the phone.
    Unlock and reopen the app. Check the saved position, type one character and
    listen for fresh feedback. Repeat after explicitly disconnecting to check
    the phone stays quiet.
+5. With “Use Emacs keyboard field” enabled, swipe forward from the keyboard
+   to Settings, then swipe back. Listen for your usual VoiceOver voice.
+   “Review terminal screen” opens a snapshot you can read one visible row
+   at a time. Activate Done to return. When you turn the keyboard field off,
+   SwiftTerm also appears directly in the swipe order.
+6. From the phone, press =C-e=, pause for the prefix help, then press =m=.
+   Listen for the help and the mode line on the phone. Repeat on the PC to
+   hear its own mode line on the desktop.
 
 ** Attach to an existing conversation
 

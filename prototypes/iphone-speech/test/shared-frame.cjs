@@ -68,9 +68,12 @@ async function main() {
     relay.httpServer.listen(0, '127.0.0.1');
     await once(relay.httpServer, 'listening');
     tmux('-f', '/dev/null', 'start-server', ';', 'set-option', '-s', 'exit-empty', 'off');
-    gui = spawn('xvfb-run', ['-a', './test-session', '-T', 'Emacsvox isolated route check', '-l', path.join(__dirname, 'shared-session.el')], {
+    gui = spawn('xvfb-run', ['-a', './test-session', '-T', 'Emacsvox isolated route check',
+      '--eval', "(setq native-comp-async-report-warnings-errors 'silent)", '-l', path.join(__dirname, 'shared-session.el')], {
       cwd: path.join(__dirname, '..'), detached: true, stdio: 'ignore',
-      env: {...process.env, GDK_BACKEND: 'x11', XDG_RUNTIME_DIR: dir, EMACSVOX_PHONE_SOCKET: socket, EMACSVOX_SHARED_DIR: dir,
+      // Mode-line feedback can invoke SoX directly even with a test speech backend.
+      env: {...process.env, AUDIODRIVER: 'alsa', AUDIODEV: 'null', GDK_BACKEND: 'x11',
+        XDG_RUNTIME_DIR: dir, EMACSVOX_PHONE_SOCKET: socket, EMACSVOX_SHARED_DIR: dir,
         ...(routed && {EMACSVOX_PHONE_SOCKET: desktopSocket, EMACSVOX_TRIAL_ROUTED: '1',
           EMACSVOX_TRIAL_DESKTOP_PROGRAM: path.resolve(__dirname, '../phone-backend')})},
     });
@@ -107,6 +110,30 @@ async function main() {
       assert.equal(Number(windowId), Number(JSON.parse(await observe(`(frame-parameter ${pc} 'outer-window-id)`))));
       const pressPC = (...keys) => run('python3', [path.join(__dirname, 'xvfb-key.py'), windowId, ...keys], {env: xenv});
       const spoke = (packets, row) => packets.some(p => p.type === 'speak' && p.text.trim() === row);
+      // Exercise Emacs's prefix-message callback while the terminal is
+      // waiting for the second physical key. Redisplay timing varies on Xvfb.
+      await observe(`(with-selected-frame ${phone}
+        (switch-to-buffer (get-buffer-create "PhoneModeFixture"))
+        (org-mode) (insert "Row one\\nWarmup row\\nLast row\\n") (goto-char (point-min)))`);
+      ws.send('key \x0e');
+      await until('phone reads its Org window', () => records.some(p => p.type === 'speak' && p.text.includes('Warmup row')));
+      desktop.length = records.length = 0;
+      ws.send('key \x05');
+      await until('real phone prefix is pending', async () =>
+        (await observe(`(with-selected-frame ${phone} (key-description (this-single-command-keys)))`)) === '"C-e"');
+      await observe(`(with-selected-frame ${phone}
+        (let ((echo (help--append-keystrokes-help (concat (key-description (this-single-command-keys)) "-"))))
+          (let ((emacsvox-speak-messages nil)) (message "%s" echo))
+          (set-minibuffer-message echo)))`);
+      await until('phone speaks its prefix help', () => records.some(p => p.type === 'speak' && /C-e.*for help/.test(p.text)));
+      assert.ok(!desktop.some(p => p.type === 'speak' && /C-e.*for help/.test(p.text)));
+      ws.send('key m');
+      await until('phone reads its mode line', () => records.some(p => p.type === 'speak' && /PhoneModeFixture/i.test(p.text)));
+      await observe(`(with-selected-frame ${phone} (message "Fixture desktop reminder"))`);
+      await until('unrelated message still goes to desktop', () => spoke(desktop, 'Fixture desktop reminder'));
+      assert.ok(!records.some(p => p.type === 'speak' && /Fixture desktop reminder/.test(p.text)));
+      assert.ok(!desktop.some(p => p.type === 'speak' && /C-e|PhoneModeFixture/i.test(p.text)));
+      await observe(`(with-selected-frame ${phone} (switch-to-buffer iphone-shared-buffer))`);
       await observe("(global-set-key (kbd \"<f8>\") #'tts-stop)");
       await position(pc, 'Starting row');
       await position(phone, 'Cobalt lighthouse');
@@ -262,12 +289,9 @@ async function main() {
         const phoneWindow = "(frame-selected-window (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))";
         await until('SSH edit buffer', async () => (await observe('(buffer-name (window-buffer ' + phoneWindow + '))')) === '"Phone resume draft"');
         packets.length = 0;
-        await observe(`(with-current-buffer iphone-shared-buffer
-          (let ((tool '((:title . "Inspect typing sample") (:permission-request-id . 23))))
-            (map-put! agent-shell--state :tool-calls (list (cons "typing" tool)))
-            (agent-shell--emit-event :event 'permission-request
-              :data (list '(:request-id . 23) '(:tool-call-id . "typing") (cons :tool-call tool)))))`);
-        await until('permission reaches the subscribed frame', () => packets.some(p => p.type === 'permission'));
+        await observe('(with-selected-window ' + phoneWindow + ' (iphone-test-permission) nil)');
+        await until('practice permission reaches the subscribed frame', () =>
+          packets.some(p => p.type === 'permission' && /lighthouse notes.*Allow once.*Reject/.test(p.text)));
         sshKeys('j');
         await until('character echo during permission', () => packets.some(p => p.type === 'letter' && p.text === 'j'));
         assert.ok(!packets.some(p => p.type === 'stop' && p.scope === 'all'));
@@ -281,6 +305,26 @@ async function main() {
         sshKeys('k');
         await until('fresh SSH input at the restored point', async () =>
           (await observe('(with-current-buffer "Phone resume draft" (buffer-string))')) === '"jk other edits"');
+        const originalRequest = resumed.find(p => p.type === 'permission').id;
+        await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer "PhoneModeFixture") (goto-char (point-min)))`);
+        sshKeys('\x15\x1bxiphone-test-permission\r');
+        await until('permission practice is armed', async () => (await observe('(frame-live-p iphone-test--armed-frame)')) === 't');
+        sshKeys('\x0e');
+        await until('first move starts a fresh practice request', () =>
+          resumed.some(p => p.type === 'permission' && p.id !== originalRequest));
+        const newRequest = resumed.find(p => p.type === 'permission' && p.id !== originalRequest).id;
+        assert.ok(resumed.some(p => p.type === 'resolved' && p.id === originalRequest));
+        const beforeMove = resumed.length;
+        sshKeys('\x0e');
+        await until('second move speaks its line', () =>
+          resumed.slice(beforeMove).some(p => p.type === 'speak' && p.text.trim() === 'Last row'));
+        assert.ok(!resumed.slice(beforeMove).some(p => p.type === 'stop' && p.scope === 'all'));
+        sshKeys('\x1bxiphone-test-permission\r');
+        await until('phone reviews the pending choices', async () => (await observe(
+          '(with-selected-window ' + phoneWindow + ' (get-text-property (point) \'agent-shell-permission-button))')) === 't');
+        sshKeys('y');
+        await until('phone answers the practice request', () =>
+          resumed.some(p => p.type === 'resolved' && p.id === newRequest));
         await closeSSH();
         console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
       } finally {

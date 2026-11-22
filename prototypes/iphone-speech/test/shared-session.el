@@ -10,6 +10,76 @@
   (load (expand-file-name "../frame-speech.el" (file-name-directory load-file-name)) nil nil t)
   (iphone-frame-speech-enable))
 (defvar iphone-shared-buffer nil)
+(defvar-local iphone-test--permission-client nil)
+(defvar-local iphone-test--permission-id 0)
+(defvar iphone-test--armed-frame nil)
+
+(defun iphone-test-permission (&optional on-next-line)
+  "Announce a practice permission or visit its choices.
+With a prefix argument, start a fresh request after your next line move."
+  (interactive "P")
+  (unless (and (getenv "EMACSVOX_TRIAL_ROUTED") (buffer-live-p iphone-shared-buffer)
+               (process-live-p (frame-parameter nil 'emacsvox-phone-speaker)))
+    (user-error "Run this command from the connected test phone"))
+  (if on-next-line
+      (progn
+        (unless (eq (frame-parameter nil 'emacsvox-conversation) iphone-shared-buffer)
+          (user-error "Visit the shared Codex sample before arming practice"))
+        (setq iphone-test--armed-frame (selected-frame))
+        (add-hook 'post-command-hook #'iphone-test--after-line 90)
+        (message "Press Control+n to start permission practice"))
+    (iphone-test--show-permission)))
+
+(defun iphone-test--after-line ()
+  (let ((frame iphone-test--armed-frame))
+    (when (or (not (frame-live-p frame))
+              (and (eq frame (selected-frame)) (eq this-command 'next-line)))
+      (remove-hook 'post-command-hook #'iphone-test--after-line)
+      (setq iphone-test--armed-frame nil)
+      (when (frame-live-p frame)
+        (run-at-time
+         0.25 nil
+         (lambda ()
+           (when (and (frame-live-p frame) (process-live-p (frame-parameter frame 'emacsvox-phone-speaker))
+                      (eq (frame-parameter frame 'emacsvox-conversation) iphone-shared-buffer))
+             (with-selected-frame frame (iphone-test--show-permission t)))))))))
+
+(defun iphone-test--show-permission (&optional fresh)
+  (with-current-buffer iphone-shared-buffer
+    (let* ((client (map-elt agent-shell--state :client))
+           (tool-id "phone-listening-test")
+           (pending (agent-shell--permission-pending-p :tool-call-id tool-id)))
+      (when (and client (not (eq client iphone-test--permission-client)))
+        (user-error "This sample already has an agent client"))
+      (unless client
+        ;; Only this generated sample receives a local ACP response handler.
+        (setq iphone-test--permission-client
+              (acp-make-client :command "true" :context-buffer (current-buffer)
+                               :request-sender #'ignore :notification-sender #'ignore
+                               :response-sender #'ignore))
+        (map-put! agent-shell--state :client iphone-test--permission-client)
+        (setf (alist-get :id (alist-get :session agent-shell--state)) "phone-listening-test"))
+      (unless (eq (frame-parameter nil 'emacsvox-conversation) (current-buffer))
+        (switch-to-buffer (current-buffer))
+        (iphone-frame-speech-subscribe (current-buffer)))
+      (when (and fresh pending)
+        (save-excursion
+          (agent-shell--send-permission-response
+           :client iphone-test--permission-client :state agent-shell--state
+           :tool-call-id tool-id :request-id pending :cancelled t))
+        (setq pending nil))
+      (if pending
+          (progn (switch-to-buffer (current-buffer))
+                 (call-interactively #'agent-shell-jump-to-latest-permission-button-row))
+        (let ((agent-shell-permission-responder-function nil))
+          (agent-shell--on-request
+           :state agent-shell--state
+           :acp-request
+           `((method . "session/request_permission") (id . ,(cl-incf iphone-test--permission-id))
+             (params . ((toolCall . ((toolCallId . ,tool-id) (kind . "read") (status . "pending")
+                                     (title . "Read the lighthouse notes for the listening test")))
+                        (options . [((kind . "allow_once") (name . "Allow once") (optionId . "allow"))
+                                    ((kind . "reject_once") (name . "Reject") (optionId . "reject"))]))))))))))
 
 (defun iphone-shared-show-draft ()
   (when-let* ((id (frame-parameter nil 'emacsvox-phone-id))

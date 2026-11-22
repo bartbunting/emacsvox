@@ -47,6 +47,20 @@
   (let ((iphone-frame-speech--command-owner (iphone-frame-speech--owner)))
     (apply original args)))
 
+(defun iphone-frame-speech--key-echo (original text)
+  ;; Emacs displays a partial key sequence before either command hook runs.
+  ;; Other messages can arrive while the phone is the selected frame.
+  (let* ((keys (and (frame-parameter nil 'emacsvox-phone-id)
+                    (this-single-command-keys)))
+         (name (and (length> keys 0) (key-description keys)))
+         (iphone-frame-speech--command-owner
+          (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner
+              (and name (stringp text)
+                   (or (equal text name) (equal text (concat name "-"))
+                       (string-prefix-p (concat name "- (") text))
+                   (iphone-frame-speech--owner)))))
+    (funcall original text)))
+
 (defun iphone-frame-speech--stop (original &optional all)
   ;; Preserve the desktop command's interactive stop of both speech lanes.
   (interactive (list 'iphone-explicit-stop))
@@ -232,7 +246,7 @@
 
 (defconst iphone-frame-speech--entries
   '(emacsvox-aural-call-with-submission emacsvox-icon tts-letter
-    tts-dispatch tts-tone tts-silence tts-notify-apply))
+    tts-dispatch tts-tone tts-silence tts-notify-apply tts--protocol-set-punctuations))
 
 (defconst iphone-frame-speech--deferred-entries
   '(emacsvox-agent-shell--deliver-pending-blocks emacsvox-agent-shell--deliver-out-of-turn-pending))
@@ -276,6 +290,7 @@
     (remove-hook 'post-command-hook #'iphone-frame-speech--post-command)
     (remove-hook 'delete-frame-functions #'iphone-frame-speech--detach)
     (advice-remove 'command-execute #'iphone-frame-speech--command)
+    (advice-remove 'set-minibuffer-message #'iphone-frame-speech--key-echo)
     (advice-remove 'agent-shell--emit-event #'iphone-frame-speech--event)
     (advice-remove 'emacsvox-agent-shell--session-focused-p #'iphone-frame-speech--focused)
     (advice-remove 'emacsvox-agent-shell--deliver-announcement #'iphone-frame-speech--announce)
@@ -304,6 +319,7 @@
   (advice-add 'emacsvox-agent-shell--session-focused-p :around #'iphone-frame-speech--focused)
   (advice-add 'emacsvox-agent-shell--deliver-announcement :around #'iphone-frame-speech--announce)
   (advice-add 'command-execute :around #'iphone-frame-speech--command)
+  (advice-add 'set-minibuffer-message :around #'iphone-frame-speech--key-echo '((depth . -90)))
   (dolist (entry iphone-frame-speech--entries)
     (advice-add entry :around #'iphone-frame-speech--route)))
 
