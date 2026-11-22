@@ -19,23 +19,46 @@ The earlier local branches named above are stages of this checkout. Emacsvox
 revisions in the build notes point to the corresponding commits in this
 history. The private signed builds predate the removal of local setup details.
 
-* Next trials with signed build 3
+* Proposed additions to the next signed build
 
-1. Use both keyboards to check delayed feedback. Move onto a letter, pause
-   for its phonetic name, then move rapidly. Each frame should speak its own
-   letter and describe only the last one.
-2. The 480 ms Diagnostics tone and a direct Return in the SSH tone buffer
-   both start promptly on build 3. Use the command-completion comparison
-   below when investigating the slower response after =M-x=.
-3. At the next permission request in the running Codex conversation, press
-   =C-n= while the choices are spoken, then review the request on the phone.
-   Typing into that conversation and reconnecting after lock passed on build 3.
-4. Compare the visual-line chime heard in Expo Go Diagnostics with =C-e m=
-   in a signed build that includes the recording. Check cue order and Stop
-   on the phone.
-5. Finish daily-use setup. Start the opt-in relay, reconnect with the
-   saved SSH settings after a WSL restart, then disconnect the phone and
-   continue in the same desktop session.
+The build 4 source includes the visual-line chime heard in Expo Go.
+Group the following three slices into the next device trial.
+
+1. *Everyday earcons.* Bundle the [[file:../../sounds/packs/accent/README.org][Accent pack]] and its inherited 3d cues.
+   Match each recording selected by Emacsvox and play it locally.
+   The current desktop profile uses 18 Accent and 36 inherited 3d
+   recordings that match the bundled audio byte for byte.
+   The 55th cue, =task-done=, uses a personal recording.
+   Check minibuffer entry and exit, Dired marks, completion and warnings.
+   Preserve the stereo recordings for minibuffer exit and warnings on headphones.
+   Personal recording import is a later opt-in feature.
+2. *Character and code reading.* Follow the Emacs settings for capitals,
+   punctuation and speech rate. Compare reading =aA_b[2]= as a line and
+   moving over its characters. After a pause the phonetic word should
+   reach the frame that moved, and rapid movement should cancel the old one.
+3. *Audio timing and interruption.* Add an optional Diagnostics comparison.
+   For a test key, time arrival at the phone keyboard field, receipt of
+   the relay message, and the direct-speech start callback or the first
+   buffer scheduled by the native mixer. Collect timings without storing
+   spoken text.
+   Compare direct speech and mixed Eloquence on speaker and headphones.
+   Check that the cue starts at the intended place, a second =C-n= cuts
+   off obsolete feedback, and Stop Speech silences a long reply.
+   Use the listening check for audible onset.
+
+* Work alongside and after this build
+
+- *Live permissions on build 3.* At the next real Codex permission
+  request, navigate during the choices, review the pending request and
+  answer it. The practice request and lock recovery have passed.
+- *Shared Omnivox core.* Start in WSL by replaying the same queue,
+  dispatch, character, tone and Stop sequences through the Rust core
+  and the receiver. Then integrate the core in the iPhone app while
+  Swift supplies local Eloquence audio. Later slices cover word-aligned
+  cues, voice palettes and effects as their protocol tests pass.
+- *Daily startup and recovery.* After a planned WSL restart, reopen
+  Codex, start the private listener and relay, and connect with the
+  saved phone settings. Disconnect and continue on the desktop.
 
 * Delivery plan
 
