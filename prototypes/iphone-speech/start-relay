@@ -4,8 +4,13 @@
 
 set -euo pipefail
 cd "$(dirname "$0")"
+mode=--go
+if [[ ${1:-} == --native-metro ]]; then
+    mode=--dev-client
+    shift
+fi
 if [[ $# != 1 ]]; then
-    echo "Usage: ./start-relay IPHONE_TAILSCALE_IPV4"
+    echo "Usage: ./start-relay [--native-metro] IPHONE_TAILSCALE_IPV4"
     tailscale status | awk 'tolower($0) ~ /ios/ { print $1, $2 }'
     exit 2
 fi
@@ -21,26 +26,43 @@ address=$(tailscale ip -4)
 runtime=${XDG_RUNTIME_DIR:?}/emacsvox-iphone
 umask 077
 mkdir -p "$runtime"
-exec 9>"$runtime/relay.lock"
-flock -n 9 || { echo 'Phone relay already running.' >&2; exit 1; }
 socket=$runtime/speech.sock
-[[ ! -S $socket ]] || rm -- "$socket"
+if [[ $mode == --dev-client ]]; then
+    if [[ ! -S $socket ]] || flock -n "$runtime/relay.lock" true; then
+        echo 'Start the usual phone relay first.' >&2
+        exit 1
+    fi
+    exec 9>"$runtime/native-metro.lock"
+    flock -n 9 || { echo 'Native Metro already running.' >&2; exit 1; }
+    port=8790
+    proxy=8789
+else
+    exec 9>"$runtime/relay.lock"
+    flock -n 9 || { echo 'Phone relay already running.' >&2; exit 1; }
+    [[ ! -S $socket ]] || unlink "$socket"
+    port=8786
+    proxy=8788
+fi
 children=()
 cleanup() {
     trap - EXIT INT TERM
     for child in "${children[@]}"; do kill "$child" 2>/dev/null || true; done
     wait || true
-    [[ ! -S $socket ]] || unlink "$socket"
+    if [[ $mode == --go && -S $socket ]]; then unlink "$socket"; fi
 }
 trap cleanup EXIT
 trap 'exit 0' INT TERM
 export EXPO_PUBLIC_EMACSVOX_HOST=$address
-export EXPO_PACKAGER_PROXY_URL="http://$address:8788"
+export EXPO_PACKAGER_PROXY_URL="http://$address:$proxy"
 export EXPO_NO_TELEMETRY=1
-CI=1 node_modules/.bin/expo start --go --localhost --port 8786 </dev/null &
+CI=1 node_modules/.bin/expo start "$mode" --localhost --port "$port" </dev/null &
 children+=($!)
-socat "TCP4-LISTEN:8788,bind=$address,range=$phone/32,fork,reuseaddr" TCP4:127.0.0.1:8786 &
+socat "TCP4-LISTEN:$proxy,bind=$address,range=$phone/32,fork,reuseaddr" "TCP4:127.0.0.1:$port" &
 children+=($!)
-node relay.cjs "$address" "$phone" "$socket" &
-children+=($!)
+if [[ $mode == --go ]]; then
+    node relay.cjs "$address" "$phone" "$socket" &
+    children+=($!)
+else
+    echo "In the development app, enter http://$address:$proxy as the server URL."
+fi
 wait -n

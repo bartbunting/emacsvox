@@ -182,6 +182,93 @@ Metro served an iOS bundle with the Tailscale bundle URL, and the iOS
 Hermes export succeeded. On a physical iPhone, both the local voice test
 and line navigation in a rendered Agent Shell sample produced audible speech.
 
+* Native mixer experiment
+
+The local Emacsvox branch =prototype/iphone-native-audio= adds a Swift
+module to the same receiver. The signed development app starts in direct
+speech mode. In native mixer mode, the selected iOS voice supplies PCM
+buffers to an audio player. The voice, the Accent recording and a short
+660 Hz tone have separate players connected to one audio engine. The
+relay still uses the same legacy commands. The test tone is a local
+listening fixture.
+
+** Prepare a hosted build from WSL
+
+Use the native worktree for these commands. The staging script copies the
+committed receiver files to a fresh directory. It prints that directory
+and leaves your Emacs profile, relay, Git history and other projects local.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+stage=$(./stage-ios-build)
+cd "$stage"
+npm ci
+export EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD"
+read -rp 'Expo account name: ' expo_owner
+npx --yes eas-cli@27.11.0 account:usage "$expo_owner"
+#+end_src
+
+The first simulator build compiled the Swift mixer. To download your own
+completed build, use its ID from your Expo dashboard.
+
+#+begin_src sh
+read -rp 'Expo build ID: ' build_id
+npx --yes eas-cli@27.11.0 build:download --build-id "$build_id"
+#+end_src
+
+To compile a later revision for the iOS Simulator, run the following
+command. Each new build uses an iOS build slot.
+
+#+begin_src sh
+npx --yes eas-cli@27.11.0 build --platform ios --profile simulator
+#+end_src
+
+For the physical phone, use the =development= profile after activating
+Apple Developer Program membership. Register the iPhone first, follow the
+Expo device registration link in Safari, then run the build and use its
+install link on that phone. Enable Developer Mode if iOS requests it.
+[[https://docs.expo.dev/tutorial/eas/ios-development-build-for-devices/][Expo device build and installation]].
+
+#+begin_src sh
+npx --yes eas-cli@27.11.0 device:create
+npx --yes eas-cli@27.11.0 build --platform ios --profile development
+#+end_src
+
+** Listen on the phone
+
+Keep the usual Expo Go relay and isolated test Emacs running from the
+[[*Listen from the PC keyboard][listening setup]]. In another WSL terminal, start the development server
+from the native worktree. Use your phone's Tailscale IP as the argument.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+npm ci
+read -rp 'iPhone Tailscale IPv4 address: ' phone
+./start-relay --native-metro "$phone"
+#+end_src
+
+1. Open the installed Emacsvox Speech app. In the development launcher,
+   choose Enter URL manually and enter the HTTP address printed by the
+   script. Allow the
+   phone's Tailscale address to reach TCP port 8789 on WSL.
+2. Activate Connect. Check the voice and rate below Connected. In the
+   isolated Emacs, press =C-n= during a long line. This is the direct
+   speech comparison with VoiceOver active.
+3. Activate Use native mixer and then Connect. Activate Test mixed audio.
+   Listen for speech, the Accent recording and a short tone together.
+   Stop Speech should silence all three. Let one sample finish to read
+   its timing. The value runs from the native speech request to the first
+   processed buffer.
+4. Repeat the navigation, Compose, Stop during a stall and reconnect
+   tests. Compare headphones and speaker on the same text in each mode.
+   To measure audible latency, use one external recording that picks up
+   the keypress and the output on the same clock. Record first use and
+   repeated moves separately. If the selected voice supplies no PCM,
+   the app reports that condition. Use direct speech and Connect to resume.
+5. Close the development app and press =Ctrl-C= in the native Metro
+   terminal. Open Expo Go and activate Connect to use the original
+   receiver again.
+
 * Full terminal Emacs on the iPhone
 
 The planned app gives you a terminal frame in your existing WSL Emacs.

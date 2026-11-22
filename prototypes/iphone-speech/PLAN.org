@@ -7,8 +7,8 @@ existing WSL Emacs, edit files, use the minibuffer and work in a running
 Codex conversation. The phone speaks its own frame locally, including
 Emacsvox navigation, tones, earcons and permission announcements.
 
-Keep the receiver, relay and Emacs integration on the local Emacsvox branch
-=prototype/iphone-speech=. Make reusable Rust changes on a separate Omnivox
+The Expo Go baseline is on the local Emacsvox branch =prototype/iphone-speech=.
+The native experiment builds on it on =prototype/iphone-native-audio=. Make reusable Rust changes on a separate Omnivox
 feature branch when the audio experiment calls for them. Use a named test
 Emacs server until phone and desktop routing pass together. Record a date,
 revision and short result under each milestone when its acceptance test passes.
@@ -81,6 +81,13 @@ With VoiceOver active, the mixer should cut off the old line, start the new
 one and respond to Stop at least as promptly. Cancelled audio must stay
 silent. If Reed's samples arrive too late, keep direct speech and separate
 cues usable while investigating.
+
+The [[file:README.org::*Native mixer experiment][native mixer experiment]] includes direct and mixed playback, cancellation,
+a fixed tone and the Accent recording. On 22 November 2026 the
+hosted simulator build of =dd21276ef= succeeded. The downloaded iOS
+Simulator app contained the compiled Swift mixer. All 14 WSL receiver and
+relay tests passed. Device signing, Eloquence sample delivery and acoustic
+timing on both routes are open.
 
 ** TODO Bring the first Omnivox speech features across
 
