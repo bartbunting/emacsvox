@@ -2,8 +2,9 @@
 #+TODO: TODO NEXT | DONE
 #+startup: content
 
-The working prototype is one foreground iPhone app. You connect to your
-existing WSL Emacs, edit files, use the minibuffer and work in a running
+The working prototype is one foreground iPhone app. With an external
+keyboard connected to the phone, you edit files in your existing WSL
+Emacs, use the minibuffer and work in a running
 Codex conversation. The phone speaks its own frame locally, including
 Emacsvox navigation, tones, earcons and permission announcements.
 
@@ -120,12 +121,16 @@ Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
 the same buffer. The phone-facing SSH endpoint, Keychain storage,
 terminal display and accessible input still need implementation or testing.
 
-On the phone, open and save a file using Braille Screen Input, use =M-x=
-completion and =C-g=, browse Dired, then switch to the running Codex buffer.
-Check Control and Meta sequences with the external keyboard and accessible
-modifier controls with touch. Typed text should arrive once and VoiceOver
-should let you reach both the terminal and Stop Speech. The [[file:README.org::*Full terminal Emacs on the iPhone][editing walkthrough]]
-gives the keys.
+The first phone input test uses an external keyboard connected to the
+iPhone with VoiceOver on. Focus the terminal in the foreground app. In an
+Agent Shell response, press =C-n= and press it again during speech. Each
+press should move one line and speak its destination. The second press
+should cut off the first line.
+
+Use the same keyboard to open and save a file, use =M-x= completion and
+=C-g=, browse Dired and switch buffers. Check that typed text arrives
+once and that VoiceOver can move focus to Stop Speech and back to the
+terminal. The [[file:README.org::*Full terminal Emacs on the iPhone][editing walkthrough]] gives the keys.
 
 ** TODO Route speech by frame and preserve pending permissions
 
@@ -151,7 +156,7 @@ old audio stay silent.
 Install a private signed build with the JavaScript bundled. Run the WSL
 relay with the Expo development server stopped. Open the app using
 VoiceOver. Choose the Emacs server that owns your existing Codex
-conversation. With the PC keyboard set aside, edit a file, send a prompt,
+conversation. Using the keyboard connected to the iPhone, edit a file, send a prompt,
 hear a reply, interrupt it, handle a permission request and reconnect.
 Confirm you return to the same buffer and conversation.
 Close just the phone frame and continue on the desktop with ordinary speech.

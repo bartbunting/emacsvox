@@ -323,19 +323,23 @@ and a running Agent Shell conversation, with Emacsvox speaking on the phone.
 
 The signed app would combine SSH, an accessible terminal and the speech
 receiver. Verify the WSL host key, keep SSH credentials in the iOS
-Keychain, allocate a PTY and run =emacsclient -t -s SERVER=. Pass keyboard
-input and terminal size changes to Emacs. Support Control, Meta, Escape
-and prefix sequences such as =C-x= and =C-c=. Provide VoiceOver-accessible
-ways to enter these with Braille Screen Input and to reach commands whose
-key combinations iOS or VoiceOver intercepts.
+Keychain, allocate a PTY and run =emacsclient -t -s SERVER=. Pass input
+from the external keyboard connected to the iPhone and terminal size
+changes to Emacs. Support Control, Meta, Escape and prefix sequences
+such as =C-x= and =C-c=. Check which keys reach the terminal with
+VoiceOver active.
 
-Test on the phone with a real editing task. Open a scratch file with
-=C-x C-f=, enter text with Braille Screen Input, search with =C-s=,
-and save with =C-x C-s=. Run =M-x=, navigate completions and cancel with
-=C-g=. Switch to the existing Codex buffer with =C-x b= and press
-=C-n= twice during speech. Listen for each destination line and check
-for duplicate echo from VoiceOver. Check that desktop activity still
-speaks on the desktop while the phone frame is open.
+Connect the external keyboard to the iPhone, turn on VoiceOver and focus
+the terminal. Use =C-x b= to switch to the Codex buffer. In a response,
+press =C-n=, then press it again halfway through the line. Listen for
+the new line to interrupt the old one.
+
+Open a scratch file with =C-x C-f=, type a sentence, search with =C-s=
+and save with =C-x C-s=. Check that the saved text appears once. Press
+Escape and then =x= to invoke =M-x=, navigate completions and cancel with
+=C-g=. Use VoiceOver to reach Stop Speech, return focus to the terminal
+and type again. Check for duplicate echo and confirm that desktop
+activity still speaks on the desktop while the phone frame is open.
 
 Pair the phone's authenticated SSH connection and TTY with a fresh speech
 endpoint. One option is to forward the relay socket through the same SSH
