@@ -49,7 +49,7 @@ test('old keyboard events cannot enter a replacement session', () => {
     speech: {stop: async () => true}, status() {}, keyboard: value => { field = value; },
     openSocket: () => (socket = {readyState: 1, send: text => sent.push(text), close() {}}),
   });
-  const ready = keyboard => socket.onmessage({data: JSON.stringify({type:'ready', id:0, keyboard})});
+  const ready = (keyboard, id = 0) => socket.onmessage({data: JSON.stringify({type:'ready', id, keyboard})});
   try {
     receiver.connect();
     ready(true);
@@ -60,9 +60,10 @@ test('old keyboard events cannot enter a replacement session', () => {
     assert.equal(field, null);
     old.sendKeys('stale');
     receiver.connect();
-    ready(true);
+    receiver.stop();
+    ready(true, 1);
     old.sendKeys('stale');
     field.sendKeys('b');
-    assert.deepEqual(sent, ['key a', 'key b']);
+    assert.deepEqual(sent, ['key a', 'reset 1', 'key b']);
   } finally { receiver.disconnect(); }
 });

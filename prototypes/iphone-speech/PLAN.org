@@ -2,7 +2,7 @@
 #+TODO: TODO NEXT | DONE
 #+startup: content
 
-The working prototype is one foreground iPhone app. With an external
+The goal is one foreground iPhone app. With an external
 keyboard connected to the phone, you edit files in your existing WSL
 Emacs, use the minibuffer and work in a running
 Codex conversation. The phone speaks its own frame locally, including
@@ -19,9 +19,131 @@ The earlier local branches named above are stages of this checkout. Emacsvox
 revisions in the build notes point to the corresponding commits in this
 history. The private signed builds predate the removal of local setup details.
 
-* Prototype milestones [2/7]
+* Delivery plan
 
-** DONE Hear a real Emacs navigation command on the iPhone
+Slices 1 through 3 use Expo Go and a named test server in WSL. Slice 4
+is the first physical-device build that needs Apple Developer Program
+membership. Start that build on hosted macOS from WSL. Keep the normal
+desktop profile available throughout the trials.
+
+** NEXT 1. Attach the phone to an existing Emacs
+
+Use the Expo keyboard relay to run =emacsclient -t= against the test
+server whose graphical frame already shows an Agent Shell conversation.
+Start an unsent draft on the PC and continue it on the phone. Pass when
+disconnect closes just the phone frame, the PC still shows the edited
+draft, and reconnect opens the same conversation.
+
+The [[file:README.org::*Continue a PC draft on the phone][shared-frame trial]]
+is ready on =prototype/iphone-ssh=. The WSL check uses a real graphical
+Emacs, a rendered Agent Shell sample and terminal input over the receiver
+socket. Both frames showed the same buffer and the PC retained the edited
+draft and its original Emacs process after the phone frame closed.
+The physical check is to continue that draft from the iPhone and reopen it.
+
+** TODO 2. Route speech to the frame that requested it
+
+In the test server, give the PC and phone separate speech destinations
+and queues. Capture the destination when the command runs and carry it
+through deferred output. Retire the association when the phone frame
+closes. Pass when both frames display the same buffer and alternating
+navigation and Stop affect only the device that issued each command.
+Verify this before attaching to the everyday Emacs server.
+
+** TODO 3. Deliver replies and permission requests across reconnects
+
+Route asynchronous events to the frame subscribed to the conversation.
+Keep permission identity and urgency through playback. During rapid
+navigation, hear the request finish, review it and answer it. Explicit
+Stop silences both phone lanes. On reconnect, announce a still-pending
+request once from current Emacs state. Resolved requests and old audio
+stay silent. Check the policy against the
+[[file:../../docs/adr/0009-foreground-and-notification-speech-lanes.org][main and notification lane rules]].
+
+** TODO 4. Put SSH and an accessible terminal in the signed app
+
+Test SSH authentication,
+host-key verification, interactive terminal allocation and resize against
+the isolated server. Try SwiftNIO SSH and SwiftTerm in the signed app.
+Keep the SSH key in the iOS Keychain. Run =emacsclient -t -s SERVER= and
+keep terminal input and local speech available in the same foreground app.
+
+The [[file:README.org::*Exercise the SSH transport in WSL][WSL SSH test]] on =prototype/iphone-ssh= uses the Swift transport against
+a temporary loopback OpenSSH server. On 22 November 2026 it attached to
+an existing Agent Shell sample, dispatched the destination line through
+Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
+the same buffer. The phone-facing SSH endpoint, Keychain storage,
+native terminal display and physical keyboard behaviour still need testing.
+
+Pass when the app verifies the host, attaches its terminal to the chosen
+server and supports the keyboard workflows below. Use VoiceOver to move
+to Stop Speech, return to the terminal and resume navigation.
+
+** TODO 5. Prove native audio with Eloquence on the phone
+
+Build a small Swift audio module in the same Expo app. Ask iOS for Reed's
+speech samples, start playback as samples arrive, and mix one generated
+tone and one preloaded earcon. On Stop, clear scheduled audio immediately
+and discard later callbacks for the cancelled utterance. Use the existing
+relay and PC keyboard so this experiment changes only the phone audio path.
+
+Use the signed development app from slice 4. Check dependencies, tests
+and the iOS JavaScript export in WSL, then build native changes with
+=eas build --platform ios --profile development=. Reuse the installed
+development build for JavaScript-only changes.
+[[https://docs.expo.dev/tutorial/eas/ios-development-build-for-devices/][Expo device build]] · [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer/write%28_%3Atobuffercallback%3A%29][Apple speech buffers]].
+
+Compare keypress to audible cue, keypress to first word, and Stop to
+silence for direct speech and the mixer. Use one recording clock for the
+key and the audible result. For each output route, record first use,
+typical and slow repeated moves, and any stale speech or cues heard during
+rapid replacement. Label internal callback timings separately.
+Use direct Expo Go speech on the same output route as the baseline.
+With VoiceOver active, the mixer should cut off the old line, start the new
+one and respond to Stop at least as promptly. Cancelled audio must stay
+silent. If Reed's samples arrive too late, keep direct speech and separate
+cues usable while investigating.
+
+The [[file:README.org::*Native mixer experiment][native mixer experiment]] includes direct and mixed playback, cancellation,
+a fixed tone and the Accent recording. On 22 November 2026 the
+hosted simulator build of =dd21276ef= succeeded. The downloaded iOS
+Simulator app contained the compiled Swift mixer. All 14 WSL receiver and
+relay tests passed. Device signing, Eloquence sample delivery and acoustic
+timing on both routes are open.
+
+** TODO 6. Bring across the Omnivox speech features
+
+Use the same line, character, tone, earcon and Stop sequences as fixtures
+in WSL and on the phone. Reuse the Rust command, queue and timeline types
+from =omnivox-core= where those fixtures exercise them. Use Omnivox's
+macOS speech-buffer adapter as a reference. The iOS adapter owns local voice
+selection, playback and cancellation. Map the Emacsvox cue to a bundled
+recording by identity. Negotiate only capabilities that pass the complete
+protocol contract on the device.
+
+Pass when a configured cue and spoken line play in order, an uppercase
+letter and punctuation get their usual feedback, an Emacs rate change is
+audible, and a rapid move discards the obsolete line and its pending cue.
+Track finer word-aligned cues, voice palettes and effects individually as
+their timing and voice support are demonstrated.
+
+** TODO 7. Ship the daily-use build
+
+Install a private signed build with the JavaScript bundled. Run the WSL
+relay with the Expo development server stopped. Open the app using
+VoiceOver. Choose the Emacs server that owns your existing Codex
+conversation. Using the keyboard connected to the iPhone, edit a file, send a prompt,
+hear a reply, interrupt it, handle a permission request and reconnect.
+Confirm you return to the same buffer and conversation.
+Close just the phone frame and continue on the desktop with ordinary speech.
+
+Close this milestone when the session works from a fresh launch, the setup
+and return steps are reproducible in the README, and the timing and
+listening results identify which audio features the build supports.
+
+* Verified prototype baseline
+
+** Hear Emacs navigation on the iPhone
 
 On 22 November 2026, the phone spoke a selected line in a rendered Agent
 Shell sample over Tailscale. The receiver at =6c4d0ec72= prefers Eloquence
@@ -29,7 +151,7 @@ Reed at 1.5 times normal speed. Ten automated receiver and relay tests passed.
 A graphical Emacs test also verified the two real =C-n= commands, replies,
 characters, permission output and Stop. The [[file:README.org::*Listen from the PC keyboard][listening setup]] is the baseline.
 
-** DONE Compare interruption and one familiar earcon in Expo Go
+** Compare interruption and an earcon in Expo Go
 
 1. With the PC keyboard and VoiceOver on, press =C-n= halfway through a
    long line. Stop a long reply on the phone during a network stall.
@@ -57,69 +179,7 @@ acceptable delay. The built-in iPhone speaker felt a little quicker.
 These are listening impressions. Keypress-to-sound timing and the
 source of the delay have yet to be measured.
 
-** TODO Prove local mixing and stop latency in a signed build
-
-Build a small Swift audio module in the same Expo app. Ask iOS for Reed's
-speech samples, start playback as samples arrive, and mix one generated
-tone and one preloaded earcon. On Stop, clear scheduled audio immediately
-and discard later callbacks for the cancelled utterance. Use the existing
-relay and PC keyboard so this experiment changes only the phone audio path.
-
-The first custom device build is where Apple Developer membership enters
-the plan. Check dependencies, tests and the iOS JavaScript export in WSL,
-then register the phone and build on hosted macOS from WSL with
-=eas build --platform ios --profile development=. Reuse the installed
-development build for JavaScript-only changes.
-[[https://docs.expo.dev/tutorial/eas/ios-development-build-for-devices/][Expo device build]] · [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer/write%28_%3Atobuffercallback%3A%29][Apple speech buffers]].
-
-Compare keypress to audible cue, keypress to first word, and Stop to
-silence for direct speech and the mixer. Use one recording clock for the
-key and the audible result. For each output route, record first use,
-typical and slow repeated moves, and any stale speech or cues heard during
-rapid replacement. Label internal callback timings separately.
-Use direct Expo Go speech on the same output route as the baseline.
-With VoiceOver active, the mixer should cut off the old line, start the new
-one and respond to Stop at least as promptly. Cancelled audio must stay
-silent. If Reed's samples arrive too late, keep direct speech and separate
-cues usable while investigating.
-
-The [[file:README.org::*Native mixer experiment][native mixer experiment]] includes direct and mixed playback, cancellation,
-a fixed tone and the Accent recording. On 22 November 2026 the
-hosted simulator build of =dd21276ef= succeeded. The downloaded iOS
-Simulator app contained the compiled Swift mixer. All 14 WSL receiver and
-relay tests passed. Device signing, Eloquence sample delivery and acoustic
-timing on both routes are open.
-
-** TODO Bring the first Omnivox speech features across
-
-Use the same line, character, tone, earcon and Stop sequences as fixtures
-in WSL and on the phone. Reuse the Rust command, queue and timeline types
-from =omnivox-core= where those fixtures exercise them. Use Omnivox's
-macOS speech-buffer adapter as a reference. The iOS adapter owns local voice
-selection, playback and cancellation. Map the Emacsvox cue to a bundled
-recording by identity. Negotiate only capabilities that pass the complete
-protocol contract on the device.
-
-Pass when a configured cue and spoken line play in order, an uppercase
-letter and punctuation get their usual feedback, an Emacs rate change is
-audible, and a rapid move discards the obsolete line and its pending cue.
-Track finer word-aligned cues, voice palettes and effects individually as
-their timing and voice support are demonstrated.
-
-** NEXT Use the iPhone as a full Emacs terminal
-
-This work can start in WSL during the audio trials. Test SSH authentication,
-host-key verification, interactive terminal allocation and resize against
-the isolated server. Try SwiftNIO SSH and SwiftTerm in the signed app.
-Keep the SSH key in the iOS Keychain. Run =emacsclient -t -s SERVER= and
-keep terminal input and local speech available in the same foreground app.
-
-The [[file:README.org::*Exercise the SSH transport in WSL][WSL SSH test]] on =prototype/iphone-ssh= uses the Swift transport against
-a temporary loopback OpenSSH server. On 22 November 2026 it attached to
-an existing Agent Shell sample, dispatched the destination line through
-Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
-the same buffer. The phone-facing SSH endpoint, Keychain storage,
-native terminal display and physical keyboard behaviour still need testing.
+** Edit from the iPhone external keyboard
 
 The [[file:README.org::*Try the external keyboard in Expo Go][Expo Go keyboard test]]
 connects the phone field to a separate terminal Emacs over the private relay.
@@ -132,40 +192,3 @@ external keyboard, =Alt+x= opened the command prompt and =Alt+f= moved
 by word. Dired worked and Tab completed filenames in Shell mode.
 At the =M-x= prompt, Tab completed =forward-cha= to =forward-char= and
 Emacsvox announced the completion.
-
-When trying the attached frame, check that VoiceOver can move focus
-to Stop Speech and back to the terminal, then resume navigation.
-The [[file:README.org::*Full terminal Emacs on the iPhone][editing walkthrough]] gives the keys.
-
-** TODO Route speech by frame and preserve pending permissions
-
-Pair the SSH terminal with its Emacs frame when the frame opens. Give
-it its own authenticated speech connection and queues. Remove the pairing
-when the frame closes. Carry its identity through deferred output. Route
-asynchronous replies and permission events to the frame subscribed to the
-conversation. Preserve each permission request's ID as it becomes speech.
-Test a phone-specific policy that lets the request finish, then speaks
-the newest navigation line. Review that policy against the existing
-[[file:../../docs/adr/0009-foreground-and-notification-speech-lanes.org][main and notification lane rules]].
-
-In one test Emacs, display the same conversation on desktop and phone.
-Alternate navigation and Stop across frames while a reply and a permission
-request arrive. Each frame must speak and stop independently. On the phone,
-hear the request finish during rapid navigation, then review and answer
-it. Explicit Stop silences both phone lanes. After reconnect, announce a
-still-pending request once from current Emacs state. Resolved requests and
-old audio stay silent.
-
-** TODO Complete an ordinary session from the phone
-
-Install a private signed build with the JavaScript bundled. Run the WSL
-relay with the Expo development server stopped. Open the app using
-VoiceOver. Choose the Emacs server that owns your existing Codex
-conversation. Using the keyboard connected to the iPhone, edit a file, send a prompt,
-hear a reply, interrupt it, handle a permission request and reconnect.
-Confirm you return to the same buffer and conversation.
-Close just the phone frame and continue on the desktop with ordinary speech.
-
-Close this milestone when the session works from a fresh launch, the setup
-and return steps are reproducible in the README, and the timing and
-listening results identify which audio features the build supports.

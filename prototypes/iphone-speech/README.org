@@ -360,6 +360,40 @@ in your existing Emacs are later stages. Run =npm test= for the keyboard
 field and receiver checks and =node test/keyboard-terminal.cjs= for the
 real terminal editing and speech test in WSL.
 
+* Continue a PC draft on the phone
+
+On =prototype/iphone-ssh=, start the shared-frame trial from WSL.
+Use the same installed JavaScript packages as the external keyboard test.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+read -rp 'iPhone Tailscale IPv4 address: ' phone
+./start-relay --shared "$phone"
+#+end_src
+
+1. On the PC, find the new window titled “Emacsvox Shared Draft”.
+   Its =Shared Codex sample= buffer contains a rendered Agent Shell
+   response and the unsent draft “Started on PC”. Append a few words.
+   Leave the draft in the input area.
+2. With Tailscale connected, open the host’s Tailscale address on port 8794 in Safari using HTTP.
+   Activate “Open receiver in Expo Go”, then Connect. The relay creates
+   an =emacsclient -t= frame in the server that owns the PC window.
+3. Double-tap “Emacs keyboard” and append another word. Keep the draft
+   unsent. Activate Disconnect. The phone frame closes. In the PC test
+   window, the draft keeps your addition. Connect again on the iPhone
+   and read it in the same buffer. You can also start with Connect
+   before typing on the PC to hear edits from either test frame.
+4. To end the whole trial, keep any text you want and press =Control+c=
+   in the WSL launcher. This closes the test server and its PC frame.
+
+The sample uses the real Agent Shell buffer and a fixed reply. Both
+test frames send their speech to the phone while it is connected.
+Independent speech destinations are the next slice. The launcher
+creates a private server and accepts the named iPhone over Tailscale.
+Your regular desktop Emacs and the earlier keyboard test run separately.
+Run =node test/shared-frame.cjs= in this directory for the WSL check
+with a graphical frame under Xvfb.
+
 * Full terminal Emacs on the iPhone
 
 The planned app gives you a terminal frame in your existing WSL Emacs.

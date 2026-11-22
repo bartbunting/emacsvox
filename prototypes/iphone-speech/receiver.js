@@ -175,7 +175,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       if (record.type === 'ready' && record.id === resetId) {
         ready = true;
         status('Connected');
-        if (record.id === 0 && record.keyboard === true) {
+        if (record.keyboard === true) {
           keyboard({sendKeys(text) {
             if (socket === current && ready && current.readyState === 1 &&
                 typeof text === 'string' && text.length > 0 && text.length <= 256) {

@@ -2,13 +2,34 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 const { execFile } = require('node:child_process');
+const { randomUUID } = require('node:crypto');
+const fs = require('node:fs/promises');
+const path = require('node:path');
 const { promisify } = require('node:util');
 const run = promisify(execFile);
 
-// The launcher owns this tmux socket and starts Emacs directly in its only pane.
-function attachTerminal(socketPath, send, failed) {
+// Each shared-frame connection owns the tmux session that runs its emacsclient.
+async function openPhoneFrame(socketPath, directory) {
+  const session = 'phone-' + randomUUID();
+  const client = await fs.readFile(path.join(directory, 'ready'), 'utf8');
+  const tmux = (...args) => run('tmux', ['-N', '-S', socketPath, ...args], {timeout: 8000});
+  await tmux('new-session', '-d', '-s', session,
+    '-x', '100', '-y', '32', 'env', 'LC_ALL=C.UTF-8', client,
+    '--alternate-editor=/bin/false', '--tty', '--socket-name=' + path.join(directory, 'shared'),
+    '--frame-parameters=((emacsvox-phone-id . "' + session + '"))');
+  try {
+    // A new PTY can accept keys before Emacs has installed its terminal mode.
+    await tmux('wait-for', session);
+  } catch (error) {
+    await tmux('kill-session', '-t', '=' + session).catch(() => {});
+    throw error;
+  }
+  return session;
+}
+
+function attachTerminal(socketPath, send, failed, session = 'phone') {
   const options = { timeout: 2000, maxBuffer: 128 * 1024 };
-  const pane = 'phone:0.0';
+  const pane = session + ':0.0';
   const tmux = (...args) => run('tmux', ['-S', socketPath, ...args], options);
   let active = true, writing = false, reading = false, lastScreen;
   let pending = Buffer.alloc(0);
@@ -45,9 +66,11 @@ function attachTerminal(socketPath, send, failed) {
   const timer = setInterval(readScreen, 350);
   void readScreen();
   return { write, close() {
+    if (!active) return;
     active = false;
     pending = Buffer.alloc(0);
     clearInterval(timer);
+    if (session !== 'phone') void tmux('kill-session', '-t', '=' + session).catch(() => {});
   }};
 }
-module.exports = { attachTerminal };
+module.exports = { attachTerminal, openPhoneFrame };

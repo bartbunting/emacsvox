@@ -5,7 +5,7 @@ const net = require('node:net');
 const http = require('node:http');
 const path = require('node:path');
 const { WebSocketServer, WebSocket } = require('ws');
-const { attachTerminal } = require('./terminal.cjs');
+const { attachTerminal, openPhoneFrame } = require('./terminal.cjs');
 
 const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
@@ -114,7 +114,7 @@ class LegacyInput {
   }
 }
 
-function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket} = {}) {
+function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket, sharedDirectory} = {}) {
   let phone, producer, input, terminal;
   const send = message => {
     if (phone?.readyState !== WebSocket.OPEN) return;
@@ -150,10 +150,11 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket}
     wss.handleUpgrade(req, socket, head, ws => {
       const previous = phone;
       terminal?.close();
+      terminal = undefined;
       phone = ws;
       previous?.terminate();
       input?.invalidate();
-      let lastSeen = Date.now();
+      let lastSeen = Date.now(), readyId = 0;
       const timer = setInterval(() => {
         if (Date.now() - lastSeen > 12000) ws.terminate();
       }, 3000);
@@ -173,13 +174,20 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket}
         if (command === 'ping') send({ type: 'pong' });
         else if (/^reset [0-9]{1,12}$/.test(command)) {
           input?.invalidate();
-          send({ type: 'ready', id: Number(command.slice(6)) });
+          readyId = Number(command.slice(6));
+          if (!sharedDirectory || terminal) send({ type: 'ready', id: readyId });
         } else if (terminal && command.startsWith('key ') && command.length > 4) {
           void terminal.write(command.slice(4));
         } else ws.terminate();
       });
-      send({ type: 'ready', id: 0, ...(terminalSocket && {keyboard: true}) });
-      if (terminalSocket) terminal = attachTerminal(terminalSocket, send, () => ws.terminate());
+      function connected(session) {
+        const attached = terminalSocket && attachTerminal(terminalSocket, send, () => ws.terminate(), session);
+        if (phone !== ws || ws.readyState !== WebSocket.OPEN) return attached?.close();
+        terminal = attached;
+        send({ type: 'ready', id: readyId, ...(terminalSocket && {keyboard: true}) });
+      }
+      if (sharedDirectory) openPhoneFrame(terminalSocket, sharedDirectory).then(connected, () => ws.terminate());
+      else connected();
     });
   });
   return { backend, httpServer };
@@ -188,10 +196,9 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket}
 module.exports = { createRelay, LegacyInput };
 
 if (require.main === module) {
-  const [host, peer, socketPath, terminalSocket] = process.argv.slice(2);
-  const port = terminalSocket ? 8791 : 8787;
-  const metroPort = terminalSocket ? 8792 : 8788;
-  const relay = createRelay(host, peer, {port, metroPort, terminalSocket});
+  const [host, peer, socketPath, terminalSocket, sharedDirectory] = process.argv.slice(2);
+  const port = sharedDirectory ? 8794 : terminalSocket ? 8791 : 8787;
+  const relay = createRelay(host, peer, {port, metroPort: port + 1, terminalSocket, sharedDirectory});
   const listen = () => relay.httpServer.listen(port, host, () =>
     console.log('On your iPhone, open http://' + host + ':' + port + ' in Safari.'));
   // The keyboard launcher signals after the isolated Emacs reaches its command loop.

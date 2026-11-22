@@ -5,16 +5,16 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 mode=--go
-keyboard=false
+trial=
 if [[ ${1:-} == --native-metro ]]; then
     mode=--dev-client
     shift
-elif [[ ${1:-} == --keyboard ]]; then
-    keyboard=true
+elif [[ ${1:-} == --keyboard || ${1:-} == --shared ]]; then
+    trial=${1#--}
     shift
 fi
 if [[ $# != 1 ]]; then
-    echo "Usage: ./start-relay [--native-metro|--keyboard] IPHONE_TAILSCALE_IPV4"
+    echo "Usage: ./start-relay [--native-metro|--keyboard|--shared] IPHONE_TAILSCALE_IPV4"
     tailscale status | awk 'tolower($0) ~ /ios/ { print $1, $2 }'
     exit 2
 fi
@@ -32,15 +32,22 @@ umask 077
 mkdir -p "$runtime"
 socket=$runtime/speech.sock
 export EXPO_PUBLIC_EMACSVOX_PORT=8787
-if $keyboard; then
-    exec 9>"$runtime/keyboard.lock"
-    flock -n 9 || { echo 'Keyboard test already running.' >&2; exit 1; }
-    session=$(mktemp -d "$runtime/keyboard.XXXXXXXX")
+if [[ -n $trial ]]; then
+    exec 9>"$runtime/$trial.lock"
+    flock -n 9 || { echo "$trial test already running." >&2; exit 1; }
+    session=$(mktemp -d "$runtime/$trial.XXXXXXXX")
     socket=$session/speech.sock
     export EMACSVOX_PHONE_SOCKET=$socket EMACSVOX_KEYBOARD_READY=$session/ready
     export EXPO_PUBLIC_EMACSVOX_PORT=8791
     port=8793
     proxy=8792
+    relay_args=("$session/tmux.sock")
+    if [[ $trial == shared ]]; then
+        export EMACSVOX_SHARED_DIR=$session EXPO_PUBLIC_EMACSVOX_PORT=8794
+        port=8796
+        proxy=8795
+        relay_args+=("$session")
+    fi
 elif [[ $mode == --dev-client ]]; then
     if [[ ! -S $socket ]] || flock -n "$runtime/relay.lock" true; then
         echo 'Start the usual phone relay first.' >&2
@@ -60,12 +67,12 @@ fi
 children=()
 cleanup() {
     trap - EXIT INT TERM
-    if $keyboard; then tmux -S "$session/tmux.sock" kill-server 2>/dev/null || true; fi
+    if [[ -n $trial ]]; then tmux -S "$session/tmux.sock" kill-server 2>/dev/null || true; fi
     for child in "${children[@]}"; do kill "$child" 2>/dev/null || true; done
     wait || true
     if [[ $mode == --go && -S $socket ]]; then unlink "$socket"; fi
-    if $keyboard; then
-        rm -f -- "$session/ready" "$session/tmux.sock"
+    if [[ -n $trial ]]; then
+        rm -f -- "$session/ready" "$session/ready.tmp" "$session/tmux.sock" "$session/shared"
         rmdir "$session"
     fi
 }
@@ -74,19 +81,29 @@ trap 'exit 0' INT TERM
 export EXPO_PUBLIC_EMACSVOX_HOST=$address
 export EXPO_PACKAGER_PROXY_URL="http://$address:$proxy"
 export EXPO_NO_TELEMETRY=1
-if $keyboard; then
-    node relay.cjs "$address" "$phone" "$socket" "$session/tmux.sock" 9>&- &
+if [[ -n $trial ]]; then
+    node relay.cjs "$address" "$phone" "$socket" "${relay_args[@]}" 9>&- &
     children+=($!)
     for ((i=0; i<100; ++i)); do
         [[ ! -S $socket ]] || break
         sleep .1
     done
     [[ -S $socket ]] || { echo 'Keyboard relay failed to start.' >&2; exit 1; }
-    tmux -S "$session/tmux.sock" -f /dev/null new-session -d -s phone -x 100 -y 32 \
-        env LC_ALL=C.UTF-8 "$PWD/test-session" -nw -l "$PWD/test/keyboard-session.el" 9>&-
+    if [[ $trial == shared ]]; then
+        tmux -S "$session/tmux.sock" -f /dev/null start-server \; set-option -s exit-empty off 9>&-
+        ./test-session -T "Emacsvox Shared Draft" -l "$PWD/test/shared-session.el" 9>&- &
+        children+=($!)
+    else
+        tmux -S "$session/tmux.sock" -f /dev/null new-session -d -s phone -x 100 -y 32 \
+            env LC_ALL=C.UTF-8 "$PWD/test-session" -nw -l "$PWD/test/keyboard-session.el" 9>&-
+    fi
     for ((i=0; i<450; ++i)); do
         [[ ! -e $EMACSVOX_KEYBOARD_READY ]] || break
-        tmux -S "$session/tmux.sock" has-session -t phone 2>/dev/null || break
+        if [[ $trial == shared ]]; then
+            kill -0 "${children[1]}" 2>/dev/null || break
+        else
+            tmux -S "$session/tmux.sock" has-session -t phone 2>/dev/null || break
+        fi
         sleep .1
     done
     [[ -e $EMACSVOX_KEYBOARD_READY ]] || { echo 'Keyboard Emacs failed to start.' >&2; exit 1; }
@@ -96,7 +113,7 @@ CI=1 node_modules/.bin/expo start "$mode" --localhost --port "$port" </dev/null 
 children+=($!)
 socat "TCP4-LISTEN:$proxy,bind=$address,range=$phone/32,fork,reuseaddr" "TCP4:127.0.0.1:$port" &
 children+=($!)
-if [[ $mode == --go ]] && ! $keyboard; then
+if [[ $mode == --go && -z $trial ]]; then
     node relay.cjs "$address" "$phone" "$socket" &
     children+=($!)
 elif [[ $mode == --dev-client ]]; then
