@@ -127,11 +127,14 @@ WSL checks cover two response lines, speech interruption, UTF-8 file
 editing, buffer switching and reconnect. On 22 November 2026, the first
 listening trial with the keyboard connected to the iPhone indicated that
 the two =C-n= presses worked in an Agent Shell response. Typing and
-saving worked on the phone with no audible duplicate echo.
+saving worked on the phone with no audible duplicate echo. On the
+external keyboard, =Alt+x= opened the command prompt and =Alt+f= moved
+by word. Dired worked and Tab completed filenames in Shell mode.
+At the =M-x= prompt, Tab completed =forward-cha= to =forward-char= and
+Emacsvox announced the completion.
 
-Check the updated Alt mapping for =M-x= and =M-f= on the phone. Try
-command completion and =C-g=, browse Dired and switch buffers. Check
-that VoiceOver can move focus to Stop Speech and back to the terminal.
+When trying the attached frame, check that VoiceOver can move focus
+to Stop Speech and back to the terminal, then resume navigation.
 The [[file:README.org::*Full terminal Emacs on the iPhone][editing walkthrough]] gives the keys.
 
 ** TODO Route speech by frame and preserve pending permissions

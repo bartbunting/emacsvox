@@ -82,9 +82,20 @@ async function main() {
     keys('!\x18\x13');
     // Emacsvox moves past the space so the next word is under point.
     await until('Meta forward one word', () => fs.readFileSync(file, 'utf8').trimEnd() === 'Café !lantern 雪');
+    keys('\x18d\r');
+    await until('Dired listing', () => screenHas('Dired') && screenHas('keyboard.txt'));
     assert.ok(down('≈', {code: 'KeyX', altKey: true}));
     await until('extended command prompt', () => screenHas('M-x'));
+    keys('forward-cha');
+    await until('partial command name', () => /M-x forward-cha\s*$/.test(screen));
+    packets = [];
+    assert.ok(down('Tab'));
+    await until('completed command name', () => screenHas('M-x forward-char'));
+    await until('spoken completion', () => packets.some(p => p.type === 'speak' && p.text.trim() === 'r'));
     keys('\x07');
+    await until('cancel back to Dired', () => !screenHas('M-x forward-char') && screenHas('Dired'));
+    keys('q');
+    await until('return to the edited file', () => /F1\s+keyboard\.txt/.test(screen));
     keys('\x18bPhone keyboard sample\r');
     await until('response after switch-buffer', () => screenHas('Cobalt lighthouse'));
     const closed = once(ws, 'close');
@@ -95,7 +106,7 @@ async function main() {
     assert.ok(!packets.some(p => p.type === 'speak'));
     keys('\x10');
     await until('fresh speech after reconnect', () => packets.some(p => p.type === 'speak' && p.text.trim().startsWith('Cobalt lighthouse')));
-    console.log('Passed terminal navigation and cutoff, UTF-8 file save, Alt+f, Alt+x, cancel, buffer switch and reconnect.');
+    console.log('Passed terminal navigation and cutoff, UTF-8 file save, Alt+f, Dired, M-x Tab completion, cancel, buffer switch and reconnect.');
   } catch (error) {
     console.error('Packet kinds during the failed step:', packets.map(p => p.type).slice(-20).join(' '));
     throw error;
