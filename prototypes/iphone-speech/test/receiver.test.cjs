@@ -265,3 +265,33 @@ test('rapid navigation preserves active and pending permission identities until 
     assert.equal(spoken.length, 3);
   } finally { receiver.disconnect(); }
 });
+
+test('native notification has its own speaker, while tone preparation and rate follow navigation', async () => {
+  const socket = {readyState: 1, send() {}, close() {}};
+  const spoken = [], urgent = [], tones = [];
+  let releaseTone, releasePermission, permissionStops = 0;
+  const receiver = createReceiver({status() {}, openSocket: () => socket,
+    speech: {stop: async () => {}, speak: (text, opts) => spoken.push([text, opts.rate])},
+    tonePlayer: {prepare: () => new Promise(done => { releaseTone = done; }), play: hz => tones.push(hz), stop() {}},
+    notificationPlayer: {speak: text => new Promise(done => { urgent.push(text); releasePermission = done; }),
+      stop() { permissionStops++; releasePermission?.(); }}});
+  const send = packet => socket.onmessage({data: JSON.stringify(packet)});
+  try {
+    receiver.connect();
+    send({type: 'ready', id: 0});
+    send({type: 'permission', id: 'one', text: 'Inspect sample'});
+    send({type: 'tone', hz: 440, ms: 30});
+    await flush();
+    const before = permissionStops;
+    send({type: 'stop'});
+    send({type: 'letter', text: 'Z', rate: 1.35});
+    releaseTone();
+    await flush();
+    assert.deepEqual(tones, []);
+    assert.deepEqual(spoken, [['capital Z', 1.35]]);
+    assert.deepEqual(urgent, ['Inspect sample']);
+    assert.equal(permissionStops, before);
+    receiver.stop();
+    assert.equal(permissionStops, before + 1);
+  } finally { receiver.disconnect(); }
+});

@@ -42,6 +42,15 @@ function Session({mixed, switchMode}) {
     : {speech: Speech, cuePlayer: directCue}, [mixed, directCue]);
   const receiver = useMemo(() => createReceiver({
     ...adapters,
+    notificationPlayer: native?.permission && {
+      speak: (text, voice, rate) => native.permission(text, voice, rate),
+      stop: () => native.stopPermission(),
+    },
+    tonePlayer: native?.queueTone && {
+      prepare: async () => native.prepare((await Asset.fromModule(sound).downloadAsync()).localUri),
+      play: (hz, ms) => native.queueTone(hz, ms),
+      stop: () => native.stopEffects(),
+    },
     status: setStatus,
     playback: setPlayback,
     voiceStatus: setVoice,

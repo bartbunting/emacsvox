@@ -29,11 +29,22 @@ private final class Reading {
   }
 }
 
+private final class QueuedTone {
+  let hz: Double
+  let frames: Int
+  var cursor = 0
+  init(hz: Double, frames: Int) { self.hz = hz; self.frames = frames }
+}
+
 public final class IphoneMixerModule: Module {
+  private let permissions = PermissionVoice()
   private let engine = AVAudioEngine()
   private let voice = AVAudioPlayerNode()
   private let cue = AVAudioPlayerNode()
   private let tone = AVAudioPlayerNode()
+  private var toneGeneration = 0
+  private var toneBuffers = 0
+  private var pendingTones: [QueuedTone] = []
   private var recording: AVAudioPCMBuffer?
   private var beep: AVAudioPCMBuffer?
   private var voiceFormat: AVAudioFormat?
@@ -43,6 +54,12 @@ public final class IphoneMixerModule: Module {
 
   public func definition() -> ModuleDefinition {
     Name("IphoneMixer")
+
+    AsyncFunction("permission") { (text: String, voice: String?, rate: Double, promise: Promise) in
+      self.permissions.speak(text, voice: voice, rate: rate, promise: promise)
+    }.runOnQueue(.main)
+
+    AsyncFunction("stopPermission") { self.permissions.stop() }.runOnQueue(.main)
 
     AsyncFunction("prepare") { (uri: String) in
       try self.prepare(uri)
@@ -57,19 +74,29 @@ public final class IphoneMixerModule: Module {
       if let recording = self.recording { self.play(recording, on: self.cue) }
     }.runOnQueue(.main)
 
+    AsyncFunction("queueTone") { (hz: Double, ms: Int) in
+      guard hz.isFinite, hz > 0, hz <= 24000, (1...60000).contains(ms),
+            self.pendingTones.count < 1024, let format = self.beep?.format else { throw MixerFailure("Invalid tone.") }
+      try self.startAudio()
+      self.pendingTones.append(QueuedTone(hz: hz, frames: Int(format.sampleRate * Double(ms) / 1000)))
+      self.fillTones()
+    }.runOnQueue(.main)
+
     AsyncFunction("stopEffects") {
       self.cue.stop()
-      self.tone.stop()
+      self.stopTones()
     }.runOnQueue(.main)
 
     AsyncFunction("stop") { (all: Bool) in
       self.finish("stopped")
-      if all { self.cue.stop(); self.tone.stop() }
+      if all { self.cue.stop(); self.stopTones() }
     }.runOnQueue(.main)
 
     OnDestroy {
       DispatchQueue.main.async {
         self.finish("stopped")
+        self.permissions.stop()
+        self.stopTones()
         self.engine.stop()
         if let observer = self.configObserver { NotificationCenter.default.removeObserver(observer) }
         if let observer = self.interruptionObserver { NotificationCenter.default.removeObserver(observer) }
@@ -83,8 +110,8 @@ public final class IphoneMixerModule: Module {
     let file = try AVAudioFile(forReading: url)
     guard file.length > 0, file.length <= 100000,
           let sound = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)),
-          let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1),
-          let signal = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4410),
+          let format = AVAudioFormat(standardFormatWithSampleRate: 48000, channels: 1),
+          let signal = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4800),
           let data = signal.floatChannelData?[0] else { throw MixerFailure("Cannot prepare the test sounds.") }
     try file.read(into: sound)
     signal.frameLength = signal.frameCapacity
@@ -109,7 +136,7 @@ public final class IphoneMixerModule: Module {
   private func resetOutput() {
     finish("audio route changed")
     cue.stop()
-    tone.stop()
+    stopTones()
   }
 
   private func startAudio() throws {
@@ -125,6 +152,41 @@ public final class IphoneMixerModule: Module {
     player.stop()
     player.scheduleBuffer(buffer)
     player.play()
+  }
+
+  private func stopTones() {
+    toneGeneration &+= 1
+    pendingTones.removeAll()
+    toneBuffers = 0
+    tone.stop()
+  }
+
+  private func fillTones() {
+    guard let format = beep?.format else { return }
+    // Keep at most two small PCM buffers scheduled so Stop remains responsive.
+    while toneBuffers < 2, let note = pendingTones.first {
+      let count = min(2048, note.frames - note.cursor)
+      guard let pcm = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count)),
+            let samples = pcm.floatChannelData?[0] else { stopTones(); return }
+      pcm.frameLength = AVAudioFrameCount(count)
+      for index in 0..<count {
+        let position = note.cursor + index
+        let edge = min(1.0, Double(min(position, note.frames - position - 1)) / (format.sampleRate * 0.004))
+        samples[index] = Float(0.15 * edge * sin(2 * .pi * note.hz * Double(position) / format.sampleRate))
+      }
+      note.cursor += count
+      if note.cursor == note.frames { pendingTones.removeFirst() }
+      toneBuffers += 1
+      let owner = toneGeneration
+      tone.scheduleBuffer(pcm, completionCallbackType: .dataPlayedBack) { [weak self] _ in
+        DispatchQueue.main.async {
+          guard let self, self.toneGeneration == owner else { return }
+          self.toneBuffers -= 1
+          self.fillTones()
+        }
+      }
+      if !tone.isPlaying { tone.play() }
+    }
   }
 
   private func read(_ text: String, identifier: String?, rate: Double, mixSample: Bool, promise: Promise) {
@@ -229,7 +291,7 @@ public final class IphoneMixerModule: Module {
     current = nil
     voice.stop()
     if state != "done" { reading.synthesizer.stopSpeaking(at: .immediate) }
-    if state != "stopped" && state != "done" { cue.stop(); tone.stop() }
+    if state != "stopped" && state != "done" { cue.stop(); stopTones() }
     reading.promise.resolve(["state": state, "firstBufferMs": reading.firstBufferMs ?? -1] as [String: Any])
   }
 }

@@ -24,12 +24,12 @@ async function findVoice(speech) {
 
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, cuePlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
+function createReceiver({ speech, cuePlayer, tonePlayer, notificationPlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
                           keyboard = () => {}, screen = () => {}, sshOffer = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
-  let voiceLookup;
+  let voiceLookup, currentRate = speechRate;
   let permission = null;
   const waitingPermissions = new Map();
   const seenPermissions = new Set();
@@ -41,7 +41,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     lookup.then(voice => {
       if (voiceLookup !== lookup) return;
       const label = voice?.label ?? 'iPhone default';
-      voiceStatus(label + ' at ' + speechRate + ' times normal speed');
+      voiceStatus(label + ' at ' + currentRate + ' times normal speed');
     });
   }
 
@@ -82,13 +82,16 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       if (epoch === owner) playback('iOS could not stop speech.');
       return false;
     });
-    if (includeSound) stopCue();
+    if (includeSound) {
+      stopCue();
+      if (tonePlayer) Promise.resolve(tonePlayer.stop()).catch(() => {});
+    }
   }
 
   function drain() {
     if (speaking) return;
     let urgentText;
-    if (waitingPermissions.size) {
+    if (!notificationPlayer && waitingPermissions.size) {
       const [id, words] = waitingPermissions.entries().next().value;
       waitingPermissions.delete(id);
       permission = id;
@@ -100,9 +103,16 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     barrier.then(async result => {
       if (owner !== epoch || !result) return;
       // Queued sound starts at its place in the dispatch and can overlap speech.
-      while (!urgentText && queue[0] === openObjectCue) {
-        queue.shift();
-        await playOpenObject();
+      while (!urgentText && (queue[0] === openObjectCue || queue[0]?.type === 'tone')) {
+        const cue = queue.shift();
+        if (cue === openObjectCue) await playOpenObject();
+        else if (tonePlayer) {
+          try {
+            await tonePlayer.prepare();
+            if (owner !== epoch) return;
+            await tonePlayer.play(cue.hz, cue.ms);
+          } catch { if (owner === epoch) playback('iOS could not play the tone.'); }
+        }
         if (owner !== epoch) return;
       }
       if (!urgentText && !queue.length) {
@@ -113,19 +123,19 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       if (owner !== epoch) return;
       const item = urgentText ?? queue.shift();
       const mix = item === mixedSample;
-      const text = mix ? 'This is the mixer test. The lighthouse keeper climbed the stairs to light the lamp.' : item;
+      const text = mix ? 'This is the mixer test. The lighthouse keeper climbed the stairs to light the lamp.' : (item.text ?? item);
       if (!mix && !urgentText) queuedChars -= text.length;
       const finish = state => {
         if (owner !== epoch) return;
         playback(state);
-        permission = null;
+        if (!notificationPlayer) permission = null;
         speaking = false;
         drain();
       };
       speech.speak(text, {
         ...(voice && { voice: voice.identifier }),
         ...(mix && { mixSample: true }),
-        rate: speechRate,
+        rate: item.rate ?? currentRate,
         useApplicationAudioSession: false,
         onStart: () => {
           if (owner === epoch) playback('iOS started speech.');
@@ -139,7 +149,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
 
   function enqueue(item) {
     if (!item) return;
-    const chars = typeof item === 'string' ? item.length : 0;
+    const chars = typeof item === 'string' ? item.length : (item.text?.length ?? 0);
     if (queuedChars + chars > 1_000_000 || queue.length >= 1024) {
       disconnect('Speech queue full. Activate Connect to retry.');
       return;
@@ -150,8 +160,32 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     drain();
   }
 
-  function clearPermissions() {
+  let notificationGeneration = 0;
+
+  async function speakNotification() {
+    if (!notificationPlayer || permission !== null || !waitingPermissions.size) return;
+    const [id, text] = waitingPermissions.entries().next().value;
+    const owner = ++notificationGeneration;
+    waitingPermissions.delete(id);
+    permission = id;
+    try {
+      const voice = await voiceLookup;
+      if (owner !== notificationGeneration) return;
+      await notificationPlayer.speak(text, voice?.identifier ?? null, currentRate);
+    } catch { if (owner === notificationGeneration) playback('iOS could not speak the permission request.'); }
+    if (owner !== notificationGeneration) return;
     permission = null;
+    void speakNotification();
+  }
+
+  function stopNotification() {
+    ++notificationGeneration;
+    permission = null;
+    if (notificationPlayer) Promise.resolve(notificationPlayer.stop()).catch(() => {});
+  }
+
+  function clearPermissions() {
+    stopNotification();
     waitingPermissions.clear();
   }
 
@@ -161,16 +195,19 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       waitingPermissions.delete(record.id);
       seenPermissions.delete(record.id);
       if (permission === record.id) {
-        permission = null;
-        silence();
-        drain();
+        stopNotification();
+        if (notificationPlayer) void speakNotification();
+        else { silence(); drain(); }
       }
     } else if (!seenPermissions.has(record.id) && typeof record.text === 'string' && record.text) {
       if (seenPermissions.size >= 256) return disconnect('Too many pending requests. Reconnect to refresh.');
       seenPermissions.add(record.id);
       waitingPermissions.set(record.id, record.text);
-      if (permission === null) silence();
-      drain();
+      if (notificationPlayer) void speakNotification();
+      else {
+        if (permission === null) silence();
+        drain();
+      }
     }
   }
 
@@ -191,6 +228,7 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
 
   function connect() {
     disconnect('Connecting');
+    currentRate = speechRate;
     refreshVoice();
     let current;
     try {
@@ -231,13 +269,22 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
         screen(record.text);
       } else if (ready && record.type === 'stop') {
         if (record.scope === 'all') clearPermissions();
-        if (permission === null) silence(record.scope !== 'speech');
+        if (notificationPlayer || permission === null) silence(record.scope !== 'speech');
         else { queue = []; queuedChars = 0; }
       } else if (ready && record.type === 'cue' && record.name === 'open-object') {
         if (record.immediate) playOpenObject();
         else enqueue(openObjectCue);
+      } else if (ready && record.type === 'tone' && tonePlayer) {
+        enqueue(record);
       } else if (ready && ['letter', 'speak'].includes(record.type) && typeof record.text === 'string') {
-        enqueue(record.type === 'letter' ? characterName(record.text) : record.text);
+        const text = record.type === 'letter' ? characterName(record.text) : record.text;
+        if (Number.isFinite(record.rate) && record.rate >= 0 && record.rate <= 2 && currentRate !== record.rate) {
+          currentRate = record.rate;
+          const rate = currentRate;
+          voiceLookup.then(v => { if (socket === current && currentRate === rate)
+            voiceStatus((v?.label ?? 'iPhone default') + ' at ' + rate + ' times normal speed'); });
+        }
+        if (text) enqueue({text, rate: currentRate});
       }
     };
     current.onclose = current.onerror = () => {
