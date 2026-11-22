@@ -18,7 +18,7 @@ The earlier local branches named above are stages of this checkout. Emacsvox
 revisions in the build notes point to the corresponding commits in this
 history. The private signed builds predate the removal of local setup details.
 
-* Prototype milestones [1/7]
+* Prototype milestones [2/7]
 
 ** DONE Hear a real Emacs navigation command on the iPhone
 
@@ -28,14 +28,14 @@ Reed at 1.5 times normal speed. Ten automated receiver and relay tests passed.
 A graphical Emacs test also verified the two real =C-n= commands, replies,
 characters, permission output and Stop. The [[file:README.org::*Listen from the PC keyboard][listening setup]] is the baseline.
 
-** NEXT Compare interruption and one familiar earcon in Expo Go
+** DONE Compare interruption and one familiar earcon in Expo Go
 
 1. With the PC keyboard and VoiceOver on, press =C-n= halfway through a
    long line. Stop a long reply on the phone during a network stall.
    Disconnect, move twice in Emacs, reconnect and move once more. Listen
    for a prompt cutoff, silence on reconnect and just the new line.
-2. Enable one existing cue in the isolated profile, such as =open-object=
-   on entering Agent Shell. Forward the cue selected by Emacsvox and
+2. Open Agent Shell's compose editor in the isolated profile to trigger
+   the Accent =open-object= cue. Forward the cue selected by Emacsvox and
    preload its recording on the phone. Check the trigger and cue order in
    WSL. Listen for the cue once at the same action on desktop and phone.
    Check that the next navigation command still interrupts. [[https://docs.expo.dev/versions/v58.0.0/sdk/audio/][Expo Audio]].
@@ -43,7 +43,20 @@ characters, permission output and Stop. The [[file:README.org::*Listen from the 
    felt on the phone speaker and your usual headphones. Use this comparison
    to set the latency target for the native experiment.
 
-** TODO Prove local mixing and stop latency in a signed build
+On 22 November 2026, with receiver =e532818dd= in Expo Go, a second =C-n=
+promptly cut off the old line on the iPhone. Opening the compose editor
+played the Accent Open Object sound and spoke “Compose prompt”. Stop Speech
+silenced a long phrase straight away during an eight-second relay pause.
+Two moves while disconnected stayed silent on reconnect. The next =C-n=
+spoke its line. All 13 WSL tests passed, and a fresh graphical Emacs
+sent the configured cue before the compose announcement.
+
+On headphones, Eloquence at 1.5 times normal speed had a small,
+acceptable delay. The built-in iPhone speaker felt a little quicker.
+These are listening impressions. Keypress-to-sound timing and the
+source of the delay have yet to be measured.
+
+** NEXT Prove local mixing and stop latency in a signed build
 
 Build a small Swift audio module in the same Expo app. Ask iOS for Reed's
 speech samples, start playback as samples arrive, and mix one generated
@@ -63,9 +76,11 @@ silence for direct speech and the mixer. Use one recording clock for the
 key and the audible result. For each output route, record first use,
 typical and slow repeated moves, and any stale speech or cues heard during
 rapid replacement. Label internal callback timings separately.
-Advance the mixer when it meets the listening target with VoiceOver active
-and cancelled audio stays silent. If Reed's samples arrive too late,
-keep direct speech and separate cues usable while investigating.
+Use direct Expo Go speech on the same output route as the baseline.
+With VoiceOver active, the mixer should cut off the old line, start the new
+one and respond to Stop at least as promptly. Cancelled audio must stay
+silent. If Reed's samples arrive too late, keep direct speech and separate
+cues usable while investigating.
 
 ** TODO Bring the first Omnivox speech features across
 
