@@ -5,13 +5,13 @@ const vm = require('node:vm');
 const { keyboardSource } = require('../keyboard');
 
 // Run the document shipped to the WebView, with its normal postMessage boundary.
-function keyboardField(postMessage) {
+function keyboardField(postMessage, controlOption = false) {
   const listeners = {};
   const field = {value: '', addEventListener(name, fn) { listeners[name] = fn; }};
   const html = decodeURIComponent(keyboardSource.uri.split(',')[1]);
   vm.runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], {
     document: {getElementById: () => field},
-    window: {ReactNativeWebView: {postMessage}},
+    window: {ReactNativeWebView: {postMessage}, emacsControlOption: controlOption},
   });
   function down(key, modifiers) {
     let prevented = false;

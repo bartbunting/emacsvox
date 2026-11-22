@@ -44,8 +44,31 @@ public final class IphoneTerminalModule: Module {
   }
 }
 
+private final class EmacsTerminalView: TerminalView {
+  override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+    guard optionAsMetaKey, markedTextRange == nil, getTerminal().keyboardEnhancementFlags.isEmpty else {
+      super.pressesBegan(presses, with: event)
+      return
+    }
+    var remaining = presses
+    for press in presses {
+      guard let key = press.key, key.modifierFlags.contains([.alternate, .shift]),
+            key.modifierFlags.intersection([.control, .command]).isEmpty else { continue }
+      let symbol: String
+      switch key.charactersIgnoringModifiers {
+      case ",": symbol = "<"
+      case ".": symbol = ">"
+      default: continue
+      }
+      send(txt: "\u{1b}" + symbol)
+      remaining.remove(press)
+    }
+    if !remaining.isEmpty { super.pressesBegan(remaining, with: event) }
+  }
+}
+
 final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
-  let terminal = TerminalView(frame: .zero)
+  let terminal: TerminalView = EmacsTerminalView(frame: .zero)
   let onSessionStatus = EventDispatcher()
   private var configuration: [String: String] = [:]
   private var connection: Task<Void, Never>?

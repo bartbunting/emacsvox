@@ -27,29 +27,63 @@ function send(text) {
   }
   if (packet) window.ReactNativeWebView.postMessage(packet);
 }
-const special = {Enter:'\r', Escape:'\x1b', Tab:'\t', Backspace:'\x7f', Delete:'\x1b[3~',
-  ArrowUp:'\x1b[A', ArrowDown:'\x1b[B', ArrowRight:'\x1b[C', ArrowLeft:'\x1b[D',
-  Home:'\x1b[H', End:'\x1b[F', PageUp:'\x1b[5~', PageDown:'\x1b[6~'};
-field.addEventListener('keydown', event => {
-  if (event.isComposing || event.metaKey || (event.altKey && event.ctrlKey)) return;
-  let bytes;
-  if (event.altKey) {
-    let letter = event.key;
-    if (!/^[a-zA-Z]$/.test(letter)) {
-      // Option can produce a symbol such as ƒ on the physical F key.
-      if (!/^Key[A-Z]$/.test(event.code)) return;
-      letter = event.code.slice(3);
-      if (!event.shiftKey) letter = letter.toLowerCase();
-    }
-    bytes = '\x1b' + letter;
-  } else if (event.ctrlKey) {
-    const k = event.key.toUpperCase();
-    if (k === ' ') bytes = '\x00';
-    else if (k === '?') bytes = '\x7f';
-    else if (k.length === 1 && k >= '@' && k <= '_') bytes = String.fromCharCode(k.charCodeAt(0) & 31);
-  } else if (Object.hasOwn(special, event.key)) {
-    bytes = event.key === 'Tab' && event.shiftKey ? '\x1b[Z' : special[event.key];
+const basic = {Enter:'\r', Escape:'\x1b', Tab:'\t', Backspace:'\x7f'};
+const cursor = {ArrowUp:'A', ArrowDown:'B', ArrowRight:'C', ArrowLeft:'D', Home:'H', End:'F'};
+const functionKeys = {F1:'P', F2:'Q', F3:'R', F4:'S'};
+const tildeKeys = {Insert:2, Delete:3, PageUp:5, PageDown:6, F5:15, F6:17, F7:18,
+  F8:19, F9:20, F10:21, F11:23, F12:24};
+const punctuation = {Comma:',<', Period:'.>', Slash:'/?', Semicolon:';:', Quote:"'\"",
+  BracketLeft:'[{', BracketRight:']}', Backslash:'\\|', Minus:'-_', Equal:'=+', Backquote:'\x60~'};
+
+// Prefer the symbol from the active layout. Fall back to the physical US
+// position when Option changes the character to a glyph or a dead key.
+function metaCharacter(event) {
+  if (/^[\x20-\x7e]$/.test(event.key)) return event.key;
+  const code = event.code;
+  if (event.shiftKey && (!code || code === 'Unidentified')) {
+    if (event.key === '¯') return '<';
+    if (event.key === '˘') return '>';
   }
+  if (/^Key[A-Z]$/.test(code)) {
+    const letter = code.slice(3);
+    return event.shiftKey ? letter : letter.toLowerCase();
+  }
+  if (/^Digit[0-9]$/.test(code)) return event.shiftKey ? ')!@#$%^&*('[code[5]] : code[5];
+  if (Object.hasOwn(punctuation, code)) return punctuation[code][Number(Boolean(event.shiftKey))];
+}
+
+function terminalKey(event) {
+  const {key, altKey, ctrlKey, shiftKey} = event;
+  const mod = 1 + (shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4 : 0);
+  if (Object.hasOwn(cursor, key) || Object.hasOwn(functionKeys, key)) {
+    const suffix = cursor[key] ?? functionKeys[key];
+    if (mod === 1) return (cursor[key] ? '\x1b[' : '\x1bO') + suffix;
+    return '\x1b[1;' + mod + suffix;
+  }
+  if (Object.hasOwn(tildeKeys, key)) return '\x1b[' + tildeKeys[key] + (mod === 1 ? '' : ';' + mod) + '~';
+  const esc = altKey ? '\x1b' : '';
+  if (Object.hasOwn(basic, key)) {
+    if ((ctrlKey || shiftKey) && (key === 'Enter' || key === 'Tab')) {
+      if (!ctrlKey && key === 'Tab') return esc + '\x1b[Z';
+      return esc + '\x1b[27;' + (1 + (ctrlKey ? 4 : 0) + (shiftKey ? 1 : 0)) + ';' + basic[key].charCodeAt(0) + '~';
+    }
+    return esc + basic[key];
+  }
+  const char = altKey ? metaCharacter(event) : key;
+  if (!char || char.length !== 1) return;
+  if (ctrlKey) {
+    const upper = char.toUpperCase();
+    if (char === ' ' || char === '@') return esc + '\x00';
+    if (char === '?') return esc + '\x7f';
+    if (!altKey && !shiftKey && /^[2-8]$/.test(char)) return '\x00\x1b\x1c\x1d\x1e\x1f\x7f'[Number(char) - 2];
+    if (upper.length === 1 && upper >= '@' && upper <= '_') return esc + String.fromCharCode(upper.charCodeAt(0) & 31);
+    if (/^[\x21-\x7e]$/.test(char)) return '\x1b[27;' + mod + ';' + char.charCodeAt(0) + '~';
+  } else if (altKey) return esc + char;
+}
+field.addEventListener('keydown', event => {
+  if (event.isComposing || event.metaKey || (event.altKey && event.ctrlKey &&
+      (!window.emacsControlOption || event.getModifierState?.('AltGraph')))) return;
+  const bytes = terminalKey(event);
   if (bytes !== undefined) { event.preventDefault(); send(bytes); }
 });
 function flushText() {
@@ -61,4 +95,16 @@ field.addEventListener('input', event => { if (!event.isComposing) flushText(); 
 field.addEventListener('compositionend', flushText);
 </script></body></html>`;
 
-module.exports = { keyboardSource: {uri: 'data:text/html;charset=utf-8,' + encodeURIComponent(html)} };
+// Give each new input one focus request. Returning from Settings or Stop
+// during the same session should leave the VoiceOver cursor where it is.
+function createKeyboardFocus() {
+  let lastInput;
+  return (input, visible, focus) => {
+    if (!input) { lastInput = null; return; }
+    if (!visible || input === lastInput) return;
+    lastInput = input;
+    focus(input);
+  };
+}
+
+module.exports = {keyboardSource: {uri: 'data:text/html;charset=utf-8,' + encodeURIComponent(html)}, createKeyboardFocus};

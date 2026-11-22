@@ -77,11 +77,14 @@ async function main() {
     keys(sentence);
     keys('\x18\x13');
     await until('saved UTF-8 file', () => fs.existsSync(file) && fs.readFileSync(file, 'utf8').trimEnd() === sentence);
-    keys('\x1b<');
+    assert.ok(down('¯', {code: 'Comma', altKey: true, shiftKey: true}));
     assert.ok(down('ƒ', {code: 'KeyF', altKey: true}));
     keys('!\x18\x13');
     // Emacsvox moves past the space so the next word is under point.
     await until('Meta forward one word', () => fs.readFileSync(file, 'utf8').trimEnd() === 'Café !lantern 雪');
+    assert.ok(down('˘', {code: 'Period', altKey: true, shiftKey: true}));
+    keys('END\x18\x13');
+    await until('Meta end of buffer', () => fs.readFileSync(file, 'utf8').trimEnd() === 'Café !lantern 雪\nEND');
     keys('\x18d\r');
     await until('Dired listing', () => screenHas('Dired') && screenHas('keyboard.txt'));
     assert.ok(down('≈', {code: 'KeyX', altKey: true}));
@@ -106,7 +109,7 @@ async function main() {
     assert.ok(!packets.some(p => p.type === 'speak'));
     keys('\x10');
     await until('fresh speech after reconnect', () => packets.some(p => p.type === 'speak' && p.text.trim().startsWith('Cobalt lighthouse')));
-    console.log('Passed terminal navigation and cutoff, UTF-8 file save, Alt+f, Dired, M-x Tab completion, cancel, buffer switch and reconnect.');
+    console.log('Passed terminal navigation and cutoff, UTF-8 file save, Meta beginning and end of buffer, Alt+f, Dired, M-x Tab completion, cancel, buffer switch and reconnect.');
   } catch (error) {
     console.error('Packet kinds during the failed step:', packets.map(p => p.type).slice(-20).join(' '));
     throw error;

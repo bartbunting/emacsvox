@@ -8,7 +8,7 @@ import {Asset} from 'expo-asset';
 import {useAudioPlayer} from 'expo-audio';
 import * as Speech from 'expo-speech';
 import {WebView} from '@expo/dom-webview';
-import {keyboardSource} from './keyboard';
+import {keyboardSource, createKeyboardFocus} from './keyboard';
 import {mixerAdapters} from './mixer';
 import {createReceiver} from './receiver';
 import {Action, colors, Panel, Settings, TerminalReview} from './panels';
@@ -45,10 +45,11 @@ function App() {
   const [settings, setSettings] = useState(() => ({
     host: process.env.EXPO_PUBLIC_EMACSVOX_HOST ?? '', port: '8822', username: '', pin: '',
     transport: ssh ? 'ssh' : 'relay', input: 'field', keepAwake: 'yes', audio: 'direct',
+    connectOnOpen: 'no', controlOption: 'voiceover',
     ...ssh?.loadProfile(),
   }));
   const active = useRef(false);
-  const reconnect = useRef(false);
+  const reconnect = useRef(Boolean(ssh && settings.transport === 'ssh' && settings.connectOnOpen === 'yes'));
   function save(draft) {
     const next = Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, value.trim()]));
     ssh?.saveProfile(next);
@@ -56,6 +57,27 @@ function App() {
     setSettings(next);
   }
   return <Session key={connectionKey(settings)} settings={settings} save={save} active={active} reconnect={reconnect} />;
+}
+
+function EmacsKeyboard({canFocus, controlOption, onKeys, onClosed}) {
+  const view = useRef(null);
+  const [focusNewInput] = useState(createKeyboardFocus);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    focusNewInput(loaded && view.current, canFocus,
+      input => input.injectJavaScript("document.getElementById('keys').focus();"));
+  }, [loaded, canFocus, focusNewInput]);
+  return <View style={styles.keyboard}>
+    <WebView ref={view} source={keyboardSource} style={styles.surface} scrollEnabled={false}
+      injectedJavaScriptBeforeContentLoaded={controlOption ? 'window.emacsControlOption = true;' : undefined}
+      injectedJavaScript="window.ReactNativeWebView.postMessage('');"
+      onMessage={({nativeEvent}) => {
+        // The document sends an empty message at load. Key packets are nonempty.
+        if (nativeEvent.data === '') setLoaded(true);
+        else if (canFocus) onKeys(nativeEvent.data);
+      }}
+      onContentProcessDidTerminate={onClosed} />
+  </View>;
 }
 
 function Session({settings, save, active, reconnect}) {
@@ -66,6 +88,8 @@ function Session({settings, save, active, reconnect}) {
   const [playback, setPlayback] = useState('');
   const [offer, setOffer] = useState(null);
   const terminalRef = useRef(null);
+  const [focusNewTerminal] = useState(createKeyboardFocus);
+  const [foreground, setForeground] = useState(AppState.currentState === 'active');
   const [voice, setVoice] = useState('');
   const [keyboard, setKeyboard] = useState(null);
   const [screen, setScreen] = useState('');
@@ -118,13 +142,17 @@ function Session({settings, save, active, reconnect}) {
     return () => { live = false; };
   }, [mixed, prepareAttempt]);
   useEffect(() => {
-    const listener = AppState.addEventListener('change', receiver.appState);
-    receiver.appState(AppState.currentState);
+    function onState(state) {
+      setForeground(state === 'active');
+      receiver.appState(state);
+    }
+    const listener = AppState.addEventListener('change', onState);
+    onState(AppState.currentState);
     return () => { listener.remove(); receiver.disconnect(); };
   }, [receiver]);
   useEffect(() => {
-    if (reconnect.current && prepared) { reconnect.current = false; connect(); }
-  }, [receiver, prepared]);
+    if (reconnect.current && prepared && foreground && !panel) { reconnect.current = false; connect(); }
+  }, [receiver, prepared, foreground, panel]);
   useEffect(() => {
     if (!ssh) return;
     ssh.keepAwake(settings.keepAwake === 'yes' && activeSession);
@@ -149,6 +177,12 @@ function Session({settings, save, active, reconnect}) {
     }
   }
   const useField = sshMode && offer && settings.input === 'field';
+  const keyboardFrame = sshMode && offer && keyboard?.frame === offer.frame ? offer.frame : null;
+  const canFocus = foreground && !panel;
+  useEffect(() => {
+    focusNewTerminal(!useField && keyboardFrame, canFocus && terminalRef.current,
+      () => terminalRef.current.focusKeyboard());
+  }, [useField, keyboardFrame, canFocus, focusNewTerminal]);
   return <>
     <StatusBar barStyle="light-content" />
     <ScrollView style={styles.surface} contentContainerStyle={styles.page} accessibilityElementsHidden={Boolean(panel)}
@@ -162,19 +196,24 @@ function Session({settings, save, active, reconnect}) {
       </View>
       {sshMode && offer && !useField &&
         <Action title="Focus Emacs terminal" onPress={() => terminalRef.current?.focusKeyboard()} />}
-      {(useField || keyboard) && <View key={'keyboard-' + (offer?.frame ?? 'relay')} style={styles.keyboard}>
-        <WebView source={keyboardSource} style={styles.surface} scrollEnabled={false}
-          onMessage={({nativeEvent}) => {
-            if (useField) terminalRef.current?.sendKeys(offer.frame, nativeEvent.data);
-            else keyboard?.sendKeys(nativeEvent.data);
+      {((useField && keyboardFrame) || keyboard?.sendKeys) &&
+        <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption} canFocus={canFocus}
+          controlOption={settings.controlOption === 'emacs'}
+          onKeys={text => {
+            if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
+            else keyboard?.sendKeys(text);
           }}
-          onContentProcessDidTerminate={() => receiver.disconnect('Keyboard closed. Activate Connect to retry.')} />
-      </View>}
+          onClosed={() => {
+            const message = 'Keyboard closed. Activate Connect to retry.';
+            if (keyboardFrame) receiver.terminalClosed(keyboardFrame, message);
+            else receiver.disconnect(message);
+          }} />}
       {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
         <Terminal ref={terminalRef} style={styles.nativeTerminal}
           connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
           onSessionStatus={({nativeEvent}) => {
-            if (nativeEvent.state !== 'connected') receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail);
+            if (nativeEvent.state === 'connected') receiver.terminalConnected(offer.frame);
+            else receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail);
           }} /></View>}
       {screen ? <View><Text accessibilityRole="header" style={styles.status}>Terminal screen</Text>
         <Text selectable style={styles.terminal}>{screen}</Text></View> : null}

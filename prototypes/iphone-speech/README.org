@@ -361,9 +361,11 @@ use this relay. It can issue ordinary Emacs commands as your WSL user.
    press Return. Type a sentence and save with =Control+x Control+s=.
    Press =Alt+x= to open the command minibuffer. Cancel with =Control+g=.
    Press =Control+a= on your sentence and use =Alt+f= to move by word.
-   In the Emacs keyboard field, Alt (Option) plus a letter sends an Emacs
-   Meta command. You can also press Escape, release it, then type the
-   letter. Control+Option remains available for VoiceOver.
+   In the Emacs keyboard field, Alt (Option) sends Emacs Meta. For the
+   beginning of the buffer, hold Option and Shift and press comma. Use
+   period for the end. You can also press and release Escape, then type
+   =<= or =>=. This second method works on signed build 3 as well.
+   Control+Option remains available for VoiceOver by default.
    Use =Control+x b= to return to =Phone keyboard sample=.
    The receiver also has a readable terminal screen below the controls.
 5. Use VoiceOver to activate Stop Speech or Disconnect. On reconnect,
@@ -492,7 +494,11 @@ speech socket before the receiver reports Connected.
 4. In Settings fill in WSL Tailscale IPv4 address,
    SSH port (=8822=), WSL username and the full =ssh-ed25519= host public
    key printed by the listener. Activate Save settings, then Connect.
-   When you hear Connected, focus the Emacs keyboard field and double-tap.
+   On signed build 3, double-tap the Emacs keyboard field after you hear
+   Connected. In the next build the app requests focus when SSH and the
+   Emacs frame are ready. To start there on a fresh launch, enable
+   “Connect on open” in Settings once and save. It starts off. You can
+   always focus the field by double-tapping it.
    The app remembers these values, the input method, the audio mode and
    your keep-awake preference across launches. An update installed over the
    first signed build reads its saved SSH settings and keeps the iPhone key.
@@ -502,7 +508,7 @@ speech socket before the receiver reports Connected.
    a file, =C-x C-s= to save, and =M-x= with Tab completion. Use VoiceOver
    to reach Stop Speech and return to the keyboard. To compare input
    paths, switch off “Use Emacs keyboard field” in Settings, save and
-   activate “Focus Emacs terminal”. Control+Option stays available to VoiceOver.
+   activate “Focus Emacs terminal”.
    For the audio comparison, turn on “Use native mixer”, save and open
    Diagnostics. Activate “Test mixed audio”. Saving a changed connection or
    audio mode reconnects an active session.
@@ -546,6 +552,22 @@ The ordinary =./phone-sshd= command now uses this identity. For a newly
 created key, compare the public key printed by WSL and save it on the phone
 once. To select another existing key, pass =--host-key /path/to/key=.
 Control+C ends the listener.
+
+** Use Control and Meta on the external keyboard
+
+With the default VoiceOver modifier, send =C-M-f= by pressing Escape,
+releasing it, then pressing Control+f. In an Emacs Lisp buffer this moves
+forward one expression. For physical Control+Option chords in the updated
+Emacs keyboard field, choose Caps Lock as your only VoiceOver modifier in
+iPhone Settings, Accessibility, VoiceOver, Typing, Modifier Keys. Then enable
+“Send Control+Option to Emacs” in the app settings and save. Press
+Control+Option+f to move one expression. The app leaves Command shortcuts
+to iOS. On terminals that share key codes, the usual Emacs prefix =C-x @=
+can supply individual modifiers, including =C-x @ s= for Super.
+[[https://support.apple.com/guide/iphone/iph6c494dc6/ios][Apple's external keyboard guide]].
+
+If your keyboard has Mac and Windows layouts, check its manual for the
+position of Option or Alt. iOS interprets the Alt key as Option.
 
 ** Check keyboard speech and permissions on the signed app
 

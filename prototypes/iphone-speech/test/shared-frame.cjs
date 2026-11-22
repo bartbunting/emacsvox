@@ -11,6 +11,7 @@ const {setTimeout: delay} = require('node:timers/promises');
 const run = require('node:util').promisify(execFile);
 const {WebSocket} = require('ws');
 const {createRelay, LegacyInput} = require('../relay.cjs');
+const {keyboardField} = require('./keyboard-field.cjs');
 const net = require('node:net');
 const routed = process.argv.includes('--routed');
 const timeTones = process.argv.includes('--time-tones');
@@ -324,6 +325,25 @@ async function main() {
         const phoneWindow = "(frame-selected-window (seq-find (lambda (f) (frame-parameter f 'emacsvox-native-ssh)) (frame-list)))";
         const packets = await attachSSH();
         assert.ok(!packets.some(p => p.keyboard || p.type === 'screen'));
+        const beforeKeys = await observe('(window-point ' + phoneWindow + ')');
+        await observe('(with-selected-window ' + phoneWindow + ' (switch-to-buffer (get-buffer-create "Phone modifier sample")) ' +
+          '(emacs-lisp-mode) (insert "(one two) (three four)") (goto-char 5))');
+        const field = keyboardField(sshKeys);
+        const controlMetaField = keyboardField(sshKeys, true);
+        const atPoint = async position => (await observe('(window-point ' + phoneWindow + ')')) === String(position);
+        assert.ok(field.down('˘', {code:'Period', altKey:true, shiftKey:true}));
+        await until('SSH Meta end of buffer', () => atPoint(23));
+        assert.ok(field.down('¯', {code:'Comma', altKey:true, shiftKey:true}));
+        await until('SSH Meta beginning of buffer', () => atPoint(1));
+        assert.ok(controlMetaField.down('ƒ', {code:'KeyF', ctrlKey:true, altKey:true}));
+        await until('SSH Control+Option forward-sexp', () => atPoint(10));
+        assert.ok(field.down('Escape'));
+        assert.ok(field.down('f', {ctrlKey:true}));
+        await until('SSH Escape then Control+f', () => atPoint(23));
+        assert.equal(await observe('(with-current-buffer "Phone modifier sample" (buffer-substring-no-properties (point-min) (point-max)))'),
+          '"(one two) (three four)"');
+        await observe('(with-selected-window ' + phoneWindow + ' (switch-to-buffer iphone-shared-buffer) (goto-char ' + beforeKeys + '))');
+        console.log('Passed Meta buffer boundaries and both Control+Meta inputs through the Swift SSH client to Emacs.');
         const otherSounds = path.join(dir, 'second installation', 'sounds');
         const relativeCue = 'packs/accent/open-object.ogg';
         const otherCue = path.join(otherSounds, relativeCue);

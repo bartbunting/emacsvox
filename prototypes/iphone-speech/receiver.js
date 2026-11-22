@@ -27,6 +27,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
                           keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
+  let sshKeyboardConnected = false, sshKeyboardPublished = false;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
   let voiceLookup, currentRate = speechRate;
@@ -222,6 +223,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     clearTimeout(retryTimer);
     retryTimer = null;
     frameId = null;
+    sshKeyboardConnected = sshKeyboardPublished = false;
     sessionActive(false);
     ready = false;
     keyboard(null);
@@ -283,7 +285,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
               current.send('key ' + text);
             }
           }});
-        }
+        } else publishSshKeyboard();
       } else if (record.type === 'ssh' && typeof record.frame === 'string' &&
                  typeof record.client === 'string' && typeof record.server === 'string') {
         frameId = record.frame;
@@ -334,6 +336,19 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     }
   }
 
+  function publishSshKeyboard() {
+    if (ready && sshKeyboardConnected && !sshKeyboardPublished) {
+      sshKeyboardPublished = true;
+      keyboard({frame: frameId});
+    }
+  }
+
+  function terminalConnected(frame) {
+    if (!frame || frame !== frameId) return;
+    sshKeyboardConnected = true;
+    publishSshKeyboard();
+  }
+
   function terminalClosed(frame, message) {
     if (frame && frameId === frame) disconnect(message || 'SSH terminal closed. Activate Connect to retry.');
   }
@@ -361,7 +376,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     enqueue({type: 'tone', hz: 660, ms});
   }
 
-  return { connect: () => connect(), disconnect, appState, terminalClosed, stop, testTone,
+  return { connect: () => connect(), disconnect, appState, terminalConnected, terminalClosed, stop, testTone,
     testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => playCue(openObjectCue),
     testVisualLine: () => playCue(visualLineCue) };
 }

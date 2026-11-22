@@ -62,8 +62,13 @@ export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer}) {
     {ssh && <>
       <Toggle label="Use SSH terminal" hint="Connect your external keyboard to Emacs through SSH. Switch off to use the test relay."
         value={draft.transport === 'ssh'} change={v => edit('transport', v ? 'ssh' : 'relay')} />
+      <Toggle label="Connect on open" hint="Open the saved SSH connection when you launch the app. The Emacs keyboard receives focus once the terminal is ready."
+        value={draft.connectOnOpen === 'yes'} change={v => edit('connectOnOpen', v ? 'yes' : 'no')} />
       <Toggle label="Use Emacs keyboard field" hint="Use the keyboard field that was tested with VoiceOver. Switch off to type directly into SwiftTerm."
         value={draft.input === 'field'} change={v => edit('input', v ? 'field' : 'terminal')} />
+      {draft.input === 'field' && <Toggle label="Send Control+Option to Emacs"
+        hint="Use Control and Meta together in the Emacs keyboard field. Choose Caps Lock as your VoiceOver modifier first. When off, press Escape followed by the Control key combination."
+        value={draft.controlOption === 'emacs'} change={v => edit('controlOption', v ? 'emacs' : 'voiceover')} />}
       <Toggle label="Keep awake while connected" hint="Prevent automatic screen lock while this app is in the foreground."
         value={draft.keepAwake === 'yes'} change={v => edit('keepAwake', v ? 'yes' : 'no')} />
       {[['host','WSL Tailscale IPv4 address'], ['port','SSH port'], ['username','WSL username'],
