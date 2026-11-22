@@ -119,7 +119,13 @@ a temporary loopback OpenSSH server. On 22 November 2026 it attached to
 an existing Agent Shell sample, dispatched the destination line through
 Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
 the same buffer. The phone-facing SSH endpoint, Keychain storage,
-terminal display and accessible input still need implementation or testing.
+native terminal display and physical keyboard behaviour still need testing.
+
+The [[file:README.org::*Try the external keyboard in Expo Go][Expo Go keyboard test]]
+connects the phone field to a separate terminal Emacs over the private relay.
+WSL checks cover two response lines, speech interruption, UTF-8 file
+editing, buffer switching and reconnect. Check VoiceOver focus and
+hardware shortcuts on the iPhone before moving the input path to SSH.
 
 The first phone input test uses an external keyboard connected to the
 iPhone with VoiceOver on. Focus the terminal in the foreground app. In an

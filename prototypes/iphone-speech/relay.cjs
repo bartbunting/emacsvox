@@ -5,6 +5,7 @@ const net = require('node:net');
 const http = require('node:http');
 const path = require('node:path');
 const { WebSocketServer, WebSocket } = require('ws');
+const { attachTerminal } = require('./terminal.cjs');
 
 const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
@@ -113,8 +114,8 @@ class LegacyInput {
   }
 }
 
-function createRelay(host, peer) {
-  let phone, producer, input;
+function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket} = {}) {
+  let phone, producer, input, terminal;
   const send = message => {
     if (phone?.readyState !== WebSocket.OPEN) return;
     if (phone.bufferedAmount > maxBytes) return phone.terminate();
@@ -138,16 +139,17 @@ function createRelay(host, peer) {
     }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end('<title>Emacsvox Speech</title><main><h1>Emacsvox Speech</h1>' +
-      '<a href="exp://' + host + ':8788">Open receiver in Expo Go</a></main>');
+      '<a href="exp://' + host + ':' + metroPort + '">Open receiver in Expo Go</a></main>');
   });
-  const wss = new WebSocketServer({ noServer: true, maxPayload: 256, perMessageDeflate: false });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: terminalSocket ? 2048 : 256, perMessageDeflate: false });
   httpServer.on('upgrade', (req, socket, head) => {
     // The native iOS WebSocket may supply its own endpoint as Origin.
     const origin = req.headers.origin;
     if (req.socket.remoteAddress !== peer || req.url !== '/speech' ||
-        (origin && origin !== 'http://' + host + ':8787')) return socket.destroy();
+        (origin && origin !== 'http://' + host + ':' + port)) return socket.destroy();
     wss.handleUpgrade(req, socket, head, ws => {
       const previous = phone;
+      terminal?.close();
       phone = ws;
       previous?.terminate();
       input?.invalidate();
@@ -159,6 +161,8 @@ function createRelay(host, peer) {
       ws.on('close', () => {
         clearInterval(timer);
         if (phone !== ws) return;
+        terminal?.close();
+        terminal = undefined;
         input?.invalidate();
         phone = undefined;
       });
@@ -170,9 +174,12 @@ function createRelay(host, peer) {
         else if (/^reset [0-9]{1,12}$/.test(command)) {
           input?.invalidate();
           send({ type: 'ready', id: Number(command.slice(6)) });
+        } else if (terminal && command.startsWith('key ') && command.length > 4) {
+          void terminal.write(command.slice(4));
         } else ws.terminate();
       });
-      send({ type: 'ready', id: 0 });
+      send({ type: 'ready', id: 0, ...(terminalSocket && {keyboard: true}) });
+      if (terminalSocket) terminal = attachTerminal(terminalSocket, send, () => ws.terminate());
     });
   });
   return { backend, httpServer };
@@ -181,9 +188,14 @@ function createRelay(host, peer) {
 module.exports = { createRelay, LegacyInput };
 
 if (require.main === module) {
-  const [host, peer, socketPath] = process.argv.slice(2);
-  const relay = createRelay(host, peer);
+  const [host, peer, socketPath, terminalSocket] = process.argv.slice(2);
+  const port = terminalSocket ? 8791 : 8787;
+  const metroPort = terminalSocket ? 8792 : 8788;
+  const relay = createRelay(host, peer, {port, metroPort, terminalSocket});
+  const listen = () => relay.httpServer.listen(port, host, () =>
+    console.log('On your iPhone, open http://' + host + ':' + port + ' in Safari.'));
+  // The keyboard launcher signals after the isolated Emacs reaches its command loop.
+  if (terminalSocket) process.once('SIGUSR2', listen);
+  else listen();
   relay.backend.listen(socketPath);
-  relay.httpServer.listen(8787, host, () =>
-    console.log('On your iPhone, open http://' + host + ':8787 in Safari.'));
 }

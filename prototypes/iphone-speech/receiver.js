@@ -24,7 +24,8 @@ async function findVoice(speech) {
 
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, cuePlayer, openSocket, status, playback = () => {}, voiceStatus = () => {}, now = Date.now }) {
+function createReceiver({ speech, cuePlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
+                          keyboard = () => {}, screen = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
@@ -141,6 +142,8 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
     const old = socket;
     socket = null;
     ready = false;
+    keyboard(null);
+    screen('');
     clearInterval(heartbeat);
     silence();
     old?.close();
@@ -172,6 +175,16 @@ function createReceiver({ speech, cuePlayer, openSocket, status, playback = () =
       if (record.type === 'ready' && record.id === resetId) {
         ready = true;
         status('Connected');
+        if (record.id === 0 && record.keyboard === true) {
+          keyboard({sendKeys(text) {
+            if (socket === current && ready && current.readyState === 1 &&
+                typeof text === 'string' && text.length > 0 && text.length <= 256) {
+              current.send('key ' + text);
+            }
+          }});
+        }
+      } else if (record.type === 'screen' && typeof record.text === 'string') {
+        screen(record.text);
       } else if (ready && record.type === 'stop') {
         silence(record.scope !== 'speech');
       } else if (ready && record.type === 'cue' && record.name === 'open-object') {

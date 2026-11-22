@@ -314,6 +314,48 @@ python3 test/ssh-terminal.py --sshd "$server_dir/usr/sbin/sshd" \
   --emacsclient "$(command -v emacsclient)"
 #+end_src
 
+* Try the external keyboard in Expo Go
+
+Connect the keyboard to your iPhone and leave VoiceOver on. This test
+runs a separate terminal Emacs in WSL and opens a sample response in
+the real Agent Shell renderer. The foreground receiver sends keystrokes
+and speaks Emacsvox output locally. Only the named Tailscale peer can
+use this relay. It can issue ordinary Emacs commands as your WSL user.
+
+1. From WSL, start the keyboard test on the =prototype/iphone-ssh= branch.
+   Install the branch's JavaScript packages once.
+
+   #+begin_src sh
+   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   npm ci
+   read -rp 'iPhone Tailscale IPv4 address: ' phone
+   ./start-relay --keyboard "$phone"
+   #+end_src
+
+2. With Tailscale connected, open the host’s Tailscale address on port 8791 in Safari using HTTP.
+   Activate “Open receiver in Expo Go”, then Connect. After “Connected”,
+   move past Stop Speech to the “Emacs keyboard” text field and double-tap.
+3. Press =Control+n= on the iPhone keyboard. Listen for “Cobalt lighthouse”.
+   Press it again during the line. Listen for “Amber orchard” to interrupt.
+   Use =Control+p= to repeat. If VoiceOver takes a letter for navigation,
+   turn off Quick Nav and focus the field again.
+4. Press =Control+x=, then =Control+f=. Type =keyboard-test.txt= and
+   press Return. Type a sentence and save with =Control+x Control+s=.
+   Press Escape, then =x= to open the command minibuffer. Cancel with
+   =Control+g=. Use =Control+x b= to return to =Phone keyboard sample=.
+   The receiver also has a readable terminal screen below the controls.
+5. Use VoiceOver to activate Stop Speech or Disconnect. On reconnect,
+   double-tap the keyboard field to resume at the same place. To end the
+   test, save any wanted edits and press =Control+c= in the WSL launcher
+   terminal. This closes the test Emacs. Your regular Emacs remains
+   available for desktop speech.
+
+The test uses a fixed 100-column, 32-row tmux terminal. The keyboard and
+speech share a WebSocket. SSH on the phone and speech routing for frames
+in your existing Emacs are later stages. Run =npm test= for the keyboard
+field and receiver checks and =node test/keyboard-terminal.cjs= for the
+real terminal editing and speech test in WSL.
+
 * Full terminal Emacs on the iPhone
 
 The planned app gives you a terminal frame in your existing WSL Emacs.

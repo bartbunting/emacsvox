@@ -15,8 +15,8 @@
 
 ;;; Code:
 
-(defun iphone-test-render-response ()
-  "Return a new Agent Shell buffer containing the fixed ACP reply."
+(defun iphone-test-render-response (&optional reply)
+  "Return a new Agent Shell buffer containing REPLY or the short test response."
   (save-current-buffer
     (let* ((agent-shell-show-welcome-message nil)
            (agent-shell-openai-codex-acp-command '("true"))
@@ -29,10 +29,10 @@
       (agent-shell--on-notification
        :state agent-shell--state
        :acp-notification
-       '((method . "session/update")
+       `((method . "session/update")
          (params . ((update . ((sessionUpdate . "agent_message_chunk")
                                (content . ((type . "text")
-                                           (text . "Starting row\nCobalt lighthouse\nAmber orchard\nLast row")))))))))
+                                           (text . ,(or reply "Starting row\nCobalt lighthouse\nAmber orchard\nLast row"))))))))))
       (agent-shell--flush-stream-render agent-shell--state)
       (agent-shell--emit-event :event 'turn-complete :data '((:stop-reason . "end_turn")))
       buffer)))

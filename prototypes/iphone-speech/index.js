@@ -9,6 +9,8 @@ import { mixerAdapters } from './mixer';
 import { useAudioPlayer } from 'expo-audio';
 import * as Speech from 'expo-speech';
 import { createReceiver } from './receiver';
+import { WebView } from '@expo/dom-webview';
+import { keyboardSource } from './keyboard';
 
 const native = requireOptionalNativeModule('IphoneMixer');
 const sound = require('./assets/open-object.wav');
@@ -22,6 +24,8 @@ function Session({mixed, switchMode}) {
   const [status, setStatus] = useState('Disconnected');
   const [playback, setPlayback] = useState('');
   const [voice, setVoice] = useState('');
+  const [keyboard, setKeyboard] = useState(null);
+  const [screen, setScreen] = useState('');
   const directCue = useAudioPlayer(sound, {downloadFirst: true});
   const [timing, setTiming] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +37,10 @@ function Session({mixed, switchMode}) {
     status: setStatus,
     playback: setPlayback,
     voiceStatus: setVoice,
-    openSocket: () => new WebSocket('ws://' + process.env.EXPO_PUBLIC_EMACSVOX_HOST + ':8787/speech'),
+    keyboard: setKeyboard,
+    screen: setScreen,
+    openSocket: () => new WebSocket('ws://' + process.env.EXPO_PUBLIC_EMACSVOX_HOST + ':' +
+      (process.env.EXPO_PUBLIC_EMACSVOX_PORT || '8787') + '/speech'),
   }), [adapters]);
   useEffect(() => {
     const listener = AppState.addEventListener('change', state => {
@@ -65,11 +72,18 @@ function Session({mixed, switchMode}) {
         <Button title="Connect" accessibilityLabel="Connect" onPress={receiver.connect} />
         <Button title="Disconnect" accessibilityLabel="Disconnect" onPress={() => receiver.disconnect()} />
         <Button title="Stop Speech" accessibilityLabel="Stop Speech" onPress={receiver.stop} />
+        {keyboard && <View style={styles.keyboard}>
+          <WebView source={keyboardSource} scrollEnabled={false}
+            onMessage={event => keyboard.sendKeys(event.nativeEvent.data)}
+            onContentProcessDidTerminate={() => receiver.disconnect('Keyboard closed. Activate Connect to retry.')} />
+        </View>}
         <Button title="Test iPhone Voice" accessibilityLabel="Test iPhone Voice" onPress={receiver.testVoice} />
         {native && <Button title={mixed ? 'Use direct speech' : 'Use native mixer'} disabled={loading} onPress={changeMode} />}
         {mixed && <Button title="Test mixed audio" onPress={receiver.testMix} />}
         <Button title="Test Open Object Sound" accessibilityLabel="Test Open Object Sound" onPress={receiver.testCue} />
       </View>
+      {screen ? <View><Text accessibilityRole="header">Terminal screen</Text>
+        <Text selectable style={styles.terminal}>{screen}</Text></View> : null}
       {timing ? <Text style={styles.status}>{timing}</Text> : null}
       {playback ? <Text style={styles.status}>{playback}</Text> : null}
     </ScrollView>
@@ -81,6 +95,8 @@ const styles = StyleSheet.create({
   heading: { fontSize: 28, fontWeight: '600', color: '#111' },
   status: { fontSize: 20, marginVertical: 24, color: '#111' },
   controls: { gap: 20, alignItems: 'flex-start' },
+  keyboard: { height: 108, alignSelf: 'stretch' },
+  terminal: { fontFamily: 'Menlo', fontSize: 14, color: '#111' },
 });
 
 registerRootComponent(App);
