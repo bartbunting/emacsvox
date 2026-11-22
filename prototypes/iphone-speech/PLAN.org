@@ -27,12 +27,12 @@ history. The private signed builds predate the removal of local setup details.
 2. The 480 ms Diagnostics tone and a direct Return in the SSH tone buffer
    both start promptly on build 3. Use the command-completion comparison
    below when investigating the slower response after =M-x=.
-3. Use an existing Codex conversation from both frames. Continue a draft,
-   hear a reply, review a permission while navigating and reconnect after
-   locking the phone. Leave the desktop frame and draft open.
-4. Extend Omnivox cue support on the phone, starting with the visual-line
-   mode-line chime. Verify cue order, cancellation and timing on the device
-   before enabling each additional protocol capability.
+3. At the next permission request in the running Codex conversation, press
+   =C-n= while the choices are spoken, then review the request on the phone.
+   Typing into that conversation and reconnecting after lock passed on build 3.
+4. Compare the visual-line chime heard in Expo Go Diagnostics with =C-e m=
+   in a signed build that includes the recording. Check cue order and Stop
+   on the phone.
 5. Finish daily-use setup. Start the opt-in relay, reconnect with the
    saved SSH settings after a WSL restart, then disconnect the phone and
    continue in the same desktop session.
@@ -221,8 +221,10 @@ The desktop chime now uses one SoX worker. The phone frame sends the same
 mode-line indication in the legacy immediate-play command. A two-frame
 test counted one desktop SoX request for the desktop command and one
 phone cue for the phone command. The build 3 receiver accepted its spoken
-label in a compatibility test. The new receiver bundles the 675 ms recording
-and plays it in direct and mixed audio. Physical listening remains open.
+label in a compatibility test. On 23 November 2026, “Test visual-line chime”
+in Expo Go Diagnostics played the 675 ms recording successfully on the iPhone.
+The remaining listening check is =C-e m= with direct speech and with the
+native mixer in a signed build that includes the recording.
 
 ** TODO 6. Bring across the Omnivox speech features
 
