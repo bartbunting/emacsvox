@@ -8,6 +8,7 @@ The iPhone synthesises each utterance locally. Your desktop Emacs keeps
 its own speech process and conversation.
 
 1. Install [[https://apps.apple.com/app/expo-go/id982107779][Expo Go]] on your iPhone. This prototype targets Expo SDK 58.
+   In Expo Go, open the account button and sign in with a free Expo account.
    Connect Tailscale on both devices. In Tailscale on the phone, find
    the phone's own 100.x IPv4 address. Turn Silent Mode off and check
    media volume. [[https://docs.expo.dev/versions/latest/sdk/speech/][Expo Speech on physical iOS devices]].
@@ -16,9 +17,14 @@ its own speech process and conversation.
 
    #+begin_src sh
    cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   npx expo login
    read -rp 'iPhone Tailscale IPv4 address: ' phone
    ./start-relay "$phone"
    #+end_src
+
+   Use the same Expo account in WSL and on your phone. If the relay is
+   already running, you can run the login command in another WSL terminal,
+   then activate “Try Again” on the phone. [[https://docs.expo.dev/troubleshooting/expo-go-sign-in-required/][Expo Go sign-in help]].
 
 3. Wait for Metro to print “Waiting on http://localhost:8786”. Open
    the HTTP address printed for the iPhone in Safari.
@@ -65,7 +71,9 @@ directly over Tailscale. There is no public tunnel or audio stream.
 If Safari fails to load the page, check the peer address, Tailscale and
 those ports. If the page opens but the app fails to load, check the Metro
 output and the Expo Go SDK version. If status reports a timeout, activate
-Connect after restoring the network.
+Connect after restoring the network. If you hear silence, activate
+“Test iPhone Voice”. This speaks a short phrase locally even while
+disconnected. Swipe right once more to read the latest speech status.
 
 The private Unix socket accepts one Emacs producer. Speech is delivered
 only to the current foreground receiver. Each new phone connection drops
@@ -143,7 +151,8 @@ On 2026-11-22, the checks passed on WSL2 with the configured Emacs 31,
 Agent Shell checkout dde9392 and Expo SDK 58. A separate fresh session
 reached Codex ACP readiness with version 2.9.0 without submitting a prompt.
 Metro served an iOS bundle with the Tailscale bundle URL, and the iOS
-Hermes export succeeded. The physical iPhone listening test is pending.
+Hermes export succeeded. On a physical iPhone, both the local voice test
+and line navigation in a rendered Agent Shell sample produced audible speech.
 
 * One foreground app for SSH and speech
 

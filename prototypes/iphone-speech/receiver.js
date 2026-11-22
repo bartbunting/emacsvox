@@ -3,9 +3,9 @@
 
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, openSocket, status, now = Date.now }) {
+function createReceiver({ speech, openSocket, status, playback = () => {}, now = Date.now }) {
   let socket, heartbeat, lastReceived, resetId, ready;
-  let epoch = 0, barrier = Promise.resolve(), speaking = false;
+  let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
 
   function silence() {
@@ -13,8 +13,10 @@ function createReceiver({ speech, openSocket, status, now = Date.now }) {
     queue = [];
     queuedChars = 0;
     speaking = false;
-    barrier = speech.stop().catch(() => {
-      if (epoch === owner) status('iOS could not stop speech.');
+    // An idle AVSpeechSynthesizer can return false from stopSpeaking.
+    // Any fulfilled stop permits fresh speech. Only rejection blocks it.
+    barrier = speech.stop().then(() => true, () => {
+      if (epoch === owner) playback('iOS could not stop speech.');
       return false;
     });
   }
@@ -24,24 +26,37 @@ function createReceiver({ speech, openSocket, status, now = Date.now }) {
     speaking = true;
     const owner = epoch;
     barrier.then(result => {
-      if (owner !== epoch || result === false) return;
+      if (owner !== epoch || !result) return;
       const text = queue.shift();
       queuedChars -= text.length;
-      const finish = () => {
+      const finish = state => {
         if (owner !== epoch) return;
+        playback(state);
         speaking = false;
         drain();
       };
       speech.speak(text, {
         useApplicationAudioSession: false,
-        onDone: finish,
-        onStopped: finish,
-        onError: () => {
-          if (owner === epoch) status('iOS could not speak this utterance.');
-          finish();
+        onStart: () => {
+          if (owner === epoch) playback('iOS started speech.');
         },
+        onDone: () => finish('iOS finished speech.'),
+        onStopped: () => finish('iOS stopped speech.'),
+        onError: () => finish('iOS could not speak this utterance.'),
       });
     });
+  }
+
+  function enqueue(text) {
+    if (!text) return;
+    if (queuedChars + text.length > 1_000_000 || queue.length >= 1024) {
+      disconnect('Speech queue full. Activate Connect to retry.');
+      return;
+    }
+    queue.push(text);
+    queuedChars += text.length;
+    playback('Speech queued.');
+    drain();
   }
 
   function disconnect(message = 'Disconnected') {
@@ -81,15 +96,7 @@ function createReceiver({ speech, openSocket, status, now = Date.now }) {
       } else if (ready && record.type === 'stop') {
         silence();
       } else if (ready && ['letter', 'speak'].includes(record.type) && typeof record.text === 'string') {
-        const text = record.type === 'letter' ? characterName(record.text) : record.text;
-        if (!text) return;
-        if (queuedChars + text.length > 1_000_000 || queue.length >= 1024) {
-          disconnect('Speech queue full. Activate Connect to retry.');
-          return;
-        }
-        queue.push(text);
-        queuedChars += text.length;
-        drain();
+        enqueue(record.type === 'letter' ? characterName(record.text) : record.text);
       }
     };
     current.onclose = current.onerror = () => {
@@ -106,7 +113,12 @@ function createReceiver({ speech, openSocket, status, now = Date.now }) {
     socket.send('reset ' + ++resetId);
   }
 
-  return { connect, disconnect, stop };
+  function testVoice() {
+    silence();
+    enqueue('This is the iPhone voice test.');
+  }
+
+  return { connect, disconnect, stop, testVoice };
 }
 
 const symbols = {

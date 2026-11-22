@@ -54,3 +54,39 @@ test('native stop races, stalled socket and delayed callbacks after reconnect', 
     receiver.disconnect();
   }
 });
+
+test('an idle iOS stop permits the next dispatched line', async () => {
+  const spoken = [];
+  const socket = {readyState: 1, close() {}};
+  const receiver = createReceiver({
+    status() {},
+    openSocket: () => socket,
+    speech: {stop: async () => false, speak: text => spoken.push(text)},
+  });
+  try {
+    receiver.connect();
+    for (const message of [{type:'ready', id:0}, {type:'stop'}, {type:'speak', text:'Sample line'}]) {
+      socket.onmessage({data: JSON.stringify(message)});
+    }
+    await flush();
+    assert.deepEqual(spoken, ['Sample line']);
+  } finally {
+    receiver.disconnect();
+  }
+});
+
+test('local voice test works without a socket and reports native callbacks', async () => {
+  const states = [];
+  let utterance;
+  const receiver = createReceiver({
+    status() {}, playback: state => states.push(state),
+    openSocket: () => assert.fail('Local voice test opened a connection'),
+    speech: {stop: async () => false, speak: (text, options) => { utterance = {text, options}; }},
+  });
+  receiver.testVoice();
+  await flush();
+  assert.equal(utterance.text, 'This is the iPhone voice test.');
+  utterance.options.onStart();
+  utterance.options.onDone();
+  assert.deepEqual(states.slice(-2), ['iOS started speech.', 'iOS finished speech.']);
+});

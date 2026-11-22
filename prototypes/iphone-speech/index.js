@@ -9,9 +9,11 @@ import { createReceiver } from './receiver';
 
 function App() {
   const [status, setStatus] = useState('Disconnected');
+  const [playback, setPlayback] = useState('');
   const receiver = useMemo(() => createReceiver({
     speech: Speech,
     status: setStatus,
+    playback: setPlayback,
     openSocket: () => new WebSocket('ws://' + process.env.EXPO_PUBLIC_EMACSVOX_HOST + ':8787/speech'),
   }), []);
   useEffect(() => {
@@ -28,7 +30,9 @@ function App() {
         <Button title="Connect" accessibilityLabel="Connect" onPress={receiver.connect} />
         <Button title="Disconnect" accessibilityLabel="Disconnect" onPress={() => receiver.disconnect()} />
         <Button title="Stop Speech" accessibilityLabel="Stop Speech" onPress={receiver.stop} />
+        <Button title="Test iPhone Voice" accessibilityLabel="Test iPhone Voice" onPress={receiver.testVoice} />
       </View>
+      {playback ? <Text style={styles.status}>{playback}</Text> : null}
     </ScrollView>
   );
 }
