@@ -285,16 +285,15 @@ async function main() {
           (map-put! agent-shell--state :tool-calls
             '(("second" . ((:title . "Review copper") (:permission-request-id . 17)))))))`);
       async function switchPhoneBuffer(name) {
-        ws.send('key \x18b');
-        const prompt = `(when-let* ((mini (active-minibuffer-window))
-                                   ((frame-parameter (window-frame mini) 'emacsvox-phone-id)))
-                         (with-current-buffer (window-buffer mini) (minibuffer-prompt)))`;
-        await until('Switch to buffer on the phone frame', async () => /switch to buffer/i.test(await observe(prompt)))
+        ws.send('key \x18b' + name + '\r');
+        const selectedBuffer = `(when-let* ((f (seq-find (lambda (frame) (frame-parameter frame 'emacsvox-phone-id))
+                                                         (frame-list))))
+                                 (buffer-name (window-buffer (frame-selected-window f))))`;
+        await until('phone switched to ' + name, async () => (await observe(selectedBuffer)) === JSON.stringify(name))
           .catch(async error => {
-            const state = await observe(`(list last-command (minibuffer-depth) ${prompt})`);
+            const state = await observe(`(list last-command (minibuffer-depth) ${selectedBuffer})`);
             throw new Error(error.message + ', editor state ' + state);
           });
-        ws.send('key ' + name + '\r');
       }
       await switchPhoneBuffer('Second permission sample');
       await until('switch restores the second conversation request', () =>
@@ -355,6 +354,11 @@ async function main() {
               require('node:readline').createInterface({input: worker.stdout}).on('line', line => {
                 if (line.startsWith('test-audio ')) { packets.push({lane: tag, audio: line.slice(11)}); return; }
                 const marker = /^__EMACSVOX_MARKER__ ([A-Za-z0-9+/=]+)$/.exec(line);
+                const result = /^__OMNIVOX_CONTROL__ ([A-Za-z0-9+/=]+)$/.exec(line);
+                if (result) {
+                  const reply = JSON.parse(Buffer.from(result[1], 'base64'));
+                  packets.push({lane: tag, response: reply.type, requestId: reply.request_id, generation: reply.registry_generation});
+                }
                 const receipt = /^__EMACSVOX_TRACKED__ (\d+) (completed|cancelled|failed)$/.exec(line);
                 if (marker) packets.push({lane: tag, marker: JSON.parse(Buffer.from(marker[1], 'base64'))});
                 if (receipt) packets.push({lane: tag, dispatch: Number(receipt[1]), status: receipt[2]});
@@ -372,12 +376,20 @@ async function main() {
               const tone = /^emacsvox_tone 1 (insert|overlay) ([\d.]+) (\d+)$/.exec(line);
               const encoded = /^omnivox_control\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
               const control = encoded && JSON.parse(Buffer.from(encoded[1], 'base64').toString());
-              const encodedTimeline = /^emacsvox_timeline\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
+              const encodedTimeline = /^(?:emacsvox_timeline|emacsvox_letter)\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
               const timeline = encodedTimeline && JSON.parse(Buffer.from(encodedTimeline[1], 'base64'));
+              if (timeline?.protocol_version >= 4) {
+                timeline.spanModes = timeline.spans.map(s => s.mode);
+                timeline.spans = timeline.spans.map(s => s.span);
+              }
               const volume = /^tts_set_(voice|tone|sound)_volume (\S+)$/.exec(line);
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
                 timeline, volume: volume && {kind: volume[1], value: Number(volume[2])},
-                control: control?.type, voice: control?.selector?.voice_id,
+                control: control?.type, voice: control?.selector?.voice_id, requestId: control?.request_id,
+                readingVoices: control?.definitions?.map(row => {
+                  const definition = row.definition ?? row;
+                  return definition.choices?.[0]?.selector?.voice_id ?? definition.preferences?.[0]?.voice_id;
+                }),
                 fixtureRow: /^q\s/.test(line) && line.includes('Fixture') || timeline?.spans.some(span => span.text.includes('Fixture')),
                 tone: tone && {mode: tone[1], hz: Number(tone[2]), ms: Number(tone[3])}});
             } else packets.push(JSON.parse(message));
@@ -629,6 +641,7 @@ async function main() {
           const word = () => rawPackets.slice(firstNavigation).find(p =>
             p.lane === 'M' && p.timeline?.spans.some(span => span.text.includes('TestCase')))?.timeline;
           await until('ordinary Control+n delivers an intact TestCase timeline to the iPhone worker', word);
+          assert.equal(word().protocol_version, 7, 'navigation uses the negotiated desktop tone format');
           const inner = word().actions.find(action => action.type === 'tone' && action.position.utf8_offset === 4);
           assert.equal(inner?.mode, 'insert');
           await until('the marked navigation dispatch completes after its semantic cue', () =>
@@ -715,6 +728,15 @@ async function main() {
           const caps = rawPackets.length;
           sshKeys('\x0e');
           await until('capital insert and its spoken word in one dispatch', () => mixedDispatch(caps, p => p.mode === 'insert'));
+          // A printable letter uses the frozen palette on the same worker.
+          await observe(`(with-selected-window ${phoneWindow} (beginning-of-line) (forward-char 3))`);
+          const spelling = rawPackets.length;
+          sshKeys('\x1b[C');
+          const letter = () => rawPackets.slice(spelling).find(p => p.lane === 'M' &&
+            p.command === 'emacsvox_letter' && p.timeline?.spans.some(s => s.text === 'C'))?.timeline;
+          await until('the isolated internal capital reaches playback through the negotiated letter protocol', () =>
+            letter() && rawPackets.some(p => p.lane === 'M' && p.dispatch === letter().dispatch_id && p.status === 'completed'));
+          assert.equal(letter().protocol_version, 7);
           await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer)
             (goto-char (point-max))
             (setq-local emacsvox-agent-shell-input-activation 'explicit
@@ -761,11 +783,13 @@ async function main() {
           await until('inventory refreshed on both phone lanes', () => ['M','N'].every(
             lane => rawPackets.slice(startPreview).some(p => p.lane === lane && p.control === 'inventory')));
           assert.equal(await row(), '"test-2"');
+          const applying = rawPackets.length;
           sshKeys('\r');
-          await until('reading voice applied to both lanes', async () => await observe(`(cl-every
-            (lambda (p) (seq-some (lambda (b) (equal "test-2" (plist-get (plist-get (plist-get b :resolution) :realized) :voice_id)))
-                                  (plist-get (plist-get (process-get p omnivox--control-registration-property) :registration) :bindings)))
-            (list ${main} ${notification}))`) === 't');
+          await until('updated reading voice acknowledged on each worker', () => ['M', 'N'].every(lane => {
+            const changes = rawPackets.slice(applying).filter(p => p.lane === lane);
+            return changes.some(p => p.control === 'register_logical_voices_v3' && p.readingVoices?.includes('test-2') &&
+              changes.some(r => r.response === 'logical_voices_registered_v3' && r.requestId === p.requestId));
+          }));
           sshKeys('q');
           await until('quit returns to Voices and engines', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');
           sshKeys('w');

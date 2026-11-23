@@ -88,11 +88,19 @@ supplies from word starts the phone measures.
    playback. Build 6 can already use the relay's spoken trace receipt and
    the main and notification volume settings inherited from Emacs.
 
-The source branch now preserves distinct adjustments for two choices that
-select the same iOS voice. Private layered auditions use the desktop Rust
-playback evidence. Stop before first playback keeps the accepted voice
-with its started flag clear. Stop after first playback records which
-choice began. The full voice-choice capability still needs runtime fallback.
+The source branch negotiates layered voice choices, engine parameters,
+rich tones through timeline version 7, and palette-aware characters.
+In a WSL test, a real Agent Shell =C-n= and Right Arrow onto the capital
+in =TestCase= reached the phone worker over SSH and completed on version 7.
+Both workers acknowledged the selected reading voice. The worker tries
+another eligible choice if its voice disappears before audio starts.
+If you ask to preview one exact voice, the result belongs to that voice.
+
+The Rust audio test feeds identical speech samples through exact preview,
+a named voice preview, line reading and character reading. It compares
+every stereo sample and the echo and reverb tails. These changes await
+a signed build for listening with US Reed, particularly the relative
+volume of characters and lines.
 
 On ordinary lines and boundary-only cues the phone now skips word scanning
 and SSML construction. Run =test/bookmark-timings= to measure this step with
@@ -319,7 +327,8 @@ native mixer in a signed build that includes the recording.
 The paired prototype now runs the Omnivox worker and Swift scheduling
 tests in WSL. Follow [[file:OMNIVOX.org][Omnivox on iPhone]] to exercise the isolated
 SSH connection, phone voice controls, bundled or imported recordings
-and standalone tone placement. Device qualification and the later rich-tone and voice-choice timelines remain open.
+and standalone tone placement. The newer rich-tone and voice-choice
+timelines await a signed build for device qualification.
 
 The [[file:OMNIVOX.org::*Implementation order][implementation slices]] specify the expected playback and control
 behaviour, automated proof and separate physical listening checks.
