@@ -32,8 +32,10 @@ On 24 November 2026 the downloaded archive passed checks for its arm64
 signature, registered iPhone profile, tab and SSH messages, timing fixture
 and all 83 bundled sound and licence files.
 
-On the iPhone, turn Wi-Fi off before connecting, read a line, disconnect,
-then connect and read another line with Wi-Fi still off. Check the
+On 24 November 2026, build 9 connected over cellular on a test
+iPhone. To finish the recovery check, keep Wi-Fi off, disconnect and
+connect again. Press =C-n= and listen for the next line in the same
+conversation. Check the
 [[file:README.org::*Use the bottom tabs][shorter Settings and Diagnostics tabs]] with VoiceOver. Use =C-h k= to
 check =M-:= and =C-S-k=. Open a link and activate Done to return to the
 same terminal. Check keyboard echo with VoiceOver speech on. A Flyspell
