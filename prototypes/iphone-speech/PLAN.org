@@ -22,6 +22,16 @@ history. The private signed builds predate the removal of local setup details.
 
 * Next implementation and device build
 
+Signed build 8 was built from
+Emacsvox =813b6c176= and Omnivox =7bbd0156=. The arm64 executable,
+signature, device profile, JavaScript bundle, cue timing fixture and 83
+sound and licence files passed the archive check on 24 November 2026.
+In WSL, a 120-column PTY produced a 120-column Emacs frame. The phone
+and desktop each used their own web browser handler. During voice
+selection, ~C-c C-p~ auditioned the highlighted choice through the phone
+while the minibuffer stayed open. Compare these interactions on the
+physical keyboard and check speech loudness and timing in Diagnostics.
+
 Follow the [[file:OMNIVOX.org][Omnivox iPhone implementation plan]] for the shared Rust
 runtime, legacy and structured audio, on-device voice inventory and
 Emacs voice settings. Signed build 4 negotiates both speech workers and
@@ -111,7 +121,7 @@ word. On the registered iPhone with VoiceOver speech muted, Reed's typed
 letters and line reading now sound about equal. Overall Emacsvox speech
 is quieter than VoiceOver with audio ducking off. Across 86 measured
 speech chunks the app's average level was -20.4 dBFS and two samples
-reached full scale. The next signed version adds an optional speech
+reached full scale. Build 8 adds an optional speech
 loudness slider with peak limiting. Listen at zero and at +3 dB on the
 same output, including a line with an indentation tone.
 
@@ -136,11 +146,11 @@ to the relay tone packet. Speaker onset and interruption require device timing.
   request, navigate during the choices, review the pending request and
   answer it. The practice request and lock recovery have passed.
 - *Mobile keyboard and web links.* Check the external keyboard in the phone's terminal, including
-  =M-<=, =M->= and =C-M-f=. In the next signed build, compare =j= and =J=
+  =M-<=, =M->= and =C-M-f=. In build 8, compare =j= and =J=
   while entering text and while moving between responses. Check that
   Shift+Return inserts a newline in an unsent draft. Check focus on
-  connection and unlock while keeping other app controls accessible. The
-  next build also sends Command as Hyper and requests at least 120 columns
+  connection and unlock while keeping other app controls accessible. Build 8
+  also sends Command as Hyper and requests at least 120 columns
   by default. Check ~H-x~ and the width reported by ~(frame-width)~.
   Follow a web link from the phone, close the Safari view with Done and
   continue typing in the original buffer. The mobile design and optional self-voicing work are in the
