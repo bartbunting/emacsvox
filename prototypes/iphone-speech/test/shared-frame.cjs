@@ -324,7 +324,11 @@ async function main() {
               const line = message.slice(2);
               const icon = /^[ap]\s/.test(line) && /(omnivox-icon:personal\/[a-f0-9]{64})/.exec(line);
               const tone = /^emacsvox_tone 1 (insert|overlay) ([\d.]+) (\d+)$/.exec(line);
+              const encoded = /^omnivox_control\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
+              const control = encoded && JSON.parse(Buffer.from(encoded[1], 'base64').toString());
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
+                control: control?.type, voice: control?.selector?.voice_id,
+                fixtureRow: /^q\s/.test(line) && line.includes('Fixture'),
                 tone: tone && {mode: tone[1], hz: Number(tone[2]), ms: Number(tone[3])}});
             } else packets.push(JSON.parse(message));
           });
@@ -502,7 +506,8 @@ async function main() {
           await until('both Omnivox workers discovered and registered', async () =>
             await observe(`(cl-every (lambda (p) (and (equal "ios" (plist-get (process-get p omnivox--control-inventory-property) :preferred_engine_id))
               (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
-          const desktopState = await observe('(list (process-name tts-speaker-process) omnivox-engine-inventory)');
+          const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
+          const desktopState = await observe(desktopSnapshot);
           const before = rawPackets.length;
           sshKeys('\x0e');
           await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.command === 'q'));
@@ -542,18 +547,66 @@ async function main() {
             await until('Agent Shell ' + file + ' recording on the phone', () =>
               rawPackets.slice(start).some(p => p.icon === id && p.lane === 'M'));
           }
-          await observe(`(with-selected-frame ${phone} (emacsvox-aural-voice-workbench))`);
+          const currentMenu = name => observe(`(and transient--prefix (eq (oref transient--prefix command) '${name}))`);
+          await observe(`(setq iphone-test-voices-origin ${phoneWindow})`);
+          sshKeys('\x1bxemacsvox-aural-menu\r');
+          await until('Aural menu on phone', async () => await currentMenu('emacsvox-aural-menu') === 't');
+          sshKeys('v');
+          await until('Voices and engines menu on phone', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');
+          sshKeys('b');
+          const opening = rawPackets.length;
+          const inBrowser = () => observe(`(with-selected-window ${phoneWindow}
+            (and (derived-mode-p 'iphone-voices-mode) (functionp emacsvox-aural-ui--return-function)))`);
+          await until('Browse voices selected with a return to the suspended menu', async () => await inBrowser() === 't');
+          assert.equal(await observe(`(eq iphone-test-voices-origin ${phoneWindow})`), 't');
+          await until('opening speaks the selected voice on the phone', () =>
+            rawPackets.slice(opening).some(p => p.lane === 'M' && p.fixtureRow));
           assert.equal(await observe(`(with-current-buffer (window-buffer ${phoneWindow}) (length tabulated-list-entries))`), '2');
-          await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (while (and (not (eobp)) (not (equal (tabulated-list-get-id) "test-2"))) (forward-line 1)) (iphone-voices-apply))`);
+          const row = () => observe(`(with-selected-window ${phoneWindow} (tabulated-list-get-id))`);
+          const movement = rawPackets.length;
+          sshKeys('\x0e');
+          await until('next phone voice', async () => await row() === '"test-2"');
+          await until('voice row speech on the phone', () => rawPackets.slice(movement).some(p => p.lane === 'M' && p.fixtureRow));
+          sshKeys('/en-US\t\r');
+          await until('find an installed phone voice', async () => await row() === '"test-1"');
+          sshKeys('\x0e');
+          await until('return to second phone voice', async () => await row() === '"test-2"');
+          const startPreview = rawPackets.length;
+          sshKeys('P');
+          await until('exact preview on the phone main worker', () => rawPackets.slice(startPreview).some(
+            p => p.lane === 'M' && p.control === 'preview' && p.voice === 'test-2'));
+          assert.ok(!rawPackets.slice(startPreview).some(p => p.lane === 'N' && p.control === 'preview'));
+          sshKeys('g');
+          await until('inventory refreshed on both phone lanes', () => ['M','N'].every(
+            lane => rawPackets.slice(startPreview).some(p => p.lane === lane && p.control === 'inventory')));
+          assert.equal(await row(), '"test-2"');
+          sshKeys('\r');
           await until('reading voice applied to both lanes', async () => await observe(`(cl-every
             (lambda (p) (seq-some (lambda (b) (equal "test-2" (plist-get (plist-get (plist-get b :resolution) :realized) :voice_id)))
                                   (plist-get (plist-get (process-get p omnivox--control-registration-property) :registration) :bindings)))
             (list ${main} ${notification}))`) === 't');
-          assert.equal(await observe('(list (process-name tts-speaker-process) omnivox-engine-inventory)'), desktopState);
+          sshKeys('q');
+          await until('quit returns to Voices and engines', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');
+          sshKeys('w');
+          await until('Resume Voice Workbench opens the phone browser', async () => await inBrowser() === 't');
+          sshKeys('q');
+          await until('resume returns to the menu', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');
+          sshKeys('p');
+          await until('Voice palettes opens from the phone menu', async () =>
+            await observe(`(with-selected-window ${phoneWindow} (derived-mode-p 'emacsvox-aural-voice-palettes-mode))`) !== 'nil');
+          sshKeys('\x1bxomnivox-list-voices\r');
+          await until('Omnivox list opens on the phone', async () =>
+            await observe(`(with-selected-window ${phoneWindow} (derived-mode-p 'iphone-voices-mode))`) !== 'nil');
+          assert.equal(await observe(`(with-selected-window ${phoneWindow} (mapcar #'car (omnivox-refresh-voices)))`),
+            '("test-1" "test-2")');
+          sshKeys('\x1bxomnivox-select-voice\rFixture  en-US  compact  test-1\r');
+          await until('Omnivox Select changes the phone profile', async () =>
+            await observe('(plist-get iphone-frame-speech--settings :reading)') === '"test-1"');
+          assert.equal(await observe(desktopSnapshot), desktopState);
           ws.send('reset 11');
           await until('raw two-worker Stop response', () => rawPackets.some(p => p.type === 'ready' && p.id === 11));
           await closeSSH();
-          console.log('Passed native SSH, real Emacs navigation, both phone inventories, physical voice Apply and stop with desktop speech isolated.');
+          console.log('Passed phone Settings browse, find, exact preview, refresh, Apply, return, resume, palettes and direct voice commands with desktop speech isolated.');
         }
         console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
       } finally {

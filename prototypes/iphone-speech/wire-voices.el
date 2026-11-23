@@ -4,7 +4,7 @@
 ;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Code:
-(require 'tabulated-list)
+(require 'emacsvox-aural-ui)
 (require 'json)
 (require 'seq)
 (defvar iphone-frame-speech--settings nil)
@@ -77,8 +77,9 @@
 
 (defun iphone-voices--owner ()
   (let ((main (frame-parameter nil 'emacsvox-phone-speaker)))
-    (unless (and (processp main) (process-live-p main) (process-get main 'iphone-notify))
-      (user-error "Connect the Omnivox phone workers first"))
+    (unless (and (processp main) (process-live-p main) (process-get main 'iphone-wire)
+                 (when-let* ((notify (process-get main 'iphone-notify))) (process-live-p notify)))
+      (user-error "Connect with Use Omnivox on iPhone enabled to browse iPhone voices"))
     main))
 
 (defun iphone-voices--rows (main)
@@ -90,8 +91,9 @@
                                                (plist-get row :quality) id))))))
 
 (defun iphone-voices--draw (main)
-  (setq tabulated-list-entries (iphone-voices--rows main))
-  (tabulated-list-print t))
+  (emacsvox-aural-ui-refresh-tabulated
+   (lambda () (setq tabulated-list-entries (iphone-voices--rows main)))
+   nil (plist-get iphone-frame-speech--settings :reading)))
 
 (defun iphone-voices-refresh ()
   "Ask both phone workers for the current installed voices."
@@ -175,25 +177,93 @@
     (dolist (worker (list main (process-get main 'iphone-notify))) (iphone-voices--restore worker))
     (message "%s %s" label value)))
 
-(define-derived-mode iphone-voices-mode tabulated-list-mode "iPhone Voices"
+(defun iphone-voices--row-description ()
+  (when-let* ((row (tabulated-list-get-entry)))
+    (string-join (list (aref row 0) (aref row 1) (aref row 2)) ", ")))
+
+(defun iphone-voices--speak-row ()
+  (when-let* ((description (iphone-voices--row-description))) (tts-speak description)))
+
+(defun iphone-voices--choose (main prompt)
+  (let* ((choices (cl-loop for (id row) in (iphone-voices--rows main)
+                           collect (cons (string-join (append row nil) "  ") id))))
+    (unless choices (user-error "Waiting for the iPhone voice inventory"))
+    (cdr (assoc (emacsvox-aural-ui--read-choice prompt choices) choices))))
+
+(defun iphone-voices-find ()
+  "Find an installed phone voice by name, language or identifier."
+  (interactive)
+  (let ((id (iphone-voices--choose (iphone-voices--owner) "Find iPhone voice: ")))
+    (emacsvox-aural-ui-goto-row id)
+    (iphone-voices--speak-row)))
+
+(defun iphone-voices-help ()
+  "Show the iPhone voice browser keys."
+  (interactive)
+  (emacsvox-aural-ui-with-help-window
+    (princ (concat "iPhone voices\n\n"
+                   "Up and Down move by voice. Left and Right read columns. Space reads the row.\n"
+                   "/ finds an installed voice. p or P auditions it. S stops a sample.\n"
+                   "Return applies this reading voice to both phone workers. r assigns it to one named role.\n"
+                   "v adjusts phone speech and audio levels. g refreshes the installed voices. q goes back.\n"))))
+
+(define-derived-mode iphone-voices-mode emacsvox-aural-tabulated-mode "iPhone Voices"
   "Browse installed iPhone voices. p previews, Return applies, r assigns a role and v adjusts speech."
   (setq tabulated-list-format [("Voice" 28 t) ("Language" 10 t) ("Quality" 12 t) ("Identifier" 40 t)])
+  (emacsvox-aural-ui-configure-tabulated "iPhone voices" #'iphone-voices--speak-row
+                                         #'iphone-voices-refresh #'iphone-voices--speak-row)
   (tabulated-list-init-header))
 
-(dolist (binding '(("p" . iphone-voices-preview) ("RET" . iphone-voices-apply)
+(dolist (binding '(("p" . iphone-voices-preview) ("P" . iphone-voices-preview)
+                   ("/" . iphone-voices-find) ("?" . iphone-voices-help) ("RET" . iphone-voices-apply)
                    ("r" . iphone-voices-role) ("v" . iphone-voices-adjust)
                    ("g" . iphone-voices-refresh) ("R" . iphone-voices-refresh)))
   (keymap-set iphone-voices-mode-map (car binding) (cdr binding)))
 
+(defun iphone-voices--buffer (main)
+  "Reuse MAIN's browser across visits. Another connected phone owns its own selection."
+  (let ((buffer (process-get main 'iphone-voice-buffer)))
+    (unless (buffer-live-p buffer)
+      (setq buffer (get-buffer-create "*iPhone Voices*"))
+      (with-current-buffer buffer
+        (when (and (processp iphone-voices--main) (process-live-p iphone-voices--main)
+                   (not (eq iphone-voices--main main)))
+          (setq buffer (generate-new-buffer "*iPhone Voices*"))))
+      (process-put main 'iphone-voice-buffer buffer))
+    buffer))
+
 (defun iphone-voices--workbench (original &rest args)
-  (let ((main (frame-parameter nil 'emacsvox-phone-speaker)))
-    (if (not (and (processp main) (process-get main 'iphone-wire))) (apply original args)
-      (pop-to-buffer-same-window (get-buffer-create "*iPhone Voices*"))
-      (iphone-voices-mode)
-      (setq iphone-voices--main main)
-      (iphone-voices--draw main)
-      (iphone-voices-refresh)
-      (message "iPhone voices. p previews, Return applies, r assigns a role, v adjusts speech."))))
+  (if (not (frame-parameter nil 'emacsvox-phone-id)) (apply original args)
+    (let* ((main (iphone-voices--owner))
+           (source (current-buffer))
+           (buffer (iphone-voices--buffer main)))
+      (with-current-buffer buffer
+        (unless (and (derived-mode-p 'iphone-voices-mode) (eq iphone-voices--main main)
+                     (eq emacsvox-aural-ui-row-speaker #'iphone-voices--speak-row))
+          (iphone-voices-mode)
+          (setq iphone-voices--main main))
+        (emacsvox-aural-ui-register-interface source)
+        (setq emacsvox-aural-ui--return-function nil)
+        (iphone-voices--draw main)
+        (iphone-voices-refresh))
+      (let ((display-buffer-overriding-action '((display-buffer-same-window))))
+        (emacsvox-aural-ui--pop-to-buffer
+         buffer (lambda ()
+                  (tts-speak (format "iPhone voices. %d installed. %s. Up or Down moves, P previews."
+                                     (length tabulated-list-entries)
+                                     (or (iphone-voices--row-description) "Waiting for inventory"))))))
+      buffer)))
+
+(defun iphone-voices--select (original &rest args)
+  (if (not (frame-parameter nil 'emacsvox-phone-id)) (apply original args)
+    (iphone-voices--apply (iphone-voices--choose (iphone-voices--owner) "Use iPhone reading voice: "))))
+
+(defun iphone-voices--refresh-command (original &rest args)
+  (if (not (frame-parameter nil 'emacsvox-phone-id)) (apply original args)
+    (iphone-voices-refresh)
+    (mapcar (lambda (entry)
+              (let ((row (cadr entry))) (list (car entry) (aref row 0) (aref row 1) (aref row 2))))
+            (iphone-voices--rows (iphone-voices--owner)))))
 
 (provide 'iphone-wire-voices)
 ;;; wire-voices.el ends here

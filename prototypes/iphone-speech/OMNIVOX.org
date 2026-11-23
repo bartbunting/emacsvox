@@ -69,9 +69,13 @@ prefers an installed Eloquence Reed. Build 4 can select British Reed from
 Apple's inventory order. The next build prefers US Reed when available.
 The phone reading rate starts at 150.
 
-Open =M-x emacsvox-aural-voice-workbench= in the phone terminal. Its
-phone view shows one row per installed iOS identifier with name, language
-and quality. Move by line. Press =p= for an exact preview, Return to
+In the phone terminal, open the Aural menu, press =v= for Voices and
+engines, then =b= for Browse voices. The selected window shows one row per
+installed iOS identifier. Up and Down speak the name, language and quality.
+Use =/= to find a name or language, Left and Right to inspect columns,
+and =q= to return to the same menu. =M-x emacsvox-aural-voice-workbench=
+and =M-x omnivox-list-voices= also open the phone browser. Press =p= or
+=P= for an exact preview, Return to
 apply across the phone's reading roles, =r= to give a named role a
 different voice, =v= for rate, character scale, pitch, speech volume,
 tone volume or earcon volume, and =g= to refresh. Apply waits for both
