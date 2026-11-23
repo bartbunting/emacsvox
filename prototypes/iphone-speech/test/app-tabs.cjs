@@ -129,9 +129,14 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       await act(() => slider.props.onLevelChange({nativeEvent: {decibels: 3}}));
     }
     await act(() => loggingSwitch().props.onValueChange(true));
+    assert.equal(terminal.props.minimumColumns, 120);
+    const columns = app.root.findAllByType('TextInput').find(el => el.props.accessibilityLabel === 'Minimum terminal columns');
+    await act(() => columns.props.onChangeText('160'));
     await act(() => keepAwake.props.onValueChange(false));
     await act(() => button('Save settings').props.onPress());
     assert.equal(profile.keepAwake, 'no');
+    assert.equal(terminal.props.minimumColumns, 160);
+    assert.equal(profile.terminalColumns, '160');
     if (hasShiftReturnShortcut) {
       assert.equal(profile.speechLoudness, '3');
       assert.deepEqual(levels, [2, 3]);

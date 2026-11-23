@@ -31,6 +31,10 @@ public final class IphoneTerminalModule: Module {
     View(PhoneTerminalView.self) {
       Events("onSessionStatus")
       Prop("connection") { (view: PhoneTerminalView, config: [String: String]) in view.configure(config) }
+      Prop("commandHyper") { (view: PhoneTerminalView, enabled: Bool) in view.terminal.commandHyper = enabled }
+      Prop("minimumColumns") { (view: PhoneTerminalView, columns: Int) in
+        view.minimumColumns = (40...240).contains(columns) ? columns : 0
+      }
       Prop("keyboardEnabled") { (view: PhoneTerminalView, enabled: Bool) in
         view.terminal.isUserInteractionEnabled = enabled
         if !enabled && view.terminal.isFirstResponder { view.terminal.resignFirstResponder() }
@@ -87,7 +91,51 @@ private final class PhoneKeyboardContainer: ExpoView {
   @objc private func sendShiftReturn(_ sender: UIKeyCommand) { onShiftReturn() }
 }
 
-private final class EmacsTerminalView: TerminalView {
+final class EmacsTerminalView: TerminalView {
+  var commandHyper = false
+
+  private func hyperSequence(for key: UIKey) -> String? {
+    let flags = key.modifierFlags
+    var modifier = 17
+    if flags.contains(.shift) { modifier += 1 }
+    if flags.contains(.alternate) { modifier += 2 }
+    if flags.contains(.control) { modifier += 4 }
+    let usage = Int(key.keyCode.rawValue)
+    let suffixes = ["P", "Q", "R", "S"]
+    if (0x3a...0x3d).contains(usage) { return "\u{1b}[1;\(modifier)\(suffixes[usage - 0x3a])" }
+    if (0x3e...0x45).contains(usage) {
+      let codes = [15, 17, 18, 19, 20, 21, 23, 24]
+      return "\u{1b}[\(codes[usage - 0x3e]);\(modifier)~"
+    }
+    switch key.keyCode {
+    case .keyboardUpArrow: return "\u{1b}[1;\(modifier)A"
+    case .keyboardDownArrow: return "\u{1b}[1;\(modifier)B"
+    case .keyboardRightArrow: return "\u{1b}[1;\(modifier)C"
+    case .keyboardLeftArrow: return "\u{1b}[1;\(modifier)D"
+    case .keyboardHome: return "\u{1b}[1;\(modifier)H"
+    case .keyboardEnd: return "\u{1b}[1;\(modifier)F"
+    case .keyboardInsert: return "\u{1b}[2;\(modifier)~"
+    case .keyboardDeleteForward: return "\u{1b}[3;\(modifier)~"
+    case .keyboardPageUp: return "\u{1b}[5;\(modifier)~"
+    case .keyboardPageDown: return "\u{1b}[6;\(modifier)~"
+    case .keyboardReturnOrEnter, .keypadEnter: return "\u{1b}[13;\(modifier)u"
+    case .keyboardTab: return "\u{1b}[9;\(modifier)u"
+    case .keyboardEscape: return "\u{1b}[27;\(modifier)u"
+    case .keyboardDeleteOrBackspace: return "\u{1b}[127;\(modifier)u"
+    default: break
+    }
+    let base = key.charactersIgnoringModifiers.lowercased()
+    guard base.unicodeScalars.count == 1, let scalar = base.unicodeScalars.first else { return nil }
+    var code = scalar.value
+    if flags.contains(.shift), !(97...122).contains(code) {
+      if let shifted = key.characters.unicodeScalars.first, (32...126).contains(shifted.value) {
+        code = shifted.value
+      }
+      modifier -= 1
+    }
+    return (32...126).contains(code) ? "\u{1b}[\(code);\(modifier)u" : nil
+  }
+
   override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
     guard optionAsMetaKey, markedTextRange == nil, getTerminal().keyboardEnhancementFlags.isEmpty else {
       super.pressesBegan(presses, with: event)
@@ -97,6 +145,11 @@ private final class EmacsTerminalView: TerminalView {
     for press in presses {
       guard let key = press.key else { continue }
       let modifiers = key.modifierFlags.intersection([.control, .alternate, .shift, .command])
+      if commandHyper, modifiers.contains(.command), let sequence = hyperSequence(for: key) {
+        send(txt: sequence)
+        remaining.remove(press)
+        continue
+      }
       if modifiers == .shift && (key.keyCode == .keyboardReturnOrEnter || key.keyCode == .keypadEnter) {
         send(txt: "\u{1b}[27;2;13~")
         remaining.remove(press)
@@ -117,7 +170,7 @@ private final class EmacsTerminalView: TerminalView {
 }
 
 final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
-  let terminal: TerminalView = EmacsTerminalView(frame: .zero)
+  let terminal = EmacsTerminalView(frame: .zero)
   let onSessionStatus = EventDispatcher()
   private var configuration: [String: String] = [:]
   private var connection: Task<Void, Never>?
@@ -127,6 +180,9 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
   private var generation = UUID()
   private var rows = 24
   private var columns = 80
+  var minimumColumns = 120 {
+    didSet { if minimumColumns != oldValue { setNeedsLayout() } }
+  }
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -140,7 +196,14 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    terminal.frame = bounds
+    guard bounds.width > 0, bounds.height > 0 else { return }
+    let cellWidth = terminal.getOptimalFrameSize().width / CGFloat(max(1, terminal.getTerminal().cols))
+    let width = max(bounds.width, ceil(CGFloat(minimumColumns) * cellWidth))
+    let scale = bounds.width / width
+    // SwiftTerm derives the SSH PTY and the reviewable rows from these bounds.
+    terminal.bounds.size = CGSize(width: width, height: bounds.height / scale)
+    terminal.transform = CGAffineTransform(scaleX: scale, y: scale)
+    terminal.center = CGPoint(x: bounds.midX, y: bounds.midY)
   }
 
   private func close() {

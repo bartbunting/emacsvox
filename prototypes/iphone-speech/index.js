@@ -52,7 +52,7 @@ function App() {
     return {
       host: process.env.EXPO_PUBLIC_EMACSVOX_HOST ?? '', port: '8822', username: '', pin: '',
       transport: ssh ? 'ssh' : 'relay', input: 'field', keepAwake: 'yes', audio: 'direct',
-      connectOnOpen: 'no', controlOption: 'voiceover', logSpeech: 'no', ...profile,
+      connectOnOpen: 'no', controlOption: 'voiceover', terminalColumns: '120', commandHyper: 'yes', logSpeech: 'no', ...profile,
       speechLoudness: Number.isInteger(db) && db >= 0 && db <= 6 ? String(db) : '0',
     };
   });
@@ -71,7 +71,7 @@ function App() {
   return <Session key={connectionKey(settings)} settings={settings} save={save} active={active} reconnect={reconnect} />;
 }
 
-function EmacsKeyboard({canFocus, controlOption, onKeys, onClosed}) {
+function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys, onClosed}) {
   const view = useRef(null);
   const [focusNewInput] = useState(createKeyboardFocus);
   const [loaded, setLoaded] = useState(false);
@@ -85,7 +85,7 @@ function EmacsKeyboard({canFocus, controlOption, onKeys, onClosed}) {
   } : {};
   return <KeyboardContainer style={styles.keyboard} {...shortcuts}>
     <WebView ref={view} source={keyboardSource} style={styles.surface} scrollEnabled={false}
-      injectedJavaScriptBeforeContentLoaded={controlOption ? 'window.emacsControlOption = true;' : undefined}
+      injectedJavaScriptBeforeContentLoaded={`window.emacsControlOption = ${Boolean(controlOption)}; window.emacsCommandHyper = ${Boolean(commandHyper)};`}
       injectedJavaScript="window.ReactNativeWebView.postMessage('');"
       onMessage={({nativeEvent}) => {
         // The document sends an empty message at load. Key packets are nonempty.
@@ -221,8 +221,8 @@ function Session({settings, save, active, reconnect}) {
       {sshMode && offer && !useField &&
         <Action title="Focus Emacs terminal" onPress={() => terminalRef.current?.focusKeyboard()} />}
       {terminalTab && ((useField && keyboardFrame) || keyboard?.sendKeys) &&
-        <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption} canFocus={canFocus}
-          controlOption={settings.controlOption === 'emacs'}
+        <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption + settings.commandHyper} canFocus={canFocus}
+          controlOption={settings.controlOption === 'emacs'} commandHyper={Boolean(useField && settings.commandHyper === 'yes')}
           onKeys={text => {
             if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
             else keyboard?.sendKeys(text);
@@ -234,7 +234,7 @@ function Session({settings, save, active, reconnect}) {
           }} />}
       {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
         <Terminal ref={terminalRef} style={styles.nativeTerminal}
-          keyboardEnabled={canFocus}
+          keyboardEnabled={canFocus} commandHyper={settings.commandHyper === 'yes'} minimumColumns={Number(settings.terminalColumns)}
           connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
           onSessionStatus={({nativeEvent}) => {
             if (nativeEvent.state === 'connected') receiver.terminalConnected(offer.frame);

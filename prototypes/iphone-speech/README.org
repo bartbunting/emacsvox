@@ -350,6 +350,21 @@ python3 test/ssh-terminal.py --sshd "$server_dir/usr/sbin/sshd" \
   --emacsclient "$(command -v emacsclient)"
 #+end_src
 
+* Set the SSH terminal width and Hyper key
+
+In the signed app, open Settings and change /Minimum terminal columns/.
+The default is 120. Choose 40 to 240 columns, or enter zero to fit the
+screen. Save settings. Emacs receives the new width over the current SSH
+connection. The terminal print shrinks to fit. /Review terminal screen/
+still displays each full row at the usual text size.
+
+With /Use Windows or Command as Emacs Hyper/ enabled, focus the terminal
+and try =C-h k= followed by Windows and =x=. Emacs reports =H-x=. Option
+continues to send Meta. Some combinations belong to iOS or VoiceOver.
+If the keyboard sends no Windows chords, check its manual for a Windows-key lock.
+In any Emacs terminal, =C-x @ h= followed by a letter also enters Hyper
+for that letter.
+
 * Try the external keyboard in Expo Go
 
 Connect the keyboard to your iPhone and leave VoiceOver on. This test

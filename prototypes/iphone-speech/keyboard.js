@@ -56,20 +56,30 @@ function terminalKey(event) {
   const {altKey, ctrlKey} = event;
   const shiftKey = event.shiftKey || event.getModifierState?.('Shift');
   let key = event.key;
-  if (ctrlKey && /^Key[A-Z]$/.test(event.code) && /^[\x00-\x1f]$/.test(key)) {
+  if (!event.metaKey && ctrlKey && /^Key[A-Z]$/.test(event.code) && /^[\x00-\x1f]$/.test(key)) {
     return (altKey ? '\x1b' : '') + key;
   }
   if (key === 'Return' || key === '\r' || key === '\n' ||
       ((!key || key === 'Unidentified') && (event.code === 'Enter' || event.code === 'NumpadEnter'))) {
     key = 'Enter';
   }
-  const mod = 1 + (shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4 : 0);
+  const hyper = event.metaKey && window.emacsCommandHyper;
+  const mod = 1 + (hyper ? 16 : 0) + (shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4 : 0);
   if (Object.hasOwn(cursor, key) || Object.hasOwn(functionKeys, key)) {
     const suffix = cursor[key] ?? functionKeys[key];
     if (mod === 1) return (cursor[key] ? '\x1b[' : '\x1bO') + suffix;
     return '\x1b[1;' + mod + suffix;
   }
   if (Object.hasOwn(tildeKeys, key)) return '\x1b[' + tildeKeys[key] + (mod === 1 ? '' : ';' + mod) + '~';
+  if (hyper) {
+    const raw = basic[key] ?? metaCharacter(event);
+    if (!raw || raw.length !== 1) return;
+    const letter = /^[A-Za-z]$/.test(raw);
+    const code = (letter ? raw.toLowerCase() : raw).charCodeAt(0);
+    // Shifted punctuation already carries its symbol, e.g. Hyper+greater-than.
+    const modifier = shiftKey && !letter && !Object.hasOwn(basic, key) ? mod - 1 : mod;
+    return '\x1b[' + code + ';' + modifier + 'u';
+  }
   const esc = altKey ? '\x1b' : '';
   if (Object.hasOwn(basic, key)) {
     if ((ctrlKey || shiftKey) && (key === 'Enter' || key === 'Tab')) {
@@ -94,7 +104,7 @@ function terminalKey(event) {
   } else if (altKey) return esc + char;
 }
 field.addEventListener('keydown', event => {
-  if (event.isComposing || event.keyCode === 229 || event.metaKey ||
+  if (event.isComposing || event.keyCode === 229 || (event.metaKey && !window.emacsCommandHyper) ||
       (!event.altKey && event.getModifierState?.('AltGraph')) || (event.altKey && event.ctrlKey &&
       (!window.emacsControlOption || event.getModifierState?.('AltGraph')))) return;
   const bytes = terminalKey(event);

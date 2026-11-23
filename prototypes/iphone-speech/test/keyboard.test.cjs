@@ -43,6 +43,20 @@ test('Option letters send Meta once and leave VoiceOver chords to iOS', () => {
   assert.deepEqual(sent, ['\x1bx', '\x1bx', '\x1bf', '\x1bE', '\x1ba']);
 });
 
+test('Command chords encode Hyper while composition, VoiceOver and a disabled mapping stay local', () => {
+  const sent = [];
+  const {down} = keyboardField(text => sent.push(text), false, true);
+  assert.equal(down('Meta', {metaKey: true, code: 'MetaLeft'}), false);
+  assert.ok(down('x', {metaKey: true, code: 'KeyX'}));
+  assert.ok(down('F', {metaKey: true, ctrlKey: true, shiftKey: true, code: 'KeyF'}));
+  assert.ok(down('>', {metaKey: true, shiftKey: true, code: 'Period'}));
+  assert.ok(down('ArrowLeft', {metaKey: true}));
+  assert.ok(down('F5', {metaKey: true}));
+  assert.equal(down('x', {metaKey: true, altKey: true, ctrlKey: true, code: 'KeyX'}), false);
+  assert.equal(down('x', {metaKey: true, code: 'KeyX', isComposing: true}), false);
+  assert.deepEqual(sent, ['\x1b[120;17u','\x1b[102;22u','\x1b[62;17u','\x1b[1;17D','\x1b[15;17~']);
+});
+
 test('hardware j and Shift+j bypass text editing, while composition and paste use the field', () => {
   const sent = [];
   const {field, listeners, down} = keyboardField(text => sent.push(text));

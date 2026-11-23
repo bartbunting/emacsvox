@@ -217,10 +217,10 @@ def check_session(probe, emacsclient, root, port, server, arm_speech, speech):
         fd = os.open(tty, os.O_RDONLY | os.O_NOCTTY | os.O_NONBLOCK)
         try:
             assert termios.tcgetwinsize(fd) == (24, 80)
-            first.command("resize 104 36")
-            until("kernel PTY resize", lambda: termios.tcgetwinsize(fd) == (36, 104))
+            first.command("resize 120 36")
+            until("kernel PTY resize", lambda: termios.tcgetwinsize(fd) == (36, 120))
             until("Emacs frame resize", lambda: on_frame(
-                f"(and (= (frame-width f) 104) (= (frame-height f) {height + 12}))"))
+                f"(and (= (frame-width f) 120) (= (frame-height f) {height + 12}))"))
         finally:
             os.close(fd)
         select_sample(first)

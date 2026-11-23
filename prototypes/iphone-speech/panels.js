@@ -86,10 +86,18 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
   const [message, setMessage] = React.useState('');
   const fields = [['host', 'WSL Tailscale IPv4 address']];
   if (ssh && draft.transport === 'ssh') {
-    fields.push(['port', 'SSH port'], ['username', 'WSL username'], ['pin', 'Trusted WSL host public key']);
+    fields.push(['terminalColumns', 'Minimum terminal columns'], ['port', 'SSH port'], ['username', 'WSL username'], ['pin', 'Trusted WSL host public key']);
   }
   return <TabPage title="Settings">
-    <Action title="Save settings" onPress={save} />
+    <Action title="Save settings" onPress={() => {
+      const columns = draft.terminalColumns?.trim();
+      if (ssh && draft.transport === 'ssh' &&
+          !(columns === '0' || (/^\d{2,3}$/.test(columns) && Number(columns) >= 40 && Number(columns) <= 240))) {
+        const detail = 'Enter 40 to 240 terminal columns, or zero to fit the screen.';
+        setMessage(detail);
+        AccessibilityInfo.announceForAccessibility(detail);
+      } else save();
+    }} />
     <Action title="Cancel" onPress={cancel} />
     {ssh && <>
       <Toggle label="Use SSH terminal" hint="Connect your external keyboard to Emacs through SSH. Switch off to use the test relay."
@@ -109,6 +117,9 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
         value={draft.connectOnOpen === 'yes'} change={v => edit('connectOnOpen', v ? 'yes' : 'no')} />
       <Toggle label="Use Emacs keyboard field" hint="Use the keyboard field that was tested with VoiceOver. Switch off to type directly into SwiftTerm."
         value={draft.input === 'field'} change={v => edit('input', v ? 'field' : 'terminal')} />
+      {draft.transport === 'ssh' && <Toggle label="Use Windows or Command as Emacs Hyper"
+        hint="Hold this key with another key in the terminal to send Hyper. iOS or VoiceOver may reserve some shortcuts."
+        value={draft.commandHyper === 'yes'} change={v => edit('commandHyper', v ? 'yes' : 'no')} />}
       {draft.input === 'field' && <Toggle label="Send Control+Option to Emacs"
         hint="Use Control and Meta together in the Emacs keyboard field. Choose Caps Lock as your VoiceOver modifier first. When off, press Escape followed by the Control key combination."
         value={draft.controlOption === 'emacs'} change={v => edit('controlOption', v ? 'emacs' : 'voiceover')} />}
@@ -117,7 +128,9 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
     </>}
     {fields.map(([name,label]) => <View key={name}>
       <Text accessible={false} accessibilityElementsHidden style={styles.label}>{label}</Text>
-      <TextInput accessibilityLabel={label} autoCapitalize="none" autoCorrect={false}
+      <TextInput accessibilityLabel={label}
+        accessibilityHint={name === 'terminalColumns' ? 'Enter 40 to 240, or zero to fit the screen. Wider lines shrink the terminal print. Review terminal screen keeps your usual text size.' : undefined}
+        keyboardType={name === 'terminalColumns' ? 'number-pad' : 'default'} autoCapitalize="none" autoCorrect={false}
         keyboardAppearance="dark" selectionColor={colors.action} style={styles.field}
         value={draft[name]} onChangeText={v => edit(name, v)} />
     </View>)}

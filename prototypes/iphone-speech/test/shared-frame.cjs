@@ -426,6 +426,20 @@ async function main() {
           '(emacs-lisp-mode) (insert "(one two) (three four)") (goto-char 5))');
         const field = keyboardField(sshKeys);
         const controlMetaField = keyboardField(sshKeys, true);
+        const hyper = keyboardField(sshKeys, false, true);
+        const chords = [
+          ['H-x', 'x', {code:'KeyX'}], ['C-H-f', 'f', {code:'KeyF', ctrlKey:true}],
+          ['H-M-r', 'r', {code:'KeyR', altKey:true}], ['H-<left>', 'ArrowLeft', {}],
+          ['H->', '>', {code:'Period', shiftKey:true}],
+        ];
+        await observe(`(with-selected-window ${phoneWindow} (use-local-map (copy-keymap (current-local-map)))
+          (setq-local iphone-test-hyper-events nil)
+          ${chords.map(([name]) => `(local-set-key (kbd "${name}") (lambda () (interactive) (push "${name}" iphone-test-hyper-events)))`).join(' ')})`);
+        for (const [name, key, modifiers] of chords) {
+          assert.ok(hyper.down(key, {metaKey:true, ...modifiers}));
+          await until('SSH receives ' + name, async () => await observe(`(with-selected-window ${phoneWindow}
+            (equal (car iphone-test-hyper-events) "${name}"))`) === 't');
+        }
         const atPoint = async position => (await observe('(window-point ' + phoneWindow + ')')) === String(position);
         assert.ok(field.down('˘', {code:'Period', altKey:true, shiftKey:true}));
         await until('SSH Meta end of buffer', () => atPoint(23));
