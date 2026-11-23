@@ -11,7 +11,7 @@
     ],
     "scheme": "emacsvox-speech",
     "ios": {
-      "buildNumber": "7",
+      "buildNumber": "8",
       "bundleIdentifier": "org.emacsvox.iphone.speech",
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "Connect to your Emacsvox speech relay on Tailscale."
