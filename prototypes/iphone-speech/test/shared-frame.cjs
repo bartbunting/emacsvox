@@ -108,6 +108,17 @@ async function main() {
     assert.ok(await pcSeesDraft('Started on PC'));
     await observe(`(with-current-buffer ${pcBuffer} (goto-char (point-max)) (insert " first"))`);
     assert.ok(await pcSeesDraft('Started on PC first'));
+    if (routed) {
+      // Create both conversations before opening the terminal. Starting
+      // Agent Shell can select a window and interrupt a terminal prefix key.
+      await observe(`(with-selected-frame ${pc}
+        (defvar iphone-second-test-buffer)
+        (setq iphone-second-test-buffer (save-window-excursion (iphone-test-render-response)))
+        (with-current-buffer iphone-second-test-buffer
+          (rename-buffer "Second permission sample")
+          (map-put! agent-shell--state :tool-calls
+            '(("second" . ((:title . "Review copper") (:permission-request-id . 17)))))))`);
+    }
     const records = await connect();
     heartbeat = setInterval(() => { if (ws.readyState === WebSocket.OPEN) ws.send('ping'); }, 3000);
     ws.send('key  and phone');
@@ -277,23 +288,24 @@ async function main() {
       await observe(`(with-selected-frame ${pc} (with-current-buffer iphone-test--reply-buffer
         (funcall iphone-test--acp-reply '((outcome . "injected")))))`);
       assert.ok(![...after, ...desktop.slice(beforeOldReply)].some(p => p.type === 'speak' && p.text.includes('Steering accepted')));
-      await observe(`(progn
-        (defvar iphone-second-test-buffer)
-        (setq iphone-second-test-buffer (save-window-excursion (iphone-test-render-response)))
-        (with-current-buffer iphone-second-test-buffer
-          (rename-buffer "Second permission sample")
-          (map-put! agent-shell--state :tool-calls
-            '(("second" . ((:title . "Review copper") (:permission-request-id . 17)))))))`);
       async function switchPhoneBuffer(name) {
-        ws.send('key \x18b' + name + '\r');
+        const start = after.length;
+        ws.send('key \x18b');
+        // Observe the terminal's own minibuffer. A polling emacsclient eval
+        // can select a different frame while the keyboard command is reading.
+        await until('buffer prompt on the phone terminal', () => after.slice(start).some(p =>
+          p.type === 'screen' && /switch to buffer/i.test(p.text))).catch(async error => {
+          const state = await observe(`(list last-command (minibuffer-depth)
+            (when-let* ((w (active-minibuffer-window))) (frame-parameter (window-frame w) 'emacsvox-phone-id)))`);
+          throw new Error(error.message + ', last command and minibuffer state ' + state);
+        });
+        ws.send('key ' + name + '\r');
         const selectedBuffer = `(when-let* ((f (seq-find (lambda (frame) (frame-parameter frame 'emacsvox-phone-id))
                                                          (frame-list))))
                                  (buffer-name (window-buffer (frame-selected-window f))))`;
-        await until('phone switched to ' + name, async () => (await observe(selectedBuffer)) === JSON.stringify(name))
-          .catch(async error => {
-            const state = await observe(`(list last-command (minibuffer-depth) ${selectedBuffer})`);
-            throw new Error(error.message + ', editor state ' + state);
-          });
+        await until('buffer name in the phone mode line', () => after.slice(start).some(p =>
+          p.type === 'screen' && p.text.includes(name) && !/switch to buffer/i.test(p.text)));
+        assert.equal(await observe(selectedBuffer), JSON.stringify(name));
       }
       await switchPhoneBuffer('Second permission sample');
       await until('switch restores the second conversation request', () =>
@@ -386,10 +398,10 @@ async function main() {
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
                 timeline, volume: volume && {kind: volume[1], value: Number(volume[2])},
                 control: control?.type, voice: control?.selector?.voice_id, requestId: control?.request_id,
-                readingVoices: control?.definitions?.map(row => {
+                roleVoices: control?.definitions && Object.fromEntries(control.definitions.map(row => {
                   const definition = row.definition ?? row;
-                  return definition.choices?.[0]?.selector?.voice_id ?? definition.preferences?.[0]?.voice_id;
-                }),
+                  return [definition.id, definition.choices?.[0]?.selector?.voice_id ?? definition.preferences?.[0]?.voice_id];
+                })),
                 fixtureRow: /^q\s/.test(line) && line.includes('Fixture') || timeline?.spans.some(span => span.text.includes('Fixture')),
                 tone: tone && {mode: tone[1], hz: Number(tone[2]), ms: Number(tone[3])}});
             } else packets.push(JSON.parse(message));
@@ -787,9 +799,36 @@ async function main() {
           sshKeys('\r');
           await until('updated reading voice acknowledged on each worker', () => ['M', 'N'].every(lane => {
             const changes = rawPackets.slice(applying).filter(p => p.lane === lane);
-            return changes.some(p => p.control === 'register_logical_voices_v3' && p.readingVoices?.includes('test-2') &&
+            return changes.some(p => p.control === 'register_logical_voices_v3' && Object.values(p.roleVoices).includes('test-2') &&
               changes.some(r => r.response === 'logical_voices_registered_v3' && r.requestId === p.requestId));
           }));
+          sshKeys('/en-US\t\r');
+          await until('choose the alternate physical voice', async () => await row() === '"test-1"');
+          const roleStart = rawPackets.length;
+          sshKeys('rbolden\r');
+          await until('both workers acknowledge a distinct voice for bold text', () => ['M', 'N'].every(lane => {
+            const changes = rawPackets.slice(roleStart).filter(p => p.lane === lane);
+            return changes.some(p => p.roleVoices?.bolden === 'test-1' && Object.values(p.roleVoices).includes('test-2') &&
+              changes.some(r => r.response === 'logical_voices_registered_v3' && r.requestId === p.requestId));
+          }));
+          await observe(`(with-selected-window ${phoneWindow}
+            (switch-to-buffer (get-buffer-create "Phone styled line"))
+            (text-mode)
+            (emacsvox-aural-set-compatibility-voice-enabled t)
+            (erase-buffer)
+            (insert "Start\n" "plain " (propertize "marble" 'personality 'voice-bolden) " orchard\n")
+            (goto-char (point-min)))`);
+          const styledStart = rawPackets.length;
+          sshKeys('\x0e');
+          const styled = () => rawPackets.slice(styledStart).find(p => p.lane === 'M' &&
+            p.timeline?.spans.some(s => s.text.includes('marble')))?.timeline;
+          await until('styled line completes', () => styled() && rawPackets.slice(styledStart).some(p =>
+            p.lane === 'M' && p.dispatch === styled().dispatch_id && p.status === 'completed'));
+          const voices = rawPackets.slice(styledStart).filter(p => p.lane === 'M' &&
+            p.marker?.dispatch_id === styled().dispatch_id && p.marker.type === 'utterance_started')
+            .map(p => [p.marker.text.trim(), p.marker.actual_voice?.voice_id]);
+          assert.deepEqual(voices, [['plain','test-2'], ['marble','test-1'], ['orchard','test-2']]);
+          await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer (process-get ${main} 'iphone-voice-buffer)))`);
           sshKeys('q');
           await until('quit returns to Voices and engines', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');
           sshKeys('w');
@@ -848,7 +887,7 @@ async function main() {
               (and (derived-mode-p 'iphone-voices-mode) (tabulated-list-get-id)))`) === '"test-1"');
           assert.equal(await observe(desktopSnapshot), desktopState);
           await closeSSH();
-          console.log('Passed phone Settings browse, find, exact preview, refresh, Apply, return, resume, palettes and direct voice commands with desktop speech isolated.');
+          console.log('Passed phone voice browsing, preview, Apply, role assignment, palettes and direct voice commands. Control+n used the reading, bold and reading voices within one line.');
         }
         console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
       } finally {
