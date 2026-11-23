@@ -721,6 +721,7 @@ when they remain unsaved."
        ("C-c u" . omnivox-library-uninstall)
        ("C-c U" . omnivox-library-resume-uninstall)
        ("P" . emacsvox-aural-voice-workbench-preview)
+       ("C-c C-p" . emacsvox-aural-voice-workbench-preview)
        ("A" . emacsvox-aural-voice-workbench-preview-all)
        ("B" . emacsvox-aural-voice-workbench-compare)
        ("T" . emacsvox-aural-voice-workbench-edit-preview-text)

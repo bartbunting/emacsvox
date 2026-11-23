@@ -691,23 +691,38 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
       (emacsvox-aural-voice-editor-previous)
     (emacsvox-aural-voice-editor-adjust -1)))
 
+(defun emacsvox-aural-voice-editor--physical-candidate (pair)
+  "Describe the exact engine and voice in the inventory PAIR."
+  (list :selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)
+                        :voice-id (plist-get (cadr pair) :voice-id))
+        :name (or (plist-get (cadr pair) :display-name) (plist-get (cadr pair) :voice-id))))
+
 (defun emacsvox-aural-voice-editor--pick ()
   "Read a physical selector and whether to audition it before using it."
   (let* ((emacsvox-aural-voice-workbench-inventory (tts-voice-inventory))
          (choices (emacsvox-aural-voice-workbench--physical-candidates))
+         (buffer (current-buffer))
+         (revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+         (audition (lambda (label)
+                     (with-current-buffer buffer
+                       (emacsvox-aural-voice-editor--candidate
+                        (append (emacsvox-aural-voice-editor--physical-candidate (cdr (assoc label choices)))
+                                (list :revision revision)) nil))))
          (action "Search again") name pair)
     (unless choices (user-error "No available physical voices"))
     (while (equal action "Search again")
-      (setq name (emacsvox-aural-ui--read-choice "Physical voice (search engine or name): " choices)
+      (setq name (emacsvox-aural-ui--with-voice-audition
+                  (lambda () (funcall audition (emacsvox-aural-ui--voice-at-completion choices)))
+                  (lambda () (emacsvox-aural-ui--read-choice "Physical voice (C-c C-p auditions): " choices)))
             pair (cdr (assoc name choices))
-            action (completing-read (format "%s: " name)
-                                    '("Use this voice" "Audition candidate" "Search again" "Cancel") nil t)))
+            action (emacsvox-aural-ui--with-voice-audition
+                    (lambda () (funcall audition name))
+                    (lambda () (completing-read (format "%s: " name)
+                                                '("Use this voice" "Audition candidate" "Search again" "Cancel") nil t)))))
     (when (equal action "Cancel") (user-error "Choice unchanged"))
     (unless pair (user-error "No physical voice selected"))
-    (list :selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)
-                          :voice-id (plist-get (cadr pair) :voice-id))
-          :name (or (plist-get (cadr pair) :display-name) name)
-          :audition (equal action "Audition candidate"))))
+    (append (emacsvox-aural-voice-editor--physical-candidate pair)
+            (list :audition (equal action "Audition candidate")))))
 
 (defun emacsvox-aural-voice-editor--candidate (candidate use)
   "Audition CANDIDATE, or USE it in the row that opened the picker."
@@ -1308,6 +1323,7 @@ Return nil to stay, a feedback string for a draft decision, or t when clean."
     (define-key map [remap push-button] #'emacsvox-aural-voice-editor-activate)
     (dolist (pair '(("SPC" . emacsvox-aural-voice-editor-speak) ("<right>" . emacsvox-aural-voice-editor-increase)
                     ("<left>" . emacsvox-aural-voice-editor-decrease) ("P" . emacsvox-aural-voice-editor-play)
+                    ("C-c C-p" . emacsvox-aural-voice-editor-play)
                     ("B" . emacsvox-aural-voice-editor-compare) ("S" . emacsvox-aural-voice-editor-stop)
                     ("T" . emacsvox-aural-voice-editor-text) ("u" . emacsvox-aural-voice-editor-undo)
                     ("d" . emacsvox-aural-voice-editor-default)

@@ -4951,14 +4951,16 @@ labels on both toggling and navigation.  Navigation stops a sample.  ‘u’
 undoes an edit, including reset.  ‘q’ returns to the originating view,
 offering to retain or discard unsaved work.
 
-   _Physical voice_ searches engine or voice names.  _Audition
-candidate_ returns to the editor and plays the sample.  Press ‘P’ to
-replay it or ‘<RET>’ on _Use_ to put that voice in your draft.  You can
-leave with ‘q’ after listening.  _Fallbacks_ allows replacement,
-reordering, removal, individual auditions, appending, or returning to
-Automatic.  Unavailable, engine-default, and property choices are
-retained.  Shared adjustments supply inherited fields; _Customize this
-voice_ provides optional per-choice settings.
+   _Physical voice_ searches engine or voice names.  Press ‘C-c C-p’ to
+hear the highlighted voice or a unique typed match.  The search stays
+open.  At the following action prompt the same key replays your
+selection.  _Audition candidate_ returns to the editor and plays the
+sample.  Press ‘P’ to replay it or ‘<RET>’ on _Use_ to put that voice in
+your draft.  You can leave with ‘q’ after listening.  _Fallbacks_ allows
+replacement, reordering, removal, individual auditions, appending, or
+returning to Automatic.  Unavailable, engine-default, and property
+choices are retained.  Shared adjustments supply inherited fields;
+_Customize this voice_ provides optional per-choice settings.
 
 8.7.2 Tune through the focused menu
 -----------------------------------

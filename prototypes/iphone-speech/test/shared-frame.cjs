@@ -903,10 +903,17 @@ async function main() {
             await observe(`(process-name ${main})`));
           const picking = rawPackets.length;
           await inEditor(`(emacsvox-aural-voice-editor--locate 'add)`);
-          sshKeys('\rtest-2\t\rSearch again\rtest-1\t\rAudition candidate\r');
+          sshKeys('\rtest-2\x03\x10');
+          await until('the voice search auditions its candidate without exiting the minibuffer', () =>
+            rawPackets.slice(picking).some(p => p.lane === 'M' && p.previewChoice?.id === 'candidate' &&
+              p.previewChoice.selector.voice_id === 'test-2'));
+          assert.equal(await observe('(minibuffer-depth)'), '1');
+          sshKeys('\t\rSearch again\rtest-1\t\r\x03\x10');
           await until('the picker auditions the replacement choice through the phone', () =>
             rawPackets.slice(picking).some(p => p.lane === 'M' && p.previewChoice?.id === 'candidate' &&
               p.previewChoice.selector.voice_id === 'test-1'));
+          assert.equal(await observe('(minibuffer-depth)'), '1');
+          sshKeys('Audition candidate\r');
           await until('audition leaves the candidate under point with no outstanding prompt', async () =>
             await inEditor(`(and (= 0 (minibuffer-depth)) (eq 'candidate (get-text-property (point) 'voice-field))
               (eq 'completed (plist-get (emacsvox-aural-voice-editor--get :preview-result) :status)))`) === 't');

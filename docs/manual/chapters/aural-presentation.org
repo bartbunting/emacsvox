@@ -1265,7 +1265,9 @@ and /Fallbacks/ use open/close cues and optional state labels on both toggling
 and navigation. Navigation stops a sample. ~u~ undoes an edit, including reset.
 ~q~ returns to the originating view, offering to retain or discard unsaved work.
 
-/Physical voice/ searches engine or voice names. /Audition candidate/ returns
+/Physical voice/ searches engine or voice names. Press ~C-c C-p~ to hear the
+highlighted voice or a unique typed match. The search stays open. At the
+following action prompt the same key replays your selection. /Audition candidate/ returns
 to the editor and plays the sample. Press ~P~ to replay it or ~RET~ on /Use/
 to put that voice in your draft. You can leave with ~q~ after listening.
 /Fallbacks/ allows replacement, reordering, removal, individual auditions,

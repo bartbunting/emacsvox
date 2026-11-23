@@ -235,15 +235,17 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
 (defun iphone-voices-preview ()
   "Speak a sample using the selected iOS identifier."
   (interactive)
-  (let ((voice (iphone-voices--selected)))
-    (omnivox--send-control-request
-     iphone-voices--main
+  (iphone-voices--preview-id iphone-voices--main (iphone-voices--selected)))
+
+(defun iphone-voices--preview-id (main voice)
+  (omnivox--send-control-request
+     main
      (list :type "preview" :selector (list :kind "exact" :engine_id "ios" :voice_id voice)
            :text "The lighthouse keeper climbed the stairs to light the lamp.")
      (lambda (worker result)
        (when (and (process-live-p worker) (not (member (plist-get result :status) '("completed" "cancelled"))))
          (iphone-frame-speech--worker-call worker #'tts-speak "Phone voice preview failed")))
-     25)))
+     25))
 
 (defun iphone-voices-tune ()
   "Open the voice editor to audition adjustments to the selected iPhone voice."
@@ -321,7 +323,10 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
       (user-error "%s" (if (process-get main omnivox--control-inventory-property)
                            "No matching iPhone voices. Press L in Browse voices to choose languages"
                          "Waiting for the iPhone voice inventory")))
-    (cdr (assoc (emacsvox-aural-ui--read-choice prompt choices) choices))))
+    (cdr (assoc (emacsvox-aural-ui--with-voice-audition
+                 (lambda () (iphone-voices--preview-id main
+                              (cdr (assoc (emacsvox-aural-ui--voice-at-completion choices) choices))))
+                 (lambda () (emacsvox-aural-ui--read-choice prompt choices))) choices))))
 
 (defun iphone-voices-find ()
   "Find an installed phone voice by name, language or identifier."
@@ -352,6 +357,7 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
   (tabulated-list-init-header))
 
 (dolist (binding '(("p" . iphone-voices-preview) ("P" . iphone-voices-preview)
+                   ("C-c C-p" . iphone-voices-preview)
                    ("t" . iphone-voices-tune)
                    ("/" . iphone-voices-find) ("?" . iphone-voices-help) ("RET" . iphone-voices-apply)
                    ("r" . iphone-voices-role) ("v" . iphone-voices-adjust) ("L" . emacsvox-choose-voice-languages)
