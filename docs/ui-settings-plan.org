@@ -63,8 +63,10 @@ Check external-keyboard echo, isolated capital pitch and Shift+Return in
 an unsent draft using the [[file:../prototypes/iphone-speech/README.org::*Check keyboard speech and permissions on the signed app][signed keyboard exercise]].
 On the phone, open Browse voices from the Aural menu. Check the spoken
 voice on entry and after Down, then preview the selected row after reconnecting.
-Compare US Reed’s in-word capital timing, mixed indentation level and
-typed-letter volume with line reading. Check the spoken WSL receipt
+Compare US Reed’s in-word capital timing and mixed indentation level.
+On a signed build with the speech loudness slider, check VoiceOver
+adjustment, saved level and speech balance with tones at zero and +3 dB.
+Check the spoken WSL receipt
 using the [[file:../prototypes/iphone-speech/OMNIVOX.org::*What exists][phone listening and trace exercise]].
 
 ** Preference reload, recovery and early speech

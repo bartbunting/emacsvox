@@ -290,22 +290,16 @@ async function main() {
       assert.ok(![...after, ...desktop.slice(beforeOldReply)].some(p => p.type === 'speak' && p.text.includes('Steering accepted')));
       async function switchPhoneBuffer(name) {
         const start = after.length;
-        ws.send('key \x18b');
-        // Observe the terminal's own minibuffer. A polling emacsclient eval
-        // can select a different frame while the keyboard command is reading.
-        await until('buffer prompt on the phone terminal', () => after.slice(start).some(p =>
-          p.type === 'screen' && /switch to buffer/i.test(p.text))).catch(async error => {
-          const state = await observe(`(list last-command (minibuffer-depth)
-            (when-let* ((w (active-minibuffer-window))) (frame-parameter (window-frame w) 'emacsvox-phone-id)))`);
-          throw new Error(error.message + ', last command and minibuffer state ' + state);
-        });
-        ws.send('key ' + name + '\r');
+        // A process-exit message can cover the prompt between tmux snapshots.
+        // Type the complete command and verify the resulting terminal window.
+        ws.send('key \x18b' + name + '\r');
         const selectedBuffer = `(when-let* ((f (seq-find (lambda (frame) (frame-parameter frame 'emacsvox-phone-id))
                                                          (frame-list))))
                                  (buffer-name (window-buffer (frame-selected-window f))))`;
         await until('buffer name in the phone mode line', () => after.slice(start).some(p =>
           p.type === 'screen' && p.text.includes(name) && !/switch to buffer/i.test(p.text)));
-        assert.equal(await observe(selectedBuffer), JSON.stringify(name));
+        await until('selected phone buffer ' + name, async () =>
+          await observe(selectedBuffer) === JSON.stringify(name));
       }
       await switchPhoneBuffer('Second permission sample');
       await until('switch restores the second conversation request', () =>
@@ -369,7 +363,8 @@ async function main() {
                 const result = /^__OMNIVOX_CONTROL__ ([A-Za-z0-9+/=]+)$/.exec(line);
                 if (result) {
                   const reply = JSON.parse(Buffer.from(result[1], 'base64'));
-                  packets.push({lane: tag, response: reply.type, requestId: reply.request_id, generation: reply.registry_generation});
+                  packets.push({lane: tag, response: reply.type, requestId: reply.request_id, generation: reply.registry_generation,
+                    unresolved: reply.unresolved_logical_voice_ids?.length});
                 }
                 const receipt = /^__EMACSVOX_TRACKED__ (\d+) (completed|cancelled|failed)$/.exec(line);
                 if (marker) packets.push({lane: tag, marker: JSON.parse(Buffer.from(marker[1], 'base64'))});
@@ -659,7 +654,14 @@ async function main() {
           await until('the marked navigation dispatch completes after its semantic cue', () =>
             rawPackets.some(p => p.lane === 'M' && p.dispatch === word().dispatch_id && p.status === 'completed') &&
             rawPackets.some(p => p.lane === 'M' && p.marker?.dispatch_id === word().dispatch_id &&
-              p.marker.type === 'semantic_event_reached'));
+              p.marker.type === 'semantic_event_reached')).catch(error => {
+            const id = word().dispatch_id;
+            const receipts = rawPackets.filter(p => p.lane === 'M' && p.dispatch === id).map(p => p.status);
+            const registrations = rawPackets.filter(p => p.lane === 'M' && p.response).map(
+              p => [p.response, p.generation, p.unresolved]);
+            throw new Error(error.message + ', dispatch ' + id + ' registry ' + word().registry_generation +
+              ' receipts ' + JSON.stringify(receipts) + ' setup ' + JSON.stringify(registrations.slice(-15)));
+          });
           const played = rawPackets.filter(p => p.marker?.dispatch_id === word().dispatch_id).map(p => p.marker);
           assert.ok(played.some(m => m.type === 'utterance_started' && m.text.includes('TestCase')));
           assert.ok(played.some(m => m.type === 'timeline_action_resolved' && m.action_id === inner.id && m.resolution === 'exact'));

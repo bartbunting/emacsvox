@@ -77,7 +77,9 @@
                                 (or (not (omnivox--process-supports-p worker "engine_inventory"))
                                     (process-get worker omnivox--control-inventory-property))
                                 (or (not (omnivox--process-supports-p worker "logical_voice_registration"))
-                                    (process-get worker omnivox--control-registration-property))))
+                                    (member (plist-get (process-get worker omnivox--control-registration-property) :type)
+                                            '("logical_voices_registered" "logical_voices_registered_v2"
+                                              "logical_voices_registered_v3")))))
                          (list owner (process-get owner 'iphone-notify))))
       (process-put owner 'iphone-routing-ready t)
       (iphone-voices--ready owner)

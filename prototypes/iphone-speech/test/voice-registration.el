@@ -5,6 +5,23 @@
 (require 'ert)
 (require 'omnivox-voices)
 
+(ert-deftest iphone-registration-falls-back-to-the-installed-phone-default ()
+  (let ((phone (make-pipe-process :name "phone inventory" :noquery t))
+        (content '(:definitions [] :fallback_policy (:global_default :null))))
+    (unwind-protect
+        (progn
+          (process-put phone 'iphone-wire t)
+          (process-put phone omnivox--control-inventory-property
+                       '(:engines ((:id "ios" :default_voice_id "reed"
+                                   :voices ((:id (:voice_id "reed")) (:id (:voice_id "alternate")))))))
+          (dolist (pair '((nil "reed") ("removed" "reed") ("alternate" "alternate")))
+            (let* ((iphone-frame-speech--settings (list :reading (car pair)))
+                   (result (iphone-voices--registration (lambda (_) content) phone)))
+              (should (equal (plist-get (plist-get (plist-get result :fallback_policy) :global_default)
+                                        :voice_id) (cadr pair)))))
+          (should (eq (plist-get (plist-get content :fallback_policy) :global_default) :null)))
+      (delete-process phone))))
+
 (ert-deftest iphone-registration-keeps-choice-occurrences-and-desktop-settings ()
   (let* ((phone (make-pipe-process :name "test phone registration" :noquery t))
          (selector '(:kind exact :scope local :engine-id "ios" :voice-id "reed"))

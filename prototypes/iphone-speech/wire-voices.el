@@ -79,6 +79,16 @@
     (if (not (process-get process 'iphone-wire)) content
       (let* ((copy (tts--dispatch-copy-data content))
              (base (plist-get iphone-frame-speech--settings :reading))
+             (inventory (process-get process omnivox--control-inventory-property))
+             (engine (cl-find "ios" (plist-get inventory :engines) :test #'equal
+                              :key (lambda (row) (plist-get row :id))))
+             (installed-default (plist-get engine :default_voice_id))
+             (fallback (if (and (iphone-voices--id-p base)
+                                (or (null engine)
+                                    (cl-find base (plist-get engine :voices) :test #'equal
+                                             :key (lambda (row) (plist-get (plist-get row :id) :voice_id)))))
+                           base
+                         installed-default))
              (roles (plist-get iphone-frame-speech--settings :roles))
              (exact (lambda (id) (list :kind "exact" :engine_id "ios" :voice_id id))))
         (seq-doseq (row (plist-get copy :definitions))
@@ -97,8 +107,8 @@
                                          (plist-get definition :preferences))))
                   (setf (plist-get definition :preferences)
                         (vconcat (seq-take (append first rest) 32))))))))
-        (when (iphone-voices--id-p base)
-          (setf (plist-get (plist-get copy :fallback_policy) :global_default) (funcall exact base)))
+        (when (iphone-voices--id-p fallback)
+          (setf (plist-get (plist-get copy :fallback_policy) :global_default) (funcall exact fallback)))
         copy))))
 
 (defconst iphone-voices--parameters
