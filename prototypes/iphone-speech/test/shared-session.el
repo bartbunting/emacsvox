@@ -13,6 +13,40 @@
 (defvar-local iphone-test--permission-client nil)
 (defvar-local iphone-test--permission-id 0)
 (defvar iphone-test--armed-frame nil)
+(defvar iphone-test--reply-buffer nil)
+(defvar iphone-test--acp-reply nil)
+
+(defun iphone-test--prepare-question (id)
+  "Show a disposable upstream question and place point on Submit."
+  (unless (buffer-live-p iphone-test--reply-buffer)
+    (setq iphone-test--reply-buffer (iphone-test-render-response "Frame confirmation test")))
+  (switch-to-buffer iphone-test--reply-buffer)
+  (unless (map-elt agent-shell--state :client)
+    (map-put! agent-shell--state :client
+              (acp-make-client :command "true" :context-buffer (current-buffer)
+                               :response-sender #'ignore))
+    (setf (alist-get :id (alist-get :session agent-shell--state)) "frame-test"))
+  (let ((agent-shell-elicitation--experimental-feature-enabled t))
+    (agent-shell--on-request
+     :state agent-shell--state
+     :acp-request `((method . "elicitation/create") (id . ,id)
+                    (params . ((mode . "form") (sessionId . "frame-test")
+                               (message . "Confirm test answer")
+                               (requestedSchema . ((type . "object")
+                                                   (properties . ((note . ((type . "string"))))))))))))
+  (goto-char (point-min))
+  (while (and (< (point) (point-max))
+              (not (eq (map-elt (get-text-property (point) 'agent-shell-elicitation-control) :action) 'submit)))
+    (goto-char (next-single-property-change (point) 'agent-shell-elicitation-control nil (point-max))))
+  (eq (key-binding (kbd "RET")) 'agent-shell-elicitation-act))
+
+(defun iphone-test--steer ()
+  "Send a steering request and hold the ACP reply until the test delivers it."
+  (interactive)
+  (setq iphone-test--acp-reply nil)
+  (cl-letf (((symbol-function 'acp-send-request)
+             (lambda (&rest args) (setq iphone-test--acp-reply (plist-get args :on-success)))))
+    (agent-shell-experimental--send-steering :state agent-shell--state :prompt "Use the test answer")))
 
 (defun iphone-test-tone (&optional repeat-with-return)
   "Play the receiver's 480 ms Diagnostics tone through the phone frame.

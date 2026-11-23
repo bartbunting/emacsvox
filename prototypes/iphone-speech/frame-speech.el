@@ -292,14 +292,33 @@
 
 (defun iphone-frame-speech--event (original &rest args)
   (let* ((owner (iphone-frame-speech--subscriber))
-         (iphone-frame-speech--command-owner (or owner 'desktop))
+         (event (plist-get args :event))
+         (iphone-frame-speech--command-owner
+          (or (and (eq event 'elicitation-response)
+                   (bound-and-true-p emacsvox-agent-shell--question-command-active)
+                   (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner))
+              owner 'desktop))
          (data (plist-get args :data))
          (key (or (map-elt data :request-id) (map-elt data :tool-call-id)))
          (iphone-frame-speech--request-id
-          (and owner key (eq (plist-get args :event) 'permission-request)
+          (and owner key (eq event 'permission-request)
                (iphone-frame-speech--permission-id key))))
-    (when (and owner (process-live-p owner) key (eq (plist-get args :event) 'permission-response))
+    (when (and owner (process-live-p owner) key (eq event 'permission-response))
       (iphone-frame-speech--packet owner "resolved" (iphone-frame-speech--permission-id key)))
+    (apply original args)))
+
+(defun iphone-frame-speech--steering-request (original &rest args)
+  ;; A later ACP reply can arrive while another frame is typing. Keep the
+  ;; originating worker, including its identity across a phone reconnect.
+  (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
+    (when (and owner (equal (map-elt (plist-get args :request) :method) "_session/steering"))
+      (setq args (copy-sequence args))
+      (dolist (key '(:on-success :on-failure))
+        (when-let* ((callback (plist-get args key)))
+          (setq args (plist-put args key
+                                (lambda (&rest response)
+                                  (let ((iphone-frame-speech--command-owner owner))
+                                    (apply callback response))))))))
     (apply original args)))
 
 (defun iphone-frame-speech--deferred (original buffer &rest args)
@@ -365,6 +384,13 @@
       ('detach (iphone-frame-speech--close-terminal frame))
       ((guard (not (process-live-p owner))) nil)
       ('sync (iphone-frame-speech--sync frame owner))
+      ((or 'trace-saved 'trace-failed)
+       (with-selected-frame frame
+         (let ((iphone-frame-speech--command-owner owner))
+           (emacsvox-aural-submit-notification
+            (if (eq action 'trace-saved) "Speech trace saved in WSL."
+              "WSL could not save the speech trace.")
+            :delivery-policy 'ordered :dont-log t))))
       ('stop
        (let ((tts-speaker-process owner) (tts-notify-process (or (process-get owner 'iphone-notify) owner))
              (iphone-frame-speech--bound t))
@@ -426,6 +452,7 @@
     (advice-remove 'set-minibuffer-message #'iphone-frame-speech--key-echo)
     (advice-remove 'emacsvox--delayed-phonetic-announce #'iphone-frame-speech--phonetic)
     (advice-remove 'agent-shell--emit-event #'iphone-frame-speech--event)
+    (advice-remove 'agent-shell--send-request #'iphone-frame-speech--steering-request)
     (advice-remove 'emacsvox-agent-shell--session-focused-p #'iphone-frame-speech--focused)
     (advice-remove 'emacsvox-agent-shell--deliver-announcement #'iphone-frame-speech--announce)
     (advice-remove 'emacsvox-aural-voice-workbench #'iphone-voices--workbench)
@@ -464,6 +491,8 @@
   (dolist (entry iphone-frame-speech--deferred-entries)
     (advice-add entry :around #'iphone-frame-speech--deferred))
   (advice-add 'agent-shell--emit-event :around #'iphone-frame-speech--event)
+  ;; Capture the success and failure callbacks after Emacsvox adds feedback.
+  (advice-add 'agent-shell--send-request :around #'iphone-frame-speech--steering-request '((depth . 50)))
   (advice-add 'emacsvox-agent-shell--session-focused-p :around #'iphone-frame-speech--focused)
   (advice-add 'emacsvox-agent-shell--deliver-announcement :around #'iphone-frame-speech--announce)
   (advice-add 'command-execute :around #'iphone-frame-speech--command)

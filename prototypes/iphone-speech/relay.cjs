@@ -242,6 +242,13 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
       let frameAttached = false, voicesReady = false, setupDeadline;
       const control = (action, serial = 0) =>
         frameControl(sharedDirectory, session, action, serial).catch(() => ws.terminate());
+      const traceReceipt = ok => {
+        if (phone !== ws || ws.readyState !== WebSocket.OPEN) return;
+        send({type: 'trace-saved', ok});
+        // Use the same phone's notification queue even when VoiceOver is muted.
+        // A retiring frame can disappear after its file has been saved.
+        void frameControl(sharedDirectory, session, ok ? 'trace-saved' : 'trace-failed', 0).catch(() => {});
+      };
       const receiveControl = packet => {
         if (phone !== ws || !packet) return;
         if (ssh && packet.id === session && !attached && ['attached', 'routing-ready'].includes(packet.type)) {
@@ -287,10 +294,9 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
           if (!endpoint.reply(command)) ws.terminate();
         } else if (raw && attached && command.startsWith('speech-trace ')) {
           const text = command.slice(13);
-          if (savingTrace || !text || Buffer.byteLength(text) > 65536) return send({type: 'trace-saved', ok: false});
+          if (savingTrace || !text || Buffer.byteLength(text) > 65536) return traceReceipt(false);
           savingTrace = true;
-          const acknowledge = ok => { if (phone === ws) send({type: 'trace-saved', ok}); };
-          saveSpeechTrace(traceDirectory, text).then(() => acknowledge(true), () => acknowledge(false))
+          saveSpeechTrace(traceDirectory, text).then(() => traceReceipt(true), () => traceReceipt(false))
             .finally(() => { savingTrace = false; });
         } else if (command === 'ping') send({ type: 'pong' });
         else if (/^reset [0-9]{1,12}$/.test(command)) {

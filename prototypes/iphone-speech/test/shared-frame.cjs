@@ -193,6 +193,37 @@ async function main() {
       await pressPC('Control_L', 'n');
       await until('PC C-n on the desktop speaker', () => spoke(desktop, 'Cobalt lighthouse'));
       assert.ok(!spoke(records, 'Cobalt lighthouse'));
+      await observe("(global-set-key (kbd \"<f5>\") #'iphone-test--steer)");
+      const speaks = (packets, words) => packets.filter(p => p.type === 'speak' && p.text.includes(words)).length;
+      const deliverSteering = frame => observe(`(with-selected-frame ${frame}
+        (with-current-buffer iphone-test--reply-buffer
+          (funcall iphone-test--acp-reply '((outcome . "injected")))))`);
+      for (const onPhone of [true, false]) {
+        const source = onPhone ? phone : pc, other = onPhone ? pc : phone;
+        const local = onPhone ? records : desktop, remote = onPhone ? desktop : records;
+        assert.equal(await observe(`(with-selected-frame ${source} (iphone-test--prepare-question ${onPhone ? 81 : 82}))`), 't');
+        await observe(`(with-selected-frame ${other} (switch-to-buffer iphone-test--reply-buffer))`);
+        // Exercise a phone form opened before its next subscription update and
+        // a desktop form answered while the phone subscribes to the same shell.
+        await observe(`(with-selected-frame ${phone}
+          (iphone-frame-speech-subscribe ${onPhone ? 'iphone-shared-buffer' : 'iphone-test--reply-buffer'}))`);
+        const start = local.length, otherStart = remote.length;
+        if (onPhone) ws.send('key \r'); else await pressPC('Return');
+        await until('answer confirmed on the submitting frame', () => speaks(local.slice(start), 'Answers sent'));
+        if (onPhone) ws.send('key \x1b[15~'); else await pressPC('F5');
+        await until('steering transport received the request', async () => await observe('(functionp iphone-test--acp-reply)') === 't');
+        await deliverSteering(other);
+        await until('deferred steering reaches its originating frame', () => speaks(local.slice(start), 'Steering accepted'));
+        assert.equal(speaks(local.slice(start), 'Answers sent'), 1);
+        assert.equal(speaks(local.slice(start), 'Steering accepted'), 1);
+        assert.equal(speaks(remote.slice(otherStart), 'Answers sent') + speaks(remote.slice(otherStart), 'Steering accepted'), 0);
+        await observe('(setq iphone-test--acp-reply nil)');
+      }
+      ws.send('key \x1b[15~');
+      await until('another phone steering request is in flight', async () => await observe('(functionp iphone-test--acp-reply)') === 't');
+      await observe(`(progn (with-selected-frame ${pc} (switch-to-buffer iphone-shared-buffer))
+        (with-selected-frame ${phone} (switch-to-buffer iphone-shared-buffer)
+          (iphone-frame-speech-subscribe iphone-shared-buffer)))`);
       // The phone is subscribed. A timer delivers an Agent Shell update
       // while the PC shows another buffer.
       await observe(`(with-selected-frame ${pc}
@@ -242,6 +273,10 @@ async function main() {
     if (routed) {
       await until('pending request restored from Agent Shell state', () => after.some(p => p.type === 'permission' && p.id === pendingRequest));
       assert.equal(after.filter(p => p.type === 'permission' && p.id === pendingRequest).length, 1);
+      const beforeOldReply = desktop.length;
+      await observe(`(with-selected-frame ${pc} (with-current-buffer iphone-test--reply-buffer
+        (funcall iphone-test--acp-reply '((outcome . "injected")))))`);
+      assert.ok(![...after, ...desktop.slice(beforeOldReply)].some(p => p.type === 'speak' && p.text.includes('Steering accepted')));
       await observe(`(progn
         (defvar iphone-second-test-buffer)
         (setq iphone-second-test-buffer (save-window-excursion (iphone-test-render-response)))
@@ -291,7 +326,7 @@ async function main() {
       const existing = action => run(path.resolve(__dirname, '../existing-session'),
         [action, client, path.join(dir, 'shared'), pairDir, 'Shared Codex sample']);
       await existing('attach');
-      const sshRelay = createRelay('127.0.0.1', '127.0.0.1', {sharedDirectory: pairDir, routed: true, sshOnly: true});
+      const sshRelay = createRelay('127.0.0.1', '127.0.0.1', {sharedDirectory: pairDir, routed: true, sshOnly: true, traceDirectory: pairDir});
       sshRelay.httpServer.listen(0, '127.0.0.1');
       await once(sshRelay.httpServer, 'listening');
       const probe = path.resolve(__dirname, '../ssh/.build/debug/SessionProbe');
@@ -334,8 +369,9 @@ async function main() {
               const control = encoded && JSON.parse(Buffer.from(encoded[1], 'base64').toString());
               const encodedTimeline = /^emacsvox_timeline\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
               const timeline = encodedTimeline && JSON.parse(Buffer.from(encodedTimeline[1], 'base64'));
+              const volume = /^tts_set_(voice|tone|sound)_volume (\S+)$/.exec(line);
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
-                timeline,
+                timeline, volume: volume && {kind: volume[1], value: Number(volume[2])},
                 control: control?.type, voice: control?.selector?.voice_id,
                 fixtureRow: /^q\s/.test(line) && line.includes('Fixture') || timeline?.spans.some(span => span.text.includes('Fixture')),
                 tone: tone && {mode: tone[1], hz: Number(tone[2]), ms: Number(tone[3])}});
@@ -542,6 +578,7 @@ async function main() {
           attached.some(p => p.type === 'speak' && p.text.trim() === 'romeo'));
         await closeSSH();
         if (process.env.IPHONE_WIRE_WORKER) {
+          await observe('(setq-default tts-main-tone-volume 50 tts-notification-tone-volume 90 tts-main-earcon-volume 45)');
           const rawPackets = await attachSSH(process.env.IPHONE_WIRE_WORKER);
           const phone = `(window-frame ${phoneWindow})`;
           const main = `(frame-parameter ${phone} 'emacsvox-phone-speaker)`;
@@ -551,6 +588,30 @@ async function main() {
               (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
           const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
           const desktopState = await observe(desktopSnapshot);
+          const hasVolume = (packets, lane, kind, value) => packets.some(p =>
+            p.lane === lane && p.volume?.kind === kind && p.volume.value === value);
+          assert.ok(hasVolume(rawPackets, 'M', 'tone', 0.5) && hasVolume(rawPackets, 'N', 'tone', 0.9));
+          assert.ok(hasVolume(rawPackets, 'M', 'sound', 0.45));
+          const muteFrom = rawPackets.length;
+          await observe(`(let ((iphone-frame-speech--settings '(:tone 0.0)))
+            (mapc #'iphone-voices--restore (list ${main} ${notification})))`);
+          await until('explicit zero tone volume on both phone lanes', () =>
+            ['M', 'N'].every(lane => hasVolume(rawPackets.slice(muteFrom), lane, 'tone', 0)));
+          await observe(`(mapc #'iphone-voices--restore (list ${main} ${notification}))`);
+          for (const ok of [true, false]) {
+            const start = rawPackets.length;
+            const words = ok ? 'Speech trace saved in WSL.' : 'WSL could not save the speech trace.';
+            ws.send('speech-trace ' + (ok ? 'private synthetic test' : ''));
+            const confirms = p => p.timeline?.spans.some(s => s.text.includes(words));
+            await until('trace result acknowledged and spoken on the phone notification lane', () => {
+              const fresh = rawPackets.slice(start);
+              return fresh.some(p => p.type === 'trace-saved' && p.ok === ok) &&
+                fresh.some(p => p.lane === 'N' && confirms(p));
+            });
+            assert.ok(!rawPackets.slice(start).some(p => p.lane === 'M' && confirms(p)));
+            assert.ok(!desktop.some(p => p.text?.includes(words)));
+          }
+          assert.equal(fs.readFileSync(path.join(pairDir, 'last-speech-trace.log'), 'utf8'), 'private synthetic test');
           await observe(`(with-selected-window ${phoneWindow}
             (switch-to-buffer (iphone-test-render-response "Timing start\nTestCase\nFresh line\nLime Plum Pear Fig Café"))
             (setq-local tts-caps t tts-split-caps nil emacsvox-capitalization-presentation 'tone)
@@ -710,6 +771,7 @@ async function main() {
           const selectedVoice = await row();
           await closeSSH();
           const resumed = await attachSSH(process.env.IPHONE_WIRE_WORKER);
+          assert.ok(hasVolume(resumed, 'M', 'tone', 0.5) && hasVolume(resumed, 'N', 'tone', 0.9));
           await until('restored voice browser belongs to the new phone workers', async () =>
             await observe(`(with-selected-window ${phoneWindow}
               (and (derived-mode-p 'iphone-voices-mode) (eq iphone-voices--main ${main})
