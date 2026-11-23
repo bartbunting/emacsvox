@@ -265,7 +265,9 @@
         (unless (and (derived-mode-p 'iphone-voices-mode) (eq iphone-voices--main main)
                      (eq emacsvox-aural-ui-row-speaker #'iphone-voices--speak-row))
           (iphone-voices-mode)
-          (setq iphone-voices--main main))
+          ;; A reused buffer can still display the previous connection's row.
+          (setq iphone-voices--main main tabulated-list-entries nil)
+          (tabulated-list-print))
         (emacsvox-aural-ui-register-interface source)
         (setq emacsvox-aural-ui--return-function nil)
         (iphone-voices--draw main)

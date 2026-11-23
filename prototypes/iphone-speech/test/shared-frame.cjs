@@ -626,6 +626,17 @@ async function main() {
           sshKeys('P');
           await until('restored row previews on the replacement worker', () => resumed.some(
             p => p.lane === 'M' && p.control === 'preview' && p.voice === JSON.parse(selectedVoice)));
+          sshKeys('/test-2\t\r');
+          await until('highlight a voice other than the saved reader', async () => await row() === '"test-2"');
+          sshKeys('\x18bPhoneModeFixture\r');
+          await until('leave the voice list before disconnecting', async () =>
+            await observe(`(buffer-name (window-buffer ${phoneWindow}))`) === '"PhoneModeFixture"');
+          await closeSSH();
+          await attachSSH(process.env.IPHONE_WIRE_WORKER);
+          sshKeys('\x1bxomnivox-list-voices\r');
+          await until('a fresh browse on the new connection starts on the saved reading voice', async () =>
+            await observe(`(with-selected-window ${phoneWindow}
+              (and (derived-mode-p 'iphone-voices-mode) (tabulated-list-get-id)))`) === '"test-1"');
           assert.equal(await observe(desktopSnapshot), desktopState);
           await closeSSH();
           console.log('Passed phone Settings browse, find, exact preview, refresh, Apply, return, resume, palettes and direct voice commands with desktop speech isolated.');
