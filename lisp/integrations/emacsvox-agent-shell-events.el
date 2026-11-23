@@ -928,19 +928,23 @@ status and terminal-output digests so late updates remain deduplicated."
   (remove-hook 'change-major-mode-hook
                #'emacsvox-agent-shell--lifecycle-event-cleanup t))
 
+(defun emacsvox-agent-shell--speak-rendered-blocks (blocks answer)
+  "Present ordered BLOCKS and their combined ANSWER at this frame's speech level."
+  (when (emacsvox-agent-shell--should-speak-p (current-buffer))
+    (let ((response-only (eq (emacsvox-agent-shell--effective-speech-level) 'response)))
+      (dolist (item blocks)
+        (unless (and response-only (eq (cdr item) 'agent-message))
+          (emacsvox-agent-shell--speak-content (car item) (cdr item))))
+      ;; Response level applies its unsolicited-content budget once per turn.
+      (when (and response-only answer)
+        (emacsvox-agent-shell--speak-content answer 'agent-message)))))
+
 (defun emacsvox-agent-shell--deliver-pending-blocks (buffer qualified-ids)
   "Deliver pending QUALIFIED-IDS from BUFFER and return its agent answer.
 Clear the stored bodies after taking their final rendered snapshots."
   (when (and buffer (buffer-live-p buffer))
     (with-current-buffer buffer
-      (let* ((speak-p (emacsvox-agent-shell--should-speak-p buffer))
-             (response-only-p
-              (and
-               speak-p
-               (eq
-                (emacsvox-agent-shell--effective-speech-level buffer)
-                'response)))
-            answer-bodies)
+      (let (blocks answer-bodies)
         (dolist (qualified-id qualified-ids)
           (let* ((pair
                   (and
@@ -982,22 +986,11 @@ Clear the stored bodies after taking their final rendered snapshots."
                 (when (not (string-empty-p trimmed))
                   (when (eq block-type 'agent-message)
                     (push trimmed answer-bodies))
-                  (when (and
-                         speak-p
-                         (not
-                          (and response-only-p
-                               (eq block-type 'agent-message))))
-                    (emacsvox-agent-shell--speak-content
-                     trimmed block-type)))))))
+                  (push (cons trimmed block-type) blocks))))))
         (let ((answer
                (when answer-bodies
                  (string-join (nreverse answer-bodies) "\n"))))
-          ;; At the ordinary response level, all rendered answer fragments are
-          ;; one automatic response.  This applies the unsolicited-content
-          ;; budget once per turn and avoids queueing progress updates ahead of
-          ;; the final answer.  Full mode retains semantic per-block ordering.
-          (when (and response-only-p answer)
-            (emacsvox-agent-shell--speak-content answer 'agent-message))
+          (emacsvox-agent-shell--speak-rendered-blocks (nreverse blocks) answer)
           (emacsvox-agent-shell--clear-section-markers
            emacsvox-agent-shell--pending-section-markers)
           (when emacsvox-agent-shell--pending-bodies

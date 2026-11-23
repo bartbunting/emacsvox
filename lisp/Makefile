@@ -233,6 +233,7 @@ integrations/emacsvox-agent-shell-render.elc \
 integrations/emacsvox-agent-shell-tables.elc \
 integrations/emacsvox-agent-shell-navigation.elc \
 integrations/emacsvox-agent-shell-events.elc \
+integrations/emacsvox-agent-shell-frames.elc \
 integrations/emacsvox-agent-shell-interaction.elc \
 integrations/emacsvox-agent-shell-presentation.elc \
 integrations/emacsvox-agent-shell-motion.elc \
@@ -488,6 +489,7 @@ integrations/emacsvox-agent-shell-render.elc: core/emacsvox-text-tree.elc
 integrations/emacsvox-agent-shell-tables.elc: integrations/emacsvox-agent-shell-render.elc core/emacsvox-table-reader.elc
 integrations/emacsvox-agent-shell-navigation.elc: integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-render.elc
 integrations/emacsvox-agent-shell-events.elc: integrations/emacsvox-agent-shell-navigation.elc
+integrations/emacsvox-agent-shell-frames.elc: speech/emacsvox-frame-speech.elc speech/tts-queue-state.elc
 integrations/emacsvox-agent-shell-interaction.elc: integrations/emacsvox-agent-shell-events.elc
 integrations/emacsvox-agent-shell-presentation.elc: integrations/emacsvox-agent-shell-events.elc
 integrations/emacsvox-agent-shell-motion.elc: \

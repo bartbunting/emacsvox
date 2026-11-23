@@ -8988,6 +8988,16 @@ shared background default.
 @kbd{M-x emacsvox-agent-shell-cycle-speech-level} cycles toward less routine
 speech; use a prefix argument to restore @code{auto}.
 
+If two Emacs frames use separate speech servers@comma{} open the conversation in
+each frame and run @kbd{M-x emacsvox-agent-shell-subscribe-frame} in each.
+Both frames now receive new replies according to their own focus. With the
+defaults@comma{} a frame showing the conversation reads the answer and a frame
+showing another buffer announces completion. Both receive permission
+requests. Answer once in either frame to clear the request for both.
+Typing@comma{} navigation and steering feedback follow the frame where you acted.
+Use @kbd{M-x emacsvox-agent-shell-unsubscribe-frame} in the conversation to
+stop following it from that frame. Closing the frame also ends its subscription.
+
 @subsection Adjust speech in the settings menu
 
 Press @kbd{C-e S} in an Agent Shell buffer or its viewport for focused Emacsvox

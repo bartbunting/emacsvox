@@ -48,6 +48,9 @@
                (:copier nil))
   frame main notification program rate)
 
+(defvar emacsvox-frame-speech-detach-hook nil
+  "Functions called with FRAME before its speech attachment changes.")
+
 (defvar emacsvox-frame-speech--command-owner nil)
 (defvar emacsvox-frame-speech--hook-owner nil)
 (defvar emacsvox-frame-speech--active nil)
@@ -225,6 +228,7 @@ and shutdown. Attaching again replaces the handle for future commands."
                    :frame frame :main main :notification notification
                    :program (or program (bound-and-true-p tts-program))
                    :rate (or rate (bound-and-true-p tts-speech-rate)))))
+    (run-hook-with-args 'emacsvox-frame-speech-detach-hook frame)
     (set-frame-parameter frame 'emacsvox-speech-endpoint endpoint)
     (emacsvox-frame-speech--install)
     endpoint))
@@ -235,6 +239,7 @@ and shutdown. Attaching again replaces the handle for future commands."
 FRAME defaults to the selected frame. Its transport still owns its workers."
   (setq frame (or frame (selected-frame)))
   (when (emacsvox-frame-speech-endpoint frame)
+    (run-hook-with-args 'emacsvox-frame-speech-detach-hook frame)
     (set-frame-parameter frame 'emacsvox-speech-endpoint nil)
     (when (and emacsvox-frame-speech--installed
                (not (seq-some #'emacsvox-frame-speech-endpoint (frame-list))))

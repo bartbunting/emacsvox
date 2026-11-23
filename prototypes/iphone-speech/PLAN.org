@@ -175,7 +175,8 @@ timer expires.
 
 ** NEXT 3. Deliver replies and permission requests across reconnects
 
-Route asynchronous events to the frame subscribed to the conversation.
+Route new replies and permission requests to each frame subscribed to the
+conversation. Each frame uses its own foreground and background speech levels.
 When you submit a question form or steer a running turn, that
 confirmation follows the frame where you acted. A steering reply that
 arrives after a phone disconnect stays silent on the replacement frame.

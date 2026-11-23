@@ -8,6 +8,8 @@
 (require 'json)
 (require 'emacsvox-frame-speech (expand-file-name "../../lisp/speech/emacsvox-frame-speech"
                                                   (file-name-directory load-file-name)))
+(require 'emacsvox-agent-shell-frames (expand-file-name "../../lisp/integrations/emacsvox-agent-shell-frames"
+                                                       (file-name-directory load-file-name)))
 (defvar tts-program)
 (defvar tts-speech-rate)
 (defvar tts-handle-unicode)
@@ -26,10 +28,8 @@
 (defvar emacsvox-play-program)
 (defvar emacsvox-sounds-dir)
 (defvar server-socket-dir)
-(defvar-local iphone-frame-speech--subscriber nil)
 (defvar-local iphone-frame-speech--buffer-id nil)
 (defvar iphone-frame-speech--next-buffer-id 0)
-(defvar iphone-frame-speech--request-id nil)
 (defvar iphone-frame-speech--receiver-stop nil)
 (defconst iphone-frame-speech--program
   (expand-file-name "phone-backend" (file-name-directory load-file-name)))
@@ -61,8 +61,10 @@
 (defun iphone-frame-speech--stop (original &optional all)
   (interactive (list 'iphone-explicit-stop))
   (let ((owner (iphone-frame-speech--command-worker)))
-    (funcall original (and all (or iphone-frame-speech--receiver-stop (eq all 'iphone-explicit-stop)
-                                  (null owner) (not (process-get owner 'iphone-notify)))))
+    (funcall original (cond ((eq all 'iphone-explicit-stop) t)
+                            ((and owner (process-get owner 'iphone-notify)
+                                  (not iphone-frame-speech--receiver-stop)) nil)
+                            (t all)))
     (when (and owner (eq all 'iphone-explicit-stop))
       (iphone-frame-speech--packet owner "stop-all" 0))))
 
@@ -194,10 +196,6 @@
     (iphone-frame-speech--remember frame)
     (when (eq frame iphone-frame-speech--last-terminal)
       (setq iphone-frame-speech--last-terminal nil))
-    (when-let* ((buffer (frame-parameter frame 'emacsvox-conversation)) ((buffer-live-p buffer)))
-      (with-current-buffer buffer
-        (when (eq iphone-frame-speech--subscriber frame)
-          (setq iphone-frame-speech--subscriber nil))))
     (emacsvox-frame-speech-detach frame)
     (set-frame-parameter frame 'emacsvox-phone-speaker nil)
     (when-let* ((notify (process-get owner 'iphone-notify))) (tts--retire-process notify))
@@ -220,13 +218,11 @@
       (dolist (id (process-get owner 'iphone-requests))
         (iphone-frame-speech--packet owner "resolved" id))
       (when (buffer-live-p old)
-        (with-current-buffer old
-          (when (eq iphone-frame-speech--subscriber frame)
-            (setq iphone-frame-speech--subscriber nil))))
+        (emacsvox-agent-shell-unsubscribe-frame old frame))
       (when (or iphone-frame-speech--directory (frame-parameter frame 'emacsvox-native-ssh))
         (setq iphone-frame-speech--entry-buffer buffer))
       (set-frame-parameter frame 'emacsvox-conversation buffer)
-      (with-current-buffer buffer (setq iphone-frame-speech--subscriber frame))
+      (emacsvox-agent-shell-subscribe-frame buffer frame)
       (when (process-get owner 'iphone-synced)
         (iphone-frame-speech-control (frame-parameter frame 'emacsvox-phone-id) 'sync 0)))))
 
@@ -234,55 +230,6 @@
   (unless iphone-frame-speech--buffer-id
     (setq iphone-frame-speech--buffer-id (cl-incf iphone-frame-speech--next-buffer-id)))
   (format "%d:%S" iphone-frame-speech--buffer-id key))
-
-(defun iphone-frame-speech--subscriber ()
-  (when (and iphone-frame-speech--subscriber (frame-live-p iphone-frame-speech--subscriber))
-    (frame-parameter iphone-frame-speech--subscriber 'emacsvox-phone-speaker)))
-
-(defun iphone-frame-speech--event (original &rest args)
-  (let* ((owner (iphone-frame-speech--subscriber))
-         (event (plist-get args :event))
-         (emacsvox-frame-speech--command-owner
-          (or (and (eq event 'elicitation-response)
-                   (bound-and-true-p emacsvox-agent-shell--question-command-active)
-                   (emacsvox-frame-speech--origin))
-              (and owner (process-get owner 'iphone-endpoint)) 'desktop))
-         (data (plist-get args :data))
-         (key (or (map-elt data :request-id) (map-elt data :tool-call-id)))
-         (iphone-frame-speech--request-id
-          (and owner key (eq event 'permission-request)
-               (iphone-frame-speech--permission-id key))))
-    (when (and owner (process-live-p owner) key (eq event 'permission-response))
-      (iphone-frame-speech--packet owner "resolved" (iphone-frame-speech--permission-id key)))
-    (apply original args)))
-
-(defun iphone-frame-speech--steering-request (original &rest args)
-  ;; A later ACP reply can arrive while another frame is typing. Keep the
-  ;; originating worker, including its identity across a phone reconnect.
-  (let ((owner (emacsvox-frame-speech--origin)))
-    (when (and owner (equal (map-elt (plist-get args :request) :method) "_session/steering"))
-      (setq args (copy-sequence args))
-      (dolist (key '(:on-success :on-failure))
-        (when-let* ((callback (plist-get args key)))
-          (setq args (plist-put args key
-                                (lambda (&rest response)
-                                  (apply #'emacsvox-frame-speech--with-origin owner callback response)))))))
-    (apply original args)))
-
-(defun iphone-frame-speech--deferred (original buffer &rest args)
-  (when (buffer-live-p buffer)
-    (let ((emacsvox-frame-speech--command-owner
-           (or (when-let* ((main (with-current-buffer buffer (iphone-frame-speech--subscriber))))
-                 (process-get main 'iphone-endpoint)) 'desktop)))
-      (apply original buffer args))))
-
-(defun iphone-frame-speech--focused (original &optional buffer)
-  (let* ((target (or buffer (current-buffer)))
-         (frame (buffer-local-value 'iphone-frame-speech--subscriber target)))
-    (if (and frame (frame-live-p frame)
-             (eq (emacsvox-frame-speech--origin) (emacsvox-frame-speech-endpoint frame)))
-        (with-selected-frame frame (funcall original target))
-      (funcall original target))))
 
 (defun iphone-frame-speech--packet (owner kind id &optional text)
   (pcase kind
@@ -292,20 +239,19 @@
                        (concat "iphone_event " (json-encode
                                                `((type . ,kind) (id . ,id) (text . ,text))) "\n")))
 
-(defun iphone-frame-speech--announce (original facts occasion icon text &optional policy)
-  ;; Preserve Agent Shell's request bookkeeping and its own spoken wording.
-  (if (and iphone-frame-speech--request-id (eq policy 'urgent)
-           (memq 'agent-permission-requested (plist-get facts :events)))
-      (when-let* ((owner (iphone-frame-speech--subscriber)) ((process-live-p owner)))
-        (iphone-frame-speech--packet owner "permission" iphone-frame-speech--request-id text))
-    (funcall original facts occasion icon text policy)))
+(defun iphone-frame-speech--permission (frame key text)
+  (when-let* ((owner (frame-parameter frame 'emacsvox-phone-speaker))
+              ((process-live-p owner)))
+    (iphone-frame-speech--packet owner (if text "permission" "resolved")
+                               (iphone-frame-speech--permission-id key) text)
+    t))
 
 (defun iphone-frame-speech--sync (frame owner)
   (process-put owner 'iphone-synced t)
   (when-let* ((buffer (frame-parameter frame 'emacsvox-conversation))
               ((buffer-live-p buffer)))
     (with-current-buffer buffer
-      (when (and (eq frame iphone-frame-speech--subscriber)
+      (when (and (assq frame (emacsvox-agent-shell--subscribers))
                  emacsvox-agent-shell-speak-permissions)
         (dolist (entry (reverse (copy-sequence (map-elt (agent-shell--state) :tool-calls))))
           (when-let* ((request (map-elt (cdr entry) :permission-request-id)))
@@ -339,9 +285,6 @@
          (iphone-frame-speech--packet notify "reset-done" serial))
        (iphone-frame-speech--packet owner "reset-done" serial))))
   t)
-
-(defconst iphone-frame-speech--deferred-entries
-  '(emacsvox-agent-shell--deliver-pending-blocks emacsvox-agent-shell--deliver-out-of-turn-pending))
 
 (defun iphone-frame-speech--native-frame ()
   (when (and iphone-frame-speech--directory (not (display-graphic-p))
@@ -380,10 +323,7 @@
           (iphone-frame-speech--detach frame))))
     (remove-hook 'post-command-hook #'iphone-frame-speech--post-command)
     (remove-hook 'delete-frame-functions #'iphone-frame-speech--detach)
-    (advice-remove 'agent-shell--emit-event #'iphone-frame-speech--event)
-    (advice-remove 'agent-shell--send-request #'iphone-frame-speech--steering-request)
-    (advice-remove 'emacsvox-agent-shell--session-focused-p #'iphone-frame-speech--focused)
-    (advice-remove 'emacsvox-agent-shell--deliver-announcement #'iphone-frame-speech--announce)
+    (remove-hook 'emacsvox-agent-shell-frame-permission-functions #'iphone-frame-speech--permission)
     (advice-remove 'emacsvox-aural-voice-workbench #'iphone-voices--workbench)
     (advice-remove 'omnivox-list-voices #'iphone-voices--workbench)
     (advice-remove 'omnivox-select-voice #'iphone-voices--select)
@@ -393,8 +333,6 @@
     (advice-remove 'tts-stop #'iphone-frame-speech--stop)
     (advice-remove 'omnivox-remote-resource #'iphone-frame-speech--resource)
     (advice-remove 'sox-chime #'iphone-frame-speech--chime)
-    (dolist (entry iphone-frame-speech--deferred-entries)
-      (advice-remove entry #'iphone-frame-speech--deferred))
     (set-marker iphone-frame-speech--position nil)
     (setq iphone-frame-speech--directory nil iphone-frame-speech--entry-buffer nil
           iphone-frame-speech--last-terminal nil))
@@ -413,13 +351,7 @@
   (advice-add 'tts-stop :around #'iphone-frame-speech--stop '((depth . -15)))
   (advice-add 'omnivox-remote-resource :around #'iphone-frame-speech--resource)
   (advice-add 'sox-chime :around #'iphone-frame-speech--chime)
-  (dolist (entry iphone-frame-speech--deferred-entries)
-    (advice-add entry :around #'iphone-frame-speech--deferred))
-  (advice-add 'agent-shell--emit-event :around #'iphone-frame-speech--event)
-  ;; Capture the success and failure callbacks after Emacsvox adds feedback.
-  (advice-add 'agent-shell--send-request :around #'iphone-frame-speech--steering-request '((depth . 50)))
-  (advice-add 'emacsvox-agent-shell--session-focused-p :around #'iphone-frame-speech--focused)
-  (advice-add 'emacsvox-agent-shell--deliver-announcement :around #'iphone-frame-speech--announce)
+  (add-hook 'emacsvox-agent-shell-frame-permission-functions #'iphone-frame-speech--permission)
   t)
 
 ;;; frame-speech.el ends here

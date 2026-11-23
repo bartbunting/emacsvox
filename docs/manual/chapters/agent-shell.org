@@ -274,6 +274,16 @@ shared background default.
 ~M-x emacsvox-agent-shell-cycle-speech-level~ cycles toward less routine
 speech; use a prefix argument to restore =auto=.
 
+If two Emacs frames use separate speech servers, open the conversation in
+each frame and run ~M-x emacsvox-agent-shell-subscribe-frame~ in each.
+Both frames now receive new replies according to their own focus. With the
+defaults, a frame showing the conversation reads the answer and a frame
+showing another buffer announces completion. Both receive permission
+requests. Answer once in either frame to clear the request for both.
+Typing, navigation and steering feedback follow the frame where you acted.
+Use ~M-x emacsvox-agent-shell-unsubscribe-frame~ in the conversation to
+stop following it from that frame. Closing the frame also ends its subscription.
+
 *** Adjust speech in the settings menu
 :PROPERTIES:
 :TEXINFO_NODE: no
