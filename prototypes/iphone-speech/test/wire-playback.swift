@@ -143,6 +143,15 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   let words = ov_ios_samples(pcm)!
   precondition(words[359] == 0.25 && words[360] == 0 && words[(180 + 882) * 2] == 0.25)
   ov_ios_pcm_free(pcm)
+  var left = WireItem(kind: .speech, gain: 0.25, master: 0.5, channel: "left")
+  precondition(left.beginVoice(clock) && left.synthesisVolume(mixed: false) == 0.125)
+  let leftPCM = samples.withUnsafeBufferPointer {
+    ov_ios_mix_marked(clock, $0.baseAddress, $0.count, 44100, 1, nil, 0, token)
+  }!
+  precondition(ov_ios_samples(leftPCM)![0] == 0.125 && ov_ios_samples(leftPCM)![1] == 0)
+  ov_ios_pcm_free(leftPCM)
+  left.effects = "{invalid}"
+  precondition(!left.beginVoice(clock))
   typealias Run = WirePlayback<Int>
   let output = TestOutput(root)
   var replies: [String] = []
@@ -197,7 +206,9 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   voice(11)
   played.last!()
   try send(["l {J}"])
-  precondition(readings.last?.gain == lower.gain && lower.gain == 0.75 && readings.last!.pitch! > lower.pitch!)
+  precondition(readings.last?.gain == lower.gain && readings.last?.master == lower.master)
+  precondition(lower.synthesisVolume(mixed: true) == 1 && lower.synthesisVolume(mixed: false) == 0.75)
+  precondition(readings.last!.pitch! > lower.pitch!)
   voice(12)
   played.last!()
   precondition(output.started.isEmpty)
@@ -218,6 +229,16 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   let count = queued.count
   stale?((5, 1024))
   precondition(queued.count == count && replies.last == "__EMACSVOX_TRACKED__ 122 cancelled")
+  // A direct synthesizer cannot preserve a stereo route. A failed PCM voice
+  // releases the scheduler for the next dispatch without replaying it aloud.
+  try send(["s", "tts_set_speech_channel left", "q left only", "emacsvox_tracked_dispatch 124"])
+  output.started.removeAll()
+  end?(false)
+  precondition(output.started.isEmpty && replies.last == "__EMACSVOX_TRACKED__ 124 failed")
+  try send(["tts_set_speech_channel both", "q restored", "emacsvox_tracked_dispatch 125"])
+  voice(13)
+  played.last!()
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 125 completed")
   print("Passed mixed PCM lookahead, independent tail completion, unheard voice fallback and Stop.")
 }
 

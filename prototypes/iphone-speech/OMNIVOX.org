@@ -59,6 +59,14 @@ mixed-case word stays intact. The precision of a cue inside that word
 still depends on the timings its voice returns. Separately synthesized
 phrases can change the cadence.
 
+Build 7 uses the desktop effect processor for structured readings, palette
+letters and voice previews. Its speech and character PCM use the same
+player. In the source revision after build 7, older queued and marked
+speech also applies the registered voice's effects. A synthetic stereo
+comparison covers the speech samples and the echo tail. On the phone,
+listen for the level of letters relative to ordinary reading and for the
+change of voice within a styled line.
+
 Read a line such as “Lime Plum Pear Fig Café” with =C-n=. Listen for one
 tone at each word, then press =C-n= during the line. In Diagnostics,
 “Last reading’s cue timing” reports the first reading’s marker counts,

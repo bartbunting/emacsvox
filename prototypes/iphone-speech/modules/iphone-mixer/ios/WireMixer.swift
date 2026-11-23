@@ -109,7 +109,7 @@ final class WireMixer {
     capture.marked = bookmarks.map { WireMarkedAudio(item, $0) }
     current = capture
     work.async {
-      let ready = self.tones(cues)
+      let ready = (self.presentation != nil || item.beginVoice(self.clock)) && self.tones(cues)
       DispatchQueue.main.async {
         guard self.current === capture else { return }
         guard ready else { self.end(capture, ok: false); return }
@@ -122,7 +122,8 @@ final class WireMixer {
 
   private func write(_ item: WireItem, bookmarks: WireBookmarks?, capture: Capture, part: Int) {
     guard current === capture else { return }
-    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil, lookup: voiceLookup)
+    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil,
+                                       mixed: true, lookup: voiceLookup)
     else { end(capture, ok: false); return }
     let ticket = capture.ticket
     trace.append(ticket, "Part \(part), requested anchors \(bookmarks?.marks.map(\.offset) ?? []), SSML \(bookmarks?.needsBookmarks == true). Apple speechString \(utterance.speechString.debugDescription)")

@@ -45,7 +45,7 @@ func wireBufferSlice(_ pcm: OpaquePointer, format: AVAudioFormat, frames: Range<
   return buffer
 }
 
-func wireUtterance(_ item: WireItem, ssml: String? = nil,
+func wireUtterance(_ item: WireItem, ssml: String? = nil, mixed: Bool = false,
                    lookup: (String) -> AVSpeechSynthesisVoice? = { AVSpeechSynthesisVoice(identifier: $0) }) -> AVSpeechUtterance? {
   guard let words = item.text, !words.isEmpty, let id = item.voice,
         let selected = lookup(id) else { return nil }
@@ -54,7 +54,7 @@ func wireUtterance(_ item: WireItem, ssml: String? = nil,
   utterance.rate = min(AVSpeechUtteranceMaximumSpeechRate, max(AVSpeechUtteranceMinimumSpeechRate,
       (item.rate ?? 1) * AVSpeechUtteranceDefaultSpeechRate))
   utterance.pitchMultiplier = item.pitch ?? 1
-  utterance.volume = item.gain ?? 1
+  utterance.volume = item.synthesisVolume(mixed: mixed)
   return utterance
 }
 

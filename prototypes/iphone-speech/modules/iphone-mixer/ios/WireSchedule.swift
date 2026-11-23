@@ -10,10 +10,20 @@ struct WireItem: Decodable {
   var placement: Placement?
   var text: String?, voice: String?, rate: Float?, pitch: Float?, gain: Float?
   var path: String?, hz: Float?, ms: UInt32?, recipe: String?
+  var master: Float?, channel: String?, effects: String?
   var marks: [WireToneMark]?
   var anchors: [WireAnchor]?
   var startMarker: String?
   var unavailable: Bool?
+
+  func synthesisVolume(mixed: Bool) -> Float {
+    (gain ?? 1) * (mixed ? 1 : (master ?? 1))
+  }
+
+  func beginVoice(_ clock: OpaquePointer) -> Bool {
+    ov_ios_mix_begin_voice(clock, master ?? 1, channel ?? "both", effects ?? "")
+  }
+
   func tonePCM(_ token: OpaquePointer) -> OpaquePointer? {
     if let recipe { return ov_ios_shaped_tone(recipe, token) }
     return ov_ios_tone(hz ?? 0, ms ?? 0, gain ?? 1, token)
@@ -236,9 +246,11 @@ final class WireSchedule {
           }
         }) { [weak self, weak job] played, ok in
           guard let self, let job, !job.finished else { return }
-          let lostMarker = run.dropFirst(played).contains { $0.startMarker != nil }
-          job.failed = job.failed || !ok || lostMarker
-          job.index = lostMarker ? run.endIndex : run.startIndex + played
+          let needsMixer = run.dropFirst(played).contains {
+            $0.startMarker != nil || $0.effects != nil || $0.channel != nil
+          }
+          job.failed = job.failed || !ok || needsMixer
+          job.index = needsMixer ? run.endIndex : run.startIndex + played
           self.blocked = false
           self.advance()
         }
