@@ -330,9 +330,22 @@
 (defvar iphone-frame-speech--hyper-map nil)
 
 (defun iphone-frame-speech--enable-hyper ()
-  "Decode Hyper chords on the attached SSH terminal."
+  "Decode the phone keyboard's extended modifier sequences on its SSH terminal."
   (unless iphone-frame-speech--hyper-map
     (let ((map (make-sparse-keymap)))
+      (dolist (bits '(1 3 4 5 6 7))
+        (let ((mods (append (when (/= 0 (logand bits 1)) '(shift))
+                            (when (/= 0 (logand bits 2)) '(meta))
+                            (when (/= 0 (logand bits 4)) '(control)))))
+          (dolist (pair '((127 . backspace) (27 . escape)))
+            (define-key map (format "\e[%d;%du" (car pair) (1+ bits))
+                        (vector (event-convert-list (append mods (list (cdr pair)))))))))
+      (dolist (code (number-sequence ?a ?z))
+        (dolist (modifier '(6 8))
+          (define-key map (format "\e[%d;%du" code modifier)
+                      (vector (event-convert-list
+                               (append '(control shift) (when (= modifier 8) '(meta))
+                                       (list code)))))))
       (dotimes (bits 8)
         (let ((modifier (+ 17 bits))
               (mods (append '(hyper)

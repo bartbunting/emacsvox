@@ -442,6 +442,27 @@ async function main() {
             (equal (car iphone-test-hyper-events) "${name}"))`) === 't');
         }
         const atPoint = async position => (await observe('(window-point ' + phoneWindow + ')')) === String(position);
+        const shifted = Array.from('abcdefghijklmnopqrstuvwxyz', letter => [
+          'C-S-' + letter, String.fromCharCode(letter.charCodeAt(0) & 31),
+          {code:'Key' + letter.toUpperCase(), ctrlKey:true, shiftKey:true}]);
+        shifted.push(['C-<backspace>', 'Backspace', {ctrlKey:true}], ['S-<escape>', 'Escape', {shiftKey:true}],
+          ['C-S-<up>', 'ArrowUp', {ctrlKey:true, shiftKey:true}], ['C-S-<f5>', 'F5', {ctrlKey:true, shiftKey:true}],
+          ['C-S-<tab>', 'Tab', {ctrlKey:true, shiftKey:true}], ['C-S-<return>', 'Enter', {ctrlKey:true, shiftKey:true}]);
+        await observe('(with-selected-window ' + phoneWindow + ' (setq-local iphone-test-shifted nil) ' +
+          shifted.map(([name]) => '(local-set-key (kbd "' + name + '") (lambda () (interactive) ' +
+            '(setq-local iphone-test-shifted (this-command-keys-vector))))').join(' ') + ')');
+        for (const [name, key, modifiers] of shifted) {
+          assert.ok(field.down(key, modifiers));
+          await until('SSH receives ' + name, async () => await observe('(with-selected-window ' +
+            phoneWindow + ' (equal iphone-test-shifted (kbd "' + name + '")))') === 't');
+        }
+        const expectedWidth = await observe('(frame-width (window-frame ' + phoneWindow + '))');
+        assert.ok(field.down(';', {code:'Semicolon', altKey:true, shiftKey:true}));
+        await until('SSH Meta colon opens eval-expression', async () =>
+          await observe('(and (active-minibuffer-window) (with-current-buffer (window-buffer (active-minibuffer-window)) (equal (minibuffer-prompt) "Eval: ")))') === 't');
+        sshKeys('(setq iphone-test-eval-width (frame-width))\r');
+        await until('SSH Meta colon evaluates on the phone frame',
+          async () => await observe('(bound-and-true-p iphone-test-eval-width)') === expectedWidth);
         assert.ok(field.down('˘', {code:'Period', altKey:true, shiftKey:true}));
         await until('SSH Meta end of buffer', () => atPoint(23));
         assert.ok(field.down('¯', {code:'Comma', altKey:true, shiftKey:true}));

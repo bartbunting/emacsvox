@@ -37,25 +37,33 @@ const punctuation = {Comma:',<', Period:'.>', Slash:'/?', Semicolon:';:', Quote:
 
 // Prefer the symbol from the active layout. Fall back to the physical US
 // position when Option changes the character to a glyph or a dead key.
-function metaCharacter(event) {
-  if (/^[\x20-\x7e]$/.test(event.key)) return event.key;
+function metaCharacter(event, shift) {
   const code = event.code;
-  if (event.shiftKey && (!code || code === 'Unidentified')) {
+  const pair = Object.hasOwn(punctuation, code) && punctuation[code];
+  if (shift && pair && event.key === pair[0]) return pair[1];
+  if (/^[\x20-\x7e]$/.test(event.key)) return event.key;
+  if (shift && (!code || code === 'Unidentified')) {
     if (event.key === '¯') return '<';
     if (event.key === '˘') return '>';
   }
   if (/^Key[A-Z]$/.test(code)) {
     const letter = code.slice(3);
-    return event.shiftKey ? letter : letter.toLowerCase();
+    return shift ? letter : letter.toLowerCase();
   }
-  if (/^Digit[0-9]$/.test(code)) return event.shiftKey ? ')!@#$%^&*('[code[5]] : code[5];
-  if (Object.hasOwn(punctuation, code)) return punctuation[code][Number(Boolean(event.shiftKey))];
+  if (/^Digit[0-9]$/.test(code)) return shift ? ')!@#$%^&*('[code[5]] : code[5];
+  if (pair) return pair[shift ? 1 : 0];
 }
 
 function terminalKey(event) {
   const {altKey, ctrlKey} = event;
   const shiftKey = event.shiftKey || event.getModifierState?.('Shift');
   let key = event.key;
+  if (!event.metaKey && ctrlKey && shiftKey) {
+    // WebKit sometimes reports a control byte instead of the letter.
+    const letter = /^[a-z]$/i.test(key) ? key :
+      /^Key[A-Z]$/.test(event.code) ? event.code.slice(3) : '';
+    if (letter) return '\x1b[' + letter.toLowerCase().charCodeAt(0) + (altKey ? ';8u' : ';6u');
+  }
   if (!event.metaKey && ctrlKey && /^Key[A-Z]$/.test(event.code) && /^[\x00-\x1f]$/.test(key)) {
     return (altKey ? '\x1b' : '') + key;
   }
@@ -72,7 +80,7 @@ function terminalKey(event) {
   }
   if (Object.hasOwn(tildeKeys, key)) return '\x1b[' + tildeKeys[key] + (mod === 1 ? '' : ';' + mod) + '~';
   if (hyper) {
-    const raw = basic[key] ?? metaCharacter(event);
+    const raw = basic[key] ?? metaCharacter(event, shiftKey);
     if (!raw || raw.length !== 1) return;
     const letter = /^[A-Za-z]$/.test(raw);
     const code = (letter ? raw.toLowerCase() : raw).charCodeAt(0);
@@ -82,6 +90,9 @@ function terminalKey(event) {
   }
   const esc = altKey ? '\x1b' : '';
   if (Object.hasOwn(basic, key)) {
+    if ((ctrlKey || shiftKey) && (key === 'Backspace' || key === 'Escape')) {
+      return '\x1b[' + basic[key].charCodeAt(0) + ';' + mod + 'u';
+    }
     if ((ctrlKey || shiftKey) && (key === 'Enter' || key === 'Tab')) {
       if (!ctrlKey && key === 'Tab') return esc + '\x1b[Z';
       return esc + '\x1b[27;' + (1 + (ctrlKey ? 4 : 0) + (shiftKey ? 1 : 0)) + ';' + basic[key].charCodeAt(0) + '~';
@@ -92,7 +103,7 @@ function terminalKey(event) {
   // The layout supplies the character. Text composition still uses input.
   if (event.cancelable !== false && !ctrlKey && !altKey && event.code && event.code !== 'Unidentified' &&
       key && Array.from(key).length === 1 && !/[\x00-\x1f\x7f-\x9f]/.test(key)) return key;
-  const char = altKey ? metaCharacter(event) : key;
+  const char = altKey ? metaCharacter(event, shiftKey) : key;
   if (!char || char.length !== 1) return;
   if (ctrlKey) {
     const upper = char.toUpperCase();

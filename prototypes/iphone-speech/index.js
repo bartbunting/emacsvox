@@ -82,6 +82,9 @@ function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys, onClosed}
   const shortcuts = ssh?.hasShiftReturnShortcut ? {
     active: canFocus,
     onShiftReturn: () => { if (canFocus) onKeys('\x1b[27;2;13~'); },
+    ...(ssh.hasModifiedLetterShortcuts && {
+      onModifiedKey: ({nativeEvent}) => { if (canFocus) onKeys(nativeEvent.text); },
+    }),
   } : {};
   return <KeyboardContainer style={styles.keyboard} {...shortcuts}>
     <WebView ref={view} source={keyboardSource} style={styles.surface} scrollEnabled={false}

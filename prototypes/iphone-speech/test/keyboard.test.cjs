@@ -98,6 +98,55 @@ test('Option punctuation sends one Emacs Meta chord and ordinary accents remain 
   assert.deepEqual(sent, ['\x1b>', '\x1b<', '\x1b>', '\x1b>', '\x1b<', '\x1b<', '\x1b>', '>', '¯˘']);
 });
 
+test('Meta colon keeps Shift and shifted Control letters remain distinct from ordinary Control bytes', () => {
+  const sent = [];
+  const {down} = keyboardField(bytes => sent.push(bytes), true);
+  assert.ok(down(';', {code: 'Semicolon', altKey: true}));
+  assert.ok(down(';', {code: 'Semicolon', altKey: true, shiftKey: true}));
+  assert.ok(down('Ú', {code: 'Semicolon', altKey: true, getModifierState: key => key === 'Shift'}));
+  assert.deepEqual(sent.splice(0), ['\x1b;', '\x1b:', '\x1b:']);
+  for (const letter of 'abcdefghijklmnopqrstuvwxyz') {
+    const code = 'Key' + letter.toUpperCase();
+    const byte = String.fromCharCode(letter.charCodeAt(0) & 31);
+    assert.ok(down(byte, {code, ctrlKey: true}));
+    assert.ok(down(byte, {code, ctrlKey: true, shiftKey: true}));
+    assert.ok(down(letter.toUpperCase(), {code, ctrlKey: true, altKey: true, shiftKey: true}));
+    assert.deepEqual(sent.splice(0), [byte, '\x1b[' + letter.charCodeAt(0) + ';6u', '\x1b[' + letter.charCodeAt(0) + ';8u']);
+  }
+});
+
+test('shifted Meta punctuation, physical function keys and editing keys keep their modifiers', () => {
+  const sent = [];
+  const {down} = keyboardField(bytes => sent.push(bytes), true);
+  function check(key, modifiers, bytes) {
+    assert.ok(down(key, modifiers), key);
+    assert.equal(sent.pop(), bytes, key);
+  }
+  const pairs = {Comma:',<', Period:'.>', Slash:'/?', Semicolon:';:', Quote:"'\"",
+    BracketLeft:'[{', BracketRight:']}', Backslash:'\\|', Minus:'-_', Equal:'=+', Backquote:'\x60~'};
+  for (const [code, [plain, shifted]] of Object.entries(pairs)) {
+    check(plain, {code, altKey:true}, '\x1b' + plain);
+    check(plain, {code, altKey:true, shiftKey:true}, '\x1b' + shifted);
+  }
+  for (const [number, char] of Array.from(')!@#$%^&*(').entries()) {
+    check('Dead', {code:'Digit' + number, altKey:true, shiftKey:true}, '\x1b' + char);
+  }
+  for (const [key, suffix] of Object.entries({ArrowUp:'A', ArrowDown:'B', ArrowLeft:'D',
+    ArrowRight:'C', Home:'H', End:'F', F1:'P', F2:'Q', F3:'R', F4:'S'})) {
+    check(key, {ctrlKey:true, shiftKey:true}, '\x1b[1;6' + suffix);
+  }
+  for (const [key, code] of Object.entries({Insert:2, Delete:3, PageUp:5, PageDown:6,
+    F5:15, F6:17, F7:18, F8:19, F9:20, F10:21, F11:23, F12:24})) {
+    check(key, {ctrlKey:true, shiftKey:true}, '\x1b[' + code + ';6~');
+  }
+  for (const [key, code] of [['Escape',27], ['Backspace',127]]) {
+    check(key, {}, String.fromCharCode(code));
+    check(key, {shiftKey:true}, '\x1b[' + code + ';2u');
+    check(key, {ctrlKey:true}, '\x1b[' + code + ';5u');
+    check(key, {ctrlKey:true, shiftKey:true}, '\x1b[' + code + ';6u');
+  }
+});
+
 test('old keyboard events cannot enter a replacement session', () => {
   const sent = [];
   let field, socket;

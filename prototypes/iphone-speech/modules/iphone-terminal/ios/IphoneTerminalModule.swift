@@ -11,6 +11,7 @@ public final class IphoneTerminalModule: Module {
   public func definition() -> ModuleDefinition {
     Name("IphoneTerminal")
     Constant("hasShiftReturnShortcut") { true }
+    Constant("hasModifiedLetterShortcuts") { true }
     Constant("hasWebBrowser") { true }
     AsyncFunction("copyPublicKey") { UIPasteboard.general.string = try PhoneIdentity.publicKey() }.runOnQueue(.main)
     Function("loadProfile") { UserDefaults.standard.dictionary(forKey: "emacsvox.ssh.profile") as? [String:String] ?? [:] }
@@ -58,16 +59,16 @@ public final class IphoneTerminalModule: Module {
     }
     View(PhoneKeyboardContainer.self) {
       ViewName("PhoneKeyboardContainer")
-      Events("onShiftReturn")
+      Events("onShiftReturn", "onModifiedKey")
       Prop("active") { (view: PhoneKeyboardContainer, active: Bool) in view.active = active }
     }
   }
 }
 
-// WebKit can turn Shift+Return into an ordinary text newline. Take this one
-// hardware shortcut while the Emacs field owns the responder chain.
+// WebKit can discard Shift before delivering a hardware key to the field.
 private final class PhoneKeyboardContainer: ExpoView {
   let onShiftReturn = EventDispatcher()
+  let onModifiedKey = EventDispatcher()
   var active = false
   private lazy var shiftReturn: UIKeyCommand = {
     let command = UIKeyCommand(input: "\r", modifierFlags: .shift, action: #selector(sendShiftReturn))
@@ -75,7 +76,17 @@ private final class PhoneKeyboardContainer: ExpoView {
     return command
   }()
 
-  override var keyCommands: [UIKeyCommand]? { (super.keyCommands ?? []) + [shiftReturn] }
+  private lazy var modifiedKeys: [UIKeyCommand] = {
+    let letters = "abcdefghijklmnopqrstuvwxyz".map {
+      UIKeyCommand(input: String($0), modifierFlags: [.control, .shift], action: #selector(sendModifiedKey))
+    }
+    let colon = UIKeyCommand(input: ";", modifierFlags: [.alternate, .shift], action: #selector(sendModifiedKey))
+    let keys = letters + [colon]
+    for key in keys { key.wantsPriorityOverSystemBehavior = true }
+    return keys
+  }()
+
+  override var keyCommands: [UIKeyCommand]? { (super.keyCommands ?? []) + [shiftReturn] + modifiedKeys }
 
   private func focusedView(in view: UIView) -> UIView? {
     if view.isFirstResponder { return view }
@@ -94,6 +105,12 @@ private final class PhoneKeyboardContainer: ExpoView {
   }
 
   @objc private func sendShiftReturn(_ sender: UIKeyCommand) { onShiftReturn() }
+  @objc private func sendModifiedKey(_ sender: UIKeyCommand) {
+    if sender.modifierFlags == [.alternate, .shift] { onModifiedKey(["text": "\u{1b}:"]) }
+    else if let letter = sender.input?.lowercased().first?.asciiValue {
+      onModifiedKey(["text": "\u{1b}[\(letter);6u"])
+    }
+  }
 }
 
 final class EmacsTerminalView: TerminalView {
@@ -160,11 +177,27 @@ final class EmacsTerminalView: TerminalView {
         remaining.remove(press)
         continue
       }
+      if modifiers == [.control, .shift],
+         let letter = key.charactersIgnoringModifiers.lowercased().first?.asciiValue, (97...122).contains(letter) {
+        send(txt: "\u{1b}[\(letter);6u")
+        remaining.remove(press)
+        continue
+      }
+      if !modifiers.contains(.command), !modifiers.contains(.alternate),
+         !modifiers.intersection([.shift, .control]).isEmpty,
+         key.keyCode == .keyboardDeleteOrBackspace || key.keyCode == .keyboardEscape {
+        let code = key.keyCode == .keyboardEscape ? 27 : 127
+        let modifier = 1 + (modifiers.contains(.shift) ? 1 : 0) + (modifiers.contains(.control) ? 4 : 0)
+        send(txt: "\u{1b}[\(code);\(modifier)u")
+        remaining.remove(press)
+        continue
+      }
       guard modifiers == [.alternate, .shift] else { continue }
       let symbol: String
       switch key.charactersIgnoringModifiers {
       case ",": symbol = "<"
       case ".": symbol = ">"
+      case ";", ":": symbol = ":"
       default: continue
       }
       send(txt: "\u{1b}" + symbol)
