@@ -5,22 +5,27 @@ import OmnivoxMobile
 
 struct WireTimingReport {
   var exact = 0, word = 0, span = 0
+  var requestedBookmarks = false, measuredWords = false
+  var bookmarksReceived = 0, wordsReceived = 0, wordsMismatched = 0, wordStartsUsed = 0
   var description: String {
-    var text = "The voice supplied \(exact) of \(exact + word + span) in-word timing marks."
-    if word > 0 { text += " \(word) used a word boundary." }
-    if span > 0 { text += " \(span) used the speech span boundary." }
+    var text = "Cue timing. \(exact) exact, \(word) at word boundaries, \(span) at speech span boundaries."
+    if requestedBookmarks { text += " Apple returned \(bookmarksReceived) named bookmarks." }
+    text += " The first reading returned \(wordsReceived) word ranges with \(wordStartsUsed) usable word positions."
+    if wordsMismatched > 0 { text += " \(wordsMismatched) ranges referred to different text." }
+    if measuredWords { text += " Word starts were measured from separately synthesized audio." }
     return text
   }
 }
 
-// Keep one utterance and add an SSML bookmark at each requested UTF-8
-// boundary. Apple ignores utterance rate and pitch when the input is SSML.
+// Use plain text for word timing. Only positions inside words need SSML.
 struct WireBookmarks {
   let ssml: String, marks: [WireAnchor], length: Int
+  let wordStarts: [Int]
   private let source: String, utf16Length: Int
   private(set) var offsets: [String: Int] = [:]
   private var conflicting: Set<String> = []
   private var words: [Int: Int] = [:], conflictingWords: Set<Int> = []
+  private var bookmarksReceived = 0, wordsReceived = 0, wordsMismatched = 0
   static let end = "ov-end"
 
   init?(_ item: WireItem) {
@@ -31,6 +36,11 @@ struct WireBookmarks {
     source = text
     utf16Length = text.utf16.count
     length = bytes.count
+    // ICU's Unicode word breaks keep contractions and mixed-case words intact.
+    wordStarts = Self.wordStart.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap {
+      guard let start = Range(NSRange(location: $0.range.location, length: 0), in: text)?.lowerBound else { return nil }
+      return text.utf8.distance(from: text.utf8.startIndex, to: start)
+    }
     let rate = Int(((item.rate ?? 1) * 100).rounded())
     let pitch = Int((((item.pitch ?? 1) - 1) * 100).rounded())
     let gain = item.gain ?? 1
@@ -51,7 +61,10 @@ struct WireBookmarks {
     ssml = xml + rest + "<mark name=\"\(Self.end)\"/></prosody></speak>"
   }
 
+  private static let wordStart = try! NSRegularExpression(pattern: #"(?w)\b[\p{L}\p{M}\p{N}\p{Pc}]"#)
+
   mutating func observe(_ name: String, byte: Int) {
+    bookmarksReceived += 1
     guard byte >= 0, name == Self.end || marks.contains(where: { name == "ov-\($0.offset)" }) else { return }
     if let previous = offsets[name], previous != byte { conflicting.insert(name) }
     offsets[name] = byte
@@ -62,7 +75,9 @@ struct WireBookmarks {
     source.utf8.elementsEqual(request.utf8)
   }
 
-  mutating func observeWord(_ range: NSRange, byte: Int) {
+  mutating func observeWord(_ range: NSRange, byte: Int, matchesSource: Bool = true) {
+    wordsReceived += 1
+    guard matchesSource else { wordsMismatched += 1; return }
     guard byte >= 0, range.location >= 0, range.location <= utf16Length,
           range.length > 0, range.length <= utf16Length - range.location,
           let word = Range(range, in: source) else { return }
@@ -72,9 +87,15 @@ struct WireBookmarks {
     words[offset] = byte
   }
 
-  var needsBookmarks: Bool { marks.contains { $0.offset > 0 && $0.offset < length } }
+  var needsTiming: Bool { marks.contains { $0.offset > 0 && $0.offset < length } }
+  var needsBookmarks: Bool { marks.contains { $0.offset > 0 && $0.offset < length && !wordStarts.contains($0.offset) } }
 
-  var complete: Bool { !needsBookmarks || offsets[Self.end] != nil && marks.allSatisfy { offsets["ov-\($0.offset)"] != nil } }
+  var complete: Bool {
+    marks.allSatisfy {
+      $0.offset == 0 || $0.offset == length || words[$0.offset] != nil ||
+        (offsets[Self.end] != nil && offsets["ov-\($0.offset)"] != nil)
+    }
+  }
 
   func nativeFrames(bytesPerFrame: Int, totalFrames: Int) -> [Int?] {
     guard bytesPerFrame > 0, totalFrames > 0 else { return marks.map { _ in nil } }
@@ -99,14 +120,52 @@ struct WireBookmarks {
   }
 
   enum Precision { case exact, word, span }
-  func placements(bytesPerFrame: Int, totalFrames: Int) -> [(frame: Int, precision: Precision)] {
-    guard bytesPerFrame > 0, totalFrames > 0 else { return [] }
-    var boundaries: [OvWordBoundary] = []
+  typealias Position = (frame: Int, precision: Precision)
+
+  func report(bytesPerFrame: Int, totalFrames: Int) -> WireTimingReport {
+    WireTimingReport(requestedBookmarks: needsBookmarks, bookmarksReceived: bookmarksReceived,
+                     wordsReceived: wordsReceived, wordsMismatched: wordsMismatched,
+                     wordStartsUsed: wordFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames).count)
+  }
+
+  private func wordFrames(bytesPerFrame: Int, totalFrames: Int) -> [Int: Int] {
+    var frames: [Int: Int] = [:], last = -1
     for (offset, byte) in words.sorted(by: { $0.key < $1.key }) {
       let frame = byte / bytesPerFrame
       guard !conflictingWords.contains(offset), byte % bytesPerFrame == 0,
-            frame <= totalFrames, frame >= Int(boundaries.last?.frame ?? 0) else { continue }
-      boundaries.append(OvWordBoundary(offset: UInt32(offset), frame: UInt32(frame)))
+            frame < totalFrames, frame > last, frame > 0 || offset <= (wordStarts.first ?? 0) else { continue }
+      frames[offset] = frame
+      last = frame
+    }
+    return frames
+  }
+
+  // A later word's first sample cannot be recovered from a marker for some
+  // other word. Keep the whole reading if Apple timed the requested positions.
+  func recoveryCuts(bytesPerFrame: Int, totalFrames: Int) -> [Int] {
+    guard needsTiming, wordStarts.count > 1, bytesPerFrame > 0, totalFrames > 0 else { return [] }
+    let exact = nativeFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames)
+    let timed = wordFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames)
+    var cuts = Set<Int>(), missing = false
+    for (mark, named) in zip(marks, exact) where mark.offset > 0 && mark.offset < length {
+      let lower = wordStarts.last { $0 <= mark.offset }
+      let upper = wordStarts.first { $0 >= mark.offset }
+      if let lower, lower != wordStarts.first { cuts.insert(lower) }
+      if let upper, upper != wordStarts.first { cuts.insert(upper) }
+      let expected = mark.after == true ? lower : upper
+      if named == nil && timed[mark.offset] == nil && expected.flatMap({ timed[$0] }) == nil { missing = true }
+    }
+    return missing ? cuts.sorted() : []
+  }
+
+  func placements(bytesPerFrame: Int, totalFrames: Int,
+                  startsAtWord: Bool = false, endsAtNextWord: Bool = false) -> [Position] {
+    guard bytesPerFrame > 0, totalFrames > 0 else { return [] }
+    var frames = wordFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames)
+    if startsAtWord { frames[0] = 0 }
+    if endsAtNextWord { frames[length] = totalFrames }
+    let boundaries = frames.sorted { $0.key < $1.key }.map {
+      OvWordBoundary(offset: UInt32($0.key), frame: UInt32($0.value))
     }
     let exact = nativeFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames)
     return boundaries.withUnsafeBufferPointer { words in

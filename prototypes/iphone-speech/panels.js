@@ -97,6 +97,9 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire}) {
       {wire && draft.transport === 'ssh' && <Toggle label="Use Omnivox on iPhone"
         hint="Run speech, installed voice discovery, tones and earcons on this phone. Reconnects the terminal when saved."
         value={draft.worker === 'omnivox'} change={v => edit('worker', v ? 'omnivox' : 'legacy')} />}
+      {wire?.setSpeechLogging && <Toggle label="Log speech text and timing"
+        hint="Save to start recording on this phone. Use Diagnostics to read the trace or send a copy to WSL. Save with the switch off to erase the phone copy."
+        value={draft.logSpeech === 'yes'} change={v => edit('logSpeech', v ? 'yes' : 'no')} />}
       <Toggle label="Connect on open" hint="Open the saved SSH connection when you launch the app. The Emacs keyboard receives focus once the terminal is ready."
         value={draft.connectOnOpen === 'yes'} change={v => edit('connectOnOpen', v ? 'yes' : 'no')} />
       <Toggle label="Use Emacs keyboard field" hint="Use the keyboard field that was tested with VoiceOver. Switch off to type directly into SwiftTerm."

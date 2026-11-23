@@ -552,7 +552,7 @@ async function main() {
           const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
           const desktopState = await observe(desktopSnapshot);
           await observe(`(with-selected-window ${phoneWindow}
-            (switch-to-buffer (iphone-test-render-response "Timing start\nTestCase\nFresh line"))
+            (switch-to-buffer (iphone-test-render-response "Timing start\nTestCase\nFresh line\nLime Plum Pear Fig Café"))
             (setq-local tts-caps t tts-split-caps nil emacsvox-capitalization-presentation 'tone)
             (goto-char (point-min)) (search-forward "Timing start") (beginning-of-line))`);
           const firstNavigation = rawPackets.length;
@@ -569,6 +569,18 @@ async function main() {
           const played = rawPackets.filter(p => p.marker?.dispatch_id === word().dispatch_id).map(p => p.marker);
           assert.ok(played.some(m => m.type === 'utterance_started' && m.text.includes('TestCase')));
           assert.ok(played.some(m => m.type === 'timeline_action_resolved' && m.action_id === inner.id && m.resolution === 'exact'));
+          await observe(`(with-selected-window ${phoneWindow} (search-forward "Fresh line") (beginning-of-line))`);
+          const fiveStart = rawPackets.length;
+          sshKeys('\x0e');
+          const five = () => rawPackets.slice(fiveStart).find(p => p.lane === 'M' &&
+            p.timeline?.spans.some(s => s.text.includes('Lime Plum Pear Fig Café')))?.timeline;
+          await until('five capital tones finish through ordinary Agent Shell navigation without native markers', () => five() &&
+            rawPackets.some(p => p.dispatch === five().dispatch_id && p.status === 'completed'));
+          const fiveTones = five().actions.filter(a => a.type === 'tone');
+          assert.deepEqual(fiveTones.map(a => a.position.utf8_offset), [0, 5, 10, 15, 19]);
+          for (const [i, tone] of fiveTones.entries()) assert.ok(rawPackets.some(p => p.lane === 'M' &&
+            p.marker?.dispatch_id === five().dispatch_id && p.marker.action_id === tone.id &&
+            p.marker.resolution === (i === 0 ? 'exact' : 'word_boundary')));
           // Hold both synthetic output devices while sending two ordinary keys
           // over SSH. Releasing old hardware callbacks must never revive a line.
           controlAudio('N', 'test-permission');

@@ -48,11 +48,12 @@ function App() {
   const [settings, setSettings] = useState(() => ({
     host: process.env.EXPO_PUBLIC_EMACSVOX_HOST ?? '', port: '8822', username: '', pin: '',
     transport: ssh ? 'ssh' : 'relay', input: 'field', keepAwake: 'yes', audio: 'direct',
-    connectOnOpen: 'no', controlOption: 'voiceover',
+    connectOnOpen: 'no', controlOption: 'voiceover', logSpeech: 'no',
     ...ssh?.loadProfile(),
   }));
   const active = useRef(false);
   const reconnect = useRef(Boolean(ssh && settings.transport === 'ssh' && settings.connectOnOpen === 'yes'));
+  useEffect(() => { nativeWire?.setSpeechLogging?.(settings.logSpeech === 'yes'); }, [settings.logSpeech]);
   function save(draft) {
     const next = Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, value.trim()]));
     ssh?.saveProfile(next);
@@ -103,6 +104,8 @@ function Session({settings, save, active, reconnect}) {
   const [keyboard, setKeyboard] = useState(null);
   const [screen, setScreen] = useState('');
   const [timing, setTiming] = useState('');
+  const [trace, setTrace] = useState('');
+  useEffect(() => { if (settings.logSpeech !== 'yes' || tab !== 'Diagnostics') setTrace(''); }, [settings.logSpeech, tab]);
   const sshMode = Boolean(ssh) && settings.transport === 'ssh';
   const useWire = sshMode && Boolean(nativeWire) && settings.worker === 'omnivox';
   const mixed = !useWire && Boolean(native) && settings.audio === 'mixed';
@@ -240,6 +243,12 @@ function Session({settings, save, active, reconnect}) {
       {native && <Text style={styles.status}>{useWire ? 'Omnivox on iPhone' : mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
       {useWire && <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />}
+      {useWire && nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
+      {nativeWire?.speechTrace && settings.logSpeech === 'yes' && <>
+        <Action title="Read speech trace" onPress={() => setTrace(nativeWire.speechTrace() || 'The speech trace is empty.')} />
+        <Action title="Send speech trace to WSL" disabled={!activeSession || !useWire} onPress={receiver.sendSpeechTrace} />
+        {trace ? <Text selectable style={styles.terminal}>{trace}</Text> : null}
+      </>}
       {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}
       {native && <Action title="Test three-second tone" onPress={() => receiver.testTone(3000)} />}
       <Action title="Test Open Object Sound" disabled={!prepared} onPress={receiver.testCue} />

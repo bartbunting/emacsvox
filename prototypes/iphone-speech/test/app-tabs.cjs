@@ -35,6 +35,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     global.requestAnimationFrame = setImmediate;
     global.cancelAnimationFrame = clearImmediate;
     const profile = {host: '100.64.0.1', port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
+    const logging = [], trace = {setSpeechLogging: on => logging.push(on), speechTrace: () => 'local speech sample'};
     const ssh = {hasShiftReturnShortcut, loadProfile: () => profile, keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
     const player = {};
     const rn = Object.fromEntries(['Button', 'View', 'Text', 'ScrollView', 'SafeAreaView', 'Pressable',
@@ -45,7 +46,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     let App;
     const platform = {react: React, 'react-native': rn,
       expo: {registerRootComponent: root => { App = root; }, requireNativeView: (_, name) => name ?? 'NativeTerminal',
-        requireOptionalNativeModule: name => name === 'IphoneTerminal' ? ssh : null},
+        requireOptionalNativeModule: name => name === 'IphoneTerminal' ? ssh : name === 'IphoneOmnivox' ? trace : null},
       'expo-asset': {}, 'expo-speech': {stop: async () => {}, getAvailableVoicesAsync: async () => []},
       'expo-audio': {useAudioPlayer: () => player}, '@expo/dom-webview': {WebView: 'WebView'},
       './assets/open-object.wav': 1, './assets/visual-line.wav': 2};
@@ -82,6 +83,8 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Diagnostics');
     assert.ok(tabs()[1].props.accessibilityState.selected);
     assert.ok(button('Test iPhone Voice'));
+    assert.equal(button('Read speech trace'), undefined);
+    assert.deepEqual(logging, [false]);
     assert.equal(app.root.findAllByType('WebView').length, 0);
     assert.equal(app.root.findAllByType('PhoneKeyboardContainer').length, 0);
     await select('Settings');
@@ -106,6 +109,8 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Settings');
     assert.equal(hostField().props.value, '100.64.0.1');
     const keepAwake = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Keep awake while connected');
+    const loggingSwitch = () => app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Log speech text and timing');
+    await act(() => loggingSwitch().props.onValueChange(true));
     await act(() => keepAwake.props.onValueChange(false));
     await act(() => button('Save settings').props.onPress());
     assert.equal(profile.keepAwake, 'no');
@@ -113,5 +118,16 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.equal(app.root.findByType('NativeTerminal'), terminal);
     assert.equal(sockets.length, 1);
     assert.equal(ws.readyState, 1);
+    assert.deepEqual(logging, [false, true]);
+    await select('Diagnostics');
+    await act(() => button('Read speech trace').props.onPress());
+    assert.ok(app.root.findAllByType('Text').some(el => el.props.children === 'local speech sample'));
+    assert.ok(button('Send speech trace to WSL'));
+    await select('Settings');
+    await act(() => loggingSwitch().props.onValueChange(false));
+    await act(() => button('Save settings').props.onPress());
+    await select('Diagnostics');
+    assert.equal(button('Read speech trace'), undefined);
+    assert.deepEqual(logging, [false, true, false]);
   });
 }

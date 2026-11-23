@@ -17,6 +17,6 @@ for slice in ios-arm64 ios-arm64-simulator; do
     docker run --rm --network none --cpus=1 --user "$(id -u):$(id -g)" -v "$pod:/pod:ro" swift:6.3-noble \
         swiftc -typecheck -module-cache-path /tmp/modules "${extra[@]}" \
         -Xcc "-I/pod/OmnivoxMobile.xcframework/$slice/Headers" /pod/WireSchedule.swift /pod/WireLane.swift \
-        /pod/WirePlayback.swift /pod/WireBookmarks.swift /pod/WirePresentation.swift
+        /pod/WirePlayback.swift /pod/WireBookmarks.swift /pod/WireSpeechTiming.swift /pod/WireSpeechTrace.swift /pod/WirePresentation.swift
     echo "Swift imported the $slice Omnivox headers."
 done

@@ -37,14 +37,12 @@ cancels the old dispatch and its remaining cues while an urgent permission
 finishes. Disconnecting during playback and reconnecting delivers fresh
 navigation. WSL supplies test speech samples and hardware completions.
 
-On build 5, enable Omnivox, select US Reed and run “Test timing inside
-TestCase” in Diagnostics. Listen for the internal capital during ordinary
-=C-n= with the same voice and capital settings. Repeat during the line,
-and test the built-in speaker and headphones. Record the reported exact,
-word or span placement alongside what you hear.
-
-Include the staged keyboard and capital-pitch fixes with that build.
-Track these listening comparisons alongside the port.
+On build 5, Emacs sent five separate capital positions and the phone
+placed four at the start of the speech span. On build 6, use US Reed
+to check five capitalized words, interruption and the cadence between
+words. Also try the internal capital in =TestCase=. The
+[[file:OMNIVOX.org::*What exists][cue timing and optional speech trace]] distinguish the timings the voice
+supplies from word starts the phone measures.
 
 1. *Everyday earcons.* Bundle the [[file:../../sounds/packs/accent/README.org][Accent pack]] and its inherited 3d cues.
    Match each recording selected by Emacsvox and play it locally.

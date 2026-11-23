@@ -11,10 +11,13 @@ public final class IphoneOmnivoxModule: Module {
   private var catalogue = ""
   private var markerStatus: String?
   private let importer = CueImport()
+  private let trace = WireSpeechTrace()
 
   public func definition() -> ModuleDefinition {
     Name("IphoneOmnivox")
     Events("wireReply")
+    Function("setSpeechLogging") { (enabled: Bool) in self.trace.setEnabled(enabled) }
+    Function("speechTrace") { self.trace.snapshot() }
     AsyncFunction("importCue") { (promise: Promise) in
       guard let controller = self.appContext?.utilities?.currentViewController() else { throw CueImportError.busy }
       try self.importer.pick(from: controller) { result in
@@ -31,9 +34,11 @@ public final class IphoneOmnivoxModule: Module {
       guard let root = bundles.compactMap({ $0.url(forResource: "OmnivoxSounds", withExtension: "bundle") }).first,
             let resources = WireResources(at: root) else { throw WireFailure.resources }
       for tag in ["M", "N"] {
-        let audio = WireAudio(resources)
+        let audio = WireAudio(resources, trace: self.trace, lane: tag)
         if tag == "M" {
-          audio.resolvedMarks = { [weak self] report in self?.markerStatus = report.description }
+          audio.resolvedMarks = { [weak self] report in
+            if report.exact + report.word + report.span > 0 { self?.markerStatus = report.description }
+          }
         }
         let lane = WireLane(audio) { [weak self] line in
           guard let self, self.connection == id else { return }
@@ -58,6 +63,7 @@ public final class IphoneOmnivoxModule: Module {
       let done: (Bool) -> Void = { ok in promise.resolve(ok) }
       switch sound {
       case "voice": try lane.permission("This is the iPhone voice test.", done: done)
+      case "last-timing": promise.resolve(self.markerStatus ?? "No reading with internal cue positions yet.")
       case "markers":
         let bundles = [Bundle.main, Bundle(for: IphoneOmnivoxModule.self)]
         guard let file = bundles.compactMap({ $0.url(forResource: "CapitalTiming", withExtension: "json") }).first,
@@ -89,6 +95,7 @@ public final class IphoneOmnivoxModule: Module {
     for lane in lanes.values { lane.stop() }
     lanes.removeAll()
     catalogue = ""
+    markerStatus = nil
   }
 
   private func refreshVoices() throws {

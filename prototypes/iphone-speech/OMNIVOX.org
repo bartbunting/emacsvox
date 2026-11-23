@@ -51,6 +51,30 @@ separate playback queues. Moving again retires the old navigation and its
 unheard cues. Local Stop silences both queues, including their remaining
 audio. Reconnecting creates fresh workers.
 
+Build 6 asks for word timings in plain text when each cue falls at a word
+start. If the voice omits a needed position, the app collects audio again
+in phrases beginning at the affected words. It measures those boundaries
+in speech samples and passes one speech window to the desktop mixer. A
+mixed-case word stays intact. The precision of a cue inside that word
+still depends on the timings its voice returns. Separately synthesized
+phrases can change the cadence.
+
+Read a line such as “Lime Plum Pear Fig Café” with =C-n=. Listen for one
+tone at each word, then press =C-n= during the line. In Diagnostics,
+“Last reading’s cue timing” reports the first reading’s marker counts,
+range mismatches and any measured word boundaries.
+
+For more detail, open Settings, turn on “Log speech text and timing” and
+activate “Save settings”. Repeat the reading. “Read speech trace” in
+Diagnostics shows speech text, Apple's request text, marker ranges and
+audio offsets. The phone keeps up to 64 KiB in memory. Turning the
+switch off and saving clears the phone copy. To share one snapshot with
+your WSL session, activate “Send speech trace to WSL” while connected.
+“Speech trace saved in WSL” confirms the write. The latest snapshot
+replaces the previous one in
+=~/.local/state/emacsvox/iphone/last-speech-trace.log=, or under
+=$XDG_STATE_HOME/emacsvox/iphone/= if you set =XDG_STATE_HOME=.
+
 ** Try the native worker
 
 Start the opt-in SSH relay and test window with the commands below. Use your

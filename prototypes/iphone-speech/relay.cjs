@@ -6,6 +6,8 @@ const { randomUUID } = require('node:crypto');
 const { once } = require('node:events');
 const http = require('node:http');
 const path = require('node:path');
+const fs = require('node:fs/promises');
+const os = require('node:os');
 const { WebSocketServer, WebSocket } = require('ws');
 const { attachTerminal, openPhoneFrame, frameControl, sshOffer } = require('./terminal.cjs');
 
@@ -177,8 +179,23 @@ function frameSpeech(directory, session, send, control, fail) {
   }};
 }
 
-function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket, sharedDirectory, routed = false, sshOnly = false} = {}) {
+const traceHome = path.join(process.env.XDG_STATE_HOME || path.join(os.homedir(), '.local', 'state'), 'emacsvox', 'iphone');
+
+async function saveSpeechTrace(directory, text) {
+  await fs.mkdir(directory, {recursive: true, mode: 0o700});
+  const staging = path.join(directory, '.trace-' + randomUUID());
+  try {
+    await fs.writeFile(staging, text, {flag: 'wx', mode: 0o600});
+    await fs.rename(staging, path.join(directory, 'last-speech-trace.log'));
+  } finally {
+    await fs.rm(staging, {force: true});
+  }
+}
+
+function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket, sharedDirectory, routed = false, sshOnly = false,
+                                  traceDirectory = traceHome} = {}) {
   let phone, producer, input, terminal;
+  let savingTrace = false;
   const send = message => {
     if (phone?.readyState !== WebSocket.OPEN) return;
     if (phone.bufferedAmount > maxBytes) return phone.terminate();
@@ -235,7 +252,9 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
           if (frameAttached && (!raw || voicesReady)) connected();
         }
         else if (packet.type === 'stop-all') send({type: 'stop', scope: 'all'});
-        else if (packet.type === 'reset-done' && packet.id === readyId && attached) send({type: 'ready', id: readyId});
+        else if (packet.type === 'reset-done' && packet.id === readyId && attached) {
+          send({type: 'ready', id: readyId, ...(raw && {speechTrace: true})});
+        }
         else if (attached && ['permission', 'resolved'].includes(packet.type) &&
                  typeof packet.id === 'string') send(packet);
       };
@@ -266,6 +285,13 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         const command = data.toString();
         if (raw && /^[MN] /.test(command)) {
           if (!endpoint.reply(command)) ws.terminate();
+        } else if (raw && attached && command.startsWith('speech-trace ')) {
+          const text = command.slice(13);
+          if (savingTrace || !text || Buffer.byteLength(text) > 65536) return send({type: 'trace-saved', ok: false});
+          savingTrace = true;
+          const acknowledge = ok => { if (phone === ws) send({type: 'trace-saved', ok}); };
+          saveSpeechTrace(traceDirectory, text).then(() => acknowledge(true), () => acknowledge(false))
+            .finally(() => { savingTrace = false; });
         } else if (command === 'ping') send({ type: 'pong' });
         else if (/^reset [0-9]{1,12}$/.test(command)) {
           input?.invalidate();
@@ -285,7 +311,7 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         terminal = pane || undefined;
         attached = true;
         if (raw && readyId) void control('stop', readyId);
-        else send({ type: 'ready', id: readyId, ...(pane && {keyboard: true}) });
+        else send({ type: 'ready', id: readyId, ...(raw && {speechTrace: true}), ...(pane && {keyboard: true}) });
         if (routed) void control('sync');
       }
       if (sharedDirectory) Promise.resolve(endpoint && endpoint.listening).then(() => {

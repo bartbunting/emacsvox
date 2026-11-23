@@ -6,6 +6,30 @@ const assert = require('node:assert/strict');
 const { createReceiver } = require('../receiver');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('speech text is sent only on request to a relay that advertises trace storage', async () => {
+  const sent = [], messages = [];
+  const ws = {readyState: 1, send: text => sent.push(text), close() {}};
+  const nativeWire = {open: async () => {}, close: async () => {}, stopPermission: async () => {},
+    addListener: () => ({remove() {}}), speechTrace: () => 'Lime Plum'};
+  const receiver = createReceiver({openSocket: () => ws, nativeWire, status() {}, playback: text => messages.push(text),
+    speech: {stop: async () => true}});
+  try {
+    receiver.connect();
+    const deliver = record => ws.onmessage({data: JSON.stringify(record)});
+    deliver({type: 'ssh', frame: 'phone', server: 'server', client: 'client'});
+    deliver({type: 'ready', id: 0});
+    receiver.sendSpeechTrace();
+    assert.match(messages.at(-1), /needs an update/);
+    deliver({type: 'ready', id: 0, speechTrace: true});
+    assert.deepEqual(sent, []);
+    receiver.sendSpeechTrace();
+    receiver.sendSpeechTrace();
+    assert.deepEqual(sent, ['speech-trace Lime Plum']);
+    deliver({type: 'trace-saved', ok: true});
+    assert.equal(messages.at(-1), 'Speech trace saved in WSL.');
+  } finally { receiver.disconnect(); }
+});
+
 test('unlock reattaches once with fresh speech and ignores the replaced SSH view', async () => {
   const sockets = [], spoken = [];
   const receiver = createReceiver({

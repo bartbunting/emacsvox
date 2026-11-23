@@ -10,6 +10,7 @@ final class WireMixer {
   private let clock = ov_ios_mix_new()!, token = RenderToken()
   private let work = DispatchQueue(label: "org.emacsvox.iphone.presentation", qos: .userInitiated)
   private let format: AVAudioFormat, synth: AVSpeechSynthesizer
+  private let trace: WireSpeechTrace, lane: String
   private let resolvedMarks: ((WireTimingReport) -> Void)?
   private let reached: ((String) -> Void)?
   private let presentation: WirePresentation?
@@ -21,7 +22,9 @@ final class WireMixer {
   private final class Capture {
     var deadline = ProcessInfo.processInfo.systemUptime + 3   // main queue
     var inputFull = false                                     // main queue
+    var writingPart = 0                                       // main queue
     var ended = false                                         // render queue
+    var part = 0                                              // render queue
     var startMarker: String?                                  // render queue
     var marked: WireMarkedAudio?                              // render queue
     let audio: (Packet) -> Void, finished: (Bool) -> Void
@@ -31,7 +34,10 @@ final class WireMixer {
     }
   }
 
-  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, reached: ((String) -> Void)? = nil) {
+  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, trace: WireSpeechTrace, lane: String,
+       resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, reached: ((String) -> Void)? = nil) {
+    self.trace = trace
+    self.lane = lane
     self.reached = reached
     self.presentation = presentation
     self.format = format
@@ -90,10 +96,9 @@ final class WireMixer {
               _ finished: @escaping (Bool) -> Void) {
     let bookmarks = WireBookmarks(item)
     guard presentation == nil || bookmarks != nil else { finished(false); return }
-    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil) else { finished(false); return }
     let capture = Capture(audio, finished)
     capture.startMarker = item.startMarker
-    capture.marked = bookmarks.map { WireMarkedAudio($0, tones: item.marks ?? []) }
+    capture.marked = bookmarks.map { WireMarkedAudio(item, $0) }
     current = capture
     work.async {
       let ready = self.tones(cues)
@@ -102,55 +107,68 @@ final class WireMixer {
         guard ready else { self.end(capture, ok: false); return }
         capture.deadline = ProcessInfo.processInfo.systemUptime + 3
         self.watch(capture)
-        let collect: AVSpeechSynthesizer.BufferCallback = { [weak self, weak capture] buffer in
-          guard let self, let capture else { return }
-          let stride = Int((buffer as? AVAudioPCMBuffer)?.format.streamDescription.pointee.mBytesPerFrame ?? 0)
-          // The system chooses its callback queue. A callback on main must
-          // never wait behind a producer throttled by hardware playback.
-          if Thread.isMainThread {
-            guard self.current === capture, !capture.inputFull else { return }
-            let pcm = buffer as? AVAudioPCMBuffer
-            let bytes = Int(pcm?.frameLength ?? 0) * Int(pcm?.format.channelCount ?? 0) * 4
+        self.write(item, bookmarks: bookmarks, capture: capture, part: 0)
+      }
+    }
+  }
+
+  private func write(_ item: WireItem, bookmarks: WireBookmarks?, capture: Capture, part: Int) {
+    guard current === capture else { return }
+    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil)
+    else { end(capture, ok: false); return }
+    let ticket = trace.begin("\(lane) part \(part) voice \(item.voice ?? "") text \((item.text ?? "").debugDescription)")
+    trace.append(ticket, "Requested anchors \(bookmarks?.marks.map(\.offset) ?? []), SSML \(bookmarks?.needsBookmarks == true). Apple speechString \(utterance.speechString.debugDescription)")
+    if let bookmarks, bookmarks.needsBookmarks { trace.append(ticket, "SSML request \(bookmarks.ssml.debugDescription)") }
+    capture.writingPart = part
+    capture.deadline = ProcessInfo.processInfo.systemUptime + 3
+    let collect: AVSpeechSynthesizer.BufferCallback = { [weak self, weak capture] buffer in
+      guard let self, let capture else { return }
+      let pcm = buffer as? AVAudioPCMBuffer
+      let stride = Int(pcm?.format.streamDescription.pointee.mBytesPerFrame ?? 0)
+      self.trace.append(ticket, "PCM frames \(pcm?.frameLength ?? 0), bytes per frame \(stride)")
+      // Apple can deliver PCM on main. Leave that queue free for Stop.
+      if Thread.isMainThread {
+        guard self.current === capture, capture.writingPart == part, !capture.inputFull else { return }
+        let bytes = Int(pcm?.frameLength ?? 0) * Int(pcm?.format.channelCount ?? 0) * 4
+        self.capacity.lock()
+        capture.inputFull = bytes > 64 * 1024 * 1024 - self.pendingInputBytes
+        if !capture.inputFull { self.pendingInputBytes += bytes }
+        self.capacity.unlock()
+        if capture.inputFull {
+          self.work.async { if capture.part == part { _ = self.post(nil, capture, end: true) } }
+        } else {
+          let samples = Result { try IphoneMixerModule.copySamples(buffer) }
+          self.work.async {
+            if capture.part == part { self.receive(samples, capture, stride: stride) }
             self.capacity.lock()
-            capture.inputFull = bytes > 64 * 1024 * 1024 - self.pendingInputBytes
-            if !capture.inputFull { self.pendingInputBytes += bytes }
+            self.pendingInputBytes -= bytes
             self.capacity.unlock()
-            if capture.inputFull {
-              self.work.async { _ = self.post(nil, capture, end: true) }
-            } else {
-              let samples = Result { try IphoneMixerModule.copySamples(buffer) }
-              self.work.async {
-                self.receive(samples, capture, stride: stride)
-                self.capacity.lock()
-                self.pendingInputBytes -= bytes
-                self.capacity.unlock()
-              }
-            }
-          } else {
-            self.work.sync { self.receive(Result { try IphoneMixerModule.copySamples(buffer) }, capture, stride: stride) }
           }
         }
-        if let bookmarks, bookmarks.needsBookmarks {
-          let useWords = bookmarks.acceptsWordRanges(in: utterance.speechString)
-          self.synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
-            guard let self, let capture else { return }
-            let names: [(String, Int)]
-            let words = useWords ? Array(markers.lazy.filter { $0.mark == .word }.prefix(4096).map { ($0.textRange, $0.byteSampleOffset) }) : []
-            if #available(iOS 17.0, *) {
-              names = Array(markers.lazy.filter { $0.mark == .bookmark }.prefix(513).map { ($0.bookmarkName, $0.byteSampleOffset) })
-            } else { names = [] }
-            self.work.async {
-              guard !capture.ended, let marked = capture.marked else { return }
-              for (name, byte) in names { marked.plan.observe(name, byte: byte) }
-              for (range, byte) in words { marked.plan.observeWord(range, byte: byte) }
-              if marked.pcmEnded && marked.plan.complete { self.finishMarked(capture, marked) }
-            }
-          })
-        } else {
-          self.synth.write(utterance, toBufferCallback: collect)
+      } else {
+        self.work.sync {
+          if capture.part == part { self.receive(Result { try IphoneMixerModule.copySamples(buffer) }, capture, stride: stride) }
         }
       }
     }
+    guard let bookmarks, bookmarks.needsTiming else { synth.write(utterance, toBufferCallback: collect); return }
+    let useWords = bookmarks.acceptsWordRanges(in: utterance.speechString)
+    synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
+      guard let self, let capture else { return }
+      let names: [(String, Int)]
+      let words = markers.lazy.filter { $0.mark == .word }.prefix(4096).map { ($0.textRange, $0.byteSampleOffset) }
+      if #available(iOS 17.0, *) {
+        names = Array(markers.lazy.filter { $0.mark == .bookmark }.prefix(513).map { ($0.bookmarkName, $0.byteSampleOffset) })
+      } else { names = [] }
+      let ranges = Array(words)
+      self.trace.append(ticket, "Named bookmarks and audio bytes \(names). Word UTF-16 ranges and audio bytes \(ranges). Text indices match \(useWords).")
+      self.work.async {
+        guard !capture.ended, capture.part == part, let marked = capture.marked else { return }
+        for (name, byte) in names { marked.timing.plan.observe(name, byte: byte) }
+        for (range, byte) in ranges { marked.timing.plan.observeWord(range, byte: byte, matchesSource: useWords) }
+        if marked.pcmEnded && marked.timing.plan.complete { self.finishMarked(capture, marked) }
+      }
+    })
   }
 
   private func watch(_ capture: Capture) {
@@ -213,7 +231,17 @@ final class WireMixer {
 
   private func finishMarked(_ capture: Capture, _ marked: WireMarkedAudio) {
     guard !capture.ended else { return }
-    let (pcm, report) = marked.render(clock: clock, token: token.pointer, presentation: presentation)
+    guard let result = marked.finishPart() else { _ = post(nil, capture, end: true); return }
+    let positions: [WireBookmarks.Position]
+    switch result {
+    case let .ready(points): positions = points
+    case let .next(item, _):
+      capture.part += 1
+      let part = capture.part, plan = marked.timing.plan
+      DispatchQueue.main.async { self.write(item, bookmarks: plan, capture: capture, part: part) }
+      return
+    }
+    let (pcm, report) = marked.render(positions, clock: clock, token: token.pointer, presentation: presentation)
     DispatchQueue.main.async { [weak self, weak capture] in
       guard let self, let capture, self.current === capture else { return }
       self.resolvedMarks?(report)
@@ -253,11 +281,12 @@ final class WireMixer {
           if !marked.append(samples, stride: bytesPerFrame) { _ = post(nil, capture, end: true) }
         } else {
           marked.pcmEnded = true
-          if marked.plan.complete { finishMarked(capture, marked) }
+          if marked.timing.plan.complete { finishMarked(capture, marked) }
           else {
-            // Allow outstanding metadata callbacks to arrive. Only reported
-            // audio offsets determine placement, including on expiry.
-            work.asyncAfter(deadline: .now() + .milliseconds(150)) { self.finishMarked(capture, marked) }
+            let part = capture.part
+            work.asyncAfter(deadline: .now() + .milliseconds(150)) {
+              if capture.part == part { self.finishMarked(capture, marked) }
+            }
           }
         }
         return

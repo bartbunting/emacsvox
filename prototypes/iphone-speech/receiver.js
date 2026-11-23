@@ -28,6 +28,7 @@ async function findVoice(speech) {
 function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, nativeWire, openSocket, status, playback = () => {}, voiceStatus = () => {},
                           keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
   let wire, socket, heartbeat, lastReceived, resetId, ready;
+  let traceAllowed = false, tracePending = false;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
   let sshKeyboardConnected = false, sshKeyboardPublished = false;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
@@ -235,6 +236,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     sshKeyboardConnected = sshKeyboardPublished = false;
     sessionActive(false);
     ready = false;
+    traceAllowed = tracePending = false;
     keyboard(null);
     sshOffer(null);
     clearPermissions();
@@ -292,6 +294,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
         status('Finding iPhone voices');
       } else if (record.type === 'ready' && record.id === resetId) {
         ready = true;
+        if (record.speechTrace === true) traceAllowed = true;
         attempt = 0;
         status('Connected');
         if (record.keyboard === true) {
@@ -302,6 +305,9 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
             }
           }});
         } else publishSshKeyboard();
+      } else if (record.type === 'trace-saved' && tracePending) {
+        tracePending = false;
+        playback(record.ok === true ? 'Speech trace saved in WSL.' : 'WSL could not save the speech trace.');
       } else if (record.type === 'ssh' && typeof record.frame === 'string' &&
                  typeof record.client === 'string' && typeof record.server === 'string') {
         if (frameId) return disconnect('Unexpected second SSH offer.');
@@ -396,6 +402,19 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     return true;
   }
 
+  function sendSpeechTrace() {
+    if (!wire || !ready || socket?.readyState !== 1) return playback('Connect to WSL to send the speech trace.');
+    if (!traceAllowed) return playback('This relay needs an update to receive speech traces.');
+    if (tracePending) return playback('Waiting for WSL to save the trace.');
+    const text = nativeWire.speechTrace();
+    if (!text) return playback('The speech trace is empty.');
+    try {
+      socket.send('speech-trace ' + text);
+      tracePending = true;
+      playback('Sending speech trace to WSL.');
+    } catch { playback('Could not send the speech trace.'); }
+  }
+
   function testVoice(mix = false) {
     if (localWireTest('voice')) return;
     clearPermissions();
@@ -412,7 +431,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   return { connect: () => connect(), disconnect, appState, terminalConnected, terminalClosed, stop, testTone,
-    testMarkers: () => localWireTest('markers'),
+    testMarkers: () => localWireTest('markers'), lastTiming: () => localWireTest('last-timing'), sendSpeechTrace,
     testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => localWireTest('accent') || playCue(openObjectCue),
     testVisualLine: () => localWireTest('chime') || playCue(visualLineCue) };
 }

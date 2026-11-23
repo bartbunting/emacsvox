@@ -28,10 +28,24 @@ final class TestOutput: WireOutput {
     guard let items = plan.prepare(bundle: loader, personal: nil) else { done(false); return }
     var reached: [String] = []
     for item in items {
-      // Stand in for Apple's native PCM and bookmark callbacks at known sample
-      // positions. Production obtains both from AVSpeechSynthesizer.
-      let frames = 4096, length = max(1, item.text?.utf8.count ?? 0)
-      let points = (item.anchors ?? []).map { OvAnchorFrame(frame: UInt32($0.offset * frames / length), precision: 0) }
+      // The single-word fixture has named bookmarks. Other readings receive
+      // audio only, as on the reported handset.
+      var timing = WireSpeechTiming(item, WireBookmarks(item)!)
+      var frames = 4096
+      if item.text == "TestCase" {
+        timing.plan.observe("ov-4", byte: 3780)
+        timing.plan.observe(WireBookmarks.end, byte: frames * 2)
+      }
+      var result = timing.finish(bytesPerFrame: 2, totalFrames: frames)
+      while case let .next(part, discard)? = result {
+        if discard { frames = 0 }
+        frames += 1100 + (part.text?.utf8.count ?? 0)
+        result = timing.finish(bytesPerFrame: 2, totalFrames: frames)
+      }
+      guard case let .ready(positions)? = result else { done(false); return }
+      let points = positions.map {
+        OvAnchorFrame(frame: UInt32($0.frame), precision: $0.precision == .exact ? 0 : $0.precision == .word ? 1 : 2)
+      }
       let samples = [Float](repeating: 0.125, count: frames)
       guard let pcm = ov_ios_render_presentation(plan.pointer, samples, samples.count, 44100, 1, points, points.count, plan.token)
       else { done(false); return }
@@ -85,6 +99,19 @@ final class TestOutput: WireOutput {
     precondition(lane.setVoices(voices, preferred: "test-1"))
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
+      let trace = WireSpeechTrace()
+      func disabledText() -> String { fatalError("Read speech text while logging was disabled") }
+      precondition(trace.begin(disabledText()) == nil && trace.snapshot().isEmpty)
+      trace.setEnabled(true)
+      let old = trace.begin("Lime Plum")
+      trace.append(old, "Word at 5")
+      precondition(trace.snapshot().contains("Lime Plum") && trace.snapshot().contains("Word at 5"))
+      trace.setEnabled(false)
+      trace.setEnabled(true)
+      trace.append(old, disabledText())
+      precondition(trace.snapshot().isEmpty)
+      _ = trace.begin(String(repeating: "🦜", count: 22000))
+      precondition(trace.snapshot().utf8.count <= 65536 && trace.snapshot().hasSuffix("[entry truncated]") && !trace.snapshot().contains("�"))
       var letters: [WireItem] = []
       output.observeSpeech = { letters.append($0) }
       try feed("tts_set_pitch_multiplier 0.8")
@@ -111,6 +138,7 @@ final class TestOutput: WireOutput {
       try feed("tts_set_voice {test-1}")
       print("The desktop timeline supplied one intact TestCase with both capital positions and the selected phone voice.")
       try checkTimelinePlayback(CommandLine.arguments[1], voices: voices, envelope: envelope)
+      try checkMissingWordTiming(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMixedPlayback(CommandLine.arguments[1], voices: voices)
       let token = ov_ios_token_new()!
       let pcm = ov_ios_tone(660, 480, 1, token)!

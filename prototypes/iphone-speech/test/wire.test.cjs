@@ -29,7 +29,8 @@ test('UTF-8 split at a code point, exactly 512 KiB with CRLF, bad records then r
 
 test('SSH carrier returns replies to the issuing worker, waits for both stop barriers and retires old sockets', {timeout: 8000}, async t => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'wire-'));
-  const relay = createRelay('127.0.0.1', '127.0.0.1', {sharedDirectory: directory, routed: true, sshOnly: true});
+  const traceDirectory = path.join(directory, 'traces');
+  const relay = createRelay('127.0.0.1', '127.0.0.1', {sharedDirectory: directory, routed: true, sshOnly: true, traceDirectory});
   await fs.writeFile(path.join(directory, 'ready'), '/bin/true');
   relay.httpServer.listen(0, '127.0.0.1');
   await once(relay.httpServer, 'listening');
@@ -55,10 +56,19 @@ test('SSH carrier returns replies to the issuing worker, waits for both stop bar
     main.write('iphone_event ' + JSON.stringify({type: 'attached', id: offer.frame}) + '\n');
     assert.equal(JSON.parse(await next()).type, 'discovering');
     main.write('iphone_event ' + JSON.stringify({type: 'routing-ready', id: offer.frame}) + '\n');
-    assert.equal(JSON.parse(await next()).type, 'ready');
+    assert.deepEqual(JSON.parse(await next()), {type: 'ready', id: 0, speechTrace: true});
     return {ws, main, notify, next};
   }
   const first = await connect();
+  await assert.rejects(fs.stat(traceDirectory), {code: 'ENOENT'});
+  const traceFile = path.join(traceDirectory, 'last-speech-trace.log');
+  const snapshot = 'Café test\nNamed bookmarks 0';
+  first.ws.send('speech-trace ' + snapshot);
+  assert.deepEqual(JSON.parse(await first.next()), {type: 'trace-saved', ok: true});
+  first.ws.send('speech-trace ' + 'x'.repeat(65537));
+  assert.deepEqual(JSON.parse(await first.next()), {type: 'trace-saved', ok: false});
+  assert.equal(await fs.readFile(traceFile, 'utf8'), snapshot);
+  assert.equal((await fs.stat(traceFile)).mode & 0o777, 0o600);
   const reply = '__OMNIVOX_CONTROL__ ' + 'A'.repeat(12000);
   for (const [tag, s] of [['M', first.main], ['N', first.notify]]) {
     s.write('omnivox_control {same-id}\r\n');
@@ -74,7 +84,7 @@ test('SSH carrier returns replies to the issuing worker, waits for both stop bar
   first.main.write(marker + 'q barrier\n');
   assert.equal(await first.next(), 'M q barrier');
   first.notify.write(marker);
-  assert.deepEqual(JSON.parse(await first.next()), {type: 'ready', id: 9});
+  assert.deepEqual(JSON.parse(await first.next()), {type: 'ready', id: 9, speechTrace: true});
   first.main.write('q partial');
   const closed = once(first.main, 'close');
   const second = await connect();

@@ -115,6 +115,7 @@ private final class EffectStream {
 final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private let synth = AVSpeechSynthesizer(), engine = AVAudioEngine()
   private let resources: WireResources
+  private let trace: WireSpeechTrace, lane: String
   private let preparation = DispatchQueue(label: "org.emacsvox.iphone.resource-preparation", qos: .userInitiated)
   private let bufferSynth = AVSpeechSynthesizer()
   private let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
@@ -128,8 +129,10 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   var resolvedMarks: ((WireTimingReport) -> Void)?
   private var observers: [NSObjectProtocol] = []
 
-  init(_ resources: WireResources) {
+  init(_ resources: WireResources, trace: WireSpeechTrace, lane: String) {
     self.resources = resources
+    self.trace = trace
+    self.lane = lane
     tones = EffectStream(resources, format: format)
     sounds = EffectStream(resources, format: format)
     inserts = EffectStream(resources, format: format)
@@ -194,7 +197,8 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     }
     let key = ObjectIdentifier(node)
     node.volume = 1
-    let mixer = WireMixer(format: format, synth: bufferSynth, resolvedMarks: resolvedMarks, presentation: presentation, reached: reached)
+    let mixer = WireMixer(format: format, synth: bufferSynth, trace: trace, lane: lane,
+                          resolvedMarks: resolvedMarks, presentation: presentation, reached: reached)
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
       enqueue: { buffer, played in
         node.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
@@ -247,6 +251,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     case .speech:
       guard !(item.text ?? "").isEmpty else { done(true); return }
       guard let utterance = wireUtterance(item) else { done(false); return }
+      _ = trace.begin("\(lane) direct speech \(utterance.speechString.debugDescription)")
       speech = utterance
       spoken = done
       synth.speak(utterance)

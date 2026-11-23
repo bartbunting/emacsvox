@@ -6,11 +6,16 @@ import OmnivoxMobile
 // Apple can supply markers after the PCM they describe. Retain at most one
 // bounded marked span. Unmarked speech uses the progressive renderer.
 final class WireMarkedAudio {
-  var plan: WireBookmarks, pcmEnded = false
+  let original: WireBookmarks
+  var timing: WireSpeechTiming, pcmEnded = false
   private var samples: [Float] = []
   private var rate: UInt32 = 0, channels = 0, bytesPerFrame = 0
   private let tones: [WireToneMark]
-  init(_ plan: WireBookmarks, tones: [WireToneMark]) { self.plan = plan; self.tones = tones }
+  init(_ item: WireItem, _ plan: WireBookmarks) {
+    original = plan
+    timing = WireSpeechTiming(item, plan)
+    tones = item.marks ?? []
+  }
 
   func append(_ buffer: AVAudioPCMBuffer, stride: Int) -> Bool {
     let frames = Int(buffer.frameLength), nextRate = UInt32(buffer.format.sampleRate)
@@ -30,13 +35,27 @@ final class WireMarkedAudio {
     return true
   }
 
-  func render(clock: OpaquePointer, token: OpaquePointer, presentation: WirePresentation?) -> (OpaquePointer?, WireTimingReport) {
-    let positions = plan.placements(bytesPerFrame: bytesPerFrame, totalFrames: samples.count / max(1, channels))
+  func finishPart() -> WireSpeechTiming.Result? {
+    let result = timing.finish(bytesPerFrame: bytesPerFrame, totalFrames: samples.count / max(1, channels))
+    if case let .next(_, discardAudio)? = result {
+      if discardAudio {
+        samples.removeAll()
+        rate = 0
+        channels = 0
+        bytesPerFrame = 0
+      }
+      pcmEnded = false
+    }
+    return result
+  }
+
+  func render(_ positions: [WireBookmarks.Position], clock: OpaquePointer, token: OpaquePointer,
+              presentation: WirePresentation?) -> (OpaquePointer?, WireTimingReport) {
     var anchors: [OvAnchorFrame] = []
-    var report = WireTimingReport()
+    var report = timing.report
     var reported = Set<Int>()
-    for (mark, position) in zip(plan.marks, positions) {
-      if mark.offset > 0 && mark.offset < plan.length && reported.insert(mark.offset).inserted {
+    for (mark, position) in zip(original.marks, positions) {
+      if mark.offset > 0 && mark.offset < original.length && reported.insert(mark.offset).inserted {
         switch position.precision {
         case .exact: report.exact += 1
         case .word: report.word += 1

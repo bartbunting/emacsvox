@@ -3,6 +3,96 @@
 import Foundation
 import OmnivoxMobile
 
+// Match the five cue offsets from the handset. Give Apple no bookmarks and
+// deliberately uneven phrase durations. Compare the whole Rust output to PCM.
+func checkMissingWordTiming(_ root: String, voices: String, envelope: Data) throws {
+  let offsets = [0, 5, 10, 15, 19], parts = ["Lime ", "Plum ", "Pear ", "Fig ", "Café"]
+  let lengths = [319, 971, 453, 617, 287]
+  var document = try JSONSerialization.jsonObject(with: envelope) as! [String: Any]
+  var spans = document["spans"] as! [[String: Any]]
+  spans[0]["text"] = parts.joined()
+  document["spans"] = spans
+  let pair = Array((document["actions"] as! [[String: Any]]).prefix(2))
+  document["actions"] = offsets.flatMap { offset in
+    pair.enumerated().map { i, prototype -> [String: Any] in
+      var action = prototype, position = action["position"] as! [String: Any]
+      position["utf8_offset"] = offset
+      action["id"] = (i == 0 ? "tone." : "capital.") + String(offset)
+      action["position"] = position
+      return action
+    }
+  }
+  let output = TestOutput(root), lane = WireLane(output) { _ in }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  try lane.feed("tts_split_caps 0", muted: false)
+  let record = "emacsvox_timeline " + (try JSONSerialization.data(withJSONObject: document)).base64EncodedString()
+  let accepted = Array(record.utf8).withUnsafeBufferPointer { ov_ios_record(lane.worker, $0.baseAddress, $0.count) }!
+  ov_ios_string_free(accepted)
+  let presentation = WirePresentation(ov_ios_take_presentation(lane.worker)!, key: nil, reply: { _ in })
+  let items = presentation.prepare(bundle: output.loader, personal: nil)!
+  precondition(items.count == 1)
+  let item = items[0], plan = WireBookmarks(item)!
+  precondition(plan.needsTiming && !plan.needsBookmarks)
+  var timing = WireSpeechTiming(item, plan)
+  var result = timing.finish(bytesPerFrame: 2, totalFrames: 5497), dry: [Float] = [], expected: [Float] = []
+  let tone = ov_ios_tone(440, 20, 1, presentation.token)!
+  defer { ov_ios_pcm_free(tone) }
+  let insert = Array(UnsafeBufferPointer(start: ov_ios_samples(tone), count: ov_ios_frames(tone) * 2))
+  var ends: [String: Int] = [:], resolutions: [String: String] = [:]
+  for (i, text) in parts.enumerated() {
+    guard case let .next(part, discard)? = result else { fatalError("Missing word timing fell back to the whole line") }
+    precondition(part.text == text && part.voice == item.voice && part.rate == item.rate && discard == (i == 0))
+    let voice = Float(i + 1) / 16
+    dry += Array(repeating: voice, count: lengths[i])
+    expected += insert
+    ends["capital." + String(offsets[i])] = expected.count / 2
+    expected += Array(repeating: voice, count: lengths[i] * 2)
+    result = timing.finish(bytesPerFrame: 2, totalFrames: dry.count)
+  }
+  guard case let .ready(positions)? = result else { fatalError("The measured speech did not finish") }
+  precondition(timing.report.measuredWords && timing.report.wordsReceived == 0)
+  let points = positions.map { OvAnchorFrame(frame: UInt32($0.frame), precision: $0.precision == .exact ? 0 : 1) }
+  let pcm = ov_ios_render_presentation(presentation.pointer, dry, dry.count, 44100, 1, points, points.count, presentation.token)!
+  defer { ov_ios_pcm_free(pcm) }
+  precondition(ov_ios_frames(pcm) * 2 == expected.count)
+  precondition(expected.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(pcm), count: expected.count)))
+  var reached: [String: Int] = [:]
+  for region in presentation.regions(frames: ov_ios_frames(pcm))! {
+    for line in region.events {
+      let payload = Data(base64Encoded: String(line.split(separator: " ")[1]))!
+      let value = try JSONSerialization.jsonObject(with: payload) as! [String: Any]
+      guard let id = value["action_id"] as? String else { continue }
+      if value["type"] as? String == "semantic_event_reached" { reached[id] = region.frames.upperBound }
+      if let resolution = value["resolution"] as? String { resolutions[id] = resolution }
+    }
+  }
+  precondition(reached == ends)
+  for offset in offsets {
+    precondition(resolutions["tone." + String(offset)] == (offset == 0 ? "exact" : "word_boundary"))
+  }
+
+  var timed = WireSpeechTiming(item, plan), source = 0, frame = 0
+  for (i, text) in parts.enumerated() {
+    timed.plan.observeWord(NSRange(location: source, length: text.trimmingCharacters(in: .whitespaces).utf16.count), byte: frame * 2)
+    source += text.utf16.count
+    frame += lengths[i]
+  }
+  guard case let .ready(same)? = timed.finish(bytesPerFrame: 2, totalFrames: frame) else { fatalError("Split a fully timed reading") }
+  precondition(same.map(\.frame) == positions.map(\.frame) && !timed.report.measuredWords)
+  var broken = plan
+  for offset in offsets { broken.observeWord(NSRange(location: offset, length: 1), byte: 0) }
+  precondition(broken.recoveryCuts(bytesPerFrame: 2, totalFrames: frame) == Array(offsets.dropFirst()))
+
+  let mixed = WireItem(kind: .speech, text: "Café déjà TestCase end", anchors: [WireAnchor(offset: 13), WireAnchor(offset: 17)])
+  var unicode = WireSpeechTiming(mixed, WireBookmarks(mixed)!)
+  unicode.plan.observeWord(NSRange(location: 2, length: 3), byte: 100, matchesSource: false)
+  guard case let .next(prefix, _)? = unicode.finish(bytesPerFrame: 2, totalFrames: 750),
+        case let .next(wholeWord, _)? = unicode.finish(bytesPerFrame: 2, totalFrames: 250)
+  else { fatalError("Lost the Unicode word boundary") }
+  precondition(prefix.text == "Café déjà " && wholeWord.text == "TestCase " && unicode.report.wordsMismatched == 1)
+  print("Five missing or unusable markers recovered at separate measured words. Rust tone samples and played semantic events match all five positions.")
+}
+
 // Drive the production scheduler with explicit Apple synthesis and hardware
 // completion callbacks. Rust's sample comparisons run in the paired crate.
 func checkMixedPlayback(_ root: String, voices: String) throws {
