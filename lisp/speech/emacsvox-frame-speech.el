@@ -32,6 +32,7 @@
 
 (require 'cl-lib)
 (require 'seq)
+(require 'omnivox-inventory)
 
 (defvar tts-quiet)
 (defvar emacsvox-play-program)
@@ -57,11 +58,12 @@
 (defvar emacsvox-frame-speech--desktop-values nil)
 (defvar emacsvox-frame-speech--installed nil)
 (defconst emacsvox-frame-speech--variables
-  '(tts-speaker-process tts-notify-process tts-program tts-speech-rate
-    emacsvox-play-program omnivox-control-capabilities omnivox-engine-inventory
-    omnivox-engine-inventory-time omnivox-logical-voice-registration
-    omnivox-routing-policy-registration omnivox-control-last-error tts-handle-unicode
-    omnivox-available-voices))
+  (append '(tts-speaker-process tts-notify-process tts-program tts-speech-rate
+            emacsvox-play-program omnivox-control-capabilities omnivox-engine-inventory
+            omnivox-engine-inventory-time omnivox-logical-voice-registration
+            omnivox-routing-policy-registration omnivox-control-last-error tts-handle-unicode
+            omnivox-available-voices)
+          (mapcar #'car omnivox--voice-api-bindings)))
 
 (defun emacsvox-frame-speech-endpoint (&optional frame)
   "Return the speech attachment for FRAME, or nil for ordinary desktop speech.
@@ -81,19 +83,21 @@ asynchronous work and pass it to `emacsvox-frame-speech-call' on completion."
 
 (defun emacsvox-frame-speech--values (endpoint)
   (let* ((main (emacsvox-frame-speech--endpoint-main endpoint))
+         (capabilities (and (boundp 'omnivox--control-capabilities-property)
+                            (process-get main omnivox--control-capabilities-property)))
          (inventory (and (boundp 'omnivox--control-inventory-property)
                          (process-get main omnivox--control-inventory-property))))
-    (list main (or (emacsvox-frame-speech--endpoint-notification endpoint) main)
-          (emacsvox-frame-speech--endpoint-program endpoint)
-          (emacsvox-frame-speech--endpoint-rate endpoint)
-          nil
-          (and (boundp 'omnivox--control-capabilities-property)
-               (process-get main omnivox--control-capabilities-property))
-          inventory (process-get main 'omnivox-inventory-received-at)
-          (and (boundp 'omnivox--control-registration-property)
-               (process-get main omnivox--control-registration-property))
-          (plist-get inventory :routing_policy) nil
-          (bound-and-true-p tts-handle-unicode) nil)))
+    (nconc
+     (list main (or (emacsvox-frame-speech--endpoint-notification endpoint) main)
+           (emacsvox-frame-speech--endpoint-program endpoint)
+           (emacsvox-frame-speech--endpoint-rate endpoint)
+           nil capabilities inventory (process-get main 'omnivox-inventory-received-at)
+           (and (boundp 'omnivox--control-registration-property)
+                (process-get main omnivox--control-registration-property))
+           (plist-get inventory :routing_policy) nil
+           (bound-and-true-p tts-handle-unicode) nil)
+     (if capabilities (mapcar #'cdr omnivox--voice-api-bindings)
+       (last emacsvox-frame-speech--desktop-values (length omnivox--voice-api-bindings))))))
 
 (defun emacsvox-frame-speech-call (endpoint function &rest args)
   "Call FUNCTION with ARGS through ENDPOINT. Return its result.

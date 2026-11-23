@@ -2573,18 +2573,8 @@ DISCOVERY selects the bounded background discovery observer."
   (fset 'tts-voice-defined-p #'omnivox-voice-defined-p)
   (fset 'tts-get-voice-command #'omnivox-get-voice-command)
   (fset 'tts-define-voice-from-acss #'omnivox-define-voice-from-acss)
-  (setq tts-voice-capabilities-function #'omnivox-voice-capabilities)
-  (setq tts-voice-inventory-function #'omnivox-voice-inventory)
-  (setq tts-voice-inventory-refresh-function
-        #'omnivox-refresh-voice-inventory)
-  (setq tts-voice-configuration-apply-function
-        #'omnivox-apply-voice-configuration)
-  (setq tts-last-realized-voice-function
-        #'omnivox-last-realized-voice)
-  (setq tts-engine-recovery-probe-function
-        #'omnivox-request-engine-recovery-probe)
-  (setq tts-voice-preview-function #'omnivox-preview-voice-sequence)
-  (setq tts-voice-preview-code-function #'tts-default-voice-preview-code)
+  (dolist (binding omnivox--voice-api-bindings)
+    (set (car binding) (cdr binding)))
   (setq tts-default-speech-rate omnivox-default-speech-rate)
   (set-default 'tts-default-speech-rate omnivox-default-speech-rate)
   (setq tts-speech-rate omnivox-default-speech-rate)

@@ -245,6 +245,17 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
          (iphone-frame-speech--worker-call worker #'tts-speak "Phone voice preview failed")))
      25)))
 
+(defun iphone-voices-tune ()
+  "Open the voice editor to audition adjustments to the selected iPhone voice."
+  (interactive)
+  (require 'emacsvox-aural-voice-editor)
+  (let* ((id (iphone-voices--selected))
+         (engine (tts--voice-preview-engine "ios" (tts-voice-inventory)))
+         (voice (tts--inventory-exact-voice engine id)))
+    (unless voice (user-error "This voice is no longer installed. Press g to refresh"))
+    (emacsvox-aural-voice-editor-experiment
+     (list engine voice) (current-buffer) emacsvox-aural-voice-workbench-preview-text)))
+
 (defun iphone-voices--apply (voice &optional role)
   (let* ((main (iphone-voices--owner))
          (workers (list main (process-get main 'iphone-notify)))
@@ -325,13 +336,13 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
   (emacsvox-aural-ui-with-help-window
     (princ (concat "iPhone voices\n\n"
                    "Up and Down move by voice. Left and Right read columns. Space reads the row.\n"
-                   "/ finds an installed voice. p or P auditions it. S stops a sample.\n"
+                   "/ finds an installed voice. p or P auditions it. t opens its tuning editor. S stops a sample.\n"
                    "L chooses the languages shown on both the phone and desktop.\n"
                    "Return applies this reading voice to both phone workers. r assigns it to one named role.\n"
-                   "v adjusts phone speech and audio levels. g refreshes the installed voices. q goes back.\n"))))
+                   "v adjusts speech and audio levels for the whole phone. g refreshes the installed voices. q goes back.\n"))))
 
 (define-derived-mode iphone-voices-mode emacsvox-aural-tabulated-mode "iPhone Voices"
-  "Browse installed iPhone voices. p previews, Return applies, r assigns a role and v adjusts speech."
+  "Browse installed iPhone voices. p previews, t tunes, Return applies, r assigns a role and v adjusts phone speech."
   (setq-local emacsvox-voice-browser--redraw
               (lambda () (when (and (processp iphone-voices--main) (process-live-p iphone-voices--main))
                            (iphone-voices--draw iphone-voices--main))))
@@ -341,6 +352,7 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
   (tabulated-list-init-header))
 
 (dolist (binding '(("p" . iphone-voices-preview) ("P" . iphone-voices-preview)
+                   ("t" . iphone-voices-tune)
                    ("/" . iphone-voices-find) ("?" . iphone-voices-help) ("RET" . iphone-voices-apply)
                    ("r" . iphone-voices-role) ("v" . iphone-voices-adjust) ("L" . emacsvox-choose-voice-languages)
                    ("g" . iphone-voices-refresh) ("R" . iphone-voices-refresh)))

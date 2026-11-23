@@ -243,7 +243,6 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                      :palette palette :voice name :policy (emacsvox-aural-voice-editor--policy)
                      :destination palette :summary nil :owner (plist-get opened :owner)
                      :diagnostics (plist-get opened :diagnostics) :experiment nil :new new
-                     :inventory (tts-voice-inventory)
                      :text emacsvox-aural-voice-workbench-preview-text :expanded nil :effects nil
                      :automatic-sample t :preview-generation 0 :preview-result nil :origin nil :buffer nil)))
           (puthash key context emacsvox-aural-voice-editor--contexts)
@@ -1254,6 +1253,7 @@ Return nil to stay, a feedback string for a draft decision, or t when clean."
   "Show retained CONTEXT, recording a return position in SOURCE."
   ;; Keep context identity stable for the registry and asynchronous callbacks.
   (emacsvox-aural-voice-editor--invalidate context)
+  (emacsvox-aural-voice-editor--context-put context :inventory (tts-voice-inventory))
   (dolist (key '(:origin-row :origin-column :announced-apply :seen-revision))
     (unless (plist-member context key) (nconc context (list key nil))))
   (let ((ordinary (and (buffer-live-p source) (emacsvox-aural-inspection-remember-source-buffer source)))

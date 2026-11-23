@@ -44,6 +44,17 @@
 (defvar omnivox-engine-inventory-time)
 (defvar omnivox--control-inventory-property)
 
+(defconst omnivox--voice-api-bindings
+  '((tts-voice-capabilities-function . omnivox-voice-capabilities)
+    (tts-voice-inventory-function . omnivox-voice-inventory)
+    (tts-voice-inventory-refresh-function . omnivox-refresh-voice-inventory)
+    (tts-voice-configuration-apply-function . omnivox-apply-voice-configuration)
+    (tts-last-realized-voice-function . omnivox-last-realized-voice)
+    (tts-engine-recovery-probe-function . omnivox-request-engine-recovery-probe)
+    (tts-voice-preview-function . omnivox-preview-voice-sequence)
+    (tts-voice-preview-code-function . tts-default-voice-preview-code))
+  "Voice API functions used by a negotiated Omnivox worker.")
+
 (defun omnivox--status-value (record fallback)
   "Return status string from RECORD, or FALLBACK."
   (let ((status (and (listp record) (plist-get record :status))))

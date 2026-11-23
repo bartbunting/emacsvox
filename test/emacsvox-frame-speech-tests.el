@@ -31,6 +31,28 @@
       (delete-process main)
       (delete-process other))))
 
+(ert-deftest emacsvox-frame-speech-auditions-use-the-workers-voice-adapter ()
+  (require 'omnivox-voices)
+  (let* ((main (make-pipe-process :name "Frame audition" :noquery t))
+         (frame (selected-frame))
+         (endpoint (emacsvox-frame-speech-attach frame main))
+         (tts-voice-inventory-function #'tts-default-voice-inventory)
+         (tts-voice-preview-function #'tts-default-voice-preview-sequence)
+         (adapter (lambda () (list tts-voice-inventory-function tts-voice-preview-function)))
+         (desktop (funcall adapter)))
+    (unwind-protect
+        (progn
+          (should (equal desktop (emacsvox-frame-speech-call endpoint adapter)))
+          (process-put main omnivox--control-capabilities-property '(:features ("engine_inventory")))
+          (emacsvox-frame-speech-call
+           endpoint (lambda ()
+                      (should (equal (funcall adapter)
+                                     '(omnivox-voice-inventory omnivox-preview-voice-sequence)))
+                      (should (equal desktop (emacsvox-frame-speech-call nil adapter)))))
+          (should (equal desktop (funcall adapter))))
+      (emacsvox-frame-speech-detach frame)
+      (delete-process main))))
+
 (ert-deftest emacsvox-frame-speech-local-worker-on-a-remote-desktop ()
   (let* ((frame (selected-frame)) (main (make-pipe-process :name "Local frame" :noquery t))
          (tts-program "omnivox") (omnivox-remote-host "127.0.0.1")

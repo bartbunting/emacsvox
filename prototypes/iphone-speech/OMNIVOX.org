@@ -135,8 +135,9 @@ while browsing, the list returns to the same installed voice and sends the
 next preview to the new connection. Press =p= or
 =P= for an exact preview, Return to
 use it as the phone's reading fallback, =r= to give a named role a
-different voice, =v= for rate, character scale, pitch, speech volume,
-tone volume or earcon volume, and =g= to refresh. Apply waits for both
+different voice, =t= to experiment with the selected voice in the common
+editor, and =g= to refresh. The =v= command changes rate, character scale,
+pitch or output levels for the whole phone. Apply waits for both
 workers' replies. The phone profile is saved in =iphone-omnivox.json=
 under the Emacs user directory. Phone sessions using this directory share
 those choices. Both connections use the palette's ordered choices for
@@ -146,6 +147,14 @@ A desktop with Harry reads a directory in Harry, and an iPhone with Flo
 reads it in Flo. A phone-only assignment made with =r= takes priority for
 that role. The phone uses its reading fallback when the role has no
 usable choice. VoiceOver chooses its voice separately.
+
+To tune only the iPhone fallback for Dired directories, open
+=C-e H v p= on the phone, select your palette's =dired_directory= voice
+and press =e=. Expand /Fallbacks/, press Return on the iOS Flo row and
+choose /Customize this voice/. Open /More adjustments and effects/ for
+reverb, high-pass and low-pass. Left and Right adjust the current field.
+=P= auditions Flo with its adjustments. =w= saves and applies the draft.
+Shared adjustments apply to each choice until a row overrides that field.
 With no phone volume override, the main and notification workers inherit
 their respective Emacs tone and earcon levels. Notification speech also
 inherits its Emacs volume. Setting a phone volume to zero mutes that

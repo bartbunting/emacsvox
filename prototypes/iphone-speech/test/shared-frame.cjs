@@ -394,6 +394,7 @@ async function main() {
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
                 timeline, volume: volume && {kind: volume[1], value: Number(volume[2])},
                 control: control?.type, voice: control?.selector?.voice_id, requestId: control?.request_id,
+                previewChoice: control?.voice?.choices?.find(c => c.id === control.selection?.choice_id),
                 roleVoices: control?.definitions && Object.fromEntries(control.definitions.map(row => {
                   const definition = row.definition ?? row;
                   return [definition.id, definition.choices?.[0]?.selector?.voice_id ?? definition.preferences?.[0]?.voice_id];
@@ -812,6 +813,52 @@ async function main() {
           await until('exact preview on the phone main worker', () => rawPackets.slice(startPreview).some(
             p => p.lane === 'M' && p.control === 'preview' && p.voice === 'test-2'));
           assert.ok(!rawPackets.slice(startPreview).some(p => p.lane === 'N' && p.control === 'preview'));
+          const voiceAdapter = await observe(`(emacsvox-frame-speech-call (process-get ${main} 'iphone-endpoint)
+            (lambda () (list (plist-get (car (plist-get (tts-voice-inventory) :engines)) :engine-id) tts-voice-preview-function)))`);
+          assert.equal(voiceAdapter.replace(/\s+/g, ' '), '("ios" omnivox-preview-voice-sequence)');
+          sshKeys('t');
+          const inEditor = form => observe(`(with-selected-window ${phoneWindow}
+            (and (derived-mode-p 'emacsvox-aural-voice-editor-mode) ${form}))`);
+          await until('t opens the selected iPhone voice in the common editor', async () =>
+            await inEditor(`(equal "test-2" (plist-get (car (plist-get (emacsvox-aural-voice-editor--working) :selectors)) :voice-id))`) === 't');
+          assert.notEqual(await inEditor(`(member "reverb" (plist-get (car (plist-get (emacsvox-aural-voice-editor--get :inventory) :engines))
+            :post-synthesis-dimensions))`), 'nil');
+          const tuned = rawPackets.length;
+          sshKeys('P');
+          await until('the iPhone auditions this physical choice', () => rawPackets.slice(tuned).some(
+            p => p.lane === 'M' && p.previewChoice?.selector.voice_id === 'test-2'));
+          await until('the editor receives the iPhone audition result', async () =>
+            await inEditor(`(eq 'completed (plist-get (emacsvox-aural-voice-editor--get :preview-result) :status))`) === 't');
+          sshKeys('q');
+          await until('leaving the tuner restores the iPhone voice row', async () => await row() === '"test-2"');
+          sshKeys('\x1bxiphone-test-fallback-editor\r');
+          await until('named editor focuses the second physical choice', async () =>
+            await inEditor(`(and (button-at (point)) (equal '(choice . 1) (button-get (button-at (point)) 'voice-field)))`) === 't');
+          sshKeys('\rCustomize this voice\r');
+          await until('only the iPhone fallback is being edited', async () =>
+            await inEditor(`(emacsvox-aural-voice-editor--get :tuning-choice)`) === '"phone"');
+          for (const [field, level] of [['reverb', 3], ['high-pass', 5], ['low-pass', 5]]) {
+            assert.equal(await inEditor(`(progn (emacsvox-aural-voice-editor--locate '${field})
+              (and (eq '${field} (button-get (button-at (point)) 'voice-field))
+                   (not (string-match-p "unsupported\\\\|not known" (button-label (button-at (point)))))))`), 't');
+            await inEditor(`(emacsvox-aural-voice-editor--set '${field} ${level})`);
+          }
+          const audition = rawPackets.length;
+          sshKeys('P');
+          const effectChoice = () => rawPackets.slice(audition).find(p => p.lane === 'M' &&
+            p.previewChoice?.id === 'phone' && p.previewChoice.selector.voice_id === 'test-2');
+          await until('audition targets the second choice on the phone', effectChoice);
+          const patch = effectChoice().previewChoice.adjustments;
+          for (const [name, stored] of [['reverb', 3], ['high_pass', 5], ['low_pass', 4]]) {
+            assert.equal(patch[name].op, 'set');
+            assert.ok(Math.abs(patch[name].value - stored / 9) < 0.00001, name);
+          }
+          await until('the phone confirms the rendered fallback audition', async () =>
+            await inEditor(`(eq 'completed (plist-get (emacsvox-aural-voice-editor--get :preview-result) :status))`) === 't');
+          assert.equal(await inEditor(`(car (plist-get (emacsvox-aural-voice-editor--get :preview-result) :speech-connection))`),
+            await observe(`(process-name ${main})`));
+          sshKeys('qKeep draft and return\r');
+          await until('the named fallback returns to the phone browser', async () => await row() === '"test-2"');
           sshKeys('g');
           await until('inventory refreshed on both phone lanes', () => ['M','N'].every(
             lane => rawPackets.slice(startPreview).some(p => p.lane === lane && p.control === 'inventory')));

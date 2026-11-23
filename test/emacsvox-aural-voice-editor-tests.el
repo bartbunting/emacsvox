@@ -259,6 +259,29 @@
            (should (= (point) 12)))
        (kill-buffer origin)))))
 
+(ert-deftest emacsvox-aural-voice-editor-resumed-choice-uses-the-opening-connection ()
+  (emacsvox-test--with-voice-editor
+    (let* ((source (current-buffer))
+           (voice '(:voice-id "flo" :language "en-US"))
+           (engine (list :engine-id "ios" :voices (list voice)
+                         :post-synthesis-dimensions '("reverb" "high_pass" "low_pass")))
+           (inventory '(:engines ((:engine-id "dectalk")))))
+      (cl-letf (((symbol-function 'tts-voice-inventory) (lambda () inventory)))
+        (emacsvox-aural-voice-editor-open 'reading-owned 'bolden source)
+        (let ((draft (emacsvox-aural-voice-editor--draft)))
+          (setq inventory (list :engines (list engine)))
+          (emacsvox-aural-voice-editor-open 'reading-owned 'bolden source)
+          (should (eq draft (emacsvox-aural-voice-editor--draft)))
+          (should (equal inventory (emacsvox-aural-voice-editor--get :inventory))))
+        (emacsvox-aural-voice-editor-experiment (list engine voice) source "Sample")
+        (let ((chain (plist-get (emacsvox-aural-voice-editor--working) :selectors)))
+          (dolist (field '(reverb high-pass low-pass))
+            (should-not (string-match-p
+                         "unsupported\\|support not known"
+                         (emacsvox-aural-voice-editor--adjustment-text field nil chain))))
+          (should (string-match-p "unsupported"
+                                  (emacsvox-aural-voice-editor--adjustment-text 'richness nil chain))))))))
+
 (ert-deftest emacsvox-aural-voice-editor-experiment-destination-preserves-fallbacks ()
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-experiment

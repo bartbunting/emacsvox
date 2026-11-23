@@ -16,6 +16,21 @@
 (defvar iphone-test--reply-buffer nil)
 (defvar iphone-test--acp-reply nil)
 
+(defun iphone-test-fallback-editor ()
+  "Open a disposable voice draft with a desktop first choice and an iPhone fallback."
+  (interactive)
+  (require 'emacsvox-aural-voice-editor)
+  (emacsvox-aural-voice-editor-new 'acss-default 'phone-fallback-check (current-buffer))
+  (emacsvox-aural-voice-editor--put :automatic-sample nil)
+  (emacsvox-aural-voice-editor--put :expanded t)
+  (emacsvox-aural-voice-editor--put :effects t)
+  (let* ((choices '((:id "desktop" :selector (:kind exact :scope local :engine-id "dectalk" :voice-id "harry") :adjustments nil)
+                    (:id "phone" :selector (:kind exact :scope local :engine-id "ios" :voice-id "test-2") :adjustments nil)))
+         (draft (emacsvox-aural-voice-editor--working)))
+    (setq draft (plist-put draft :selectors (mapcar (lambda (row) (plist-get row :selector)) choices)))
+    (emacsvox-aural-voice-editor--changed (plist-put draft :choices choices)))
+  (emacsvox-aural-voice-editor--locate '(choice . 1)))
+
 (defun iphone-test--prepare-question (id)
   "Show a disposable upstream question and place point on Submit."
   (unless (buffer-live-p iphone-test--reply-buffer)
