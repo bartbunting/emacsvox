@@ -46,7 +46,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
         open: async () => {}, close: async () => {}, record: async () => {},
         addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
     }
-    const ssh = {hasShiftReturnShortcut, hasWebBrowser: hasShiftReturnShortcut, loadProfile: () => profile,
+    const ssh = {hasShiftReturnShortcut, hasModifiedLetterShortcuts: hasShiftReturnShortcut, hasWebBrowser: hasShiftReturnShortcut, loadProfile: () => profile,
       keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
     const links = [];
     let dismiss;
@@ -194,6 +194,18 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       assert.equal(terminal.props.keyboardEnabled, false);
       await act(() => dismiss(true));
       assert.equal(terminal.props.keyboardEnabled, true);
+      assert.equal(app.root.findByType('NativeTerminal'), terminal);
+      if (input === 'field') {
+        const old = app.root.findByType('WebView');
+        await act(() => old.props.onContentProcessDidTerminate());
+        const fresh = app.root.findByType('WebView');
+        assert.notEqual(fresh, old);
+        await act(() => fresh.props.onMessage({nativeEvent: {data: ''}}));
+        await act(() => app.root.findByType('PhoneKeyboardContainer').props.onModifiedKey({nativeEvent: {text: '\x1b:'}}));
+        assert.deepEqual(keys.at(-1), ['same-frame', '\x1b:']);
+        assert.equal(app.root.findByType('NativeTerminal'), terminal);
+        assert.equal(sockets.length, 1);
+      }
       await select('Settings');
       const browse = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Open web links inside Emacsvox Speech');
       await act(() => browse.props.onValueChange(false));

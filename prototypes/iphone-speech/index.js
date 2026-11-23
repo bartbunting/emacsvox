@@ -71,10 +71,11 @@ function App() {
   return <Session key={connectionKey(settings)} settings={settings} save={save} active={active} reconnect={reconnect} />;
 }
 
-function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys, onClosed}) {
+function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys}) {
   const view = useRef(null);
   const [focusNewInput] = useState(createKeyboardFocus);
   const [loaded, setLoaded] = useState(false);
+  const [webGeneration, setWebGeneration] = useState(0);
   useEffect(() => {
     focusNewInput(loaded && view.current, canFocus,
       input => input.injectJavaScript("document.getElementById('keys').focus();"));
@@ -87,7 +88,7 @@ function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys, onClosed}
     }),
   } : {};
   return <KeyboardContainer style={styles.keyboard} {...shortcuts}>
-    <WebView ref={view} source={keyboardSource} style={styles.surface} scrollEnabled={false}
+    <WebView key={webGeneration} ref={view} source={keyboardSource} style={styles.surface} scrollEnabled={false}
       injectedJavaScriptBeforeContentLoaded={`window.emacsControlOption = ${Boolean(controlOption)}; window.emacsCommandHyper = ${Boolean(commandHyper)};`}
       injectedJavaScript="window.ReactNativeWebView.postMessage('');"
       onMessage={({nativeEvent}) => {
@@ -95,7 +96,10 @@ function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys, onClosed}
         if (nativeEvent.data === '') setLoaded(true);
         else if (canFocus) onKeys(nativeEvent.data);
       }}
-      onContentProcessDidTerminate={onClosed} />
+      onContentProcessDidTerminate={() => {
+        setLoaded(false);
+        setWebGeneration(value => value + 1);
+      }} />
   </KeyboardContainer>;
 }
 
@@ -289,11 +293,6 @@ function Session({settings, save, active, reconnect}) {
             if (timingTrial.current) void timingKey(timingTrial.current, text);
             else if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
             else keyboard?.sendKeys(text);
-          }}
-          onClosed={() => {
-            const message = 'Keyboard closed. Activate Connect to retry.';
-            if (keyboardFrame) receiver.terminalClosed(keyboardFrame, message);
-            else receiver.disconnect(message);
           }} />}
       {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
         <Terminal ref={terminalRef} style={styles.nativeTerminal}
@@ -301,7 +300,7 @@ function Session({settings, save, active, reconnect}) {
           connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
           onSessionStatus={({nativeEvent}) => {
             if (nativeEvent.state === 'connected') receiver.terminalConnected(offer.frame);
-            else receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail);
+            else receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail, nativeEvent.retryable);
           }} /></View>}
       {screen ? <View><Text accessibilityRole="header" style={styles.status}>Terminal screen</Text>
         <Text selectable style={styles.terminal}>{screen}</Text></View> : null}

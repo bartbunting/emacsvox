@@ -126,6 +126,55 @@ test('unlock retries a waking network and Disconnect or a rejected host stops re
   } finally { receiver.disconnect(); }
 });
 
+test('foreground relay and SSH losses retry fresh frames and stop after repeated failures', t => {
+  t.mock.timers.enable({apis:['setTimeout']});
+  const sockets = [], states = [];
+  const receiver = createReceiver({
+    openSocket() { const ws = {readyState:1, send() {}, close() {}}; sockets.push(ws); return ws; },
+    status: value => states.push(value), speech: {stop: async () => true},
+  });
+  function attach(frame) {
+    const socket = sockets.at(-1);
+    for (const record of [{type:'ssh', frame, server:'s', client:'c'}, {type:'ready', id:0}]) {
+      socket.onmessage({data:JSON.stringify(record)});
+    }
+    receiver.terminalConnected(frame);
+    return socket;
+  }
+  try {
+    receiver.connect();
+    const old = attach('first');
+    receiver.stop();
+    old.onclose();
+    t.mock.timers.tick(1000);
+    assert.equal(sockets.length, 2);
+    attach('second');
+    receiver.terminalClosed('first', 'Stale SSH exit', true);
+    assert.equal(states.at(-1), 'Connected');
+    receiver.terminalClosed('second', 'SSH lost', true);
+    for (const delay of [1000, 1000, 2000, 3000]) {
+      t.mock.timers.tick(delay);
+      sockets.at(-1).onerror();
+    }
+    assert.equal(sockets.length, 6);
+    t.mock.timers.tick(30000);
+    assert.equal(sockets.length, 6);
+    assert.match(states.at(-1), /Activate Connect/);
+    receiver.connect();
+    attach('third');
+    receiver.appState('inactive');
+    receiver.terminalClosed('third', 'SSH lost', true);
+    receiver.appState('background');
+    receiver.appState('active');
+    assert.equal(sockets.length, 8);
+    attach('fourth');
+    receiver.terminalClosed('fourth', 'Session ended', false);
+    t.mock.timers.tick(30000);
+    assert.equal(sockets.length, 8);
+    assert.equal(states.at(-1), 'Session ended');
+  } finally { receiver.disconnect(); }
+});
+
 test('the diagnostic tones use the local cancellable Emacs tone player without a connection', async () => {
   const played = [];
   let stops = 0;

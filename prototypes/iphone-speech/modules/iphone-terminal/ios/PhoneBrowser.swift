@@ -7,6 +7,7 @@ import UIKit
 final class PhoneBrowser: NSObject, SFSafariViewControllerDelegate, UIAdaptivePresentationControllerDelegate {
   private weak var safari: SFSafariViewController?
   private var finished: ((Bool) -> Void)?
+  var coversTerminal: Bool { finished != nil }
 
   func open(_ address: String, external: Bool, from presenter: UIViewController, done: @escaping (Bool) -> Void) {
     guard finished == nil, presenter.viewIfLoaded?.window?.windowScene?.activationState == .foregroundActive,

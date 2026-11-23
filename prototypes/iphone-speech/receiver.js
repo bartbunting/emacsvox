@@ -32,6 +32,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   let traceAllowed = false, tracePending = false, timingAllowed = false;
   let browserReady = false;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
+  let retryNetworkLoss, sessionEstablished = false;
   let sshKeyboardConnected = false, sshKeyboardPublished = false;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
   let queue = [], queuedChars = 0;
@@ -234,6 +235,8 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     activeBeforeLock = false;
     clearTimeout(retryTimer);
     retryTimer = null;
+    retryNetworkLoss = null;
+    sessionEstablished = false;
     frameId = null;
     sshKeyboardConnected = sshKeyboardPublished = false;
     sessionActive(false);
@@ -256,16 +259,16 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     disconnect(attempt ? 'Reconnecting' : 'Connecting');
     currentRate = speechRate;
     refreshVoice();
-    // Give Tailscale time to resume after unlocking. A manual disconnect or
-    // a host-key or authentication error cancels any further attempts.
+    // A fresh connection never reuses the previous audio queue or SSH frame.
     function networkFailed(message) {
       const resumeCandidate = activeBeforeLock;
+      const next = sessionEstablished ? 1 : attempt && attempt + 1;
       disconnect(message);
       activeBeforeLock = resumeCandidate;
-      if (attempt > 0 && attempt < 4 && !background) {
+      if (next > 0 && next <= 4 && !background) {
         status('Waiting for the relay to reconnect');
         sessionActive(true);
-        retryTimer = setTimeout(() => connect(attempt + 1), 1000 * attempt);
+        retryTimer = setTimeout(() => connect(next), 1000 * Math.max(1, next - 1));
       }
     }
     let current;
@@ -276,6 +279,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
       return;
     }
     socket = current;
+    retryNetworkLoss = networkFailed;
     sessionActive(true);
     resetId = 0;
     lastReceived = now();
@@ -303,7 +307,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
           browserReady = true;
           current.send('browser-ready');
         }
-        attempt = 0;
+        if (!frameId || sshKeyboardConnected) sessionEstablished = true;
         status('Connected');
         if (record.keyboard === true) {
           keyboard({sendKeys(text) {
@@ -389,11 +393,15 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   function terminalConnected(frame) {
     if (!frame || frame !== frameId) return;
     sshKeyboardConnected = true;
+    if (ready) sessionEstablished = true;
     publishSshKeyboard();
   }
 
-  function terminalClosed(frame, message) {
-    if (frame && frameId === frame) disconnect(message || 'SSH terminal closed. Activate Connect to retry.');
+  function terminalClosed(frame, message, retryable = false) {
+    if (!frame || frameId !== frame) return;
+    const detail = message || 'SSH terminal closed. Activate Connect to retry.';
+    if (retryable && retryNetworkLoss) retryNetworkLoss(detail);
+    else disconnect(detail);
   }
 
   function stop() {

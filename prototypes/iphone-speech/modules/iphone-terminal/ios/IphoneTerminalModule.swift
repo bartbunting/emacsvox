@@ -97,7 +97,7 @@ private final class PhoneKeyboardContainer: ExpoView {
   }
 
   override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-    if action == #selector(sendShiftReturn) {
+    if action == #selector(sendShiftReturn) || action == #selector(sendModifiedKey) {
       guard active, let focused = focusedView(in: self) else { return false }
       return (focused as? UITextInput)?.markedTextRange == nil
     }
@@ -258,8 +258,22 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
 
   override func didMoveToWindow() {
     super.didMoveToWindow()
-    if window == nil { close() }
+    if window == nil {
+      // Full-screen Safari temporarily removes the presenting hierarchy.
+      if !browser.coversTerminal { close() }
+    }
     else if connection == nil && session == nil { start() }
+  }
+
+  override func didMoveToSuperview() {
+    super.didMoveToSuperview()
+    if superview == nil { close() }
+  }
+
+  deinit {
+    connection?.cancel()
+    writes?.cancel()
+    if let session { Task { try? await session.disconnect() } }
   }
 
   func configure(_ config: [String: String]) {
@@ -274,11 +288,10 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
     guard let host = config["host"], let port = Int(config["port"] ?? ""),
           let user = config["username"], let pin = config["pin"],
           let server = config["server"], let client = config["client"], let frame = config["frame"] else { return }
-    let owner = generation
+    let owner = generation, initialColumns = columns, initialRows = rows
     connection = Task { @MainActor [weak self] in
-      guard let self else { return }
       do {
-        let size = try TerminalSize(columns: columns, rows: rows)
+        let size = try TerminalSize(columns: initialColumns, rows: initialRows)
         let live = try await PhoneIdentity.connect(host: host, port: port, username: user, pin: pin,
           server: server, client: client, frame: frame, size: size) { [weak self] bytes in
           DispatchQueue.main.async {
@@ -286,22 +299,31 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
             self.terminal.feed(byteArray: bytes[...])
           }
         }
-        guard generation == owner else { try? await live.disconnect(); return }
-        session = live
-        try await live.resize(TerminalSize(columns: columns, rows: rows))
-        onSessionStatus(["state":"connected"])
-        _ = try await live.waitForExit()
-        if generation == owner { close(); onSessionStatus(["state":"closed", "frame":frame]) }
+        do {
+          guard let self, generation == owner else { try? await live.disconnect(); return }
+          session = live
+          try await live.resize(TerminalSize(columns: columns, rows: rows))
+          guard generation == owner else { return }
+          onSessionStatus(["state":"connected", "frame":frame])
+        }
+        let exit = try await live.waitForExit()
+        if let self, generation == owner {
+          close()
+          onSessionStatus(["state":"closed", "frame":frame, "retryable":exit == .disconnected])
+        }
       } catch {
-        if generation == owner {
+        if let self, generation == owner {
           let reason: String
+          let retryable: Bool
           switch error {
-          case TerminalError.hostKeyMismatch: reason = "The SSH host key does not match."
-          case TerminalError.keyRejected: reason = "WSL rejected the iPhone public key."
-          default: reason = "Could not open the SSH terminal."
+          case TerminalError.hostKeyMismatch: reason = "The SSH host key does not match."; retryable = false
+          case TerminalError.keyRejected: reason = "WSL rejected the iPhone public key."; retryable = false
+          case TerminalError.invalidDestination, TerminalError.invalidSize, TerminalError.requestRejected:
+            reason = "Could not open the SSH terminal."; retryable = false
+          default: reason = "The SSH connection was interrupted."; retryable = true
           }
           close()
-          onSessionStatus(["state":"failed", "frame":frame, "detail":reason])
+          onSessionStatus(["state":"failed", "frame":frame, "detail":reason, "retryable":retryable])
         }
       }
     }
@@ -339,7 +361,7 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
       await previous?.value
       guard let self, generation == owner else { return }
       do { try await session.send(bytes) }
-      catch { if generation == owner { close(); onSessionStatus(["state":"closed", "frame":frame]) }; return }
+      catch { if generation == owner { close(); onSessionStatus(["state":"closed", "frame":frame, "retryable":true]) }; return }
       if generation == owner { pendingBytes -= bytes.count }
     }
   }
