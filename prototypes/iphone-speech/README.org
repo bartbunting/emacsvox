@@ -477,7 +477,7 @@ speech socket before the receiver reports Connected.
 
 ** Start the signed app against the test server
 
-1. Open the private install link for your registered iPhone in iPhone Safari. Activate Install and
+1. Open the private install link for Emacsvox Speech build 4 in iPhone Safari. Activate Install and
    confirm the iOS prompt. Open Emacsvox Speech from the Home Screen.
    If iOS asks for Developer Mode, turn it on under Settings, Privacy
    & Security, Developer Mode. Restart, unlock and confirm Turn On.
@@ -511,7 +511,7 @@ speech socket before the receiver reports Connected.
    SSH port (=8822=), WSL username and the full =ssh-ed25519= host public
    key printed by the listener. Activate Save settings, then Connect.
    On signed build 3, double-tap the Emacs keyboard field after you hear
-   Connected. In the next build the app requests focus when SSH and the
+   Connected. In build 4 the app requests focus when SSH and the
    Emacs frame are ready. To start there on a fresh launch, enable
    “Connect on open” in Settings once and save. It starts off. You can
    always focus the field by double-tapping it.

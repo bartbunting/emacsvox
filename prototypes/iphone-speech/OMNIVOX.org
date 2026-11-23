@@ -16,7 +16,7 @@ of recordings, and a separate synthesizer for permission requests. Its WSL
 relay interprets a subset of the legacy commands. It has no return path for
 Omnivox voice inventory or capability replies. Its Swift beep and cue player
 do not yet implement the desktop tone renderer or the full sound queue.
-The new native worker is available on the paired development branches.
+[[file:README.org::*Start the signed app against the test server][Signed build 4]] includes the native worker. Enable it in Settings.
 It uses Omnivox's parser, bounded pending batch, logical voice registry,
 control codec, 44.1 kHz stereo tone renderer and WAV/OGG decoder. Swift
 schedules the speech, sound and tone streams on the phone. The signed
