@@ -22,6 +22,26 @@ control codec, 44.1 kHz stereo tone renderer and WAV/OGG decoder. Swift
 schedules the speech, sound and tone streams on the phone. The signed
 build 3 still uses the earlier receiver.
 
+Desktop Omnivox defines the playback behaviour for this port. In build 4
+speech goes directly to the system synthesizer. Swift starts overlaid tones
+on a separate player and waits for an inserted tone to finish before
+asking for the next speech fragment. This can add an audible gap.
+
+The next build's source feeds Apple speech samples into the desktop Rust
+resampler and presentation mixer. In cue-bearing speech, an insert moves
+the following speech by its rendered length. An overlay starts on the
+speech clock, can carry into the next audio buffer and can finish after
+the line. WSL tests compare individual stereo samples for both placements.
+The main and notification workers have independent playback and Stop.
+
+In Diagnostics, “Test timing inside TestCase” requests one utterance with a
+bookmark at the internal capital. The status reports how many internal
+marks the voice supplied. The renderer uses the reported audio position.
+If an internal mark is missing, you still hear the word. Ordinary navigation
+currently uses the negotiated legacy commands, which can split a word
+across utterances. The structured timeline work below brings the intact
+span and its original offsets through that route.
+
 ** Try the native worker
 
 Start the opt-in SSH relay and test window with the commands below. Use your
@@ -45,7 +65,9 @@ In a build containing the native worker, open Settings, turn on “Use
 Omnivox on iPhone”, save and connect. “Finding iPhone voices” precedes
 “Connected”. Both workers acknowledge their inventory and initial voice
 registration before the keyboard becomes ready. The first connection
-prefers an installed Eloquence Reed. The phone reading rate starts at 150.
+prefers an installed Eloquence Reed. Build 4 can select British Reed from
+Apple's inventory order. The next build prefers US Reed when available.
+The phone reading rate starts at 150.
 
 Open =M-x emacsvox-aural-voice-workbench= in the phone terminal. Its
 phone view shows one row per installed iOS identifier with name, language
@@ -54,7 +76,9 @@ apply across the phone's reading roles, =r= to give a named role a
 different voice, =v= for rate, character scale, pitch, speech volume,
 tone volume or earcon volume, and =g= to refresh. Apply waits for both
 workers' replies. The phone profile is saved in =iphone-omnivox.json=
-under the Emacs user directory. The desktop keeps its own workbench.
+under the Emacs user directory. Phone sessions using this directory share
+those choices. The desktop palette supplies the role names and keeps its
+own physical voice assignments. VoiceOver chooses its voice separately.
 If iOS removes a saved voice, ordinary speech can use its fallback.
 Refresh shows the current inventory. A strict preview fails when its
 selected voice is unavailable.
@@ -64,6 +88,19 @@ For a personal WAV or OGG, put the same file in Files on the iPhone and
 choose “Import a personal earcon” in Settings. Both ends identify the
 recording by SHA-256. Encoded size is limited to 16 MiB and decoded
 duration to 30 seconds. A failed cue leaves the terminal usable.
+
+In build 4, import the two original Agent Shell input recordings to hear
+the change between editing and browsing. The next build includes both
+recordings under the same content IDs. With Explicit input and earcon
+feedback enabled, Return at the draft enters editing and =C-c e= returns
+to browsing. A customised recording can still be imported from Files.
+
+To compare indentation, enable audio indentation in the buffer, select
+duration-coded tone and alongside speech, and navigate to lines indented
+by four and eight spaces. At the default duration settings you should hear
+a 250 Hz tone for 130 and 210 ms respectively, starting with the line.
+Compare mixed-case words such as =TestCase= separately. The built-in
+capital cue uses an insert.
 
 =Stop Speech= on the phone silences both lanes locally. Reconnect to
 create fresh workers and restore the saved phone settings. Turn off
@@ -79,6 +116,7 @@ export IPHONE_TEST_SSHD=/usr/sbin/sshd
 ./test/wire-worker --frame
 stage=$(./stage-ios-build)
 ./test/staged-worker-import "$stage"
+IPHONE_TEST_ICONS="$stage/modules/iphone-mixer/ios/OmnivoxSounds.bundle" ./test/wire-worker
 #+end_src
 
 The worker fixture runs the native Rust library and Swift scheduler in

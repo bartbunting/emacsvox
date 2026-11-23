@@ -31,9 +31,12 @@ final class WireLane {
     let payload = Data(bytes: result, count: strlen(result))
     return (try JSONDecoder().decode(WireAction.self, from: payload), payload.count)
   }
-  func permission(_ text: String, done: @escaping (Bool) -> Void) throws {
+  func speechItem(_ text: String) throws -> WireItem? {
     let words = text.components(separatedBy: .newlines).joined(separator: " ")
-    guard let (command, _) = try action("tts_say {" + words + "}"), let item = command.item else { done(false); return }
+    return try action("tts_say {" + words + "}")?.0.item
+  }
+  func permission(_ text: String, done: @escaping (Bool) -> Void) throws {
+    guard let item = try speechItem(text) else { done(false); return }
     schedule.permission(item, done: done)
   }
   func feed(_ line: String, muted: Bool) throws {

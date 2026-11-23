@@ -240,7 +240,7 @@ public final class IphoneMixerModule: Module {
     }
   }
 
-  private static func copySamples(_ buffer: AVAudioBuffer) throws -> AVAudioPCMBuffer? {
+  static func copySamples(_ buffer: AVAudioBuffer) throws -> AVAudioPCMBuffer? {
     guard let pcm = buffer as? AVAudioPCMBuffer else { throw MixerFailure("Unexpected speech buffer.") }
     guard pcm.frameLength > 0 else { return nil }
     guard (1...2).contains(pcm.format.channelCount), (8000...192000).contains(pcm.format.sampleRate),

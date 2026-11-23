@@ -11,6 +11,11 @@ final class TestOutput: WireOutput {
   var started: [WireItem.Kind] = [], finishes: [(Bool) -> Void] = []
   init(_ root: String) { loader = ov_ios_loader_new(root)! }
   deinit { ov_ios_loader_free(loader); ov_ios_token_free(token) }
+  var mixed: ((ArraySlice<WireItem>, @escaping () -> () -> Void, @escaping (Int, Bool) -> Void) -> Void)?
+  var stopMixed: (() -> Void)?
+  func playMixed(_ items: ArraySlice<WireItem>, holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
+    if let mixed { mixed(items, holdTail, done) } else { done(0, true) }
+  }
   func play(_ item: WireItem, done: @escaping (Bool) -> Void) {
     started.append(item.kind)
     let pcm: OpaquePointer?
@@ -27,7 +32,7 @@ final class TestOutput: WireOutput {
     }
     if hold { finishes.append(done) } else { done(pcm != nil) }
   }
-  func stop(all: Bool) {}
+  func stop(all: Bool) { stopMixed?() }
 }
 
 @main struct Probe {
@@ -43,6 +48,7 @@ final class TestOutput: WireOutput {
     precondition(lane.setVoices(voices, preferred: "test-1"))
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
+      try checkMixedPlayback(CommandLine.arguments[1], voices: voices)
       let token = ov_ios_token_new()!
       let pcm = ov_ios_tone(660, 480, 1, token)!
       let quieter = ov_ios_tone(660, 480, 0.5, token)!

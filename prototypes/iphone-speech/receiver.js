@@ -391,7 +391,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     const owner = wire;
     if (!owner) return false;
     owner.test(sound).then(ok => {
-      if (owner === wire) playback(ok ? 'Omnivox finished playback.' : 'Omnivox playback stopped.');
+      if (owner === wire) playback(typeof ok === 'string' ? ok : ok ? 'Omnivox finished playback.' : 'Omnivox playback stopped.');
     }, () => { if (owner === wire) playback('Omnivox could not play the sample.'); });
     return true;
   }
@@ -412,6 +412,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   return { connect: () => connect(), disconnect, appState, terminalConnected, terminalClosed, stop, testTone,
+    testMarkers: () => localWireTest('markers'),
     testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => localWireTest('accent') || playCue(openObjectCue),
     testVisualLine: () => localWireTest('chime') || playCue(visualLineCue) };
 }

@@ -77,6 +77,16 @@ for line in (output / "wire-icons.sha256").read_text().splitlines():
     asset.parent.mkdir(parents=True, exist_ok=True)
     asset.write_bytes(data)
 
+# The relay already addresses module recordings by content digest. Bundle
+# their defaults under those IDs so both app versions use the same relay.
+module_sounds = resources / "personal"
+module_sounds.mkdir()
+for name in ("agent-input-on.ogg", "agent-input-off.ogg"):
+    data = subprocess.check_output(["git", "-C", app, "show", "HEAD:sounds/modules/agent-shell/" + name])
+    (module_sounds / hashlib.sha256(data).hexdigest()).write_bytes(data)
+(resources / "Agent-Shell-README.org").write_bytes(subprocess.check_output(
+    ["git", "-C", app, "show", "HEAD:sounds/modules/agent-shell/README.org"]))
+
 (resources / "Accent-README.org").write_bytes(subprocess.check_output(
     ["git", "-C", app, "show", "HEAD:sounds/packs/accent/README.org"]))
 (resources / "Info.plist").write_bytes(plistlib.dumps({

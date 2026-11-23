@@ -9,6 +9,7 @@ public final class IphoneOmnivoxModule: Module {
   private var lanes: [String: WireLane] = [:]
   private var connection = 0
   private var catalogue = ""
+  private var markerStatus: String?
   private let importer = CueImport()
 
   public func definition() -> ModuleDefinition {
@@ -31,6 +32,11 @@ public final class IphoneOmnivoxModule: Module {
             let resources = WireResources(at: root) else { throw WireFailure.resources }
       for tag in ["M", "N"] {
         let audio = WireAudio(resources)
+        if tag == "M" {
+          audio.resolvedMarks = { [weak self] exact, total in
+            self?.markerStatus = "The voice supplied \(exact) of \(total) in-word timing marks."
+          }
+        }
         let lane = WireLane(audio) { [weak self] line in
           guard let self, self.connection == id else { return }
           self.sendEvent("wireReply", ["connection": id, "record": tag + " " + line] as [String: Any])
@@ -54,6 +60,13 @@ public final class IphoneOmnivoxModule: Module {
       let done: (Bool) -> Void = { ok in promise.resolve(ok) }
       switch sound {
       case "voice": try lane.permission("This is the iPhone voice test.", done: done)
+      case "markers":
+        guard var item = try lane.speechItem("TestCase") else { done(false); return }
+        self.markerStatus = nil
+        item.marks = [0, 4].map { WireToneMark(offset: $0, placement: .insert, hz: 440, ms: 20, gain: 1) }
+        lane.schedule.permission(item) { ok in
+          promise.resolve(ok ? (self.markerStatus ?? "The voice played without timing marks.") : "Timing test stopped.")
+        }
       case "short", "long":
         lane.schedule.diagnosticEffect(WireItem(kind: .tone, placement: .independent, gain: 1, hz: 660, ms: sound == "short" ? 480 : 3000), done: done)
       case "accent", "chime":
@@ -91,8 +104,9 @@ public final class IphoneOmnivoxModule: Module {
     let data = try JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys])
     guard let json = String(data: data, encoding: .utf8) else { throw WireFailure.voices }
     let english = voices.filter { $0.language.lowercased().hasPrefix("en") }
-    let preferred = ["Reed", "Eddy", "Rocko", "Grandpa", "Daniel", "Aaron", "Lee"].compactMap { name in
-      english.first { $0.name.components(separatedBy: " (")[0].caseInsensitiveCompare(name) == .orderedSame }
+    let preferred = ["Reed", "Eddy", "Rocko", "Grandpa", "Daniel", "Aaron", "Lee"].compactMap { name -> AVSpeechSynthesisVoice? in
+      let matches = english.filter { $0.name.components(separatedBy: " (")[0].caseInsensitiveCompare(name) == .orderedSame }
+      return matches.first { $0.language.replacingOccurrences(of: "_", with: "-").lowercased() == "en-us" } ?? matches.first
     }.first ?? AVSpeechSynthesisVoice(language: AVSpeechSynthesisVoice.currentLanguageCode())
     let key = (preferred?.identifier ?? "") + "\n" + json
     guard key != catalogue else { return }

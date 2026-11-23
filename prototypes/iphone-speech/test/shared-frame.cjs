@@ -321,7 +321,11 @@ async function main() {
             const message = data.toString();
             if (rawWorker && /^[MN] /.test(message)) {
               workers[message[0]].stdin.write(message.slice(2) + '\n');
-              packets.push({lane: message[0], command: message.slice(2).split(' ')[0]});
+              const line = message.slice(2);
+              const icon = /^[ap]\s/.test(line) && /(omnivox-icon:personal\/[a-f0-9]{64})/.exec(line);
+              const tone = /^emacsvox_tone 1 (insert|overlay) ([\d.]+) (\d+)$/.exec(line);
+              packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
+                tone: tone && {mode: tone[1], hz: Number(tone[2]), ms: Number(tone[3])}});
             } else packets.push(JSON.parse(message));
           });
           await until('SSH pairing offer', () => packets.some(p => p.type === 'ssh'));
@@ -502,6 +506,42 @@ async function main() {
           const before = rawPackets.length;
           sshKeys('\x0e');
           await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.command === 'q'));
+          await observe(`(with-selected-window ${phoneWindow}
+            (switch-to-buffer (get-buffer-create "Phone indentation fixture")) (emacs-lisp-mode)
+            (insert "start\n    sample\n        sample\nTestCase\n") (goto-char (point-min))
+            (setq-local emacsvox-audio-indentation t emacsvox-indentation-presentation 'duration-tone
+                        emacsvox-indentation-tone-timing 'overlay))`);
+          function mixedDispatch(start, predicate) {
+            const main = rawPackets.slice(start).filter(p => p.lane === 'M');
+            const at = main.findIndex(predicate);
+            if (at < 0) return false;
+            const rest = main.slice(at + 1);
+            const end = rest.findIndex(p => ['s', 'd', 'emacsvox_tracked_dispatch'].includes(p.command));
+            return end >= 0 && rest[end].command !== 's' && rest.slice(0, end).some(p => p.command === 'q');
+          }
+          for (const ms of [130, 210]) {
+            const start = rawPackets.length;
+            sshKeys('\x0e');
+            await until('indentation overlay and its spoken line in one dispatch', () => mixedDispatch(start, p =>
+              p.tone?.mode === 'overlay' && p.tone.hz === 250 && p.tone.ms === ms));
+          }
+          await observe(`(with-selected-window ${phoneWindow} (setq-local tts-caps t emacsvox-capitalization-presentation 'tone))`);
+          const caps = rawPackets.length;
+          sshKeys('\x0e');
+          await until('capital insert and its spoken word in one dispatch', () => mixedDispatch(caps, p => p.tone?.mode === 'insert'));
+          await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer)
+            (goto-char (point-max))
+            (setq-local emacsvox-agent-shell-input-activation 'explicit
+                        emacsvox-agent-shell-input-state-feedback 'earcon emacsvox-use-icons t)
+            (emacsvox-agent-shell--input-sync))`);
+          for (const [keys, file] of [['\x03e', 'off'], ['\r', 'on']]) {
+            const cue = fs.readFileSync(path.resolve(__dirname, '../../../sounds/modules/agent-shell/agent-input-' + file + '.ogg'));
+            const id = 'omnivox-icon:personal/' + require('node:crypto').createHash('sha256').update(cue).digest('hex');
+            const start = rawPackets.length;
+            sshKeys(keys);
+            await until('Agent Shell ' + file + ' recording on the phone', () =>
+              rawPackets.slice(start).some(p => p.icon === id && p.lane === 'M'));
+          }
           await observe(`(with-selected-frame ${phone} (emacsvox-aural-voice-workbench))`);
           assert.equal(await observe(`(with-current-buffer (window-buffer ${phoneWindow}) (length tabulated-list-entries))`), '2');
           await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (while (and (not (eobp)) (not (equal (tabulated-list-get-id) "test-2"))) (forward-line 1)) (iphone-voices-apply))`);

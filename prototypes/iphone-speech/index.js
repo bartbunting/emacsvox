@@ -234,6 +234,7 @@ function Session({settings, save, active, reconnect}) {
       {voice ? <Text style={styles.status}>{voice}</Text> : null}
       {native && <Text style={styles.status}>{useWire ? 'Omnivox on iPhone' : mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
+      {useWire && <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />}
       {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}
       {native && <Action title="Test three-second tone" onPress={() => receiver.testTone(3000)} />}
       <Action title="Test Open Object Sound" disabled={!prepared} onPress={receiver.testCue} />

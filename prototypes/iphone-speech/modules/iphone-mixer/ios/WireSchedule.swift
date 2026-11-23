@@ -9,6 +9,13 @@ struct WireItem: Decodable {
   var placement: Placement?
   var text: String?, voice: String?, rate: Float?, pitch: Float?, gain: Float?
   var path: String?, hz: Float?, ms: UInt32?
+  var marks: [WireToneMark]?
+}
+
+struct WireToneMark: Decodable {
+  let offset: Int
+  let placement: WireItem.Placement
+  let hz: Float, ms: UInt32, gain: Float
 }
 
 struct WireReceipts: Decodable {
@@ -24,18 +31,40 @@ struct WireAction: Decodable {
 protocol WireOutput: AnyObject {
   // Each callback runs once on the owning queue, after playback or failure.
   func play(_ item: WireItem, done: @escaping (Bool) -> Void)
+  // An overlay can continue after the next speech starts. Its ticket keeps
+  // tracked dispatch open until the actual last sample plays.
+  func playMixed(_ items: ArraySlice<WireItem>, holdTail: @escaping () -> () -> Void,
+                 done: @escaping (Int, Bool) -> Void)
   func stop(all: Bool)
 }
 
 private final class WireBatch {
   let items: [WireItem], receipts: WireReceipts?, bytes: Int
   let done: ((Bool) -> Void)?
-  var index = 0, outstanding = 0, failed = false, finished = false
+  var index = 0, separateUntil = 0, outstanding = 0, failed = false, finished = false
   init(_ items: [WireItem], _ receipts: WireReceipts?, _ bytes: Int, _ done: ((Bool) -> Void)?) {
     self.done = done
     self.items = items
     self.receipts = receipts
     self.bytes = bytes
+  }
+
+  func mixedRun() -> ArraySlice<WireItem>? {
+    guard index >= separateUntil else { return nil }
+    var end = index, speech = false, tone = false
+    while end < items.count {
+      let item = items[end]
+      if item.kind == .speech, let text = item.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        speech = true
+        if item.marks?.isEmpty == false { tone = true }
+      } else if item.kind == .tone && (item.placement == .insert || item.placement == .overlay) {
+        tone = true
+      } else { break }
+      end += 1
+    }
+    if speech && tone { return items[index..<end] }
+    separateUntil = end
+    return nil
   }
 }
 
@@ -115,6 +144,26 @@ final class WireSchedule {
       if job.index == job.items.count {
         waiting.removeFirst()
         finishIfPlayed(job)
+        continue
+      }
+      if let run = job.mixedRun() {
+        blocked = true
+        job.separateUntil = run.endIndex
+        output.playMixed(run, holdTail: { [weak self, weak job] in
+          guard let job, !job.finished else { return {} }
+          job.outstanding += 1
+          return { [weak self, weak job] in
+            guard let job, !job.finished else { return }
+            job.outstanding -= 1
+            self?.finishIfPlayed(job)
+          }
+        }) { [weak self, weak job] played, ok in
+          guard let self, let job, !job.finished else { return }
+          job.failed = job.failed || !ok
+          job.index = run.startIndex + played
+          self.blocked = false
+          self.advance()
+        }
         continue
       }
       let item = job.items[job.index]

@@ -13,11 +13,43 @@ final class WireResources {
     self.loader = loader
   }
   deinit { ov_ios_loader_free(loader); ov_ios_loader_free(personal) }
+
+  func sound(_ id: String, gain: Float, token: OpaquePointer) -> OpaquePointer? {
+    if id.hasPrefix("omnivox-icon:personal/"), let pcm = ov_ios_sound(personal, id, gain, token) { return pcm }
+    return ov_ios_sound(loader, id, gain, token)
+  }
 }
 
-private final class RenderToken {
+final class RenderToken {
   let pointer = ov_ios_token_new()!
   deinit { ov_ios_token_free(pointer) }
+}
+
+// Transfer one owned canonical Omnivox buffer into Apple's planar player format.
+func wireBuffer(_ pcm: OpaquePointer, format: AVAudioFormat) -> AVAudioPCMBuffer? {
+  defer { ov_ios_pcm_free(pcm) }
+  let count = ov_ios_frames(pcm)
+  guard count > 0, let source = ov_ios_samples(pcm),
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count)),
+        let planes = buffer.floatChannelData else { return nil }
+  buffer.frameLength = AVAudioFrameCount(count)
+  for i in 0..<count {
+    planes[0][i] = source[2 * i]
+    planes[1][i] = source[2 * i + 1]
+  }
+  return buffer
+}
+
+func wireUtterance(_ item: WireItem, ssml: String? = nil) -> AVSpeechUtterance? {
+  guard let words = item.text, !words.isEmpty, let id = item.voice,
+        let selected = AVSpeechSynthesisVoice(identifier: id) else { return nil }
+  let utterance = ssml.flatMap { AVSpeechUtterance(ssmlRepresentation: $0) } ?? AVSpeechUtterance(string: words)
+  utterance.voice = selected
+  utterance.rate = min(AVSpeechUtteranceMaximumSpeechRate, max(AVSpeechUtteranceMinimumSpeechRate,
+      (item.rate ?? 1) * AVSpeechUtteranceDefaultSpeechRate))
+  utterance.pitchMultiplier = item.pitch ?? 1
+  utterance.volume = item.gain ?? 1
+  return utterance
 }
 
 private final class EffectStream {
@@ -53,22 +85,9 @@ private final class EffectStream {
           pcm = ov_ios_tone(item.hz ?? 0, item.ms ?? 0, item.gain ?? 1, token.pointer)
         } else {
           let id = item.path ?? ""
-          let loader = id.hasPrefix("omnivox-icon:personal/") ? resources.personal : resources.loader
-          pcm = ov_ios_sound(loader, id, item.gain ?? 1, token.pointer)
+          pcm = resources.sound(id, gain: item.gain ?? 1, token: token.pointer)
         }
-        let buffer = pcm.flatMap { pcm -> AVAudioPCMBuffer? in
-          defer { ov_ios_pcm_free(pcm) }
-          let count = ov_ios_frames(pcm)
-          guard count > 0, let source = ov_ios_samples(pcm),
-                let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count)),
-                let planes = buffer.floatChannelData else { return nil }
-          buffer.frameLength = AVAudioFrameCount(count)
-          for i in 0..<count {
-            planes[0][i] = source[2 * i]
-            planes[1][i] = source[2 * i + 1]
-          }
-          return buffer
-        }
+        let buffer = pcm.flatMap { wireBuffer($0, format: format) }
         DispatchQueue.main.async { [weak self] in
           guard let self, self.generation === token else { return }
           let finish: (Bool) -> Void = { [weak self] ok in
@@ -90,20 +109,25 @@ private final class EffectStream {
 
 final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private let synth = AVSpeechSynthesizer(), engine = AVAudioEngine()
+  private let bufferSynth = AVSpeechSynthesizer()
+  private let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+  private var available: [AVAudioPlayerNode] = []
+  private var playing: [ObjectIdentifier: (WirePlayback<AVAudioPCMBuffer>, WireMixer, AVAudioPlayerNode)] = [:]
   private let tones: EffectStream, sounds: EffectStream, inserts: EffectStream
   private var speech: AVSpeechUtterance?, spoken: ((Bool) -> Void)?, pause: DispatchWorkItem?
   var interrupted: (() -> Void)?
+  var resolvedMarks: ((Int, Int) -> Void)?
   private var observers: [NSObjectProtocol] = []
 
   init(_ resources: WireResources) {
-    let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
     tones = EffectStream(resources, format: format)
     sounds = EffectStream(resources, format: format)
     inserts = EffectStream(resources, format: format)
     super.init()
     synth.delegate = self
     synth.usesApplicationAudioSession = false
-    for node in [tones.node, sounds.node, inserts.node] {
+    available = [AVAudioPlayerNode()]
+    for node in [tones.node, sounds.node, inserts.node] + available {
       engine.attach(node)
       engine.connect(node, to: engine.mainMixerNode, format: format)
     }
@@ -119,17 +143,47 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
 
   deinit { for observer in observers { NotificationCenter.default.removeObserver(observer) } }
 
+  private func startAudio() throws {
+    if !engine.isRunning {
+      let session = AVAudioSession.sharedInstance()
+      try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+      try session.setActive(true)
+      try engine.start()
+    }
+  }
+
+  func playMixed(_ items: ArraySlice<WireItem>, holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
+    do { try startAudio() } catch { done(0, true); return }
+    // A previous dispatch may still own this lane's overlay tail.
+    let node: AVAudioPlayerNode
+    if let idle = available.popLast() { node = idle }
+    else {
+      node = AVAudioPlayerNode()
+      engine.attach(node)
+      engine.connect(node, to: engine.mainMixerNode, format: format)
+    }
+    let key = ObjectIdentifier(node)
+    let mixer = WireMixer(format: format, synth: bufferSynth, resolvedMarks: resolvedMarks)
+    let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
+      enqueue: { buffer, played in
+        node.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
+          DispatchQueue.main.async { mixer.played(Int(buffer.frameLength)); played() }
+        }
+        if !node.isPlaying { node.play() }
+      }, holdTail: holdTail, done: done, release: { [weak self] in
+        self?.playing.removeValue(forKey: key)
+        node.stop()
+        self?.available.append(node)
+      })
+    playing[key] = (playback, mixer, node)
+    playback.advance()
+  }
+
   func play(_ item: WireItem, done: @escaping (Bool) -> Void) {
     switch item.kind {
     case .speech:
-      guard let words = item.text, !words.isEmpty else { done(true); return }
-      let utterance = AVSpeechUtterance(string: words)
-      guard let id = item.voice, let selected = AVSpeechSynthesisVoice(identifier: id) else { done(false); return }
-      utterance.voice = selected
-      utterance.rate = min(AVSpeechUtteranceMaximumSpeechRate, max(AVSpeechUtteranceMinimumSpeechRate,
-          (item.rate ?? 1) * AVSpeechUtteranceDefaultSpeechRate))
-      utterance.pitchMultiplier = item.pitch ?? 1
-      utterance.volume = item.gain ?? 1
+      guard !(item.text ?? "").isEmpty else { done(true); return }
+      guard let utterance = wireUtterance(item) else { done(false); return }
       speech = utterance
       spoken = done
       synth.speak(utterance)
@@ -139,12 +193,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
       DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(Int(item.ms ?? 0)), execute: task)
     case .sound, .tone:
       do {
-        if !engine.isRunning {
-          let session = AVAudioSession.sharedInstance()
-          try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-          try session.setActive(true)
-          try engine.start()
-        }
+        try startAudio()
         let stream: EffectStream
         switch item.placement {
         case .independent: stream = tones
@@ -156,6 +205,13 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     }
   }
   func stop(all: Bool) {
+    for (playback, mixer, node) in playing.values {
+      playback.stop()
+      mixer.cancel()
+      node.stop()
+      available.append(node)
+    }
+    playing.removeAll()
     speech = nil
     spoken = nil
     pause?.cancel()
