@@ -11,6 +11,9 @@ final class WireMixer {
   private let work = DispatchQueue(label: "org.emacsvox.iphone.presentation", qos: .userInitiated)
   private let format: AVAudioFormat, synth: AVSpeechSynthesizer
   private let resolvedMarks: ((WireTimingReport) -> Void)?
+  private let reached: ((String) -> Void)?
+  private let presentation: WirePresentation?
+  private var markers: [ObjectIdentifier: [String]] = [:]
   private var current: Capture?
   private let capacity = NSCondition()
   private var queuedFrames = 0, pendingInputBytes = 0, cancelled = false
@@ -19,6 +22,7 @@ final class WireMixer {
     var deadline = ProcessInfo.processInfo.systemUptime + 3   // main queue
     var inputFull = false                                     // main queue
     var ended = false                                         // render queue
+    var startMarker: String?                                  // render queue
     var marked: WireMarkedAudio?                              // render queue
     let audio: (Packet) -> Void, finished: (Bool) -> Void
     init(_ audio: @escaping (Packet) -> Void, _ finished: @escaping (Bool) -> Void) {
@@ -27,7 +31,9 @@ final class WireMixer {
     }
   }
 
-  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, resolvedMarks: ((WireTimingReport) -> Void)?) {
+  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, reached: ((String) -> Void)? = nil) {
+    self.reached = reached
+    self.presentation = presentation
     self.format = format
     self.synth = synth
     self.resolvedMarks = resolvedMarks
@@ -35,6 +41,7 @@ final class WireMixer {
   deinit { ov_ios_mix_free(clock) }
 
   func cancel() {
+    markers.removeAll()
     ov_ios_cancel(token.pointer)
     wakeProducer()
     if current != nil {
@@ -50,7 +57,12 @@ final class WireMixer {
     capacity.unlock()
   }
 
-  func played(_ frames: Int) {
+  func played(_ buffer: AVAudioPCMBuffer) {
+    if let lines = markers.removeValue(forKey: ObjectIdentifier(buffer)) {
+      if let presentation { presentation.reached(lines) }
+      else { for line in lines { reached?(line) } }
+    }
+    let frames = Int(buffer.frameLength)
     capacity.lock()
     queuedFrames = max(0, queuedFrames - frames)
     capacity.signal()
@@ -77,9 +89,11 @@ final class WireMixer {
   func speech(_ cues: [WireItem], _ item: WireItem, _ audio: @escaping (Packet) -> Void,
               _ finished: @escaping (Bool) -> Void) {
     let bookmarks = WireBookmarks(item)
-    guard let utterance = wireUtterance(item, ssml: bookmarks?.ssml) else { finished(false); return }
+    guard presentation == nil || bookmarks != nil else { finished(false); return }
+    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil) else { finished(false); return }
     let capture = Capture(audio, finished)
-    capture.marked = bookmarks.map(WireMarkedAudio.init)
+    capture.startMarker = item.startMarker
+    capture.marked = bookmarks.map { WireMarkedAudio($0, tones: item.marks ?? []) }
     current = capture
     work.async {
       let ready = self.tones(cues)
@@ -116,7 +130,7 @@ final class WireMixer {
             self.work.sync { self.receive(Result { try IphoneMixerModule.copySamples(buffer) }, capture, stride: stride) }
           }
         }
-        if let bookmarks {
+        if let bookmarks, bookmarks.needsBookmarks {
           let useWords = bookmarks.acceptsWordRanges(in: utterance.speechString)
           self.synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
             guard let self, let capture else { return }
@@ -156,20 +170,42 @@ final class WireMixer {
   }
 
   private func post(_ pcm: OpaquePointer?, _ capture: Capture, end: Bool, mayWait: Bool = false) -> Bool {
-    let valid: Bool, buffer: AVAudioPCMBuffer?
+    var packets: [(AVAudioPCMBuffer, String?)] = []
+    var valid = false
     if let pcm {
+      defer { ov_ios_pcm_free(pcm) }
       let frames = ov_ios_frames(pcm)
-      buffer = wireBuffer(pcm, format: format)
-      valid = frames == 0 || (buffer != nil && reserve(frames, mayWait: mayWait))
-    } else { buffer = nil; valid = false }
+      if frames == 0 { valid = true }
+      else if reserve(frames, mayWait: mayWait) {
+        if let line = capture.startMarker {
+          if let initial = wireBufferSlice(pcm, format: format, frames: 0..<1) {
+            packets.append((initial, line))
+            capture.startMarker = nil
+            if frames == 1 { valid = true }
+            else if let rest = wireBufferSlice(pcm, format: format, frames: 1..<frames) {
+              packets.append((rest, nil))
+              valid = true
+            }
+          }
+        } else if let buffer = wireBufferSlice(pcm, format: format, frames: 0..<frames) {
+          packets.append((buffer, nil))
+          valid = true
+        }
+      }
+    }
     if end || !valid { capture.ended = true }
-    DispatchQueue.main.async { [weak self, weak capture] in
+    DispatchQueue.main.async { [weak self, weak capture, packets, valid] in
       guard let self, let capture, self.current === capture else { return }
       self.capacity.lock()
       let lead = Double(self.queuedFrames) / 44100
       self.capacity.unlock()
       capture.deadline = ProcessInfo.processInfo.systemUptime + lead + 3
-      if valid, let buffer { capture.audio((buffer, Int(buffer.frameLength))) }
+      if valid {
+        for (buffer, line) in packets {
+          if let line { self.markers[ObjectIdentifier(buffer)] = [line] }
+          capture.audio((buffer, Int(buffer.frameLength)))
+        }
+      }
       if end || !valid { self.end(capture, ok: valid) }
     }
     return valid
@@ -177,12 +213,35 @@ final class WireMixer {
 
   private func finishMarked(_ capture: Capture, _ marked: WireMarkedAudio) {
     guard !capture.ended else { return }
-    let (pcm, report) = marked.render(clock: clock, token: token.pointer)
+    let (pcm, report) = marked.render(clock: clock, token: token.pointer, presentation: presentation)
     DispatchQueue.main.async { [weak self, weak capture] in
       guard let self, let capture, self.current === capture else { return }
       self.resolvedMarks?(report)
     }
-    _ = post(pcm, capture, end: true, mayWait: true)
+    if let presentation, let pcm {
+      defer { ov_ios_pcm_free(pcm) }
+      guard let regions = presentation.regions(frames: ov_ios_frames(pcm)) else { _ = post(nil, capture, end: true); return }
+      for region in regions {
+        var start = region.frames.lowerBound
+        while start < region.frames.upperBound {
+          let end = min(start + 16384, region.frames.upperBound)
+          guard let buffer = wireBufferSlice(pcm, format: format, frames: start..<end), reserve(end - start, mayWait: true)
+          else { _ = post(nil, capture, end: true); return }
+          let lines = end == region.frames.upperBound ? region.events : []
+          DispatchQueue.main.async { [weak self, weak capture] in
+            guard let self, let capture, self.current === capture else { return }
+            if !lines.isEmpty { self.markers[ObjectIdentifier(buffer)] = lines }
+            capture.deadline = ProcessInfo.processInfo.systemUptime + 3
+            capture.audio((buffer, Int(buffer.frameLength)))
+          }
+          start = end
+        }
+      }
+      capture.ended = true
+      DispatchQueue.main.async { self.end(capture, ok: true) }
+    } else {
+      _ = post(pcm, capture, end: true, mayWait: true)
+    }
   }
 
   private func receive(_ input: Result<AVAudioPCMBuffer?, Error>, _ capture: Capture, stride bytesPerFrame: Int) {
@@ -234,6 +293,13 @@ final class WireMixer {
 
   func flush(_ trailing: [WireItem]?, _ done: @escaping (Packet?, Packet?, Bool) -> Void) {
     work.async {
+      if let presentation = self.presentation {
+        let pcm = ov_ios_presentation_tail(presentation.pointer)
+        let buffer = pcm.flatMap { wireBuffer($0, format: self.format) }
+        let valid = trailing != nil && (pcm == nil || buffer != nil)
+        DispatchQueue.main.async { done(nil, buffer.map { ($0, Int($0.frameLength)) }, valid) }
+        return
+      }
       let ready = trailing.map(self.tones) ?? true
       var tail: OpaquePointer?
       let primary = ov_ios_mix_finish(self.clock, trailing != nil && ready, &tail, self.token.pointer)

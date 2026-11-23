@@ -75,6 +75,7 @@ final class WirePlayback<Buffer> {
     finishing = true
     flush(pending) { [weak self] primary, tail, valid in
       guard let self, !self.stopped else { return }
+      self.ok = self.ok && valid
       if valid, pending != nil { self.consumed = self.items.count }
       if let primary { self.schedule(primary) }
       if let tail {

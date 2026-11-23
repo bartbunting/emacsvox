@@ -10,6 +10,8 @@ struct WireItem: Decodable {
   var text: String?, voice: String?, rate: Float?, pitch: Float?, gain: Float?
   var path: String?, hz: Float?, ms: UInt32?
   var marks: [WireToneMark]?
+  var anchors: [WireAnchor]?
+  var startMarker: String?
 }
 
 struct WireToneMark: Decodable {
@@ -24,8 +26,9 @@ struct WireReceipts: Decodable {
 }
 
 struct WireAction: Decodable {
-  enum Op: String, Decodable { case reply, batch, immediate, stop, exit }
+  enum Op: String, Decodable { case reply, batch, immediate, timeline, stop, exit }
   let op: Op
+  var key: String?, bytes: Int?
   var line: String?, items: [WireItem]?, item: WireItem?, receipts: WireReceipts?
 }
 
@@ -34,13 +37,16 @@ protocol WireOutput: AnyObject {
   func play(_ item: WireItem, done: @escaping (Bool) -> Void)
   // An overlay can continue after the next speech starts. Its ticket keeps
   // tracked dispatch open until the actual last sample plays.
-  func playMixed(_ items: ArraySlice<WireItem>, holdTail: @escaping () -> () -> Void,
+  func playMixed(_ items: ArraySlice<WireItem>, reached: @escaping (String) -> Void, holdTail: @escaping () -> () -> Void,
                  done: @escaping (Int, Bool) -> Void)
+  func playTimeline(_ plan: WirePresentation, holdTail: @escaping () -> () -> Void, done: @escaping (Bool) -> Void)
   func stop(all: Bool)
 }
 
 private final class WireBatch {
   let items: [WireItem], receipts: WireReceipts?, bytes: Int
+  var presentation: WirePresentation?
+  var timelineStarted = false
   let done: ((Bool) -> Void)?
   var index = 0, separateUntil = 0, outstanding = 0, failed = false, finished = false
   init(_ items: [WireItem], _ receipts: WireReceipts?, _ bytes: Int, _ done: ((Bool) -> Void)?) {
@@ -52,18 +58,18 @@ private final class WireBatch {
 
   func mixedRun() -> ArraySlice<WireItem>? {
     guard index >= separateUntil else { return nil }
-    var end = index, speech = false, tone = false
+    var end = index, speech = false, needsMixer = false
     while end < items.count {
       let item = items[end]
       if item.kind == .speech, let text = item.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         speech = true
-        if item.marks?.isEmpty == false { tone = true }
+        if item.startMarker != nil || item.marks?.isEmpty == false { needsMixer = true }
       } else if item.kind == .tone && (item.placement == .insert || item.placement == .overlay) {
-        tone = true
+        needsMixer = true
       } else { break }
       end += 1
     }
-    if speech && tone { return items[index..<end] }
+    if speech && needsMixer { return items[index..<end] }
     separateUntil = end
     return nil
   }
@@ -81,7 +87,7 @@ final class WireSchedule {
     self.reply = reply
   }
 
-  func submit(_ action: WireAction, bytes size: Int) {
+  func submit(_ action: WireAction, bytes size: Int, presentation: WirePresentation? = nil) {
     switch action.op {
     case .reply: if let line = action.line { reply(line) }
     case .stop, .exit: stop(all: true)
@@ -89,6 +95,9 @@ final class WireSchedule {
       guard let item = action.item else { return }
       if item.kind == .speech { stop(all: false) }
       admit([item], nil, size, immediate: item.kind == .sound)
+    case .timeline:
+      guard let presentation, let receipts = action.receipts, let bytes = action.bytes else { return }
+      admit([], receipts, bytes, immediate: false, presentation: presentation)
     case .batch: admit(action.items ?? [], action.receipts, size, immediate: false)
     }
   }
@@ -102,13 +111,36 @@ final class WireSchedule {
     admit([item], nil, item.text?.utf8.count ?? 0, immediate: false, done: done)
   }
 
-  private func admit(_ items: [WireItem], _ receipts: WireReceipts?, _ size: Int, immediate: Bool, done: ((Bool) -> Void)? = nil) {
-    guard live.count < 33, size <= 32 * 1024 * 1024 - bytes else {
+  private func admit(_ items: [WireItem], _ receipts: WireReceipts?, _ size: Int, immediate: Bool, presentation: WirePresentation? = nil, done: ((Bool) -> Void)? = nil) {
+    var replaced = presentation?.key.map { key in live.values.filter { $0.presentation?.key == key } } ?? []
+    var freed = replaced.reduce(0) { $0 + $1.bytes }
+    func fits() -> Bool {
+      live.count - replaced.count < 33 && size >= 0 && size <= 32 * 1024 * 1024 - bytes + freed
+    }
+    if !fits(), size <= 32 * 1024 * 1024 {
+      for queued in waiting where !queued.timelineStarted && queued.presentation?.key != nil {
+        if replaced.contains(where: { $0 === queued }) { continue }
+        replaced.append(queued)
+        freed += queued.bytes
+        if fits() { break }
+      }
+    }
+    guard fits() else {
       done?(false)
       if let receipts { reply(receipts.failed) }
       return
     }
     let job = WireBatch(items, receipts, size, done)
+    job.presentation = presentation
+    for old in replaced {
+      old.finished = true
+      if waiting.first === old && old.timelineStarted { blocked = false }
+      waiting.removeAll { $0 === old }
+      live.removeValue(forKey: ObjectIdentifier(old))
+      bytes -= old.bytes
+      old.presentation?.cancel(replacing: true)
+      if let receipts = old.receipts { reply(receipts.cancelled) }
+    }
     live[ObjectIdentifier(job)] = job
     bytes += size
     if immediate {
@@ -129,7 +161,7 @@ final class WireSchedule {
     live.removeAll()
     bytes = 0
     blocked = false
-    for job in cancelled { job.finished = true }
+    for job in cancelled { job.finished = true; job.presentation?.cancel() }
     output.stop(all: all)
     for job in cancelled {
       job.done?(false)
@@ -142,6 +174,28 @@ final class WireSchedule {
     advancing = true
     defer { advancing = false }
     while !blocked, let job = waiting.first {
+      if let plan = job.presentation, !job.timelineStarted {
+        job.timelineStarted = true
+        job.outstanding += 1
+        blocked = true
+        output.playTimeline(plan, holdTail: { [weak self, weak job] in
+          guard let job, !job.finished else { return {} }
+          job.outstanding += 1
+          return { [weak self, weak job] in
+            guard let job, !job.finished else { return }
+            job.outstanding -= 1
+            self?.finishIfPlayed(job)
+          }
+        }) { [weak self, weak job] ok in
+          guard let self, let job, !job.finished else { return }
+          job.failed = !ok
+          job.outstanding -= 1
+          self.blocked = false
+          self.finishIfPlayed(job)
+          self.advance()
+        }
+        continue
+      }
       if job.index == job.items.count {
         waiting.removeFirst()
         finishIfPlayed(job)
@@ -150,7 +204,10 @@ final class WireSchedule {
       if let run = job.mixedRun() {
         blocked = true
         job.separateUntil = run.endIndex
-        output.playMixed(run, holdTail: { [weak self, weak job] in
+        output.playMixed(run, reached: { [weak self, weak job] marker in
+          guard let job, !job.finished else { return }
+          self?.reply(marker)
+        }, holdTail: { [weak self, weak job] in
           guard let job, !job.finished else { return {} }
           job.outstanding += 1
           return { [weak self, weak job] in
@@ -160,8 +217,9 @@ final class WireSchedule {
           }
         }) { [weak self, weak job] played, ok in
           guard let self, let job, !job.finished else { return }
-          job.failed = job.failed || !ok
-          job.index = run.startIndex + played
+          let lostMarker = run.dropFirst(played).contains { $0.startMarker != nil }
+          job.failed = job.failed || !ok || lostMarker
+          job.index = lostMarker ? run.endIndex : run.startIndex + played
           self.blocked = false
           self.advance()
         }

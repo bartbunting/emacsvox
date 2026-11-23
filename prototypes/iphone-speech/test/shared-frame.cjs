@@ -300,18 +300,24 @@ async function main() {
       fs.writeFileSync(pub, execFileSync(probe, ['public-key', seed]));
       const peer = spawn('python3', [path.join(__dirname, 'ssh-terminal.py'), '--peer-only', pub,
         '--sshd', process.env.IPHONE_TEST_SSHD], {stdio: ['pipe', 'pipe', 'inherit']});
-      let connection;
+      let connection, controlAudio;
       try {
         const {port, pin} = JSON.parse((await once(peer.stdout, 'data'))[0]);
         async function attachSSH(rawWorker) {
           const packets = [];
           ws = new WebSocket('ws://127.0.0.1:' + sshRelay.httpServer.address().port + '/speech/ssh' + (rawWorker ? '/omnivox' : ''));
           const current = ws, workers = {};
+          controlAudio = (lane, line) => workers[lane].stdin.write(line + '\n');
           if (rawWorker) {
             for (const tag of ['M', 'N']) {
               const worker = spawn(rawWorker, [], {stdio: ['pipe', 'pipe', 'inherit']});
               workers[tag] = worker;
               require('node:readline').createInterface({input: worker.stdout}).on('line', line => {
+                if (line.startsWith('test-audio ')) { packets.push({lane: tag, audio: line.slice(11)}); return; }
+                const marker = /^__EMACSVOX_MARKER__ ([A-Za-z0-9+/=]+)$/.exec(line);
+                const receipt = /^__EMACSVOX_TRACKED__ (\d+) (completed|cancelled|failed)$/.exec(line);
+                if (marker) packets.push({lane: tag, marker: JSON.parse(Buffer.from(marker[1], 'base64'))});
+                if (receipt) packets.push({lane: tag, dispatch: Number(receipt[1]), status: receipt[2]});
                 if (current.readyState === WebSocket.OPEN) current.send(tag + ' ' + line);
               });
             }
@@ -326,9 +332,12 @@ async function main() {
               const tone = /^emacsvox_tone 1 (insert|overlay) ([\d.]+) (\d+)$/.exec(line);
               const encoded = /^omnivox_control\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
               const control = encoded && JSON.parse(Buffer.from(encoded[1], 'base64').toString());
+              const encodedTimeline = /^emacsvox_timeline\s+\{?([A-Za-z0-9+/=]+)\}?$/.exec(line);
+              const timeline = encodedTimeline && JSON.parse(Buffer.from(encodedTimeline[1], 'base64'));
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
+                timeline,
                 control: control?.type, voice: control?.selector?.voice_id,
-                fixtureRow: /^q\s/.test(line) && line.includes('Fixture'),
+                fixtureRow: /^q\s/.test(line) && line.includes('Fixture') || timeline?.spans.some(span => span.text.includes('Fixture')),
                 tone: tone && {mode: tone[1], hz: Number(tone[2]), ms: Number(tone[3])}});
             } else packets.push(JSON.parse(message));
           });
@@ -542,6 +551,45 @@ async function main() {
               (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
           const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
           const desktopState = await observe(desktopSnapshot);
+          await observe(`(with-selected-window ${phoneWindow}
+            (switch-to-buffer (iphone-test-render-response "Timing start\nTestCase\nFresh line"))
+            (setq-local tts-caps t tts-split-caps nil emacsvox-capitalization-presentation 'tone)
+            (goto-char (point-min)) (search-forward "Timing start") (beginning-of-line))`);
+          const firstNavigation = rawPackets.length;
+          sshKeys('\x0e');
+          const word = () => rawPackets.slice(firstNavigation).find(p =>
+            p.lane === 'M' && p.timeline?.spans.some(span => span.text.includes('TestCase')))?.timeline;
+          await until('ordinary Control+n delivers an intact TestCase timeline to the iPhone worker', word);
+          const inner = word().actions.find(action => action.type === 'tone' && action.position.utf8_offset === 4);
+          assert.equal(inner?.mode, 'insert');
+          await until('the marked navigation dispatch completes after its semantic cue', () =>
+            rawPackets.some(p => p.lane === 'M' && p.dispatch === word().dispatch_id && p.status === 'completed') &&
+            rawPackets.some(p => p.lane === 'M' && p.marker?.dispatch_id === word().dispatch_id &&
+              p.marker.type === 'semantic_event_reached'));
+          const played = rawPackets.filter(p => p.marker?.dispatch_id === word().dispatch_id).map(p => p.marker);
+          assert.ok(played.some(m => m.type === 'utterance_started' && m.text.includes('TestCase')));
+          assert.ok(played.some(m => m.type === 'timeline_action_resolved' && m.action_id === inner.id && m.resolution === 'exact'));
+          // Hold both synthetic output devices while sending two ordinary keys
+          // over SSH. Releasing old hardware callbacks must never revive a line.
+          controlAudio('N', 'test-permission');
+          controlAudio('M', 'test-hold');
+          await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (search-forward "Timing start") (beginning-of-line))`);
+          const heldStart = rawPackets.length;
+          sshKeys('\x0e');
+          const held = () => rawPackets.slice(heldStart).find(p => p.lane === 'M' && p.timeline?.spans.some(s => s.text.includes('TestCase')))?.timeline;
+          await until('first navigation admitted while playback held', held);
+          sshKeys('\x0e');
+          const fresh = () => rawPackets.slice(heldStart).find(p => p.lane === 'M' && p.timeline?.spans.some(s => s.text.includes('Fresh line')))?.timeline;
+          await until('second navigation cancels the earlier dispatch', () => fresh() &&
+            rawPackets.some(p => p.lane === 'M' && p.dispatch === held().dispatch_id && p.status === 'cancelled'));
+          controlAudio('M', 'test-play');
+          await until('only the later navigation reaches playback completion', () =>
+            rawPackets.some(p => p.lane === 'M' && p.dispatch === fresh().dispatch_id && p.status === 'completed'));
+          assert.ok(!rawPackets.some(p => p.marker?.dispatch_id === held().dispatch_id));
+          controlAudio('N', 'test-play');
+          await until('urgent permission reaches completion on its own output', () => rawPackets.some(p => p.audio === 'permission played'));
+          console.log('Passed ordinary Agent Shell Control+n with one TestCase utterance, an in-word insert, semantic playback, replacement and protected permission.');
+          await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer))`);
           const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, '../modules/iphone-mixer/ios/CapitalTiming.json'), 'utf8'));
           const transportTests = path.resolve(__dirname, '../../../test/emacsvox-aural-transport-tests.el');
           await observe(`(load ${JSON.stringify(transportTests)} nil t)`);
@@ -555,30 +603,27 @@ async function main() {
           assert.deepEqual(JSON.parse(JSON.parse(capitalTimeline)), fixture);
           const before = rawPackets.length;
           sshKeys('\x0e');
-          await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.command === 'q'));
+          await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.timeline?.spans.some(span => span.text.trim())));
           await observe(`(with-selected-window ${phoneWindow}
             (switch-to-buffer (get-buffer-create "Phone indentation fixture")) (emacs-lisp-mode)
             (insert "start\n    sample\n        sample\nTestCase\n") (goto-char (point-min))
             (setq-local emacsvox-audio-indentation t emacsvox-indentation-presentation 'duration-tone
                         emacsvox-indentation-tone-timing 'overlay))`);
           function mixedDispatch(start, predicate) {
-            const main = rawPackets.slice(start).filter(p => p.lane === 'M');
-            const at = main.findIndex(predicate);
-            if (at < 0) return false;
-            const rest = main.slice(at + 1);
-            const end = rest.findIndex(p => ['s', 'd', 'emacsvox_tracked_dispatch'].includes(p.command));
-            return end >= 0 && rest[end].command !== 's' && rest.slice(0, end).some(p => p.command === 'q');
+            return rawPackets.slice(start).some(p => p.lane === 'M' && p.timeline?.spans.some(span => span.text.trim()) &&
+              p.timeline.actions?.some(a => a.type === 'tone' && predicate(a)) &&
+              rawPackets.some(r => r.lane === 'M' && r.dispatch === p.timeline.dispatch_id && r.status === 'completed'));
           }
           for (const ms of [130, 210]) {
             const start = rawPackets.length;
             sshKeys('\x0e');
             await until('indentation overlay and its spoken line in one dispatch', () => mixedDispatch(start, p =>
-              p.tone?.mode === 'overlay' && p.tone.hz === 250 && p.tone.ms === ms));
+              p.mode === 'overlay' && p.frequency_hz === 250 && p.duration_ms === ms));
           }
           await observe(`(with-selected-window ${phoneWindow} (setq-local tts-caps t emacsvox-capitalization-presentation 'tone))`);
           const caps = rawPackets.length;
           sshKeys('\x0e');
-          await until('capital insert and its spoken word in one dispatch', () => mixedDispatch(caps, p => p.tone?.mode === 'insert'));
+          await until('capital insert and its spoken word in one dispatch', () => mixedDispatch(caps, p => p.mode === 'insert'));
           await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer)
             (goto-char (point-max))
             (setq-local emacsvox-agent-shell-input-activation 'explicit
@@ -590,7 +635,7 @@ async function main() {
             const start = rawPackets.length;
             sshKeys(keys);
             await until('Agent Shell ' + file + ' recording on the phone', () =>
-              rawPackets.slice(start).some(p => p.icon === id && p.lane === 'M'));
+              rawPackets.slice(start).some(p => p.lane === 'M' && (p.icon === id || p.timeline?.actions.some(a => a.type === 'audio' && a.path === id))));
           }
           const currentMenu = name => observe(`(and transient--prefix (eq (oref transient--prefix command) '${name}))`);
           await observe(`(setq iphone-test-voices-origin ${phoneWindow})`);
@@ -665,8 +710,22 @@ async function main() {
           sshKeys('\x18bPhoneModeFixture\r');
           await until('leave the voice list before disconnecting', async () =>
             await observe(`(buffer-name (window-buffer ${phoneWindow}))`) === '"PhoneModeFixture"');
+          await observe(`(with-selected-window ${phoneWindow}
+            (switch-to-buffer (iphone-test-render-response "Reconnect start\nUnheard previous row\nFresh after reconnect"))
+            (goto-char (point-min)) (search-forward "Reconnect start") (beginning-of-line))`);
+          controlAudio('M', 'test-hold');
+          sshKeys('\x0e');
+          await until('old navigation is admitted before disconnect', () => resumed.some(p =>
+            p.timeline?.spans.some(s => s.text.includes('Unheard previous row'))));
           await closeSSH();
-          await attachSSH(process.env.IPHONE_WIRE_WORKER);
+          const reconnected = await attachSSH(process.env.IPHONE_WIRE_WORKER);
+          await until('fresh phone workers registered after disconnect', async () => await observe(`(process-get ${main} 'iphone-routing-ready)`) === 't');
+          sshKeys('\x0e');
+          const nextLine = () => reconnected.find(p => p.timeline?.spans.some(s => s.text.includes('Fresh after reconnect')))?.timeline;
+          await until('new navigation plays after reconnect', () => nextLine() &&
+            reconnected.some(p => p.lane === 'M' && p.dispatch === nextLine().dispatch_id && p.status === 'completed'));
+          assert.ok(!reconnected.some(p => p.marker?.text?.includes('Unheard previous row')));
+          console.log('Passed disconnect during a held timeline and fresh Control+n on the replacement phone frame.');
           sshKeys('\x1bxomnivox-list-voices\r');
           await until('a fresh browse on the new connection starts on the saved reading voice', async () =>
             await observe(`(with-selected-window ${phoneWindow}

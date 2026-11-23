@@ -9,7 +9,8 @@ final class WireMarkedAudio {
   var plan: WireBookmarks, pcmEnded = false
   private var samples: [Float] = []
   private var rate: UInt32 = 0, channels = 0, bytesPerFrame = 0
-  init(_ plan: WireBookmarks) { self.plan = plan }
+  private let tones: [WireToneMark]
+  init(_ plan: WireBookmarks, tones: [WireToneMark]) { self.plan = plan; self.tones = tones }
 
   func append(_ buffer: AVAudioPCMBuffer, stride: Int) -> Bool {
     let frames = Int(buffer.frameLength), nextRate = UInt32(buffer.format.sampleRate)
@@ -29,19 +30,33 @@ final class WireMarkedAudio {
     return true
   }
 
-  func render(clock: OpaquePointer, token: OpaquePointer) -> (OpaquePointer?, WireTimingReport) {
+  func render(clock: OpaquePointer, token: OpaquePointer, presentation: WirePresentation?) -> (OpaquePointer?, WireTimingReport) {
     let positions = plan.placements(bytesPerFrame: bytesPerFrame, totalFrames: samples.count / max(1, channels))
-    var cues: [OvToneMark] = []
+    var anchors: [OvAnchorFrame] = []
     var report = WireTimingReport()
+    var reported = Set<Int>()
     for (mark, position) in zip(plan.marks, positions) {
-      if mark.offset > 0 && mark.offset < plan.length {
+      if mark.offset > 0 && mark.offset < plan.length && reported.insert(mark.offset).inserted {
         switch position.precision {
         case .exact: report.exact += 1
         case .word: report.word += 1
         case .span: report.span += 1
         }
       }
-      cues.append(OvToneMark(frame: UInt32(position.frame), hz: mark.hz, ms: mark.ms, gain: mark.gain, insert: mark.placement == .insert))
+      let precision: UInt8 = position.precision == .exact ? 0 : position.precision == .word ? 1 : 2
+      anchors.append(OvAnchorFrame(frame: UInt32(position.frame), precision: precision))
+    }
+    if let presentation {
+      let pcm = samples.withUnsafeBufferPointer { input in
+        anchors.withUnsafeBufferPointer { points in
+          ov_ios_render_presentation(presentation.pointer, input.baseAddress, input.count, rate, UInt16(channels),
+                                     points.baseAddress, points.count, presentation.token)
+        }
+      }
+      return (pcm, report)
+    }
+    let cues = zip(tones, anchors).map { tone, point in
+      OvToneMark(frame: point.frame, hz: tone.hz, ms: tone.ms, gain: tone.gain, insert: tone.placement == .insert)
     }
     let pcm = samples.withUnsafeBufferPointer { input in
       cues.withUnsafeBufferPointer { points in

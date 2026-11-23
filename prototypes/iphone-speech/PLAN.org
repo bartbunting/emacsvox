@@ -27,14 +27,19 @@ runtime, legacy and structured audio, on-device voice inventory and
 Emacs voice settings. Signed build 4 negotiates both speech workers and
 lists the installed voices.
 
-Before the next signed build, test ordinary =C-n= in an Agent Shell
-response containing =TestCase=. Emacs must send the whole word and its cue
-positions through the Omnivox timeline protocol. With a synthesis marker
-at the internal capital in the WSL test, the Rust mixer must insert the
-tone at that audio frame. A second =C-n= must cancel the old line and its
-remaining cues while an urgent permission announcement finishes. Reconnect
-must discard stale output. On the signed phone, compare US Reed's reported
-timing and audible placement with desktop playback.
+The build 5 source passes the WSL navigation exercise. In a disposable
+graphical Emacs, the Swift SSH client sends =C-n= in an Agent Shell response.
+Emacs sends =TestCase= in one span. With a known synthesis bookmark the
+worker inserts exactly 882 frames at the internal capital. Moving again
+cancels the old dispatch and its remaining cues while an urgent permission
+finishes. Disconnecting during playback and reconnecting delivers fresh
+navigation. WSL supplies test speech samples and hardware completions.
+
+On build 5, enable Omnivox, select US Reed and run “Test timing inside
+TestCase” in Diagnostics. Listen for the internal capital during ordinary
+=C-n= with the same voice and capital settings. Repeat during the line,
+and test the built-in speaker and headphones. Record the reported exact,
+word or span placement alongside what you hear.
 
 Include the staged keyboard and capital-pitch fixes with that build.
 Track these listening comparisons alongside the port.
@@ -274,8 +279,7 @@ native mixer in a signed build that includes the recording.
 The paired prototype now runs the Omnivox worker and Swift scheduling
 tests in WSL. Follow [[file:OMNIVOX.org][Omnivox on iPhone]] to exercise the isolated
 SSH connection, phone voice controls, bundled or imported recordings
-and standalone tone placement. Device qualification and structured
-timeline support remain open.
+and standalone tone placement. Device qualification and the later rich-tone and voice-choice timelines remain open.
 
 The [[file:OMNIVOX.org::*Implementation order][implementation slices]] specify the expected playback and control
 behaviour, automated proof and separate physical listening checks.

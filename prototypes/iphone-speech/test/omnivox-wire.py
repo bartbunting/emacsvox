@@ -71,6 +71,24 @@ async def check(command, icon):
         await dispatch(11, "failed", bad, "p {" + icon + "}")
         await dispatch(12, "completed", bad, "s")
         await dispatch(13, "completed", "q {Fresh}", "t 440 12")
+        if "playback_marker_events_v2" in capabilities["features"]:
+            await send("q {first}", "q {second}", "emacsvox_marker_dispatch 14")
+            started, sequence = [], 0
+            while True:
+                line = await reply()
+                if line == b"__EMACSVOX_TRACKED__ 14 completed":
+                    break
+                prefix, _, payload = line.partition(b" ")
+                if prefix != b"__EMACSVOX_MARKER__":
+                    raise RuntimeError("Expected a playback marker before tracked completion")
+                event = json.loads(base64.b64decode(payload, validate=True))
+                if event["dispatch_id"] != 14 or event["sequence"] != sequence + 1:
+                    raise RuntimeError("Marker dispatch lost ownership or order")
+                sequence += 1
+                if event["type"] == "utterance_started":
+                    started.append(event["text"])
+            if started != ["first", "second"]:
+                raise RuntimeError("Legacy marker dispatch lost an utterance start")
         await send("tts_exit")
         if await asyncio.wait_for(proc.wait(), 5) != 0:
             raise RuntimeError("Worker did not exit cleanly")

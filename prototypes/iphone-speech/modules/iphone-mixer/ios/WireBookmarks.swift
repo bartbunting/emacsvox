@@ -16,7 +16,7 @@ struct WireTimingReport {
 // Keep one utterance and add an SSML bookmark at each requested UTF-8
 // boundary. Apple ignores utterance rate and pitch when the input is SSML.
 struct WireBookmarks {
-  let ssml: String, marks: [WireToneMark], length: Int
+  let ssml: String, marks: [WireAnchor], length: Int
   private let source: String, utf16Length: Int
   private(set) var offsets: [String: Int] = [:]
   private var conflicting: Set<String> = []
@@ -24,7 +24,8 @@ struct WireBookmarks {
   static let end = "ov-end"
 
   init?(_ item: WireItem) {
-    guard let text = item.text, let marks = item.marks, !marks.isEmpty, marks.count <= 512 else { return nil }
+    guard let text = item.text, let marks = item.anchors ?? item.marks?.map({ WireAnchor(offset: $0.offset, after: $0.after) }),
+          item.anchors != nil || !marks.isEmpty, marks.count <= 512 else { return nil }
     let bytes = Array(text.utf8)
     self.marks = marks
     source = text
@@ -71,7 +72,9 @@ struct WireBookmarks {
     words[offset] = byte
   }
 
-  var complete: Bool { offsets[Self.end] != nil && marks.allSatisfy { offsets["ov-\($0.offset)"] != nil } }
+  var needsBookmarks: Bool { marks.contains { $0.offset > 0 && $0.offset < length } }
+
+  var complete: Bool { !needsBookmarks || offsets[Self.end] != nil && marks.allSatisfy { offsets["ov-\($0.offset)"] != nil } }
 
   func nativeFrames(bytesPerFrame: Int, totalFrames: Int) -> [Int?] {
     guard bytesPerFrame > 0, totalFrames > 0 else { return marks.map { _ in nil } }

@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 import AVFoundation
+import AudioToolbox
 import OmnivoxMobile
 
 final class WireResources {
@@ -28,14 +29,18 @@ final class RenderToken {
 // Transfer one owned canonical Omnivox buffer into Apple's planar player format.
 func wireBuffer(_ pcm: OpaquePointer, format: AVAudioFormat) -> AVAudioPCMBuffer? {
   defer { ov_ios_pcm_free(pcm) }
-  let count = ov_ios_frames(pcm)
+  return wireBufferSlice(pcm, format: format, frames: 0..<ov_ios_frames(pcm))
+}
+
+func wireBufferSlice(_ pcm: OpaquePointer, format: AVAudioFormat, frames: Range<Int>) -> AVAudioPCMBuffer? {
+  let count = frames.count
   guard count > 0, let source = ov_ios_samples(pcm),
         let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count)),
         let planes = buffer.floatChannelData else { return nil }
   buffer.frameLength = AVAudioFrameCount(count)
   for i in 0..<count {
-    planes[0][i] = source[2 * i]
-    planes[1][i] = source[2 * i + 1]
+    planes[0][i] = source[2 * (frames.lowerBound + i)]
+    planes[1][i] = source[2 * (frames.lowerBound + i) + 1]
   }
   return buffer
 }
@@ -109,8 +114,12 @@ private final class EffectStream {
 
 final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private let synth = AVSpeechSynthesizer(), engine = AVAudioEngine()
+  private let resources: WireResources
+  private let preparation = DispatchQueue(label: "org.emacsvox.iphone.resource-preparation", qos: .userInitiated)
   private let bufferSynth = AVSpeechSynthesizer()
   private let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+  private lazy var scheduleGain = engine.mainMixerNode.auAudioUnit.scheduleParameterBlock
+  private var fading: [ObjectIdentifier: AVAudioPlayerNode] = [:]
   private var available: [AVAudioPlayerNode] = []
   private var playing: [ObjectIdentifier: (WirePlayback<AVAudioPCMBuffer>, WireMixer, AVAudioPlayerNode)] = [:]
   private let tones: EffectStream, sounds: EffectStream, inserts: EffectStream
@@ -120,6 +129,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private var observers: [NSObjectProtocol] = []
 
   init(_ resources: WireResources) {
+    self.resources = resources
     tones = EffectStream(resources, format: format)
     sounds = EffectStream(resources, format: format)
     inserts = EffectStream(resources, format: format)
@@ -148,12 +158,32 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
       let session = AVAudioSession.sharedInstance()
       try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
       try session.setActive(true)
+      _ = scheduleGain
       try engine.start()
     }
   }
 
-  func playMixed(_ items: ArraySlice<WireItem>, holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
-    do { try startAudio() } catch { done(0, true); return }
+  func playMixed(_ items: ArraySlice<WireItem>, reached: @escaping (String) -> Void, holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
+    startRun(items, presentation: nil, reached: reached, holdTail: holdTail, done: done)
+  }
+
+  func playTimeline(_ plan: WirePresentation, holdTail: @escaping () -> () -> Void, done: @escaping (Bool) -> Void) {
+    preparation.async { [resources] in
+      let items = plan.prepare(bundle: resources.loader, personal: resources.personal)
+      DispatchQueue.main.async { [weak self] in
+        guard !plan.cancelled else { return }
+        guard let self, let items else { done(false); return }
+        if items.isEmpty { done(true); return }
+        self.startRun(items[...], presentation: plan, reached: nil, holdTail: holdTail) { count, ok in
+          done(ok && count == items.count)
+        }
+      }
+    }
+  }
+
+  private func startRun(_ items: ArraySlice<WireItem>, presentation: WirePresentation?, reached: ((String) -> Void)?,
+                        holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
+    do { try startAudio() } catch { done(0, presentation == nil); return }
     // A previous dispatch may still own this lane's overlay tail.
     let node: AVAudioPlayerNode
     if let idle = available.popLast() { node = idle }
@@ -163,20 +193,53 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
       engine.connect(node, to: engine.mainMixerNode, format: format)
     }
     let key = ObjectIdentifier(node)
-    let mixer = WireMixer(format: format, synth: bufferSynth, resolvedMarks: resolvedMarks)
+    node.volume = 1
+    let mixer = WireMixer(format: format, synth: bufferSynth, resolvedMarks: resolvedMarks, presentation: presentation, reached: reached)
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
       enqueue: { buffer, played in
         node.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
-          DispatchQueue.main.async { mixer.played(Int(buffer.frameLength)); played() }
+          DispatchQueue.main.async { mixer.played(buffer); played() }
         }
         if !node.isPlaying { node.play() }
       }, holdTail: holdTail, done: done, release: { [weak self] in
+        presentation?.stopPlayer = nil
         self?.playing.removeValue(forKey: key)
         node.stop()
         self?.available.append(node)
       })
+    presentation?.stopPlayer = { [weak self] replacing in
+      guard let self, let (run, mixer, player) = self.playing.removeValue(forKey: key) else { return }
+      run.stop()
+      mixer.cancel()
+      self.retire(player, replacing: replacing)
+    }
     playing[key] = (playback, mixer, node)
     playback.advance()
+  }
+
+  private func retire(_ player: AVAudioPlayerNode, replacing: Bool) {
+    let mixer = engine.mainMixerNode
+    guard replacing, player.isPlaying, engine.isRunning,
+          let route = engine.outputConnectionPoints(for: player, outputBus: 0).first(where: { $0.node === mixer }),
+          let gain = mixer.auAudioUnit.parameterTree?.parameter(withID: kMultiChannelMixerParam_Volume,
+            scope: kAudioUnitScope_Input, element: UInt32(route.bus)), gain.flags.contains(.flag_CanRamp)
+    else {
+      player.stop()
+      available.append(player)
+      return
+    }
+    let frames = AUAudioFrameCount((mixer.outputFormat(forBus: 0).sampleRate * 0.003).rounded())
+    scheduleGain(AUEventSampleTimeImmediate, frames, gain.address, 0)
+    let key = ObjectIdentifier(player)
+    fading[key] = player
+    // Keep this bus private until its hardware render quantum consumes the ramp.
+    let grace = AVAudioSession.sharedInstance().ioBufferDuration + 0.003
+    DispatchQueue.main.asyncAfter(deadline: .now() + grace) { [weak self] in
+      guard let self, self.fading.removeValue(forKey: key) != nil else { return }
+      player.stop()
+      gain.value = 1
+      self.available.append(player)
+    }
   }
 
   func play(_ item: WireItem, done: @escaping (Bool) -> Void) {
@@ -205,6 +268,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     }
   }
   func stop(all: Bool) {
+    for node in fading.values { node.stop() }
     for (playback, mixer, node) in playing.values {
       playback.stop()
       mixer.cancel()

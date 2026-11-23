@@ -44,10 +44,12 @@ or later. See [[https://developer.apple.com/documentation/avfaudio/avspeechsynth
 If an internal mark is missing, Omnivox uses a word boundary on the
 requested side when Apple supplies a matching word range. Otherwise it
 places the cue at the corresponding end of the speech span. The diagnostic
-reports each fallback. Ordinary navigation
-currently uses the negotiated legacy commands, which can split a word
-across utterances. The structured timeline work below brings the intact
-span and its original offsets through that route.
+reports each fallback. In the build 5 source, ordinary navigation negotiates
+timeline version 3. A single =C-n= in an Agent Shell response sends =TestCase=
+with its cue positions to the phone. Main and notification speech keep
+separate playback queues. Moving again retires the old navigation and its
+unheard cues. Local Stop silences both queues, including their remaining
+audio. Reconnecting creates fresh workers.
 
 ** Try the native worker
 
@@ -133,10 +135,9 @@ Disconnect and press Control+C in the separate test launchers to finish.
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
 npm test
 export IPHONE_TEST_SSHD=/usr/sbin/sshd
-./test/wire-worker --frame
 stage=$(./stage-ios-build)
 ./test/staged-worker-import "$stage"
-IPHONE_TEST_ICONS="$stage/modules/iphone-mixer/ios/OmnivoxSounds.bundle" ./test/wire-worker
+IPHONE_TEST_ICONS="$stage/modules/iphone-mixer/ios/OmnivoxSounds.bundle" ./test/wire-worker --frame
 #+end_src
 
 The worker fixture runs the native Rust library and Swift scheduler in
@@ -146,8 +147,11 @@ a disposable graphical Emacs. Staging builds the pinned Rust commit for
 arm64 iPhone and arm64 Simulator and checks every bundled sound digest.
 A hosted Xcode build and physical listening qualify Apple playback,
 voice availability and keyboard focus. Standalone =emacsvox_tone= version
-1 supports insert and overlay. The current workers omit the structured
-timeline, rich-tone and engine-specific parameter capabilities.
+1 supports insert and overlay. Build 5 adds timeline version 3 and playback
+marker version 2. Files, silence, tone placement, stereo pan, filters and
+effect tails use the desktop renderer. The worker reports resolved positions
+and reached semantic events before tracked completion. Timeline versions 6 and 7 add richer tone shapes. Those versions and
+engine-specific voice parameters remain separate milestones.
 
 
 Use Omnivox =3ed4e8d= as the first reproducible desktop reference. Update
@@ -302,7 +306,7 @@ can exercise audio buffers with an installed test voice. Use a signed
 device build to collect the real iOS inventory and renderer timings.
 Build 4 introduced two-way negotiation, phone voice listing, selection
 and common controls, and the legacy tone and icon streams. The
-[[file:PLAN.org::*Next implementation and device build][next signed build]] requires in-word cues through ordinary Emacs navigation.
+[[file:PLAN.org::*Next implementation and device build][build 5 device exercise]] checks ordinary navigation with the installed iOS voice.
 Qualify the later rich-tone versions against their own fixtures.
 
 Keep listening as a parallel acceptance track. Continue coding, running

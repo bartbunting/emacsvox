@@ -14,8 +14,43 @@ final class TestOutput: WireOutput {
   deinit { ov_ios_loader_free(loader); ov_ios_token_free(token) }
   var mixed: ((ArraySlice<WireItem>, @escaping () -> () -> Void, @escaping (Int, Bool) -> Void) -> Void)?
   var stopMixed: (() -> Void)?
-  func playMixed(_ items: ArraySlice<WireItem>, holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
-    if let mixed { mixed(items, holdTail, done) } else { done(0, true) }
+  func playMixed(_ items: ArraySlice<WireItem>, reached: @escaping (String) -> Void, holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
+    if let mixed { mixed(items, holdTail, done) }
+    else if items.contains(where: { $0.startMarker != nil }) {
+      let finish: (Bool) -> Void = { ok in
+        if ok { for item in items { if let marker = item.startMarker { reached(marker) } } }
+        done(items.count, ok)
+      }
+      if hold { finishes.append(finish) } else { finish(true) }
+    } else { done(0, true) }
+  }
+  func playTimeline(_ plan: WirePresentation, holdTail: @escaping () -> () -> Void, done: @escaping (Bool) -> Void) {
+    guard let items = plan.prepare(bundle: loader, personal: nil) else { done(false); return }
+    var reached: [String] = []
+    for item in items {
+      // Stand in for Apple's native PCM and bookmark callbacks at known sample
+      // positions. Production obtains both from AVSpeechSynthesizer.
+      let frames = 4096, length = max(1, item.text?.utf8.count ?? 0)
+      let points = (item.anchors ?? []).map { OvAnchorFrame(frame: UInt32($0.offset * frames / length), precision: 0) }
+      let samples = [Float](repeating: 0.125, count: frames)
+      guard let pcm = ov_ios_render_presentation(plan.pointer, samples, samples.count, 44100, 1, points, points.count, plan.token)
+      else { done(false); return }
+      let regions = plan.regions(frames: ov_ios_frames(pcm))
+      ov_ios_pcm_free(pcm)
+      guard let regions else { done(false); return }
+      reached += regions.flatMap(\.events)
+      observeSpeech?(item)
+    }
+    let endTail = ov_ios_presentation_tail(plan.pointer).map { pcm in
+      ov_ios_pcm_free(pcm)
+      return holdTail()
+    }
+    let finish: (Bool) -> Void = { ok in
+      if ok { plan.reached(reached) }
+      done(ok)
+      endTail?()
+    }
+    if hold { finishes.append(finish) } else { finish(true) }
   }
   func play(_ item: WireItem, done: @escaping (Bool) -> Void) {
     started.append(item.kind)
@@ -75,6 +110,7 @@ final class TestOutput: WireOutput {
       try feed("tts_set_tone_volume 1")
       try feed("tts_set_voice {test-1}")
       print("The desktop timeline supplied one intact TestCase with both capital positions and the selected phone voice.")
+      try checkTimelinePlayback(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMixedPlayback(CommandLine.arguments[1], voices: voices)
       let token = ov_ios_token_new()!
       let pcm = ov_ios_tone(660, 480, 1, token)!
@@ -141,7 +177,20 @@ final class TestOutput: WireOutput {
       return
     }
     while let line = readLine() {
-      try feed(line)
+      switch line {
+      case "test-hold": output.hold = true
+      case "test-permission":
+        output.hold = true
+        try lane.permission("Allow once or reject") { ok in
+          FileHandle.standardOutput.write(Data(("test-audio permission " + (ok ? "played" : "cancelled") + "\n").utf8))
+        }
+      case "test-play":
+        output.hold = false
+        let callbacks = output.finishes
+        output.finishes.removeAll()
+        for played in callbacks { played(true) }
+      default: try feed(line)
+      }
       if line == "tts_exit" { break }
     }
   }

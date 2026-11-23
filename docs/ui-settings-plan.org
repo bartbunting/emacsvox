@@ -63,8 +63,8 @@ Check external-keyboard echo, isolated capital pitch and Shift+Return in
 an unsent draft using the [[file:../prototypes/iphone-speech/README.org::*Check keyboard speech and permissions on the signed app][signed keyboard exercise]].
 On the phone, open Browse voices from the Aural menu. Check the spoken
 voice on entry and after Down, then preview the selected row after reconnecting.
-Check the selected voice's in-word timing report in Diagnostics and compare
-capital and indentation cues with desktop playback using the
+On build 5, check US Reed’s in-word timing in Diagnostics. Compare the same
+capital in an Agent Shell response and indentation cues with desktop playback using the
 [[file:../prototypes/iphone-speech/OMNIVOX.org::*Try the native worker][phone listening exercise]].
 
 ** Preference reload, recovery and early speech
