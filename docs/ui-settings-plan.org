@@ -59,6 +59,8 @@ evidence of a defect.
 
 Check VoiceOver tab selection and external keyboard focus on the signed
 build using the [[file:../prototypes/iphone-speech/README.org::*Use the bottom tabs][bottom tab exercise]].
+On the phone, open Browse voices from the Aural menu. Check the spoken
+voice on entry and after Down, then preview the selected row after reconnecting.
 Check the selected voice's in-word timing report in Diagnostics and compare
 capital and indentation cues with desktop playback using the
 [[file:../prototypes/iphone-speech/OMNIVOX.org::*Try the native worker][phone listening exercise]].

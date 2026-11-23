@@ -81,7 +81,9 @@ engines, then =b= for Browse voices. The selected window shows one row per
 installed iOS identifier. Up and Down speak the name, language and quality.
 Use =/= to find a name or language, Left and Right to inspect columns,
 and =q= to return to the same menu. =M-x emacsvox-aural-voice-workbench=
-and =M-x omnivox-list-voices= also open the phone browser. Press =p= or
+and =M-x omnivox-list-voices= also open the phone browser. If you reconnect
+while browsing, the list returns to the same installed voice and sends the
+next preview to the new connection. Press =p= or
 =P= for an exact preview, Return to
 apply across the phone's reading roles, =r= to give a named role a
 different voice, =v= for rate, character scale, pitch, speech volume,

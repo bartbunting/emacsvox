@@ -616,6 +616,17 @@ async function main() {
           assert.equal(await observe(desktopSnapshot), desktopState);
           ws.send('reset 11');
           await until('raw two-worker Stop response', () => rawPackets.some(p => p.type === 'ready' && p.id === 11));
+          const selectedVoice = await row();
+          await closeSSH();
+          const resumed = await attachSSH(process.env.IPHONE_WIRE_WORKER);
+          await until('restored voice browser belongs to the new phone workers', async () =>
+            await observe(`(with-selected-window ${phoneWindow}
+              (and (derived-mode-p 'iphone-voices-mode) (eq iphone-voices--main ${main})
+                   (process-get ${main} 'iphone-routing-ready) (tabulated-list-get-id)))`) === selectedVoice);
+          sshKeys('P');
+          await until('restored row previews on the replacement worker', () => resumed.some(
+            p => p.lane === 'M' && p.control === 'preview' && p.voice === JSON.parse(selectedVoice)));
+          assert.equal(await observe(desktopSnapshot), desktopState);
           await closeSSH();
           console.log('Passed phone Settings browse, find, exact preview, refresh, Apply, return, resume, palettes and direct voice commands with desktop speech isolated.');
         }

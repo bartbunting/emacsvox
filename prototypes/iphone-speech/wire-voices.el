@@ -90,10 +90,34 @@
                       collect (list id (vector (plist-get row :display_name) (or (plist-get row :language) "")
                                                (plist-get row :quality) id))))))
 
-(defun iphone-voices--draw (main)
-  (emacsvox-aural-ui-refresh-tabulated
-   (lambda () (setq tabulated-list-entries (iphone-voices--rows main)))
-   nil (plist-get iphone-frame-speech--settings :reading)))
+(defun iphone-voices--draw (main &optional previous)
+  (let* ((rows (iphone-voices--rows main))
+         (selected (or previous (tabulated-list-get-id)))
+         (reading (plist-get iphone-frame-speech--settings :reading)))
+    (emacsvox-aural-ui-refresh-tabulated
+     (lambda () (setq tabulated-list-entries rows))
+     (cond ((assoc selected rows) selected) ((assoc reading rows) reading)))))
+
+(defun iphone-voices--ready (main)
+  (when-let* ((buffer (process-get main 'iphone-voice-buffer))
+              ((buffer-live-p buffer)))
+    (with-current-buffer buffer
+      (when (eq iphone-voices--main main)
+        (iphone-voices--draw main (process-get main 'iphone-voice-restore-row))
+        (process-put main 'iphone-voice-restore-row nil)))))
+
+(defun iphone-voices--resume (main conversation)
+  "Restore this browser to MAIN when the phone reconnects."
+  (setq emacsvox-aural-ui--return-function nil)
+  (if (and (processp main) (process-get main 'iphone-wire))
+      (progn
+        (process-put main 'iphone-voice-restore-row (tabulated-list-get-id))
+        (process-put main 'iphone-voice-buffer (current-buffer))
+        (setq iphone-voices--main main tabulated-list-entries nil)
+        (tabulated-list-print)
+        (when (process-get main 'iphone-routing-ready) (iphone-voices--ready main)))
+    (switch-to-buffer (if (buffer-live-p emacsvox-aural-ui-source-buffer)
+                          emacsvox-aural-ui-source-buffer conversation))))
 
 (defun iphone-voices-refresh ()
   "Ask both phone workers for the current installed voices."

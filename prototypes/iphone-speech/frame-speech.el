@@ -133,6 +133,7 @@
                                     (process-get worker omnivox--control-registration-property))))
                          (list owner tts-notify-process)))
       (process-put owner 'iphone-routing-ready t)
+      (iphone-voices--ready owner)
       (iphone-frame-speech--packet owner "routing-ready" (process-get owner 'iphone-connection)))))
 
 (defun iphone-frame-speech--wire-resource (file)
@@ -231,7 +232,12 @@
   (setq iphone-frame-speech--last-terminal (selected-frame))
   (when (buffer-live-p conversation) (iphone-frame-speech-subscribe conversation))
   (if-let* ((saved (marker-buffer iphone-frame-speech--position)))
-      (progn (switch-to-buffer saved) (goto-char iphone-frame-speech--position) t)
+      (progn
+        (switch-to-buffer saved)
+        (goto-char iphone-frame-speech--position)
+        (when (derived-mode-p 'iphone-voices-mode)
+          (iphone-voices--resume (frame-parameter nil 'emacsvox-phone-speaker) conversation))
+        t)
     (when (buffer-live-p conversation) (switch-to-buffer conversation))
     nil))
 
