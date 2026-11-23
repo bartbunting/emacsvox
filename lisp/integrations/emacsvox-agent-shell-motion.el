@@ -644,11 +644,20 @@ icon's text properties so its status voice remains available to Emacsvox."
         text
       (let ((result text))
         (dolist (replacement replacements result)
-          (let ((position (car replacement)))
+          (let* ((position (car replacement))
+                 (end (1+ position)))
+            ;; A tool heading separates its status glyph from the kind with
+            ;; one unstyled space. The spoken label already ends in a space.
+            (when (and (< end (length text)) (= (aref text end) ?\s)
+                       (eq (get-text-property position 'agent-shell-ui-section text) 'label-left)
+                       (eq (get-text-property end 'agent-shell-ui-section text) 'label-left)
+                       (not (get-text-property end 'face text))
+                       (not (get-text-property end 'font-lock-face text)))
+              (cl-incf end))
             (setq result
                   (concat (substring result 0 position)
                           (cdr replacement)
-                          (substring result (1+ position))))))))))
+                          (substring result end)))))))))
 
 (defvar emacsvox-agent-shell--line-navigation-speech-p nil
   "Non-nil while Agent Shell is preparing line-navigation speech.")
