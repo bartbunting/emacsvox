@@ -508,6 +508,17 @@ async function main() {
               (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
           const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
           const desktopState = await observe(desktopSnapshot);
+          const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, '../modules/iphone-mixer/ios/CapitalTiming.json'), 'utf8'));
+          const transportTests = path.resolve(__dirname, '../../../test/emacsvox-aural-transport-tests.el');
+          await observe(`(load ${JSON.stringify(transportTests)} nil t)`);
+          const capitalTimeline = await observe(`(emacsvox-test--with-transport-scheme
+            (let ((tts-caps t) (emacsvox-capitalization-presentation 'tone))
+              (cl-letf (((symbol-function 'emacsvox-aural-structured-timeline-available-p) (lambda () t)))
+                (let* ((text "TestCase") (prepared (emacsvox-aural-prepare-text text nil (emacsvox-test--transport-context)))
+                       (plan (emacsvox-aural-concrete-plan-at 0 prepared))
+                       (actions (with-temp-buffer (insert prepared) (tts--concrete-positioned-actions (point-min) (point-max)))))
+                  (json-serialize (car (emacsvox-aural--build-structured-timeline 1 1 (list (list plan text nil actions)))))))))`);
+          assert.deepEqual(JSON.parse(JSON.parse(capitalTimeline)), fixture);
           const before = rawPackets.length;
           sshKeys('\x0e');
           await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.command === 'q'));

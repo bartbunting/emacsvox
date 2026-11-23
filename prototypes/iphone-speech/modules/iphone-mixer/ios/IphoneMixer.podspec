@@ -11,6 +11,6 @@ Pod::Spec.new do |s|
   s.static_framework = true
   s.source_files = '*.swift'
   s.vendored_frameworks = 'OmnivoxMobile.xcframework'
-  s.resources = 'OmnivoxSounds.bundle'
+  s.resources = 'OmnivoxSounds.bundle', 'CapitalTiming.json'
   s.dependency 'ExpoModulesCore'
 end

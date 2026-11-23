@@ -48,6 +48,20 @@ final class TestOutput: WireOutput {
     precondition(lane.setVoices(voices, preferred: "test-1"))
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
+      let envelope = try Data(contentsOf: URL(fileURLWithPath: "/out/CapitalTiming.json"))
+      try feed("tts_set_voice {test-2}")
+      try feed("tts_split_caps 0")
+      try feed("tts_set_tone_volume 0.5")
+      let items = try lane.timingSample(envelope)
+      guard let sample = items?.first, items?.count == 1, let marks = sample.marks else {
+        fatalError("Desktop timing sample did not produce one marked utterance")
+      }
+      precondition(sample.text == "TestCase" && sample.voice == "test-2")
+      precondition(marks.map(\.offset) == [0, 4])
+      precondition(marks.allSatisfy { $0.hz == 440 && $0.ms == 20 && $0.gain == 0.5 && $0.placement == .insert })
+      try feed("tts_set_tone_volume 1")
+      try feed("tts_set_voice {test-1}")
+      print("The desktop timeline supplied one intact TestCase with both capital positions and the selected phone voice.")
       try checkMixedPlayback(CommandLine.arguments[1], voices: voices)
       let token = ov_ios_token_new()!
       let pcm = ov_ios_tone(660, 480, 1, token)!

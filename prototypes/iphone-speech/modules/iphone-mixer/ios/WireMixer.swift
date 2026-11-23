@@ -116,7 +116,7 @@ final class WireMixer {
             self.work.sync { self.receive(Result { try IphoneMixerModule.copySamples(buffer) }, capture, stride: stride) }
           }
         }
-        if bookmarks != nil {
+        if #available(iOS 17.0, *), bookmarks != nil {
           self.synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
             guard let self, let capture else { return }
             let bookmarks = markers.filter { $0.mark == .bookmark }.map { ($0.bookmarkName, $0.byteSampleOffset) }

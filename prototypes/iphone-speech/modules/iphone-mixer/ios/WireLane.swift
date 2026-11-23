@@ -35,6 +35,15 @@ final class WireLane {
     let words = text.components(separatedBy: .newlines).joined(separator: " ")
     return try action("tts_say {" + words + "}")?.0.item
   }
+  func timingSample(_ envelope: Data) throws -> [WireItem]? {
+    let payload = envelope.base64EncodedData()
+    let result = payload.withUnsafeBytes { bytes in
+      ov_ios_timing_sample(worker, bytes.bindMemory(to: UInt8.self).baseAddress, bytes.count)
+    }
+    guard let result else { return nil }
+    defer { ov_ios_string_free(result) }
+    return try JSONDecoder().decode([WireItem].self, from: Data(bytes: result, count: strlen(result)))
+  }
   func permission(_ text: String, done: @escaping (Bool) -> Void) throws {
     guard let item = try speechItem(text) else { done(false); return }
     schedule.permission(item, done: done)

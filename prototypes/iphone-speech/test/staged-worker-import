@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 set -euo pipefail
 pod=$(realpath "${1:?Pass the staged Expo project directory}/modules/iphone-mixer/ios")
+cmp "$(dirname "$0")/../modules/iphone-mixer/ios/CapitalTiming.json" "$pod/CapitalTiming.json"
 
 # CocoaPods exposes the headers from one XCFramework slice. Include any
 # loose module maps too so a competing definition fails during type checking.

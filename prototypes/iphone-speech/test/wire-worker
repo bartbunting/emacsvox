@@ -17,6 +17,7 @@ docker run --rm --network none --cpus=1 --user "$(id -u):$(id -g)" -e CLANG_MODU
   /app/test/wire-playback.swift /app/test/wire-worker.swift \
   /rust/libomnivox_ios.a -Xlinker --gc-sections -o /out/worker
 icons=${IPHONE_TEST_ICONS:-$app/../../sounds}
+cp "$app/modules/iphone-mixer/ios/CapitalTiming.json" "$out/CapitalTiming.json"
 run=(docker run --rm -i --cpus=1 --network none --user "$(id -u):$(id -g)" -v "$out:/out:ro" -v "$icons:/icons:ro" swift:6.3-noble /out/worker /icons)
 "${run[@]}" scheduler
 python3 "$here/omnivox-wire.py" --icon omnivox-icon:packs/accent/open-object.ogg -- "${run[@]}"

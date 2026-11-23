@@ -61,10 +61,11 @@ public final class IphoneOmnivoxModule: Module {
       switch sound {
       case "voice": try lane.permission("This is the iPhone voice test.", done: done)
       case "markers":
-        guard var item = try lane.speechItem("TestCase") else { done(false); return }
+        let bundles = [Bundle.main, Bundle(for: IphoneOmnivoxModule.self)]
+        guard let file = bundles.compactMap({ $0.url(forResource: "CapitalTiming", withExtension: "json") }).first,
+              let items = try lane.timingSample(Data(contentsOf: file)), items.count == 1 else { done(false); return }
         self.markerStatus = nil
-        item.marks = [0, 4].map { WireToneMark(offset: $0, placement: .insert, hz: 440, ms: 20, gain: 1) }
-        lane.schedule.permission(item) { ok in
+        lane.schedule.permission(items[0]) { ok in
           promise.resolve(ok ? (self.markerStatus ?? "The voice played without timing marks.") : "Timing test stopped.")
         }
       case "short", "long":

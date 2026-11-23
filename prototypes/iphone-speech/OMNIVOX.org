@@ -34,9 +34,13 @@ speech clock, can carry into the next audio buffer and can finish after
 the line. WSL tests compare individual stereo samples for both placements.
 The main and notification workers have independent playback and Stop.
 
-In Diagnostics, “Test timing inside TestCase” requests one utterance with a
-bookmark at the internal capital. The status reports how many internal
-marks the voice supplied. The renderer uses the reported audio position.
+In Diagnostics, “Test timing inside TestCase” replays the version 3 document
+produced by Emacsvox for that word. The same Rust code used by the desktop
+validates the document, prepares the text and assigns the actions to speech
+windows. Apple receives one utterance with the internal capital bookmarked.
+The status reports how many internal marks the voice supplied. The renderer
+uses the reported audio position. Reading a named bookmark requires iOS 17
+or later. See [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesismarker/bookmarkname][Apple's bookmarkName reference]].
 If an internal mark is missing, you still hear the word. Ordinary navigation
 currently uses the negotiated legacy commands, which can split a word
 across utterances. The structured timeline work below brings the intact
