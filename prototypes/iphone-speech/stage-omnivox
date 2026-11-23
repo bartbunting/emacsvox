@@ -50,7 +50,6 @@ with ExitStack() as stack:
     if clean and not clean_pin():
         sys.exit("Omnivox sources changed during staging. Run the staging command again.")
     headers = Path(temp) / "omnivox-ios/include"
-    shutil.copytree(headers, dest / "WireHeaders")
     libraries = []
     for identifier, target in targets.items():
         folder = framework / identifier

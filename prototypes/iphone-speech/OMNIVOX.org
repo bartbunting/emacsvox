@@ -77,7 +77,8 @@ cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
 npm test
 export IPHONE_TEST_SSHD=/usr/sbin/sshd
 ./test/wire-worker --frame
-./stage-ios-build
+stage=$(./stage-ios-build)
+./test/staged-worker-import "$stage"
 #+end_src
 
 The worker fixture runs the native Rust library and Swift scheduler in
