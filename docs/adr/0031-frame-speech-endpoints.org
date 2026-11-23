@@ -20,6 +20,12 @@ voice registrations. A local desktop process pair, an authenticated remote
 workstation and the iPhone receiver can use the same frame interface.
 Each transport resolves its own sound resources and owns its audio devices.
 
+A frame connected through the workstation transport owns its pair of
+authenticated lanes and its reconnect timer. Losing either lane retires
+the pair. The frame retains its destination while offline and accepts
+new speech after both replacement workers acknowledge their configuration.
+Recovering the same destination preserves its explicit subscriptions.
+
 A frame can explicitly subscribe to an Agent Shell session. Each distinct
 subscribed destination hears new replies and permission requests. The
 session processes an incoming event once. Answering a permission clears the

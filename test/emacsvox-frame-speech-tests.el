@@ -31,5 +31,22 @@
       (delete-process main)
       (delete-process other))))
 
+(ert-deftest emacsvox-frame-speech-local-worker-on-a-remote-desktop ()
+  (let* ((frame (selected-frame)) (main (make-pipe-process :name "Local frame" :noquery t))
+         (tts-program "omnivox") (omnivox-remote-host "127.0.0.1")
+         (omnivox-available-voices '("desktop voice"))
+         (local (emacsvox-frame-speech-attach frame main nil "omnivox")))
+    (unwind-protect
+        (progn
+          (should (omnivox-remote-enabled-p))
+          (emacsvox-frame-speech-call
+           local (lambda ()
+                   (should-not (omnivox-remote-enabled-p))
+                   (should-not omnivox-available-voices)
+                   (should (equal "/local/cue.wav" (omnivox-remote-resource "/local/cue.wav")))))
+          (should (equal omnivox-available-voices '("desktop voice"))))
+      (emacsvox-frame-speech-detach frame)
+      (delete-process main))))
+
 (provide 'emacsvox-frame-speech-tests)
 ;;; emacsvox-frame-speech-tests.el ends here

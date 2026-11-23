@@ -72,13 +72,16 @@
                         (lambda (p) (member (cons ticket "completed") (process-get p 'heard)))
                         workers))))
 
-(ert-deftest emacsvox-frame-speech-four-workers-one-conversation ()
-  (should (display-graphic-p))
+(defun emacsvox-frame-test--load-agent-shell ()
   (dolist (name '("compat" "acp" "shell-maker" "agent-shell" "markdown-mode"))
     (add-to-list 'load-path (expand-file-name name (getenv "EMACSVOX_TEST_DEPS_DIR"))))
   (require 'agent-shell)
   (require 'emacsvox-agent-shell)
-  (require 'emacsvox-agent-shell-frames)
+  (require 'emacsvox-agent-shell-frames))
+
+(ert-deftest emacsvox-frame-speech-four-workers-one-conversation ()
+  (should (display-graphic-p))
+  (emacsvox-frame-test--load-agent-shell)
   (let* ((a (selected-frame)) (b (make-frame))
          (buffer (generate-new-buffer "Frame subscription test"))
          (workers (mapcar #'emacsvox-frame-test--worker
@@ -184,12 +187,109 @@
       (delete-frame b)
       (dolist (p workers) (delete-process p)))))
 
+(defun emacsvox-frame-test--wait (predicate seconds)
+  (let ((end (+ (float-time) seconds)))
+    (while (and (not (funcall predicate)) (< (float-time) end))
+      (accept-process-output nil 0.03))
+    (should (funcall predicate))))
+
+(defun emacsvox-frame-test--service (token)
+  (let* ((log (generate-new-buffer " *Frame Omnivox service*"))
+         (service (make-process
+                   :name "Frame Omnivox service" :buffer log :noquery t :connection-type 'pipe
+                   :command (list (getenv "EMACSVOX_TEST_OMNIVOX") "--serve" "--listen" "127.0.0.1:0"
+                                  "--token-file" token "--sound-root" emacsvox-sounds-dir "--audio-output" "null")))
+         ready)
+    (unwind-protect
+        (progn
+          (emacsvox-frame-test--wait
+           (lambda () (with-current-buffer log (save-excursion (goto-char (point-min))
+                        (when (re-search-forward "listening on 127\\.0\\.0\\.1:\\([0-9]+\\)" nil t)
+                          (process-put service 'port (string-to-number (match-string 1))))))) 5)
+          (setq ready service))
+      (unless ready (delete-process service) (kill-buffer log)))))
+
+(ert-deftest emacsvox-frame-speech-four-workstation-workers-recover-independently ()
+  (require 'omnivox-remote)
+  (emacsvox-frame-test--load-agent-shell)
+  (let* ((a (selected-frame)) (b (make-frame)) (token (make-temp-file "frame-remote-token"))
+         (desktop tts-speaker-process) (desktop-notification tts-notify-process)
+         (global-retry omnivox-remote--retry-timer)
+         (conversation (generate-new-buffer "Workstation subscription"))
+         (omnivox-remote-auto-reconnect t) (process-environment (copy-sequence process-environment))
+         services heard)
+    (unwind-protect
+        (progn
+          (with-temp-file token (insert (secure-hash 'sha256 (format "%s%s" (current-time) (random)))))
+          (dotimes (_ 2) (push (emacsvox-frame-test--service token) services))
+          (cl-labels
+              ((connect (frame service)
+                 (omnivox-remote-connect-frame "127.0.0.1" (process-get service 'port) token frame))
+               (speak (text)
+                 (let ((worker tts-speaker-process))
+                   (tts--protocol-queue-text text)
+                   (tts--protocol-dispatch-tracked
+                    (lambda (_id status) (push (cons worker status) heard)))))
+               (pair (endpoint)
+                 (emacsvox-frame-speech-call endpoint #'speak "Workstation foreground")
+                 (emacsvox-frame-speech-call endpoint #'tts-notify-apply #'speak "Workstation notification")))
+            (let* ((left (connect a (car services))) (right (connect b (cadr services)))
+                   (owner (frame-parameter a 'omnivox-remote-connection))
+                   (old (omnivox-remote--frame-workers owner))
+                   (other (omnivox-remote--frame-workers (frame-parameter b 'omnivox-remote-connection))))
+              (should (eq left (connect a (car services))))
+              (with-current-buffer conversation
+                (setq major-mode 'agent-shell-mode)
+                (emacsvox-agent-shell-subscribe-frame conversation a))
+              (should (equal "omnivox-icon:visual-line.ogg"
+                             (emacsvox-frame-speech-call left #'omnivox-remote-resource
+                                                       (expand-file-name "visual-line.ogg" emacsvox-sounds-dir))))
+              (pair left) (pair right)
+              (emacsvox-frame-test--wait (lambda () (= 4 (length heard))) 6)
+              (dolist (worker (append old other)) (should (member (cons worker 'completed) heard)))
+              (setq heard nil)
+              (delete-process (cadr old))
+              (emacsvox-frame-test--wait (lambda () (omnivox-remote--frame-timer owner)) 1)
+              (should-not (cl-some #'process-live-p old))
+              (let ((audience (emacsvox-agent-shell--subscribers conversation)))
+                (should (equal audience (list (cons a left))))
+                (emacsvox-agent-shell--each-destination
+                 audience (lambda (_frame) (ert-fail "Offline announcement reached a speaker"))))
+              (should-not (emacsvox-frame-speech-call left #'ert-fail "Stale callback reached a speaker"))
+              (pair right)
+              (emacsvox-frame-test--wait (lambda () (not (eq left (emacsvox-frame-speech-endpoint a)))) 10)
+              (should (eq owner (frame-parameter a 'omnivox-remote-connection)))
+              (should (equal (emacsvox-agent-shell--subscribers conversation)
+                             (list (cons a (emacsvox-frame-speech-endpoint a)))))
+              (should (eq right (emacsvox-frame-speech-endpoint b)))
+              (should (cl-every #'process-live-p other))
+              (should-not (emacsvox-frame-speech-call left #'ert-fail "Recovered frame replayed stale work"))
+              (pair (emacsvox-frame-speech-endpoint a))
+              (emacsvox-frame-test--wait (lambda () (= 4 (length heard))) 6)
+              (dolist (worker (append other (omnivox-remote--frame-workers owner)))
+                (should (member (cons worker 'completed) heard)))
+              (delete-process (car (omnivox-remote--frame-workers owner)))
+              (omnivox-remote-disconnect-frame a)
+              (should-not (omnivox-remote--frame-timer owner))
+              (should-not (emacsvox-frame-speech-endpoint a))
+              (should-not (emacsvox-agent-shell--subscribers conversation))
+              (delete-frame b)
+              (should-not (cl-some #'process-live-p other))
+              (should (eq desktop tts-speaker-process)) (should (eq desktop-notification tts-notify-process))
+              (should (eq global-retry omnivox-remote--retry-timer)))))
+      (omnivox-remote-disconnect-frame a)
+      (when (frame-live-p b) (omnivox-remote-disconnect-frame b) (delete-frame b))
+      (kill-buffer conversation)
+      (dolist (service services)
+        (delete-process service) (kill-buffer (process-buffer service)))
+      (delete-file token))))
+
 (let ((report (getenv "EMACSVOX_TEST_FRAME_REPORT")))
   (let ((stats (ert-run-tests-batch "^emacsvox-frame-speech-four-")))
     (when report
       (with-temp-file report
         (insert (if (zerop (ert-stats-completed-unexpected stats))
-                    "Two Emacs frames reached their four desktop Omnivox workers. Shared Agent Shell events passed.\n"
+                    "Independent local and remote workers, workstation recovery and shared Agent Shell events passed.\n"
                   "Desktop frame routing failed.\n"))
         (unless (zerop (ert-stats-completed-unexpected stats))
           (when-let* ((messages (get-buffer "*Messages*")))

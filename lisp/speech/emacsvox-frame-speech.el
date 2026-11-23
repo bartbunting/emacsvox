@@ -60,7 +60,8 @@
   '(tts-speaker-process tts-notify-process tts-program tts-speech-rate
     emacsvox-play-program omnivox-control-capabilities omnivox-engine-inventory
     omnivox-engine-inventory-time omnivox-logical-voice-registration
-    omnivox-routing-policy-registration omnivox-control-last-error tts-handle-unicode))
+    omnivox-routing-policy-registration omnivox-control-last-error tts-handle-unicode
+    omnivox-available-voices))
 
 (defun emacsvox-frame-speech-endpoint (&optional frame)
   "Return the speech attachment for FRAME, or nil for ordinary desktop speech.
@@ -92,7 +93,7 @@ asynchronous work and pass it to `emacsvox-frame-speech-call' on completion."
           (and (boundp 'omnivox--control-registration-property)
                (process-get main omnivox--control-registration-property))
           (plist-get inventory :routing_policy) nil
-          (bound-and-true-p tts-handle-unicode))))
+          (bound-and-true-p tts-handle-unicode) nil)))
 
 (defun emacsvox-frame-speech-call (endpoint function &rest args)
   "Call FUNCTION with ARGS through ENDPOINT. Return its result.
@@ -216,19 +217,22 @@ discards the callback. Nested calls can target a different frame."
   (setq emacsvox-frame-speech--installed nil emacsvox-frame-speech--hook-owner nil))
 
 ;;;###autoload
-(defun emacsvox-frame-speech-attach (frame main &optional notification program rate)
+(defun emacsvox-frame-speech-attach (frame main &optional notification program rate previous)
   "Attach ready speech workers MAIN and NOTIFICATION to FRAME and return a handle.
 Omit NOTIFICATION to use MAIN for both lanes. PROGRAM and RATE default to
 the current speech configuration. The caller owns worker startup, negotiation
-and shutdown. Attaching again replaces the handle for future commands."
+and shutdown. When recovering the same destination, pass its PREVIOUS
+handle to retain frame subscriptions. Earlier callbacks always expire."
   (unless (and (frame-live-p frame) (processp main) (process-live-p main)
                (or (null notification) (and (processp notification) (process-live-p notification))))
     (user-error "Frame attachment requires a live frame and speech workers"))
+  (when (and previous (not (eq previous (emacsvox-frame-speech-endpoint frame))))
+    (user-error "The frame's speech destination changed during recovery"))
   (let ((endpoint (emacsvox-frame-speech--create
                    :frame frame :main main :notification notification
                    :program (or program (bound-and-true-p tts-program))
                    :rate (or rate (bound-and-true-p tts-speech-rate)))))
-    (run-hook-with-args 'emacsvox-frame-speech-detach-hook frame)
+    (unless previous (run-hook-with-args 'emacsvox-frame-speech-detach-hook frame))
     (set-frame-parameter frame 'emacsvox-speech-endpoint endpoint)
     (emacsvox-frame-speech--install)
     endpoint))

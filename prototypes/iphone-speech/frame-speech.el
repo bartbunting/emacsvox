@@ -300,8 +300,6 @@
   (unless (and (process-live-p tts-speaker-process) (fboundp 'tts--retire-process)
                (fboundp 'emacsvox-aural-call-with-submission))
     (user-error "Start Emacsvox in this Emacs server first"))
-  (when (omnivox-remote-enabled-p)
-    (user-error "This trial requires the desktop's local speech backend"))
   (let ((buffer (get-buffer name)))
     (unless (and buffer (with-current-buffer buffer (derived-mode-p 'agent-shell-mode)))
       (user-error "Choose an existing Agent Shell conversation buffer"))

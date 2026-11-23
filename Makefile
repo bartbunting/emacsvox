@@ -183,11 +183,11 @@ graphical-integration-test: check-emacs
 .PHONY: frame-speech-test
 frame-speech-test: bytecode-check
 	@test -x "$(EMACSVOX_TEST_OMNIVOX)" || { echo "Set EMACSVOX_TEST_OMNIVOX to the desktop Omnivox executable."; exit 2; }
-	@report=$$(mktemp) && { \
+	@report=$$(mktemp) && { status=0; \
 	  EMACSVOX_TEST_FRAME_REPORT="$$report" EMACSVOX_TEST_OMNIVOX="$(EMACSVOX_TEST_OMNIVOX)" \
 	  EMACSVOX_TEST_DEPS_DIR="$(TEST_DEPS_DIR)" TTS_PROGRAM="$(CURDIR)/servers/log-null" GDK_BACKEND=x11 \
-	  timeout --kill-after=4s 60s xvfb-run -a "$(EMACS)" -Q -l lisp/emacsvox-preamble.el -l test/frame-speech-workers.el; \
-	  status=$$?; cat "$$report"; rm -f "$$report"; exit $$status; }
+	  timeout --kill-after=4s 60s xvfb-run -a "$(EMACS)" -Q -l lisp/emacsvox-preamble.el -l test/frame-speech-workers.el || status=$$?; \
+	  cat "$$report"; rm -f "$$report"; exit $$status; }
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el

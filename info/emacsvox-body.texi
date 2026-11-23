@@ -11639,6 +11639,20 @@ Reconnection refreshes voices/routing and discards unfinished speech. Main and
 notification retain separate workers. Only one Emacs session owns a service
 at a time.
 
+To use a workstation for one frame@comma{} open that frame and run
+@kbd{M-x omnivox-remote-connect-frame}. Enter the forwarded loopback address@comma{}
+the port on the Emacs host and the private token file on that host. You
+can attach a second frame to another workstation using a separate
+forwarded port and that workstation's token. In an Agent Shell buffer@comma{}
+run @kbd{M-x emacsvox-agent-shell-subscribe-frame} on each frame that should
+hear replies and permission requests.
+
+@kbd{M-x omnivox-remote-frame-status} reports the selected frame's connection.
+If either lane drops@comma{} the frame keeps accepting edits while its speech
+is offline. Automatic recovery opens a fresh pair@comma{} preserves the frame's
+subscriptions and accepts new output. @kbd{M-x omnivox-remote-disconnect-frame}
+closes that pair@comma{} cancels retries and returns the frame to ordinary speech.
+
 If main connects but notification fails@comma{} main remains available while the
 missing connection retries. Recovery does not replace working main speech.
 @code{omnivox-remote-auto-reconnect} set to nil disables automatic retry; explicit

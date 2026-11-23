@@ -49,12 +49,11 @@
 A non-nil return means the transport owns playback. A nil TEXT resolves KEY.")
 
 (defun emacsvox-agent-shell--subscribers (&optional buffer)
-  (cl-remove-if-not
-   (lambda (entry)
-     (let ((frame (car entry)) (endpoint (cdr entry)))
-       (and (frame-live-p frame) (eq endpoint (emacsvox-frame-speech-endpoint frame))
-            (or (null endpoint) (emacsvox-frame-speech--valid-p endpoint)))))
-   (buffer-local-value 'emacsvox-agent-shell--speech-subscribers (or buffer (current-buffer)))))
+  ;; Capture the current handle for this delivery. An offline subscriber
+  ;; still has a private destination. Its expired handle discards speech.
+  (cl-loop for frame in (buffer-local-value 'emacsvox-agent-shell--speech-subscribers
+                                             (or buffer (current-buffer)))
+           when (frame-live-p frame) collect (cons frame (emacsvox-frame-speech-endpoint frame))))
 
 (defun emacsvox-agent-shell--each-destination (audience deliver)
   (let ((source (current-buffer)) (emacsvox-agent-shell--speech-audience nil) seen)
@@ -229,8 +228,7 @@ frame that acted."
                (with-current-buffer buffer (derived-mode-p 'agent-shell-mode)))
     (user-error "Select a live Agent Shell conversation and frame"))
   (with-current-buffer buffer
-    (setf (alist-get frame emacsvox-agent-shell--speech-subscribers nil nil #'eq)
-          (emacsvox-frame-speech-endpoint frame))
+    (cl-pushnew frame emacsvox-agent-shell--speech-subscribers)
     (add-hook 'kill-buffer-hook #'emacsvox-agent-shell--forget-buffer nil t))
   (set-frame-parameter frame 'emacsvox-agent-shell-buffers
                        (cons buffer (delq buffer (frame-parameter frame 'emacsvox-agent-shell-buffers))))
@@ -245,15 +243,15 @@ Interactively, use the current conversation and the selected frame."
   (setq frame (or frame (selected-frame)) buffer (or buffer (emacsvox-agent-shell--subscription-buffer)))
   (when (and (frame-live-p frame) (buffer-live-p buffer))
     (with-current-buffer buffer
-      (when-let* ((entry (assq frame emacsvox-agent-shell--speech-subscribers)))
+      (when (memq frame emacsvox-agent-shell--speech-subscribers)
         (emacsvox-frame-speech-call
-         (cdr entry)
+         (emacsvox-frame-speech-endpoint frame)
          (lambda ()
            (when-let* ((notify (tts-notify-process))
                        (request (process-get notify 'emacsvox-frame-permission))
                        ((eq buffer (car request))))
              (emacsvox-agent-shell--resolve-frame-permission frame (nth 1 request))))))
-      (setq emacsvox-agent-shell--speech-subscribers (assq-delete-all frame emacsvox-agent-shell--speech-subscribers))
+      (setq emacsvox-agent-shell--speech-subscribers (delq frame emacsvox-agent-shell--speech-subscribers))
       (unless emacsvox-agent-shell--speech-subscribers
         (remove-hook 'kill-buffer-hook #'emacsvox-agent-shell--forget-buffer t)))
     (set-frame-parameter frame 'emacsvox-agent-shell-buffers
@@ -267,8 +265,8 @@ Interactively, use the current conversation and the selected frame."
     (emacsvox-agent-shell-unsubscribe-frame buffer frame)))
 
 (defun emacsvox-agent-shell--forget-buffer ()
-  (dolist (entry (copy-sequence emacsvox-agent-shell--speech-subscribers))
-    (emacsvox-agent-shell-unsubscribe-frame (current-buffer) (car entry))))
+  (dolist (frame (copy-sequence emacsvox-agent-shell--speech-subscribers))
+    (emacsvox-agent-shell-unsubscribe-frame (current-buffer) frame)))
 
 (provide 'emacsvox-agent-shell-frames)
 ;;; emacsvox-agent-shell-frames.el ends here
