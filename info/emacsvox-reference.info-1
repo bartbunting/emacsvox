@@ -596,6 +596,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-folding:: Speech enable Folding.
 * emacsvox-forge:: Speech-enable FORGE.
 * emacsvox-forms:: Speech enable  forms mode.
+* emacsvox-frame-speech:: Speech workers for an Emacs frame.
 * emacsvox-geiser:: Speech-enable GEISER.
 * emacsvox-gnuplot:: speech-enable gnuplot.
 * emacsvox-gnus:: Speech enable Gnus.

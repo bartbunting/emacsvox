@@ -74,6 +74,7 @@
     "speech/tts-voice-api.el"
     "speech/tts-speak.el"
     "speech/tts-queue-state.el"
+    "speech/emacsvox-frame-speech.el"
     "core/emacsvox-emoji.el"
     "speech/voice-setup.el"
     "voices/voice-defs.el"

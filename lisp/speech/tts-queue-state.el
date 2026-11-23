@@ -243,12 +243,13 @@ EFFECTS is one symbol, or one symbol per record.  Mismatches remain opaque."
                   (process-get process 'omnivox-remote-managed)
                   (and (boundp 'tts-speaker-process) (eq process (symbol-value 'tts-speaker-process)))
                   (and (boundp 'tts-notify-process) (eq process (symbol-value 'tts-notify-process))))
-          (let ((remote (or (process-get process 'omnivox-remote-managed)
-                            (eq (process-type process) 'network))))
-            (process-put process 'tts-queue--state
-                         (tts-queue--make-state
-                          :remote remote :unusable remote
-                          :generation (process-get process 'tts--speech-process-generation)))))))))
+          (let* ((remote (or (process-get process 'omnivox-remote-managed)
+                             (eq (process-type process) 'network)))
+                 (adopted (tts-queue--make-state
+                           :remote remote :unusable remote
+                           :generation (process-get process 'tts--speech-process-generation))))
+            (process-put process 'tts-queue--state adopted)
+            adopted))))))
 
 (defun tts-queue--coverage-p ()
   "Whether all three observers are present nearest their respective primitives."

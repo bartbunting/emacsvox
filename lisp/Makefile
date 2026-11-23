@@ -82,6 +82,7 @@ emacsvox-version.elc \
 emacsvox-paths.elc \
 emacsvox-preamble.elc \
 speech/tts-queue-state.elc \
+speech/emacsvox-frame-speech.elc \
 speech/omnivox-remote.elc \
 speech/omnivox-engine-settings.elc \
 ui/omnivox-engine-configuration.elc \

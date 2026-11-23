@@ -126,7 +126,8 @@
     (let ((value (iphone-voices--parameter-value worker spec)))
       (when (eq (car spec) :rate)
         (setq value (or value (nth 5 spec)))
-        (process-put worker 'iphone-speech-rate value))
+        (when-let* ((endpoint (process-get worker 'iphone-endpoint)))
+          (setf (emacsvox-frame-speech--endpoint-rate endpoint) value)))
       (when value (process-send-string worker (format "%s %s\n" (nth 2 spec) value))))))
 
 (defun iphone-voices--owner ()
@@ -200,8 +201,7 @@
            :text "The lighthouse keeper climbed the stairs to light the lamp.")
      (lambda (worker result)
        (when (and (process-live-p worker) (not (member (plist-get result :status) '("completed" "cancelled"))))
-         (let ((iphone-frame-speech--command-owner worker))
-           (iphone-frame-speech--route #'tts-speak "Phone voice preview failed"))))
+         (iphone-frame-speech--worker-call worker #'tts-speak "Phone voice preview failed")))
      25)))
 
 (defun iphone-voices--apply (voice &optional role)
@@ -224,9 +224,9 @@
            (lambda (process response)
              (unless (omnivox--accept-registration-response process response generation content) (setq failed t))
              (when (and (= (cl-decf remaining) 0) (process-live-p main))
-               (let ((iphone-frame-speech--command-owner main))
-                 (iphone-frame-speech--route #'tts-speak
-                  (if failed "Phone voice saved. Application unconfirmed." "Phone voice applied.")))))))))))
+               (iphone-frame-speech--worker-call
+                main #'tts-speak
+                (if failed "Phone voice saved. Application unconfirmed." "Phone voice applied."))))))))))
 
 (defun iphone-voices-apply ()
   "Use the selected voice for ordinary reading on the phone."
