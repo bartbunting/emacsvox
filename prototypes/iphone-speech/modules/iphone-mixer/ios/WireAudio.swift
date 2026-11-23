@@ -45,9 +45,10 @@ func wireBufferSlice(_ pcm: OpaquePointer, format: AVAudioFormat, frames: Range<
   return buffer
 }
 
-func wireUtterance(_ item: WireItem, ssml: String? = nil) -> AVSpeechUtterance? {
+func wireUtterance(_ item: WireItem, ssml: String? = nil,
+                   lookup: (String) -> AVSpeechSynthesisVoice? = { AVSpeechSynthesisVoice(identifier: $0) }) -> AVSpeechUtterance? {
   guard let words = item.text, !words.isEmpty, let id = item.voice,
-        let selected = AVSpeechSynthesisVoice(identifier: id) else { return nil }
+        let selected = lookup(id) else { return nil }
   let utterance = ssml.flatMap { AVSpeechUtterance(ssmlRepresentation: $0) } ?? AVSpeechUtterance(string: words)
   utterance.voice = selected
   utterance.rate = min(AVSpeechUtteranceMaximumSpeechRate, max(AVSpeechUtteranceMinimumSpeechRate,
@@ -171,20 +172,27 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   }
 
   func playTimeline(_ plan: WirePresentation, holdTail: @escaping () -> () -> Void, done: @escaping (Bool) -> Void) {
+    var acquired: [String: AVSpeechSynthesisVoice] = [:]
+    guard plan.bindVoices({ engine, id in
+      guard engine == "ios", let voice = AVSpeechSynthesisVoice(identifier: id) else { return false }
+      acquired[id] = voice
+      return true
+    }) else { done(false); return }
+    let voices = acquired
     preparation.async { [resources] in
       let items = plan.prepare(bundle: resources.loader, personal: resources.personal)
       DispatchQueue.main.async { [weak self] in
         guard !plan.cancelled else { return }
         guard let self, let items else { done(false); return }
         if items.isEmpty { done(true); return }
-        self.startRun(items[...], presentation: plan, reached: nil, holdTail: holdTail) { count, ok in
+        self.startRun(items[...], presentation: plan, voices: voices, reached: nil, holdTail: holdTail) { count, ok in
           done(ok && count == items.count)
         }
       }
     }
   }
 
-  private func startRun(_ items: ArraySlice<WireItem>, presentation: WirePresentation?, reached: ((String) -> Void)?,
+  private func startRun(_ items: ArraySlice<WireItem>, presentation: WirePresentation?, voices: [String: AVSpeechSynthesisVoice]? = nil, reached: ((String) -> Void)?,
                         holdTail: @escaping () -> () -> Void, done: @escaping (Int, Bool) -> Void) {
     do { try startAudio() } catch { done(0, presentation == nil); return }
     // A previous dispatch may still own this lane's overlay tail.
@@ -198,7 +206,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     let key = ObjectIdentifier(node)
     node.volume = 1
     let mixer = WireMixer(format: format, synth: bufferSynth, trace: trace, lane: lane,
-                          resolvedMarks: resolvedMarks, presentation: presentation, reached: reached)
+                          resolvedMarks: resolvedMarks, presentation: presentation, voices: voices, reached: reached)
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
       enqueue: { buffer, played in
         node.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in

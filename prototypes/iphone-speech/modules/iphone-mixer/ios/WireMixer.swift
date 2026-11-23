@@ -14,6 +14,7 @@ final class WireMixer {
   private let resolvedMarks: ((WireTimingReport) -> Void)?
   private let reached: ((String) -> Void)?
   private let presentation: WirePresentation?
+  private let voiceLookup: (String) -> AVSpeechSynthesisVoice?
   private var markers: [ObjectIdentifier: [String]] = [:]
   private var current: Capture?
   private let capacity = NSCondition()
@@ -38,11 +39,13 @@ final class WireMixer {
   }
 
   init(format: AVAudioFormat, synth: AVSpeechSynthesizer, trace: WireSpeechTrace, lane: String,
-       resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, reached: ((String) -> Void)? = nil) {
+       resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, voices: [String: AVSpeechSynthesisVoice]? = nil, reached: ((String) -> Void)? = nil) {
     self.trace = trace
     self.lane = lane
     self.reached = reached
     self.presentation = presentation
+    if let voices { voiceLookup = { voices[$0] } }
+    else { voiceLookup = { AVSpeechSynthesisVoice(identifier: $0) } }
     self.format = format
     self.synth = synth
     self.resolvedMarks = resolvedMarks
@@ -97,6 +100,7 @@ final class WireMixer {
 
   func speech(_ cues: [WireItem], _ item: WireItem, _ audio: @escaping (Packet) -> Void,
               _ finished: @escaping (Bool) -> Void) {
+    guard item.unavailable != true else { finished(false); return }
     let bookmarks = WireBookmarks(item)
     guard presentation == nil || bookmarks != nil else { finished(false); return }
     let ticket = trace.begin("\(lane) \(presentation == nil ? "queued PCM" : "timeline PCM") voice \(item.voice ?? "") gain \(item.gain ?? 1) text \((item.text ?? "").debugDescription)")
@@ -118,7 +122,7 @@ final class WireMixer {
 
   private func write(_ item: WireItem, bookmarks: WireBookmarks?, capture: Capture, part: Int) {
     guard current === capture else { return }
-    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil)
+    guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil, lookup: voiceLookup)
     else { end(capture, ok: false); return }
     let ticket = capture.ticket
     trace.append(ticket, "Part \(part), requested anchors \(bookmarks?.marks.map(\.offset) ?? []), SSML \(bookmarks?.needsBookmarks == true). Apple speechString \(utterance.speechString.debugDescription)")

@@ -285,10 +285,15 @@ async function main() {
           (map-put! agent-shell--state :tool-calls
             '(("second" . ((:title . "Review copper") (:permission-request-id . 17)))))))`);
       async function switchPhoneBuffer(name) {
-        const start = after.length;
         ws.send('key \x18b');
-        await until('buffer prompt in the phone terminal', () =>
-          after.slice(start).some(p => p.type === 'screen' && /switch to buffer/i.test(p.text)));
+        const prompt = `(when-let* ((mini (active-minibuffer-window))
+                                   ((frame-parameter (window-frame mini) 'emacsvox-phone-id)))
+                         (with-current-buffer (window-buffer mini) (minibuffer-prompt)))`;
+        await until('Switch to buffer on the phone frame', async () => /switch to buffer/i.test(await observe(prompt)))
+          .catch(async error => {
+            const state = await observe(`(list last-command (minibuffer-depth) ${prompt})`);
+            throw new Error(error.message + ', editor state ' + state);
+          });
         ws.send('key ' + name + '\r');
       }
       await switchPhoneBuffer('Second permission sample');
@@ -652,15 +657,25 @@ async function main() {
           await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (search-forward "Timing start") (beginning-of-line))`);
           const heldStart = rawPackets.length;
           sshKeys('\x0e');
-          const held = () => rawPackets.slice(heldStart).find(p => p.lane === 'M' && p.timeline?.spans.some(s => s.text.includes('TestCase')))?.timeline;
+          const navigationAfter = (start, line) => rawPackets.slice(start).find(p =>
+            p.lane === 'M' && p.timeline?.spans.map(s => s.text).join('').trim() === line)?.timeline;
+          const held = () => navigationAfter(heldStart, 'TestCase');
           await until('first navigation admitted while playback held', held);
+          const freshStart = rawPackets.length;
           sshKeys('\x0e');
-          const fresh = () => rawPackets.slice(heldStart).find(p => p.lane === 'M' && p.timeline?.spans.some(s => s.text.includes('Fresh line')))?.timeline;
+          const fresh = () => navigationAfter(freshStart, 'Fresh line');
           await until('second navigation cancels the earlier dispatch', () => fresh() &&
             rawPackets.some(p => p.lane === 'M' && p.dispatch === held().dispatch_id && p.status === 'cancelled'));
           controlAudio('M', 'test-play');
           await until('only the later navigation reaches playback completion', () =>
-            rawPackets.some(p => p.lane === 'M' && p.dispatch === fresh().dispatch_id && p.status === 'completed'));
+            rawPackets.some(p => p.lane === 'M' && p.dispatch === fresh().dispatch_id && p.status === 'completed'))
+            .catch(error => {
+              const states = rawPackets.slice(heldStart).filter(p => p.lane === 'M' && (p.timeline || p.dispatch))
+                .map(p => p.timeline ? ['admitted', p.timeline.dispatch_id, p.timeline.replacement_key,
+                  p.timeline.spans.some(s => s.text.includes('TestCase')), p.timeline.spans.some(s => s.text.includes('Fresh line')),
+                  p.timeline.spans.map(s => s.text.length)] : [p.status, p.dispatch]);
+              throw new Error(error.message + ' (' + JSON.stringify(states) + ')');
+            });
           assert.ok(!rawPackets.some(p => p.marker?.dispatch_id === held().dispatch_id));
           controlAudio('N', 'test-play');
           await until('urgent permission reaches completion on its own output', () => rawPackets.some(p => p.audio === 'permission played'));

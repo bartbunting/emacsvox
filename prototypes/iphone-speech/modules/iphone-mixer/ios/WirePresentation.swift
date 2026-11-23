@@ -3,6 +3,11 @@
 import Foundation
 import OmnivoxMobile
 
+private final class WireVoiceLookup {
+  let acquire: (String, String) -> Bool
+  init(_ acquire: @escaping (String, String) -> Bool) { self.acquire = acquire }
+}
+
 struct WireAnchor: Decodable {
   let offset: Int
   var after: Bool?
@@ -78,6 +83,18 @@ final class WirePresentation {
     guard let raw else { return nil }
     defer { ov_ios_string_free(raw) }
     return try? JSONDecoder().decode(T.self, from: Data(bytes: raw, count: strlen(raw)))
+  }
+
+  func bindVoices(_ acquire: @escaping (String, String) -> Bool) -> Bool {
+    let lookup = WireVoiceLookup(acquire)
+    return withExtendedLifetime(lookup) {
+      ov_ios_bind_voices(pointer, preview, Unmanaged.passUnretained(lookup).toOpaque()) { context, engine, engineBytes, voice, voiceBytes in
+        guard let context, let engine, let voice else { return false }
+        let owner = Unmanaged<WireVoiceLookup>.fromOpaque(context).takeUnretainedValue()
+        return owner.acquire(String(decoding: UnsafeBufferPointer(start: engine, count: engineBytes), as: UTF8.self),
+                             String(decoding: UnsafeBufferPointer(start: voice, count: voiceBytes), as: UTF8.self))
+      }
+    }
   }
 
   func prepare(bundle: OpaquePointer, personal: OpaquePointer?) -> [WireItem]? {

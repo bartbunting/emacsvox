@@ -456,6 +456,23 @@ func checkPrivatePreview(_ root: String, voices: String) throws {
   try feed()
   check(try response("completed"), choice: "eloquence-reed", started: true)
   precondition(heard.last?.voice == "test-2")
+  var alternate = choices[0]
+  alternate["id"] = "backup"
+  alternate["selector"] = ["kind":"exact", "engine_id":"ios", "voice_id":"test-1"]
+  role["choices"] = choices + [alternate]
+  draft["voice"] = role
+  output.missingVoices.insert("test-2")
+  try feed()
+  check(try response("completed"), choice: "backup", started: true)
+  precondition(heard.last?.voice == "test-1")
+  draft["selection"] = ["mode":"choice", "choice_id":"eloquence-reed"]
+  let beforeRemoval = heard.count
+  try feed()
+  let removed = try response("failed")
+  precondition((removed["accepted_audio"] as! [Any]).isEmpty && removed["last_started"] is NSNull && heard.count == beforeRemoval)
+  output.missingVoices.removeAll()
+  role["choices"] = choices
+  draft["voice"] = role
   draft["selection"] = ["mode":"choice", "choice_id":"eloquence-reed-soft"]
   output.hold = true
   for played in [false, true] {

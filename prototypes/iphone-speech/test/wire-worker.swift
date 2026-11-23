@@ -8,6 +8,7 @@ import OmnivoxMobile
 final class TestOutput: WireOutput {
   let loader: OpaquePointer, token = ov_ios_token_new()!
   var hold = false, playPreviewFirstFrame = false
+  var missingVoices: Set<String> = []
   var started: [WireItem.Kind] = [], finishes: [(Bool) -> Void] = []
   var observeSpeech: ((WireItem) -> Void)?
   init(_ root: String) { loader = ov_ios_loader_new(root)! }
@@ -25,9 +26,11 @@ final class TestOutput: WireOutput {
     } else { done(0, true) }
   }
   func playTimeline(_ plan: WirePresentation, holdTail: @escaping () -> () -> Void, done: @escaping (Bool) -> Void) {
-    guard let items = plan.prepare(bundle: loader, personal: nil) else { done(false); return }
+    guard plan.bindVoices({ engine, id in engine == "ios" && !self.missingVoices.contains(id) }),
+          let items = plan.prepare(bundle: loader, personal: nil) else { done(false); return }
     var reached: [String] = []
     for item in items {
+      guard item.unavailable != true else { done(false); return }
       // The single-word fixture has named bookmarks. Other readings receive
       // audio only, as on the reported handset.
       var timing = WireSpeechTiming(item, WireBookmarks(item)!)

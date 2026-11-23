@@ -13,6 +13,7 @@ struct WireItem: Decodable {
   var marks: [WireToneMark]?
   var anchors: [WireAnchor]?
   var startMarker: String?
+  var unavailable: Bool?
   func tonePCM(_ token: OpaquePointer) -> OpaquePointer? {
     if let recipe { return ov_ios_shaped_tone(recipe, token) }
     return ov_ios_tone(hz ?? 0, ms ?? 0, gain ?? 1, token)
