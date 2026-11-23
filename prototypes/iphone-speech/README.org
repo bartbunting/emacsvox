@@ -475,6 +475,12 @@ ID and server path. SSH checks the pinned WSL host key and runs
 =emacsclient -t= with that ID. Emacs sends “attached” over the matching
 speech socket before the receiver reports Connected.
 
+The WSL speech and SSH listeners negotiate a TCP segment size of at most
+1120 bytes. This leaves room for Tailscale on a 1280-byte WSL uplink.
+Without that space, small messages can reach the phone while a larger
+voice registration or terminal redraw stalls. During voice registration,
+the app shows “Finding iPhone voices”.
+
 ** Start the signed app against the test server
 
 1. Open the private install link for Emacsvox Speech build 4 in iPhone Safari. Activate Install and

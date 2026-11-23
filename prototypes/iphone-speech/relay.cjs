@@ -307,8 +307,11 @@ if (require.main === module) {
   const routed = sshOnly || mode === '--routed';
   const port = routed ? 8797 : sharedDirectory ? 8794 : terminalSocket ? 8791 : 8787;
   const relay = createRelay(host, peer, {port, metroPort: port + 1, terminalSocket, sharedDirectory, routed, sshOnly});
-  const listen = () => relay.httpServer.listen(port, host, () =>
-    console.log(sshOnly ? 'Ready for the signed SSH app.' : 'On your iPhone, open http://' + host + ':' + port + ' in Safari.'));
+  const fd = process.env.EMACSVOX_PHONE_LISTEN_FD;
+  const endpoint = fd === undefined ? {port, host} : {fd: Number(fd)};
+  const listen = () => relay.httpServer.listen(endpoint, () =>
+    console.log(sshOnly ? 'Ready for the signed SSH app.' :
+      'On your iPhone, open http://' + host + ':' + relay.httpServer.address().port + ' in Safari.'));
   // The keyboard launcher signals after the isolated Emacs reaches its command loop.
   if (terminalSocket) process.once('SIGUSR2', listen);
   else listen();

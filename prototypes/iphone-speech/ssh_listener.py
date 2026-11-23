@@ -7,11 +7,16 @@ import socket
 import socketserver
 import subprocess
 import threading
+from phone_tcp import limit_phone_segments
 
 QUIET = subprocess.DEVNULL
 
 class LocalSSH(socketserver.ThreadingTCPServer):
     daemon_threads = True
+
+    def server_bind(self):
+        limit_phone_segments(self.socket)
+        super().server_bind()
 
 
 @contextlib.contextmanager

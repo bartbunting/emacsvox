@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import queue
+import select
 import shutil
 import signal
 import socket
@@ -19,6 +20,7 @@ import tempfile
 import termios
 import threading
 import time
+from urllib.parse import urlsplit
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
@@ -35,6 +37,29 @@ def until(label, check, seconds=12):
             return result
         time.sleep(0.07)
     raise RuntimeError("Timed out waiting for " + label)
+
+
+def check_phone_mss(connection):
+    mss = connection.getsockopt(socket.IPPROTO_TCP, socket.TCP_MAXSEG)
+    assert 0 < mss <= 1120, f"Phone connection negotiated oversized TCP segments: {mss}"
+
+
+def check_relay_listener(root):
+    backend = root / "relay.sock"
+    command = [sys.executable, APP / "phone_tcp.py", "0", "127.0.0.1", "127.0.0.1",
+               backend, root / "tmux.sock"]
+    with subprocess.Popen(command, stdout=subprocess.PIPE, text=True) as relay:
+        try:
+            until("relay waiting for Emacs", backend.is_socket)
+            relay.send_signal(signal.SIGUSR2)
+            assert select.select([relay.stdout], [], [], 5)[0], "Relay did not accept the readiness signal"
+            url = relay.stdout.readline().split("open ", 1)[1].split()[0]
+            with socket.create_connection(("127.0.0.1", urlsplit(url).port), timeout=5) as connection:
+                check_phone_mss(connection)
+                connection.sendall(b"GET / HTTP/1.0\r\n\r\n")
+                assert connection.makefile("rb").readline().split()[1] == b"200"
+        finally:
+            relay.terminate()
 
 
 @contextlib.contextmanager
@@ -253,7 +278,11 @@ def main():
                 print(json.dumps({"port": port, "pin": str(root / "host.pub")}), flush=True)
                 sys.stdin.readline()
             return
+        check_relay_listener(root)
         with serve_ssh(opt.sshd.resolve(), root) as port, listen_for_navigation(root) as (socket_path, arm, marker):
+            with socket.create_connection(("127.0.0.1", port), timeout=5) as connection:
+                check_phone_mss(connection)
+                assert connection.makefile("rb").readline().startswith(b"SSH-2.0-")
             with test_emacs(root, socket_path) as server:
                 check_session(opt.probe.resolve(), opt.emacsclient, root, port, server, arm, marker)
 
