@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {AppState, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {AppState, KeyboardAvoidingView, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {registerRootComponent, requireNativeView, requireOptionalNativeModule} from 'expo';
 import {Asset} from 'expo-asset';
 import {useAudioPlayer} from 'expo-audio';
@@ -11,7 +11,7 @@ import {WebView} from '@expo/dom-webview';
 import {keyboardSource, createKeyboardFocus} from './keyboard';
 import {mixerAdapters} from './mixer';
 import {createReceiver} from './receiver';
-import {Action, colors, Panel, Settings, TerminalReview} from './panels';
+import {Action, colors, Settings, TabBar, TabPage, TerminalReview} from './panels';
 
 const native = requireOptionalNativeModule('IphoneMixer');
 const ssh = requireOptionalNativeModule('IphoneTerminal');
@@ -83,7 +83,9 @@ function EmacsKeyboard({canFocus, controlOption, onKeys, onClosed}) {
 }
 
 function Session({settings, save, active, reconnect}) {
-  const [panel, setPanel] = useState(null);
+  const [tab, setTab] = useState('Terminal');
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const terminalTab = tab === 'Terminal';
   const [draft, setDraft] = useState(settings);
   const [status, setStatus] = useState('Disconnected');
   const [activeSession, setActiveSession] = useState(false);
@@ -119,7 +121,7 @@ function Session({settings, save, active, reconnect}) {
     status: setStatus, playback: setPlayback, voiceStatus: setVoice, keyboard: setKeyboard,
     screen: setScreen, sshOffer: value => {
       setOffer(value);
-      if (!value) setPanel(current => current === 'review' ? null : current);
+      if (!value) setReviewOpen(false);
     },
     sessionActive: value => { active.current = value; setActiveSession(value); },
     openSocket: () => new WebSocket('ws://' + host + (sshMode ? (useWire ? ':8797/speech/ssh/omnivox' : ':8797/speech/ssh') : ':' + relayPort + '/speech')),
@@ -154,20 +156,22 @@ function Session({settings, save, active, reconnect}) {
     return () => { listener.remove(); receiver.disconnect(); };
   }, [receiver]);
   useEffect(() => {
-    if (reconnect.current && prepared && foreground && !panel) { reconnect.current = false; connect(); }
-  }, [receiver, prepared, foreground, panel]);
+    if (reconnect.current && prepared && foreground && terminalTab && !reviewOpen) {
+      reconnect.current = false;
+      connect();
+    }
+  }, [receiver, prepared, foreground, terminalTab, reviewOpen]);
   useEffect(() => {
     if (!ssh) return;
     ssh.keepAwake(settings.keepAwake === 'yes' && activeSession);
     return () => { ssh.keepAwake(false); };
   }, [activeSession, settings.keepAwake]);
-  function openSettings() { setDraft(settings); setPanel('settings'); }
   function connect() {
     if (!validHost(host) || (sshMode && (!/^\d{1,5}$/.test(settings.port) ||
         Number(settings.port) < 1 || Number(settings.port) > 65535 || !settings.username ||
         !/^ssh-ed25519 [A-Za-z0-9+/=]+(?: .*)?$/.test(settings.pin)))) {
       setStatus('Enter the WSL connection details in Settings, then save.');
-      if (ssh) openSettings();
+      setTab('Settings');
       return;
     }
     if (audioFailed) {
@@ -181,16 +185,17 @@ function Session({settings, save, active, reconnect}) {
   }
   const useField = sshMode && offer && settings.input === 'field';
   const keyboardFrame = sshMode && offer && keyboard?.frame === offer.frame ? offer.frame : null;
-  const canFocus = foreground && !panel;
+  const canFocus = foreground && terminalTab && !reviewOpen;
   useEffect(() => {
-    focusNewTerminal(!useField && keyboardFrame, canFocus && terminalRef.current,
+    focusNewTerminal(terminalTab && !useField && keyboardFrame, canFocus && terminalRef.current,
       () => terminalRef.current.focusKeyboard());
-  }, [useField, keyboardFrame, canFocus, focusNewTerminal]);
-  return <>
-    <StatusBar barStyle="light-content" />
-    <ScrollView style={styles.surface} contentContainerStyle={styles.page} accessibilityElementsHidden={Boolean(panel)}
-      contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
-      <Text accessibilityRole="header" style={styles.heading}>Emacsvox Speech</Text>
+  }, [useField, keyboardFrame, terminalTab, canFocus, focusNewTerminal]);
+  // SwiftTerm closes SSH if its view is detached. Keep it behind the active tab.
+  const terminalPage = (
+    <ScrollView style={styles.surface} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled"
+      pointerEvents={terminalTab ? 'auto' : 'none'} accessibilityElementsHidden={!terminalTab || reviewOpen}
+      importantForAccessibility={terminalTab && !reviewOpen ? 'auto' : 'no-hide-descendants'}>
+      <Text accessibilityRole="header" style={styles.heading}>Terminal</Text>
       <Text accessibilityLabel={'Connection status. ' + status} style={styles.status}>{status}</Text>
       <View style={styles.actions}>
         {activeSession ? <Action title="Disconnect" onPress={() => receiver.disconnect()} />
@@ -199,7 +204,7 @@ function Session({settings, save, active, reconnect}) {
       </View>
       {sshMode && offer && !useField &&
         <Action title="Focus Emacs terminal" onPress={() => terminalRef.current?.focusKeyboard()} />}
-      {((useField && keyboardFrame) || keyboard?.sendKeys) &&
+      {terminalTab && ((useField && keyboardFrame) || keyboard?.sendKeys) &&
         <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption} canFocus={canFocus}
           controlOption={settings.controlOption === 'emacs'}
           onKeys={text => {
@@ -213,6 +218,7 @@ function Session({settings, save, active, reconnect}) {
           }} />}
       {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
         <Terminal ref={terminalRef} style={styles.nativeTerminal}
+          keyboardEnabled={canFocus}
           connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
           onSessionStatus={({nativeEvent}) => {
             if (nativeEvent.state === 'connected') receiver.terminalConnected(offer.frame);
@@ -220,19 +226,11 @@ function Session({settings, save, active, reconnect}) {
           }} /></View>}
       {screen ? <View><Text accessibilityRole="header" style={styles.status}>Terminal screen</Text>
         <Text selectable style={styles.terminal}>{screen}</Text></View> : null}
-      <View style={styles.actions}>
-        {(ssh || native) && <Action title="Settings" onPress={openSettings} />}
-        <Action title="Diagnostics" onPress={() => setPanel('diagnostics')} />
-        {sshMode && offer && <Action title="Review terminal screen" onPress={() => setPanel('review')} />}
-      </View>
+      {sshMode && offer && <Action title="Review terminal screen" onPress={() => setReviewOpen(true)} />}
     </ScrollView>
-    {panel === 'settings' && <Settings draft={draft} ssh={ssh} mixer={native} wire={nativeWire}
-      edit={(k,v) => setDraft(prev => ({...prev, [k]:v}))}
-      cancel={() => setPanel(null)} save={() => { save(draft); setPanel(null); }} />}
-    {panel === 'review' && offer && <TerminalReview key={offer.frame} terminalRef={terminalRef} frame={offer.frame}
-      close={() => setPanel(null)} />}
-    {panel === 'diagnostics' && <Panel title="Diagnostics" close={() => setPanel(null)}>
-      <Action title="Done" onPress={() => setPanel(null)} />
+  );
+  const diagnostics = (
+    <TabPage title="Diagnostics">
       {voice ? <Text style={styles.status}>{voice}</Text> : null}
       {native && <Text style={styles.status}>{useWire ? 'Omnivox on iPhone' : mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
@@ -244,11 +242,31 @@ function Session({settings, save, active, reconnect}) {
       <Action title="Stop Speech" onPress={receiver.stop} />
       {timing ? <Text style={styles.status}>{timing}</Text> : null}
       {playback ? <Text style={styles.status}>{playback}</Text> : null}
-    </Panel>}
-  </>;
+    </TabPage>
+  );
+  return <KeyboardAvoidingView behavior="padding" style={styles.root}>
+    <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.root}>
+      <View style={styles.content}>
+        {terminalPage}
+        {!terminalTab && <View style={styles.tabPage}>
+          {tab === 'Diagnostics' ? diagnostics : <Settings draft={draft} ssh={ssh} mixer={native} wire={nativeWire}
+            edit={(k,v) => setDraft(prev => ({...prev, [k]:v}))}
+            cancel={() => { setDraft(settings); setTab('Terminal'); }}
+            save={() => { save(draft); setTab('Terminal'); }} />}
+        </View>}
+      </View>
+      <TabBar selected={tab} onSelect={setTab} />
+    </SafeAreaView>
+    {reviewOpen && offer && <TerminalReview key={offer.frame} terminalRef={terminalRef} frame={offer.frame}
+      close={() => setReviewOpen(false)} />}
+  </KeyboardAvoidingView>;
 }
 
 const styles = StyleSheet.create({
+  root: {flex: 1, backgroundColor: colors.background},
+  content: {flex: 1},
+  tabPage: {...StyleSheet.absoluteFill, backgroundColor: colors.background},
   surface: {backgroundColor: colors.background},
   page: {flexGrow: 1, gap: 16, backgroundColor: colors.background, paddingHorizontal: 20, paddingVertical: 36},
   heading: {fontSize: 28, fontWeight: '600', color: colors.text},

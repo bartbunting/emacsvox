@@ -55,6 +55,11 @@ history, issue or commit discussion. Remove superseded entries. If no later
 result exists, use the bounded task below; absence of a recorded result is not
 evidence of a defect.
 
+** iPhone terminal tabs
+
+Check VoiceOver tab selection and external keyboard focus on the signed
+build using the [[file:../prototypes/iphone-speech/README.org::*Use the bottom tabs][bottom tab exercise]].
+
 ** Preference reload, recovery and early speech
 
 Independent saved host-preference reload, retained recovery and explicit

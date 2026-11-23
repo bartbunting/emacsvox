@@ -30,7 +30,12 @@ public final class IphoneTerminalModule: Module {
     View(PhoneTerminalView.self) {
       Events("onSessionStatus")
       Prop("connection") { (view: PhoneTerminalView, config: [String: String]) in view.configure(config) }
+      Prop("keyboardEnabled") { (view: PhoneTerminalView, enabled: Bool) in
+        view.terminal.isUserInteractionEnabled = enabled
+        if !enabled && view.terminal.isFirstResponder { view.terminal.resignFirstResponder() }
+      }
       AsyncFunction("focusKeyboard") { (view: PhoneTerminalView) in
+        guard view.terminal.isUserInteractionEnabled else { return }
         view.terminal.becomeFirstResponder()
         UIAccessibility.post(notification: .layoutChanged, argument: view.terminal)
       }
@@ -157,7 +162,8 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
   }
 
   func sendKeys(_ text: String, to frame: String) {
-    guard configuration["frame"] == frame, !text.isEmpty, text.utf8.count <= 1024 else { return }
+    guard terminal.isUserInteractionEnabled, configuration["frame"] == frame,
+          !text.isEmpty, text.utf8.count <= 1024 else { return }
     send(source: terminal, data: Array(text.utf8)[...])
   }
 

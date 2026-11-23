@@ -198,6 +198,16 @@ Receiver tests use a substitute synthesiser to delay callbacks and a
 substitute audio player to interrupt a cue during rewind. Use the phone
 to hear the cutoff, check VoiceOver focus and try recovery on your tailnet.
 
+To check tab changes with both terminal input modes, run the React test
+renderer in a temporary directory. The test drives the app and receiver
+with a simulated phone and SSH offer.
+
+#+begin_src sh
+tab_tools=$(mktemp -d)
+npm install --prefix "$tab_tools" --no-save --ignore-scripts react-test-renderer@19.3.0 react@19.3.0
+NODE_PATH="$tab_tools/node_modules" node --test test/app-tabs.cjs
+#+end_src
+
 On 2026-11-22, the checks passed on WSL2 with the configured Emacs 31,
 Agent Shell checkout dde9392 and Expo SDK 58. A separate fresh session
 reached Codex ACP readiness with version 2.9.0 without submitting a prompt.
@@ -472,7 +482,8 @@ speech socket before the receiver reports Connected.
    If iOS asks for Developer Mode, turn it on under Settings, Privacy
    & Security, Developer Mode. Restart, unlock and confirm Turn On.
    Open Diagnostics and activate “Test iPhone Voice” to hear local speech
-   before connecting. Activate Done. Allow local network access if prompted.
+   before connecting. Return to Terminal using its bottom tab, or activate
+   Done on build 3. Allow local network access if prompted.
    For SSH, open Settings and activate
    “Copy iPhone SSH public key” and transfer that one public
    line to a file of your choice in WSL.
@@ -520,6 +531,23 @@ speech socket before the receiver reports Connected.
 6. Activate Disconnect, then press Control+C in the listener and relay
    terminals. The listener accepts the nominated Tailscale phone and its
    public key while it runs. It uses its own host key and authorized keys.
+
+** Use the bottom tabs
+
+Build 4 opens on Terminal. The tabs along the bottom, from left to right,
+are Terminal, Diagnostics and Settings. Select Diagnostics for audio tests
+or Settings for connection and keyboard preferences. Changing tabs keeps
+your SSH frame open. Return to Terminal to resume typing at the same point.
+Stop Speech is available on Terminal and Diagnostics.
+
+You can switch tabs while editing a setting. Return to Settings to continue
+your edit. Save settings applies it. Cancel restores the saved values. Both
+actions return to Terminal.
+
+On the iPhone, check that VoiceOver identifies the selected tab and reads
+only the visible page and the tab bar. In an Emacs draft, switch to
+Diagnostics, then Settings, then Terminal. Press =C-n= on the external
+keyboard and listen for the next line in that same buffer.
 
 ** Resume after locking the iPhone
 
@@ -579,7 +607,7 @@ position of Option or Alt. iOS interprets the Alt key as Option.
 1. In Diagnostics, activate “Test half-second tone”. Listen for one steady
    pitch. Try “Test three-second tone” and interrupt it with Stop Speech.
    Both controls work offline and use the same player as an Emacs tone.
-   For a timing comparison, try the half-second tone twice. Close Diagnostics
+   For a timing comparison, try the half-second tone twice. Return to Terminal
    and run =M-x iphone-test-tone RET= twice in the isolated phone frame.
    Both paths play 660 Hz for 480 ms. Keep the same speaker or headphones
    and compare the pause between activation and the start of the sound.

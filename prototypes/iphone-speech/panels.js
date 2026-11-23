@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-import React, {useRef} from 'react';
-import {AccessibilityInfo, Button, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, View} from 'react-native';
+import React, {useEffect, useRef} from 'react';
+import {AccessibilityInfo, Button, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View} from 'react-native';
 
 export const colors = {background: '#000', text: '#f5f5f5', action: '#90c4ff'};
 
@@ -10,11 +10,39 @@ export function Action(props) {
   return <Button color={colors.action} {...props} />;
 }
 
-export function Panel({title, close, onDismiss, children}) {
+export function TabBar({selected, onSelect}) {
+  return <View accessible={false} collapsable={false} accessibilityRole="tabbar" style={styles.tabs}>
+    {['Terminal', 'Diagnostics', 'Settings'].map(name => {
+      const active = selected === name;
+      return <Pressable key={name} accessibilityRole="tab" accessibilityLabel={name}
+        accessibilityState={{selected: active}} onPress={() => onSelect(name)}
+        style={[styles.tab, active && styles.selectedTab]}>
+        <Text style={[styles.tabLabel, active && styles.selectedLabel]}>{name}</Text>
+      </Pressable>;
+    })}
+  </View>;
+}
+
+export function TabPage({title, children}) {
+  const heading = useRef(null);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      if (heading.current) AccessibilityInfo.sendAccessibilityEvent(heading.current, 'focus');
+    });
+    return () => cancelAnimationFrame(id);
+  }, [title]);
+  return <ScrollView style={styles.surface} contentContainerStyle={styles.panel}
+    keyboardShouldPersistTaps="handled">
+    <Text ref={heading} accessibilityRole="header" style={styles.heading}>{title}</Text>
+    {children}
+  </ScrollView>;
+}
+
+function Panel({title, close, children}) {
   const heading = useRef(null);
   // Keep the terminal attached to its window while the panel covers it.
   return <Modal visible transparent presentationStyle="overFullScreen" animationType="none"
-    onRequestClose={close} onDismiss={onDismiss}
+    onRequestClose={close}
     onShow={() => { if (heading.current) AccessibilityInfo.sendAccessibilityEvent(heading.current, 'focus'); }}>
     <ScrollView style={styles.surface} contentContainerStyle={styles.panel}
       contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled"
@@ -54,9 +82,13 @@ function Toggle({label, hint, value, change}) {
   </View>;
 }
 
-export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer, wire}) {
+export function Settings({draft, edit, save, cancel, ssh, mixer, wire}) {
   const [message, setMessage] = React.useState('');
-  return <Panel title="Settings" close={cancel} onDismiss={onDismiss}>
+  const fields = [['host', 'WSL Tailscale IPv4 address']];
+  if (ssh && draft.transport === 'ssh') {
+    fields.push(['port', 'SSH port'], ['username', 'WSL username'], ['pin', 'Trusted WSL host public key']);
+  }
+  return <TabPage title="Settings">
     <Action title="Save settings" onPress={save} />
     <Action title="Cancel" onPress={cancel} />
     {ssh && <>
@@ -74,18 +106,17 @@ export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer, wire
         value={draft.controlOption === 'emacs'} change={v => edit('controlOption', v ? 'emacs' : 'voiceover')} />}
       <Toggle label="Keep awake while connected" hint="Prevent automatic screen lock while this app is in the foreground."
         value={draft.keepAwake === 'yes'} change={v => edit('keepAwake', v ? 'yes' : 'no')} />
-      {[['host','WSL Tailscale IPv4 address'], ['port','SSH port'], ['username','WSL username'],
-        ['pin','Trusted WSL host public key']].map(([name,label]) => <View key={name}>
-        <Text accessible={false} accessibilityElementsHidden style={styles.label}>{label}</Text>
-        <TextInput accessibilityLabel={label} autoCapitalize="none" autoCorrect={false}
-          keyboardAppearance="dark" selectionColor={colors.action} style={styles.field}
-          value={draft[name]} onChangeText={v => edit(name, v)} />
-      </View>)}
-      <Action title="Copy iPhone SSH public key" onPress={async () => {
-        try { await ssh.copyPublicKey(); setMessage('iPhone public key copied.'); }
-        catch { setMessage('Could not read the iPhone SSH identity.'); }
-      }} />
     </>}
+    {fields.map(([name,label]) => <View key={name}>
+      <Text accessible={false} accessibilityElementsHidden style={styles.label}>{label}</Text>
+      <TextInput accessibilityLabel={label} autoCapitalize="none" autoCorrect={false}
+        keyboardAppearance="dark" selectionColor={colors.action} style={styles.field}
+        value={draft[name]} onChangeText={v => edit(name, v)} />
+    </View>)}
+    {ssh && <Action title="Copy iPhone SSH public key" onPress={async () => {
+      try { await ssh.copyPublicKey(); setMessage('iPhone public key copied.'); }
+      catch { setMessage('Could not read the iPhone SSH identity.'); }
+    }} />}
     {wire && <Action title="Import a personal earcon" onPress={async () => {
       try { if (await wire.importCue()) setMessage('Earcon imported. Emacs can now play the matching recording.'); }
       catch { setMessage('Could not import this recording. Choose a WAV or OGG up to 16 MiB and 30 seconds.'); }
@@ -93,7 +124,7 @@ export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer, wire
     {mixer && !(wire && draft.transport === 'ssh' && draft.worker === 'omnivox') && <Toggle label="Use native mixer" hint="Mix local speech with tones and earcons. Switch off for direct iPhone speech."
       value={draft.audio === 'mixed'} change={v => edit('audio', v ? 'mixed' : 'direct')} />}
     {message ? <Text style={styles.label}>{message}</Text> : null}
-  </Panel>;
+  </TabPage>;
 }
 
 const styles = StyleSheet.create({
@@ -104,4 +135,10 @@ const styles = StyleSheet.create({
   row: {fontFamily: 'Menlo', fontSize: 16, color: colors.text},
   toggle: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44},
   field: {color: colors.text, borderColor: '#aaa', borderWidth: 1, padding: 10, marginTop: 6, borderRadius: 4},
+  tabs: {flexDirection: 'row', borderTopColor: '#636366', borderTopWidth: StyleSheet.hairlineWidth},
+  tab: {flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: 2, paddingVertical: 8, borderTopWidth: 3, borderTopColor: 'transparent'},
+  selectedTab: {borderTopColor: colors.action},
+  tabLabel: {fontSize: 16, textAlign: 'center', color: colors.text},
+  selectedLabel: {color: colors.action, fontWeight: '700'},
 });
