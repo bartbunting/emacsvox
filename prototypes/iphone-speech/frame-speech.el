@@ -6,6 +6,7 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'json)
+(require 'browse-url)
 (require 'emacsvox-frame-speech (expand-file-name "../../lisp/speech/emacsvox-frame-speech"
                                                   (file-name-directory load-file-name)))
 (require 'emacsvox-agent-shell-frames (expand-file-name "../../lisp/integrations/emacsvox-agent-shell-frames"
@@ -240,6 +241,7 @@
   (process-send-string owner
                        (concat "iphone_event " (json-encode
                                                `((type . ,kind) (id . ,id) (text . ,text)
+                                                 ,@(when (equal kind "attached") '((browseUrl . t)))
                                                  ,@(when (and (equal kind "attached")
                                                               (terminal-parameter nil 'emacsvox-phone-hyper))
                                                      '((keyTiming . t))))) "\n")))
@@ -274,6 +276,7 @@
     (pcase action
       ('detach (iphone-frame-speech--close-terminal frame))
       ((guard (not (process-live-p owner))) nil)
+      ('browser-ready (process-put owner 'iphone-web-browser t))
       ('sync (iphone-frame-speech--sync frame owner))
       ((or 'trace-saved 'trace-failed)
        (with-selected-frame frame
@@ -290,6 +293,21 @@
          (iphone-frame-speech--packet notify "reset-done" serial))
        (iphone-frame-speech--packet owner "reset-done" serial))))
   t)
+
+(defun iphone-frame-speech--web-link-p (url)
+  "Recognise a web URL opened by a command on a browser-capable phone frame."
+  (when-let* ((owner (iphone-frame-speech--command-worker)))
+    (and (process-get owner 'iphone-web-browser)
+         (string-match-p "\\`https?://" (downcase url)))))
+
+(defun iphone-frame-speech--browse-url (url &rest _args)
+  "Ask the phone that issued the command to open URL."
+  (when (or (> (length url) 8192) (string-match-p "[[:cntrl:]]" url))
+    (user-error "The phone cannot open this web link"))
+  (when-let* ((owner (iphone-frame-speech--command-worker)))
+    (iphone-frame-speech--packet owner "open-url" (process-get owner 'iphone-connection) url)))
+
+(function-put 'iphone-frame-speech--browse-url 'browse-url-browser-kind 'external)
 
 (defun iphone-frame-speech--timing-key (serial)
   "Return the fixed diagnostic sample numbered SERIAL through this phone."
@@ -371,6 +389,8 @@
             (iphone-frame-speech--close-terminal frame)
           (iphone-frame-speech--detach frame))))
     (remove-hook 'post-command-hook #'iphone-frame-speech--post-command)
+    (setq browse-url-default-handlers
+          (delete '(iphone-frame-speech--web-link-p . iphone-frame-speech--browse-url) browse-url-default-handlers))
     (remove-hook 'delete-frame-functions #'iphone-frame-speech--detach)
     (remove-hook 'emacsvox-agent-shell-frame-permission-functions #'iphone-frame-speech--permission)
     (advice-remove 'emacsvox-aural-voice-workbench #'iphone-voices--workbench)
@@ -390,6 +410,7 @@
 (defun iphone-frame-speech-enable ()
   "Enable frame routing in the isolated trial server."
   (add-hook 'post-command-hook #'iphone-frame-speech--post-command 90)
+  (add-to-list 'browse-url-default-handlers '(iphone-frame-speech--web-link-p . iphone-frame-speech--browse-url))
   (add-hook 'delete-frame-functions #'iphone-frame-speech--detach)
   (advice-add 'emacsvox-aural-voice-workbench :around #'iphone-voices--workbench)
   (advice-add 'omnivox-list-voices :around #'iphone-voices--workbench)

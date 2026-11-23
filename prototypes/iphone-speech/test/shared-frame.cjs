@@ -640,6 +640,24 @@ async function main() {
           });
           assert.equal(await observe(editorPosition), beforeTiming, 'the diagnostic key leaves the conversation untouched');
           console.log('The numbered timing key returned on the main phone worker and preserved the buffer and point.');
+          assert.ok(rawPackets.some(p => p.type === 'ready' && p.browseUrl === true));
+          const web = 'https://example.org/phone?q=one%20two#section';
+          await observe(`(progn (setq iphone-web-on-desktop nil
+              browse-url-browser-function (lambda (url &rest _) (push url iphone-web-on-desktop)))
+            (with-selected-window ${phoneWindow} (setq iphone-before-web (current-buffer))
+              (switch-to-buffer (get-buffer-create "Phone link sample"))
+              (insert "${web}") (goto-char 15)))`);
+          ws.send('browser-ready');
+          await until('the phone browser registered on its own frame', async () =>
+            await observe(`(process-get ${main} 'iphone-web-browser)`) === 't');
+          sshKeys('\x1bxbrowse-url-at-point\r');
+          await until('a link activated at point reaches the opening SSH frame', () => rawPackets.some(p =>
+            p.type === 'open-url' && p.url === web && p.frame === rawPackets.find(r => r.type === 'ssh').frame));
+          assert.equal(await observe('iphone-web-on-desktop'), 'nil');
+          await observe(`(with-selected-frame ${pc} (browse-url "https://example.org/desktop"))`);
+          assert.equal(await observe('iphone-web-on-desktop'), '("https://example.org/desktop")');
+          await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-before-web))`);
+          console.log('The SSH frame opened its URL on the phone while a desktop link used the desktop browser.');
           const registrationTests = JSON.stringify(path.join(__dirname, 'voice-registration.el'));
           assert.equal(await observe(`(progn (load ${registrationTests} nil t t)
             (ert-stats-completed-unexpected (ert-run-tests-batch "^iphone-registration-")))`), '0');

@@ -105,6 +105,10 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
       {wire && draft.transport === 'ssh' && <Toggle label="Use Omnivox on iPhone"
         hint="Run speech, installed voice discovery, tones and earcons on this phone. Reconnects the terminal when saved."
         value={draft.worker === 'omnivox'} change={v => edit('worker', v ? 'omnivox' : 'legacy')} />}
+      {ssh.hasWebBrowser && draft.worker === 'omnivox' && draft.transport === 'ssh' &&
+        <Toggle label="Open web links inside Emacsvox Speech"
+          hint="Use Done in the Safari view to return to Emacs. Turn off to open links in the default browser on this iPhone."
+          value={draft.webBrowser !== 'external'} change={v => edit('webBrowser', v ? 'in-app' : 'external')} />}
       {LoudnessSlider && draft.transport === 'ssh' && draft.worker === 'omnivox' && <>
         <Text accessible={false} accessibilityElementsHidden style={styles.label}>Speech loudness · {Number(draft.speechLoudness) || 0} dB</Text>
         <LoudnessSlider style={{height: 48}} level={Number(draft.speechLoudness) || 0}

@@ -52,7 +52,7 @@ function App() {
     return {
       host: process.env.EXPO_PUBLIC_EMACSVOX_HOST ?? '', port: '8822', username: '', pin: '',
       transport: ssh ? 'ssh' : 'relay', input: 'field', keepAwake: 'yes', audio: 'direct',
-      connectOnOpen: 'no', controlOption: 'voiceover', terminalColumns: '120', commandHyper: 'yes', logSpeech: 'no', ...profile,
+      connectOnOpen: 'no', controlOption: 'voiceover', terminalColumns: '120', commandHyper: 'yes', webBrowser: 'in-app', logSpeech: 'no', ...profile,
       speechLoudness: Number.isInteger(db) && db >= 0 && db <= 6 ? String(db) : '0',
     };
   });
@@ -99,6 +99,9 @@ function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys, onClosed}
 function Session({settings, save, active, reconnect}) {
   const [tab, setTab] = useState('Terminal');
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [browserOpen, setBrowserOpen] = useState(false);
+  const browserShowing = useRef(false), browserPreference = useRef(settings.webBrowser);
+  browserPreference.current = settings.webBrowser;
   const terminalTab = tab === 'Terminal';
   const [draft, setDraft] = useState(settings);
   const [status, setStatus] = useState('Disconnected');
@@ -142,6 +145,18 @@ function Session({settings, save, active, reconnect}) {
       if (!value) setReviewOpen(false);
     },
     sessionActive: value => { active.current = value; setActiveSession(value); },
+    openWebLink: ssh?.hasWebBrowser && (async (frame, url) => {
+      if (!terminalRef.current || browserShowing.current || AppState.currentState !== 'active') return;
+      browserShowing.current = true;
+      setBrowserOpen(true);
+      try {
+        if (!await terminalRef.current.openWebLink(frame, url, browserPreference.current === 'external')) {
+          const detail = 'The iPhone could not open the web link.';
+          setStatus(detail);
+          AccessibilityInfo.announceForAccessibility?.(detail);
+        }
+      } finally { browserShowing.current = false; setBrowserOpen(false); }
+    }),
     openSocket: () => new WebSocket('ws://' + host + (sshMode ? (useWire ? ':8797/speech/ssh/omnivox' : ':8797/speech/ssh') : ':' + relayPort + '/speech')),
   }), [adapters, host, sshMode, useWire, active]);
   useEffect(() => {
@@ -203,7 +218,7 @@ function Session({settings, save, active, reconnect}) {
   }
   const useField = sshMode && offer && (settings.input === 'field' || Boolean(timingPrompt));
   const keyboardFrame = sshMode && offer && keyboard?.frame === offer.frame ? offer.frame : null;
-  const canFocus = foreground && terminalTab && !reviewOpen;
+  const canFocus = foreground && terminalTab && !reviewOpen && !browserOpen;
   function cancelTrial() {
     timingTrial.current = null;
     receiver.cancelKeyTiming();
@@ -246,9 +261,9 @@ function Session({settings, save, active, reconnect}) {
     } catch (error) { finishTrial(trial, error.message); }
   }
   useEffect(() => {
-    focusNewTerminal(terminalTab && !useField && keyboardFrame, canFocus && terminalRef.current,
+    focusNewTerminal(terminalTab && !useField && !browserOpen && keyboardFrame, canFocus && terminalRef.current,
       () => terminalRef.current.focusKeyboard());
-  }, [useField, keyboardFrame, terminalTab, canFocus, focusNewTerminal]);
+  }, [useField, keyboardFrame, terminalTab, canFocus, browserOpen, focusNewTerminal]);
   // SwiftTerm closes SSH if its view is detached. Keep it behind the active tab.
   const terminalPage = (
     <ScrollView style={styles.surface} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled"
@@ -264,7 +279,7 @@ function Session({settings, save, active, reconnect}) {
       {sshMode && offer && !useField &&
         <Action title="Focus Emacs terminal" onPress={() => terminalRef.current?.focusKeyboard()} />}
       {timingPrompt ? <Text style={styles.status}>{timingPrompt}</Text> : null}
-      {terminalTab && ((useField && keyboardFrame) || keyboard?.sendKeys) &&
+      {terminalTab && !browserOpen && ((useField && keyboardFrame) || keyboard?.sendKeys) &&
         <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption + settings.commandHyper} canFocus={canFocus}
           controlOption={settings.controlOption === 'emacs'} commandHyper={Boolean(useField && settings.commandHyper === 'yes')}
           onKeys={text => {

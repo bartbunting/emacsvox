@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 const {openWire} = require('./wire-receiver');
+const {isWebLink} = require('./web-link');
 
 const speechRate = 1.5;
 const eloquenceNames = ['Reed', 'Eddy', 'Rocko', 'Grandpa'];
@@ -26,9 +27,10 @@ async function findVoice(speech) {
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
 function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, nativeWire, openSocket, status, playback = () => {}, voiceStatus = () => {},
-                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
+                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, openWebLink, sessionActive = () => {}, now = Date.now }) {
   let wire, socket, heartbeat, lastReceived, resetId, ready;
   let traceAllowed = false, tracePending = false, timingAllowed = false;
+  let browserReady = false;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
   let sshKeyboardConnected = false, sshKeyboardPublished = false;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
@@ -237,6 +239,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     sessionActive(false);
     ready = false;
     traceAllowed = tracePending = timingAllowed = false;
+    browserReady = false;
     keyboard(null);
     sshOffer(null);
     clearPermissions();
@@ -296,6 +299,10 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
         ready = true;
         if (record.speechTrace === true) traceAllowed = true;
         timingAllowed = record.keyTiming === true;
+        if (wire && openWebLink && record.browseUrl === true && !browserReady) {
+          browserReady = true;
+          current.send('browser-ready');
+        }
         attempt = 0;
         status('Connected');
         if (record.keyboard === true) {
@@ -320,6 +327,12 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
           wire.opened.then(() => { if (socket === current) sshOffer(record); },
             () => { if (socket === current) disconnect('Could not open the local Omnivox workers.'); });
         } else sshOffer(record);
+      } else if (record.type === 'open-url') {
+        if (ready && browserReady && !background && record.frame === frameId && isWebLink(record.url)) {
+          Promise.resolve().then(() => {
+            if (ready && socket === current && frameId === record.frame && !background) return openWebLink(frameId, record.url);
+          }).catch(() => { if (socket === current) playback('The iPhone could not open the web link.'); });
+        }
       } else if (ready && (record.type === 'permission' || record.type === 'resolved')) {
         permissionRecord(record);
       } else if (record.type === 'screen' && typeof record.text === 'string') {

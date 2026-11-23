@@ -12,6 +12,7 @@ const { WebSocketServer, WebSocket } = require('ws');
 const { attachTerminal, openPhoneFrame, frameControl, sshOffer } = require('./terminal.cjs');
 
 const {wireEndpoint, recordLimit} = require('./wire.cjs');
+const {isWebLink} = require('./web-link');
 
 const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
@@ -240,6 +241,9 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
       const session = sharedDirectory && 'phone-' + randomUUID();
       let lastSeen = Date.now(), readyId = 0, attached = false;
       let frameAttached = false, voicesReady = false, keyTiming = false, setupDeadline;
+      let browserOffered = false, browserReady = false;
+      const capabilities = () => raw ? {speechTrace: true, ...(keyTiming && {keyTiming: true}),
+        ...(browserOffered && {browseUrl: true})} : {};
       const control = (action, serial = 0) =>
         frameControl(sharedDirectory, session, action, serial).catch(() => ws.terminate());
       const traceReceipt = ok => {
@@ -255,14 +259,17 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
           if (packet.type === 'attached') {
             frameAttached = true;
             keyTiming = raw && packet.keyTiming === true;
+            browserOffered = raw && packet.browseUrl === true;
             if (raw) { setupDeadline = Date.now() + 15000; send({type: 'discovering'}); }
           } else voicesReady = true;
           if (frameAttached && (!raw || voicesReady)) connected();
         }
         else if (packet.type === 'stop-all') send({type: 'stop', scope: 'all'});
         else if (packet.type === 'reset-done' && packet.id === readyId && attached) {
-          send({type: 'ready', id: readyId, ...(raw && {speechTrace: true}), ...(keyTiming && {keyTiming: true})});
+          send({type: 'ready', id: readyId, ...capabilities()});
         }
+        else if (attached && browserReady && packet.type === 'open-url' && packet.id === session && isWebLink(packet.text))
+          send({type: 'open-url', frame: session, url: packet.text});
         else if (attached && ['permission', 'resolved'].includes(packet.type) &&
                  typeof packet.id === 'string') send(packet);
       };
@@ -293,6 +300,8 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         const command = data.toString();
         if (raw && /^[MN] /.test(command)) {
           if (!endpoint.reply(command)) ws.terminate();
+        } else if (attached && browserOffered && command === 'browser-ready') {
+          if (!browserReady) { browserReady = true; void control('browser-ready'); }
         } else if (raw && attached && command.startsWith('speech-trace ')) {
           const text = command.slice(13);
           if (savingTrace || !text || Buffer.byteLength(text) > 65536) return traceReceipt(false);
@@ -318,7 +327,7 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         terminal = pane || undefined;
         attached = true;
         if (raw && readyId) void control('stop', readyId);
-        else send({ type: 'ready', id: readyId, ...(raw && {speechTrace: true}), ...(keyTiming && {keyTiming: true}), ...(pane && {keyboard: true}) });
+        else send({ type: 'ready', id: readyId, ...capabilities(), ...(pane && {keyboard: true}) });
         if (routed) void control('sync');
       }
       if (sharedDirectory) Promise.resolve(endpoint && endpoint.listening).then(() => {

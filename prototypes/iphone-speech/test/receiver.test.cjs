@@ -6,6 +6,35 @@ const assert = require('node:assert/strict');
 const { createReceiver } = require('../receiver');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('open web links only for the negotiated foreground frame and discard late actions', async () => {
+  const sent = [], opened = [], ws = {readyState: 1, send(text) { sent.push(text); }, close() {}};
+  const nativeWire = {open: async () => {}, close: async () => {}, addListener: () => ({remove() {}})};
+  const receiver = createReceiver({openSocket: () => ws, nativeWire, status() {}, speech: {stop: async () => {}},
+    openWebLink: (frame, url) => opened.push([frame, url])});
+  const deliver = data => ws.onmessage({data: JSON.stringify(data)});
+  const valid = 'https://example.org/path?q=1#section';
+  const link = (url, frame = 'first') => deliver({type: 'open-url', url, frame});
+  try {
+    receiver.connect();
+    deliver({type: 'ssh', frame: 'first', server: 'server', client: 'client'});
+    deliver({type: 'ready', id: 0});
+    link(valid);
+    assert.deepEqual(sent, []);
+    deliver({type: 'ready', id: 0, browseUrl: true});
+    deliver({type: 'ready', id: 0, browseUrl: true});
+    assert.deepEqual(sent, ['browser-ready']);
+    link(valid, 'expired');
+    for (const invalid of ['file:///tmp/x', 'javascript:alert(1)', 'https://', 'https://example.org/\n']) link(invalid);
+    link(valid);
+    await flush();
+    assert.deepEqual(opened, [['first', valid]]);
+    link(valid);
+    receiver.appState('background');
+    await flush();
+    assert.equal(opened.length, 1);
+  } finally { receiver.disconnect(); }
+});
+
 test('speech text is sent only on request to a relay that advertises trace storage', async () => {
   const sent = [], messages = [];
   const ws = {readyState: 1, send: text => sent.push(text), close() {}};

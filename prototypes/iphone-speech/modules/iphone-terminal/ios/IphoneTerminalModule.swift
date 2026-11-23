@@ -11,6 +11,7 @@ public final class IphoneTerminalModule: Module {
   public func definition() -> ModuleDefinition {
     Name("IphoneTerminal")
     Constant("hasShiftReturnShortcut") { true }
+    Constant("hasWebBrowser") { true }
     AsyncFunction("copyPublicKey") { UIPasteboard.general.string = try PhoneIdentity.publicKey() }.runOnQueue(.main)
     Function("loadProfile") { UserDefaults.standard.dictionary(forKey: "emacsvox.ssh.profile") as? [String:String] ?? [:] }
     Function("saveProfile") { (profile: [String:String]) in UserDefaults.standard.set(profile, forKey: "emacsvox.ssh.profile") }
@@ -30,6 +31,10 @@ public final class IphoneTerminalModule: Module {
     }
     View(PhoneTerminalView.self) {
       Events("onSessionStatus")
+      AsyncFunction("openWebLink") { (view: PhoneTerminalView, frame: String, url: String, external: Bool, promise: Promise) in
+        guard let presenter = self.appContext?.utilities?.currentViewController() else { promise.resolve(false); return }
+        view.openWebLink(url, frame: frame, external: external, from: presenter) { promise.resolve($0) }
+      }.runOnQueue(.main)
       Prop("connection") { (view: PhoneTerminalView, config: [String: String]) in view.configure(config) }
       Prop("commandHyper") { (view: PhoneTerminalView, enabled: Bool) in view.terminal.commandHyper = enabled }
       Prop("minimumColumns") { (view: PhoneTerminalView, columns: Int) in
@@ -170,6 +175,7 @@ final class EmacsTerminalView: TerminalView {
 }
 
 final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
+  private let browser = PhoneBrowser()
   let terminal = EmacsTerminalView(frame: .zero)
   let onSessionStatus = EventDispatcher()
   private var configuration: [String: String] = [:]
@@ -272,6 +278,11 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
     guard terminal.isUserInteractionEnabled, configuration["frame"] == frame,
           !text.isEmpty, text.utf8.count <= 1024 else { return }
     send(source: terminal, data: Array(text.utf8)[...])
+  }
+
+  func openWebLink(_ url: String, frame: String, external: Bool, from presenter: UIViewController, done: @escaping (Bool) -> Void) {
+    guard window != nil, configuration["frame"] == frame, session != nil else { done(false); return }
+    browser.open(url, external: external, from: presenter, done: done)
   }
 
   func visibleRows(for frame: String) -> [String] {

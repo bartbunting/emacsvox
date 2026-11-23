@@ -74,11 +74,12 @@ supplies from word starts the phone measures.
    punctuation and speech rate. Compare reading =aA_b[2]= as a line and
    moving over its characters. After a pause the phonetic word should
    reach the frame that moved, and rapid movement should cancel the old one.
-5. *Audio timing and interruption.* Add an optional Diagnostics comparison.
-   For a test key, time arrival at the phone keyboard field, receipt of
-   the relay message, and the direct-speech start callback or the first
-   buffer scheduled by the native mixer. Collect timings without storing
-   spoken text.
+5. *Audio timing and interruption.* Compare “Measure SSH key to speech”
+   and “Measure local key to speech” in Diagnostics. Both start when the
+   phone keyboard field receives Return. The SSH test also reports arrival of
+   the matching speech record. The audio result uses the direct-speech start
+   callback or the first buffer scheduled by the native mixer. The tests use
+   a fixed sample and work with speech logging off.
    Compare direct speech and mixed Eloquence on speaker and headphones.
    Check that the cue starts at the intended place, a second =C-n= cuts
    off obsolete feedback, and Stop Speech silences a long reply.
@@ -131,17 +132,20 @@ to the relay tone packet. Speaker onset and interruption require device timing.
 
 * Work alongside and after this build
 
-- *Live permissions on build 3.* At the next real Codex permission
+- *Live permissions.* At the next real Codex permission
   request, navigate during the choices, review the pending request and
   answer it. The practice request and lock recovery have passed.
-- *Mobile keyboard.* Check the external keyboard in the phone's terminal, including
+- *Mobile keyboard and web links.* Check the external keyboard in the phone's terminal, including
   =M-<=, =M->= and =C-M-f=. In the next signed build, compare =j= and =J=
   while entering text and while moving between responses. Check that
   Shift+Return inserts a newline in an unsent draft. Check focus on
   connection and unlock while keeping other app controls accessible. The
-  mobile design and optional self-voicing work are in the
+  next build also sends Command as Hyper and requests at least 120 columns
+  by default. Check ~H-x~ and the width reported by ~(frame-width)~.
+  Follow a web link from the phone, close the Safari view with Done and
+  continue typing in the original buffer. The mobile design and optional self-voicing work are in the
   [[file:OMNIVOX.org::*External keyboard and self-voicing][keyboard roadmap]].
-- *Daily startup and recovery.* After a planned WSL restart, reopen
+- *Daily startup and recovery.* After your next normal WSL restart, reopen
   Codex, start the private listener and relay, and connect with the
   saved phone settings. Disconnect and continue on the desktop.
 

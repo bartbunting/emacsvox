@@ -27,7 +27,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
   test('switch tabs with a connected ' + input + ' keyboard' + (hasShiftReturnShortcut ? '' : ' on an earlier app'), async t => {
     const sockets = [], focus = [], keys = [];
     t.mock.method(global, 'WebSocket', function openSocket() {
-      const socket = {readyState: 1, close() { this.readyState = 3; }};
+      const socket = {readyState: 1, send() {}, close() { this.readyState = 3; }};
       sockets.push(socket);
       return socket;
     });
@@ -46,7 +46,10 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
         open: async () => {}, close: async () => {}, record: async () => {},
         addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
     }
-    const ssh = {hasShiftReturnShortcut, loadProfile: () => profile, keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
+    const ssh = {hasShiftReturnShortcut, hasWebBrowser: hasShiftReturnShortcut, loadProfile: () => profile,
+      keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
+    const links = [];
+    let dismiss;
     const player = {};
     const rn = Object.fromEntries(['Button', 'View', 'Text', 'ScrollView', 'SafeAreaView', 'Pressable',
       'KeyboardAvoidingView', 'Switch', 'TextInput', 'StatusBar', 'Modal'].map(name => [name, name]));
@@ -67,6 +70,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       app = create(React.createElement(App), {createNodeMock: ({type}) => ({
         focusKeyboard: () => focus.push(type), injectJavaScript: () => focus.push(type),
         sendKeys: (frame, bytes) => keys.push([frame, bytes]),
+        openWebLink: (...args) => { links.push(args); return new Promise(done => { dismiss = done; }); },
       })});
     });
     t.after(() => act(() => app.unmount()));
@@ -180,6 +184,24 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\x1b'}}));
       assert.ok(tabs()[1].props.accessibilityState.selected);
       assert.deepEqual(keys.at(-1), ['same-frame', '\x1b[57343;1u']);
+      await select('Terminal');
+      const link = 'https://example.org/a%20b#c';
+      await act(() => {
+        receive({type: 'ready', id: 0, keyTiming: true, browseUrl: true});
+        receive({type: 'open-url', frame: 'same-frame', url: link});
+      });
+      assert.deepEqual(links, [['same-frame', link, false]]);
+      assert.equal(terminal.props.keyboardEnabled, false);
+      await act(() => dismiss(true));
+      assert.equal(terminal.props.keyboardEnabled, true);
+      await select('Settings');
+      const browse = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Open web links inside Emacsvox Speech');
+      await act(() => browse.props.onValueChange(false));
+      await act(() => button('Save settings').props.onPress());
+      await act(() => receive({type: 'open-url', frame: 'same-frame', url: link}));
+      assert.deepEqual(links.at(-1), ['same-frame', link, true]);
+      await act(() => dismiss(true));
+      assert.equal(sockets.length, 1);
     }
   });
 }
