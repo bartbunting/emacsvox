@@ -260,6 +260,34 @@ def check_session(probe, emacsclient, root, port, server, arm_speech, speech):
           "Meta and Control input, disconnect and reattachment to the same buffer.")
 
 
+def check_listener_restart(sshd, probe, emacsclient, root, server):
+    pin = root / "saved-pin"
+    pin.write_bytes((root / "host.pub").read_bytes())
+
+    def observe(form):
+        return subprocess.check_output([emacsclient, "-s", server, "-e", form], text=True, timeout=5).strip()
+
+    def reconnect(stack, port):
+        client = stack.enter_context(contextlib.closing(Client(
+            [probe, "connect", root / "seed", str(port), getpass.getuser(), pin, server, emacsclient])))
+        client.ready()
+        client.keys(b"\x18bPhone SSH sample\r")
+        until("the existing conversation after opening SSH", lambda: observe(
+            "(seq-some (lambda (f) (and (not (display-graphic-p f)) "
+            "(eq (window-buffer (frame-selected-window f)) iphone-ssh-test-buffer))) (frame-list))") == "t")
+        return client
+
+    pid = observe("(emacs-pid)")
+    with contextlib.ExitStack() as clients:
+        with serve_ssh(sshd, root, host_key=root / "host") as port:
+            reconnect(clients, port)
+        until("the stopped listener's frame to close", lambda: observe("(seq-every-p #'display-graphic-p (frame-list))") == "t")
+        with serve_ssh(sshd, root, port=port, host_key=root / "host") as same_port:
+            reconnect(clients, same_port).command("disconnect")
+            assert observe("(emacs-pid)") == pid
+    print("Restarted a listener with an active terminal and reopened the same Emacs conversation using the saved pin and port.")
+
+
 def main():
     args = argparse.ArgumentParser(description=__doc__)
     args.add_argument("--sshd", type=Path, default=Path("/usr/sbin/sshd"))
@@ -279,12 +307,14 @@ def main():
                 sys.stdin.readline()
             return
         check_relay_listener(root)
-        with serve_ssh(opt.sshd.resolve(), root) as port, listen_for_navigation(root) as (socket_path, arm, marker):
-            with socket.create_connection(("127.0.0.1", port), timeout=5) as connection:
-                check_phone_mss(connection)
-                assert connection.makefile("rb").readline().startswith(b"SSH-2.0-")
+        with listen_for_navigation(root) as (socket_path, arm, marker):
             with test_emacs(root, socket_path) as server:
-                check_session(opt.probe.resolve(), opt.emacsclient, root, port, server, arm, marker)
+                with serve_ssh(opt.sshd.resolve(), root) as port:
+                    with socket.create_connection(("127.0.0.1", port), timeout=5) as connection:
+                        check_phone_mss(connection)
+                        assert connection.makefile("rb").readline().startswith(b"SSH-2.0-")
+                    check_session(opt.probe.resolve(), opt.emacsclient, root, port, server, arm, marker)
+                check_listener_restart(opt.sshd.resolve(), opt.probe.resolve(), opt.emacsclient, root, server)
 
 
 if __name__ == "__main__":

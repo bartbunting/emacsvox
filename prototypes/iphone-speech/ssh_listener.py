@@ -13,6 +13,7 @@ QUIET = subprocess.DEVNULL
 
 class LocalSSH(socketserver.ThreadingTCPServer):
     daemon_threads = True
+    allow_reuse_address = True
 
     def server_bind(self):
         limit_phone_segments(self.socket)
