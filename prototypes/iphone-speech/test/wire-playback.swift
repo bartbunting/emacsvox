@@ -150,6 +150,13 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   }!
   precondition(ov_ios_samples(leftPCM)![0] == 0.125 && ov_ios_samples(leftPCM)![1] == 0)
   ov_ios_pcm_free(leftPCM)
+  ov_ios_mix_set_loudness(clock, 6)
+  let boostedPCM = samples.withUnsafeBufferPointer {
+    ov_ios_mix_marked(clock, $0.baseAddress, $0.count, 44100, 1, nil, 0, token)
+  }!
+  precondition(abs(ov_ios_samples(boostedPCM)![0] - 0.2494078) < 0.00001)
+  precondition(ov_ios_samples(boostedPCM)![1] == 0 && ov_ios_frames(boostedPCM) == samples.count)
+  ov_ios_pcm_free(boostedPCM)
   left.effects = "{invalid}"
   precondition(!left.beginVoice(clock))
   typealias Run = WirePlayback<Int>

@@ -22,6 +22,7 @@ const chime = require('./assets/visual-line.wav');
 const relayPort = process.env.EXPO_PUBLIC_EMACSVOX_PORT || '8787';
 
 const nativeWire = requireOptionalNativeModule('IphoneOmnivox');
+const LoudnessSlider = nativeWire?.setSpeechLoudness ? requireNativeView('IphoneOmnivox', 'PhoneSpeechLoudnessView') : null;
 
 function connectionKey(p) {
   return JSON.stringify([p.transport, p.audio, p.worker, p.host, p.port, p.username, p.pin]);
@@ -45,15 +46,22 @@ function prepareAudio() {
 }
 
 function App() {
-  const [settings, setSettings] = useState(() => ({
-    host: process.env.EXPO_PUBLIC_EMACSVOX_HOST ?? '', port: '8822', username: '', pin: '',
-    transport: ssh ? 'ssh' : 'relay', input: 'field', keepAwake: 'yes', audio: 'direct',
-    connectOnOpen: 'no', controlOption: 'voiceover', logSpeech: 'no',
-    ...ssh?.loadProfile(),
-  }));
+  const [settings, setSettings] = useState(() => {
+    const profile = ssh?.loadProfile();
+    const db = Number(profile?.speechLoudness);
+    return {
+      host: process.env.EXPO_PUBLIC_EMACSVOX_HOST ?? '', port: '8822', username: '', pin: '',
+      transport: ssh ? 'ssh' : 'relay', input: 'field', keepAwake: 'yes', audio: 'direct',
+      connectOnOpen: 'no', controlOption: 'voiceover', logSpeech: 'no', ...profile,
+      speechLoudness: Number.isInteger(db) && db >= 0 && db <= 6 ? String(db) : '0',
+    };
+  });
   const active = useRef(false);
   const reconnect = useRef(Boolean(ssh && settings.transport === 'ssh' && settings.connectOnOpen === 'yes'));
   useEffect(() => { nativeWire?.setSpeechLogging?.(settings.logSpeech === 'yes'); }, [settings.logSpeech]);
+  useEffect(() => {
+    void nativeWire?.setSpeechLoudness?.(Number(settings.speechLoudness));
+  }, [settings.speechLoudness]);
   function save(draft) {
     const next = Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, value.trim()]));
     ssh?.saveProfile(next);
@@ -265,7 +273,7 @@ function Session({settings, save, active, reconnect}) {
       <View style={styles.content}>
         {terminalPage}
         {!terminalTab && <View style={styles.tabPage}>
-          {tab === 'Diagnostics' ? diagnostics : <Settings draft={draft} ssh={ssh} mixer={native} wire={nativeWire}
+          {tab === 'Diagnostics' ? diagnostics : <Settings draft={draft} ssh={ssh} mixer={native} wire={nativeWire} LoudnessSlider={LoudnessSlider}
             edit={(k,v) => setDraft(prev => ({...prev, [k]:v}))}
             cancel={() => { setDraft(settings); setTab('Terminal'); }}
             save={() => { save(draft); setTab('Terminal'); }} />}

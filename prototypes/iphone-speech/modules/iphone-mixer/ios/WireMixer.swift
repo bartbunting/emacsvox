@@ -38,7 +38,7 @@ final class WireMixer {
     }
   }
 
-  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, trace: WireSpeechTrace, lane: String,
+  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, trace: WireSpeechTrace, lane: String, loudness: UInt8,
        resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, voices: [String: AVSpeechSynthesisVoice]? = nil, reached: ((String) -> Void)? = nil) {
     self.trace = trace
     self.lane = lane
@@ -49,6 +49,8 @@ final class WireMixer {
     self.format = format
     self.synth = synth
     self.resolvedMarks = resolvedMarks
+    if let presentation { ov_ios_presentation_set_loudness(presentation.pointer, loudness) }
+    else { ov_ios_mix_set_loudness(clock, loudness) }
   }
   deinit { ov_ios_mix_free(clock) }
 

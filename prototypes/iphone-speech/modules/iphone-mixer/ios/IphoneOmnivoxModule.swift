@@ -14,10 +14,19 @@ public final class IphoneOmnivoxModule: Module {
   private var markerStatus: String?
   private let importer = CueImport()
   private let trace = WireSpeechTrace()
+  private var speechBoost: UInt8 = 0
 
   public func definition() -> ModuleDefinition {
     Name("IphoneOmnivox")
     Events("wireReply")
+    AsyncFunction("setSpeechLoudness") { (db: Int) in
+      self.speechBoost = UInt8(min(6, max(0, db)))
+    }.runOnQueue(.main)
+    View(PhoneSpeechLoudnessView.self) {
+      ViewName("PhoneSpeechLoudnessView")
+      Events("onLevelChange")
+      Prop("level") { (view: PhoneSpeechLoudnessView, db: Int) in view.setLevel(db) }
+    }
     Function("setSpeechLogging") { (enabled: Bool) in self.trace.setEnabled(enabled) }
     Function("speechTrace") { self.trace.snapshot() }
     AsyncFunction("importCue") { (promise: Promise) in
@@ -37,6 +46,7 @@ public final class IphoneOmnivoxModule: Module {
             let resources = WireResources(at: root) else { throw WireFailure.resources }
       for tag in ["M", "N"] {
         let audio = WireAudio(resources, trace: self.trace, lane: tag)
+        audio.speechLoudness = { [weak self] in self?.speechBoost ?? 0 }
         if tag == "M" {
           audio.resolvedMarks = { [weak self] report in
             if report.exact + report.word + report.span > 0 { self?.markerStatus = report.description }

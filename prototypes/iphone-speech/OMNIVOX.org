@@ -67,6 +67,15 @@ comparison covers the speech samples and the echo tail. On the phone,
 listen for the level of letters relative to ordinary reading and for the
 change of voice within a styled line.
 
+In the next signed version, open Settings and focus “Speech loudness”.
+Swipe up or down with VoiceOver, or drag the slider. Choose zero for the
+desktop Omnivox level or add up to six decibels. Activate “Save settings”
+to use that level for the next reading and future connections. The native
+worker raises Apple speech on both lanes before mixing its effects,
+tones and earcons. A stereo peak limiter acts on the boosted speech.
+The zero setting bypasses this processing. If a voice needs direct iOS
+playback, it uses its regular volume.
+
 Read a line such as “Lime Plum Pear Fig Café” with =C-n=. Listen for one
 tone at each word, then press =C-n= during the line. In Diagnostics,
 “Last reading’s cue timing” reports the first reading’s marker counts,

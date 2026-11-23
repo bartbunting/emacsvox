@@ -108,9 +108,11 @@ every stereo sample and the echo and reverb tails. Listen on build 7 for
 the change of voice within a line and the indentation tone over the first
 word. On the registered iPhone with VoiceOver speech muted, Reed's typed
 letters and line reading now sound about equal. Overall Emacsvox speech
-is quieter than VoiceOver with audio ducking off. The connected main
-worker uses the default full speech volume, and the default reading role
-has neutral gain. Comparing the phone's audio levels is still open.
+is quieter than VoiceOver with audio ducking off. Across 86 measured
+speech chunks the app's average level was -20.4 dBFS and two samples
+reached full scale. The next signed version adds an optional speech
+loudness slider with peak limiting. Listen at zero and at +3 dB on the
+same output, including a line with an indentation tone.
 
 When a line changes voices, the desktop and iPhone workers use the same
 effect state for each choice. A WSL test tracks the old voice's echo on

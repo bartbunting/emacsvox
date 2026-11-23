@@ -82,7 +82,7 @@ function Toggle({label, hint, value, change}) {
   </View>;
 }
 
-export function Settings({draft, edit, save, cancel, ssh, mixer, wire}) {
+export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessSlider}) {
   const [message, setMessage] = React.useState('');
   const fields = [['host', 'WSL Tailscale IPv4 address']];
   if (ssh && draft.transport === 'ssh') {
@@ -97,6 +97,11 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire}) {
       {wire && draft.transport === 'ssh' && <Toggle label="Use Omnivox on iPhone"
         hint="Run speech, installed voice discovery, tones and earcons on this phone. Reconnects the terminal when saved."
         value={draft.worker === 'omnivox'} change={v => edit('worker', v ? 'omnivox' : 'legacy')} />}
+      {LoudnessSlider && draft.transport === 'ssh' && draft.worker === 'omnivox' && <>
+        <Text accessible={false} accessibilityElementsHidden style={styles.label}>Speech loudness · {Number(draft.speechLoudness) || 0} dB</Text>
+        <LoudnessSlider style={{height: 48}} level={Number(draft.speechLoudness) || 0}
+          onLevelChange={({nativeEvent}) => edit('speechLoudness', String(nativeEvent.decibels))} />
+      </>}
       {wire?.setSpeechLogging && <Toggle label="Log speech text and timing"
         hint="Save to start recording on this phone. Use Diagnostics to read the trace or send a copy to WSL. Save with the switch off to erase the phone copy."
         value={draft.logSpeech === 'yes'} change={v => edit('logSpeech', v ? 'yes' : 'no')} />}

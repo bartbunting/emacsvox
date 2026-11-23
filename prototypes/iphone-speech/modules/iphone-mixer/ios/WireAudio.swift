@@ -127,6 +127,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private let tones: EffectStream, sounds: EffectStream, inserts: EffectStream
   private var speech: AVSpeechUtterance?, spoken: ((Bool) -> Void)?, pause: DispatchWorkItem?
   var interrupted: (() -> Void)?
+  var speechLoudness: () -> UInt8 = { 0 }
   var resolvedMarks: ((WireTimingReport) -> Void)?
   private var observers: [NSObjectProtocol] = []
 
@@ -205,7 +206,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     }
     let key = ObjectIdentifier(node)
     node.volume = 1
-    let mixer = WireMixer(format: format, synth: bufferSynth, trace: trace, lane: lane,
+    let mixer = WireMixer(format: format, synth: bufferSynth, trace: trace, lane: lane, loudness: speechLoudness(),
                           resolvedMarks: resolvedMarks, presentation: presentation, voices: voices, reached: reached)
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
       enqueue: { buffer, played in

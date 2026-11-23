@@ -36,6 +36,13 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     global.cancelAnimationFrame = clearImmediate;
     const profile = {host: '100.64.0.1', port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
     const logging = [], trace = {setSpeechLogging: on => logging.push(on), speechTrace: () => 'local speech sample'};
+    const levels = [];
+    if (hasShiftReturnShortcut) {
+      profile.worker = 'omnivox';
+      profile.speechLoudness = '2';
+      Object.assign(trace, {setSpeechLoudness: async db => levels.push(db),
+        open: async () => {}, close: async () => {}, addListener: () => ({remove() {}})});
+    }
     const ssh = {hasShiftReturnShortcut, loadProfile: () => profile, keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
     const player = {};
     const rn = Object.fromEntries(['Button', 'View', 'Text', 'ScrollView', 'SafeAreaView', 'Pressable',
@@ -89,6 +96,12 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.equal(app.root.findAllByType('PhoneKeyboardContainer').length, 0);
     await select('Settings');
     assert.equal(hostField().props.value, '100.64.0.2');
+    if (hasShiftReturnShortcut) {
+      const slider = app.root.findByType('PhoneSpeechLoudnessView');
+      assert.equal(slider.props.level, 2);
+      await act(() => slider.props.onLevelChange({nativeEvent: {decibels: 6}}));
+      assert.deepEqual(levels, [2]);
+    }
     assert.deepEqual(focus, []);
     await act(() => button('Cancel').props.onPress());
     assert.equal(app.root.findByType('NativeTerminal'), terminal);
@@ -110,10 +123,19 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.equal(hostField().props.value, '100.64.0.1');
     const keepAwake = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Keep awake while connected');
     const loggingSwitch = () => app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Log speech text and timing');
+    if (hasShiftReturnShortcut) {
+      const slider = app.root.findByType('PhoneSpeechLoudnessView');
+      assert.equal(slider.props.level, 2);
+      await act(() => slider.props.onLevelChange({nativeEvent: {decibels: 3}}));
+    }
     await act(() => loggingSwitch().props.onValueChange(true));
     await act(() => keepAwake.props.onValueChange(false));
     await act(() => button('Save settings').props.onPress());
     assert.equal(profile.keepAwake, 'no');
+    if (hasShiftReturnShortcut) {
+      assert.equal(profile.speechLoudness, '3');
+      assert.deepEqual(levels, [2, 3]);
+    }
     assert.ok(tabs()[0].props.accessibilityState.selected);
     assert.equal(app.root.findByType('NativeTerminal'), terminal);
     assert.equal(sockets.length, 1);
