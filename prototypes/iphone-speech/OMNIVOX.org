@@ -70,7 +70,8 @@ Diagnostics shows speech text, Apple's request text, marker ranges and
 audio offsets. The phone keeps up to 64 KiB in memory. Turning the
 switch off and saving clears the phone copy. To share one snapshot with
 your WSL session, activate “Send speech trace to WSL” while connected.
-“Speech trace saved in WSL” confirms the write. The latest snapshot
+The phone's notification voice says “Speech trace saved in WSL” after
+the relay saves the file, or reports that saving failed. The latest snapshot
 replaces the previous one in
 =~/.local/state/emacsvox/iphone/last-speech-trace.log=, or under
 =$XDG_STATE_HOME/emacsvox/iphone/= if you set =XDG_STATE_HOME=.
@@ -122,6 +123,10 @@ workers' replies. The phone profile is saved in =iphone-omnivox.json=
 under the Emacs user directory. Phone sessions using this directory share
 those choices. The desktop palette supplies the role names and keeps its
 own physical voice assignments. VoiceOver chooses its voice separately.
+With no phone volume override, the main and notification workers inherit
+their respective Emacs tone and earcon levels. Notification speech also
+inherits its Emacs volume. Setting a phone volume to zero mutes that
+output on both phone workers.
 If iOS removes a saved voice, ordinary speech can use its fallback.
 Refresh shows the current inventory. A strict preview fails when its
 selected voice is unavailable.

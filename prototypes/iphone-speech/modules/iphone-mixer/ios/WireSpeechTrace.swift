@@ -2,6 +2,24 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
 
+// Levels of the stereo PCM sent to the app's player. Samples stay in the mixer.
+struct WireTraceLevel {
+  private(set) var samples = 0, fullScale = 0
+  private(set) var peak: Float = 0
+  private var squares: Double = 0
+  var rms: Double { samples == 0 ? 0 : sqrt(squares / Double(samples)) }
+
+  mutating func observe(_ pcm: UnsafeBufferPointer<Float>) {
+    samples += pcm.count
+    for sample in pcm {
+      let level = abs(sample)
+      peak = max(peak, level)
+      if level >= 1 { fullScale += 1 }
+      squares += Double(sample) * Double(sample)
+    }
+  }
+}
+
 // The trace lives in memory. A callback keeps the ticket from its own reading
 // so turning logging on again cannot resurrect text from an earlier session.
 final class WireSpeechTrace {

@@ -139,20 +139,23 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   var replies: [String] = []
   let lane = WireLane(output) { replies.append($0) }
   precondition(lane.setVoices(voices, preferred: "test-1"))
-  var active: Run?, cues: [[WireItem]] = [], ready: ((Run.Packet) -> Void)?, end: ((Bool) -> Void)?
-  var queued: [Int] = [], played: [() -> Void] = [], tail = false
+  var active: [Int: Run] = [:], nextRun = 0, cues: [[WireItem]] = [], ready: ((Run.Packet) -> Void)?, end: ((Bool) -> Void)?
+  var queued: [Int] = [], played: [() -> Void] = [], readings: [WireItem] = [], tail = false
   output.mixed = { items, holdTail, done in
-    let run = Run(items, speech: { tones, _, audio, finished in
+    nextRun += 1
+    let id = nextRun
+    let run = Run(items, speech: { tones, item, audio, finished in
       cues.append(tones)
+      readings.append(item)
       ready = audio
       end = finished
     }, flush: { _, flushed in flushed(nil, tail ? (99, 88) : nil, true) },
     enqueue: { buffer, finished in queued.append(buffer); played.append(finished) },
-    holdTail: holdTail, done: done, release: { active = nil })
-    active = run
+    holdTail: holdTail, done: done, release: { active.removeValue(forKey: id) })
+    active[id] = run
     run.advance()
   }
-  output.stopMixed = { active?.stop(); active = nil }
+  output.stopMixed = { for run in active.values { run.stop() }; active.removeAll() }
   func send(_ records: [String]) throws { for line in records { try lane.feed(line, muted: false) } }
   func voice(_ id: Int) { ready?((id, 1024)); end?(true) }
   tail = true
@@ -166,12 +169,31 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   voice(3)
   precondition(queued == [1, 2, 3, 99] && output.started.isEmpty)
   for i in 0..<3 { played[i]() }
-  precondition(output.started == [.speech] && replies.isEmpty)
+  precondition(readings.last?.text == "following" && output.started.isEmpty && replies.isEmpty)
   played[3]()
   precondition(replies == ["__EMACSVOX_TRACKED__ 120 completed"])
+  tail = false
+  voice(9)
+  played[4]()
+
+  // Immediate letters, including their capital pitch, use the same application
+  // output as a line. A new letter can still silence a partially played line.
+  try send(["tts_set_voice_volume 0.75", "q ongoing", "emacsvox_tracked_dispatch 119"])
+  voice(10)
+  let oldCompletion = played.last!
+  try send(["l {j}"])
+  oldCompletion()
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 119 cancelled" && readings.last?.text == "j")
+  let lower = readings.last!
+  voice(11)
+  played.last!()
+  try send(["l {J}"])
+  precondition(readings.last?.gain == lower.gain && lower.gain == 0.75 && readings.last!.pitch! > lower.pitch!)
+  voice(12)
+  played.last!()
+  precondition(output.started.isEmpty)
 
   // An unavailable voice retries only the unheard suffix, including its tone.
-  tail = false
   played.removeAll()
   output.started.removeAll()
   try send(["q first", "emacsvox_tone 1 insert 440 20", "q second", "emacsvox_tracked_dispatch 121"])

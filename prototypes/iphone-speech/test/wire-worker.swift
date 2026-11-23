@@ -100,6 +100,10 @@ final class TestOutput: WireOutput {
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
       let trace = WireSpeechTrace()
+      var level = WireTraceLevel()
+      [Float(1), -1, 0.5, -0.5].withUnsafeBufferPointer { level.observe($0) }
+      precondition(level.peak == 1 && level.fullScale == 2 && level.samples == 4 &&
+                   abs(level.rms - sqrt(0.625)) < 0.000001)
       func disabledText() -> String { fatalError("Read speech text while logging was disabled") }
       precondition(trace.begin(disabledText()) == nil && trace.snapshot().isEmpty)
       trace.setEnabled(true)

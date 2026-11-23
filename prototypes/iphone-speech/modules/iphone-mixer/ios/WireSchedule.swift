@@ -58,18 +58,17 @@ private final class WireBatch {
 
   func mixedRun() -> ArraySlice<WireItem>? {
     guard index >= separateUntil else { return nil }
-    var end = index, speech = false, needsMixer = false
+    var end = index, speech = false
     while end < items.count {
       let item = items[end]
+      let inlineTone = item.kind == .tone && (item.placement == .insert || item.placement == .overlay)
       if item.kind == .speech, let text = item.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         speech = true
-        if item.startMarker != nil || item.marks?.isEmpty == false { needsMixer = true }
-      } else if item.kind == .tone && (item.placement == .insert || item.placement == .overlay) {
-        needsMixer = true
-      } else { break }
+      } else if !inlineTone { break }
       end += 1
     }
-    if speech && needsMixer { return items[index..<end] }
+    // Letters and unmarked speech use the same PCM output level as a spoken line.
+    if speech { return items[index..<end] }
     separateUntil = end
     return nil
   }

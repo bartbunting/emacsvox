@@ -20,6 +20,8 @@ final class WireMixer {
   private var queuedFrames = 0, pendingInputBytes = 0, cancelled = false
 
   private final class Capture {
+    let ticket: WireSpeechTrace.Ticket?
+    var level = WireTraceLevel(), inputFrames = 0, inputBuffers = 0 // render queue
     var deadline = ProcessInfo.processInfo.systemUptime + 3   // main queue
     var inputFull = false                                     // main queue
     var writingPart = 0                                       // main queue
@@ -28,7 +30,8 @@ final class WireMixer {
     var startMarker: String?                                  // render queue
     var marked: WireMarkedAudio?                              // render queue
     let audio: (Packet) -> Void, finished: (Bool) -> Void
-    init(_ audio: @escaping (Packet) -> Void, _ finished: @escaping (Bool) -> Void) {
+    init(_ ticket: WireSpeechTrace.Ticket?, _ audio: @escaping (Packet) -> Void, _ finished: @escaping (Bool) -> Void) {
+      self.ticket = ticket
       self.audio = audio
       self.finished = finished
     }
@@ -96,7 +99,8 @@ final class WireMixer {
               _ finished: @escaping (Bool) -> Void) {
     let bookmarks = WireBookmarks(item)
     guard presentation == nil || bookmarks != nil else { finished(false); return }
-    let capture = Capture(audio, finished)
+    let ticket = trace.begin("\(lane) \(presentation == nil ? "queued PCM" : "timeline PCM") voice \(item.voice ?? "") gain \(item.gain ?? 1) text \((item.text ?? "").debugDescription)")
+    let capture = Capture(ticket, audio, finished)
     capture.startMarker = item.startMarker
     capture.marked = bookmarks.map { WireMarkedAudio(item, $0) }
     current = capture
@@ -116,8 +120,8 @@ final class WireMixer {
     guard current === capture else { return }
     guard let utterance = wireUtterance(item, ssml: bookmarks?.needsBookmarks == true ? bookmarks?.ssml : nil)
     else { end(capture, ok: false); return }
-    let ticket = trace.begin("\(lane) part \(part) voice \(item.voice ?? "") text \((item.text ?? "").debugDescription)")
-    trace.append(ticket, "Requested anchors \(bookmarks?.marks.map(\.offset) ?? []), SSML \(bookmarks?.needsBookmarks == true). Apple speechString \(utterance.speechString.debugDescription)")
+    let ticket = capture.ticket
+    trace.append(ticket, "Part \(part), requested anchors \(bookmarks?.marks.map(\.offset) ?? []), SSML \(bookmarks?.needsBookmarks == true). Apple speechString \(utterance.speechString.debugDescription)")
     if let bookmarks, bookmarks.needsBookmarks { trace.append(ticket, "SSML request \(bookmarks.ssml.debugDescription)") }
     capture.writingPart = part
     capture.deadline = ProcessInfo.processInfo.systemUptime + 3
@@ -125,7 +129,6 @@ final class WireMixer {
       guard let self, let capture else { return }
       let pcm = buffer as? AVAudioPCMBuffer
       let stride = Int(pcm?.format.streamDescription.pointee.mBytesPerFrame ?? 0)
-      self.trace.append(ticket, "PCM frames \(pcm?.frameLength ?? 0), bytes per frame \(stride)")
       // Apple can deliver PCM on main. Leave that queue free for Stop.
       if Thread.isMainThread {
         guard self.current === capture, capture.writingPart == part, !capture.inputFull else { return }
@@ -195,6 +198,7 @@ final class WireMixer {
       let frames = ov_ios_frames(pcm)
       if frames == 0 { valid = true }
       else if reserve(frames, mayWait: mayWait) {
+        measure(pcm, capture)
         if let line = capture.startMarker {
           if let initial = wireBufferSlice(pcm, format: format, frames: 0..<1) {
             packets.append((initial, line))
@@ -211,7 +215,7 @@ final class WireMixer {
         }
       }
     }
-    if end || !valid { capture.ended = true }
+    if end || !valid { capture.ended = true; reportLevel(capture) }
     DispatchQueue.main.async { [weak self, weak capture, packets, valid] in
       guard let self, let capture, self.current === capture else { return }
       self.capacity.lock()
@@ -227,6 +231,15 @@ final class WireMixer {
       if end || !valid { self.end(capture, ok: valid) }
     }
     return valid
+  }
+
+  private func measure(_ pcm: OpaquePointer, _ capture: Capture) {
+    guard capture.ticket != nil, let samples = ov_ios_samples(pcm) else { return }
+    capture.level.observe(UnsafeBufferPointer(start: samples, count: ov_ios_frames(pcm) * 2))
+  }
+
+  private func reportLevel(_ capture: Capture) {
+    trace.append(capture.ticket, "Apple input \(capture.inputFrames) frames in \(capture.inputBuffers) buffers. Mixer output \(capture.level.samples / 2) stereo frames, peak \(capture.level.peak), RMS \(capture.level.rms), full-scale samples \(capture.level.fullScale).")
   }
 
   private func finishMarked(_ capture: Capture, _ marked: WireMarkedAudio) {
@@ -249,6 +262,7 @@ final class WireMixer {
     if let presentation, let pcm {
       defer { ov_ios_pcm_free(pcm) }
       guard let regions = presentation.regions(frames: ov_ios_frames(pcm)) else { _ = post(nil, capture, end: true); return }
+      measure(pcm, capture)
       for region in regions {
         var start = region.frames.lowerBound
         while start < region.frames.upperBound {
@@ -266,6 +280,7 @@ final class WireMixer {
         }
       }
       capture.ended = true
+      reportLevel(capture)
       DispatchQueue.main.async { self.end(capture, ok: true) }
     } else {
       _ = post(pcm, capture, end: true, mayWait: true)
@@ -276,6 +291,10 @@ final class WireMixer {
     guard !capture.ended else { return }
     do {
       let samples = try input.get()
+      if capture.ticket != nil, let samples {
+        capture.inputBuffers += 1
+        capture.inputFrames += Int(samples.frameLength)
+      }
       if let marked = capture.marked {
         if let samples {
           if !marked.append(samples, stride: bytesPerFrame) { _ = post(nil, capture, end: true) }

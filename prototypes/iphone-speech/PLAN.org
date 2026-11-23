@@ -41,25 +41,40 @@ On build 5, Emacs sent five separate capital positions and the phone
 placed four at the start of the speech span. Signed build 6 uses
 Emacsvox =445cc6ee8= and the same Omnivox revision. In WSL all five
 tones and their semantic events matched the expected audio frames when
-the synthesizer supplied no markers. On the phone, use US Reed
-to check five capitalized words, interruption and the cadence between
-words. Also try the internal capital in =TestCase=. The
+the synthesizer supplied no markers. On the phone, US Reed's capital
+tones now sound at their intended words. The saved trace contains five
+distinct word positions. Exact timing inside =TestCase=, the level of an
+indentation tone over speech and the level of typed letters still need
+listening checks. The
 [[file:OMNIVOX.org::*What exists][cue timing and optional speech trace]] distinguish the timings the voice
 supplies from word starts the phone measures.
 
-1. *Everyday earcons.* Bundle the [[file:../../sounds/packs/accent/README.org][Accent pack]] and its inherited 3d cues.
+1. *Voice changes within a line.* Build on the working voice browser and
+   per-role assignments. Port version 4 voice-choice tuning so a reading
+   can combine a role's shared settings, the selected phone voice's
+   adjustments and a change for the current context. Compare a line of
+   code, a link and the next plain line against desktop Omnivox. Check
+   exact preview, the selected fallback and cancellation. Use the same
+   palette when moving one character at a time, including the capital
+   pitch and character rate. Then qualify the version 5 controls the Apple
+   engine can actually apply.
+2. *Rich Omnivox tones.* Use the desktop renderer for waveform, envelope
+   and gain in timeline version 6, then pitch sweeps and pulse width in
+   version 7. Compare stereo samples, placement and Stop before enabling
+   the corresponding standalone and timeline capabilities on the phone.
+3. *Everyday earcons.* Check the bundled [[file:../../sounds/packs/accent/README.org][Accent pack]] and its inherited 3d cues.
    Match each recording selected by Emacsvox and play it locally.
    The current desktop profile uses 18 Accent and 36 inherited 3d
    recordings that match the bundled audio byte for byte.
    The 55th cue, =task-done=, uses a personal recording.
    Check minibuffer entry and exit, Dired marks, completion and warnings.
    Preserve the stereo recordings for minibuffer exit and warnings on headphones.
-   Personal recording import is a later opt-in feature.
-2. *Character and code reading.* Follow the Emacs settings for capitals,
+   Import the personal recording from Files for a like-for-like comparison.
+4. *Character and code reading.* Follow the Emacs settings for capitals,
    punctuation and speech rate. Compare reading =aA_b[2]= as a line and
    moving over its characters. After a pause the phonetic word should
    reach the frame that moved, and rapid movement should cancel the old one.
-3. *Audio timing and interruption.* Add an optional Diagnostics comparison.
+5. *Audio timing and interruption.* Add an optional Diagnostics comparison.
    For a test key, time arrival at the phone keyboard field, receipt of
    the relay message, and the direct-speech start callback or the first
    buffer scheduled by the native mixer. Collect timings without storing
@@ -67,7 +82,11 @@ supplies from word starts the phone measures.
    Compare direct speech and mixed Eloquence on speaker and headphones.
    Check that the cue starts at the intended place, a second =C-n= cuts
    off obsolete feedback, and Stop Speech silences a long reply.
-   Use the listening check for audible onset.
+   Use the listening check for audible onset. The next native revision
+   sends typed letters through the same PCM player as line reading. Its
+   optional trace records peak, RMS and full-scale sample counts before
+   playback. Build 6 can already use the relay's spoken trace receipt and
+   the main and notification volume settings inherited from Emacs.
 
 * Work alongside and after this build
 
@@ -143,6 +162,9 @@ timer expires.
 ** NEXT 3. Deliver replies and permission requests across reconnects
 
 Route asynchronous events to the frame subscribed to the conversation.
+When you submit a question form or steer a running turn, that
+confirmation follows the frame where you acted. A steering reply that
+arrives after a phone disconnect stays silent on the replacement frame.
 Keep permission identity and urgency through playback. During rapid
 navigation, hear the request finish, review it and answer it. Explicit
 Stop silences both phone lanes. On reconnect, announce a still-pending
@@ -287,12 +309,10 @@ and standalone tone placement. Device qualification and the later rich-tone and 
 The [[file:OMNIVOX.org::*Implementation order][implementation slices]] specify the expected playback and control
 behaviour, automated proof and separate physical listening checks.
 
-The routed WSL test exercises the legacy character, rate and tone commands.
-With Rust 1.97.1, the unchanged Omnivox core at =3ed4e8d= built from WSL
-for =aarch64-apple-ios= and =aarch64-apple-ios-sim= using
-=cargo build --locked -p omnivox-core --lib=. The iPhone app runs its Swift audio
-adapter. Integrating the Rust core and measuring mixed Eloquence on the
-physical phone remain open.
+The routed WSL test exercises the Omnivox protocol through a real Emacs
+terminal. The signed app links the Rust worker and mixer to the Swift
+adapter that requests Apple speech samples. Device checks still include
+Eloquence onset, character volume and mixed indentation on headphones.
 
 ** TODO 7. Ship the daily-use build
 
