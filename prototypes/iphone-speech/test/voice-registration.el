@@ -1,0 +1,71 @@
+;;; voice-registration.el --- Check phone voice assignments -*- lexical-binding: t; -*-
+;; Copyright (C) 2026 Emacsvox contributors
+;; SPDX-License-Identifier: GPL-2.0-or-later
+
+(require 'ert)
+(require 'omnivox-voices)
+
+(ert-deftest iphone-registration-keeps-choice-occurrences-and-desktop-settings ()
+  (let* ((phone (make-pipe-process :name "test phone registration" :noquery t))
+         (selector '(:kind exact :scope local :engine-id "ios" :voice-id "reed"))
+         (collision (concat "iphone-" (secure-hash 'sha256 "reading")))
+         (choices (list (list :id collision :selector '(:kind engine-default :scope portable
+                                                         :engine-id "other") :adjustments nil)
+                        (list :id "loud" :selector selector :adjustments '(:gain 8))
+                        (list :id "soft" :selector selector :adjustments '(:gain 3))))
+         (iphone-frame-speech--settings '(:reading "reading" :roles ((:role "heading" :voice "reed")))))
+    (unwind-protect
+        (dolist (mode '("layered" "engine_layered"))
+          (let* ((wire (if (equal mode "layered") (omnivox--choice-records-json choices)
+                         (omnivox--native-choice-records-json choices)))
+                 (row (list :id "heading" :shared (omnivox--choice-shared-json nil nil nil) :choices wire))
+                 (content (list :definitions (vector (list :mode mode :definition row))
+                                :choice-provenance (vector (list :logical-id "heading" :choices choices
+                                                                 :choice-source 'portable))
+                                :fallback_policy (list :global_default :null)))
+                 (original (lambda (_) content)))
+            (process-put phone 'iphone-wire nil)
+            (should (eq content (iphone-voices--registration original phone)))
+            (process-put phone 'iphone-wire t)
+            (let* ((result (iphone-voices--registration original phone))
+                   (definition (plist-get (aref (plist-get result :definitions) 0) :definition))
+                   (rows (plist-get definition :choices))
+                   (raw (plist-get (aref (plist-get result :choice-provenance) 0) :choices))
+                   (ids (mapcar (lambda (r) (plist-get r :id)) rows)))
+              (should (equal ids (list "loud" (concat collision "-1") collision "soft")))
+              (should (equal ids (mapcar (lambda (r) (plist-get r :id)) raw)))
+              (should (equal (plist-get (aref rows 0) :adjustments) (plist-get (aref wire 1) :adjustments)))
+              (should (equal (plist-get (aref rows 3) :adjustments) (plist-get (aref wire 2) :adjustments)))
+              (should (zerop (hash-table-count (plist-get (aref rows 1) :adjustments))))
+              (should (eq (plist-get (aref rows 1) :native) (and (equal mode "engine_layered") :null)))
+              (should (equal (plist-get (plist-get result :fallback_policy) :global_default)
+                             '(:kind "exact" :engine_id "ios" :voice_id "reading")))
+              (should (= 3 (length (plist-get row :choices))))
+              (should (eq :null (plist-get (plist-get content :fallback_policy) :global_default)))
+              (let* ((retry (iphone-voices--registration (lambda (_) result) phone))
+                     (again (plist-get (aref (plist-get retry :definitions) 0) :definition)))
+                (should (equal ids (mapcar (lambda (r) (plist-get r :id))
+                                           (plist-get again :choices))))))))
+      (delete-process phone))))
+
+(ert-deftest iphone-registration-retains-the-legacy-wire-shape-and-choice-limit ()
+  (let* ((phone (make-pipe-process :name "test legacy registration" :noquery t))
+         (iphone-frame-speech--settings '(:reading "reed"))
+         (rest (vconcat (cl-loop for n below 32 collect (list :kind "engine_default" :engine_id (number-to-string n))))))
+    (unwind-protect
+        (progn
+          (process-put phone 'iphone-wire t)
+          (dolist (wrapped '(nil t))
+            (let* ((legacy (list :id "plain" :preferences rest))
+                   (content (list :definitions (vector (if wrapped (list :mode "legacy" :definition legacy) legacy))
+                                  :fallback_policy (list :global_default :null)))
+                   (result (iphone-voices--registration (lambda (_) content) phone))
+                   (row (aref (plist-get result :definitions) 0))
+                   (prefs (plist-get (if wrapped (plist-get row :definition) row) :preferences)))
+              (should (equal (plist-get (aref prefs 0) :voice_id) "reed"))
+              (should (= 32 (length prefs)))
+              (should (equal (aref prefs 31) (aref rest 30)))
+              (should (equal (aref (plist-get legacy :preferences) 0) (aref rest 0))))))
+      (delete-process phone))))
+
+;;; voice-registration.el ends here

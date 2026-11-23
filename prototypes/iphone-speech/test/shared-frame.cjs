@@ -588,6 +588,9 @@ async function main() {
               (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
           const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
           const desktopState = await observe(desktopSnapshot);
+          const registrationTests = JSON.stringify(path.join(__dirname, 'voice-registration.el'));
+          assert.equal(await observe(`(progn (load ${registrationTests} nil t t)
+            (ert-stats-completed-unexpected (ert-run-tests-batch "^iphone-registration-")))`), '0');
           const hasVolume = (packets, lane, kind, value) => packets.some(p =>
             p.lane === lane && p.volume?.kind === kind && p.volume.value === value);
           assert.ok(hasVolume(rawPackets, 'M', 'tone', 0.5) && hasVolume(rawPackets, 'N', 'tone', 0.9));

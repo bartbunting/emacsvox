@@ -37,19 +37,66 @@
             (setq iphone-frame-speech--settings settings))
         (when (file-exists-p tmp) (delete-file tmp))))))
 
+(defun iphone-voices--project-choices (definition provenance voices native)
+  "Give VOICES priority in a phone copy of DEFINITION and its client PROVENANCE."
+  (let* ((remaining (copy-sequence (plist-get provenance :choices)))
+         (used (mapcar (lambda (row) (plist-get row :id)) remaining))
+         (wire (plist-get definition :choices))
+         selected)
+    (dolist (voice voices)
+      (let ((match (seq-find
+                    (lambda (row)
+                      (let ((selector (plist-get row :selector)))
+                        (and (eq (plist-get selector :kind) 'exact)
+                             (equal (plist-get selector :engine-id) "ios")
+                             (equal (plist-get selector :voice-id) voice))))
+                    remaining)))
+        (if match
+            (progn (push match selected) (setq remaining (delq match remaining)))
+          ;; New phone assignments inherit the shared style. Only the original
+          ;; occurrence of a tuned choice owns its adjustments.
+          (let* ((base (concat "iphone-" (secure-hash 'sha256 voice)))
+                 (id base) (serial 0))
+            (while (member id used) (setq id (format "%s-%d" base (cl-incf serial))))
+            (push id used)
+            (push (list :id id :selector (list :kind 'exact :scope 'local :engine-id "ios"
+                                               :voice-id voice) :adjustments nil)
+                  selected)))))
+    (let ((rows (seq-take (append (nreverse selected) remaining) 32)))
+      (setf (plist-get provenance :choices) rows
+            (plist-get provenance :choice-source) 'local
+            (plist-get definition :choices)
+            (vconcat
+             (mapcar (lambda (row)
+                       (or (cl-find (plist-get row :id) wire :test #'equal
+                                    :key (lambda (choice) (plist-get choice :id)))
+                           (aref (if native (omnivox--native-choice-records-json (list row))
+                                   (omnivox--choice-records-json (list row))) 0)))
+                     rows))))))
+
 (defun iphone-voices--registration (original process)
   (let ((content (funcall original process)))
     (if (not (process-get process 'iphone-wire)) content
-      (let* ((copy (copy-tree content t))
+      (let* ((copy (tts--dispatch-copy-data content))
              (base (plist-get iphone-frame-speech--settings :reading))
              (roles (plist-get iphone-frame-speech--settings :roles))
              (exact (lambda (id) (list :kind "exact" :engine_id "ios" :voice_id id))))
-        (seq-doseq (definition (plist-get copy :definitions))
-          (let* ((role (seq-find (lambda (r) (equal (plist-get r :role) (plist-get definition :id))) roles))
-                 (ids (seq-uniq (seq-filter #'iphone-voices--id-p (list (plist-get role :voice) base)))))
-            (when ids
-              (setf (plist-get definition :preferences)
-                    (vconcat (mapcar exact ids) (plist-get definition :preferences))))))
+        (seq-doseq (row (plist-get copy :definitions))
+          (let* ((mode (plist-get row :mode))
+                 (definition (or (plist-get row :definition) row))
+                 (id (plist-get definition :id))
+                 (role (cl-find id roles :test #'equal :key (lambda (r) (plist-get r :role))))
+                 (voices (seq-uniq (seq-filter #'iphone-voices--id-p (list (plist-get role :voice) base)))))
+            (when voices
+              (if (member mode '("layered" "engine_layered"))
+                  (when-let* ((source (cl-find id (plist-get copy :choice-provenance)
+                                              :test #'equal :key (lambda (r) (plist-get r :logical-id)))))
+                    (iphone-voices--project-choices definition source voices (equal mode "engine_layered")))
+                (let* ((first (mapcar exact voices))
+                       (rest (seq-remove (lambda (s) (member s first))
+                                         (plist-get definition :preferences))))
+                  (setf (plist-get definition :preferences)
+                        (vconcat (seq-take (append first rest) 32))))))))
         (when (iphone-voices--id-p base)
           (setf (plist-get (plist-get copy :fallback_policy) :global_default) (funcall exact base)))
         copy))))
