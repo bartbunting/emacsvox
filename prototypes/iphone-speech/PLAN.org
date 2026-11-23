@@ -105,8 +105,12 @@ If you ask to preview one exact voice, the result belongs to that voice.
 The Rust audio test feeds identical speech samples through exact preview,
 a named voice preview, line reading and character reading. It compares
 every stereo sample and the echo and reverb tails. Listen on build 7 for
-the change of voice within a line, the relative volume of Reed's letters
-and line reading, and the indentation tone over the first word.
+the change of voice within a line and the indentation tone over the first
+word. On the registered iPhone with VoiceOver speech muted, Reed's typed
+letters and line reading now sound about equal. Overall Emacsvox speech
+is quieter than VoiceOver with audio ducking off. The connected main
+worker uses the default full speech volume, and the default reading role
+has neutral gain. Comparing the phone's audio levels is still open.
 
 When a line changes voices, the desktop and iPhone workers use the same
 effect state for each choice. A WSL test tracks the old voice's echo on
