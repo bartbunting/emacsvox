@@ -97,6 +97,29 @@ final class TestOutput: WireOutput {
 }
 
 @main struct Probe {
+  static func checkVoiceRefresh() throws {
+    let catalogue = WireVoiceInventory()
+    var reads = 0
+    func control(_ kind: String) -> String {
+      let payload = Data(#"{"protocol_version":1,"request_id":1,"type":"\#(kind)"}"#.utf8)
+      return "omnivox_control {" + payload.base64EncodedString() + "}"
+    }
+    catalogue.refresh(for: "") { reads += 1 }
+    for line in [control("capabilities"), control("register_logical_voices_v3"), control("preview"),
+                 "q {Fixture}", "d", "s"] {
+      catalogue.refresh(for: line) { preconditionFailure("re-enumerated unchanged Apple voices") }
+    }
+    catalogue.refresh(for: control("inventory")) { reads += 1 }
+    catalogue.invalidate()
+    catalogue.refresh(for: "d") { reads += 1; catalogue.invalidate() }
+    catalogue.refresh(for: "s") { reads += 1 }
+    enum Failure: Error { case unavailable }
+    do { try catalogue.refresh(for: control("inventory")) { throw Failure.unavailable } }
+    catch Failure.unavailable {}
+    catalogue.refresh(for: "q {Fixture}") { reads += 1 }
+    precondition(reads == 5)
+  }
+
   static func main() throws {
     let output = TestOutput(CommandLine.arguments[1])
     let voices = #"[{"id":"test-1","name":"Fixture","language":"en-US","quality":"compact"},{"id":"test-2","name":"Fixture","language":"en-AU","quality":"enhanced"}]"#
@@ -109,6 +132,7 @@ final class TestOutput: WireOutput {
     precondition(lane.setVoices(voices, preferred: "test-1"))
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
+      try checkVoiceRefresh()
       let trace = WireSpeechTrace()
       var level = WireTraceLevel()
       [Float(1), -1, 0.5, -0.5].withUnsafeBufferPointer { level.observe($0) }

@@ -9,6 +9,8 @@ public final class IphoneOmnivoxModule: Module {
   private var lanes: [String: WireLane] = [:]
   private var connection = 0
   private var catalogue = ""
+  private let inventory = WireVoiceInventory()
+  private var inventoryObserver: NSObjectProtocol?
   private var markerStatus: String?
   private let importer = CueImport()
   private let trace = WireSpeechTrace()
@@ -47,11 +49,19 @@ public final class IphoneOmnivoxModule: Module {
         audio.interrupted = { [weak lane] in lane?.stop() }
         self.lanes[tag] = lane
       }
-      try self.refreshVoices()
+      if #available(iOS 17.0, *) {
+        self.inventoryObserver = NotificationCenter.default.addObserver(
+          forName: AVSpeechSynthesizer.availableVoicesDidChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+          guard let self, self.connection == id else { return }
+          self.inventory.invalidate()
+        }
+      }
+      try self.inventory.refresh(for: "") { try self.refreshVoices() }
     }.runOnQueue(.main)
     AsyncFunction("record") { (id: Int, tag: String, line: String, muted: Bool) in
       guard self.connection == id, let lane = self.lanes[tag] else { return }
-      if line.hasPrefix("omnivox_control ") { try self.refreshVoices() }
+      try self.inventory.refresh(for: line) { try self.refreshVoices() }
       try lane.feed(line, muted: muted)
     }.runOnQueue(.main)
     AsyncFunction("permission") { (id: Int, text: String, promise: Promise) in
@@ -92,6 +102,9 @@ public final class IphoneOmnivoxModule: Module {
 
   private func close() {
     connection = 0
+    if let inventoryObserver { NotificationCenter.default.removeObserver(inventoryObserver) }
+    inventoryObserver = nil
+    inventory.invalidate()
     for lane in lanes.values { lane.stop() }
     lanes.removeAll()
     catalogue = ""

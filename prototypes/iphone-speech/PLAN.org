@@ -102,6 +102,13 @@ every stereo sample and the echo and reverb tails. These changes await
 a signed build for listening with US Reed, particularly the relative
 volume of characters and lines.
 
+When a line changes voices, the desktop and iPhone workers use the same
+effect state for each choice. A WSL test tracks the old voice's echo on
+its original stereo channels through the next voice and its final tail.
+Opening the receiver or refreshing Browse voices requests the installed
+list. On iOS 17 and later, a system voice change also invalidates that
+list. Applying a palette uses the current list.
+
 On ordinary lines and boundary-only cues the phone now skips word scanning
 and SSML construction. Run =test/bookmark-timings= to measure this step with
 optimised Swift in WSL. In the same fixtures, median preparation fell from

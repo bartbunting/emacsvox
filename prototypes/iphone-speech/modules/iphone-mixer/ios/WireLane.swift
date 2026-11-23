@@ -3,6 +3,31 @@
 import Foundation
 import OmnivoxMobile
 
+// Both speech workers use one platform catalogue for this connection.
+final class WireVoiceInventory {
+  private struct ControlHeader: Decodable { let type: String }
+  private var changed = true
+  func invalidate() { changed = true }
+
+  func refresh(for record: String, _ read: () throws -> Void) rethrows {
+    guard changed || Self.requestsInventory(record) else { return }
+    changed = false
+    do { try read() } catch { changed = true; throw error }
+  }
+
+  private static func requestsInventory(_ record: String) -> Bool {
+    let command = "omnivox_control"
+    guard record.hasPrefix(command) else { return false }
+    let rest = record.dropFirst(command.count)
+    guard rest.first?.isWhitespace == true else { return false }
+    var payload = rest.trimmingCharacters(in: .whitespaces)[...]
+    if payload.first == "{", payload.last == "}" { payload = payload.dropFirst().dropLast() }
+    guard let data = Data(base64Encoded: String(payload)),
+          let header = try? JSONDecoder().decode(ControlHeader.self, from: data) else { return false }
+    return header.type == "inventory"
+  }
+}
+
 final class WireLane {
   let worker = ov_ios_worker_new()!
   let schedule: WireSchedule
