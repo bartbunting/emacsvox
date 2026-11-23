@@ -100,6 +100,15 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   let innerMark = WireToneMark(offset: 5, placement: .insert, hz: 440, ms: 20, gain: 1)
   var word = WireItem(kind: .speech, text: "CaféCase & <x>", rate: 1.5, marks: [firstMark, innerMark])
   var bookmarks = WireBookmarks(word)!
+  let edges = WireItem(kind: .speech, text: "É x", anchors: [WireAnchor(offset: 0), WireAnchor(offset: 4)])
+  let endpoints = WireBookmarks(edges)!
+  precondition(!endpoints.needsTiming && !endpoints.needsBookmarks && endpoints.complete)
+  precondition(endpoints.placements(bytesPerFrame: 2, totalFrames: 42).map(\.frame) == [0, 42])
+  for invalid in [-1, 1, 5] {
+    var broken = edges
+    broken.anchors = [WireAnchor(offset: invalid)]
+    precondition(WireBookmarks(broken) == nil)
+  }
   precondition(bookmarks.ssml.contains("Café<mark name=\"ov-5\"/>Case &amp; &lt;x&gt;"))
   precondition(bookmarks.ssml.contains("rate=\"150%\""))
   bookmarks.observe("ov-0", byte: 0)

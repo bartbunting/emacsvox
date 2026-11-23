@@ -31,16 +31,30 @@ struct WireBookmarks {
   init?(_ item: WireItem) {
     guard let text = item.text, let marks = item.anchors ?? item.marks?.map({ WireAnchor(offset: $0.offset, after: $0.after) }),
           item.anchors != nil || !marks.isEmpty, marks.count <= 512 else { return nil }
-    let bytes = Array(text.utf8)
     self.marks = marks
     source = text
     utf16Length = text.utf16.count
-    length = bytes.count
+    let byteCount = text.utf8.count
+    length = byteCount
+    guard marks.allSatisfy({ (0...byteCount).contains($0.offset) }) else { return nil }
+    // Endpoints already have exact sample positions. Most navigated lines
+    // need neither Unicode word boundaries nor an SSML synthesis request.
+    guard marks.contains(where: { $0.offset > 0 && $0.offset < byteCount }) else {
+      wordStarts = []
+      ssml = ""
+      return
+    }
     // ICU's Unicode word breaks keep contractions and mixed-case words intact.
     wordStarts = Self.wordStart.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap {
       guard let start = Range(NSRange(location: $0.range.location, length: 0), in: text)?.lowerBound else { return nil }
       return text.utf8.distance(from: text.utf8.startIndex, to: start)
     }
+    let boundaries = wordStarts
+    guard marks.contains(where: { $0.offset > 0 && $0.offset < byteCount && !boundaries.contains($0.offset) }) else {
+      ssml = ""
+      return
+    }
+    let bytes = Array(text.utf8)
     let rate = Int(((item.rate ?? 1) * 100).rounded())
     let pitch = Int((((item.pitch ?? 1) - 1) * 100).rounded())
     let gain = item.gain ?? 1
@@ -88,7 +102,7 @@ struct WireBookmarks {
   }
 
   var needsTiming: Bool { marks.contains { $0.offset > 0 && $0.offset < length } }
-  var needsBookmarks: Bool { marks.contains { $0.offset > 0 && $0.offset < length && !wordStarts.contains($0.offset) } }
+  var needsBookmarks: Bool { !ssml.isEmpty }
 
   var complete: Bool {
     marks.allSatisfy {

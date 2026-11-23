@@ -88,6 +88,20 @@ supplies from word starts the phone measures.
    playback. Build 6 can already use the relay's spoken trace receipt and
    the main and notification volume settings inherited from Emacs.
 
+The source branch now preserves distinct adjustments for two choices that
+select the same iOS voice. Private layered auditions use the desktop Rust
+playback evidence. Stop before first playback keeps the accepted voice
+with its started flag clear. Stop after first playback records which
+choice began. The full voice-choice capability still needs runtime fallback.
+
+On ordinary lines and boundary-only cues the phone now skips word scanning
+and SSML construction. Run =test/bookmark-timings= to measure this step with
+optimised Swift in WSL. In the same fixtures, median preparation fell from
+37 to 0.14 microseconds for a plain line and from 45 to 4.7 microseconds
+for a cue at a word start. In-word requests still construct SSML. The
+SSH loopback direct-key test separately measured 2.4 to 3.7 milliseconds
+to the relay tone packet. Speaker onset and interruption require device timing.
+
 * Work alongside and after this build
 
 - *Live permissions on build 3.* At the next real Codex permission

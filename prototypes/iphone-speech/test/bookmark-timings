@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+set -euo pipefail
+app=$(cd "$(dirname "$0")/.." && pwd)
+omni=${IPHONE_OMNIVOX_SOURCE:-$app/../../../omnivox}
+build=${CARGO_TARGET_DIR:-$HOME/.cache/emacsvox/iphone-omnivox-protocol}
+(cd "$omni" && CARGO_TARGET_DIR="$build" cargo build --locked -p omnivox-ios)
+docker run --rm --cpus=1 --network none --user "$(id -u):$(id -g)" \
+  -v "$app:/app:ro" -v "$omni/omnivox-ios/include:/include:ro" -v "$build/debug:/rust:ro" \
+  -e CLANG_MODULE_CACHE_PATH=/tmp/clang swift:6.3-noble sh -ec '
+    swiftc -O -module-cache-path /tmp/swift -I /include \
+      /app/modules/iphone-mixer/ios/WireSchedule.swift /app/modules/iphone-mixer/ios/WirePresentation.swift /app/modules/iphone-mixer/ios/WireBookmarks.swift \
+      /app/test/bookmark-timings.swift /rust/libomnivox_ios.a -Xlinker --gc-sections -o /tmp/clock
+    /tmp/clock'
