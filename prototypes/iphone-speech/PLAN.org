@@ -60,9 +60,12 @@ automated checks. Track these comparisons alongside the port.
   request, navigate during the choices, review the pending request and
   answer it. The practice request and lock recovery have passed.
 - *Mobile keyboard.* Check the external keyboard in the phone's terminal, including
-  =M-<=, =M->= and =C-M-f=. Check focus on connection and unlock while
-  keeping other app controls accessible. The mobile design and optional
-  self-voicing work are in the [[file:OMNIVOX.org::*External keyboard and self-voicing][keyboard roadmap]].
+  =M-<=, =M->= and =C-M-f=. In the next signed build, compare =j= and =J=
+  while entering text and while moving between responses. Check that
+  Shift+Return inserts a newline in an unsent draft. Check focus on
+  connection and unlock while keeping other app controls accessible. The
+  mobile design and optional self-voicing work are in the
+  [[file:OMNIVOX.org::*External keyboard and self-voicing][keyboard roadmap]].
 - *Daily startup and recovery.* After a planned WSL restart, reopen
   Codex, start the private listener and relay, and connect with the
   saved phone settings. Disconnect and continue on the desktop.

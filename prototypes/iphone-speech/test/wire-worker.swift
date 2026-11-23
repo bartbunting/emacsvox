@@ -9,6 +9,7 @@ final class TestOutput: WireOutput {
   let loader: OpaquePointer, token = ov_ios_token_new()!
   var hold = false
   var started: [WireItem.Kind] = [], finishes: [(Bool) -> Void] = []
+  var observeSpeech: ((WireItem) -> Void)?
   init(_ root: String) { loader = ov_ios_loader_new(root)! }
   deinit { ov_ios_loader_free(loader); ov_ios_token_free(token) }
   var mixed: ((ArraySlice<WireItem>, @escaping () -> () -> Void, @escaping (Int, Bool) -> Void) -> Void)?
@@ -23,6 +24,7 @@ final class TestOutput: WireOutput {
     case .tone: pcm = ov_ios_tone(item.hz!, item.ms!, item.gain!, token)
     case .sound: pcm = ov_ios_sound(loader, item.path!, item.gain!, token)
     default:
+      if item.kind == .speech { observeSpeech?(item) }
       if hold { finishes.append(done) } else { done(true) }
       return
     }
@@ -48,6 +50,17 @@ final class TestOutput: WireOutput {
     precondition(lane.setVoices(voices, preferred: "test-1"))
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
+      var letters: [WireItem] = []
+      output.observeSpeech = { letters.append($0) }
+      try feed("tts_set_pitch_multiplier 0.8")
+      try feed("l {j}")
+      try feed("l {J}")
+      try feed("tts_say {ordinary}")
+      precondition(letters.map(\.text) == ["j", "j", "ordinary"])
+      precondition(letters.map(\.pitch) == [0.8, 1.5, 0.8])
+      output.observeSpeech = nil
+      output.started.removeAll()
+      try feed("tts_set_pitch_multiplier 1")
       let envelope = try Data(contentsOf: URL(fileURLWithPath: "/out/CapitalTiming.json"))
       try feed("tts_set_voice {test-2}")
       try feed("tts_split_caps 0")

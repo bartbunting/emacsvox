@@ -53,7 +53,13 @@ function metaCharacter(event) {
 }
 
 function terminalKey(event) {
-  const {key, altKey, ctrlKey, shiftKey} = event;
+  const {altKey, ctrlKey} = event;
+  const shiftKey = event.shiftKey || event.getModifierState?.('Shift');
+  let key = event.key;
+  if (key === 'Return' || key === '\r' || key === '\n' ||
+      ((!key || key === 'Unidentified') && (event.code === 'Enter' || event.code === 'NumpadEnter'))) {
+    key = 'Enter';
+  }
   const mod = 1 + (shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4 : 0);
   if (Object.hasOwn(cursor, key) || Object.hasOwn(functionKeys, key)) {
     const suffix = cursor[key] ?? functionKeys[key];
@@ -69,6 +75,10 @@ function terminalKey(event) {
     }
     return esc + basic[key];
   }
+  // Forward ordinary hardware keys before the text field can echo them.
+  // The layout supplies the character. Text composition still uses input.
+  if (!ctrlKey && !altKey && event.code && event.code !== 'Unidentified' &&
+      key && Array.from(key).length === 1 && !/[\x00-\x1f\x7f-\x9f]/.test(key)) return key;
   const char = altKey ? metaCharacter(event) : key;
   if (!char || char.length !== 1) return;
   if (ctrlKey) {
@@ -81,7 +91,8 @@ function terminalKey(event) {
   } else if (altKey) return esc + char;
 }
 field.addEventListener('keydown', event => {
-  if (event.isComposing || event.metaKey || (event.altKey && event.ctrlKey &&
+  if (event.cancelable === false || event.isComposing || event.keyCode === 229 || event.metaKey ||
+      (!event.altKey && event.getModifierState?.('AltGraph')) || (event.altKey && event.ctrlKey &&
       (!window.emacsControlOption || event.getModifierState?.('AltGraph')))) return;
   const bytes = terminalKey(event);
   if (bytes !== undefined) { event.preventDefault(); send(bytes); }

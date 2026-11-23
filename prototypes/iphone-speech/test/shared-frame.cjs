@@ -367,8 +367,35 @@ async function main() {
         await until('SSH Escape then Control+f', () => atPoint(23));
         assert.equal(await observe('(with-current-buffer "Phone modifier sample" (buffer-substring-no-properties (point-min) (point-max)))'),
           '"(one two) (three four)"');
-        await observe('(with-selected-window ' + phoneWindow + ' (switch-to-buffer iphone-shared-buffer) (goto-char ' + beforeKeys + '))');
         console.log('Passed Meta buffer boundaries and both Control+Meta inputs through the Swift SSH client to Emacs.');
+        const draft = 'Started on PC first and phone';
+        await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer)
+          (goto-char (point-max)) (emacsvox-agent-shell-edit-input))`);
+        assert.ok(field.down('j', {code:'KeyJ'}));
+        await until('one literal j in the draft', () => pcSeesDraft(draft + 'j'));
+        assert.ok(field.down('Return', {code:'Enter', shiftKey:true}));
+        assert.ok(field.down('J', {code:'KeyJ', shiftKey:true}));
+        await until('Shift+Return inserts one newline in the unsent Agent Shell draft',
+          () => pcSeesDraft(draft + 'j\nJ'));
+        await observe(`(with-selected-window ${phoneWindow}
+          (goto-char (point-max)) (delete-region (- (point) 3) (point))
+          (goto-char (point-min)) (emacsvox-agent-shell--input-sync)
+          (setq-local iphone-test-response-keys nil)
+          (add-hook 'pre-command-hook (lambda ()
+            (when (memq this-command '(emacsvox-agent-shell-next-response emacsvox-agent-shell-previous-response))
+              (push this-command iphone-test-response-keys))) nil t))`);
+        const nav = packets.length;
+        assert.ok(field.down('j', {code:'KeyJ'}));
+        assert.ok(field.down('J', {code:'KeyJ', shiftKey:true}));
+        await until('j and Shift+j navigate Agent Shell responses', async () =>
+          (await observe(`(with-current-buffer iphone-shared-buffer (equal iphone-test-response-keys
+            '(emacsvox-agent-shell-previous-response emacsvox-agent-shell-next-response)))`)) === 't')
+          .catch(async error => { throw new Error(error.message + ': ' + await observe(`(with-selected-window ${phoneWindow}
+            (list (key-binding "j") (key-binding "J") (buffer-name) (point) iphone-test-response-keys))`)); });
+        assert.ok(await pcSeesDraft(draft));
+        assert.ok(!packets.slice(nav).some(p => p.type === 'letter' && /^[jJ]$/.test(p.text)));
+        await observe(`(with-selected-window ${phoneWindow} (goto-char ${beforeKeys}) (emacsvox-agent-shell--input-sync))`);
+        console.log('Passed printable input, Shift+Return in an unsent draft and j/J transcript navigation over native SSH.');
         const otherSounds = path.join(dir, 'second installation', 'sounds');
         const relativeCue = 'packs/accent/open-object.ogg';
         const otherCue = path.join(otherSounds, relativeCue);
@@ -447,10 +474,11 @@ async function main() {
         await observe('(with-selected-window ' + phoneWindow + ' (iphone-test-permission) nil)');
         await until('practice permission reaches the subscribed frame', () =>
           packets.some(p => p.type === 'permission' && /lighthouse notes.*Allow once.*Reject/.test(p.text)));
-        sshKeys('j');
+        assert.ok(field.down('j', {code:'KeyJ'}));
         await until('character echo during permission', () => packets.some(p => p.type === 'letter' && p.text === 'j'));
         assert.ok(!packets.some(p => p.type === 'stop' && p.scope === 'all'));
         await closeSSH();
+        assert.equal(packets.filter(p => p.type === 'letter' && p.text === 'j').length, 1);
         await observe('(with-current-buffer "Phone resume draft" (save-excursion (goto-char (point-max)) (insert " other edits")))');
         const resumed = await attachSSH();
         await until('pending permission on resuming the edit buffer', () => resumed.some(p => p.type === 'permission'));

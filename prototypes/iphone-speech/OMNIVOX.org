@@ -74,6 +74,8 @@ Omnivox on iPhone”, save and connect. “Finding iPhone voices” precedes
 registration before the keyboard becomes ready. The first connection
 prefers an installed Eloquence Reed. Build 4 can select British Reed from
 Apple's inventory order. The next build prefers US Reed when available.
+On a test iPhone both workers refreshed the installed voices on reconnect
+and resolved the reading roles to the saved voice.
 The phone reading rate starts at 150.
 
 In the phone terminal, open the Aural menu, press =v= for Voices and
@@ -115,7 +117,10 @@ duration-coded tone and alongside speech, and navigate to lines indented
 by four and eight spaces. At the default duration settings you should hear
 a 250 Hz tone for 130 and 210 ms respectively, starting with the line.
 Compare mixed-case words such as =TestCase= separately. The built-in
-capital cue uses an insert.
+capital cue uses an insert. For an isolated character, compare =a= with
+=A=. The updated worker uses desktop Omnivox's capital pitch, 1.5 by
+default. Lowercase letters and the following line use their ordinary pitch.
+Build 4 used ordinary pitch for both cases.
 
 =Stop Speech= on the phone silences both lanes locally. Reconnect to
 create fresh workers and restore the saved phone settings. Turn off

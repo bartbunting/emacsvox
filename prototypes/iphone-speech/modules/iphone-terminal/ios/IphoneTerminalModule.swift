@@ -10,6 +10,7 @@ public final class IphoneTerminalModule: Module {
 
   public func definition() -> ModuleDefinition {
     Name("IphoneTerminal")
+    Constant("hasShiftReturnShortcut") { true }
     AsyncFunction("copyPublicKey") { UIPasteboard.general.string = try PhoneIdentity.publicKey() }.runOnQueue(.main)
     Function("loadProfile") { UserDefaults.standard.dictionary(forKey: "emacsvox.ssh.profile") as? [String:String] ?? [:] }
     Function("saveProfile") { (profile: [String:String]) in UserDefaults.standard.set(profile, forKey: "emacsvox.ssh.profile") }
@@ -46,7 +47,44 @@ public final class IphoneTerminalModule: Module {
         view.visibleRows(for: frame)
       }
     }
+    View(PhoneKeyboardContainer.self) {
+      ViewName("PhoneKeyboardContainer")
+      Events("onShiftReturn")
+      Prop("active") { (view: PhoneKeyboardContainer, active: Bool) in view.active = active }
+    }
   }
+}
+
+// WebKit can turn Shift+Return into an ordinary text newline. Take this one
+// hardware shortcut while the Emacs field owns the responder chain.
+private final class PhoneKeyboardContainer: ExpoView {
+  let onShiftReturn = EventDispatcher()
+  var active = false
+  private lazy var shiftReturn: UIKeyCommand = {
+    let command = UIKeyCommand(input: "\r", modifierFlags: .shift, action: #selector(sendShiftReturn))
+    command.wantsPriorityOverSystemBehavior = true
+    return command
+  }()
+
+  override var keyCommands: [UIKeyCommand]? { (super.keyCommands ?? []) + [shiftReturn] }
+
+  private func focusedView(in view: UIView) -> UIView? {
+    if view.isFirstResponder { return view }
+    for child in view.subviews {
+      if let focused = focusedView(in: child) { return focused }
+    }
+    return nil
+  }
+
+  override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+    if action == #selector(sendShiftReturn) {
+      guard active, let focused = focusedView(in: self) else { return false }
+      return (focused as? UITextInput)?.markedTextRange == nil
+    }
+    return super.canPerformAction(action, withSender: sender)
+  }
+
+  @objc private func sendShiftReturn(_ sender: UIKeyCommand) { onShiftReturn() }
 }
 
 private final class EmacsTerminalView: TerminalView {
@@ -57,8 +95,14 @@ private final class EmacsTerminalView: TerminalView {
     }
     var remaining = presses
     for press in presses {
-      guard let key = press.key, key.modifierFlags.contains([.alternate, .shift]),
-            key.modifierFlags.intersection([.control, .command]).isEmpty else { continue }
+      guard let key = press.key else { continue }
+      let modifiers = key.modifierFlags.intersection([.control, .alternate, .shift, .command])
+      if modifiers == .shift && (key.keyCode == .keyboardReturnOrEnter || key.keyCode == .keypadEnter) {
+        send(txt: "\u{1b}[27;2;13~")
+        remaining.remove(press)
+        continue
+      }
+      guard modifiers == [.alternate, .shift] else { continue }
       let symbol: String
       switch key.charactersIgnoringModifiers {
       case ",": symbol = "<"

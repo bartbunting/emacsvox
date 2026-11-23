@@ -43,6 +43,27 @@ test('Option letters send Meta once and leave VoiceOver chords to iOS', () => {
   assert.deepEqual(sent, ['\x1bx', '\x1bx', '\x1bf', '\x1bE', '\x1ba']);
 });
 
+test('hardware j and Shift+j bypass text editing, while composition and paste use the field', () => {
+  const sent = [];
+  const {field, listeners, down} = keyboardField(text => sent.push(text));
+  assert.ok(down('j', {code: 'KeyJ'}));
+  assert.ok(down('J', {code: 'KeyJ', shiftKey: true}));
+  assert.ok(down('a', {code: 'KeyQ'}));
+  assert.ok(!down('j', {code: 'KeyJ', isComposing: true}));
+  assert.ok(!down('j', {code: 'KeyJ', keyCode: 229}));
+  assert.ok(!down('j', {code: 'KeyJ', cancelable: false}));
+  assert.ok(!down('j', {code: 'KeyJ', getModifierState: key => key === 'AltGraph'}));
+  assert.ok(!down('Process', {code: 'KeyJ'}));
+  assert.ok(!down('j'));
+  assert.ok(!down('j', {code: 'Unidentified'}));
+  field.value = '日本';
+  listeners.compositionend();
+  listeners.input({});
+  field.value = 'pasted';
+  listeners.input({});
+  assert.deepEqual(sent, ['j', 'J', 'a', '日本', 'pasted']);
+});
+
 test('Option punctuation sends one Emacs Meta chord and ordinary accents remain text', () => {
   const sent = [];
   const {field, listeners, down} = keyboardField(text => sent.push(text));
@@ -57,10 +78,10 @@ test('Option punctuation sends one Emacs Meta chord and ordinary accents remain 
   assert.ok(!down('˘', {...meta, ctrlKey: true, code: 'Period'}));
   assert.ok(!down('¯', {...meta, metaKey: true, code: 'Comma'}));
   assert.ok(!down('Dead', {...meta, isComposing: true, code: 'Comma'}));
-  assert.ok(!down('>', {shiftKey: true, code: 'Period'}));
-  field.value = '>¯˘';
+  assert.ok(down('>', {shiftKey: true, code: 'Period'}));
+  field.value = '¯˘';
   listeners.input({});
-  assert.deepEqual(sent, ['\x1b>', '\x1b<', '\x1b>', '\x1b>', '\x1b<', '\x1b<', '\x1b>', '>¯˘']);
+  assert.deepEqual(sent, ['\x1b>', '\x1b<', '\x1b>', '\x1b>', '\x1b<', '\x1b<', '\x1b>', '>', '¯˘']);
 });
 
 test('old keyboard events cannot enter a replacement session', () => {
@@ -102,6 +123,11 @@ test('terminal modifiers, function keys and Control+Meta with either VoiceOver m
     ['Backspace', meta, '\x1b\x7f'], ['ArrowRight', ctrl, '\x1b[1;5C'],
     ['ArrowLeft', meta, '\x1b[1;3D'], ['PageDown', {shiftKey: true}, '\x1b[6;2~'],
     ['Tab', {shiftKey: true}, '\x1b[Z'], ['Tab', ctrl, '\x1b[27;5;9~'],
+    ['Enter', {code: 'Enter', shiftKey: true}, '\x1b[27;2;13~'],
+    ['Unidentified', {code: 'Enter', shiftKey: true}, '\x1b[27;2;13~'],
+    ['Return', {code: 'NumpadEnter', shiftKey: true}, '\x1b[27;2;13~'],
+    ['Enter', {code: 'Enter', getModifierState: key => key === 'Shift'}, '\x1b[27;2;13~'],
+    ['Enter', {code: 'Enter'}, '\r'],
     ['F1', {}, '\x1bOP'], ['F4', ctrl, '\x1b[1;5S'], ['F12', {}, '\x1b[24~'],
   ]) {
     assert.ok(field.down(key, modifiers), key);

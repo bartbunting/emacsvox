@@ -23,9 +23,9 @@ function loadComponent(filename, platform) {
   return exports;
 }
 
-for (const input of ['field', 'terminal']) {
-  test('switch tabs with a connected ' + input + ' keyboard', async t => {
-    const sockets = [], focus = [];
+for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', true], ['field', false]]) {
+  test('switch tabs with a connected ' + input + ' keyboard' + (hasShiftReturnShortcut ? '' : ' on an earlier app'), async t => {
+    const sockets = [], focus = [], keys = [];
     t.mock.method(global, 'WebSocket', function openSocket() {
       const socket = {readyState: 1, close() { this.readyState = 3; }};
       sockets.push(socket);
@@ -35,7 +35,7 @@ for (const input of ['field', 'terminal']) {
     global.requestAnimationFrame = setImmediate;
     global.cancelAnimationFrame = clearImmediate;
     const profile = {host: '100.64.0.1', port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
-    const ssh = {loadProfile: () => profile, keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
+    const ssh = {hasShiftReturnShortcut, loadProfile: () => profile, keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
     const player = {};
     const rn = Object.fromEntries(['Button', 'View', 'Text', 'ScrollView', 'SafeAreaView', 'Pressable',
       'KeyboardAvoidingView', 'Switch', 'TextInput', 'StatusBar', 'Modal'].map(name => [name, name]));
@@ -44,7 +44,7 @@ for (const input of ['field', 'terminal']) {
     rn.AccessibilityInfo = {sendAccessibilityEvent() {}};
     let App;
     const platform = {react: React, 'react-native': rn,
-      expo: {registerRootComponent: root => { App = root; }, requireNativeView: () => 'NativeTerminal',
+      expo: {registerRootComponent: root => { App = root; }, requireNativeView: (_, name) => name ?? 'NativeTerminal',
         requireOptionalNativeModule: name => name === 'IphoneTerminal' ? ssh : null},
       'expo-asset': {}, 'expo-speech': {stop: async () => {}, getAvailableVoicesAsync: async () => []},
       'expo-audio': {useAudioPlayer: () => player}, '@expo/dom-webview': {WebView: 'WebView'},
@@ -55,6 +55,7 @@ for (const input of ['field', 'terminal']) {
     await act(() => {
       app = create(React.createElement(App), {createNodeMock: ({type}) => ({
         focusKeyboard: () => focus.push(type), injectJavaScript: () => focus.push(type),
+        sendKeys: (frame, bytes) => keys.push([frame, bytes]),
       })});
     });
     t.after(() => act(() => app.unmount()));
@@ -82,6 +83,7 @@ for (const input of ['field', 'terminal']) {
     assert.ok(tabs()[1].props.accessibilityState.selected);
     assert.ok(button('Test iPhone Voice'));
     assert.equal(app.root.findAllByType('WebView').length, 0);
+    assert.equal(app.root.findAllByType('PhoneKeyboardContainer').length, 0);
     await select('Settings');
     assert.equal(hostField().props.value, '100.64.0.2');
     assert.deepEqual(focus, []);
@@ -90,6 +92,15 @@ for (const input of ['field', 'terminal']) {
     assert.equal(terminal.props.keyboardEnabled, true);
     if (input === 'field') {
       await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: ''}}));
+      if (hasShiftReturnShortcut) {
+        const container = app.root.findByType('PhoneKeyboardContainer');
+        assert.ok(container.props.active);
+        await act(() => container.props.onShiftReturn());
+      } else {
+        assert.equal(app.root.findAllByType('PhoneKeyboardContainer').length, 0);
+        await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\x1b[27;2;13~'}}));
+      }
+      assert.deepEqual(keys, [['same-frame', '\x1b[27;2;13~']]);
     }
     assert.deepEqual(focus, [input === 'field' ? 'WebView' : 'NativeTerminal']);
     await select('Settings');

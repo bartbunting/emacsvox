@@ -16,6 +16,7 @@ import {Action, colors, Settings, TabBar, TabPage, TerminalReview} from './panel
 const native = requireOptionalNativeModule('IphoneMixer');
 const ssh = requireOptionalNativeModule('IphoneTerminal');
 const Terminal = ssh ? requireNativeView('IphoneTerminal') : null;
+const KeyboardContainer = ssh?.hasShiftReturnShortcut ? requireNativeView('IphoneTerminal', 'PhoneKeyboardContainer') : View;
 const sound = require('./assets/open-object.wav');
 const chime = require('./assets/visual-line.wav');
 const relayPort = process.env.EXPO_PUBLIC_EMACSVOX_PORT || '8787';
@@ -69,7 +70,11 @@ function EmacsKeyboard({canFocus, controlOption, onKeys, onClosed}) {
     focusNewInput(loaded && view.current, canFocus,
       input => input.injectJavaScript("document.getElementById('keys').focus();"));
   }, [loaded, canFocus, focusNewInput]);
-  return <View style={styles.keyboard}>
+  const shortcuts = ssh?.hasShiftReturnShortcut ? {
+    active: canFocus,
+    onShiftReturn: () => { if (canFocus) onKeys('\x1b[27;2;13~'); },
+  } : {};
+  return <KeyboardContainer style={styles.keyboard} {...shortcuts}>
     <WebView ref={view} source={keyboardSource} style={styles.surface} scrollEnabled={false}
       injectedJavaScriptBeforeContentLoaded={controlOption ? 'window.emacsControlOption = true;' : undefined}
       injectedJavaScript="window.ReactNativeWebView.postMessage('');"
@@ -79,7 +84,7 @@ function EmacsKeyboard({canFocus, controlOption, onKeys, onClosed}) {
         else if (canFocus) onKeys(nativeEvent.data);
       }}
       onContentProcessDidTerminate={onClosed} />
-  </View>;
+  </KeyboardContainer>;
 }
 
 function Session({settings, save, active, reconnect}) {

@@ -608,6 +608,18 @@ can supply individual modifiers, including =C-x @ s= for Super.
 If your keyboard has Mac and Windows layouts, check its manual for the
 position of Option or Alt. iOS interprets the Alt key as Option.
 
+In an editable Agent Shell draft, Shift+Return inserts a newline. On
+build 4, use =M-x newline RET= if the keyboard sends ordinary Return.
+In the transcript, =j= moves to the next response and =J= to the previous
+one. At the editable prompt they insert letters.
+
+If iOS also speaks a letter, you can give this app its own VoiceOver
+typing feedback. Open Settings, Accessibility, VoiceOver, Activities, and
+choose Add Activity. Set Typing Feedback to Nothing for the hardware
+keyboard if that choice is available. Under Automatic Switching, choose
+Apps and select Emacsvox Speech. Emacs still uses your usual typing echo.
+[[https://support.apple.com/guide/iphone/iphfa3d32c50/ios][Apple's VoiceOver Activities guide]].
+
 ** Check keyboard speech and permissions on the signed app
 
 1. In Diagnostics, activate “Test half-second tone”. Listen for one steady
@@ -623,7 +635,11 @@ position of Option or Alt. iOS interprets the Alt key as Option.
    Receivers with “Test visual-line chime” in Diagnostics can also compare
    that local recording with =C-e m= in a visual-line buffer.
 2. On the main screen, connect and focus the Emacs keyboard field. Type a
-   lowercase letter with ordinary Emacs typing echo on. Listen for one echo.
+   lowercase =j= and an uppercase =J= with ordinary Emacs typing echo on.
+   Listen for one echo per key and a higher pitch on the capital. In an
+   editable draft, press Shift+Return between two words and check that
+   they occupy separate lines. In the transcript, press =j= and =J= and
+   listen for the response navigation without a separate letter echo.
    In an Agent Shell response, press =C-n= twice during a line and compare
    the cutoff on speaker and headphones.
 3. In the isolated test session, run =C-u M-x iphone-test-permission RET=
