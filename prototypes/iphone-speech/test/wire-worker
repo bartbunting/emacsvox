@@ -14,7 +14,7 @@ docker run --rm --network none --cpus=1 --user "$(id -u):$(id -g)" -e CLANG_MODU
   -v "$out:/out" swift:6.3-noble swiftc -module-cache-path /tmp/swift -I /include \
   /app/modules/iphone-mixer/ios/WireSchedule.swift /app/modules/iphone-mixer/ios/WireLane.swift \
   /app/modules/iphone-mixer/ios/WirePlayback.swift /app/modules/iphone-mixer/ios/WireBookmarks.swift /app/modules/iphone-mixer/ios/WirePresentation.swift \
-  /app/modules/iphone-mixer/ios/WireSpeechTiming.swift /app/modules/iphone-mixer/ios/WireSpeechTrace.swift \
+  /app/modules/iphone-mixer/ios/WireSpeechTiming.swift /app/modules/iphone-mixer/ios/WireMarkedAudio.swift /app/modules/iphone-mixer/ios/WireSpeechTrace.swift \
   /app/test/wire-playback.swift /app/test/wire-worker.swift \
   /rust/libomnivox_ios.a -Xlinker --gc-sections -o /out/worker
 icons=${IPHONE_TEST_ICONS:-$app/../../sounds}

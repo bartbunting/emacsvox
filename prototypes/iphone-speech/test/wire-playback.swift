@@ -3,6 +3,58 @@
 import Foundation
 import OmnivoxMobile
 
+// Apple can return its end buffer immediately for the separately voiced space
+// between a status and a command. Exercise the same capture and Rust mixer.
+func checkCommandSeparators(_ root: String, voices: String) throws {
+  for withTone in [false, true] {
+    let output = TestOutput(root), lane = WireLane(output) { _ in }
+    precondition(lane.setVoices(voices, preferred: "test-1"))
+    let labels = [withTone ? "failed" : "completed", " ", "command", "list sample files"]
+    let position: [String:Any] = ["position":"span_boundary", "span_id":2, "affinity":"before"]
+    var actions: [[String:Any]] = [["id":"separator", "position":position,
+      "lifecycle_anchor":"object", "type":"semantic_event"]]
+    if withTone {
+      actions.append(["id":"cue", "position":position, "lifecycle_anchor":"run", "type":"tone", "mode":"insert",
+        "frequency_hz":660, "duration_ms":20, "volume":1, "pan":0.5, "effect_bus":"dry"])
+    }
+    let doc: [String:Any] = ["protocol_version":3, "generation":1, "dispatch_id":1, "delivery_policy":"ordered",
+      "spans":labels.enumerated().map { ["id":$0.offset + 1, "text":$0.element] as [String:Any] }, "actions":actions]
+    let record = "emacsvox_timeline " + (try JSONSerialization.data(withJSONObject: doc)).base64EncodedString()
+    let action = Array(record.utf8).withUnsafeBufferPointer { ov_ios_record(lane.worker, $0.baseAddress, $0.count) }!
+    ov_ios_string_free(action)
+    let plan = WirePresentation(ov_ios_take_presentation(lane.worker)!, key: nil, reply: { _ in })
+    let clock = ov_ios_mix_new()!
+    defer { ov_ios_mix_free(clock) }
+    let items = plan.prepare(bundle: output.loader, personal: nil)!
+    precondition(items.map(\.text) == labels)
+    for (i, item) in items.enumerated() {
+      let capture = WireMarkedAudio(item, WireBookmarks(item)!)
+      if i == 1 {
+        guard case let .ready(points)? = capture.finishPart() else { preconditionFailure("Silent separator stopped speech") }
+        let (pcm, _) = capture.render(points, clock: clock, token: plan.token, presentation: plan)
+        guard let pcm else { preconditionFailure("Silent separator did not reach the mixer") }
+        defer { ov_ios_pcm_free(pcm) }
+        let frames = ov_ios_frames(pcm), samples = ov_ios_samples(pcm)!
+        precondition(withTone ? frames >= 800 : frames == 1)
+        precondition((0..<(2 * frames)).contains { samples[$0] != 0 } == withTone)
+        let lines = plan.regions(frames: frames)!.flatMap(\.events)
+        precondition(lines.contains { line in
+          guard let data = Data(base64Encoded: String(line.split(separator: " ").last!)),
+                let event = try? JSONSerialization.jsonObject(with: data) as? [String:Any] else { return false }
+          return event["type"] as? String == "semantic_event_reached" && event["action_id"] as? String == "separator"
+        })
+      } else {
+        precondition(capture.finishPart() == nil)
+        let samples = [Float](repeating: 0.2, count: 256)
+        guard let pcm = ov_ios_render_presentation(plan.pointer, samples, samples.count, 44100, 1, nil, 0, plan.token)
+        else { preconditionFailure("Command audio did not follow its status") }
+        precondition(ov_ios_frames(pcm) > 0 && plan.regions(frames: ov_ios_frames(pcm)) != nil)
+        ov_ios_pcm_free(pcm)
+      }
+    }
+  }
+}
+
 // Match the five cue offsets from the handset. Give Apple no bookmarks and
 // deliberately uneven phrase durations. Compare the whole Rust output to PCM.
 func checkMissingWordTiming(_ root: String, voices: String, envelope: Data) throws {

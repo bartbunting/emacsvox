@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
+#if canImport(AVFoundation)
 import AVFoundation
+#endif
 import OmnivoxMobile
 
 // Apple can supply markers after the PCM they describe. Retain at most one
@@ -17,6 +19,7 @@ final class WireMarkedAudio {
     tones = item.marks ?? []
   }
 
+  #if canImport(AVFoundation)
   func append(_ buffer: AVAudioPCMBuffer, stride: Int) -> Bool {
     let frames = Int(buffer.frameLength), nextRate = UInt32(buffer.format.sampleRate)
     let nextChannels = Int(buffer.format.channelCount)
@@ -34,8 +37,17 @@ final class WireMarkedAudio {
     }
     return true
   }
+  #endif
 
   func finishPart() -> WireSpeechTiming.Result? {
+    // Some voices finish a formatting space without producing any PCM.
+    // Rust still owns the separator's cues, effect tails and playback markers.
+    if samples.isEmpty && original.isWhitespaceOnly {
+      samples = [0]
+      rate = 44100
+      channels = 1
+      bytesPerFrame = MemoryLayout<Float>.stride
+    }
     let result = timing.finish(bytesPerFrame: bytesPerFrame, totalFrames: samples.count / max(1, channels))
     if case let .next(_, discardAudio)? = result {
       if discardAudio {

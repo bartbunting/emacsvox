@@ -28,6 +28,8 @@ struct WireBookmarks {
   private var bookmarksReceived = 0, wordsReceived = 0, wordsMismatched = 0
   static let end = "ov-end"
 
+  var isWhitespaceOnly: Bool { !source.isEmpty && source.allSatisfy(\.isWhitespace) }
+
   init?(_ item: WireItem) {
     guard let text = item.text, let marks = item.anchors ?? item.marks?.map({ WireAnchor(offset: $0.offset, after: $0.after) }),
           item.anchors != nil || !marks.isEmpty, marks.count <= 512 else { return nil }

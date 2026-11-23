@@ -180,6 +180,7 @@ final class TestOutput: WireOutput {
       try checkPalettePlayback(CommandLine.arguments[1], voices: voices)
       try checkTimelinePlayback(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMissingWordTiming(CommandLine.arguments[1], voices: voices, envelope: envelope)
+      try checkCommandSeparators(CommandLine.arguments[1], voices: voices)
       try checkMixedPlayback(CommandLine.arguments[1], voices: voices)
       let token = ov_ios_token_new()!
       let pcm = ov_ios_tone(660, 480, 1, token)!
