@@ -535,6 +535,8 @@ so this value never determines when a submitted turn is spoken."
     (define-key emacsvox-agent-shell--speech-control-map (kbd key) #'ignore))
   (define-key emacsvox-agent-shell--speech-control-map (kbd "C-c C-q")
               #'emacsvox-agent-shell-select-speech-level)
+  (define-key emacsvox-agent-shell--speech-control-map (kbd "C-c q")
+              #'emacsvox-agent-shell-jump-to-pending-question)
   (define-key emacsvox-agent-shell--speech-control-map (kbd "C-c C-S-q")
               #'emacsvox-agent-shell-select-background-speech-level)
   (define-key emacsvox-agent-shell--speech-control-map (kbd "C-c C-b")

@@ -8430,6 +8430,10 @@ Function Index
                                                              (line   39)
 * emacsvox-agent-shell-enable <1>:       emacsvox-agent-shell.
                                                              (line   40)
+* emacsvox-agent-shell-jump-to-pending-question: emacsvox-agent-shell-interaction.
+                                                             (line   18)
+* emacsvox-agent-shell-jump-to-pending-question <1>: emacsvox-agent-shell-interaction.
+                                                             (line   19)
 * emacsvox-agent-shell-next-block-at-point: emacsvox-agent-shell-navigation.
                                                              (line   26)
 * emacsvox-agent-shell-next-block-at-point <1>: emacsvox-agent-shell-navigation.

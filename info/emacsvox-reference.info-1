@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1779 commands and 270 options.
+   This chapter documents a total of 1780 commands and 270 options.
 
 * Menu:
 
@@ -1579,6 +1579,18 @@ outcomes.  Keep callback generations and interaction snapshots with
 cleanup.  The facade owns advice installation and activation; event
 subscriptions call these helpers.  Load through 'emacsvox-agent-shell'.
 Loading definitions installs no advice or buffer hooks.
+
+2.20.1 Emacsvox-Agent-Shell-Interaction Commands
+------------------------------------------------
+
+2.20.1.1 emacsvox-agent-shell-jump-to-pending-question
+......................................................
+
+ -- Command: emacsvox-agent-shell-jump-to-pending-question
+
+     Move to this conversation’s newest unanswered question and speak it.
+     Use the selected window.  If no question is waiting, speak that result
+     and leave point and any unsent draft in place.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-agent-shell-motion,  Next: emacsvox-agent-shell-navigation,  Prev: emacsvox-agent-shell-interaction,  Up: Emacsvox Commands And Options

@@ -13236,6 +13236,37 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (mapcar (lambda (event) (substring-no-properties (cadr event)))
           (seq-filter (lambda (event) (memq (car event) '(speak notify))) events)))
 
+(ert-deftest emacsvox-agent-shell-jump-to-pending-question ()
+  "Skip settled forms, preserve the draft, and speak once for each jump."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell--table-navigation-setup)
+    (dolist (entry '((1 . "First question?") (2 . "Second question?") (3 . "Last question?")))
+      (let ((request (emacsvox-agent-shell-test--question-request)))
+        (setf (alist-get 'id request) (car entry)
+              (alist-get 'message (alist-get 'params request)) (cdr entry))
+        (emacsvox-agent-shell-test--capture-events
+          (agent-shell--on-request :state agent-shell--state :acp-request request))))
+    (cl-flet ((decline (id)
+                (emacsvox-agent-shell-test--capture-events
+                  (agent-shell-elicitation--respond :state agent-shell--state :id id :action 'decline)))
+              (jump ()
+                (emacsvox-agent-shell-test--question-speech
+                 (emacsvox-agent-shell-test--capture-events (execute-kbd-macro (kbd "C-c q"))))))
+      (decline 3)
+      (goto-char (point-max))
+      (let ((inhibit-read-only t)) (insert "\nUnsent draft"))
+      (should (equal (jump) '("Second question?")))
+      (should (string-match-p "Second question?" (ems--this-line)))
+      (decline 2)
+      (should (equal (jump) '("First question?")))
+      (decline 1)
+      (goto-char (point-max))
+      (backward-char 3)
+      (let ((origin (point)))
+        (should (equal (jump) '("No pending question.")))
+        (should (= origin (point)))
+        (should (string-suffix-p "Unsent draft" (buffer-string)))))))
+
 (ert-deftest emacsvox-agent-shell-question-arrival-respects-focus-and-quiet ()
   "A question announces once, on the appropriate lane, unless speech is quiet."
   (dolist (focused '(nil t))
@@ -13259,6 +13290,32 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (eq (caar delivered) (if focused 'main 'background)))
             (should (string-match-p "Answer needed.*Choose a destination" (cadar delivered)))
             (should (eq 'agent-question (plist-get (nth 2 (car delivered)) :role)))))))))
+
+(ert-deftest emacsvox-agent-shell-pending-question-from-viewport ()
+  "Stay on a page showing the form, or open its shell in the same window."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (let ((shell (current-buffer)) (rendered (buffer-string)) (window (selected-window)))
+      (dolist (view '(current-page earlier-page editor))
+        (with-temp-buffer
+          (let ((viewport (current-buffer)))
+            (insert (if (eq view 'current-page) rendered "Existing text"))
+            (setq major-mode (if (eq view 'editor) 'agent-shell-viewport-edit-mode
+                               'agent-shell-viewport-view-mode))
+            (use-local-map (symbol-value (intern (format "%s-map" major-mode))))
+            (switch-to-buffer viewport)
+            (emacsvox-agent-shell--table-navigation-setup)
+            (cl-letf (((symbol-function 'agent-shell-shell-buffer) (lambda (&rest _) shell)))
+              (should (equal '("Choose a destination")
+                             (emacsvox-agent-shell-test--question-speech
+                              (emacsvox-agent-shell-test--capture-events
+                                (execute-kbd-macro (kbd "C-c q")))))))
+            (should (eq (selected-window) window))
+            (should (eq (window-buffer window) (if (eq view 'current-page) viewport shell)))
+            (when (eq view 'editor)
+              (with-current-buffer viewport (should (equal (buffer-string) "Existing text"))))))))))
 
 (ert-deftest emacsvox-agent-shell-question-controls-confirm-state-and-preview ()
   "Choices, checkboxes, edits and previews speak confirmed semantic values."
@@ -13634,6 +13691,33 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let ((agent-shell--version "0.85.2"))
     (should-error (emacsvox-agent-shell-enable) :type 'user-error)))
 
+
+(ert-deftest emacsvox-agent-shell-pending-question-graphical-frames ()
+  "Each frame jumps and speaks independently in a shared conversation."
+  (skip-unless (display-graphic-p))
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (emacsvox-agent-shell--table-navigation-setup)
+    (let ((shell (current-buffer)) (first (selected-frame)) (second (make-frame)))
+      (unwind-protect
+          (progn
+            (set-window-buffer (frame-selected-window second) shell)
+            (dolist (frame (list first second))
+              (with-selected-frame frame
+                (let ((peer (frame-selected-window (if (eq frame first) second first))) heard)
+                  (goto-char (point-max))
+                  (set-window-point peer (point-min))
+                  (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                             (lambda (text &rest _) (push (cons (selected-frame) text) heard))))
+                    (execute-kbd-macro (kbd "C-c q")))
+                  (redisplay t)
+                  (should (equal heard (list (cons frame "Choose a destination"))))
+                  (should (get-text-property (point) 'agent-shell-elicitation-form-start))
+                  (should (pos-visible-in-window-p (point)))
+                  (should (= (window-point peer) (point-min)))))))
+        (delete-frame second t)))))
 
 (ert-deftest emacsvox-agent-shell-question-graphical-controls ()
   "Rendered question controls remain visible and operable in a real frame."

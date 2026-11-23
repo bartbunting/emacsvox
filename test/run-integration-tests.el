@@ -22,6 +22,7 @@
     emacsvox-agent-shell-explicit-input-graphical-prompt-label
     emacsvox-agent-shell-diff-headings-graphical-navigation
     emacsvox-agent-shell-question-graphical-controls
+    emacsvox-agent-shell-pending-question-graphical-frames
     emacsvox-agent-shell-streamed-output-graphical-reading
     emacsvox-agent-shell-live-input-graphical-visual-speech
     emacsvox-agent-shell-live-input-graphical-wrapped-speech

@@ -51,6 +51,7 @@
                   "emacsvox-agent-shell-presentation" (facts occasion icon text &optional delivery-policy))
 (declare-function emacsvox-agent-shell--session-buffer
                   "emacsvox-agent-shell-presentation" (&optional buffer))
+(declare-function emacsvox-agent-shell--nonempty-text "emacsvox-agent-shell-presentation" (value))
 (declare-function emacsvox-agent-shell--submit-text-feedback
                   "emacsvox-agent-shell-presentation" (text facts occasion &optional icon delivery-policy replacement-key))
 (declare-function agent-shell-elicitation--preview-open-p "agent-shell-elicitation" (elicitation key value))
@@ -176,6 +177,47 @@ Resolve form values in the owning shell, including from a viewport."
           (seq-find (lambda (field)
                       (equal (map-elt field :key) (map-elt control :key)))
                     (map-elt form :fields)))))
+
+(defun emacsvox-agent-shell--pending-question-location (ids)
+  "Return (ID . POSITION) for the last rendered form with an ID in IDS."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-max))
+      (when-let* ((control (text-property-search-backward
+                            'agent-shell-elicitation-control ids
+                            (lambda (ids control)
+                              (and control (member (map-elt control :id) ids)))))
+                  (heading (text-property-search-backward 'agent-shell-elicitation-form-start t t)))
+        (cons (map-elt (prop-match-value control) :id) (prop-match-beginning heading))))))
+
+(defun emacsvox-agent-shell-jump-to-pending-question ()
+  "Move to this conversation's newest unanswered question and speak it.
+Use the selected window.  If no question is waiting, speak that result
+and leave point and any unsent draft in place."
+  (declare (modes agent-shell-mode agent-shell-viewport-view-mode agent-shell-viewport-edit-mode))
+  (interactive)
+  (let* ((shell (emacsvox-agent-shell--session-buffer))
+         (forms (map-elt (buffer-local-value 'agent-shell--state shell) :elicitations))
+         (pending (cl-loop for (id . form) in forms
+                           when (eq (map-elt form :status) 'pending) collect id))
+         (target (and pending (with-current-buffer shell
+                                (emacsvox-agent-shell--pending-question-location pending)))))
+    (if (not target)
+        (emacsvox-agent-shell--submit-text-feedback
+         "No pending question." '(:role agent-question) 'navigation)
+      (unless (eq (current-buffer) shell)
+        (if-let* (((derived-mode-p 'agent-shell-viewport-view-mode))
+                  (here (emacsvox-agent-shell--pending-question-location (list (car target)))))
+            (setq target here)
+          (switch-to-buffer shell nil t)))
+      (unless (<= (point-min) (cdr target) (point-max)) (widen))
+      (goto-char (cdr target))
+      (deactivate-mark)
+      (emacsvox-agent-shell--submit-text-feedback
+       (or (emacsvox-agent-shell--nonempty-text (map-nested-elt forms (list (car target) :message)))
+           (string-trim (ems--this-line)))
+       '(:role agent-question) 'navigation 'item))))
 
 (defun emacsvox-agent-shell--question-presentation (control form field)
   "Return speech and semantic facts for CONTROL in FORM and FIELD."

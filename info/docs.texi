@@ -87,7 +87,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1779 commands and 270 options.
+This chapter documents a total of 1780 commands and 270 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -1404,6 +1404,19 @@ The facade owns advice installation and activation; event subscriptions call
 these helpers.
 Load through `emacsvox-agent-shell'. Loading definitions installs no advice
 or buffer hooks.
+
+@subsection Emacsvox-Agent-Shell-Interaction Commands
+
+@subsubsection emacsvox-agent-shell-jump-to-pending-question
+@deffn {Command} emacsvox-agent-shell-jump-to-pending-question
+@findex emacsvox-agent-shell-jump-to-pending-question
+
+@format
+Move to this conversation’s newest unanswered question and speak it.
+Use the selected window.  If no question is waiting, speak that result
+and leave point and any unsent draft in place.
+@end format
+@end deffn
 
 @node emacsvox-agent-shell-motion
 @section emacsvox-agent-shell-motion
@@ -12979,7 +12992,6 @@ Second interactive prefix arg toggles default value of this flag.
 The h2 is automatically spoken if there is no user activity.
 @end format
 @end deffn
-
 @subsubsection emacsvox-eww-next-h3
 @deffn {Command} emacsvox-eww-next-h3  (&optional speak)
 @findex emacsvox-eww-next-h3
