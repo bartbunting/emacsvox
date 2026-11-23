@@ -133,13 +133,18 @@ and =M-x omnivox-list-voices= also open the phone browser. If you reconnect
 while browsing, the list returns to the same installed voice and sends the
 next preview to the new connection. Press =p= or
 =P= for an exact preview, Return to
-apply across the phone's reading roles, =r= to give a named role a
+use it as the phone's reading fallback, =r= to give a named role a
 different voice, =v= for rate, character scale, pitch, speech volume,
 tone volume or earcon volume, and =g= to refresh. Apply waits for both
 workers' replies. The phone profile is saved in =iphone-omnivox.json=
 under the Emacs user directory. Phone sessions using this directory share
-those choices. The desktop palette supplies the role names and keeps its
-own physical voice assignments. VoiceOver chooses its voice separately.
+those choices. Both connections use the palette's ordered choices for
+each role. Each speech server takes the first voice it can use. For
+example, list DECtalk Harry followed by iOS Flo for Dired directories.
+A desktop with Harry reads a directory in Harry, and an iPhone with Flo
+reads it in Flo. A phone-only assignment made with =r= takes priority for
+that role. The phone uses its reading fallback when the role has no
+usable choice. VoiceOver chooses its voice separately.
 With no phone volume override, the main and notification workers inherit
 their respective Emacs tone and earcon levels. Notification speech also
 inherits its Emacs volume. Setting a phone volume to zero mutes that

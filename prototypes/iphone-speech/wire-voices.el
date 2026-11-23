@@ -37,32 +37,37 @@
             (setq iphone-frame-speech--settings settings))
         (when (file-exists-p tmp) (delete-file tmp))))))
 
-(defun iphone-voices--project-choices (definition provenance voices native)
-  "Give VOICES priority in a phone copy of DEFINITION and its client PROVENANCE."
-  (let* ((remaining (copy-sequence (plist-get provenance :choices)))
-         (used (mapcar (lambda (row) (plist-get row :id)) remaining))
+(defun iphone-voices--ordered-choices (choices override reading voice-id make-row)
+  "Put OVERRIDE first and use READING after the ordered role CHOICES.
+VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
+  (let ((rows (append choices nil)))
+    (when override
+      (let ((match (cl-find override rows :key voice-id :test #'equal)))
+        (setq rows (cons (or match (funcall make-row override)) (delq match rows)))))
+    (when (and reading (< (length rows) 32)
+               (not (cl-find reading rows :key voice-id :test #'equal)))
+      (setq rows (append rows (list (funcall make-row reading)))))
+    (seq-take rows 32)))
+
+(defun iphone-voices--project-choices (definition provenance override reading native)
+  "Apply the phone role OVERRIDE and READING fallback to a layered DEFINITION."
+  (let* ((choices (plist-get provenance :choices))
+         (used (mapcar (lambda (row) (plist-get row :id)) choices))
          (wire (plist-get definition :choices))
-         selected)
-    (dolist (voice voices)
-      (let ((match (seq-find
-                    (lambda (row)
-                      (let ((selector (plist-get row :selector)))
-                        (and (eq (plist-get selector :kind) 'exact)
-                             (equal (plist-get selector :engine-id) "ios")
-                             (equal (plist-get selector :voice-id) voice))))
-                    remaining)))
-        (if match
-            (progn (push match selected) (setq remaining (delq match remaining)))
-          ;; New phone assignments inherit the shared style. Only the original
-          ;; occurrence of a tuned choice owns its adjustments.
-          (let* ((base (concat "iphone-" (secure-hash 'sha256 voice)))
-                 (id base) (serial 0))
-            (while (member id used) (setq id (format "%s-%d" base (cl-incf serial))))
-            (push id used)
-            (push (list :id id :selector (list :kind 'exact :scope 'local :engine-id "ios"
-                                               :voice-id voice) :adjustments nil)
-                  selected)))))
-    (let ((rows (seq-take (append (nreverse selected) remaining) 32)))
+         (rows (iphone-voices--ordered-choices
+                choices override reading
+                (lambda (row)
+                  (let ((s (plist-get row :selector)))
+                    (and (eq (plist-get s :kind) 'exact) (equal (plist-get s :engine-id) "ios")
+                         (plist-get s :voice-id))))
+                (lambda (voice)
+                  (let* ((base (concat "iphone-" (secure-hash 'sha256 voice)))
+                         (id base) (serial 0))
+                    (while (member id used) (setq id (format "%s-%d" base (cl-incf serial))))
+                    (push id used)
+                    (list :id id :selector (list :kind 'exact :scope 'local :engine-id "ios"
+                                                 :voice-id voice) :adjustments nil))))))
+    (unless (equal rows choices)
       (setf (plist-get provenance :choices) rows
             (plist-get provenance :choice-source) 'local
             (plist-get definition :choices)
@@ -73,6 +78,30 @@
                            (aref (if native (omnivox--native-choice-records-json (list row))
                                    (omnivox--choice-records-json (list row))) 0)))
                      rows))))))
+
+(defun iphone-voices--legacy-preferences (definition override reading exact)
+  "Apply phone choices before implicit engine defaults in a legacy DEFINITION."
+  (let* ((id (plist-get definition :id))
+         (prefs (append (plist-get definition :preferences) nil))
+         (wildcard (omnivox--selector-json '(properties)))
+         ;; Older registrations put both authored choices and automatic engine
+         ;; defaults in the same list. An explicitly chosen engine default or
+         ;; wildcard keeps its place alongside the authored physical voices.
+         (generated (voice-setup--generated-acss-p (intern-soft id)))
+         (owned (unless generated (emacsvox-aural-voice-runtime--owned id)))
+         (configured (unless generated
+                       (if owned (plist-get owned :selectors)
+                         (omnivox--logical-setting id omnivox-logical-voice-preferences))))
+         (last-specific (cl-position-if-not
+                         (lambda (s) (or (equal (plist-get s :kind) "engine_default") (equal s wildcard)))
+                         prefs :from-end t))
+         (count (max (length configured) (if last-specific (1+ last-specific) 0)))
+         (rows (iphone-voices--ordered-choices
+                (seq-take prefs count) override reading
+                (lambda (s) (and (equal (plist-get s :kind) "exact") (equal (plist-get s :engine_id) "ios")
+                                 (plist-get s :voice_id)))
+                exact)))
+    (vconcat (seq-take (append rows (nthcdr count prefs)) 32))))
 
 (defun iphone-voices--registration (original process)
   (let ((content (funcall original process)))
@@ -96,17 +125,15 @@
                  (definition (or (plist-get row :definition) row))
                  (id (plist-get definition :id))
                  (role (cl-find id roles :test #'equal :key (lambda (r) (plist-get r :role))))
-                 (voices (seq-uniq (seq-filter #'iphone-voices--id-p (list (plist-get role :voice) base)))))
-            (when voices
+                 (override (and (iphone-voices--id-p (plist-get role :voice)) (plist-get role :voice)))
+                 (reading (and (equal base fallback) (iphone-voices--id-p base) base)))
+            (when (or override reading)
               (if (member mode '("layered" "engine_layered"))
                   (when-let* ((source (cl-find id (plist-get copy :choice-provenance)
                                               :test #'equal :key (lambda (r) (plist-get r :logical-id)))))
-                    (iphone-voices--project-choices definition source voices (equal mode "engine_layered")))
-                (let* ((first (mapcar exact voices))
-                       (rest (seq-remove (lambda (s) (member s first))
-                                         (plist-get definition :preferences))))
-                  (setf (plist-get definition :preferences)
-                        (vconcat (seq-take (append first rest) 32))))))))
+                    (iphone-voices--project-choices definition source override reading (equal mode "engine_layered")))
+                (setf (plist-get definition :preferences)
+                      (iphone-voices--legacy-preferences definition override reading exact))))))
         (when (iphone-voices--id-p fallback)
           (setf (plist-get (plist-get copy :fallback_policy) :global_default) (funcall exact fallback)))
         copy))))
