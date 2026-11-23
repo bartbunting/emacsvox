@@ -432,6 +432,7 @@ async function main() {
           ['H-x', 'x', {code:'KeyX'}], ['C-H-f', 'f', {code:'KeyF', ctrlKey:true}],
           ['H-M-r', 'r', {code:'KeyR', altKey:true}], ['H-<left>', 'ArrowLeft', {}],
           ['H->', '>', {code:'Period', shiftKey:true}],
+          ['H-S-<f7>', 'F7', {shiftKey:true}],
         ];
         await observe(`(with-selected-window ${phoneWindow} (use-local-map (copy-keymap (current-local-map)))
           (setq-local iphone-test-hyper-events nil)
@@ -442,19 +443,25 @@ async function main() {
             (equal (car iphone-test-hyper-events) "${name}"))`) === 't');
         }
         const atPoint = async position => (await observe('(window-point ' + phoneWindow + ')')) === String(position);
-        const shifted = Array.from('abcdefghijklmnopqrstuvwxyz', letter => [
+        const keyCases = Array.from('abcdefghijklmnopqrstuvwxyz', letter => [
           'C-S-' + letter, String.fromCharCode(letter.charCodeAt(0) & 31),
           {code:'Key' + letter.toUpperCase(), ctrlKey:true, shiftKey:true}]);
-        shifted.push(['C-<backspace>', 'Backspace', {ctrlKey:true}], ['S-<escape>', 'Escape', {shiftKey:true}],
+        for (let n = 1; n <= 12; n++) {
+          keyCases.push([`<f${n}>`, `F${n}`, {}], [`S-<f${n}>`, `F${n}`, {shiftKey:true}]);
+        }
+        keyCases.push(['C-<backspace>', 'Backspace', {ctrlKey:true}], ['S-<escape>', 'Escape', {shiftKey:true}],
+          ['M-<f3>', 'F3', {altKey:true}], ['C-<f6>', 'F6', {ctrlKey:true}],
           ['C-S-<up>', 'ArrowUp', {ctrlKey:true, shiftKey:true}], ['C-S-<f5>', 'F5', {ctrlKey:true, shiftKey:true}],
           ['C-S-<tab>', 'Tab', {ctrlKey:true, shiftKey:true}], ['C-S-<return>', 'Enter', {ctrlKey:true, shiftKey:true}]);
-        await observe('(with-selected-window ' + phoneWindow + ' (setq-local iphone-test-shifted nil) ' +
-          shifted.map(([name]) => '(local-set-key (kbd "' + name + '") (lambda () (interactive) ' +
-            '(setq-local iphone-test-shifted (this-command-keys-vector))))').join(' ') + ')');
-        for (const [name, key, modifiers] of shifted) {
+        // A binding for F18 must not take precedence over the phone's explicit Shift+F6.
+        await observe('(with-selected-window ' + phoneWindow + ' (setq-local iphone-test-key-event nil) ' +
+          '(dolist (n (number-sequence 13 63)) (local-set-key (vector (intern (format "f%d" n))) (quote ignore))) ' +
+          keyCases.map(([name]) => '(local-set-key (kbd "' + name + '") (lambda () (interactive) ' +
+            '(setq-local iphone-test-key-event (this-command-keys-vector))))').join(' ') + ')');
+        for (const [name, key, modifiers] of keyCases) {
           assert.ok(field.down(key, modifiers));
           await until('SSH receives ' + name, async () => await observe('(with-selected-window ' +
-            phoneWindow + ' (equal iphone-test-shifted (kbd "' + name + '")))') === 't');
+            phoneWindow + ' (equal iphone-test-key-event (kbd "' + name + '")))') === 't');
         }
         const expectedWidth = await observe('(frame-width (window-frame ' + phoneWindow + '))');
         assert.ok(field.down(';', {code:'Semicolon', altKey:true, shiftKey:true}));
@@ -474,7 +481,7 @@ async function main() {
         await until('SSH Escape then Control+f', () => atPoint(23));
         assert.equal(await observe('(with-current-buffer "Phone modifier sample" (buffer-substring-no-properties (point-min) (point-max)))'),
           '"(one two) (three four)"');
-        console.log('Passed Meta buffer boundaries and both Control+Meta inputs through the Swift SSH client to Emacs.');
+        console.log('Passed plain and shifted F1 to F12, Meta buffer boundaries and both Control+Meta inputs through native SSH.');
         const draft = 'Started on PC first and phone';
         await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer)
           (goto-char (point-max)) (emacsvox-agent-shell-edit-input))`);

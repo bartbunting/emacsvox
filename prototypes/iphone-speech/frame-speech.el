@@ -329,10 +329,29 @@
 
 (defvar iphone-frame-speech--hyper-map nil)
 
+(defun iphone-frame-speech--install-function-keys (map)
+  "Decode the phone's explicit F1 through F12 modifiers in MAP.
+Terminfo can name Shift+F6 as F18, which has a separate Emacs binding."
+  (dolist (bits (append (number-sequence 1 7) (number-sequence 16 23)))
+    (let ((mods (append (when (/= 0 (logand bits 1)) '(shift))
+                        (when (/= 0 (logand bits 2)) '(meta))
+                        (when (/= 0 (logand bits 4)) '(control))
+                        (when (/= 0 (logand bits 16)) '(hyper)))))
+      (dolist (key '((f1 . "\e[1;%dP") (f2 . "\e[1;%dQ") (f3 . "\e[1;%dR") (f4 . "\e[1;%dS")
+                     (f5 . "\e[15;%d~") (f6 . "\e[17;%d~") (f7 . "\e[18;%d~") (f8 . "\e[19;%d~")
+                     (f9 . "\e[20;%d~") (f10 . "\e[21;%d~") (f11 . "\e[23;%d~") (f12 . "\e[24;%d~")))
+        (define-key map (format (cdr key) (1+ bits))
+                    (vector (event-convert-list (append mods (list (car key))))))))))
+
+;; Connected phone terminals share this map when the launcher reloads.
+(when iphone-frame-speech--hyper-map
+  (iphone-frame-speech--install-function-keys iphone-frame-speech--hyper-map))
+
 (defun iphone-frame-speech--enable-hyper ()
   "Decode the phone keyboard's extended modifier sequences on its SSH terminal."
   (unless iphone-frame-speech--hyper-map
     (let ((map (make-sparse-keymap)))
+      (iphone-frame-speech--install-function-keys map)
       (dolist (bits '(1 3 4 5 6 7))
         (let ((mods (append (when (/= 0 (logand bits 1)) '(shift))
                             (when (/= 0 (logand bits 2)) '(meta))
@@ -356,11 +375,8 @@
             (define-key map (format "\e[%d;%du" code modifier)
                         (vector (event-convert-list (append mods (list code))))))
           (dolist (pair '((up . "1;%dA") (down . "1;%dB") (right . "1;%dC") (left . "1;%dD")
-                          (home . "1;%dH") (end . "1;%dF") (f1 . "1;%dP") (f2 . "1;%dQ")
-                          (f3 . "1;%dR") (f4 . "1;%dS") (insert . "2;%d~") (delete . "3;%d~")
-                          (prior . "5;%d~") (next . "6;%d~") (f5 . "15;%d~") (f6 . "17;%d~")
-                          (f7 . "18;%d~") (f8 . "19;%d~") (f9 . "20;%d~") (f10 . "21;%d~")
-                          (f11 . "23;%d~") (f12 . "24;%d~")))
+                          (home . "1;%dH") (end . "1;%dF") (insert . "2;%d~") (delete . "3;%d~")
+                          (prior . "5;%d~") (next . "6;%d~")))
             (define-key map (concat "\e[" (format (cdr pair) modifier))
                         (vector (event-convert-list (append mods (list (car pair)))))))))
       ;; A diagnostic key carries a trial number without entering the buffer.

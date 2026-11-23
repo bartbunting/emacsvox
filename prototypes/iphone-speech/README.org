@@ -365,6 +365,10 @@ If the keyboard sends no Windows chords, check its manual for a Windows-key lock
 In any Emacs terminal, =C-x @ h= followed by a letter also enters Hyper
 for that letter.
 
+In the Emacs keyboard field, Shift works with F1 through F12. To check
+your binding, press =C-h k=, then hold Shift and press F6. Emacs reports
+=S-<f6>= and names the command bound to it in the current buffer.
+
 * Try the external keyboard in Expo Go
 
 Connect the keyboard to your iPhone and leave VoiceOver on. This test
