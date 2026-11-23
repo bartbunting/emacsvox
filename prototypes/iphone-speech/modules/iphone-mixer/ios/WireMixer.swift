@@ -91,7 +91,7 @@ final class WireMixer {
 
   private func tones(_ items: [WireItem]) -> Bool {
     items.allSatisfy {
-      ov_ios_mix_tone(clock, $0.placement == .insert, $0.hz ?? 0, $0.ms ?? 0, $0.gain ?? 1, token.pointer)
+      $0.queueTone(clock, token: token.pointer)
     }
   }
 

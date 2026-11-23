@@ -87,7 +87,7 @@ private final class EffectStream {
       render.async { [weak self, resources, format] in
         let pcm: OpaquePointer?
         if item.kind == .tone {
-          pcm = ov_ios_tone(item.hz ?? 0, item.ms ?? 0, item.gain ?? 1, token.pointer)
+          pcm = item.tonePCM(token.pointer)
         } else {
           let id = item.path ?? ""
           pcm = resources.sound(id, gain: item.gain ?? 1, token: token.pointer)

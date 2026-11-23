@@ -70,7 +70,7 @@ final class TestOutput: WireOutput {
     started.append(item.kind)
     let pcm: OpaquePointer?
     switch item.kind {
-    case .tone: pcm = ov_ios_tone(item.hz!, item.ms!, item.gain!, token)
+    case .tone: pcm = item.tonePCM(token)
     case .sound: pcm = ov_ios_sound(loader, item.path!, item.gain!, token)
     default:
       if item.kind == .speech { observeSpeech?(item) }
@@ -141,6 +141,7 @@ final class TestOutput: WireOutput {
       try feed("tts_set_tone_volume 1")
       try feed("tts_set_voice {test-1}")
       print("The desktop timeline supplied one intact TestCase with both capital positions and the selected phone voice.")
+      try checkShapedTones(CommandLine.arguments[1])
       try checkPalettePlayback(CommandLine.arguments[1], voices: voices)
       try checkTimelinePlayback(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMissingWordTiming(CommandLine.arguments[1], voices: voices, envelope: envelope)

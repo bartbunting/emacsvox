@@ -382,3 +382,28 @@ func checkPalettePlayback(_ root: String, voices: String) throws {
   try lane.feed(record("emacsvox_letter", document), muted: true)
   precondition(replies.last == "__EMACSVOX_TRACKED__ 93 cancelled" && output.finishes.isEmpty)
 }
+
+func checkShapedTones(_ root: String) throws {
+  let output = TestOutput(root), lane = WireLane(output) { _ in }
+  let command = "emacsvox_tone 3 insert 440 40 0.35 pulse adsr 1 5 0.4 10 0.25 880 exponential"
+  try lane.feed(command, muted: false)
+  var dispatch = UInt8(ascii: "d")
+  let reply = ov_ios_record(lane.worker, &dispatch, 1)!
+  defer { ov_ios_string_free(reply) }
+  let batch = try JSONDecoder().decode(WireAction.self, from: Data(bytes: reply, count: strlen(reply)))
+  let item = batch.items!.first!, clock = ov_ios_mix_new()!, token = ov_ios_token_new()!
+  defer { ov_ios_mix_free(clock); ov_ios_token_free(token) }
+  let pcm = item.tonePCM(token)!, plain = ov_ios_tone(440, 40, 0.35, token)!
+  defer { ov_ios_pcm_free(pcm); ov_ios_pcm_free(plain) }
+  let count = ov_ios_frames(pcm) * 2
+  let isolated = Array(UnsafeBufferPointer(start: ov_ios_samples(pcm), count: count))
+  precondition(count == 3528 && !isolated.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(plain), count: count)))
+  precondition(item.queueTone(clock, token: token))
+  var tail: OpaquePointer?
+  let insert = ov_ios_mix_finish(clock, true, &tail, token)!
+  defer { ov_ios_pcm_free(insert) }
+  precondition(tail == nil && ov_ios_frames(insert) * 2 == count)
+  precondition(isolated.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(insert), count: count)))
+  ov_ios_cancel(token)
+  precondition(item.tonePCM(token) == nil && !item.queueTone(clock, token: token))
+}

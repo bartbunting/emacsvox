@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
+import OmnivoxMobile
 
 struct WireItem: Decodable {
   enum Kind: String, Decodable { case speech, tone, silence, sound }
@@ -8,10 +9,20 @@ struct WireItem: Decodable {
   let kind: Kind
   var placement: Placement?
   var text: String?, voice: String?, rate: Float?, pitch: Float?, gain: Float?
-  var path: String?, hz: Float?, ms: UInt32?
+  var path: String?, hz: Float?, ms: UInt32?, recipe: String?
   var marks: [WireToneMark]?
   var anchors: [WireAnchor]?
   var startMarker: String?
+  func tonePCM(_ token: OpaquePointer) -> OpaquePointer? {
+    if let recipe { return ov_ios_shaped_tone(recipe, token) }
+    return ov_ios_tone(hz ?? 0, ms ?? 0, gain ?? 1, token)
+  }
+
+  func queueTone(_ clock: OpaquePointer, token: OpaquePointer) -> Bool {
+    if let recipe { return ov_ios_mix_shaped_tone(clock, placement == .insert, recipe, token) }
+    return ov_ios_mix_tone(clock, placement == .insert, hz ?? 0, ms ?? 0, gain ?? 1, token)
+  }
+
 }
 
 struct WireToneMark: Decodable {
