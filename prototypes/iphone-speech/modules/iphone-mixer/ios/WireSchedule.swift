@@ -1,0 +1,149 @@
+// Copyright (C) 2026 Emacsvox contributors
+// SPDX-License-Identifier: GPL-2.0-or-later
+import Foundation
+
+struct WireItem: Decodable {
+  enum Kind: String, Decodable { case speech, tone, silence, sound }
+  enum Placement: String, Decodable { case independent, insert, overlay }
+  let kind: Kind
+  var placement: Placement?
+  var text: String?, voice: String?, rate: Float?, pitch: Float?, gain: Float?
+  var path: String?, hz: Float?, ms: UInt32?
+}
+
+struct WireReceipts: Decodable {
+  let completed: String, failed: String, cancelled: String
+}
+
+struct WireAction: Decodable {
+  enum Op: String, Decodable { case reply, batch, immediate, stop, exit }
+  let op: Op
+  var line: String?, items: [WireItem]?, item: WireItem?, receipts: WireReceipts?
+}
+
+protocol WireOutput: AnyObject {
+  // Each callback runs once on the owning queue, after playback or failure.
+  func play(_ item: WireItem, done: @escaping (Bool) -> Void)
+  func stop(all: Bool)
+}
+
+private final class WireBatch {
+  let items: [WireItem], receipts: WireReceipts?, bytes: Int
+  let done: ((Bool) -> Void)?
+  var index = 0, outstanding = 0, failed = false, finished = false
+  init(_ items: [WireItem], _ receipts: WireReceipts?, _ bytes: Int, _ done: ((Bool) -> Void)?) {
+    self.done = done
+    self.items = items
+    self.receipts = receipts
+    self.bytes = bytes
+  }
+}
+
+// One scheduler per worker. Speech and silence share a clock. Sound has a FIFO
+// of its own and a queued icon starts when preceding speech reaches its boundary.
+final class WireSchedule {
+  private let output: WireOutput, reply: (String) -> Void
+  private var waiting: [WireBatch] = [], live: [ObjectIdentifier: WireBatch] = [:]
+  private var bytes = 0, blocked = false, advancing = false
+
+  init(_ output: WireOutput, reply: @escaping (String) -> Void) {
+    self.output = output
+    self.reply = reply
+  }
+
+  func submit(_ action: WireAction, bytes size: Int) {
+    switch action.op {
+    case .reply: if let line = action.line { reply(line) }
+    case .stop, .exit: stop(all: true)
+    case .immediate:
+      guard let item = action.item else { return }
+      if item.kind == .speech { stop(all: false) }
+      admit([item], nil, size, immediate: item.kind == .sound)
+    case .batch: admit(action.items ?? [], action.receipts, size, immediate: false)
+    }
+  }
+
+  func diagnosticEffect(_ item: WireItem, done: @escaping (Bool) -> Void) {
+    admit([item], nil, 0, immediate: true, done: done)
+  }
+
+  func permission(_ item: WireItem, done: @escaping (Bool) -> Void) {
+    stop(all: false)
+    admit([item], nil, item.text?.utf8.count ?? 0, immediate: false, done: done)
+  }
+
+  private func admit(_ items: [WireItem], _ receipts: WireReceipts?, _ size: Int, immediate: Bool, done: ((Bool) -> Void)? = nil) {
+    guard live.count < 33, size <= 32 * 1024 * 1024 - bytes else {
+      done?(false)
+      if let receipts { reply(receipts.failed) }
+      return
+    }
+    let job = WireBatch(items, receipts, size, done)
+    live[ObjectIdentifier(job)] = job
+    bytes += size
+    if immediate {
+      job.index = job.items.count
+      start(items[0], job, clock: false)
+      finishIfPlayed(job)
+    } else {
+      waiting.append(job)
+      // Independent tones start at dispatch, including tones following speech.
+      for tone in items where tone.kind == .tone && tone.placement == .independent { start(tone, job, clock: false) }
+      advance()
+    }
+  }
+
+  func stop(all: Bool) {
+    let cancelled = Array(live.values)
+    waiting.removeAll()
+    live.removeAll()
+    bytes = 0
+    blocked = false
+    for job in cancelled { job.finished = true }
+    output.stop(all: all)
+    for job in cancelled {
+      job.done?(false)
+      if let receipts = job.receipts { reply(receipts.cancelled) }
+    }
+  }
+
+  private func advance() {
+    guard !advancing else { return }
+    advancing = true
+    defer { advancing = false }
+    while !blocked, let job = waiting.first {
+      if job.index == job.items.count {
+        waiting.removeFirst()
+        finishIfPlayed(job)
+        continue
+      }
+      let item = job.items[job.index]
+      job.index += 1
+      if item.kind == .tone && item.placement == .independent { continue }
+      let clock = item.kind == .speech || item.kind == .silence || item.placement == .insert
+      blocked = clock
+      start(item, job, clock: clock)
+    }
+  }
+
+  private func start(_ item: WireItem, _ job: WireBatch, clock: Bool) {
+    job.outstanding += 1
+    output.play(item) { [weak self, weak job] ok in
+      guard let self, let job, !job.finished else { return }
+      job.failed = job.failed || !ok
+      job.outstanding -= 1
+      if clock { self.blocked = false }
+      self.finishIfPlayed(job)
+      if clock { self.advance() }
+    }
+  }
+
+  private func finishIfPlayed(_ job: WireBatch) {
+    guard !job.finished, job.index == job.items.count, job.outstanding == 0 else { return }
+    job.finished = true
+    bytes -= job.bytes
+    live.removeValue(forKey: ObjectIdentifier(job))
+    job.done?(!job.failed)
+    if let receipts = job.receipts { reply(job.failed ? receipts.failed : receipts.completed) }
+  }
+}

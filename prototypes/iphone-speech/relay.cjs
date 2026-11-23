@@ -9,6 +9,8 @@ const path = require('node:path');
 const { WebSocketServer, WebSocket } = require('ws');
 const { attachTerminal, openPhoneFrame, frameControl, sshOffer } = require('./terminal.cjs');
 
+const {wireEndpoint, recordLimit} = require('./wire.cjs');
+
 const maxBytes = 512 * 1024;
 const openObject = {type: 'cue', name: 'open-object'};
 const resource = path.resolve(__dirname, '../../sounds/packs/accent/open-object.ogg');
@@ -203,13 +205,15 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
       '<a href="exp://' + host + ':' + metroPort + '">Open receiver in Expo Go</a></main>');
   });
   const wss = new WebSocketServer({ noServer: true, maxPayload: terminalSocket ? 2048 : 256, perMessageDeflate: false });
+  const rawWss = new WebSocketServer({ noServer: true, maxPayload: recordLimit + 2, perMessageDeflate: false });
   httpServer.on('upgrade', (req, socket, head) => {
     // The native iOS WebSocket may supply its own endpoint as Origin.
     const origin = req.headers.origin;
-    const ssh = routed && req.url === '/speech/ssh';
+    const raw = routed && req.url === '/speech/ssh/omnivox';
+    const ssh = raw || (routed && req.url === '/speech/ssh');
     if (req.socket.remoteAddress !== peer || (!ssh && (sshOnly || req.url !== '/speech')) ||
         (origin && origin !== 'http://' + host + ':' + port)) return socket.destroy();
-    wss.handleUpgrade(req, socket, head, ws => {
+    (raw ? rawWss : wss).handleUpgrade(req, socket, head, ws => {
       const previous = phone;
       terminal?.close();
       terminal = undefined;
@@ -218,25 +222,37 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
       input?.invalidate();
       const session = sharedDirectory && 'phone-' + randomUUID();
       let lastSeen = Date.now(), readyId = 0, attached = false;
+      let frameAttached = false, voicesReady = false, setupDeadline;
       const control = (action, serial = 0) =>
         frameControl(sharedDirectory, session, action, serial).catch(() => ws.terminate());
       const receiveControl = packet => {
         if (phone !== ws || !packet) return;
-        if (packet.type === 'attached' && packet.id === session && ssh && !attached) connected();
+        if (ssh && packet.id === session && !attached && ['attached', 'routing-ready'].includes(packet.type)) {
+          if (packet.type === 'attached') {
+            frameAttached = true;
+            if (raw) { setupDeadline = Date.now() + 15000; send({type: 'discovering'}); }
+          } else voicesReady = true;
+          if (frameAttached && (!raw || voicesReady)) connected();
+        }
         else if (packet.type === 'stop-all') send({type: 'stop', scope: 'all'});
         else if (packet.type === 'reset-done' && packet.id === readyId && attached) send({type: 'ready', id: readyId});
         else if (attached && ['permission', 'resolved'].includes(packet.type) &&
                  typeof packet.id === 'string') send(packet);
       };
-      const endpoint = routed && frameSpeech(sharedDirectory, session,
+      const endpoint = raw ? wireEndpoint(sharedDirectory, session, message => {
+        if (phone !== ws || ws.readyState !== WebSocket.OPEN) return;
+        if (ws.bufferedAmount > recordLimit * 2) return ws.terminate();
+        ws.send(message);
+      }, receiveControl, () => ws.terminate()) : routed && frameSpeech(sharedDirectory, session,
         packet => { if (phone === ws) send(packet); }, receiveControl, () => ws.terminate());
       const timer = setInterval(() => {
-        if (Date.now() - lastSeen > 12000) ws.terminate();
+        if (setupDeadline && !attached && Date.now() > setupDeadline) ws.close(1011, 'Phone voice setup timed out');
+        else if (Date.now() - lastSeen > 12000) ws.terminate();
       }, 3000);
       ws.on('error', () => ws.terminate());
       ws.on('close', () => {
         clearInterval(timer);
-        if (ssh && attached) void frameControl(sharedDirectory, session, 'detach', 0).catch(() => {});
+        if (ssh && (attached || frameAttached)) void frameControl(sharedDirectory, session, 'detach', 0).catch(() => {});
         if (endpoint) endpoint.close();
         if (phone !== ws) return;
         terminal?.close();
@@ -248,11 +264,14 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         if (phone !== ws || binary) return ws.terminate();
         lastSeen = Date.now();
         const command = data.toString();
-        if (command === 'ping') send({ type: 'pong' });
+        if (raw && /^[MN] /.test(command)) {
+          if (!endpoint.reply(command)) ws.terminate();
+        } else if (command === 'ping') send({ type: 'pong' });
         else if (/^reset [0-9]{1,12}$/.test(command)) {
           input?.invalidate();
-          if (endpoint) endpoint.input.invalidate();
           readyId = Number(command.slice(6));
+          if (raw) endpoint.reset(readyId);
+          else if (endpoint) endpoint.input.invalidate();
           if (routed && attached) void control('stop', readyId);
           else if (!sharedDirectory || terminal) send({ type: 'ready', id: readyId });
         } else if (terminal && command.startsWith('key ') && command.length > 4) {
@@ -265,7 +284,8 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         if (phone !== ws || ws.readyState !== WebSocket.OPEN) { if (pane) pane.close(); return; }
         terminal = pane || undefined;
         attached = true;
-        send({ type: 'ready', id: readyId, ...(pane && {keyboard: true}) });
+        if (raw && readyId) void control('stop', readyId);
+        else send({ type: 'ready', id: readyId, ...(pane && {keyboard: true}) });
         if (routed) void control('sync');
       }
       if (sharedDirectory) Promise.resolve(endpoint && endpoint.listening).then(() => {

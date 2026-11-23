@@ -16,8 +16,80 @@ of recordings, and a separate synthesizer for permission requests. Its WSL
 relay interprets a subset of the legacy commands. It has no return path for
 Omnivox voice inventory or capability replies. Its Swift beep and cue player
 do not yet implement the desktop tone renderer or the full sound queue.
-The shared Rust core has compiled for the device and simulator from WSL.
-Linking it into the signed app is still ahead.
+The new native worker is available on the paired development branches.
+It uses Omnivox's parser, bounded pending batch, logical voice registry,
+control codec, 44.1 kHz stereo tone renderer and WAV/OGG decoder. Swift
+schedules the speech, sound and tone streams on the phone. The signed
+build 3 still uses the earlier receiver.
+
+** Try the native worker
+
+Start the opt-in SSH relay and test window with the commands below. Use your
+iPhone’s Tailscale address. Run the listener in a
+second WSL terminal if that listener is stopped.
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+read -rp 'iPhone Tailscale IPv4 address: ' phone
+./start-relay --standalone "$phone"
+#+end_src
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+read -rp 'iPhone Tailscale IPv4 address: ' phone
+read -rp 'Path to the iPhone public key: ' phone_key
+./phone-sshd "$phone" "$phone_key"
+#+end_src
+
+In a build containing the native worker, open Settings, turn on “Use
+Omnivox on iPhone”, save and connect. “Finding iPhone voices” precedes
+“Connected”. Both workers acknowledge their inventory and initial voice
+registration before the keyboard becomes ready. The first connection
+prefers an installed Eloquence Reed. The phone reading rate starts at 150.
+
+Open =M-x emacsvox-aural-voice-workbench= in the phone terminal. Its
+phone view shows one row per installed iOS identifier with name, language
+and quality. Move by line. Press =p= for an exact preview, Return to
+apply across the phone's reading roles, =r= to give a named role a
+different voice, =v= for rate, character scale, pitch, speech volume,
+tone volume or earcon volume, and =g= to refresh. Apply waits for both
+workers' replies. The phone profile is saved in =iphone-omnivox.json=
+under the Emacs user directory. The desktop keeps its own workbench.
+If iOS removes a saved voice, ordinary speech can use its fallback.
+Refresh shows the current inventory. A strict preview fails when its
+selected voice is unavailable.
+
+Emacs can send a bundled Accent or 3d cue by its Omnivox resource ID.
+For a personal WAV or OGG, put the same file in Files on the iPhone and
+choose “Import a personal earcon” in Settings. Both ends identify the
+recording by SHA-256. Encoded size is limited to 16 MiB and decoded
+duration to 30 seconds. A failed cue leaves the terminal usable.
+
+=Stop Speech= on the phone silences both lanes locally. Reconnect to
+create fresh workers and restore the saved phone settings. Turn off
+“Use Omnivox on iPhone” in Settings to use the earlier speech mode.
+Disconnect and press Control+C in the separate test launchers to finish.
+
+** Reproduce the WSL checks
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+npm test
+export IPHONE_TEST_SSHD=/usr/sbin/sshd
+./test/wire-worker --frame
+./stage-ios-build
+#+end_src
+
+The worker fixture runs the native Rust library and Swift scheduler in
+WSL with two synthetic voices, controllable speech durations and real
+Omnivox effect PCM. The frame test uses a temporary OpenSSH listener and
+a disposable graphical Emacs. Staging builds the pinned Rust commit for
+arm64 iPhone and arm64 Simulator and checks every bundled sound digest.
+A hosted Xcode build and physical listening qualify Apple playback,
+voice availability and keyboard focus. Standalone =emacsvox_tone= version
+1 supports insert and overlay. The current workers omit the structured
+timeline, rich-tone and engine-specific parameter capabilities.
+
 
 Use Omnivox =3ed4e8d= as the first reproducible desktop reference. Update
 the reference deliberately as Omnivox evolves. The contracts are
@@ -53,8 +125,8 @@ oversized batches, a lost reply and a replacement connection. Record
 only request IDs, event types, timings and frame counts by default.
 
 The first executable fixture is [[file:test/omnivox-wire.py][the stdio compatibility test]]. Run it
-from the prototype directory with a disposable desktop worker. Use the
-same test with the phone worker when the two-way transport is ready.
+from the prototype directory with a disposable desktop worker. The WSL
+phone-worker fixture above runs this same transcript.
 
 #+begin_src sh
 read -rp 'Path to the Omnivox checkout: ' IPHONE_OMNIVOX_SOURCE

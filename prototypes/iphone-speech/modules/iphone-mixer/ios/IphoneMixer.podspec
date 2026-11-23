@@ -10,5 +10,9 @@ Pod::Spec.new do |s|
   s.swift_version = '5.9'
   s.static_framework = true
   s.source_files = '*.swift'
+  s.vendored_frameworks = 'OmnivoxMobile.xcframework'
+  s.resources = 'OmnivoxSounds.bundle'
+  s.preserve_paths = 'WireHeaders/*'
+  s.pod_target_xcconfig = { 'SWIFT_INCLUDE_PATHS' => '"$(PODS_TARGET_SRCROOT)/WireHeaders"' }
   s.dependency 'ExpoModulesCore'
 end

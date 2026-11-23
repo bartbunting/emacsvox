@@ -1,4 +1,4 @@
 {
   "platforms": ["apple"],
-  "apple": { "modules": ["IphoneMixerModule"] }
+  "apple": { "modules": ["IphoneMixerModule", "IphoneOmnivoxModule"] }
 }

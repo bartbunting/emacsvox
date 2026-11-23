@@ -4,8 +4,10 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 stage=$(mktemp -d "${TMPDIR:-/tmp}/emacsvox-ios-build.XXXXXXXX")
+trap 'rm -rf -- "$stage"' ERR
 prefix=$(git rev-parse --show-prefix)
 git -C "$(git rev-parse --show-toplevel)" archive "HEAD:${prefix%/}" -- .gitignore app.json eas.json index.js mixer.js \
-    receiver.js keyboard.js panels.js package.json package-lock.json modules ssh/Package.swift ssh/Package.resolved ssh/Sources ssh/Tests assets/open-object.wav assets/visual-line.wav |
+    receiver.js wire-receiver.js wire-icons.sha256 omnivox-revision keyboard.js panels.js package.json package-lock.json modules ssh/Package.swift ssh/Package.resolved ssh/Sources ssh/Tests assets/open-object.wav assets/visual-line.wav |
     tar -x -C "$stage"
+"$PWD/stage-omnivox" "$stage"
 printf '%s\n' "$stage"

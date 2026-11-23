@@ -258,6 +258,12 @@ native mixer in a signed build that includes the recording.
 
 ** NEXT 6. Bring across the Omnivox speech features
 
+The paired prototype now runs the Omnivox worker and Swift scheduling
+tests in WSL. Follow [[file:OMNIVOX.org][Omnivox on iPhone]] to exercise the isolated
+SSH connection, phone voice controls, bundled or imported recordings
+and standalone tone placement. Device qualification and structured
+timeline support remain open.
+
 The [[file:OMNIVOX.org::*Implementation order][implementation slices]] specify the expected playback and control
 behaviour, automated proof and separate physical listening checks.
 

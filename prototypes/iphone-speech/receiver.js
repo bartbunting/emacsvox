@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+const {openWire} = require('./wire-receiver');
+
 const speechRate = 1.5;
 const eloquenceNames = ['Reed', 'Eddy', 'Rocko', 'Grandpa'];
 
@@ -23,9 +25,9 @@ async function findVoice(speech) {
 
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
-function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, openSocket, status, playback = () => {}, voiceStatus = () => {},
+function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, nativeWire, openSocket, status, playback = () => {}, voiceStatus = () => {},
                           keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
-  let socket, heartbeat, lastReceived, resetId, ready;
+  let wire, socket, heartbeat, lastReceived, resetId, ready;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
   let sshKeyboardConnected = false, sshKeyboardPublished = false;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
@@ -43,6 +45,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     voiceLookup = lookup;
     lookup.then(voice => {
       if (voiceLookup !== lookup) return;
+      if (nativeWire) { voiceStatus('Omnivox on iPhone. Open the Emacs voice workbench to select a voice.'); return; }
       const label = voice?.label ?? 'iPhone default';
       voiceStatus(label + ' at ' + currentRate + ' times normal speed');
     });
@@ -173,9 +176,12 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     waitingPermissions.delete(id);
     permission = id;
     try {
-      const voice = await voiceLookup;
-      if (owner !== notificationGeneration) return;
-      await notificationPlayer.speak(text, voice?.identifier ?? null, currentRate);
+      if (wire) await wire.permission(text);
+      else {
+        const voice = await voiceLookup;
+        if (owner !== notificationGeneration) return;
+        await notificationPlayer.speak(text, voice?.identifier ?? null, currentRate);
+      }
     } catch { if (owner === notificationGeneration) playback('iOS could not speak the permission request.'); }
     if (owner !== notificationGeneration) return;
     permission = null;
@@ -184,6 +190,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
 
   function stopNotification() {
     ++notificationGeneration;
+    if (permission !== null) wire?.stopPermission();
     permission = null;
     if (notificationPlayer) Promise.resolve(notificationPlayer.stop()).catch(() => {});
   }
@@ -217,6 +224,8 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
 
   function disconnect(message = 'Disconnected') {
     const old = socket;
+    wire?.close();
+    wire = null;
     socket = null;
     resumeOnActive = false;
     activeBeforeLock = false;
@@ -271,10 +280,17 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     }, 3000);
     current.onmessage = event => {
       if (socket !== current) return;
+      if (wire && typeof event.data === 'string' && /^[MN] /.test(event.data)) {
+        lastReceived = now();
+        wire.record(event.data, !ready);
+        return;
+      }
       let record;
       try { record = JSON.parse(event.data); } catch { disconnect('Invalid relay message'); return; }
       lastReceived = now();
-      if (record.type === 'ready' && record.id === resetId) {
+      if (record.type === 'discovering' && nativeWire) {
+        status('Finding iPhone voices');
+      } else if (record.type === 'ready' && record.id === resetId) {
         ready = true;
         attempt = 0;
         status('Connected');
@@ -288,14 +304,21 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
         } else publishSshKeyboard();
       } else if (record.type === 'ssh' && typeof record.frame === 'string' &&
                  typeof record.client === 'string' && typeof record.server === 'string') {
+        if (frameId) return disconnect('Unexpected second SSH offer.');
         frameId = record.frame;
-        sshOffer(record);
+        if (nativeWire) {
+          wire = openWire(nativeWire, line => {
+            if (socket === current && current.readyState === 1) current.send(line);
+          }, () => disconnect('iPhone speech worker failed. Reconnect to retry.'));
+          wire.opened.then(() => { if (socket === current) sshOffer(record); },
+            () => { if (socket === current) disconnect('Could not open the local Omnivox workers.'); });
+        } else sshOffer(record);
       } else if (ready && (record.type === 'permission' || record.type === 'resolved')) {
         permissionRecord(record);
       } else if (record.type === 'screen' && typeof record.text === 'string') {
         screen(record.text);
       } else if (ready && record.type === 'stop') {
-        if (record.scope === 'all') clearPermissions();
+        if (record.scope === 'all') { clearPermissions(); wire?.stop(); }
         if (notificationPlayer || permission === null) silence(record.scope !== 'speech');
         else { queue = []; queuedChars = 0; }
       } else if (ready && ((record.type === 'cue' && record.name === 'open-object') ||
@@ -354,6 +377,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   function stop() {
+    wire?.stop();
     clearPermissions();
     silence();
     if (socket?.readyState !== 1) return;
@@ -363,7 +387,17 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     socket.send('reset ' + ++resetId);
   }
 
+  function localWireTest(sound) {
+    const owner = wire;
+    if (!owner) return false;
+    owner.test(sound).then(ok => {
+      if (owner === wire) playback(ok ? 'Omnivox finished playback.' : 'Omnivox playback stopped.');
+    }, () => { if (owner === wire) playback('Omnivox could not play the sample.'); });
+    return true;
+  }
+
   function testVoice(mix = false) {
+    if (localWireTest('voice')) return;
     clearPermissions();
     silence();
     refreshVoice();
@@ -371,14 +405,15 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   function testTone(ms) {
+    if (localWireTest(ms === 480 ? 'short' : 'long')) return;
     clearPermissions();
     silence();
     enqueue({type: 'tone', hz: 660, ms});
   }
 
   return { connect: () => connect(), disconnect, appState, terminalConnected, terminalClosed, stop, testTone,
-    testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => playCue(openObjectCue),
-    testVisualLine: () => playCue(visualLineCue) };
+    testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => localWireTest('accent') || playCue(openObjectCue),
+    testVisualLine: () => localWireTest('chime') || playCue(visualLineCue) };
 }
 
 const symbols = {

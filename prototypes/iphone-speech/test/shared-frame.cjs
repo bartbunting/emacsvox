@@ -303,10 +303,27 @@ async function main() {
       let connection;
       try {
         const {port, pin} = JSON.parse((await once(peer.stdout, 'data'))[0]);
-        async function attachSSH() {
+        async function attachSSH(rawWorker) {
           const packets = [];
-          ws = new WebSocket('ws://127.0.0.1:' + sshRelay.httpServer.address().port + '/speech/ssh');
-          ws.on('message', data => packets.push(JSON.parse(data)));
+          ws = new WebSocket('ws://127.0.0.1:' + sshRelay.httpServer.address().port + '/speech/ssh' + (rawWorker ? '/omnivox' : ''));
+          const current = ws, workers = {};
+          if (rawWorker) {
+            for (const tag of ['M', 'N']) {
+              const worker = spawn(rawWorker, [], {stdio: ['pipe', 'pipe', 'inherit']});
+              workers[tag] = worker;
+              require('node:readline').createInterface({input: worker.stdout}).on('line', line => {
+                if (current.readyState === WebSocket.OPEN) current.send(tag + ' ' + line);
+              });
+            }
+            current.once('close', () => Object.values(workers).forEach(worker => worker.stdin.end()));
+          }
+          ws.on('message', data => {
+            const message = data.toString();
+            if (rawWorker && /^[MN] /.test(message)) {
+              workers[message[0]].stdin.write(message.slice(2) + '\n');
+              packets.push({lane: message[0], command: message.slice(2).split(' ')[0]});
+            } else packets.push(JSON.parse(message));
+          });
           await until('SSH pairing offer', () => packets.some(p => p.type === 'ssh'));
           const offer = packets.find(p => p.type === 'ssh');
           connection = spawn(probe, ['connect', seed, String(port), os.userInfo().username, pin,
@@ -473,6 +490,31 @@ async function main() {
         await until('fresh phonetic speech after reconnect', () =>
           attached.some(p => p.type === 'speak' && p.text.trim() === 'romeo'));
         await closeSSH();
+        if (process.env.IPHONE_WIRE_WORKER) {
+          const rawPackets = await attachSSH(process.env.IPHONE_WIRE_WORKER);
+          const phone = `(window-frame ${phoneWindow})`;
+          const main = `(frame-parameter ${phone} 'emacsvox-phone-speaker)`;
+          const notification = `(process-get ${main} 'iphone-notify)`;
+          await until('both Omnivox workers discovered and registered', async () =>
+            await observe(`(cl-every (lambda (p) (and (equal "ios" (plist-get (process-get p omnivox--control-inventory-property) :preferred_engine_id))
+              (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
+          const desktopState = await observe('(list (process-name tts-speaker-process) omnivox-engine-inventory)');
+          const before = rawPackets.length;
+          sshKeys('\x0e');
+          await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.command === 'q'));
+          await observe(`(with-selected-frame ${phone} (emacsvox-aural-voice-workbench))`);
+          assert.equal(await observe(`(with-current-buffer (window-buffer ${phoneWindow}) (length tabulated-list-entries))`), '2');
+          await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (while (and (not (eobp)) (not (equal (tabulated-list-get-id) "test-2"))) (forward-line 1)) (iphone-voices-apply))`);
+          await until('reading voice applied to both lanes', async () => await observe(`(cl-every
+            (lambda (p) (seq-some (lambda (b) (equal "test-2" (plist-get (plist-get (plist-get b :resolution) :realized) :voice_id)))
+                                  (plist-get (plist-get (process-get p omnivox--control-registration-property) :registration) :bindings)))
+            (list ${main} ${notification}))`) === 't');
+          assert.equal(await observe('(list (process-name tts-speaker-process) omnivox-engine-inventory)'), desktopState);
+          ws.send('reset 11');
+          await until('raw two-worker Stop response', () => rawPackets.some(p => p.type === 'ready' && p.id === 11));
+          await closeSSH();
+          console.log('Passed native SSH, real Emacs navigation, both phone inventories, physical voice Apply and stop with desktop speech isolated.');
+        }
         console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
       } finally {
         if (connection?.exitCode === null) connection.kill();
@@ -503,7 +545,7 @@ async function main() {
     relay.httpServer.close();
     relay.backend.close();
     if (routed) pcBackend.close();
-    fs.rmSync(dir, {recursive: true, force: true});
+    fs.rmSync(dir, {recursive: true, force: true, maxRetries: 5, retryDelay: 120});
   }
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+"""Stage the pinned phone worker archives and verified original sound assets."""
+import hashlib
+import os
+from pathlib import Path
+from contextlib import ExitStack
+import plistlib
+import shutil
+import subprocess
+import sys
+import tempfile
+
+app = Path(__file__).resolve().parent
+source = Path(os.environ.get("IPHONE_OMNIVOX_SOURCE", app.parents[2] / "omnivox")).resolve()
+output = Path(sys.argv[1]).resolve()
+revision = (output / "omnivox-revision").read_text().strip()
+if not output.is_dir() or not (output / "modules/iphone-mixer/ios/IphoneMixer.podspec").is_file():
+    sys.exit("Expected a staged Expo project.")
+if subprocess.check_output(["git", "-C", source, "rev-parse", revision + "^{commit}"], text=True).strip() != revision:
+    sys.exit("The paired Omnivox checkout does not contain the pinned worker commit.")
+dest = output / "modules/iphone-mixer/ios"
+framework = dest / "OmnivoxMobile.xcframework"
+resources = dest / "OmnivoxSounds.bundle"
+cache = Path(os.environ.get("CARGO_TARGET_DIR", Path.home() / ".cache/emacsvox/iphone-omnivox-protocol")).resolve()
+env = dict(os.environ, CARGO_TARGET_DIR=str(cache), IPHONEOS_DEPLOYMENT_TARGET="16.4")
+env.setdefault("CARGO_BUILD_JOBS", "2")
+
+# Reuse the paired checkout's incremental build when it is the clean pin.
+# Otherwise build a disposable snapshot without altering the checkout.
+def clean_pin():
+    head = subprocess.check_output(["git", "-C", source, "rev-parse", "HEAD"], text=True).strip()
+    return head == revision and not subprocess.check_output(["git", "-C", source, "status", "--porcelain"])
+
+with ExitStack() as stack:
+    clean = clean_pin()
+    temp = source if clean else stack.enter_context(tempfile.TemporaryDirectory(prefix="iphone-omnivox-source-"))
+    if not clean:
+        with tempfile.TemporaryFile() as archive:
+            subprocess.run(["git", "-C", source, "archive", revision], stdout=archive, check=True)
+            archive.seek(0)
+            subprocess.run(["tar", "-x", "-C", temp], stdin=archive, check=True)
+    resources.mkdir()
+    shutil.copyfile(Path(temp) / "LICENSE", resources / "Omnivox-LICENSE.txt")
+    targets = {"ios-arm64": "aarch64-apple-ios", "ios-arm64-simulator": "aarch64-apple-ios-sim"}
+    subprocess.run(["cargo", "build", "--locked", "--release", "-p", "omnivox-ios",
+                    *[item for triple in targets.values() for item in ("--target", triple)]],
+                   cwd=temp, env=env, check=True)
+    if clean and not clean_pin():
+        sys.exit("Omnivox sources changed during staging. Run the staging command again.")
+    headers = Path(temp) / "omnivox-ios/include"
+    shutil.copytree(headers, dest / "WireHeaders")
+    libraries = []
+    for identifier, target in targets.items():
+        folder = framework / identifier
+        folder.mkdir(parents=True)
+        shutil.copytree(headers, folder / "Headers")
+        shutil.copyfile(cache / target / "release/libomnivox_ios.a", folder / "libOmnivoxMobile.a")
+        library = {"LibraryIdentifier": identifier, "SupportedArchitectures": ["arm64"],
+                   "LibraryPath": "libOmnivoxMobile.a", "HeadersPath": "Headers", "SupportedPlatform": "ios"}
+        if target.endswith("-sim"):
+            library["SupportedPlatformVariant"] = "simulator"
+        libraries.append(library)
+    (framework / "Info.plist").write_bytes(plistlib.dumps({"CFBundlePackageType": "XFWK",
+        "XCFrameworkFormatVersion": "1.0", "AvailableLibraries": libraries}))
+
+for line in (output / "wire-icons.sha256").read_text().splitlines():
+    digest, name = line.split("  ", 1)
+    path = Path(name)
+    if path.is_absolute() or ".." in path.parts:
+        sys.exit("Invalid resource identity.")
+    data = ((output / "assets/visual-line.wav").read_bytes() if name == "visual-line.wav" else
+            subprocess.check_output(["git", "-C", app, "show", "HEAD:sounds/" + name]))
+    if hashlib.sha256(data).hexdigest() != digest:
+        sys.exit("Bundled sound hash does not match " + name)
+    asset = resources / path
+    asset.parent.mkdir(parents=True, exist_ok=True)
+    asset.write_bytes(data)
+
+(resources / "Accent-README.org").write_bytes(subprocess.check_output(
+    ["git", "-C", app, "show", "HEAD:sounds/packs/accent/README.org"]))
+(resources / "Info.plist").write_bytes(plistlib.dumps({
+    "CFBundleIdentifier": "org.emacsvox.iphone.speech.sounds",
+    "CFBundleName": "OmnivoxSounds", "CFBundlePackageType": "BNDL", "CFBundleVersion": "1"
+}))

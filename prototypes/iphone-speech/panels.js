@@ -54,7 +54,7 @@ function Toggle({label, hint, value, change}) {
   </View>;
 }
 
-export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer}) {
+export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer, wire}) {
   const [message, setMessage] = React.useState('');
   return <Panel title="Settings" close={cancel} onDismiss={onDismiss}>
     <Action title="Save settings" onPress={save} />
@@ -62,6 +62,9 @@ export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer}) {
     {ssh && <>
       <Toggle label="Use SSH terminal" hint="Connect your external keyboard to Emacs through SSH. Switch off to use the test relay."
         value={draft.transport === 'ssh'} change={v => edit('transport', v ? 'ssh' : 'relay')} />
+      {wire && draft.transport === 'ssh' && <Toggle label="Use Omnivox on iPhone"
+        hint="Run speech, installed voice discovery, tones and earcons on this phone. Reconnects the terminal when saved."
+        value={draft.worker === 'omnivox'} change={v => edit('worker', v ? 'omnivox' : 'legacy')} />}
       <Toggle label="Connect on open" hint="Open the saved SSH connection when you launch the app. The Emacs keyboard receives focus once the terminal is ready."
         value={draft.connectOnOpen === 'yes'} change={v => edit('connectOnOpen', v ? 'yes' : 'no')} />
       <Toggle label="Use Emacs keyboard field" hint="Use the keyboard field that was tested with VoiceOver. Switch off to type directly into SwiftTerm."
@@ -83,7 +86,11 @@ export function Settings({draft, edit, save, cancel, onDismiss, ssh, mixer}) {
         catch { setMessage('Could not read the iPhone SSH identity.'); }
       }} />
     </>}
-    {mixer && <Toggle label="Use native mixer" hint="Mix local speech with tones and earcons. Switch off for direct iPhone speech."
+    {wire && <Action title="Import a personal earcon" onPress={async () => {
+      try { if (await wire.importCue()) setMessage('Earcon imported. Emacs can now play the matching recording.'); }
+      catch { setMessage('Could not import this recording. Choose a WAV or OGG up to 16 MiB and 30 seconds.'); }
+    }} />}
+    {mixer && !(wire && draft.transport === 'ssh' && draft.worker === 'omnivox') && <Toggle label="Use native mixer" hint="Mix local speech with tones and earcons. Switch off for direct iPhone speech."
       value={draft.audio === 'mixed'} change={v => edit('audio', v ? 'mixed' : 'direct')} />}
     {message ? <Text style={styles.label}>{message}</Text> : null}
   </Panel>;

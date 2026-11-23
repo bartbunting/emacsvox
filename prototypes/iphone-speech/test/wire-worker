@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+app=$(dirname "$here")
+omni=${IPHONE_OMNIVOX_SOURCE:-$app/../../../omnivox}
+build=${CARGO_TARGET_DIR:-$HOME/.cache/emacsvox/iphone-omnivox-protocol}
+out=$(mktemp -d)
+trap 'rm -rf -- "$out"' EXIT
+(cd "$omni" && CARGO_TARGET_DIR="$build" cargo build --locked -p omnivox-ios)
+docker run --rm --network none --user "$(id -u):$(id -g)" -e CLANG_MODULE_CACHE_PATH=/tmp/clang \
+  -v "$omni/omnivox-ios/include:/include:ro" -v "$build/debug:/rust:ro" -v "$app:/app:ro" \
+  -v "$out:/out" swift:6.3-noble swiftc -module-cache-path /tmp/swift -I /include \
+  /app/modules/iphone-mixer/ios/WireSchedule.swift /app/modules/iphone-mixer/ios/WireLane.swift /app/test/wire-worker.swift /rust/libomnivox_ios.a -Xlinker --gc-sections -o /out/worker
+run=(docker run --rm -i --network none --user "$(id -u):$(id -g)" -v "$out:/out:ro" -v "$app/../../sounds:/icons:ro" swift:6.3-noble /out/worker /icons)
+"${run[@]}" scheduler
+python3 "$here/omnivox-wire.py" --icon omnivox-icon:packs/accent/open-object.ogg -- "${run[@]}"
+
+if [[ ${1:-} == --frame ]]; then
+  printf '%s\n' '#!/usr/bin/env bash' > "$out/stdio"
+  printf 'exec %q ' "${run[0]}" >> "$out/stdio"
+  printf '%q ' "${run[@]:1}" >> "$out/stdio"
+  printf '\n' >> "$out/stdio"
+  chmod 700 "$out/stdio"
+  : "${IPHONE_TEST_SSHD:?Set IPHONE_TEST_SSHD to the disposable sshd binary}"
+  IPHONE_WIRE_WORKER="$out/stdio" node "$here/shared-frame.cjs" --routed
+fi

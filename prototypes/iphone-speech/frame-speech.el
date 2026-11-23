@@ -8,6 +8,17 @@
 (require 'json)
 (defvar tts-program)
 (defvar tts-speech-rate)
+(defvar tts-handle-unicode)
+(defvar omnivox-control-capabilities)
+(defvar omnivox-engine-inventory)
+(defvar omnivox-engine-inventory-time)
+(defvar omnivox-logical-voice-registration)
+(defvar omnivox-routing-policy-registration)
+(defvar omnivox-control-last-error)
+(load (expand-file-name "wire-voices.el" (file-name-directory load-file-name)) nil t t)
+(defconst iphone-frame-speech--assets
+  (expand-file-name "wire-icons.sha256" (file-name-directory load-file-name)))
+(defvar iphone-frame-speech--digests nil)
 (defvar tts-speaker-process)
 (defvar tts-notify-process)
 (defvar emacsvox-play-program)
@@ -70,7 +81,8 @@
   ;; Preserve the desktop command's interactive stop of both speech lanes.
   (interactive (list 'iphone-explicit-stop))
   (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
-    (iphone-frame-speech--route original all)
+    (iphone-frame-speech--route original
+     (and all (or (eq all 'iphone-explicit-stop) (not (and (processp owner) (process-get owner 'iphone-notify))))))
     ;; Several typing and movement commands call (tts-stop 'all) before
     ;; giving feedback. Only explicit Stop clears an urgent phone request.
     (when (and (eq all 'iphone-explicit-stop) (processp owner) (process-live-p owner))
@@ -88,18 +100,68 @@
             (tts-program iphone-frame-speech--program)
             (tts-speaker-process owner)
             (tts-speech-rate (or (process-get owner 'iphone-speech-rate) 150))
-            (tts-notify-process owner))
-        (apply original args))))))
+            (tts-notify-process (or (process-get owner 'iphone-notify) owner)))
+        (if (process-get owner 'iphone-notify)
+            (iphone-frame-speech--with-inventory owner original args)
+          (apply original args)))))))
+
+(defun iphone-frame-speech--with-inventory (owner function args)
+  ;; The desktop adapter keeps a foreground cache in addition to each
+  ;; worker's properties. Bind that cache for the duration of a phone call.
+  (let ((omnivox-control-capabilities (process-get owner omnivox--control-capabilities-property))
+        (omnivox-engine-inventory (process-get owner omnivox--control-inventory-property))
+        (omnivox-engine-inventory-time (process-get owner 'omnivox-inventory-received-at))
+        (omnivox-logical-voice-registration (process-get owner omnivox--control-registration-property))
+        (omnivox-routing-policy-registration (plist-get (process-get owner omnivox--control-inventory-property) :routing_policy))
+        (omnivox-control-last-error nil)
+        (tts-handle-unicode tts-handle-unicode))
+    (apply function args)))
+
+(defun iphone-frame-speech--wire-filter (process output)
+  (let* ((owner (or (process-get process 'iphone-main) process))
+         (tts-speaker-process owner)
+         (tts-notify-process (process-get owner 'iphone-notify))
+         (tts-program iphone-frame-speech--program)
+         (iphone-frame-speech--command-owner owner))
+    (iphone-frame-speech--with-inventory owner #'omnivox--control-process-filter (list process output))
+    (when (and (process-live-p owner) (not (process-get owner 'iphone-routing-ready))
+               (cl-every (lambda (worker)
+                           (and (process-get worker omnivox--control-capabilities-property)
+                                (or (not (omnivox--process-supports-p worker "engine_inventory"))
+                                    (process-get worker omnivox--control-inventory-property))
+                                (or (not (omnivox--process-supports-p worker "logical_voice_registration"))
+                                    (process-get worker omnivox--control-registration-property))))
+                         (list owner tts-notify-process)))
+      (process-put owner 'iphone-routing-ready t)
+      (iphone-frame-speech--packet owner "routing-ready" (process-get owner 'iphone-connection)))))
+
+(defun iphone-frame-speech--wire-resource (file)
+  (unless iphone-frame-speech--digests
+    (setq iphone-frame-speech--digests (make-hash-table :test #'equal))
+    (with-temp-buffer
+      (insert-file-contents iphone-frame-speech--assets)
+      (while (re-search-forward "^\\([a-f0-9]\\{64\\}\\)  \\(.+\\)$" nil t)
+        (puthash (match-string 2) (match-string 1) iphone-frame-speech--digests))))
+  (let* ((relative (if (equal file iphone-frame-speech--visual-line-file) "visual-line.wav"
+                     (file-relative-name file emacsvox-sounds-dir)))
+         (expected (gethash relative iphone-frame-speech--digests))
+         (size (and (file-regular-p file) (file-attribute-size (file-attributes file))))
+         (digest (and size (<= size (* 16 1024 1024)) (emacsvox-aural--file-digest file))))
+    (cond ((and expected (equal expected digest)) (concat "omnivox-icon:" relative))
+          (digest (concat "omnivox-icon:personal/" digest))
+          (t "omnivox-icon:unavailable"))))
 
 (defun iphone-frame-speech--resource (original file)
   ;; Different installations can resolve the same bundled cue to different
   ;; absolute paths. Use Omnivox's bundled-resource ID on the phone stream.
-  (if (and iphone-frame-speech--bound
+  (if (and iphone-frame-speech--bound (process-get tts-speaker-process 'iphone-wire))
+      (or (iphone-frame-speech--wire-resource file) file)
+    (if (and iphone-frame-speech--bound
            (equal file (expand-file-name iphone-frame-speech--accent-file emacsvox-sounds-dir))
            (equal (ignore-errors (emacsvox-aural--file-digest file))
                   "d5ee5d380a01d530f9a09336161b75e6426cb3604843967612d370b0fc547e96"))
       (concat "omnivox-icon:" iphone-frame-speech--accent-file)
-    (funcall original file)))
+    (funcall original file))))
 
 (defun iphone-frame-speech--chime (original &optional tempo speed)
   ;; The visual-line indicator normally starts a local SoX process.
@@ -114,6 +176,8 @@
   (let ((owner (or iphone-frame-speech--command-owner iphone-frame-speech--hook-owner)))
     (if (and (processp owner) (process-live-p owner))
         (progn
+          (when (and (process-get owner 'iphone-wire) (numberp rate) (<= 1 rate 200))
+            (iphone-voices--save (plist-put (copy-sequence iphone-frame-speech--settings) :rate rate)))
           (process-put owner 'iphone-speech-rate rate)
           (iphone-frame-speech--route original rate nil))
       (funcall original rate prefix))))
@@ -125,10 +189,34 @@
                  (string-match-p "\\`phone-[0-9a-f]\\{8\\}\\(?:-[0-9a-f]\\{4\\}\\)\\{3\\}-[0-9a-f]\\{12\\}\\'" id)
                  (file-exists-p (expand-file-name (concat id ".sock") directory)))
       (user-error "The phone speech connection has expired"))
-    (let ((process-environment (copy-sequence process-environment))
-          (tts-program iphone-frame-speech--program))
-      (setenv "EMACSVOX_PHONE_SOCKET" (expand-file-name (concat id ".sock") directory))
-      (set-frame-parameter nil 'emacsvox-phone-speaker (tts-make-process "Phone frame")))))
+    (let* ((process-environment (copy-sequence process-environment))
+           (tts-program iphone-frame-speech--program)
+           (notify-path (expand-file-name (concat id ".n") directory))
+           main notify attached)
+      (unwind-protect
+          (progn
+            (setenv "EMACSVOX_PHONE_SOCKET" (expand-file-name (concat id ".sock") directory))
+            (setq main (tts-make-process "Phone frame"))
+            (when (file-exists-p notify-path)
+              (require 'omnivox-voices)
+              (setenv "EMACSVOX_PHONE_SOCKET" notify-path)
+              (setq notify (tts-make-process "Notify"))
+              (iphone-voices--load)
+              (process-put main 'iphone-connection id)
+              (process-put main 'iphone-notify notify)
+              (process-put notify 'iphone-main main)
+              (dolist (worker (list main notify))
+                (process-put worker 'iphone-wire t)
+                (omnivox--install-control-filter worker)
+                (set-process-filter worker #'iphone-frame-speech--wire-filter)
+                (let ((tts-handle-unicode tts-handle-unicode))
+                  (omnivox--negotiate-process worker))
+                (iphone-voices--restore worker)))
+            (set-frame-parameter nil 'emacsvox-phone-speaker main)
+            (setq attached t))
+        (unless attached
+          (dolist (worker (list notify main))
+            (when (processp worker) (tts--retire-process worker))))))))
 
 (defun iphone-frame-speech--remember (frame)
   (when (and (eq frame iphone-frame-speech--last-terminal) (frame-live-p frame))
@@ -157,6 +245,7 @@
         (when (eq iphone-frame-speech--subscriber frame)
           (setq iphone-frame-speech--subscriber nil))))
     (set-frame-parameter frame 'emacsvox-phone-speaker nil)
+    (when-let* ((notify (process-get owner 'iphone-notify))) (tts--retire-process notify))
     (tts--retire-process owner)))
 
 (defun iphone-frame-speech--close-terminal (frame)
@@ -271,15 +360,18 @@
       ((guard (not (process-live-p owner))) nil)
       ('sync (iphone-frame-speech--sync frame owner))
       ('stop
-       (let ((tts-speaker-process owner) (tts-notify-process owner)
+       (let ((tts-speaker-process owner) (tts-notify-process (or (process-get owner 'iphone-notify) owner))
              (iphone-frame-speech--bound t))
          (tts-stop t))
        ;; Acknowledge on the same stream, after the cancelled generation.
+       (when-let* ((notify (process-get owner 'iphone-notify)))
+         (iphone-frame-speech--packet notify "reset-done" serial))
        (iphone-frame-speech--packet owner "reset-done" serial))))
   t)
 
 (defconst iphone-frame-speech--entries
   '(emacsvox-aural-call-with-submission emacsvox-icon tts-letter
+    tts-voice-inventory tts-refresh-voice-inventory tts-preview-voices
     tts-dispatch tts-tone tts-silence tts-notify-apply tts--protocol-set-punctuations
     emacsvox--delayed-phonetic-schedule))
 
@@ -330,6 +422,8 @@
     (advice-remove 'agent-shell--emit-event #'iphone-frame-speech--event)
     (advice-remove 'emacsvox-agent-shell--session-focused-p #'iphone-frame-speech--focused)
     (advice-remove 'emacsvox-agent-shell--deliver-announcement #'iphone-frame-speech--announce)
+    (advice-remove 'emacsvox-aural-voice-workbench #'iphone-voices--workbench)
+    (advice-remove 'omnivox--process-logical-registry-content #'iphone-voices--registration)
     (advice-remove 'tts-set-rate #'iphone-frame-speech--set-rate)
     (advice-remove 'tts-stop #'iphone-frame-speech--stop)
     (advice-remove 'omnivox-remote-resource #'iphone-frame-speech--resource)
@@ -349,6 +443,8 @@
   (add-hook 'pre-command-hook #'iphone-frame-speech--pre-command -100)
   (add-hook 'post-command-hook #'iphone-frame-speech--post-command 100)
   (add-hook 'delete-frame-functions #'iphone-frame-speech--detach)
+  (advice-add 'emacsvox-aural-voice-workbench :around #'iphone-voices--workbench)
+  (advice-add 'omnivox--process-logical-registry-content :around #'iphone-voices--registration)
   (advice-add 'tts-set-rate :around #'iphone-frame-speech--set-rate)
   (advice-add 'tts-stop :around #'iphone-frame-speech--stop)
   (advice-add 'omnivox-remote-resource :around #'iphone-frame-speech--resource)

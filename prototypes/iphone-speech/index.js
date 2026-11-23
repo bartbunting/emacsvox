@@ -20,8 +20,10 @@ const sound = require('./assets/open-object.wav');
 const chime = require('./assets/visual-line.wav');
 const relayPort = process.env.EXPO_PUBLIC_EMACSVOX_PORT || '8787';
 
+const nativeWire = requireOptionalNativeModule('IphoneOmnivox');
+
 function connectionKey(p) {
-  return JSON.stringify([p.transport, p.audio, p.host, p.port, p.username, p.pin]);
+  return JSON.stringify([p.transport, p.audio, p.worker, p.host, p.port, p.username, p.pin]);
 }
 
 function validHost(host) {
@@ -95,7 +97,8 @@ function Session({settings, save, active, reconnect}) {
   const [screen, setScreen] = useState('');
   const [timing, setTiming] = useState('');
   const sshMode = Boolean(ssh) && settings.transport === 'ssh';
-  const mixed = Boolean(native) && settings.audio === 'mixed';
+  const useWire = sshMode && Boolean(nativeWire) && settings.worker === 'omnivox';
+  const mixed = !useWire && Boolean(native) && settings.audio === 'mixed';
   const directCue = useAudioPlayer(sound, {downloadFirst: true});
   const directChime = useAudioPlayer(chime, {downloadFirst: true});
   const adapters = useMemo(() => mixed ? mixerAdapters(native, Speech, setTiming, () => nativeChimeReady)
@@ -105,7 +108,7 @@ function Session({settings, save, active, reconnect}) {
   const [audioFailed, setAudioFailed] = useState(false);
   const host = settings.host;
   const receiver = useMemo(() => createReceiver({
-    ...adapters,
+    ...adapters, nativeWire: useWire ? nativeWire : null,
     notificationPlayer: native?.permission && {
       speak: (text, voice, rate) => native.permission(text, voice, rate),
       stop: () => native.stopPermission(),
@@ -119,8 +122,8 @@ function Session({settings, save, active, reconnect}) {
       if (!value) setPanel(current => current === 'review' ? null : current);
     },
     sessionActive: value => { active.current = value; setActiveSession(value); },
-    openSocket: () => new WebSocket('ws://' + host + (sshMode ? ':8797/speech/ssh' : ':' + relayPort + '/speech')),
-  }), [adapters, host, sshMode, active]);
+    openSocket: () => new WebSocket('ws://' + host + (sshMode ? (useWire ? ':8797/speech/ssh/omnivox' : ':8797/speech/ssh') : ':' + relayPort + '/speech')),
+  }), [adapters, host, sshMode, useWire, active]);
   useEffect(() => {
     if (!mixed) return;
     let live = true;
@@ -223,7 +226,7 @@ function Session({settings, save, active, reconnect}) {
         {sshMode && offer && <Action title="Review terminal screen" onPress={() => setPanel('review')} />}
       </View>
     </ScrollView>
-    {panel === 'settings' && <Settings draft={draft} ssh={ssh} mixer={native}
+    {panel === 'settings' && <Settings draft={draft} ssh={ssh} mixer={native} wire={nativeWire}
       edit={(k,v) => setDraft(prev => ({...prev, [k]:v}))}
       cancel={() => setPanel(null)} save={() => { save(draft); setPanel(null); }} />}
     {panel === 'review' && offer && <TerminalReview key={offer.frame} terminalRef={terminalRef} frame={offer.frame}
@@ -231,7 +234,7 @@ function Session({settings, save, active, reconnect}) {
     {panel === 'diagnostics' && <Panel title="Diagnostics" close={() => setPanel(null)}>
       <Action title="Done" onPress={() => setPanel(null)} />
       {voice ? <Text style={styles.status}>{voice}</Text> : null}
-      {native && <Text style={styles.status}>{mixed ? 'Native mixer' : 'Direct speech'}</Text>}
+      {native && <Text style={styles.status}>{useWire ? 'Omnivox on iPhone' : mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
       {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}
       {native && <Action title="Test three-second tone" onPress={() => receiver.testTone(3000)} />}
