@@ -37,7 +37,7 @@ struct WireReceipts: Decodable {
 }
 
 struct WireAction: Decodable {
-  enum Op: String, Decodable { case reply, batch, immediate, timeline, stop, exit }
+  enum Op: String, Decodable { case reply, batch, immediate, timeline, preview, stop, exit }
   let op: Op
   var key: String?, bytes: Int?, interrupt: Bool?
   var line: String?, items: [WireItem]?, item: WireItem?, receipts: WireReceipts?
@@ -105,10 +105,11 @@ final class WireSchedule {
       guard let item = action.item else { return }
       if item.kind == .speech { stop(all: false) }
       admit([item], nil, size, immediate: item.kind == .sound)
-    case .timeline:
-      guard let presentation, let receipts = action.receipts, let bytes = action.bytes else { return }
+    case .timeline, .preview:
+      guard let presentation, let bytes = action.bytes else { return }
+      let receipts = action.receipts
       if action.interrupt == true {
-        guard (0...32 * 1024 * 1024).contains(bytes) else { reply(receipts.failed); return }
+        guard (0...32 * 1024 * 1024).contains(bytes) else { if let receipts { reply(receipts.failed) }; return }
         stop(all: false)
       }
       admit([], receipts, bytes, immediate: false, presentation: presentation)
@@ -140,6 +141,7 @@ final class WireSchedule {
       }
     }
     guard fits() else {
+      presentation?.finishPreview(OvPreviewFailed)
       done?(false)
       if let receipts { reply(receipts.failed) }
       return
@@ -153,6 +155,7 @@ final class WireSchedule {
       live.removeValue(forKey: ObjectIdentifier(old))
       bytes -= old.bytes
       old.presentation?.cancel(replacing: true)
+      old.presentation?.finishPreview(OvPreviewCancelled)
       if let receipts = old.receipts { reply(receipts.cancelled) }
     }
     live[ObjectIdentifier(job)] = job
@@ -178,6 +181,7 @@ final class WireSchedule {
     for job in cancelled { job.finished = true; job.presentation?.cancel() }
     output.stop(all: all)
     for job in cancelled {
+      job.presentation?.finishPreview(OvPreviewCancelled)
       job.done?(false)
       if let receipts = job.receipts { reply(receipts.cancelled) }
     }
@@ -265,6 +269,7 @@ final class WireSchedule {
     job.finished = true
     bytes -= job.bytes
     live.removeValue(forKey: ObjectIdentifier(job))
+    job.presentation?.finishPreview(job.failed ? OvPreviewFailed : OvPreviewCompleted)
     job.done?(!job.failed)
     if let receipts = job.receipts { reply(job.failed ? receipts.failed : receipts.completed) }
   }

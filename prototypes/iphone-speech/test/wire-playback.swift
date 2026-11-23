@@ -407,3 +407,77 @@ func checkShapedTones(_ root: String) throws {
   ov_ios_cancel(token)
   precondition(item.tonePCM(token) == nil && !item.queueTone(clock, token: token))
 }
+
+func checkPrivatePreview(_ root: String, voices: String) throws {
+  let data = try Data(contentsOf: URL(fileURLWithPath: "/out/VoiceChoices.json"))
+  let fixture = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+  let messages = fixture["messages"] as! [String: [String: Any]]
+  var draft = messages["preview"]!, role = (messages["preview"]!["voice"] as! [String: Any])
+  var choices = role["choices"] as! [[String: Any]]
+  for i in [1, 2] { choices[i]["selector"] = ["kind":"exact", "engine_id":"ios", "voice_id":"test-2"] }
+  role["choices"] = choices
+  draft["voice"] = role
+  draft["text"] = "private draft"
+  draft.removeValue(forKey: "expected_base_rate")
+  let output = TestOutput(root)
+  var replies: [String] = [], heard: [WireItem] = []
+  output.observeSpeech = { heard.append($0) }
+  let lane = WireLane(output) { replies.append($0) }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  let id = draft["request_id"] as! Int
+  func feed(muted: Bool = false) throws {
+    let record = try JSONSerialization.data(withJSONObject: draft).base64EncodedString()
+    try lane.feed("omnivox_control " + record, muted: muted)
+  }
+  func response(_ status: String) throws -> [String: Any] {
+    precondition(replies.count == 1 && replies[0].hasPrefix("__OMNIVOX_CONTROL__ "))
+    let payload = String(replies.removeFirst().split(separator: " ").last!)
+    let value = try JSONSerialization.jsonObject(with: Data(base64Encoded: payload)!) as! [String: Any]
+    precondition(value["request_id"] as? Int == id && value["status"] as? String == status)
+    return value
+  }
+  func check(_ value: [String:Any], choice: String, started: Bool) {
+    let entries = value["accepted_audio"] as! [[String:Any]]
+    precondition(entries.count == 1 && entries[0]["choice_id"] as? String == choice)
+    precondition(entries[0]["playback_started"] as? Bool == started)
+    if started {
+      precondition((value["last_started"] as? [String:Any])?["choice_id"] as? String == choice)
+    } else { precondition(value["last_started"] is NSNull) }
+  }
+  try feed()
+  check(try response("completed"), choice: "eloquence-reed", started: true)
+  precondition(heard.last?.voice == "test-2")
+  draft["selection"] = ["mode":"choice", "choice_id":"eloquence-reed-soft"]
+  output.hold = true
+  for played in [false, true] {
+    output.playPreviewFirstFrame = played
+    try feed()
+    precondition(replies.isEmpty)
+    try lane.feed("s", muted: false)
+    check(try response("cancelled"), choice: "eloquence-reed-soft", started: played)
+    output.finishes.removeFirst()(true)
+    precondition(replies.isEmpty)
+  }
+  try feed(muted: true)
+  let muted = try response("cancelled")
+  precondition((muted["accepted_audio"] as! [Any]).isEmpty && muted["last_started"] is NSNull)
+  let before = heard.count
+  draft["selection"] = ["mode":"choice", "choice_id":"dectalk-paul"]
+  try feed()
+  let unavailable = try response("failed")
+  precondition((unavailable["accepted_audio"] as! [Any]).isEmpty && unavailable["last_started"] is NSNull)
+  draft["selection"] = ["mode":"automatic"]
+  draft["disabled_engine_ids"] = ["ios"]
+  try feed()
+  let disabled = try response("failed")
+  precondition((disabled["effective_disabled_engine_ids"] as? [String]) == ["ios"] && heard.count == before)
+  draft["expected_base_rate"] = 0.12345
+  try feed()
+  let error = try JSONSerialization.jsonObject(with: Data(base64Encoded: String(replies.removeFirst().split(separator:" ").last!))!) as! [String:Any]
+  precondition(error["type"] as? String == "error" && error["code"] as? String == "invalid_configuration")
+  output.hold = false
+  try lane.feed("q an ordinary reading", muted: false)
+  try lane.feed("d", muted: false)
+  precondition(heard.last?.voice == "test-1" && replies.isEmpty)
+  print("Passed private audition, exact duplicate choices, unavailable voices, stale rate and Stop before and after first playback.")
+}

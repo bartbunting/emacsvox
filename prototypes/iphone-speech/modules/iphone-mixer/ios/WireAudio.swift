@@ -202,8 +202,13 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
       enqueue: { buffer, played in
         node.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
-          DispatchQueue.main.async { mixer.played(buffer); played() }
+          DispatchQueue.main.async {
+            if presentation?.isPreview == true { presentation?.startedAudio() }
+            mixer.played(buffer)
+            played()
+          }
         }
+        if presentation?.isPreview == true { presentation?.acceptedAudio() }
         if !node.isPlaying { node.play() }
       }, holdTail: holdTail, done: done, release: { [weak self] in
         presentation?.stopPlayer = nil

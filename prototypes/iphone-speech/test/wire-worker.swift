@@ -7,7 +7,7 @@ import OmnivoxMobile
 // still go through the Rust renderer and remote icon decoder used on device.
 final class TestOutput: WireOutput {
   let loader: OpaquePointer, token = ov_ios_token_new()!
-  var hold = false
+  var hold = false, playPreviewFirstFrame = false
   var started: [WireItem.Kind] = [], finishes: [(Bool) -> Void] = []
   var observeSpeech: ((WireItem) -> Void)?
   init(_ root: String) { loader = ov_ios_loader_new(root)! }
@@ -52,6 +52,10 @@ final class TestOutput: WireOutput {
       let regions = plan.regions(frames: ov_ios_frames(pcm))
       ov_ios_pcm_free(pcm)
       guard let regions else { done(false); return }
+      if plan.isPreview {
+        plan.acceptedAudio()
+        if playPreviewFirstFrame { plan.startedAudio() }
+      }
       reached += regions.flatMap(\.events)
       observeSpeech?(item)
     }
@@ -60,7 +64,10 @@ final class TestOutput: WireOutput {
       return holdTail()
     }
     let finish: (Bool) -> Void = { ok in
-      if ok { plan.reached(reached) }
+      if ok {
+        if plan.isPreview && !items.isEmpty { plan.startedAudio() }
+        plan.reached(reached)
+      }
       done(ok)
       endTail?()
     }
@@ -142,6 +149,7 @@ final class TestOutput: WireOutput {
       try feed("tts_set_voice {test-1}")
       print("The desktop timeline supplied one intact TestCase with both capital positions and the selected phone voice.")
       try checkShapedTones(CommandLine.arguments[1])
+      try checkPrivatePreview(CommandLine.arguments[1], voices: voices)
       try checkPalettePlayback(CommandLine.arguments[1], voices: voices)
       try checkTimelinePlayback(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMissingWordTiming(CommandLine.arguments[1], voices: voices, envelope: envelope)

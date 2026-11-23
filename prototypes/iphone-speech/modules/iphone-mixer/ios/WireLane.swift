@@ -81,9 +81,11 @@ final class WireLane {
     let result = try self.action(line)
     refreshParts()
     guard let (action, size) = result else { return }
-    if action.op == .timeline, let pointer = ov_ios_take_presentation(worker) {
-      let plan = WirePresentation(pointer, key: action.key, reply: reply)
+    if action.op == .timeline || action.op == .preview, let pointer = ov_ios_take_presentation(worker) {
+      let preview = action.op == .preview ? ov_ios_take_preview(pointer) : nil
+      let plan = WirePresentation(pointer, key: action.key, preview: preview, reply: reply)
       if muted {
+        plan.finishPreview(OvPreviewCancelled)
         if let receipts = action.receipts { reply(receipts.cancelled) }
       } else { schedule.submit(action, bytes: size, presentation: plan) }
       return
