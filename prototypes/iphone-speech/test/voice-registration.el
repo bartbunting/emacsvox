@@ -5,6 +5,20 @@
 (require 'ert)
 (require 'omnivox-voices)
 
+(ert-deftest iphone-voice-languages-filter-the-browser-and-keep-complete-worker-data ()
+  (let ((phone (make-pipe-process :name "phone languages" :noquery t))
+        (emacsvox-voice-browser-languages '("en" "fr")))
+    (unwind-protect
+        (let* ((voices (mapcar (lambda (row)
+                                 (list :id (list :voice_id (car row)) :display_name (car row) :language (cadr row)))
+                               '(("Reed" "en_US") ("Flo" "en-US") ("French" "fr-CA") ("Spanish" "es"))))
+               (inventory (list :engines (list (list :id "ios" :voices voices)))))
+          (process-put phone omnivox--control-inventory-property inventory)
+          (should (equal (mapcar #'car (iphone-voices--rows phone)) '("Reed" "Flo" "French")))
+          (should (equal (mapcar #'car (iphone-voices--rows phone t)) '("Reed" "Flo" "French" "Spanish")))
+          (should (eq inventory (process-get phone omnivox--control-inventory-property))))
+      (delete-process phone))))
+
 (ert-deftest iphone-registration-prefers-the-shared-directory-alternative-to-reading ()
   (let* ((phone (make-pipe-process :name "directory voice check" :noquery t))
          (choices '((:id "desktop" :selector (:kind exact :scope local :engine-id "dectalk" :voice-id "harry")

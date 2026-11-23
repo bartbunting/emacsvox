@@ -95,8 +95,9 @@ async function main() {
     gui = spawn('xvfb-run', ['-a', './test-session', '-T', 'Emacsvox isolated route check',
       '--eval', "(setq native-comp-async-report-warnings-errors 'silent)", '-l', path.join(__dirname, 'shared-session.el')], {
       cwd: path.join(__dirname, '..'), detached: true, stdio: 'ignore',
-      // Mode-line feedback can invoke SoX directly even with a test speech backend.
-      env: {...process.env, AUDIODRIVER: 'alsa', AUDIODEV: 'null', GDK_BACKEND: 'x11',
+      // Direct audio from the test Emacs must stay silent on the development machine.
+      env: {...process.env, AUDIODRIVER: 'alsa', AUDIODEV: 'null', PULSE_SERVER: 'unix:' + path.join(dir, 'no-audio'),
+        GDK_BACKEND: 'x11',
         XDG_RUNTIME_DIR: dir, EMACSVOX_PHONE_SOCKET: socket, EMACSVOX_SHARED_DIR: dir,
         ...(routed && {EMACSVOX_PHONE_SOCKET: desktopSocket, EMACSVOX_TRIAL_ROUTED: '1',
           EMACSVOX_TRIAL_DESKTOP_PROGRAM: path.resolve(__dirname, '../phone-backend')})},
@@ -780,6 +781,24 @@ async function main() {
             rawPackets.slice(opening).some(p => p.lane === 'M' && p.fixtureRow));
           assert.equal(await observe(`(with-current-buffer (window-buffer ${phoneWindow}) (length tabulated-list-entries))`), '2');
           const row = () => observe(`(with-selected-window ${phoneWindow} (tabulated-list-get-id))`);
+          const shown = () => observe(`(with-selected-window ${phoneWindow}
+            (and (derived-mode-p 'iphone-voices-mode) (length tabulated-list-entries)))`);
+          sshKeys('L');
+          await until('language list on the phone frame', async () => await observe(`(with-selected-window ${phoneWindow}
+            (derived-mode-p 'emacsvox-voice-languages-mode))`) !== 'nil');
+          assert.equal(await observe(`(with-selected-window ${phoneWindow}
+            (emacsvox-aural-ui-goto-row "es") (equal (tabulated-list-get-id) "es"))`), 't');
+          sshKeys('\r');
+          await until('Return stages Spanish on the phone', async () => await observe(`(with-selected-window ${phoneWindow}
+            (and (equal emacsvox-voice-languages--selected '("es")) (null emacsvox-voice-browser-languages)))`) === 't');
+          sshKeys('q');
+          await until('cancel returns to the unfiltered phone browser', async () => await shown() === '2');
+          // The disposable -Q profile only applies settings for this session.
+          await observe(`(setopt emacsvox-voice-browser-languages '("es"))`);
+          await until('Spanish hides both English fixture voices', async () => await shown() === '0');
+          await observe('(setopt emacsvox-voice-browser-languages nil)');
+          await until('clearing the filter restores both phone voices', async () => await shown() === '2');
+          assert.equal(await row(), '"test-1"');
           const movement = rawPackets.length;
           sshKeys('\x0e');
           await until('next phone voice', async () => await row() === '"test-2"');

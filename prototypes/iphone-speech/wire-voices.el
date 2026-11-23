@@ -5,6 +5,8 @@
 
 ;;; Code:
 (require 'emacsvox-aural-ui)
+(require 'emacsvox-voice-languages
+         (expand-file-name "../../lisp/ui/emacsvox-voice-languages" (file-name-directory load-file-name)))
 (require 'json)
 (require 'seq)
 (defvar iphone-frame-speech--settings nil)
@@ -174,11 +176,13 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
       (user-error "Connect with Use Omnivox on iPhone enabled to browse iPhone voices"))
     main))
 
-(defun iphone-voices--rows (main)
+(defun iphone-voices--rows (main &optional all)
+  "Return MAIN's visible voice rows, or the complete inventory when ALL is set."
   (let ((inventory (process-get main omnivox--control-inventory-property)))
     (cl-loop for engine in (plist-get inventory :engines) append
              (cl-loop for row in (plist-get engine :voices)
                       for id = (plist-get (plist-get row :id) :voice_id)
+                      when (or all (emacsvox-voice-browser--visible-p (plist-get row :language)))
                       collect (list id (vector (plist-get row :display_name) (or (plist-get row :language) "")
                                                (plist-get row :quality) id))))))
 
@@ -302,7 +306,10 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
 (defun iphone-voices--choose (main prompt)
   (let* ((choices (cl-loop for (id row) in (iphone-voices--rows main)
                            collect (cons (string-join (append row nil) "  ") id))))
-    (unless choices (user-error "Waiting for the iPhone voice inventory"))
+    (unless choices
+      (user-error "%s" (if (process-get main omnivox--control-inventory-property)
+                           "No matching iPhone voices. Press L in Browse voices to choose languages"
+                         "Waiting for the iPhone voice inventory")))
     (cdr (assoc (emacsvox-aural-ui--read-choice prompt choices) choices))))
 
 (defun iphone-voices-find ()
@@ -319,11 +326,15 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
     (princ (concat "iPhone voices\n\n"
                    "Up and Down move by voice. Left and Right read columns. Space reads the row.\n"
                    "/ finds an installed voice. p or P auditions it. S stops a sample.\n"
+                   "L chooses the languages shown on both the phone and desktop.\n"
                    "Return applies this reading voice to both phone workers. r assigns it to one named role.\n"
                    "v adjusts phone speech and audio levels. g refreshes the installed voices. q goes back.\n"))))
 
 (define-derived-mode iphone-voices-mode emacsvox-aural-tabulated-mode "iPhone Voices"
   "Browse installed iPhone voices. p previews, Return applies, r assigns a role and v adjusts speech."
+  (setq-local emacsvox-voice-browser--redraw
+              (lambda () (when (and (processp iphone-voices--main) (process-live-p iphone-voices--main))
+                           (iphone-voices--draw iphone-voices--main))))
   (setq tabulated-list-format [("Voice" 28 t) ("Language" 10 t) ("Quality" 12 t) ("Identifier" 40 t)])
   (emacsvox-aural-ui-configure-tabulated "iPhone voices" #'iphone-voices--speak-row
                                          #'iphone-voices-refresh #'iphone-voices--speak-row)
@@ -331,7 +342,7 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
 
 (dolist (binding '(("p" . iphone-voices-preview) ("P" . iphone-voices-preview)
                    ("/" . iphone-voices-find) ("?" . iphone-voices-help) ("RET" . iphone-voices-apply)
-                   ("r" . iphone-voices-role) ("v" . iphone-voices-adjust)
+                   ("r" . iphone-voices-role) ("v" . iphone-voices-adjust) ("L" . emacsvox-choose-voice-languages)
                    ("g" . iphone-voices-refresh) ("R" . iphone-voices-refresh)))
   (keymap-set iphone-voices-mode-map (car binding) (cdr binding)))
 
@@ -366,9 +377,11 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
       (let ((display-buffer-overriding-action '((display-buffer-same-window))))
         (emacsvox-aural-ui--pop-to-buffer
          buffer (lambda ()
-                  (tts-speak (format "iPhone voices. %d installed. %s. Up or Down moves, P previews."
+                  (tts-speak (format "iPhone voices. %d shown. %s. Up or Down moves, P previews."
                                      (length tabulated-list-entries)
-                                     (or (iphone-voices--row-description) "Waiting for inventory"))))))
+                                     (or (iphone-voices--row-description)
+                                         (if (process-get main omnivox--control-inventory-property)
+                                             "L chooses browsing languages" "Waiting for inventory")))))))
       buffer)))
 
 (defun iphone-voices--select (original &rest args)
@@ -380,7 +393,7 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
     (iphone-voices-refresh)
     (mapcar (lambda (entry)
               (let ((row (cadr entry))) (list (car entry) (aref row 0) (aref row 1) (aref row 2))))
-            (iphone-voices--rows (iphone-voices--owner)))))
+            (iphone-voices--rows (iphone-voices--owner) t))))
 
 (provide 'iphone-wire-voices)
 ;;; wire-voices.el ends here

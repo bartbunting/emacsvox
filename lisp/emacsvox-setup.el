@@ -181,6 +181,7 @@
     "ui/emacsvox-aural-doctor.el"
     "ui/emacsvox-aural-profiles.el"
     "ui/emacsvox-aural-voice-palettes.el"
+    "ui/emacsvox-voice-languages.el"
     "ui/emacsvox-aural-voice-workbench-views.el"
     "ui/emacsvox-aural-voice-workbench-preview.el"
     "ui/emacsvox-aural-voice-workbench-library.el"

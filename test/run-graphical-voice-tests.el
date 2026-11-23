@@ -99,6 +99,7 @@
                         emacsvox-aural-workbench-graphical-espeak-tree-navigation
                         emacsvox-aural-workbench-graphical-filter-search-and-editor-return
                         emacsvox-aural-workbench-graphical-language-navigation-and-refresh
+                        emacsvox-voice-languages-stage-multiple-choices-save-and-cancel
                         emacsvox-omnivox-components-graphical-details-refresh-preserves-window
                         emacsvox-omnivox-components-graphical-explicit-release-round-trip
                         emacsvox-omnivox-components-graphical-library-navigation-and-return
@@ -113,8 +114,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 40)
-                                (= (ert-stats-completed stats) 40)
+          (setq status (if (and (= (ert-stats-total stats) 41)
+                                (= (ert-stats-completed stats) 41)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

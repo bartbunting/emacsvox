@@ -6929,7 +6929,6 @@ itself.
 
  -- Variable: User Option emacsvox-notmuch-automatic-total-byte-limit
      Maximum UTF-8 bytes in one automatic Notmuch presentation.
-
      The limit includes the explicit truncation notice.  Set this to nil to disable
      the total byte limit; the total character limit still applies.
 

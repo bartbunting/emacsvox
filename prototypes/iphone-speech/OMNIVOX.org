@@ -123,9 +123,10 @@ and resolved the reading roles to the saved voice.
 The phone reading rate starts at 150.
 
 In the phone terminal, open the Aural menu, press =v= for Voices and
-engines, then =b= for Browse voices. The selected window shows one row per
-installed iOS identifier. The first visit on a new connection selects your
-saved reading voice if it is installed. Up and Down speak the name, language
+engines, then =b= for Browse voices. Press =L= to choose the languages
+shown on the phone and desktop. Return toggles each language, =s= saves,
+and =q= cancels. The first visit on a new connection selects your
+saved reading voice if it is visible. Up and Down speak the name, language
 and quality.
 Use =/= to find a name or language, Left and Right to inspect columns,
 and =q= to return to the same menu. =M-x emacsvox-aural-voice-workbench=

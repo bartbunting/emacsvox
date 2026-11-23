@@ -5094,6 +5094,18 @@ shortcuts remain available.
 
 @subsection Find and filter installed voices
 
+Press @kbd{L} in @emph{Voices and engines} or in the voice browser to choose the
+languages shown on all your Emacs frames. Use Up and Down to hear each
+language and its selection state. Press @kbd{@key{RET}} on each language you want@comma{}
+then @kbd{s} to save. For example@comma{} selecting English and French includes voices
+from every English and French region. Select @emph{Unspecified language} to
+include voices whose engine supplies no language. Select @emph{All languages}
+and save to see the full list again. @kbd{q} discards pending changes.
+
+The selection also narrows voice searches and the physical-voice picker
+when adding a fallback to a palette. Speech servers continue to resolve
+your saved voice assignments against their full inventories.
+
 A language with one voice shows it directly; several voices form an expandable
 heading with count and state. @kbd{@key{RET}} toggles it. Initial sorting ignores
 capitalisation. Regions form a tree@comma{} for example English then United Kingdom

@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 387 loaded; 0 intentionally omitted.
+@c Modules: 388 loaded; 0 intentionally omitted.
 @c Loaded: aural/emacsvox-aural-compatibility-voice.elc aural/emacsvox-aural-compiler.elc aural/emacsvox-aural-concrete.elc aural/emacsvox-aural-description.elc aural/emacsvox-aural-explanation.elc
 @c Loaded: aural/emacsvox-aural-history.elc aural/emacsvox-aural-inspection.elc aural/emacsvox-aural-planner.elc aural/emacsvox-aural-preview.elc aural/emacsvox-aural-profile-service.elc
 @c Loaded: aural/emacsvox-aural-provider-markdown.elc aural/emacsvox-aural-provider-notmuch.elc aural/emacsvox-aural-provider-org-srs.elc aural/emacsvox-aural-provider-org.elc aural/emacsvox-aural-provider-workflows.elc
@@ -77,9 +77,9 @@
 @c Loaded: ui/emacsvox-interaction.elc ui/emacsvox-line-cues.elc ui/emacsvox-muggles-ui.elc ui/emacsvox-omnivox-components.elc ui/emacsvox-output-settings.elc
 @c Loaded: ui/emacsvox-reading-settings.elc ui/emacsvox-settings-changes.elc ui/emacsvox-settings-integrations.elc ui/emacsvox-settings-workflows.elc ui/emacsvox-settings.elc
 @c Loaded: ui/emacsvox-sound-library.elc ui/emacsvox-spelling.elc ui/emacsvox-table-settings.elc ui/emacsvox-tone-editor.elc ui/emacsvox-tree-settings.elc
-@c Loaded: ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc ui/omnivox-library.elc
-@c Loaded: ui/omnivox-output-devices.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc voices/emacsvox-aural-voice-editing.elc
-@c Loaded: voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
+@c Loaded: ui/emacsvox-voice-languages.elc ui/emacsvox-welcome.elc ui/omnivox-catalogue.elc ui/omnivox-engine-configuration.elc ui/omnivox-espeak-variants.elc
+@c Loaded: ui/omnivox-library.elc ui/omnivox-output-devices.elc ui/omnivox-punctuation.elc voices/emacsvox-aural-voice-data.elc voices/emacsvox-aural-voice-drafts.elc
+@c Loaded: voices/emacsvox-aural-voice-editing.elc voices/emacsvox-aural-voice-runtime.elc voices/voice-defs.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -87,7 +87,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1777 commands and 269 options.
+This chapter documents a total of 1779 commands and 270 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -412,6 +412,7 @@ This chapter documents a total of 1777 commands and 269 options.
 * emacsvox-version:: Emacsvox release identity.
 * emacsvox-vertico:: Speech-enable Vertico.
 * emacsvox-view:: Speech enable View mode -.
+* emacsvox-voice-languages:: Languages shown in voice browsers.
 * emacsvox-vterm:: Speech-enable VTERM.
 * emacsvox-wdired:: Speech-enable wdired.
 * emacsvox-we:: Transform WebUsing XSLT.
@@ -7506,6 +7507,7 @@ E		emacsvox-aural-voice-workbench-export-profile
 F		emacsvox-aural-voice-workbench-set-filter
 I		emacsvox-aural-voice-workbench-import-profile
 K		emacsvox-aural-voice-workbench-request-recovery-probe
+L		emacsvox-choose-voice-languages
 O		emacsvox-aural-voice-workbench-toggle-preferred-engine
 P		emacsvox-aural-voice-workbench-preview
 Q		emacsvox-aural-voice-workbench-quick-filter
@@ -18071,7 +18073,6 @@ Default Value:
 @defvar {User Option} emacsvox-notmuch-automatic-total-byte-limit
 @verbatim
 Maximum UTF-8 bytes in one automatic Notmuch presentation.
-
 The limit includes the explicit truncation notice.  Set this to nil to disable
 the total byte limit; the total character limit still applies.
 @end verbatim
@@ -25123,6 +25124,66 @@ Provide additional advice to view-mode
 Move the current line to the top of the window and speak it.
 @end format
 @end deffn
+
+@node emacsvox-voice-languages
+@section emacsvox-voice-languages
+
+Choose which languages to show when browsing physical voices. Speech
+workers use their full inventories to resolve saved and active voices.
+
+@subsection Emacsvox-Voice-Languages Commands
+
+@subsubsection emacsvox-choose-voice-languages
+@deffn {Command} emacsvox-choose-voice-languages
+@findex emacsvox-choose-voice-languages
+
+@format
+Choose which languages appear in physical voice browsers and voice pickers.
+Return toggles a language and s saves the list across sessions. Select All
+languages to include every voice. Each language includes its regional voices.
+@end format
+@end deffn
+
+@subsubsection emacsvox-voice-languages-mode
+@deffn {Command} emacsvox-voice-languages-mode
+@findex emacsvox-voice-languages-mode
+
+@format
+Choose browsing languages. Return toggles a language, s saves and q cancels.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-voice-languages-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-voice-languages--toggle
+q		emacsvox-voice-languages--quit
+s		emacsvox-voice-languages--save
+
+@end format
+@end deffn
+
+@subsection emacsvox-voice-languages Options
+
+@defvar {User Option} emacsvox-voice-browser-languages
+@verbatim
+Languages to show when browsing physical voices on any connected speech server.
+An empty list shows all voices.  Use primary language codes, such as
+"en" for all English voices or "fr" for all French voices.  Use "und"
+for voices with an unspecified language.  This preference affects the
+lists and their searches.  Speech uses the complete inventory.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-vterm
 @section emacsvox-vterm

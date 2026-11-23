@@ -327,7 +327,8 @@
                    (plist-get (car pair) :engine-id) (plist-get (cadr pair) :voice-id)) pair))
    (cl-remove-if #'emacsvox-aural-voice-workbench--unavailable-reason
                  (if filtered (emacsvox-aural-voice-workbench--visible-physical-pairs)
-                   (emacsvox-aural-voice-workbench--all-engine-voices)))))
+                   (seq-filter (lambda (pair) (emacsvox-voice-browser--visible-p (plist-get (cadr pair) :language)))
+                               (emacsvox-aural-voice-workbench--all-engine-voices))))))
 
 (defun emacsvox-aural-voice-workbench-compare ()
   "Compare the selected physical voice with another matching voice."

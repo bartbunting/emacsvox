@@ -35,6 +35,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'tts-queue-state)
+(require 'emacsvox-voice-languages)
 (require 'emacsvox-preamble)
 (require 'json)
 (require 'subr-x)
@@ -2368,7 +2369,8 @@ Return the number of distinct processes that received the command."
                 (format "%s [%s, %s] — %s"
                         name language quality id)
                 id)))
-           omnivox-available-voices))
+           (seq-filter (lambda (v) (emacsvox-voice-browser--visible-p (nth 2 v))) omnivox-available-voices)))
+         (_ (unless candidates (user-error "No voices match your browsing languages. Run emacsvox-choose-voice-languages")))
          (choice (completing-read "Omnivox voice: " candidates nil t))
          (voice-id (cdr (assoc-string choice candidates))))
     (omnivox-set-voice voice-id)
@@ -2379,13 +2381,13 @@ Return the number of distinct processes that received the command."
   (interactive)
   (unless omnivox-available-voices
     (omnivox-refresh-voices))
-  (with-help-window "*Omnivox Voices*"
-    (princ (format "Omnivox reported %d voices.\n\n"
-                   (length omnivox-available-voices)))
-    (dolist (voice omnivox-available-voices)
-      (pcase-let ((`(,id ,name ,language ,quality) voice))
-        (princ (format "%s\n  ID: %s\n  Language: %s\n  Quality: %s\n\n"
-                       name id language quality))))))
+  (let ((voices (seq-filter (lambda (v) (emacsvox-voice-browser--visible-p (nth 2 v))) omnivox-available-voices)))
+    (with-help-window "*Omnivox Voices*"
+      (princ (format "%d of %d voices shown.\n\n" (length voices) (length omnivox-available-voices)))
+      (dolist (voice voices)
+        (pcase-let ((`(,id ,name ,language ,quality) voice))
+          (princ (format "%s\n  ID: %s\n  Language: %s\n  Quality: %s\n\n"
+                         name id language quality)))))))
 
 (defun omnivox--request-inventory (process &optional discovery)
   "Refresh PROCESS's inventory with at most one outstanding request.

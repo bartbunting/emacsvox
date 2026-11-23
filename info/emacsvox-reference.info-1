@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1777 commands and 269 options.
+   This chapter documents a total of 1779 commands and 270 options.
 
 * Menu:
 
@@ -746,6 +746,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-version:: Emacsvox release identity.
 * emacsvox-vertico:: Speech-enable Vertico.
 * emacsvox-view:: Speech enable View mode -.
+* emacsvox-voice-languages:: Languages shown in voice browsers.
 * emacsvox-vterm:: Speech-enable VTERM.
 * emacsvox-wdired:: Speech-enable wdired.
 * emacsvox-we:: Transform WebUsing XSLT.
@@ -6856,6 +6857,7 @@ preview, library integration, routing and apply.
      F		emacsvox-aural-voice-workbench-set-filter
      I		emacsvox-aural-voice-workbench-import-profile
      K		emacsvox-aural-voice-workbench-request-recovery-probe
+     L		emacsvox-choose-voice-languages
      O		emacsvox-aural-voice-workbench-toggle-preferred-engine
      P		emacsvox-aural-voice-workbench-preview
      Q		emacsvox-aural-voice-workbench-quick-filter
