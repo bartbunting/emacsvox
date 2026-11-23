@@ -3,10 +3,13 @@
 Track the path from this speech receiver to a full terminal in the
 [[file:PLAN.org][iPhone prototype plan]].
 
-Install signed build 6 for word-aligned capital tones and optional speech
-tracing. From the phone frame you can list and apply installed iOS voices
-and play Omnivox tones and earcons. See [[file:OMNIVOX.org][Omnivox on iPhone]] for the
-listening exercise, trace controls, launch commands and WSL verification.
+Install signed build 7 on the registered iPhone. In Safari, activate
+Install and confirm. Open Emacsvox Speech, connect on the Terminal tab and
+focus the Emacs keyboard. Run =M-x omnivox-list-voices=. Press =p= to
+audition the selected voice, Return to use it for reading, or =r= to
+assign it to a role such as =bolden=. Your saved reading voice applies
+when you reconnect. See [[file:OMNIVOX.org][Omnivox on iPhone]] for the audio tests, trace
+controls and WSL launch commands.
 
 * Listen from the PC keyboard
 

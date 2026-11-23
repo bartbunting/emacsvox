@@ -82,25 +82,31 @@ supplies from word starts the phone measures.
    Compare direct speech and mixed Eloquence on speaker and headphones.
    Check that the cue starts at the intended place, a second =C-n= cuts
    off obsolete feedback, and Stop Speech silences a long reply.
-   Use the listening check for audible onset. The next native revision
+   Use the listening check for audible onset. Build 7
    sends typed letters through the same PCM player as line reading. Its
    optional trace records peak, RMS and full-scale sample counts before
    playback. Build 6 can already use the relay's spoken trace receipt and
    the main and notification volume settings inherited from Emacs.
 
-The source branch negotiates layered voice choices, engine parameters,
-rich tones through timeline version 7, and palette-aware characters.
+Signed build 7 was built on 23 November 2026 from Emacsvox =d03ef54a1=
+and Omnivox =d2c76f1=. Its arm64 executable, signature, device profile,
+timing fixture and 83 bundled audio and licence files passed verification.
+It negotiates layered voice choices, engine parameters, rich tones
+through timeline version 7 and palette-aware characters.
 In a WSL test, a real Agent Shell =C-n= and Right Arrow onto the capital
 in =TestCase= reached the phone worker over SSH and completed on version 7.
-Both workers acknowledged the selected reading voice. The worker tries
+Both workers acknowledged the selected reading voice. Assigning a second
+voice to =bolden= and reading a styled line produced the expected three
+voice identifiers in order: reading voice, alternate voice, reading voice.
+The worker tries
 another eligible choice if its voice disappears before audio starts.
 If you ask to preview one exact voice, the result belongs to that voice.
 
 The Rust audio test feeds identical speech samples through exact preview,
 a named voice preview, line reading and character reading. It compares
-every stereo sample and the echo and reverb tails. These changes await
-a signed build for listening with US Reed, particularly the relative
-volume of characters and lines.
+every stereo sample and the echo and reverb tails. Listen on build 7 for
+the change of voice within a line, the relative volume of Reed's letters
+and line reading, and the indentation tone over the first word.
 
 When a line changes voices, the desktop and iPhone workers use the same
 effect state for each choice. A WSL test tracks the old voice's echo on
