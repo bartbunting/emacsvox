@@ -76,7 +76,7 @@ final class WireLane {
       }
       return
     }
-    if muted && !(line.hasPrefix("emacsvox_timeline") || line.hasPrefix("omnivox_control ") || line.hasPrefix("tts_set_") ||
+    if muted && !(line.hasPrefix("emacsvox_timeline") || line.hasPrefix("emacsvox_letter ") || line.hasPrefix("omnivox_control ") || line.hasPrefix("tts_set_") ||
                   line.hasPrefix("tts_sync_state ") || line == "tts_reset" || line == "s") { return }
     let result = try self.action(line)
     refreshParts()

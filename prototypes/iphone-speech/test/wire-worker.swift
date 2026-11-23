@@ -141,6 +141,7 @@ final class TestOutput: WireOutput {
       try feed("tts_set_tone_volume 1")
       try feed("tts_set_voice {test-1}")
       print("The desktop timeline supplied one intact TestCase with both capital positions and the selected phone voice.")
+      try checkPalettePlayback(CommandLine.arguments[1], voices: voices)
       try checkTimelinePlayback(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMissingWordTiming(CommandLine.arguments[1], voices: voices, envelope: envelope)
       try checkMixedPlayback(CommandLine.arguments[1], voices: voices)

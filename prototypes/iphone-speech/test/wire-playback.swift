@@ -331,3 +331,54 @@ func checkTimelinePlayback(_ root: String, voices: String, envelope: Data) throw
   precondition(events.contains { $0["type"] as? String == "semantic_event_reached" && $0["action_id"] as? String == "done-reached" })
   print("Passed exact TestCase PCM and semantic frames, protected ordering, queue pressure, atomic resource failure and stale playback callbacks.")
 }
+
+func checkPalettePlayback(_ root: String, voices: String) throws {
+  let data = try Data(contentsOf: URL(fileURLWithPath: "/out/VoiceChoices.json"))
+  let fixture = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+  let messages = fixture["messages"] as! [String: [String: Any]]
+  var registration = messages["registration"]!, document = messages["timeline"]!
+  var definitions = registration["definitions"] as! [[String: Any]]
+  var role = definitions[0]["definition"] as! [String: Any], choices = role["choices"] as! [[String: Any]]
+  choices[1]["selector"] = ["kind":"exact", "engine_id":"ios", "voice_id":"test-2"]
+  role["choices"] = choices
+  definitions[0]["definition"] = role
+  registration["definitions"] = definitions
+  func record(_ command: String, _ body: [String: Any]) throws -> String {
+    command + " " + (try JSONSerialization.data(withJSONObject: body)).base64EncodedString()
+  }
+  let output = TestOutput(root)
+  var replies: [String] = [], spoken: [WireItem] = []
+  output.observeSpeech = { spoken.append($0) }
+  output.hold = true
+  let lane = WireLane(output) { replies.append($0) }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  try lane.feed(record("omnivox_control", registration), muted: false)
+  replies.removeAll()
+  try lane.feed(record("emacsvox_timeline", document), muted: false)
+  precondition(spoken.count == 4 && replies.isEmpty)
+  document["generation"] = 9
+  document["dispatch_id"] = 92
+  try lane.feed(record("emacsvox_letter", document), muted: false)
+  precondition(replies == ["__EMACSVOX_TRACKED__ 92 failed"] && output.finishes.count == 1)
+  var span = (document["spans"] as! [[String: Any]])[0]
+  var letter = span["span"] as! [String: Any]
+  letter["text"] = "J"
+  span["span"] = letter
+  document["spans"] = [span]
+  try lane.feed(record("emacsvox_letter", document), muted: false)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 91 cancelled")
+  precondition(spoken.last?.text == "j" && spoken.last?.voice == "test-2")
+  output.finishes.removeFirst()(true)
+  precondition(replies.count == 2)
+  output.finishes.removeFirst()(true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 92 completed")
+  let markers = try replies.filter { $0.hasPrefix("__EMACSVOX_MARKER__ ") }.map {
+    try JSONSerialization.jsonObject(with: Data(base64Encoded: String($0.split(separator:" ")[1]))!) as! [String: Any]
+  }
+  precondition(markers.prefix(2).compactMap { $0["type"] as? String } == ["utterance_started","voice_choice_applied"])
+  precondition((markers[1]["choice"] as? [String: Any])?["choice_id"] as? String == "eloquence-reed")
+  document["generation"] = 10
+  document["dispatch_id"] = 93
+  try lane.feed(record("emacsvox_letter", document), muted: true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 93 cancelled" && output.finishes.isEmpty)
+}

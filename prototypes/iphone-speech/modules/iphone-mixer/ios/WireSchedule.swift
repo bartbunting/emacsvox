@@ -28,7 +28,7 @@ struct WireReceipts: Decodable {
 struct WireAction: Decodable {
   enum Op: String, Decodable { case reply, batch, immediate, timeline, stop, exit }
   let op: Op
-  var key: String?, bytes: Int?
+  var key: String?, bytes: Int?, interrupt: Bool?
   var line: String?, items: [WireItem]?, item: WireItem?, receipts: WireReceipts?
 }
 
@@ -96,6 +96,10 @@ final class WireSchedule {
       admit([item], nil, size, immediate: item.kind == .sound)
     case .timeline:
       guard let presentation, let receipts = action.receipts, let bytes = action.bytes else { return }
+      if action.interrupt == true {
+        guard (0...32 * 1024 * 1024).contains(bytes) else { reply(receipts.failed); return }
+        stop(all: false)
+      }
       admit([], receipts, bytes, immediate: false, presentation: presentation)
     case .batch: admit(action.items ?? [], action.receipts, size, immediate: false)
     }
