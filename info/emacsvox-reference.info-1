@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1775 commands and 269 options.
+   This chapter documents a total of 1776 commands and 269 options.
 
 * Menu:
 
@@ -1540,6 +1540,18 @@ outcomes.  Keep callback generations and interaction snapshots with
 cleanup.  The facade owns advice installation and activation; event
 subscriptions call these helpers.  Load through 'emacsvox-agent-shell'.
 Loading definitions installs no advice or buffer hooks.
+
+2.19.1 Emacsvox-Agent-Shell-Interaction Commands
+------------------------------------------------
+
+2.19.1.1 emacsvox-agent-shell-jump-to-pending-question
+......................................................
+
+ -- Command: emacsvox-agent-shell-jump-to-pending-question
+
+     Move to this conversation’s newest unanswered question and speak it.
+     Use the selected window.  If no question is waiting, speak that result
+     and leave point and any unsent draft in place.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-agent-shell-motion,  Next: emacsvox-agent-shell-navigation,  Prev: emacsvox-agent-shell-interaction,  Up: Emacsvox Commands And Options
@@ -8889,22 +8901,3 @@ File: emacsvox-reference.info,  Node: emacsvox-dumb-jump,  Next: emacsvox-eat,  
 
 DUMB-JUMP == Jump to imputed cross-references in source code.  This
 module speech-enables dumb-jump
-
-
-File: emacsvox-reference.info,  Node: emacsvox-eat,  Next: emacsvox-eat-core,  Prev: emacsvox-dumb-jump,  Up: Emacsvox Commands And Options
-
-2.126 emacsvox-eat
-==================
-
-Public entry point for Emacsvox speech access to EAT terminals.  The
-implementation is split by responsibility: - 'emacsvox-eat-screen' owns
-screen snapshots and differences.  - 'emacsvox-eat-focus' owns focus
-inference and navigation feedback.  - 'emacsvox-eat-output' owns prompt
-boundaries and output collection.  - 'emacsvox-eat-presentation' owns
-status, metadata, bells, and output cues.  - 'emacsvox-eat-core' owns
-observation, lifecycle, and presentation timing.  - 'emacsvox-eat-input'
-owns input, deletion, navigation, and completion.  -
-'emacsvox-eat-review' owns frozen screen review and inspection.
-
-   Keep requiring 'emacsvox-eat'; the internal features are load-order
-details.

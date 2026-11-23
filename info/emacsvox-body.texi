@@ -8927,6 +8927,13 @@ When a form arrives@comma{} Emacsvox announces that an answer is needed and read
 question. Automatic question feedback follows the session's speech level;
 @code{quiet} suppresses it. Explicit reading and actions still speak.
 
+Press @kbd{C-c q} (@code{emacsvox-agent-shell-jump-to-pending-question}) to hear the
+newest unanswered question in this conversation. You can use it while
+reading the transcript or typing a draft. The jump moves only your selected
+window. If you are composing in a separate buffer@comma{} your draft stays there.
+If no question is waiting@comma{} Emacsvox says “No pending question” and keeps
+your place.
+
 Use @kbd{@key{TAB}} and @kbd{S-@key{TAB}} to move between controls in the shell or viewport.
 Emacsvox reads the field name and whether it is required when entering a field.
 Moving between choices in that field reads the choice and its state without
@@ -8945,8 +8952,9 @@ use ordinary @kbd{@key{RET}} to open.
 
 Choose @emph{Submit} to send the answers or @emph{Decline} to decline the question.
 Missing required answers are reported without announcing successful submission.
-@kbd{C-c C-c} interrupts the running request@comma{} including any pending form. To return
-to the latest question@comma{} use @kbd{M-x agent-shell-elicitation-jump-to-latest-form}.
+@kbd{C-c C-c} interrupts the running request@comma{} including any pending form.
+To revisit the latest visible form even after answering it@comma{} use
+@kbd{M-x agent-shell-elicitation-jump-to-latest-form}.
 The next-field and previous-field commands are also available through @kbd{M-x}.
 
 If controls remain visible after their form expires@comma{} @kbd{@key{TAB}} and @kbd{S-@key{TAB}} read

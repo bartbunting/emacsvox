@@ -3419,6 +3419,13 @@ reads the question.  Automatic question feedback follows the session's
 speech level; ‘quiet’ suppresses it.  Explicit reading and actions still
 speak.
 
+   Press ‘C-c q’ (‘emacsvox-agent-shell-jump-to-pending-question’) to
+hear the newest unanswered question in this conversation.  You can use
+it while reading the transcript or typing a draft.  The jump moves only
+your selected window.  If you are composing in a separate buffer, your
+draft stays there.  If no question is waiting, Emacsvox says “No pending
+question” and keeps your place.
+
    Use ‘<TAB>’ and ‘S-<TAB>’ to move between controls in the shell or
 viewport.  Emacsvox reads the field name and whether it is required when
 entering a field.  Moving between choices in that field reads the choice
@@ -3439,7 +3446,8 @@ the question text or expanded previews use ordinary ‘<RET>’ to open.
    Choose _Submit_ to send the answers or _Decline_ to decline the
 question.  Missing required answers are reported without announcing
 successful submission.  ‘C-c C-c’ interrupts the running request,
-including any pending form.  To return to the latest question, use ‘M-x
+including any pending form.  To revisit the latest visible form even
+after answering it, use ‘M-x
 agent-shell-elicitation-jump-to-latest-form’.  The next-field and
 previous-field commands are also available through ‘M-x’.
 
