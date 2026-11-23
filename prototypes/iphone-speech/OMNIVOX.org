@@ -262,6 +262,11 @@ Use fixed synthetic speech lengths for scheduling comparisons.
 
 ** 3. List, select and tune the phone's voices from Emacs
 
+Qualify Apple's installed voices first. Keep the engine ID with each
+physical voice ID in the registry, renderer and playback reports. A later
+on-device engine such as eSpeak NG can then join the same Omnivox resolver
+and mixer. The Apple build uses the ordinary single-engine fallback rules.
+
 Implement the existing =capabilities= and =inventory= exchange on each
 phone worker. Enumerate the voices iOS makes available with
 [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesisvoice/speechvoices%28%29][Apple's voice inventory]].
