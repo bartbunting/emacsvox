@@ -12,13 +12,19 @@ public final class IphoneOmnivoxModule: Module {
   private let inventory = WireVoiceInventory()
   private var inventoryObserver: NSObjectProtocol?
   private var markerStatus: String?
+  private weak var mainAudio: WireAudio?
   private let importer = CueImport()
   private let trace = WireSpeechTrace()
   private var speechBoost: UInt8 = 0
 
   public func definition() -> ModuleDefinition {
     Name("IphoneOmnivox")
-    Events("wireReply")
+    Events("wireReply", "keyTiming")
+    Function("timingClock") { wireUptimeMilliseconds() }
+    AsyncFunction("armKeyTiming") { (id: Int, serial: Int) in
+      guard self.connection == id, let audio = self.mainAudio else { throw WireFailure.action }
+      audio.keyTimingSample = (1...255).contains(serial) ? serial : nil
+    }.runOnQueue(.main)
     AsyncFunction("setSpeechLoudness") { (db: Int) in
       self.speechBoost = UInt8(min(6, max(0, db)))
     }.runOnQueue(.main)
@@ -48,6 +54,11 @@ public final class IphoneOmnivoxModule: Module {
         let audio = WireAudio(resources, trace: self.trace, lane: tag)
         audio.speechLoudness = { [weak self] in self?.speechBoost ?? 0 }
         if tag == "M" {
+          self.mainAudio = audio
+          audio.keyTimingStarted = { [weak self] serial, event, time in
+            guard let self, self.connection == id else { return }
+            self.sendEvent("keyTiming", ["connection": id, "serial": serial, "event": event, "time": time] as [String: Any])
+          }
           audio.resolvedMarks = { [weak self] report in
             if report.exact + report.word + report.span > 0 { self?.markerStatus = report.description }
           }

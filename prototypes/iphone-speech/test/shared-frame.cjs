@@ -392,6 +392,7 @@ async function main() {
               }
               const volume = /^tts_set_(voice|tone|sound)_volume (\S+)$/.exec(line);
               packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
+                timingSerial: /^q \{timing sample (\d+) \}$/.exec(line)?.[1],
                 timeline, volume: volume && {kind: volume[1], value: Number(volume[2])},
                 control: control?.type, voice: control?.selector?.voice_id, requestId: control?.request_id,
                 previewChoice: control?.voice?.choices?.find(c => c.id === control.selection?.choice_id),
@@ -628,6 +629,17 @@ async function main() {
               (process-get p omnivox--control-registration-property))) (list ${main} ${notification}))`) === 't', 30000);
           const desktopSnapshot = '(list (process-name tts-speaker-process) omnivox-engine-inventory omnivox-available-voices omnivox-default-voice-id)';
           const desktopState = await observe(desktopSnapshot);
+          const editorPosition = `(with-selected-window ${phoneWindow}
+            (list (buffer-name) (point) (buffer-chars-modified-tick)))`;
+          const beforeTiming = await observe(editorPosition);
+          assert.ok(rawPackets.some(p => p.type === 'ready' && p.keyTiming === true));
+          sshKeys('\x1b[57343;17u');
+          await until('one diagnostic key returns its numbered speech on the phone', () => {
+            const queued = rawPackets.findIndex(p => p.lane === 'M' && p.timingSerial === '17');
+            return queued >= 0 && rawPackets.slice(queued + 1).some(p => p.lane === 'M' && p.command === 'd');
+          });
+          assert.equal(await observe(editorPosition), beforeTiming, 'the diagnostic key leaves the conversation untouched');
+          console.log('The numbered timing key returned on the main phone worker and preserved the buffer and point.');
           const registrationTests = JSON.stringify(path.join(__dirname, 'voice-registration.el'));
           assert.equal(await observe(`(progn (load ${registrationTests} nil t t)
             (ert-stats-completed-unexpected (ert-run-tests-batch "^iphone-registration-")))`), '0');
@@ -871,6 +883,15 @@ async function main() {
             await inEditor(`(eq 'completed (plist-get (emacsvox-aural-voice-editor--get :preview-result) :status))`) === 't');
           assert.equal(await inEditor(`(car (plist-get (emacsvox-aural-voice-editor--get :preview-result) :speech-connection))`),
             await observe(`(process-name ${main})`));
+          const picking = rawPackets.length;
+          await inEditor(`(emacsvox-aural-voice-editor--locate 'add)`);
+          sshKeys('\rtest-2\t\rSearch again\rtest-1\t\rAudition candidate\r');
+          await until('the picker auditions the replacement choice through the phone', () =>
+            rawPackets.slice(picking).some(p => p.lane === 'M' && p.previewChoice?.id === 'candidate' &&
+              p.previewChoice.selector.voice_id === 'test-1'));
+          await until('audition leaves the candidate under point with no outstanding prompt', async () =>
+            await inEditor(`(and (= 0 (minibuffer-depth)) (eq 'candidate (get-text-property (point) 'voice-field))
+              (eq 'completed (plist-get (emacsvox-aural-voice-editor--get :preview-result) :status)))`) === 't');
           sshKeys('qKeep draft and return\r');
           await until('the named fallback returns to the phone browser', async () => await row() === '"test-2"');
           sshKeys('g');

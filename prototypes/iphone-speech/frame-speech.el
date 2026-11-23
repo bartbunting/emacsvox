@@ -239,7 +239,10 @@
     ("resolved" (process-put owner 'iphone-requests (delete id (process-get owner 'iphone-requests)))))
   (process-send-string owner
                        (concat "iphone_event " (json-encode
-                                               `((type . ,kind) (id . ,id) (text . ,text))) "\n")))
+                                               `((type . ,kind) (id . ,id) (text . ,text)
+                                                 ,@(when (and (equal kind "attached")
+                                                              (terminal-parameter nil 'emacsvox-phone-hyper))
+                                                     '((keyTiming . t))))) "\n")))
 
 (defun iphone-frame-speech--permission (frame key text)
   (when-let* ((owner (frame-parameter frame 'emacsvox-phone-speaker))
@@ -288,6 +291,18 @@
        (iphone-frame-speech--packet owner "reset-done" serial))))
   t)
 
+(defun iphone-frame-speech--timing-key (serial)
+  "Return the fixed diagnostic sample numbered SERIAL through this phone."
+  (when-let* (((frame-parameter nil 'emacsvox-native-ssh))
+              (owner (frame-parameter nil 'emacsvox-phone-speaker))
+              ((process-live-p owner)))
+    (iphone-frame-speech--worker-call
+     owner
+     (lambda ()
+       (tts--protocol-queue-text (format "timing sample %d" serial))
+       (tts--protocol-dispatch))))
+  [])
+
 (defvar iphone-frame-speech--hyper-map nil)
 
 (defun iphone-frame-speech--enable-hyper ()
@@ -311,6 +326,11 @@
                           (f11 . "23;%d~") (f12 . "24;%d~")))
             (define-key map (concat "\e[" (format (cdr pair) modifier))
                         (vector (event-convert-list (append mods (list (car pair)))))))))
+      ;; A diagnostic key carries a trial number without entering the buffer.
+      (dotimes (index 255)
+        (let ((serial (1+ index)))
+          (define-key map (format "\e[57343;%du" serial)
+                      (lambda (_prompt) (iphone-frame-speech--timing-key serial)))))
       (setq iphone-frame-speech--hyper-map map)))
   (unless (terminal-parameter nil 'emacsvox-phone-hyper)
     (setq input-decode-map (make-composed-keymap iphone-frame-speech--hyper-map input-decode-map))

@@ -4,6 +4,8 @@ import AVFoundation
 import AudioToolbox
 import OmnivoxMobile
 
+func wireUptimeMilliseconds() -> Double { ProcessInfo.processInfo.systemUptime * 1000 }
+
 final class WireResources {
   let loader: OpaquePointer
   let personal: OpaquePointer
@@ -129,6 +131,8 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   var interrupted: (() -> Void)?
   var speechLoudness: () -> UInt8 = { 0 }
   var resolvedMarks: ((WireTimingReport) -> Void)?
+  var keyTimingSample: Int?
+  var keyTimingStarted: ((Int, String, Double) -> Void)?
   private var observers: [NSObjectProtocol] = []
 
   init(_ resources: WireResources, trace: WireSpeechTrace, lane: String) {
@@ -157,6 +161,18 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   }
 
   deinit { for observer in observers { NotificationCenter.default.removeObserver(observer) } }
+
+  private func matchingSample(_ text: String?) -> Int? {
+    guard let serial = keyTimingSample,
+          text?.trimmingCharacters(in: .whitespacesAndNewlines) == "timing sample \(serial)" else { return nil }
+    return serial
+  }
+
+  private func reportSample(_ serial: Int, _ event: String, _ time: Double) {
+    guard keyTimingSample == serial else { return }
+    keyTimingSample = nil
+    keyTimingStarted?(serial, event, time)
+  }
 
   private func startAudio() throws {
     if !engine.isRunning {
@@ -206,16 +222,20 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     }
     let key = ObjectIdentifier(node)
     node.volume = 1
+    let sample = items.count == 1 ? matchingSample(items.first?.text) : nil
     let mixer = WireMixer(format: format, synth: bufferSynth, trace: trace, lane: lane, loudness: speechLoudness(),
                           resolvedMarks: resolvedMarks, presentation: presentation, voices: voices, reached: reached)
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
-      enqueue: { buffer, played in
+      enqueue: { [weak self] buffer, played in
         node.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
           DispatchQueue.main.async {
             if presentation?.isPreview == true { presentation?.startedAudio() }
             mixer.played(buffer)
             played()
           }
+        }
+        if let sample, buffer.frameLength > 0, self?.keyTimingSample == sample {
+          self?.reportSample(sample, "buffer", wireUptimeMilliseconds())
         }
         if presentation?.isPreview == true { presentation?.acceptedAudio() }
         if !node.isPlaying { node.play() }
@@ -310,6 +330,13 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
       let done = self.spoken
       self.spoken = nil
       done?(played)
+    }
+  }
+  func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+    let time = wireUptimeMilliseconds()
+    DispatchQueue.main.async { [weak self] in
+      guard let self, self.speech === utterance, let serial = self.matchingSample(utterance.speechString) else { return }
+      self.reportSample(serial, "speech", time)
     }
   }
   func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

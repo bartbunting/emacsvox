@@ -564,6 +564,14 @@ or Settings for connection and keyboard preferences. Changing tabs keeps
 your SSH frame open. Return to Terminal to resume typing at the same point.
 Stop Speech is available on Terminal and Diagnostics.
 
+With an updated app and WSL relay, choose “Measure SSH key to speech” in
+Diagnostics. Press Return in the Emacs keyboard field. The result gives
+milliseconds from receipt of that key to the returning speech record and
+to the first scheduled audio buffer or speech-start callback. “Measure
+local key to speech” plays the same sample on the phone. Neither test
+edits your Emacs buffer or requires speech logging. To compare speaker
+and headphones, run each test twice on each output and listen for onset.
+
 You can switch tabs while editing a setting. Return to Settings to continue
 your edit. Save settings applies it. Cancel restores the saved values. Both
 actions return to Terminal.

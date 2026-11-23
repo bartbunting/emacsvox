@@ -28,7 +28,7 @@ async function findVoice(speech) {
 function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, nativeWire, openSocket, status, playback = () => {}, voiceStatus = () => {},
                           keyboard = () => {}, screen = () => {}, sshOffer = () => {}, sessionActive = () => {}, now = Date.now }) {
   let wire, socket, heartbeat, lastReceived, resetId, ready;
-  let traceAllowed = false, tracePending = false;
+  let traceAllowed = false, tracePending = false, timingAllowed = false;
   let background = false, resumeOnActive = false, activeBeforeLock = false, retryTimer, frameId;
   let sshKeyboardConnected = false, sshKeyboardPublished = false;
   let epoch = 0, barrier = Promise.resolve(true), speaking = false;
@@ -236,7 +236,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     sshKeyboardConnected = sshKeyboardPublished = false;
     sessionActive(false);
     ready = false;
-    traceAllowed = tracePending = false;
+    traceAllowed = tracePending = timingAllowed = false;
     keyboard(null);
     sshOffer(null);
     clearPermissions();
@@ -295,6 +295,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
       } else if (record.type === 'ready' && record.id === resetId) {
         ready = true;
         if (record.speechTrace === true) traceAllowed = true;
+        timingAllowed = record.keyTiming === true;
         attempt = 0;
         status('Connected');
         if (record.keyboard === true) {
@@ -431,6 +432,12 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   return { connect: () => connect(), disconnect, appState, terminalConnected, terminalClosed, stop, testTone,
+    async prepareKeyTiming(frame, local) {
+      if (!wire || !ready || !sshKeyboardConnected || frameId !== frame) throw new Error('Connect the SSH terminal first.');
+      if (!local && !timingAllowed) throw new Error('The connected Emacs frame does not offer the timing test.');
+      return wire.prepareTiming(local);
+    },
+    cancelKeyTiming: () => wire?.cancelTiming(),
     testMarkers: () => localWireTest('markers'), lastTiming: () => localWireTest('last-timing'), sendSpeechTrace,
     testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => localWireTest('accent') || playCue(openObjectCue),
     testVisualLine: () => localWireTest('chime') || playCue(visualLineCue) };

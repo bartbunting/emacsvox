@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {AppState, KeyboardAvoidingView, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {AccessibilityInfo, AppState, KeyboardAvoidingView, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {registerRootComponent, requireNativeView, requireOptionalNativeModule} from 'expo';
 import {Asset} from 'expo-asset';
 import {useAudioPlayer} from 'expo-audio';
@@ -112,6 +112,8 @@ function Session({settings, save, active, reconnect}) {
   const [keyboard, setKeyboard] = useState(null);
   const [screen, setScreen] = useState('');
   const [timing, setTiming] = useState('');
+  const timingTrial = useRef(null);
+  const [timingPrompt, setTimingPrompt] = useState('');
   const [trace, setTrace] = useState('');
   useEffect(() => { if (settings.logSpeech !== 'yes' || tab !== 'Diagnostics') setTrace(''); }, [settings.logSpeech, tab]);
   const sshMode = Boolean(ssh) && settings.transport === 'ssh';
@@ -199,9 +201,50 @@ function Session({settings, save, active, reconnect}) {
       receiver.connect();
     }
   }
-  const useField = sshMode && offer && settings.input === 'field';
+  const useField = sshMode && offer && (settings.input === 'field' || Boolean(timingPrompt));
   const keyboardFrame = sshMode && offer && keyboard?.frame === offer.frame ? offer.frame : null;
   const canFocus = foreground && terminalTab && !reviewOpen;
+  function cancelTrial() {
+    timingTrial.current = null;
+    receiver.cancelKeyTiming();
+    setTimingPrompt('');
+  }
+  useEffect(() => {
+    if (!foreground || !keyboardFrame || reviewOpen) cancelTrial();
+    return () => { timingTrial.current = null; receiver.cancelKeyTiming(); };
+  }, [foreground, keyboardFrame, receiver, reviewOpen]);
+  function finishTrial(trial, message) {
+    if (timingTrial.current !== trial) return;
+    cancelTrial();
+    setTiming(message);
+    setTab('Diagnostics');
+    AccessibilityInfo.announceForAccessibility?.(message);
+  }
+  async function armTiming(local) {
+    cancelTrial();
+    const trial = {local, frame: keyboardFrame};
+    timingTrial.current = trial;
+    try {
+      trial.run = await receiver.prepareKeyTiming(trial.frame, local);
+      if (timingTrial.current !== trial) return;
+      const prompt = 'Press Return on the external keyboard to time ' + (local ? 'local speech' : 'speech over SSH') +
+        '. Escape cancels.';
+      setTimingPrompt(prompt);
+      setTab('Terminal');
+      AccessibilityInfo.announceForAccessibility?.(prompt);
+    } catch (error) { finishTrial(trial, error.message); }
+  }
+  async function timingKey(trial, text) {
+    if (text === '\x1b') return finishTrial(trial, 'Timing cancelled.');
+    if (text !== '\r' || trial.waiting || !trial.run) return;
+    trial.waiting = true;
+    try {
+      const result = await trial.run(bytes => terminalRef.current.sendKeys(trial.frame, bytes));
+      const route = trial.local ? 'Local speech. ' : 'SSH. Key to returned speech ' + result.returned + ' milliseconds. ';
+      finishTrial(trial, route + 'Key to ' + (result.event === 'buffer' ? 'first scheduled audio' : 'speech start callback') +
+        ' ' + result.audio + ' milliseconds.');
+    } catch (error) { finishTrial(trial, error.message); }
+  }
   useEffect(() => {
     focusNewTerminal(terminalTab && !useField && keyboardFrame, canFocus && terminalRef.current,
       () => terminalRef.current.focusKeyboard());
@@ -216,15 +259,17 @@ function Session({settings, save, active, reconnect}) {
       <View style={styles.actions}>
         {activeSession ? <Action title="Disconnect" onPress={() => receiver.disconnect()} />
           : <Action title="Connect" disabled={!prepared && !audioFailed} onPress={connect} />}
-        <Action title="Stop Speech" onPress={receiver.stop} />
+        <Action title="Stop Speech" onPress={() => { cancelTrial(); receiver.stop(); }} />
       </View>
       {sshMode && offer && !useField &&
         <Action title="Focus Emacs terminal" onPress={() => terminalRef.current?.focusKeyboard()} />}
+      {timingPrompt ? <Text style={styles.status}>{timingPrompt}</Text> : null}
       {terminalTab && ((useField && keyboardFrame) || keyboard?.sendKeys) &&
         <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption + settings.commandHyper} canFocus={canFocus}
           controlOption={settings.controlOption === 'emacs'} commandHyper={Boolean(useField && settings.commandHyper === 'yes')}
           onKeys={text => {
-            if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
+            if (timingTrial.current) void timingKey(timingTrial.current, text);
+            else if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
             else keyboard?.sendKeys(text);
           }}
           onClosed={() => {
@@ -252,6 +297,10 @@ function Session({settings, save, active, reconnect}) {
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
       {useWire && <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />}
       {useWire && nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
+      {useWire && nativeWire?.armKeyTiming && <>
+        <Action title="Measure SSH key to speech" disabled={!keyboardFrame} onPress={() => armTiming(false)} />
+        <Action title="Measure local key to speech" disabled={!keyboardFrame} onPress={() => armTiming(true)} />
+      </>}
       {nativeWire?.speechTrace && settings.logSpeech === 'yes' && <>
         <Action title="Read speech trace" onPress={() => setTrace(nativeWire.speechTrace() || 'The speech trace is empty.')} />
         <Action title="Send speech trace to WSL" disabled={!activeSession || !useWire} onPress={receiver.sendSpeechTrace} />
@@ -279,7 +328,7 @@ function Session({settings, save, active, reconnect}) {
             save={() => { save(draft); setTab('Terminal'); }} />}
         </View>}
       </View>
-      <TabBar selected={tab} onSelect={setTab} />
+      <TabBar selected={tab} onSelect={next => { cancelTrial(); setTab(next); }} />
     </SafeAreaView>
     {reviewOpen && offer && <TerminalReview key={offer.frame} terminalRef={terminalRef} frame={offer.frame}
       close={() => setReviewOpen(false)} />}

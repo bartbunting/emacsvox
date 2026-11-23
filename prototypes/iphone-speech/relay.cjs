@@ -239,7 +239,7 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
       input?.invalidate();
       const session = sharedDirectory && 'phone-' + randomUUID();
       let lastSeen = Date.now(), readyId = 0, attached = false;
-      let frameAttached = false, voicesReady = false, setupDeadline;
+      let frameAttached = false, voicesReady = false, keyTiming = false, setupDeadline;
       const control = (action, serial = 0) =>
         frameControl(sharedDirectory, session, action, serial).catch(() => ws.terminate());
       const traceReceipt = ok => {
@@ -254,13 +254,14 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         if (ssh && packet.id === session && !attached && ['attached', 'routing-ready'].includes(packet.type)) {
           if (packet.type === 'attached') {
             frameAttached = true;
+            keyTiming = raw && packet.keyTiming === true;
             if (raw) { setupDeadline = Date.now() + 15000; send({type: 'discovering'}); }
           } else voicesReady = true;
           if (frameAttached && (!raw || voicesReady)) connected();
         }
         else if (packet.type === 'stop-all') send({type: 'stop', scope: 'all'});
         else if (packet.type === 'reset-done' && packet.id === readyId && attached) {
-          send({type: 'ready', id: readyId, ...(raw && {speechTrace: true})});
+          send({type: 'ready', id: readyId, ...(raw && {speechTrace: true}), ...(keyTiming && {keyTiming: true})});
         }
         else if (attached && ['permission', 'resolved'].includes(packet.type) &&
                  typeof packet.id === 'string') send(packet);
@@ -317,7 +318,7 @@ function createRelay(host, peer, {port = 8787, metroPort = 8788, terminalSocket,
         terminal = pane || undefined;
         attached = true;
         if (raw && readyId) void control('stop', readyId);
-        else send({ type: 'ready', id: readyId, ...(raw && {speechTrace: true}), ...(pane && {keyboard: true}) });
+        else send({ type: 'ready', id: readyId, ...(raw && {speechTrace: true}), ...(keyTiming && {keyTiming: true}), ...(pane && {keyboard: true}) });
         if (routed) void control('sync');
       }
       if (sharedDirectory) Promise.resolve(endpoint && endpoint.listening).then(() => {

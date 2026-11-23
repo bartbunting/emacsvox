@@ -115,3 +115,53 @@ test('local Stop and session-owned native replies during reconnect', async () =>
   assert.deepEqual(sent, ['N fresh']);
   second.close();
 });
+
+test('time one numbered key on the main channel, including cancellation and reconnect', async t => {
+  const listeners = {}, records = [], keys = [];
+  let clock = 100, id, serial;
+  const native = {
+    timingClock: () => clock,
+    armKeyTiming: async (connection, n) => { id = connection; serial = n; },
+    record: async (_, lane, text) => { records.push([lane, text]); },
+    open: async () => {}, close: async () => {}, stop: async () => {},
+    addListener(name, f) { listeners[name] = f; return {remove() { delete listeners[name]; }}; },
+  };
+  t.mock.timers.enable({apis: ['setTimeout']});
+  const wire = openWire(native, assert.fail, assert.fail);
+  const start = await wire.prepareTiming(false);
+  const sample = start(key => keys.push(key));
+  await Promise.resolve();
+  assert.deepEqual(keys, ['\x1b[57343;1u']);
+  clock = 105;
+  for (const [msg, muted] of [['N q {timing sample 1 }', false], ['M q {timing sample 1 }', true],
+                              ['M q {timing sample 2 }', false]]) wire.record(msg, muted);
+  const event = {connection: id, serial, time: 107, event: 'buffer'};
+  listeners.keyTiming(event);
+  clock = 113;
+  wire.record('M q {timing sample 1 }', false);
+  listeners.keyTiming({...event, connection: id + 1, time: 125});
+  listeners.keyTiming({...event, serial: serial + 1, time: 129});
+  listeners.keyTiming({...event, time: 135});
+  assert.deepEqual(await sample, {returned: 13, audio: 35, event: 'buffer'});
+
+  const local = (await wire.prepareTiming(true))(assert.fail);
+  assert.deepEqual(records.slice(-2), [['M', 'q {timing sample 2 }'], ['M', 'd']]);
+  listeners.keyTiming({...event, serial: 2, event: 'speech', time: 150});
+  assert.deepEqual(await local, {returned: 0, audio: 37, event: 'speech'});
+  const stalled = (await wire.prepareTiming(false))(() => {});
+  t.mock.timers.tick(8000);
+  await assert.rejects(stalled, /No matching speech/);
+  const afterReturn = (await wire.prepareTiming(false))(() => {});
+  wire.record('M q {timing sample 4 }', false);
+  t.mock.timers.tick(8000);
+  await assert.rejects(afterReturn, /No matching audio/);
+  const stopped = (await wire.prepareTiming(false))(() => {});
+  wire.stop();
+  await assert.rejects(stopped, /cancelled/);
+  const last = (await wire.prepareTiming(false))(() => {});
+  const previousListener = listeners.keyTiming;
+  wire.close();
+  await assert.rejects(last, /cancelled/);
+  previousListener({...event, serial: 6});
+  assert.equal(listeners.keyTiming, undefined);
+});

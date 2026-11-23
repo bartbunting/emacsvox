@@ -36,12 +36,15 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     global.cancelAnimationFrame = clearImmediate;
     const profile = {host: '100.64.0.1', port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
     const logging = [], trace = {setSpeechLogging: on => logging.push(on), speechTrace: () => 'local speech sample'};
-    const levels = [];
+    const levels = [], listeners = {};
+    let clock = 50, trial;
     if (hasShiftReturnShortcut) {
       profile.worker = 'omnivox';
       profile.speechLoudness = '2';
-      Object.assign(trace, {setSpeechLoudness: async db => levels.push(db),
-        open: async () => {}, close: async () => {}, addListener: () => ({remove() {}})});
+      Object.assign(trace, {setSpeechLoudness: async db => levels.push(db), timingClock: () => clock,
+        armKeyTiming: async (connection, serial) => { trial = {connection, serial}; },
+        open: async () => {}, close: async () => {}, record: async () => {},
+        addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
     }
     const ssh = {hasShiftReturnShortcut, loadProfile: () => profile, keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
     const player = {};
@@ -156,5 +159,27 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Diagnostics');
     assert.equal(button('Read speech trace'), undefined);
     assert.deepEqual(logging, [false, true, false]);
+    if (hasShiftReturnShortcut) {
+      await act(() => button('Measure SSH key to speech').props.onPress());
+      assert.ok(tabs()[1].props.accessibilityState.selected);
+      assert.ok(app.root.findAllByType('Text').some(el => el.props.children === 'The connected Emacs frame does not offer the timing test.'));
+      await act(() => receive({type: 'ready', id: 0, keyTiming: true}));
+      await act(() => button('Measure SSH key to speech').props.onPress());
+      assert.ok(tabs()[0].props.accessibilityState.selected);
+      await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\r'}}));
+      assert.deepEqual(keys.at(-1), ['same-frame', '\x1b[57343;1u']);
+      clock = 60;
+      await act(() => {
+        ws.onmessage({data: 'M q {timing sample 1 }'});
+        listeners.keyTiming({...trial, event: 'buffer', time: 85});
+      });
+      assert.ok(tabs()[1].props.accessibilityState.selected);
+      assert.ok(app.root.findAllByType('Text').some(el => el.props.children ===
+        'SSH. Key to returned speech 10 milliseconds. Key to first scheduled audio 35 milliseconds.'));
+      await act(() => button('Measure local key to speech').props.onPress());
+      await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\x1b'}}));
+      assert.ok(tabs()[1].props.accessibilityState.selected);
+      assert.deepEqual(keys.at(-1), ['same-frame', '\x1b[57343;1u']);
+    }
   });
 }
