@@ -38,7 +38,10 @@ finishes. Disconnecting during playback and reconnecting delivers fresh
 navigation. WSL supplies test speech samples and hardware completions.
 
 On build 5, Emacs sent five separate capital positions and the phone
-placed four at the start of the speech span. On build 6, use US Reed
+placed four at the start of the speech span. Signed build 6 uses
+Emacsvox =445cc6ee8= and the same Omnivox revision. In WSL all five
+tones and their semantic events matched the expected audio frames when
+the synthesizer supplied no markers. On the phone, use US Reed
 to check five capitalized words, interruption and the cadence between
 words. Also try the internal capital in =TestCase=. The
 [[file:OMNIVOX.org::*What exists][cue timing and optional speech trace]] distinguish the timings the voice
