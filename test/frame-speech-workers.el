@@ -172,6 +172,26 @@
                 (emacsvox-frame-test--await workers 305 1)
                 (should (assoc 304 (process-get (nth 0 workers) 'heard)))
                 (should (assoc 305 (process-get (nth 3 workers) 'heard)))))
+            ;; Two messages share a real timer. Bob reconnects between their
+            ;; arrivals, while Alice keeps the same speech workers.
+            (set-window-buffer (frame-selected-window b) buffer)
+            (let ((emacsvox-agent-shell-speech-delay 0))
+              (cl-letf (((symbol-function 'emacsvox-agent-shell--submit-automatic-text-feedback)
+                         (lambda (words &rest _)
+                           (emacsvox-frame-test--speak
+                            (pcase words ("Agent update: Before reconnect" 306)
+                                   ("Agent update: After reconnect" 307)
+                                   (_ (ert-fail "Unexpected out-of-turn update")))))))
+                (emacsvox-agent-shell--record-out-of-turn-snapshot
+                 '("out-of-turn-1-agent_message_chunk" . "Before reconnect"))
+                (emacsvox-frame-speech-detach b)
+                (emacsvox-frame-speech-attach b (nth 2 workers) (nth 3 workers) "omnivox")
+                (emacsvox-agent-shell-subscribe-frame buffer b)
+                (emacsvox-agent-shell--record-out-of-turn-snapshot
+                 '("out-of-turn-2-agent_message_chunk" . "After reconnect"))
+                (emacsvox-frame-test--await workers 307 2)
+                (should (assoc 306 (process-get (nth 0 workers) 'heard)))
+                (should-not (assoc 306 (process-get (nth 2 workers) 'heard)))))
             (emacsvox-frame-speech-detach b)
             (should (equal (emacsvox-agent-shell--subscribers) (list (cons a actor))))
             (agent-shell--emit-event :event 'permission-request :data '((:request-id . 9)))
