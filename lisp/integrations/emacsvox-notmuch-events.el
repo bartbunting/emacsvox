@@ -50,6 +50,7 @@
 (require 'subr-x)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
+(require 'emacsvox-frame-speech)
 
 (defconst emacsvox-notmuch--search-process-property
   'emacsvox-notmuch-search-completion
@@ -103,6 +104,16 @@ refresh command."
    (buffer-live-p buffer)
    (window-live-p (selected-window))
    (eq buffer (window-buffer (selected-window)))))
+
+(defun emacsvox-notmuch--call-for-search (state function &rest args)
+  "Present search feedback on the frame and speech connection saved in STATE."
+  (let* ((destination (plist-get state :destination))
+         (frame (car destination))
+         (endpoint (cdr destination)))
+    (when (and (frame-live-p frame)
+               (eq endpoint (emacsvox-frame-speech-endpoint frame)))
+      (with-selected-frame frame
+        (apply #'emacsvox-frame-speech-call endpoint function args)))))
 
 (defun emacsvox-notmuch--search-summary (kind count)
   "Return a generic completed-search summary for KIND with COUNT results."
@@ -169,7 +180,9 @@ notifications."
 
 (defun emacsvox--advice-notmuch-search-process-filter-after (process _output)
   "Present the initial row after Notmuch has parsed new PROCESS output."
-  (emacsvox-notmuch--maybe-speak-initial-search-result process))
+  (when-let* ((state (process-get process emacsvox-notmuch--search-process-property)))
+    (emacsvox-notmuch--call-for-search
+     state #'emacsvox-notmuch--maybe-speak-initial-search-result process)))
 
 (defun emacsvox-notmuch--announce-foreground-search-complete
     (buffer count)
@@ -291,9 +304,11 @@ notifications."
        ((and
          (eq status 'exit)
          (zerop (process-exit-status process)))
-        (emacsvox-notmuch--announce-search-complete state buffer))
+        (emacsvox-notmuch--call-for-search
+         state #'emacsvox-notmuch--announce-search-complete state buffer))
        (t
-        (emacsvox-notmuch--search-completion-feedback
+        (emacsvox-notmuch--call-for-search
+         state #'emacsvox-notmuch--search-completion-feedback
          buffer (plist-get state :kind)
          (emacsvox-notmuch--search-completion-facts
           (plist-get state :kind) 'refresh-failed)
@@ -302,10 +317,13 @@ notifications."
              "Search refresh failed"
            "Search failed")))))))
 
-(defun emacsvox-notmuch--track-search-process (kind)
-  "Track the current buffer's user-owned Notmuch process as KIND."
+(defun emacsvox-notmuch--track-search-process (kind &optional destination)
+  "Track the current buffer's Notmuch process as KIND for DESTINATION."
   (when-let* ((process (get-buffer-process (current-buffer))))
-    (let ((state (list :kind kind :interacted nil)))
+    (let ((state (list :kind kind :interacted nil :destination
+                       (or destination
+                           (cons (selected-frame) (emacsvox-frame-speech-endpoint)))))
+          (buffer (current-buffer)))
       (process-put process emacsvox-notmuch--search-process-property state)
       (setq-local emacsvox-notmuch--tracked-search-process process)
       (add-hook
@@ -315,20 +333,22 @@ notifications."
           (process-get
            process emacsvox-notmuch--search-sentinel-finished-property)
           (emacsvox-notmuch--finish-search-process process)
-        (when (and
-               (eq kind 'search)
-               (emacsvox-notmuch--search-buffer-focused-p (current-buffer)))
-          (emacsvox-notmuch--announce-search-start))
-        ;; Output may have arrived before the search command returned and
-        ;; installed tracking.  Do not wait for another filter invocation.
-        (emacsvox-notmuch--maybe-speak-initial-search-result process)))))
+        (emacsvox-notmuch--call-for-search
+         state
+         (lambda ()
+           (when (and (eq kind 'search)
+                      (emacsvox-notmuch--search-buffer-focused-p buffer))
+             (emacsvox-notmuch--announce-search-start))
+           ;; Output may already have arrived before tracking began.
+           (emacsvox-notmuch--maybe-speak-initial-search-result process)))))))
 
 (defun emacsvox--advice-notmuch-search-around (original &rest arguments)
   "Track completion of a user-owned call to `notmuch-search'."
-  (let ((kind (emacsvox-notmuch--search-request-kind)))
+  (let* ((kind (emacsvox-notmuch--search-request-kind))
+         (destination (and kind (cons (selected-frame) (emacsvox-frame-speech-endpoint)))))
     (prog1 (apply original arguments)
       (when kind
-        (emacsvox-notmuch--track-search-process kind)))))
+        (emacsvox-notmuch--track-search-process kind destination)))))
 
 (defun emacsvox--advice-notmuch-search-process-sentinel-after (process _event)
   "Record and announce completion after Notmuch's sentinel for PROCESS."

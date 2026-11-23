@@ -797,6 +797,12 @@ async function main() {
           await until('the isolated internal capital reaches playback through the negotiated letter protocol', () =>
             letter() && rawPackets.some(p => p.lane === 'M' && p.dispatch === letter().dispatch_id && p.status === 'completed'));
           assert.equal(letter().protocol_version, 7);
+          for (const [name, bundled] of [['mail-unread', 'packs/accent/item.ogg'], ['mail-replied', 'packs/3d/left.ogg'],
+            ['mail-forwarded', 'packs/3d/right.ogg'], ['mail-has-attachment', 'packs/accent/doc.ogg']]) {
+            const resource = path.resolve(__dirname, '../../../sounds/modules/mail', name + '.ogg');
+            const actual = await observe('(iphone-frame-speech--wire-resource ' + JSON.stringify(resource) + ')');
+            assert.equal(JSON.parse(actual), 'omnivox-icon:' + bundled);
+          }
           await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer iphone-shared-buffer)
             (goto-char (point-max))
             (setq-local emacsvox-agent-shell-input-activation 'explicit

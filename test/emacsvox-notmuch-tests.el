@@ -4064,13 +4064,54 @@ Return the beginning of the inserted row."
                (equal
                 (alist-get
                  emacsvox-notmuch--search-process-property properties)
-                '(:kind search :interacted nil)))
+                (list :kind 'search :interacted nil
+                      :destination (cons (selected-frame) nil))))
               (should (eq emacsvox-notmuch--tracked-search-process 'process))
               (should
                (memq #'emacsvox-notmuch--note-search-interaction
                      pre-command-hook)))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should (equal events '((progress))))))
+
+(ert-deftest emacsvox-notmuch-search-callbacks-use-the-original-speech-workers ()
+  "A delayed first row and completion belong to the connection that ran the search."
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (setq major-mode 'notmuch-search-mode)
+      (let* ((frame (selected-frame))
+             (main (make-pipe-process :name "Notmuch main test" :noquery t))
+             (notify (make-pipe-process :name "Notmuch notify test" :noquery t))
+             (search (make-process :name "Notmuch search test" :buffer (current-buffer)
+                                   :command '("cat") :connection-type 'pipe :sentinel #'ignore
+                                   :noquery t))
+             (emacsvox-notmuch-search-completion-style 'adaptive)
+             heard)
+        (unwind-protect
+            (cl-letf (((symbol-function 'input-pending-p) (lambda () nil))
+                      ((symbol-function 'emacsvox-notmuch--announce-search-start) #'ignore)
+                      ((symbol-function 'emacsvox-notmuch-speak-search-result)
+                       (lambda (row) (push (list tts-speaker-process (plist-get row :thread)) heard)))
+                      ((symbol-function 'emacsvox-notmuch--notify-search-feedback)
+                       (lambda (_facts _icon text) (push (list tts-notify-process text) heard))))
+              (emacsvox-frame-speech-attach frame main notify)
+              (emacsvox-notmuch--track-search-process 'search)
+              (emacsvox-notmuch-test--insert-search-result "First" '(:thread "first"))
+              (goto-char (point-min))
+              (emacsvox--advice-notmuch-search-process-filter-after search "")
+              (let ((state (process-get search emacsvox-notmuch--search-process-property)))
+                (process-send-eof search)
+                (while (process-live-p search) (accept-process-output search 0.1))
+                (emacsvox--advice-notmuch-search-process-sentinel-after search "")
+                (should (equal (reverse heard) (list (list main "first")
+                                                     (list notify "Search complete, 1 thread"))))
+                (emacsvox-frame-speech-detach frame)
+                (process-put search emacsvox-notmuch--search-process-property state)
+                (emacsvox--advice-notmuch-search-process-sentinel-after search "")
+                (should (= 2 (length heard)))
+                (should-not (process-get search emacsvox-notmuch--search-process-property))))
+          (emacsvox-frame-speech-detach frame)
+          (dolist (process (list search main notify)) (delete-process process)))))))
 
 (ert-deftest emacsvox-notmuch-streamed-first-result-speaks-before-completion ()
   "Partial output speaks the first complete row once while search still runs."
@@ -4143,7 +4184,8 @@ Return the beginning of the inserted row."
              (properties
               (list (cons emacsvox-notmuch--search-process-property
                           (list :kind (if (eq case 'refresh) 'refresh 'search)
-                                :interacted (eq case 'interacted))))))
+                                :interacted (eq case 'interacted)
+                                :destination (cons (selected-frame) nil))))))
         (emacsvox-notmuch-test--with-fake-search-process
             ('process buffer properties 'run 0)
           (cl-letf
@@ -4182,7 +4224,7 @@ Return the beginning of the inserted row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-complete-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
-            . (:kind search :interacted nil))))
+            . (:kind search :interacted nil :destination (,(selected-frame))))))
         captured initial-point)
     (unwind-protect
         (save-window-excursion
@@ -4373,7 +4415,7 @@ Return the beginning of the inserted row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-empty-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
-            . (:kind search :interacted nil))))
+            . (:kind search :interacted nil :destination (,(selected-frame))))))
         captured)
     (unwind-protect
         (save-window-excursion
@@ -4399,7 +4441,7 @@ Return the beginning of the inserted row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-interaction-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
-            . (:kind search :interacted nil))))
+            . (:kind search :interacted nil :destination (,(selected-frame))))))
         events facts second-point)
     (unwind-protect
         (save-window-excursion
@@ -4552,7 +4594,7 @@ Return the beginning of the inserted row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
-            . (:kind refresh :interacted nil))))
+            . (:kind refresh :interacted nil :destination (,(selected-frame))))))
         events
         (submission-calls 0)
         submission-arguments)
@@ -4737,7 +4779,7 @@ Return the beginning of the inserted row."
           (process-put process 'parse-buf parse-buffer)
           (process-put
            process emacsvox-notmuch--search-process-property
-           '(:kind refresh :interacted nil))
+           (list :kind 'refresh :interacted nil :destination (cons (selected-frame) nil)))
           (with-current-buffer owner
             (setq-local emacsvox-notmuch--tracked-search-process process)
             (add-hook
@@ -4787,7 +4829,7 @@ Return the beginning of the inserted row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-failure-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
-            . (:kind refresh :interacted nil))))
+            . (:kind refresh :interacted nil :destination (,(selected-frame))))))
         (emacsvox-notmuch-search-completion-style 'silent)
         events facts submission-arguments)
     (unwind-protect

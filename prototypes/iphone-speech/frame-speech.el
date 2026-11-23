@@ -24,6 +24,7 @@
 (defconst iphone-frame-speech--assets
   (expand-file-name "wire-icons.sha256" (file-name-directory load-file-name)))
 (defvar iphone-frame-speech--digests nil)
+(defvar iphone-frame-speech--bundled-paths nil)
 (defvar tts-speaker-process)
 (defvar tts-notify-process)
 (defvar emacsvox-play-program)
@@ -87,18 +88,23 @@
       (iphone-frame-speech--packet owner "routing-ready" (process-get owner 'iphone-connection)))))
 
 (defun iphone-frame-speech--wire-resource (file)
-  (unless iphone-frame-speech--digests
-    (setq iphone-frame-speech--digests (make-hash-table :test #'equal))
+  (unless (and iphone-frame-speech--digests iphone-frame-speech--bundled-paths)
+    (setq iphone-frame-speech--digests (make-hash-table :test #'equal)
+          iphone-frame-speech--bundled-paths (make-hash-table :test #'equal))
     (with-temp-buffer
       (insert-file-contents iphone-frame-speech--assets)
       (while (re-search-forward "^\\([a-f0-9]\\{64\\}\\)  \\(.+\\)$" nil t)
-        (puthash (match-string 2) (match-string 1) iphone-frame-speech--digests))))
+        (let ((path (match-string 2)) (digest (match-string 1)))
+          (puthash path digest iphone-frame-speech--digests)
+          (puthash digest path iphone-frame-speech--bundled-paths)))))
   (let* ((relative (if (equal file iphone-frame-speech--visual-line-file) "visual-line.wav"
                      (file-relative-name file emacsvox-sounds-dir)))
          (expected (gethash relative iphone-frame-speech--digests))
          (size (and (file-regular-p file) (file-attribute-size (file-attributes file))))
-         (digest (and size (<= size (* 16 1024 1024)) (emacsvox-aural--file-digest file))))
+         (digest (and size (<= size (* 16 1024 1024)) (emacsvox-aural--file-digest file)))
+         (alias (gethash digest iphone-frame-speech--bundled-paths)))
     (cond ((and expected (equal expected digest)) (concat "omnivox-icon:" relative))
+          (alias (concat "omnivox-icon:" alias))
           (digest (concat "omnivox-icon:personal/" digest))
           (t "omnivox-icon:unavailable"))))
 
