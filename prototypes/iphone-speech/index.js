@@ -46,6 +46,8 @@ function prepareAudio() {
 }
 
 function App() {
+  const [history, setHistory] = useState(() => ssh?.loadConnectionHistory?.() ?? []);
+  useEffect(() => { ssh?.saveConnectionHistory?.(history); }, [history]);
   const [settings, setSettings] = useState(() => {
     const profile = ssh?.loadProfile();
     const db = Number(profile?.speechLoudness);
@@ -68,7 +70,8 @@ function App() {
     reconnect.current = connectionKey(settings) !== connectionKey(next) && active.current;
     setSettings(next);
   }
-  return <Session key={connectionKey(settings)} settings={settings} save={save} active={active} reconnect={reconnect} />;
+  return <Session key={connectionKey(settings)} settings={settings} save={save} active={active} reconnect={reconnect}
+    history={history} setHistory={setHistory} />;
 }
 
 function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys}) {
@@ -103,7 +106,7 @@ function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys}) {
   </KeyboardContainer>;
 }
 
-function Session({settings, save, active, reconnect}) {
+function Session({settings, save, active, reconnect, history, setHistory}) {
   const [tab, setTab] = useState('Terminal');
   const [diagnosticSection, setDiagnosticSection] = useState('');
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -148,6 +151,10 @@ function Session({settings, save, active, reconnect}) {
       prepare: prepareAudio, play: (hz, ms) => native.queueTone(hz, ms), stop: () => native.stopEffects(),
     },
     status: setStatus, playback: setPlayback, voiceStatus: setVoice, keyboard: setKeyboard,
+    connectionResult: text => {
+      const entry = new Date().toLocaleString() + '. ' + text;
+      setHistory(previous => [entry, ...previous].slice(0, 6));
+    },
     screen: setScreen, sshOffer: value => {
       setOffer(value);
       if (!value) setReviewOpen(false);
@@ -166,7 +173,7 @@ function Session({settings, save, active, reconnect}) {
       } finally { browserShowing.current = false; setBrowserOpen(false); }
     }),
     openSocket: () => new WebSocket('ws://' + host + (sshMode ? (useWire ? ':8797/speech/ssh/omnivox' : ':8797/speech/ssh') : ':' + relayPort + '/speech')),
-  }), [adapters, host, sshMode, useWire, active]);
+  }), [adapters, host, sshMode, useWire, active, setHistory]);
   useEffect(() => {
     if (!mixed) return;
     let live = true;
@@ -317,6 +324,11 @@ function Session({settings, save, active, reconnect}) {
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
       <Action title="Stop Speech" onPress={receiver.stop} />
       {playback ? <Text style={styles.status}>{playback}</Text> : null}
+      {sshMode && history.length > 0 && <Section title="Connection history"
+        hint="Review the last six connection results saved on this iPhone, most recent first."
+        selected={diagnosticSection} select={setDiagnosticSection}>
+        {history.map((entry, i) => <Text key={i} style={styles.status}>{entry}</Text>)}
+      </Section>}
       <Section title="Audio tests" hint="Play test tones and earcons on this iPhone."
         selected={diagnosticSection} select={setDiagnosticSection}>
         {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}

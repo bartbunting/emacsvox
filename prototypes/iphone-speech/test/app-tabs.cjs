@@ -46,7 +46,9 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
         open: async () => {}, close: async () => {}, record: async () => {},
         addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
     }
+    let savedHistory = ['Earlier. Could not reach WSL on SSH port 8822.'];
     const ssh = {hasShiftReturnShortcut, hasModifiedLetterShortcuts: hasShiftReturnShortcut, hasWebBrowser: hasShiftReturnShortcut, loadProfile: () => profile,
+      loadConnectionHistory: () => savedHistory, saveConnectionHistory(entries) { savedHistory = entries; },
       keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
     const links = [];
     let dismiss;
@@ -102,6 +104,11 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     });
     await select('Diagnostics');
     assert.ok(tabs()[1].props.accessibilityState.selected);
+    assert.match(savedHistory[0], /SSH terminal opened\./);
+    assert.equal(savedHistory.length, 2);
+    assert.equal(app.root.findAll(el => el.type === 'Text' && el.props.children === savedHistory[1]).length, 0);
+    await select('Connection history');
+    assert.equal(app.root.findAll(el => el.type === 'Text' && el.props.children === savedHistory[1]).length, 1);
     assert.ok(button('Test iPhone Voice'));
     assert.equal(button('Test Open Object Sound'), undefined);
     await select('Audio tests');

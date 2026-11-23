@@ -27,7 +27,8 @@ async function findVoice(speech) {
 // All speech for the foreground receiver belongs to this instance. The epoch
 // invalidates delayed native callbacks as well as already received dispatches.
 function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notificationPlayer, nativeWire, openSocket, status, playback = () => {}, voiceStatus = () => {},
-                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, openWebLink, sessionActive = () => {}, now = Date.now }) {
+                          keyboard = () => {}, screen = () => {}, sshOffer = () => {}, openWebLink, sessionActive = () => {},
+                          connectionResult = () => {}, now = Date.now }) {
   let wire, socket, heartbeat, lastReceived, resetId, ready;
   let traceAllowed = false, tracePending = false, timingAllowed = false;
   let browserReady = false;
@@ -261,6 +262,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     refreshVoice();
     // A fresh connection never reuses the previous audio queue or SSH frame.
     function networkFailed(message, retryStatus = 'Waiting for the relay to reconnect') {
+      if (!frameId) connectionResult(message);
       const resumeCandidate = activeBeforeLock;
       const canRetry = sessionEstablished || Boolean(frameId) || attempt > 0;
       const next = sessionEstablished ? 1 : attempt + 1;
@@ -392,7 +394,8 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   function terminalConnected(frame) {
-    if (!frame || frame !== frameId) return;
+    if (!frame || frame !== frameId || sshKeyboardConnected) return;
+    connectionResult('SSH terminal opened.');
     sshKeyboardConnected = true;
     if (ready) sessionEstablished = true;
     publishSshKeyboard();
@@ -401,6 +404,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   function terminalClosed(frame, message, retryable = false) {
     if (!frame || frameId !== frame) return;
     const detail = message || 'SSH terminal closed. Activate Connect to retry.';
+    connectionResult(message || 'SSH terminal closed.');
     if (retryable && retryNetworkLoss) retryNetworkLoss(detail, (message || 'SSH terminal closed.') + ' Retrying SSH.');
     else disconnect(detail);
   }

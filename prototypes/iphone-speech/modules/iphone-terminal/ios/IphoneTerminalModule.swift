@@ -15,6 +15,10 @@ public final class IphoneTerminalModule: Module {
     Constant("hasWebBrowser") { true }
     AsyncFunction("copyPublicKey") { UIPasteboard.general.string = try PhoneIdentity.publicKey() }.runOnQueue(.main)
     Function("loadProfile") { UserDefaults.standard.dictionary(forKey: "emacsvox.ssh.profile") as? [String:String] ?? [:] }
+    Function("loadConnectionHistory") { UserDefaults.standard.stringArray(forKey: "emacsvox.ssh.results") ?? [] }
+    Function("saveConnectionHistory") { (entries: [String]) in
+      UserDefaults.standard.set(Array(entries.prefix(6)), forKey: "emacsvox.ssh.results")
+    }
     Function("saveProfile") { (profile: [String:String]) in UserDefaults.standard.set(profile, forKey: "emacsvox.ssh.profile") }
     AsyncFunction("keepAwake") { (enabled: Bool) in
       if enabled && !UIApplication.shared.isIdleTimerDisabled {

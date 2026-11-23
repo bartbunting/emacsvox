@@ -128,10 +128,10 @@ test('unlock retries a waking network and Disconnect or a rejected host stops re
 
 test('a fresh cellular SSH attempt can retry before the first phone frame opens', t => {
   t.mock.timers.enable({apis:['setTimeout']});
-  const sockets = [], states = [];
+  const sockets = [], states = [], results = [];
   const receiver = createReceiver({
     openSocket() { const ws = {close() {}}; sockets.push(ws); return ws; },
-    status: value => states.push(value), speech: {stop: async () => true},
+    status: value => states.push(value), connectionResult: value => results.push(value), speech: {stop: async () => true},
   });
   function offer(frame) {
     sockets.at(-1).onmessage({data: JSON.stringify({type:'ssh', frame, server:'s', client:'c'})});
@@ -149,6 +149,7 @@ test('a fresh cellular SSH attempt can retry before the first phone frame opens'
     t.mock.timers.tick(10000);
     assert.equal(sockets.length, 2);
     assert.equal(states.at(-1), 'The SSH host key does not match.');
+    assert.deepEqual(results, ['Could not reach WSL on SSH port 8822.', 'The SSH host key does not match.']);
   } finally { receiver.disconnect(); }
 });
 

@@ -578,7 +578,10 @@ Keyboard and terminal for input, line width and web links, or Speech
 and sounds for loudness, earcons and optional speech logging. Opening a
 section keeps your edits in the others. Save settings applies them all.
 Diagnostics starts with connection status, Test iPhone Voice and Stop
-Speech. Expand Audio tests or Timing tests for the individual checks.
+Speech. Open Connection history to read the last six connection results
+and their times, including failures before the most recent successful
+retry. They stay on the phone across app restarts. Expand Audio tests or
+Timing tests for the individual checks.
 Speech trace is available when you enable logging.
 
 Open a web link with its usual Emacs command, or run ~M-x browse-url-at-point~.
