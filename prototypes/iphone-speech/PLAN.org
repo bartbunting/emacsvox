@@ -27,7 +27,9 @@ runtime, legacy and structured audio, on-device voice inventory and
 Emacs voice settings. Signed build 4 negotiates both speech workers and
 lists the installed voices.
 
-The build 5 source passes the WSL navigation exercise. In a disposable
+Signed build 5 was built on 23 November 2026 from Emacsvox =715ac3a39=
+and Omnivox =d244efc=. Its signature, registered device profile and cue
+assets passed verification. In a disposable
 graphical Emacs, the Swift SSH client sends =C-n= in an Agent Shell response.
 Emacs sends =TestCase= in one span. With a known synthesis bookmark the
 worker inserts exactly 882 frames at the internal capital. Moving again

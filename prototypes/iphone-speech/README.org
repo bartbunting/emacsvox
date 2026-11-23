@@ -3,7 +3,7 @@
 Track the path from this speech receiver to a full terminal in the
 [[file:PLAN.org][iPhone prototype plan]].
 
-Signed build 4 includes the opt-in Omnivox worker. The build 5 source adds
+Signed build 4 includes the opt-in Omnivox worker. Signed build 5 adds
 in-word cues to ordinary navigation. From the
 phone frame you can list and apply installed iOS voices and play
 Omnivox tones and earcons. See [[file:OMNIVOX.org][Omnivox on iPhone]] for the controls,

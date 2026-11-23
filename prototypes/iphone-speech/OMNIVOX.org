@@ -27,7 +27,7 @@ speech goes directly to the system synthesizer. Swift starts overlaid tones
 on a separate player and waits for an inserted tone to finish before
 asking for the next speech fragment. This can add an audible gap.
 
-The next build's source feeds Apple speech samples into the desktop Rust
+Signed build 5 feeds Apple speech samples into the desktop Rust
 resampler and presentation mixer. In cue-bearing speech, an insert moves
 the following speech by its rendered length. An overlay starts on the
 speech clock, can carry into the next audio buffer and can finish after
@@ -44,7 +44,7 @@ or later. See [[https://developer.apple.com/documentation/avfaudio/avspeechsynth
 If an internal mark is missing, Omnivox uses a word boundary on the
 requested side when Apple supplies a matching word range. Otherwise it
 places the cue at the corresponding end of the speech span. The diagnostic
-reports each fallback. In the build 5 source, ordinary navigation negotiates
+reports each fallback. In build 5, ordinary navigation negotiates
 timeline version 3. A single =C-n= in an Agent Shell response sends =TestCase=
 with its cue positions to the phone. Main and notification speech keep
 separate playback queues. Moving again retires the old navigation and its
@@ -109,7 +109,7 @@ recording by SHA-256. Encoded size is limited to 16 MiB and decoded
 duration to 30 seconds. A failed cue leaves the terminal usable.
 
 In build 4, import the two original Agent Shell input recordings to hear
-the change between editing and browsing. The next build includes both
+the change between editing and browsing. Build 5 includes both
 recordings under the same content IDs. With Explicit input and earcon
 feedback enabled, Return at the draft enters editing and =C-c e= returns
 to browsing. A customised recording can still be imported from Files.
