@@ -153,7 +153,7 @@
              (should (equal saved (emacsvox-aural-read-user-data)))
              (should-not callbacks)
              (emacsvox-aural-voice-editor-play)
-             (should (equal (plist-get (car (plist-get (caar requests) :selectors)) :voice-id)
+             (should (equal (plist-get (plist-get (caar requests) :selector) :voice-id)
                             "espeak:gmw/en-US+max"))
              (emacsvox-aural-voice-editor-save)
              (should (= (length callbacks) 1))

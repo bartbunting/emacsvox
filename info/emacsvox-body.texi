@@ -4648,7 +4648,8 @@ and activate the button again to hide them. Changed fields state earlier values;
 unsupported settings stay visible and retained. Field navigation stops at its
 ends without wrapping@comma{} and numeric limits announce minimum or maximum.
 
-@kbd{P} previews the edited voice; @kbd{B} compares captured original and edited versions
+On a primary or fallback row@comma{} @kbd{P} auditions that choice. On an adjustment@comma{} @kbd{P}
+auditions the voice you are editing. @kbd{B} compares captured original and edited versions
 with the same sample and spoken labels. @kbd{T} changes sample text and @kbd{S} stops.
 An automatic sample follows adjustments unless @emph{Automatic sample after adjustment}
 is off. The value precedes it@comma{} for example ``1. The quick brown fox…''.
@@ -4658,8 +4659,9 @@ and @emph{Fallbacks} use open/close cues and optional state labels on both toggl
 and navigation. Navigation stops a sample. @kbd{u} undoes an edit@comma{} including reset.
 @kbd{q} returns to the originating view@comma{} offering to retain or discard unsaved work.
 
-@emph{Physical voice} searches engine or voice names. Audition with working adjustments
-before accepting; cancellation keeps the earlier choice and returns to the field.
+@emph{Physical voice} searches engine or voice names. @emph{Audition candidate} returns
+to the editor and plays the sample. Press @kbd{P} to replay it or @kbd{@key{RET}} on @emph{Use}
+to put that voice in your draft. You can leave with @kbd{q} after listening.
 @emph{Fallbacks} allows replacement@comma{} reordering@comma{} removal@comma{} individual auditions@comma{}
 appending@comma{} or returning to Automatic. Unavailable@comma{} engine-default@comma{} and property
 choices are retained. Shared adjustments supply inherited fields;
@@ -4870,7 +4872,9 @@ custom@comma{} and explicit adapter default. @kbd{@key{RET}} offers all three@co
 numbers@comma{} @kbd{d} requests adapter default@comma{} and @kbd{i} inherits. Zero remains explicit.
 Later shared changes affect inherited fields only. @emph{More adjustments and effects}
 reveals additional controls. Automatic samples name the value/state and audition
-that row; @emph{Play whole fallback chain} tests normal selection. @emph{Return to shared
+that row. @emph{Audition choices in fallback order} plays each available row and
+names any unavailable choices. @emph{Hear the voice normal reading would use} tests
+automatic selection on your current connection. @emph{Return to shared
 settings} leaves individual tuning within the same draft and Save operation.
 Removing a row disables its controls until undo or return to shared settings.
 
@@ -5275,7 +5279,7 @@ the standard baseline; otherwise activate the recorded explicit palette.
 @end enumerate
 
 For independent fallback tuning@comma{} open its menu and @emph{Customize this voice}.
-Change one field@comma{} audition that row@comma{} then test @emph{Play whole fallback chain}.
+Change one field@comma{} audition that row@comma{} then try @emph{Hear the voice normal reading would use}.
 The custom field overrides shared tuning only for that choice. @kbd{i} restores
 inheritance; reordering carries adjustments with the row.
 

@@ -4938,11 +4938,12 @@ them.  Changed fields state earlier values; unsupported settings stay
 visible and retained.  Field navigation stops at its ends without
 wrapping, and numeric limits announce minimum or maximum.
 
-   ‘P’ previews the edited voice; ‘B’ compares captured original and
-edited versions with the same sample and spoken labels.  ‘T’ changes
-sample text and ‘S’ stops.  An automatic sample follows adjustments
-unless _Automatic sample after adjustment_ is off.  The value precedes
-it, for example "1.  The quick brown fox…".
+   On a primary or fallback row, ‘P’ auditions that choice.  On an
+adjustment, ‘P’ auditions the voice you are editing.  ‘B’ compares
+captured original and edited versions with the same sample and spoken
+labels.  ‘T’ changes sample text and ‘S’ stops.  An automatic sample
+follows adjustments unless _Automatic sample after adjustment_ is off.
+The value precedes it, for example "1.  The quick brown fox…".
 
    That toggle announces on/off with distinct cues.  _More adjustments
 and effects_ and _Fallbacks_ use open/close cues and optional state
@@ -4950,9 +4951,10 @@ labels on both toggling and navigation.  Navigation stops a sample.  ‘u’
 undoes an edit, including reset.  ‘q’ returns to the originating view,
 offering to retain or discard unsaved work.
 
-   _Physical voice_ searches engine or voice names.  Audition with
-working adjustments before accepting; cancellation keeps the earlier
-choice and returns to the field.  _Fallbacks_ allows replacement,
+   _Physical voice_ searches engine or voice names.  _Audition
+candidate_ returns to the editor and plays the sample.  Press ‘P’ to
+replay it or ‘<RET>’ on _Use_ to put that voice in your draft.  You can
+leave with ‘q’ after listening.  _Fallbacks_ allows replacement,
 reordering, removal, individual auditions, appending, or returning to
 Automatic.  Unavailable, engine-default, and property choices are
 retained.  Shared adjustments supply inherited fields; _Customize this
@@ -5180,7 +5182,9 @@ offers all three, left/right sets numbers, ‘d’ requests adapter default,
 and ‘i’ inherits.  Zero remains explicit.  Later shared changes affect
 inherited fields only.  _More adjustments and effects_ reveals
 additional controls.  Automatic samples name the value/state and
-audition that row; _Play whole fallback chain_ tests normal selection.
+audition that row.  _Audition choices in fallback order_ plays each
+available row and names any unavailable choices.  _Hear the voice normal
+reading would use_ tests automatic selection on your current connection.
 _Return to shared settings_ leaves individual tuning within the same
 draft and Save operation.  Removing a row disables its controls until
 undo or return to shared settings.
@@ -5612,10 +5616,10 @@ practice.
      otherwise activate the recorded explicit palette.
 
    For independent fallback tuning, open its menu and _Customize this
-voice_.  Change one field, audition that row, then test _Play whole
-fallback chain_.  The custom field overrides shared tuning only for that
-choice.  ‘i’ restores inheritance; reordering carries adjustments with
-the row.
+voice_.  Change one field, audition that row, then try _Hear the voice
+normal reading would use_.  The custom field overrides shared tuning
+only for that choice.  ‘i’ restores inheritance; reordering carries
+adjustments with the row.
 
 
 File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Keeping A Voice Experiment,  Up: Installed Voices And Engines

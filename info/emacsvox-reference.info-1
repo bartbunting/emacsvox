@@ -6091,7 +6091,7 @@ defaults.
 
  -- Command: emacsvox-aural-voice-editor-play
 
-     Play the edited voice or selected tuning row without saving.
+     Audition the voice at point or the adjustment currently being edited.
 
 2.78.1.15 emacsvox-aural-voice-editor-previous
 ..............................................
@@ -6375,6 +6375,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      e		emacsvox-aural-voice-palette-previews-tune
      h		emacsvox-aural-menu
      o		emacsvox-aural-voice-palette-previews-open-manager
+     q		emacsvox-aural-voice-palettes-quit
      r		emacsvox-aural-voice-palette-previews-rename
      s		emacsvox-aural-voice-palette-previews-stop
      t		emacsvox-aural-voice-palette-previews-tune
@@ -6643,6 +6644,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      f		emacsvox-aural-voice-palettes-follow-baseline
      h		emacsvox-aural-menu
      i		emacsvox-aural-voice-palettes-import
+     q		emacsvox-aural-voice-palettes-quit
      r		emacsvox-aural-voice-palettes-rename
      u		emacsvox-aural-voice-palettes-where-used
      v		emacsvox-aural-voice-palettes-describe

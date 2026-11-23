@@ -445,8 +445,13 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
       (insert "This palette is inactive. Save and apply will select it for this session.\n"))
     (insert "\nPhysical voice\n")
     (emacsvox-aural-voice-editor--button 'primary
-                                         (if chain (emacsvox-aural-voice-workbench--selector-description (car chain)) "Automatic selection")
+                                         (if chain (concat "Primary: " (emacsvox-aural-voice-workbench--selector-description (car chain))) "Automatic selection")
                                          (lambda () (emacsvox-aural-voice-editor-choose 0)))
+    (when-let* ((candidate (emacsvox-aural-voice-editor--get :candidate))
+                ((= (plist-get candidate :revision) (emacsvox-aural-voice-draft-revision draft))))
+      (emacsvox-aural-voice-editor--button
+       'candidate (format "Use %s in this draft. P replays the sample" (plist-get candidate :name))
+       (lambda () (emacsvox-aural-voice-editor--candidate candidate t))))
     (when voice
       (emacsvox-aural-voice-editor--button 'fallbacks
                                            (format "Fallbacks: %s" (if (cdr chain) (format "%d explicit" (length (cdr chain))) "Automatic"))
@@ -506,9 +511,11 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (insert "\nListen — base voice, without contextual rules\n")
     (emacsvox-aural-voice-editor--button 'play (if tuning "Audition this choice" "Play edited") #'emacsvox-aural-voice-editor-play)
     (emacsvox-aural-voice-editor--button 'compare (if tuning "Compare original and edited choice" "Compare original and edited") #'emacsvox-aural-voice-editor-compare)
-    (when tuning
-      (emacsvox-aural-voice-editor--button 'play-chain "Play whole fallback chain"
-                                            (lambda () (emacsvox-aural-voice-editor--preview nil))))
+    (when chain
+      (emacsvox-aural-voice-editor--button 'play-chain "Audition choices in fallback order"
+                                           #'emacsvox-aural-voice-editor--play-order)
+      (emacsvox-aural-voice-editor--button 'play-route "Hear the voice normal reading would use"
+                                           (lambda () (emacsvox-aural-voice-editor--preview nil))))
     (emacsvox-aural-voice-editor--button 'stop "Stop sample" #'emacsvox-aural-voice-editor-stop)
     (emacsvox-aural-voice-editor--button 'text (format "Sample text: %s" (emacsvox-aural-voice-editor--get :text))
                                          #'emacsvox-aural-voice-editor-text)
@@ -685,55 +692,62 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (emacsvox-aural-voice-editor-adjust -1)))
 
 (defun emacsvox-aural-voice-editor--pick ()
-  "Search the inventory and audition candidates before choosing a selector."
+  "Read a physical selector and whether to audition it before using it."
   (let* ((emacsvox-aural-voice-workbench-inventory (tts-voice-inventory))
          (choices (emacsvox-aural-voice-workbench--physical-candidates))
-         selected)
+         (action "Search again") name pair)
     (unless choices (user-error "No available physical voices"))
-    (unwind-protect
-        (while (not selected)
-          (let* ((name (emacsvox-aural-ui--read-choice "Physical voice (search engine or name): " choices))
-                 (pair (cdr (assoc name choices)))
-                 (selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)
-                                 :voice-id (plist-get (cadr pair) :voice-id)))
-                 action)
-            (unless pair (user-error "No physical voice selected"))
-            (while (not (member action '("Use this voice" "Search again" "Cancel")))
-              (setq action (completing-read (format "%s: " name)
-                                            '("Use this voice" "Audition candidate" "Search again" "Cancel") nil t))
-              (when (equal action "Audition candidate")
-                (let* ((snapshot (plist-put (emacsvox-aural-voice-editor--working) :selectors (list selector)))
-                       (_ (setq snapshot (plist-put snapshot :choices
-                                                    (list (list :id "candidate" :selector selector :adjustments nil)))))
-                       (entry (emacsvox-aural-voice-editing--cascade
-                               snapshot (emacsvox-aural-voice-editor--get :palette)
-                               (emacsvox-aural-voice-editor--get :policy) (emacsvox-aural-voice-editor--get :text)
-                               nil "candidate")))
-                  (emacsvox-aural-voice-editor--start-entries
-                   emacsvox-aural-voice-editor--context (list entry)
-                   (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft))))))
-            (emacsvox-aural-voice-editor-stop)
-            (pcase action
-              ("Cancel" (user-error "Choice unchanged"))
-              ("Use this voice" (setq selected selector)))))
-      (emacsvox-aural-voice-editor-stop))
-    selected))
+    (while (equal action "Search again")
+      (setq name (emacsvox-aural-ui--read-choice "Physical voice (search engine or name): " choices)
+            pair (cdr (assoc name choices))
+            action (completing-read (format "%s: " name)
+                                    '("Use this voice" "Audition candidate" "Search again" "Cancel") nil t)))
+    (when (equal action "Cancel") (user-error "Choice unchanged"))
+    (unless pair (user-error "No physical voice selected"))
+    (list :selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)
+                          :voice-id (plist-get (cadr pair) :voice-id))
+          :name (or (plist-get (cadr pair) :display-name) name)
+          :audition (equal action "Audition candidate"))))
+
+(defun emacsvox-aural-voice-editor--candidate (candidate use)
+  "Audition CANDIDATE, or USE it in the row that opened the picker."
+  (let* ((draft (emacsvox-aural-voice-editor--draft))
+         (revision (plist-get candidate :revision))
+         (selector (plist-get candidate :selector))
+         (index (plist-get candidate :index))
+         (snapshot (emacsvox-aural-voice-editor--working)))
+    (unless (= revision (emacsvox-aural-voice-draft-revision draft))
+      (user-error "The draft changed. Choose the voice again"))
+    (if use
+        (let ((replacement (emacsvox-aural-voice-editor--replacement
+                            (and index (nth index (emacsvox-aural-voice-editing--rows snapshot))))))
+          (unless (= revision (emacsvox-aural-voice-draft-revision draft))
+            (user-error "The draft changed. Choose the voice again"))
+          (emacsvox-aural-voice-editor-stop)
+          (emacsvox-aural-voice-editor--put :candidate nil)
+          (emacsvox-aural-voice-editor--changed
+           (emacsvox-aural-voice-editing--keep snapshot (list :selectors (list selector)) 'physical
+                                               (if index 'replace 'fallback) index replacement)))
+      (setf (plist-get snapshot :selectors) (list selector)
+            (plist-get snapshot :choices) (list (list :id "candidate" :selector selector :adjustments nil)))
+      (emacsvox-aural-voice-editor--start-entries
+       emacsvox-aural-voice-editor--context
+       (list (emacsvox-aural-voice-editing--cascade
+              snapshot (emacsvox-aural-voice-editor--get :palette) (emacsvox-aural-voice-editor--get :policy)
+              (emacsvox-aural-voice-editor--get :text) nil "candidate")) revision))))
+
 (defun emacsvox-aural-voice-editor-choose (choice)
   "Replace stable CHOICE (or a current index), or append when CHOICE is nil."
-  (let* ((snapshot (emacsvox-aural-voice-editor--working))
-         (revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
-         (rows (emacsvox-aural-voice-editing--rows snapshot))
-         (index (if (stringp choice) (cl-position choice rows :test #'equal :key (lambda (row) (plist-get row :id))) choice))
-         (row (and index (nth index rows)))
-         (selector (progn (when (and (stringp choice) (null index)) (user-error "This fallback row no longer exists"))
-                           (emacsvox-aural-voice-editor--pick)))
-         (replacement (emacsvox-aural-voice-editor--replacement row)))
-    (unless (= revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
-      (user-error "Voice changed while choosing a replacement; choose the row again"))
-    (emacsvox-aural-voice-editor--changed
-     (emacsvox-aural-voice-editing--keep snapshot
-                                         (list :selectors (list selector)) 'physical
-                                         (if index 'replace 'fallback) index replacement))))
+  (let* ((revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+         (rows (emacsvox-aural-voice-editing--rows (emacsvox-aural-voice-editor--working)))
+         (index (if (stringp choice) (cl-position choice rows :test #'equal :key (lambda (row) (plist-get row :id))) choice)))
+    (when (and (stringp choice) (null index)) (user-error "This fallback row no longer exists"))
+    (let ((candidate (append (emacsvox-aural-voice-editor--pick) (list :revision revision :index index))))
+      (when (plist-get candidate :audition)
+        (emacsvox-aural-voice-editor--put :candidate candidate)
+        (emacsvox-aural-voice-editor-refresh)
+        (emacsvox-aural-voice-editor--locate 'candidate))
+      (emacsvox-aural-voice-editor--candidate candidate (not (plist-get candidate :audition))))))
 
 (defun emacsvox-aural-voice-editor--replacement (row)
   "Choose explicitly whether replacement ROW should retain its custom settings."
@@ -799,7 +813,54 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                                            (list (plist-put (plist-put (copy-tree entry) :text (concat label ".")) :role 'label) entry))
                                        (list entry))))))
     (emacsvox-aural-voice-editor--start-entries context entries revision)))
-(defun emacsvox-aural-voice-editor-play () "Play the edited voice or selected tuning row without saving." (interactive) (emacsvox-aural-voice-editor--preview nil (emacsvox-aural-voice-editor--get :tuning-choice)))
+(defun emacsvox-aural-voice-editor--play-order ()
+  "Audition the available explicit choices in their saved order in this draft."
+  (let* ((snapshot (emacsvox-aural-voice-editor--working))
+         (rows (emacsvox-aural-voice-editing--rows snapshot))
+         (inventory (emacsvox-aural-voice-editor--get :inventory))
+         (text (emacsvox-aural-voice-editor--get :text))
+         entries unavailable)
+    (cl-loop for row in rows for position from 1
+             for selector = (plist-get row :selector)
+             for resolved = (and (plist-get inventory :engines)
+                                 (ignore-errors (tts--resolve-voice-preview-selector selector inventory)))
+             for label = (or (plist-get (plist-get resolved :voice) :display-name)
+                             (emacsvox-aural-voice-workbench--selector-description selector))
+             do (if (and (plist-get inventory :engines) (not resolved))
+                    (push label unavailable)
+                  (push (emacsvox-aural-voice-editing--cascade
+                         snapshot (emacsvox-aural-voice-editor--get :palette)
+                         (emacsvox-aural-voice-editor--get :policy)
+                         (format "Choice %d. %s. %s" position label text) nil (plist-get row :id))
+                        entries)))
+    (setq entries (nreverse entries))
+    (unless entries
+      (user-error "No available fallback choices here%s"
+                  (if unavailable (concat ": " (string-join (nreverse unavailable) ", ")) "")))
+    (when unavailable
+      (let ((first (car entries)))
+        (setf (plist-get first :text)
+              (concat "Unavailable here: " (string-join (nreverse unavailable) ", ") ". " (plist-get first :text)))))
+    (emacsvox-aural-voice-editor--start-entries
+     emacsvox-aural-voice-editor--context entries
+     (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))))
+
+(defun emacsvox-aural-voice-editor-play ()
+  "Audition the voice at point or the adjustment currently being edited."
+  (interactive)
+  (let ((field (get-text-property (point) 'voice-field)))
+    (pcase field
+      ('candidate (emacsvox-aural-voice-editor--candidate (emacsvox-aural-voice-editor--get :candidate) nil))
+      ('play-chain (emacsvox-aural-voice-editor--play-order))
+      ('play-route (emacsvox-aural-voice-editor--preview nil))
+      (_ (let* ((snapshot (emacsvox-aural-voice-editor--working))
+                (index (cond ((eq field 'primary) 0) ((eq (car-safe field) 'choice) (cdr field))))
+                (row (and index (nth index (emacsvox-aural-voice-editing--rows snapshot))))
+                (choice (or (plist-get row :id) (emacsvox-aural-voice-editor--get :tuning-choice))))
+           (when (and row (plist-get (emacsvox-aural-voice-editor--get :inventory) :engines))
+             (tts--resolve-voice-preview-selector
+              (plist-get row :selector) (emacsvox-aural-voice-editor--get :inventory)))
+           (emacsvox-aural-voice-editor--preview nil choice))))))
 (defun emacsvox-aural-voice-editor-compare () "Compare original and edited voices, or the selected tuning row." (interactive) (emacsvox-aural-voice-editor--preview t (emacsvox-aural-voice-editor--get :tuning-choice)))
 (defun emacsvox-aural-voice-editor-text ()
   "Change the common comparison text."
@@ -827,6 +888,19 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
             (emacsvox-aural-voice-editor--put :destination id)
             id)))))
 
+(defun emacsvox-aural-voice-editor--refresh-named-watch (draft palette voice)
+  "Refresh DRAFT's source watch if only unrelated PALETTE entries changed."
+  (let* ((old (emacsvox-aural-voice-draft-watches draft))
+         (now (emacsvox-aural-voice-drafts--watch (list palette)))
+         (entry (lambda (watch)
+                  (cl-find voice (cdar watch) :key (lambda (row) (car (plist-get row :entry)))))))
+    (when (and (equal (mapcar #'car old) (list palette)) (not (equal old now))
+               (funcall entry old) (equal (funcall entry old) (funcall entry now))
+               (equal (emacsvox-aural-voice-draft-baseline draft)
+                      (emacsvox-aural-voice-editing--freeze
+                       (plist-get (emacsvox-aural-voice-editing--snapshot palette voice) :snapshot) palette)))
+      (setf (emacsvox-aural-voice-draft-watches draft) now))))
+
 (defun emacsvox-aural-voice-editor--save (select)
   "Save the current voice with explicit SELECT behavior."
   (if (not (emacsvox-aural-voice-editor--get :voice))
@@ -843,6 +917,8 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                             palette voice (emacsvox-aural-voice-editor--working) destination
                             (format "Personal voices based on %s" palette)
                             (emacsvox-aural-voice-editor--get :new))))
+                (unless (emacsvox-aural-voice-editor--get :new)
+                  (emacsvox-aural-voice-editor--refresh-named-watch draft palette voice))
                 (emacsvox-aural-voice-drafts--prepare draft (plist-get data :palette) (plist-get data :choice-sets)
                                                       :select select :sources (list palette))))))
       (unless (eq (and select t) (and (emacsvox-aural-voice-save-select proposal) t))
@@ -1157,6 +1233,7 @@ Return nil to stay, a feedback string for a draft decision, or t when clean."
   (interactive)
   (when-let* ((decision (emacsvox-aural-voice-editor--leave-choice)))
     (emacsvox-aural-voice-editor-stop)
+    (emacsvox-aural-voice-editor--put :candidate nil)
     (let ((origin (emacsvox-aural-voice-editor--get :origin))
           (row (emacsvox-aural-voice-editor--get :origin-row))
           (column (emacsvox-aural-voice-editor--get :origin-column))
@@ -1196,8 +1273,10 @@ Return nil to stay, a feedback string for a draft decision, or t when clean."
        "Enter edits or activates the field. Space repeats it. u undoes the last draft edit.\n"
        "d restores the adapter default. For a fallback override, i uses the shared value.\n\n"
        "Physical voice search matches text anywhere, ignoring case. Space inserts; Tab completes.\n"
-       "Selecting a candidate offers audition before Use this voice changes the draft.\n"
-       "P plays the edited base voice; B compares original and edited; S stops; T changes sample text.\n"
+       "Audition candidate returns to the editor. P replays the candidate. Return uses it in the draft.\n"
+       "P on a primary or fallback row auditions that row. On an adjustment it auditions the voice being edited.\n"
+       "Audition choices in fallback order plays each available choice. Hear the voice normal reading would use tests automatic selection.\n"
+       "B compares original and edited. S stops. T changes the sample text.\n"
        "Preview uses the draft without saving it. Automatic samples can be turned off in the editor.\n\n"
        "w or C-c C-c saves and applies the named voice. An experiment first asks for a destination.\n"
        "Save to collection stores the voice without selecting its palette.\n"

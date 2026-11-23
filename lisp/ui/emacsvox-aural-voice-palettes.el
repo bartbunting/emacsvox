@@ -1719,6 +1719,26 @@ A built-in voice opens a personal draft; save it to create a personal child."
    (kbd (car binding))
    (cdr binding)))
 
+(defun emacsvox-aural-voice-palettes--quit ()
+  "Leave this palette view through its opener on the current frame."
+  (interactive)
+  (let* ((frame (selected-frame))
+         (key (if (derived-mode-p 'emacsvox-aural-voice-palette-previews-mode)
+                  'emacsvox-voice-list-parent 'emacsvox-palette-parent))
+         (parent (frame-parameter frame key)))
+    (set-frame-parameter frame key nil)
+    (when (and (not emacsvox-aural-ui--return-function)
+               (buffer-live-p parent) (not (eq parent (current-buffer))))
+      (setq-local emacsvox-aural-ui--return-function
+                  (lambda ()
+                    (when (and (frame-live-p frame) (buffer-live-p parent))
+                      (if-let* ((window (get-buffer-window parent frame)))
+                          (select-window window)
+                        (switch-to-buffer parent)))
+                    ;; Let the usual close cue announce the restored buffer.
+                    nil)))
+    (emacsvox-aural-quit)))
+
 (defun emacsvox-aural-list-voice-palette-previews
     (palette &optional voice speak)
   "Open the spoken effective-voice browser for PALETTE.
@@ -1729,6 +1749,9 @@ When SPEAK is non-nil, include the selected row's full description."
          (emacsvox-aural-inspection-remember-source-buffer))
         (entries (emacsvox-aural-voice-palettes--preview-entries palette))
         (buffer (get-buffer-create "*Aural Voice Palette Preview*")))
+    (unless (eq (current-buffer) buffer)
+      (set-frame-parameter nil 'emacsvox-voice-list-parent
+                           (if (derived-mode-p 'emacsvox-aural-voice-palettes-mode) (current-buffer) source)))
     (with-current-buffer buffer
       (unless (and (derived-mode-p 'emacsvox-aural-voice-palette-previews-mode)
                    (eq palette emacsvox-aural-voice-palette-previews-palette))
@@ -2137,6 +2160,8 @@ When SPEAK is non-nil, include the selected row's full description."
   (let ((source
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Voice Palettes*")))
+    (unless (eq (current-buffer) buffer)
+      (set-frame-parameter nil 'emacsvox-palette-parent source))
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-voice-palettes-mode)
         (emacsvox-aural-voice-palettes-mode))
@@ -2150,6 +2175,9 @@ When SPEAK is non-nil, include the selected row's full description."
                (format "Voice palettes. %d palettes. Selected %s. Return browses voices; a activates. Question mark for help."
                        (length tabulated-list-entries) (or (tabulated-list-get-id) "none")))))
     buffer))
+
+(dolist (map (list emacsvox-aural-voice-palettes-mode-map emacsvox-aural-voice-palette-previews-mode-map))
+  (define-key map (kbd "q") #'emacsvox-aural-voice-palettes--quit))
 
 (provide 'emacsvox-aural-voice-palettes)
 

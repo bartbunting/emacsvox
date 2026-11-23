@@ -6594,7 +6594,7 @@ Move to and read the next editor field.
 @findex emacsvox-aural-voice-editor-play
 
 @format
-Play the edited voice or selected tuning row without saving.
+Audition the voice at point or the adjustment currently being edited.
 @end format
 @end deffn
 
@@ -6923,6 +6923,7 @@ d		emacsvox-aural-voice-palette-previews-delete
 e		emacsvox-aural-voice-palette-previews-tune
 h		emacsvox-aural-menu
 o		emacsvox-aural-voice-palette-previews-open-manager
+q		emacsvox-aural-voice-palettes--quit
 r		emacsvox-aural-voice-palette-previews-rename
 s		emacsvox-aural-voice-palette-previews-stop
 t		emacsvox-aural-voice-palette-previews-tune
@@ -7257,6 +7258,7 @@ e		emacsvox-aural-voice-palettes-edit-entry
 f		emacsvox-aural-voice-palettes-follow-baseline
 h		emacsvox-aural-menu
 i		emacsvox-aural-voice-palettes-import
+q		emacsvox-aural-voice-palettes--quit
 r		emacsvox-aural-voice-palettes-rename
 u		emacsvox-aural-voice-palettes-where-used
 v		emacsvox-aural-voice-palettes-describe
@@ -18073,6 +18075,7 @@ Default Value:
 @defvar {User Option} emacsvox-notmuch-automatic-total-byte-limit
 @verbatim
 Maximum UTF-8 bytes in one automatic Notmuch presentation.
+
 The limit includes the explicit truncation notice.  Set this to nil to disable
 the total byte limit; the total character limit still applies.
 @end verbatim
