@@ -85,8 +85,11 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.equal(sockets.length, 1);
     const ws = sockets[0];
     const receive = record => ws.onmessage({data: JSON.stringify(record)});
-    await act(() => receive({type:'ssh', frame:'same-frame', client:'client', server:'server'}));
+    await act(() => receive({type:'ssh', frame:'same-frame', client:'client', server:'server',
+      host:'unused.test', port:'1', username:'unused', pin:'unused'}));
     const terminal = app.root.findByType('NativeTerminal');
+    assert.deepEqual(terminal.props.connection, {host:profile.host, port:profile.port,
+      username:profile.username, pin:profile.pin, frame:'same-frame', client:'client', server:'server'});
     await select('Settings');
     assert.equal(terminal.props.keyboardEnabled, false);
     assert.ok(app.root.findAllByType('ScrollView').some(el => el.props.accessibilityElementsHidden));

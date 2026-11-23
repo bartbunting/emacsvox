@@ -298,7 +298,8 @@ function Session({settings, save, active, reconnect}) {
       {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
         <Terminal ref={terminalRef} style={styles.nativeTerminal}
           keyboardEnabled={canFocus} commandHyper={settings.commandHyper === 'yes'} minimumColumns={Number(settings.terminalColumns)}
-          connection={{host, port:settings.port, username:settings.username, pin:settings.pin, ...offer}}
+          connection={{host, port:settings.port, username:settings.username, pin:settings.pin,
+            frame:offer.frame, client:offer.client, server:offer.server}}
           onSessionStatus={({nativeEvent}) => {
             if (nativeEvent.state === 'connected') receiver.terminalConnected(offer.frame);
             else receiver.terminalClosed(nativeEvent.frame, nativeEvent.detail, nativeEvent.retryable);

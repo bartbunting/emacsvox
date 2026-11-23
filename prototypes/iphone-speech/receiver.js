@@ -260,13 +260,14 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     currentRate = speechRate;
     refreshVoice();
     // A fresh connection never reuses the previous audio queue or SSH frame.
-    function networkFailed(message) {
+    function networkFailed(message, retryStatus = 'Waiting for the relay to reconnect') {
       const resumeCandidate = activeBeforeLock;
-      const next = sessionEstablished ? 1 : attempt && attempt + 1;
+      const canRetry = sessionEstablished || Boolean(frameId) || attempt > 0;
+      const next = sessionEstablished ? 1 : attempt + 1;
       disconnect(message);
       activeBeforeLock = resumeCandidate;
-      if (next > 0 && next <= 4 && !background) {
-        status('Waiting for the relay to reconnect');
+      if (canRetry && next <= 4 && !background) {
+        status(retryStatus);
         sessionActive(true);
         retryTimer = setTimeout(() => connect(next), 1000 * Math.max(1, next - 1));
       }
@@ -400,7 +401,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   function terminalClosed(frame, message, retryable = false) {
     if (!frame || frameId !== frame) return;
     const detail = message || 'SSH terminal closed. Activate Connect to retry.';
-    if (retryable && retryNetworkLoss) retryNetworkLoss(detail);
+    if (retryable && retryNetworkLoss) retryNetworkLoss(detail, (message || 'SSH terminal closed.') + ' Retrying SSH.');
     else disconnect(detail);
   }
 

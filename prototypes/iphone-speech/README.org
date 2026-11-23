@@ -499,6 +499,14 @@ Without that space, small messages can reach the phone while a larger
 voice registration or terminal redraw stalls. During voice registration,
 the app shows “Finding iPhone voices”.
 
+To check cellular access, turn Wi-Fi off before you activate Connect.
+Keep Tailscale connected. After you hear Connected, press =C-n= on a
+line of text. Disconnect, connect again and read another line while
+Wi-Fi is still off. To check a network change during use, start on
+Wi-Fi, read a line, turn Wi-Fi off, then continue reading in that frame.
+Build 8 kept the established frame during this switch. Opening a fresh
+SSH session on cellular is still a device acceptance check.
+
 ** Start the signed app against the test server
 
 1. Open the private install link for Emacsvox Speech build 4 in iPhone Safari. Activate Install and

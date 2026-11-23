@@ -318,8 +318,20 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
           switch error {
           case TerminalError.hostKeyMismatch: reason = "The SSH host key does not match."; retryable = false
           case TerminalError.keyRejected: reason = "WSL rejected the iPhone public key."; retryable = false
-          case TerminalError.invalidDestination, TerminalError.invalidSize, TerminalError.requestRejected:
-            reason = "Could not open the SSH terminal."; retryable = false
+          case let network as URLError where network.code == .timedOut:
+            reason = "Timed out reaching WSL on SSH port \(port)."; retryable = true
+          case let network as URLError where network.code == .cannotConnectToHost:
+            reason = "Could not reach WSL on SSH port \(port)."; retryable = true
+          case TerminalError.setupTimedOut:
+            reason = "Reached WSL, but SSH setup timed out."; retryable = true
+          case TerminalError.sessionClosed:
+            reason = "WSL closed SSH before the terminal was ready."; retryable = true
+          case TerminalError.requestRejected:
+            reason = "WSL refused the terminal or the Emacs command."; retryable = false
+          case TerminalError.invalidDestination:
+            reason = "The SSH connection details are invalid."; retryable = false
+          case TerminalError.invalidSize:
+            reason = "The terminal size is invalid."; retryable = false
           default: reason = "The SSH connection was interrupted."; retryable = true
           }
           close()

@@ -69,6 +69,7 @@ private func run() async throws {
 do { try await run() }
 catch {
     if let failure = error as? TerminalError { report("error \(failure)") }
+    else if let network = error as? URLError { report("error network \(network.code.rawValue)") }
     else { report("error \(type(of: error))") }
     exit(1)
 }

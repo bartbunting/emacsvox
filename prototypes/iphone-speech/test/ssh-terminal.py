@@ -177,6 +177,15 @@ def check_session(probe, emacsclient, root, port, server, arm_speech, speech):
 
     reject(command(host_key=authorized), "hostKeyMismatch")
     reject(command(identity=other), "keyRejected")
+    # Keep this loopback port reserved while testing the two sides of TCP setup.
+    with socket.socket() as endpoint:
+        endpoint.bind(("127.0.0.1", 0))
+        phone = command() + ["phone-00000000-0000-4000-8000-000000000001"]
+        phone[3] = str(endpoint.getsockname()[1])
+        reject(phone, "network -1004")  # Foundation cannotConnectToHost
+        endpoint.listen(1)  # TCP succeeds, but no SSH server sends an identification.
+        reject(phone, "setupTimedOut")
+    print("Distinguished an unreachable SSH port from a listener that stalled before SSH was ready.", flush=True)
     authorized.write_text("no-pty " + pub)
     reject(command(), "requestRejected")
     authorized.write_text(pub)

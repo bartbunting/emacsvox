@@ -38,8 +38,11 @@ completion on the originating iPhone. The next signed app needs checks
 for shifted Meta punctuation, Control+Shift letters, returning from Safari
 with Done, and reconnecting after a foreground connection loss. Check
 keyboard echo with VoiceOver speech on and review the shorter Settings
-and Diagnostics tabs. On a cellular connection, verify both the relay
-and SSH before testing navigation. A Flyspell tone heard on the laptop
+and Diagnostics tabs. Build 8 kept an established session when Wi-Fi
+was switched off. A fresh connection over cellular reached the speech
+relay and failed to open SSH. On the next device build, turn Wi-Fi off
+before connecting, read a line, disconnect, then connect and read
+another line with Wi-Fi still off. A Flyspell tone heard on the laptop
 still needs a reproduction on the phone frame.
 
 Follow the [[file:OMNIVOX.org][Omnivox iPhone implementation plan]] for the shared Rust

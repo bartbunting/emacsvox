@@ -73,6 +73,22 @@ public final class TerminalSession: Sendable {
         String(openSSHPublicKey: NIOSSHPrivateKey(ed25519Key: key).publicKey)
     }
 
+    static func openTransport(_ bootstrap: ClientBootstrap, host: String, port: Int,
+                              phone: Bool) -> EventLoopFuture<Channel> {
+        guard phone else { return bootstrap.connect(host: host, port: port) }
+        let connection: EventLoopFuture<Channel>
+        if let address = try? SocketAddress(ipAddress: host, port: port) {
+            // The saved address belongs to the VPN even when the carrier supplies the uplink.
+            connection = bootstrap.connect(to: address)
+        } else {
+            connection = bootstrap.connect(host: host, port: port)
+        }
+        return connection.flatMapErrorThrowing { error in
+            if case ChannelError.connectTimeout = error { throw URLError(.timedOut) }
+            throw URLError(.cannotConnectToHost)
+        }
+    }
+
     /// Returns when the server has accepted the terminal and emacsclient command.
     /// Output is delivered in order on the NIO event loop. Keep the callback short.
     public static func connect(host: String, port: Int, username: String, pinnedHostKey: String,
@@ -112,7 +128,7 @@ public final class TerminalSession: Sendable {
             }
         }
         let transport: Channel
-        do { transport = try await bootstrap.connect(host: host, port: port).get() }
+        do { transport = try await openTransport(bootstrap, host: host, port: port, phone: phoneFrame != nil).get() }
         catch { ready.fail(error); throw error }
         do {
             return try await withTaskCancellationHandler {

@@ -23,5 +23,9 @@ let package = Package(
             .product(name: "Crypto", package: "swift-crypto"),
             .product(name: "NIOPosix", package: "swift-nio"),
         ], path: "Tests/SessionProbe"),
+        .testTarget(name: "EmacsTerminalSSHTests", dependencies: ["EmacsTerminalSSH",
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+        ]),
     ]
 )
