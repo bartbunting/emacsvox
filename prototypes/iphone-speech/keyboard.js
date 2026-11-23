@@ -80,7 +80,7 @@ function terminalKey(event) {
   }
   // Forward ordinary hardware keys before the text field can echo them.
   // The layout supplies the character. Text composition still uses input.
-  if (!ctrlKey && !altKey && event.code && event.code !== 'Unidentified' &&
+  if (event.cancelable !== false && !ctrlKey && !altKey && event.code && event.code !== 'Unidentified' &&
       key && Array.from(key).length === 1 && !/[\x00-\x1f\x7f-\x9f]/.test(key)) return key;
   const char = altKey ? metaCharacter(event) : key;
   if (!char || char.length !== 1) return;
@@ -94,7 +94,7 @@ function terminalKey(event) {
   } else if (altKey) return esc + char;
 }
 field.addEventListener('keydown', event => {
-  if (event.cancelable === false || event.isComposing || event.keyCode === 229 || event.metaKey ||
+  if (event.isComposing || event.keyCode === 229 || event.metaKey ||
       (!event.altKey && event.getModifierState?.('AltGraph')) || (event.altKey && event.ctrlKey &&
       (!window.emacsControlOption || event.getModifierState?.('AltGraph')))) return;
   const bytes = terminalKey(event);
