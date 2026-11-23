@@ -300,10 +300,10 @@ Use hosted macOS to link the Rust library for device and simulator, compile
 Swift against the iOS SDK and run native integration tests. A simulator
 can exercise audio buffers with an installed test voice. Use a signed
 device build to collect the real iOS inventory and renderer timings.
-Target the first combined native build at two-way negotiation, phone
-voice listing, selection and common controls, the legacy tone and icon
-streams, and the keyboard improvements. Keep the structured timeline
-and rich-tone bundles for the next increment that passes their fixtures.
+Build 4 introduced two-way negotiation, phone voice listing, selection
+and common controls, and the legacy tone and icon streams. The
+[[file:PLAN.org::*Next implementation and device build][next signed build]] requires in-word cues through ordinary Emacs navigation.
+Qualify the later rich-tone versions against their own fixtures.
 
 Keep listening as a parallel acceptance track. Continue coding, running
 automated checks and preparing subsequent slices while listening results

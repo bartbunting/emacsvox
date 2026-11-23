@@ -24,13 +24,20 @@ history. The private signed builds predate the removal of local setup details.
 
 Follow the [[file:OMNIVOX.org][Omnivox iPhone implementation plan]] for the shared Rust
 runtime, legacy and structured audio, on-device voice inventory and
-Emacs voice settings. Start the two-way worker connection and reference
-tests now. Advance each slice on automated checks. Batch listening checks
-on signed builds when convenient.
+Emacs voice settings. Signed build 4 negotiates both speech workers and
+lists the installed voices.
 
-The next signed build should include the keyboard and focus fixes, the
-visual-line chime heard in Expo Go, and the Omnivox slices that pass their
-automated checks. Track these comparisons alongside the port.
+Before the next signed build, test ordinary =C-n= in an Agent Shell
+response containing =TestCase=. Emacs must send the whole word and its cue
+positions through the Omnivox timeline protocol. With a synthesis marker
+at the internal capital in the WSL test, the Rust mixer must insert the
+tone at that audio frame. A second =C-n= must cancel the old line and its
+remaining cues while an urgent permission announcement finishes. Reconnect
+must discard stale output. On the signed phone, compare US Reed's reported
+timing and audible placement with desktop playback.
+
+Include the staged keyboard and capital-pitch fixes with that build.
+Track these listening comparisons alongside the port.
 
 1. *Everyday earcons.* Bundle the [[file:../../sounds/packs/accent/README.org][Accent pack]] and its inherited 3d cues.
    Match each recording selected by Emacsvox and play it locally.
@@ -180,6 +187,9 @@ Review terminal screen opens a snapshot of its visible rows. WSL verified
 the signed executable, registered iPhone and bundled review control.
 On 23 November the slower voice disappeared when swiping across the
 keyboard field on the physical phone.
+
+On 23 November 2026, =C-j= on an external keyboard inserted a newline in an unsent
+Agent Shell draft on signed build 4.
 
 Pass when the app verifies the host, attaches its terminal to the chosen
 server and supports the keyboard workflows below. Use VoiceOver to move
