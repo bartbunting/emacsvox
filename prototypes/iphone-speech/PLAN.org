@@ -22,7 +22,24 @@ history. The private signed builds predate the removal of local setup details.
 
 * Next implementation and device build
 
-Signed build 8 was built from
+Signed build 9 uses Emacsvox =d22d0fbf6= and Omnivox
+=717a06aa=. SSH opens the saved Tailscale address directly. If the speech
+relay has answered and SSH encounters a temporary failure, the app can
+retry up to four times. Diagnostics keeps the last six connection results
+across app launches. In WSL, the phone SSH client opened a real Emacs
+terminal and distinguished an unreachable port from a stalled SSH handshake.
+On 24 November 2026 the downloaded archive passed checks for its arm64
+signature, registered iPhone profile, tab and SSH messages, timing fixture
+and all 83 bundled sound and licence files.
+
+On the iPhone, turn Wi-Fi off before connecting, read a line, disconnect,
+then connect and read another line with Wi-Fi still off. Check the
+[[file:README.org::*Use the bottom tabs][shorter Settings and Diagnostics tabs]] with VoiceOver. Use =C-h k= to
+check =M-:= and =C-S-k=. Open a link and activate Done to return to the
+same terminal. Check keyboard echo with VoiceOver speech on. A Flyspell
+tone heard on the laptop still needs a reproduction on the phone frame.
+
+Build 8 was built from
 Emacsvox =813b6c176= and Omnivox =7bbd0156=. The arm64 executable,
 signature, device profile, JavaScript bundle, cue timing fixture and 83
 sound and licence files passed the archive check on 24 November 2026.
@@ -34,16 +51,10 @@ physical keyboard and check speech loudness and timing in Diagnostics.
 
 With an external keyboard, build 8 reported 120 columns and delivered Hyper.
 With the updated WSL host, Notmuch read unread rows and announced search
-completion on the originating iPhone. The next signed app needs checks
-for shifted Meta punctuation, Control+Shift letters, returning from Safari
-with Done, and reconnecting after a foreground connection loss. Check
-keyboard echo with VoiceOver speech on and review the shorter Settings
-and Diagnostics tabs. Build 8 kept an established session when Wi-Fi
-was switched off. A fresh connection over cellular reached the speech
-relay and failed to open SSH. On the next device build, turn Wi-Fi off
-before connecting, read a line, disconnect, then connect and read
-another line with Wi-Fi still off. A Flyspell tone heard on the laptop
-still needs a reproduction on the phone frame.
+completion on the originating iPhone. Agent Shell read both the status and
+the command on tool headings. Build 8 kept an established session when
+Wi-Fi was switched off. A fresh connection over cellular reached the
+speech relay and failed to open SSH.
 
 Follow the [[file:OMNIVOX.org][Omnivox iPhone implementation plan]] for the shared Rust
 runtime, legacy and structured audio, on-device voice inventory and

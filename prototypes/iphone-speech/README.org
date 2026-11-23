@@ -3,7 +3,7 @@
 Track the path from this speech receiver to a full terminal in the
 [[file:PLAN.org][iPhone prototype plan]].
 
-Install signed build 8 on the registered iPhone. In Safari, activate
+Install signed build 9 on the registered iPhone. In Safari, activate
 Install and confirm. Open Emacsvox Speech, connect on the Terminal tab and
 focus the Emacs keyboard. Run =M-x omnivox-list-voices=. Press =p= to
 audition the selected voice, Return to use it for reading, or =r= to
@@ -504,19 +504,22 @@ Keep Tailscale connected. After you hear Connected, press =C-n= on a
 line of text. Disconnect, connect again and read another line while
 Wi-Fi is still off. To check a network change during use, start on
 Wi-Fi, read a line, turn Wi-Fi off, then continue reading in that frame.
-Build 8 kept the established frame during this switch. Opening a fresh
-SSH session on cellular is still a device acceptance check.
+If Connect fails, open Diagnostics, then Connection history. The newest
+result gives the time and tells you whether the phone could reach the SSH
+port, whether SSH setup timed out, or whether WSL refused the key or the
+terminal. Earlier attempts stay available after a successful retry.
+You can read these results with speech logging off.
 
 ** Start the signed app against the test server
 
-1. Open the private install link for Emacsvox Speech build 4 in iPhone Safari. Activate Install and
+1. Open the private install link for Emacsvox Speech build 9 in iPhone Safari. Activate Install and
    confirm the iOS prompt. Open Emacsvox Speech from the Home Screen.
    If iOS asks for Developer Mode, turn it on under Settings, Privacy
    & Security, Developer Mode. Restart, unlock and confirm Turn On.
    Open Diagnostics and activate “Test iPhone Voice” to hear local speech
    before connecting. Return to Terminal using its bottom tab, or activate
    Done on build 3. Allow local network access if prompted.
-   For SSH, open Settings and activate
+   For SSH, open Settings, expand Connection and activate
    “Copy iPhone SSH public key” and transfer that one public
    line to a file of your choice in WSL.
 2. From the prototype directory, run the following in WSL. If your
@@ -539,9 +542,10 @@ SSH session on cellular is still a device acceptance check.
    ./phone-sshd "$phone" "$phone_key"
    #+end_src
 
-4. In Settings fill in WSL Tailscale IPv4 address,
-   SSH port (=8822=), WSL username and the full =ssh-ed25519= host public
-   key printed by the listener. Activate Save settings, then Connect.
+4. Under Settings, Connection, fill in the WSL Tailscale IPv4 address,
+   SSH port (=8822=), WSL username and the full
+   =ssh-ed25519= host public key printed by the listener. Activate Save
+   settings, then Connect.
    On signed build 3, double-tap the Emacs keyboard field after you hear
    Connected. In build 4 the app requests focus when SSH and the
    Emacs frame are ready. To start there on a fresh launch, enable
@@ -555,25 +559,26 @@ SSH session on cellular is still a device acceptance check.
 5. Use the phone keyboard to try =C-n= during a line, =C-x C-f= to visit
    a file, =C-x C-s= to save, and =M-x= with Tab completion. Use VoiceOver
    to reach Stop Speech and return to the keyboard. To compare input
-   paths, switch off “Use Emacs keyboard field” in Settings, save and
-   activate “Focus Emacs terminal”.
-   For the audio comparison, turn on “Use native mixer”, save and open
-   Diagnostics. Activate “Test mixed audio”. Saving a changed connection or
-   audio mode reconnects an active session.
+   paths, open Settings, Keyboard and terminal. Switch off “Use Emacs
+   keyboard field”, save and activate “Focus Emacs terminal”.
+   To compare the earlier audio mixer, open Settings, Speech and sounds.
+   Switch off “Use Omnivox on iPhone”, turn on “Use native mixer” and save.
+   Open Diagnostics, Audio tests and activate “Test mixed audio”. Saving
+   a changed connection or audio mode reconnects an active session.
 6. Activate Disconnect, then press Control+C in the listener and relay
    terminals. The listener accepts the nominated Tailscale phone and its
    public key while it runs. It uses its own host key and authorized keys.
 
 ** Use the bottom tabs
 
-Build 4 opens on Terminal. The tabs along the bottom, from left to right,
+The signed app opens on Terminal. The tabs along the bottom, from left to right,
 are Terminal, Diagnostics and Settings. Select Diagnostics for audio tests
 or Settings for connection and keyboard preferences. Changing tabs keeps
 your SSH frame open. Return to Terminal to resume typing at the same point.
 Stop Speech is available on Terminal and Diagnostics.
 
-In the version after build 8, Settings opens with three sections on a
-signed device. Open Connection for the WSL address and SSH identity,
+In build 9, Settings opens with three collapsed sections.
+Open Connection for the WSL address and SSH identity,
 Keyboard and terminal for input, line width and web links, or Speech
 and sounds for loudness, earcons and optional speech logging. Opening a
 section keeps your edits in the others. Save settings applies them all.
@@ -593,8 +598,8 @@ normal foreground reconnection. Desktop frames use their own browser, and
 explicit Emacs URL handlers keep their priority. A WSL web service needs
 an address reachable from the phone, such as its Tailscale address.
 
-With an updated app and WSL relay, choose “Measure SSH key to speech” in
-Diagnostics. Press Return in the Emacs keyboard field. The result gives
+In Diagnostics, open Timing tests and choose “Measure SSH key to speech”.
+Press Return in the Emacs keyboard field. The result gives
 milliseconds from receipt of that key to the returning speech record and
 to the first scheduled audio buffer or speech-start callback. “Measure
 local key to speech” plays the same sample on the phone. Neither test
@@ -677,8 +682,9 @@ Apps and select Emacsvox Speech. Emacs still uses your usual typing echo.
 
 ** Check keyboard speech and permissions on the signed app
 
-1. In Diagnostics, activate “Test half-second tone”. Listen for one steady
-   pitch. Try “Test three-second tone” and interrupt it with Stop Speech.
+1. Open Diagnostics, then Audio tests. Activate “Test half-second tone”
+   and listen for one steady pitch. Try “Test three-second tone” and
+   interrupt it with Stop Speech.
    Both controls work offline and use the same player as an Emacs tone.
    For a timing comparison, try the half-second tone twice. Return to Terminal
    and run =M-x iphone-test-tone RET= twice in the isolated phone frame.
