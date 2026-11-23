@@ -3,7 +3,7 @@
 Track the path from this speech receiver to a full terminal in the
 [[file:PLAN.org][iPhone prototype plan]].
 
-Install signed build 7 on the registered iPhone. In Safari, activate
+Install signed build 8 on the registered iPhone. In Safari, activate
 Install and confirm. Open Emacsvox Speech, connect on the Terminal tab and
 focus the Emacs keyboard. Run =M-x omnivox-list-voices=. Press =p= to
 audition the selected voice, Return to use it for reading, or =r= to
@@ -564,6 +564,15 @@ or Settings for connection and keyboard preferences. Changing tabs keeps
 your SSH frame open. Return to Terminal to resume typing at the same point.
 Stop Speech is available on Terminal and Diagnostics.
 
+In the version after build 8, Settings opens with three sections on a
+signed device. Open Connection for the WSL address and SSH identity,
+Keyboard and terminal for input, line width and web links, or Speech
+and sounds for loudness, earcons and optional speech logging. Opening a
+section keeps your edits in the others. Save settings applies them all.
+Diagnostics starts with connection status, Test iPhone Voice and Stop
+Speech. Expand Audio tests or Timing tests for the individual checks.
+Speech trace is available when you enable logging.
+
 Open a web link with its usual Emacs command, or run ~M-x browse-url-at-point~.
 On a connected phone with browser support, Safari opens inside Emacsvox
 Speech. Activate Done to return to the same terminal. Settings includes
@@ -635,8 +644,8 @@ forward one expression. For physical Control+Option chords in the updated
 Emacs keyboard field, choose Caps Lock as your only VoiceOver modifier in
 iPhone Settings, Accessibility, VoiceOver, Typing, Modifier Keys. Then enable
 “Send Control+Option to Emacs” in the app settings and save. Press
-Control+Option+f to move one expression. The app leaves Command shortcuts
-to iOS. On terminals that share key codes, the usual Emacs prefix =C-x @=
+Control+Option+f to move one expression. The Windows or Command key sends
+Hyper when its setting is enabled. On terminals that share key codes, the usual Emacs prefix =C-x @=
 can supply individual modifiers, including =C-x @ s= for Super.
 [[https://support.apple.com/guide/iphone/iph6c494dc6/ios][Apple's external keyboard guide]].
 

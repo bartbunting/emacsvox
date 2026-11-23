@@ -59,6 +59,8 @@ evidence of a defect.
 
 Check VoiceOver tab selection and external keyboard focus on the signed
 build using the [[file:../prototypes/iphone-speech/README.org::*Use the bottom tabs][bottom tab exercise]].
+Check the expanded state of the Settings and Diagnostics sections with
+VoiceOver. Verify that switching sections preserves unsaved preferences.
 Check external-keyboard echo, isolated capital pitch and Shift+Return in
 an unsent draft using the [[file:../prototypes/iphone-speech/README.org::*Check keyboard speech and permissions on the signed app][signed keyboard exercise]].
 On the phone, open Browse voices from the Aural menu. Check the spoken

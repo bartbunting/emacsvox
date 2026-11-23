@@ -11,7 +11,7 @@ import {WebView} from '@expo/dom-webview';
 import {keyboardSource, createKeyboardFocus} from './keyboard';
 import {mixerAdapters} from './mixer';
 import {createReceiver} from './receiver';
-import {Action, colors, Settings, TabBar, TabPage, TerminalReview} from './panels';
+import {Action, colors, Section, Settings, TabBar, TabPage, TerminalReview} from './panels';
 
 const native = requireOptionalNativeModule('IphoneMixer');
 const ssh = requireOptionalNativeModule('IphoneTerminal');
@@ -105,6 +105,7 @@ function EmacsKeyboard({canFocus, controlOption, commandHyper, onKeys}) {
 
 function Session({settings, save, active, reconnect}) {
   const [tab, setTab] = useState('Terminal');
+  const [diagnosticSection, setDiagnosticSection] = useState('');
   const [reviewOpen, setReviewOpen] = useState(false);
   const [browserOpen, setBrowserOpen] = useState(false);
   const browserShowing = useRef(false), browserPreference = useRef(settings.webBrowser);
@@ -309,28 +310,36 @@ function Session({settings, save, active, reconnect}) {
   );
   const diagnostics = (
     <TabPage title="Diagnostics">
+      <Text accessibilityLabel={'Connection status. ' + status} style={styles.status}>{status}</Text>
       {voice ? <Text style={styles.status}>{voice}</Text> : null}
       {native && <Text style={styles.status}>{useWire ? 'Omnivox on iPhone' : mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
-      {useWire && <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />}
-      {useWire && nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
-      {useWire && nativeWire?.armKeyTiming && <>
-        <Action title="Measure SSH key to speech" disabled={!keyboardFrame} onPress={() => armTiming(false)} />
-        <Action title="Measure local key to speech" disabled={!keyboardFrame} onPress={() => armTiming(true)} />
-      </>}
-      {nativeWire?.speechTrace && settings.logSpeech === 'yes' && <>
+      <Action title="Stop Speech" onPress={receiver.stop} />
+      {playback ? <Text style={styles.status}>{playback}</Text> : null}
+      <Section title="Audio tests" hint="Play test tones and earcons on this iPhone."
+        selected={diagnosticSection} select={setDiagnosticSection}>
+        {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}
+        {native && <Action title="Test three-second tone" onPress={() => receiver.testTone(3000)} />}
+        <Action title="Test Open Object Sound" disabled={!prepared} onPress={receiver.testCue} />
+        {adapters.visualLinePlayer && <Action title="Test visual-line chime" disabled={!prepared} onPress={receiver.testVisualLine} />}
+        {mixed && <Action title="Test mixed audio" disabled={!prepared} onPress={receiver.testMix} />}
+      </Section>
+      {useWire && <Section title="Timing tests" hint="Check cue placement and compare SSH and local key latency."
+        selected={diagnosticSection} select={setDiagnosticSection}>
+        <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />
+        {nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
+        {nativeWire?.armKeyTiming && <>
+          <Action title="Measure SSH key to speech" disabled={!keyboardFrame} onPress={() => armTiming(false)} />
+          <Action title="Measure local key to speech" disabled={!keyboardFrame} onPress={() => armTiming(true)} />
+        </>}
+        {timing ? <Text style={styles.status}>{timing}</Text> : null}
+      </Section>}
+      {nativeWire?.speechTrace && settings.logSpeech === 'yes' && <Section title="Speech trace"
+        hint="Read the local recording log or send it to your WSL relay." selected={diagnosticSection} select={setDiagnosticSection}>
         <Action title="Read speech trace" onPress={() => setTrace(nativeWire.speechTrace() || 'The speech trace is empty.')} />
         <Action title="Send speech trace to WSL" disabled={!activeSession || !useWire} onPress={receiver.sendSpeechTrace} />
         {trace ? <Text selectable style={styles.terminal}>{trace}</Text> : null}
-      </>}
-      {native && <Action title="Test half-second tone" onPress={() => receiver.testTone(480)} />}
-      {native && <Action title="Test three-second tone" onPress={() => receiver.testTone(3000)} />}
-      <Action title="Test Open Object Sound" disabled={!prepared} onPress={receiver.testCue} />
-      {adapters.visualLinePlayer && <Action title="Test visual-line chime" disabled={!prepared} onPress={receiver.testVisualLine} />}
-      {mixed && <Action title="Test mixed audio" disabled={!prepared} onPress={receiver.testMix} />}
-      <Action title="Stop Speech" onPress={receiver.stop} />
-      {timing ? <Text style={styles.status}>{timing}</Text> : null}
-      {playback ? <Text style={styles.status}>{playback}</Text> : null}
+      </Section>}
     </TabPage>
   );
   return <KeyboardAvoidingView behavior="padding" style={styles.root}>

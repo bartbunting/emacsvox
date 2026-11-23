@@ -74,8 +74,9 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       })});
     });
     t.after(() => act(() => app.unmount()));
-    const tabs = () => app.root.findAllByType('Pressable');
-    const select = name => act(() => tabs().find(el => el.props.accessibilityLabel === name).props.onPress());
+    const presses = () => app.root.findAllByType('Pressable');
+    const tabs = () => presses().filter(el => el.props.accessibilityRole === 'tab');
+    const select = name => act(() => presses().find(el => el.props.accessibilityLabel === name).props.onPress());
     const button = title => app.root.findAllByType('Button').find(el => el.props.title === title);
     const hostField = () => app.root.findAllByType('TextInput').find(el => el.props.accessibilityLabel === 'WSL Tailscale IPv4 address');
     assert.deepEqual(tabs().map(el => [el.props.accessibilityLabel, el.props.accessibilityRole,
@@ -89,6 +90,8 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Settings');
     assert.equal(terminal.props.keyboardEnabled, false);
     assert.ok(app.root.findAllByType('ScrollView').some(el => el.props.accessibilityElementsHidden));
+    assert.equal(hostField(), undefined);
+    await select('Connection');
     await act(() => hostField().props.onChangeText('100.64.0.2'));
     await act(() => {
       terminal.props.onSessionStatus({nativeEvent: {state: 'connected'}});
@@ -97,13 +100,20 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Diagnostics');
     assert.ok(tabs()[1].props.accessibilityState.selected);
     assert.ok(button('Test iPhone Voice'));
+    assert.equal(button('Test Open Object Sound'), undefined);
+    await select('Audio tests');
+    assert.ok(button('Test Open Object Sound'));
+    await select('Audio tests');
     assert.equal(button('Read speech trace'), undefined);
     assert.deepEqual(logging, [false]);
     assert.equal(app.root.findAllByType('WebView').length, 0);
     assert.equal(app.root.findAllByType('PhoneKeyboardContainer').length, 0);
     await select('Settings');
+    await select('Connection');
     assert.equal(hostField().props.value, '100.64.0.2');
     if (hasShiftReturnShortcut) {
+      await select('Speech and sounds');
+      assert.equal(hostField(), undefined);
       const slider = app.root.findByType('PhoneSpeechLoudnessView');
       assert.equal(slider.props.level, 2);
       await act(() => slider.props.onLevelChange({nativeEvent: {decibels: 6}}));
@@ -127,8 +137,9 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     }
     assert.deepEqual(focus, [input === 'field' ? 'WebView' : 'NativeTerminal']);
     await select('Settings');
+    await select('Connection');
     assert.equal(hostField().props.value, '100.64.0.1');
-    const keepAwake = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Keep awake while connected');
+    await select('Speech and sounds');
     const loggingSwitch = () => app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Log speech text and timing');
     if (hasShiftReturnShortcut) {
       const slider = app.root.findByType('PhoneSpeechLoudnessView');
@@ -137,6 +148,8 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     }
     await act(() => loggingSwitch().props.onValueChange(true));
     assert.equal(terminal.props.minimumColumns, 120);
+    await select('Keyboard and terminal');
+    const keepAwake = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Keep awake while connected');
     const columns = app.root.findAllByType('TextInput').find(el => el.props.accessibilityLabel === 'Minimum terminal columns');
     await act(() => columns.props.onChangeText('160'));
     await act(() => keepAwake.props.onValueChange(false));
@@ -154,16 +167,19 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.equal(ws.readyState, 1);
     assert.deepEqual(logging, [false, true]);
     await select('Diagnostics');
+    await select('Speech trace');
     await act(() => button('Read speech trace').props.onPress());
     assert.ok(app.root.findAllByType('Text').some(el => el.props.children === 'local speech sample'));
     assert.ok(button('Send speech trace to WSL'));
     await select('Settings');
+    await select('Speech and sounds');
     await act(() => loggingSwitch().props.onValueChange(false));
     await act(() => button('Save settings').props.onPress());
     await select('Diagnostics');
     assert.equal(button('Read speech trace'), undefined);
     assert.deepEqual(logging, [false, true, false]);
     if (hasShiftReturnShortcut) {
+      await select('Timing tests');
       await act(() => button('Measure SSH key to speech').props.onPress());
       assert.ok(tabs()[1].props.accessibilityState.selected);
       assert.ok(app.root.findAllByType('Text').some(el => el.props.children === 'The connected Emacs frame does not offer the timing test.'));
@@ -207,6 +223,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
         assert.equal(sockets.length, 1);
       }
       await select('Settings');
+      await select('Keyboard and terminal');
       const browse = app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Open web links inside Emacsvox Speech');
       await act(() => browse.props.onValueChange(false));
       await act(() => button('Save settings').props.onPress());

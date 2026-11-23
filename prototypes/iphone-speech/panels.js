@@ -82,73 +82,102 @@ function Toggle({label, hint, value, change}) {
   </View>;
 }
 
+export function Section({title, hint, selected, select, children}) {
+  const open = selected === title;
+  return <>
+    <Pressable accessibilityRole="button" accessibilityLabel={title} accessibilityHint={hint}
+      accessibilityState={{expanded: open}} onPress={() => select(open ? '' : title)}
+      style={styles.sectionButton}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text accessible={false} accessibilityElementsHidden style={styles.sectionTitle}>{open ? '−' : '+'}</Text>
+    </Pressable>
+    {open && children}
+  </>;
+}
+
+function Field({label, hint, value, change, numeric}) {
+  return <View>
+    <Text accessible={false} accessibilityElementsHidden style={styles.label}>{label}</Text>
+    <TextInput accessibilityLabel={label} accessibilityHint={hint} keyboardType={numeric ? 'number-pad' : 'default'}
+      autoCapitalize="none" autoCorrect={false} keyboardAppearance="dark" selectionColor={colors.action}
+      style={styles.field} value={value} onChangeText={change} />
+  </View>;
+}
+
 export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessSlider}) {
   const [message, setMessage] = React.useState('');
-  const fields = [['host', 'WSL Tailscale IPv4 address']];
-  if (ssh && draft.transport === 'ssh') {
-    fields.push(['terminalColumns', 'Minimum terminal columns'], ['port', 'SSH port'], ['username', 'WSL username'], ['pin', 'Trusted WSL host public key']);
+  const [selected, select] = React.useState('');
+  const sections = {selected, select};
+  const terminal = ssh && draft.transport === 'ssh';
+  const omnivox = wire && terminal && draft.worker === 'omnivox';
+  function report(detail) {
+    setMessage(detail);
+    AccessibilityInfo.announceForAccessibility?.(detail);
+  }
+  function saveSettings() {
+    const columns = draft.terminalColumns?.trim();
+    if (terminal && !(columns === '0' || (/^\d{2,3}$/.test(columns) && Number(columns) >= 40 && Number(columns) <= 240))) {
+      select('Keyboard and terminal');
+      report('Enter 40 to 240 terminal columns, or zero to fit the screen.');
+    } else save();
   }
   return <TabPage title="Settings">
-    <Action title="Save settings" onPress={() => {
-      const columns = draft.terminalColumns?.trim();
-      if (ssh && draft.transport === 'ssh' &&
-          !(columns === '0' || (/^\d{2,3}$/.test(columns) && Number(columns) >= 40 && Number(columns) <= 240))) {
-        const detail = 'Enter 40 to 240 terminal columns, or zero to fit the screen.';
-        setMessage(detail);
-        AccessibilityInfo.announceForAccessibility(detail);
-      } else save();
-    }} />
-    <Action title="Cancel" onPress={cancel} />
-    {ssh && <>
-      <Toggle label="Use SSH terminal" hint="Connect your external keyboard to Emacs through SSH. Switch off to use the test relay."
-        value={draft.transport === 'ssh'} change={v => edit('transport', v ? 'ssh' : 'relay')} />
-      {wire && draft.transport === 'ssh' && <Toggle label="Use Omnivox on iPhone"
-        hint="Run speech, installed voice discovery, tones and earcons on this phone. Reconnects the terminal when saved."
+    <Section title="Connection" hint="WSL address, SSH identity and automatic connection." {...sections}>
+      {ssh && <Toggle label="Use SSH terminal" hint="Connect your external keyboard to Emacs through SSH. Switch off to use the test relay."
+        value={draft.transport === 'ssh'} change={v => edit('transport', v ? 'ssh' : 'relay')} />}
+      <Field label="WSL Tailscale IPv4 address" value={draft.host} change={v => edit('host', v)} />
+      {terminal && <>
+        <Field label="SSH port" numeric value={draft.port} change={v => edit('port', v)} />
+        <Field label="WSL username" value={draft.username} change={v => edit('username', v)} />
+        <Field label="Trusted WSL host public key" value={draft.pin} change={v => edit('pin', v)} />
+      </>}
+      {ssh && <>
+        <Toggle label="Connect on open" hint="Connect to the saved SSH host when you launch the app."
+          value={draft.connectOnOpen === 'yes'} change={v => edit('connectOnOpen', v ? 'yes' : 'no')} />
+        <Action title="Copy iPhone SSH public key" onPress={async () => {
+          try { await ssh.copyPublicKey(); report('iPhone public key copied.'); }
+          catch { report('Could not read the iPhone SSH identity.'); }
+        }} />
+      </>}
+    </Section>
+    {ssh && <Section title="Keyboard and terminal" hint="Keyboard input, modifiers, line width, screen lock and web links." {...sections}>
+      <Toggle label="Use Emacs keyboard field" hint="Use an editable VoiceOver field. Switch off to type directly into SwiftTerm."
+        value={draft.input === 'field'} change={v => edit('input', v ? 'field' : 'terminal')} />
+      {terminal && <Toggle label="Use Windows or Command as Emacs Hyper"
+        hint="Hold this key with another key in the terminal to send Hyper. iOS or VoiceOver may reserve some shortcuts."
+        value={draft.commandHyper === 'yes'} change={v => edit('commandHyper', v ? 'yes' : 'no')} />}
+      {draft.input === 'field' && <Toggle label="Send Control+Option to Emacs"
+        hint="Choose Caps Lock as your VoiceOver modifier first. When off, press Escape followed by the Control key combination."
+        value={draft.controlOption === 'emacs'} change={v => edit('controlOption', v ? 'emacs' : 'voiceover')} />}
+      {terminal && <Field label="Minimum terminal columns" numeric value={draft.terminalColumns} change={v => edit('terminalColumns', v)}
+        hint="Enter 40 to 240, or zero to fit the screen. Wider lines shrink the terminal print. Review terminal screen keeps your usual text size." />}
+      <Toggle label="Keep awake while connected" hint="Prevent automatic screen lock while this app is in the foreground."
+        value={draft.keepAwake === 'yes'} change={v => edit('keepAwake', v ? 'yes' : 'no')} />
+      {ssh.hasWebBrowser && omnivox && <Toggle label="Open web links inside Emacsvox Speech"
+        hint="Use Done in the Safari view to return to Emacs. Turn off to use your default browser."
+        value={draft.webBrowser !== 'external'} change={v => edit('webBrowser', v ? 'in-app' : 'external')} />}
+    </Section>}
+    {(wire || mixer) && <Section title="Speech and sounds" hint="Speech engine, loudness, earcons and optional speech logging." {...sections}>
+      {wire && terminal && <Toggle label="Use Omnivox on iPhone" hint="Run speech, voice discovery, tones and earcons on this phone. Saving reconnects the terminal."
         value={draft.worker === 'omnivox'} change={v => edit('worker', v ? 'omnivox' : 'legacy')} />}
-      {ssh.hasWebBrowser && draft.worker === 'omnivox' && draft.transport === 'ssh' &&
-        <Toggle label="Open web links inside Emacsvox Speech"
-          hint="Use Done in the Safari view to return to Emacs. Turn off to open links in the default browser on this iPhone."
-          value={draft.webBrowser !== 'external'} change={v => edit('webBrowser', v ? 'in-app' : 'external')} />}
-      {LoudnessSlider && draft.transport === 'ssh' && draft.worker === 'omnivox' && <>
+      {LoudnessSlider && omnivox && <>
         <Text accessible={false} accessibilityElementsHidden style={styles.label}>Speech loudness · {Number(draft.speechLoudness) || 0} dB</Text>
         <LoudnessSlider style={{height: 48}} level={Number(draft.speechLoudness) || 0}
           onLevelChange={({nativeEvent}) => edit('speechLoudness', String(nativeEvent.decibels))} />
       </>}
+      {mixer && !omnivox && <Toggle label="Use native mixer" hint="Mix local speech with tones and earcons. Switch off for direct iPhone speech."
+        value={draft.audio === 'mixed'} change={v => edit('audio', v ? 'mixed' : 'direct')} />}
+      {wire && <Action title="Import a personal earcon" onPress={async () => {
+        try { if (await wire.importCue()) report('Earcon imported. Emacs can now play the matching recording.'); }
+        catch { report('Could not import this recording. Choose a WAV or OGG up to 16 MiB and 30 seconds.'); }
+      }} />}
       {wire?.setSpeechLogging && <Toggle label="Log speech text and timing"
-        hint="Save to start recording on this phone. Use Diagnostics to read the trace or send a copy to WSL. Save with the switch off to erase the phone copy."
+        hint="Save to start recording on this phone. Diagnostics can send the trace to WSL. Save with the switch off to erase the phone copy."
         value={draft.logSpeech === 'yes'} change={v => edit('logSpeech', v ? 'yes' : 'no')} />}
-      <Toggle label="Connect on open" hint="Open the saved SSH connection when you launch the app. The Emacs keyboard receives focus once the terminal is ready."
-        value={draft.connectOnOpen === 'yes'} change={v => edit('connectOnOpen', v ? 'yes' : 'no')} />
-      <Toggle label="Use Emacs keyboard field" hint="Use the keyboard field that was tested with VoiceOver. Switch off to type directly into SwiftTerm."
-        value={draft.input === 'field'} change={v => edit('input', v ? 'field' : 'terminal')} />
-      {draft.transport === 'ssh' && <Toggle label="Use Windows or Command as Emacs Hyper"
-        hint="Hold this key with another key in the terminal to send Hyper. iOS or VoiceOver may reserve some shortcuts."
-        value={draft.commandHyper === 'yes'} change={v => edit('commandHyper', v ? 'yes' : 'no')} />}
-      {draft.input === 'field' && <Toggle label="Send Control+Option to Emacs"
-        hint="Use Control and Meta together in the Emacs keyboard field. Choose Caps Lock as your VoiceOver modifier first. When off, press Escape followed by the Control key combination."
-        value={draft.controlOption === 'emacs'} change={v => edit('controlOption', v ? 'emacs' : 'voiceover')} />}
-      <Toggle label="Keep awake while connected" hint="Prevent automatic screen lock while this app is in the foreground."
-        value={draft.keepAwake === 'yes'} change={v => edit('keepAwake', v ? 'yes' : 'no')} />
-    </>}
-    {fields.map(([name,label]) => <View key={name}>
-      <Text accessible={false} accessibilityElementsHidden style={styles.label}>{label}</Text>
-      <TextInput accessibilityLabel={label}
-        accessibilityHint={name === 'terminalColumns' ? 'Enter 40 to 240, or zero to fit the screen. Wider lines shrink the terminal print. Review terminal screen keeps your usual text size.' : undefined}
-        keyboardType={name === 'terminalColumns' ? 'number-pad' : 'default'} autoCapitalize="none" autoCorrect={false}
-        keyboardAppearance="dark" selectionColor={colors.action} style={styles.field}
-        value={draft[name]} onChangeText={v => edit(name, v)} />
-    </View>)}
-    {ssh && <Action title="Copy iPhone SSH public key" onPress={async () => {
-      try { await ssh.copyPublicKey(); setMessage('iPhone public key copied.'); }
-      catch { setMessage('Could not read the iPhone SSH identity.'); }
-    }} />}
-    {wire && <Action title="Import a personal earcon" onPress={async () => {
-      try { if (await wire.importCue()) setMessage('Earcon imported. Emacs can now play the matching recording.'); }
-      catch { setMessage('Could not import this recording. Choose a WAV or OGG up to 16 MiB and 30 seconds.'); }
-    }} />}
-    {mixer && !(wire && draft.transport === 'ssh' && draft.worker === 'omnivox') && <Toggle label="Use native mixer" hint="Mix local speech with tones and earcons. Switch off for direct iPhone speech."
-      value={draft.audio === 'mixed'} change={v => edit('audio', v ? 'mixed' : 'direct')} />}
+    </Section>}
     {message ? <Text style={styles.label}>{message}</Text> : null}
+    <Action title="Save settings" onPress={saveSettings} />
+    <Action title="Cancel" onPress={cancel} />
   </TabPage>;
 }
 
@@ -157,6 +186,9 @@ const styles = StyleSheet.create({
   panel: {flexGrow: 1, gap: 18, paddingHorizontal: 24, paddingVertical: 40},
   heading: {fontSize: 28, fontWeight: '600', color: colors.text},
   label: {fontSize: 18, color: colors.text, flexShrink: 1},
+  sectionButton: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    minHeight: 48, borderBottomColor: '#636366', borderBottomWidth: StyleSheet.hairlineWidth},
+  sectionTitle: {fontSize: 18, color: colors.action},
   row: {fontFamily: 'Menlo', fontSize: 16, color: colors.text},
   toggle: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44},
   field: {color: colors.text, borderColor: '#aaa', borderWidth: 1, padding: 10, marginTop: 6, borderRadius: 4},
