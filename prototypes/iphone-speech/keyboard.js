@@ -56,6 +56,9 @@ function terminalKey(event) {
   const {altKey, ctrlKey} = event;
   const shiftKey = event.shiftKey || event.getModifierState?.('Shift');
   let key = event.key;
+  if (ctrlKey && /^Key[A-Z]$/.test(event.code) && /^[\x00-\x1f]$/.test(key)) {
+    return (altKey ? '\x1b' : '') + key;
+  }
   if (key === 'Return' || key === '\r' || key === '\n' ||
       ((!key || key === 'Unidentified') && (event.code === 'Enter' || event.code === 'NumpadEnter'))) {
     key = 'Enter';

@@ -377,8 +377,11 @@ async function main() {
         assert.ok(field.down('J', {code:'KeyJ', shiftKey:true}));
         await until('Shift+Return inserts one newline in the unsent Agent Shell draft',
           () => pcSeesDraft(draft + 'j\nJ'));
+        assert.ok(field.down('j', {code:'KeyJ', ctrlKey:true}));
+        assert.ok(field.down('k', {code:'KeyK'}));
+        await until('Control+j also inserts an unsent newline', () => pcSeesDraft(draft + 'j\nJ\nk'));
         await observe(`(with-selected-window ${phoneWindow}
-          (goto-char (point-max)) (delete-region (- (point) 3) (point))
+          (goto-char (point-max)) (delete-region (- (point) 5) (point))
           (goto-char (point-min)) (emacsvox-agent-shell--input-sync)
           (setq-local iphone-test-response-keys nil)
           (add-hook 'pre-command-hook (lambda ()
@@ -386,7 +389,10 @@ async function main() {
               (push this-command iphone-test-response-keys))) nil t))`);
         const nav = packets.length;
         assert.ok(field.down('j', {code:'KeyJ'}));
+        await until('spoken response navigation for j', () => packets.slice(nav).some(p => p.type === 'speak' && p.text.trim()));
+        const back = packets.length;
         assert.ok(field.down('J', {code:'KeyJ', shiftKey:true}));
+        await until('spoken response navigation for Shift+j', () => packets.slice(back).some(p => p.type === 'speak' && p.text.trim()));
         await until('j and Shift+j navigate Agent Shell responses', async () =>
           (await observe(`(with-current-buffer iphone-shared-buffer (equal iphone-test-response-keys
             '(emacsvox-agent-shell-previous-response emacsvox-agent-shell-next-response)))`)) === 't')

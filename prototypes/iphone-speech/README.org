@@ -609,7 +609,7 @@ If your keyboard has Mac and Windows layouts, check its manual for the
 position of Option or Alt. iOS interprets the Alt key as Option.
 
 In an editable Agent Shell draft, Shift+Return inserts a newline. On
-build 4, use =M-x newline RET= if the keyboard sends ordinary Return.
+build 4, use =C-j= or =M-x newline RET= if the keyboard sends ordinary Return.
 In the transcript, =j= moves to the next response and =J= to the previous
 one. At the editable prompt they insert letters.
 

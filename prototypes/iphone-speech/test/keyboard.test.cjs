@@ -128,6 +128,7 @@ test('terminal modifiers, function keys and Control+Meta with either VoiceOver m
     ['Return', {code: 'NumpadEnter', shiftKey: true}, '\x1b[27;2;13~'],
     ['Enter', {code: 'Enter', getModifierState: key => key === 'Shift'}, '\x1b[27;2;13~'],
     ['Enter', {code: 'Enter'}, '\r'],
+    ['j', {...ctrl, code: 'KeyJ'}, '\n'], ['\n', {...ctrl, code: 'KeyJ'}, '\n'],
     ['F1', {}, '\x1bOP'], ['F4', ctrl, '\x1b[1;5S'], ['F12', {}, '\x1b[24~'],
   ]) {
     assert.ok(field.down(key, modifiers), key);
