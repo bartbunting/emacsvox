@@ -116,7 +116,7 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private let tones: EffectStream, sounds: EffectStream, inserts: EffectStream
   private var speech: AVSpeechUtterance?, spoken: ((Bool) -> Void)?, pause: DispatchWorkItem?
   var interrupted: (() -> Void)?
-  var resolvedMarks: ((Int, Int) -> Void)?
+  var resolvedMarks: ((WireTimingReport) -> Void)?
   private var observers: [NSObjectProtocol] = []
 
   init(_ resources: WireResources) {

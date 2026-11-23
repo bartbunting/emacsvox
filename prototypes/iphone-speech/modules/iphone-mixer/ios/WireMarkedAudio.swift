@@ -29,22 +29,25 @@ final class WireMarkedAudio {
     return true
   }
 
-  func render(clock: OpaquePointer, token: OpaquePointer) -> (OpaquePointer?, Int, Int) {
-    let positions = plan.nativeFrames(bytesPerFrame: bytesPerFrame, totalFrames: samples.count / max(1, channels))
+  func render(clock: OpaquePointer, token: OpaquePointer) -> (OpaquePointer?, WireTimingReport) {
+    let positions = plan.placements(bytesPerFrame: bytesPerFrame, totalFrames: samples.count / max(1, channels))
     var cues: [OvToneMark] = []
-    var interior = 0, exact = 0
-    for (mark, frame) in zip(plan.marks, positions) {
-      let inside = mark.offset > 0 && mark.offset < plan.length
-      if inside { interior += 1 }
-      guard let frame else { continue }
-      if inside { exact += 1 }
-      cues.append(OvToneMark(frame: UInt32(frame), hz: mark.hz, ms: mark.ms, gain: mark.gain, insert: mark.placement == .insert))
+    var report = WireTimingReport()
+    for (mark, position) in zip(plan.marks, positions) {
+      if mark.offset > 0 && mark.offset < plan.length {
+        switch position.precision {
+        case .exact: report.exact += 1
+        case .word: report.word += 1
+        case .span: report.span += 1
+        }
+      }
+      cues.append(OvToneMark(frame: UInt32(position.frame), hz: mark.hz, ms: mark.ms, gain: mark.gain, insert: mark.placement == .insert))
     }
     let pcm = samples.withUnsafeBufferPointer { input in
       cues.withUnsafeBufferPointer { points in
         ov_ios_mix_marked(clock, input.baseAddress, input.count, rate, UInt16(channels), points.baseAddress, points.count, token)
       }
     }
-    return (pcm, pcm == nil ? 0 : exact, interior)
+    return (pcm, report)
   }
 }

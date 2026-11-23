@@ -16,6 +16,7 @@ struct WireToneMark: Decodable {
   let offset: Int
   let placement: WireItem.Placement
   let hz: Float, ms: UInt32, gain: Float
+  var after: Bool?
 }
 
 struct WireReceipts: Decodable {

@@ -18,6 +18,21 @@ func checkMixedPlayback(_ root: String, voices: String) throws {
   precondition(bookmarks.complete && bookmarks.nativeFrames(bytesPerFrame: 2, totalFrames: 400) == [0, 180])
   bookmarks.observe("ov-5", byte: 400)
   precondition(bookmarks.nativeFrames(bytesPerFrame: 2, totalFrames: 400) == [0, nil])
+  let unresolved = bookmarks.placements(bytesPerFrame: 2, totalFrames: 400)
+  precondition(unresolved[1].precision == .span && unresolved[1].frame == 0)
+  precondition(!bookmarks.acceptsWordRanges(in: bookmarks.ssml) && !bookmarks.acceptsWordRanges(in: "Cafe\u{301}Case & <x>"))
+  precondition(bookmarks.acceptsWordRanges(in: "CaféCase & <x>"))
+  bookmarks.observeWord(NSRange(location: NSNotFound, length: 4), byte: 320)
+  precondition(bookmarks.placements(bytesPerFrame: 2, totalFrames: 400)[1].precision == .span)
+  bookmarks.observeWord(NSRange(location: 4, length: 4), byte: 320)
+  let approximate = bookmarks.placements(bytesPerFrame: 2, totalFrames: 400)[1]
+  precondition(approximate.precision == .word && approximate.frame == 160)
+  var after = innerMark
+  after.after = true
+  var trailing = WireBookmarks(WireItem(kind: .speech, text: "CaféCase", marks: [after]))!
+  precondition(trailing.placements(bytesPerFrame: 4, totalFrames: 400)[0].frame == 400)
+  trailing.observeWord(NSRange(location: 0, length: 4), byte: 80)
+  precondition(trailing.placements(bytesPerFrame: 4, totalFrames: 400)[0].frame == 20)
   word.marks = [WireToneMark(offset: 4, placement: .insert, hz: 440, ms: 20, gain: 1)]
   precondition(WireBookmarks(word) == nil)
   let clock = ov_ios_mix_new()!, token = ov_ios_token_new()!

@@ -33,9 +33,7 @@ public final class IphoneOmnivoxModule: Module {
       for tag in ["M", "N"] {
         let audio = WireAudio(resources)
         if tag == "M" {
-          audio.resolvedMarks = { [weak self] exact, total in
-            self?.markerStatus = "The voice supplied \(exact) of \(total) in-word timing marks."
-          }
+          audio.resolvedMarks = { [weak self] report in self?.markerStatus = report.description }
         }
         let lane = WireLane(audio) { [weak self] line in
           guard let self, self.connection == id else { return }

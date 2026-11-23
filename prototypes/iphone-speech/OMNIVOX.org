@@ -41,7 +41,10 @@ windows. Apple receives one utterance with the internal capital bookmarked.
 The status reports how many internal marks the voice supplied. The renderer
 uses the reported audio position. Reading a named bookmark requires iOS 17
 or later. See [[https://developer.apple.com/documentation/avfaudio/avspeechsynthesismarker/bookmarkname][Apple's bookmarkName reference]].
-If an internal mark is missing, you still hear the word. Ordinary navigation
+If an internal mark is missing, Omnivox uses a word boundary on the
+requested side when Apple supplies a matching word range. Otherwise it
+places the cue at the corresponding end of the speech span. The diagnostic
+reports each fallback. Ordinary navigation
 currently uses the negotiated legacy commands, which can split a word
 across utterances. The structured timeline work below brings the intact
 span and its original offsets through that route.

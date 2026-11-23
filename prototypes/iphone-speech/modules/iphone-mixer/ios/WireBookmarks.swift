@@ -1,19 +1,34 @@
 // Copyright (C) 2026 Emacsvox contributors
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
+import OmnivoxMobile
+
+struct WireTimingReport {
+  var exact = 0, word = 0, span = 0
+  var description: String {
+    var text = "The voice supplied \(exact) of \(exact + word + span) in-word timing marks."
+    if word > 0 { text += " \(word) used a word boundary." }
+    if span > 0 { text += " \(span) used the speech span boundary." }
+    return text
+  }
+}
 
 // Keep one utterance and add an SSML bookmark at each requested UTF-8
 // boundary. Apple ignores utterance rate and pitch when the input is SSML.
 struct WireBookmarks {
   let ssml: String, marks: [WireToneMark], length: Int
+  private let source: String, utf16Length: Int
   private(set) var offsets: [String: Int] = [:]
   private var conflicting: Set<String> = []
+  private var words: [Int: Int] = [:], conflictingWords: Set<Int> = []
   static let end = "ov-end"
 
   init?(_ item: WireItem) {
     guard let text = item.text, let marks = item.marks, !marks.isEmpty, marks.count <= 512 else { return nil }
     let bytes = Array(text.utf8)
     self.marks = marks
+    source = text
+    utf16Length = text.utf16.count
     length = bytes.count
     let rate = Int(((item.rate ?? 1) * 100).rounded())
     let pitch = Int((((item.pitch ?? 1) - 1) * 100).rounded())
@@ -41,6 +56,21 @@ struct WireBookmarks {
     offsets[name] = byte
   }
 
+  func acceptsWordRanges(in request: String) -> Bool {
+    // SSML and canonically equivalent Unicode can both have different indices.
+    source.utf8.elementsEqual(request.utf8)
+  }
+
+  mutating func observeWord(_ range: NSRange, byte: Int) {
+    guard byte >= 0, range.location >= 0, range.location <= utf16Length,
+          range.length > 0, range.length <= utf16Length - range.location,
+          let word = Range(range, in: source) else { return }
+    let offset = source.utf8.distance(from: source.utf8.startIndex, to: word.lowerBound)
+    guard words.count < 4096 || words[offset] != nil else { return }
+    if let previous = words[offset], previous != byte { conflictingWords.insert(offset) }
+    words[offset] = byte
+  }
+
   var complete: Bool { offsets[Self.end] != nil && marks.allSatisfy { offsets["ov-\($0.offset)"] != nil } }
 
   func nativeFrames(bytesPerFrame: Int, totalFrames: Int) -> [Int?] {
@@ -63,5 +93,29 @@ struct WireBookmarks {
       }
     }
     return marks.map { byOffset[$0.offset] }
+  }
+
+  enum Precision { case exact, word, span }
+  func placements(bytesPerFrame: Int, totalFrames: Int) -> [(frame: Int, precision: Precision)] {
+    guard bytesPerFrame > 0, totalFrames > 0 else { return [] }
+    var boundaries: [OvWordBoundary] = []
+    for (offset, byte) in words.sorted(by: { $0.key < $1.key }) {
+      let frame = byte / bytesPerFrame
+      guard !conflictingWords.contains(offset), byte % bytesPerFrame == 0,
+            frame <= totalFrames, frame >= Int(boundaries.last?.frame ?? 0) else { continue }
+      boundaries.append(OvWordBoundary(offset: UInt32(offset), frame: UInt32(frame)))
+    }
+    let exact = nativeFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames)
+    return boundaries.withUnsafeBufferPointer { words in
+      zip(marks, exact).map { mark, frame in
+        if let frame { return (frame, .exact) }
+        let after = mark.after == true
+        var word: UInt32 = 0
+        if ov_ios_word_frame(UInt32(mark.offset), after, words.baseAddress, words.count, &word) {
+          return (Int(word), .word)
+        }
+        return (after ? totalFrames : 0, .span)
+      }
+    }
   }
 }

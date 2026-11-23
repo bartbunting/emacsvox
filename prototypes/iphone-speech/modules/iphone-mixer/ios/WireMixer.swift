@@ -10,7 +10,7 @@ final class WireMixer {
   private let clock = ov_ios_mix_new()!, token = RenderToken()
   private let work = DispatchQueue(label: "org.emacsvox.iphone.presentation", qos: .userInitiated)
   private let format: AVAudioFormat, synth: AVSpeechSynthesizer
-  private let resolvedMarks: ((Int, Int) -> Void)?
+  private let resolvedMarks: ((WireTimingReport) -> Void)?
   private var current: Capture?
   private let capacity = NSCondition()
   private var queuedFrames = 0, pendingInputBytes = 0, cancelled = false
@@ -27,7 +27,7 @@ final class WireMixer {
     }
   }
 
-  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, resolvedMarks: ((Int, Int) -> Void)?) {
+  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, resolvedMarks: ((WireTimingReport) -> Void)?) {
     self.format = format
     self.synth = synth
     self.resolvedMarks = resolvedMarks
@@ -116,13 +116,19 @@ final class WireMixer {
             self.work.sync { self.receive(Result { try IphoneMixerModule.copySamples(buffer) }, capture, stride: stride) }
           }
         }
-        if #available(iOS 17.0, *), bookmarks != nil {
+        if let bookmarks {
+          let useWords = bookmarks.acceptsWordRanges(in: utterance.speechString)
           self.synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
             guard let self, let capture else { return }
-            let bookmarks = markers.filter { $0.mark == .bookmark }.map { ($0.bookmarkName, $0.byteSampleOffset) }
+            let names: [(String, Int)]
+            let words = useWords ? Array(markers.lazy.filter { $0.mark == .word }.prefix(4096).map { ($0.textRange, $0.byteSampleOffset) }) : []
+            if #available(iOS 17.0, *) {
+              names = Array(markers.lazy.filter { $0.mark == .bookmark }.prefix(513).map { ($0.bookmarkName, $0.byteSampleOffset) })
+            } else { names = [] }
             self.work.async {
               guard !capture.ended, let marked = capture.marked else { return }
-              for (name, byte) in bookmarks { marked.plan.observe(name, byte: byte) }
+              for (name, byte) in names { marked.plan.observe(name, byte: byte) }
+              for (range, byte) in words { marked.plan.observeWord(range, byte: byte) }
               if marked.pcmEnded && marked.plan.complete { self.finishMarked(capture, marked) }
             }
           })
@@ -171,10 +177,10 @@ final class WireMixer {
 
   private func finishMarked(_ capture: Capture, _ marked: WireMarkedAudio) {
     guard !capture.ended else { return }
-    let (pcm, exact, requested) = marked.render(clock: clock, token: token.pointer)
+    let (pcm, report) = marked.render(clock: clock, token: token.pointer)
     DispatchQueue.main.async { [weak self, weak capture] in
       guard let self, let capture, self.current === capture else { return }
-      self.resolvedMarks?(exact, requested)
+      self.resolvedMarks?(report)
     }
     _ = post(pcm, capture, end: true, mayWait: true)
   }
