@@ -530,31 +530,30 @@ This explicit command works regardless of autospeak or prompt preference."
       (forward-line (max 0 (min row (1- count))))
       (emacsvox-eat-review--row-at-point))))
 
-(defun emacsvox-eat-review--current-line-description ()
-  "Return a styled spoken description of the frozen row at point."
+(defun emacsvox-eat-review--row-label (row)
+  "Describe the position of zero-based ROW at point in the frozen view."
+  (let ((count (length (emacsvox-eat-review--rows)))
+        (start (line-beginning-position)))
+    (if (eq emacsvox-eat-review--view 'completion)
+        (format "Completion row %d of %d" (1+ row) count)
+      (concat
+       (format "Terminal row %d of %d" (1+ row) count)
+       (when (get-text-property start 'emacsvox-eat-review-cursor)
+         ", captured cursor")
+       (when-let* ((focus (get-text-property start 'emacsvox-eat-review-focus)))
+         (format ", likely focus, %s confidence"
+                 (or (plist-get focus :confidence) 'unknown)))))))
+
+(defun emacsvox-eat-review--current-line-description (&optional text-only)
+  "Return the styled frozen row at point, omitting its position for TEXT-ONLY."
   (when-let* ((row (emacsvox-eat-review--row-at-point)))
-    (let* ((rows (emacsvox-eat-review--rows))
-           (text
-            (buffer-substring
-             (line-beginning-position) (line-end-position)))
-           (cursor-p
-            (get-text-property
-             (line-beginning-position) 'emacsvox-eat-review-cursor))
-           (focus
-            (get-text-property
-             (line-beginning-position) 'emacsvox-eat-review-focus))
-           (label
-            (if (eq emacsvox-eat-review--view 'completion)
-                (format "Completion row %d of %d" (1+ row) (length rows))
-              (concat
-               (format "Terminal row %d of %d" (1+ row) (length rows))
-               (when cursor-p ", captured cursor")
-               (when focus
-                 (format ", likely focus, %s confidence"
-                         (or (plist-get focus :confidence) 'unknown)))))))
-      (if (string-empty-p (string-trim text))
-          (concat label " is blank")
-        (concat label ": " (emacsvox-eat--speech-row text))))))
+    (let ((text (buffer-substring (line-beginning-position) (line-end-position)))
+          (label (unless text-only (emacsvox-eat-review--row-label row))))
+      (if (string-blank-p text)
+          (if label (concat label " is blank")
+            (propertize "Blank" 'emacsvox-aural-facts
+                        (list :line-condition (if (string-empty-p text) 'empty 'whitespace-only))))
+        (concat (when label (concat label ": ")) (emacsvox-eat--speech-row text))))))
 
 (defun emacsvox-eat-review-speak-current-line
     (&optional introduction replaceable-p)
@@ -565,7 +564,7 @@ review because only the newly reached row remains useful."
   (unless (derived-mode-p 'emacsvox-eat-review-mode)
     (user-error "This is not a frozen EAT review buffer"))
   (if-let* ((description
-             (emacsvox-eat-review--current-line-description)))
+             (emacsvox-eat-review--current-line-description replaceable-p)))
       (let ((content (concat (or introduction "") description))
             (operation
              (if (eq emacsvox-eat-review--view 'completion)

@@ -6424,7 +6424,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           (switch-to-buffer source)
           (setq major-mode 'eat-mode
                 emacsvox-eat--screen-snapshot
-                '(:text "One\nTwo\nThree" :rows ("One" "Two" "Three")
+                '(:text "One\nTwo\n" :rows ("One" "Two" "")
                   :styles nil :cursor-row 1 :alternate-screen nil))
           (cl-letf (((symbol-function 'emacsvox-eat--submit)
                      (lambda (&rest arguments)
@@ -6432,7 +6432,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (setq review (emacsvox-eat-review-screen))
             (emacsvox-eat-review-next-line)
             (emacsvox-eat-review-next-line)
-            (emacsvox-eat-review-previous-line 2))
+            (emacsvox-eat-review-previous-line)
+            (emacsvox-eat-review-previous-line)
+            (emacsvox-eat-review-previous-line)
+            (call-interactively (key-binding (kbd "."))))
+          (should (equal (car (pop submissions)) "Terminal row 1 of 3: One"))
           (should (= (emacsvox-eat-review--row-at-point) 0))
           (setq submissions (nreverse submissions))
           (should
@@ -6442,9 +6446,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                (substring-no-properties (car submission)))
              submissions)
             '("Frozen screen review opened. Terminal row 2 of 3, captured cursor: Two"
-              "Terminal row 3 of 3: Three"
-              "Last retained row. Terminal row 3 of 3: Three"
-              "Terminal row 1 of 3: One"))))
+              "Blank"
+              "Last retained row. Blank"
+              "Two"
+              "One"
+              "First retained row. One")))
           (should (eq (nth 2 (car submissions)) 'state-change))
           (should (eq (nth 3 (car submissions)) 'open-object))
           (should (eq (nth 4 (car submissions)) 'urgent))
@@ -6454,7 +6460,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (dolist (submission (cdr submissions))
               (should (eq (nth 2 submission) 'inspection))
               (should (eq (nth 4 submission) 'replaceable))
-              (should (equal (nth 5 submission) navigation-key))))
+              (should (equal (nth 5 submission) navigation-key)))))
       (when (buffer-live-p review) (kill-buffer review))
       (when (buffer-live-p source) (kill-buffer source)))))
 

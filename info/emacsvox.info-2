@@ -4287,10 +4287,12 @@ positions for the cursor and likely focus, and completion rows.  Opening
 and closing play distinct object cues and announce the transition.
 
 ‘n, p; C-n, C-p; down, up’
-     Move by captured terminal row and speak the destination,
-     interrupting the previous row announcement.
+     Move by captured terminal row.  You hear the row text immediately,
+     and a new move interrupts the previous reading.  Moving past either
+     end announces the boundary.
 ‘SPC, RET, .’
-     Speak the current captured row.
+     Hear the row number and text, including any captured cursor or
+     likely focus on that row.
 ‘a’
      Speak a bounded form of the current screen or completion view.
 ‘s, c’
