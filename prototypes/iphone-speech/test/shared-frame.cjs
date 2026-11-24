@@ -290,17 +290,22 @@ async function main() {
         (funcall iphone-test--acp-reply '((outcome . "injected")))))`);
       assert.ok(![...after, ...desktop.slice(beforeOldReply)].some(p => p.type === 'speak' && p.text.includes('Steering accepted')));
       async function switchPhoneBuffer(name) {
-        const start = after.length;
-        // A process-exit message can cover the prompt between tmux snapshots.
-        // Type the complete command and verify the resulting terminal window.
-        ws.send('key \x18b' + name + '\r');
-        const selectedBuffer = `(when-let* ((f (seq-find (lambda (frame) (frame-parameter frame 'emacsvox-phone-id))
-                                                         (frame-list))))
-                                 (buffer-name (window-buffer (frame-selected-window f))))`;
-        await until('buffer name in the phone mode line', () => after.slice(start).some(p =>
-          p.type === 'screen' && p.text.includes(name) && !/switch to buffer/i.test(p.text)));
+        const phone = "(seq-find (lambda (f) (frame-parameter f 'emacsvox-phone-id)) (frame-list))";
+        const prompt = `(with-selected-frame ${phone}
+          (when-let* ((w (active-minibuffer-window)))
+            (with-current-buffer (window-buffer w) (minibuffer-contents-no-properties))))`;
+        ws.send('key \x18b');
+        await until('phone buffer prompt', async () => await observe(prompt) !== 'nil').catch(async error => {
+          const state = await observe(`(with-selected-frame ${phone}
+            (list (buffer-name (window-buffer)) last-command (minibuffer-depth) (current-message)))`);
+          throw new Error(error.message + ', terminal state ' + state + ', screen ' +
+            JSON.stringify(after.findLast(p => p.type === 'screen')?.text.slice(-450)));
+        });
+        ws.send('key ' + name);
+        await until('phone buffer name entered', async () => await observe(prompt) === JSON.stringify(name));
+        ws.send('key \r');
         await until('selected phone buffer ' + name, async () =>
-          await observe(selectedBuffer) === JSON.stringify(name));
+          await observe(`(buffer-name (window-buffer (frame-selected-window ${phone})))`) === JSON.stringify(name));
       }
       await switchPhoneBuffer('Second permission sample');
       await until('switch restores the second conversation request', () =>
