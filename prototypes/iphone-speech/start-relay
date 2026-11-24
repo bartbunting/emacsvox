@@ -37,6 +37,9 @@ fi
 if [[ $# != 1 ]]; then
     echo 'Usage: ./start-relay [--vpn-host HOST_IP] [--native-metro|--keyboard|--shared|--routed|--standalone] IPHONE_IP' >&2
     echo '       ./start-relay [--vpn-host HOST_IP] --existing IPHONE_IP EMACS_SOCKET [BUFFER_NAME]' >&2
+    if [[ ${#network[@]} == 0 ]] && command -v tailscale >/dev/null; then
+        tailscale status 2>/dev/null | awk 'tolower($0) ~ /ios/ { print $1, $2 }' || true
+    fi
     exit 2
 fi
 phone=$1

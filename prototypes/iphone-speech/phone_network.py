@@ -24,7 +24,8 @@ def host_for_phone(phone, vpn_host=None):
         try:
             status = json.loads(subprocess.check_output(["tailscale", "status", "--json"]))
             peers = (status.get("Peer") or {}).values()
-            if not any(phone in peer["TailscaleIPs"] and peer["OS"].lower() == "ios" for peer in peers):
+            if not any(phone in (peer.get("TailscaleIPs") or []) and
+                       (peer.get("OS") or "").lower() == "ios" for peer in peers):
                 raise ValueError("Choose the Tailscale IPv4 address of a paired iPhone.")
             vpn_host = subprocess.check_output(["tailscale", "ip", "-4"], text=True).strip()
         except (OSError, subprocess.CalledProcessError) as error:

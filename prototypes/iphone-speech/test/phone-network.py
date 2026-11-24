@@ -27,7 +27,7 @@ class PhoneNetworkTest(unittest.TestCase):
                 host_for_phone(value, "10.8.0.2")
 
     def test_discovery_verifies_the_phone(self):
-        status = json.dumps({"Peer": {"one": {"OS": "iOS", "TailscaleIPs": ["100.64.0.2"]},
+        status = json.dumps({"Peer": {"pending": {}, "one": {"OS": "iOS", "TailscaleIPs": ["100.64.0.2"]},
                                       "two": {"OS": "linux", "TailscaleIPs": ["100.64.0.3"]}}})
         with patch("subprocess.check_output", side_effect=[status, "100.64.0.1\n"]):
             self.assertEqual(host_for_phone("100.64.0.2"), "100.64.0.1")
