@@ -23,6 +23,7 @@ const relayPort = process.env.EXPO_PUBLIC_EMACSVOX_PORT || '8787';
 
 const nativeWire = requireOptionalNativeModule('IphoneOmnivox');
 const LoudnessSlider = nativeWire?.setSpeechLoudness ? requireNativeView('IphoneOmnivox', 'PhoneSpeechLoudnessView') : null;
+const AudioRoutePicker = nativeWire?.hasAudioRoutePicker ? requireNativeView('IphoneOmnivox', 'PhoneAudioRouteView') : null;
 
 function connectionKey(p) {
   return JSON.stringify([p.transport, p.audio, p.worker, p.host, p.port, p.username, p.pin]);
@@ -362,6 +363,7 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
         {terminalPage}
         {!terminalTab && <View style={styles.tabPage}>
           {tab === 'Diagnostics' ? diagnostics : <Settings draft={draft} ssh={ssh} mixer={native} wire={nativeWire} LoudnessSlider={LoudnessSlider}
+            AudioRoutePicker={AudioRoutePicker}
             edit={(k,v) => setDraft(prev => ({...prev, [k]:v}))}
             cancel={() => { setDraft(settings); setTab('Terminal'); }}
             save={() => { save(draft); setTab('Terminal'); }} />}

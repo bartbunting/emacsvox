@@ -79,6 +79,15 @@ on that worker to try a fresh iOS synthesizer. Stopping a retry leaves the
 next one available. Build 9 can still use the voice browser and reports
 that its worker lacks the retry command.
 
+* Choose the iPhone output
+
+In receivers after build 9, open Settings, then Speech and sounds.
+After “Audio output for speech and notifications”, activate the system
+output picker and choose an available destination. Both workers use the
+active iOS output. The choice takes effect immediately. iOS lists the
+eligible destinations, including nearby AirPlay receivers.
+[[https://developer.apple.com/documentation/avkit/avroutepickerview][Apple's output picker]].
+
 * What exists
 
 Signed build 3 connects the external keyboard over SSH and speaks Emacs

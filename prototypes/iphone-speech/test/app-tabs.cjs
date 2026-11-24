@@ -41,7 +41,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     if (hasShiftReturnShortcut) {
       profile.worker = 'omnivox';
       profile.speechLoudness = '2';
-      Object.assign(trace, {setSpeechLoudness: async db => levels.push(db), timingClock: () => clock,
+      Object.assign(trace, {hasAudioRoutePicker: true, setSpeechLoudness: async db => levels.push(db), timingClock: () => clock,
         armKeyTiming: async (connection, serial) => { trial = {connection, serial}; },
         open: async () => {}, close: async () => {}, record: async () => {},
         addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
@@ -93,6 +93,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.deepEqual(terminal.props.connection, {host:profile.host, port:profile.port,
       username:profile.username, pin:profile.pin, frame:'same-frame', client:'client', server:'server'});
     await select('Settings');
+    assert.equal(app.root.findAllByType('PhoneAudioRouteView').length, 0);
     assert.equal(terminal.props.keyboardEnabled, false);
     assert.ok(app.root.findAllByType('ScrollView').some(el => el.props.accessibilityElementsHidden));
     assert.equal(hostField(), undefined);
@@ -150,6 +151,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Connection');
     assert.equal(hostField().props.value, '100.64.0.1');
     await select('Speech and sounds');
+    assert.equal(app.root.findAllByType('PhoneAudioRouteView').length, hasShiftReturnShortcut ? 1 : 0);
     const loggingSwitch = () => app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Log speech text and timing');
     if (hasShiftReturnShortcut) {
       const slider = app.root.findByType('PhoneSpeechLoudnessView');

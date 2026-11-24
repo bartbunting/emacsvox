@@ -20,6 +20,8 @@ public final class IphoneOmnivoxModule: Module {
   public func definition() -> ModuleDefinition {
     Name("IphoneOmnivox")
     Events("wireReply", "keyTiming")
+    Constant("hasAudioRoutePicker") { true }
+    View(PhoneAudioRouteView.self) { ViewName("PhoneAudioRouteView") }
     Function("timingClock") { wireUptimeMilliseconds() }
     AsyncFunction("armKeyTiming") { (id: Int, serial: Int) in
       guard self.connection == id, let audio = self.mainAudio else { throw WireFailure.action }

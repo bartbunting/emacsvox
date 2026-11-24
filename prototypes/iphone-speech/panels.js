@@ -104,7 +104,7 @@ function Field({label, hint, value, change, numeric}) {
   </View>;
 }
 
-export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessSlider}) {
+export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessSlider, AudioRoutePicker}) {
   const [message, setMessage] = React.useState('');
   const [selected, select] = React.useState('');
   const sections = {selected, select};
@@ -157,7 +157,7 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
         hint="Use Done in the Safari view to return to Emacs. Turn off to use your default browser."
         value={draft.webBrowser !== 'external'} change={v => edit('webBrowser', v ? 'in-app' : 'external')} />}
     </Section>}
-    {(wire || mixer) && <Section title="Speech and sounds" hint="Speech engine, loudness, earcons and optional speech logging." {...sections}>
+    {(wire || mixer) && <Section title="Speech and sounds" hint="Speech engine, audio output, loudness, earcons and optional speech logging." {...sections}>
       {wire && terminal && <Toggle label="Use Omnivox on iPhone" hint="Run speech, voice discovery, tones and earcons on this phone. Saving reconnects the terminal."
         value={draft.worker === 'omnivox'} change={v => edit('worker', v ? 'omnivox' : 'legacy')} />}
       {LoudnessSlider && omnivox && <>
@@ -165,6 +165,10 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
         <LoudnessSlider style={{height: 48}} level={Number(draft.speechLoudness) || 0}
           onLevelChange={({nativeEvent}) => edit('speechLoudness', String(nativeEvent.decibels))} />
       </>}
+      {AudioRoutePicker && <View style={styles.toggle}>
+        <Text style={styles.label}>Audio output for speech and notifications</Text>
+        <AudioRoutePicker style={{width: 52, height: 48}} />
+      </View>}
       {mixer && !omnivox && <Toggle label="Use native mixer" hint="Mix local speech with tones and earcons. Switch off for direct iPhone speech."
         value={draft.audio === 'mixed'} change={v => edit('audio', v ? 'mixed' : 'direct')} />}
       {wire && <Action title="Import a personal earcon" onPress={async () => {
