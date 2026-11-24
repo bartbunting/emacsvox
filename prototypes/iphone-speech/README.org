@@ -606,8 +606,8 @@ In Diagnostics, open Timing tests and choose “Measure SSH key to speech”.
 Press Return in the Emacs keyboard field. The result gives
 milliseconds from receipt of that key to the returning speech record and
 to the first scheduled audio buffer or speech-start callback. “Measure
-local key to speech” plays the same sample on the phone. On receivers
-after build 9, a scheduled buffer also reports its output type and,
+local key to speech” plays the same sample on the phone. In build 10
+a scheduled buffer also reports its output type and,
 when available, the latency iOS reports for that route. These times
 are measured before you hear the sound. The tests preserve your buffer
 and work with speech logging off. [[https://developer.apple.com/documentation/avfaudio/avaudiosession/outputlatency][Apple's output latency reference]].

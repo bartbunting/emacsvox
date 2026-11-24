@@ -22,6 +22,14 @@ history. The private signed builds predate the removal of local setup details.
 
 * Next implementation and device build
 
+Signed build 10 uses Emacsvox =d9fc7b152=
+and Omnivox =a30c94d=. On 24 November 2026, the downloaded archive passed
+checks for its signed arm64 executable, device profile, bundled JavaScript,
+cue timing fixture and all 83 sound and licence files. Build 10 adds
+[[file:OMNIVOX.org::*Language routing in build 10][language routing]], independent recovery of reading and notification speech,
+the system output picker and timing for the active output. Speaker and
+headphone listening remain open. [[file:README.org::*Use the bottom tabs][Run the phone timing checks]].
+
 Signed build 9 uses Emacsvox =d22d0fbf6= and Omnivox
 =717a06aa=. SSH opens the saved Tailscale address directly. If the speech
 relay has answered and SSH encounters a temporary failure, the app can

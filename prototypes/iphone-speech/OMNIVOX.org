@@ -49,9 +49,9 @@ are the position of a cue inside a word when Reed omits a marker,
 indentation over the first word, and the time from a keypress to audible
 speech and interruption on speaker and headphones.
 
-* Language routing in the build 10 candidate
+* Language routing in build 10
 
-The build 10 candidate uses Omnivox =a30c94d=. It advertises 35 of the
+Signed build 10 uses Omnivox =a30c94d=. It advertises 35 of the
 43 desktop capabilities, adding language routing, Unicode routing and
 speech engine recovery to build 9. iOS manages the voice library and
 the shared audio output. Use =g= in Browse voices after installing a
@@ -74,7 +74,7 @@ The WSL protocol check exercises this glyph, a language change, Japanese
 text and a combining accent with the desktop and phone workers.
 Pronunciation depends on the installed voice.
 
-* Recover a speech engine after build 9
+* Recover a speech engine in build 10
 
 The main and notification workers each use desktop Omnivox's recovery
 rules. If iOS fails to synthesize speech on one worker, that worker
@@ -90,7 +90,7 @@ that its worker lacks the retry command.
 
 * Choose the iPhone output
 
-In receivers after build 9, open Settings, then Speech and sounds.
+In build 10, open Settings, then Speech and sounds.
 After “Audio output for speech and notifications”, activate the system
 output picker and choose an available destination. Both workers use the
 active iOS output. The choice takes effect immediately. iOS lists the
