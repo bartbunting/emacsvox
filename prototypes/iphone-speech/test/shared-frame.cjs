@@ -978,7 +978,7 @@ async function main() {
             (text-mode)
             (emacsvox-aural-set-compatibility-voice-enabled t)
             (erase-buffer)
-            (insert "Start\n" "plain " (propertize "marble" 'personality 'voice-bolden) " orchard\n")
+            (insert "Start\n" "été " (propertize "marble" 'personality 'voice-bolden) " 東京 cafe\u0301\n")
             (goto-char (point-min)))`);
           const styledStart = rawPackets.length;
           sshKeys('\x0e');
@@ -989,7 +989,7 @@ async function main() {
           const voices = rawPackets.slice(styledStart).filter(p => p.lane === 'M' &&
             p.marker?.dispatch_id === styled().dispatch_id && p.marker.type === 'utterance_started')
             .map(p => [p.marker.text.trim(), p.marker.actual_voice?.voice_id]);
-          assert.deepEqual(voices, [['plain','test-2'], ['marble','test-1'], ['orchard','test-2']]);
+          assert.deepEqual(voices, [['été','test-2'], ['marble','test-1'], ['東京 cafe\u0301','test-2']]);
           await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer (process-get ${main} 'iphone-voice-buffer)))`);
           sshKeys('q');
           await until('quit returns to Voices and engines', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');

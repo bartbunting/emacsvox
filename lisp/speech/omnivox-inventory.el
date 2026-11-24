@@ -69,6 +69,16 @@
   (and omnivox-control-capabilities
        (member feature (plist-get omnivox-control-capabilities :features))))
 
+(defun omnivox--worker-unicode-names-p (main notification default)
+  "Return whether MAIN and NOTIFICATION need Emacs to expand Unicode names.
+With no live workers, preserve DEFAULT. A live worker must negotiate exact text."
+  (let ((workers (cl-remove-if-not #'process-live-p (delq nil (list main notification)))))
+    (if workers
+        (not (cl-every (lambda (worker)
+                         (omnivox--process-supports-p worker "text_repertoire_routing_v1"))
+                       workers))
+      default)))
+
 (defun omnivox--inventory-process-agreement ()
   "Describe agreement between distinct live Omnivox speech processes."
   (let ((processes

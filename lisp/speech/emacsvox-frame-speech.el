@@ -83,19 +83,26 @@ asynchronous work and pass it to `emacsvox-frame-speech-call' on completion."
 
 (defun emacsvox-frame-speech--values (endpoint)
   (let* ((main (emacsvox-frame-speech--endpoint-main endpoint))
+         (notification (emacsvox-frame-speech--endpoint-notification endpoint))
+         (program (emacsvox-frame-speech--endpoint-program endpoint))
          (capabilities (and (boundp 'omnivox--control-capabilities-property)
                             (process-get main omnivox--control-capabilities-property)))
          (inventory (and (boundp 'omnivox--control-inventory-property)
                          (process-get main omnivox--control-inventory-property))))
     (nconc
-     (list main (or (emacsvox-frame-speech--endpoint-notification endpoint) main)
-           (emacsvox-frame-speech--endpoint-program endpoint)
+     (list main (or notification main) program
            (emacsvox-frame-speech--endpoint-rate endpoint)
            nil capabilities inventory (process-get main 'omnivox-inventory-received-at)
            (and (boundp 'omnivox--control-registration-property)
                 (process-get main omnivox--control-registration-property))
            (plist-get inventory :routing_policy) nil
-           (bound-and-true-p tts-handle-unicode) nil)
+           (if (or capabilities
+                   (and (equal program "omnivox") (fboundp 'omnivox--process-supports-p))
+                   (and notification (boundp 'omnivox--control-capabilities-property)
+                        (process-get notification omnivox--control-capabilities-property)))
+               (omnivox--worker-unicode-names-p main notification t)
+             (bound-and-true-p tts-handle-unicode))
+           nil)
      (if capabilities (mapcar #'cdr omnivox--voice-api-bindings)
        (last emacsvox-frame-speech--desktop-values (length omnivox--voice-api-bindings))))))
 

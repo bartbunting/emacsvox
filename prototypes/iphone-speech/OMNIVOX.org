@@ -49,6 +49,22 @@ are the position of a cue inside a word when Reed omits a marker,
 indentation over the first word, and the time from a keypress to audible
 speech and interruption on speaker and headphones.
 
+* Language routing after build 9
+
+A palette role can request a language such as =fr-CA=. The phone tries its
+explicit voice choices in order. If the first choice names an unavailable
+iOS voice and same-language fallback is enabled, Omnivox looks for the
+requested language and region on that engine. The phone's saved reading
+voice remains the global fallback. An explicit phone assignment for that
+role still takes priority. The language filter in Browse voices only
+affects which rows you see.
+
+An attached frame sends original Unicode when both its main and
+notification workers negotiate =text_repertoire_routing_v1=. Each other
+frame negotiates independently. The WSL protocol check exercises a
+language change, Japanese text and a combining accent with the desktop
+and phone workers. Pronunciation depends on the installed voice.
+
 * What exists
 
 Signed build 3 connects the external keyboard over SSH and speaks Emacs

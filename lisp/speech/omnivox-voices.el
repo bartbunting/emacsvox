@@ -2183,18 +2183,8 @@ registration reads the current choices, never a captured startup preference."
 
 (defun omnivox--update-unicode-preprocessing ()
   "Use client-side Unicode names unless every live Omnivox routes exact text."
-  (let (processes)
-    (dolist (process (delete-dups (list tts-speaker-process
-                                        tts-notify-process)))
-      (when (and process (process-live-p process))
-        (push process processes)))
-    (when processes
-      (let ((all-supported t))
-        (dolist (process processes)
-          (unless (omnivox--process-supports-p
-                   process "text_repertoire_routing_v1")
-            (setq all-supported nil)))
-        (setq tts-handle-unicode (not all-supported))))))
+  (setq tts-handle-unicode
+        (omnivox--worker-unicode-names-p tts-speaker-process tts-notify-process tts-handle-unicode)))
 
 (defun omnivox--finish-capability-negotiation (process readiness)
   "Finish PROCESS capability negotiation with aural READINESS."

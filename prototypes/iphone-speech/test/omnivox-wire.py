@@ -89,6 +89,40 @@ async def check(command, icon):
                     started.append(event["text"])
             if started != ["first", "second"]:
                 raise RuntimeError("Legacy marker dispatch lost an utterance start")
+        if {"logical_voice_language_routing", "text_repertoire_routing_v1"} <= set(capabilities["features"]):
+            engine = next(e for e in inventory["engines"] if e["id"] == inventory["preferred_engine_id"])
+            installed = [v for v in engine["voices"] if v["availability"]["status"] == "available"]
+            default = next(v for v in installed if v["id"]["voice_id"] == engine["default_voice_id"])
+            other = next(v for v in installed if v.get("language") and v["language"] != default.get("language"))
+            expected = min((v["id"] for v in installed if v.get("language") and
+                            v["language"].casefold() == other["language"].casefold()), key=lambda v: v["voice_id"])
+            exact = {"kind": "exact", **default["id"]}
+            registered = await control("register_logical_voices", 16, "logical_voices_registered",
+                registry_generation=1, definitions=[
+                    {"id": "regional", "language": other["language"], "acss": {}, "preferences": [
+                        {"kind": "exact", "engine_id": engine["id"], "voice_id": "absent-test-voice"}]},
+                    {"id": "reading", "acss": {}, "preferences": [exact]}],
+                fallback_policy={"allow_same_language_on_requested_engine": True, "global_default": exact,
+                                 "fallback_engines": []})
+            routes = {b["resolution"]["logical_voice_id"]: b["resolution"]["realized"]
+                      for b in registered["registration"]["bindings"]}
+            assert routes == {"regional": expected, "reading": default["id"]}, routes
+            words = ["cafe\u0301 東京", "été α"]
+            timeline = {"protocol_version": 3, "generation": 1, "dispatch_id": 17, "delivery_policy": "ordered",
+                        "spans": [{"id": i, "text": word, "logical_voice_id": role}
+                                  for i, (word, role) in enumerate(zip(words, ["regional", "reading"]), 1)]}
+            await send("emacsvox_timeline {" + base64.b64encode(json.dumps(timeline).encode()).decode() + "}")
+            spoken = []
+            while (line := await reply()) != b"__EMACSVOX_TRACKED__ 17 completed":
+                prefix, _, payload = line.partition(b" ")
+                if prefix != b"__EMACSVOX_MARKER__":
+                    raise RuntimeError("Mixed-language timeline did not complete")
+                event = json.loads(base64.b64decode(payload, validate=True))
+                assert event["dispatch_id"] == 17
+                if event["type"] == "utterance_started":
+                    spoken.append((event["text"], event["actual_voice"]))
+            assert spoken == list(zip(words, [expected, default["id"]])), spoken
+            print("Mixed-language text and combining marks reached both selected voices unchanged.")
         await send("tts_exit")
         if await asyncio.wait_for(proc.wait(), 5) != 0:
             raise RuntimeError("Worker did not exit cleanly")

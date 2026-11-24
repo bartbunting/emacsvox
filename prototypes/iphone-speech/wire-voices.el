@@ -128,7 +128,9 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
                  (id (plist-get definition :id))
                  (role (cl-find id roles :test #'equal :key (lambda (r) (plist-get r :role))))
                  (override (and (iphone-voices--id-p (plist-get role :voice)) (plist-get role :voice)))
-                 (reading (and (equal base fallback) (iphone-voices--id-p base) base)))
+                 ;; Let the worker resolve a language-specific role before the global reading voice.
+                 (reading (and (not (stringp (plist-get definition :language)))
+                               (equal base fallback) (iphone-voices--id-p base) base)))
             (when (or override reading)
               (if (member mode '("layered" "engine_layered"))
                   (when-let* ((source (cl-find id (plist-get copy :choice-provenance)
