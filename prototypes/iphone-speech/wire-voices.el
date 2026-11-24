@@ -105,21 +105,24 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
                 exact)))
     (vconcat (seq-take (append rows (nthcdr count prefs)) 32))))
 
+(defun iphone-voices--reading-id (worker)
+  "Return the saved reading voice when installed, or WORKER's installed default."
+  (let* ((saved (plist-get iphone-frame-speech--settings :reading))
+         (inventory (process-get worker omnivox--control-inventory-property))
+         (engine (cl-find "ios" (plist-get inventory :engines) :test #'equal
+                          :key (lambda (row) (plist-get row :id)))))
+    (if (and (iphone-voices--id-p saved)
+             (or (null engine) (cl-find saved (plist-get engine :voices) :test #'equal
+                                        :key (lambda (row) (plist-get (plist-get row :id) :voice_id)))))
+        saved
+      (plist-get engine :default_voice_id))))
+
 (defun iphone-voices--registration (original process)
   (let ((content (funcall original process)))
     (if (not (process-get process 'iphone-wire)) content
       (let* ((copy (tts--dispatch-copy-data content))
              (base (plist-get iphone-frame-speech--settings :reading))
-             (inventory (process-get process omnivox--control-inventory-property))
-             (engine (cl-find "ios" (plist-get inventory :engines) :test #'equal
-                              :key (lambda (row) (plist-get row :id))))
-             (installed-default (plist-get engine :default_voice_id))
-             (fallback (if (and (iphone-voices--id-p base)
-                                (or (null engine)
-                                    (cl-find base (plist-get engine :voices) :test #'equal
-                                             :key (lambda (row) (plist-get (plist-get row :id) :voice_id)))))
-                           base
-                         installed-default))
+             (fallback (iphone-voices--reading-id process))
              (roles (plist-get iphone-frame-speech--settings :roles))
              (exact (lambda (id) (list :kind "exact" :engine_id "ios" :voice_id id))))
         (seq-doseq (row (plist-get copy :definitions))
@@ -145,7 +148,7 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
 (defconst iphone-voices--parameters
   '((:pitch "Pitch" "tts_set_pitch_multiplier" 0.5 2.0 1.0)
     (:rate "Reading rate (100 is normal)" "tts_set_speech_rate" 1 200 150)
-    (:character "Character rate multiplier" "tts_set_character_scale" 0.1 4.0 1.0)
+    (:character "Character rate multiplier" "tts_set_character_scale" 0.1 4.0 1.2)
     (:voice "Speech volume" "tts_set_voice_volume" 0.0 1.0 1.0)
     (:tone "Tone volume" "tts_set_tone_volume" 0.0 1.0 1.0)
     (:sound "Earcon volume" "tts_set_sound_volume" 0.0 1.0 1.0)))
@@ -154,22 +157,25 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
   (let ((saved (plist-get iphone-frame-speech--settings (car spec)))
         (role (process-get worker tts--speech-process-role-property)))
     (if (and (numberp saved) (<= (nth 3 spec) saved (nth 4 spec))) saved
-      (when-let* ((setting (seq-find (lambda (row)
+      (if-let* ((setting (seq-find (lambda (row)
                                       (and (eq (nth 1 row) role) (equal (nth 2 row) (nth 2 spec))))
                                     tts--output-volume-settings)))
-        (/ (default-value (car setting)) 100.0)))))
+          (/ (default-value (car setting)) 100.0)
+        (nth 5 spec)))))
+
+(defun iphone-voices--send-parameter (worker spec)
+  (let ((value (iphone-voices--parameter-value worker spec)))
+    (when (eq (car spec) :rate)
+      (when-let* ((endpoint (process-get worker 'iphone-endpoint)))
+        (setf (emacsvox-frame-speech--endpoint-rate endpoint) value)))
+    (process-send-string worker (format "%s %s\n" (nth 2 spec) value))))
 
 (defun iphone-voices--restore (worker)
-  (let ((id (plist-get iphone-frame-speech--settings :reading)))
+  (let ((id (iphone-voices--reading-id worker)))
     (when (iphone-voices--id-p id)
       (process-send-string worker (format "tts_set_voice {%s}\n" id))))
   (dolist (spec iphone-voices--parameters)
-    (let ((value (iphone-voices--parameter-value worker spec)))
-      (when (eq (car spec) :rate)
-        (setq value (or value (nth 5 spec)))
-        (when-let* ((endpoint (process-get worker 'iphone-endpoint)))
-          (setf (emacsvox-frame-speech--endpoint-rate endpoint) value)))
-      (when value (process-send-string worker (format "%s %s\n" (nth 2 spec) value))))))
+    (iphone-voices--send-parameter worker spec)))
 
 (defun iphone-voices--owner ()
   (let ((main (frame-parameter nil 'emacsvox-phone-speaker)))
@@ -234,6 +240,20 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
   (or (and (eq (iphone-voices--owner) iphone-voices--main) (tabulated-list-get-id))
       (user-error "Select an installed phone voice")))
 
+(defun iphone-voices-retry-engine ()
+  "Let the next speech on a failed phone worker try its synthesizer again."
+  (interactive)
+  (let* ((main (iphone-voices--owner))
+         (lane (completing-read "Retry speech on which phone worker? " '("Main" "Notifications") nil t))
+         (tts-speaker-process (if (equal lane "Main") main (process-get main 'iphone-notify))))
+    (omnivox-request-engine-recovery-probe
+     "ios" (lambda (response)
+             (iphone-frame-speech--worker-call
+              main #'message "%s. %s" lane
+              (if (equal (plist-get response :type) "engine_recovery_probe_requested")
+                  "Ready to retry on the next speech request"
+                (or (plist-get response :message) "Could not request recovery")))))))
+
 (defun iphone-voices-preview ()
   "Speak a sample using the selected iOS identifier."
   (interactive)
@@ -265,10 +285,14 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
          (workers (list main (process-get main 'iphone-notify)))
          (settings (copy-tree iphone-frame-speech--settings))
          (roles (plist-get settings :roles)))
-    (when role
-      (setq roles (cons (list :role role :voice voice)
-                        (seq-remove (lambda (r) (equal (plist-get r :role) role)) roles))))
-    (iphone-voices--save (if role (plist-put settings :roles roles) (plist-put settings :reading voice)))
+    (cond
+     (role
+      (setq roles (seq-remove (lambda (r) (equal (plist-get r :role) role)) roles))
+      (when voice (push (list :role role :voice voice) roles))
+      (setq settings (plist-put settings :roles roles)))
+     (voice (setq settings (plist-put settings :reading voice)))
+     (t (cl-remf settings :reading)))
+    (iphone-voices--save settings)
     (dolist (worker workers) (iphone-voices--restore worker))
     ;; Each acknowledgement is correlated to this exact registration and worker.
     (let ((remaining 2) failed)
@@ -304,12 +328,41 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
          (label (completing-read "Phone parameter: " (mapcar #'cadr iphone-voices--parameters) nil t))
          (spec (seq-find (lambda (s) (equal (cadr s) label)) iphone-voices--parameters))
          (key (car spec))
-         (value (read-number (format "%s from %s to %s: " label (nth 3 spec) (nth 4 spec))
-                             (or (iphone-voices--parameter-value main spec) (nth 5 spec)))))
-    (unless (<= (nth 3 spec) value (nth 4 spec)) (user-error "Value outside the supported range"))
-    (iphone-voices--save (plist-put (copy-sequence iphone-frame-speech--settings) key value))
-    (dolist (worker (list main (process-get main 'iphone-notify))) (iphone-voices--restore worker))
-    (message "%s %s" label value)))
+         (settings (copy-sequence iphone-frame-speech--settings))
+         (inherit "Use default")
+         (current (iphone-voices--parameter-value main spec))
+         (answer (string-trim (completing-read
+                               (format "%s, currently %s. Enter %s to %s or choose Use default: "
+                                       label current (nth 3 spec) (nth 4 spec))
+                               (list inherit) nil nil nil nil
+                               (if (plist-member settings key) (number-to-string current) inherit)))))
+    (if (equal answer inherit)
+        (cl-remf settings key)
+      (unless (and (string-match-p (rx string-start (opt (any "+-"))
+                                       (or (seq (+ digit) (opt "." (* digit))) (seq "." (+ digit)))
+                                       (opt (any "eE") (opt (any "+-")) (+ digit)) string-end) answer)
+                   (<= (nth 3 spec) (string-to-number answer) (nth 4 spec)))
+        (user-error "Enter a number from %s to %s or choose Use default" (nth 3 spec) (nth 4 spec)))
+      (setq settings (plist-put settings key (string-to-number answer))))
+    (iphone-voices--save settings)
+    (let ((notify (process-get main 'iphone-notify)))
+      (dolist (worker (list main notify)) (iphone-voices--send-parameter worker spec))
+      (let ((reading (iphone-voices--parameter-value main spec))
+            (notification (iphone-voices--parameter-value notify spec)))
+        (message "%s%s. Main %s%s" label (if (equal answer inherit) " default" "") reading
+                 (if (= reading notification) "" (format ", notification %s" notification)))))))
+
+(defun iphone-voices-use-default ()
+  "Remove one phone assignment. A role uses its palette again."
+  (interactive)
+  (let ((choices (mapcar (lambda (row)
+                           (let ((role (plist-get row :role))) (cons (concat "Palette for " role) role)))
+                         (plist-get iphone-frame-speech--settings :roles))))
+    (when (plist-get iphone-frame-speech--settings :reading)
+      (push (cons "Installed reading default" nil) choices))
+    (unless choices (user-error "No saved phone voice assignments"))
+    (let ((target (completing-read "Restore which voice assignment? " choices nil t)))
+      (iphone-voices--apply nil (cdr (assoc target choices))))))
 
 (defun iphone-voices--row-description ()
   (when-let* ((row (tabulated-list-get-entry)))
@@ -344,9 +397,12 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
     (princ (concat "iPhone voices\n\n"
                    "Up and Down move by voice. Left and Right read columns. Space reads the row.\n"
                    "/ finds an installed voice. p or P auditions it. t opens its tuning editor. S stops a sample.\n"
+                   "iOS voices offer rate, average pitch and volume. Omnivox adds gain, pan, filters, chorus, echo and reverb.\n"
                    "L chooses the languages shown on both the phone and desktop.\n"
                    "Return applies this reading voice to both phone workers. r assigns it to one named role.\n"
-                   "v adjusts speech and audio levels for the whole phone. g refreshes the installed voices. q goes back.\n"))))
+                   "u removes a phone assignment and returns that role to its palette or reading to the installed default.\n"
+                   "v adjusts phone speech and audio levels. Choose Use default to restore that setting.\n"
+                   "g refreshes installed voices. K retries a failed main or notification synthesizer. q goes back.\n"))))
 
 (define-derived-mode iphone-voices-mode emacsvox-aural-tabulated-mode "iPhone Voices"
   "Browse installed iPhone voices. p previews, t tunes, Return applies, r assigns a role and v adjusts phone speech."
@@ -362,8 +418,9 @@ VOICE-ID reads an exact iOS voice from a row.  MAKE-ROW creates a missing one."
                    ("C-c C-p" . iphone-voices-preview)
                    ("t" . iphone-voices-tune)
                    ("/" . iphone-voices-find) ("?" . iphone-voices-help) ("RET" . iphone-voices-apply)
-                   ("r" . iphone-voices-role) ("v" . iphone-voices-adjust) ("L" . emacsvox-choose-voice-languages)
-                   ("g" . iphone-voices-refresh) ("R" . iphone-voices-refresh)))
+                   ("r" . iphone-voices-role) ("u" . iphone-voices-use-default) ("v" . iphone-voices-adjust)
+                   ("L" . emacsvox-choose-voice-languages)
+                   ("g" . iphone-voices-refresh) ("R" . iphone-voices-refresh) ("K" . iphone-voices-retry-engine)))
   (keymap-set iphone-voices-mode-map (car binding) (cdr binding)))
 
 (defun iphone-voices--buffer (main)

@@ -991,6 +991,19 @@ async function main() {
             .map(p => [p.marker.text.trim(), p.marker.actual_voice?.voice_id]);
           assert.deepEqual(voices, [['été','test-2'], ['marble','test-1'], ['東京 cafe\u0301','test-2']]);
           await observe(`(with-selected-window ${phoneWindow} (switch-to-buffer (process-get ${main} 'iphone-voice-buffer)))`);
+          const removeStart = rawPackets.length;
+          const previousRole = lane => rawPackets.slice(0, roleStart).findLast(p =>
+            p.lane === lane && p.control === 'register_logical_voices_v3').roleVoices.bolden;
+          sshKeys('uPalette for bolden\r');
+          await until('removing the phone assignment preserves the saved reading voice', async () =>
+            await observe(`(and (equal (plist-get iphone-frame-speech--settings :reading) "test-2")
+              (not (seq-find (lambda (r) (equal (plist-get r :role) "bolden"))
+                             (plist-get iphone-frame-speech--settings :roles))))`) === 't');
+          await until('both lanes restore the palette after removing a phone assignment', () =>
+            ['M', 'N'].every(lane => rawPackets.slice(removeStart).some(p => p.lane === lane &&
+              p.control === 'register_logical_voices_v3' && p.roleVoices.bolden === previousRole(lane) &&
+              rawPackets.slice(removeStart).some(r => r.lane === lane && r.response === 'logical_voices_registered_v3' &&
+                r.requestId === p.requestId))));
           sshKeys('q');
           await until('quit returns to Voices and engines', async () => await currentMenu('emacsvox-aural-menu-voices') === 't');
           sshKeys('w');

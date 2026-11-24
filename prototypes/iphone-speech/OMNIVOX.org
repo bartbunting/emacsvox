@@ -214,7 +214,13 @@ next preview to the new connection. Press =p= or
 use it as the phone's reading fallback, =r= to give a named role a
 different voice, =t= to experiment with the selected voice in the common
 editor, and =g= to refresh. The =v= command changes rate, character scale,
-pitch or output levels for the whole phone. Apply waits for both
+pitch or output levels for the whole phone. Enter a value or choose
+“Use default” to remove that override immediately. Tone and earcon
+volume then follow the Emacs settings for each lane. Notification speech
+also inherits its own volume. To remove a saved reading voice or phone
+role assignment, press =u= and choose the assignment. A role then uses
+its shared palette, and ordinary reading uses the phone's installed default.
+Apply waits for both
 workers' replies. The phone profile is saved in =iphone-omnivox.json=
 under the Emacs user directory. Phone sessions using this directory share
 those choices. Both connections use the palette's ordered choices for
