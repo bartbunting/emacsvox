@@ -112,6 +112,13 @@ DELIVERY-POLICY and REPLACEMENT-KEY control whole-transaction delivery."
      (when icon
        (list (emacsvox-aural-compatibility-icon icon)))))))
 
+(defun emacsvox-eat--speak-deleted-character (character)
+  "Announce a verified deleted CHARACTER with ordinary Emacs edit feedback."
+  (let ((emacsvox-aural-submission-module 'eat)
+        (emacsvox-aural-submission-occasion 'edit))
+    (emacsvox-speak-edit-operation 'deletion)
+    (emacsvox-speak-this-char character)))
+
 (defun emacsvox-eat--present-ready-prompt (text)
   "Present identified prompt TEXT according to the buffer's prompt preference."
   (let ((facts (emacsvox-eat--facts 'command-prompt 'command-prompt-ready)))

@@ -570,9 +570,7 @@ STATUS supplies an already parsed ruler when available."
                            'navigation nil 'replaceable (emacsvox-eat--terminal-delivery-key 'focus)))
     ('deletion
      (if (characterp content)
-         (let ((emacsvox-aural-submission-module 'eat) (emacsvox-aural-submission-occasion 'edit))
-           (emacsvox-speak-edit-operation 'deletion)
-           (emacsvox-speak-this-char content))
+         (emacsvox-eat--speak-deleted-character content)
        (emacsvox-eat--submit content (emacsvox-eat--facts 'command-input 'object-changed nil
                                                          '(:edit-operation deletion)) 'edit)))
     ((or 'uppercase 'lowercase 'line-created)

@@ -1078,13 +1078,13 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (should
    (equal
     (emacsvox-eat--deleted-text-content
-     "abc" '(:action backspace :count 3))
-    "c b a")))
+     "aBc" '(:action backspace :count 3))
+    "c B a")))
 
 (ert-deftest emacsvox-eat-real-backspace-speaks-rendered-deletion ()
   "Real EAT Backspace speaks the deleted cell after its rendered update."
   (let ((buffer (generate-new-buffer " *emacsvox-eat-backspace*"))
-        terminal sent submissions action-submissions)
+        terminal sent submissions action-submissions feedback)
     (unwind-protect
         (save-window-excursion
           (switch-to-buffer buffer)
@@ -1095,14 +1095,18 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
            terminal 'input-function
            (lambda (_terminal text) (push text sent)))
           (let ((inhibit-read-only t))
-            (eat-term-process-output terminal "$ abc")
+            (eat-term-process-output terminal "$ abA")
             (eat-term-redisplay terminal))
           (goto-char (eat-term-display-cursor terminal))
           (set-window-point (selected-window) (point))
           (setq emacsvox-eat--screen-snapshot
                 (emacsvox-eat--capture-screen))
           (cl-letf
-              (((symbol-function 'emacsvox-aural-submit)
+              (((symbol-function 'emacsvox-speak-edit-operation)
+                (lambda (operation) (push operation feedback)))
+               ((symbol-function 'tts-letter)
+                (lambda (letter) (push letter feedback)))
+               ((symbol-function 'emacsvox-aural-submit)
                 (lambda (content &rest arguments)
                   (push (list content arguments) submissions)))
                ((symbol-function 'emacsvox-aural-submit-actions)
@@ -1115,6 +1119,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (eat-self-input 1 'backspace)
             (should (equal sent '("\177")))
             (should-not submissions)
+            (should-not feedback)
             (should
              (plist-get emacsvox-eat--deletion-intent :transported))
             (let ((inhibit-read-only t))
@@ -1127,15 +1132,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           (should-not action-submissions)
           (should-not emacsvox-eat--deletion-intent)
           (should-not emacsvox-eat--deletion-timer)
-          (should (equal (mapcar #'car submissions) '("c")))
-          (should
-           (equal
-            (plist-get (cadar submissions) :facts)
-            '(:role command-input
-              :command-interaction-kind shell
-              :events (object-changed)
-              :command-input-origin current)))
-          (should (eq (plist-get (cadar submissions) :occasion) 'edit)))
+          (should-not submissions)
+          (should (equal (nreverse feedback) '(deletion "A"))))
       (with-current-buffer buffer
         (emacsvox-eat--cancel-quiescence)
         (emacsvox-eat--cancel-deletion))
@@ -1146,7 +1144,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
 (ert-deftest emacsvox-eat-real-delete-speaks-rendered-deletion ()
   "Real EAT Delete speaks the cell removed at the rendered cursor."
   (let ((buffer (generate-new-buffer " *emacsvox-eat-delete*"))
-        terminal sent submissions action-submissions)
+        terminal sent submissions action-submissions feedback)
     (unwind-protect
         (save-window-excursion
           (switch-to-buffer buffer)
@@ -1164,7 +1162,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           (setq emacsvox-eat--screen-snapshot
                 (emacsvox-eat--capture-screen))
           (cl-letf
-              (((symbol-function 'emacsvox-aural-submit)
+              (((symbol-function 'emacsvox-speak-edit-operation)
+                (lambda (operation) (push operation feedback)))
+               ((symbol-function 'tts-letter)
+                (lambda (letter) (push letter feedback)))
+               ((symbol-function 'emacsvox-aural-submit)
                 (lambda (content &rest arguments)
                   (push (list content arguments) submissions)))
                ((symbol-function 'emacsvox-aural-submit-actions)
@@ -1173,6 +1175,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (eat-self-input 1 'delete)
             (should (equal sent '("\e[3~")))
             (should-not submissions)
+            (should-not feedback)
             (let ((inhibit-read-only t))
               (eat-term-process-output terminal "\e[P")
               (eat-term-redisplay terminal))
@@ -1182,7 +1185,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (emacsvox-eat-test--finish-screen-burst))
           (should-not action-submissions)
           (should-not emacsvox-eat--deletion-intent)
-          (should (equal (mapcar #'car submissions) '("b"))))
+          (should-not submissions)
+          (should (equal (nreverse feedback) '(deletion "b"))))
       (with-current-buffer buffer
         (emacsvox-eat--cancel-quiescence)
         (emacsvox-eat--cancel-deletion))

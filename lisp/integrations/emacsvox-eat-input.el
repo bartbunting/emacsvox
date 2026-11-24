@@ -719,14 +719,16 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
             (substring text 0 limit)))
          (content
           (cond
-           ((= length 1)
-            (emacsvox-eat--deleted-character-name (aref text 0)))
            ((and (> count 1) (memq action '(backspace delete)))
             (let ((characters (string-to-list bounded)))
               (when (eq action 'backspace)
                 (setq characters (nreverse characters)))
               (mapconcat
-               #'emacsvox-eat--deleted-character-name characters " ")))
+               (lambda (char)
+                 (if (emacsvox-is-alpha-p char)
+                     (char-to-string char)
+                   (emacsvox-eat--deleted-character-name char)))
+               characters " ")))
            (t
             (let ((sanitized
                    (emacsvox-eat--sanitize-output-row bounded)))
@@ -743,18 +745,19 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
 
 (defun emacsvox-eat--present-observed-deletion (intent snapshot)
   "Present deletion INTENT from its rendered result in SNAPSHOT."
-  (let* ((text (emacsvox-eat--observed-deleted-text intent snapshot))
-         (content (and text (emacsvox-eat--deleted-text-content text intent))))
+  (let ((text (emacsvox-eat--observed-deleted-text intent snapshot)))
     (emacsvox-eat--cancel-deletion)
-    (if content
-        (emacsvox-eat--submit
-         content
-         (emacsvox-eat--facts
-          'command-input 'object-changed nil
-          '(:command-input-origin current))
-         'edit nil 'replaceable
-         (emacsvox-eat--terminal-delivery-key 'deletion))
-      (emacsvox-eat--present-deletion-cue))
+    (cond
+     ((null text) (emacsvox-eat--present-deletion-cue))
+     ((length= text 1) (emacsvox-eat--speak-deleted-character (aref text 0)))
+     (t
+      (emacsvox-eat--submit
+       (emacsvox-eat--deleted-text-content text intent)
+       (emacsvox-eat--facts
+        'command-input 'object-changed nil
+        '(:command-input-origin current :edit-operation deletion))
+       'edit nil 'replaceable
+       (emacsvox-eat--terminal-delivery-key 'deletion))))
     t))
 
 (defun emacsvox-eat--navigation-intent-current-p (intent)
