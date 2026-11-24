@@ -16,6 +16,11 @@ emacs=${EMACS:-}
 if [[ -z $emacs && -r $root/local.mk ]]; then
     emacs=$(sed -n 's/^EMACS=//p' "$root/local.mk")
 fi
+if [[ -z ${EMACSVOX_AGENT_SHELL_DIRECTORY:-} ]]; then
+    if checkout=$(git -C "$root" config --path --get emacsvox.iphoneAgentShellSource); then
+        export EMACSVOX_AGENT_SHELL_DIRECTORY="$checkout"
+    fi
+fi
 export EMACSVOX_DIR=$root TTS_PROGRAM=$here/phone-backend
 if [[ -n ${EMACSVOX_TRIAL_ROUTED:-} ]]; then
     export TTS_PROGRAM=${EMACSVOX_TRIAL_DESKTOP_PROGRAM:-$root/servers/omnivox}

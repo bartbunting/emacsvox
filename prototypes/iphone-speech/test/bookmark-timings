@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd)
-omni=${IPHONE_OMNIVOX_SOURCE:-$app/../../../omnivox}
+omni=$("$app/omnivox-source")
 build=${CARGO_TARGET_DIR:-$HOME/.cache/emacsvox/iphone-omnivox-protocol}
 (cd "$omni" && CARGO_TARGET_DIR="$build" cargo build --locked -p omnivox-ios)
 docker run --rm --cpus=1 --network none --user "$(id -u):$(id -g)" \

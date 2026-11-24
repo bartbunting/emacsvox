@@ -1,15 +1,100 @@
-#+title: Listen to Emacsvox on an iPhone
+#+title: Use your Emacs session from an iPhone
 
-Track the path from this speech receiver to a full terminal in the
-[[file:PLAN.org][iPhone prototype plan]].
+Emacsvox Speech opens a terminal frame in your running Emacs over SSH.
+The iPhone runs Omnivox, synthesises the frame's speech with its installed
+voices and mixes tones and earcons locally. Your desktop frame keeps its
+own speech. Use a keyboard paired with the phone and keep the app in the
+foreground while you work. [[file:OMNIVOX.org][Omnivox on iPhone]] describes voice selection,
+playback and diagnostics. The [[file:PLAN.org][prototype plan]] records the implementation.
 
-Install signed build 9 on the registered iPhone. In Safari, activate
-Install and confirm. Open Emacsvox Speech, connect on the Terminal tab and
-focus the Emacs keyboard. Run =M-x omnivox-list-voices=. Press =p= to
-audition the selected voice, Return to use it for reading, or =r= to
-assign it to a role such as =bolden=. Your saved reading voice applies
-when you reconnect. See [[file:OMNIVOX.org][Omnivox on iPhone]] for the audio tests, trace
-controls and WSL launch commands.
+* Connect the signed app to your running Emacs
+
+1. Install the signed app from the private link supplied for your registered
+   iPhone. Open it in Safari, activate Install, then open Emacsvox Speech.
+   If iOS asks for Developer Mode, enable it in Settings, Privacy & Security,
+   restart and confirm. In Diagnostics, Audio tests, activate “Test iPhone
+   Voice” to hear the phone before setting up the network.
+
+2. Start a working Emacsvox desktop session from this checkout on the Linux
+   host. The host launchers use Bash, Python 3, Node.js and npm, socat, flock,
+   OpenSSH server and the emacsclient matching your Emacs. WSL2 is one tested
+   Linux environment. Start the Emacs server with =M-x server-start= if
+   needed. In that Emacs, =M-: (expand-file-name server-name server-socket-dir) RET=
+   gives you the socket path. From inside the checkout, run the following.
+   Use the same prototype directory in both host terminals.
+
+   #+begin_src sh
+   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+   npm ci
+   #+end_src
+
+3. Connect the host and phone to the same encrypted VPN. The host must see
+   the phone's own VPN IPv4 source address on TCP ports 8822 (SSH) and 8797
+   (speech). SSH checks the host key. The separate speech WebSocket relies
+   on the VPN for encryption. The launchers discover and check a Tailscale
+   iPhone by default. For another VPN, use the explicit addresses below.
+   Both addresses must be in the private IPv4 ranges or the shared
+   =100.64.0.0/10= range. Obtain each device's address from your VPN.
+
+4. On the phone, open Settings, Connection and activate “Copy iPhone SSH
+   public key”. Transfer that one public line to any file you choose on the
+   Emacs host. The private key stays on the phone. To keep the host key
+   stable across restarts, follow [[*Keep the same SSH host key between runs][the one-time host key setup]].
+   In the first host terminal run these commands.
+
+   #+begin_src sh
+   read -rp 'iPhone VPN IPv4 address: ' phone
+   read -rp 'Absolute path to the iPhone public key file: ' phone_key
+   ./phone-sshd "$phone" "$phone_key"
+   #+end_src
+
+   In the app's Connection settings, enter the *host* address, SSH port
+   8822, username and full trusted SSH host public key printed by the
+   listener. In Speech and sounds turn on “Use Omnivox on iPhone” for the
+   native worker. Save settings.
+
+5. In the second host terminal start the speech relay.
+
+   #+begin_src sh
+   read -rp 'iPhone VPN IPv4 address: ' phone
+   read -rp 'Emacs server socket path: ' socket
+   ./start-relay --existing "$phone" "$socket"
+   #+end_src
+
+   Emacs chooses the first buffer as it ordinarily would for a new terminal
+   frame. To start in a particular live buffer, append its exact name as one
+   argument, for example =./start-relay --existing "$phone" "$socket" "*scratch*"=.
+   A file, Dired buffer or Agent Shell conversation can all be the starting
+   buffer. An unknown name is reported at startup. Reconnecting to the
+   running relay restores the phone's last live buffer and point. If that
+   buffer was killed, Emacs opens the named starting buffer if it still
+   exists, or uses its normal frame selection. Visiting an Agent Shell
+   conversation subscribes the frame to its replies and permission requests.
+
+   For a private VPN other than Tailscale, substitute these two invocations
+   in steps 4 and 5. Set =host= to the Emacs machine's VPN IPv4 address in
+   each terminal. The listeners bind only to that address and accept only
+   the specified phone. This mode runs without the Tailscale CLI.
+
+   #+begin_src sh
+   # In the SSH listener terminal
+   read -rp 'Emacs host VPN IPv4 address: ' host
+   ./phone-sshd --vpn-host "$host" "$phone" "$phone_key"
+   # In the speech relay terminal
+   read -rp 'Emacs host VPN IPv4 address: ' host
+   ./start-relay --vpn-host "$host" --existing "$phone" "$socket"
+   #+end_src
+
+6. On the Terminal tab activate Connect. Once you hear “Connected”, focus
+   the Emacs keyboard and use =C-x b= to choose a buffer with several lines.
+   Press =C-n=, then press it again halfway through the line. The second line
+   should interrupt the first on the phone. Disconnect closes the phone
+   frame. Control+C in each host terminal stops the private listeners.
+
+A signed app built before the private-VPN address update accepts only
+Tailscale-range host addresses. The optional starting buffer works with
+those builds. The following sections also describe the isolated test
+sessions and the earlier Expo Go receiver.
 
 * Listen from the PC keyboard
 
@@ -23,8 +108,8 @@ its own speech process and conversation.
    Connect Tailscale on both devices. In Tailscale on the phone, find
    the phone's own 100.x IPv4 address. Turn Silent Mode off and check
    media volume. [[https://docs.expo.dev/versions/latest/sdk/speech/][Expo Speech on physical iOS devices]].
-2. In WSL, enter the prototype directory. Run =npm ci= to install the
-   pinned JavaScript dependencies before starting the relay.
+2. Enter the prototype directory on the host and run =npm ci= to install
+   the pinned JavaScript dependencies.
 
    #+begin_src sh
    cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
@@ -44,9 +129,10 @@ its own speech process and conversation.
    asks. Bundling can take a moment on the first launch. Find and
    activate Connect. Swipe to the connection status and check that it
    reads “Connected”. Keep the receiver in the foreground.
-4. In a second WSL terminal start the isolated graphical Emacs with Node
-   and Codex ACP on your PATH. The launcher uses Emacs from local.mk, the existing ELPA
-   packages and the Agent Shell checkout. It creates a private scratch
+4. In a second WSL terminal start the isolated graphical Emacs. Put Node and Codex ACP
+   on your PATH. The launcher uses Emacs from local.mk and the installed
+   ELPA packages. To use an Agent Shell checkout, set
+   =EMACSVOX_AGENT_SHELL_DIRECTORY= to its directory. It creates a private scratch
    project and a fresh Emacs directory under XDG_RUNTIME_DIR. Codex uses
    your normal login.
 
@@ -78,13 +164,13 @@ its own speech process and conversation.
 
 * Connection and recovery
 
-The shell launcher binds the relay and Expo forwarder to WSL's Tailscale
+The shell launcher binds the relay and Expo forwarder to the host's VPN
 IPv4 address. Only the specified iOS peer address can open the receiver
 page, load the bundle or subscribe to speech. Metro listens on loopback.
-Ports 8787 and 8788 must be reachable from that peer through your tailnet
+Ports 8787 and 8788 must be reachable from that peer through your VPN
 policy. The relay uses the source address of the connection, so connect
-directly over Tailscale. There is no public tunnel or audio stream.
-If Safari fails to load the page, check the peer address, Tailscale and
+over the VPN with the phone’s source address preserved. There is no public tunnel or audio stream.
+If Safari fails to load the page, check the peer address, VPN and
 those ports. If the page opens but the app fails to load, check the Metro
 output and the Expo Go SDK version. If status reports a timeout, activate
 Connect after restoring the network. If you hear silence, open Diagnostics
@@ -188,6 +274,7 @@ requires current byte-code, Xvfb, xauth, socat and the local Emacs packages.
 #+begin_src sh
 npm ci
 npm test
+python3 test/phone-network.py
 npx --no-install expo install --check
 node test/navigation.cjs
 #+end_src
@@ -230,6 +317,19 @@ listening fixture.
 
 ** Prepare a hosted build from WSL
 
+Testers installing a signed app can skip this section. To build the app,
+set =IPHONE_OMNIVOX_SOURCE= to an Omnivox checkout containing the revision
+in =omnivox-revision=. The tooling also accepts a repository-local
+=emacsvox.iphoneOmnivoxSource= Git setting, then looks for an adjacent
+=omnivox= checkout. The native worker tests use the checked-out sources.
+
+To use your existing Expo project across staged builds, save a JSON object
+with your Expo =owner= and =projectId= in
+=${XDG_CONFIG_HOME:-$HOME/.config}/emacsvox/iphone-expo.json=.
+Staging writes just those fields into the temporary app manifest.
+With no publisher configured, the project is unlinked. Run =eas init= in
+the staged directory to link your own project before submitting a build.
+
 Use the native worktree for these commands. The staging script copies the
 committed receiver files to a fresh directory. It prints that directory
 and leaves your Emacs profile, relay, Git history and other projects local.
@@ -244,8 +344,7 @@ read -rp 'Expo account name: ' expo_owner
 npx --yes eas-cli@27.11.0 account:usage "$expo_owner"
 #+end_src
 
-The first simulator build compiled the Swift mixer. To download your own
-completed build, use its ID from your Expo dashboard.
+To download a completed build, use its ID from your own Expo dashboard.
 
 #+begin_src sh
 read -rp 'Expo build ID: ' build_id
@@ -279,14 +378,13 @@ from the native worktree. Use your phone's Tailscale IP as the argument.
 #+begin_src sh
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
 npm ci
-read -rp 'iPhone Tailscale IPv4 address: ' phone
+read -rp 'iPhone VPN IPv4 address: ' phone
 ./start-relay --native-metro "$phone"
 #+end_src
 
 1. Open the installed Emacsvox Speech app. In the development launcher,
    choose Enter URL manually and enter the HTTP address printed by the
-   script. Allow the
-   phone's Tailscale address to reach TCP port 8789 on WSL.
+   script. Allow the phone's VPN address to reach TCP port 8789 on the host.
 2. Activate Connect. Check the voice and rate below Connected. In the
    isolated Emacs, press =C-n= during a long line. This is the direct
    speech comparison with VoiceOver active.
@@ -323,10 +421,9 @@ loopback port, a dedicated graphical Emacs under Xvfb and a phone speech
 backend that records only whether the test line was dispatched. It creates
 fresh keys and a rendered Agent Shell reply. It closes its listener and
 removes its keys on exit. The phone trial below opens a separate listener
-on the WSL Tailscale address.
+on the host VPN address.
 
-In WSL, build the test client with Docker from the
-worktree. The static Swift runtime lets the probe run directly in WSL.
+On Linux, you can build the test client with Docker from the prototype directory. The static Swift runtime lets the probe run directly in WSL.
 
 #+begin_src sh
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech/ssh"
@@ -339,7 +436,7 @@ cd ..
 
 When =/usr/sbin/sshd= is installed, run the test from that directory with
 =python3 test/ssh-terminal.py --emacsclient "$(command -v emacsclient)"=.
-The test launches its own instance. Ubuntu provides the
+The test launches its own instance. Ubuntu also provides the
 server and matching helpers as a downloadable package. To use that copy
 without installing a service, run the following commands.
 
@@ -361,7 +458,8 @@ still displays each full row at the usual text size.
 With /Use Windows or Command as Emacs Hyper/ enabled, focus the terminal
 and try =C-h k= followed by Windows and =x=. Emacs reports =H-x=. Option
 continues to send Meta. Some combinations belong to iOS or VoiceOver.
-If the keyboard sends no Windows chords, check its manual for a Windows-key lock.
+If Windows-key chords never reach the app, check the keyboard's operating
+system switch and Windows-key lock in its manual.
 In any Emacs terminal, =C-x @ h= followed by a letter also enters Hyper
 for that letter.
 
@@ -383,11 +481,11 @@ use this relay. It can issue ordinary Emacs commands as your WSL user.
    #+begin_src sh
    cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
    npm ci
-   read -rp 'iPhone Tailscale IPv4 address: ' phone
+   read -rp 'iPhone VPN IPv4 address: ' phone
    ./start-relay --keyboard "$phone"
    #+end_src
 
-2. With Tailscale connected, open the host’s Tailscale address on port 8791 in Safari using HTTP.
+2. With Tailscale connected, open the address printed by the launcher in Safari.
    Activate “Open receiver in Expo Go”, then Connect. After “Connected”,
    move past Stop Speech to the “Emacs keyboard” text field and double-tap.
 3. Press =Control+n= on the iPhone keyboard. Listen for “Cobalt lighthouse”.
@@ -423,7 +521,7 @@ Use the same installed JavaScript packages as the external keyboard test.
 
 #+begin_src sh
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-read -rp 'iPhone Tailscale IPv4 address: ' phone
+read -rp 'iPhone VPN IPv4 address: ' phone
 ./start-relay --shared "$phone"
 #+end_src
 
@@ -431,7 +529,7 @@ read -rp 'iPhone Tailscale IPv4 address: ' phone
    Its =Shared Codex sample= buffer contains a rendered Agent Shell
    response and the unsent draft “Started on PC”. Append a few words.
    Leave the draft in the input area.
-2. With Tailscale connected, open the host’s Tailscale address on port 8794 in Safari using HTTP.
+2. With Tailscale connected, open the address printed by the launcher in Safari.
    Activate “Open receiver in Expo Go”, then Connect. The relay creates
    an =emacsclient -t= frame in the server that owns the PC window.
 3. Double-tap “Emacs keyboard” and append another word. Keep the draft
@@ -458,11 +556,11 @@ Start the test server and relay together in WSL.
 
 #+begin_src sh
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-read -rp 'iPhone Tailscale IPv4 address: ' phone
+read -rp 'iPhone VPN IPv4 address: ' phone
 ./start-relay --routed "$phone"
 #+end_src
 
-1. On the iPhone, open the host’s Tailscale address on port 8797 in Safari using HTTP. Activate
+1. On the iPhone, open the address printed by the launcher in Safari. Activate
    “Open receiver in Expo Go”, “Connect” and then “Emacs keyboard”.
 2. In “Emacsvox Routed Draft” on the PC, navigate the rendered response
    with =C-n=. On the phone keyboard, move through the same response.
@@ -491,9 +589,9 @@ is still needed for simultaneous playback and mixed Eloquence.
 * Full terminal Emacs on the iPhone
 
 The private signed app runs SwiftTerm and SwiftNIO SSH in the foreground.
-It stores the phone's private Ed25519 key in the iOS Keychain. Tailscale
+It stores the phone's private Ed25519 key in the iOS Keychain. Your private VPN
 carries both SSH and the speech WebSocket. The relay offers a fresh frame
-ID and server path. SSH checks the pinned WSL host key and runs
+ID and server path. SSH checks the pinned SSH host key and runs
 =emacsclient -t= with that ID. Emacs sends “attached” over the matching
 speech socket before the receiver reports Connected.
 
@@ -504,63 +602,42 @@ voice registration or terminal redraw stalls. During voice registration,
 the app shows “Finding iPhone voices”.
 
 To check cellular access, turn Wi-Fi off before you activate Connect.
-Keep Tailscale connected. After you hear Connected, press =C-n= on a
+Keep your VPN connected. After you hear Connected, press =C-n= on a
 line of text. Disconnect, connect again and read another line while
 Wi-Fi is still off. To check a network change during use, start on
 Wi-Fi, read a line, turn Wi-Fi off, then continue reading in that frame.
 If Connect fails, open Diagnostics, then Connection history. The newest
 result gives the time and tells you whether the phone could reach the SSH
-port, whether SSH setup timed out, or whether WSL refused the key or the
+port, whether SSH setup timed out, or whether the host refused the key or the
 terminal. Earlier attempts stay available after a successful retry.
 You can read these results with speech logging off.
 
 ** Start the signed app against the test server
 
-1. Open the private install link for Emacsvox Speech build 9 in iPhone Safari. Activate Install and
-   confirm the iOS prompt. Open Emacsvox Speech from the Home Screen.
-   If iOS asks for Developer Mode, turn it on under Settings, Privacy
-   & Security, Developer Mode. Restart, unlock and confirm Turn On.
-   Open Diagnostics and activate “Test iPhone Voice” to hear local speech
-   before connecting. Return to Terminal using its bottom tab, or activate
-   Done on build 3. Allow local network access if prompted.
-   For SSH, open Settings, expand Connection and activate
-   “Copy iPhone SSH public key” and transfer that one public
-   line to a file of your choice in WSL.
-2. From the prototype directory, run the following in WSL. If your
-   earlier routed test is using port 8797, close that test launcher with
-   Control+C first. This mode runs with the JavaScript bundled in the app.
+1. Follow [[*Connect the signed app to your running Emacs][the signed app setup]] to install the app, pair your public key
+   and start the SSH listener. The isolated sample also needs Agent Shell
+   and its dependencies installed in Emacs, a graphical display and a
+   working desktop Omnivox. You can select an Agent Shell checkout with
+   =EMACSVOX_AGENT_SHELL_DIRECTORY= or the repository-local Git setting
+   =emacsvox.iphoneAgentShellSource=.
+
+2. In the relay terminal, start an isolated graphical sample in place of
+   the existing-server relay.
 
    #+begin_src sh
-   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-   read -rp 'iPhone Tailscale IPv4 address: ' phone
+   read -rp 'iPhone VPN IPv4 address: ' phone
    ./start-relay --standalone "$phone"
    #+end_src
 
-3. In a second WSL terminal, start the temporary SSH listener. To use a
-   downloaded OpenSSH package, pass its server path with =--sshd=.
+   For an explicitly configured VPN add =--vpn-host "$host"= before
+   =--standalone=. The signed app includes its JavaScript.
 
-   #+begin_src sh
-   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-   read -rp 'iPhone Tailscale IPv4 address: ' phone
-   read -rp 'Path to the iPhone public key: ' phone_key
-   ./phone-sshd "$phone" "$phone_key"
-   #+end_src
+3. Save the connection settings printed by the SSH listener and activate
+   Connect. Double-tap the Emacs keyboard field if it needs focus. To
+   reconnect automatically on a fresh launch, enable “Connect on open”
+   in Settings. The app saves your connection and input preferences.
 
-4. Under Settings, Connection, fill in the WSL Tailscale IPv4 address,
-   SSH port (=8822=), WSL username and the full
-   =ssh-ed25519= host public key printed by the listener. Activate Save
-   settings, then Connect.
-   On signed build 3, double-tap the Emacs keyboard field after you hear
-   Connected. In build 4 the app requests focus when SSH and the
-   Emacs frame are ready. To start there on a fresh launch, enable
-   “Connect on open” in Settings once and save. It starts off. You can
-   always focus the field by double-tapping it.
-   The app remembers these values, the input method, the audio mode and
-   your keep-awake preference across launches. An update installed over the
-   first signed build reads its saved SSH settings and keeps the iPhone key.
-   The listener reuses your saved host key. With no saved key it generates
-   a temporary one for that run.
-5. Use the phone keyboard to try =C-n= during a line, =C-x C-f= to visit
+4. Use the phone keyboard to try =C-n= during a line, =C-x C-f= to visit
    a file, =C-x C-s= to save, and =M-x= with Tab completion. Use VoiceOver
    to reach Stop Speech and return to the keyboard. To compare input
    paths, open Settings, Keyboard and terminal. Switch off “Use Emacs
@@ -569,7 +646,7 @@ You can read these results with speech logging off.
    Switch off “Use Omnivox on iPhone”, turn on “Use native mixer” and save.
    Open Diagnostics, Audio tests and activate “Test mixed audio”. Saving
    a changed connection or audio mode reconnects an active session.
-6. Activate Disconnect, then press Control+C in the listener and relay
+5. Activate Disconnect, then press Control+C in the listener and relay
    terminals. The listener accepts the nominated Tailscale phone and its
    public key while it runs. It uses its own host key and authorized keys.
 
@@ -649,7 +726,7 @@ keyboard and listen for the next line in that same buffer.
 automatic screen lock while the receiver is connected in the foreground.
 Disconnect restores the normal idle timer. You can still lock the phone with
 the side button. Locking or switching apps stops local audio and releases
-the phone frame. Emacs, its buffers and Codex keep running in WSL.
+the phone frame. Emacs and its buffers keep running on the host.
 
 To use your keyboard with the display dark and the app active, turn on
 VoiceOver Screen Curtain with a three-finger triple-tap. Use a three-finger
@@ -659,15 +736,16 @@ quadruple-tap if Zoom is also on. Repeat the gesture to restore the display.
 Unlock and return to the app. It reconnects a previously active session,
 opens the last live phone buffer at its saved position and refreshes any
 still-pending permission. The next navigation command speaks fresh output.
-If that buffer has been killed, the terminal opens the subscribed conversation
-if it is still live. If iOS terminated the app, launch it and activate Connect.
+If that buffer was killed, the relay uses the configured starting buffer
+if it still exists, or leaves the new frame at its normal selection. If iOS
+terminated the app, launch it and activate Connect.
 An explicit Disconnect stays disconnected. [[https://developer.apple.com/documentation/xcode/configuring-background-execution-modes][Apple’s background execution guide]].
 
-** Keep the same WSL host key between trials
+** Keep the same SSH host key between runs
 
-The listener looks for a dedicated Ed25519 key under your WSL state
+The listener looks for a dedicated Ed25519 key under your host state
 directory. Keeping the current key there preserves the pin already saved
-on the phone. To create a host identity for the first time, run this in WSL.
+on the phone. To create a host identity for the first time, run this on the host.
 
 #+begin_src sh
 key_dir="${XDG_STATE_HOME:-$HOME/.local/state}/emacsvox/iphone-ssh"
@@ -676,7 +754,7 @@ test -e "$key_dir/host" || ssh-keygen -q -t ed25519 -N '' -f "$key_dir/host"
 #+end_src
 
 The ordinary =./phone-sshd= command now uses this identity. For a newly
-created key, compare the public key printed by WSL and save it on the phone
+created key, compare the public key printed by the listener and save it on the phone
 once. To select another existing key, pass =--host-key /path/to/key=.
 Control+C ends the listener.
 
@@ -693,8 +771,9 @@ Hyper when its setting is enabled. On terminals that share key codes, the usual 
 can supply individual modifiers, including =C-x @ s= for Super.
 [[https://support.apple.com/guide/iphone/iph6c494dc6/ios][Apple's external keyboard guide]].
 
-If your keyboard has Mac and Windows layouts, check its manual for the
-position of Option or Alt. iOS interprets the Alt key as Option.
+A keyboard with Mac and Windows modes may swap the positions of Command
+and Option. Use =C-h k= in the phone frame to identify the keys your
+keyboard sends in each position.
 
 In an editable Agent Shell draft, Shift+Return inserts a newline. On
 build 4, use =C-j= or =M-x newline RET= if the keyboard sends ordinary Return.
@@ -758,40 +837,14 @@ Apps and select Emacsvox Speech. Emacs still uses your usual typing echo.
    phone. Move twice quickly to check that only the last letter gets a
    phonetic name. Try it on the PC to hear the same feedback there.
 
-** Attach to an existing conversation
+** Restart an existing session
 
-After listening on both devices in the isolated test, you can choose an
-existing Emacs server with a local desktop Omnivox process. In the target
-conversation, =M-: (buffer-name) RET= gives the buffer name and
-=M-: (expand-file-name server-name server-socket-dir) RET= gives the socket.
-Run the same temporary SSH listener as above. Replace the standalone relay
-with the following command in its own WSL terminal.
-
-#+begin_src sh
-cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-export EMACSCLIENT="$(command -v emacsclient)"
-read -rp 'Emacs server socket: ' socket
-read -rp 'Agent Shell buffer name: ' conversation
-read -rp 'iPhone Tailscale IPv4 address: ' phone
-./start-relay --existing "$phone" "$socket" "$conversation"
-#+end_src
-
-Connect from the signed app. The new terminal opens the chosen buffer.
-Disconnect closes the phone frame. Control+C in the relay releases
-its speech hooks and leaves the chosen Emacs server running. On the
-physical iPhone, the external keyboard could navigate the existing
-conversation, hear it in the phone voice and send a message to the same
-thread. After unlocking the phone, focus the Emacs keyboard again.
-In the listening check the same conversation reopened and only the next
-navigation line spoke. A disposable graphical test also exercises release
-and reattachment.
-
-After restarting WSL, start your usual Emacsvox profile and open the
-conversation again. If you have its session ID, =M-x agent-shell-resume-session=
-can reopen it with Codex. Once its buffer exists, start the SSH listener
-and the existing-server relay with the socket and buffer of this Emacs.
-Connect using the saved iPhone settings. Locking only the phone leaves
-the WSL Emacs process running.
+After a host restart, start your normal Emacsvox profile and server, then
+start the SSH listener and relay with its current socket. If you pass a
+starting buffer name, open that buffer in Emacs first. Connect using your
+saved iPhone settings. For an Agent Shell session, you can reopen an
+existing conversation with =M-x agent-shell-resume-session=. See
+[[*Connect the signed app to your running Emacs][the existing-session setup]].
 
 ** Reproduce routing and the hosted build
 
@@ -824,8 +877,7 @@ profile compiles and embeds JavaScript without device signing. The
 =device= profile builds a private installable app. Apple requires the
 distribution certificate with its matching private key, the registered
 iPhone, and an Ad Hoc profile for =org.emacsvox.iphone.speech=.
-For the Apple website signing route, save the downloaded profile in Windows
-Downloads. In the prototype directory run these commands. The staging helper
+For the Apple website signing route, save the downloaded profile in a private directory. In the prototype directory run these commands. The staging helper
 uses the prepared WSL signing directory, checks the app ID, iPhone, expiry
 and certificate, and prints a private build directory. EAS reads the
 signing identity separately from the source archive.
@@ -834,7 +886,7 @@ signing identity separately from the source archive.
 (
   set -e
   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-  read -rp 'Full WSL path of downloaded .mobileprovision: ' profile
+  read -rp 'Full path of downloaded .mobileprovision: ' profile
   stage=$(./stage-device-build "$profile")
   cd "$stage"
   npm ci

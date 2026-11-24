@@ -3,7 +3,7 @@
 #+startup: content
 
 The goal is one foreground iPhone app. With an external
-keyboard connected to the phone, you edit files in your existing WSL
+keyboard connected to the phone, you edit files in your existing
 Emacs, use the minibuffer and work in a running
 Codex conversation. The phone speaks its own frame locally, including
 Emacsvox navigation, tones, earcons and permission announcements.
@@ -21,6 +21,11 @@ revisions in the build notes point to the corresponding commits in this
 history. The private signed builds predate the removal of local setup details.
 
 * Next implementation and device build
+
+The host can open the ordinary Emacs frame buffer or a named live buffer.
+The receiver and both listeners also accept explicit private VPN addresses.
+Test reconnect and line speech on a physical iPhone using this option
+with the next signed build. [[file:README.org::*Connect the signed app to your running Emacs][Connection instructions]].
 
 Signed build 10 uses Emacsvox =d9fc7b152=
 and Omnivox =a30c94d=. On 24 November 2026, the downloaded archive passed
@@ -159,7 +164,7 @@ The Rust audio test feeds identical speech samples through exact preview,
 a named voice preview, line reading and character reading. It compares
 every stereo sample and the echo and reverb tails. Listen on build 7 for
 the change of voice within a line and the indentation tone over the first
-word. On the registered iPhone with VoiceOver speech muted, Reed's typed
+word. On a test iPhone with VoiceOver speech muted, Reed's typed
 letters and line reading now sound about equal. Overall Emacsvox speech
 is quieter than VoiceOver with audio ducking off. Across 86 measured
 speech chunks the app's average level was -20.4 dBFS and two samples
@@ -187,7 +192,7 @@ to the relay tone packet. Speaker onset and interruption require device timing.
 - *Live permissions.* At the next real Codex permission
   request, navigate during the choices, review the pending request and
   answer it. The practice request and lock recovery have passed.
-- *Mobile keyboard and web links.* Check the external keyboard in the phone's terminal, including
+- *Mobile keyboard and web links.* Check the external keyboard in the phone terminal, including
   =M-<=, =M->= and =C-M-f=. In build 8, compare =j= and =J=
   while entering text and while moving between responses. Check that
   Shift+Return inserts a newline in an unsent draft. Check focus on
@@ -222,7 +227,7 @@ draft and its original Emacs process after the phone frame closed.
 The physical check is to continue that draft from the iPhone and reopen it.
 
 On 23 November 2026 the signed iPhone opened the running Codex conversation
-in the everyday WSL Emacs. The terminal frame and its subscription matched
+in a running Emacs server. The terminal frame and its subscription matched
 the existing ACP session. Navigation spoke the conversation on the handset,
 and a message typed there arrived in the same thread. After the phone
 frame closed on lock, its replacement selected the same conversation
@@ -422,7 +427,7 @@ hear a reply, interrupt it, handle a permission request and reconnect.
 Confirm you return to the same buffer and conversation.
 Close just the phone frame and continue on the desktop with ordinary speech.
 
-The [[file:README.org::*Attach to an existing conversation][existing-server launcher]] selects an explicit socket and buffer.
+The [[file:README.org::*Connect the signed app to your running Emacs][existing-server launcher]] selects an explicit socket. The starting buffer is optional.
 The SSH integration check kept the original server and draft after the
 phone disconnected and routing was released. The standalone launcher
 uses bundled JavaScript and a private Tailscale listener. WSL reconnected

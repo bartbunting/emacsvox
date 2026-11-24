@@ -61,6 +61,8 @@ Check VoiceOver tab selection and external keyboard focus on the signed
 build using the [[file:../prototypes/iphone-speech/README.org::*Use the bottom tabs][bottom tab exercise]].
 Check the expanded state of the Settings and Diagnostics sections with
 VoiceOver. Verify that switching sections preserves unsaved preferences.
+Use Connection in the next signed build to enter an alternate VPN's host
+address. Reconnect and read a line using the [[file:../prototypes/iphone-speech/README.org::*Connect the signed app to your running Emacs][signed app setup]].
 Check external-keyboard echo, isolated capital pitch and Shift+Return in
 an unsent draft using the [[file:../prototypes/iphone-speech/README.org::*Check keyboard speech and permissions on the signed app][signed keyboard exercise]].
 On the phone, open Browse voices from the Aural menu. Check the spoken

@@ -4,7 +4,7 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 app=$(dirname "$here")
-omni=${IPHONE_OMNIVOX_SOURCE:-$app/../../../omnivox}
+omni=$("$app/omnivox-source")
 build=${CARGO_TARGET_DIR:-$HOME/.cache/emacsvox/iphone-omnivox-protocol}
 out=$(mktemp -d)
 trap 'rm -rf -- "$out"' EXIT

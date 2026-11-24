@@ -6,8 +6,10 @@ cd "$(dirname "$0")"
 stage=$(mktemp -d "${TMPDIR:-/tmp}/emacsvox-ios-build.XXXXXXXX")
 trap 'rm -rf -- "$stage"' ERR
 prefix=$(git rev-parse --show-prefix)
-git -C "$(git rev-parse --show-toplevel)" archive "HEAD:${prefix%/}" -- .gitignore app.json eas.json index.js mixer.js \
+git -C "$(git rev-parse --show-toplevel)" archive "HEAD:${prefix%/}" -- .gitignore app.json app.config.js eas.json index.js mixer.js \
     receiver.js wire-receiver.js web-link.js wire-icons.sha256 omnivox-revision keyboard.js panels.js package.json package-lock.json modules ssh/Package.swift ssh/Package.resolved ssh/Sources ssh/Tests assets/open-object.wav assets/visual-line.wav |
     tar -x -C "$stage"
+node "$stage/app.config.js" "$stage/app.json"
+rm -- "$stage/app.config.js"
 "$PWD/stage-omnivox" "$stage"
 printf '%s\n' "$stage"

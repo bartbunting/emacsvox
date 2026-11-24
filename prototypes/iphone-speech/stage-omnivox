@@ -13,7 +13,7 @@ import sys
 import tempfile
 
 app = Path(__file__).resolve().parent
-source = Path(os.environ.get("IPHONE_OMNIVOX_SOURCE", app.parents[2] / "omnivox")).resolve()
+source = Path(subprocess.check_output([app / "omnivox-source"], text=True).strip())
 output = Path(sys.argv[1]).resolve()
 revision = (output / "omnivox-revision").read_text().strip()
 if not output.is_dir() or not (output / "modules/iphone-mixer/ios/IphoneMixer.podspec").is_file():
