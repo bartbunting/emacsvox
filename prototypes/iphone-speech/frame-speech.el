@@ -295,8 +295,8 @@
        (with-selected-frame frame
          (let ((emacsvox-frame-speech--command-owner (process-get owner 'iphone-endpoint)))
            (emacsvox-aural-submit-notification
-            (if (eq action 'trace-saved) "Speech trace saved in WSL."
-              "WSL could not save the speech trace.")
+            (if (eq action 'trace-saved) "Speech trace saved on the Emacs host."
+              "The Emacs host could not save the speech trace.")
             :delivery-policy 'ordered :dont-log t))))
       ('stop
        (let ((iphone-frame-speech--receiver-stop t))

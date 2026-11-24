@@ -712,7 +712,7 @@ async function main() {
           await observe(`(mapc #'iphone-voices--restore (list ${main} ${notification}))`);
           for (const ok of [true, false]) {
             const start = rawPackets.length;
-            const words = ok ? 'Speech trace saved in WSL.' : 'WSL could not save the speech trace.';
+            const words = ok ? 'Speech trace saved on the Emacs host.' : 'The Emacs host could not save the speech trace.';
             ws.send('speech-trace ' + (ok ? 'private synthetic test' : ''));
             const confirms = p => p.timeline?.spans.some(s => s.text.includes(words));
             await until('trace result acknowledged and spoken on the phone notification lane', () => {

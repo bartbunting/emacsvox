@@ -122,14 +122,14 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
     } else save();
   }
   return <TabPage title="Settings">
-    <Section title="Connection" hint="WSL address, SSH identity and automatic connection." {...sections}>
+    <Section title="Connection" hint="Emacs host VPN address, SSH identity and automatic connection." {...sections}>
       {ssh && <Toggle label="Use SSH terminal" hint="Connect your external keyboard to Emacs through SSH. Switch off to use the test relay."
         value={draft.transport === 'ssh'} change={v => edit('transport', v ? 'ssh' : 'relay')} />}
-      <Field label="WSL Tailscale IPv4 address" value={draft.host} change={v => edit('host', v)} />
+      <Field label="Emacs host VPN IPv4 address" value={draft.host} change={v => edit('host', v)} />
       {terminal && <>
         <Field label="SSH port" numeric value={draft.port} change={v => edit('port', v)} />
-        <Field label="WSL username" value={draft.username} change={v => edit('username', v)} />
-        <Field label="Trusted WSL host public key" value={draft.pin} change={v => edit('pin', v)} />
+        <Field label="SSH username" value={draft.username} change={v => edit('username', v)} />
+        <Field label="Trusted SSH host public key" value={draft.pin} change={v => edit('pin', v)} />
       </>}
       {ssh && <>
         <Toggle label="Connect on open" hint="Connect to the saved SSH host when you launch the app."
@@ -176,7 +176,7 @@ export function Settings({draft, edit, save, cancel, ssh, mixer, wire, LoudnessS
         catch { report('Could not import this recording. Choose a WAV or OGG up to 16 MiB and 30 seconds.'); }
       }} />}
       {wire?.setSpeechLogging && <Toggle label="Log speech text and timing"
-        hint="Save to start recording on this phone. Diagnostics can send the trace to WSL. Save with the switch off to erase the phone copy."
+        hint="Save to start recording on this phone. Diagnostics can send the trace to the Emacs host. Save with the switch off to erase the phone copy."
         value={draft.logSpeech === 'yes'} change={v => edit('logSpeech', v ? 'yes' : 'no')} />}
     </Section>}
     {message ? <Text style={styles.label}>{message}</Text> : null}

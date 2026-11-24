@@ -278,7 +278,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
     try {
       current = openSocket();
     } catch {
-      networkFailed('Connection failed. Check Tailscale and the relay.');
+      networkFailed('Connection failed. Check the VPN and the speech relay.');
       return;
     }
     socket = current;
@@ -322,7 +322,7 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
         } else publishSshKeyboard();
       } else if (record.type === 'trace-saved' && tracePending) {
         tracePending = false;
-        playback(record.ok === true ? 'Speech trace saved in WSL.' : 'WSL could not save the speech trace.');
+        playback(record.ok === true ? 'Speech trace saved on the Emacs host.' : 'The Emacs host could not save the speech trace.');
       } else if (record.type === 'ssh' && typeof record.frame === 'string' &&
                  typeof record.client === 'string' && typeof record.server === 'string') {
         if (frameId) return disconnect('Unexpected second SSH offer.');
@@ -430,15 +430,15 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
   }
 
   function sendSpeechTrace() {
-    if (!wire || !ready || socket?.readyState !== 1) return playback('Connect to WSL to send the speech trace.');
+    if (!wire || !ready || socket?.readyState !== 1) return playback('Connect to the Emacs host to send the speech trace.');
     if (!traceAllowed) return playback('This relay needs an update to receive speech traces.');
-    if (tracePending) return playback('Waiting for WSL to save the trace.');
+    if (tracePending) return playback('Waiting for the Emacs host to save the trace.');
     const text = nativeWire.speechTrace();
     if (!text) return playback('The speech trace is empty.');
     try {
       socket.send('speech-trace ' + text);
       tracePending = true;
-      playback('Sending speech trace to WSL.');
+      playback('Sending speech trace to the Emacs host.');
     } catch { playback('Could not send the speech trace.'); }
   }
 

@@ -321,17 +321,17 @@ final class PhoneTerminalView: ExpoView, TerminalViewDelegate {
           let retryable: Bool
           switch error {
           case TerminalError.hostKeyMismatch: reason = "The SSH host key does not match."; retryable = false
-          case TerminalError.keyRejected: reason = "WSL rejected the iPhone public key."; retryable = false
+          case TerminalError.keyRejected: reason = "The SSH server rejected the iPhone public key."; retryable = false
           case let network as URLError where network.code == .timedOut:
-            reason = "Timed out reaching WSL on SSH port \(port)."; retryable = true
+            reason = "Timed out reaching the Emacs host on SSH port \(port)."; retryable = true
           case let network as URLError where network.code == .cannotConnectToHost:
-            reason = "Could not reach WSL on SSH port \(port)."; retryable = true
+            reason = "Could not reach the Emacs host on SSH port \(port)."; retryable = true
           case TerminalError.setupTimedOut:
-            reason = "Reached WSL, but SSH setup timed out."; retryable = true
+            reason = "Reached the host, but SSH setup timed out."; retryable = true
           case TerminalError.sessionClosed:
-            reason = "WSL closed SSH before the terminal was ready."; retryable = true
+            reason = "The host closed SSH before the terminal was ready."; retryable = true
           case TerminalError.requestRejected:
-            reason = "WSL refused the terminal or the Emacs command."; retryable = false
+            reason = "The SSH server refused the terminal or the Emacs command."; retryable = false
           case TerminalError.invalidDestination:
             reason = "The SSH connection details are invalid."; retryable = false
           case TerminalError.invalidSize:

@@ -27,15 +27,17 @@ function loadComponent(filename, platform) {
 for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', true], ['field', false]]) {
   test('switch tabs with a connected ' + input + ' keyboard' + (hasShiftReturnShortcut ? '' : ' on an earlier app'), async t => {
     const sockets = [], focus = [], keys = [];
-    t.mock.method(global, 'WebSocket', function openSocket() {
-      const socket = {readyState: 1, send() {}, close() { this.readyState = 3; }};
+    t.mock.method(global, 'WebSocket', function openSocket(url) {
+      const socket = {url, readyState: 1, send() {}, close() { this.readyState = 3; }};
       sockets.push(socket);
       return socket;
     });
     global.IS_REACT_ACT_ENVIRONMENT = true;
     global.requestAnimationFrame = setImmediate;
     global.cancelAnimationFrame = clearImmediate;
-    const profile = {host: '100.64.0.1', port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
+    const vpnHost = hasShiftReturnShortcut ? (input === 'field' ? '10.8.0.1' : '172.20.0.1') : '100.64.0.1';
+    const profile = {host: input === 'terminal' ? '203.0.113.1' : vpnHost,
+      port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
     const logging = [], trace = {setSpeechLogging: on => logging.push(on), speechTrace: () => 'local speech sample'};
     const levels = [], listeners = {}, records = [], announcements = [];
     let clock = 50, trial;
@@ -47,7 +49,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
         open: async () => {}, close: async () => {}, record: async (_, lane, line) => { records.push([lane, line]); },
         addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
     }
-    let savedHistory = ['Earlier. Could not reach WSL on SSH port 8822.'];
+    let savedHistory = ['Earlier. Could not reach the Emacs host on SSH port 8822.'];
     const ssh = {hasShiftReturnShortcut, hasModifiedLetterShortcuts: hasShiftReturnShortcut, hasWebBrowser: hasShiftReturnShortcut, loadProfile: () => profile,
       loadConnectionHistory: () => savedHistory, saveConnectionHistory(entries) { savedHistory = entries; },
       keepAwake() {}, saveProfile(next) { Object.assign(profile, next); }};
@@ -81,12 +83,21 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     const tabs = () => presses().filter(el => el.props.accessibilityRole === 'tab');
     const select = name => act(() => presses().find(el => el.props.accessibilityLabel === name).props.onPress());
     const button = title => app.root.findAllByType('Button').find(el => el.props.title === title);
-    const hostField = () => app.root.findAllByType('TextInput').find(el => el.props.accessibilityLabel === 'WSL Tailscale IPv4 address');
+    const hostField = () => app.root.findAllByType('TextInput').find(el => el.props.accessibilityLabel === 'Emacs host VPN IPv4 address');
     assert.deepEqual(tabs().map(el => [el.props.accessibilityLabel, el.props.accessibilityRole,
       el.props.accessibilityState.selected]), [['Terminal','tab',true], ['Diagnostics','tab',false], ['Settings','tab',false]]);
+    if (input === 'terminal') {
+      await act(() => button('Connect').props.onPress());
+      assert.equal(sockets.length, 0);
+      assert.ok(tabs()[2].props.accessibilityState.selected);
+      await select('Connection');
+      await act(() => hostField().props.onChangeText(vpnHost));
+      await act(() => button('Save settings').props.onPress());
+    }
     await act(() => button('Connect').props.onPress());
     assert.equal(sockets.length, 1);
     const ws = sockets[0];
+    assert.equal(new URL(ws.url).hostname, vpnHost);
     const receive = record => ws.onmessage({data: JSON.stringify(record)});
     await act(() => receive({type:'ssh', frame:'same-frame', client:'client', server:'server',
       host:'unused.test', port:'1', username:'unused', pin:'unused'}));
@@ -150,7 +161,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.deepEqual(focus, [input === 'field' ? 'WebView' : 'NativeTerminal']);
     await select('Settings');
     await select('Connection');
-    assert.equal(hostField().props.value, '100.64.0.1');
+    assert.equal(hostField().props.value, vpnHost);
     await select('Speech and sounds');
     assert.equal(app.root.findAllByType('PhoneAudioRouteView').length, hasShiftReturnShortcut ? 1 : 0);
     const loggingSwitch = () => app.root.findAllByType('Switch').find(el => el.props.accessibilityLabel === 'Log speech text and timing');
@@ -183,7 +194,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     await select('Speech trace');
     await act(() => button('Read speech trace').props.onPress());
     assert.ok(app.root.findAllByType('Text').some(el => el.props.children === 'local speech sample'));
-    assert.ok(button('Send speech trace to WSL'));
+    assert.ok(button('Send speech trace to Emacs host'));
     await select('Settings');
     await select('Speech and sounds');
     await act(() => loggingSwitch().props.onValueChange(false));

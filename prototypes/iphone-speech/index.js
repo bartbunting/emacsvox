@@ -31,8 +31,10 @@ function connectionKey(p) {
 
 function validHost(host) {
   const parts = host.split('.');
-  return parts.length === 4 && parts.every(n => /^\d{1,3}$/.test(n) && Number(n) <= 255) &&
-    Number(parts[0]) === 100 && Number(parts[1]) >= 64 && Number(parts[1]) <= 127;
+  if (parts.length !== 4 || !parts.every(n => /^(0|[1-9]\d{0,2})$/.test(n) && Number(n) <= 255)) return false;
+  const [first, second] = parts.map(Number);
+  return first === 10 || (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168) || (first === 100 && second >= 64 && second <= 127);
 }
 
 let audioPreparation;
@@ -220,7 +222,7 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
     if (!validHost(host) || (sshMode && (!/^\d{1,5}$/.test(settings.port) ||
         Number(settings.port) < 1 || Number(settings.port) > 65535 || !settings.username ||
         !/^ssh-ed25519 [A-Za-z0-9+/=]+(?: .*)?$/.test(settings.pin)))) {
-      setStatus('Enter the WSL connection details in Settings, then save.');
+      setStatus('Enter the private VPN address and connection details for your Emacs host in Settings, then save.');
       setTab('Settings');
       return;
     }
@@ -388,9 +390,9 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
         {nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
       </Section>}
       {nativeWire?.speechTrace && settings.logSpeech === 'yes' && <Section title="Speech trace"
-        hint="Read the local recording log or send it to your WSL relay." selected={diagnosticSection} select={setDiagnosticSection}>
+        hint="Read the local recording log or send it to your Emacs host." selected={diagnosticSection} select={setDiagnosticSection}>
         <Action title="Read speech trace" onPress={() => setTrace(nativeWire.speechTrace() || 'The speech trace is empty.')} />
-        <Action title="Send speech trace to WSL" disabled={!activeSession || !useWire} onPress={receiver.sendSpeechTrace} />
+        <Action title="Send speech trace to Emacs host" disabled={!activeSession || !useWire} onPress={receiver.sendSpeechTrace} />
         {trace ? <Text selectable style={styles.terminal}>{trace}</Text> : null}
       </Section>}
     </TabPage>

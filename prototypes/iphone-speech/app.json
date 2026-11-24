@@ -14,7 +14,7 @@
       "buildNumber": "10",
       "bundleIdentifier": "org.emacsvox.iphone.speech",
       "infoPlist": {
-        "NSLocalNetworkUsageDescription": "Connect to your Emacsvox speech relay on Tailscale."
+        "NSLocalNetworkUsageDescription": "Connect to your Emacs terminal and speech relay over your private VPN."
       }
     },
     "plugins": [

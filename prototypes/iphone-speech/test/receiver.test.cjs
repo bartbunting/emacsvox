@@ -55,7 +55,7 @@ test('speech text is sent only on request to a relay that advertises trace stora
     receiver.sendSpeechTrace();
     assert.deepEqual(sent, ['speech-trace Lime Plum']);
     deliver({type: 'trace-saved', ok: true});
-    assert.equal(messages.at(-1), 'Speech trace saved in WSL.');
+    assert.equal(messages.at(-1), 'Speech trace saved on the Emacs host.');
   } finally { receiver.disconnect(); }
 });
 
@@ -139,8 +139,8 @@ test('a fresh cellular SSH attempt can retry before the first phone frame opens'
   try {
     receiver.connect();
     offer('first');
-    receiver.terminalClosed('first', 'Could not reach WSL on SSH port 8822.', true);
-    assert.equal(states.at(-1), 'Could not reach WSL on SSH port 8822. Retrying SSH.');
+    receiver.terminalClosed('first', 'Could not reach the Emacs host on SSH port 8822.', true);
+    assert.equal(states.at(-1), 'Could not reach the Emacs host on SSH port 8822. Retrying SSH.');
     t.mock.timers.tick(1000);
     assert.equal(sockets.length, 2);
     offer('second');
@@ -149,7 +149,7 @@ test('a fresh cellular SSH attempt can retry before the first phone frame opens'
     t.mock.timers.tick(10000);
     assert.equal(sockets.length, 2);
     assert.equal(states.at(-1), 'The SSH host key does not match.');
-    assert.deepEqual(results, ['Could not reach WSL on SSH port 8822.', 'The SSH host key does not match.']);
+    assert.deepEqual(results, ['Could not reach the Emacs host on SSH port 8822.', 'The SSH host key does not match.']);
   } finally { receiver.disconnect(); }
 });
 
