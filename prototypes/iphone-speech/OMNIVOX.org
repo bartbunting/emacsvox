@@ -21,10 +21,11 @@ speech samples and timing information.
 The desktop advertises eleven more capabilities. They affect different
 parts of the experience.
 
-- *Legacy clients.* The phone implements queue, dispatch, Stop, letters,
-  tones and recordings. It does not advertise the complete =legacy_commands=
-  set or =emacsvox_tx=, which replaces a whole legacy command batch with
-  a newer one. Ordinary Emacsvox navigation uses the structured timeline.
+- *Legacy clients.* Queue, dispatch, Stop, letters, tones and recordings
+  serve existing Emacs commands. Ordinary navigation uses the structured
+  timeline. The desktop also advertises the complete =legacy_commands=
+  set and =emacsvox_tx= for replacing a legacy batch. Add a missing legacy
+  command only for a specific client workflow with a demonstrable benefit.
 - *Languages and characters.* Phone palettes can choose among installed
   Apple voices. The desktop also advertises =logical_voice_language_routing=
   and =text_repertoire_routing_v1=. The latter allows Emacsvox to send
@@ -32,9 +33,10 @@ parts of the experience.
   engine. Mixed-language text and symbols are a useful next comparison.
 - *Engines and voices.* The desktop advertises =preferred_engine=,
   =espeak_variants_v1=, =startup_engine_rescan=, =engine_recovery_probe=,
-  =engine_configuration_v1= and =voice_library_v1=. The phone currently
-  has one engine. Refreshing the voice browser enumerates its installed
-  Apple voices. A second on-device engine such as eSpeak NG is deferred.
+  =engine_configuration_v1= and =voice_library_v1=. The phone has one
+  Omnivox adapter for iOS system speech. A provider app can register more
+  voices with iOS. Trying those voices uses the existing adapter.
+  Embedding eSpeak NG as a separate Omnivox engine is deferred.
 - *Audio outputs.* The desktop advertises =process_audio_routing=. The phone
   plays through the active iOS audio route and keeps independent main
   and notification speech lanes.
@@ -160,6 +162,26 @@ Apple's inventory order. The next build prefers US Reed when available.
 On a test iPhone both workers refreshed the installed voices on reconnect
 and resolved the reading roles to the saved voice.
 The phone reading rate starts at 150.
+
+To download another Apple voice, open Settings, Accessibility, VoiceOver,
+Speech, then Add Rotor Voice. Choose the language and use the download
+button on the voice you want. Your primary VoiceOver voice can stay
+selected. [[https://support.apple.com/guide/iphone/iphfa3d32c50/ios][Apple's VoiceOver settings guide]].
+
+For eSpeak, install [[https://apps.apple.com/app/espeak-ng/id6444089174][eSpeak-NG on the App Store]]. Open it,
+activate “VoiceOver languages” and select English (United States).
+Return to Emacsvox Speech and connect. From the phone terminal, run
+=M-x omnivox-list-voices=, press =g= to refresh, then =/= to find
+=eSpeak=. Press =p= to audition the row and Return to choose it for
+reading. Audition first to check how the provider sounds through the mixer.
+
+DECtalk is also available as an iOS system voice provider. Its release
+includes =DECtalk-iOS-unsigned.ipa=. On Windows, use Sideloadly to sign
+and install the package with its voice extension included. Open DECtalk
+on the phone, then use the same Emacs refresh and audition steps for
+Huge Harry or Perfect Paul. Both provider apps synthesize locally.
+Their audio, interruption and word timing still need a physical check
+with this receiver. [[https://github.com/masonasons/DECTalkApple/releases/tag/v0.1.3][DECtalk iOS release]]. [[https://sideloadly.io/][Sideloadly for Windows]].
 
 In the phone terminal, open the Aural menu, press =v= for Voices and
 engines, then =b= for Browse voices. Press =L= to choose the languages
@@ -335,10 +357,11 @@ Use fixed synthetic speech lengths for scheduling comparisons.
 
 ** 3. List, select and tune the phone's voices from Emacs
 
-Qualify Apple's installed voices first. Keep the engine ID with each
-physical voice ID in the registry, renderer and playback reports. A later
-on-device engine such as eSpeak NG can then join the same Omnivox resolver
-and mixer. The Apple build uses the ordinary single-engine fallback rules.
+Qualify installed system voices through the iOS adapter, including
+voices from provider apps. Keep the engine ID with each physical voice ID
+in the registry, renderer and playback reports. An engine embedded in a
+future build can join the same Omnivox resolver and mixer. The current
+build uses the ordinary single-engine fallback rules.
 
 Implement the existing =capabilities= and =inventory= exchange on each
 phone worker. Enumerate the voices iOS makes available with
