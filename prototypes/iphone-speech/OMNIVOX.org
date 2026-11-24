@@ -338,6 +338,21 @@ the reference deliberately as Omnivox evolves. The contracts are
 [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md][control and discovery]] and
 [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/presentation-timeline.md][presentation timelines]].
 
+*** Build 10 timing baseline in WSL
+
+On 24 November 2026, seven pairs of =C-n= presses crossed the loopback
+SSH connection. With the isolated Emacs using a 128,000,000-byte garbage
+collection threshold, the median time to receive the new line was 35 ms.
+Cancellation of the old line arrived in 36 ms at the median. With the
+test profile's normal threshold, two commands spent 125 and 140 ms in
+garbage collection. The playback device in these checks was synthetic.
+[[file:README.org::*Reproduce routing and the hosted build][Run the SSH timing check]].
+
+Run =./test/bookmark-timings= to measure cue placement separately. For
+512 cues in 256 words, median planning time fell from 8.0 to 1.1 ms with
+native timing marks and from 15.0 to 2.2 ms when recovering missing word
+starts. Both versions produced the same checksums for the cue positions.
+
 * Implementation order
 
 ** 1. Run the real protocol in the app

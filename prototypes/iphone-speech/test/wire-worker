@@ -39,5 +39,5 @@ if [[ ${1:-} == --frame ]]; then
   printf '\n' >> "$out/stdio"
   chmod 700 "$out/stdio"
   : "${IPHONE_TEST_SSHD:?Set IPHONE_TEST_SSHD to the disposable sshd binary}"
-  IPHONE_WIRE_WORKER="$out/stdio" node "$here/shared-frame.cjs" --routed
+  IPHONE_WIRE_WORKER="$out/stdio" node "$here/shared-frame.cjs" --routed "${@:2}"
 fi

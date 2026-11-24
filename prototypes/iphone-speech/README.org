@@ -795,6 +795,14 @@ using the Swift SSH client and a loopback receiver. Each result gives
 milliseconds until the matching tone packet and the number of intervening
 Stop packets. Listen on the phone to assess audible onset.
 
+Run =./test/wire-worker --frame --time-navigation= with the same test SSH
+server setting to time seven pairs of =C-n= presses in an Agent Shell
+response. Each pair reports milliseconds from the second key to the new
+timeline arriving and to the old worker dispatch reporting cancellation.
+Both timestamps use the WSL clock. The report includes time in the Emacs
+command and its garbage collections. This loopback test uses a synthetic
+playback device and keeps the notification worker busy throughout.
+
 Use =./stage-ios-build= in this worktree to stage the committed app only.
 In the printed directory, run =npm ci=, then
 =export EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD"=. The =simulator-private=

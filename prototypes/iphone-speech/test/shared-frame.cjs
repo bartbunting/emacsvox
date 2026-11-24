@@ -15,6 +15,7 @@ const {keyboardField} = require('./keyboard-field.cjs');
 const net = require('node:net');
 const routed = process.argv.includes('--routed');
 const timeTones = process.argv.includes('--time-tones');
+const timeNavigation = process.argv.includes('--time-navigation');
 
 async function measureToneReturn(socket, pressReturn) {
   const messages = on(socket, 'message', {signal: AbortSignal.timeout(8000), close: ['close']});
@@ -47,6 +48,9 @@ async function until(label, predicate, ms = 8000) {
 async function main() {
   if (timeTones && (!routed || !process.env.IPHONE_TEST_SSHD)) {
     throw new Error('For tone timings use --routed and set IPHONE_TEST_SSHD to the test sshd.');
+  }
+  if (timeNavigation && (!routed || !process.env.IPHONE_TEST_SSHD || !process.env.IPHONE_WIRE_WORKER)) {
+    throw new Error('Use test/wire-worker --frame --time-navigation with the test sshd.');
   }
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'shared-emacs-'));
   const socket = path.join(dir, 'speech.sock');
@@ -374,13 +378,15 @@ async function main() {
                 }
                 const receipt = /^__EMACSVOX_TRACKED__ (\d+) (completed|cancelled|failed)$/.exec(line);
                 if (marker) packets.push({lane: tag, marker: JSON.parse(Buffer.from(marker[1], 'base64'))});
-                if (receipt) packets.push({lane: tag, dispatch: Number(receipt[1]), status: receipt[2]});
+                if (receipt) packets.push({lane: tag, dispatch: Number(receipt[1]), status: receipt[2],
+                  receivedAt: timeNavigation ? performance.now() : undefined});
                 if (current.readyState === WebSocket.OPEN) current.send(tag + ' ' + line);
               });
             }
             current.once('close', () => Object.values(workers).forEach(worker => worker.stdin.end()));
           }
           ws.on('message', data => {
+            const receivedAt = timeNavigation ? performance.now() : undefined;
             const message = data.toString();
             if (rawWorker && /^[MN] /.test(message)) {
               workers[message[0]].stdin.write(message.slice(2) + '\n');
@@ -396,7 +402,7 @@ async function main() {
                 timeline.spans = timeline.spans.map(s => s.span);
               }
               const volume = /^tts_set_(voice|tone|sound)_volume (\S+)$/.exec(line);
-              packets.push({lane: message[0], command: line.split(' ')[0], icon: icon?.[1],
+              packets.push({lane: message[0], receivedAt, command: line.split(' ')[0], icon: icon?.[1],
                 timingSerial: /^q \{timing sample (\d+) \}$/.exec(line)?.[1],
                 timeline, volume: volume && {kind: volume[1], value: Number(volume[2])},
                 control: control?.type, voice: control?.selector?.voice_id, requestId: control?.request_id,
@@ -759,30 +765,62 @@ async function main() {
           // Hold both synthetic output devices while sending two ordinary keys
           // over SSH. Releasing old hardware callbacks must never revive a line.
           controlAudio('N', 'test-permission');
-          controlAudio('M', 'test-hold');
-          await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (search-forward "Timing start") (beginning-of-line))`);
-          const heldStart = rawPackets.length;
-          sshKeys('\x0e');
           const navigationAfter = (start, line) => rawPackets.slice(start).find(p =>
-            p.lane === 'M' && p.timeline?.spans.map(s => s.text).join('').trim() === line)?.timeline;
-          const held = () => navigationAfter(heldStart, 'TestCase');
-          await until('first navigation admitted while playback held', held);
-          const freshStart = rawPackets.length;
-          sshKeys('\x0e');
-          const fresh = () => navigationAfter(freshStart, 'Fresh line');
-          await until('second navigation cancels the earlier dispatch', () => fresh() &&
-            rawPackets.some(p => p.lane === 'M' && p.dispatch === held().dispatch_id && p.status === 'cancelled'));
-          controlAudio('M', 'test-play');
-          await until('only the later navigation reaches playback completion', () =>
-            rawPackets.some(p => p.lane === 'M' && p.dispatch === fresh().dispatch_id && p.status === 'completed'))
-            .catch(error => {
-              const states = rawPackets.slice(heldStart).filter(p => p.lane === 'M' && (p.timeline || p.dispatch))
-                .map(p => p.timeline ? ['admitted', p.timeline.dispatch_id, p.timeline.replacement_key,
-                  p.timeline.spans.some(s => s.text.includes('TestCase')), p.timeline.spans.some(s => s.text.includes('Fresh line')),
-                  p.timeline.spans.map(s => s.text.length)] : [p.status, p.dispatch]);
-              throw new Error(error.message + ' (' + JSON.stringify(states) + ')');
-            });
-          assert.ok(!rawPackets.some(p => p.marker?.dispatch_id === held().dispatch_id));
+            p.lane === 'M' && p.timeline?.spans.map(s => s.text).join('').trim() === line);
+          const samples = [];
+          if (timeNavigation) {
+            console.log('Test Emacs garbage collection threshold in bytes:', await observe('gc-cons-threshold'));
+            await observe(`(with-selected-window ${phoneWindow}
+              (setq-local iphone-test-nav-clock nil)
+              (setq-local iphone-test-nav-duration nil)
+              (setq-local iphone-test-nav-command (key-binding (kbd "C-n")))
+              (add-hook 'pre-command-hook (lambda ()
+                (when (eq this-command iphone-test-nav-command)
+                  (setq iphone-test-nav-clock (cons (current-time) gc-elapsed)))) -90 t)
+              (add-hook 'post-command-hook (lambda ()
+                (when iphone-test-nav-clock
+                  (setq iphone-test-nav-duration
+                        (list (* 1000 (float-time (time-since (car iphone-test-nav-clock))))
+                              (* 1000 (- gc-elapsed (cdr iphone-test-nav-clock))))
+                        iphone-test-nav-clock nil))) 90 t))`);
+          }
+          for (let pair = 0; pair < (timeNavigation ? 7 : 1); pair++) {
+            controlAudio('M', 'test-hold');
+            await observe(`(with-selected-window ${phoneWindow} (goto-char (point-min)) (search-forward "Timing start") (beginning-of-line))`);
+            const heldStart = rawPackets.length;
+            sshKeys('\x0e');
+            await until('first navigation admitted while playback held', () => navigationAfter(heldStart, 'TestCase'));
+            const heldId = navigationAfter(heldStart, 'TestCase').timeline.dispatch_id;
+            const freshStart = rawPackets.length;
+            const started = performance.now();
+            sshKeys('\x0e');
+            const cancellation = () => rawPackets.slice(freshStart).find(p =>
+              p.lane === 'M' && p.dispatch === heldId && p.status === 'cancelled');
+            await until('second navigation cancels the earlier dispatch', () =>
+              cancellation() && navigationAfter(freshStart, 'Fresh line'));
+            const replacement = navigationAfter(freshStart, 'Fresh line');
+            controlAudio('M', 'test-play');
+            await until('only the later navigation reaches playback completion', () => rawPackets.some(p =>
+              p.lane === 'M' && p.dispatch === replacement.timeline.dispatch_id && p.status === 'completed'))
+              .catch(error => {
+                const receipts = rawPackets.slice(heldStart).filter(p => p.lane === 'M' && p.dispatch)
+                  .map(p => [p.dispatch, p.status]);
+                throw new Error(error.message + ', old and new dispatches ' + heldId + ', ' +
+                  replacement.timeline.dispatch_id + ', receipts ' + JSON.stringify(receipts));
+              });
+            assert.ok(!rawPackets.some(p => p.lane === 'M' && p.marker?.dispatch_id === heldId));
+            if (timeNavigation) {
+              const duration = await observe(`(with-current-buffer (window-buffer ${phoneWindow})
+                (json-serialize (vconcat iphone-test-nav-duration)))`);
+              const milliseconds = value => Number(value.toFixed(1));
+              const [emacsCommandMs, emacsGcMs] = JSON.parse(JSON.parse(duration)).map(milliseconds);
+              assert.ok(Number.isFinite(emacsCommandMs) && Number.isFinite(emacsGcMs),
+                'Missing Emacs command timing for the second Control+n');
+              samples.push({newLineMs: milliseconds(replacement.receivedAt - started),
+                oldCancelledMs: milliseconds(cancellation().receivedAt - started), emacsCommandMs, emacsGcMs});
+            }
+          }
+          if (timeNavigation) console.log('Loopback SSH Control+n to new timeline and old cancellation:', JSON.stringify(samples));
           controlAudio('N', 'test-play');
           await until('urgent permission reaches completion on its own output', () => rawPackets.some(p => p.audio === 'permission played'));
           console.log('Passed ordinary Agent Shell Control+n with one TestCase utterance, an in-word insert, semantic playback, replacement and protected permission.');
@@ -833,6 +871,9 @@ async function main() {
             'pitch overlay for four spaces: ' + JSON.stringify(indented().actions));
           const speechSpan = indented().spans.find(s => s.id === pitch.position.span_id);
           assert.equal(speechSpan?.text.trimStart(), 'test the indentation', JSON.stringify(indented().spans));
+          assert.equal(pitch.position.affinity, 'before');
+          if (pitch.position.position === 'text_offset')
+            assert.ok(pitch.position.utf8_offset <= speechSpan.text.indexOf('test'));
           assert.ok(rawPackets.some(p => p.lane === 'M' && p.marker?.dispatch_id === indented().dispatch_id &&
             p.marker.type === 'timeline_action_resolved' && p.marker.action_id === pitch.id));
           await observe(`(with-selected-window ${phoneWindow} (setq-local tts-caps t emacsvox-capitalization-presentation 'tone))`);
