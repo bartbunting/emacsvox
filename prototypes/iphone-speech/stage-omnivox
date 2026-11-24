@@ -44,6 +44,16 @@ with ExitStack() as stack:
     resources.mkdir()
     shutil.copyfile(Path(temp) / "LICENSE", resources / "Omnivox-LICENSE.txt")
     targets = {"ios-arm64": "aarch64-apple-ios", "ios-arm64-simulator": "aarch64-apple-ios-sim"}
+    # Dependencies embed source locations in panic messages even in release builds.
+    # Cargo's encoded form keeps paths containing spaces in one compiler argument.
+    flags = env.get("CARGO_ENCODED_RUSTFLAGS", "\x1f".join(env.get("RUSTFLAGS", "").split()))
+    home = Path.home()
+    cargo_home = Path(env.get("CARGO_HOME") or home / ".cargo").resolve()
+    prefixes = [(home, "/build/user"), (cargo_home, "/build/cargo"),
+                (Path(temp), "/build/omnivox"), (cache, "/build/target")]
+    remaps = [f"--remap-path-prefix={original}={published}" for original, published in prefixes
+              if original != Path(original.anchor)]
+    env["CARGO_ENCODED_RUSTFLAGS"] = "\x1f".join([flags, *remaps] if flags else remaps)
     subprocess.run(["cargo", "build", "--locked", "--release", "-p", "omnivox-ios",
                     *[item for triple in targets.values() for item in ("--target", triple)]],
                    cwd=temp, env=env, check=True)
@@ -55,7 +65,10 @@ with ExitStack() as stack:
         folder = framework / identifier
         folder.mkdir(parents=True)
         shutil.copytree(headers, folder / "Headers")
-        shutil.copyfile(cache / target / "release/libomnivox_ios.a", folder / "libOmnivoxMobile.a")
+        archive = cache / target / "release/libomnivox_ios.a"
+        if home != Path(home.anchor) and os.fsencode(str(home) + "/") in archive.read_bytes():
+            sys.exit("The iOS library still contains the build user's home directory.")
+        shutil.copyfile(archive, folder / "libOmnivoxMobile.a")
         library = {"LibraryIdentifier": identifier, "SupportedArchitectures": ["arm64"],
                    "LibraryPath": "libOmnivoxMobile.a", "HeadersPath": "Headers", "SupportedPlatform": "ios"}
         if target.endswith("-sim"):
