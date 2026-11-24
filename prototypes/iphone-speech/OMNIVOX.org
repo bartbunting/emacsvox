@@ -49,7 +49,13 @@ are the position of a cue inside a word when Reed omits a marker,
 indentation over the first word, and the time from a keypress to audible
 speech and interruption on speaker and headphones.
 
-* Language routing after build 9
+* Language routing in the build 10 candidate
+
+The build 10 candidate uses Omnivox =a30c94d=. It advertises 35 of the
+43 desktop capabilities, adding language routing, Unicode routing and
+speech engine recovery to build 9. iOS manages the voice library and
+the shared audio output. Use =g= in Browse voices after installing a
+voice in iOS or its provider app.
 
 A palette role can request a language such as =fr-CA=. The phone tries its
 explicit voice choices in order. If the first choice names an unavailable
@@ -61,9 +67,12 @@ affects which rows you see.
 
 An attached frame sends original Unicode when both its main and
 notification workers negotiate =text_repertoire_routing_v1=. Each other
-frame negotiates independently. The WSL protocol check exercises a
-language change, Japanese text and a combining accent with the desktop
-and phone workers. Pronunciation depends on the installed voice.
+frame negotiates independently. Explicit pronunciations and emoji names
+still apply. For example, with emoji naming enabled, Emacs says “right
+arrow” for =→=. With naming off, an exact-text worker receives the glyph.
+The WSL protocol check exercises this glyph, a language change, Japanese
+text and a combining accent with the desktop and phone workers.
+Pronunciation depends on the installed voice.
 
 * Recover a speech engine after build 9
 
@@ -74,7 +83,7 @@ still speak. The first retry becomes available after five seconds.
 Repeated failures extend the wait to at most one minute.
 
 To retry sooner, open Browse voices on the phone frame, press capital
-=K= and choose Main or Notification. Read a line or trigger a notification
+=K= and choose Main or Notifications. Read a line or trigger a notification
 on that worker to try a fresh iOS synthesizer. Stopping a retry leaves the
 next one available. Build 9 can still use the voice browser and reports
 that its worker lacks the retry command.

@@ -93,13 +93,15 @@ async def check(command, icon):
             engine = next(e for e in inventory["engines"] if e["id"] == inventory["preferred_engine_id"])
             installed = [v for v in engine["voices"] if v["availability"]["status"] == "available"]
             default = next(v for v in installed if v["id"]["voice_id"] == engine["default_voice_id"])
-            other = next(v for v in installed if v.get("language") and v["language"] != default.get("language"))
-            expected = min((v["id"] for v in installed if v.get("language") and
-                            v["language"].casefold() == other["language"].casefold()), key=lambda v: v["voice_id"])
+            language = next((v["language"] for v in installed if v.get("language") and
+                             v["language"] != default.get("language")), default.get("language"))
+            expected = min((v["id"] for v in installed if language and v.get("language") and
+                            v["language"].casefold() == language.casefold()),
+                           default=default["id"], key=lambda v: v["voice_id"])
             exact = {"kind": "exact", **default["id"]}
             registered = await control("register_logical_voices", 16, "logical_voices_registered",
                 registry_generation=1, definitions=[
-                    {"id": "regional", "language": other["language"], "acss": {}, "preferences": [
+                    {"id": "regional", "language": language, "acss": {}, "preferences": [
                         {"kind": "exact", "engine_id": engine["id"], "voice_id": "absent-test-voice"}]},
                     {"id": "reading", "acss": {}, "preferences": [exact]}],
                 fallback_policy={"allow_same_language_on_requested_engine": True, "global_default": exact,
@@ -107,7 +109,7 @@ async def check(command, icon):
             routes = {b["resolution"]["logical_voice_id"]: b["resolution"]["realized"]
                       for b in registered["registration"]["bindings"]}
             assert routes == {"regional": expected, "reading": default["id"]}, routes
-            words = ["cafe\u0301 東京", "été α"]
+            words = ["cafe\u0301 東京", "été α north→south"]
             timeline = {"protocol_version": 3, "generation": 1, "dispatch_id": 17, "delivery_policy": "ordered",
                         "spans": [{"id": i, "text": word, "logical_voice_id": role}
                                   for i, (word, role) in enumerate(zip(words, ["regional", "reading"]), 1)]}
