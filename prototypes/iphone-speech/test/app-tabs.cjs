@@ -9,6 +9,7 @@ const path = require('node:path');
 const {transformFileSync} = require('@babel/core');
 const {create, act} = require('react-test-renderer');
 const React = createRequire(require.resolve('react-test-renderer'))('react');
+const {keyboardField} = require('./keyboard-field.cjs');
 
 // Load the production components and receiver. Only the phone and network
 // boundaries are stand-ins, so tab presses use React's real reconciliation.
@@ -36,14 +37,14 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     global.cancelAnimationFrame = clearImmediate;
     const profile = {host: '100.64.0.1', port: '8822', username: 'test', pin: 'ssh-ed25519 AA==', input};
     const logging = [], trace = {setSpeechLogging: on => logging.push(on), speechTrace: () => 'local speech sample'};
-    const levels = [], listeners = {};
+    const levels = [], listeners = {}, records = [], announcements = [];
     let clock = 50, trial;
     if (hasShiftReturnShortcut) {
       profile.worker = 'omnivox';
       profile.speechLoudness = '2';
       Object.assign(trace, {hasAudioRoutePicker: true, setSpeechLoudness: async db => levels.push(db), timingClock: () => clock,
         armKeyTiming: async (connection, serial) => { trial = {connection, serial}; },
-        open: async () => {}, close: async () => {}, record: async () => {},
+        open: async () => {}, close: async () => {}, record: async (_, lane, line) => { records.push([lane, line]); },
         addListener: (name, cb) => { listeners[name] = cb; return {remove() { delete listeners[name]; }}; }});
     }
     let savedHistory = ['Earlier. Could not reach WSL on SSH port 8822.'];
@@ -57,7 +58,7 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       'KeyboardAvoidingView', 'Switch', 'TextInput', 'StatusBar', 'Modal'].map(name => [name, name]));
     rn.StyleSheet = {create: value => value, absoluteFill: {position: 'absolute'}};
     rn.AppState = {currentState: 'active', addEventListener: () => ({remove() {}})};
-    rn.AccessibilityInfo = {sendAccessibilityEvent() {}};
+    rn.AccessibilityInfo = {sendAccessibilityEvent() {}, announceForAccessibility(text) { announcements.push(text); }};
     let App;
     const platform = {react: React, 'react-native': rn,
       expo: {registerRootComponent: root => { App = root; }, requireNativeView: (_, name) => name ?? 'NativeTerminal',
@@ -192,13 +193,18 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
     assert.deepEqual(logging, [false, true, false]);
     if (hasShiftReturnShortcut) {
       await select('Timing tests');
+      const shows = text => app.root.findAllByType('Text').some(el => el.props.children === text);
+      assert.ok(shows('No timing measurements yet.'));
       await act(() => button('Measure SSH key to speech').props.onPress());
       assert.ok(tabs()[1].props.accessibilityState.selected);
       assert.ok(app.root.findAllByType('Text').some(el => el.props.children === 'The connected Emacs frame does not offer the timing test.'));
       await act(() => receive({type: 'ready', id: 0, keyTiming: true}));
       await act(() => button('Measure SSH key to speech').props.onPress());
-      assert.ok(tabs()[0].props.accessibilityState.selected);
-      await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\r'}}));
+      assert.ok(tabs()[1].props.accessibilityState.selected);
+      assert.equal(terminal.props.keyboardEnabled, false);
+      const field = keyboardField(data => app.root.findByType('WebView').props.onMessage({nativeEvent: {data}}));
+      // WebKit can deliver Return as an inserted newline instead of a keydown.
+      await act(() => { field.field.value = '\n'; field.listeners.input({isComposing: false}); });
       assert.deepEqual(keys.at(-1), ['same-frame', '\x1b[57343;1u']);
       clock = 60;
       await act(() => {
@@ -206,11 +212,41 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
         listeners.keyTiming({...trial, event: 'buffer', time: 85, route: 'Bluetooth', outputLatencyMs: 42});
       });
       assert.ok(tabs()[1].props.accessibilityState.selected);
-      assert.ok(app.root.findAllByType('Text').some(el => el.props.children ===
-        'SSH. Key to returned speech 10 milliseconds. Key to first scheduled audio 35 milliseconds. Bluetooth output. iOS reports 42 milliseconds of output latency.'));
+      const sshResult = 'SSH. Key to returned speech 10 milliseconds. Key to first scheduled audio 35 milliseconds. Bluetooth output. iOS reports 42 milliseconds of output latency.';
+      assert.ok(shows(sshResult));
+      assert.equal(announcements.at(-1), sshResult);
       await act(() => button('Measure local key to speech').props.onPress());
-      await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\x1b'}}));
+      await act(() => { button('Start timing with this button').props.onPress(); });
+      await act(() => listeners.keyTiming({...trial, event: 'buffer', time: 92}));
+      const localResult = 'Local speech. Button to first scheduled audio 32 milliseconds.';
+      assert.ok(shows(localResult));
+      assert.ok(shows(sshResult));
+      assert.equal(announcements.at(-1), localResult);
+      await act(() => button('Read timing results aloud').props.onPress());
+      assert.deepEqual(records.at(-1), ['M', 'tts_say ' + sshResult + ' ' + localResult]);
+      await act(() => button('Measure local key to speech').props.onPress());
+      await act(() => { field.down('Escape', {}); });
       assert.ok(tabs()[1].props.accessibilityState.selected);
+      assert.ok(shows('Timing cancelled.'));
+      t.mock.timers.enable({apis: ['setTimeout']});
+      await act(() => button('Measure SSH key to speech').props.onPress());
+      await act(() => { t.mock.timers.tick(60000); });
+      assert.ok(shows('The test did not receive Return or a button press. Choose a measurement to try again.'));
+      assert.ok(shows(sshResult));
+      assert.ok(shows(localResult));
+      assert.equal(app.root.findAllByType('WebView').length, 0);
+      t.mock.timers.reset();
+      await act(() => button('Measure local key to speech').props.onPress());
+      await select('Terminal');
+      await select('Diagnostics');
+      assert.ok(shows('Timing cancelled.'));
+      assert.ok(shows(sshResult));
+      assert.ok(shows(localResult));
+      assert.equal(app.root.findAllByType('WebView').length, 0);
+      await act(() => button('Measure local key to speech').props.onPress());
+      await act(() => { field.down('Enter', {code: 'Enter'}); });
+      await act(() => listeners.keyTiming({...trial, event: 'speech', time: 87}));
+      assert.ok(shows('Local speech. Key to speech start callback 27 milliseconds.'));
       assert.deepEqual(keys.at(-1), ['same-frame', '\x1b[57343;1u']);
       await select('Terminal');
       const link = 'https://example.org/a%20b#c';

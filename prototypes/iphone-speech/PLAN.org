@@ -124,9 +124,11 @@ supplies from word starts the phone measures.
    punctuation and speech rate. Compare reading =aA_b[2]= as a line and
    moving over its characters. After a pause the phonetic word should
    reach the frame that moved, and rapid movement should cancel the old one.
-5. *Audio timing and interruption.* Compare “Measure SSH key to speech”
-   and “Measure local key to speech” in Diagnostics. Both start when the
-   phone keyboard field receives Return. The SSH test also reports arrival of
+5. *Audio timing and interruption.* Compare the [[file:README.org::*Use the bottom tabs][SSH and local timing tests]]
+   in Diagnostics. Use the same trigger and output for each comparison.
+   Build 10 starts with Return in the phone keyboard field. The next version
+   also accepts a button press and retains each result for spoken review.
+   The SSH test also reports arrival of
    the matching speech record. The audio result uses the direct-speech start
    callback or the first buffer scheduled by the native mixer. The tests use
    a fixed sample and work with speech logging off.

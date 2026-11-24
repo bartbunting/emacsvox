@@ -464,6 +464,10 @@ function createReceiver({ speech, cuePlayer, visualLinePlayer, tonePlayer, notif
       return wire.prepareTiming(local);
     },
     cancelKeyTiming: () => wire?.cancelTiming(),
+    readTimingResults(text) {
+      if (!wire || !ready) return playback('Connect to read the timing results aloud.');
+      wire.record('M tts_say ' + text.replace(/[\r\n]+/g, ' '), false);
+    },
     testMarkers: () => localWireTest('markers'), lastTiming: () => localWireTest('last-timing'), sendSpeechTrace,
     testVoice: () => testVoice(), testMix: () => testVoice(true), testCue: () => localWireTest('accent') || playCue(openObjectCue),
     testVisualLine: () => localWireTest('chime') || playCue(visualLineCue) };

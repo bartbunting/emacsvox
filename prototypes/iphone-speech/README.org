@@ -602,15 +602,29 @@ normal foreground reconnection. Desktop frames use their own browser, and
 explicit Emacs URL handlers keep their priority. A WSL web service needs
 an address reachable from the phone, such as its Tailscale address.
 
-In Diagnostics, open Timing tests and choose “Measure SSH key to speech”.
-Press Return in the Emacs keyboard field. The result gives
-milliseconds from receipt of that key to the returning speech record and
-to the first scheduled audio buffer or speech-start callback. “Measure
-local key to speech” plays the same sample on the phone. In build 10
-a scheduled buffer also reports its output type and,
-when available, the latency iOS reports for that route. These times
-are measured before you hear the sound. The tests preserve your buffer
-and work with speech logging off. [[https://developer.apple.com/documentation/avfaudio/avaudiosession/outputlatency][Apple's output latency reference]].
+In build 10, open Diagnostics, expand Timing tests and choose a key-to-speech
+test. When Terminal opens, double-tap the Emacs keyboard text field. Press
+plain Return on the external keyboard and wait for Diagnostics to reopen.
+The latest result or error follows “Measure local key to speech”. VoiceOver
+announces it when VoiceOver speech is on. Switching tabs yourself while the
+test is waiting cancels it. If Return misses the field, this build can wait
+without producing a result.
+
+In the next app version, both tests stay in Diagnostics. Under Timing tests,
+choose “Measure SSH key to speech” or “Measure local key to speech”. Press
+Return in the Emacs keyboard field. You can also double-tap “Start timing
+with this button”. The result says “Key” or “Button” according to how you
+started. The latest successful SSH and local measurements appear directly
+under the Timing tests heading while the session stays open. Activate “Read
+timing results aloud” to hear them in the phone’s Emacsvox voice, including
+when VoiceOver speech is muted.
+
+Both tests report the time to the first scheduled audio buffer or speech-start
+callback. SSH also reports when the matching speech returned from Emacs.
+For a scheduled buffer, build 10 and later identify the output and report its
+latency when iOS supplies it. These measurements end before you hear the sound.
+The tests preserve your buffer and work with speech logging off.
+[[https://developer.apple.com/documentation/avfaudio/avaudiosession/outputlatency][Apple's output latency reference]].
 
 For a listening comparison, run each test twice on the built-in speaker,
 then on your headphones. In a buffer with two long lines, press =C-n= again

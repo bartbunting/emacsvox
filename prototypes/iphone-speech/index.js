@@ -127,8 +127,9 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
   const [keyboard, setKeyboard] = useState(null);
   const [screen, setScreen] = useState('');
   const [timing, setTiming] = useState('');
+  const [timingResults, setTimingResults] = useState({});
+  const [timingPhase, setTimingPhase] = useState('idle');
   const timingTrial = useRef(null);
-  const [timingPrompt, setTimingPrompt] = useState('');
   const [trace, setTrace] = useState('');
   useEffect(() => { if (settings.logSpeech !== 'yes' || tab !== 'Diagnostics') setTrace(''); }, [settings.logSpeech, tab]);
   const sshMode = Boolean(ssh) && settings.transport === 'ssh';
@@ -232,50 +233,78 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
       receiver.connect();
     }
   }
-  const useField = sshMode && offer && (settings.input === 'field' || Boolean(timingPrompt));
+  const useField = sshMode && offer && settings.input === 'field';
   const keyboardFrame = sshMode && offer && keyboard?.frame === offer.frame ? offer.frame : null;
   const canFocus = foreground && terminalTab && !reviewOpen && !browserOpen;
-  function cancelTrial() {
+  function cancelTrial(message) {
+    if (timingTrial.current && message) setTiming(message);
+    clearTimeout(timingTrial.current?.inputTimer);
     timingTrial.current = null;
     receiver.cancelKeyTiming();
-    setTimingPrompt('');
+    setTimingPhase('idle');
   }
   useEffect(() => {
-    if (!foreground || !keyboardFrame || reviewOpen) cancelTrial();
-    return () => { timingTrial.current = null; receiver.cancelKeyTiming(); };
-  }, [foreground, keyboardFrame, receiver, reviewOpen]);
-  function finishTrial(trial, message) {
+    setTimingPhase('idle');
+    setTiming('');
+    return () => {
+      clearTimeout(timingTrial.current?.inputTimer);
+      timingTrial.current = null;
+      receiver.cancelKeyTiming();
+    };
+  }, [receiver]);
+  useEffect(() => {
+    const trial = timingTrial.current;
+    if (trial && (!foreground || trial.frame !== keyboardFrame || tab !== 'Diagnostics' || diagnosticSection !== 'Timing tests')) {
+      cancelTrial('Timing cancelled.');
+    }
+  }, [foreground, keyboardFrame, tab, diagnosticSection]);
+  function finishTrial(trial, message, measured = false) {
     if (timingTrial.current !== trial) return;
     cancelTrial();
-    setTiming(message);
-    setTab('Diagnostics');
+    if (measured) setTimingResults(previous => ({...previous, [trial.local ? 'local' : 'ssh']: message}));
+    setTiming(measured ? '' : message);
     AccessibilityInfo.announceForAccessibility?.(message);
   }
   async function armTiming(local) {
     cancelTrial();
     const trial = {local, frame: keyboardFrame};
     timingTrial.current = trial;
+    setTimingPhase('preparing');
+    setTiming('Preparing the timing test.');
+    trial.inputTimer = setTimeout(() => finishTrial(trial, trial.run
+      ? 'The test did not receive Return or a button press. Choose a measurement to try again.'
+      : 'The phone could not prepare the timing test. Choose a measurement to try again.'), 60000);
     try {
       trial.run = await receiver.prepareKeyTiming(trial.frame, local);
       if (timingTrial.current !== trial) return;
-      const prompt = 'Press Return on the external keyboard to time ' + (local ? 'local speech' : 'speech over SSH') +
-        '. Escape cancels.';
-      setTimingPrompt(prompt);
-      setTab('Terminal');
+      const prompt = 'To time ' + (local ? 'local speech' : 'speech over SSH') +
+        ', press Return in Emacs keyboard or activate Start timing with this button. Escape cancels.';
+      setTiming(prompt);
+      setTimingPhase('armed');
       AccessibilityInfo.announceForAccessibility?.(prompt);
     } catch (error) { finishTrial(trial, error.message); }
   }
-  async function timingKey(trial, text) {
-    if (text === '\x1b') return finishTrial(trial, 'Timing cancelled.');
-    if (text !== '\r' || trial.waiting || !trial.run) return;
+  function timingKey(text) {
+    const trial = timingTrial.current;
+    if (!trial) return;
+    if (text === '\x1b') finishTrial(trial, 'Timing cancelled.');
+    else if (text === '\r' || text === '\n' || text === '\r\n') void startTiming('Key');
+  }
+  async function startTiming(origin) {
+    const trial = timingTrial.current;
+    if (!trial?.run || trial.waiting) return;
     trial.waiting = true;
+    clearTimeout(trial.inputTimer);
     try {
-      const result = await trial.run(bytes => terminalRef.current.sendKeys(trial.frame, bytes));
-      const route = trial.local ? 'Local speech. ' : 'SSH. Key to returned speech ' + result.returned + ' milliseconds. ';
+      const measurement = trial.run(bytes => terminalRef.current.sendKeys(trial.frame, bytes));
+      setTimingPhase('measuring');
+      setTiming('Waiting for the speech sample.');
+      const result = await measurement;
+      const route = trial.local ? 'Local speech. ' : 'SSH. ' + origin + ' to returned speech ' + result.returned + ' milliseconds. ';
       const output = result.route ? ' ' + result.route + ' output.' : '';
       const latency = result.outputLatencyMs == null ? '' : ' iOS reports ' + result.outputLatencyMs + ' milliseconds of output latency.';
-      finishTrial(trial, route + 'Key to ' + (result.event === 'buffer' ? 'first scheduled audio' : 'speech start callback') +
-        ' ' + result.audio + ' milliseconds.' + output + latency);
+      finishTrial(trial, route + origin + ' to ' + (result.event === 'buffer' ? 'first scheduled audio' : 'speech start callback') +
+        ' ' + result.audio + ' milliseconds.' + output + latency, true);
     } catch (error) { finishTrial(trial, error.message); }
   }
   useEffect(() => {
@@ -296,13 +325,11 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
       </View>
       {sshMode && offer && !useField &&
         <Action title="Focus Emacs terminal" onPress={() => terminalRef.current?.focusKeyboard()} />}
-      {timingPrompt ? <Text style={styles.status}>{timingPrompt}</Text> : null}
       {terminalTab && !browserOpen && ((useField && keyboardFrame) || keyboard?.sendKeys) &&
         <EmacsKeyboard key={'keyboard-' + (keyboardFrame ?? 'relay') + settings.controlOption + settings.commandHyper} canFocus={canFocus}
           controlOption={settings.controlOption === 'emacs'} commandHyper={Boolean(useField && settings.commandHyper === 'yes')}
           onKeys={text => {
-            if (timingTrial.current) void timingKey(timingTrial.current, text);
-            else if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
+            if (useField) terminalRef.current?.sendKeys(keyboardFrame, text);
             else keyboard?.sendKeys(text);
           }} />}
       {sshMode && offer && <View key={offer.frame} collapsable={false} accessibilityElementsHidden={Boolean(useField)}>
@@ -325,7 +352,7 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
       {voice ? <Text style={styles.status}>{voice}</Text> : null}
       {native && <Text style={styles.status}>{useWire ? 'Omnivox on iPhone' : mixed ? 'Native mixer' : 'Direct speech'}</Text>}
       <Action title="Test iPhone Voice" disabled={!prepared} onPress={receiver.testVoice} />
-      <Action title="Stop Speech" onPress={receiver.stop} />
+      <Action title="Stop Speech" onPress={() => { cancelTrial('Timing cancelled.'); receiver.stop(); }} />
       {playback ? <Text style={styles.status}>{playback}</Text> : null}
       {sshMode && history.length > 0 && <Section title="Connection history"
         hint="Review the last six connection results saved on this iPhone, most recent first."
@@ -342,13 +369,23 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
       </Section>
       {useWire && <Section title="Timing tests" hint="Check cue placement and compare SSH and local key latency."
         selected={diagnosticSection} select={setDiagnosticSection}>
-        <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />
-        {nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
         {nativeWire?.armKeyTiming && <>
+          {!timingResults.ssh && !timingResults.local && <Text style={styles.status}>No timing measurements yet.</Text>}
+          {timingResults.ssh && <Text style={styles.status}>{timingResults.ssh}</Text>}
+          {timingResults.local && <Text style={styles.status}>{timingResults.local}</Text>}
+          {(timingResults.ssh || timingResults.local) && <Action title="Read timing results aloud"
+            disabled={!keyboardFrame || timingPhase !== 'idle'} onPress={() =>
+              receiver.readTimingResults([timingResults.ssh, timingResults.local].filter(Boolean).join(' '))} />}
           <Action title="Measure SSH key to speech" disabled={!keyboardFrame} onPress={() => armTiming(false)} />
           <Action title="Measure local key to speech" disabled={!keyboardFrame} onPress={() => armTiming(true)} />
         </>}
         {timing ? <Text style={styles.status}>{timing}</Text> : null}
+        {timingPhase === 'armed' && <>
+          <Action title="Start timing with this button" onPress={() => { void startTiming('Button'); }} />
+          <EmacsKeyboard canFocus={foreground} onKeys={timingKey} />
+        </>}
+        <Action title="Test timing inside TestCase" disabled={!activeSession} onPress={receiver.testMarkers} />
+        {nativeWire?.speechTrace && <Action title="Last reading’s cue timing" disabled={!activeSession} onPress={receiver.lastTiming} />}
       </Section>}
       {nativeWire?.speechTrace && settings.logSpeech === 'yes' && <Section title="Speech trace"
         hint="Read the local recording log or send it to your WSL relay." selected={diagnosticSection} select={setDiagnosticSection}>
@@ -371,7 +408,7 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
             save={() => { save(draft); setTab('Terminal'); }} />}
         </View>}
       </View>
-      <TabBar selected={tab} onSelect={next => { cancelTrial(); setTab(next); }} />
+      <TabBar selected={tab} onSelect={next => { if (next !== tab) cancelTrial('Timing cancelled.'); setTab(next); }} />
     </SafeAreaView>
     {reviewOpen && offer && <TerminalReview key={offer.frame} terminalRef={terminalRef} frame={offer.frame}
       close={() => setReviewOpen(false)} />}
