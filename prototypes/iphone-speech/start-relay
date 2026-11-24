@@ -8,11 +8,11 @@ mode=--go
 trial=
 standalone=
 existing=
-conversation=
+initial_buffer=()
 if [[ ${1:-} == --existing ]]; then
-    [[ $# == 4 && -S $3 ]] || { echo 'Usage: ./start-relay --existing IPHONE_IP EMACS_SOCKET BUFFER_NAME' >&2; exit 2; }
+    [[ $# -ge 3 && $# -le 4 && -S $3 ]] || { echo 'Usage: ./start-relay --existing IPHONE_IP EMACS_SOCKET [BUFFER_NAME]' >&2; exit 2; }
     existing=$(realpath "$3")
-    conversation=$4
+    initial_buffer=("${@:4}")
     client=${EMACSCLIENT:-$(command -v emacsclient)}
     standalone=1
     trial=routed
@@ -91,7 +91,7 @@ children=()
 cleanup() {
     trap - EXIT INT TERM
     if [[ -n $existing && -L $session/shared ]]; then
-        ./existing-session release "$client" "$existing" "$session" "$conversation" || true
+        ./existing-session release "$client" "$existing" "$session" || true
     fi
     if [[ -n $trial && -z $existing ]]; then tmux -S "$session/tmux.sock" kill-server 2>/dev/null || true; fi
     for child in "${children[@]}"; do kill "$child" 2>/dev/null || true; done
@@ -116,7 +116,7 @@ if [[ -n $trial ]]; then
     done
     [[ -S $socket ]] || { echo 'Keyboard relay failed to start.' >&2; exit 1; }
     if [[ -n $existing ]]; then
-        ./existing-session attach "$client" "$existing" "$session" "$conversation"
+        ./existing-session attach "$client" "$existing" "$session" "${initial_buffer[@]}"
     elif [[ $trial != keyboard ]]; then
         if [[ -z $standalone ]]; then
             tmux -S "$session/tmux.sock" -f /dev/null start-server \; set-option -s exit-empty off 9>&-

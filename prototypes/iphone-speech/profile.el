@@ -16,6 +16,8 @@
 ;;; Code:
 
 (setq user-emacs-directory (file-name-as-directory (getenv "EMACSVOX_PHONE_PROFILE"))
+      ;; This profile and its cache are discarded when the trial ends.
+      native-comp-jit-compilation nil
       server-name (file-name-nondirectory (directory-file-name user-emacs-directory))
       package-user-dir (expand-file-name "~/.emacs.d/elpa")
       emacsvox-use-icons nil

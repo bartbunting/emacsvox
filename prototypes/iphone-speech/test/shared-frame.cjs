@@ -343,9 +343,9 @@ async function main() {
       // Exercise the same opt-in attach and release used with an existing server.
       await observe("(remove-hook 'server-after-make-frame-hook #'iphone-shared-show-draft)");
       const pairDir = fs.mkdtempSync(path.join(dir, 'pair-'));
-      const existing = action => run(path.resolve(__dirname, '../existing-session'),
-        [action, client, path.join(dir, 'shared'), pairDir, 'Shared Codex sample']);
-      await existing('attach');
+      const existing = (action, ...buffer) => run(path.resolve(__dirname, '../existing-session'),
+        [action, client, path.join(dir, 'shared'), pairDir, ...buffer]);
+      await existing('attach', 'Shared Codex sample');
       const sshRelay = createRelay('127.0.0.1', '127.0.0.1', {sharedDirectory: pairDir, routed: true, sshOnly: true, traceDirectory: pairDir});
       sshRelay.httpServer.listen(0, '127.0.0.1');
       await once(sshRelay.httpServer, 'listening');
@@ -1129,6 +1129,36 @@ async function main() {
           console.log('Passed phone voice browsing, preview, Apply, role assignment, palettes and direct voice commands. Control+n used the reading, bold and reading voices within one line.');
         }
         console.log('Passed native SSH navigation, protected typing echo and reconnect to the same buffer and point.');
+        const defaultBuffer = 'Default terminal buffer';
+        const namedBuffer = 'Notes for the phone';
+        await observe(`(progn
+          (with-current-buffer (get-buffer-create "${namedBuffer}")
+            (insert "First row\nSecond row\n") (goto-char (point-min)))
+          (add-hook 'server-after-make-frame-hook
+                    (lambda () (switch-to-buffer (get-buffer-create "${defaultBuffer}"))) -90))`);
+        for (const initial of [namedBuffer, null]) {
+          await existing('release');
+          fs.unlinkSync(path.join(pairDir, 'shared'));
+          await existing('attach', ...(initial ? [initial] : []));
+          const lines = await attachSSH();
+          const current = () => observe(`(buffer-name (window-buffer ${phoneWindow}))`);
+          assert.equal(await current(), JSON.stringify(initial ?? defaultBuffer));
+          assert.equal(await observe(`(frame-parameter (window-frame ${phoneWindow}) 'emacsvox-conversation)`), 'nil');
+          if (initial) {
+            sshKeys('\x0e');
+            await until('ordinary buffer speaks over SSH', () => lines.some(p => p.type === 'speak' && p.text.includes('Second row')));
+            await closeSSH();
+            await attachSSH();
+            assert.equal(await current(), JSON.stringify(initial));
+            assert.equal(await observe(`(window-point ${phoneWindow})`), '11');
+            await closeSSH();
+            await observe(`(kill-buffer "${initial}")`);
+            await attachSSH();
+            assert.equal(await current(), JSON.stringify(defaultBuffer));
+          }
+          await closeSSH();
+        }
+        console.log('Passed named and default initial buffers, ordinary line speech, resume and killed-buffer fallback.');
       } finally {
         if (connection?.exitCode === null) connection.kill();
         peer.stdin.end();

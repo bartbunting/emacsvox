@@ -40,6 +40,7 @@
   (expand-file-name "assets/visual-line.wav" (file-name-directory load-file-name)))
 (defvar iphone-frame-speech--directory nil)
 (defvar iphone-frame-speech--entry-buffer nil)
+(defvar iphone-frame-speech--subscription nil)
 (defvar iphone-frame-speech--last-terminal nil)
 (defvar iphone-frame-speech--position (make-marker))
 (defun iphone-frame-speech--command-worker ()
@@ -52,11 +53,14 @@
   (apply #'emacsvox-frame-speech-call (or (process-get main 'iphone-endpoint) 'disconnected)
          function args))
 
+(defun iphone-frame-speech--current-conversation ()
+  (cond ((derived-mode-p 'agent-shell-mode) (current-buffer))
+        ((derived-mode-p 'agent-shell-viewport-view-mode 'agent-shell-viewport-edit-mode)
+         (emacsvox-agent-shell--viewport-session-buffer (current-buffer)))))
+
 (defun iphone-frame-speech--post-command ()
   (when (frame-parameter nil 'emacsvox-phone-speaker)
-    (when-let* ((shell (cond ((derived-mode-p 'agent-shell-mode) (current-buffer))
-                             ((derived-mode-p 'agent-shell-viewport-view-mode 'agent-shell-viewport-edit-mode)
-                              (emacsvox-agent-shell--viewport-session-buffer (current-buffer))))))
+    (when-let* ((shell (iphone-frame-speech--current-conversation)))
       (iphone-frame-speech-subscribe shell))
     (iphone-frame-speech--remember (selected-frame))))
 
@@ -184,21 +188,24 @@
       (unless (window-minibuffer-p window)
         (set-marker iphone-frame-speech--position (window-point window) (window-buffer window))))))
 
-(defun iphone-frame-speech--open-terminal-buffer (conversation)
+(defun iphone-frame-speech--open-terminal-buffer (initial)
   ;; Each opted-in relay serves one phone. A late detach from a replaced
   ;; frame must not overwrite the position on its successor.
   (iphone-frame-speech--remember iphone-frame-speech--last-terminal)
   (setq iphone-frame-speech--last-terminal (selected-frame))
-  (when (buffer-live-p conversation) (iphone-frame-speech-subscribe conversation))
-  (if-let* ((saved (marker-buffer iphone-frame-speech--position)))
-      (progn
-        (switch-to-buffer saved)
-        (goto-char iphone-frame-speech--position)
-        (when (derived-mode-p 'iphone-voices-mode)
-          (iphone-voices--resume (frame-parameter nil 'emacsvox-phone-speaker) conversation))
-        t)
-    (when (buffer-live-p conversation) (switch-to-buffer conversation))
-    nil))
+  (let ((saved (marker-buffer iphone-frame-speech--position)))
+    (cond (saved
+           (switch-to-buffer saved)
+           (goto-char iphone-frame-speech--position)
+           (when (derived-mode-p 'iphone-voices-mode)
+             (iphone-voices--resume (frame-parameter nil 'emacsvox-phone-speaker)
+                                    (and (buffer-live-p initial) initial))))
+          ((buffer-live-p initial) (switch-to-buffer initial)))
+    (when-let* ((shell (or (iphone-frame-speech--current-conversation)
+                           (and (buffer-live-p iphone-frame-speech--subscription)
+                                iphone-frame-speech--subscription))))
+      (iphone-frame-speech-subscribe shell))
+    (and saved t)))
 
 (defun iphone-frame-speech--detach (frame)
   (when-let* ((owner (frame-parameter frame 'emacsvox-phone-speaker)))
@@ -229,7 +236,7 @@
       (when (buffer-live-p old)
         (emacsvox-agent-shell-unsubscribe-frame old frame))
       (when (or iphone-frame-speech--directory (frame-parameter frame 'emacsvox-native-ssh))
-        (setq iphone-frame-speech--entry-buffer buffer))
+        (setq iphone-frame-speech--subscription buffer))
       (set-frame-parameter frame 'emacsvox-conversation buffer)
       (emacsvox-agent-shell-subscribe-frame buffer frame)
       (when (process-get owner 'iphone-synced)
@@ -398,18 +405,18 @@ Terminfo can name Shift+F6 as F18, which has a separate Emacs binding."
       (iphone-frame-speech--open-terminal-buffer iphone-frame-speech--entry-buffer)
       (iphone-frame-speech--packet (frame-parameter nil 'emacsvox-phone-speaker) "attached" id))))
 
-(defun iphone-frame-speech-use-server (directory name)
-  "Attach an opt-in relay in DIRECTORY to Agent Shell buffer NAME."
+(defun iphone-frame-speech-use-server (directory &optional name)
+  "Attach the phone relay in DIRECTORY. Optionally start in live buffer NAME."
   (when iphone-frame-speech--directory (user-error "A phone relay is already attached"))
   (unless (and (process-live-p tts-speaker-process) (fboundp 'tts--retire-process)
                (fboundp 'emacsvox-aural-call-with-submission))
     (user-error "Start Emacsvox in this Emacs server first"))
-  (let ((buffer (get-buffer name)))
-    (unless (and buffer (with-current-buffer buffer (derived-mode-p 'agent-shell-mode)))
-      (user-error "Choose an existing Agent Shell conversation buffer"))
+  (let ((buffer (and name (get-buffer name))))
+    (when (and name (null buffer))
+      (user-error "No live Emacs buffer named %s" name))
     (set-marker iphone-frame-speech--position nil)
     (setq iphone-frame-speech--directory directory iphone-frame-speech--entry-buffer buffer
-          iphone-frame-speech--last-terminal nil))
+          iphone-frame-speech--subscription nil iphone-frame-speech--last-terminal nil))
   (iphone-frame-speech-enable)
   (add-hook 'server-after-make-frame-hook #'iphone-frame-speech--native-frame)
   (expand-file-name "emacsclient" invocation-directory))
@@ -439,7 +446,7 @@ Terminfo can name Shift+F6 as F18, which has a separate Emacs binding."
     (advice-remove 'sox-chime #'iphone-frame-speech--chime)
     (set-marker iphone-frame-speech--position nil)
     (setq iphone-frame-speech--directory nil iphone-frame-speech--entry-buffer nil
-          iphone-frame-speech--last-terminal nil))
+          iphone-frame-speech--subscription nil iphone-frame-speech--last-terminal nil))
   t)
 
 (defun iphone-frame-speech-enable ()

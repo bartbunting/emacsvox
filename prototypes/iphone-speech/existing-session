@@ -7,14 +7,14 @@ from pathlib import Path
 import subprocess
 import sys
 
-action, client, socket, directory, buffer = sys.argv[1:]
+action, client, socket, directory, *initial = sys.argv[1:]
 path = Path(directory)
 quote = lambda s: json.dumps(str(s), ensure_ascii=False)
 if action == "attach":
     path.joinpath("shared").symlink_to(Path(socket).resolve(strict=True))
     source = Path(__file__).resolve().with_name("frame-speech.el")
     form = (f"(progn (load {quote(source)} nil t t) "
-            f"(iphone-frame-speech-use-server {quote(path)} {quote(buffer)}))")
+            f"(iphone-frame-speech-use-server {quote(path)} {quote(initial[0]) if initial else 'nil'}))")
 elif action == "release":
     form = f"(when (fboundp 'iphone-frame-speech-release-server) (iphone-frame-speech-release-server {quote(path)}))"
 else:
