@@ -21,7 +21,6 @@ public final class IphoneOmnivoxModule: Module {
     Name("IphoneOmnivox")
     Events("wireReply", "keyTiming")
     Constant("hasAudioRoutePicker") { true }
-    View(PhoneAudioRouteView.self) { ViewName("PhoneAudioRouteView") }
     Function("timingClock") { wireUptimeMilliseconds() }
     AsyncFunction("armKeyTiming") { (id: Int, serial: Int) in
       guard self.connection == id, let audio = self.mainAudio else { throw WireFailure.action }
@@ -35,6 +34,7 @@ public final class IphoneOmnivoxModule: Module {
       Events("onLevelChange")
       Prop("level") { (view: PhoneSpeechLoudnessView, db: Int) in view.setLevel(db) }
     }
+    View(PhoneAudioRouteView.self) { ViewName("PhoneAudioRouteView") }
     Function("setSpeechLogging") { (enabled: Bool) in self.trace.setEnabled(enabled) }
     Function("speechTrace") { self.trace.snapshot() }
     AsyncFunction("importCue") { (promise: Promise) in
