@@ -37,11 +37,15 @@ iPhone. With the Emacsvox question shortcut installed in WSL, =C-c q=
 jumped to the unanswered question and read it on the phone. On the external keyboard,
 Command+q returned to the Home Screen. To finish the cellular recovery check,
 keep Wi-Fi off, disconnect and connect again. Press =C-n= and listen for
-the next line in the same conversation. Check the
+the next line in the same conversation. With the updated WSL keyboard
+decoder, use =C-h k= followed by Shift+F6 to check that Emacs reports
+=S-<f6>=. Check the
 [[file:README.org::*Use the bottom tabs][shorter Settings and Diagnostics tabs]] with VoiceOver. Use =C-h k= to
 check =M-:= and =C-S-k=. Open a link and activate Done to return to the
-same terminal. Check keyboard echo with VoiceOver speech on. A Flyspell
-tone heard on the laptop still needs a reproduction on the phone frame.
+same terminal. Check keyboard echo with VoiceOver speech on. In an
+isolated SSH frame, enabling Flyspell sent no tone or bell. Reading a
+misspelled word sent its 225 Hz tone to the phone worker. The occasional
+laptop tone in the everyday session still needs a reproduction.
 
 Build 8 was built from
 Emacsvox =813b6c176= and Omnivox =7bbd0156=. The arm64 executable,
@@ -386,8 +390,9 @@ native mixer in a signed build that includes the recording.
 The paired prototype now runs the Omnivox worker and Swift scheduling
 tests in WSL. Follow [[file:OMNIVOX.org][Omnivox on iPhone]] to exercise the isolated
 SSH connection, phone voice controls, bundled or imported recordings
-and standalone tone placement. The newer rich-tone and voice-choice
-timelines await a signed build for device qualification.
+and standalone tone placement. Build 9 includes the rich-tone and
+voice-choice timelines. The [[file:OMNIVOX.org::*Desktop compatibility in build 9][desktop compatibility comparison]] lists the
+remaining protocol differences, voice controls and listening checks.
 
 The [[file:OMNIVOX.org::*Implementation order][implementation slices]] specify the expected playback and control
 behaviour, automated proof and separate physical listening checks.

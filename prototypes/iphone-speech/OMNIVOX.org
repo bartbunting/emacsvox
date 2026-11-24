@@ -8,6 +8,45 @@ commands and cue identities. The phone synthesizes the speech and plays
 the audio locally. Pair your keyboard with the iPhone. The app reaches WSL
 over Tailscale.
 
+* Desktop compatibility in build 9
+
+Build 9 uses Omnivox =717a06a=. Its worker advertises 32 capabilities,
+all present in the running desktop worker. Both support timeline versions
+1 through 7, rich tones, recorded earcons, palette-aware letters, exact
+voice previews, per-choice tuning, punctuation profiles and tracked
+completion. Both use the Rust mixer for inserts, overlays, stereo
+placement, filters, chorus, echo and reverb. Apple supplies the phone's
+speech samples and timing information.
+
+The desktop advertises eleven more capabilities. They affect different
+parts of the experience.
+
+- *Legacy clients.* The phone implements queue, dispatch, Stop, letters,
+  tones and recordings. It does not advertise the complete =legacy_commands=
+  set or =emacsvox_tx=, which replaces a whole legacy command batch with
+  a newer one. Ordinary Emacsvox navigation uses the structured timeline.
+- *Languages and characters.* Phone palettes can choose among installed
+  Apple voices. The desktop also advertises =logical_voice_language_routing=
+  and =text_repertoire_routing_v1=. The latter allows Emacsvox to send
+  original Unicode text when every worker can route it to a suitable
+  engine. Mixed-language text and symbols are a useful next comparison.
+- *Engines and voices.* The desktop advertises =preferred_engine=,
+  =espeak_variants_v1=, =startup_engine_rescan=, =engine_recovery_probe=,
+  =engine_configuration_v1= and =voice_library_v1=. The phone currently
+  has one engine. Refreshing the voice browser enumerates its installed
+  Apple voices. A second on-device engine such as eSpeak NG is deferred.
+- *Audio outputs.* The desktop advertises =process_audio_routing=. The phone
+  plays through the active iOS audio route and keeps independent main
+  and notification speech lanes.
+
+For Reed and Flo, the phone implements rate, average pitch and volume.
+The Apple adapter has no native controls for pitch range, stress or
+richness. Shared effects such as reverb and high-pass and low-pass
+filters work on the synthesized audio. The remaining listening checks
+are the position of a cue inside a word when Reed omits a marker,
+indentation over the first word, and the time from a keypress to audible
+speech and interruption on speaker and headphones.
+
 * What exists
 
 Signed build 3 connects the external keyboard over SSH and speaks Emacs
@@ -67,7 +106,7 @@ comparison covers the speech samples and the echo tail. On the phone,
 listen for the level of letters relative to ordinary reading and for the
 change of voice within a styled line.
 
-In the next signed version, open Settings and focus “Speech loudness”.
+In build 8 or later, open Settings and focus “Speech loudness”.
 Swipe up or down with VoiceOver, or drag the slider. Choose zero for the
 desktop Omnivox level or add up to six decibels. Activate “Save settings”
 to use that level for the next reading and future connections. The native
@@ -211,8 +250,10 @@ voice availability and keyboard focus. Standalone =emacsvox_tone= version
 1 supports insert and overlay. Build 5 adds timeline version 3 and playback
 marker version 2. Files, silence, tone placement, stereo pan, filters and
 effect tails use the desktop renderer. The worker reports resolved positions
-and reached semantic events before tracked completion. Timeline versions 6 and 7 add richer tone shapes. Those versions and
-engine-specific voice parameters remain separate milestones.
+and reached semantic events before tracked completion. Build 9 includes
+the richer tone shapes in versions 6 and 7. See
+[[*Desktop compatibility in build 9][Desktop compatibility in build 9]] for the Apple voice controls and
+remaining device checks.
 
 
 Use Omnivox =3ed4e8d= as the first reproducible desktop reference. Update
