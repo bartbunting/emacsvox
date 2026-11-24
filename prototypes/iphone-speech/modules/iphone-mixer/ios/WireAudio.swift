@@ -116,11 +116,12 @@ private final class EffectStream {
 }
 
 final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
-  private let synth = AVSpeechSynthesizer(), engine = AVAudioEngine()
+  private var synth = AVSpeechSynthesizer()
+  private let engine = AVAudioEngine()
   private let resources: WireResources
   private let trace: WireSpeechTrace, lane: String
   private let preparation = DispatchQueue(label: "org.emacsvox.iphone.resource-preparation", qos: .userInitiated)
-  private let bufferSynth = AVSpeechSynthesizer()
+  private var bufferSynth = AVSpeechSynthesizer()
   private let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
   private lazy var scheduleGain = engine.mainMixerNode.auAudioUnit.scheduleParameterBlock
   private var fading: [ObjectIdentifier: AVAudioPlayerNode] = [:]
@@ -129,6 +130,9 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private let tones: EffectStream, sounds: EffectStream, inserts: EffectStream
   private var speech: AVSpeechUtterance?, spoken: ((Bool) -> Void)?, pause: DispatchWorkItem?
   var interrupted: (() -> Void)?
+  var beginSynthesis: () -> WireSynthesisAttempt? = { nil }
+  private var directAttempt: WireSynthesisAttempt?
+  private var directStartTimeout: DispatchWorkItem?
   var speechLoudness: () -> UInt8 = { 0 }
   var resolvedMarks: ((WireTimingReport) -> Void)?
   var keyTimingSample: Int?
@@ -223,7 +227,11 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     let key = ObjectIdentifier(node)
     node.volume = 1
     let sample = items.count == 1 ? matchingSample(items.first?.text) : nil
-    let mixer = WireMixer(format: format, synth: bufferSynth, trace: trace, lane: lane, loudness: speechLoudness(),
+    let mixer = WireMixer(format: format, source: { [weak self] in
+      guard let self, let attempt = self.beginSynthesis() else { return nil }
+      if attempt.recovery { self.bufferSynth = AVSpeechSynthesizer() }
+      return (attempt, self.bufferSynth)
+    }, trace: trace, lane: lane, loudness: speechLoudness(),
                           resolvedMarks: resolvedMarks, presentation: presentation, voices: voices, reached: reached)
     let playback = WirePlayback<AVAudioPCMBuffer>(items, speech: mixer.speech, flush: mixer.flush,
       enqueue: { [weak self] buffer, played in
@@ -284,10 +292,25 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
     switch item.kind {
     case .speech:
       guard !(item.text ?? "").isEmpty else { done(true); return }
-      guard let utterance = wireUtterance(item) else { done(false); return }
+      guard let utterance = wireUtterance(item), let attempt = beginSynthesis() else { done(false); return }
+      if attempt.recovery {
+        synth = AVSpeechSynthesizer()
+        synth.delegate = self
+        synth.usesApplicationAudioSession = false
+      }
+      directAttempt = attempt
       _ = trace.begin("\(lane) direct speech \(utterance.speechString.debugDescription)")
       speech = utterance
       spoken = done
+      let timeout = DispatchWorkItem { [weak self, weak utterance] in
+        guard let self, let utterance, self.speech === utterance else { return }
+        // With direct system playback a late start can also mean the output is busy.
+        self.directAttempt?.finish(OvSpeechCancelled)
+        self.synth.stopSpeaking(at: .immediate)
+        self.finish(utterance, played: false)
+      }
+      directStartTimeout = timeout
+      DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: timeout)
       synth.speak(utterance)
     case .silence:
       let task = DispatchWorkItem(block: { done(true) })
@@ -315,6 +338,10 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
       available.append(node)
     }
     playing.removeAll()
+    directStartTimeout?.cancel()
+    directStartTimeout = nil
+    directAttempt?.finish(OvSpeechCancelled)
+    directAttempt = nil
     speech = nil
     spoken = nil
     pause?.cancel()
@@ -326,6 +353,10 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   private func finish(_ utterance: AVSpeechUtterance, played: Bool) {
     DispatchQueue.main.async { [weak self] in
       guard let self, self.speech === utterance else { return }
+      self.directStartTimeout?.cancel()
+      self.directStartTimeout = nil
+      self.directAttempt?.finish(played ? OvSpeechSucceeded : OvSpeechCancelled)
+      self.directAttempt = nil
       self.speech = nil
       let done = self.spoken
       self.spoken = nil
@@ -335,8 +366,10 @@ final class WireAudio: NSObject, WireOutput, AVSpeechSynthesizerDelegate {
   func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
     let time = wireUptimeMilliseconds()
     DispatchQueue.main.async { [weak self] in
-      guard let self, self.speech === utterance, let serial = self.matchingSample(utterance.speechString) else { return }
-      self.reportSample(serial, "speech", time)
+      guard let self, self.speech === utterance else { return }
+      self.directStartTimeout?.cancel()
+      self.directStartTimeout = nil
+      if let serial = self.matchingSample(utterance.speechString) { self.reportSample(serial, "speech", time) }
     }
   }
   func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

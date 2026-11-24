@@ -120,6 +120,53 @@ final class TestOutput: WireOutput {
     precondition(reads == 5)
   }
 
+  static func checkSynthesisRecovery(voices: String, root: String) throws {
+    var reply = ""
+    let main = WireLane(TestOutput(root)) { reply = $0 }
+    let notify = WireLane(TestOutput(root)) { _ in }
+    for lane in [main, notify] { precondition(lane.setVoices(voices, preferred: "test-1")) }
+    func request(_ type: String, _ fields: [String: Any] = [:]) throws -> [String: Any] {
+      var data: [String: Any] = ["protocol_version": 1, "request_id": 51, "type": type]
+      data.merge(fields) { _, new in new }
+      let encoded = try JSONSerialization.data(withJSONObject: data).base64EncodedString()
+      try main.feed("omnivox_control {" + encoded + "}", muted: false)
+      let response = Data(base64Encoded: String(reply.split(separator: " ").last!))!
+      return try JSONSerialization.jsonObject(with: response) as! [String: Any]
+    }
+    func circuit() throws -> String {
+      let inventory = try request("inventory")
+      return (inventory["engine_runtime"] as! [[String: Any]])[0]["circuit"] as! String
+    }
+    func retry(_ id: String = "ios") throws -> String {
+      try request("request_engine_recovery_probe", ["engine_id": id])["type"] as! String
+    }
+    func expect(_ actual: String, _ expected: String) { precondition(actual == expected, actual) }
+    try expect(retry(), "error")
+    let failed = WireSynthesisAttempt(main.worker)!
+    precondition(!failed.recovery)
+    failed.finish(OvSpeechFailed)
+    failed.finish(OvSpeechCancelled)
+    try expect(circuit(), "cooldown")
+    precondition(WireSynthesisAttempt(main.worker) == nil)
+    WireSynthesisAttempt(notify.worker)!.finish(OvSpeechSucceeded)
+    try expect(retry("unknown"), "error")
+    try expect(retry(), "engine_recovery_probe_requested")
+    let probe = WireSynthesisAttempt(main.worker)!
+    precondition(probe.recovery && WireSynthesisAttempt(main.worker) == nil)
+    try expect(retry(), "error")
+    probe.finish(OvSpeechCancelled)
+    try expect(circuit(), "ready")
+    let next = WireSynthesisAttempt(main.worker)!
+    precondition(next.recovery)
+    next.finish(OvSpeechSucceeded)
+    try expect(circuit(), "closed")
+    let normal = WireSynthesisAttempt(main.worker)!
+    precondition(!normal.recovery)
+    normal.finish(OvSpeechCancelled)
+    try expect(circuit(), "closed")
+    print("A failed speech lane rejected new synthesis, stayed separate from notifications, and recovered after a cancelled probe.")
+  }
+
   static func main() throws {
     let output = TestOutput(CommandLine.arguments[1])
     let voices = #"[{"id":"test-1","name":"Fixture","language":"en-US","quality":"compact"},{"id":"test-2","name":"Fixture","language":"en-AU","quality":"enhanced"}]"#
@@ -133,6 +180,7 @@ final class TestOutput: WireOutput {
     func feed(_ line: String) throws { try lane.feed(line, muted: false) }
     if !interactive {
       try checkVoiceRefresh()
+      try checkSynthesisRecovery(voices: voices, root: CommandLine.arguments[1])
       let trace = WireSpeechTrace()
       var level = WireTraceLevel()
       [Float(1), -1, 0.5, -0.5].withUnsafeBufferPointer { level.observe($0) }

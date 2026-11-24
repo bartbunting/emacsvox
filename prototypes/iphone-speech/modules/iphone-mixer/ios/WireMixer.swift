@@ -9,7 +9,8 @@ final class WireMixer {
   typealias Packet = WirePlayback<AVAudioPCMBuffer>.Packet
   private let clock = ov_ios_mix_new()!, token = RenderToken()
   private let work = DispatchQueue(label: "org.emacsvox.iphone.presentation", qos: .userInitiated)
-  private let format: AVAudioFormat, synth: AVSpeechSynthesizer
+  private let format: AVAudioFormat
+  private let source: () -> (WireSynthesisAttempt, AVSpeechSynthesizer)?
   private let trace: WireSpeechTrace, lane: String
   private let resolvedMarks: ((WireTimingReport) -> Void)?
   private let reached: ((String) -> Void)?
@@ -22,6 +23,16 @@ final class WireMixer {
 
   private final class Capture {
     let ticket: WireSpeechTrace.Ticket?
+    let attempt: WireSynthesisAttempt, synth: AVSpeechSynthesizer
+    let expectsAudio: Bool
+    private let callbackLock = NSLock()
+    private var callbackSeen = false
+    func receivedCallback() { callbackLock.lock(); callbackSeen = true; callbackLock.unlock() }
+    var waitingForFirstCallback: Bool {
+      callbackLock.lock()
+      defer { callbackLock.unlock() }
+      return !callbackSeen
+    }
     var level = WireTraceLevel(), inputFrames = 0, inputBuffers = 0 // render queue
     var deadline = ProcessInfo.processInfo.systemUptime + 3   // main queue
     var inputFull = false                                     // main queue
@@ -31,14 +42,18 @@ final class WireMixer {
     var startMarker: String?                                  // render queue
     var marked: WireMarkedAudio?                              // render queue
     let audio: (Packet) -> Void, finished: (Bool) -> Void
-    init(_ ticket: WireSpeechTrace.Ticket?, _ audio: @escaping (Packet) -> Void, _ finished: @escaping (Bool) -> Void) {
+    init(_ ticket: WireSpeechTrace.Ticket?, _ source: (WireSynthesisAttempt, AVSpeechSynthesizer),
+         expectsAudio: Bool, _ audio: @escaping (Packet) -> Void, _ finished: @escaping (Bool) -> Void) {
+      (attempt, synth) = source
+      self.expectsAudio = expectsAudio
       self.ticket = ticket
       self.audio = audio
       self.finished = finished
     }
   }
 
-  init(format: AVAudioFormat, synth: AVSpeechSynthesizer, trace: WireSpeechTrace, lane: String, loudness: UInt8,
+  init(format: AVAudioFormat, source: @escaping () -> (WireSynthesisAttempt, AVSpeechSynthesizer)?,
+       trace: WireSpeechTrace, lane: String, loudness: UInt8,
        resolvedMarks: ((WireTimingReport) -> Void)?, presentation: WirePresentation? = nil, voices: [String: AVSpeechSynthesisVoice]? = nil, reached: ((String) -> Void)? = nil) {
     self.trace = trace
     self.lane = lane
@@ -47,7 +62,7 @@ final class WireMixer {
     if let voices { voiceLookup = { voices[$0] } }
     else { voiceLookup = { AVSpeechSynthesisVoice(identifier: $0) } }
     self.format = format
-    self.synth = synth
+    self.source = source
     self.resolvedMarks = resolvedMarks
     if let presentation { ov_ios_presentation_set_loudness(presentation.pointer, loudness) }
     else { ov_ios_mix_set_loudness(clock, loudness) }
@@ -58,9 +73,10 @@ final class WireMixer {
     markers.removeAll()
     ov_ios_cancel(token.pointer)
     wakeProducer()
-    if current != nil {
+    if let capture = current {
       current = nil
-      synth.stopSpeaking(at: .immediate)
+      capture.attempt.finish(OvSpeechCancelled)
+      capture.synth.stopSpeaking(at: .immediate)
     }
   }
 
@@ -102,11 +118,13 @@ final class WireMixer {
 
   func speech(_ cues: [WireItem], _ item: WireItem, _ audio: @escaping (Packet) -> Void,
               _ finished: @escaping (Bool) -> Void) {
-    guard item.unavailable != true else { finished(false); return }
+    guard item.unavailable != true, item.voice != nil else { finished(false); return }
     let bookmarks = WireBookmarks(item)
     guard presentation == nil || bookmarks != nil else { finished(false); return }
     let ticket = trace.begin("\(lane) \(presentation == nil ? "queued PCM" : "timeline PCM") voice \(item.voice ?? "") gain \(item.gain ?? 1) text \((item.text ?? "").debugDescription)")
-    let capture = Capture(ticket, audio, finished)
+    guard let native = source() else { finished(false); return }
+    let expectsAudio = item.text?.contains(where: { $0.isLetter || $0.isNumber }) == true
+    let capture = Capture(ticket, native, expectsAudio: expectsAudio, audio, finished)
     capture.startMarker = item.startMarker
     capture.marked = bookmarks.map { WireMarkedAudio(item, $0) }
     current = capture
@@ -134,6 +152,7 @@ final class WireMixer {
     capture.deadline = ProcessInfo.processInfo.systemUptime + 3
     let collect: AVSpeechSynthesizer.BufferCallback = { [weak self, weak capture] buffer in
       guard let self, let capture else { return }
+      capture.receivedCallback()
       let pcm = buffer as? AVAudioPCMBuffer
       let stride = Int(pcm?.format.streamDescription.pointee.mBytesPerFrame ?? 0)
       // Apple can deliver PCM on main. Leave that queue free for Stop.
@@ -161,9 +180,9 @@ final class WireMixer {
         }
       }
     }
-    guard let bookmarks, bookmarks.needsTiming else { synth.write(utterance, toBufferCallback: collect); return }
+    guard let bookmarks, bookmarks.needsTiming else { capture.synth.write(utterance, toBufferCallback: collect); return }
     let useWords = bookmarks.acceptsWordRanges(in: utterance.speechString)
-    synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
+    capture.synth.write(utterance, toBufferCallback: collect, toMarkerCallback: { [weak self, weak capture] markers in
       guard let self, let capture else { return }
       let names: [(String, Int)]
       let words = markers.lazy.filter { $0.mark == .word }.prefix(4096).map { ($0.textRange, $0.byteSampleOffset) }
@@ -183,17 +202,21 @@ final class WireMixer {
 
   private func watch(_ capture: Capture) {
     let remaining = capture.deadline - ProcessInfo.processInfo.systemUptime
-    if remaining <= 0 { end(capture, ok: false); return }
+    if remaining <= 0 {
+      end(capture, ok: false, synthesisFailed: capture.waitingForFirstCallback)
+      return
+    }
     DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self, weak capture] in
       guard let self, let capture, self.current === capture else { return }
       self.watch(capture)
     }
   }
 
-  private func end(_ capture: Capture, ok: Bool) {
+  private func end(_ capture: Capture, ok: Bool, synthesisFailed: Bool = false) {
     guard current === capture else { return }
     current = nil
-    if !ok { wakeProducer(); synth.stopSpeaking(at: .immediate) }
+    capture.attempt.finish(synthesisFailed ? OvSpeechFailed : (ok ? OvSpeechSucceeded : OvSpeechCancelled))
+    if !ok { wakeProducer(); capture.synth.stopSpeaking(at: .immediate) }
     capture.finished(ok)
   }
 
@@ -298,9 +321,13 @@ final class WireMixer {
     guard !capture.ended else { return }
     do {
       let samples = try input.get()
-      if capture.ticket != nil, let samples {
+      if let samples {
         capture.inputBuffers += 1
         capture.inputFrames += Int(samples.frameLength)
+      } else if capture.expectsAudio && capture.inputFrames == 0 {
+        capture.ended = true
+        DispatchQueue.main.async { self.end(capture, ok: false, synthesisFailed: true) }
+        return
       }
       if let marked = capture.marked {
         if let samples {

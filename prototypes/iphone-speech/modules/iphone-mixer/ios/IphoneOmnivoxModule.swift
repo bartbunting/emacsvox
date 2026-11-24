@@ -67,6 +67,7 @@ public final class IphoneOmnivoxModule: Module {
           guard let self, self.connection == id else { return }
           self.sendEvent("wireReply", ["connection": id, "record": tag + " " + line] as [String: Any])
         }
+        audio.beginSynthesis = { [weak lane] in lane.flatMap { WireSynthesisAttempt($0.worker) } }
         audio.interrupted = { [weak lane] in lane?.stop() }
         self.lanes[tag] = lane
       }

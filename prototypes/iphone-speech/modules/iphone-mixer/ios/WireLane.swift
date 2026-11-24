@@ -28,6 +28,24 @@ final class WireVoiceInventory {
   }
 }
 
+// Each native write owns one permit. Stops and expired callbacks can finish it only once.
+final class WireSynthesisAttempt {
+  let recovery: Bool
+  private var pointer: OpaquePointer?
+  init?(_ worker: OpaquePointer) {
+    var recovering = false
+    guard let permit = ov_ios_synthesis_begin(worker, &recovering) else { return nil }
+    pointer = permit
+    recovery = recovering
+  }
+  func finish(_ outcome: OvSynthesisOutcome) {
+    guard let permit = pointer else { return }
+    pointer = nil
+    ov_ios_synthesis_finish(permit, outcome)
+  }
+  deinit { finish(OvSpeechCancelled) }
+}
+
 final class WireLane {
   let worker = ov_ios_worker_new()!
   let schedule: WireSchedule

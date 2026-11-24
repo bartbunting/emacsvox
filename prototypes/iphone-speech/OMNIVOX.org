@@ -65,6 +65,20 @@ frame negotiates independently. The WSL protocol check exercises a
 language change, Japanese text and a combining accent with the desktop
 and phone workers. Pronunciation depends on the installed voice.
 
+* Recover a speech engine after build 9
+
+The main and notification workers each use desktop Omnivox's recovery
+rules. If iOS fails to synthesize speech on one worker, that worker
+reports the failure and waits before trying again. The other worker can
+still speak. The first retry becomes available after five seconds.
+Repeated failures extend the wait to at most one minute.
+
+To retry sooner, open Browse voices on the phone frame, press capital
+=K= and choose Main or Notification. Read a line or trigger a notification
+on that worker to try a fresh iOS synthesizer. Stopping a retry leaves the
+next one available. Build 9 can still use the voice browser and reports
+that its worker lacks the retry command.
+
 * What exists
 
 Signed build 3 connects the external keyboard over SSH and speaks Emacs
