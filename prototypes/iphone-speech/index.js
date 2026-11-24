@@ -272,8 +272,10 @@ function Session({settings, save, active, reconnect, history, setHistory}) {
     try {
       const result = await trial.run(bytes => terminalRef.current.sendKeys(trial.frame, bytes));
       const route = trial.local ? 'Local speech. ' : 'SSH. Key to returned speech ' + result.returned + ' milliseconds. ';
+      const output = result.route ? ' ' + result.route + ' output.' : '';
+      const latency = result.outputLatencyMs == null ? '' : ' iOS reports ' + result.outputLatencyMs + ' milliseconds of output latency.';
       finishTrial(trial, route + 'Key to ' + (result.event === 'buffer' ? 'first scheduled audio' : 'speech start callback') +
-        ' ' + result.audio + ' milliseconds.');
+        ' ' + result.audio + ' milliseconds.' + output + latency);
     } catch (error) { finishTrial(trial, error.message); }
   }
   useEffect(() => {

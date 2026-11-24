@@ -803,7 +803,7 @@ async function main() {
           await until('real navigation reaches main worker', () => rawPackets.slice(before).some(p => p.lane === 'M' && p.timeline?.spans.some(span => span.text.trim())));
           await observe(`(with-selected-window ${phoneWindow}
             (switch-to-buffer (get-buffer-create "Phone indentation fixture")) (emacs-lisp-mode)
-            (insert "start\n    sample\n        sample\nTestCase\n") (goto-char (point-min))
+            (insert "start\n    sample\n        sample\n    test the indentation\nTestCase\n") (goto-char (point-min))
             (setq-local emacsvox-audio-indentation t emacsvox-indentation-presentation 'duration-tone
                         emacsvox-indentation-tone-timing 'overlay))`);
           function mixedDispatch(start, predicate) {
@@ -817,6 +817,24 @@ async function main() {
             await until('indentation overlay and its spoken line in one dispatch', () => mixedDispatch(start, p =>
               p.mode === 'overlay' && p.frequency_hz === 250 && p.duration_ms === ms));
           }
+          await observe(`(with-selected-window ${phoneWindow}
+            (setq-local emacsvox-indentation-presentation 'pitch-tone
+                        emacsvox-indentation-pitch-tone-base 250.0
+                        emacsvox-indentation-pitch-tone-semitones-per-column 1.0
+                        emacsvox-indentation-pitch-tone-duration 250))`);
+          const pitchStart = rawPackets.length;
+          sshKeys('\x0e');
+          const indented = () => rawPackets.slice(pitchStart).find(p => p.lane === 'M' &&
+            p.timeline?.spans.some(s => s.text.includes('test the indentation')))?.timeline;
+          await until('the indented word finishes on the phone', () => indented() && rawPackets.some(p =>
+            p.lane === 'M' && p.dispatch === indented().dispatch_id && p.status === 'completed'));
+          const pitch = indented().actions.find(a => a.type === 'tone' && a.mode === 'overlay');
+          assert.ok(pitch && pitch.frequency_hz > 250 && pitch.duration_ms === 250,
+            'pitch overlay for four spaces: ' + JSON.stringify(indented().actions));
+          const speechSpan = indented().spans.find(s => s.id === pitch.position.span_id);
+          assert.equal(speechSpan?.text.trimStart(), 'test the indentation', JSON.stringify(indented().spans));
+          assert.ok(rawPackets.some(p => p.lane === 'M' && p.marker?.dispatch_id === indented().dispatch_id &&
+            p.marker.type === 'timeline_action_resolved' && p.marker.action_id === pitch.id));
           await observe(`(with-selected-window ${phoneWindow} (setq-local tts-caps t emacsvox-capitalization-presentation 'tone))`);
           const caps = rawPackets.length;
           sshKeys('\x0e');

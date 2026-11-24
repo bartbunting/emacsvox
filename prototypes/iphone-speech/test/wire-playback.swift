@@ -142,6 +142,19 @@ func checkMissingWordTiming(_ root: String, voices: String, envelope: Data) thro
         case let .next(wholeWord, _)? = unicode.finish(bytesPerFrame: 2, totalFrames: 250)
   else { fatalError("Lost the Unicode word boundary") }
   precondition(prefix.text == "Café déjà " && wholeWord.text == "TestCase " && unicode.report.wordsMismatched == 1)
+  let ties = WireItem(kind: .speech, text: "one two three", anchors: [
+    WireAnchor(offset: 8), WireAnchor(offset: 0), WireAnchor(offset: 4, after: true),
+    WireAnchor(offset: 13), WireAnchor(offset: 4)])
+  var reordered = WireSpeechTiming(ties, WireBookmarks(ties)!)
+  var resultWithTies = reordered.finish(bytesPerFrame: 2, totalFrames: 500)
+  var consumedFrames = 0
+  while case let .next(piece, _)? = resultWithTies {
+    consumedFrames += piece.text!.utf8.count * 10
+    resultWithTies = reordered.finish(bytesPerFrame: 2, totalFrames: consumedFrames)
+  }
+  guard case let .ready(measured)? = resultWithTies else { fatalError("Missing tied cue positions") }
+  precondition(measured.map(\.frame) == [80, 0, 40, 130, 40])
+  precondition(measured.map(\.precision) == [.word, .exact, .word, .exact, .word])
   print("Five missing or unusable markers recovered at separate measured words. Rust tone samples and played semantic events match all five positions.")
 }
 

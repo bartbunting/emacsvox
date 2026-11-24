@@ -26,8 +26,14 @@ function openWire(native, send, failed) {
     const done = trial;
     trial = null;
     clearTimeout(done.timer);
-    done.resolve({returned: Math.round(done.received - done.started),
-      audio: Math.round(event.time - done.started), event: event.event});
+    const result = {returned: Math.round(done.received - done.started),
+      audio: Math.round(event.time - done.started), event: event.event};
+    if (event.event === 'buffer') {
+      if (typeof event.route === 'string' && event.route) result.route = event.route;
+      if (Number.isFinite(event.outputLatencyMs) && event.outputLatencyMs >= 0)
+        result.outputLatencyMs = Math.round(event.outputLatencyMs);
+    }
+    done.resolve(result);
   });
   const opened = native.open(id);
   function record(message, muted) {

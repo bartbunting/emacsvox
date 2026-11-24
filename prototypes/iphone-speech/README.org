@@ -606,9 +606,19 @@ In Diagnostics, open Timing tests and choose “Measure SSH key to speech”.
 Press Return in the Emacs keyboard field. The result gives
 milliseconds from receipt of that key to the returning speech record and
 to the first scheduled audio buffer or speech-start callback. “Measure
-local key to speech” plays the same sample on the phone. Neither test
-edits your Emacs buffer or requires speech logging. To compare speaker
-and headphones, run each test twice on each output and listen for onset.
+local key to speech” plays the same sample on the phone. On receivers
+after build 9, a scheduled buffer also reports its output type and,
+when available, the latency iOS reports for that route. These times
+are measured before you hear the sound. The tests preserve your buffer
+and work with speech logging off. [[https://developer.apple.com/documentation/avfaudio/avaudiosession/outputlatency][Apple's output latency reference]].
+
+For a listening comparison, run each test twice on the built-in speaker,
+then on your headphones. In a buffer with two long lines, press =C-n= again
+mid-line and listen for the old line to stop and the next to start. With
+indentation tones set to Overlay, read an indented word. To check an
+internal capital with your reading voice, choose “Test timing inside
+TestCase” in Diagnostics. The result tells you which timing marks the
+voice returned.
 
 You can switch tabs while editing a setting. Return to Settings to continue
 your edit. Save settings applies it. Cancel restores the saved values. Both

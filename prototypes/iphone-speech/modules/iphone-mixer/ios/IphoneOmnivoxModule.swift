@@ -59,7 +59,25 @@ public final class IphoneOmnivoxModule: Module {
           self.mainAudio = audio
           audio.keyTimingStarted = { [weak self] serial, event, time in
             guard let self, self.connection == id else { return }
-            self.sendEvent("keyTiming", ["connection": id, "serial": serial, "event": event, "time": time] as [String: Any])
+            var result: [String: Any] = ["connection": id, "serial": serial, "event": event, "time": time]
+            if event == "buffer" {
+              let session = AVAudioSession.sharedInstance()
+              let outputs = session.currentRoute.outputs.map { port -> String in
+                switch port.portType {
+                case .builtInSpeaker: return "Built-in speaker"
+                case .builtInReceiver: return "Receiver"
+                case .headphones: return "Wired headphones"
+                case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE: return "Bluetooth"
+                case .airPlay: return "AirPlay"
+                case .usbAudio: return "USB audio"
+                default: return "Other output"
+                }
+              }
+              if !outputs.isEmpty { result["route"] = Set(outputs).sorted().joined(separator: ", ") }
+              let latency = session.outputLatency
+              if latency.isFinite && latency > 0 { result["outputLatencyMs"] = (latency * 1000).rounded() }
+            }
+            self.sendEvent("keyTiming", result)
           }
           audio.resolvedMarks = { [weak self] report in
             if report.exact + report.word + report.span > 0 { self?.markerStatus = report.description }

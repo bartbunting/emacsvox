@@ -21,6 +21,8 @@ struct WireTimingReport {
 struct WireBookmarks {
   let ssml: String, marks: [WireAnchor], length: Int
   let wordStarts: [Int]
+  private let bookmarkNames: Set<String>
+  private let orderedOffsets: [Int]
   private let source: String, utf16Length: Int
   private(set) var offsets: [String: Int] = [:]
   private var conflicting: Set<String> = []
@@ -43,6 +45,8 @@ struct WireBookmarks {
     // need neither Unicode word boundaries nor an SSML synthesis request.
     guard marks.contains(where: { $0.offset > 0 && $0.offset < byteCount }) else {
       wordStarts = []
+      bookmarkNames = []
+      orderedOffsets = []
       ssml = ""
       return
     }
@@ -51,8 +55,14 @@ struct WireBookmarks {
       guard let start = Range(NSRange(location: $0.range.location, length: 0), in: text)?.lowerBound else { return nil }
       return text.utf8.distance(from: text.utf8.startIndex, to: start)
     }
-    let boundaries = wordStarts
-    guard marks.contains(where: { $0.offset > 0 && $0.offset < byteCount && !boundaries.contains($0.offset) }) else {
+    orderedOffsets = Set(marks.map(\.offset)).sorted()
+    bookmarkNames = Set(orderedOffsets.map { "ov-\($0)" })
+    let starts = wordStarts
+    guard orderedOffsets.contains(where: { offset in
+      guard offset > 0 && offset < byteCount else { return false }
+      let index = Self.firstAtLeast(offset, in: starts)
+      return index == starts.count || starts[index] != offset
+    }) else {
       ssml = ""
       return
     }
@@ -60,15 +70,20 @@ struct WireBookmarks {
     let rate = Int(((item.rate ?? 1) * 100).rounded())
     let pitch = Int((((item.pitch ?? 1) - 1) * 100).rounded())
     let gain = item.gain ?? 1
-    let volume = gain > 0 ? String(format: "%.2fdB", locale: Locale(identifier: "en_US_POSIX"), 20 * log10(Double(gain))) : "silent"
+    let volume: String
+    if gain == 1 { volume = "0.00dB" }
+    else if gain <= 0 { volume = "silent" }
+    else { volume = String(format: "%.2fdB", locale: Self.posix, 20 * log10(Double(gain))) }
     var xml = "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"><prosody rate=\"\(max(1, rate))%\" pitch=\"\(pitch >= 0 ? "+" : "")\(pitch)%\" volume=\"\(volume)\">"
     var start = 0
     func escaped(_ low: Int, _ high: Int) -> String? {
-      guard let part = String(bytes: bytes[low..<high], encoding: .utf8) else { return nil }
+      let slice = bytes[low..<high]
+      guard let part = String(bytes: slice, encoding: .utf8) else { return nil }
+      guard slice.contains(where: { $0 == 38 || $0 == 60 || $0 == 62 }) else { return part }
       return part.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
         .replacingOccurrences(of: ">", with: "&gt;")
     }
-    for offset in Set(marks.map(\.offset)).sorted() {
+    for offset in orderedOffsets {
       guard (start...length).contains(offset), let part = escaped(start, offset) else { return nil }
       xml += part + "<mark name=\"ov-\(offset)\"/>"
       start = offset
@@ -78,10 +93,20 @@ struct WireBookmarks {
   }
 
   private static let wordStart = try! NSRegularExpression(pattern: #"(?w)\b[\p{L}\p{M}\p{N}\p{Pc}]"#)
+  private static let posix = Locale(identifier: "en_US_POSIX")
+
+  static func firstAtLeast(_ value: Int, in sorted: [Int]) -> Int {
+    var low = 0, high = sorted.count
+    while low < high {
+      let middle = low + (high - low) / 2
+      if sorted[middle] < value { low = middle + 1 } else { high = middle }
+    }
+    return low
+  }
 
   mutating func observe(_ name: String, byte: Int) {
     bookmarksReceived += 1
-    guard byte >= 0, name == Self.end || marks.contains(where: { name == "ov-\($0.offset)" }) else { return }
+    guard byte >= 0, name == Self.end || bookmarkNames.contains(name) else { return }
     if let previous = offsets[name], previous != byte { conflicting.insert(name) }
     offsets[name] = byte
   }
@@ -115,6 +140,7 @@ struct WireBookmarks {
 
   func nativeFrames(bytesPerFrame: Int, totalFrames: Int) -> [Int?] {
     guard bytesPerFrame > 0, totalFrames > 0 else { return marks.map { _ in nil } }
+    if orderedOffsets.isEmpty { return marks.map { $0.offset == 0 ? 0 : totalFrames } }
     func aligned(_ name: String) -> Int? {
       guard !conflicting.contains(name), let b = offsets[name], b % bytesPerFrame == 0,
             b / bytesPerFrame <= totalFrames else { return nil }
@@ -123,7 +149,7 @@ struct WireBookmarks {
     var last = -1
     var byOffset: [Int: Int] = [:]
     let endFrame = aligned(Self.end) ?? totalFrames
-    for offset in Set(marks.map(\.offset)).sorted() {
+    for offset in orderedOffsets {
       // A span edge is defined by the protocol even if the voice omits marks.
       if offset == 0 { byOffset[offset] = 0; last = aligned("ov-0") ?? 0; continue }
       if offset == length { byOffset[offset] = totalFrames; continue }
@@ -164,8 +190,9 @@ struct WireBookmarks {
     let timed = wordFrames(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames)
     var cuts = Set<Int>(), missing = false
     for (mark, named) in zip(marks, exact) where mark.offset > 0 && mark.offset < length {
-      let lower = wordStarts.last { $0 <= mark.offset }
-      let upper = wordStarts.first { $0 >= mark.offset }
+      let i = Self.firstAtLeast(mark.offset, in: wordStarts)
+      let upper = i < wordStarts.count ? wordStarts[i] : nil
+      let lower = upper == mark.offset ? upper : (i > 0 ? wordStarts[i - 1] : nil)
       if let lower, lower != wordStarts.first { cuts.insert(lower) }
       if let upper, upper != wordStarts.first { cuts.insert(upper) }
       let expected = mark.after == true ? lower : upper

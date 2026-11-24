@@ -203,11 +203,11 @@ for (const [input, hasShiftReturnShortcut] of [['field', true], ['terminal', tru
       clock = 60;
       await act(() => {
         ws.onmessage({data: 'M q {timing sample 1 }'});
-        listeners.keyTiming({...trial, event: 'buffer', time: 85});
+        listeners.keyTiming({...trial, event: 'buffer', time: 85, route: 'Bluetooth', outputLatencyMs: 42});
       });
       assert.ok(tabs()[1].props.accessibilityState.selected);
       assert.ok(app.root.findAllByType('Text').some(el => el.props.children ===
-        'SSH. Key to returned speech 10 milliseconds. Key to first scheduled audio 35 milliseconds.'));
+        'SSH. Key to returned speech 10 milliseconds. Key to first scheduled audio 35 milliseconds. Bluetooth output. iOS reports 42 milliseconds of output latency.'));
       await act(() => button('Measure local key to speech').props.onPress());
       await act(() => app.root.findByType('WebView').props.onMessage({nativeEvent: {data: '\x1b'}}));
       assert.ok(tabs()[1].props.accessibilityState.selected);

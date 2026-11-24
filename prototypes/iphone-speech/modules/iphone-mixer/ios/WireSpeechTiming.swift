@@ -14,7 +14,7 @@ struct WireSpeechTiming {
   var plan: WireBookmarks
   private(set) var report = WireTimingReport()
   private var ranges: [Range<Int>] = [], part = 0, firstFrame = 0
-  private var indices: [Int] = [], positions: [WireBookmarks.Position] = []
+  private var indicesByPart: [[Int]] = [], positions: [WireBookmarks.Position] = []
 
   init(_ item: WireItem, _ plan: WireBookmarks) {
     self.item = item
@@ -28,14 +28,8 @@ struct WireSpeechTiming {
     let low = bytes.index(bytes.startIndex, offsetBy: range.lowerBound)
     let high = bytes.index(low, offsetBy: range.count)
     slice.text = String(decoding: bytes[low..<high], as: UTF8.self)
-    // A boundary belongs to the following word. The original span end belongs
-    // to the last piece. Preserve the action order Rust supplied, including ties.
-    indices = original.marks.indices.filter {
-      let offset = original.marks[$0].offset
-      return range.contains(offset) || (offset == range.upperBound && offset == original.length)
-    }
     slice.marks = nil
-    slice.anchors = indices.map {
+    slice.anchors = indicesByPart[part].map {
       let mark = original.marks[$0]
       return WireAnchor(offset: mark.offset - range.lowerBound, after: mark.after)
     }
@@ -55,13 +49,20 @@ struct WireSpeechTiming {
       let edges = [0] + cuts + [original.length]
       report.measuredWords = true
       ranges = zip(edges, edges.dropFirst()).map { $0..<$1 }
+      // A cut belongs to the following word. Keep all actions at the same
+      // offset in their original order, including actions at the span end.
+      indicesByPart = Array(repeating: [], count: ranges.count)
+      for (index, mark) in original.marks.enumerated() {
+        let part = WireBookmarks.firstAtLeast(mark.offset + 1, in: cuts)
+        indicesByPart[part].append(index)
+      }
       positions = Array(repeating: (0, .span), count: original.marks.count)
       return nextPart(discardAudio: true)
     }
     let range = ranges[part]
     let local = plan.placements(bytesPerFrame: bytesPerFrame, totalFrames: totalFrames - firstFrame,
                                 startsAtWord: part > 0, endsAtNextWord: part + 1 < ranges.count)
-    for (index, position) in zip(indices, local) {
+    for (index, position) in zip(indicesByPart[part], local) {
       let measuredStart = part > 0 && original.marks[index].offset == range.lowerBound
       positions[index] = (firstFrame + position.frame, measuredStart ? .word : position.precision)
     }
