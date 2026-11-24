@@ -9790,10 +9790,12 @@ closing play distinct object cues and announce the transition.
 
 @table @kbd
 @item n@comma{} p; C-n@comma{} C-p; down@comma{} up
-Move by captured terminal row and speak the destination@comma{} interrupting the
-previous row announcement.
+Move by captured terminal row. You hear the row text immediately@comma{} and a
+new move interrupts the previous reading. Moving past either end
+announces the boundary.
 @item SPC@comma{} RET@comma{} .
-Speak the current captured row.
+Hear the row number and text@comma{} including any captured cursor
+or likely focus on that row.
 @item a
 Speak a bounded form of the current screen or completion view.
 @item s@comma{} c

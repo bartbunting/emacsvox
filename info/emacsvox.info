@@ -17,7 +17,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 Indirect:
 emacsvox.info-1: 384
 emacsvox.info-2: 305280
-emacsvox.info-3: 611204
+emacsvox.info-3: 611333
 
 Tag Table:
 (Indirect)
@@ -238,83 +238,83 @@ Node: EAT Input Modes518355
 Node: EAT Automatic Feedback520948
 Node: EAT Terminal Completion527945
 Node: EAT Screen Review529512
-Node: EAT Feedback Preferences532564
-Node: EAT Shell Integration535177
-Node: EAT Passwords And Privacy536487
-Node: EAT Clipboard Trust537986
-Node: EAT Full-screen Applications539658
-Node: Vim in EAT541250
-Node: Vim navigation543423
-Node: Vim editing and selection547228
-Node: Vim search and command results550969
-Node: Vim over SSH or inside tmux552923
-Node: EAT In Eshell554419
-Node: Running Terminal Based Applications555239
-Node: Starting Term556492
-Node: Term Input Modes557306
-Node: Term Speech Feedback558805
-Node: Reviewing The Term Screen559945
-Node: Term Help And Recovery561767
-Node: Speech Backends562823
-Node: Supported Platform Routes564722
-Node: Installing An Omnivox Release Binary568665
-Node: Installing An Omnivox Windows Release Under WSL2575309
-Node: Optional Omnivox Engine Modules580324
-Ref: Inspect running engines580746
-Ref: Browse voices and variants582922
-Ref: Install and activate voice packages585692
-Ref: Remove or import managed voices589196
-Ref: Configure and check an engine590377
-Ref: Manage the installed Omnivox release592497
-Node: Trying Native Windows Emacsvox597722
-Ref: Download And Verify Omnivox604459
-Ref: Install And Check The Native Server606159
-Ref: Start Native Emacsvox607633
-Ref: Verify Speech And Report Problems608504
-Node: Installing Omnivox From Source611204
-Node: Building Omnivox For WSL2612633
-Node: Selecting And Checking Omnivox618303
-Ref: Remote workstation speech setup624324
-Node: Compatibility Speech Servers628879
-Node: Backend Diagnostics And Ownership630494
-Node: Emacsvox Keyboard Commands635225
-Node: Everyday Reading Commands636885
-Node: Everyday Editing Commands639621
-Node: Everyday Workspace Commands642781
-Node: Everyday Help Commands645186
-Node: Everyday Speech Commands647237
-Node: Emacsvox Key Prefixes649074
-Node: Finding Tasks652783
-Node: Finding Reading Tasks654253
-Node: Finding Editing Tasks656834
-Node: Finding Voice Tasks658227
-Node: Finding Settings Tasks659960
-Node: Finding Application Tasks661695
-Node: Finding Problem Tasks664542
-Node: Emacsvox Terminology667746
-Node: Working Context Terms669102
-Node: Editing Terms671990
-Node: Presentation Resource Terms674961
-Node: Speech And Settings Terms677004
-Node: Copyright678949
-Node: Acknowledgments679532
-Node: Developer Guide680558
-Node: Documentation Maintenance683069
-Node: Speech Server Protocols688738
-Ref: Testing A Direct Legacy Server699956
-Ref: Commands That Queue Output700515
-Ref: Commands That Set State703747
-Node: Integration Maintenance706218
-Ref: Background startup ownership and failure recovery716968
-Ref: Supported Emacs versions720121
-Ref: Native Windows builds723358
-Ref: Offline Windows development bundle725574
-Ref: Public Windows installer previews734595
-Ref: Remote preview validation737659
-Ref: Internal ownership and renderer tests762533
-Ref: Upstream contract layers766144
-Node: Authoring Sound Packs796313
-Node: Concept Index800486
+Node: EAT Feedback Preferences532693
+Node: EAT Shell Integration535306
+Node: EAT Passwords And Privacy536616
+Node: EAT Clipboard Trust538115
+Node: EAT Full-screen Applications539787
+Node: Vim in EAT541379
+Node: Vim navigation543552
+Node: Vim editing and selection547357
+Node: Vim search and command results551098
+Node: Vim over SSH or inside tmux553052
+Node: EAT In Eshell554548
+Node: Running Terminal Based Applications555368
+Node: Starting Term556621
+Node: Term Input Modes557435
+Node: Term Speech Feedback558934
+Node: Reviewing The Term Screen560074
+Node: Term Help And Recovery561896
+Node: Speech Backends562952
+Node: Supported Platform Routes564851
+Node: Installing An Omnivox Release Binary568794
+Node: Installing An Omnivox Windows Release Under WSL2575438
+Node: Optional Omnivox Engine Modules580453
+Ref: Inspect running engines580875
+Ref: Browse voices and variants583051
+Ref: Install and activate voice packages585821
+Ref: Remove or import managed voices589325
+Ref: Configure and check an engine590506
+Ref: Manage the installed Omnivox release592626
+Node: Trying Native Windows Emacsvox597851
+Ref: Download And Verify Omnivox604588
+Ref: Install And Check The Native Server606288
+Ref: Start Native Emacsvox607762
+Ref: Verify Speech And Report Problems608633
+Node: Installing Omnivox From Source611333
+Node: Building Omnivox For WSL2612762
+Node: Selecting And Checking Omnivox618432
+Ref: Remote workstation speech setup624453
+Node: Compatibility Speech Servers629008
+Node: Backend Diagnostics And Ownership630623
+Node: Emacsvox Keyboard Commands635354
+Node: Everyday Reading Commands637014
+Node: Everyday Editing Commands639750
+Node: Everyday Workspace Commands642910
+Node: Everyday Help Commands645315
+Node: Everyday Speech Commands647366
+Node: Emacsvox Key Prefixes649203
+Node: Finding Tasks652912
+Node: Finding Reading Tasks654382
+Node: Finding Editing Tasks656963
+Node: Finding Voice Tasks658356
+Node: Finding Settings Tasks660089
+Node: Finding Application Tasks661824
+Node: Finding Problem Tasks664671
+Node: Emacsvox Terminology667875
+Node: Working Context Terms669231
+Node: Editing Terms672119
+Node: Presentation Resource Terms675090
+Node: Speech And Settings Terms677133
+Node: Copyright679078
+Node: Acknowledgments679661
+Node: Developer Guide680687
+Node: Documentation Maintenance683198
+Node: Speech Server Protocols688867
+Ref: Testing A Direct Legacy Server700085
+Ref: Commands That Queue Output700644
+Ref: Commands That Set State703876
+Node: Integration Maintenance706347
+Ref: Background startup ownership and failure recovery717097
+Ref: Supported Emacs versions720250
+Ref: Native Windows builds723487
+Ref: Offline Windows development bundle725703
+Ref: Public Windows installer previews734724
+Ref: Remote preview validation737788
+Ref: Internal ownership and renderer tests762662
+Ref: Upstream contract layers766273
+Node: Authoring Sound Packs796442
+Node: Concept Index800615
 
 End Tag Table
 

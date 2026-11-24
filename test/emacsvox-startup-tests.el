@@ -464,6 +464,33 @@
       (should (= (cl-count "emacsvox" Info-file-list-for-emacs :test #'equal) 1))
       (should (= (hash-table-count emacsvox--startup-adapters) 2)))))
 
+(ert-deftest emacsvox-startup-package-preparation-before-notifications-ready ()
+  "Package preparation can finish while notification speech is unavailable."
+  (require 'info)
+  (require 'emacsvox-advice-messages)
+  (let ((emacsvox-packages-to-prepare nil)
+        (Info-file-list-for-emacs (copy-sequence Info-file-list-for-emacs))
+        (use-dialog-box use-dialog-box)
+        (inhibit-message nil)
+        (emacsvox-speak-messages t)
+        (emacsvox-last-message nil)
+        (tts-punctuation-mode 'all)
+        echo)
+    ;; Batch Emacs has no echo area.  Run the usual message feedback on
+    ;; the text that an interactive frame would display.
+    (cl-letf (((default-value 'line-move-visual) nil)
+              ((symbol-function 'message)
+               (lambda (&rest args)
+                 (emacsvox--message-around
+                  (lambda (&rest parts) (setq echo (apply #'format-message parts)))
+                  args)))
+              ((symbol-function 'current-message) (lambda () echo))
+              ((symbol-function 'emacsvox-icon) #'ignore)
+              ((symbol-function 'tts-notify)
+               (lambda (&rest _) (error "Notification voice registration pending"))))
+      (emacsvox-prepare-emacs)
+      (should (equal echo "emacsvox-prepare-emacs: done")))))
+
 (ert-deftest emacsvox-startup-deferred-adapter-retains-source-preference ()
   "An adapter registered under source fallback keeps it when loaded later."
   (emacsvox-startup-tests--with-packages

@@ -347,7 +347,9 @@ without aborting other registrations or automatically retrying partial loads."
   (setq-default line-move-visual nil)
   (setq use-dialog-box nil)
   (mapc #'emacsvox-package-setup emacsvox-packages-to-prepare)
-  (message "emacsvox-prepare-emacs: done"))
+  ;; The notification voice may still be registering on its speech lane.
+  (let ((emacsvox-speak-messages nil))
+    (message "emacsvox-prepare-emacs: done")))
 
 ;;;  setup programming modes
 
