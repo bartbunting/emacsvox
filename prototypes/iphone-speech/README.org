@@ -73,10 +73,31 @@ the phone’s own VPN IPv4 source address.
 If you prefer to run a separate SSH listener for the phone, skip to
 [[*Use a dedicated SSH listener][Use a dedicated SSH listener]].
 
-Authorise the iPhone’s public key for the account that runs Emacs. On a
-standard OpenSSH installation, append the public line to that account’s
-=~/.ssh/authorized_keys=. If your host manages keys centrally, use its
-usual procedure.
+On a standard OpenSSH host, edit =~/.ssh/authorized_keys= for the account
+that runs Emacs. Prefix the public key you copied from the app as shown
+below. Replace =PHONE_VPN_IP= with the iPhone’s VPN IPv4 address and
+=PUBLIC_KEY_DATA= with the key data from the app. Keep it all on one line.
+If you already added this key, edit its existing entry. A second,
+unrestricted copy would still allow an ordinary login from other addresses.
+
+#+begin_example
+restrict,pty,from="PHONE_VPN_IP" ssh-ed25519 PUBLIC_KEY_DATA
+#+end_example
+
+OpenSSH then accepts this key only from the phone’s VPN address. The
+=restrict,pty= options disable SSH forwarding and allow the terminal
+Emacs needs. If your host manages keys centrally, ask its administrator
+to apply the same restrictions. To limit which network interfaces accept
+SSH connections at all, configure the host firewall or the SSH listen
+addresses. The settings on this key apply only to logins using this key.
+[[https://man.openbsd.org/sshd.8#AUTHORIZED_KEYS_FILE_FORMAT][OpenSSH authorised-key options]].
+
+Treat the phone key as a login to your Emacs account. The app asks SSH
+to run =emacsclient=, but neither setup in this guide forces that command.
+The relay supplies the socket path and a frame identifier for each
+connection. A fixed command such as =emacsclient -t= would omit those
+details. Even a forced command opening your full Emacs session would
+let you run shell commands and access files as your Emacs user.
 
 The app authenticates with its Ed25519 key and has no password or
 interactive sign-in prompt. The server must present its Ed25519 host key
@@ -147,10 +168,12 @@ own terminal too.
 
 ** Use a dedicated SSH listener
 
-Use =phone-sshd= if you want to test without changing the authorised keys
-of your usual SSH service. It runs as your Emacs user, accepts the named
-phone on port 8822 and keeps its own host key. You need OpenSSH server
-and =ssh-keygen= on the host.
+Use =phone-sshd= if you want to keep the phone key separate from your
+usual SSH service. It binds to the host’s VPN address on port 8822,
+accepts only the named phone’s VPN address and public key, and disables
+forwarding. An authenticated connection runs as your Emacs user and can
+request a shell. The listener keeps its own host key. You need OpenSSH
+server and =ssh-keygen= on the host.
 
 1. Save the public key you copied from the app in a file of your choice
    on the host. Keep its absolute path.
