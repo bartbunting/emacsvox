@@ -103,6 +103,23 @@
 - Preserve existing tracked and untracked work. Never clean, reset, stash, or
   discard a dirty worktree merely to satisfy a build precondition.
 
+## Repository privacy check
+
+Stage the files you intend to share and run `make privacy-check` to reproduce
+the GitHub Actions check locally. It scans the Git index, including files
+excluded from release archives. It checks text and supported compressed
+archives for named home directories, private VPN hostnames, private-key
+headers, signed tokens and radio listener tokens. Under `docs/evidence/` it
+also flags raw session event logs and snapshots by filename. Findings identify
+the file, line where available, and rule. Replace personal paths with repository-relative paths or
+environment variables, and use synthetic data in fixtures. Keep raw speech
+captures in private local storage.
+
+Run `make privacy-test` when changing the rules. Historical and fixture path
+exceptions identify reviewed lines in individual files. The check covers the
+staged snapshot. Earlier commits and spoken content in media need separate
+review.
+
 ## Lisp builds and verification
 
 - Establish how the current change will be tried: a fresh normal Emacsvox

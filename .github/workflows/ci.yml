@@ -8,6 +8,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  privacy:
+    name: Repository privacy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check the staged source and privacy rules
+        run: make privacy-check privacy-test
+
   windows-staging:
     name: Isolated Windows packaging fixtures
     runs-on: ubuntu-latest
@@ -19,7 +31,7 @@ jobs:
 
   windows-installer:
     name: Windows x64 installer and lifecycle
-    needs: windows-staging
+    needs: [windows-staging, privacy]
     runs-on: windows-2025
     timeout-minutes: 60
     permissions:
@@ -136,6 +148,7 @@ jobs:
 
   debian-package:
     name: Debian package and Ubuntu installation
+    needs: privacy
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4

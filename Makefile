@@ -81,6 +81,7 @@ TEST_DEPS_CACHE ?= $(CURDIR)/.test-deps-cache
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 .PHONY: dist release release-source-check release-check release-artifact
 .PHONY: release-artifact-check source-archive-check source-archive-test
+.PHONY: privacy-check privacy-test
 .PHONY: release-tag release-publish
 .PHONY: deb deb-test release-deb
 .PHONY: windows-staging-test
@@ -98,6 +99,12 @@ version:
 
 version-check:
 	@utils/emacsvox-version-check --check
+
+privacy-check:
+	python3 utils/emacsvox-privacy-check.py
+
+privacy-test:
+	python3 -m unittest discover -s test -p 'test_privacy_check.py' -v
 
 headers-check:
 	@utils/emacsvox-header-check
