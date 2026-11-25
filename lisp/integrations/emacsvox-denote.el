@@ -65,11 +65,31 @@
     (emacsvox-icon 'open-object)
     (tts-speak (format "Note %s" (buffer-name)))))
 
-(defun emacsvox--advice-denote-rename-file-after (&rest _)
-  "speak."
-  (when (ems-interactive-p 'denote-rename-file)
-    (emacsvox-icon 'task-done)
-    (tts-speak "Renamed")))
+(defvar emacsvox-denote--rename-observer nil
+  "Function receiving the old and new filenames during a Denote rename.")
+
+(defun emacsvox--advice-denote-rename-file-and-buffer-after (old new)
+  "Record the accepted rename from OLD to NEW for the enclosing command."
+  (when emacsvox-denote--rename-observer
+    (funcall emacsvox-denote--rename-observer old new)))
+
+(defun emacsvox--advice-denote-rename-around (rename &rest args)
+  "Announce the result of the outermost rename command after it completes."
+  ;; The keyword editor calls `denote-rename-file' interactively.  Both can
+  ;; return the proposed filename even when the user declines the rename.
+  (if emacsvox-denote--rename-observer
+      (apply rename args)
+    (let* ((keywords (ems-interactive-p 'denote-rename-file-keywords))
+           (announce (or keywords (ems-interactive-p 'denote-rename-file)))
+           (component (if keywords #'denote-retrieve-filename-keywords #'expand-file-name))
+           changed
+           (emacsvox-denote--rename-observer
+            (lambda (old new)
+              (setq changed (not (equal (funcall component old) (funcall component new)))))))
+      (prog1 (apply rename args)
+        (when (and announce changed)
+          (emacsvox-icon 'task-done)
+          (tts-speak (if keywords "Keywords updated" "Renamed")))))))
 
 (defun emacsvox--advice-denote-rename-file-using-front-matter-after (&rest _)
   "speak."
@@ -95,18 +115,6 @@
     (emacsvox-icon 'open-object)
     (tts-speak "Backlinks")))
 
-(defun emacsvox--advice-denote-keywords-add-after (&rest _)
-  "speak."
-  (when (ems-interactive-p 'denote-keywords-add)
-    (emacsvox-icon 'task-done)
-    (tts-speak "Keywords added")))
-
-(defun emacsvox--advice-denote-keywords-remove-after (&rest _)
-  "speak."
-  (when (ems-interactive-p 'denote-keywords-remove)
-    (emacsvox-icon 'delete-object)
-    (tts-speak "Keywords removed")))
-
 (defun emacsvox--advice-denote-dired-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-dired)
@@ -117,18 +125,16 @@
   '((denote :after emacsvox--advice-denote-after)
     (denote-open-or-create :after
      emacsvox--advice-denote-open-or-create-after)
-    (denote-rename-file :after
-     emacsvox--advice-denote-rename-file-after)
+    (denote-rename-file :around emacsvox--advice-denote-rename-around)
+    (denote-rename-file-keywords :around emacsvox--advice-denote-rename-around)
+    (denote-rename-file-and-buffer :after
+     emacsvox--advice-denote-rename-file-and-buffer-after)
     (denote-rename-file-using-front-matter :after
      emacsvox--advice-denote-rename-file-using-front-matter-after)
     (denote-link :after emacsvox--advice-denote-link-after)
     (denote-link-or-create :after
      emacsvox--advice-denote-link-or-create-after)
     (denote-backlinks :after emacsvox--advice-denote-backlinks-after)
-    (denote-keywords-add :after
-     emacsvox--advice-denote-keywords-add-after)
-    (denote-keywords-remove :after
-     emacsvox--advice-denote-keywords-remove-after)
     (denote-dired :after emacsvox--advice-denote-dired-after))
   "Current Denote targets and their native advice functions.")
 
