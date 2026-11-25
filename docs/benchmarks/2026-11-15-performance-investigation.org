@@ -36,9 +36,9 @@ clean. Only this report and its evidence were added.
 * Environment and measurement limits
 
 The source commit was =2563f0414d51a909f6a8986634f6f5e81cb4dbf6=.
-=local.mk= selects =/home/bart/opt/emacs-31/bin/emacs=, Emacs 31.0.90,
+=local.mk= selects =$HOME/opt/emacs-31/bin/emacs=, Emacs 31.0.90,
 and the verified dependency directory
-=/home/bart/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90=.
+=$HOME/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90=.
 =make check-emacs= and =make bytecode-check= passed before measurements.
 The machine runs Linux 6.18.58.1 under WSL2 on an Intel Core Ultra 9 185H.
 
@@ -46,16 +46,16 @@ Read-only, bounded requests identified the live Emacs as PID 3376, socket
 =/run/user/1000/emacs/emacsvox=. Its main and notification workers were
 PIDs 12026 and 12041. They reported Omnivox 1.18.0 and ran the installed
 Windows executable at
-=/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe=.
+=%LOCALAPPDATA%/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe=.
 Neither worker was restarted or given test speech.
 
 Actual loaded optional packages differed from the pinned test dependencies:
 
 | Package | Live path or identity | Pinned benchmark dependency |
 |---------+-----------------------+-----------------------------|
-| Agent Shell | /home/bart/src/agent-shell/agent-shell.el; 0.96.1 | 0.95.1 |
-| Markdown | /home/bart/.emacs.d/elpa/markdown-mode-20261022.55/markdown-mode.elc; 2.8-alpha | 2.9-alpha |
-| Notmuch | /home/bart/.emacs.d/elpa/notmuch-20260314.2247/notmuch.elc | Verified test installation |
+| Agent Shell | $HOME/src/agent-shell/agent-shell.el; 0.96.1 | 0.95.1 |
+| Markdown | $HOME/.emacs.d/elpa/markdown-mode-20261022.55/markdown-mode.elc; 2.8-alpha | 2.9-alpha |
+| Notmuch | $HOME/.emacs.d/elpa/notmuch-20260314.2247/notmuch.elc | Verified test installation |
 
 The Agent Shell checkout on disk was clean at
 =26365eb6f2fc3a635eb10bfccc97b3f4264d64be=; that alone does not prove every
@@ -548,19 +548,21 @@ The saved scripts are disposable investigation inputs, not application tests
 or startup code. Run them from the source commit recorded above with the
 selected Emacs and verified dependency tree. Outputs go to a private temporary
 directory; no normal profile or audible backend is started.
+The published measurements use shortened paths for loaded libraries.
+Versions and content digests are recorded in the accompanying provenance.
 
 #+begin_src sh
-export EMACSVOX_AUDIT_DEPS=/home/bart/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90
+export EMACSVOX_AUDIT_DEPS="$HOME"/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90
 export EMACSVOX_AUDIT_OUTPUT=$(mktemp -d /tmp/emacsvox-audit-replay-XXXXXX)
 audit_inputs=docs/benchmarks/data/2026-11-15-performance-audit
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l "$audit_inputs/tables.el"
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l "$audit_inputs/streams.el"
+"${EMACS:-emacs}" -Q --batch -l "$audit_inputs/tables.el"
+"${EMACS:-emacs}" -Q --batch -l "$audit_inputs/streams.el"
 python3 "$audit_inputs/generate-fixtures.py" "$EMACSVOX_AUDIT_OUTPUT"
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l "$audit_inputs/library.el"
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l "$audit_inputs/navigation.el"
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l "$audit_inputs/interaction-probes.el"
+"${EMACS:-emacs}" -Q --batch -l "$audit_inputs/library.el"
+"${EMACS:-emacs}" -Q --batch -l "$audit_inputs/navigation.el"
+"${EMACS:-emacs}" -Q --batch -l "$audit_inputs/interaction-probes.el"
 GDK_BACKEND=x11 timeout --kill-after=5s 60s xvfb-run -a \
-  -s '-screen 0 1280x1024x24' /home/bart/opt/emacs-31/bin/emacs -Q \
+  -s '-screen 0 1280x1024x24' "${EMACS:-emacs}" -Q \
   -l "$audit_inputs/graphical.el"
 #+end_src
 
@@ -575,7 +577,9 @@ Rerunning on changed dependencies is a new observation, not an exact replay.
 =candidate-probes.el= temporarily substitutes the suspected mechanisms and
 restores them on exit. It is a diagnostic aid, not an approved implementation.
 The saved =graphical-count.el= repeats the separate table call-count probe;
-=focused-graphical-final.el= records the qualified supplemental graphical setup.
+=focused-graphical-final.el= records the supplemental graphical setup. To use
+the same Vertico revision, set =EMACSVOX_AUDIT_VERTICO= to the directory
+containing Vertico 20260913.1525.
 The existing delivery profiler supports =EMACSVOX_DELIVERY_LOAD=compiled=,
 =EMACSVOX_PROFILE_DEPS=, =EMACSVOX_DELIVERY_GC_BYTES=128000000=, and
 =EMACSVOX_PROFILE_ITERATIONS=20=. Set =EMACSVOX_PROFILE_STAGES=1= only for

@@ -85,8 +85,9 @@ expectation.
 [[file:data/2026-09-20-voice-preparation/summary.json][Summary statistics]],
 [[file:data/2026-09-20-voice-preparation/provenance.json][source and fixture provenance]], and
 [[file:data/2026-09-20-voice-preparation/SHA256SUMS][raw-report checksums]] accompany the six raw JSON reports in that directory.
-The settings-only fixture stays in the maintainer's ignored benchmark directory;
-its hash and local location are recorded, but personal settings are not published.
+The provenance record identifies the private settings fixture by its hash.
+Keep full benchmark run directories private. Their plans and job indexes include
+local paths and host details needed for replay.
 
 The repeatable driver now includes =preferred_engine_apply= in
 =utils/voice-benchmark.el=. It alternates available preferred engines and

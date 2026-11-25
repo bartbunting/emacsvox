@@ -40,25 +40,25 @@
        :runs
        ((:emacs "31.0.90" :mode source :loaded-paths
 		(("emacsvox-aural--build-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural--assembly-span"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural--timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural--bind-timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural-replay--span-map"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-replay.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-replay.el")
 		 ("emacsvox-aural--submit-content"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.el")
 		 ("emacsvox-aural--frame-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.el")
 		 ("tts--dispatch-write-packet"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.el")
 		 ("tts-queue--send"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.el")
 		 ("omnivox--prepare-choice-dispatch"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.el"))
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.el"))
 		:observers
 		((:observer normal :returned 1 :error nil
 			    :timeline-writes 1 :stop-writes 0
@@ -253,25 +253,25 @@
 				   (5558 6 296 0 1801331 0 11))))))
 	(:emacs "31.0.90" :mode compiled :loaded-paths
 		(("emacsvox-aural--build-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural--assembly-span"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural--timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural--bind-timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural-replay--span-map"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-replay.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-replay.elc")
 		 ("emacsvox-aural--submit-content"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.elc")
 		 ("emacsvox-aural--frame-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.elc")
 		 ("tts--dispatch-write-packet"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.elc")
 		 ("tts-queue--send"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.elc")
 		 ("omnivox--prepare-choice-dispatch"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.elc"))
+		  . "checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.elc"))
 		:observers
 		((:observer normal :returned 1 :error nil
 			    :timeline-writes 1 :stop-writes 0
@@ -466,25 +466,25 @@
 				   (528 6 263 0 1801331 0 11))))))
 	(:emacs "30.2" :mode source :loaded-paths
 		(("emacsvox-aural--build-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural--assembly-span"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural--timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural--bind-timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.el")
 		 ("emacsvox-aural-replay--span-map"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-replay.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-replay.el")
 		 ("emacsvox-aural--submit-content"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-submission.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-submission.el")
 		 ("emacsvox-aural--frame-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-timeline-codec.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-timeline-codec.el")
 		 ("tts--dispatch-write-packet"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-lifecycle.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-lifecycle.el")
 		 ("tts-queue--send"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-queue-state.el")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-queue-state.el")
 		 ("omnivox--prepare-choice-dispatch"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/omnivox-voices.el"))
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/omnivox-voices.el"))
 		:observers
 		((:observer normal :returned 1 :error nil
 			    :timeline-writes 1 :stop-writes 0
@@ -679,25 +679,25 @@
 				   (6879 6 296 0 1801331 0 11))))))
 	(:emacs "30.2" :mode compiled :loaded-paths
 		(("emacsvox-aural--build-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural--assembly-span"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural--timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural--bind-timeline-candidate"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-transport.elc")
 		 ("emacsvox-aural-replay--span-map"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-replay.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-replay.elc")
 		 ("emacsvox-aural--submit-content"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-submission.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-submission.elc")
 		 ("emacsvox-aural--frame-structured-timeline"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-timeline-codec.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/aural/emacsvox-aural-timeline-codec.elc")
 		 ("tts--dispatch-write-packet"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-lifecycle.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-lifecycle.elc")
 		 ("tts-queue--send"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-queue-state.elc")
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/tts-queue-state.elc")
 		 ("omnivox--prepare-choice-dispatch"
-		  . "/home/bart/src/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/omnivox-voices.elc"))
+		  . "checkouts/.worktrees/emacsvox/speech-delivery-emacs30/lisp/speech/omnivox-voices.elc"))
 		:observers
 		((:observer normal :returned 1 :error nil
 			    :timeline-writes 1 :stop-writes 0

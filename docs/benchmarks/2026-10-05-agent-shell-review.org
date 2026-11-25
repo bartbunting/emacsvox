@@ -60,7 +60,7 @@ left unchanged; newer packages were selected explicitly in isolated checks.
 
 * Verification
 
-Selected Emacs: 31.0.90 from =/home/bart/opt/emacs-31/bin/emacs=.
+Selected Emacs: 31.0.90 from =$HOME/opt/emacs-31/bin/emacs=.
 The isolated runner disabled user package activation and verified that loaded
 Agent Shell modules came from the requested directory. The compiled test loader
 also verified the exact Emacsvox renderer and integration paths.

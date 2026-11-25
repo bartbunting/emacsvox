@@ -1,7 +1,7 @@
 ;; Read as data with read-eval nil. Timings do not measure audible latency.
 (:schema 1
  :baseline "89acd0601ba768a0ac767ebb021959be81cf0f1d"
- :emacs-executable "/home/bart/opt/emacs-31/bin/emacs"
+ :emacs-executable "opt/emacs-31/bin/emacs"
  :input-sha256 (
   ("test/diagnose-delivery.el" . "e2e7afb28c6647f0ab721b822277e63877a9aaf326946d465c3221477fdbdda7")
   ("test/emacsvox-aural-transport-tests.el" . "8dd02a722d5f560e670ff2a7084eb962355e3bdefae67562a3887646bf3ba58b")
@@ -10,12 +10,12 @@
  :source
  ( :test-summary "Ran 446 tests, 446 results as expected, 0 unexpected (2026-11-13 04:09:30+1100, 16.853857 sec)"
    :loaded-paths (
-    "Loaded emacsvox-aural--build-structured-timeline from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el"
-    "Loaded emacsvox-aural--submit-content from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.el"
-    "Loaded emacsvox-aural--frame-structured-timeline from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.el"
-    "Loaded tts--dispatch-write-packet from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.el"
-    "Loaded tts-queue--send from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.el"
-    "Loaded omnivox--prepare-choice-dispatch from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.el"
+    "Loaded emacsvox-aural--build-structured-timeline from checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.el"
+    "Loaded emacsvox-aural--submit-content from checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.el"
+    "Loaded emacsvox-aural--frame-structured-timeline from checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.el"
+    "Loaded tts--dispatch-write-packet from checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.el"
+    "Loaded tts-queue--send from checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.el"
+    "Loaded omnivox--prepare-choice-dispatch from checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.el"
    )
    :environment (:emacs "31.0.90" :system "x86_64-pc-linux-gnu" :gc-cons-threshold 800000 :gc-cons-percentage 1.0 :allocation-units (conses floats vector-cells symbols string-chars intervals strings))
    :observations (
@@ -36,12 +36,12 @@
  :compiled
  ( :test-summary "Ran 446 tests, 446 results as expected, 0 unexpected (2026-11-13 04:10:15+1100, 4.275851 sec)"
    :loaded-paths (
-    "Loaded emacsvox-aural--build-structured-timeline from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc"
-    "Loaded emacsvox-aural--submit-content from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.elc"
-    "Loaded emacsvox-aural--frame-structured-timeline from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.elc"
-    "Loaded tts--dispatch-write-packet from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.elc"
-    "Loaded tts-queue--send from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.elc"
-    "Loaded omnivox--prepare-choice-dispatch from /home/bart/src/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.elc"
+    "Loaded emacsvox-aural--build-structured-timeline from checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-transport.elc"
+    "Loaded emacsvox-aural--submit-content from checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-submission.elc"
+    "Loaded emacsvox-aural--frame-structured-timeline from checkouts/.worktrees/emacsvox/speech-delivery/lisp/aural/emacsvox-aural-timeline-codec.elc"
+    "Loaded tts--dispatch-write-packet from checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-lifecycle.elc"
+    "Loaded tts-queue--send from checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/tts-queue-state.elc"
+    "Loaded omnivox--prepare-choice-dispatch from checkouts/.worktrees/emacsvox/speech-delivery/lisp/speech/omnivox-voices.elc"
    )
    :environment (:emacs "31.0.90" :system "x86_64-pc-linux-gnu" :gc-cons-threshold 800000 :gc-cons-percentage 1.0 :allocation-units (conses floats vector-cells symbols string-chars intervals strings))
    :observations (

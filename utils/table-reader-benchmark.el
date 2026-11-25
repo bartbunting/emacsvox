@@ -20,6 +20,22 @@
 (load (or (getenv "EMACSVOX_TABLE_BENCHMARK_AGENT_LIBRARY")
           (locate-library "emacsvox-agent-shell")) nil nil t)
 
+(defun emacsvox-table-benchmark--libraries ()
+  "Identify the loaded libraries by filename and content digest."
+  (let (names hashes)
+    (dolist (entry '((:agent_library . emacsvox-agent-shell-table-next-row)
+                     (:reader_library . emacsvox-table-reader-next-row)
+                     (:markdown_library . markdown-mode)
+                     (:agent_dependency . agent-shell-mode)))
+      (let ((file (symbol-file (cdr entry) 'defun)))
+        (setq names (plist-put names (car entry) (file-name-nondirectory file)))
+        (with-temp-buffer
+          (set-buffer-multibyte nil)
+          (insert-file-contents-literally file)
+          (setq hashes (plist-put hashes (car entry)
+                                  (secure-hash 'sha256 (current-buffer)))))))
+    (plist-put names :library_sha256 hashes)))
+
 (defun emacsvox-table-benchmark--measure (command origin)
   "Time 20 row moves by COMMAND from ORIGIN after five warm-up rounds."
   (let (samples)
@@ -63,10 +79,7 @@
   (with-temp-file (or (getenv "EMACSVOX_TABLE_BENCHMARK_OUTPUT")
                      (error "Set EMACSVOX_TABLE_BENCHMARK_OUTPUT"))
     (insert (json-serialize
-             (list :emacs emacs-version :gc_threshold gc-cons-threshold
-                   :agent_library (symbol-file 'emacsvox-agent-shell-table-next-row 'defun)
-                   :reader_library (symbol-file 'emacsvox-table-reader-next-row 'defun)
-                   :markdown_library (symbol-file 'markdown-mode 'defun)
-                   :agent_dependency (symbol-file 'agent-shell-mode 'defun)
-                   :records (vconcat (nreverse records)))
+             (append (list :emacs emacs-version :gc_threshold gc-cons-threshold
+                           :records (vconcat (nreverse records)))
+                     (emacsvox-table-benchmark--libraries))
              :null-object nil :false-object :false))))

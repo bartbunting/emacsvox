@@ -19,7 +19,8 @@
                                       :command (list (expand-file-name "servers/log-null" audit-root)))
       tts-notify-process (make-process :name "audit-menu-notify" :noquery t
                                      :command (list (expand-file-name "servers/log-null" audit-root))))
-(add-to-list 'load-path "/home/bart/.emacs.d/elpa/vertico-20260913.1525/")
+(when-let* ((directory (getenv "EMACSVOX_AUDIT_VERTICO")))
+  (add-to-list 'load-path directory))
 (require 'emacsvox-aural-provider-notmuch)
 (require 'plain-voices)
 ;; This test macro clears preview registries after the provider was loaded.

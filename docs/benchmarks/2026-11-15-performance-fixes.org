@@ -191,7 +191,7 @@ unsupported. These checks change no Help layout or platform support behavior.
 
 * Verification and environment
 
-The selected toolchain is =/home/bart/opt/emacs-31/bin/emacs=, Emacs 31.0.90,
+The selected toolchain is =$HOME/opt/emacs-31/bin/emacs=, Emacs 31.0.90,
 on WSL2 Linux 6.18.58.1. The original source is =2563f0414=; final application
 and test source is =660ba13e3=. Builds used ignored =local.mk= and the verified
 =menu-20261113-emacs-31.0.90= dependency tree. Incremental byte-code builds and
@@ -216,7 +216,7 @@ commands, per-slice checks, failures discovered during validation and final
 results. The verification repairs are described above.
 
 Muted native tests used the installed Windows Omnivox 1.18.0 executable at
-=C:/Users/bart/AppData/Local/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe=,
+=%LOCALAPPDATA%/Emacsvox/Omnivox/releases/1.18.0-windows-x64/omnivox.exe=,
 with =--engine espeak --audio-output null=. They verified exact Max character
 routes on both lanes, eleven cancellations followed by the final completion
 in a twelve-character burst, physical-choice fallback, two registration
@@ -256,10 +256,12 @@ Set =EMACSVOX_AUDIT_DEPS= to the verified dependency directory and
 =EMACSVOX_AUDIT_OUTPUT= to a new temporary directory. Run the saved drivers with
 the selected Emacs and =-Q --batch -l DRIVER=. The table driver and graphical
 checks require an isolated Xvfb frame, as in the original report. The library
-driver uses the original =generate-fixtures.py=. Set
-=EMACSVOX_AUDIT_ENV_FILE= to the saved =library-environment.json= to use the
-exact recorded exec-path. Only that path list is saved; full configuration
-snapshots and speech text are not included.
+driver uses the original =generate-fixtures.py=. For a paired comparison,
+use the same Emacs executable search path for both runs. The driver uses the
+current
+=exec-path= by default. To replay a private snapshot, set
+=EMACSVOX_AUDIT_ENV_FILE= to a JSON file with an =exec-path= array of directory
+names. The provenance record retains the count and hash of the original list.
 
 For paired preparation, set =EMACSVOX_PROFILE_DEPS= to the verified directory,
 =EMACSVOX_DELIVERY_LOAD=compiled=, =EMACSVOX_DELIVERY_GC_BYTES=128000000= and

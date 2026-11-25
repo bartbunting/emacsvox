@@ -205,7 +205,9 @@ Suppress only its spoken confirmation; keep real preparation and transport."
     (list :emacs_version emacs-version :graphical (if (display-graphic-p) t :false)
           :preparation_lisp
           (vconcat (mapcar (lambda (function)
-                            (list :function (symbol-name function) :file (symbol-file function)
+                            (list :function (symbol-name function)
+                                  :file (when-let* ((file (symbol-file function)))
+                                          (file-name-nondirectory file))
                                   :native_compiled (if (subrp (symbol-function function)) t :false)))
                           '(emacsvox-aural-voice-data--resolve
                             emacsvox-aural-voice-runtime--resolve omnivox-apply-voice-configuration

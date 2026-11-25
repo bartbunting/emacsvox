@@ -120,8 +120,8 @@ To repeat, put the project Lisp and the selected dependencies on =load-path=,
 initialize the installed Markdown package, disable native JIT, and load the
 driver in a fresh batch Emacs. Set =EMACSVOX_TABLE_BENCHMARK_OUTPUT= to the JSON
 output file. For a comparison, set =EMACSVOX_TABLE_BENCHMARK_AGENT_LIBRARY= to
-byte-code compiled from the selected baseline facade. Check the actual loaded
-paths in each output before comparing measurements.
+byte-code compiled from the selected baseline facade. Check the library
+filenames and SHA-256 digests in each new report before comparing measurements.
 
 [[file:data/2026-09-28-table-reading/summary.json][Summary measurements]], [[file:data/2026-09-28-table-reading/test-results.json][individual test results]], [[file:data/2026-09-28-table-reading/provenance.json][source/toolchain provenance]] and
 [[file:data/2026-09-28-table-reading/SHA256SUMS][checksums]] accompany the raw JSON measurements in the same directory.

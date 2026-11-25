@@ -5,9 +5,9 @@
     "gc-threshold": 128000000,
     "gc-percentage": 0.1,
     "extra": {
-      "org": "/home/bart/opt/emacs-31/share/emacs/31.0.90/lisp/org/org.elc",
-      "markdown": "/home/bart/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90/markdown-mode/markdown-mode.el",
-      "reader": "/home/bart/src/emacsvox/lisp/core/emacsvox-table-reader.elc"
+      "org": "opt/emacs-31/share/emacs/31.0.90/lisp/org/org.elc",
+      "markdown": "cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90/markdown-mode/markdown-mode.el",
+      "reader": "lisp/core/emacsvox-table-reader.elc"
     },
     "results": [
       {
@@ -730,8 +730,8 @@
     "gc-threshold": 128000000,
     "gc-percentage": 0.1,
     "extra": {
-      "comint": "/home/bart/src/emacsvox/lisp/integrations/emacsvox-comint.elc",
-      "filter": "/home/bart/src/emacsvox/lisp/speech/tts-lifecycle.elc"
+      "comint": "lisp/integrations/emacsvox-comint.elc",
+      "filter": "lisp/speech/tts-lifecycle.elc"
     },
     "results": [
       {
@@ -1712,8 +1712,8 @@
     "gc-percentage": 0.1,
     "extra": {
       "agent-version": "0.95.1",
-      "agent-source": "/home/bart/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90/agent-shell/agent-shell-ui.el",
-      "adapter": "/home/bart/src/emacsvox/lisp/integrations/emacsvox-agent-shell-navigation.elc"
+      "agent-source": "cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90/agent-shell/agent-shell-ui.el",
+      "adapter": "lisp/integrations/emacsvox-agent-shell-navigation.elc"
     },
     "results": [
       {
@@ -2601,7 +2601,7 @@
     "gc-percentage": 0.1,
     "extra": {
       "display": true,
-      "markdown": "/home/bart/.cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90/markdown-mode/markdown-mode.el"
+      "markdown": "cache/emacsvox/test-deps/menu-20261113-emacs-31.0.90/markdown-mode/markdown-mode.el"
     },
     "results": [
       {
@@ -2757,7 +2757,7 @@
     "gc-percentage": 0.1,
     "extra": {
       "display": true,
-      "markdown": "/home/bart/.emacs.d/elpa/markdown-mode-20261022.55/markdown-mode.elc"
+      "markdown": "packages/markdown-mode-20261022.55/markdown-mode.elc"
     },
     "results": [
       {
@@ -2912,7 +2912,7 @@
     "gc-threshold": 128000000,
     "gc-percentage": 0.1,
     "extra": {
-      "markdown": "/home/bart/.emacs.d/elpa/markdown-mode-20261022.55/markdown-mode.elc",
+      "markdown": "packages/markdown-mode-20261022.55/markdown-mode.elc",
       "exec-path-hash": "0ae8c511a80be41d1d59688f75e07dd8ae63ba67e10d7c1a140bc57a601a5d31"
     },
     "results": [

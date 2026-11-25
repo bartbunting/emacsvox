@@ -37,10 +37,10 @@ also passed the affected suite.
 
 The live Emacs, PID 1781 on socket =/run/user/1000/emacs/emacsvox=, loads
 Agent Shell 0.83.5 from
-=/home/bart/.emacs.d/elpa/agent-shell-20261004.1353/agent-shell.elc=,
+=$HOME/.emacs.d/elpa/agent-shell-20261004.1353/agent-shell.elc=,
 Shell Maker 0.97.5 from
-=/home/bart/.emacs.d/elpa/shell-maker-20261001.1543/shell-maker.elc=,
-and ACP 0.15.2 from =/home/bart/.emacs.d/elpa/acp/acp.elc=.
+=$HOME/.emacs.d/elpa/shell-maker-20261001.1543/shell-maker.elc=,
+and ACP 0.15.2 from =$HOME/.emacs.d/elpa/acp/acp.elc=.
 Its Emacsvox integration comes from this repository's compiled Lisp. Updating
 the Agent Shell checkout alone does not replace those already loaded modules.
 No live package installation, reload, or dependency-lock change was performed.
@@ -67,7 +67,7 @@ agent.
 
 * Verification
 
-Selected Emacs: 31.0.90 from =/home/bart/opt/emacs-31/bin/emacs=.
+Selected Emacs: 31.0.90 from =$HOME/opt/emacs-31/bin/emacs=.
 Fresh isolated processes verified the actual Agent Shell and Emacsvox loaded
 paths. Candidate checks loaded Shell Maker 0.97.5 source from installed
 revision =dcc05a8cf24e=. The pinned prepared dependency tree was verified

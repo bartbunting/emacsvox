@@ -4,7 +4,6 @@
   "implementation_commit": "cd2c66215232d25adce140bec8de3655256adf96",
   "fixture_sha256": "2266f70d2b4df8e7b2c27b70d350710eff87f6014a956778d34a00147888c66a",
   "fixture_scope": "Private settings-only capture of saved palettes and local choices; not distributed. 81 logical voice definitions in each benchmark lane.",
-  "fixture_retained_at": "/home/bart/src/emacsvox/.benchmarks/preferred-engine-2026-09-20/palette-fixture.el",
   "before_files": {
     "emacsvox-aural-voice-data.el": "7e7284c69df311ded33ed33d1179e28cc99966746d1db9ce81057ec7ed03b1ee",
     "emacsvox-aural-voice-data.elc": "9c43883bddd6a573febe02458bbfb7e4fce249fa3920533e462af75bb472cb02",
