@@ -415,8 +415,8 @@
   (with-temp-buffer
     (let ((emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
           (emacsvox-pronounce-table nil)
-          (default-directory "/mnt/c/Users/bart/bin/")
-          (minibuffer-default "/mnt/c/Users/bart/bin/")
+          (default-directory "/mnt/c/Users/example/bin/")
+          (minibuffer-default "/mnt/c/Users/example/bin/")
           (vertico--index 0)
           (vertico--base "")
           (minibuffer-setup-hook
@@ -433,7 +433,7 @@
            ((symbol-function 'minibuffer-prompt)
             (lambda () "Find file: "))
            ((symbol-function 'vertico--candidate)
-            (lambda (&optional _highlight) "/mnt/c/Users/bart/bin/"))
+            (lambda (&optional _highlight) "/mnt/c/Users/example/bin/"))
            ((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
               (let ((pronunciation-table emacsvox-pronounce-table)
@@ -458,7 +458,7 @@
         '((stop all)
           (icon open-object)
           (icon help)
-          (aural "Find file: /mnt/c/Users/bart/bin/" vertico)))))))
+          (aural "Find file: /mnt/c/Users/example/bin/" vertico)))))))
 
 (ert-deftest emacsvox-vertico-loaded-but-inactive-keeps-minibuffer-speech ()
   "Generic setup still speaks when Vertico is loaded but not active."
@@ -466,7 +466,7 @@
     (insert "Shell command: ")
     (let ((emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
           (emacsvox-pronounce-table nil)
-          (default-directory "/mnt/c/Users/bart/bin/")
+          (default-directory "/mnt/c/Users/example/bin/")
           (minibuffer-default nil)
           (tts-punctuation-mode 'all)
           (vertico--input nil)

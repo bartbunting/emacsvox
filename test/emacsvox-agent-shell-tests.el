@@ -858,7 +858,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (cons :content (map-elt raw-tool-call 'content))))
 
 (defun emacsvox-agent-shell-test--tool-call-events (filename)
-  "Replay public tool-call events from upstream traffic FILENAME."
+  "Replay public tool-call events from traffic fixture FILENAME."
   (let ((state '((:tool-calls . nil)))
         events)
     (dolist (item (emacsvox-agent-shell-test--read-traffic filename))
