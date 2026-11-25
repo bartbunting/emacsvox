@@ -22,6 +22,7 @@
 (require 'emacsvox-aural-home)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-overrides)
+(require 'emacsvox-aural-voice-editor)
 (require 'emacsvox-aural-voice-palettes)
 (require 'emacsvox-aural-voice-workbench)
 (require 'emacsvox-omnivox-components)
@@ -2843,11 +2844,13 @@
          emacsvox-aural-voice-palette-previews-mode))
     (with-temp-buffer
       (funcall mode)
-      (should
-       (eq (key-binding (kbd "q"))
-           (if (eq mode 'emacsvox-aural-voice-workbench-mode)
-               #'emacsvox-aural-voice-workbench-quit
-             #'emacsvox-aural-quit)))))
+      (let ((dismissals 0))
+        (cl-letf (((frame-parameter nil 'emacsvox-palette-parent) nil)
+                  ((frame-parameter nil 'emacsvox-voice-list-parent) nil)
+                  ((symbol-function 'emacsvox-aural-quit)
+                   (lambda (&optional _kill) (interactive) (cl-incf dismissals))))
+          (call-interactively (key-binding (kbd "q"))))
+        (should (= dismissals 1)))))
   (should
    (eq
     (lookup-key emacsvox-aural-scheme-editor-mode-map (kbd "q"))
