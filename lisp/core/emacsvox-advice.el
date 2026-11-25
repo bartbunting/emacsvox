@@ -159,7 +159,16 @@ DOCSTRING and BODY define the feedback function for each command."
 (defvar ems--voiceify-overlays t
   "Voicify overlays")
 
-;; Needed for  outline support:
+(defun ems--mirror-overlay-invisibility (buffer start end value)
+  "Mirror overlay VALUE between START and END in BUFFER for legacy readers.
+Org owns invisible text properties for link targets.  Its reader captures
+effective visibility from the original text and overlays at speech time."
+  (with-current-buffer buffer
+    (unless (derived-mode-p 'org-mode)
+      (save-restriction
+        (widen)
+        (with-silent-modifications
+          (put-text-property start end 'invisible value))))))
 
 (defun emacsvox--advice-remove-overlays-around
     (original &rest arguments)
@@ -176,8 +185,11 @@ DOCSTRING and BODY define the feedback function for each command."
     (let ((property-beg (max (point-min) (min beg (point-max))))
           (property-end (max (point-min) (min end (point-max)))))
       (when (< property-beg property-end)
-        (with-silent-modifications
-          (put-text-property property-beg property-end name nil))))
+        (if (eq name 'invisible)
+            (ems--mirror-overlay-invisibility
+             (current-buffer) property-beg property-end nil)
+          (with-silent-modifications
+            (put-text-property property-beg property-end name nil)))))
     (apply original arguments)))
 
 (advice-add
@@ -198,8 +210,7 @@ DOCSTRING and BODY define the feedback function for each command."
           (save-restriction
             (widen) (ems--remove-personality start end voice buffer))))
       (when (and start end invisible)
-        (with-silent-modifications
-          (put-text-property start end 'invisible nil))))))
+        (ems--mirror-overlay-invisibility buffer start end nil)))))
 
 (advice-add
  'delete-overlay :before #'emacsvox--advice-delete-overlay-before
@@ -223,9 +234,8 @@ DOCSTRING and BODY define the feedback function for each command."
           (ems--add-personality start end voice
                                 (overlay-buffer overlay))))
        ((eq property 'invisible)
-        (with-current-buffer (overlay-buffer overlay)
-          (with-silent-modifications
-            (put-text-property start end 'invisible (or value nil)))))))))
+        (ems--mirror-overlay-invisibility
+         (overlay-buffer overlay) start end value))))))
 
 (advice-add
  'overlay-put :after #'emacsvox--advice-overlay-put-after
@@ -247,14 +257,10 @@ DOCSTRING and BODY define the feedback function for each command."
                                  (overlay-end overlay) voice buffer)
         (ems--add-personality beginning end voice object))
       (when invisible
-        (with-current-buffer buffer
-          (with-silent-modifications
-            (put-text-property (overlay-start overlay)
-                               (overlay-end overlay) 'invisible nil)))
-        (with-current-buffer object
-          (with-silent-modifications
-            (put-text-property
-             beginning end 'invisible invisible)))))))
+        (when buffer
+          (ems--mirror-overlay-invisibility
+           buffer (overlay-start overlay) (overlay-end overlay) nil))
+        (ems--mirror-overlay-invisibility object beginning end invisible)))))
 
 (advice-add
  'move-overlay :before #'emacsvox--advice-move-overlay-before

@@ -57,10 +57,16 @@
   "Non-nil when semantic heading annotation is installed in this buffer.")
 
 (defun emacsvox-org-heading-folded-p ()
-  "Return non-nil when point is on an Org heading with hidden descendants."
-  (and
-   (org-at-heading-p)
-   (org-fold-folded-p (line-end-position) 'outline)))
+  "Return non-nil when the whole subtree at this heading is folded."
+  (when (and (org-at-heading-p)
+             (org-fold-folded-p (line-end-position) 'outline))
+    ;; In contents view, Org hides the body but leaves child headings visible.
+    (save-excursion
+      (save-match-data
+        (let* ((heading-end (line-end-position))
+               (subtree-end (org-end-of-subtree t)))
+          (>= (org-fold-next-visibility-change heading-end subtree-end t)
+              subtree-end))))))
 
 (defun emacsvox-org-heading-facts (&optional event action)
   "Return semantic facts for the Org heading at point.

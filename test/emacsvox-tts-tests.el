@@ -4477,6 +4477,8 @@
                 ((symbol-function 'org-fold-initialize)
                  (lambda (ellipsis)
                    (push (list 'initialize ellipsis) events)))
+                ((symbol-function 'org-fold-folding-spec-p)
+                 (lambda (spec) (eq spec 'org-fold-hidden)))
                 ((symbol-function 'org-fold-core-set-folding-spec-property)
                  (lambda (spec property value &optional force)
                    (push

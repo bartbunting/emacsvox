@@ -147,6 +147,23 @@
      (point-min) (point-max) nil)
     (should-not (get-text-property (point-min) 'invisible))))
 
+(ert-deftest emacsvox-outline-fold-in-org-preserves-descriptive-links ()
+  "An Outline fold in Org leaves the link target hidden when reopened."
+  (require 'org)
+  (with-temp-buffer
+    (let ((org-mode-hook nil)) (org-mode))
+    (insert "* Heading\n[[*Heading][Label]]\n")
+    (font-lock-ensure)
+    (goto-char (point-min))
+    (let ((start (line-end-position))
+          (target (progn (search-forward "[[*") (1- (point)))))
+      (should (invisible-p target))
+      (outline-flag-region start (point-max) t)
+      (outline-flag-region start (point-max) nil)
+      (should (invisible-p target))
+      (search-forward "Label")
+      (should-not (invisible-p (1- (point)))))))
+
 (ert-deftest emacsvox-foldout-advice-is-directly-registered ()
   "Optional Foldout advice uses native advice directly."
   (dolist (target emacsvox-test--foldout-after-targets)

@@ -91,9 +91,12 @@
       ;; Outline accepts zero as a sentinel, but text properties do not.
       (when (zerop beginning)
         (setq beginning (point-min)))
-      (with-silent-modifications
-        (put-text-property
-         beginning to 'invisible (and flag 'outline)))
+      ;; In Org, the native overlay hides the body while text properties
+      ;; independently hide link targets.
+      (unless (derived-mode-p 'org-mode)
+        (with-silent-modifications
+          (put-text-property
+           beginning to 'invisible (and flag 'outline))))
       result)))
 
 (advice-add

@@ -2576,9 +2576,7 @@ Argument S specifies the syntax class."
  and intangible in it.
 This is so text marked invisible is silenced.")
 
-(declare-function
- org-fold-core-set-folding-spec-property
- "org-fold-core" (spec property value &optional force))
+(declare-function org-fold-folding-spec-p "org-fold" (spec-or-alias))
 (declare-function
  org-fold-core-set-folding-spec-property
  "org-fold-core" (spec property value &optional force))
@@ -2593,9 +2591,10 @@ This is so text marked invisible is silenced.")
        (boundp 'org-fold-core-style) (eq org-fold-core-style 'text-properties))
     (outline-mode)
     (org-fold-initialize "...")
-    (org-fold-core-set-folding-spec-property
-     'org-fold-hidden
-     :visible (not org-link-descriptive))))
+    ;; Some Org versions hide link targets with ordinary text properties.
+    (when (org-fold-folding-spec-p 'org-fold-hidden)
+      (org-fold-core-set-folding-spec-property
+       'org-fold-hidden :visible (not org-link-descriptive)))))
 
 (defun tts-speak (text)
   "Speak the TEXT string
@@ -2727,8 +2726,8 @@ by the audio device's buffering latency."
               (setq buffer-undo-list  t)
               (erase-buffer)
               (when (eq orig-mode 'org-mode)
-                (setq org-link-descriptive links-desc)
-                (tts-org-fold))
+                (let ((org-link-descriptive links-desc))
+                  (tts-org-fold)))
               ;; inherit environment
               (setq                           ; mirror snapshot
                yank-excluded-properties tts-yank-excluded-properties
