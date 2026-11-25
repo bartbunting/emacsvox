@@ -1,0 +1,395 @@
+#+title: Exploring Mermaid diagrams with Emacsvox
+#+startup: overview
+
+* What this experiment does
+
+The Emacsvox Mermaid experiment lets you explore a flowchart with speech.
+You move between nodes, browse their connections, and ask how paths branch,
+join or loop. The explorer reads the diagram's structure without requiring
+an image or a browser. It describes explicit arrows and labels; it does not
+infer what a process means or execute its steps.
+
+This walkthrough starts with a single arrow and gradually adds more structure.
+Each Mermaid block is a complete diagram you can explore directly in this Org
+file. The examples are listening exercises: judge whether you can understand
+the connections, keep your place and retrace your steps from speech alone.
+
+The prototype currently supports Mermaid flowcharts only. It uses the pinned
+Mermaid 13.0.0-alpha.3 parser, so this is experimental support. Other Mermaid
+diagram types, such as sequence diagrams and Gantt charts, are outside its
+current scope. Colors and visual styling are not narrated, and diagram links
+and callbacks are not executed. See the [[file:../js/mermaid/README.org][prototype guide]] for full details.
+
+* Open your first diagram
+
+If this is your first time using the explorer, install its parser with Node
+20 or newer and npm. Run this from the root of the Emacsvox checkout that
+your Emacs uses.
+
+#+begin_src sh
+make mermaid-deps
+#+end_src
+
+In an up-to-date Emacsvox session you can now open a diagram. If you are
+setting up a fresh checkout, run =make bytecode= from the same directory
+and start Emacsvox from that checkout.
+
+This file opens with its headings folded. Go to “1. Two nodes and one arrow”
+and press Tab on the heading to expand it. Move to the line beginning
+=flowchart LR=. Deactivate any selected region with =C-g=, then run
+=M-x emacsvox-mermaid-explore=. The active region takes precedence over the
+block at point, so a leftover selection can cause the wrong text to be parsed.
+You do not need to execute the Org block or configure Org Babel rendering.
+
+A separate read-only explorer opens and speaks an overview and the initial
+node. Use the keys below in the explorer. Up and Down (or =p= and =n=)
+browse the connections at your current node. Return follows your selection.
+Press =q= to leave it, then move to the next block in this file and run the
+command again. Each block is independent.
+
+* 1. Two nodes and one arrow
+
+An arrow points from its source to its destination. Here, Start has one
+outgoing connection and Finish has one incoming connection.
+
+#+begin_src mermaid
+flowchart LR
+    Start[Start] --> Finish[Finish]
+#+end_src
+
+At Start, press period (=.=) for full details. Press Right to follow its sole
+outgoing connection to Finish. Press Right again. You should hear that there
+is no outgoing connection and stay at Finish. Now press Left to follow the
+incoming connection back to Start.
+
+Press =b= at Start. It undoes your last visit and returns you to Finish,
+with its previous selection restored.
+
+Press =w= to hear where you are, =v= for the overview, or =?= for help.
+The =LR= declaration specifies a visual layout from left to right. Explorer
+navigation follows connections regardless of that layout.
+
+* 2. A short sequence
+
+A chain lets you practice following several steps and returning through them.
+Terminal and database shapes also give speech a little more context.
+
+#+begin_src mermaid
+flowchart TD
+    accTitle: Save a note
+    accDescr: A note is written, stored and then confirmed.
+    Begin([Begin]) --> Write[Write a note]
+    Write --> Store[(Notebook)]
+    Store --> Done([Note saved])
+#+end_src
+
+Follow Right through the chain. Listen for terminal and database shape cues;
+ordinary box shapes are omitted from brief arrivals. Use period for full
+node details. Press =b= several times to retrace your visits.
+
+Use =f= and choose Begin, then press =e=. The explanation traces the straight
+sequence ahead without moving you. Press =w= to confirm your position.
+Press =v= and listen for the author-supplied description from =accDescr=.
+
+* 3. A choice whose branches rejoin
+
+This diagram has two choices at Known solution. Both paths lead to Resolve
+the ticket. The diamond conventionally marks a decision; the arrows establish
+the actual branch structure.
+
+#+begin_src mermaid
+flowchart TD
+    Receive[Receive ticket] --> Known{Known solution?}
+    Known -->|yes| Guide[Follow guide]
+    Known -->|no| Investigate[Investigate problem]
+    Guide --> Resolve[Resolve the ticket]
+    Investigate --> Resolve
+    Resolve --> Close([Close ticket])
+#+end_src
+
+Use =f= to find Known solution. Press =o= to summarize its outgoing choices
+and select the first one. Up and Down browse choices without leaving the node;
+Return follows the selected choice. Try the yes path, use =b= to return, and
+try the no path. Press =e= at Known solution to hear where the branches rejoin.
+
+At Resolve the ticket, press =i= and browse its two incoming connections.
+Return follows the selected connection back to its source. Press =e= here
+to hear the incoming paths described in forward order.
+
+Press =C-g= to restore the combined connection list. That list puts outgoing
+connections before incoming connections, followed by undirected links when
+present. Listen for section announcements as you browse across a boundary.
+
+* 4. A retry loop and a self link
+
+A path can return to a node you have already visited. A self link returns
+directly to the same node.
+
+#+begin_src mermaid
+flowchart TD
+    Send[Send request] --> Reply{Response received?}
+    Reply -->|yes| Done([Request complete])
+    Reply -->|no| Wait[Wait before retry]
+    Wait -->|still waiting| Wait
+    Wait -->|retry| Send
+    Wait -->|retry limit reached| Escalate[Escalate to an operator]
+#+end_src
+
+Find Response received and press =e=. Follow no to Wait before retry, then
+use =o= and Up or Down to select still waiting. Return should keep you at
+Wait before retry while traversing its self link. Press =o= again and choose
+retry to return to Send request. Press =b= to return to Wait, then choose
+retry limit reached to follow the exit to Escalate to an operator.
+
+Listen for loop information with =e= at Wait before retry and =v= for the
+whole diagram. Back should retrace the visits you actually made, even when
+the same node appears more than once in that history.
+
+* 5. Identical labels on different paths
+
+Labels need not be unique. The identifiers R1 and R2 distinguish two Review
+nodes, while edge labels give their paths meaningful names.
+
+#+begin_src mermaid
+flowchart TD
+    Request[Receive change request] -->|manager| R1[Review]
+    Request -->|security| R2[Review]
+    R1 --> A1[Approved]
+    R2 --> A2[Approved]
+    A1 --> Schedule[Schedule work]
+    A2 --> Schedule
+#+end_src
+
+Browse both paths from Receive change request. Listen for identifiers when
+ordinary navigation needs to distinguish Review or Approved. Use =f= to
+search for R2 and check that you reach the security review.
+
+At Schedule work, press =e=. The explanation can use manager and security
+to distinguish these paths without repeating every duplicate node's identifier.
+Try =e= at Receive change request for the forward explanation as well.
+The shared destination describes the graph; it does not establish that both
+reviews must finish before scheduling can proceed.
+
+* 6. Long paths and browsable explanations
+
+Long chains can exceed the spoken explanation's tracing limit. This example
+lets you expand one path while keeping the rest of the explanation short.
+
+#+begin_src mermaid
+flowchart LR
+    Start[Prepare report] --> Collect[Collect figures]
+    Collect --> Clean[Clean data]
+    Clean --> Check[Check totals]
+    Check --> Draft[Draft report]
+    Draft --> Review[Review wording]
+    Review --> Format[Format report]
+    Format --> Send[Send report]
+    Send --> Done([Report delivered])
+#+end_src
+
+At Prepare report, press =e=. With the default tracing limit of five arrows,
+you should hear that later steps were omitted. Press capital =E= to open the
+browsable explanation. Use Down to select the outgoing path, then Return or
+=+= to expand it. Period repeats the selected row. Press =q= to return to the
+explorer with its node and selection preserved.
+
+For the reverse case, find Report delivered and press =e=. At the default
+limit, earlier steps are omitted. Press capital =E=, move Down to the
+incoming path and press Return to expand it. Press =q= to return. Expansion
+affects only the selected path in that explanation buffer.
+
+* 7. Different kinds of connection
+
+Two arrows to the same destination are separate choices. A two-way arrow
+allows travel in either direction. A line without arrows expresses an
+undirected connection.
+
+#+begin_src mermaid
+flowchart LR
+    Primary[Primary service] -->|normal| Worker[Worker]
+    Primary -->|urgent| Worker
+    Worker <-->|synchronize| Replica[Replica]
+    Worker --- Notebook[Operator notebook]
+    Worker -. status .-> Monitor[Monitor]
+    Worker ==> Archive[(Archive)]
+    Notebook o--o Maintenance[Maintenance port]
+    Maintenance x--x Spare[Spare port]
+    Primary ~~~ Anchor[Layout anchor]
+#+end_src
+
+At Primary service, use =o= and browse normal and urgent. Both lead to Worker,
+but they should remain distinct choices. At Worker, browse the combined list
+and listen for the two-way connection and the undirected link. Either Left
+or Right can follow a selected two-way or undirected connection.
+
+Browse the connections to Monitor and Archive to hear the dotted and thick
+styles. Use =f= to find Maintenance port and browse both of its connections.
+Listen for the circle marker on the link to Operator notebook and the cross
+marker on the link to Spare port. The invisible =~~~= layout link is omitted
+from navigation. Layout anchor remains available through =a= or =f=.
+
+Use =f= to go back to Worker. Press =r= and choose Replica to preview an
+arrow route. In the route buffer, Return follows the next step. Press =b=
+to retrace it, then =q= to return to the explorer at Worker. Try a route
+to Operator notebook. Its undirected link provides no arrow route there.
+You can still visit it by following the selected undirected connection.
+
+* 8. Separate parts and an isolated node
+
+A single diagram can contain several independent components. Following arrows
+from one component cannot reach the others.
+
+#+begin_src mermaid
+flowchart LR
+    Browser[Web browser] --> Website[Website]
+    Sensor[Temperature sensor] --> Display[Local display]
+    Notebook[Operator notebook]
+#+end_src
+
+Press =v=. The overview should report three separate parts, including one
+isolated node. Press =a= to browse all nodes, then select Temperature sensor
+and press Return to visit the second component.
+
+Press capital =F= and choose Disconnected nodes to find Operator notebook.
+In this filter, disconnected means no visible connections or group membership;
+it does not mean every node outside your current component. Try Entry points
+and Exit points as well. The isolated notebook belongs to neither of those
+filters.
+
+* 9. Groups inside groups
+
+Groups express containment. A connection to a group is distinct from a
+connection to one of its members.
+
+#+begin_src mermaid
+flowchart LR
+    subgraph Site[Warehouse site]
+        Receive[Receive updates]
+        subgraph Processing[Processing]
+            Queue[(Work queue)] --> Worker[Process update]
+        end
+        Archive[(Audit log)]
+    end
+    Dashboard[Remote dashboard]
+    Receive --> Queue
+    Worker --> Archive
+    Worker --> Dashboard
+    Site --> Dashboard
+    Processing -. status .-> Dashboard
+#+end_src
+
+Find Warehouse site, press =m=, and browse its members. Visit Processing,
+then use =m= again to enter its members. From Process update, press =u= to
+visit its containing group with the member you left selected. Use =w= to
+hear the current node, groups and selection.
+
+Find Process update and follow its outgoing connections. Listen for group
+boundary announcements when moving to Audit log or Remote dashboard. At
+Remote dashboard, compare the incoming connections from a node and from
+groups. Containment helps describe the diagram's separate parts, but does
+not create arrows for route finding.
+
+* 10. Labels, Unicode and source positions
+
+The adapter simplifies basic HTML and Markdown label styling for speech.
+Unicode characters also exercise source navigation after characters that
+occupy more than one UTF-16 unit in the parser.
+
+#+begin_src mermaid
+flowchart LR
+    Start["Café reception 😀"] --> Read["Read<br/>the request"]
+    Read --> Check["`Check **important** details`"]
+    Check --> Save["Save &amp; notify"]
+    Save --> Done["Finished"]
+#+end_src
+
+Follow the chain and listen for readable labels without basic formatting
+markup. Pronunciation of the emoji depends on your speech setup. Find
+Finished and press =s=. Point should land at that node's first source
+occurrence in this block, despite the earlier emoji. Switch back to the
+explorer buffer to continue. Unknown styling may remain literal.
+
+* 11. A deployment workflow
+
+This larger example combines branches, joins, longer paths, approval waits
+and rollback. Labels describe a process, but navigation only follows arrows:
+it does not run validation or evaluate approval conditions.
+
+#+begin_src mermaid
+flowchart TD
+    accTitle: Deployment pipeline
+    accDescr: Validation paths meet before staging. Approval can wait, and monitoring can trigger rollback.
+    Commit([Submit change]) --> Build[Build application]
+    Build --> Unit[Run unit tests]
+    Build --> Lint[Check code style]
+    Build --> Security[Check dependencies]
+    Unit --> Gate{All checks passed?}
+    Lint --> Gate
+    Security --> Gate
+    Gate -->|yes| Package[Package release]
+    Gate -->|no| Fix[Correct the change]
+    Fix --> Build
+    Package --> Stage[Deploy to staging]
+    Stage --> Smoke{Smoke tests passed?}
+    Smoke -->|yes| Approval{Release approved?}
+    Smoke -->|no| Fix
+    Approval -->|yes| Production[Deploy to production]
+    Approval -->|wait| Window[Wait for release window]
+    Window --> Approval
+    Production --> Monitor{Service healthy?}
+    Monitor -->|yes| Done([Release complete])
+    Monitor -->|no| Rollback[Restore previous release]
+    Rollback --> Fix
+#+end_src
+
+Use =f= to visit each named node for these exercises.
+
+1. At Build application, press =e=. Identify the three validation paths and
+   their shared destination, All checks passed.
+2. At All checks passed, press capital =E= and browse the yes and no paths.
+   The yes path includes Package release and Deploy to staging, stopping at
+   Smoke tests passed because that node branches. Press =q= to return.
+3. At Release approved, press =e= and identify the wait loop. Some paths can
+   keep looping instead of reaching a shared destination. Listen for the
+   distinction between branches that rejoin and branches that can reach a
+   destination while other paths avoid it.
+4. At Service healthy, follow no through Restore previous release to Correct
+   the change. Use =b= to retrace those visits.
+5. At Correct the change, press =r= and choose Release complete. Browse the
+   route's steps with Up and Down; this previews them without moving you.
+   Return follows the next uncompleted step, regardless of the previewed row.
+   Follow a few steps, retrace with =b=, then press =q=.
+6. Use capital =F= to try Branch points, Joins, Upstream, Downstream and
+   Unvisited. The first two describe arrow counts. Upstream and Downstream
+   follow arrow paths relative to your current node.
+
+Routes use the fewest arrows, with source order breaking ties. A route through
+one validation branch does not establish that all checks have passed. Group
+membership and undirected links do not supply route steps.
+
+* Edit, refresh and listen again
+
+The explorer holds a snapshot of its source. To try an edit, open the first
+diagram and follow the arrow to Finish. Press =s= to visit its source.
+Change =Finish[Finish]= to =Finish[Finished]=, keeping the identifier before
+the bracket. Use =C-x b= to select the same explorer buffer (its name starts
+with =*Mermaid:=). Press period to hear the old label. Try =s= again and
+Emacs asks you to refresh first. Press =g= to refresh and hear Finished.
+
+Refreshing preserves your current node when its identifier still exists,
+clears traversal history and remembered selections, and invalidates explanation
+and route buffers. Reopen those buffers after refreshing.
+
+For an optional error exercise, temporarily remove the closing bracket from
+=Finish[Finished]= and refresh. You should receive a syntax diagnostic, with
+a line number relative to that diagram. Navigation becomes available again
+after you restore the bracket in the Org buffer and press =g= in the explorer.
+
+As you listen, note the example, current node, exact keys and what you expected
+to hear. Check whether browsing leaves your position clear, branch labels give
+enough context, Back restores the right selection, and longer explanations
+remain useful. Automated parser and navigation checks cannot decide whether
+the spoken experience is comfortable for you.
+
+For the complete command and settings reference, see the
+[[file:../js/mermaid/README.org][prototype guide]].
