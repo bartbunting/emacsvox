@@ -145,10 +145,6 @@ read -r -p 'Emacs host VPN IPv4 address: ' host
 ./start-relay --vpn-host "$host" --existing "$phone" "$socket"
 #+end_src
 
-If the app labels the address field “WSL Tailscale IPv4 address”, that
-build accepts host addresses only in the Tailscale range. For other private
-ranges you need a signed build with the “Emacs host VPN IPv4 address” field.
-
 * Reconnect or restart
 
 To connect automatically when you launch the app, enable “Connect on open”
@@ -209,12 +205,11 @@ an active session.
   and saving erases the phone copy. A trace you sent remains on the host
   in =${XDG_STATE_HOME:-$HOME/.local/state}/emacsvox/iphone/last-speech-trace.log=.
 - *Timing.* With Omnivox connected, expand Timing tests in Diagnostics.
-  Choose the local or SSH key-to-speech test. If “Start timing with this
-  button” appears, activate it or press Return in the Emacs keyboard
-  field there. Read the result under Timing tests. On signed build 10 the
-  test takes you to Terminal instead. Double-tap the Emacs keyboard field,
-  press Return and wait for Diagnostics to reopen. The measurement ends
-  at the audio callback, before the sound reaches your ears.
+  Choose the local or SSH key-to-speech test. Press Return in the Emacs
+  keyboard field or activate “Start timing with this button”. The latest
+  result for each test appears under Timing tests. Activate “Read timing
+  results aloud” to hear it. The measurement ends at the audio callback,
+  before the sound reaches your ears.
 
 * Start the signed app against the test server
 
@@ -280,8 +275,7 @@ IPHONE_TEST_SSHD=/usr/sbin/sshd node test/shared-frame.cjs --routed --time-tones
 #+end_src
 
 That check also requires =tmux=. See [[file:OMNIVOX.org::#reproduce-the-wsl-checks][Omnivox worker and timing checks]] for
-the native speech tests and [[file:PLAN.org][the development record]] for the earlier Expo Go
-and mixer trials.
+the native speech tests and [[file:PLAN.org][the development plan]] for outstanding device checks.
 
 To stage a signed app, supply an Omnivox checkout containing the Git
 revision named in =omnivox-revision=. Set =IPHONE_OMNIVOX_SOURCE= to the

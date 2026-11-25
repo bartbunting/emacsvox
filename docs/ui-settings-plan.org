@@ -61,17 +61,17 @@ Check VoiceOver tab selection and external keyboard focus on the signed
 build using the [[file:../prototypes/iphone-speech/README.org::*Use the bottom tabs][bottom tab exercise]].
 Check the expanded state of the Settings and Diagnostics sections with
 VoiceOver. Verify that switching sections preserves unsaved preferences.
-Use Connection in the next signed build to enter an alternate VPN's host
+Use Settings, Connection to enter an alternate VPN's host
 address. Reconnect and read a line using the [[file:../prototypes/iphone-speech/README.org::*Connect the signed app to your running Emacs][signed app setup]].
 Check external-keyboard echo, isolated capital pitch and Shift+Return in
 an unsent draft using the [[file:../prototypes/iphone-speech/README.org::*Check keyboard speech and permissions on the signed app][signed keyboard exercise]].
 On the phone, open Browse voices from the Aural menu. Check the spoken
 voice on entry and after Down, then preview the selected row after reconnecting.
 Compare US Reed’s in-word capital timing and mixed indentation level.
-On a signed build with the speech loudness slider, check VoiceOver
-adjustment, saved level and speech balance with tones at zero and +3 dB.
-Check the spoken WSL receipt
-using the [[file:../prototypes/iphone-speech/OMNIVOX.org::*What exists][phone listening and trace exercise]].
+Check VoiceOver adjustment of the speech loudness slider, its saved level
+and speech balance with tones at zero and +3 dB. Check the spoken receipt
+when sending a trace to the Emacs host
+using the [[file:../prototypes/iphone-speech/OMNIVOX.org::*Cue timing, loudness and logging][phone listening and trace exercise]].
 
 ** Preference reload, recovery and early speech
 

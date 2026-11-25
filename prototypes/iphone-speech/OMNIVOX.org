@@ -7,38 +7,23 @@ Emacs sends speech commands and cue identities over your encrypted VPN.
 The iPhone synthesises speech and mixes tones and earcons locally. To
 connect the app, follow the [[file:README.org::*Connect the signed app to your running Emacs][signed app setup]].
 
-* Desktop compatibility in build 9
+* Desktop compatibility
 
-Build 9 uses Omnivox =717a06a=. Its worker advertises 32 capabilities,
-all present in the running desktop worker. Both support timeline versions
-1 through 7, rich tones, recorded earcons, palette-aware letters, exact
-voice previews, per-choice tuning, punctuation profiles and tracked
-completion. Both use the Rust mixer for inserts, overlays, stereo
-placement, filters, chorus, echo and reverb. Apple supplies the phone's
-speech samples and timing information.
+The phone and desktop share the Omnivox presentation protocol and Rust
+mixer for tones, recorded earcons, stereo placement, filters, chorus,
+echo and reverb. On the phone, Apple supplies speech samples and timing
+information. The two speech workers negotiate their capabilities with
+Emacs separately. Both support presentation timelines through version 7,
+rich tones, palette-aware character speech, exact voice previews, per-choice
+tuning, punctuation profiles and tracked completion.
 
-The desktop advertises eleven more capabilities. They affect different
-parts of the experience.
-
-- *Legacy clients.* Queue, dispatch, Stop, letters, tones and recordings
-  serve existing Emacs commands. Ordinary navigation uses the structured
-  timeline. The desktop also advertises the complete =legacy_commands=
-  set and =emacsvox_tx= for replacing a legacy batch. Add a missing legacy
-  command only for a specific client workflow with a demonstrable benefit.
-- *Languages and characters.* Phone palettes can choose among installed
-  Apple voices. The desktop also advertises =logical_voice_language_routing=
-  and =text_repertoire_routing_v1=. The latter allows Emacsvox to send
-  original Unicode text when every worker can route it to a suitable
-  engine. Mixed-language text and symbols are a useful next comparison.
-- *Engines and voices.* The desktop advertises =preferred_engine=,
-  =espeak_variants_v1=, =startup_engine_rescan=, =engine_recovery_probe=,
-  =engine_configuration_v1= and =voice_library_v1=. The phone has one
-  Omnivox adapter for iOS system speech. A provider app can register more
-  voices with iOS. Trying those voices uses the existing adapter.
-  Embedding eSpeak NG as a separate Omnivox engine is deferred.
-- *Audio outputs.* The desktop advertises =process_audio_routing=. The phone
-  plays through the active iOS audio route and keeps independent main
-  and notification speech lanes.
+The phone uses an iOS speech adapter for its installed voices, including
+voices supplied by provider apps. iOS manages voice installation and the
+active output for both workers. Desktop features for configuring multiple
+engines, eSpeak variants and routing each worker to its own audio device
+remain desktop-specific. The phone accepts queue, dispatch, Stop, letter,
+tone and recording commands used by Emacsvox. Ordinary navigation uses
+structured timelines.
 
 For Reed and Flo, the phone implements rate, average pitch and volume.
 The Apple adapter has no native controls for pitch range, stress or
@@ -48,13 +33,11 @@ are the position of a cue inside a word when Reed omits a marker,
 indentation over the first word, and the time from a keypress to audible
 speech and interruption on speaker and headphones.
 
-* Language routing in build 10
+* Language routing
 
-Signed build 10 uses Omnivox =a30c94d=. It advertises 35 of the
-43 desktop capabilities, adding language routing, Unicode routing and
-speech engine recovery to build 9. iOS manages the voice library and
-the shared audio output. Use =g= in Browse voices after installing a
-voice in iOS or its provider app.
+The iPhone workers support language routing, Unicode routing and speech
+engine recovery. Press ~g~ in Browse voices after installing a voice in
+iOS or its provider app to refresh the inventory.
 
 A palette role can request a language such as =fr-CA=. The phone tries its
 explicit voice choices in order. If the first choice names an unavailable
@@ -73,7 +56,7 @@ The WSL protocol check exercises this glyph, a language change, Japanese
 text and a combining accent with the desktop and phone workers.
 Pronunciation depends on the installed voice.
 
-* Recover a speech engine in build 10
+* Recover a speech engine
 
 The main and notification workers each use desktop Omnivox's recovery
 rules. If iOS fails to synthesize speech on one worker, that worker
@@ -84,46 +67,30 @@ Repeated failures extend the wait to at most one minute.
 To retry sooner, open Browse voices on the phone frame, press capital
 =K= and choose Main or Notifications. Read a line or trigger a notification
 on that worker to try a fresh iOS synthesizer. Stopping a retry leaves the
-next one available. Build 9 can still use the voice browser and reports
-that its worker lacks the retry command.
+next one available.
 
 * Choose the iPhone output
 
-In build 10, open Settings, then Speech and sounds.
+In Settings, expand Speech and sounds.
 After “Audio output for speech and notifications”, activate the system
 output picker and choose an available destination. Both workers use the
 active iOS output. The choice takes effect immediately. iOS lists the
 eligible destinations, including nearby AirPlay receivers.
 [[https://developer.apple.com/documentation/avkit/avroutepickerview][Apple's output picker]].
 
-* What exists
+* Cue timing, loudness and logging
 
-Signed build 3 connects the external keyboard over SSH and speaks Emacs
-navigation using local Eloquence. It has a Swift tone player, a small set
-of recordings, and a separate synthesizer for permission requests. Its WSL
-relay interprets a subset of the legacy commands. It has no return path for
-Omnivox voice inventory or capability replies. Its Swift beep and cue player
-do not yet implement the desktop tone renderer or the full sound queue.
-[[file:README.org::*Start the signed app against the test server][Signed build 4]] includes the native worker. Enable it in Settings.
-It uses Omnivox's parser, bounded pending batch, logical voice registry,
-control codec, 44.1 kHz stereo tone renderer and WAV/OGG decoder. Swift
-schedules the speech, sound and tone streams on the phone. The signed
-build 3 still uses the earlier receiver.
-
-Desktop Omnivox defines the playback behaviour for this port. In build 4
-speech goes directly to the system synthesizer. Swift starts overlaid tones
-on a separate player and waits for an inserted tone to finish before
-asking for the next speech fragment. This can add an audible gap.
-
-Signed build 5 feeds Apple speech samples into the desktop Rust
+The phone worker uses Omnivox’s parser, bounded pending batch, logical
+voice registry, control codec, 44.1 kHz stereo tone renderer and WAV/OGG
+decoder. The app feeds Apple speech samples into the shared Rust
 resampler and presentation mixer. In cue-bearing speech, an insert moves
 the following speech by its rendered length. An overlay starts on the
 speech clock, can carry into the next audio buffer and can finish after
 the line. WSL tests compare individual stereo samples for both placements.
 The main and notification workers have independent playback and Stop.
 
-In Diagnostics, “Test timing inside TestCase” replays the version 3 document
-produced by Emacsvox for that word. The same Rust code used by the desktop
+Under Diagnostics, Timing tests, “Test timing inside TestCase” replays
+the version 3 document produced by Emacsvox for that word. The same Rust code used by the desktop
 validates the document, prepares the text and assigns the actions to speech
 windows. Apple receives one utterance with the internal capital bookmarked.
 The status reports how many internal marks the voice supplied. The renderer
@@ -132,14 +99,12 @@ or later. See [[https://developer.apple.com/documentation/avfaudio/avspeechsynth
 If an internal mark is missing, Omnivox uses a word boundary on the
 requested side when Apple supplies a matching word range. Otherwise it
 places the cue at the corresponding end of the speech span. The diagnostic
-reports each fallback. In build 5, ordinary navigation negotiates
-timeline version 3. A single =C-n= in an Agent Shell response sends =TestCase=
-with its cue positions to the phone. Main and notification speech keep
+reports each fallback. Main and notification speech keep
 separate playback queues. Moving again retires the old navigation and its
 unheard cues. Local Stop silences both queues, including their remaining
 audio. Reconnecting creates fresh workers.
 
-Build 6 asks for word timings in plain text when each cue falls at a word
+The app asks for word timings in plain text when each cue falls at a word
 start. If the voice omits a needed position, the app collects audio again
 in phrases beginning at the affected words. It measures those boundaries
 in speech samples and passes one speech window to the desktop mixer. A
@@ -147,15 +112,11 @@ mixed-case word stays intact. The precision of a cue inside that word
 still depends on the timings its voice returns. Separately synthesized
 phrases can change the cadence.
 
-Build 7 uses the desktop effect processor for structured readings, palette
-letters and voice previews. Its speech and character PCM use the same
-player. In the source revision after build 7, older queued and marked
-speech also applies the registered voice's effects. A synthetic stereo
-comparison covers the speech samples and the echo tail. On the phone,
-listen for the level of letters relative to ordinary reading and for the
-change of voice within a styled line.
+Structured readings, palette letters and voice previews use the desktop
+effect processor. Character and line speech use the same player. Queued
+and marked speech also use the registered voice's effects.
 
-In build 8 or later, open Settings and focus “Speech loudness”.
+In Settings, expand Speech and sounds and focus “Speech loudness”.
 Swipe up or down with VoiceOver, or drag the slider. Choose zero for the
 desktop Omnivox level or add up to six decibels. Activate “Save settings”
 to use that level for the next reading and future connections. The native
@@ -169,14 +130,14 @@ tone at each word, then press =C-n= during the line. In Diagnostics,
 “Last reading’s cue timing” reports the first reading’s marker counts,
 range mismatches and any measured word boundaries.
 
-For more detail, open Settings, turn on “Log speech text and timing” and
-activate “Save settings”. Repeat the reading. “Read speech trace” in
-Diagnostics shows speech text, Apple's request text, marker ranges and
-audio offsets. The phone keeps up to 64 KiB in memory. Turning the
+For more detail, open Settings, expand Speech and sounds, enable “Log
+speech text and timing” and activate “Save settings”. Repeat the reading.
+Under Diagnostics, expand Speech trace and activate “Read speech trace”
+to see the speech text, Apple’s request text, marker ranges and audio
+offsets. The phone keeps up to 64 KiB in memory. Turning the
 switch off and saving clears the phone copy. To share one snapshot with
 your Emacs host, activate “Send speech trace to Emacs host” while connected.
-The phone's notification voice says “Speech trace saved in WSL” after
-the relay saves the file, or reports that saving failed. The latest snapshot
+The app reports whether the Emacs host saved the trace. The latest snapshot
 replaces the previous one in
 =~/.local/state/emacsvox/iphone/last-speech-trace.log=, or under
 =$XDG_STATE_HOME/emacsvox/iphone/= if you set =XDG_STATE_HOME=.
@@ -270,10 +231,8 @@ choose “Import a personal earcon” in Settings. Both ends identify the
 recording by SHA-256. Encoded size is limited to 16 MiB and decoded
 duration to 30 seconds. A failed cue leaves the terminal usable.
 
-In build 4, import the two original Agent Shell input recordings to hear
-the change between editing and browsing. Build 5 includes both
-recordings under the same content IDs. With Explicit input and earcon
-feedback enabled, Return at the draft enters editing and =C-c e= returns
+The app bundles both Agent Shell input recordings. With Explicit input and
+earcon feedback enabled, Return at the draft enters editing and =C-c e= returns
 to browsing. A customised recording can still be imported from Files.
 
 To compare indentation, enable audio indentation in the buffer, select
@@ -282,13 +241,11 @@ by four and eight spaces. At the default duration settings you should hear
 a 250 Hz tone for 130 and 210 ms respectively, starting with the line.
 Compare mixed-case words such as =TestCase= separately. The built-in
 capital cue uses an insert. For an isolated character, compare =a= with
-=A=. The updated worker uses desktop Omnivox's capital pitch, 1.5 by
+=A=. The worker uses desktop Omnivox's capital pitch, 1.5 by
 default. Lowercase letters and the following line use their ordinary pitch.
-Build 4 used ordinary pitch for both cases.
 
 =Stop Speech= on the phone silences both lanes locally. Reconnect to
-create fresh workers and restore the saved phone settings. Turn off
-“Use Omnivox on iPhone” in Settings to use the earlier speech mode.
+create fresh workers and restore the saved phone settings.
 Disconnect and press Control+C in the separate test launchers to finish.
 
 ** Reproduce the WSL checks
@@ -312,22 +269,18 @@ a disposable graphical Emacs. Staging builds the pinned Rust commit for
 arm64 iPhone and arm64 Simulator and checks every bundled sound digest.
 A hosted Xcode build and physical listening qualify Apple playback,
 voice availability and keyboard focus. Standalone =emacsvox_tone= version
-1 supports insert and overlay. Build 5 adds timeline version 3 and playback
-marker version 2. Files, silence, tone placement, stereo pan, filters and
-effect tails use the desktop renderer. The worker reports resolved positions
-and reached semantic events before tracked completion. Build 9 includes
-the richer tone shapes in versions 6 and 7. See
-[[*Desktop compatibility in build 9][Desktop compatibility in build 9]] for the Apple voice controls and
-remaining device checks.
+1 supports insert and overlay. Timeline playback supports marker positions,
+files, silence, tone placement, stereo pan, filters and effect tails.
+The worker reports reached semantic events before tracked completion.
+Versions 6 and 7 support rich tones.
 
-
-Use Omnivox =3ed4e8d= as the first reproducible desktop reference. Update
-the reference deliberately as Omnivox evolves. The contracts are
+Use the revision in [[file:omnivox-revision][the Omnivox pin]] for reproducible comparisons.
+The contracts are
 [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/legacy.md][legacy commands]],
 [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md][control and discovery]] and
 [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/presentation-timeline.md][presentation timelines]].
 
-*** Build 10 timing baseline in WSL
+*** Timing baseline in WSL
 
 On 24 November 2026, seven pairs of =C-n= presses crossed the loopback
 SSH connection. With the isolated Emacs using a 128,000,000-byte garbage
@@ -346,11 +299,9 @@ starts. Both versions produced the same checksums for the cue positions.
 
 ** 1. Run the real protocol in the app
 
-Keep the app, frame routing, relay and integration tests on Emacsvox
-=prototype/iphone-ssh=. Use the separate Omnivox branch
-=prototype/iphone-worker= for reusable Rust changes from the pinned
-reference. Use the shared Omnivox parser, queue,
-state and timeline types. Reuse the renderer from =omnivox-audio= and
+The Emacsvox checkout contains the app, frame routing, relay and integration
+tests. The paired Omnivox checkout supplies the Rust worker. Use the
+shared Omnivox parser, queue, state and timeline types. Reuse the renderer from =omnivox-audio= and
 the admission, replacement and voice-resolution behaviour currently spread
 across the server and TTS crates. Swift provides Apple voice discovery,
 speech samples, audio output and audio-session lifecycle.
@@ -491,10 +442,8 @@ Use hosted macOS to link the Rust library for device and simulator, compile
 Swift against the iOS SDK and run native integration tests. A simulator
 can exercise audio buffers with an installed test voice. Use a signed
 device build to collect the real iOS inventory and renderer timings.
-Build 4 introduced two-way negotiation, phone voice listing, selection
-and common controls, and the legacy tone and icon streams. The
-[[file:PLAN.org::*Next implementation and device build][build 5 device exercise]] checks ordinary navigation with the installed iOS voice.
-Qualify the later rich-tone versions against their own fixtures.
+Use the [[file:README.org::*Check keyboard speech and permissions on the signed app][signed app checks]] for navigation, interruption and permissions,
+and compare rich tones with the desktop fixtures.
 
 Keep listening as a parallel acceptance track. Continue coding, running
 automated checks and preparing subsequent slices while listening results
