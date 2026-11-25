@@ -77,8 +77,6 @@ On a standard OpenSSH host, edit =~/.ssh/authorized_keys= for the account
 that runs Emacs. Prefix the public key you copied from the app as shown
 below. Replace =PHONE_VPN_IP= with the iPhone’s VPN IPv4 address and
 =PUBLIC_KEY_DATA= with the key data from the app. Keep it all on one line.
-If you already added this key, edit its existing entry. A second,
-unrestricted copy would still allow an ordinary login from other addresses.
 
 #+begin_example
 restrict,pty,from="PHONE_VPN_IP" ssh-ed25519 PUBLIC_KEY_DATA
@@ -399,3 +397,4 @@ expiry and certificate before staging the files for the build.
 #+end_src
 
 The EAS build page supplies the installation link for the registered phone.
+
