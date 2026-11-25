@@ -1,12 +1,11 @@
 #+title: Omnivox on iPhone
 #+startup: content
 
-From the iPhone frame in your existing WSL Emacs, you should be able to
-list the voices installed on the phone, preview and apply a voice, and hear
-the same tone and earcon commands you use on the desktop. Emacs sends
-commands and cue identities. The phone synthesizes the speech and plays
-the audio locally. Pair the keyboard with the iPhone. The app reaches the Emacs host over
-your encrypted VPN.
+From the iPhone frame in your running Emacs, you can list the voices
+installed on the phone, preview a voice and assign it to a reading role.
+Emacs sends speech commands and cue identities over your encrypted VPN.
+The iPhone synthesises speech and mixes tones and earcons locally. To
+connect the app, follow the [[file:README.org::*Connect the signed app to your running Emacs][signed app setup]].
 
 * Desktop compatibility in build 9
 
@@ -183,20 +182,20 @@ replaces the previous one in
 =$XDG_STATE_HOME/emacsvox/iphone/= if you set =XDG_STATE_HOME=.
 
 ** Try the native worker
+:PROPERTIES:
+:CUSTOM_ID: try-the-native-worker
+:END:
 
 Use the [[file:README.org::*Connect the signed app to your running Emacs][signed app setup]] to start the relay and SSH listener on your
 host. For the separate graphical fixture, choose the
 [[file:README.org::*Start the signed app against the test server][isolated sample]]. Both use your own VPN addresses and iPhone SSH key.
 
-In a build containing the native worker, open Settings, turn on “Use
-Omnivox on iPhone”, save and connect. “Finding iPhone voices” precedes
-“Connected”. Both workers acknowledge their inventory and initial voice
-registration before the keyboard becomes ready. The first connection
-prefers an installed Eloquence Reed. Build 4 can select British Reed from
-Apple's inventory order. The next build prefers US Reed when available.
-On a test device both workers refreshed the installed voices on reconnect
-and resolved the reading roles to the saved voice.
-The phone reading rate starts at 150.
+In Settings, expand Speech and sounds, turn on “Use Omnivox on iPhone”,
+save and connect. The status may read “Finding iPhone voices” while the
+reading and notification workers prepare. With no saved reading voice,
+Omnivox prefers US English Eloquence Reed when installed. On reconnect
+it uses your saved reading voice if that voice is still installed.
+The initial phone reading rate is 150.
 
 To download another Apple voice, open Settings, Accessibility, VoiceOver,
 Speech, then Add Rotor Voice. Choose the language and use the download
@@ -293,6 +292,9 @@ create fresh workers and restore the saved phone settings. Turn off
 Disconnect and press Control+C in the separate test launchers to finish.
 
 ** Reproduce the WSL checks
+:PROPERTIES:
+:CUSTOM_ID: reproduce-the-wsl-checks
+:END:
 
 #+begin_src sh
 cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"

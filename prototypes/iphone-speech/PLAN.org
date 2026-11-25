@@ -8,17 +8,10 @@ Emacs, use the minibuffer and work in a running
 Codex conversation. The phone speaks its own frame locally, including
 Emacsvox navigation, tones, earcons and permission announcements.
 
-The Expo Go baseline is on the local Emacsvox branch =prototype/iphone-speech=.
-The native experiment builds on it on =prototype/iphone-native-audio=.
-The signed SSH app lives on =prototype/iphone-ssh=. Make reusable Rust
-changes on a separate Omnivox feature branch. Use a named test
-Emacs server until phone and desktop routing pass together. Record a date,
-revision and short result under each milestone when its acceptance test passes.
-Use a fixed sample for listening tests and keep spoken text out of routine logs.
-
-The earlier local branches named above are stages of this checkout. Emacsvox
-revisions in the build notes point to the corresponding commits in this
-history. The private signed builds predate the removal of local setup details.
+For the current signed app, use the [[file:README.org::*Connect the signed app to your running Emacs][connection guide]]. This plan records
+the development trials, their revisions and outstanding listening checks.
+The local branch names below identify stages in the history of this
+checkout.
 
 * Next implementation and device build
 
@@ -219,7 +212,7 @@ Start an unsent draft on the PC and continue it on the phone. Pass when
 disconnect closes just the phone frame, the PC still shows the edited
 draft, and reconnect opens the same conversation.
 
-The [[file:README.org::*Continue a PC draft on the phone][shared-frame trial]]
+The [[file:test/shared-frame.cjs][shared-frame trial]]
 is ready on =prototype/iphone-ssh=. The WSL check uses a real graphical
 Emacs, a rendered Agent Shell sample and terminal input over the receiver
 socket. Both frames showed the same buffer and the PC retained the edited
@@ -244,7 +237,7 @@ closes. Pass when both frames display the same buffer and alternating
 navigation and Stop affect only the device that issued each command.
 Verify this before attaching to the everyday Emacs server.
 
-On 22 November 2026 the [[file:README.org::*Route each frame to its own speaker][routed trial]] passed with an Xvfb desktop frame
+On 22 November 2026 the [[file:test/shared-frame.cjs][routed trial]] passed with an Xvfb desktop frame
 and a real terminal frame. Alternating Control+n and Stop affected the
 expected speech process. The same test passed over SwiftNIO SSH to a
 disposable existing Emacs. On 23 November, navigation worked from both
@@ -292,7 +285,7 @@ the isolated server. Try SwiftNIO SSH and SwiftTerm in the signed app.
 Keep the SSH key in the iOS Keychain. Run =emacsclient -t -s SERVER= and
 keep terminal input and local speech available in the same foreground app.
 
-The [[file:README.org::*Exercise the SSH transport in WSL][WSL SSH test]] on =prototype/iphone-ssh= uses the Swift transport against
+The [[file:README.org::*Reproduce routing and the hosted build][WSL SSH test]] on =prototype/iphone-ssh= uses the Swift transport against
 a temporary loopback OpenSSH server. On 22 November 2026 it attached to
 an existing Agent Shell sample, dispatched the destination line through
 Emacsvox, resized the Emacs frame, saved UTF-8 input and reattached to
@@ -349,7 +342,7 @@ one and respond to Stop at least as promptly. Cancelled audio must stay
 silent. If Reed's samples arrive too late, keep direct speech and separate
 cues usable while investigating.
 
-The [[file:README.org::*Native mixer experiment][native mixer experiment]] includes direct and mixed playback, cancellation,
+The [[file:modules/iphone-mixer/ios/IphoneMixerModule.swift][native mixer experiment]] includes direct and mixed playback, cancellation,
 a fixed tone and the Accent recording. On 22 November 2026 the
 hosted simulator build of =dd21276ef= succeeded. The downloaded iOS
 Simulator app contained the compiled Swift mixer. All 14 WSL receiver and
@@ -448,7 +441,7 @@ On 22 November 2026, the phone spoke a selected line in a rendered Agent
 Shell sample over Tailscale. The receiver at =6c4d0ec72= prefers Eloquence
 Reed at 1.5 times normal speed. Ten automated receiver and relay tests passed.
 A graphical Emacs test also verified the two real =C-n= commands, replies,
-characters, permission output and Stop. The [[file:README.org::*Listen from the PC keyboard][listening setup]] is the baseline.
+characters, permission output and Stop. The [[file:test/navigation.cjs][navigation test]] is the baseline.
 
 ** Compare interruption and an earcon in Expo Go
 
@@ -480,7 +473,7 @@ source of the delay have yet to be measured.
 
 ** Edit from the iPhone external keyboard
 
-The [[file:README.org::*Try the external keyboard in Expo Go][Expo Go keyboard test]]
+The [[file:test/keyboard-terminal.cjs][Expo Go keyboard test]]
 connects the phone field to a separate terminal Emacs over the private relay.
 WSL checks cover two response lines, speech interruption, UTF-8 file
 editing, buffer switching and reconnect. On 22 November 2026, the first
