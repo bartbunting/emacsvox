@@ -1,52 +1,163 @@
 #+title: Use your Emacs session from an iPhone
 #+startup: content
 
-Emacsvox Speech opens a terminal frame in your running Emacs. The app sends
-keystrokes over SSH. A separate speech relay sends that frame's Emacsvox
-output to Omnivox on the iPhone, which synthesises speech and plays tones
-and earcons locally. Your desktop frame keeps its own speech.
+Emacsvox Speech lets you use your running Emacs session from an iPhone
+with VoiceOver and an external keyboard. You can leave a file open at
+your desk and carry on editing it from the phone, then switch to Dired or
+read your mail. You use your usual buffers and key bindings. Web links
+you follow in Emacs open on the phone.
+
+The app makes two connections to your computer over a private VPN such as
+Tailscale. It uses SSH to open a new terminal frame in your running Emacs
+with =emacsclient -t=. Your existing SSH server can handle this part. A
+small speech relay on the computer sends that frame’s Emacsvox output to
+Omnivox on the iPhone. The phone synthesises speech with its installed
+voices and mixes in tones and earcons. Your desktop frame keeps its usual
+speech server.
 
 * Connect the signed app to your running Emacs
 
-Pair your keyboard with the iPhone and run Emacsvox from this checkout on
-the host. The host launchers have been tested on Linux under WSL2. Native
-macOS hosting has not been verified. The launchers use Bash with =wait -n=,
-Python 3, Node.js and npm, =flock=, =socat=, OpenSSH server and =ssh-keygen=.
-Node 22.13 or later in the 22.x series works with the locked dependencies.
-The relay uses your user session's writable =XDG_RUNTIME_DIR=. Put the
-=emacsclient= that matches your running Emacs on your shell's =PATH=, or
-set =EMACSCLIENT= to its absolute path in the relay terminal.
-
-The host and phone must share an encrypted VPN. Allow connections from the
-phone to the host on TCP ports 8822 for SSH and 8797 for speech. The host
-must see the phone's own VPN IPv4 address on both connections. SSH checks
-the host key. The speech connection relies on the VPN for encryption.
+The app is distributed privately. To try it, get a registration link from
+the person supplying the build. If you already have the app installed,
+continue with [[*Prepare the Emacs host][Prepare the Emacs host]].
 
 ** Prepare the phone and host once
 
-1. Get the device registration link from the person supplying the build.
-   Open it in Safari on the iPhone and complete registration. Once you
-   receive the private installation link for that phone, open it in
-   Safari and activate Install. Open Emacsvox Speech. If iOS asks for
-   Developer Mode, enable it under Settings, Privacy & Security, restart
-   and confirm. On the app's Diagnostics tab, activate “Test iPhone Voice”
-   to hear local speech before connecting to Emacs.
+*** Register the iPhone and install the app
+
+1. Open the registration link in Safari on the iPhone you want to use.
+   Activate “Download Profile”.
+2. Open iPhone Settings, select the downloaded profile and activate
+   Install. Safari displays a confirmation when registration finishes.
+3. Let the person supplying the build know that registration is complete.
+   A confirmation message is enough. Expo records your iPhone’s unique
+   device identifier (UDID) in their device list for signing.
+   [[https://docs.expo.dev/build/internal-distribution/#managing-devices][How Expo registers test devices]].
+4. When you receive the private installation link, open it in Safari
+   and activate Install.
+5. Open Emacsvox Speech. If iOS asks for Developer Mode, enable it in
+   Settings under Privacy & Security, restart the phone and confirm.
    [[https://docs.expo.dev/guides/ios-developer-mode/][Enable Developer Mode on the iPhone]].
-2. In the app's Settings tab, expand Connection and activate “Copy iPhone
-   SSH public key”. Transfer the single public key line to a file of your
-   choice on the Emacs host. Keep its absolute path for the SSH launcher.
-   The phone's private key stays in the iOS Keychain.
-3. On the host, open a Bash terminal inside the Emacsvox checkout your
-   Emacs uses. Install the relay dependencies.
+6. In Emacsvox Speech, open Diagnostics and activate “Test iPhone Voice”.
+   You can hear this test before connecting to Emacs.
+
+*** Prepare the Emacs host
+
+Run Emacsvox from this checkout on the computer that hosts your Emacs
+session. The host tools have been tested on Linux under WSL2. Native
+macOS hosting is unverified. You’ll need Bash with =wait -n=, Python 3,
+Node.js and npm, =flock= and =socat=. Node 22.13 or later in the 22.x
+series works with the locked dependencies. The relay uses your session’s
+writable =XDG_RUNTIME_DIR= and the =emacsclient= on your shell’s =PATH=.
+If you have more than one Emacs installed, you can set =EMACSCLIENT= to
+the absolute path of the client that matches your running Emacs.
+
+Connect the host and phone to the same encrypted VPN. The phone needs to
+reach the host on its SSH port (usually 22) and on TCP port 8797 for
+speech. The speech relay relies on the VPN for encryption and must see
+the phone’s own VPN IPv4 source address.
+
+1. In the app’s Settings tab, expand Connection and activate “Copy iPhone
+   SSH public key”. Transfer that single public line to the Emacs host.
+   The private key stays in the iOS Keychain.
+2. On the host, open a Bash terminal inside the Emacsvox checkout your
+   Emacs uses and install the relay dependencies.
 
    #+begin_src sh
    cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
    npm ci
    #+end_src
 
-4. Give the SSH listener a stable host identity. Run these commands as
-   the same user who runs Emacs. They reuse an existing host key at this
-   location, or create one on first use.
+*** Use your existing SSH server
+
+If you prefer to run a separate SSH listener for the phone, skip to
+[[*Use a dedicated SSH listener][Use a dedicated SSH listener]].
+
+Authorise the iPhone’s public key for the account that runs Emacs. On a
+standard OpenSSH installation, append the public line to that account’s
+=~/.ssh/authorized_keys=. If your host manages keys centrally, use its
+usual procedure.
+
+The app authenticates with its Ed25519 key and has no password or
+interactive sign-in prompt. The server must present its Ed25519 host key
+and let the account open a terminal and run =emacsclient -t=. The SSH
+session needs access to the same files and Emacs server socket as the
+relay. For example, if Emacs runs in WSL, connect to an SSH server in
+that Linux environment.
+
+Note the SSH username and port. Read the server’s Ed25519 public key on
+the host, or obtain it from its administrator. On a standard OpenSSH
+installation, this command prints the public key.
+
+#+begin_src sh
+cat /etc/ssh/ssh_host_ed25519_key.pub
+#+end_src
+
+Keep the full line beginning with =ssh-ed25519=. The app uses it to
+verify the server when you connect.
+
+** Start the speech relay
+
+In the Emacsvox session you want to use, start the Emacs server with
+~M-x server-start RET~ if needed. Type
+~M-: (expand-file-name server-name server-socket-dir) RET~ and copy the
+socket path without the surrounding quotation marks.
+
+On the host, open a Bash terminal inside the Emacsvox checkout. Enter the
+phone’s VPN address and the socket path from Emacs. If you use Tailscale,
+these commands discover the host address. Running =./start-relay= with no
+arguments in the prototype directory also lists the iOS peers it finds.
+For another VPN, use the relay command in [[*Use another private VPN][Use another private VPN]].
+
+#+begin_src sh
+cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
+read -r -p 'iPhone VPN IPv4 address: ' phone
+read -r -p 'Emacs server socket path: ' socket
+./start-relay --existing "$phone" "$socket"
+#+end_src
+
+Wait for the launcher to say the signed app can connect. Leave it running
+so you can reconnect from the phone. If you want the relay to start at
+boot, you’ll need to set that up on the host. Start it after the VPN is up
+and the Emacs server socket is available.
+
+Emacs chooses the initial buffer as it usually would for a new frame.
+To start in a particular live buffer, append its exact name as one quoted
+argument, for example ="*scratch*"=.
+
+** Save the connection and use Emacs
+
+On the phone, open Settings, then Connection. Enable “Use SSH terminal”.
+Enter the *host’s* VPN IPv4 address, your SSH username, the SSH port and
+the full trusted SSH host public key. The app initially suggests port
+8822 for the dedicated listener. Change it to your server’s port if you
+use existing SSH. Under Speech and sounds, enable “Use Omnivox on
+iPhone”, then activate “Save settings”.
+
+Pair your external keyboard with the iPhone. On the Terminal tab, activate
+Connect. The status may read “Finding iPhone voices” while Omnivox starts.
+Once it reads “Connected”, use Emacsvox as usual. If input needs focus,
+double-tap the “Emacs keyboard” field. You can switch to any live buffer
+in the session.
+
+Disconnect closes the phone frame. Emacs and its buffers stay open on the
+host. Press Control+C in the relay terminal when you want to stop the
+phone connection. If you started a dedicated SSH listener, stop it in its
+own terminal too.
+
+** Use a dedicated SSH listener
+
+Use =phone-sshd= if you want to test without changing the authorised keys
+of your usual SSH service. It runs as your Emacs user, accepts the named
+phone on port 8822 and keeps its own host key. You need OpenSSH server
+and =ssh-keygen= on the host.
+
+1. Save the public key you copied from the app in a file of your choice
+   on the host. Keep its absolute path.
+2. Choose a private directory for the listener’s host key. The example
+   uses the directory the launcher checks by default. Set =key_dir= to
+   another dedicated directory if you prefer. Run these commands as your
+   Emacs user to create the key there or reuse it on subsequent runs.
 
    #+begin_src sh
    key_dir="${XDG_STATE_HOME:-$HOME/.local/state}/emacsvox/iphone-ssh"
@@ -54,105 +165,56 @@ the host key. The speech connection relies on the VPN for encryption.
    test -e "$key_dir/host" || ssh-keygen -q -t ed25519 -N '' -f "$key_dir/host"
    #+end_src
 
-   The SSH listener uses this key automatically. Its public half identifies
-   the host to the phone. The key you copied in step 2 identifies the phone
-   to the host.
-
-** Start the SSH listener and speech relay
-
-Start these two launchers yourself when you want to make Emacs available
-to your phone. Keep both running while you use it. The app can connect
-and disconnect repeatedly during that time. Neither starting Emacs nor
-activating Connect starts a host service.
-
-In the Emacsvox session you want to use, start the Emacs server with
-~M-x server-start RET~ if needed. Type
-~M-: (expand-file-name server-name server-socket-dir) RET~ and copy the
-socket path, without its surrounding quotation marks. This selects the
-right session if you run several copies of Emacs.
-
-Open two Bash terminals in the Emacsvox checkout. For Tailscale, obtain
-the phone's VPN IPv4 address from Tailscale. Running =./start-relay= with
-no arguments in the prototype directory also lists the iOS peers it finds.
-For another VPN, see [[*Use another private VPN][Use another private VPN]] for the two command substitutions
-before starting the listeners.
-
-1. In the first terminal, enter the phone's address and the path to its
-   public key. The listener prints the host address, SSH port, username
-   and trusted SSH host public key. Keep these details for the app.
+3. Open a separate Bash terminal in the checkout and start the listener.
+   If you changed the key directory in step 2, set =host_key= below to
+   the absolute path of the private =host= file you created. Use this path
+   every time you start the listener.
 
    #+begin_src sh
    cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
    read -r -p 'iPhone VPN IPv4 address: ' phone
    read -r -p 'Absolute path to the iPhone public key file: ' phone_key
-   ./phone-sshd "$phone" "$phone_key"
+   host_key="${XDG_STATE_HOME:-$HOME/.local/state}/emacsvox/iphone-ssh/host"
+   ./phone-sshd --host-key "$host_key" "$phone" "$phone_key"
    #+end_src
 
    The default SSH server executable is =/usr/sbin/sshd=. If yours is
-   elsewhere, append =--sshd= and its absolute path to the command.
-   This listener has its own authorised keys and runs as your user.
-
-2. In the second terminal, enter the same phone address and the socket path
-   from Emacs. Wait for the launcher to say the signed app can connect.
-
-   #+begin_src sh
-   cd "$(git rev-parse --show-toplevel)/prototypes/iphone-speech"
-   read -r -p 'iPhone VPN IPv4 address: ' phone
-   read -r -p 'Emacs server socket path: ' socket
-   ./start-relay --existing "$phone" "$socket"
-   #+end_src
-
-   Emacs chooses the initial buffer as it usually would for a new frame.
-   If you prefer a particular live buffer, append its exact name as one
-   quoted argument, for example ="*scratch*"=.
-
-** Save the connection and use Emacs
-
-On the phone, open Settings, then Connection. Enable “Use SSH terminal”.
-Enter the *host's* VPN IPv4 address, SSH port 8822, username and the full
-trusted SSH host public key printed by the first terminal. Include the
-=ssh-ed25519= prefix. Open Speech and sounds, enable “Use Omnivox on
-iPhone”, then activate “Save settings”.
-
-On the Terminal tab, activate Connect. The status may read “Finding iPhone
-voices” while the workers prepare. Once it reads “Connected”, use Emacsvox
-as usual with the external keyboard. If input needs focus, double-tap the
-“Emacs keyboard” field. You can switch to any live buffer in the session.
-
-Disconnect closes the phone frame. Emacs and its buffers stay open on the
-host. To stop offering the connection, press Control+C in the relay
-terminal and in the SSH listener terminal.
+   elsewhere, append =--sshd= and its absolute path. For a VPN other than
+   Tailscale, use the listener command below.
+4. Use the host address, port, username and trusted host public key printed
+   by the listener in the app. Leave it running and [[*Start the speech relay][start the speech relay]].
+   Starting this optional listener at boot also requires additional host setup.
 
 ** Use another private VPN
 
-The default commands discover the host address and check the named iPhone
-through the Tailscale CLI. With another VPN, supply the host's VPN address
-explicitly in *each* terminal. Both addresses must be distinct and fall
-within =10.0.0.0/8=, =172.16.0.0/12=, =192.168.0.0/16= or =100.64.0.0/10=.
-The listeners bind to the host address and admit the specified phone.
+With Tailscale, the launchers discover the host address and check that the
+peer is an iPhone. For another VPN, supply the host’s VPN address with
+=--vpn-host=. The host and phone addresses must be distinct and fall within
+=10.0.0.0/8=, =172.16.0.0/12=, =192.168.0.0/16= or =100.64.0.0/10=.
 
-In the first terminal, replace the =./phone-sshd= invocation with:
-
-#+begin_src sh
-read -r -p 'Emacs host VPN IPv4 address: ' host
-./phone-sshd --vpn-host "$host" "$phone" "$phone_key"
-#+end_src
-
-In the second terminal, replace the =./start-relay= invocation with:
+In the relay terminal, replace the =./start-relay= command with:
 
 #+begin_src sh
 read -r -p 'Emacs host VPN IPv4 address: ' host
 ./start-relay --vpn-host "$host" --existing "$phone" "$socket"
 #+end_src
 
+If you use the dedicated SSH listener, replace the =./phone-sshd= command
+in its terminal as well. Use the same host key you chose for that listener.
+
+#+begin_src sh
+read -r -p 'Emacs host VPN IPv4 address: ' host
+./phone-sshd --vpn-host "$host" --host-key "$host_key" "$phone" "$phone_key"
+#+end_src
+
 * Reconnect or restart
 
 To connect automatically when you launch the app, enable “Connect on open”
-in Settings, Connection, then save. The SSH listener, relay and Emacs
-server must already be running. After a host restart, start your Emacsvox
-session and server, then [[*Start the SSH listener and speech relay][start both host launchers]] with the current
-socket path. The phone retains its saved settings. If the host key changes,
-check the new public key at the host before updating the saved key.
+in Settings, Connection, then save. SSH, the relay and the Emacs server
+must be available. After a host restart, start any of these that you run
+manually. Use the current socket path when you [[*Start the speech relay][start the relay]]. The phone
+retains its saved settings. If the host key changes, check the new public
+key at the host before updating the saved key.
 
 Locking the phone or switching apps releases the phone frame and stops its
 audio. Returning to the app reconnects a previously active session. With
@@ -163,7 +225,7 @@ selection. Speech resumes with fresh output. After an explicit Disconnect,
 use Connect to resume. “Keep awake while connected” in Settings, Keyboard
 and terminal, prevents automatic lock while the app is in the foreground.
 
-If Connect fails, first check that both host launchers are still running
+If Connect fails, first check that the relay is running, SSH is available
 and that the VPN address in the app belongs to the host. In Diagnostics,
 expand Connection history for the six most recent SSH results. A port
 failure points you towards the VPN, SSH listener or port. A host-key or
@@ -213,8 +275,8 @@ an active session.
 
 * Start the signed app against the test server
 
-To try the app without attaching it to your everyday Emacs, use the same
-phone settings, host key and SSH listener. In the second terminal, replace
+To try the app without attaching it to your everyday Emacs, keep the same
+phone settings and SSH server. In the relay terminal, replace
 the existing-session relay command with the one below. The isolated
 session needs a graphical display, desktop Omnivox, and Agent Shell and
 its Emacs dependencies. The launcher reads the Emacs executable from
@@ -288,6 +350,11 @@ Expo project, put its =owner= and =projectId= in the JSON object at
 =${XDG_CONFIG_HOME:-$HOME/.config}/emacsvox/iphone-expo.json=. If you
 have not configured a project here, run =npx --yes eas-cli@27.11.0 init=
 in the staged directory immediately before the EAS build command below.
+
+After the tester completes Expo registration, run =eas device:list= to
+find their iPhone’s UDID. Include that device in the Apple Ad Hoc
+provisioning profile and put its UDID on one line in =registered-udid=
+in your signing directory.
 
 With a prepared signing directory and an Ad Hoc provisioning profile for
 the registered phone, run the following in Bash. The default signing

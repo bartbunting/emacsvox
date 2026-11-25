@@ -147,8 +147,8 @@ replaces the previous one in
 :CUSTOM_ID: try-the-native-worker
 :END:
 
-Use the [[file:README.org::*Connect the signed app to your running Emacs][signed app setup]] to start the relay and SSH listener on your
-host. For the separate graphical fixture, choose the
+Use the [[file:README.org::*Connect the signed app to your running Emacs][signed app setup]] to connect through your SSH server and the speech
+relay. For the separate graphical fixture, choose the
 [[file:README.org::*Start the signed app against the test server][isolated sample]]. Both use your own VPN addresses and iPhone SSH key.
 
 In Settings, expand Speech and sounds, turn on “Use Omnivox on iPhone”,

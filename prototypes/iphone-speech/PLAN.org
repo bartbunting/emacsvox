@@ -67,7 +67,7 @@ Test reconnect and line speech on a physical iPhone using these explicit address
   speech loudness slider with the same output. With Wi-Fi off and the VPN
   connected, disconnect, then make a fresh cellular connection.
 - *Daily startup and recovery.* After your next normal WSL restart, reopen
-  Codex, start the private listener and relay, and connect with the
+  Codex, check that SSH is available, start the relay, and connect with the
   saved phone settings. Disconnect and continue on the desktop.
 
 * Device trial results
