@@ -35,6 +35,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'tts-queue-state)
+(require 'emacsvox-voice-languages)
 (require 'emacsvox-preamble)
 (require 'json)
 (require 'subr-x)
@@ -2182,18 +2183,8 @@ registration reads the current choices, never a captured startup preference."
 
 (defun omnivox--update-unicode-preprocessing ()
   "Use client-side Unicode names unless every live Omnivox routes exact text."
-  (let (processes)
-    (dolist (process (delete-dups (list tts-speaker-process
-                                        tts-notify-process)))
-      (when (and process (process-live-p process))
-        (push process processes)))
-    (when processes
-      (let ((all-supported t))
-        (dolist (process processes)
-          (unless (omnivox--process-supports-p
-                   process "text_repertoire_routing_v1")
-            (setq all-supported nil)))
-        (setq tts-handle-unicode (not all-supported))))))
+  (setq tts-handle-unicode
+        (omnivox--worker-unicode-names-p tts-speaker-process tts-notify-process tts-handle-unicode)))
 
 (defun omnivox--finish-capability-negotiation (process readiness)
   "Finish PROCESS capability negotiation with aural READINESS."
@@ -2368,7 +2359,8 @@ Return the number of distinct processes that received the command."
                 (format "%s [%s, %s] — %s"
                         name language quality id)
                 id)))
-           omnivox-available-voices))
+           (seq-filter (lambda (v) (emacsvox-voice-browser--visible-p (nth 2 v))) omnivox-available-voices)))
+         (_ (unless candidates (user-error "No voices match your browsing languages. Run emacsvox-choose-voice-languages")))
          (choice (completing-read "Omnivox voice: " candidates nil t))
          (voice-id (cdr (assoc-string choice candidates))))
     (omnivox-set-voice voice-id)
@@ -2379,13 +2371,13 @@ Return the number of distinct processes that received the command."
   (interactive)
   (unless omnivox-available-voices
     (omnivox-refresh-voices))
-  (with-help-window "*Omnivox Voices*"
-    (princ (format "Omnivox reported %d voices.\n\n"
-                   (length omnivox-available-voices)))
-    (dolist (voice omnivox-available-voices)
-      (pcase-let ((`(,id ,name ,language ,quality) voice))
-        (princ (format "%s\n  ID: %s\n  Language: %s\n  Quality: %s\n\n"
-                       name id language quality))))))
+  (let ((voices (seq-filter (lambda (v) (emacsvox-voice-browser--visible-p (nth 2 v))) omnivox-available-voices)))
+    (with-help-window "*Omnivox Voices*"
+      (princ (format "%d of %d voices shown.\n\n" (length voices) (length omnivox-available-voices)))
+      (dolist (voice voices)
+        (pcase-let ((`(,id ,name ,language ,quality) voice))
+          (princ (format "%s\n  ID: %s\n  Language: %s\n  Quality: %s\n\n"
+                         name id language quality)))))))
 
 (defun omnivox--request-inventory (process &optional discovery)
   "Refresh PROCESS's inventory with at most one outstanding request.
@@ -2571,18 +2563,8 @@ DISCOVERY selects the bounded background discovery observer."
   (fset 'tts-voice-defined-p #'omnivox-voice-defined-p)
   (fset 'tts-get-voice-command #'omnivox-get-voice-command)
   (fset 'tts-define-voice-from-acss #'omnivox-define-voice-from-acss)
-  (setq tts-voice-capabilities-function #'omnivox-voice-capabilities)
-  (setq tts-voice-inventory-function #'omnivox-voice-inventory)
-  (setq tts-voice-inventory-refresh-function
-        #'omnivox-refresh-voice-inventory)
-  (setq tts-voice-configuration-apply-function
-        #'omnivox-apply-voice-configuration)
-  (setq tts-last-realized-voice-function
-        #'omnivox-last-realized-voice)
-  (setq tts-engine-recovery-probe-function
-        #'omnivox-request-engine-recovery-probe)
-  (setq tts-voice-preview-function #'omnivox-preview-voice-sequence)
-  (setq tts-voice-preview-code-function #'tts-default-voice-preview-code)
+  (dolist (binding omnivox--voice-api-bindings)
+    (set (car binding) (cdr binding)))
   (setq tts-default-speech-rate omnivox-default-speech-rate)
   (set-default 'tts-default-speech-rate omnivox-default-speech-rate)
   (setq tts-speech-rate omnivox-default-speech-rate)

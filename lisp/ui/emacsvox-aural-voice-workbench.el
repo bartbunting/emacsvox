@@ -215,6 +215,11 @@
 (defun emacsvox-aural-voice-workbench-refresh (&optional id)
   "Refresh inventory and preserve each view's row and column independently."
   (interactive)
+  (setq emacsvox-aural-voice-workbench-inventory (tts-voice-inventory))
+  (emacsvox-aural-voice-workbench--redraw id))
+
+(defun emacsvox-aural-voice-workbench--redraw (&optional id)
+  "Redraw this view from its own inventory, selecting ID when supplied."
   (unless (eq emacsvox-aural-voice-workbench-view 'physical)
     (setq emacsvox-aural-voice-workbench--voice-list-parent nil))
   (when emacsvox-aural-voice-workbench-rendered-view
@@ -224,8 +229,7 @@
     (puthash emacsvox-aural-voice-workbench-rendered-view
              (emacsvox-aural-ui-tabulated-column-index)
              emacsvox-aural-voice-workbench-columns))
-  (setq emacsvox-aural-voice-workbench-inventory (tts-voice-inventory)
-        tabulated-list-format (emacsvox-aural-voice-workbench--format)
+  (setq tabulated-list-format (emacsvox-aural-voice-workbench--format)
         header-line-format '(:eval (emacsvox-aural-voice-workbench--header)))
   (when (and tabulated-list-sort-key
              (not (assoc (car tabulated-list-sort-key) (append tabulated-list-format nil))))
@@ -562,7 +566,7 @@ when they remain unsaved."
       "A selection change does not establish runtime health or remove engine overrides.\n"
       "/ finds a voice across collapsed groups, revealing it in All if needed.\n"
       "Voice search and B match text anywhere, ignoring case. Space inserts; Tab completes.\n"
-      "F filters voices; C clears filters; R refreshes the inventory.\n"
+      "L chooses saved browsing languages across connections. F filters this view. C clears its temporary filters. R refreshes the inventory.\n"
       "t opens the complete editor for a named voice or physical experiment.\n"
       "Physical experiments stay unsaved until kept in a named voice draft.\n"
       "Save the named voice in that editor, with or without applying it.\n\n"
@@ -615,6 +619,7 @@ when they remain unsaved."
            'emacsvox-aural-voice-workbench-engine-view
            'emacsvox-aural-voice-workbench-style-view
            'emacsvox-aural-voice-workbench-set-filter
+           'emacsvox-choose-voice-languages
            'emacsvox-aural-voice-workbench-clear-filters
            'emacsvox-aural-voice-workbench-refresh-inventory
            'emacsvox-aural-voice-workbench-edit-preview-text
@@ -648,6 +653,7 @@ when they remain unsaved."
     emacsvox-aural-tabulated-mode
   "Aural-Voice-Workbench"
   "Spoken workbench for logical styles and physical voice routing."
+  (setq-local emacsvox-voice-browser--redraw #'emacsvox-aural-voice-workbench--redraw)
   (setq-local emacsvox-aural-ui-action-filter
               #'emacsvox-aural-voice-workbench--action-applicable-p)
   (setq-local emacsvox-aural-ui-extra-actions
@@ -697,6 +703,7 @@ when they remain unsaved."
        ("e" . emacsvox-aural-voice-workbench-engine-view)
        ("s" . emacsvox-aural-voice-workbench-style-view)
        ("F" . emacsvox-aural-voice-workbench-set-filter)
+       ("L" . emacsvox-choose-voice-languages)
        ("Q" . emacsvox-aural-voice-workbench-quick-filter)
        ("1" . emacsvox-aural-voice-workbench-quick-filter)
        ("2" . emacsvox-aural-voice-workbench-quick-filter)
@@ -714,6 +721,7 @@ when they remain unsaved."
        ("C-c u" . omnivox-library-uninstall)
        ("C-c U" . omnivox-library-resume-uninstall)
        ("P" . emacsvox-aural-voice-workbench-preview)
+       ("C-c C-p" . emacsvox-aural-voice-workbench-preview)
        ("A" . emacsvox-aural-voice-workbench-preview-all)
        ("B" . emacsvox-aural-voice-workbench-compare)
        ("T" . emacsvox-aural-voice-workbench-edit-preview-text)

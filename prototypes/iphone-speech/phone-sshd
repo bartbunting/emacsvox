@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+"""Start the private iPhone SSH trial until interrupted."""
+import argparse
+import getpass
+import os
+from pathlib import Path
+import re
+import signal
+import subprocess
+import tempfile
+from ssh_listener import serve_ssh
+from phone_network import host_for_phone
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("phone", help="iPhone VPN IPv4 address")
+parser.add_argument("--vpn-host", metavar="HOST_IP", help="bind to the Emacs host's private VPN IPv4 address instead of discovering it with Tailscale")
+parser.add_argument("public_key", type=Path, help="file containing the key copied from the iPhone")
+parser.add_argument("--sshd", type=Path, default=Path("/usr/sbin/sshd"))
+parser.add_argument("--host-key", type=Path, help="use this Ed25519 key instead of the saved or temporary host key")
+args = parser.parse_args()
+if args.host_key is None:
+    state = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
+    saved = state / "emacsvox/iphone-ssh/host"
+    if os.path.lexists(saved):
+        args.host_key = saved
+try:
+    address = host_for_phone(args.phone, args.vpn_host)
+except ValueError as error:
+    parser.error(str(error))
+key = args.public_key.read_text().strip()
+if not re.fullmatch(r"ssh-ed25519 [A-Za-z0-9+/=]+(?: [^\n\r]+)?", key):
+    parser.error("The file must contain one Ed25519 public key.")
+subprocess.run(["ssh-keygen", "-lf", args.public_key], check=True, stdout=subprocess.DEVNULL)
+if not args.sshd.is_file():
+    parser.error("Pass --sshd with the absolute path to your OpenSSH server executable.")
+if args.host_key and not args.host_key.is_file():
+    parser.error("The selected host key is unavailable. Check its path before reconnecting.")
+
+def finish(signum, frame):
+    raise SystemExit
+
+signal.signal(signal.SIGTERM, finish)
+os.umask(0o077)
+cache = Path.home() / ".cache/emacsvox"
+cache.mkdir(mode=0o700, parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(prefix="phone-sshd-", dir=cache) as directory:
+    root = Path(directory)
+    (root / "authorized_keys").write_text('restrict,pty,from="' + args.phone + '" ' + key + "\n")
+    with serve_ssh(args.sshd.resolve(), root, address=address, port=8822, peer=args.phone,
+                   host_key=args.host_key.resolve() if args.host_key else None):
+        print(f"Emacs host {address}   SSH port 8822   Username {getpass.getuser()}", flush=True)
+        print("Trusted SSH host public key", (root / "host.pub").read_text().strip(), flush=True)
+        print("Press Control+C here to end this SSH trial.", flush=True)
+        try:
+            signal.pause()
+        except KeyboardInterrupt:
+            pass

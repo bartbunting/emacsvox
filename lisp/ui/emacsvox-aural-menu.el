@@ -820,6 +820,12 @@ q returns to this menu item. Saving an assignment does not activate its pack."
   (emacsvox-aural-menu--open-browser
    #'emacsvox-aural-voice-workbench 'emacsvox-aural-menu--voice-workbench))
 
+(defun emacsvox-aural-menu--voice-languages ()
+  "Choose the languages shown in voice lists and searches across connections.
+Each language includes its regional voices. Save to keep the list across sessions."
+  (interactive)
+  (emacsvox-aural-menu--open-browser #'emacsvox-choose-voice-languages 'emacsvox-aural-menu--voice-languages))
+
 (defun emacsvox-aural-menu--prefer-engine (&optional save)
   "Choose the preferred speech engine for this session; save it separately."
   (interactive)
@@ -844,6 +850,7 @@ Browser quit commands return here after unwinding their own child views.
 Engine preferences last for this session unless explicitly saved."
   ["Voices and engines"
    ("b" "Browse voices and engines" emacsvox-aural-menu--browse-voices :transient transient--do-suspend)
+   ("L" "Choose voice browser languages" emacsvox-aural-menu--voice-languages :transient transient--do-suspend)
    ("p" "Voice palettes" emacsvox-aural-menu--voice-palettes :transient transient--do-suspend)
    ("w" "Resume Voice Workbench" emacsvox-aural-menu--voice-workbench :transient transient--do-suspend)
    ("o" "Voice presentation options" emacsvox-settings-voice-presentation :transient transient--do-stack)]

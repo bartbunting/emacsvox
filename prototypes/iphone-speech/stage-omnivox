@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+"""Stage the pinned phone worker archives and verified original sound assets."""
+import hashlib
+import os
+from pathlib import Path
+from contextlib import ExitStack
+import plistlib
+import shutil
+import subprocess
+import sys
+import tempfile
+
+app = Path(__file__).resolve().parent
+source = Path(subprocess.check_output([app / "omnivox-source"], text=True).strip())
+output = Path(sys.argv[1]).resolve()
+revision = (output / "omnivox-revision").read_text().strip()
+if not output.is_dir() or not (output / "modules/iphone-mixer/ios/IphoneMixer.podspec").is_file():
+    sys.exit("Expected a staged Expo project.")
+if subprocess.check_output(["git", "-C", source, "rev-parse", revision + "^{commit}"], text=True).strip() != revision:
+    sys.exit("The paired Omnivox checkout does not contain the pinned worker commit.")
+dest = output / "modules/iphone-mixer/ios"
+framework = dest / "OmnivoxMobile.xcframework"
+resources = dest / "OmnivoxSounds.bundle"
+cache = Path(os.environ.get("CARGO_TARGET_DIR", Path.home() / ".cache/emacsvox/iphone-omnivox-protocol")).resolve()
+env = dict(os.environ, CARGO_TARGET_DIR=str(cache), IPHONEOS_DEPLOYMENT_TARGET="16.4")
+env.setdefault("CARGO_BUILD_JOBS", "2")
+
+# Reuse the paired checkout's incremental build when it is the clean pin.
+# Otherwise build a disposable snapshot without altering the checkout.
+def clean_pin():
+    head = subprocess.check_output(["git", "-C", source, "rev-parse", "HEAD"], text=True).strip()
+    return head == revision and not subprocess.check_output(["git", "-C", source, "status", "--porcelain"])
+
+with ExitStack() as stack:
+    clean = clean_pin()
+    temp = source if clean else stack.enter_context(tempfile.TemporaryDirectory(prefix="iphone-omnivox-source-"))
+    if not clean:
+        with tempfile.TemporaryFile() as archive:
+            subprocess.run(["git", "-C", source, "archive", revision], stdout=archive, check=True)
+            archive.seek(0)
+            subprocess.run(["tar", "-x", "-C", temp], stdin=archive, check=True)
+    resources.mkdir()
+    shutil.copyfile(Path(temp) / "LICENSE", resources / "Omnivox-LICENSE.txt")
+    targets = {"ios-arm64": "aarch64-apple-ios", "ios-arm64-simulator": "aarch64-apple-ios-sim"}
+    # Dependencies embed source locations in panic messages even in release builds.
+    # Cargo's encoded form keeps paths containing spaces in one compiler argument.
+    flags = env.get("CARGO_ENCODED_RUSTFLAGS", "\x1f".join(env.get("RUSTFLAGS", "").split()))
+    home = Path.home()
+    cargo_home = Path(env.get("CARGO_HOME") or home / ".cargo").resolve()
+    prefixes = [(home, "/build/user"), (cargo_home, "/build/cargo"),
+                (Path(temp), "/build/omnivox"), (cache, "/build/target")]
+    remaps = [f"--remap-path-prefix={original}={published}" for original, published in prefixes
+              if original != Path(original.anchor)]
+    env["CARGO_ENCODED_RUSTFLAGS"] = "\x1f".join([flags, *remaps] if flags else remaps)
+    subprocess.run(["cargo", "build", "--locked", "--release", "-p", "omnivox-ios",
+                    *[item for triple in targets.values() for item in ("--target", triple)]],
+                   cwd=temp, env=env, check=True)
+    if clean and not clean_pin():
+        sys.exit("Omnivox sources changed during staging. Run the staging command again.")
+    headers = Path(temp) / "omnivox-ios/include"
+    libraries = []
+    for identifier, target in targets.items():
+        folder = framework / identifier
+        folder.mkdir(parents=True)
+        shutil.copytree(headers, folder / "Headers")
+        archive = cache / target / "release/libomnivox_ios.a"
+        if home != Path(home.anchor) and os.fsencode(str(home) + "/") in archive.read_bytes():
+            sys.exit("The iOS library still contains the build user's home directory.")
+        shutil.copyfile(archive, folder / "libOmnivoxMobile.a")
+        library = {"LibraryIdentifier": identifier, "SupportedArchitectures": ["arm64"],
+                   "LibraryPath": "libOmnivoxMobile.a", "HeadersPath": "Headers", "SupportedPlatform": "ios"}
+        if target.endswith("-sim"):
+            library["SupportedPlatformVariant"] = "simulator"
+        libraries.append(library)
+    (framework / "Info.plist").write_bytes(plistlib.dumps({"CFBundlePackageType": "XFWK",
+        "XCFrameworkFormatVersion": "1.0", "AvailableLibraries": libraries}))
+
+for line in (output / "wire-icons.sha256").read_text().splitlines():
+    digest, name = line.split("  ", 1)
+    path = Path(name)
+    if path.is_absolute() or ".." in path.parts:
+        sys.exit("Invalid resource identity.")
+    data = ((output / "assets/visual-line.wav").read_bytes() if name == "visual-line.wav" else
+            subprocess.check_output(["git", "-C", app, "show", "HEAD:sounds/" + name]))
+    if hashlib.sha256(data).hexdigest() != digest:
+        sys.exit("Bundled sound hash does not match " + name)
+    asset = resources / path
+    asset.parent.mkdir(parents=True, exist_ok=True)
+    asset.write_bytes(data)
+
+# The relay already addresses module recordings by content digest. Bundle
+# their defaults under those IDs so both app versions use the same relay.
+module_sounds = resources / "personal"
+module_sounds.mkdir()
+for name in ("agent-input-on.ogg", "agent-input-off.ogg"):
+    data = subprocess.check_output(["git", "-C", app, "show", "HEAD:sounds/modules/agent-shell/" + name])
+    (module_sounds / hashlib.sha256(data).hexdigest()).write_bytes(data)
+(resources / "Agent-Shell-README.org").write_bytes(subprocess.check_output(
+    ["git", "-C", app, "show", "HEAD:sounds/modules/agent-shell/README.org"]))
+
+(resources / "Accent-README.org").write_bytes(subprocess.check_output(
+    ["git", "-C", app, "show", "HEAD:sounds/packs/accent/README.org"]))
+(resources / "Info.plist").write_bytes(plistlib.dumps({
+    "CFBundleIdentifier": "org.emacsvox.iphone.speech.sounds",
+    "CFBundleName": "OmnivoxSounds", "CFBundlePackageType": "BNDL", "CFBundleVersion": "1"
+}))

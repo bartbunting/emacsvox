@@ -1,0 +1,75 @@
+{
+    "protocol_version": 3,
+    "generation": 1,
+    "dispatch_id": 1,
+    "delivery_policy": "ordered",
+    "spans": [
+        {
+            "id": 1,
+            "text": "TestCase",
+            "logical_voice_id": "default",
+            "acss": {},
+            "effects": {
+                "mode": "retain"
+            }
+        }
+    ],
+    "actions": [
+        {
+            "id": "action.1",
+            "position": {
+                "position": "text_offset",
+                "span_id": 1,
+                "utf8_offset": 0,
+                "affinity": "before"
+            },
+            "lifecycle_anchor": "run",
+            "type": "tone",
+            "frequency_hz": 440.0,
+            "duration_ms": 20,
+            "mode": "insert",
+            "volume": 1.0,
+            "pan": 0.5,
+            "effect_bus": "dry"
+        },
+        {
+            "id": "semantic.2",
+            "position": {
+                "position": "text_offset",
+                "span_id": 1,
+                "utf8_offset": 0,
+                "affinity": "before"
+            },
+            "lifecycle_anchor": "run",
+            "type": "semantic_event"
+        },
+        {
+            "id": "action.3",
+            "position": {
+                "position": "text_offset",
+                "span_id": 1,
+                "utf8_offset": 4,
+                "affinity": "before"
+            },
+            "lifecycle_anchor": "run",
+            "type": "tone",
+            "frequency_hz": 440.0,
+            "duration_ms": 20,
+            "mode": "insert",
+            "volume": 1.0,
+            "pan": 0.5,
+            "effect_bus": "dry"
+        },
+        {
+            "id": "semantic.4",
+            "position": {
+                "position": "text_offset",
+                "span_id": 1,
+                "utf8_offset": 4,
+                "affinity": "before"
+            },
+            "lifecycle_anchor": "run",
+            "type": "semantic_event"
+        }
+    ]
+}

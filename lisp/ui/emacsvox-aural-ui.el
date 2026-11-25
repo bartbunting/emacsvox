@@ -62,6 +62,35 @@ Respect PREDICATE and ignore case."
      ((null (cdr matches)) (cons (car matches) (length (car matches))))
      (t (cons string point)))))
 
+(defun emacsvox-aural-ui--voice-at-completion (choices)
+  "Return the highlighted voice label in CHOICES or the unique typed match."
+  (let* ((input (minibuffer-contents-no-properties))
+         (window (minibuffer--completions-visible))
+         (selected (cond
+                    ((and (bound-and-true-p vertico--input) (fboundp 'vertico--candidate)
+                          (>= (or (bound-and-true-p vertico--index) -1) 0))
+                     (vertico--candidate))
+                    ((window-live-p window)
+                     (with-current-buffer (window-buffer window)
+                       (car (completion-list-candidate-at-point (window-point window)))))
+                    ((and (bound-and-true-p icomplete-mode) (fboundp 'icomplete--sorted-completions))
+                     (car (icomplete--sorted-completions))))))
+    (or (and selected (car (assoc-string selected choices t)))
+        (car (assoc-string input choices t))
+        (let ((matches (and (not (string-empty-p input))
+                            (completion-all-completions input minibuffer-completion-table
+                                                        minibuffer-completion-predicate (length input)))))
+          (and (consp matches) (not (consp (cdr matches))) (car (assoc-string (car matches) choices t))))
+        (user-error "Highlight one voice or narrow the search"))))
+
+(defun emacsvox-aural-ui--with-voice-audition (audition reader)
+  "Read with READER, binding C-c C-p to AUDITION for this minibuffer."
+  (minibuffer-with-setup-hook
+      (lambda ()
+        (use-local-map (copy-keymap (current-local-map)))
+        (local-set-key (kbd "C-c C-p") (lambda () (interactive) (funcall audition))))
+    (funcall reader)))
+
 (defun emacsvox-aural-ui--read-choice (prompt choices &optional aliases)
   "Read a canonical label from CHOICES with PROMPT and optional ALIASES.
 Match literal substrings without case sensitivity.  Space inserts a space;

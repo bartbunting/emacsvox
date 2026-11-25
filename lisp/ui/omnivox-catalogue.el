@@ -30,6 +30,7 @@
 ;;; Code:
 
 (require 'omnivox-library)
+(require 'emacsvox-voice-languages)
 (require 'emacsvox-preamble)
 
 (defvar omnivox-catalogue--operations (make-hash-table :test #'equal))
@@ -73,7 +74,8 @@
          (entries
           (seq-filter
            (lambda (entry)
-             (and (or (null omnivox-catalogue--engine)
+             (and (emacsvox-voice-browser--visible-p (plist-get entry :language))
+                  (or (null omnivox-catalogue--engine)
                       (equal omnivox-catalogue--engine (plist-get entry :provider)))
                   (if searching
                       (string-match-p
@@ -471,10 +473,12 @@
   "s" #'omnivox-catalogue-speakers
   "e" #'omnivox-catalogue-toggle "a" #'omnivox-catalogue-apply
   "i" #'omnivox-catalogue-install "c" #'omnivox-catalogue-cancel
-  "l" #'omnivox-catalogue-library "/" #'omnivox-catalogue-search)
+  "l" #'omnivox-catalogue-library "/" #'omnivox-catalogue-search
+  "L" #'emacsvox-choose-voice-languages)
 
 (define-derived-mode omnivox-catalogue-mode emacsvox-aural-tabulated-mode "Available Voices"
   "Available voices: RET opens; i installs; e enables/disables; a reviews Apply."
+  (setq-local emacsvox-voice-browser--redraw #'omnivox-catalogue--render)
   (emacsvox-aural-ui-configure-tabulated "Available Omnivox voices"
                                          #'omnivox-catalogue--speak-row #'omnivox-catalogue-refresh
                                          #'omnivox-catalogue--speak-row)

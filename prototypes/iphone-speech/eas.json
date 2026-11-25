@@ -1,0 +1,16 @@
+{
+  "cli": { "version": ">= 27.11.0", "appVersionSource": "local" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "device": {"distribution": "internal"},
+    "device-local": {"extends": "device", "credentialsSource": "local"},
+    "simulator-private": {"extends": "device", "ios": {"simulator": true}},
+    "simulator": {
+      "extends": "development",
+      "ios": { "simulator": true }
+    }
+  }
+}

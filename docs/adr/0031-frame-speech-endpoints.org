@@ -1,0 +1,38 @@
+#+title: ADR 0031: Speech endpoints for individual Emacs frames
+#+date: 2026-11-23
+
+* Status
+
+Accepted on 2026-11-23.
+
+* Decision
+
+An Emacs frame can attach its own main and notification speech workers.
+The transport owns startup, negotiation, recovery and shutdown. Emacsvox
+associates an attachment with foreground commands and captures it when
+scheduling speech callbacks. Replacing or detaching the endpoint expires
+the earlier handle. A late reply can still update editor state. Its speech
+ends with the expired attachment.
+
+The default desktop continues to use its configured speech workers.
+Each attachment uses its workers' capabilities, inventory and logical
+voice registrations. A local desktop process pair, an authenticated remote
+workstation and the iPhone receiver can use the same frame interface.
+Each transport resolves its own sound resources and owns its audio devices.
+
+A frame connected through the workstation transport owns its pair of
+authenticated lanes and its reconnect timer. Losing either lane retires
+the pair. The frame retains its destination while offline and accepts
+new speech after both replacement workers acknowledge their configuration.
+Recovering the same destination preserves its explicit subscriptions.
+
+A frame can explicitly subscribe to an Agent Shell session. Each distinct
+subscribed destination hears new replies and permission requests. The
+session processes an incoming event once. Answering a permission clears the
+outstanding request for every subscriber. Navigation, typing and the
+acknowledgement of a steering command belong to the frame that acted.
+Closing a frame removes its subscription.
+
+The foreground and notification rules in [[file:0009-foreground-and-notification-speech-lanes.org][ADR 0009]]
+apply within each endpoint. The authenticated remote transport and fresh
+worker state on reconnect follow [[file:0010-remote-workstation-speech.org][ADR 0010]].

@@ -135,6 +135,9 @@ available so a timer created by an older loaded version can finish safely.")
 (defvar-local emacsvox-agent-shell--out-of-turn-pending-ids nil
   "Out-of-turn message IDs awaiting delivery, in arrival order.")
 
+(defvar-local emacsvox-agent-shell--out-of-turn-deliveries nil
+  "Delivery function captured when each pending message first arrived.")
+
 (defvar-local emacsvox-agent-shell--out-of-turn-bodies nil
   "Legacy hash table of rendered out-of-turn bodies by qualified ID.")
 
@@ -355,8 +358,10 @@ the body retains semantic faces and omits markup that is no longer displayed."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (setq emacsvox-agent-shell--out-of-turn-speech-timer nil)
-      (let ((qualified-ids emacsvox-agent-shell--out-of-turn-pending-ids))
-        (setq emacsvox-agent-shell--out-of-turn-pending-ids nil)
+      (let ((qualified-ids emacsvox-agent-shell--out-of-turn-pending-ids)
+            (deliveries emacsvox-agent-shell--out-of-turn-deliveries))
+        (setq emacsvox-agent-shell--out-of-turn-pending-ids nil
+              emacsvox-agent-shell--out-of-turn-deliveries nil)
         (dolist (qualified-id qualified-ids)
           (when-let* ((body
                        (or
@@ -380,7 +385,9 @@ the body retains semantic faces and omits markup that is no longer displayed."
                           emacsvox-agent-shell--out-of-turn-bodies))))
                       ((emacsvox-agent-shell--out-of-turn-body-changed-p
                         qualified-id body)))
-            (emacsvox-agent-shell--deliver-out-of-turn-body body))
+            (funcall (or (cdr (assoc qualified-id deliveries))
+                         #'emacsvox-agent-shell--deliver-out-of-turn-body)
+                     body))
           (emacsvox-agent-shell--forget-section-markers
            emacsvox-agent-shell--out-of-turn-section-markers
            qualified-id)
@@ -388,10 +395,16 @@ the body retains semantic faces and omits markup that is no longer displayed."
             (remhash qualified-id
                      emacsvox-agent-shell--out-of-turn-bodies)))))))
 
+(defun emacsvox-agent-shell--out-of-turn-receiver ()
+  "Return the speech destination for a new out-of-turn message."
+  #'emacsvox-agent-shell--deliver-out-of-turn-body)
+
 (defun emacsvox-agent-shell--schedule-out-of-turn-delivery (qualified-id)
   "Queue QUALIFIED-ID for coalesced out-of-turn speech."
   (unless (member qualified-id
                   emacsvox-agent-shell--out-of-turn-pending-ids)
+    (push (cons qualified-id (emacsvox-agent-shell--out-of-turn-receiver))
+          emacsvox-agent-shell--out-of-turn-deliveries)
     (setq emacsvox-agent-shell--out-of-turn-pending-ids
           (append emacsvox-agent-shell--out-of-turn-pending-ids
                   (list qualified-id))))
@@ -525,7 +538,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
   (when (timerp emacsvox-agent-shell--out-of-turn-speech-timer)
     (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer))
   (setq emacsvox-agent-shell--out-of-turn-speech-timer nil
-        emacsvox-agent-shell--out-of-turn-pending-ids nil)
+        emacsvox-agent-shell--out-of-turn-pending-ids nil
+        emacsvox-agent-shell--out-of-turn-deliveries nil)
   (emacsvox-agent-shell--clear-section-markers
    emacsvox-agent-shell--out-of-turn-section-markers)
   (when (hash-table-p emacsvox-agent-shell--out-of-turn-bodies)
@@ -928,19 +942,23 @@ status and terminal-output digests so late updates remain deduplicated."
   (remove-hook 'change-major-mode-hook
                #'emacsvox-agent-shell--lifecycle-event-cleanup t))
 
+(defun emacsvox-agent-shell--speak-rendered-blocks (blocks answer)
+  "Present ordered BLOCKS and their combined ANSWER at this frame's speech level."
+  (when (emacsvox-agent-shell--should-speak-p (current-buffer))
+    (let ((response-only (eq (emacsvox-agent-shell--effective-speech-level) 'response)))
+      (dolist (item blocks)
+        (unless (and response-only (eq (cdr item) 'agent-message))
+          (emacsvox-agent-shell--speak-content (car item) (cdr item))))
+      ;; Response level applies its unsolicited-content budget once per turn.
+      (when (and response-only answer)
+        (emacsvox-agent-shell--speak-content answer 'agent-message)))))
+
 (defun emacsvox-agent-shell--deliver-pending-blocks (buffer qualified-ids)
   "Deliver pending QUALIFIED-IDS from BUFFER and return its agent answer.
 Clear the stored bodies after taking their final rendered snapshots."
   (when (and buffer (buffer-live-p buffer))
     (with-current-buffer buffer
-      (let* ((speak-p (emacsvox-agent-shell--should-speak-p buffer))
-             (response-only-p
-              (and
-               speak-p
-               (eq
-                (emacsvox-agent-shell--effective-speech-level buffer)
-                'response)))
-            answer-bodies)
+      (let (blocks answer-bodies)
         (dolist (qualified-id qualified-ids)
           (let* ((pair
                   (and
@@ -982,22 +1000,11 @@ Clear the stored bodies after taking their final rendered snapshots."
                 (when (not (string-empty-p trimmed))
                   (when (eq block-type 'agent-message)
                     (push trimmed answer-bodies))
-                  (when (and
-                         speak-p
-                         (not
-                          (and response-only-p
-                               (eq block-type 'agent-message))))
-                    (emacsvox-agent-shell--speak-content
-                     trimmed block-type)))))))
+                  (push (cons trimmed block-type) blocks))))))
         (let ((answer
                (when answer-bodies
                  (string-join (nreverse answer-bodies) "\n"))))
-          ;; At the ordinary response level, all rendered answer fragments are
-          ;; one automatic response.  This applies the unsolicited-content
-          ;; budget once per turn and avoids queueing progress updates ahead of
-          ;; the final answer.  Full mode retains semantic per-block ordering.
-          (when (and response-only-p answer)
-            (emacsvox-agent-shell--speak-content answer 'agent-message))
+          (emacsvox-agent-shell--speak-rendered-blocks (nreverse blocks) answer)
           (emacsvox-agent-shell--clear-section-markers
            emacsvox-agent-shell--pending-section-markers)
           (when emacsvox-agent-shell--pending-bodies

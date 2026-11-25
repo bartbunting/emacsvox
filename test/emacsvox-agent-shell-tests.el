@@ -10264,6 +10264,27 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             position (+ position (length "pending"))
             'font-lock-face nil spoken)))))))
 
+(ert-deftest emacsvox-agent-shell-tool-heading-keeps-command-after-status ()
+  "A rendered tool heading has no separate voice run for its status separator."
+  (dolist (status '(("✓" agent-shell-success "completed") ("✗" agent-shell-error "failed")))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (agent-shell-ui-update-fragment
+       (agent-shell-ui-make-fragment-model
+        :namespace-id "speech-test" :block-id "command"
+        :label-left (concat (propertize (car status) 'font-lock-face (cadr status))
+                            " " (propertize "Command" 'font-lock-face 'agent-shell-section-heading))
+        :label-right "list sample files" :body "Tool output"))
+      (goto-char (point-min))
+      (search-forward (car status))
+      (let* ((row (buffer-substring (line-beginning-position) (line-end-position)))
+             (spoken (emacsvox-agent-shell--prepare-speech-text row))
+             (word (nth 2 status)))
+        (should (string-match (concat word " Command +list sample files") spoken))
+        (should (eq (get-text-property (+ (match-beginning 0) (length word)) 'font-lock-face spoken)
+                    (cadr status)))
+        (should (string-match-p (concat (car status) " Command") row))))))
+
 (ert-deftest emacsvox-agent-shell-status-speech-is-scoped-and-customizable ()
   "Only faced status icons should use the customizable semantic label."
   (with-temp-buffer

@@ -1,0 +1,318 @@
+;;; frame-speech-workers.el --- Exercise independent Omnivox frames -*- lexical-binding: t; -*-
+;; Copyright (C) 2026 Emacsvox contributors
+;; SPDX-License-Identifier: GPL-2.0-or-later
+
+;; Run in a fresh graphical Emacs with EMACSVOX_TEST_OMNIVOX pointing to
+;; a desktop Omnivox executable. Each real worker uses eSpeak and null output.
+(require 'ert)
+(require 'tts-speak)
+(require 'emacsvox-frame-speech)
+
+(defvar emacsvox-frame-test--ticket 0)
+
+(defun emacsvox-frame-test--speak (ticket)
+  (process-send-string tts-speaker-process
+                       (format "q {frame speech check}\nemacsvox_tracked_dispatch %d\n" ticket)))
+
+(defun emacsvox-frame-test--key ()
+  (interactive)
+  (emacsvox-frame-test--speak emacsvox-frame-test--ticket)
+  (tts-notify-apply #'emacsvox-frame-test--speak (1+ emacsvox-frame-test--ticket)))
+
+(defun emacsvox-frame-test--worker (name)
+  (make-process
+   :name name :command (list (getenv "EMACSVOX_TEST_OMNIVOX") "--engine" "espeak" "--audio-output" "null")
+   :noquery t :connection-type 'pipe :coding 'utf-8-unix
+   :stderr (get-buffer-create " *Frame worker diagnostics*")
+   :filter (lambda (process bytes)
+             (let* ((text (concat (process-get process 'partial) bytes))
+                    (lines (split-string text "\n")))
+               (process-put process 'partial (car (last lines)))
+               (dolist (line (butlast lines))
+                 (when (string-match "\\`__EMACSVOX_TRACKED__ \\([0-9]+\\) \\([a-z]+\\)\\'" line)
+                   (push (cons (string-to-number (match-string 1 line)) (match-string 2 line))
+                         (process-get process 'heard))))))))
+
+(ert-deftest emacsvox-frame-speech-four-desktop-workers ()
+  (should (display-graphic-p))
+  (let ((a (selected-frame)) (b (make-frame)) workers)
+    (unwind-protect
+        (progn
+          (dolist (name '("Frame A main" "Frame A notifications" "Frame B main" "Frame B notifications"))
+            (push (emacsvox-frame-test--worker name) workers))
+          (setq workers (nreverse workers))
+          (let ((left (emacsvox-frame-speech-attach a (nth 0 workers) (nth 1 workers) "omnivox"))
+                (right (emacsvox-frame-speech-attach b (nth 2 workers) (nth 3 workers) "omnivox")))
+            (with-selected-frame a
+              (let ((emacsvox-frame-test--ticket 100)) (command-execute #'emacsvox-frame-test--key)))
+            (with-selected-frame b
+              (let ((emacsvox-frame-test--ticket 200)) (command-execute #'emacsvox-frame-test--key))
+              (emacsvox-frame-speech-call left #'emacsvox-frame-test--speak 102))
+            (let ((deadline (+ (float-time) 12)))
+              (while (and (< (float-time) deadline)
+                          (< (apply #'+ (mapcar (lambda (p) (length (process-get p 'heard))) workers)) 5))
+                (accept-process-output nil 0.02)))
+            (should (equal (mapcar (lambda (p) (reverse (process-get p 'heard))) workers)
+                           '(((100 . "completed") (102 . "completed")) ((101 . "completed"))
+                             ((200 . "completed")) ((201 . "completed")))))
+            (emacsvox-frame-speech-detach a)
+            (should-not (emacsvox-frame-speech-call left #'error "Stale frame callback"))
+            (should (eq (emacsvox-frame-speech-call right (lambda () tts-speaker-process)) (nth 2 workers)))))
+      (emacsvox-frame-speech-detach a)
+      (emacsvox-frame-speech-detach b)
+      (delete-frame b)
+      (dolist (p workers) (delete-process p)))))
+
+(defun emacsvox-frame-test--await (workers ticket count)
+  (let ((deadline (+ (float-time) 10)))
+    (while (and (< (float-time) deadline)
+                (< (cl-count-if (lambda (p) (assoc ticket (process-get p 'heard))) workers) count))
+      (accept-process-output nil 0.02)))
+  (should (equal count (cl-count-if
+                        (lambda (p) (member (cons ticket "completed") (process-get p 'heard)))
+                        workers))))
+
+(defun emacsvox-frame-test--load-agent-shell ()
+  (dolist (name '("compat" "acp" "shell-maker" "agent-shell" "markdown-mode"))
+    (add-to-list 'load-path (expand-file-name name (getenv "EMACSVOX_TEST_DEPS_DIR"))))
+  (require 'agent-shell)
+  (require 'emacsvox-agent-shell)
+  (require 'emacsvox-agent-shell-frames))
+
+(ert-deftest emacsvox-frame-speech-four-workers-one-conversation ()
+  (should (display-graphic-p))
+  (emacsvox-frame-test--load-agent-shell)
+  (let* ((a (selected-frame)) (b (make-frame))
+         (buffer (generate-new-buffer "Frame subscription test"))
+         (workers (mapcar #'emacsvox-frame-test--worker
+                          '("Alice main" "Alice notification" "Bob main" "Bob notification")))
+         (actor (emacsvox-frame-speech-attach a (nth 0 workers) (nth 1 workers) "omnivox"))
+         (other (emacsvox-frame-speech-attach b (nth 2 workers) (nth 3 workers) "omnivox"))
+         (event-count 0) steering)
+    (unwind-protect
+        (with-current-buffer buffer
+          (setq major-mode 'agent-shell-mode)
+          (setq-local agent-shell--state (make-hash-table :test #'eq))
+          (puthash :buffer buffer agent-shell--state)
+          (setq-local emacsvox-agent-shell-speech-level 'response)
+          (setq-local emacsvox-comint-autospeak t)
+          (setq-local emacsvox-agent-shell-signal-processing nil)
+          (setq-local emacsvox-agent-shell-speak-permissions t)
+          (set-window-buffer (frame-selected-window a) buffer)
+          (set-window-buffer (frame-selected-window b) buffer)
+          (emacsvox-agent-shell-subscribe-frame buffer a)
+          (emacsvox-agent-shell-subscribe-frame buffer b)
+          (emacsvox-agent-shell-subscribe-frame buffer b)
+          (emacsvox-agent-shell--lifecycle-event-setup)
+          (emacsvox-agent-shell--permission-event-setup)
+          (agent-shell-subscribe-to :shell-buffer buffer
+                                    :on-event (lambda (_event) (cl-incf event-count)))
+          ;; Keep the public Agent Shell events, its caches and both frame
+          ;; workers real. Use short tracked submissions at the final audio
+          ;; boundary so playback and cancellation can be checked per worker.
+          (cl-letf (((symbol-function 'emacsvox-agent-shell--submit-automatic-text-feedback)
+                     (lambda (words &rest _)
+                       (when (equal words "Shared reply") (emacsvox-frame-test--speak 301))))
+                    ((symbol-function 'emacsvox-agent-shell--notify-background)
+                     (lambda (facts &rest _)
+                       (when (memq 'agent-permission-requested (plist-get facts :events))
+                         (tts-notify-apply #'emacsvox-frame-test--speak 302)))))
+            (emacsvox-frame-speech-call actor #'agent-shell--emit-event :event 'input-submitted)
+            (setq-local emacsvox-agent-shell--pending-bodies (make-hash-table :test #'equal))
+            (puthash "s-agent_message_chunk" "Shared reply" emacsvox-agent-shell--pending-bodies)
+            (setq-local emacsvox-agent-shell--pending-speech-qualified-ids '("s-agent_message_chunk"))
+            (agent-shell--emit-event :event 'turn-complete :data '((:stop-reason . "end_turn")))
+            (should (equal emacsvox-agent-shell--last-completed-answer "Shared reply"))
+            (emacsvox-frame-test--await workers 301 2)
+            (should (and (assoc 301 (process-get (nth 0 workers) 'heard))
+                         (assoc 301 (process-get (nth 2 workers) 'heard))))
+            (agent-shell--emit-event :event 'permission-request :data '((:request-id . 8)))
+            (emacsvox-frame-test--await workers 302 2)
+            (dolist (notify (list (nth 1 workers) (nth 3 workers)))
+              (should (assoc 302 (process-get notify 'heard)))
+              (should (equal 8 (nth 1 (process-get notify 'emacsvox-frame-permission)))))
+            (emacsvox-frame-speech-call other #'tts-stop 'all)
+            (should (process-get (nth 3 workers) 'emacsvox-frame-permission))
+            (emacsvox-frame-speech-call actor #'agent-shell--emit-event
+                                       :event 'permission-response :data '((:request-id . 8)))
+            (should-not (process-get (nth 1 workers) 'emacsvox-frame-permission))
+            (should-not (process-get (nth 3 workers) 'emacsvox-frame-permission))
+            (should (= event-count 4))
+            ;; Both the callback and the application state belong to the
+            ;; person who submitted the steering request.
+            (emacsvox-frame-speech-call
+             actor #'emacsvox-agent-shell--frame-steering
+             (lambda (&rest req) (setq steering (plist-get req :on-success)))
+             :request '((:method . "_session/steering"))
+             :on-success (lambda () (cl-incf event-count) (tts-dispatch "q {Steering accepted}")
+                           (emacsvox-frame-test--speak 303)))
+            (emacsvox-frame-speech-call other steering)
+            (emacsvox-frame-test--await workers 303 1)
+            (should (assoc 303 (process-get (car workers) 'heard)))
+            ;; Both frames still follow this conversation, but only Alice
+            ;; is reading it now. Bob's notification must omit its content.
+            (set-window-buffer (frame-selected-window b) (get-buffer-create " *Other work*"))
+            (setq-local emacsvox-agent-shell-speech-level 'auto)
+            (let ((emacsvox-agent-shell-foreground-speech-level 'response)
+                  (emacsvox-agent-shell-background-speech-level 'notify)
+                  (emacsvox-agent-shell-signal-processing t))
+              (cl-letf (((symbol-function 'emacsvox-agent-shell--submit-automatic-text-feedback)
+                         (lambda (words &rest _)
+                           (when (equal words "Private body") (emacsvox-frame-test--speak 304))))
+                        ((symbol-function 'emacsvox-agent-shell--submit-icon-feedback) #'ignore)
+                        ((symbol-function 'emacsvox-agent-shell--notify-background)
+                         (lambda (_facts _occasion _icon words &rest _)
+                           (should (equal words "finished."))
+                           (tts-notify-apply #'emacsvox-frame-test--speak 305))))
+                (setq-local emacsvox-agent-shell--pending-bodies (make-hash-table :test #'equal))
+                (puthash "next-agent_message_chunk" "Private body" emacsvox-agent-shell--pending-bodies)
+                (setq-local emacsvox-agent-shell--pending-speech-qualified-ids '("next-agent_message_chunk"))
+                (agent-shell--emit-event :event 'turn-complete :data '((:stop-reason . "end_turn")))
+                (emacsvox-frame-test--await workers 304 1)
+                (emacsvox-frame-test--await workers 305 1)
+                (should (assoc 304 (process-get (nth 0 workers) 'heard)))
+                (should (assoc 305 (process-get (nth 3 workers) 'heard)))))
+            ;; Two messages share a real timer. Bob reconnects between their
+            ;; arrivals, while Alice keeps the same speech workers.
+            (set-window-buffer (frame-selected-window b) buffer)
+            (let ((emacsvox-agent-shell-speech-delay 0))
+              (cl-letf (((symbol-function 'emacsvox-agent-shell--submit-automatic-text-feedback)
+                         (lambda (words &rest _)
+                           (emacsvox-frame-test--speak
+                            (pcase words ("Agent update: Before reconnect" 306)
+                                   ("Agent update: After reconnect" 307)
+                                   (_ (ert-fail "Unexpected out-of-turn update")))))))
+                (emacsvox-agent-shell--record-out-of-turn-snapshot
+                 '("out-of-turn-1-agent_message_chunk" . "Before reconnect"))
+                (emacsvox-frame-speech-detach b)
+                (emacsvox-frame-speech-attach b (nth 2 workers) (nth 3 workers) "omnivox")
+                (emacsvox-agent-shell-subscribe-frame buffer b)
+                (emacsvox-agent-shell--record-out-of-turn-snapshot
+                 '("out-of-turn-2-agent_message_chunk" . "After reconnect"))
+                (emacsvox-frame-test--await workers 307 2)
+                (should (assoc 306 (process-get (nth 0 workers) 'heard)))
+                (should-not (assoc 306 (process-get (nth 2 workers) 'heard)))))
+            (emacsvox-frame-speech-detach b)
+            (should (equal (emacsvox-agent-shell--subscribers) (list (cons a actor))))
+            (agent-shell--emit-event :event 'permission-request :data '((:request-id . 9)))
+            (should (equal 9 (nth 1 (process-get (nth 1 workers) 'emacsvox-frame-permission))))
+            (should-not (process-get (nth 3 workers) 'emacsvox-frame-permission))
+            (emacsvox-frame-speech-call actor #'tts-stop t)
+            (should-not (process-get (nth 1 workers) 'emacsvox-frame-permission))
+            (kill-buffer buffer)
+            (should-not emacsvox-agent-shell--frame-hooks-installed)))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (emacsvox-frame-speech-detach a)
+      (emacsvox-frame-speech-detach b)
+      (delete-frame b)
+      (dolist (p workers) (delete-process p)))))
+
+(defun emacsvox-frame-test--wait (predicate seconds)
+  (let ((end (+ (float-time) seconds)))
+    (while (and (not (funcall predicate)) (< (float-time) end))
+      (accept-process-output nil 0.03))
+    (should (funcall predicate))))
+
+(defun emacsvox-frame-test--service (token)
+  (let* ((log (generate-new-buffer " *Frame Omnivox service*"))
+         (service (make-process
+                   :name "Frame Omnivox service" :buffer log :noquery t :connection-type 'pipe
+                   :command (list (getenv "EMACSVOX_TEST_OMNIVOX") "--serve" "--listen" "127.0.0.1:0"
+                                  "--token-file" token "--sound-root" emacsvox-sounds-dir "--audio-output" "null")))
+         ready)
+    (unwind-protect
+        (progn
+          (emacsvox-frame-test--wait
+           (lambda () (with-current-buffer log (save-excursion (goto-char (point-min))
+                        (when (re-search-forward "listening on 127\\.0\\.0\\.1:\\([0-9]+\\)" nil t)
+                          (process-put service 'port (string-to-number (match-string 1))))))) 5)
+          (setq ready service))
+      (unless ready (delete-process service) (kill-buffer log)))))
+
+(ert-deftest emacsvox-frame-speech-four-workstation-workers-recover-independently ()
+  (require 'omnivox-remote)
+  (emacsvox-frame-test--load-agent-shell)
+  (let* ((a (selected-frame)) (b (make-frame)) (token (make-temp-file "frame-remote-token"))
+         (desktop tts-speaker-process) (desktop-notification tts-notify-process)
+         (global-retry omnivox-remote--retry-timer)
+         (conversation (generate-new-buffer "Workstation subscription"))
+         (omnivox-remote-auto-reconnect t) (process-environment (copy-sequence process-environment))
+         services heard)
+    (unwind-protect
+        (progn
+          (with-temp-file token (insert (secure-hash 'sha256 (format "%s%s" (current-time) (random)))))
+          (dotimes (_ 2) (push (emacsvox-frame-test--service token) services))
+          (cl-labels
+              ((connect (frame service)
+                 (omnivox-remote-connect-frame "127.0.0.1" (process-get service 'port) token frame))
+               (speak (text)
+                 (let ((worker tts-speaker-process))
+                   (tts--protocol-queue-text text)
+                   (tts--protocol-dispatch-tracked
+                    (lambda (_id status) (push (cons worker status) heard)))))
+               (pair (endpoint)
+                 (emacsvox-frame-speech-call endpoint #'speak "Workstation foreground")
+                 (emacsvox-frame-speech-call endpoint #'tts-notify-apply #'speak "Workstation notification")))
+            (let* ((left (connect a (car services))) (right (connect b (cadr services)))
+                   (owner (frame-parameter a 'omnivox-remote-connection))
+                   (old (omnivox-remote--frame-workers owner))
+                   (other (omnivox-remote--frame-workers (frame-parameter b 'omnivox-remote-connection))))
+              (should (eq left (connect a (car services))))
+              (with-current-buffer conversation
+                (setq major-mode 'agent-shell-mode)
+                (emacsvox-agent-shell-subscribe-frame conversation a))
+              (should (equal "omnivox-icon:visual-line.ogg"
+                             (emacsvox-frame-speech-call left #'omnivox-remote-resource
+                                                       (expand-file-name "visual-line.ogg" emacsvox-sounds-dir))))
+              (pair left) (pair right)
+              (emacsvox-frame-test--wait (lambda () (= 4 (length heard))) 6)
+              (dolist (worker (append old other)) (should (member (cons worker 'completed) heard)))
+              (setq heard nil)
+              (delete-process (cadr old))
+              (emacsvox-frame-test--wait (lambda () (omnivox-remote--frame-timer owner)) 1)
+              (should-not (cl-some #'process-live-p old))
+              (let ((audience (emacsvox-agent-shell--subscribers conversation)))
+                (should (equal audience (list (cons a left))))
+                (emacsvox-agent-shell--each-destination
+                 audience (lambda (_frame) (ert-fail "Offline announcement reached a speaker"))))
+              (should-not (emacsvox-frame-speech-call left #'ert-fail "Stale callback reached a speaker"))
+              (pair right)
+              (emacsvox-frame-test--wait (lambda () (not (eq left (emacsvox-frame-speech-endpoint a)))) 10)
+              (should (eq owner (frame-parameter a 'omnivox-remote-connection)))
+              (should (equal (emacsvox-agent-shell--subscribers conversation)
+                             (list (cons a (emacsvox-frame-speech-endpoint a)))))
+              (should (eq right (emacsvox-frame-speech-endpoint b)))
+              (should (cl-every #'process-live-p other))
+              (should-not (emacsvox-frame-speech-call left #'ert-fail "Recovered frame replayed stale work"))
+              (pair (emacsvox-frame-speech-endpoint a))
+              (emacsvox-frame-test--wait (lambda () (= 4 (length heard))) 6)
+              (dolist (worker (append other (omnivox-remote--frame-workers owner)))
+                (should (member (cons worker 'completed) heard)))
+              (delete-process (car (omnivox-remote--frame-workers owner)))
+              (omnivox-remote-disconnect-frame a)
+              (should-not (omnivox-remote--frame-timer owner))
+              (should-not (emacsvox-frame-speech-endpoint a))
+              (should-not (emacsvox-agent-shell--subscribers conversation))
+              (delete-frame b)
+              (should-not (cl-some #'process-live-p other))
+              (should (eq desktop tts-speaker-process)) (should (eq desktop-notification tts-notify-process))
+              (should (eq global-retry omnivox-remote--retry-timer)))))
+      (omnivox-remote-disconnect-frame a)
+      (when (frame-live-p b) (omnivox-remote-disconnect-frame b) (delete-frame b))
+      (kill-buffer conversation)
+      (dolist (service services)
+        (delete-process service) (kill-buffer (process-buffer service)))
+      (delete-file token))))
+
+(let ((report (getenv "EMACSVOX_TEST_FRAME_REPORT")))
+  (let ((stats (ert-run-tests-batch "^emacsvox-frame-speech-four-")))
+    (when report
+      (with-temp-file report
+        (insert (if (zerop (ert-stats-completed-unexpected stats))
+                    "Independent local and remote workers, workstation recovery and shared Agent Shell events passed.\n"
+                  "Desktop frame routing failed.\n"))
+        (unless (zerop (ert-stats-completed-unexpected stats))
+          (when-let* ((messages (get-buffer "*Messages*")))
+            (insert-buffer-substring messages)))))
+    (kill-emacs (if (zerop (ert-stats-completed-unexpected stats)) 0 1))))
+;;; frame-speech-workers.el ends here

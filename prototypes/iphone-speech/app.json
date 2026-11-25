@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Emacsvox Speech",
+    "slug": "emacsvox-iphone-speech",
+    "version": "0.1.0",
+    "backgroundColor": "#000000",
+    "userInterfaceStyle": "dark",
+    "splash": {"backgroundColor": "#000000"},
+    "platforms": [
+      "ios"
+    ],
+    "scheme": "emacsvox-speech",
+    "ios": {
+      "buildNumber": "10",
+      "bundleIdentifier": "org.emacsvox.iphone.speech",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Connect to your Emacs terminal and speech relay over your private VPN."
+      }
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
+    ]
+  }
+}

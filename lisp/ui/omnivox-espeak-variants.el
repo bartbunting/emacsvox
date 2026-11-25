@@ -29,6 +29,8 @@
 
 ;;; Code:
 
+(require 'emacsvox-voice-languages)
+
 (require 'cl-lib)
 (require 'tabulated-list)
 (require 'tts-speak)
@@ -124,8 +126,11 @@
                               (cons (format "%s — %s" (plist-get voice :display-name)
                                             (plist-get voice :voice-id))
                                     (plist-get voice :voice-id)))
-                            (omnivox-espeak-variants--bases (omnivox-espeak-variants--engine)))))
-    (unless candidates (user-error "Wait for speech inventory or press g to refresh"))
+                            (seq-filter (lambda (voice) (emacsvox-voice-browser--visible-p (plist-get voice :language)))
+                                        (omnivox-espeak-variants--bases (omnivox-espeak-variants--engine))))))
+    (unless candidates
+      (user-error "%s" (if emacsvox-voice-browser-languages "No base voices match your browsing languages"
+                         "Wait for speech inventory or press g to refresh")))
     (setq omnivox-espeak-variants--base
           (cdr (assoc (completing-read "Base voice: " candidates nil t) candidates))
           omnivox-espeak-variants--status nil

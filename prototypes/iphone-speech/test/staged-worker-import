@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+set -euo pipefail
+pod=$(realpath "${1:?Pass the staged Expo project directory}/modules/iphone-mixer/ios")
+cmp "$(dirname "$0")/../modules/iphone-mixer/ios/CapitalTiming.json" "$pod/CapitalTiming.json"
+
+# CocoaPods exposes the headers from one XCFramework slice. Include any
+# loose module maps too so a competing definition fails during type checking.
+extra=()
+while IFS= read -r -d '' map; do
+    relative=${map#"$pod"/}
+    extra+=(-I "/pod/$(dirname "$relative")")
+done < <(find "$pod" -name '*.xcframework' -prune -o -name module.modulemap -print0)
+
+for slice in ios-arm64 ios-arm64-simulator; do
+    docker run --rm --network none --cpus=1 --user "$(id -u):$(id -g)" -v "$pod:/pod:ro" swift:6.3-noble \
+        swiftc -typecheck -module-cache-path /tmp/modules "${extra[@]}" \
+        -Xcc "-I/pod/OmnivoxMobile.xcframework/$slice/Headers" /pod/WireSchedule.swift /pod/WireLane.swift \
+        /pod/WirePlayback.swift /pod/WireBookmarks.swift /pod/WireSpeechTiming.swift /pod/WireSpeechTrace.swift /pod/WirePresentation.swift
+    echo "Swift imported the $slice Omnivox headers."
+done

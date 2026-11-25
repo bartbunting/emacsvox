@@ -1,0 +1,602 @@
+// Copyright (C) 2026 Emacsvox contributors
+// SPDX-License-Identifier: GPL-2.0-or-later
+import Foundation
+import OmnivoxMobile
+
+// Apple can return its end buffer immediately for the separately voiced space
+// between a status and a command. Exercise the same capture and Rust mixer.
+func checkCommandSeparators(_ root: String, voices: String) throws {
+  for withTone in [false, true] {
+    let output = TestOutput(root), lane = WireLane(output) { _ in }
+    precondition(lane.setVoices(voices, preferred: "test-1"))
+    let labels = [withTone ? "failed" : "completed", " ", "command", "list sample files"]
+    let position: [String:Any] = ["position":"span_boundary", "span_id":2, "affinity":"before"]
+    var actions: [[String:Any]] = [["id":"separator", "position":position,
+      "lifecycle_anchor":"object", "type":"semantic_event"]]
+    if withTone {
+      actions.append(["id":"cue", "position":position, "lifecycle_anchor":"run", "type":"tone", "mode":"insert",
+        "frequency_hz":660, "duration_ms":20, "volume":1, "pan":0.5, "effect_bus":"dry"])
+    }
+    let doc: [String:Any] = ["protocol_version":3, "generation":1, "dispatch_id":1, "delivery_policy":"ordered",
+      "spans":labels.enumerated().map { ["id":$0.offset + 1, "text":$0.element] as [String:Any] }, "actions":actions]
+    let record = "emacsvox_timeline " + (try JSONSerialization.data(withJSONObject: doc)).base64EncodedString()
+    let action = Array(record.utf8).withUnsafeBufferPointer { ov_ios_record(lane.worker, $0.baseAddress, $0.count) }!
+    ov_ios_string_free(action)
+    let plan = WirePresentation(ov_ios_take_presentation(lane.worker)!, key: nil, reply: { _ in })
+    let clock = ov_ios_mix_new()!
+    defer { ov_ios_mix_free(clock) }
+    let items = plan.prepare(bundle: output.loader, personal: nil)!
+    precondition(items.map(\.text) == labels)
+    for (i, item) in items.enumerated() {
+      let capture = WireMarkedAudio(item, WireBookmarks(item)!)
+      if i == 1 {
+        guard case let .ready(points)? = capture.finishPart() else { preconditionFailure("Silent separator stopped speech") }
+        let (pcm, _) = capture.render(points, clock: clock, token: plan.token, presentation: plan)
+        guard let pcm else { preconditionFailure("Silent separator did not reach the mixer") }
+        defer { ov_ios_pcm_free(pcm) }
+        let frames = ov_ios_frames(pcm), samples = ov_ios_samples(pcm)!
+        precondition(withTone ? frames >= 800 : frames == 1)
+        precondition((0..<(2 * frames)).contains { samples[$0] != 0 } == withTone)
+        let lines = plan.regions(frames: frames)!.flatMap(\.events)
+        precondition(lines.contains { line in
+          guard let data = Data(base64Encoded: String(line.split(separator: " ").last!)),
+                let event = try? JSONSerialization.jsonObject(with: data) as? [String:Any] else { return false }
+          return event["type"] as? String == "semantic_event_reached" && event["action_id"] as? String == "separator"
+        })
+      } else {
+        precondition(capture.finishPart() == nil)
+        let samples = [Float](repeating: 0.2, count: 256)
+        guard let pcm = ov_ios_render_presentation(plan.pointer, samples, samples.count, 44100, 1, nil, 0, plan.token)
+        else { preconditionFailure("Command audio did not follow its status") }
+        precondition(ov_ios_frames(pcm) > 0 && plan.regions(frames: ov_ios_frames(pcm)) != nil)
+        ov_ios_pcm_free(pcm)
+      }
+    }
+  }
+}
+
+// Match the five cue offsets from the handset. Give Apple no bookmarks and
+// deliberately uneven phrase durations. Compare the whole Rust output to PCM.
+func checkMissingWordTiming(_ root: String, voices: String, envelope: Data) throws {
+  let offsets = [0, 5, 10, 15, 19], parts = ["Lime ", "Plum ", "Pear ", "Fig ", "Café"]
+  let lengths = [319, 971, 453, 617, 287]
+  var document = try JSONSerialization.jsonObject(with: envelope) as! [String: Any]
+  var spans = document["spans"] as! [[String: Any]]
+  spans[0]["text"] = parts.joined()
+  document["spans"] = spans
+  let pair = Array((document["actions"] as! [[String: Any]]).prefix(2))
+  document["actions"] = offsets.flatMap { offset in
+    pair.enumerated().map { i, prototype -> [String: Any] in
+      var action = prototype, position = action["position"] as! [String: Any]
+      position["utf8_offset"] = offset
+      action["id"] = (i == 0 ? "tone." : "capital.") + String(offset)
+      action["position"] = position
+      return action
+    }
+  }
+  let output = TestOutput(root), lane = WireLane(output) { _ in }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  try lane.feed("tts_split_caps 0", muted: false)
+  let record = "emacsvox_timeline " + (try JSONSerialization.data(withJSONObject: document)).base64EncodedString()
+  let accepted = Array(record.utf8).withUnsafeBufferPointer { ov_ios_record(lane.worker, $0.baseAddress, $0.count) }!
+  ov_ios_string_free(accepted)
+  let presentation = WirePresentation(ov_ios_take_presentation(lane.worker)!, key: nil, reply: { _ in })
+  let items = presentation.prepare(bundle: output.loader, personal: nil)!
+  precondition(items.count == 1)
+  let item = items[0], plan = WireBookmarks(item)!
+  precondition(plan.needsTiming && !plan.needsBookmarks)
+  var timing = WireSpeechTiming(item, plan)
+  var result = timing.finish(bytesPerFrame: 2, totalFrames: 5497), dry: [Float] = [], expected: [Float] = []
+  let tone = ov_ios_tone(440, 20, 1, presentation.token)!
+  defer { ov_ios_pcm_free(tone) }
+  let insert = Array(UnsafeBufferPointer(start: ov_ios_samples(tone), count: ov_ios_frames(tone) * 2))
+  var ends: [String: Int] = [:], resolutions: [String: String] = [:]
+  for (i, text) in parts.enumerated() {
+    guard case let .next(part, discard)? = result else { fatalError("Missing word timing fell back to the whole line") }
+    precondition(part.text == text && part.voice == item.voice && part.rate == item.rate && discard == (i == 0))
+    let voice = Float(i + 1) / 16
+    dry += Array(repeating: voice, count: lengths[i])
+    expected += insert
+    ends["capital." + String(offsets[i])] = expected.count / 2
+    expected += Array(repeating: voice, count: lengths[i] * 2)
+    result = timing.finish(bytesPerFrame: 2, totalFrames: dry.count)
+  }
+  guard case let .ready(positions)? = result else { fatalError("The measured speech did not finish") }
+  precondition(timing.report.measuredWords && timing.report.wordsReceived == 0)
+  let points = positions.map { OvAnchorFrame(frame: UInt32($0.frame), precision: $0.precision == .exact ? 0 : 1) }
+  let pcm = ov_ios_render_presentation(presentation.pointer, dry, dry.count, 44100, 1, points, points.count, presentation.token)!
+  defer { ov_ios_pcm_free(pcm) }
+  precondition(ov_ios_frames(pcm) * 2 == expected.count)
+  precondition(expected.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(pcm), count: expected.count)))
+  var reached: [String: Int] = [:]
+  for region in presentation.regions(frames: ov_ios_frames(pcm))! {
+    for line in region.events {
+      let payload = Data(base64Encoded: String(line.split(separator: " ")[1]))!
+      let value = try JSONSerialization.jsonObject(with: payload) as! [String: Any]
+      guard let id = value["action_id"] as? String else { continue }
+      if value["type"] as? String == "semantic_event_reached" { reached[id] = region.frames.upperBound }
+      if let resolution = value["resolution"] as? String { resolutions[id] = resolution }
+    }
+  }
+  precondition(reached == ends)
+  for offset in offsets {
+    precondition(resolutions["tone." + String(offset)] == (offset == 0 ? "exact" : "word_boundary"))
+  }
+
+  var timed = WireSpeechTiming(item, plan), source = 0, frame = 0
+  for (i, text) in parts.enumerated() {
+    timed.plan.observeWord(NSRange(location: source, length: text.trimmingCharacters(in: .whitespaces).utf16.count), byte: frame * 2)
+    source += text.utf16.count
+    frame += lengths[i]
+  }
+  guard case let .ready(same)? = timed.finish(bytesPerFrame: 2, totalFrames: frame) else { fatalError("Split a fully timed reading") }
+  precondition(same.map(\.frame) == positions.map(\.frame) && !timed.report.measuredWords)
+  var broken = plan
+  for offset in offsets { broken.observeWord(NSRange(location: offset, length: 1), byte: 0) }
+  precondition(broken.recoveryCuts(bytesPerFrame: 2, totalFrames: frame) == Array(offsets.dropFirst()))
+
+  let mixed = WireItem(kind: .speech, text: "Café déjà TestCase end", anchors: [WireAnchor(offset: 13), WireAnchor(offset: 17)])
+  var unicode = WireSpeechTiming(mixed, WireBookmarks(mixed)!)
+  unicode.plan.observeWord(NSRange(location: 2, length: 3), byte: 100, matchesSource: false)
+  guard case let .next(prefix, _)? = unicode.finish(bytesPerFrame: 2, totalFrames: 750),
+        case let .next(wholeWord, _)? = unicode.finish(bytesPerFrame: 2, totalFrames: 250)
+  else { fatalError("Lost the Unicode word boundary") }
+  precondition(prefix.text == "Café déjà " && wholeWord.text == "TestCase " && unicode.report.wordsMismatched == 1)
+  let ties = WireItem(kind: .speech, text: "one two three", anchors: [
+    WireAnchor(offset: 8), WireAnchor(offset: 0), WireAnchor(offset: 4, after: true),
+    WireAnchor(offset: 13), WireAnchor(offset: 4)])
+  var reordered = WireSpeechTiming(ties, WireBookmarks(ties)!)
+  var resultWithTies = reordered.finish(bytesPerFrame: 2, totalFrames: 500)
+  var consumedFrames = 0
+  while case let .next(piece, _)? = resultWithTies {
+    consumedFrames += piece.text!.utf8.count * 10
+    resultWithTies = reordered.finish(bytesPerFrame: 2, totalFrames: consumedFrames)
+  }
+  guard case let .ready(measured)? = resultWithTies else { fatalError("Missing tied cue positions") }
+  precondition(measured.map(\.frame) == [80, 0, 40, 130, 40])
+  precondition(measured.map(\.precision) == [.word, .exact, .word, .exact, .word])
+  print("Five missing or unusable markers recovered at separate measured words. Rust tone samples and played semantic events match all five positions.")
+}
+
+// Drive the production scheduler with explicit Apple synthesis and hardware
+// completion callbacks. Rust's sample comparisons run in the paired crate.
+func checkMixedPlayback(_ root: String, voices: String) throws {
+  let firstMark = WireToneMark(offset: 0, placement: .insert, hz: 440, ms: 20, gain: 1)
+  let innerMark = WireToneMark(offset: 5, placement: .insert, hz: 440, ms: 20, gain: 1)
+  var word = WireItem(kind: .speech, text: "CaféCase & <x>", rate: 1.5, marks: [firstMark, innerMark])
+  var bookmarks = WireBookmarks(word)!
+  let edges = WireItem(kind: .speech, text: "É x", anchors: [WireAnchor(offset: 0), WireAnchor(offset: 4)])
+  let endpoints = WireBookmarks(edges)!
+  precondition(!endpoints.needsTiming && !endpoints.needsBookmarks && endpoints.complete)
+  precondition(endpoints.placements(bytesPerFrame: 2, totalFrames: 42).map(\.frame) == [0, 42])
+  for invalid in [-1, 1, 5] {
+    var broken = edges
+    broken.anchors = [WireAnchor(offset: invalid)]
+    precondition(WireBookmarks(broken) == nil)
+  }
+  precondition(bookmarks.ssml.contains("Café<mark name=\"ov-5\"/>Case &amp; &lt;x&gt;"))
+  precondition(bookmarks.ssml.contains("rate=\"150%\""))
+  bookmarks.observe("ov-0", byte: 0)
+  bookmarks.observe("ov-5", byte: 360)
+  bookmarks.observe(WireBookmarks.end, byte: 800)
+  precondition(bookmarks.complete && bookmarks.nativeFrames(bytesPerFrame: 2, totalFrames: 400) == [0, 180])
+  bookmarks.observe("ov-5", byte: 400)
+  precondition(bookmarks.nativeFrames(bytesPerFrame: 2, totalFrames: 400) == [0, nil])
+  let unresolved = bookmarks.placements(bytesPerFrame: 2, totalFrames: 400)
+  precondition(unresolved[1].precision == .span && unresolved[1].frame == 0)
+  precondition(!bookmarks.acceptsWordRanges(in: bookmarks.ssml) && !bookmarks.acceptsWordRanges(in: "Cafe\u{301}Case & <x>"))
+  precondition(bookmarks.acceptsWordRanges(in: "CaféCase & <x>"))
+  bookmarks.observeWord(NSRange(location: NSNotFound, length: 4), byte: 320)
+  precondition(bookmarks.placements(bytesPerFrame: 2, totalFrames: 400)[1].precision == .span)
+  bookmarks.observeWord(NSRange(location: 4, length: 4), byte: 320)
+  let approximate = bookmarks.placements(bytesPerFrame: 2, totalFrames: 400)[1]
+  precondition(approximate.precision == .word && approximate.frame == 160)
+  var after = innerMark
+  after.after = true
+  var trailing = WireBookmarks(WireItem(kind: .speech, text: "CaféCase", marks: [after]))!
+  precondition(trailing.placements(bytesPerFrame: 4, totalFrames: 400)[0].frame == 400)
+  trailing.observeWord(NSRange(location: 0, length: 4), byte: 80)
+  precondition(trailing.placements(bytesPerFrame: 4, totalFrames: 400)[0].frame == 20)
+  word.marks = [WireToneMark(offset: 4, placement: .insert, hz: 440, ms: 20, gain: 1)]
+  precondition(WireBookmarks(word) == nil)
+  let clock = ov_ios_mix_new()!, token = ov_ios_token_new()!
+  defer { ov_ios_mix_free(clock); ov_ios_token_free(token) }
+  var mark = OvToneMark(frame: 180, hz: 440, ms: 20, gain: 1, insert: true)
+  let samples = [Float](repeating: 0.25, count: 400)
+  let pcm = samples.withUnsafeBufferPointer { ov_ios_mix_marked(clock, $0.baseAddress, $0.count, 44100, 1, &mark, 1, token) }!
+  precondition(ov_ios_frames(pcm) == 1282)
+  let words = ov_ios_samples(pcm)!
+  precondition(words[359] == 0.25 && words[360] == 0 && words[(180 + 882) * 2] == 0.25)
+  ov_ios_pcm_free(pcm)
+  var left = WireItem(kind: .speech, gain: 0.25, master: 0.5, channel: "left")
+  precondition(left.beginVoice(clock) && left.synthesisVolume(mixed: false) == 0.125)
+  let leftPCM = samples.withUnsafeBufferPointer {
+    ov_ios_mix_marked(clock, $0.baseAddress, $0.count, 44100, 1, nil, 0, token)
+  }!
+  precondition(ov_ios_samples(leftPCM)![0] == 0.125 && ov_ios_samples(leftPCM)![1] == 0)
+  ov_ios_pcm_free(leftPCM)
+  ov_ios_mix_set_loudness(clock, 6)
+  let boostedPCM = samples.withUnsafeBufferPointer {
+    ov_ios_mix_marked(clock, $0.baseAddress, $0.count, 44100, 1, nil, 0, token)
+  }!
+  precondition(abs(ov_ios_samples(boostedPCM)![0] - 0.2494078) < 0.00001)
+  precondition(ov_ios_samples(boostedPCM)![1] == 0 && ov_ios_frames(boostedPCM) == samples.count)
+  ov_ios_pcm_free(boostedPCM)
+  left.effects = "{invalid}"
+  precondition(!left.beginVoice(clock))
+  typealias Run = WirePlayback<Int>
+  let output = TestOutput(root)
+  var replies: [String] = []
+  let lane = WireLane(output) { replies.append($0) }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  var active: [Int: Run] = [:], nextRun = 0, cues: [[WireItem]] = [], ready: ((Run.Packet) -> Void)?, end: ((Bool) -> Void)?
+  var queued: [Int] = [], played: [() -> Void] = [], readings: [WireItem] = [], tail = false
+  output.mixed = { items, holdTail, done in
+    nextRun += 1
+    let id = nextRun
+    let run = Run(items, speech: { tones, item, audio, finished in
+      cues.append(tones)
+      readings.append(item)
+      ready = audio
+      end = finished
+    }, flush: { _, flushed in flushed(nil, tail ? (99, 88) : nil, true) },
+    enqueue: { buffer, finished in queued.append(buffer); played.append(finished) },
+    holdTail: holdTail, done: done, release: { active.removeValue(forKey: id) })
+    active[id] = run
+    run.advance()
+  }
+  output.stopMixed = { for run in active.values { run.stop() }; active.removeAll() }
+  func send(_ records: [String]) throws { for line in records { try lane.feed(line, muted: false) } }
+  func voice(_ id: Int) { ready?((id, 1024)); end?(true) }
+  tail = true
+  try send(["q First", "emacsvox_tone 1 insert 440 20", "q Second", "emacsvox_tone 1 overlay 250 130",
+            "q third", "emacsvox_tracked_dispatch 120", "q following", "d"])
+  precondition(cues.count == 1 && cues[0].isEmpty && queued.isEmpty)
+  voice(1)
+  precondition(cues.count == 2 && cues[1].first?.placement == .insert && cues[1].first?.ms == 20)
+  voice(2)
+  precondition(cues.count == 3 && cues[2].first?.placement == .overlay && cues[2].first?.ms == 130)
+  voice(3)
+  precondition(queued == [1, 2, 3, 99] && output.started.isEmpty)
+  for i in 0..<3 { played[i]() }
+  precondition(readings.last?.text == "following" && output.started.isEmpty && replies.isEmpty)
+  played[3]()
+  precondition(replies == ["__EMACSVOX_TRACKED__ 120 completed"])
+  tail = false
+  voice(9)
+  played[4]()
+
+  // Immediate letters, including their capital pitch, use the same application
+  // output as a line. A new letter can still silence a partially played line.
+  try send(["tts_set_voice_volume 0.75", "q ongoing", "emacsvox_tracked_dispatch 119"])
+  voice(10)
+  let oldCompletion = played.last!
+  try send(["l {j}"])
+  oldCompletion()
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 119 cancelled" && readings.last?.text == "j")
+  let lower = readings.last!
+  voice(11)
+  played.last!()
+  try send(["l {J}"])
+  precondition(readings.last?.gain == lower.gain && readings.last?.master == lower.master)
+  precondition(lower.synthesisVolume(mixed: true) == 1 && lower.synthesisVolume(mixed: false) == 0.75)
+  precondition(readings.last!.pitch! > lower.pitch!)
+  voice(12)
+  played.last!()
+  precondition(output.started.isEmpty)
+
+  // An unavailable voice retries only the unheard suffix, including its tone.
+  played.removeAll()
+  output.started.removeAll()
+  try send(["q first", "emacsvox_tone 1 insert 440 20", "q second", "emacsvox_tracked_dispatch 121"])
+  voice(4)
+  end?(false)
+  precondition(output.started.isEmpty)
+  played[0]()
+  precondition(output.started == [.tone, .speech] && replies.last == "__EMACSVOX_TRACKED__ 121 completed")
+
+  try send(["emacsvox_tone 1 insert 440 20", "q old", "emacsvox_tracked_dispatch 122"])
+  let stale = ready
+  try send(["s", "q fresh", "d"])
+  let count = queued.count
+  stale?((5, 1024))
+  precondition(queued.count == count && replies.last == "__EMACSVOX_TRACKED__ 122 cancelled")
+  // A direct synthesizer cannot preserve a stereo route. A failed PCM voice
+  // releases the scheduler for the next dispatch without replaying it aloud.
+  try send(["s", "tts_set_speech_channel left", "q left only", "emacsvox_tracked_dispatch 124"])
+  output.started.removeAll()
+  end?(false)
+  precondition(output.started.isEmpty && replies.last == "__EMACSVOX_TRACKED__ 124 failed")
+  try send(["tts_set_speech_channel both", "q restored", "emacsvox_tracked_dispatch 125"])
+  voice(13)
+  played.last!()
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 125 completed")
+  print("Passed mixed PCM lookahead, independent tail completion, unheard voice fallback and Stop.")
+}
+
+// Verify the real negotiated dispatch against deterministic native speech and
+// bookmark callbacks. Compare both inserted regions and every voice sample.
+func checkTimelinePlayback(_ root: String, voices: String, envelope: Data) throws {
+  let document = try JSONSerialization.jsonObject(with: envelope) as! [String: Any]
+  func record(_ generation: Int, policy: String = "ordered", key: String? = nil,
+              change: (inout [String: Any]) -> Void = { _ in }) throws -> String {
+    var value = document
+    value["generation"] = generation
+    value["dispatch_id"] = generation
+    value["delivery_policy"] = policy
+    value["replacement_key"] = key
+    change(&value)
+    return "emacsvox_timeline " + (try JSONSerialization.data(withJSONObject: value)).base64EncodedString()
+  }
+
+  let output = TestOutput(root)
+  var replies: [String] = []
+  let lane = WireLane(output) { replies.append($0) }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  try lane.feed("tts_split_caps 0", muted: false)
+  let request = try record(1)
+  let action = Array(request.utf8).withUnsafeBufferPointer { ov_ios_record(lane.worker, $0.baseAddress, $0.count) }!
+  ov_ios_string_free(action)
+  let plan = WirePresentation(ov_ios_take_presentation(lane.worker)!, key: nil, reply: { replies.append($0) })
+  let item = plan.prepare(bundle: output.loader, personal: nil)!.first!
+  precondition(item.text == "TestCase" && item.voice == "test-1" && item.anchors?.map(\.offset) == [0, 0, 4, 4])
+  var marks = WireBookmarks(item)!
+  marks.observe("ov-4", byte: 760)
+  marks.observe(WireBookmarks.end, byte: 2000)
+  let native = marks.placements(bytesPerFrame: 2, totalFrames: 1000)
+  let points = native.map { OvAnchorFrame(frame: UInt32($0.frame), precision: $0.precision == .exact ? 0 : 2) }
+  let dry = [Float](repeating: 0.125, count: 1000)
+  let pcm = ov_ios_render_presentation(plan.pointer, dry, dry.count, 44100, 1, points, points.count, plan.token)!
+  let tone = ov_ios_tone(440, 20, 1, plan.token)!
+  defer { ov_ios_pcm_free(pcm); ov_ios_pcm_free(tone) }
+  let count = ov_ios_frames(tone)
+  precondition(count == 882 && ov_ios_frames(pcm) == 1000 + 2 * count)
+  let insert = Array(UnsafeBufferPointer(start: ov_ios_samples(tone), count: count * 2))
+  var expected = insert
+  expected += [Float](repeating: 0.125, count: 380 * 2)
+  expected += insert
+  expected += [Float](repeating: 0.125, count: 620 * 2)
+  precondition(expected.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(pcm), count: expected.count)))
+  let regions = plan.regions(frames: ov_ios_frames(pcm))!
+  var semantic: [String: Int] = [:], previous = 0
+  for region in regions {
+    precondition(region.frames.lowerBound == previous)
+    previous = region.frames.upperBound
+    for line in region.events {
+      let data = Data(base64Encoded: line.split(separator: " ")[1].description)!
+      let value = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+      if value["type"] as? String == "semantic_event_reached" { semantic[value["action_id"] as! String] = previous }
+    }
+  }
+  precondition(semantic == ["semantic.2": count, "semantic.4": 380 + 2 * count])
+  precondition(previous == ov_ios_frames(pcm) && replies.isEmpty)
+
+  output.hold = true
+  func feed(_ record: String) throws { try lane.feed(record, muted: false) }
+  try feed(record(2, policy: "replaceable", key: "nav"))
+  try feed(record(3, policy: "urgent"))
+  try feed(record(4, policy: "replaceable", key: "nav"))
+  precondition(replies == ["__EMACSVOX_TRACKED__ 2 cancelled"])
+  output.finishes[0](true)
+  precondition(replies.count == 1)
+  output.finishes[1](true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 3 completed")
+  output.finishes[2](true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 4 completed")
+  try lane.feed(record(5), muted: true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 5 cancelled")
+  try feed(record(4))
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 4 cancelled")
+  var synthesized = false
+  output.observeSpeech = { _ in synthesized = true }
+  try feed(record(6) { value in
+    var spans = value["spans"] as! [[String: Any]]
+    spans.append(["id": 2, "text": "Later span"])
+    value["spans"] = spans
+    value["actions"] = [["id":"missing", "position":["position":"span_boundary", "span_id":2, "affinity":"before"],
+                         "lifecycle_anchor":"run", "type":"audio", "path":"omnivox-icon:packs/accent/absent.ogg",
+                         "mode":"insert","volume":1,"pan":0.5,"effect_bus":"dry"]]
+  })
+  precondition(!synthesized && replies.last == "__EMACSVOX_TRACKED__ 6 failed")
+
+  // Preserve ordered work under pressure. Evict old queued navigation first.
+  output.finishes.removeAll()
+  try feed(record(7))
+  try feed(record(8, policy: "replaceable", key: "other"))
+  for id in 9...39 { try feed(record(id)) }
+  try feed(record(40))
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 8 cancelled")
+  try feed(record(41))
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 41 failed")
+  lane.stop()
+  let stopped = replies
+  output.finishes.forEach { $0(true) }
+  precondition(replies == stopped)
+  output.hold = false
+  var heard: [WireItem] = []
+  output.observeSpeech = { heard.append($0) }
+  let fixtureURL = URL(fileURLWithPath: "/out/TimelineV3.json")
+  var fixture = try JSONSerialization.jsonObject(with: Data(contentsOf: fixtureURL)) as! [String: Any]
+  var actions = fixture["actions"] as! [[String: Any]]
+  actions[0]["path"] = "omnivox-icon:packs/accent/open-object.ogg"
+  fixture["actions"] = actions
+  fixture["generation"] = 42
+  fixture["dispatch_id"] = 42
+  try feed("emacsvox_timeline " + (try JSONSerialization.data(withJSONObject: fixture)).base64EncodedString())
+  precondition(heard.map(\.text) == ["Hello world", "Done"])
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 42 completed")
+  let events = try replies.dropFirst(stopped.count).compactMap { line -> [String: Any]? in
+    guard line.hasPrefix("__EMACSVOX_MARKER__ "), let payload = line.split(separator: " ").last,
+          let data = Data(base64Encoded: String(payload)) else { return nil }
+    return try JSONSerialization.jsonObject(with: data) as? [String: Any]
+  }
+  precondition(events.contains { $0["type"] as? String == "semantic_event_reached" && $0["action_id"] as? String == "done-reached" })
+  print("Passed exact TestCase PCM and semantic frames, protected ordering, queue pressure, atomic resource failure and stale playback callbacks.")
+}
+
+func checkPalettePlayback(_ root: String, voices: String) throws {
+  let data = try Data(contentsOf: URL(fileURLWithPath: "/out/VoiceChoices.json"))
+  let fixture = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+  let messages = fixture["messages"] as! [String: [String: Any]]
+  var registration = messages["registration"]!, document = messages["timeline"]!
+  var definitions = registration["definitions"] as! [[String: Any]]
+  var role = definitions[0]["definition"] as! [String: Any], choices = role["choices"] as! [[String: Any]]
+  choices[1]["selector"] = ["kind":"exact", "engine_id":"ios", "voice_id":"test-2"]
+  role["choices"] = choices
+  definitions[0]["definition"] = role
+  registration["definitions"] = definitions
+  func record(_ command: String, _ body: [String: Any]) throws -> String {
+    command + " " + (try JSONSerialization.data(withJSONObject: body)).base64EncodedString()
+  }
+  let output = TestOutput(root)
+  var replies: [String] = [], spoken: [WireItem] = []
+  output.observeSpeech = { spoken.append($0) }
+  output.hold = true
+  let lane = WireLane(output) { replies.append($0) }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  try lane.feed(record("omnivox_control", registration), muted: false)
+  replies.removeAll()
+  try lane.feed(record("emacsvox_timeline", document), muted: false)
+  precondition(spoken.count == 4 && replies.isEmpty)
+  document["generation"] = 9
+  document["dispatch_id"] = 92
+  try lane.feed(record("emacsvox_letter", document), muted: false)
+  precondition(replies == ["__EMACSVOX_TRACKED__ 92 failed"] && output.finishes.count == 1)
+  var span = (document["spans"] as! [[String: Any]])[0]
+  var letter = span["span"] as! [String: Any]
+  letter["text"] = "J"
+  span["span"] = letter
+  document["spans"] = [span]
+  try lane.feed(record("emacsvox_letter", document), muted: false)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 91 cancelled")
+  precondition(spoken.last?.text == "j" && spoken.last?.voice == "test-2")
+  output.finishes.removeFirst()(true)
+  precondition(replies.count == 2)
+  output.finishes.removeFirst()(true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 92 completed")
+  let markers = try replies.filter { $0.hasPrefix("__EMACSVOX_MARKER__ ") }.map {
+    try JSONSerialization.jsonObject(with: Data(base64Encoded: String($0.split(separator:" ")[1]))!) as! [String: Any]
+  }
+  precondition(markers.prefix(2).compactMap { $0["type"] as? String } == ["utterance_started","voice_choice_applied"])
+  precondition((markers[1]["choice"] as? [String: Any])?["choice_id"] as? String == "eloquence-reed")
+  document["generation"] = 10
+  document["dispatch_id"] = 93
+  try lane.feed(record("emacsvox_letter", document), muted: true)
+  precondition(replies.last == "__EMACSVOX_TRACKED__ 93 cancelled" && output.finishes.isEmpty)
+}
+
+func checkShapedTones(_ root: String) throws {
+  let output = TestOutput(root), lane = WireLane(output) { _ in }
+  let command = "emacsvox_tone 3 insert 440 40 0.35 pulse adsr 1 5 0.4 10 0.25 880 exponential"
+  try lane.feed(command, muted: false)
+  var dispatch = UInt8(ascii: "d")
+  let reply = ov_ios_record(lane.worker, &dispatch, 1)!
+  defer { ov_ios_string_free(reply) }
+  let batch = try JSONDecoder().decode(WireAction.self, from: Data(bytes: reply, count: strlen(reply)))
+  let item = batch.items!.first!, clock = ov_ios_mix_new()!, token = ov_ios_token_new()!
+  defer { ov_ios_mix_free(clock); ov_ios_token_free(token) }
+  let pcm = item.tonePCM(token)!, plain = ov_ios_tone(440, 40, 0.35, token)!
+  defer { ov_ios_pcm_free(pcm); ov_ios_pcm_free(plain) }
+  let count = ov_ios_frames(pcm) * 2
+  let isolated = Array(UnsafeBufferPointer(start: ov_ios_samples(pcm), count: count))
+  precondition(count == 3528 && !isolated.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(plain), count: count)))
+  precondition(item.queueTone(clock, token: token))
+  var tail: OpaquePointer?
+  let insert = ov_ios_mix_finish(clock, true, &tail, token)!
+  defer { ov_ios_pcm_free(insert) }
+  precondition(tail == nil && ov_ios_frames(insert) * 2 == count)
+  precondition(isolated.elementsEqual(UnsafeBufferPointer(start: ov_ios_samples(insert), count: count)))
+  ov_ios_cancel(token)
+  precondition(item.tonePCM(token) == nil && !item.queueTone(clock, token: token))
+}
+
+func checkPrivatePreview(_ root: String, voices: String) throws {
+  let data = try Data(contentsOf: URL(fileURLWithPath: "/out/VoiceChoices.json"))
+  let fixture = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+  let messages = fixture["messages"] as! [String: [String: Any]]
+  var draft = messages["preview"]!, role = (messages["preview"]!["voice"] as! [String: Any])
+  var choices = role["choices"] as! [[String: Any]]
+  for i in [1, 2] { choices[i]["selector"] = ["kind":"exact", "engine_id":"ios", "voice_id":"test-2"] }
+  role["choices"] = choices
+  draft["voice"] = role
+  draft["text"] = "private draft"
+  draft.removeValue(forKey: "expected_base_rate")
+  let output = TestOutput(root)
+  var replies: [String] = [], heard: [WireItem] = []
+  output.observeSpeech = { heard.append($0) }
+  let lane = WireLane(output) { replies.append($0) }
+  precondition(lane.setVoices(voices, preferred: "test-1"))
+  let id = draft["request_id"] as! Int
+  func feed(muted: Bool = false) throws {
+    let record = try JSONSerialization.data(withJSONObject: draft).base64EncodedString()
+    try lane.feed("omnivox_control " + record, muted: muted)
+  }
+  func response(_ status: String) throws -> [String: Any] {
+    precondition(replies.count == 1 && replies[0].hasPrefix("__OMNIVOX_CONTROL__ "))
+    let payload = String(replies.removeFirst().split(separator: " ").last!)
+    let value = try JSONSerialization.jsonObject(with: Data(base64Encoded: payload)!) as! [String: Any]
+    precondition(value["request_id"] as? Int == id && value["status"] as? String == status)
+    return value
+  }
+  func check(_ value: [String:Any], choice: String, started: Bool) {
+    let entries = value["accepted_audio"] as! [[String:Any]]
+    precondition(entries.count == 1 && entries[0]["choice_id"] as? String == choice)
+    precondition(entries[0]["playback_started"] as? Bool == started)
+    if started {
+      precondition((value["last_started"] as? [String:Any])?["choice_id"] as? String == choice)
+    } else { precondition(value["last_started"] is NSNull) }
+  }
+  try feed()
+  check(try response("completed"), choice: "eloquence-reed", started: true)
+  precondition(heard.last?.voice == "test-2")
+  var alternate = choices[0]
+  alternate["id"] = "backup"
+  alternate["selector"] = ["kind":"exact", "engine_id":"ios", "voice_id":"test-1"]
+  role["choices"] = choices + [alternate]
+  draft["voice"] = role
+  output.missingVoices.insert("test-2")
+  try feed()
+  check(try response("completed"), choice: "backup", started: true)
+  precondition(heard.last?.voice == "test-1")
+  draft["selection"] = ["mode":"choice", "choice_id":"eloquence-reed"]
+  let beforeRemoval = heard.count
+  try feed()
+  let removed = try response("failed")
+  precondition((removed["accepted_audio"] as! [Any]).isEmpty && removed["last_started"] is NSNull && heard.count == beforeRemoval)
+  output.missingVoices.removeAll()
+  role["choices"] = choices
+  draft["voice"] = role
+  draft["selection"] = ["mode":"choice", "choice_id":"eloquence-reed-soft"]
+  output.hold = true
+  for played in [false, true] {
+    output.playPreviewFirstFrame = played
+    try feed()
+    precondition(replies.isEmpty)
+    try lane.feed("s", muted: false)
+    check(try response("cancelled"), choice: "eloquence-reed-soft", started: played)
+    output.finishes.removeFirst()(true)
+    precondition(replies.isEmpty)
+  }
+  try feed(muted: true)
+  let muted = try response("cancelled")
+  precondition((muted["accepted_audio"] as! [Any]).isEmpty && muted["last_started"] is NSNull)
+  let before = heard.count
+  draft["selection"] = ["mode":"choice", "choice_id":"dectalk-paul"]
+  try feed()
+  let unavailable = try response("failed")
+  precondition((unavailable["accepted_audio"] as! [Any]).isEmpty && unavailable["last_started"] is NSNull)
+  draft["selection"] = ["mode":"automatic"]
+  draft["disabled_engine_ids"] = ["ios"]
+  try feed()
+  let disabled = try response("failed")
+  precondition((disabled["effective_disabled_engine_ids"] as? [String]) == ["ios"] && heard.count == before)
+  draft["expected_base_rate"] = 0.12345
+  try feed()
+  let error = try JSONSerialization.jsonObject(with: Data(base64Encoded: String(replies.removeFirst().split(separator:" ").last!))!) as! [String:Any]
+  precondition(error["type"] as? String == "error" && error["code"] as? String == "invalid_configuration")
+  output.hold = false
+  try lane.feed("q an ordinary reading", muted: false)
+  try lane.feed("d", muted: false)
+  precondition(heard.last?.voice == "test-1" && replies.isEmpty)
+  print("Passed private audition, exact duplicate choices, unavailable voices, stale rate and Stop before and after first playback.")
+}

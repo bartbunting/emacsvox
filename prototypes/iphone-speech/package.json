@@ -1,0 +1,21 @@
+{
+  "name": "emacsvox-iphone-speech",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "eas-build-post-install": "node modules/iphone-terminal/trust-build-plugin.cjs"
+  },
+  "dependencies": {
+    "@expo/dom-webview": "58.0.2",
+    "expo": "58.0.26",
+    "expo-asset": "58.0.21",
+    "expo-audio": "58.0.12",
+    "expo-dev-client": "58.0.21",
+    "expo-speech": "58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "ws": "8.23.0"
+  }
+}

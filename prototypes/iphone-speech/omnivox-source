@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+source_dir=${IPHONE_OMNIVOX_SOURCE:-}
+if [[ -z $source_dir ]]; then
+    source_dir=$(git -C "$here" config --path --get emacsvox.iphoneOmnivoxSource || true)
+fi
+if [[ -z $source_dir ]]; then
+    common=$(git -C "$here" rev-parse --path-format=absolute --git-common-dir)
+    source_dir="$(dirname "$(dirname "$common")")/omnivox"
+fi
+if [[ ! -e $source_dir/.git ]]; then
+    echo 'Set IPHONE_OMNIVOX_SOURCE to the paired Omnivox checkout.' >&2
+    exit 1
+fi
+realpath -- "$source_dir"

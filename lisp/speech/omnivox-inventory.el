@@ -44,6 +44,17 @@
 (defvar omnivox-engine-inventory-time)
 (defvar omnivox--control-inventory-property)
 
+(defconst omnivox--voice-api-bindings
+  '((tts-voice-capabilities-function . omnivox-voice-capabilities)
+    (tts-voice-inventory-function . omnivox-voice-inventory)
+    (tts-voice-inventory-refresh-function . omnivox-refresh-voice-inventory)
+    (tts-voice-configuration-apply-function . omnivox-apply-voice-configuration)
+    (tts-last-realized-voice-function . omnivox-last-realized-voice)
+    (tts-engine-recovery-probe-function . omnivox-request-engine-recovery-probe)
+    (tts-voice-preview-function . omnivox-preview-voice-sequence)
+    (tts-voice-preview-code-function . tts-default-voice-preview-code))
+  "Voice API functions used by a negotiated Omnivox worker.")
+
 (defun omnivox--status-value (record fallback)
   "Return status string from RECORD, or FALLBACK."
   (let ((status (and (listp record) (plist-get record :status))))
@@ -57,6 +68,16 @@
   "Return non-nil when the main Omnivox process advertised FEATURE."
   (and omnivox-control-capabilities
        (member feature (plist-get omnivox-control-capabilities :features))))
+
+(defun omnivox--worker-unicode-names-p (main notification default)
+  "Return whether MAIN and NOTIFICATION need Emacs to expand Unicode names.
+With no live workers, preserve DEFAULT. A live worker must negotiate exact text."
+  (let ((workers (cl-remove-if-not #'process-live-p (delq nil (list main notification)))))
+    (if workers
+        (not (cl-every (lambda (worker)
+                         (omnivox--process-supports-p worker "text_repertoire_routing_v1"))
+                       workers))
+      default)))
 
 (defun omnivox--inventory-process-agreement ()
   "Describe agreement between distinct live Omnivox speech processes."

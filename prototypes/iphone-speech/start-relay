@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+set -euo pipefail
+cd "$(dirname "$0")"
+mode=--go
+trial=
+standalone=
+existing=
+initial_buffer=()
+network=()
+if [[ ${1:-} == --vpn-host ]]; then
+    [[ $# -ge 3 ]] || { echo 'Usage: ./start-relay --vpn-host HOST_IP [MODE] IPHONE_IP ...' >&2; exit 2; }
+    network=(--vpn-host "$2")
+    shift 2
+fi
+if [[ ${1:-} == --existing ]]; then
+    [[ $# -ge 3 && $# -le 4 && -S $3 ]] || { echo 'Usage: ./start-relay --existing IPHONE_IP EMACS_SOCKET [BUFFER_NAME]' >&2; exit 2; }
+    existing=$(realpath "$3")
+    initial_buffer=("${@:4}")
+    client=${EMACSCLIENT:-$(command -v emacsclient)}
+    standalone=1
+    trial=routed
+    set -- "$2"
+elif [[ ${1:-} == --standalone ]]; then
+    trial=routed
+    standalone=1
+    shift
+elif [[ ${1:-} == --native-metro ]]; then
+    mode=--dev-client
+    shift
+elif [[ ${1:-} == --keyboard || ${1:-} == --shared || ${1:-} == --routed ]]; then
+    trial=${1#--}
+    shift
+fi
+if [[ $# != 1 ]]; then
+    echo 'Usage: ./start-relay [--vpn-host HOST_IP] [--native-metro|--keyboard|--shared|--routed|--standalone] IPHONE_IP' >&2
+    echo '       ./start-relay [--vpn-host HOST_IP] --existing IPHONE_IP EMACS_SOCKET [BUFFER_NAME]' >&2
+    if [[ ${#network[@]} == 0 ]] && command -v tailscale >/dev/null; then
+        tailscale status 2>/dev/null | awk 'tolower($0) ~ /ios/ { print $1, $2 }' || true
+    fi
+    exit 2
+fi
+phone=$1
+address=$(python3 phone_network.py "$phone" "${network[@]}")
+runtime=${XDG_RUNTIME_DIR:?}/emacsvox-iphone
+umask 077
+mkdir -p "$runtime"
+socket=$runtime/speech.sock
+export EXPO_PUBLIC_EMACSVOX_PORT=8787
+if [[ -n $trial ]]; then
+    exec 9>"$runtime/$trial.lock"
+    flock -n 9 || { echo "$trial test already running." >&2; exit 1; }
+    session=$(mktemp -d "$runtime/$trial.XXXXXXXX")
+    socket=$session/speech.sock
+    export EMACSVOX_PHONE_SOCKET=$socket EMACSVOX_KEYBOARD_READY=$session/ready
+    export EXPO_PUBLIC_EMACSVOX_PORT=8791
+    port=8793
+    proxy=8792
+    relay_args=("$session/tmux.sock")
+    if [[ $trial != keyboard ]]; then
+        export EMACSVOX_SHARED_DIR=$session EXPO_PUBLIC_EMACSVOX_PORT=8794
+        port=8796
+        proxy=8795
+        relay_args+=("$session")
+        title="Emacsvox Shared Draft"
+        if [[ $trial == routed ]]; then
+            export EMACSVOX_TRIAL_ROUTED=1 EXPO_PUBLIC_EMACSVOX_PORT=8797
+            port=8799
+            proxy=8798
+            title="Emacsvox Routed Draft"
+            if [[ -n $standalone ]]; then relay_args+=(--ssh-only); else relay_args+=(--routed); fi
+        fi
+    fi
+elif [[ $mode == --dev-client ]]; then
+    if [[ ! -S $socket ]] || flock -n "$runtime/relay.lock" true; then
+        echo 'Start the usual phone relay first.' >&2
+        exit 1
+    fi
+    exec 9>"$runtime/native-metro.lock"
+    flock -n 9 || { echo 'Native Metro already running.' >&2; exit 1; }
+    port=8790
+    proxy=8789
+else
+    exec 9>"$runtime/relay.lock"
+    flock -n 9 || { echo 'Phone relay already running.' >&2; exit 1; }
+    [[ ! -S $socket ]] || unlink "$socket"
+    port=8786
+    proxy=8788
+fi
+children=()
+cleanup() {
+    trap - EXIT INT TERM
+    if [[ -n $existing && -L $session/shared ]]; then
+        ./existing-session release "$client" "$existing" "$session" || true
+    fi
+    if [[ -n $trial && -z $existing ]]; then tmux -S "$session/tmux.sock" kill-server 2>/dev/null || true; fi
+    for child in "${children[@]}"; do kill "$child" 2>/dev/null || true; done
+    wait || true
+    if [[ $mode == --go && -S $socket ]]; then unlink "$socket"; fi
+    if [[ -n $trial ]]; then
+        rm -f -- "$session/ready" "$session/ready.tmp" "$session/tmux.sock" "$session/shared" "$session"/phone-*.sock
+        rmdir "$session"
+    fi
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM
+export EXPO_PUBLIC_EMACSVOX_HOST=$address
+export EXPO_PACKAGER_PROXY_URL="http://$address:$proxy"
+export EXPO_NO_TELEMETRY=1
+if [[ -n $trial ]]; then
+    python3 phone_tcp.py "$EXPO_PUBLIC_EMACSVOX_PORT" "$address" "$phone" "$socket" "${relay_args[@]}" 9>&- &
+    children+=($!)
+    for ((i=0; i<100; ++i)); do
+        [[ ! -S $socket ]] || break
+        sleep .1
+    done
+    [[ -S $socket ]] || { echo 'Keyboard relay failed to start.' >&2; exit 1; }
+    if [[ -n $existing ]]; then
+        ./existing-session attach "$client" "$existing" "$session" "${initial_buffer[@]}"
+    elif [[ $trial != keyboard ]]; then
+        if [[ -z $standalone ]]; then
+            tmux -S "$session/tmux.sock" -f /dev/null start-server \; set-option -s exit-empty off 9>&-
+        fi
+        ./test-session -T "$title" -l "$PWD/test/shared-session.el" 9>&- &
+        children+=($!)
+    else
+        tmux -S "$session/tmux.sock" -f /dev/null new-session -d -s phone -x 100 -y 32 \
+            env LC_ALL=C.UTF-8 "$PWD/test-session" -nw -l "$PWD/test/keyboard-session.el" 9>&-
+    fi
+    for ((i=0; i<450; ++i)); do
+        [[ ! -e $EMACSVOX_KEYBOARD_READY ]] || break
+        if [[ $trial != keyboard ]]; then
+            kill -0 "${children[1]}" 2>/dev/null || break
+        else
+            tmux -S "$session/tmux.sock" has-session -t phone 2>/dev/null || break
+        fi
+        sleep .1
+    done
+    [[ -e $EMACSVOX_KEYBOARD_READY ]] || { echo 'Keyboard Emacs failed to start.' >&2; exit 1; }
+    kill -USR2 "${children[0]}"
+fi
+if [[ -n $standalone ]]; then
+    echo "The signed app can now connect to $address. Press Control+C to end this trial."
+    wait -n
+    exit
+fi
+CI=1 node_modules/.bin/expo start "$mode" --localhost --port "$port" </dev/null &
+children+=($!)
+socat "TCP4-LISTEN:$proxy,bind=$address,range=$phone/32,fork,reuseaddr" "TCP4:127.0.0.1:$port" &
+children+=($!)
+if [[ $mode == --go && -z $trial ]]; then
+    python3 phone_tcp.py "$EXPO_PUBLIC_EMACSVOX_PORT" "$address" "$phone" "$socket" &
+    children+=($!)
+elif [[ $mode == --dev-client ]]; then
+    echo "In the development app, enter http://$address:$proxy as the server URL."
+fi
+wait -n

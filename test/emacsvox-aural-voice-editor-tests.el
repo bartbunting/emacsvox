@@ -259,6 +259,55 @@
            (should (= (point) 12)))
        (kill-buffer origin)))))
 
+(ert-deftest emacsvox-aural-voice-editor-resumed-choice-uses-the-opening-connection ()
+  (emacsvox-test--with-voice-editor
+    (let* ((source (current-buffer))
+           (voice '(:voice-id "flo" :language "en-US"))
+           (engine (list :engine-id "ios" :voices (list voice)
+                         :post-synthesis-dimensions '("reverb" "high_pass" "low_pass")))
+           (inventory '(:engines ((:engine-id "dectalk")))))
+      (cl-letf (((symbol-function 'tts-voice-inventory) (lambda () inventory)))
+        (emacsvox-aural-voice-editor-open 'reading-owned 'bolden source)
+        (let ((draft (emacsvox-aural-voice-editor--draft)))
+          (setq inventory (list :engines (list engine)))
+          (emacsvox-aural-voice-editor-open 'reading-owned 'bolden source)
+          (should (eq draft (emacsvox-aural-voice-editor--draft)))
+          (should (equal inventory (emacsvox-aural-voice-editor--get :inventory))))
+        (emacsvox-aural-voice-editor-experiment (list engine voice) source "Sample")
+        (let ((chain (plist-get (emacsvox-aural-voice-editor--working) :selectors)))
+          (dolist (field '(reverb high-pass low-pass))
+            (should-not (string-match-p
+                         "unsupported\\|support not known"
+                         (emacsvox-aural-voice-editor--adjustment-text field nil chain))))
+          (should (string-match-p "unsupported"
+                                  (emacsvox-aural-voice-editor--adjustment-text 'richness nil chain))))))))
+
+(ert-deftest emacsvox-aural-voice-editor-save-keeps-intervening-edits-to-other-voices ()
+  (emacsvox-test--with-voice-editor
+   (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
+   (emacsvox-aural-voice-editor--put :automatic-sample nil)
+   (emacsvox-aural-voice-editor--set 'reverb 5)
+   (let* ((draft (emacsvox-aural-voice-editor--draft))
+          (palette (copy-tree (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
+          (other '(unrelated :personality voice-bolden :choices nil)))
+     (push other (plist-get palette :entries))
+     (puthash 'reading-owned (emacsvox-aural-compile-voice-palette-data palette)
+              emacsvox-aural-voice-palette-registry)
+     (let ((stored (emacsvox-aural-read-user-data)))
+       (setf (plist-get stored :voice-palettes)
+             (cons palette (cl-remove 'reading-owned (plist-get stored :voice-palettes)
+                                      :key (lambda (row) (plist-get row :id)))))
+       (emacsvox-aural--write-user-data stored))
+     (emacsvox-aural-voice-editor-save-to-collection)
+     (should-not (emacsvox-aural-voice-drafts--dirty-fields draft))
+     (should (equal other (assq 'unrelated (plist-get (emacsvox-aural-voice-drafts--palette-data 'reading-owned) :entries))))
+     ;; A concurrent edit to this voice must still block a subsequent save.
+     (emacsvox-aural-voice-editor--set 'reverb 6)
+     (puthash 'reading-owned (emacsvox-aural-compile-voice-palette-data palette)
+              emacsvox-aural-voice-palette-registry)
+     (should-error (emacsvox-aural-voice-editor-save-to-collection) :type 'emacsvox-aural-voice-draft-conflict)
+     (should (emacsvox-aural-voice-drafts--dirty-fields draft)))))
+
 (ert-deftest emacsvox-aural-voice-editor-experiment-destination-preserves-fallbacks ()
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-experiment
@@ -311,13 +360,19 @@
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
    (let ((before (emacsvox-aural-voice-editor--working))
-         (answers '("cANDIDATE" "Audition candidate" "Cancel")))
+         (answers '("cANDIDATE" "Audition candidate")))
      (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--physical-candidates)
                 (lambda (&rest _) '(("Candidate" (:engine-id "test") (:voice-id "one")))))
                ((symbol-function 'completing-read) (lambda (&rest _) (pop answers))))
-       (should-error (emacsvox-aural-voice-editor-choose 0)))
-     (should (equal (plist-get (plist-get (caar requests) :selector) :voice-id) "one"))
-     (should (equal before (emacsvox-aural-voice-editor--working))))))
+       (emacsvox-aural-voice-editor-choose 0)
+       (should-not answers)
+       (should (eq (get-text-property (point) 'voice-field) 'candidate))
+       (should (equal before (emacsvox-aural-voice-editor--working)))
+       (call-interactively (key-binding (kbd "P")))
+       (should (equal (plist-get (plist-get (caar requests) :selector) :voice-id) "one"))
+       (emacsvox-aural-voice-editor--put :automatic-sample nil)
+       (call-interactively (key-binding (kbd "RET")))
+       (should (equal (plist-get (car (plist-get (emacsvox-aural-voice-editor--working) :selectors)) :voice-id) "one"))))))
 
 (ert-deftest emacsvox-aural-voice-editor-return-after-refresh-and-standard-actions ()
   (emacsvox-test--with-voice-editor
@@ -738,6 +793,30 @@
          (kill-buffer workbench)
          (kill-buffer source))))))
 
+(ert-deftest emacsvox-aural-voice-editor-quit-through-palette-returns-to-source ()
+  (emacsvox-test--with-voice-editor
+   (save-window-excursion
+     (let ((source (generate-new-buffer " *palette-source*")))
+       (unwind-protect
+           (dolist (action '(display-buffer-same-window display-buffer-pop-up-window))
+             (delete-other-windows)
+             (switch-to-buffer source)
+             (let ((display-buffer-overriding-action (list action)))
+               (emacsvox-aural-list-voice-palettes 'reading-owned)
+               (emacsvox-aural-voice-palettes-preview 'reading-owned)
+               (emacsvox-aural-ui-goto-row 'bolden)
+               (emacsvox-aural-voice-palette-previews-edit)
+               (call-interactively (key-binding (kbd "q")))
+               (should (derived-mode-p 'emacsvox-aural-voice-palette-previews-mode))
+               ;; Revisit the manager from its child before quitting both views.
+               (emacsvox-aural-voice-palette-previews-open-manager)
+               (emacsvox-aural-voice-palettes-preview 'reading-owned)
+               (call-interactively (key-binding (kbd "q")))
+               (should (derived-mode-p 'emacsvox-aural-voice-palettes-mode))
+               (call-interactively (key-binding (kbd "q")))
+               (should (eq source (current-buffer)))))
+         (kill-buffer source))))))
+
 (defmacro emacsvox-test--with-layered-editor (&rest body)
   "Run BODY through the real private preview service with a synthetic draft."
   (declare (indent 0) (debug t))
@@ -757,9 +836,33 @@
              (emacsvox-aural-voice-draft-working draft) (copy-tree snapshot))
        (emacsvox-aural-voice-editor--put :policy '(:engine-order ("eloquence") :disabled-engines ("winrt")
                                                  :fallback (:engines ("espeak"))))
+       ;; The fixture's normal-reading responses can realize any eligible choice.
+       (emacsvox-aural-voice-editor-refresh)
+       (emacsvox-aural-voice-editor--locate 'play-route)
        ;; Opening the interface configures punctuation before the tested action.
        (setq writes nil stops 0)
        ,@body))))
+
+(ert-deftest emacsvox-aural-voice-editor-auditions-the-focused-choice-and-the-ordered-list ()
+  (emacsvox-test--with-layered-editor
+   (let* ((rows (plist-get snapshot :choices)) (first (plist-get (car rows) :id))
+          (second (plist-get (cadr rows) :id)) chosen)
+     (emacsvox-aural-voice-editor--put :expanded t)
+     (emacsvox-aural-voice-editor--put :tuning-choice second)
+     (emacsvox-aural-voice-editor-refresh)
+     (cl-letf (((symbol-function 'emacsvox-aural-voice-editor--start-entries)
+                (lambda (_ entries _revision)
+                  (setq chosen (mapcar (lambda (r) (plist-get (plist-get r :selection) :choice-id)) entries)))))
+       (dolist (pair (list (cons 'primary first) (cons '(choice . 1) second) (cons 'average-pitch second)))
+         (emacsvox-aural-voice-editor--locate (car pair))
+         (call-interactively (key-binding (kbd "P")))
+         (should (equal (list (cdr pair)) chosen)))
+       (emacsvox-aural-voice-editor--locate 'play-chain)
+       (call-interactively (key-binding (kbd "RET")))
+       (should (equal chosen (mapcar (lambda (r) (plist-get r :id)) rows)))
+       (emacsvox-aural-voice-editor--locate 'play-route)
+       (call-interactively (key-binding (kbd "P")))
+       (should (equal chosen '(nil)))))))
 
 (ert-deftest emacsvox-aural-voice-editor-v2-connects-complete-draft-to-actual-evidence ()
   (emacsvox-test--with-layered-editor

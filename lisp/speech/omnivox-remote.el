@@ -33,6 +33,7 @@
 (require 'cl-lib)
 (require 'seq)
 (require 'subr-x)
+(require 'emacsvox-frame-speech)
 (require 'tts-queue-state)
 
 (defgroup omnivox-remote nil
@@ -65,6 +66,9 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defvar omnivox-remote--connecting nil)
 (defvar omnivox-remote--suspended nil)
 (defvar omnivox-remote--last-error nil)
+(cl-defstruct (omnivox-remote--frame (:copier nil))
+  frame host port token-file endpoint timer (delay 1) error)
+(defvar omnivox-remote--opening-frame nil)
 (defvar tts-program)
 (defvar tts-speaker-process)
 (defvar tts-notify-process)
@@ -74,6 +78,13 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defvar omnivox-control-capabilities)
 (defvar omnivox-available-voices)
 (defvar omnivox-library--timeout)
+(defvar tts-handle-unicode)
+(defvar tts-speech-rate)
+(defvar omnivox-engine-inventory-time)
+(defvar omnivox-routing-policy-registration)
+(defvar omnivox-logical-voice-registration)
+(defvar omnivox-control-last-error)
+(declare-function omnivox-library--wait-for-recovered-speech "omnivox-library-runtime" (process))
 (declare-function omnivox-library--control "omnivox-library-runtime" (process command))
 (declare-function omnivox-library-apply--uuid "omnivox-library-apply" (value))
 (declare-function omnivox--install-control-filter "omnivox-voices" (process))
@@ -90,7 +101,11 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 
 (defun omnivox-remote-enabled-p ()
   "Return non-nil when Omnivox uses the remote workstation transport."
-  (and omnivox-remote-host (tts--omnivox-program-p)))
+  (and (if (and emacsvox-frame-speech--active (not omnivox-remote--opening-frame))
+           (and (processp tts-speaker-process)
+                (process-get tts-speaker-process 'omnivox-remote-managed))
+         omnivox-remote-host)
+       (tts--omnivox-program-p)))
 
 (defun omnivox-remote--begin-activation ()
   "Retire both remote lanes before selecting a fresh workstation configuration."
@@ -191,7 +206,10 @@ workstation can prepare a new activation when no old lane remains live."
     (when (process-get process 'omnivox-remote-managed)
       (let ((retiring (process-get process 'tts--speech-process-retiring)))
         (tts--speech-process-sentinel process event)
-        (unless retiring (omnivox-remote--schedule-retry))))))
+        (unless retiring
+          (if-let* ((owner (process-get process 'omnivox-remote-frame)))
+              (omnivox-remote--frame-lost owner process)
+            (omnivox-remote--schedule-retry)))))))
 
 (defun omnivox-remote--open (name token)
   "Authenticate lane NAME with TOKEN and return its network process."
@@ -261,6 +279,8 @@ workstation can prepare a new activation when no old lane remains live."
              (accept-process-output nil 0.1)
            (signal (car err) (cdr err))))))
     (process-put process 'omnivox-remote-managed t)
+    (when omnivox-remote--opening-frame
+      (process-put process 'omnivox-remote-frame omnivox-remote--opening-frame))
     (process-put process 'omnivox-remote-pong (float-time))
     (process-put process 'omnivox-remote-heartbeat
                  (run-at-time 5 5 #'omnivox-remote--heartbeat process))
@@ -327,6 +347,150 @@ workstation can prepare a new activation when no old lane remains live."
            (and (processp tts-notify-process) (process-status tts-notify-process))
            (if (timerp omnivox-remote--retry-timer) "pending" "none")
            (if omnivox-remote--last-error (concat "; " omnivox-remote--last-error) "")))
+
+(defun omnivox-remote--frame-workers (owner)
+  (when-let* ((endpoint (omnivox-remote--frame-endpoint owner)))
+    (list (emacsvox-frame-speech--endpoint-main endpoint)
+          (emacsvox-frame-speech--endpoint-notification endpoint))))
+
+(defun omnivox-remote--retire-frame-workers (owner)
+  (dolist (process (omnivox-remote--frame-workers owner))
+    (when (process-live-p process) (tts--retire-process process))))
+
+(defun omnivox-remote--frame-release (frame)
+  "Cancel recovery and retire the remote workers owned by FRAME."
+  (when-let* ((owner (frame-parameter frame 'omnivox-remote-connection)))
+    (set-frame-parameter frame 'omnivox-remote-connection nil)
+    (when-let* ((timer (omnivox-remote--frame-timer owner))) (cancel-timer timer))
+    (setf (omnivox-remote--frame-timer owner) nil)
+    (omnivox-remote--retire-frame-workers owner)
+    (unless (seq-some (lambda (f) (frame-parameter f 'omnivox-remote-connection)) (frame-list))
+      (remove-hook 'emacsvox-frame-speech-detach-hook #'omnivox-remote--frame-release))))
+
+(defun omnivox-remote--frame-current-p (owner)
+  (let ((frame (omnivox-remote--frame-frame owner)))
+    (and (frame-live-p frame) (eq owner (frame-parameter frame 'omnivox-remote-connection)))))
+
+(defun omnivox-remote--frame-schedule (owner)
+  (when (and omnivox-remote-auto-reconnect (omnivox-remote--frame-current-p owner)
+             (not (omnivox-remote--frame-timer owner)))
+    (let ((delay (omnivox-remote--frame-delay owner)))
+      (setf (omnivox-remote--frame-timer owner)
+            (run-at-time delay nil #'omnivox-remote--frame-retry owner)
+            (omnivox-remote--frame-delay owner) (min 30 (* 2 delay))))))
+
+(defun omnivox-remote--frame-lost (owner process)
+  (when (and (omnivox-remote--frame-current-p owner)
+             (memq process (omnivox-remote--frame-workers owner)))
+    ;; Keep the expired handle attached. Commands continue to edit the frame
+    ;; while its speech and pending callbacks stay off the default desktop.
+    (omnivox-remote--retire-frame-workers owner)
+    (omnivox-remote--frame-schedule owner)))
+
+(defun omnivox-remote--frame-open (owner)
+  "Prepare and negotiate a fresh pair before publishing it to OWNER's frame."
+  (let* ((frame (omnivox-remote--frame-frame owner))
+         (previous (omnivox-remote--frame-endpoint owner))
+         (original (emacsvox-frame-speech-endpoint frame))
+         (omnivox-remote--opening-frame owner)
+         (omnivox-remote-host (omnivox-remote--frame-host owner))
+         (omnivox-remote-port (omnivox-remote--frame-port owner))
+         (omnivox-remote-token-file (omnivox-remote--frame-token-file owner))
+         (omnivox-remote--session nil) (omnivox-remote--suspended nil)
+         (emacsvox-frame-speech--active nil) (emacsvox-frame-speech--command-owner nil)
+         (emacsvox-frame-speech--hook-owner nil)
+         (tts-program "omnivox") (tts-speaker-process nil) (tts-notify-process nil)
+         (tts-speech-rate (if previous (emacsvox-frame-speech--endpoint-rate previous) tts-speech-rate))
+         (tts-handle-unicode tts-handle-unicode)
+         omnivox-engine-inventory omnivox-engine-inventory-time omnivox-control-capabilities
+         omnivox-available-voices omnivox-logical-voice-registration omnivox-routing-policy-registration
+         omnivox-control-last-error main notify installed)
+    (unwind-protect
+        (progn
+          (setq main (tts-make-process "Speaker") tts-speaker-process main
+                notify (tts-make-process "Notify") tts-notify-process notify)
+          (dolist (process (list main notify))
+            (omnivox--negotiate-process process)
+            (omnivox-library--wait-for-recovered-speech process)
+            (let ((tts-speaker-process process)) (tts--protocol-sync)))
+          (unless (and (frame-live-p frame) (eq original (emacsvox-frame-speech-endpoint frame))
+                       (or (null previous) (omnivox-remote--frame-current-p owner)))
+            (error "Frame speech changed while connecting"))
+          (setf (omnivox-remote--frame-endpoint owner)
+                (emacsvox-frame-speech-attach frame main notify tts-program tts-speech-rate previous))
+          (set-frame-parameter frame 'omnivox-remote-connection owner)
+          (add-hook 'emacsvox-frame-speech-detach-hook #'omnivox-remote--frame-release)
+          (setf (omnivox-remote--frame-delay owner) 1 (omnivox-remote--frame-error owner) nil)
+          (setq installed t))
+      (unless installed
+        (dolist (process (list notify main))
+          (when (and process (process-live-p process)) (tts--retire-process process)))))))
+
+(defun omnivox-remote--frame-retry (owner)
+  (when-let* ((timer (omnivox-remote--frame-timer owner))) (cancel-timer timer))
+  (setf (omnivox-remote--frame-timer owner) nil)
+  (when (omnivox-remote--frame-current-p owner)
+    (condition-case err
+        (omnivox-remote--frame-open owner)
+      (error (setf (omnivox-remote--frame-error owner) (error-message-string err))
+             (omnivox-remote--frame-schedule owner)))))
+
+;;;###autoload
+(defun omnivox-remote-connect-frame (host port token-file &optional frame)
+  "Connect FRAME to workstation Omnivox at loopback HOST and forwarded PORT.
+TOKEN-FILE contains the private workstation token. Use an existing SSH
+forward. Interactively connect the selected frame. A lost lane recovers
+with fresh speech workers when `omnivox-remote-auto-reconnect' is enabled."
+  (interactive (list (completing-read "Forwarded loopback address: " '("127.0.0.1" "::1")
+                                      nil t nil nil (or omnivox-remote-host "127.0.0.1"))
+                     (read-number "Forwarded port: " omnivox-remote-port)
+                     (read-file-name "Private token file: " nil omnivox-remote-token-file t)))
+  (require 'tts-speak)
+  (require 'omnivox-voices)
+  (require 'omnivox-library-runtime)
+  (setq frame (or frame (selected-frame)) token-file (expand-file-name token-file))
+  (unless (frame-live-p frame) (user-error "Choose a live Emacs frame"))
+  (let* ((old (frame-parameter frame 'omnivox-remote-connection))
+         (same (and old (equal host (omnivox-remote--frame-host old))
+                    (equal port (omnivox-remote--frame-port old))
+                    (equal token-file (omnivox-remote--frame-token-file old))))
+         (owner (if same old (make-omnivox-remote--frame
+                              :frame frame :host host :port port :token-file token-file))))
+    (unless (and same (cl-every #'process-live-p (omnivox-remote--frame-workers owner)))
+      (when-let* ((timer (omnivox-remote--frame-timer owner))) (cancel-timer timer))
+      (setf (omnivox-remote--frame-timer owner) nil)
+      (condition-case err
+          (omnivox-remote--frame-open owner)
+        (error (setf (omnivox-remote--frame-error owner) (error-message-string err))
+               (omnivox-remote--frame-schedule owner)
+               (signal (car err) (cdr err)))))
+    (when (called-interactively-p 'interactive)
+      (emacsvox-frame-speech-call (omnivox-remote--frame-endpoint owner)
+                                  #'message "Frame connected to workstation speech"))
+    (omnivox-remote--frame-endpoint owner)))
+
+;;;###autoload
+(defun omnivox-remote-disconnect-frame (&optional frame)
+  "Close FRAME's remote workers and return this frame to ordinary speech."
+  (interactive)
+  (setq frame (or frame (selected-frame)))
+  (when (frame-parameter frame 'omnivox-remote-connection)
+    (emacsvox-frame-speech-detach frame))
+  (when (called-interactively-p 'interactive)
+    (emacsvox-frame-speech-call nil #'message "Frame uses ordinary speech")))
+
+;;;###autoload
+(defun omnivox-remote-frame-status (&optional frame)
+  "Describe FRAME's workstation connection and pending recovery."
+  (interactive)
+  (if-let* ((owner (frame-parameter frame 'omnivox-remote-connection)))
+      (message "Workstation %s port %d. %s%s"
+               (omnivox-remote--frame-host owner) (omnivox-remote--frame-port owner)
+               (cond ((omnivox-remote--frame-timer owner) "Reconnecting")
+                     ((cl-every #'process-live-p (omnivox-remote--frame-workers owner)) "Connected")
+                     (t "Disconnected"))
+               (if-let* ((reason (omnivox-remote--frame-error owner))) (concat ". " reason) ""))
+    (message "This frame has no workstation connection")))
 
 (defun omnivox-remote-resource (path)
   "Map local bundled sound PATH to a workstation icon ID when remote is active."

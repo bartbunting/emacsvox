@@ -82,6 +82,7 @@ emacsvox-version.elc \
 emacsvox-paths.elc \
 emacsvox-preamble.elc \
 speech/tts-queue-state.elc \
+speech/emacsvox-frame-speech.elc \
 speech/omnivox-remote.elc \
 speech/omnivox-engine-settings.elc \
 ui/omnivox-engine-configuration.elc \
@@ -178,6 +179,7 @@ ui/emacsvox-aural-voice-workbench-preview.elc \
 ui/emacsvox-aural-voice-workbench-library.elc \
 ui/emacsvox-aural-voice-workbench-routing.elc \
 ui/emacsvox-aural-voice-workbench-apply.elc \
+ui/emacsvox-voice-languages.elc \
 ui/emacsvox-aural-voice-workbench.elc \
 ui/emacsvox-aural-change-feedback.elc \
 aural/emacsvox-aural-provider-org.elc \
@@ -232,6 +234,7 @@ integrations/emacsvox-agent-shell-render.elc \
 integrations/emacsvox-agent-shell-tables.elc \
 integrations/emacsvox-agent-shell-navigation.elc \
 integrations/emacsvox-agent-shell-events.elc \
+integrations/emacsvox-agent-shell-frames.elc \
 integrations/emacsvox-agent-shell-interaction.elc \
 integrations/emacsvox-agent-shell-presentation.elc \
 integrations/emacsvox-agent-shell-motion.elc \
@@ -487,6 +490,7 @@ integrations/emacsvox-agent-shell-render.elc: core/emacsvox-text-tree.elc
 integrations/emacsvox-agent-shell-tables.elc: integrations/emacsvox-agent-shell-render.elc core/emacsvox-table-reader.elc
 integrations/emacsvox-agent-shell-navigation.elc: integrations/emacsvox-agent-shell-tables.elc integrations/emacsvox-agent-shell-render.elc
 integrations/emacsvox-agent-shell-events.elc: integrations/emacsvox-agent-shell-navigation.elc
+integrations/emacsvox-agent-shell-frames.elc: speech/emacsvox-frame-speech.elc speech/tts-queue-state.elc
 integrations/emacsvox-agent-shell-interaction.elc: integrations/emacsvox-agent-shell-events.elc
 integrations/emacsvox-agent-shell-presentation.elc: integrations/emacsvox-agent-shell-events.elc
 integrations/emacsvox-agent-shell-motion.elc: \
@@ -755,6 +759,8 @@ ui/omnivox-library.elc speech/tts-speak.elc speech/omnivox-remote.elc: speech/om
 
 ui/emacsvox-aural-voice-workbench-views.elc: ui/emacsvox-aural-voice-palettes.elc ui/emacsvox-aural-ui.elc aural/emacsvox-aural-routing-profiles.elc
 ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-views.elc
+ui/emacsvox-voice-languages.elc: ui/emacsvox-aural-ui.elc speech/tts-voice-api.elc
+speech/omnivox-voices.elc ui/emacsvox-aural-voice-workbench-views.elc ui/omnivox-catalogue.elc ui/omnivox-espeak-variants.elc: ui/emacsvox-voice-languages.elc
 
 ui/emacsvox-aural-voice-workbench-preview.elc: ui/emacsvox-aural-voice-workbench-views.elc aural/emacsvox-aural-preview.elc
 ui/emacsvox-aural-voice-workbench.elc: ui/emacsvox-aural-voice-workbench-preview.elc

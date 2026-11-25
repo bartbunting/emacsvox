@@ -1254,7 +1254,8 @@ and activate the button again to hide them. Changed fields state earlier values;
 unsupported settings stay visible and retained. Field navigation stops at its
 ends without wrapping, and numeric limits announce minimum or maximum.
 
-~P~ previews the edited voice; ~B~ compares captured original and edited versions
+On a primary or fallback row, ~P~ auditions that choice. On an adjustment, ~P~
+auditions the voice you are editing. ~B~ compares captured original and edited versions
 with the same sample and spoken labels. ~T~ changes sample text and ~S~ stops.
 An automatic sample follows adjustments unless /Automatic sample after adjustment/
 is off. The value precedes it, for example ``1. The quick brown fox…''.
@@ -1264,8 +1265,11 @@ and /Fallbacks/ use open/close cues and optional state labels on both toggling
 and navigation. Navigation stops a sample. ~u~ undoes an edit, including reset.
 ~q~ returns to the originating view, offering to retain or discard unsaved work.
 
-/Physical voice/ searches engine or voice names. Audition with working adjustments
-before accepting; cancellation keeps the earlier choice and returns to the field.
+/Physical voice/ searches engine or voice names. Press ~C-c C-p~ to hear the
+highlighted voice or a unique typed match. The search stays open. At the
+following action prompt the same key replays your selection. /Audition candidate/ returns
+to the editor and plays the sample. Press ~P~ to replay it or ~RET~ on /Use/
+to put that voice in your draft. You can leave with ~q~ after listening.
 /Fallbacks/ allows replacement, reordering, removal, individual auditions,
 appending, or returning to Automatic. Unavailable, engine-default, and property
 choices are retained. Shared adjustments supply inherited fields;
@@ -1481,7 +1485,9 @@ custom, and explicit adapter default. ~RET~ offers all three, left/right sets
 numbers, ~d~ requests adapter default, and ~i~ inherits. Zero remains explicit.
 Later shared changes affect inherited fields only. /More adjustments and effects/
 reveals additional controls. Automatic samples name the value/state and audition
-that row; /Play whole fallback chain/ tests normal selection. /Return to shared
+that row. /Audition choices in fallback order/ plays each available row and
+names any unavailable choices. /Hear the voice normal reading would use/ tests
+automatic selection on your current connection. /Return to shared
 settings/ leaves individual tuning within the same draft and Save operation.
 Removing a row disables its controls until undo or return to shared settings.
 
@@ -1708,6 +1714,18 @@ shortcuts remain available.
 :TEXINFO_NODE: no
 :END:
 
+Press ~L~ in /Voices and engines/ or in the voice browser to choose the
+languages shown on all your Emacs frames. Use Up and Down to hear each
+language and its selection state. Press ~RET~ on each language you want,
+then ~s~ to save. For example, selecting English and French includes voices
+from every English and French region. Select /Unspecified language/ to
+include voices whose engine supplies no language. Select /All languages/
+and save to see the full list again. ~q~ discards pending changes.
+
+The selection also narrows voice searches and the physical-voice picker
+when adding a fallback to a palette. Speech servers continue to resolve
+your saved voice assignments against their full inventories.
+
 A language with one voice shows it directly; several voices form an expandable
 heading with count and state. ~RET~ toggles it. Initial sorting ignores
 capitalisation. Regions form a tree, for example English then United Kingdom
@@ -1872,7 +1890,7 @@ existing destination changes that resource; it is not preview-only practice.
    the standard baseline; otherwise activate the recorded explicit palette.
 
 For independent fallback tuning, open its menu and /Customize this voice/.
-Change one field, audition that row, then test /Play whole fallback chain/.
+Change one field, audition that row, then try /Hear the voice normal reading would use/.
 The custom field overrides shared tuning only for that choice. ~i~ restores
 inheritance; reordering carries adjustments with the row.
 

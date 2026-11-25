@@ -40,6 +40,7 @@
 (require 'emacsvox-aural-schemes)
 (require 'emacsvox-aural-routing-profiles)
 (require 'emacsvox-aural-ui)
+(require 'emacsvox-voice-languages)
 (require 'emacsvox-aural-voice-palettes)
 
 (declare-function emacsvox-aural-voice-editor--status-for
@@ -115,7 +116,9 @@
 
 (defun emacsvox-aural-voice-workbench--filter-description ()
   "Return concise physical filter text."
-  (let (parts)
+  (let ((parts (when emacsvox-voice-browser-languages
+                 (list (mapconcat #'emacsvox-aural-voice-workbench--language-label
+                                  emacsvox-voice-browser-languages ", ")))))
     (cl-loop
      for (key value) on (emacsvox-aural-voice-workbench--physical-filter) by #'cddr
      when value
@@ -501,6 +504,7 @@ or persisting a routing choice."
 (defun emacsvox-aural-voice-workbench--physical-visible-p (engine voice)
   "Return non-nil when ENGINE and VOICE pass the physical filter."
   (and
+   (emacsvox-voice-browser--visible-p (plist-get voice :language))
    (emacsvox-aural-voice-workbench--filter-match-p
     :engine (plist-get engine :engine-id))
    (emacsvox-aural-voice-workbench--filter-match-p
