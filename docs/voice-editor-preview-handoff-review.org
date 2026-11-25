@@ -25,7 +25,7 @@ The [[file:voice-editor-queue-proof-review.org][queue proof]] remains separate f
 Run [[file:../test/diagnose-choice-preview.el][diagnose-choice-preview.el]] with the Emacs selected by =local.mk=:
 
 #+begin_example
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-choice-preview.el
+$HOME/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-choice-preview.el
 #+end_example
 
 At review commit =3c62f414b=, twelve assertions reproduced the baseline using

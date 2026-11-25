@@ -449,7 +449,7 @@ and preflight bounded flat acknowledgements before publication.
 These commits are on branch =voice-choice-tuning= in
 =/tmp/omnivox-voice-choice-tuning=; the original Omnivox checkout remains at its
 release commit on =main=. This is a linked worktree: the committed source and
-branch are stored in =/home/bart/src/omnivox/.git=, independent of the temporary
+branch are stored in =$HOME/src/omnivox/.git=, independent of the temporary
 working files. The branch has not been merged into =main=. The complete
 capability bundle is now advertised after the acceptance recorded below.
 

@@ -766,7 +766,7 @@ Do not remove yet:
 The required commands were run in an isolated archive of the current repository so ignored build artifacts could not be modified or influence results. The existing generated =emacsvox-loaddefs.el= was supplied to that archive. The original working tree remained untouched.
 
 #+begin_src sh
-make test EMACS=/home/bart/opt/emacs-31/bin/emacs
+make test EMACS=$HOME/opt/emacs-31/bin/emacs
 #+end_src
 
 Outcome:
@@ -781,7 +781,7 @@ Outcome:
 - approximately 15.4 seconds for ERT.
 
 #+begin_src sh
-make aural-audit EMACS=/home/bart/opt/emacs-31/bin/emacs
+make aural-audit EMACS=$HOME/opt/emacs-31/bin/emacs
 #+end_src
 
 Outcome:
@@ -797,8 +797,8 @@ The optional pinned comparison was also run without refreshing its golden:
 
 #+begin_src sh
 make reference-test \
-  EMACS=/home/bart/opt/emacs-31/bin/emacs \
-  EMACSPEAK_DIR=/home/bart/src/emacspeak-reference
+  EMACS=$HOME/opt/emacs-31/bin/emacs \
+  EMACSPEAK_DIR=$HOME/src/emacspeak-reference
 #+end_src
 
 Outcome: failed. The checkout was at the required =7482f8e2713b5b8ea87132d9d2fcea6664ff4037= revision, but Emacs 31 obsolescence warnings were captured as scenario messages and expected speech events were absent beginning at =next-line=. This is a pinned-reference harness/runtime incompatibility, not evidence that the current aural behavior changed. The golden should not be refreshed to hide it.

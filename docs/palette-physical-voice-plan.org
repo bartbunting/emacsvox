@@ -215,7 +215,7 @@ Draft and input guards run before preparation and between publication steps.
 Saved results can be closed without removing a newer review of the same voice
 and palette. The maintained voice guide, NEWS and generated manuals are updated.
 
-Verification used =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90:
+Verification used =$HOME/opt/emacs-31/bin/emacs=, version 31.0.90:
 
 - =make check-emacs=, =make bytecode-rebuild= and subsequent incremental
   =make bytecode= / =make bytecode-check= passed. A fresh Emacs is required for
@@ -232,8 +232,8 @@ Verification used =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90:
   =make docs-reference=, =make docs-update= and =make docs-release-check= passed.
 
 Muted native verification used fresh main and notification workers launched by
-=/home/bart/src/emacsvox/servers/omnivox=, with Omnivox 1.12.0 at
-=/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/runtime/2faa4a181c27b40c/omnivox.exe=.
+=$HOME/src/emacsvox/servers/omnivox=, with Omnivox 1.12.0 at
+=%LOCALAPPDATA%/Emacsvox/Omnivox/runtime/2faa4a181c27b40c/omnivox.exe=.
 Both workers used an isolated temporary profile and =OMNIVOX_AUDIO_OUTPUT=null=.
 The installed eSpeak data directory was supplied explicitly through
 =ESPEAK_NG_DATA=; no engines or data were installed or modified. The live

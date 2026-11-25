@@ -56,7 +56,7 @@ system dependency metadata and executable checks serve different purposes.
 * Validation
 
 Local binaries were Ubuntu's =/usr/bin/emacs= (30.2) and the existing
-=/home/bart/opt/emacs-31/bin/emacs= (31.0.90). The main ignored =local.mk= remains
+=$HOME/opt/emacs-31/bin/emacs= (31.0.90). The main ignored =local.mk= remains
 on the latter. CI now schedules Emacs 30.2 and 31.1; the new workflow has not
 been run on GitHub as part of this investigation.
 
@@ -130,8 +130,8 @@ Windows installation and personal configuration were not changed.
 - A further fresh process loaded compiled startup and EWW and verified DOM text
   extraction. No audible speech test was run.
 
-Logs are retained under =~/.cache/emacsvox/compat30/native-windows-30.log= and
-=C:/Users/bart/AppData/Local/Temp/emacsvox-compat30-yaqx7jal/=.
+The WSL check wrote =~/.cache/emacsvox/compat30/native-windows-30.log=.
+Native Windows wrote its logs to a temporary directory.
 The final Linux compatibility gate passes 226 tests on Emacs 31.0.90 and
 225 with one expected skip on Emacs 30.2. These additional checks cover package
 selection, explicit source-build choice and the unified native minimum.

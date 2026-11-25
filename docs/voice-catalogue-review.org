@@ -115,7 +115,7 @@ The full guarded =windows-omnivox-piper-dev= target staged runtime
 =d81362fdc8a0b47f= from Emacsvox =76c4e7d8a= and native source =1a611627=.
 Its Windows executable is:
 
-=C:\Users\bart\AppData\Local\Emacsvox\Omnivox\runtime\d81362fdc8a0b47f\omnivox.exe=
+=%LOCALAPPDATA%\Emacsvox\Omnivox\runtime\d81362fdc8a0b47f\omnivox.exe=
 
 Main executable SHA-256:
 =309e3ef3581a70f0c9a85d25c4cb069d100abab4c0bdb409ee7c2cb34491a5cb=.
@@ -131,13 +131,12 @@ null audio, and a private Windows voice root. It opened the real catalogue,
 downloaded AWB, confirmed disabled installation without replacing either
 original speech process, enabled the voice through the library, and completed
 reviewed Apply. Both replacement workers reported =flitevox:cmu_us_awb=
-eligible. The native test root was
-=C:\Users\bart\AppData\Local\Temp\omnivox-catalogue-acceptance-w90w24ro=.
+eligible. The native test used a temporary directory.
 This was a routing/activation and synthesis check, not an audible listening
 acceptance by the maintainer.
 
 The existing Windows /Emacsvox Development/ shortcut still calls
-=/home/bart/bin/emacsvox-development= through its local launcher. That wrapper
+=$HOME/bin/emacsvox-development= through its local launcher. That wrapper
 now selects =d81362fdc8a0b47f=; its diagnostic command confirms the executable
 and Emacs 31.0.90. Existing Emacs sessions were not restarted. A fresh
 Development window loads the compiled catalogue interface and this runtime.

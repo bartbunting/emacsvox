@@ -135,7 +135,7 @@ selection. On this machine, open the /Emacsvox Development/ Windows desktop
 shortcut, or run its per-user wrapper from WSL:
 
 #+begin_src sh
-/home/bart/bin/emacsvox-development
+$HOME/bin/emacsvox-development
 #+end_src
 
 The wrapper uses the maintainer's normal Emacsvox profile, selected Emacs 31

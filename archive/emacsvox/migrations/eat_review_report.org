@@ -109,30 +109,30 @@ device, or safe to disclose.
 | Item | Exact value | Evidence |
 |------+-------------+----------|
 | Host | Ubuntu 26.04 LTS under WSL2, x86_64; kernel ~6.18.33.2-microsoft-standard-WSL2~ | Observed locally |
-| Configured Emacs | ~/home/bart/opt/emacs-31/bin/emacs~ | [[file:../../../local.mk::1][local.mk:1]] |
+| Configured Emacs | ~$HOME/opt/emacs-31/bin/emacs~ | [[file:../../../local.mk::1][local.mk:1]] |
 | Emacs version | GNU Emacs 31.0.90, development commit ~1bd56ff93273f754e72e9a50cbefae3b218d2260~, build 2026-07-22 | ~emacs --version~ and live server |
 | Emacsvox branch/commit | ~master~, ~0a19bac66dfc5e0b519f0157a28d271878ea2304~ | ~git rev-parse HEAD~ |
 | EAT package | 0.9.4, package commit/tag ~c91451f2d17453c19d3fa76faa4945cbe54e14ce~ | Installed package metadata and [[https://codeberg.org/akib/emacs-eat/src/tag/v0.9.4][upstream v0.9.4 tag]] |
-| EAT artifact loaded by server | ~/home/bart/.emacs.d/elpa/eat-0.9.4/eat.elc~ | Live ~locate-library~ |
-| Emacsvox EAT artifact loaded by server | ~/home/bart/src/emacsvox/lisp/emacsvox-eat.elc~ | Live ~locate-library~ |
+| EAT artifact loaded by server | ~$HOME/.emacs.d/elpa/eat-0.9.4/eat.elc~ | Live ~locate-library~ |
+| Emacsvox EAT artifact loaded by server | ~$HOME/src/emacsvox/lisp/emacsvox-eat.elc~ | Live ~locate-library~ |
 | EAT source SHA-256 | ~fb0f24efb7e675e2b8beed2b48b913aa02e98fab2924c1f503ec17d4617882b6~ | ~sha256sum~ |
 | EAT byte-code SHA-256 | ~913e705bd346b87f2ca33c4f972a7b8157b46da0dca9e607f7400f71563c07a3~ | ~sha256sum~ |
 | Emacsvox EAT source SHA-256 | ~5e3aff64600730b06d2b40627ec0c05651c31d715faab6e963f0c5dd5430f465~ | ~sha256sum~ |
 | Emacsvox EAT byte-code SHA-256 | ~0fef8edad669188a471504bc1c2d566ea42982a56517cf9a57abf06c3671d56b~ | ~sha256sum~ |
 | Live normal update hook | ~(emacsvox-eat-update-hook)~ | Read-only server evaluation |
 | Live EAT-Eshell update hook | nil | Read-only server evaluation |
-| Default EAT mode after exec | semi-character | [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6940][eat.el:6940-6942]] |
+| Default EAT mode after exec | semi-character | =eat.el:6940-6942= |
 | Interactive test shell | Bash 5.3.9 | Local PTY experiment |
 | Other available shell tested | Dash 0.5.12 | Local PTY experiment |
 | User's live EAT buffer at inspection | line mode; Corfu active; CAPF ~(comint-completion-at-point t)~ | Read-only server evaluation |
-| User completion context | Vertico globally; Corfu globally and explicitly in EAT; EAT-local ~exec-path~ excludes ~/mnt/c/~ | Context-only [[file:/home/bart/emacs/site-lisp/emacsvox-config.org::131][emacsvox-config.org:131-172]] |
+| User completion context | Vertico globally; Corfu globally and explicitly in EAT; EAT-local ~exec-path~ excludes ~/mnt/c/~ | Context-only =emacsvox-config.org:131-172= |
 
 ** Installation and provenance
 
 EAT is a third-party package, not a library shipped with GNU Emacs.  The
 installed package descriptor is signed, and ~package-archive-contents~ associates
 version 0.9.4 at ~c91451f2d174~ with the ~nongnu~ archive.  Together with the
-standard ~/home/bart/.emacs.d/elpa/eat-0.9.4/~ layout, this is strong evidence of
+standard ~$HOME/.emacs.d/elpa/eat-0.9.4/~ layout, this is strong evidence of
 a ~package.el~ installation from NonGNU ELPA; it is not absolute proof that no
 one subsequently copied files into that directory.  The official
 [[https://elpa.nongnu.org/nongnu/eat.html][NonGNU ELPA package page]] lists
@@ -149,7 +149,7 @@ server is using current compiled code.
 The inspected user configuration is relevant only to line-mode completion.  It
 explicitly starts Corfu at the prompt in EAT and removes Windows-mounted
 directories from EAT's local ~exec-path~ for responsiveness
-([[file:/home/bart/emacs/site-lisp/emacsvox-config.org::133][emacsvox-config.org:133-171]]).
+(=emacsvox-config.org:133-171=).
 It does not alter Bash/readline completion in semi-character mode.  The audit
 did not modify or tangle that configuration.
 
@@ -265,31 +265,31 @@ PTY bytes -> eat--filter
 
 EAT exposes public getters for terminal bounds, visible display beginning,
 cursor position/type, size, title, and alternate-display state at
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4149][eat.el:4149-4247]].
+=eat.el:4149-4247=.
 It also exposes terminal parameters/callbacks at
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4028][eat.el:4028-4147]].
+=eat.el:4028-4147=.
 That is enough to take stable post-update snapshots without reading the private
 ~eat--t-*~ structs.
 
 The public ~eat-update-hook~ is documented only as running after a terminal is
-updated ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::465][eat.el:465-468]]).
+updated (=eat.el:465-468=).
 In both installed 0.9.4 and current upstream master, it is called from exactly
 three normal-EAT paths:
 
 | Invocation | Origin | What Emacsvox is told |
 |------------+--------+------------------------|
-| [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5010][eat-reset, lines 5010-5017]] | Explicit terminal reset | No cause, old state, or changed range |
-| [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6769][output queue, lines 6769-6814]] | One batched group of process bytes | No byte/chunk boundary, reason, or changed cells |
-| [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6892][window resize, lines 6892-6911]] | Terminal resize/redisplay | Indistinguishable from output |
+| =eat-reset, lines 5010-5017= | Explicit terminal reset | No cause, old state, or changed range |
+| =output queue, lines 6769-6814= | One batched group of process bytes | No byte/chunk boundary, reason, or changed cells |
+| =window resize, lines 6892-6911= | Terminal resize/redisplay | Indistinguishable from output |
 
 EAT's Eshell path instead calls ~eat-eshell-update-hook~ at
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::7286][eat.el:7286-7307]].
+=eat.el:7286-7307=.
 The live value of that hook is nil.
 
 The output filter intentionally batches bytes for at least 8 ms and at most
 33 ms by default
-([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::608][eat.el:608-628]] and
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6816][eat.el:6816-6839]]).
+(=eat.el:608-628= and
+=eat.el:6816-6839=).
 The official [[https://elpa.nongnu.org/nongnu/doc/eat.html][EAT manual]]
 explains that the final output chunk cannot in general be identified.  Network
 delay or application flush boundaries can therefore produce several valid
@@ -334,9 +334,9 @@ correlation is retained.
 
 | Path | Originating EAT event/API | Emacsvox hook/advice | Audible transaction and timing | Selection/interference result |
 |------+---------------------------+----------------------+--------------------------------+-------------------------------|
-| Open EAT | ~eat~ / ~eat--1~ creates or selects buffer, then ~eat-exec~ ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::7045][eat.el:7045-7090]]) | after ~eat~ | ~open-object~ icon, then mode line | Only for interactive ~eat~; initial terminal output later uses update hook |
-| Switch line/semi-char/char/Emacs mode | Mode commands at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5869][eat.el:5869-5990]] | generated after-advice | ~button~ icon plus raw command symbol through ~message~, e.g. “eat-line-mode” | Interactive-only; understandable but implementation-named |
-| Ordinary character, semi/char mode | ~eat-self-input~ -> PTY ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5540][eat.el:5540]]) | before-advice only special-cases Tab; echoed bytes return through update hook | Usually character before terminal cursor; no direct typed-character semantic event | Echo may be delayed, transformed, absent, or mixed with application output |
+| Open EAT | ~eat~ / ~eat--1~ creates or selects buffer, then ~eat-exec~ (=eat.el:7045-7090=) | after ~eat~ | ~open-object~ icon, then mode line | Only for interactive ~eat~; initial terminal output later uses update hook |
+| Switch line/semi-char/char/Emacs mode | Mode commands at =eat.el:5869-5990= | generated after-advice | ~button~ icon plus raw command symbol through ~message~, e.g. “eat-line-mode” | Interactive-only; understandable but implementation-named |
+| Ordinary character, semi/char mode | ~eat-self-input~ -> PTY (=eat.el:5540=) | before-advice only special-cases Tab; echoed bytes return through update hook | Usually character before terminal cursor; no direct typed-character semantic event | Echo may be delayed, transformed, absent, or mixed with application output |
 | Ordinary character, line mode | Emacs self insertion; EAT's local line editor | Core Emacsvox echo, not EAT update | Normal character/word echo | Better editing feedback; it edits locally, not readline remotely |
 | Process output | PTY filter/batched queue | ~eat-update-hook~ | One char, or current physical line if preceding char is ASCII space | Can miss every newly printed line and speak only a prompt |
 | Prompt display | Ordinary output; optional EAT Bash/Zsh integration marks prompt | Same update hook; face mappings if named source faces survive | Usually prompt line/last char | Prompt status annotation is visual margin content and did not enter captured source faces |
@@ -346,9 +346,9 @@ correlation is retained.
 | Cursor movement | Application emits CSI cursor motion in process output | Generic update hook after batch | Character before new cursor, or line ending in space | No movement direction, row, active item, or deletion semantics |
 | Resize | ~eat--adjust-process-window-size~ | Same generic update hook | Current char/line even if screen text did not change | Selected resize produces irrelevant speech; can consume completion snapshot |
 | Background output | Same batched process output | selected-buffer guard | None when current buffer is not selected-window's buffer | Good default silence; no optional notification/monitoring |
-| Process exit | EAT sentinel drains output, deletes terminal, inserts process message, runs ~eat-exit-hook~ ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6841][eat.el:6841-6890]]) | No exit hook | Last terminal update may speak newline; inserted exit message is silent | Exit/restart state can be missed |
+| Process exit | EAT sentinel drains output, deletes terminal, inserts process message, runs ~eat-exit-hook~ (=eat.el:6841-6890=) | No exit hook | Last terminal update may speak newline; inserted exit message is silent | Exit/restart state can be missed |
 | Process restart | ~eat-exec-hook~ after new process | No exec hook | Initial output only | No restart identity/state announcement |
-| Alternate-screen enter/exit | CSI switches private display at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2192][eat.el:2192-2245]] | Generic update hook | Arbitrary char; empty entry can trigger nil error | Public predicate exists, but transition is not tracked |
+| Alternate-screen enter/exit | CSI switches private display at =eat.el:2192-2245= | Generic update hook | Arbitrary char; empty entry can trigger nil error | Public predicate exists, but transition is not tracked |
 | Reset/reload | ~eat-reset~ calls update hook; ~eat-reload~ reloads library | reset/reload after-advice | Intended task-done icon + phrase | Reset can error in update hook before after-advice; reload does not reset Emacsvox snapshots/generation |
 | Yank | ~eat-yank~, ~eat-yank-from-kill-ring~ | target-aware after-advice | ~yank-object~ icon | Content intentionally not spoken; useful but only two yank paths |
 | Xterm paste / mouse paste | ~eat-xterm-paste~, mouse primary/secondary | None | Echo/output heuristic | No explicit bracketed-paste or paste-state feedback |
@@ -436,7 +436,7 @@ regression coverage, and compatibility risk.
   ~emacsvox-eat-update-hook~ before inserting a cell.  The result is
   ~wrong-type-argument number-or-marker-p nil~.  Calling interactive
   ~eat-reset~ on the same terminal reaches EAT's update hook at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5010][eat.el:5010-5017]]
+  =eat.el:5010-5017=
   and produces the same error, so the after-advice at
   [[file:../../../lisp/emacsvox-eat.el::140][emacsvox-eat.el:140-143]] does not run.
 - *Exact cause:* ~cursor~ can be nil, so ~char~ is nil at
@@ -470,7 +470,7 @@ regression coverage, and compatibility risk.
   ([[file:../../../lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]]).  It never
   records EAT's display bounds or previous contents, although public getters
   exist at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4166][eat.el:4166-4209]].
+  =eat.el:4166-4209=.
 - *Root cause:* A state sampler is being used as an event description.  The
   cursor after a batch commonly sits on a redrawn prompt, not on the newly
   emitted result.
@@ -499,7 +499,7 @@ disruptive speech
 - *Exact references:* All update types converge on
   [[file:../../../lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]].  EAT's output
   batching is only 8--33 ms
-  ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::608][eat.el:608-628]]),
+  (=eat.el:608-628=),
   appropriate for visual responsiveness but not a speech quiescence policy.
 - *Root cause:* There is no screen diff, cursor-delta classification,
   repaint suppression, rate limiter, or replaceable TUI/progress transaction.
@@ -570,9 +570,9 @@ update
   cleared before determining whether the update completes the transaction at
   [[file:../../../lisp/emacsvox-eat.el::234][emacsvox-eat.el:234-245]].  EAT explicitly
   batches arbitrary process chunks at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6816][eat.el:6816-6839]]
+  =eat.el:6816-6839=
   and independently invokes the same hook on resize at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6892][eat.el:6892-6911]].
+  =eat.el:6892-6911=.
 - *Root cause:* A logical asynchronous interaction is represented as one
   snapshot consumed by one callback, but EAT promises neither one callback nor
   a reason.
@@ -611,7 +611,7 @@ update
   strict prefix and equal physical line at
   [[file:../../../lisp/emacsvox-eat.el::237][lines 237-244]].  EAT marks visual wrap
   newlines privately as ~eat--t-wrap-line~, for example
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::1018][eat.el:1018-1050]].
+  =eat.el:1018-1050=.
 - *Root cause:* Local character-class tokenization attempts to reconstruct
   remote shell grammar and equates Emacs buffer lines with terminal input
   lines.
@@ -637,7 +637,7 @@ update
 - *Reproduction and evidence:* Run ~false~ after loading EAT's Bash integration.
   EAT creates prompt overlays with success/failure margin glyphs.  Captured
   Emacsvox source faces were nil and the update spoke plain ~bash-5.3$ ~.
-  The user's [[file:/home/bart/.bashrc::108][.bashrc:108-115]] loads Bash
+  The user's =.bashrc:108-115= loads Bash
   completion but does not source ~$EAT_SHELL_INTEGRATION_DIR/bash~.
 - *Exact references:* Emacsvox declares prompt maps at
   [[file:../../../lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  EAT's shell
@@ -674,9 +674,9 @@ update
   its selected row from grey-on-red to neutral and the new row happened to be
   spoken solely because the terminal cursor moved there.
 - *Exact references:* EAT parses all relevant SGR attributes at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2504][eat.el:2504-2667]]
+  =eat.el:2504-2667=
   and composes anonymous face plists at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2668][eat.el:2668-2706]].
+  =eat.el:2668-2706=.
   Emacsvox maps only bold and italic terminal faces at
   [[file:../../../lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  Upstream
   [[https://codeberg.org/akib/emacs-eat/issues/248][issue 248]] also documents
@@ -708,11 +708,11 @@ update
   nil error); exit restored the old main display and spoke only its final
   character.
 - *Exact references:* EAT exposes ~eat-exec-hook~ and ~eat-exit-hook~ at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::457][eat.el:457-476]],
+  =eat.el:457-476=,
   invokes exit after inserting the message at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6841][eat.el:6841-6890]],
+  =eat.el:6841-6890=,
   and provides ~eat-term-in-alternative-display-p~ at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4245][eat.el:4245-4247]].
+  =eat.el:4245-4247=.
   Emacsvox installs none of these hooks.
 - *Root cause:* Integration is update-centric and has no process generation or
   alternate-screen state.
@@ -735,9 +735,9 @@ update
   ~eat-eshell-update-hook=nil~ while normal ~eat-update-hook~ contains
   ~emacsvox-eat-update-hook~.
 - *Exact references:* EAT calls its separate Eshell hook at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::7286][eat.el:7286-7307]]
+  =eat.el:7286-7307=
   and on Eshell resize at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6907][eat.el:6907-6911]].
+  =eat.el:6907-6911=.
   Emacsvox registers only normal EAT at
   [[file:../../../lisp/emacsvox-eat.el::273][emacsvox-eat.el:273]].
 - *Root cause:* EAT deliberately has parallel normal and Eshell lifecycles;
@@ -787,9 +787,9 @@ or under-described
   ~eat-yank~ and ~eat-yank-from-kill-ring~ have icon advice; ~eat-xterm-paste~
   and mouse paste do not.
 - *Exact references:* EAT input/yank/password functions are at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5540][eat.el:5540-5770]];
+  =eat.el:5540-5770=;
   its bell callback is configured at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6946][eat.el:6946-6960]].
+  =eat.el:6946-6960=.
   Emacsvox advice targets are at
   [[file:../../../lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]].
 - *Root cause:* Input intent and terminal callbacks are not represented in a
@@ -809,8 +809,8 @@ or under-described
 
 In *line mode*, EAT binds Tab to Emacs ~completion-at-point~ and installs shell
 completion variables
-([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5813][eat.el:5813-5833]] and
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6700][eat.el:6700-6702]]).
+(=eat.el:5813-5833= and
+=eat.el:6700-6702=).
 The inspected live buffer has Corfu and
 ~(comint-completion-at-point t)~.  This completes local Emacs-known commands and
 files.  It does *not* invoke Bash programmable completion, remote-host
@@ -869,7 +869,7 @@ readline completion; it supplies CWD tracking, prompt navigation/status,
 history, and optional mode switching.  EAT 0.9.4 officially supports that
 integration for Bash and Zsh, not arbitrary router shells.  The package exports
 ~EAT_SHELL_INTEGRATION_DIR~ to children at
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6963][eat.el:6963-6972]], but
+=eat.el:6963-6972=, but
 the child shell must source the appropriate script.
 
 ** Safety of the current implementation
@@ -1045,7 +1045,7 @@ layout properties.  Publicly, Emacsvox can obtain:
 - title and alternate-display state;
 - final buffer text and text properties.
 
-At [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2504][eat.el:2504-2706]],
+At =eat.el:2504-2706=,
 EAT recognizes foreground/background colors, inverse video, bold, faint,
 italic, underline variants/color, slow/fast blink, conceal, crossed-out text,
 and alternate fonts.  In observed buffer properties:
@@ -1065,7 +1065,7 @@ and alternate fonts.  In observed buffer properties:
 | Hyperlink OSC 8 | EAT 0.9.4 displayed plain text with nil link properties | No link semantics |
 
 EAT's blinking implementation changes face remaps on timers at
-[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4818][eat.el:4818-4907]]
+=eat.el:4818-4907=
 without running ~eat-update-hook~.  This is appropriate—speech should not follow
 visual blink frames—but confirms that “every visual style change causes an
 update” is false.  EAT disables blink presentation by default and its manual
@@ -1127,9 +1127,9 @@ should be replaceable and deduplicated by that identity.
 - *Evidence status:* Reproduced inputs plus inferred design; the proposed score
   itself remains unvalidated.
 - *References:* EAT SGR composition
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2504][eat.el:2504-2706]],
+  =eat.el:2504-2706=,
   public cursor API
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4149][eat.el:4149-4198]],
+  =eat.el:4149-4198=,
   upstream cursor/highlight
   [[https://codeberg.org/akib/emacs-eat/issues/248][issue 248]].
 - *Root cause:* No previous style snapshot or input correlation exists in
@@ -1154,9 +1154,9 @@ therefore treat privacy and denial-of-speech as first-class policy.
   during this audit.
 - *Evidence and references:* The installed manual warns that ordinary terminal
   keystrokes are recorded in Emacs lossage and recommends the password command
-  at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.texi::459][eat.texi:459]].
+  at =eat.texi:459=.
   The real command is ~eat-send-password~ at
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5752][eat.el:5752-5758]].
+  =eat.el:5752-5758=.
   Installed 0.9.4's manual uses the wrong name; upstream fixed it on 2024-03-15
   in [[https://codeberg.org/akib/emacs-eat/commit/25989bf714dd][25989bf714dd]].
 - *Root cause:* Semi/character input is an Emacs command event before it is PTY
@@ -1220,10 +1220,10 @@ therefore treat privacy and denial-of-speech as first-class policy.
 - *Evidence and references:* ~eat-enable-kill-from-terminal~ defaults true,
   allowing OSC 52 to set Emacs selection/kill data; terminal read-back is
   disabled by default through ~eat-enable-yank-to-terminal~
-  ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::138][eat.el:138-155]] and
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5048][eat.el:5048-5069]]).
+  (=eat.el:138-155= and
+  =eat.el:5048-5069=).
   EAT also parses title, CWD, UIC, and selection OSCs around
-  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::3674][eat.el:3674-3704]].
+  =eat.el:3674-3704=.
 - *Root cause:* These are intentional terminal features crossing the child
   process/Emacs boundary.
 - *Recommended remedy:* Document the settings for untrusted SSH/router use.
@@ -1244,7 +1244,7 @@ generally useful to other observers, not Emacsvox-specific.
 
 | Need | Public status in 0.9.4/master | Belongs where | Suggested request / compatibility |
 |------+--------------------------------+---------------+-----------------------------------|
-| Terminal bounds, cursor, cursor type, size, title, alternate-screen predicate | Available at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4149][eat.el:4149-4247]] | Use now in Emacsvox | Stable-looking public API; no upstream change required |
+| Terminal bounds, cursor, cursor type, size, title, alternate-screen predicate | Available at =eat.el:4149-4247= | Use now in Emacsvox | Stable-looking public API; no upstream change required |
 | Process start/exit | ~eat-exec-hook~, ~eat-exit-hook~ available | Use now in Emacsvox | No upstream change required |
 | Public current input-mode predicate and transition hooks | Missing; Emacsvox uses ~eat--semi-char-mode~ | EAT | Extend [[https://codeberg.org/akib/emacs-eat/issues/158][issue 158]] with a public mode getter and before/after transition event; additive, low risk |
 | Structured update cause | Missing | EAT | Pass or expose an update record: generation/time, ~output/reset/resize~, old/new cursor, alt transition, size change; keep old hook for compatibility |
@@ -1330,7 +1330,7 @@ Keep one bounded state object per EAT terminal:
 
 Markers should not be retained where EAT's public docs say callers should query
 positions afresh
-([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4166][eat.el:4166-4182]]).
+(=eat.el:4166-4182=).
 Store row/column/generation identifiers, then resolve against a fresh snapshot.
 
 ** Quiescence and generation rules

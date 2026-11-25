@@ -294,7 +294,7 @@ Acceptance used Emacsvox =a4f94b0d3= and a fresh Omnivox 1.16.0 development
 payload built from =880a48d916c6daf69935c4bf41b4bd95582ffa9c= with
 =CARGO_NET_OFFLINE=true make dev=. The supported build staged its matching
 eSpeak data and companions. The executable was
-=/home/bart/src/omnivox/target/debug/omnivox=, SHA-256
+=$HOME/src/omnivox/target/debug/omnivox=, SHA-256
 =62100265cfb889d7c8c979801f396c4e49c3f30b31cdb955bbecc6528d1f94ff=.
 A private worker independently reported server version =1.16.0= and control
 envelope version =1=. [[file:/tmp/emacsvox-review-acceptance-64jk1_fb/identity.json][Build identity]],
@@ -309,10 +309,10 @@ envelope version =1=. [[file:/tmp/emacsvox-review-acceptance-64jk1_fb/identity.j
 
 ** Source, toolchain, configuration, and runtime identity
 
-- Emacsvox source :: =/home/bart/src/emacsvox=, commit =41828cfe5600dcf4f80521961f272928b808281a=. Its worktree was clean before review. All 26 ADRs under =docs/adr/= and the repository instructions were read.
-- Omnivox review target :: =/home/bart/src/omnivox=, commit =d4f28f32b127e9e672115aee04bb0483440bcd92=. [[https://github.com/bartbunting/omnivox/blob/d4f28f32b127e9e672115aee04bb0483440bcd92/Cargo.toml#L50][The workspace version is 1.16.0]]. Existing staged documentation/evidence and unstaged documentation edits were preserved; no maintained Rust source was changed.
-- Selected Emacs :: [[file:../../../local.mk::2][local.mk]] selects =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90. Omnivox uses the pinned Rust 1.97.1 toolchain. Cargo checks were offline and used existing dependencies.
-- Launcher selection :: [[https://github.com/bartbunting/emacsvox/blob/41828cfe5600dcf4f80521961f272928b808281a/servers/omnivox#L17][The launcher's configuration precedence]] selects the executable named in =/home/bart/.config/emacsvox/omnivox-program=. A probe-only invocation resolved =/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/runtime/ad5be9cca3f9e40b/omnivox.exe=. This explicit pin takes precedence over =servers/omnivox-bin/current=.
+- Emacsvox source :: =$HOME/src/emacsvox=, commit =41828cfe5600dcf4f80521961f272928b808281a=. Its worktree was clean before review. All 26 ADRs under =docs/adr/= and the repository instructions were read.
+- Omnivox review target :: =$HOME/src/omnivox=, commit =d4f28f32b127e9e672115aee04bb0483440bcd92=. [[https://github.com/bartbunting/omnivox/blob/d4f28f32b127e9e672115aee04bb0483440bcd92/Cargo.toml#L50][The workspace version is 1.16.0]]. Existing staged documentation/evidence and unstaged documentation edits were preserved; no maintained Rust source was changed.
+- Selected Emacs :: [[file:../../../local.mk::2][local.mk]] selects =$HOME/opt/emacs-31/bin/emacs=, version 31.0.90. Omnivox uses the pinned Rust 1.97.1 toolchain. Cargo checks were offline and used existing dependencies.
+- Launcher selection :: [[https://github.com/bartbunting/emacsvox/blob/41828cfe5600dcf4f80521961f272928b808281a/servers/omnivox#L17][The launcher's configuration precedence]] selects the executable named in =$HOME/.config/emacsvox/omnivox-program=. A probe-only invocation resolved =%LOCALAPPDATA%/Emacsvox/Omnivox/runtime/ad5be9cca3f9e40b/omnivox.exe=. This explicit pin takes precedence over =servers/omnivox-bin/current=.
 - Selected executable provenance :: [[file:../../../servers/omnivox-bin/versions/ad5be9cca3f9e40b/PROVENANCE::4][The staged manifest]] records Omnivox commit =3ff0dc09360d29f86d928ed71bdb85172fadd26b= and a development build with local changes. Its recorded executable SHA-256, =999e4163ee585c2498731cc6b5da8f8f3b357fb0ff9239b850f1a80b48b49c48=, matched the selected file. That provenance does not identify it as the reviewed 1.16.0 source.
 - Existing live session :: Bounded read-only inspection used socket =/run/user/1000/emacs/emacsvox=, Emacs PID 2033318, main process PID 2033633, and notification process PID 2033784. Both workers reported server version 1.13.0, control envelope version 1, supported timeline versions 1 through 5, and marker versions 1 through 4. The Emacs side selected timeline version 5. No worker was restarted or used for a speech reproduction.
 - Loaded Lisp evidence :: Live speech and negotiation symbols resolved to this checkout's =tts-speak.elc= and =omnivox-voices.elc=. A loaded path does not prove that resident code matches the current file. Source-forced probes below avoid that ambiguity.
@@ -342,17 +342,17 @@ or generated maintained-file update was needed for this report.
 Commands used for the principal checks:
 
 #+begin_src sh
-cd /home/bart/src/emacsvox
+cd $HOME/src/emacsvox
 make check-emacs
 make bytecode-check
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/run-core-tests.el
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -L lisp -L test \
+$HOME/opt/emacs-31/bin/emacs -Q --batch -l test/run-core-tests.el
+$HOME/opt/emacs-31/bin/emacs -Q --batch -L lisp -L test \
   --eval '(setq load-prefer-newer t load-suffixes (quote (".el" ".elc")))' \
   -l lisp/emacsvox-preamble.el -l test/tts-queue-handoff-tests.el \
   --eval '(ert-run-tests-batch-and-exit "\\`\\(tts-queue-\\|tts-preparation-\\)")'
 make docs-release-check
 
-cd /home/bart/src/omnivox
+cd $HOME/src/omnivox
 cargo test --offline --locked -p omnivox-core
 cargo test --offline --locked -p omnivox-cli --bin omnivox
 cargo test --offline --locked -p omnivox-audio --lib
@@ -378,7 +378,7 @@ cause the observed corruption. The control-retirement probe disables unrelated
 hooks and retains the process object to inspect its pending table.
 
 #+begin_src sh
-/home/bart/opt/emacs-31/bin/emacs -Q --batch \
+$HOME/opt/emacs-31/bin/emacs -Q --batch \
   -l /tmp/emacsvox-review-probes.el
 #+end_src
 
@@ -404,7 +404,7 @@ artifacts were written.
 #+begin_src sh
 cargo +1.97.1 run --offline \
   --manifest-path /tmp/emacsvox-review-helper/Cargo.toml \
-  --target-dir /home/bart/src/omnivox/target
+  --target-dir $HOME/src/omnivox/target
 #+end_src
 
 The [[file:/tmp/emacsvox-review-helper.log][helper reproduction log]] contains the result quoted in

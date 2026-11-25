@@ -34,11 +34,11 @@ the personal session has loaded the same definitions.
 
 The test Transient is the bundled =0.13.3-10-g87d0ca08-builtin=. The installed
 Transient is =0.13.9=, loaded from
-=/home/bart/.emacs.d/elpa/transient-20261101.1108/transient.elc=.
+=$HOME/.emacs.d/elpa/transient-20261101.1108/transient.elc=.
 Pinned integration tests use Agent Shell 0.94.1 under
-=/home/bart/.cache/emacsvox/test-deps/agent-shell-0.94.1-emacs-31.0.90/=.
+=$HOME/.cache/emacsvox/test-deps/agent-shell-0.94.1-emacs-31.0.90/=.
 The personal session uses Agent Shell 0.94.2 from
-=/home/bart/.emacs.d/elpa/agent-shell-20261109.1018/agent-shell.elc=.
+=$HOME/.emacs.d/elpa/agent-shell-20261109.1018/agent-shell.elc=.
 Installed Magit is =20261107.2107= and Markdown is =20261022.55=.
 
 Read-only inspection identifies the personal Emacs as PID 1546, socket
@@ -264,7 +264,7 @@ The graphical menu runner is available as =make graphical-menu-test=.
 For this installation, the successful compatibility check used:
 
 #+begin_src sh
-make graphical-menu-test MENU_TEST_PACKAGE_DIR=/home/bart/.emacs.d/elpa MENU_TEST_MAGIT_SOURCE=1
+make graphical-menu-test MENU_TEST_PACKAGE_DIR=$HOME/.emacs.d/elpa MENU_TEST_MAGIT_SOURCE=1
 #+end_src
 
 The package directory supplies installed packages without loading a personal

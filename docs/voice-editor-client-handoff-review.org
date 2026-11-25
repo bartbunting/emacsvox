@@ -104,7 +104,7 @@ Unrelated Agent Shell edits and the untracked quality audit remain untouched.
 
 The selected Emacs's =process-send-string= documentation explicitly permits
 process output between partial writes. The local GNU Emacs source at
-=/home/bart/src/emacs/src/process.c= also documents =send_process='s reentrant
+=$HOME/src/emacs/src/process.c= also documents =send_process='s reentrant
 wait and ordered =write_queue=. It queues subsequent writes behind the existing
 remainder. A second client byte-stream scheduler is unnecessary; a stop cannot
 retract bytes already handed to Emacs. This source inspection is not a claim
@@ -114,7 +114,7 @@ Run [[file:../test/diagnose-client-handoff.el][the standalone diagnostic]] in a 
 by =local.mk=, for example on this workstation:
 
 #+begin_src sh
-/home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-client-handoff.el
+$HOME/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-client-handoff.el
 #+end_src
 
 It uses real, isolated pipe-process objects and substitutes the write function;

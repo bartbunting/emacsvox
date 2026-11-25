@@ -794,7 +794,7 @@ speech and auditory events using test doubles.  The initial suite covers:
 The standard entry point will be similar to:
 
 #+begin_src sh
-make test EMACS=/home/bart/opt/emacs-31/bin/emacs
+make test EMACS=$HOME/opt/emacs-31/bin/emacs
 #+end_src
 
 ** Structured speech traces
@@ -838,7 +838,7 @@ will be optional and accept an explicit checkout, for example:
 
 #+begin_src sh
 make reference-test \
-  EMACS=/home/bart/opt/emacs-31/bin/emacs \
+  EMACS=$HOME/opt/emacs-31/bin/emacs \
   EMACSPEAK_DIR=/path/to/pinned/emacspeak
 #+end_src
 

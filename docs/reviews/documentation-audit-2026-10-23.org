@@ -64,7 +64,7 @@ or every optional integration.
 * Verification and limits
 
 The selected toolchain is GNU Emacs 31.0.90 at
-=/home/bart/opt/emacs-31/bin/emacs=. =make check-emacs= and
+=$HOME/opt/emacs-31/bin/emacs=. =make check-emacs= and
 =make bytecode-check= pass. Lisp sources were unchanged, so no rebuild was
 needed. All graphical checks used fresh Emacs processes on private Xvfb
 displays; they did not use the running desktop session.

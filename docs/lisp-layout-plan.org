@@ -409,7 +409,7 @@ Windows installations and shortcuts were not changed.
 The standard lifecycle script was copied to a private fixture with additional
 pilot-path assertions. Its log is =/tmp/emacsvox-layout-native-lifecycle.log=;
 native logs are retained below
-=C:/Users/bart/AppData/Local/Temp/emacsvox-layout-lifecycle/logs/=. The installer
+=%LOCALAPPDATA%/Temp/emacsvox-layout-lifecycle/logs/=. The installer
 fixtures precede only the final repair-hint wording correction; the corrected
 native hints pass the native path tests separately. Graphical/audio acceptance
 and the separate deliberately failed-configuration rollback fixture were not
@@ -588,7 +588,7 @@ true=. Audio checking and the separate intentionally broken configuration
 rollback fixture were not run; failed activation was tested.
 Graphical editor acceptance is covered by the separate Emacs/Xvfb checks.
 Logs are retained under
-=/mnt/c/Users/bart/AppData/Local/Temp/emacsvox-layout-lifecycle-complete/logs/=.
+=%LOCALAPPDATA%/Temp/emacsvox-layout-lifecycle-complete/logs/=.
 
 All implementation slices are complete. The stable setup entry point and
 personal configuration require no change. Start a fresh Emacs to use the new

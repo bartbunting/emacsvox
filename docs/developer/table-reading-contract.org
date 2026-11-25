@@ -19,7 +19,7 @@ this contract.
 
 * Inspected environments
 
-The selected Emacs is =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90.
+The selected Emacs is =$HOME/opt/emacs-31/bin/emacs=, version 31.0.90.
 Read-only probes identified these sessions before inspecting their state:
 
 | Session | PID and socket | Relevant loaded code |

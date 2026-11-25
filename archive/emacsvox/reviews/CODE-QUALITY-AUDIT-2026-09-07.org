@@ -34,7 +34,7 @@ entire codebase or certification of every platform and integration.
 
 - Source commit: =96b8e634b25accc99057c9da48c4929991e2a5b4=.
 - Canonical version: =2026.9.4=; development NEWS uses =Unreleased=.
-- Selected executable: =/home/bart/opt/emacs-31/bin/emacs=, reporting
+- Selected executable: =$HOME/opt/emacs-31/bin/emacs=, reporting
   =31.0.90=. The system executable reports =30.2= and was queried for its
   version only; it was not used to compile or test Emacsvox.
 - At entry, =docs/developer/backlog.org= already had 268 added lines. Those
@@ -319,7 +319,7 @@ The child [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9d
 automatically passed to a recursive make as a command-line override.
 
 A non-building probe included the actual root and child Makefiles and printed
-their selections: the parent selected =/home/bart/opt/emacs-31/bin/emacs=;
+their selections: the parent selected =$HOME/opt/emacs-31/bin/emacs=;
 the child selected =emacs=, which here resolves to system Emacs 30.2.
 The [[https://github.com/bartbunting/emacsvox/blob/96b8e634b25accc99057c9da48c4929991e2a5b4/Makefile#L125][bytecode recipe]] passes the selection for compilation, but its =config=
 prerequisite can regenerate autoloads using the wrong Emacs. The =emacsvox=

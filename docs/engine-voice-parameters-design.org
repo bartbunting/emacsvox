@@ -1515,7 +1515,7 @@ profile's checksum qualification. Checking the capability bundle and registratio
 alone did not establish that the live editor could obtain qualified controls.
 
 The development launcher now explicitly selects the already installed audited
-DLL at =C:/Users/bart/AppData/Local/Omnivox/runtimes/dectalk/x86/DECtalk.dll=.
+DLL at =%LOCALAPPDATA%/Omnivox/runtimes/dectalk/x86/DECtalk.dll=.
 Restarting only the affected session's speech workers and refreshing its existing
 editor produced 28 editable controls; the draft was unchanged. The development
 launcher's =--check-native-controls= option runs the private acceptance check
