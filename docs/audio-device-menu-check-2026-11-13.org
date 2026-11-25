@@ -21,27 +21,13 @@ the fresh checks. Its cause remains unresolved.
 
 * Observed session
 
-The affected native Emacs was PID 26148, session =20261113T043643Z-26148=,
-using the =channels-20261113= Audio Devices candidate. Main PID 34224 remained
-available. Notification PID 15524 exited with status 1. Its retained native
-guard proof reports =native creation or handoff timed out=, with started,
-tree-retired and I/O-retired all true. Its stderr also reports Windows pipe
-error 232. This identifies the failed creation/handoff phase, not a particular
-engine or the reason its deadline elapsed.
-
-Notification dispatch 3 failed at 04:37:03.631 UTC without an observed onset.
-Subsequent Quit feedback used newly created main workers =Speaker<1>=,
-=Speaker<2>= and =Speaker<3>=, PIDs 30732, 2240 and 38772. Their references were
-lost when temporary bindings unwound. Alongside the original main worker they
-occupied the four retained native-owner slots. Recovery at 04:40:15 and
-04:40:44 then reported that four native guards remained retained.
-
-The [[file:evidence/audio-devices-2026-11-13/session-events.eld][selected aural records]] and [[file:evidence/audio-devices-2026-11-13/session-snapshot.eld][sanitized process snapshot]] preserve that
-correlation. The original personal log contains arbitrary spoken content and
-is not copied into this repository. Guard authentication material is excluded.
-Live inspection was read-only; the existing Emacs and its workers were preserved.
-Initial client-request timeouts came from the diagnostic invocation and quoting;
-the window remained responsive and corrected bounded requests succeeded.
+In the native Windows test, the main speech worker kept running when the
+notification worker exited with status 1. The guard recorded a creation or
+handoff timeout and Windows pipe error 232. Notification dispatch 3 failed
+before onset. Each of the next three Quit messages created a main worker whose
+reference was lost when the temporary binding unwound. The original main
+worker and the three new ones occupied all four native-owner slots. Two
+subsequent recovery attempts reported that all slots were still occupied.
 
 * Verification and provenance
 
@@ -50,10 +36,9 @@ Omnivox source: =89a0b98=; reused Windows runtime =287fd0119a8f77d0=.
 No Rust, helper, protocol or dependency changes are included.
 WSL checks use Emacs 31.0.90; native Windows checks use Emacs 31.1.
 
-The [[file:evidence/audio-devices-2026-11-13/checks.tar.gz][check archive]] retains raw test output, failed intermediate checks,
-native harnesses and their JSON results. Its =provenance.json= identifies the
-source patch, toolchains and commands. Source regressions fail against the
-previous definitions and pass with the correction.
+The checked source patch had SHA-256
+=42c6b9c582f5236f5df2c399fe0c16871b70f2cc6640e285b6126bcad13f37bc=.
+The table summarises the results from both environments.
 
 | Check | Result |
 |-------+--------|
@@ -71,7 +56,6 @@ previous definitions and pass with the correction.
 The full ERT failures also occur in the earlier baseline: stale generated
 aural reference, launcher log rotation exceeding its 1.5-second observation
 window, and an obsolete native-Windows ARM64 documentation expectation.
-Their raw baseline and current output is retained; unrelated fixes are deferred.
 
 The native checks start private test sessions. They verify native guard ownership,
 acknowledged engine selection and source completion for both lanes. They then
@@ -88,7 +72,7 @@ not save personal preferences. Each test session retires its own speech workers.
 
 The initial source graphical run exposed missing mutable menu-state slots;
 focused runs then exposed dynamic-choice parsing, focus lookup and missing Enter
-registration. Those were corrected and the failing output retained. The first
+registration. Subsequent checks passed. The first
 DECtalk fault-loop harness omitted an explicit require for error feedback; the
 corrected harness passes with both engines. The first full WSL byte-code build
 finished with a stale-file preflight because source edits occurred during that
@@ -119,9 +103,9 @@ The combined source suite records 4533 passes, the same three baseline failures
 listed above, and 251 skips. The isolated compiled Aural gate and all 290 compiled
 graphical menu tests pass, with no graphical skips. The full byte-code rebuild,
 freshness, headers, version, generated documentation and paired-link checks pass.
-The [[file:evidence/audio-devices-2026-11-13/merge-checks.tar.gz][merge check archive]] retains the raw output and source identities. These checks
-cover the combined client; the Windows listening result above remains at its
-exact tested candidate.
+The combined source patch had SHA-256
+=2e04fc255bdd48d509a938050e68269224ec27263060962fa04ce72dadcba1d9=.
+The Windows listening result applies to the candidate identified above.
 
 Omnivox main fast-forwards to =3ed4e8d=, including its listening record. Its Rust
 source and dependencies are unchanged from the qualified =89a0b98= candidate,

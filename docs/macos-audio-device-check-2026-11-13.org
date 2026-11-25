@@ -30,6 +30,5 @@ device delivery, audible routing and reconnect require the paired user test.
 
 * Evidence
 
-The client base is =85214244b=. The [[file:evidence/macos-audio-devices-2026-11-13/checks.tar.gz][raw check logs]] preserve source tests,
-the full compiler output, graphical results and documentation checks.
-[[file:evidence/macos-audio-devices-2026-11-13/provenance.json][Provenance]] identifies the base, checked diff hash and commands.
+The client base is =85214244b=. The [[file:evidence/macos-audio-devices-2026-11-13/provenance.json][provenance record]] lists the checked
+diff hash, the paired Omnivox revision and the commands used for verification.
