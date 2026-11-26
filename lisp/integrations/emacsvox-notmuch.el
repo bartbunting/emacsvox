@@ -503,26 +503,31 @@ bounded copy of a larger source buffer."
 
 (defun emacsvox-notmuch--bounded-source-range
     (start end label character-limit byte-limit)
-  "Copy source START through END early-bounded for LABEL under given limits."
-  (if (not emacsvox-notmuch--automatic-presentation-p)
-      (emacsvox-aural-source-substring start end)
-    (let* ((character-limit (emacsvox-notmuch--positive-limit character-limit))
-           (byte-limit (emacsvox-notmuch--positive-limit byte-limit))
-           (copy-limit
-            (min
-             (- end start)
-             (or character-limit (- end start))
-             (or byte-limit (- end start))))
-           (text
-            (emacsvox-aural-source-substring
-             start (+ start copy-limit))))
-      (pcase-let
-          ((`(,prefix ,notice ,_omitted)
-            (emacsvox-notmuch--bounded-text-components
-             text character-limit byte-limit label (- end start))))
-        (if (and notice (string-empty-p prefix))
-            (string-trim-left notice)
-          (concat prefix notice))))))
+  "Copy visible source from START to END, bounded for LABEL under given limits."
+  (let* ((size (- end start))
+         (remaining
+          (if emacsvox-notmuch--automatic-presentation-p
+              (min size (or (emacsvox-notmuch--positive-limit character-limit) size)
+                   (or (emacsvox-notmuch--positive-limit byte-limit) size))
+            size))
+         (visible 0)
+         chunks)
+    (while (< start end)
+      (let ((next (next-single-char-property-change start 'invisible nil end)))
+        (unless (invisible-p start)
+          (cl-incf visible (- next start))
+          (when (> remaining 0)
+            (let ((count (min remaining (- next start))))
+              (push (emacsvox-aural-source-substring start (+ start count)) chunks)
+              (cl-decf remaining count))))
+        (setq start next)))
+    (pcase-let ((`(,prefix ,notice ,_)
+                 (emacsvox-notmuch--bounded-text-components
+                  (apply #'concat (nreverse chunks))
+                  character-limit byte-limit label visible)))
+      (if (and notice (string-empty-p prefix))
+          (string-trim-left notice)
+        (concat prefix notice)))))
 
 (defun emacsvox-notmuch--bounded-source-substring (start end label)
   "Copy source START through END early-bounded as field LABEL."
@@ -830,25 +835,29 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
  #'emacsvox-notmuch--close-feedback)
 
 (defun emacsvox-notmuch--prefer-unread-message ()
-  "Select the newest open, matching unread message in the current thread.
+  "Select the first open, matching unread message in thread order.
 Keep Notmuch's initial position when no such message exists.  Inspecting
 messages does not change their read state."
   (when (eq major-mode 'notmuch-show-mode)
-    (let (position timestamp)
-      (notmuch-show-mapc
-       (lambda ()
-         (let* ((message (notmuch-show-get-message-properties))
-                (date (or (plist-get message :timestamp) 0)))
-           (when (and (plist-get message :match)
-                      (plist-get message :message-visible)
-                      (member "unread" (plist-get message :tags))
-                      (or (null position) (> date timestamp)))
-             (setq position (point) timestamp date)))))
-      (when position (goto-char position)))))
+    (when-let* ((position
+                 (catch 'unread
+                   (notmuch-show-mapc
+                    (lambda ()
+                      (let ((message (notmuch-show-get-message-properties)))
+                        (when (and (plist-get message :match)
+                                   (plist-get message :message-visible)
+                                   (member "unread" (plist-get message :tags)))
+                          (throw 'unread (point))))))
+                   nil)))
+      (goto-char position))))
+
+;; This landing point also runs when another Show command opens a thread.
+;; Refreshes that restore a saved position take a separate Notmuch path.
+(push '(notmuch-show-goto-first-wanted-message :after emacsvox-notmuch--prefer-unread-message)
+      emacsvox-notmuch--advice)
 
 (defun emacsvox-notmuch--show-feedback ()
-  "Prefer unread mail and speak the selected message in a newly opened thread."
-  (emacsvox-notmuch--prefer-unread-message)
+  "Speak the selected message in a newly opened thread."
   (emacsvox-notmuch--move-to-message-body)
   (let* ((message
           (and
@@ -1442,6 +1451,10 @@ When OBSERVE-STATE is non-nil, each target directly changes tags."
 
 (require 'emacsvox-notmuch-events)
 
+(push '(notmuch-show--insert-part-text/html-shr
+        :around emacsvox-notmuch--render-html-quotations)
+      emacsvox-notmuch--advice)
+
 (push
  '(notmuch-search
    :around emacsvox--advice-notmuch-search-around)
@@ -1485,6 +1498,9 @@ When OBSERVE-STATE is non-nil, each target directly changes tags."
    #'emacsvox-notmuch-speak-search-details))
 
 (with-eval-after-load 'notmuch-show
+  (define-key notmuch-show-mode-map (kbd "J") #'emacsvox-notmuch-toggle-quotation)
+  (define-key notmuch-show-mode-map (kbd "C-c C-q")
+              #'emacsvox-notmuch-toggle-quotations)
   (define-key notmuch-show-mode-map [remap notmuch-show-toggle-message]
               #'emacsvox-notmuch--activate-part-row-or-toggle-message)
   ;; SHR's text keymap otherwise overrides only forward Tab navigation.

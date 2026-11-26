@@ -87,7 +87,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1780 commands and 270 options.
+This chapter documents a total of 1782 commands and 270 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18370,6 +18370,24 @@ When BODY-LINE is non-nil, speak it after the semantic message summary.
 
 @format
 Speak thread position and complete details for the current Show item.
+@end format
+@end deffn
+
+@subsubsection emacsvox-notmuch-toggle-quotation
+@deffn {Command} emacsvox-notmuch-toggle-quotation
+@findex emacsvox-notmuch-toggle-quotation
+
+@format
+Hide the quotation at point, or restore it from its quoted-text label.
+@end format
+@end deffn
+
+@subsubsection emacsvox-notmuch-toggle-quotations
+@deffn {Command} emacsvox-notmuch-toggle-quotations
+@findex emacsvox-notmuch-toggle-quotations
+
+@format
+Hide visible quotations in this open message or restore its previous view.
 @end format
 @end deffn
 

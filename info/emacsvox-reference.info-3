@@ -11697,6 +11697,14 @@ Function Index
                                                              (line   26)
 * emacsvox-notmuch-speak-show-position <1>: emacsvox-notmuch-show.
                                                              (line   27)
+* emacsvox-notmuch-toggle-quotation:     emacsvox-notmuch-show.
+                                                             (line   33)
+* emacsvox-notmuch-toggle-quotation <1>: emacsvox-notmuch-show.
+                                                             (line   34)
+* emacsvox-notmuch-toggle-quotations:    emacsvox-notmuch-show.
+                                                             (line   40)
+* emacsvox-notmuch-toggle-quotations <1>: emacsvox-notmuch-show.
+                                                             (line   41)
 * emacsvox-nxml-summarize-outline:       emacsvox-nxml.      (line   15)
 * emacsvox-nxml-summarize-outline <1>:   emacsvox-nxml.      (line   16)
 * emacsvox-ocr:                          emacsvox-ocr.       (line   16)

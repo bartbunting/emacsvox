@@ -8453,8 +8453,9 @@ as words. @ref{Notmuch fields and privacy, , Notmuch fields and privacy} explain
 @cindex MIME parts, Notmuch
 @cindex attachments, Notmuch
 
-Opening a thread selects its newest unread message among the open messages
-matching the search. If there is none@comma{} Notmuch's initial selection is retained.
+Opening a thread selects the first open@comma{} unread message that matches the
+search@comma{} in the order you can read the thread. If there is none@comma{} you start
+at Notmuch's usual position.
 Emacsvox speaks the selected message's summary and first visible body line@comma{}
 skipping hidden alternative bodies. When no body text is visible@comma{} point falls
 back to a leaf MIME-part button where possible. That button announces a
@@ -8501,6 +8502,14 @@ run @code{notmuch-show-toggle-message} and cue the resulting visibility.
 Run @code{notmuch-show-open-or-close-all} to open every message and report the
 state and total@comma{} for example ``Opened all 5 messages.'' @kbd{C-u M-@key{RET}} closes
 every message and reports the corresponding total.
+@item J
+Run @code{emacsvox-notmuch-toggle-quotation} on a quoted passage to hide it.
+Point stays on a quoted-text label. Press uppercase @kbd{J} there to restore
+that passage. Lowercase @kbd{j} opens Notmuch's saved searches.
+@item C-c C-q
+Run @code{emacsvox-notmuch-toggle-quotations} anywhere in an open message to
+skip its visible quotations and read the replies between them. Press it
+again to restore the previous view. Speech confirms each change.
 @item C-c C-p
 Run @code{emacsvox-notmuch-speak-show-position} for the message ordinal@comma{} total@comma{}
 and full configured details. On a MIME-part button it instead reads the
@@ -8527,6 +8536,12 @@ These are the ordinary Show bindings. Table reading temporarily changes the
 reading keys described below. Viewing@comma{} saving@comma{} overwriting@comma{} or launching a
 MIME part is an explicit Notmuch operation. Navigation and detail inspection never open an attachment or an
 external viewer by themselves.
+
+The quotation commands recognise plain-text lines beginning with a greater-than
+sign and HTML block quotations rendered by SHR@. A nested quotation folds with
+the passage that contains it. Text without quotation markup stays visible.
+Notmuch's own plain-text citation buttons keep their expanded or collapsed
+state when you restore a quotation.
 
 @subsection Read a table in an HTML message
 

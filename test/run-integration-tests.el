@@ -35,6 +35,7 @@
     emacsvox-navigation-graphical-tall-image-keeps-partial-scrolling
     emacsvox-eat-graphical-output-survives-scrolling
     emacsvox-notmuch-html-table-graphical-wrapped-cells
+    emacsvox-notmuch-toggle-html-quotations
     emacsvox-eat-graphical-foreground-and-line-draft)
   "Cases owned by the graphical gate and excluded from the batch gate.")
 

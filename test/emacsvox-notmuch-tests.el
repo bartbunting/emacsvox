@@ -355,6 +355,8 @@ Return the beginning of the inserted row."
            (notmuch-show-mode-map "DEL" notmuch-show-rewind)
            (notmuch-show-mode-map "RET" notmuch-show-toggle-message)
            (notmuch-show-mode-map "M-RET" notmuch-show-open-or-close-all)
+           (notmuch-show-mode-map "J" emacsvox-notmuch-toggle-quotation)
+           (notmuch-show-mode-map "C-c C-q" emacsvox-notmuch-toggle-quotations)
            (notmuch-show-mode-map
             "C-c C-p" emacsvox-notmuch-speak-show-position)
            (notmuch-show-mode-map "TAB" notmuch-show-next-button)
@@ -470,7 +472,9 @@ Return the beginning of the inserted row."
          '(emacsvox-notmuch-speak-search-result
            emacsvox-notmuch-speak-search-details
            emacsvox-notmuch-speak-show-message
-           emacsvox-notmuch-speak-show-position))
+           emacsvox-notmuch-speak-show-position
+           emacsvox-notmuch-toggle-quotation
+           emacsvox-notmuch-toggle-quotations))
       (should
        (string-match-p
         (regexp-quote (format "@deffn {Command} %s" command))
@@ -2399,11 +2403,176 @@ Return the beginning of the inserted row."
         (speak
          "Finished saving attachments; attachment scan incomplete"))))))
 
-(ert-deftest emacsvox-notmuch-opening-thread-prefers-newest-matching-unread ()
-  "Thread entry selects unread mail by date and preserves the query and tags."
-  (dolist (case '((t "read-root" "newer-unread")
-                  (nil "read-root" "read-root")
-                  (nil "read-reply" "read-reply")))
+(defun emacsvox-notmuch-test--insert-quote-mail (id parts)
+  "Render an open synthetic message with ID and MIME PARTS."
+  (let ((inhibit-read-only t)
+        (notmuch-show-indent-content t)
+        (mm-text-html-renderer 'shr))
+    (goto-char (point-max))
+    (notmuch-show-insert-msg
+     (list :id id :match t :tags '("unread") :date_relative "today"
+           :headers (list :From "reader@example.invalid" :Subject id)
+           :body parts)
+     1)))
+
+(defun emacsvox-notmuch-test--find-text (text)
+  "Move to the start of TEXT in the test buffer and return point."
+  (goto-char (point-min))
+  (search-forward text)
+  (goto-char (match-beginning 0)))
+
+(ert-deftest emacsvox-notmuch-single-quotation-key ()
+  "J toggles one quote, including a one-line quote or a native excerpt."
+  (dolist (html '(nil t))
+    (with-temp-buffer
+      (notmuch-show-mode)
+      (let ((notmuch-wash-citation-lines-prefix 0)
+            (notmuch-wash-citation-lines-suffix 0)
+            spoken)
+        (emacsvox-notmuch-test--insert-quote-mail
+         "quoted" (list (list :id 1 :content-type (if html "text/html" "text/plain")
+                              :content (if html
+                                           "<blockquote><a href='https://example.invalid'>First</a></blockquote><p>Reply</p><blockquote>Second</blockquote>"
+                                         "> First\n> more\nReply\n> Second\n"))))
+        (let ((before (buffer-substring-no-properties (point-min) (point-max))))
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (setq spoken text))))
+            (should (eq (key-binding "j") #'notmuch-jump-search))
+            (dolist (text (list (if html "First" "more citation lines") "Second"))
+              (emacsvox-notmuch-test--find-text text)
+              (call-interactively (key-binding "J"))
+              (should (equal spoken "Quotation hidden"))
+              (should (looking-at-p "\\[Quoted text\\]"))
+              (should-not (invisible-p (point)))
+              (should (equal (notmuch-show-get-message-id t) "quoted"))
+              (should (invisible-p (emacsvox-notmuch-test--find-text text)))
+              (should-not (invisible-p (emacsvox-notmuch-test--find-text "Reply")))
+              (emacsvox-notmuch-test--find-text "[Quoted text]")
+              (forward-char 3)
+              (call-interactively (key-binding "J"))
+              (should (equal spoken "Quotation restored"))
+              (should (equal before (buffer-substring-no-properties (point-min) (point-max))))
+              (should-not (invisible-p (emacsvox-notmuch-test--find-text text))))
+            (emacsvox-notmuch-test--find-text "Reply")
+            (call-interactively (key-binding "J"))
+            (should (equal spoken "No quotation here"))))))))
+
+(ert-deftest emacsvox-notmuch-folded-quotation-spends-no-page-budget ()
+  "Long hidden quotes leave the speech budget available for inline answers."
+  (with-temp-buffer
+    (insert "Above\n" (make-string 20000 ?>) "\nBelow\n")
+    (overlay-put (make-overlay 7 20008) 'invisible t)
+    (should (equal (emacsvox-notmuch--bounded-source-range
+                    (point-min) (point-max) "visible page" 80 80)
+                   "Above\nBelow\n"))))
+
+(ert-deftest emacsvox-notmuch-toggle-plain-quotations ()
+  "Hide interleaved citations in one message and restore native excerpts."
+  (dolist (open '(nil t))
+    (with-temp-buffer
+      (notmuch-show-mode)
+      (emacsvox-notmuch-test--insert-quote-mail
+       "first"
+       (list (list :id 1 :content-type "text/plain" :content
+                   (concat "> old question\nNew answer\n"
+                           (mapconcat (lambda (i) (format ">> nested %d" i))
+                                      (number-sequence 1 10) "\n")
+                           "\nLast answer\n"))
+             '(:id 2 :content-type "text/plain" :filename "sample.txt"
+               :content "> attached text\n")))
+      (emacsvox-notmuch-test--insert-quote-mail
+       "second" '((:id 1 :content-type "text/plain" :content "> other message\n")))
+      (emacsvox-notmuch-test--find-text "more citation lines")
+      (let* ((button (button-at (point)))
+             (native (button-get button 'overlay))
+             spoken)
+        (when open (button-activate button))
+        (emacsvox-notmuch-test--find-text "old question")
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (setq spoken text))))
+          (call-interactively (key-binding (kbd "C-c C-q")))
+          (should (equal spoken "Quoted text hidden"))
+          (should (equal (notmuch-show-get-message-id t) "first"))
+          (should-not (invisible-p (point)))
+          (dolist (text '("old question" "nested 1" "nested 5" "nested 10"
+                          "more citation lines"))
+            (should (invisible-p (emacsvox-notmuch-test--find-text text))))
+          (dolist (text '("New answer" "Last answer" "sample.txt"
+                          "attached text" "other message"))
+            (should-not (invisible-p (emacsvox-notmuch-test--find-text text))))
+          (emacsvox-notmuch-test--find-text "Last answer")
+          (emacsvox-notmuch-toggle-quotations)
+          (should (equal spoken "Previous quotation view restored"))
+          (should-not (invisible-p (emacsvox-notmuch-test--find-text "old question")))
+          (should-not (invisible-p (button-start button)))
+          (should (eq (not open) (overlay-get native 'invisible)))
+          (should (eq (not open)
+                      (invisible-p (emacsvox-notmuch-test--find-text "nested 5")))))))))
+
+(ert-deftest emacsvox-notmuch-toggle-html-quotations ()
+  "Fold SHR blockquotes, preserving inline replies and the hidden alternative."
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (notmuch-show-mode)
+      (let ((shr-width 32) (shr-use-fonts (display-graphic-p))
+            (notmuch-multipart/alternative-discouraged '("text/plain"))
+            (notmuch-show-all-multipart/alternative-parts nil)
+            spoken)
+        (emacsvox-notmuch-test--insert-quote-mail
+         "html" '((:id 1 :content-type "multipart/alternative"
+                   :content
+                   ((:id 2 :content-type "text/plain" :content "> hidden alternative\n")
+                    (:id 3 :content-type "text/html" :content
+                     "<p>Before</p><blockquote>First question with enough words to wrap across lines<blockquote>Nested question</blockquote></blockquote><p>Middle reply</p><blockquote>Last question</blockquote><p>After</p>")))))
+        (let ((before (buffer-string))
+              (before-overlays (overlays-in (point-min) (point-max))))
+          (emacsvox-notmuch-test--find-text "Before")
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (setq spoken text))))
+            (call-interactively (key-binding (kbd "C-c C-q")))
+            (should (equal spoken "Quoted text hidden"))
+            (redisplay t)
+            (dolist (text '("First" "wrap" "Nested" "Last question"))
+              (should (invisible-p (emacsvox-notmuch-test--find-text text))))
+            (dolist (text '("Before" "Middle reply" "After"))
+              (should-not (invisible-p (emacsvox-notmuch-test--find-text text))))
+            (when (display-graphic-p)
+              (emacsvox-notmuch-test--find-text "Before")
+              (let (rows)
+                (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                           (lambda (text &rest _)
+                             (with-temp-buffer
+                               (insert text)
+                               (tts--delete-invisible-text)
+                               (push (buffer-substring-no-properties (point-min) (point-max))
+                                     rows))))
+                          ((symbol-function 'emacsvox-icon) #'ignore))
+                  (dotimes (_ 4)
+                    (redisplay t)
+                    (funcall-interactively (key-binding (kbd "<down>")) 1 t)))
+                (should (equal (seq-filter (lambda (s) (string-match-p "[[:alpha:]]" s))
+                                           (mapcar #'string-trim (nreverse rows)))
+                               '("Middle reply" "After")))))
+            (emacsvox-notmuch-toggle-quotations)
+            (should (equal spoken "Previous quotation view restored"))
+            (should (equal-including-properties before (buffer-string)))
+            (should (null (cl-set-exclusive-or
+                           before-overlays (overlays-in (point-min) (point-max)))))
+            (should-not (invisible-p (emacsvox-notmuch-test--find-text "Nested")))
+            (call-interactively (key-binding "J"))
+            (should (equal spoken "Quotation hidden"))
+            (should (looking-at-p "\\[Quoted text\\]"))
+            (should (invisible-p (emacsvox-notmuch-test--find-text "First")))
+            (should-not (invisible-p (emacsvox-notmuch-test--find-text "Last question")))
+            (emacsvox-notmuch-test--find-text "[Quoted text]")
+            (call-interactively (key-binding "J"))
+            (should (equal spoken "Quotation restored"))
+            (should (equal-including-properties before (buffer-string)))))))))
+
+(ert-deftest emacsvox-notmuch-opening-thread-prefers-first-matching-unread ()
+  "Thread entry follows display order and preserves the query and tags."
+  (dolist (unread '(t nil))
     (with-temp-buffer
       (setq major-mode 'notmuch-show-mode)
       (let ((ems--interactive-fn-name 'notmuch-search-show-thread)
@@ -2411,11 +2580,12 @@ Return the beginning of the inserted row."
         ;; Thread order need not be date order. Hidden and nonmatching unread
         ;; messages must not displace a message selected by this search.
         (dolist (row '(("read-root" 100 t t nil)
+                       ("unmatched-unread" 500 nil t t)
+                       ("hidden-unread" 600 t nil t)
+                       ("first-unread" 250 t t t)
                        ("newer-unread" 300 t t t)
                        ("older-unread" 200 t t t)
-                       ("read-reply" 400 t t nil)
-                       ("unmatched-unread" 500 nil t t)
-                       ("hidden-unread" 600 t nil t)))
+                       ("read-reply" 400 t t nil)))
           (let ((start (emacsvox-notmuch-test--insert-rendered-show-message
                         (nth 0 row) (nth 3 row))))
             (push (cons (nth 0 row) start) starts)
@@ -2425,18 +2595,20 @@ Return the beginning of the inserted row."
               (notmuch-show-set-prop :match (nth 2 row))
               (notmuch-show-set-prop
                :tags (when (and (nth 4 row)
-                                (or (car case) (not (nth 2 row))
+                                (or unread (not (nth 2 row))
                                     (not (nth 3 row))))
                        '("unread"))))))
         (notmuch-show-mapc
          (lambda () (push (copy-sequence (notmuch-show-get-tags)) tags-before)))
-        (goto-char (cdr (assoc (nth 1 case) starts)))
+        (goto-char (cdr (assoc "read-reply" starts)))
+        (notmuch-show-goto-first-wanted-message)
         (cl-letf (((symbol-function 'emacsvox-notmuch--submit-show-message)
                    (lambda (message &rest _)
                      (setq spoken-id (plist-get message :id)))))
           (emacsvox--advice-notmuch-search-show-thread-after))
-        (should (equal (notmuch-show-get-message-id t) (nth 2 case)))
-        (should (equal spoken-id (nth 2 case)))
+        (should (equal (notmuch-show-get-message-id t)
+                       (if unread "first-unread" "read-root")))
+        (should (equal spoken-id (notmuch-show-get-message-id t)))
         (let (tags-after)
           (notmuch-show-mapc
            (lambda () (push (copy-sequence (notmuch-show-get-tags)) tags-after)))

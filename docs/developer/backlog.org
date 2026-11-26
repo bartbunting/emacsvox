@@ -9,6 +9,13 @@ implementation checklists.
 
 * User experience
 
+** TODO Listen to thread entry and quoted replies in Notmuch
+
+Check that opening a branched thread starts where you would read forward.
+Try =J= on an individual quotation and =C-c C-q= on an interleaved reply
+in both plain-text and HTML mail. Confirm that you can find the new text
+by ear and return to a folded passage. See the [[file:../manual/chapters/notmuch.org::*Read a thread and its MIME parts][Notmuch reading guide]].
+
 ** TODO Port Caps Lock feedback to native Windows and macOS
 
 The [[file:../../lisp/core/emacsvox-caps-lock.el][Caps Lock watcher]] currently uses X11 state queries and an optional

@@ -7156,6 +7156,20 @@ Notmuch message and attachment reading.  Load through
 
      Speak thread position and complete details for the current Show item.
 
+2.231.1.3 emacsvox-notmuch-toggle-quotation
+...........................................
+
+ -- Command: emacsvox-notmuch-toggle-quotation
+
+     Hide the quotation at point, or restore it from its quoted-text label.
+
+2.231.1.4 emacsvox-notmuch-toggle-quotations
+............................................
+
+ -- Command: emacsvox-notmuch-toggle-quotations
+
+     Hide visible quotations in this open message or restore its previous view.
+
 
 File: emacsvox-reference.info,  Node: emacsvox-nov,  Next: emacsvox-nxml,  Prev: emacsvox-notmuch-show,  Up: Emacsvox Commands And Options
 

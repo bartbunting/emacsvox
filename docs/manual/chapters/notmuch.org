@@ -209,8 +209,9 @@ as words. [[Notmuch fields and privacy][Notmuch fields and privacy]] explains om
 #+cindex: MIME parts, Notmuch
 #+cindex: attachments, Notmuch
 
-Opening a thread selects its newest unread message among the open messages
-matching the search. If there is none, Notmuch's initial selection is retained.
+Opening a thread selects the first open, unread message that matches the
+search, in the order you can read the thread. If there is none, you start
+at Notmuch's usual position.
 Emacsvox speaks the selected message's summary and first visible body line,
 skipping hidden alternative bodies. When no body text is visible, point falls
 back to a leaf MIME-part button where possible. That button announces a
@@ -265,6 +266,16 @@ other text or multiple controls require you to move onto the intended control.
   Run =notmuch-show-open-or-close-all= to open every message and report the
   state and total, for example ``Opened all 5 messages.'' ~C-u M-RET~ closes
   every message and reports the corresponding total.
+- J ::
+
+  Run =emacsvox-notmuch-toggle-quotation= on a quoted passage to hide it.
+  Point stays on a quoted-text label. Press uppercase ~J~ there to restore
+  that passage. Lowercase ~j~ opens Notmuch's saved searches.
+- C-c C-q ::
+
+  Run =emacsvox-notmuch-toggle-quotations= anywhere in an open message to
+  skip its visible quotations and read the replies between them. Press it
+  again to restore the previous view. Speech confirms each change.
 - C-c C-p ::
 
   Run =emacsvox-notmuch-speak-show-position= for the message ordinal, total,
@@ -298,6 +309,12 @@ These are the ordinary Show bindings. Table reading temporarily changes the
 reading keys described below. Viewing, saving, overwriting, or launching a
 MIME part is an explicit Notmuch operation. Navigation and detail inspection never open an attachment or an
 external viewer by themselves.
+
+The quotation commands recognise plain-text lines beginning with a greater-than
+sign and HTML block quotations rendered by SHR. A nested quotation folds with
+the passage that contains it. Text without quotation markup stays visible.
+Notmuch's own plain-text citation buttons keep their expanded or collapsed
+state when you restore a quotation.
 
 *** Read a table in an HTML message
 :PROPERTIES:

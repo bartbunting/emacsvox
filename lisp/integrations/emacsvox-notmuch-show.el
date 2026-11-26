@@ -38,6 +38,7 @@
 ;; Cross-module declarations.
 (declare-function emacsvox-notmuch--annotate-field "emacsvox-notmuch" (text field))
 (defvar emacsvox-notmuch--automatic-presentation-p)
+(defvar ems--voiceify-overlays)
 (declare-function emacsvox-notmuch--bounded-source-substring "emacsvox-notmuch" (start end label))
 (declare-function emacsvox-notmuch--field-string "emacsvox-notmuch-search" (value face &optional label transform))
 (declare-function emacsvox-notmuch--format-tags "emacsvox-notmuch-search" (result status-icons))
@@ -86,6 +87,163 @@
 (setf (alist-get 'notmuch-show-mode emacsvox-table-reader--adapters)
       (list #'emacsvox-shr--table-snapshot #'emacsvox-notmuch--table-submit
             emacsvox-notmuch--table-reading-map))
+
+(defun emacsvox-notmuch--mark-blockquote (renderer dom)
+  "Mark the quotation text produced by RENDERER for DOM."
+  (let ((start (point)))
+    (funcall renderer dom)
+    (let ((end (point)))
+      (save-excursion
+        (goto-char start)
+        (skip-chars-forward "\n" end)
+        (put-text-property (point) end 'emacsvox-notmuch-quotation t)))))
+
+(defun emacsvox-notmuch--render-html-quotations (original &rest args)
+  "Keep blockquote boundaries when ORIGINAL renders an HTML mail part."
+  (let* ((renderer (or (cdr (assq 'blockquote shr-external-rendering-functions))
+                       #'shr-tag-blockquote))
+         (shr-external-rendering-functions
+          (if (derived-mode-p 'notmuch-show-mode)
+              (cons (cons 'blockquote (apply-partially
+                                       #'emacsvox-notmuch--mark-blockquote renderer))
+                    shr-external-rendering-functions)
+            shr-external-rendering-functions)))
+    (apply original args)))
+
+(defun emacsvox-notmuch--quotation-ranges ()
+  "Find visible quotation ranges in the narrowed message."
+  (let (ranges)
+    (goto-char (point-min))
+    (while (re-search-forward "^[ \t]*>" nil t)
+      (let ((part (get-text-property (1- (point)) :notmuch-part)))
+        (when (and (equal (plist-get part :content-type) "text/plain")
+                   (not (plist-get part :filename))
+                   (not (invisible-p (1- (point)))))
+          (push (cons (line-beginning-position) (line-beginning-position 2))
+                ranges))))
+    ;; Include the button and excerpt together. Its native overlay retains
+    ;; the reader's choice of whether the excerpt itself is open.
+    (dolist (overlay (overlays-in (point-min) (point-max)))
+      (when-let* ((button (overlay-get overlay 'notmuch-wash-button))
+                  ((equal (overlay-get overlay 'type) "citation"))
+                  (start (button-start button))
+                  ((not (plist-get (get-text-property start :notmuch-part) :filename)))
+                  ((not (invisible-p start))))
+        (goto-char start)
+        (push (cons (line-beginning-position) (overlay-end overlay)) ranges)))
+    (goto-char (point-min))
+    (while-let ((match (text-property-search-forward 'emacsvox-notmuch-quotation t t)))
+      (let ((beg (prop-match-beginning match))
+            (end (prop-match-end match)))
+        (unless (or (invisible-p beg)
+                    (plist-get (get-text-property beg :notmuch-part) :filename))
+          ;; Notmuch can insert unmarked indentation after SHR fills the part.
+          (save-excursion
+            (goto-char beg)
+            (skip-chars-backward " \t" (line-beginning-position))
+            (setq beg (point))
+            (goto-char end)
+            (skip-chars-backward " \t" (max beg (line-beginning-position)))
+            (unless (bolp)
+              (skip-chars-forward " \t" (line-end-position))
+              (when (eq (char-after) ?\n) (forward-char)))
+            (when (< beg (point))
+              (push (cons beg (point)) ranges))))))
+    (let (merged)
+      (dolist (range (sort ranges :key #'car :lessp #'<))
+        (if (and merged (<= (car range) (cdar merged)))
+            (setcdr (car merged) (max (cdar merged) (cdr range)))
+          (push range merged)))
+      merged)))
+
+(defun emacsvox-notmuch--fold-range (beg end)
+  "Hide the rendered quotation from BEG to END and return its overlay."
+  (let ((overlay (make-overlay beg end)))
+    (overlay-put overlay 'evaporate t)
+    (overlay-put overlay 'invisible t)
+    overlay))
+
+(defun emacsvox-notmuch--fold-at-point (range)
+  "Leave a readable handle at RANGE and fold its quotation."
+  (pcase-let* ((`(,beg . ,end) range)
+               (extent (get-text-property beg :notmuch-message-extent))
+               (part (get-text-property beg :notmuch-part))
+               (label (if (eq (char-before end) ?\n) "[Quoted text]\n" "[Quoted text]"))
+               (button (button-at beg)))
+    (goto-char beg)
+    (with-silent-modifications
+      (insert (propertize label :notmuch-message-extent extent :notmuch-part part))
+      ;; A native citation button can begin at the same position. Keep its
+      ;; mouse and Return actions on its original label.
+      (when (and (overlayp button) (= (overlay-start button) beg))
+        (move-overlay button (point) (overlay-end button)))
+      (let ((fold (emacsvox-notmuch--fold-range (point) (+ end (length label)))))
+        (put-text-property beg (point) 'emacsvox-notmuch-quote-handle fold)))
+    (goto-char beg)
+    "Quotation hidden"))
+
+(defun emacsvox-notmuch--toggle-current-quotation ()
+  "Fold or restore the quotation at point in the narrowed message."
+  (if-let* ((fold (get-text-property (point) 'emacsvox-notmuch-quote-handle)))
+      (let* ((end (overlay-start fold))
+             (beg (previous-single-property-change
+                   end 'emacsvox-notmuch-quote-handle nil (point-min))))
+        (delete-overlay fold)
+        (with-silent-modifications (delete-region beg end))
+        (goto-char beg)
+        "Quotation restored")
+    (let* ((position (point))
+           (range (seq-find (lambda (r) (and (<= (car r) position) (< position (cdr r))))
+                            (save-excursion (emacsvox-notmuch--quotation-ranges)))))
+      (if range (emacsvox-notmuch--fold-at-point range) "No quotation here"))))
+
+(defun emacsvox-notmuch--toggle-message-quotations ()
+  "Toggle quotations in the narrowed message and return spoken feedback."
+  (let* ((folds (seq-filter (lambda (ov) (overlay-get ov 'emacsvox-notmuch-fold))
+                            (overlays-in (point-min) (point-max))))
+         (ranges (unless folds (save-excursion (emacsvox-notmuch--quotation-ranges)))))
+    (cond
+     (folds
+      (mapc #'delete-overlay folds)
+      "Previous quotation view restored")
+     (ranges
+      (dolist (range ranges)
+        (overlay-put (emacsvox-notmuch--fold-range (car range) (cdr range))
+                     'emacsvox-notmuch-fold t))
+      (when (invisible-p (point))
+        (while (and (not (eobp)) (invisible-p (point)))
+          (goto-char (next-char-property-change (point))))
+        (when (eobp) (goto-char (point-min))))
+      "Quoted text hidden")
+     (t "No visible quotations"))))
+
+(defun emacsvox-notmuch--quotation-command (action)
+  "Apply ACTION to one open message and announce its result."
+  (unless (derived-mode-p 'notmuch-show-mode)
+    (user-error "Open a Notmuch message first"))
+  ;; Line reading captures effective overlay visibility. Mirroring this
+  ;; temporary fold to text properties would overwrite native MIME visibility.
+  (let ((message (notmuch-show-get-message-properties))
+        (ems--voiceify-overlays nil))
+    (emacsvox-notmuch--submit-text-feedback
+     (emacsvox-notmuch-message-facts message 'operation-completed)
+     'state-change nil
+     (if (plist-get message :message-visible)
+         (save-restriction
+           (pcase-let ((`(,beg . ,end) (notmuch-show-message-extent)))
+             (narrow-to-region beg end))
+           (funcall action))
+       "Message is closed"))))
+
+(defun emacsvox-notmuch-toggle-quotation ()
+  "Hide the quotation at point, or restore it from its quoted-text label."
+  (interactive)
+  (emacsvox-notmuch--quotation-command #'emacsvox-notmuch--toggle-current-quotation))
+
+(defun emacsvox-notmuch-toggle-quotations ()
+  "Hide visible quotations in this open message or restore its previous view."
+  (interactive)
+  (emacsvox-notmuch--quotation-command #'emacsvox-notmuch--toggle-message-quotations))
 
 (defun emacsvox-notmuch--attachment-scan (body)
   "Return a bounded attachment scan plist for MIME BODY.

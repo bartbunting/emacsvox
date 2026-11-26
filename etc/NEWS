@@ -235,6 +235,11 @@ underlines no longer interrupt navigation with a speech error. Notmuch
 HTML links speak correctly, and attachment buttons also work from nearby
 whitespace.
 
+Opening a Notmuch thread selects the first matching open unread message in
+thread order. In Show, press uppercase =J= to fold a quotation or reopen it
+from its label. =C-c C-q= hides visible quotations throughout the current
+message so you can read interleaved replies. Press it again to restore them.
+
 ** Tutorial and practice document
 
 The manual adds a guided audio-desktop tutorial with a practice document.
