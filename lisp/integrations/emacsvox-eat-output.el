@@ -90,6 +90,15 @@
 (defvar-local emacsvox-eat--output-continuity-lost-p nil
   "Non-nil when the pending burst can no longer be collected as appended output.")
 
+(defvar-local emacsvox-eat--submitted-menu nil
+  "Question marker, expected rendered answer and deadline for a submitted menu.")
+
+(defun emacsvox-eat--forget-submitted-menu ()
+  "Release the marker for the last submitted terminal menu."
+  (when emacsvox-eat--submitted-menu
+    (set-marker (car emacsvox-eat--submitted-menu) nil)
+    (setq emacsvox-eat--submitted-menu nil)))
+
 (defun emacsvox-eat--row-prefix-table (rows)
   "Return the KMP prefix table for the row sequence ROWS."
   (let* ((sequence (vconcat rows))
@@ -139,6 +148,7 @@
 
 (defun emacsvox-eat--clear-output-frontier ()
   "Discard rendered-output continuity and its pending collection."
+  (emacsvox-eat--forget-submitted-menu)
   (when (markerp emacsvox-eat--output-frontier)
     (set-marker emacsvox-eat--output-frontier nil))
   (setq emacsvox-eat--output-frontier nil
@@ -149,6 +159,7 @@
 
 (defun emacsvox-eat--output-input-boundary (&rest _)
   "Exclude the current unfinished terminal row from output collection."
+  (emacsvox-eat--forget-submitted-menu)
   (emacsvox-eat--clear-unfinished-output)
   (setq emacsvox-eat--output-skip-row-p t
         emacsvox-eat--output-partial ""
@@ -401,6 +412,47 @@ These adapter decisions establish neither successful transport nor playback."
    :terminal-id emacsvox-eat--terminal-id
    :generation emacsvox-eat--generation :update-serial emacsvox-eat--update-serial))
 
+(defun emacsvox-eat--output-wrap-p (newline width)
+  "Return non-nil when the rendered row at NEWLINE wrapped at WIDTH.
+EAT can retain an old wrap property when a menu erases and rewrites a
+shorter row. Its rendered buffer uses one position per terminal cell."
+  (and (get-text-property newline 'eat--t-wrap-line)
+       (save-excursion
+         (goto-char newline)
+         (>= (- newline (line-beginning-position)) width))))
+
+(defun emacsvox-eat--resume-after-menu (terminal)
+  "Resume ordinary output after TERMINAL replaces a submitted menu with its answer."
+  (when emacsvox-eat--submitted-menu
+    (pcase-let ((`(,start ,answer ,deadline) emacsvox-eat--submitted-menu))
+      (cond
+       ((or (> (float-time) deadline) (< start (eat-term-beginning terminal)))
+        (emacsvox-eat--forget-submitted-menu)
+        nil)
+       (t
+        (save-excursion
+          (goto-char start)
+          ;; Only a completed logical line proves the new boundary. EAT may
+          ;; split that line at the right margin or deliver it in fragments.
+          (let ((limit (min (eat-term-display-cursor terminal)
+                            (+ start (* 2 (1+ (length answer)))))))
+            (when (and (< start limit)
+                       (cl-loop while (search-forward "\n" limit t)
+                                unless (emacsvox-eat--output-wrap-p
+                                        (1- (point)) (car (eat-term-size terminal)))
+                                return t)
+                       (equal answer (string-replace
+                                      "\n" "" (car (emacsvox-eat--display-content
+                                                    start (1- (point)) nil)))))
+              (emacsvox-eat--clear-collected-output)
+              (set-marker emacsvox-eat--output-frontier (point))
+              (setq emacsvox-eat--output-observed-p t
+                    emacsvox-eat--output-partial ""
+                    emacsvox-eat--output-partial-truncated-p nil
+                    emacsvox-eat--output-skip-row-p nil)
+              (emacsvox-eat--forget-submitted-menu)
+              t))))))))
+
 (defun emacsvox-eat--process-rendered-output (original terminal output)
   "Call ORIGINAL on TERMINAL and OUTPUT, collecting before redisplay trims.
 Use only rendered text and fresh public terminal bounds.  A copied tail
@@ -438,15 +490,16 @@ be mistaken for appended output, even when the replacement text is identical."
                   (when (= generation emacsvox-eat--generation)
                     (setq emacsvox-eat--output-observed-p t)
                     (if (not (and eligible
-                                  (not emacsvox-eat--output-continuity-lost-p)
                                   (not emacsvox-eat--prompt-overflow-p)
-                                  (= anchor cursor)
                                   (eq display (eat-term-display-beginning terminal))
                                   (equal size (eat-term-size terminal))
                                   (not (eat-term-in-alternative-display-p terminal))
                                   (<= (eat-term-beginning terminal)
                                       emacsvox-eat--output-frontier
-                                      (eat-term-end terminal))))
+                                      (eat-term-end terminal))
+                                  (or (emacsvox-eat--resume-after-menu terminal)
+                                      (and (not emacsvox-eat--output-continuity-lost-p)
+                                           (= anchor cursor)))))
                         (progn
                           (emacsvox-eat--diagnose-output
                            'discarded (if eligible 'continuity-unproven
@@ -465,8 +518,8 @@ be mistaken for appended output, even when the replacement text is identical."
                         (let ((limit (eat-term-display-cursor terminal)))
                           (while (and (<= (point) limit)
                                       (search-forward "\n" limit t))
-                            (let ((wrapped (get-text-property
-                                            (1- (point)) 'eat--t-wrap-line)))
+                            (let ((wrapped (emacsvox-eat--output-wrap-p
+                                            (1- (point)) (car size))))
                               (if emacsvox-eat--output-skip-row-p
                                   (unless wrapped
                                     (setq emacsvox-eat--output-skip-row-p nil))

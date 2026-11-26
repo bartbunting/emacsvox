@@ -7334,6 +7334,117 @@ A nil element in CHUNKS finishes the current burst before later output."
           (emacsvox-eat--clear-output-frontier)
           (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal)))))))
 
+(ert-deftest emacsvox-eat-expo-menu-entry-and-split-arrow-redraw ()
+  "Speak the Expo choice once, even after an intermediate terminal resize."
+  (dolist (width '(40 120))
+    (with-temp-buffer
+      (let ((eat-terminal (eat-term-make (current-buffer) (point-min))) spoken)
+        (unwind-protect
+            (cl-letf (((symbol-function 'emacsvox-eat--foreground-p) (lambda () t))
+                      ((symbol-function 'emacsvox-eat--following-live-p) (lambda () t))
+                      ((symbol-function 'emacsvox-eat--submit)
+                       (lambda (text &rest _) (push text spoken))))
+              (eat-term-resize eat-terminal width 24)
+              (setq-local emacsvox-eat--generation 1
+                          emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
+              (cl-labels ((menu (second)
+                            (concat "\e[H? Register your devices? › - Use arrow-keys. Return to submit.\r\n"
+                                    (if second "    " "❯   ")
+                                    "Website - generates a registration URL for your devices\r\n"
+                                    (if second "❯   " "    ")
+                                    "Developer Portal - imports registered devices\r\n"
+                                    "    Exit\r\n")))
+                (emacsvox-eat-test--deliver-screen eat-terminal (menu nil))
+                (should (equal spoken '("Register your devices? Website")))
+                (setq spoken nil)
+                (emacsvox--advice-eat-self-input-before 1 'down)
+                (eat-term-resize eat-terminal width 22)
+                (emacsvox-eat-test--deliver-screen eat-terminal "")
+                (should-not spoken)
+                (emacsvox-eat-test--deliver-screen eat-terminal (menu t))
+                (emacsvox-eat-test--deliver-screen eat-terminal (menu t))
+                (should (equal spoken '("Developer Portal")))
+                (setq spoken nil)
+                (emacsvox--advice-eat-self-input-before 1 'up)
+                (eat-term-resize eat-terminal width 24)
+                (emacsvox-eat-test--deliver-screen eat-terminal (menu nil))
+                (should (equal spoken '("Website")))))
+          (emacsvox-eat--cancel-quiescence)
+          (emacsvox-eat--clear-output-frontier)
+          (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal)))))))
+
+(ert-deftest emacsvox-eat-expo-menu-requires-a-live-selection ()
+  "A transcript, ambiguous marker or unsolicited redraw is insufficient."
+  (let* ((heading "? Choose › - Use arrow-keys. Return to submit.")
+         (rows (list heading "❯   One" "    Two" ""))
+         (new (list heading "    One" "❯   Two" "")))
+    (should-not (emacsvox-eat--question-menu rows 1))
+    (should-not (emacsvox-eat--question-menu (cdr rows) 2))
+    (should-not (emacsvox-eat--question-menu (list heading "❯   One" "❯   Two" "") 3))
+    (should-not (emacsvox-eat--question-menu-feedback
+                 (list :old-rows rows :old-cursor-row 3)
+                 (list :rows new :cursor-row 3)))))
+
+(ert-deftest emacsvox-eat-expo-menu-exit-resumes-shell-output ()
+  "Read output after a submitted menu, including the returning shell prompt."
+  (dolist (case '(joined wrapped split settled annotated wrong-answer no-submit))
+    (let* ((width (if (eq case 'wrapped) 36 100))
+           (question "How would you like to register your devices?")
+           (heading (concat "? " question " › - Use arrow-keys. Return to submit."))
+           (menu (concat heading "\r\n    Website\r\n❯   Exit\r\n"))
+           (rows (+ 2 (ceiling (string-width heading) width)))
+           (clear (concat (apply #'concat (make-list rows "\e[2K\e[1A")) "\e[2K\e[G"))
+           (answer (if (eq case 'wrong-answer) "Website" "Exit"))
+           (confirmation (concat "✔ " question " › " answer "\r\n"))
+           (output "Bye!\r\n")
+           (prompt (if (eq case 'annotated)
+                       "\e]51;e;B\e\\shell$ \e]51;e;C\e\\" "shell$ "))
+           (chunks (pcase case
+                     ('settled (list (concat clear confirmation) nil output nil prompt))
+                     ('split (list clear (substring confirmation 0 3)
+                                   (substring confirmation 3) output prompt))
+                     (_ (list (concat clear confirmation output prompt))))))
+      (with-temp-buffer
+        (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+              (emacsvox-eat-prompt-feedback 'earcon) spoken)
+          (unwind-protect
+              (cl-letf (((symbol-function 'emacsvox-eat--foreground-p) (lambda () t))
+                        ((symbol-function 'emacsvox-eat--following-live-p) (lambda () t))
+                        ((symbol-function 'emacsvox-eat--submit)
+                         (lambda (text &rest _) (push text spoken)))
+                        ((symbol-function 'emacsvox-aural-submit-actions)
+                         (lambda (&rest args)
+                           (when (memq 'command-prompt-ready
+                                       (plist-get (plist-get args :facts) :events))
+                             (push "ready cue" spoken)))))
+                (eat-term-resize eat-terminal width 24)
+                (setq-local emacsvox-eat--generation 1
+                            emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
+                (setf (eat-term-parameter eat-terminal 'ui-command-function) #'ignore)
+                (emacsvox-eat--install-prompt-observer)
+                (emacsvox-eat-test--deliver-screen eat-terminal menu)
+                (should (equal spoken (list (concat question " Exit"))))
+                (setq spoken nil)
+                (unless (eq case 'no-submit)
+                  (emacsvox--advice-eat-self-input-before 1 'return))
+                (dolist (chunk chunks)
+                  (if chunk
+                      (progn
+                        (eat-term-process-output eat-terminal chunk)
+                        (eat-term-redisplay eat-terminal)
+                        (emacsvox-eat-update-hook))
+                    (emacsvox-eat-test--finish-screen-burst)))
+                (emacsvox-eat-test--finish-screen-burst)
+                (should (equal (string-trim-right (string-join (nreverse spoken) "\n"))
+                               (pcase case
+                                 ((or 'no-submit 'wrong-answer) "")
+                                 ('annotated "Bye!\nready cue")
+                                 (_ "Bye!\nshell$")))))
+            (emacsvox-eat--cancel-quiescence)
+            (emacsvox-eat--clear-prompt-state)
+            (emacsvox-eat--clear-output-frontier)
+            (eat-term-delete eat-terminal)))))))
+
 (ert-deftest emacsvox-eat-question-menu-requires-evidence ()
   "Quoted rows, ambiguous markers and unrequested selection changes stay quiet."
   (let* ((rows '("? Choose  [Use arrows to move, type to filter]" "> One" "  Two"))

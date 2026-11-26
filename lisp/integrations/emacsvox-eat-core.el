@@ -638,7 +638,18 @@ the terminal still existed instead of consulting its deleted cursor."
         (emacsvox-eat--vim-reset))
       (unless (emacsvox-eat--automatic-eligible-p)
         (emacsvox-eat--discard-automatic-feedback))
-      (setq emacsvox-eat--recent-navigation-intent nil)
+      ;; A height or style update can arrive before a menu moves its marker.
+      ;; Leave the arrow available, with its original deadline, for that move.
+      (if (and (memq (plist-get navigation :direction) '(up down))
+               (emacsvox-eat--automatic-eligible-p)
+               (not (plist-get new :alternate-screen))
+               (equal (car (plist-get old :size)) (car (plist-get new :size)))
+               (equal (plist-get old :text) (plist-get new :text))
+               (emacsvox-eat--question-menu (plist-get new :rows)
+                                            (plist-get new :cursor-row)
+                                            (car (plist-get new :size))))
+          (setq navigation nil)
+        (setq emacsvox-eat--recent-navigation-intent nil))
       (setq emacsvox-eat--update-serial
             (1+ emacsvox-eat--update-serial)
             emacsvox-eat--screen-snapshot new)

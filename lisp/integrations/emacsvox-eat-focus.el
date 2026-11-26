@@ -317,63 +317,86 @@ DIFF and content-free NAVIGATION provide causal evidence."
   (or (emacsvox-eat--style-focus-change old new diff navigation)
       (emacsvox-eat--cursor-row-focus-change old new diff navigation)))
 
+(defun emacsvox-eat--menu-choices (rows row cursor-row width expo)
+  "Read choices from ROWS at ROW and verify CURSOR-ROW for this menu.
+Expo parks the cursor below the list.  Survey puts it on the selected row."
+  (let ((prefix (if expo
+                    (rx string-start (group (any "❯ ")) "   " (group (+ not-newline)))
+                  (rx string-start (group (any "> ")) " " (group (+ not-newline)))))
+        choices index selected-row ambiguous)
+    (while (and rows (not (string-blank-p (car rows)))
+                (string-match prefix (car rows)))
+      (let* ((selected (not (equal (match-string 1 (car rows)) " ")))
+             (label (match-string 2 (car rows)))
+             (line (pop rows)))
+        (when selected
+          (setq ambiguous (numberp index) index (length choices) selected-row row))
+        (cl-incf row)
+        ;; Descriptions and labels in the Expo list can wrap over several rows.
+        (while (and expo width (= (string-width line) width)
+                    (car rows) (not (string-blank-p (car rows)))
+                    (not (string-match-p prefix (car rows))))
+          (setq line (pop rows) label (concat label line))
+          (cl-incf row))
+        (push (string-trim label) choices)))
+    (when (and index (not ambiguous) (cdr choices)
+               (if expo
+                   (and (equal cursor-row row) (car rows) (string-blank-p (car rows)))
+                 (or (null cursor-row) (= cursor-row selected-row))))
+      (list :choices (nreverse choices) :index index :row selected-row :expo expo))))
+
 (defun emacsvox-eat--question-menu (rows &optional cursor-row width)
-  "Recognize an arrow-choice question in ROWS near CURSOR-ROW at WIDTH.
-Require the explicit navigation hint, indented choices and one > marker.
-This avoids treating ordinary quoted output as a terminal menu."
-  (let ((row 0) found)
-    (while (and rows (not found))
+  "Recognize a Survey or Expo arrow-choice question in ROWS at CURSOR-ROW.
+Use WIDTH to join wrapped rows.  Require the navigation hint and one marker."
+  (let ((row 0) menu)
+    (while (and rows (not menu))
       (when (string-prefix-p "? " (car rows))
-        (let ((tail rows) (start row) (heading "") question choices selected
-              selected-row)
-          ;; The question and hint may wrap over several physical rows.
-          (while (and tail (< (- start row) 4) (not question))
-            (let ((line (pop tail)))
-              (setq heading (concat heading line) start (1+ start))
-              ;; Only a full-width row can continue the heading.  Otherwise
-              ;; an old input prompt could absorb the next question's text.
-              (unless (and width (= (string-width line) width))
-                (unless (string-match-p "\\[Use arrows to move, type to filter\\]" heading)
-                  (setq tail nil))))
-            (when (string-match
-                   "\\`? \\(.+?\\)  \\[Use arrows to move, type to filter\\]"
-                   heading)
-              (setq question (match-string 1 heading))))
-          (when question
-            (while (and tail (not (string-empty-p (string-trim (car tail))))
-                        (string-match "\\`\\([> ]\\) \\(.+\\)\\'" (car tail)))
-              (when (equal (match-string 1 (car tail)) ">")
-                (setq selected (cons (length choices) selected)
-                      selected-row start))
-              (push (string-trim (match-string 2 (car tail))) choices)
-              (setq tail (cdr tail) start (1+ start)))
-            (when (and (> (length choices) 1) (= (length selected) 1)
-                       (or (null cursor-row) (= cursor-row selected-row)))
-              (setq found (list :question question :choices (nreverse choices)
-                                :index (car selected) :row selected-row))))))
+        (let* ((tail rows)
+               (line (pop tail))
+               (heading line)
+               (start (1+ row))
+               (hint (rx string-start "? " (group (+? not-newline))
+                         (or "  [Use arrows to move, type to filter]"
+                             (group " › - Use arrow-keys. Return to submit." (* blank) string-end)))))
+          (while (and (not (string-match hint heading))
+                      width (= (string-width line) width) tail)
+            (setq line (pop tail) heading (concat heading line))
+            (cl-incf start))
+          (when (string-match hint heading)
+            (let ((question (match-string 1 heading))
+                  (expo (not (null (match-beginning 2)))))
+              (when-let* ((choices (emacsvox-eat--menu-choices
+                                    tail start cursor-row width expo)))
+                (setq menu (append choices (list :question question :question-row row))))))))
       (setq rows (cdr rows) row (1+ row)))
-    found))
+    menu))
 
 (defun emacsvox-eat--question-menu-feedback (diff snapshot)
   "Return entry or selection feedback for a proven question menu change."
   (when (and (not (plist-get snapshot :alternate-screen))
-             (not (plist-get diff :size-changed))
              (not (plist-get diff :alternate-screen-changed)))
     (when-let* ((menu (emacsvox-eat--question-menu
                       (plist-get snapshot :rows)
                       (plist-get snapshot :cursor-row)
                       (car (plist-get snapshot :size))))
+                (label (nth (plist-get menu :index) (plist-get menu :choices)))
                 (choice (emacsvox-eat--bounded-focus-text
-                         (nth (plist-get menu :index) (plist-get menu :choices)))))
+                         (if (and (plist-get menu :expo) (string-match " - " label))
+                             (substring label 0 (match-beginning 0))
+                           label))))
       (let ((old (emacsvox-eat--question-menu
                   (plist-get diff :old-rows) (plist-get diff :old-cursor-row)
                   (car (plist-get snapshot :size))))
             (navigation (plist-get diff :navigation)))
         (cond
          ((not (equal (plist-get old :question) (plist-get menu :question)))
-          (concat (emacsvox-eat--bounded-focus-text (plist-get menu :question))
-                  " " choice))
-         ((and (equal (plist-get old :choices) (plist-get menu :choices))
+          (unless (plist-get diff :size-changed)
+            (concat (emacsvox-eat--bounded-focus-text (plist-get menu :question))
+                    " " choice)))
+         ;; Expo may resize while redrawing. The same question and choices
+         ;; with a new marker still identify the destination of the arrow.
+         ((and (or (not (plist-get diff :size-changed)) (plist-get menu :expo))
+               (equal (plist-get old :choices) (plist-get menu :choices))
                (/= (plist-get old :index) (plist-get menu :index))
                (not (plist-get navigation :ambiguous))
                (memq (plist-get navigation :direction) '(up down)))

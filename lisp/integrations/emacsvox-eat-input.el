@@ -34,6 +34,7 @@
 
 (require 'emacsvox-eat-core)
 (defvar eat-terminal)
+(declare-function eat-term-display-beginning "eat" (terminal))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-end "eat" (terminal))
 (declare-function eat-term-in-alternative-display-p "eat" (terminal))
@@ -899,6 +900,26 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
             (list emacsvox-eat--generation basic
                   (+ (float-time) 0.5))))))
 
+(defun emacsvox-eat--remember-menu-submit ()
+  "Remember the rendered confirmation expected from the current terminal menu."
+  (when-let* ((eat-terminal)
+              ((not emacsvox-eat--secure-input-active-p))
+              (snapshot emacsvox-eat--screen-snapshot)
+              ((not (plist-get snapshot :alternate-screen)))
+              ((emacsvox-eat--automatic-eligible-p))
+              (menu (emacsvox-eat--question-menu
+                     (plist-get snapshot :rows) (plist-get snapshot :cursor-row)
+                     (car (plist-get snapshot :size))))
+              ((plist-get menu :expo)))
+    (save-excursion
+      (goto-char (eat-term-display-beginning eat-terminal))
+      (forward-line (plist-get menu :question-row))
+      (setq emacsvox-eat--submitted-menu
+            (list (point-marker)
+                  (concat "✔ " (plist-get menu :question) " › "
+                          (nth (plist-get menu :index) (plist-get menu :choices)))
+                  (+ (float-time) emacsvox-eat--navigation-timeout))))))
+
 (defun emacsvox--advice-eat-self-input-before (count &optional event)
   "Capture terminal completion context before EAT sends Tab EVENT."
   (emacsvox-eat--output-input-boundary)
@@ -930,7 +951,9 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
      (action
       (emacsvox-eat--cancel-completion)
       (when (eq action 'submit)
-        (when (> (or count 1) 0) (emacsvox-eat--interrupt-for-submit))
+        (when (> (or count 1) 0)
+          (emacsvox-eat--interrupt-for-submit)
+          (emacsvox-eat--remember-menu-submit))
         (setq emacsvox-eat--input-row-offset nil
               emacsvox-eat--input-start-row nil))
       (setq emacsvox-eat--recent-input nil
